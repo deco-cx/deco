@@ -1,4 +1,4 @@
-# deco — the edge-native CMS
+# deco live — the edge-native CMS
 
 ### Usage
 
