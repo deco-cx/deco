@@ -3,7 +3,7 @@
 import { Fragment, h } from "preact";
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { createClient } from "supabase";
-import { DecoState } from "$deco/types.ts";
+import { DecoState } from "$live/types.ts";
 
 const decoSite = Deno.env.get("DECO_SITE") || 4;
 

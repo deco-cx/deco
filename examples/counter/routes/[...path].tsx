@@ -1,4 +1,4 @@
-import DynamicRoute from "$deco/dynamic.tsx";
-export * from "$deco/dynamic.tsx";
+import DynamicRoute from "$live/dynamic.tsx";
+export * from "$live/dynamic.tsx";
 
 export default DynamicRoute;

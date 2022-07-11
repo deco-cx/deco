@@ -2,15 +2,7 @@
 import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
-import { IslandModule } from "$fresh/src/server/types.ts";
-import { Manifest } from "$fresh/server.ts";
 import { walk } from "std/fs/walk.ts";
-import { Configuration } from "twind";
-
-export interface DecoManifest extends Manifest {
-  components?: Record<string, IslandModule>;
-  twind?: Configuration;
-}
 
 interface DevManifest {
   routes: string[];

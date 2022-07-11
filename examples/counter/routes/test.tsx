@@ -3,7 +3,7 @@ import { h } from "preact";
 import { Handlers, PageProps } from "$fresh/server.ts";
 import Counter, { defaultProps as counterProps } from "../islands/Counter.tsx";
 import Head from "../components/Head.tsx";
-import { DecoState } from "$deco/types.ts";
+import { DecoState } from "$live/types.ts";
 
 export const handler: Handlers<any, DecoState> = {
   GET(_, ctx) {

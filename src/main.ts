@@ -12,7 +12,7 @@ import {
 
 import { setup } from "twind";
 import { shim, virtualSheet } from "twind/shim/server";
-import { DecoManifest } from "$deco/types.ts";
+import { DecoManifest } from "$live/types.ts";
 
 export const start = async (manifest: DecoManifest) => {
   const port = parseInt(Deno.env.get("PORT") || "8080");

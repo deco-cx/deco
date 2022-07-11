@@ -1,5 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { DecoManifest, DecoState } from "$deco/types.ts";
+import { DecoManifest, DecoState } from "$live/types.ts";
 import manifest from "../deco.gen.ts";
 
 export async function handler(
