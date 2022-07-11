@@ -1,6 +1,6 @@
 {
   "imports": {
-    "$live/": "./src/",
+    "$live/": "./",
     "$fresh/": "https://deno.land/x/fresh@1.0.1/",
     "preact": "https://esm.sh/preact@10.8.1",
     "preact/": "https://esm.sh/preact@10.8.1/",
