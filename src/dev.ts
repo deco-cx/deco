@@ -148,7 +148,8 @@ async function generateTwind(dir: string) {
     .replace(
       "module.exports = {\n",
       "",
-    ).replace(/,(\n|\r\n)}(\n|\r\n)$/, "");
+    ).replace(/,(\n|\r\n)}(\n|\r\n)$/, "")
+    .replace(/\(theme\)/g, "(theme: any)");
 
   // Inline config
   return templates.twind.replace("theme: {},", rawConfig);
