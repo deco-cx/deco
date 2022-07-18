@@ -17,7 +17,7 @@ Add the `$live` import to your `import_mat.json` file:
 
 ## Live scripts
 
-Live ships some utilitary scripts which you can add to your as needed.
+Live ships some utilitary scripts which you can add to your project as needed.
 
 ### HTML to Component script
 
