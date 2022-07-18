@@ -82,7 +82,7 @@ function arraysEqual<T>(a: T[], b: T[]): boolean {
   return true;
 }
 
-async function format(content: string) {
+export async function format(content: string) {
   const proc = Deno.run({
     cmd: [Deno.execPath(), "fmt", "-"],
     stdin: "piped",
