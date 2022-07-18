@@ -35,7 +35,7 @@ Add the `component` task to your `deno.json` file:
 }
 ```
 
-Then copy some HTML into your clipbord. For example:
+Then copy some HTML into your clipboard. For example:
 
 ```html
 <div>
