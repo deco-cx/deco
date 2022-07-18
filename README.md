@@ -5,12 +5,13 @@ It lets your business users live edit any fresh site.
 
 ## Start using
 
-Add the `$live` import to your `import_mat.json` file:
+Add the `$live` import to your `import_map.json` file:
 
 ```json
 {
   "imports": {
     "$live/": "https://deno.land/x/live@0.0.6/",
+    (...)
   }
 }
 ```
