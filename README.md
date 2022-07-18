@@ -11,7 +11,7 @@ Add the `$live` import to your `import_map.json` file:
 {
   "imports": {
     "$live/": "https://deno.land/x/live@0.0.6/",
-    (...)
+    "(...)": "(...)"
   }
 }
 ```
