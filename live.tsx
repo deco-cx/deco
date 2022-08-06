@@ -3,6 +3,7 @@
 import { Fragment, h } from "preact";
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { DecoManifest, DecoState } from "$live/types.ts";
+import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import getSupabaseClient from "./supabase.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -12,8 +13,7 @@ export const setManifest = (manifest: DecoManifest) => {
   userManifest = manifest;
 };
 
-// TODO: enable inspect vs code automatically if localhost
-// const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
+const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
 const site = Deno.env.get("DECO_SITE") as string;
 const domainsEnv = Deno.env.get("DECO_DOMAINS");
 const domains: string[] = domainsEnv ? JSON.parse(domainsEnv) : [];
@@ -48,49 +48,48 @@ export function createLiveRoute(defaultRender?: (props: PageProps) => any) {
         .eq("site.name", site)
         .eq("path", url.pathname);
 
-      if (error || !Pages || Pages.length === 0) {
-        if (error) {
-          console.log("Error fetching page:", error);
-        }
-        if (defaultRender) {
-          console.log("Using default render");
-        } else {
-          console.log("No default render");
-        }
-        return ctx.render();
+      if (error) {
+        console.log("Error fetching page:", error);
+      } else {
+        console.log("Found page:", Pages);
       }
 
-      console.log("Found page:", Pages);
-
-      const components = Pages![0]?.components;
+      const components = Pages && Pages[0]?.components || null;
       const data = {
         components,
       };
       return ctx.render(data);
+    },
+    async POST(req, ctx) {
+      const url = new URL(req.url);
+      if (url.pathname === "/inspect-vscode" && !isDenoDeploy) {
+        return await InspectVSCodeHandler.POST!(req, ctx as any);
+      }
+      return new Response("Not found", { status: 404 });
     },
   };
 
   function LiveRoute(
     props: PageProps<LiveRouteData>,
   ) {
-    const { data } = props;
-    if (!data || !data.components || data.components.length === 0) {
-      if (defaultRender) {
-        return defaultRender(props);
-      } else {
-        return <div>Page not found</div>;
-      }
-    }
-    const { components } = data;
     const manifest = userManifest;
+    const { data } = props;
+    const { components } = data;
+    const renderComponents = components && components.length > 0
+      ? components.map(({ component, props }: any) => {
+        const Comp = manifest.islands[`./islands/${component}.tsx`]?.default ||
+          manifest.components![`./components/${component}.tsx`]?.default;
+        return <Comp {...props} />;
+      })
+      : defaultRender
+      ? defaultRender(props)
+      : <div>Page not found</div>;
+    const InspectVSCode = !isDenoDeploy &&
+      userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
     return (
       <>
-        {components.map(({ component, props }: any) => {
-          const Comp =
-            manifest.islands[`./islands/${component}.tsx`]?.default ||
-            manifest.components![`./components/${component}.tsx`]?.default;
-          return <Comp {...props} />;
-        })}
+        {renderComponents}
+        {InspectVSCode ? <InspectVSCode /> : null}
       </>
     );
   }
