@@ -3,18 +3,56 @@
 Live is the edge-native CMS based on fresh.
 It lets your business users live edit any fresh site.
 
-## Start using
+Want to create a Live Site? Use the [deco start template repo](https://github.com/deco-pages/start) to create a new site. Clone it and run `deno task start`. That's it.
+
+## Adding live to an existing fresh site
 
 Add the `$live` import to your `import_map.json` file:
 
 ```json
 {
   "imports": {
-    "$live/": "https://deno.land/x/live@0.0.6/",
+    "$live/": "https://deno.land/x/live@0.0.8/",
     "(...)": "(...)"
   }
 }
 ```
+
+Then replace your `routes/index.tsx` file with this:
+
+```tsx
+/** @jsx h */
+import { h } from "preact";
+import { createLiveRoute } from "$live/live.tsx";
+import Placeholder from "../components/Placeholder.tsx";
+
+export const { handler, LiveRoute } = createLiveRoute(() => <Placeholder />);
+export default LiveRoute;
+```
+
+Add the fallback route at: `routes/[...path].tsx` with this:
+
+```tsx
+import LiveRoute from "./index.tsx";
+export * from "./index.tsx";
+export default LiveRoute;
+```
+
+And finally, create the `live.ts` file with this:
+
+```ts
+import manifest from "./deco.gen.ts";
+import { start } from "$live/server.ts";
+
+await start(manifest, {
+  site: "deco",
+  domains: ["deco.cx"],
+});
+```
+
+Replacing `site` and `domains` for your own values. Haven't created a site yet? Go to `deco.cx` and create one for free.
+
+**PROTIP:** When you create a site on `deco.cx`, you automatically get a working repository at `deco-pages/<your-site>`. You can clone it, start coding your components and deploying right away, with zero setup.
 
 ## Live scripts
 
