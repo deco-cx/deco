@@ -2,27 +2,24 @@
 /** @jsxFrag Fragment */
 import { Fragment, h } from "preact";
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { DecoManifest, DecoState } from "$live/types.ts";
+import { DecoManifest, DecoState, LiveOptions } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import getSupabaseClient from "./supabase.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
 let userManifest: DecoManifest;
-export const setManifest = (manifest: DecoManifest) => {
+let userOptions: LiveOptions;
+
+export const setupLive = (
+  manifest: DecoManifest,
+  liveOptions: LiveOptions,
+) => {
   userManifest = manifest;
+  userOptions = liveOptions;
 };
 
 const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
-const site = Deno.env.get("DECO_SITE") as string;
-const domainsEnv = Deno.env.get("DECO_DOMAINS");
-const domains: string[] = domainsEnv ? JSON.parse(domainsEnv) : [];
-domains.push(
-  `${site}.deco.page`,
-  `deco-pages-${site}.deno.dev`,
-  `localhost`,
-);
-
 interface LiveRouteData {
   manifest?: any;
   components?: any;
@@ -33,6 +30,13 @@ export function createLiveRoute(defaultRender?: (props: PageProps) => any) {
   const handler: Handlers<LiveRouteData, DecoState> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
+      const site = userOptions.site;
+      const domains: string[] = userOptions.domains || [];
+      domains.push(
+        `${site}.deco.page`,
+        `deco-pages-${site}.deno.dev`,
+        `localhost`,
+      );
 
       if (!domains.includes(url.hostname)) {
         console.log("Domain not found:", url.hostname);
