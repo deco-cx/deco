@@ -1,5 +1,5 @@
 import { HTMLtoJSX } from "../lib/htmltopreact.js";
-import { format } from "../src/dev.ts";
+import { format } from "../dev.ts";
 import clipboard from "https://deno.land/x/clipboard@v0.0.2/mod.ts";
 
 if (Deno.args.length < 1) {
