@@ -8,9 +8,17 @@ const SUPABASE_LIVE_ENDPOINT = "https://ozksgdmyrqcxcwhnbepg.supabase.co";
 const SUPABASE_LIVE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96a3NnZG15cnFjeGN3aG5iZXBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NTY3MjM3NDYsImV4cCI6MTk3MjI5OTc0Nn0.HMdsG6NZlq6dvYFCK1_tuJh38TmsqLeN8H4OktTHt_M";
 
+let userEndpoint = SUPABASE_LIVE_ENDPOINT;
+let userKey = SUPABASE_LIVE_ANON_KEY;
+
+export function setupSupabase(endpoint: string, key: string) {
+  userEndpoint = endpoint;
+  userKey = key;
+}
+
 export default function getSupabaseClient() {
   if (!client) {
-    client = createClient(SUPABASE_LIVE_ENDPOINT, SUPABASE_LIVE_ANON_KEY);
+    client = createClient(userEndpoint, userKey);
   }
 
   return client;
