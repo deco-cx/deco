@@ -23,19 +23,19 @@ Then replace your `routes/index.tsx` file with this:
 ```tsx
 /** @jsx h */
 import { h } from "preact";
-import { createLiveRoute } from "$live/live.tsx";
+import { createLivePage } from "$live/live.tsx";
 import Placeholder from "../components/Placeholder.tsx";
 
-export const { handler, LiveRoute } = createLiveRoute(() => <Placeholder />);
-export default LiveRoute;
+export const { handler, LivePage } = createLivePage(() => <Placeholder />);
+export default LivePage;
 ```
 
 Add the fallback route at: `routes/[...path].tsx` with this:
 
 ```tsx
-import LiveRoute from "./index.tsx";
+import LivePage from "./index.tsx";
 export * from "./index.tsx";
-export default LiveRoute;
+export default LivePage;
 ```
 
 And finally, create the `live.ts` file with this:

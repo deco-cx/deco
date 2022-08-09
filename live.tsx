@@ -21,26 +21,27 @@ export const setupLive = (
 };
 
 const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
-interface LiveRouteData {
+interface LivePageData {
   manifest?: any;
   components?: any;
   defaultRender?: any;
 }
 
-export interface LiveRouteOptions<Data = unknown> {
-  render?: (props: PageProps) => any;
+export interface LivePageOptions<Data = unknown> {
+  template?: string;
+  render?: (props: PageProps<LivePageData & Data>) => any;
   loader?: (
     req: Request,
     ctx: HandlerContext<Data>,
-    props: PageProps,
   ) => Promise<Data>;
 }
 
-export function createLiveRoute<Data>(options: LiveRouteOptions<Data>) {
+export function createLivePage<Data>(options: LivePageOptions<Data>) {
   const defaultRender = options.render;
 
-  const handler: Handlers<LiveRouteData, DecoState> = {
+  const handler: Handlers<LivePageData> = {
     async GET(req, ctx) {
+      console.log(req, ctx);
       const url = new URL(req.url);
       const site = userOptions.site;
       const domains: string[] = userOptions.domains || [];
@@ -71,8 +72,10 @@ export function createLiveRoute<Data>(options: LiveRouteOptions<Data>) {
       }
 
       const components = Pages && Pages[0]?.components || null;
+      const loader = await options.loader?.(req, ctx);
       const data = {
         components,
+        loader,
       };
       return ctx.render(data);
     },
@@ -88,8 +91,8 @@ export function createLiveRoute<Data>(options: LiveRouteOptions<Data>) {
     },
   };
 
-  function LiveRoute(
-    props: PageProps<LiveRouteData>,
+  function LivePage(
+    props: PageProps<LivePageData & Data>,
   ) {
     const manifest = userManifest;
     const { data } = props;
@@ -115,6 +118,6 @@ export function createLiveRoute<Data>(options: LiveRouteOptions<Data>) {
 
   return {
     handler,
-    LiveRoute,
+    LivePage,
   };
 }

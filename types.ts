@@ -7,10 +7,6 @@ export interface DecoManifest extends Manifest {
   twind?: Configuration;
 }
 
-export interface DecoState {
-  manifest: DecoManifest;
-}
-
 export interface Site {
   name: string;
 }
