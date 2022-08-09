@@ -1,11 +1,15 @@
 type Timing = { start: number; end?: number };
 
+type TimingKey = "fetch-page-data" | "run-page-loader"
+
 export function createServerTiming() {
   const timings: Record<string, Timing> = {};
-  const start = (key: string) => {
+
+  const start = (key: TimingKey) => {
     timings[key] = { start: Date.now() };
   };
-  const end = (key: string) => {
+
+  const end = (key: TimingKey) => {
     timings[key].end = Date.now();
   };
 
