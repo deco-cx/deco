@@ -118,25 +118,30 @@ export function createLivePage<Data>(options?: LivePageOptions<Data>) {
     const manifest = userManifest;
     const { data } = props;
     const { components, loaderData } = data;
-    const renderComponents =
-      components && components.length > 0 ? (
-        components.map(({ component, props }: any) => {
+    const RenderComponents = () => {
+      if (components?.length > 0) {
+        return components.map(({ component, props }: any) => {
           const Comp =
             manifest.islands[`./islands/${component}.tsx`]?.default ||
             manifest.components![`./components/${component}.tsx`]?.default;
           return <Comp {...props} loaderData={loaderData} />;
-        })
-      ) : defaultRender ? (
-        defaultRender(props)
-      ) : (
-        <div>Page not found</div>
-      );
+        });
+      }
+
+      if (defaultRender) {
+        return defaultRender(props);
+      }
+
+      return <div>Page not found</div>;
+    };
+
     const InspectVSCode =
       !isDenoDeploy &&
       userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
+
     return (
       <>
-        {renderComponents}
+        <RenderComponents />
         {InspectVSCode ? <InspectVSCode /> : null}
       </>
     );
