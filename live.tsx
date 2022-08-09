@@ -19,22 +19,25 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
 };
 
 const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
-interface LivePageData {
-  manifest?: any;
+
+interface LivePageData<Data> {
   components?: any;
-  defaultRender?: any;
+  loaderData?: Data;
 }
 
-export interface LivePageOptions<Data = unknown> {
+export interface LivePageOptions<Data> {
   template?: string;
-  render?: (props: PageProps<LivePageData & Data>) => any;
-  loader?: (req: Request, ctx: HandlerContext<Data>) => Promise<Data>;
+  render?: (props: PageProps<LivePageData<Data>>) => any;
+  loader?: (
+    req: Request,
+    ctx: HandlerContext<LivePageData<Data>>
+  ) => Promise<Data>;
 }
 
-export function createLivePage<Data>(options: LivePageOptions<Data>) {
-  const defaultRender = options.render;
+export function createLivePage<Data>(options?: LivePageOptions<Data>) {
+  const { render: defaultRender, loader, template } = options ?? {};
 
-  const handler: Handlers<LivePageData> = {
+  const handler: Handlers<LivePageData<Data>> = {
     async GET(req, ctx) {
       const { start, end, printTimings } = createServerTiming();
       const url = new URL(req.url);
@@ -54,13 +57,26 @@ export function createLivePage<Data>(options: LivePageOptions<Data>) {
         return new Response("Site not found", { status: 404 });
       }
 
+      const queries = [url.pathname, template]
+        .filter((query) => Boolean(query))
+        .map((query) => `path.eq.${query}`)
+        .join(",");
+
       start("fetch-page-data");
-      let { data: Pages, error } = await getSupabaseClient()
+      const pagePromise = getSupabaseClient()
         .from("Pages")
         .select(`components, path, site!inner(name, id)`)
         .eq("site.name", site)
-        .eq("path", url.pathname);
+        .or(queries);
+      const loaderPromise = loader?.(req, ctx);
+
+      const [pageData, loaderData] = await Promise.all([
+        pagePromise,
+        loaderPromise,
+      ]);
       end("fetch-page-data");
+
+      const { data: Pages, error } = pageData;
 
       if (error) {
         console.log("Error fetching page:", error);
@@ -69,14 +85,9 @@ export function createLivePage<Data>(options: LivePageOptions<Data>) {
       }
 
       const components = (Pages && Pages[0]?.components) || null;
-
-      start("run-page-loader")
-      const loader = await options.loader?.(req, ctx);
-      end("run-page-loader")
-
       const data = {
         components,
-        loader,
+        loaderData,
       };
 
       start("render");
@@ -99,7 +110,7 @@ export function createLivePage<Data>(options: LivePageOptions<Data>) {
     },
   };
 
-  function LivePage(props: PageProps<LivePageData & Data>) {
+  function LivePage(props: PageProps<LivePageData<Data>>) {
     const manifest = userManifest;
     const { data } = props;
     const { components } = data;
