@@ -2,7 +2,7 @@
 /** @jsxFrag Fragment */
 import { Fragment, h } from "preact";
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
-import { DecoManifest, DecoState, LiveOptions } from "$live/types.ts";
+import { DecoManifest, LiveOptions } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import getSupabaseClient from "./supabase.ts";
 import { authHandler } from "./auth.tsx";
