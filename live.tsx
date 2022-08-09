@@ -57,6 +57,10 @@ export function createLivePage<Data>(options?: LivePageOptions<Data>) {
         return new Response("Site not found", { status: 404 });
       }
 
+      /**
+       * Queries follow PostgREST syntax
+       * https://postgrest.org/en/stable/api.html#horizontal-filtering-rows
+       */
       const queries = [url.pathname, template]
         .filter((query) => Boolean(query))
         .map((query) => `path.eq.${query}`)
@@ -113,14 +117,14 @@ export function createLivePage<Data>(options?: LivePageOptions<Data>) {
   function LivePage(props: PageProps<LivePageData<Data>>) {
     const manifest = userManifest;
     const { data } = props;
-    const { components } = data;
+    const { components, loaderData } = data;
     const renderComponents =
       components && components.length > 0 ? (
         components.map(({ component, props }: any) => {
           const Comp =
             manifest.islands[`./islands/${component}.tsx`]?.default ||
             manifest.components![`./components/${component}.tsx`]?.default;
-          return <Comp {...props} />;
+          return <Comp {...props} loaderData={loaderData} />;
         })
       ) : defaultRender ? (
         defaultRender(props)
