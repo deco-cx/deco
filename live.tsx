@@ -1,10 +1,11 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
 import { Fragment, h } from "preact";
-import { Handlers, PageProps } from "$fresh/server.ts";
+import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import { DecoManifest, DecoState, LiveOptions } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import getSupabaseClient from "./supabase.ts";
+import { authHandler } from "./auth.tsx";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -26,7 +27,18 @@ interface LiveRouteData {
   defaultRender?: any;
 }
 
-export function createLiveRoute(defaultRender?: (props: PageProps) => any) {
+export interface LiveRouteOptions<Data = unknown> {
+  render?: (props: PageProps) => any;
+  loader?: (
+    req: Request,
+    ctx: HandlerContext<Data>,
+    props: PageProps,
+  ) => Promise<Data>;
+}
+
+export function createLiveRoute<Data>(options: LiveRouteOptions<Data>) {
+  const defaultRender = options.render;
+
   const handler: Handlers<LiveRouteData, DecoState> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
@@ -68,6 +80,9 @@ export function createLiveRoute(defaultRender?: (props: PageProps) => any) {
       const url = new URL(req.url);
       if (url.pathname === "/inspect-vscode" && !isDenoDeploy) {
         return await InspectVSCodeHandler.POST!(req, ctx as any);
+      }
+      if (url.pathname === "/api/credentials") {
+        return await authHandler.POST!(req, ctx as any);
       }
       return new Response("Not found", { status: 404 });
     },
