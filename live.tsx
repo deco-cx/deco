@@ -1,6 +1,6 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
-import { ComponentType, Fragment, h } from "preact";
+import { Fragment, h } from "preact";
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import { DecoManifest, LiveOptions } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
@@ -33,11 +33,11 @@ export interface LoadLiveComponentsOptions {
   template?: string;
 }
 
-export const loadLiveComponents = async (
+export async function loadLiveComponents(
   req: Request,
   _: HandlerContext<any>,
   options?: LoadLiveComponentsOptions,
-): Promise<LivePageData> => {
+): Promise<LivePageData> {
   const site = userOptions.site;
   const url = new URL(req.url);
   const { template } = options ?? {};
@@ -64,20 +64,19 @@ export const loadLiveComponents = async (
   }
 
   return { components: Pages?.[0]?.components ?? null };
-};
+}
 
-interface CreateLivePageOptions<LoaderData> extends LoadLiveComponentsOptions {
-  render?: ComponentType<PageProps<LoaderData>>;
+interface CreateLivePageOptions<LoaderData> {
   loader?: (
     req: Request,
     ctx: HandlerContext<LoaderData>,
   ) => Promise<LoaderData>;
 }
 
-export function createLivePage<LoaderData = LivePageData>(
-  options?: CreateLivePageOptions<LoaderData>,
+export function createLiveHandler<LoaderData = LivePageData>(
+  options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
 ) {
-  const { render: DefaultRender, loader } = options ?? {};
+  const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
 
   const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
@@ -106,7 +105,11 @@ export function createLivePage<LoaderData = LivePageData>(
         if (typeof loader === "function") {
           loaderData = await loader(req, ctx);
         } else {
-          loaderData = await loadLiveComponents(req, ctx, options);
+          loaderData = await loadLiveComponents(
+            req,
+            ctx,
+            options as LoadLiveComponentsOptions,
+          );
         }
       } catch (error) {
         console.log("Error running loader. \n", error);
@@ -135,41 +138,36 @@ export function createLivePage<LoaderData = LivePageData>(
     },
   };
 
-  function LivePage(props: PageProps<LoaderData>) {
-    const manifest = userManifest;
-    const { data } = props;
-    const { components } = data ?? ({} as any);
+  return handler;
+}
 
-    const RenderComponents = () => {
-      if (components?.length > 0) {
-        return components.map(({ component, props }: PageComponentData) => {
-          const Comp =
-            manifest.islands[`./islands/${component}.tsx`]?.default ||
-            manifest.components?.[`./components/${component}.tsx`]?.default;
-          return <Comp {...props} />;
-        });
-      }
+interface LiveComponentsProps {
+  components: PageComponentData[];
+}
 
-      if (DefaultRender) {
-        return <DefaultRender {...props} />;
-      }
+export function LiveComponents({ components }: LiveComponentsProps) {
+  return (
+    <>
+      {components.map(({ component, props }: PageComponentData) => {
+        const Comp =
+          userManifest.islands[`./islands/${component}.tsx`]?.default ||
+          userManifest.components?.[`./components/${component}.tsx`]?.default;
+        return <Comp {...props} />;
+      })}
+    </>
+  );
+}
 
-      return <div>Page not found</div>;
-    };
+export function LivePage({ data }: PageProps<LivePageData>) {
+  const { components = [] } = data;
 
-    const InspectVSCode = !isDenoDeploy &&
-      userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
+  const InspectVSCode = !isDenoDeploy &&
+    userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
-    return (
-      <>
-        <RenderComponents />
-        {InspectVSCode ? <InspectVSCode /> : null}
-      </>
-    );
-  }
-
-  return {
-    handler,
-    LivePage,
-  };
+  return (
+    <>
+      <LiveComponents components={components} />
+      {InspectVSCode ? <InspectVSCode /> : null}
+    </>
+  );
 }
