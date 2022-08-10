@@ -1,0 +1,18 @@
+{
+  "deno.enable": true,
+  "deno.lint": true,
+  "deno.unstable": true,
+  "tsserver.enable": false,
+  "coc.preferences.formatOnSaveFiletypes": [
+    "typescript",
+    "javascript",
+    "typescriptreact",
+    "javascriptreact"
+  ],
+  "prettier.disableLanguages": [
+    "typescript",
+    "javascript",
+    "typescriptreact",
+    "javascriptreact"
+  ]
+}
