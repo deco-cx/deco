@@ -1,12 +1,12 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
 import { ComponentType, Fragment, h } from "preact";
-import { Handler, HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
+import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import { DecoManifest, LiveOptions } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
-import getSupabaseClient from "./supabase.ts";
-import { authHandler } from "./auth.tsx";
-import { createServerTiming } from "./utils/serverTimings.ts";
+import getSupabaseClient from "$live/supabase.ts";
+import { authHandler } from "$live/auth.tsx";
+import { createServerTiming } from "$live/utils/serverTimings.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -20,16 +20,16 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
 
 const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
 
-interface PageComponentData {
+export interface PageComponentData {
   component: string;
   props?: Record<string, unknown>;
 }
 
-interface LivePageData {
+export interface LivePageData {
   components?: PageComponentData[];
 }
 
-interface LoadLiveComponentsOptions {
+export interface LoadLiveComponentsOptions {
   template?: string;
 }
 
@@ -145,7 +145,7 @@ export function createLivePage<LoaderData = LivePageData>(
         return components.map(({ component, props }: PageComponentData) => {
           const Comp =
             manifest.islands[`./islands/${component}.tsx`]?.default ||
-            manifest.components![`./components/${component}.tsx`]?.default;
+            manifest.components?.[`./components/${component}.tsx`]?.default;
           return <Comp {...props} />;
         });
       }
