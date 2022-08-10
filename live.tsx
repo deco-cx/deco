@@ -4,9 +4,9 @@ import { Fragment, h } from "preact";
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import { DecoManifest, LiveOptions } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
-import getSupabaseClient from "./supabase.ts";
-import { authHandler } from "./auth.tsx";
-import { createServerTiming } from "./utils/serverTimings.ts";
+import getSupabaseClient from "$live/supabase.ts";
+import { authHandler } from "$live/auth.tsx";
+import { createServerTiming } from "$live/utils/serverTimings.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -19,22 +19,66 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
 };
 
 const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
-interface LivePageData {
-  manifest?: any;
-  components?: any;
-  defaultRender?: any;
+
+export interface PageComponentData {
+  component: string;
+  props?: Record<string, unknown>;
 }
 
-export interface LivePageOptions<Data = unknown> {
+export interface LivePageData {
+  components?: PageComponentData[];
+}
+
+export interface LoadLiveComponentsOptions {
   template?: string;
-  render?: (props: PageProps<LivePageData & Data>) => any;
-  loader?: (req: Request, ctx: HandlerContext<Data>) => Promise<Data>;
 }
 
-export function createLivePage<Data>(options: LivePageOptions<Data>) {
-  const defaultRender = options.render;
+export async function loadLiveComponents(
+  req: Request,
+  _: HandlerContext<any>,
+  options?: LoadLiveComponentsOptions,
+): Promise<LivePageData> {
+  const site = userOptions.site;
+  const url = new URL(req.url);
+  const { template } = options ?? {};
 
-  const handler: Handlers<LivePageData> = {
+  /**
+   * Queries follow PostgREST syntax
+   * https://postgrest.org/en/stable/api.html#horizontal-filtering-rows
+   */
+  const queries = [url.pathname, template]
+    .filter((query) => Boolean(query))
+    .map((query) => `path.eq.${query}`)
+    .join(",");
+
+  const { data: Pages, error } = await getSupabaseClient()
+    .from("Pages")
+    .select(`components, path, site!inner(name, id)`)
+    .eq("site.name", site)
+    .or(queries);
+
+  if (error) {
+    console.log("Error fetching page:", error);
+  } else {
+    console.log("Found page:", Pages);
+  }
+
+  return { components: Pages?.[0]?.components ?? null };
+}
+
+interface CreateLivePageOptions<LoaderData> {
+  loader?: (
+    req: Request,
+    ctx: HandlerContext<LoaderData>,
+  ) => Promise<LoaderData>;
+}
+
+export function createLiveHandler<LoaderData = LivePageData>(
+  options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
+) {
+  const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
+
+  const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
       const { start, end, printTimings } = createServerTiming();
       const url = new URL(req.url);
@@ -43,7 +87,7 @@ export function createLivePage<Data>(options: LivePageOptions<Data>) {
       domains.push(
         `${site}.deco.page`,
         `deco-pages-${site}.deno.dev`,
-        `localhost`
+        `localhost`,
       );
 
       if (!domains.includes(url.hostname)) {
@@ -55,32 +99,27 @@ export function createLivePage<Data>(options: LivePageOptions<Data>) {
       }
 
       start("fetch-page-data");
-      let { data: Pages, error } = await getSupabaseClient()
-        .from("Pages")
-        .select(`components, path, site!inner(name, id)`)
-        .eq("site.name", site)
-        .eq("path", url.pathname);
-      end("fetch-page-data");
+      let loaderData = undefined;
 
-      if (error) {
-        console.log("Error fetching page:", error);
-      } else {
-        console.log("Found page:", Pages);
+      try {
+        if (typeof loader === "function") {
+          loaderData = await loader(req, ctx);
+        } else {
+          loaderData = await loadLiveComponents(
+            req,
+            ctx,
+            options as LoadLiveComponentsOptions,
+          );
+        }
+      } catch (error) {
+        console.log("Error running loader. \n", error);
+        // TODO: Do a better error handler. Maybe redirect to 500 page.
       }
 
-      const components = (Pages && Pages[0]?.components) || null;
-
-      start("run-page-loader")
-      const loader = await options.loader?.(req, ctx);
-      end("run-page-loader")
-
-      const data = {
-        components,
-        loader,
-      };
+      end("fetch-page-data");
 
       start("render");
-      const res = await ctx.render(data);
+      const res = await ctx.render(loaderData);
       end("render");
 
       res.headers.set("Server-Timing", printTimings());
@@ -90,45 +129,45 @@ export function createLivePage<Data>(options: LivePageOptions<Data>) {
     async POST(req, ctx) {
       const url = new URL(req.url);
       if (url.pathname === "/inspect-vscode" && !isDenoDeploy) {
-        return await InspectVSCodeHandler.POST!(req, ctx as any);
+        return await InspectVSCodeHandler.POST!(req, ctx);
       }
       if (url.pathname === "/api/credentials") {
-        return await authHandler.POST!(req, ctx as any);
+        return await authHandler.POST!(req, ctx);
       }
       return new Response("Not found", { status: 404 });
     },
   };
 
-  function LivePage(props: PageProps<LivePageData & Data>) {
-    const manifest = userManifest;
-    const { data } = props;
-    const { components } = data;
-    const renderComponents =
-      components && components.length > 0 ? (
-        components.map(({ component, props }: any) => {
-          const Comp =
-            manifest.islands[`./islands/${component}.tsx`]?.default ||
-            manifest.components![`./components/${component}.tsx`]?.default;
-          return <Comp {...props} />;
-        })
-      ) : defaultRender ? (
-        defaultRender(props)
-      ) : (
-        <div>Page not found</div>
-      );
-    const InspectVSCode =
-      !isDenoDeploy &&
-      userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
-    return (
-      <>
-        {renderComponents}
-        {InspectVSCode ? <InspectVSCode /> : null}
-      </>
-    );
-  }
+  return handler;
+}
 
-  return {
-    handler,
-    LivePage,
-  };
+interface LiveComponentsProps {
+  components: PageComponentData[];
+}
+
+export function LiveComponents({ components }: LiveComponentsProps) {
+  return (
+    <>
+      {components.map(({ component, props }: PageComponentData) => {
+        const Comp =
+          userManifest.islands[`./islands/${component}.tsx`]?.default ||
+          userManifest.components?.[`./components/${component}.tsx`]?.default;
+        return <Comp {...props} />;
+      })}
+    </>
+  );
+}
+
+export function LivePage({ data }: PageProps<LivePageData>) {
+  const { components = [] } = data;
+
+  const InspectVSCode = !isDenoDeploy &&
+    userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
+
+  return (
+    <>
+      <LiveComponents components={components} />
+      {InspectVSCode ? <InspectVSCode /> : null}
+    </>
+  );
 }
