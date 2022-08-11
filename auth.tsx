@@ -1,8 +1,10 @@
 /** @jsx h */
 import { h } from "preact";
 import { useCallback, useEffect } from "preact/hooks";
-import { Handlers } from "$fresh/server.ts";
-import { setCookie } from "std/http/mod.ts";
+import { Handler, Handlers } from "$fresh/server.ts";
+import { getCookies, setCookie } from "std/http/mod.ts";
+import { createServerTiming } from "./utils/serverTimings.ts";
+
 import getSupabaseClient from "./supabase.ts";
 
 export function AuthListener() {
@@ -47,6 +49,25 @@ export function Login() {
       </button>
     </div>
   );
+}
+
+export function createPrivateHandler<T>(handler: Handler<T>): Handler<T> {
+  return async (req, ctx) => {
+    const { start, end } = createServerTiming();
+    start("auth");
+    const cookies = getCookies(req.headers);
+    const jwt = cookies["access-token"];
+    const user = await getSupabaseClient().auth.api.getUser(jwt);
+    end("auth");
+    if (!user) {
+      return new Response("Redirect", {
+        status: 302,
+        headers: { location: "/login" },
+      });
+    }
+    ctx.state.user = user;
+    return handler(req, ctx);
+  };
 }
 
 export const authHandler: Handlers = {

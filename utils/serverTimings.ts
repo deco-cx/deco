@@ -16,7 +16,7 @@ export function createServerTiming() {
   const printTimings = () => {
     return Object.entries(timings)
       .map(([key, timing]) => {
-        return `${key};dur=${timing.end - timing.start}`;
+        return `${key};dur=${timing.end! - timing.start}`;
       })
       .join(", ");
   };
