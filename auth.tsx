@@ -17,7 +17,7 @@ export function AuthListener() {
           headers: new Headers({ "Content-Type": "application/json" }),
           credentials: "same-origin",
           body: JSON.stringify({ event, session }),
-        }).then((res) => res.json());
+        });
       },
     );
 
@@ -31,12 +31,13 @@ export function AuthListener() {
 export function Login() {
   const google = useCallback(() => {
     getSupabaseClient().auth.signIn({ provider: "google" }, {
-      redirectTo: "/login",
       shouldCreateUser: true,
     }).then(console.log);
   }, []);
   const github = useCallback(() => {
-    getSupabaseClient().auth.signIn({ provider: "github" }).then(console.log);
+    getSupabaseClient().auth.signIn({ provider: "github" }, {
+      shouldCreateUser: true,
+    }).then(console.log);
   }, []);
 
   return (
@@ -51,22 +52,34 @@ export function Login() {
   );
 }
 
+export function getUser(req: Request) {
+  const cookies = getCookies(req.headers);
+  const jwt = cookies["live-access-token"];
+  return getSupabaseClient().auth.api.getUser(jwt);
+}
+
 export function createPrivateHandler<T>(handler: Handler<T>): Handler<T> {
   return async (req, ctx) => {
-    const { start, end } = createServerTiming();
+    let res: Response;
+    const { start, end, printTimings } = createServerTiming();
     start("auth");
-    const cookies = getCookies(req.headers);
-    const jwt = cookies["access-token"];
-    const user = await getSupabaseClient().auth.api.getUser(jwt);
+    const user = await getUser(req);
     end("auth");
-    if (!user) {
-      return new Response("Redirect", {
+    if (!user || user.error) {
+      res = new Response(user.error ? user.error.message : "Redirect", {
         status: 302,
         headers: { location: "/login" },
       });
+    } else {
+      ctx.state.user = user;
+      res = await handler(req, ctx);
     }
-    ctx.state.user = user;
-    return handler(req, ctx);
+    const timings = res.headers.get("Server-Timing")?.split(", ");
+    const timingsHeader = timings
+      ? timings.concat(printTimings()).join(", ")
+      : printTimings();
+    res.headers.set("Server-Timing", timingsHeader);
+    return res;
   };
 }
 
@@ -84,7 +97,7 @@ export const authHandler: Handlers = {
         { key: "refresh-token", value: session.refresh_token },
       ]
         .map((token) => ({
-          name: `${""}-${token.key}`,
+          name: `live-${token.key}`,
           value: token.value,
           path: "/",
           // domain: this.cookieOptions.domain,
