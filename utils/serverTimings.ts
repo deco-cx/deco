@@ -1,6 +1,6 @@
 type Timing = { start: number; end?: number };
 
-type TimingKey = "fetch-page-data" | "render"
+type TimingKey = string;
 
 export function createServerTiming() {
   const timings: Record<string, Timing> = {};
