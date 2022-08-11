@@ -77,20 +77,23 @@ export function createLiveHandler<LoaderData = LivePageData>(
   options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
 ) {
   const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
+  const domains: string[] = userOptions.domains || [];
+  domains.push(
+    `${userOptions.site}.deco.page`,
+    `deco-pages-${userOptions.site}.deno.dev`,
+    `localhost`,
+  );
+  console.log("deployment id", Deno.env.get("DENO_DEPLOYMENT_ID"));
+  const isDeployPreview = (url: URL) =>
+    isDenoDeploy &&
+    url.hostname.match(`deco\-pages\-${userOptions.site}\-.*\.deno\.dev`);
 
   const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
       const { start, end, printTimings } = createServerTiming();
       const url = new URL(req.url);
-      const site = userOptions.site;
-      const domains: string[] = userOptions.domains || [];
-      domains.push(
-        `${site}.deco.page`,
-        `deco-pages-${site}.deno.dev`,
-        `localhost`,
-      );
 
-      if (!domains.includes(url.hostname)) {
+      if (!domains.includes(url.hostname) && !isDeployPreview(url)) {
         console.log("Domain not found:", url.hostname);
         console.log("Configured domains:", domains);
 
