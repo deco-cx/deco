@@ -137,7 +137,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
       if (url.pathname === "/inspect-vscode" && !isDenoDeploy) {
         return await InspectVSCodeHandler.POST!(req, ctx);
       }
-      if (url.pathname === "/api/credentials") {
+      if (url.pathname === "/live/api/credentials") {
         return await authHandler.POST!(req, ctx);
       }
       return new Response("Not found", { status: 404 });

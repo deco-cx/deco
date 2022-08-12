@@ -8,18 +8,18 @@ import { createServerTiming } from "./utils/serverTimings.ts";
 import getSupabaseClient from "./supabase.ts";
 
 export const useAuthStateChange = (
-  callback: (event: AuthChangeEvent) => void,
+  callback: (event: AuthChangeEvent, res?: Response) => void,
 ) =>
   useEffect(() => {
     const client = getSupabaseClient();
     const { data: authListener } = client.auth.onAuthStateChange(
       (event, session) => {
-        fetch("/api/credentials", {
+        fetch("/live/api/credentials", {
           method: "POST",
           headers: new Headers({ "Content-Type": "application/json" }),
           credentials: "same-origin",
           body: JSON.stringify({ event, session }),
-        }).then(() => callback(event));
+        }).then((res) => callback(event, res));
       },
     );
 
@@ -44,7 +44,7 @@ export function createPrivateHandler<T>(handler: Handler<T>): Handler<T> {
     if (!user || user.error) {
       res = new Response(user.error ? user.error.message : "Redirect", {
         status: 302,
-        headers: { location: "/login" },
+        headers: { location: "/live/login" },
       });
     } else {
       ctx.state.user = user;
