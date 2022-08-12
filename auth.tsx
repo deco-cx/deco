@@ -1,13 +1,13 @@
 /** @jsx h */
 import { h } from "preact";
-import { useCallback, useEffect } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 import { Handler, Handlers } from "$fresh/server.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 
 import getSupabaseClient from "./supabase.ts";
 
-export function AuthListener() {
+export const useAuthStateChange = () =>
   useEffect(() => {
     const client = getSupabaseClient();
     const { data: authListener } = client.auth.onAuthStateChange(
@@ -25,31 +25,10 @@ export function AuthListener() {
       authListener?.unsubscribe();
     };
   }, []);
+
+export function AuthListener() {
+  useAuthStateChange();
   return <span data-live="auth-listener"></span>;
-}
-
-export function Login() {
-  const google = useCallback(() => {
-    getSupabaseClient().auth.signIn({ provider: "google" }, {
-      shouldCreateUser: true,
-    }).then(console.log);
-  }, []);
-  const github = useCallback(() => {
-    getSupabaseClient().auth.signIn({ provider: "github" }, {
-      shouldCreateUser: true,
-    }).then(console.log);
-  }, []);
-
-  return (
-    <div>
-      <button type="button" onClick={google}>
-        Login with Google
-      </button>
-      <button type="button" onClick={github}>
-        Login with GitHub
-      </button>
-    </div>
-  );
 }
 
 export function getUser(req: Request) {
@@ -109,7 +88,7 @@ export const authHandler: Handlers = {
     if (event === "SIGNED_OUT") {
       ["access-token", "refresh-token"]
         .map((key) => ({
-          name: `${""}-${key}`,
+          name: `live-${key}`,
           value: "",
           maxAge: -1,
         }))
