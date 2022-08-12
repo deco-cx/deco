@@ -12,6 +12,8 @@ import { createServerTiming } from "$live/utils/serverTimings.ts";
 // we have to deliberately store the manifest in this scope.
 let userManifest: DecoManifest;
 let userOptions: LiveOptions;
+const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+const isDenoDeploy = deploymentId !== undefined;
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   userManifest = manifest;
@@ -21,11 +23,15 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
     `deco-pages-${userOptions.site}.deno.dev`,
     `localhost`,
   ];
+  // Support deploy preview domains
+  if (deploymentId) {
+    defaultDomains.push(
+      `deco-pages-${userOptions.site}-${deploymentId}.deno.dev`,
+    );
+  }
   const userDomains = liveOptions.domains || [];
   userOptions.domains = [...defaultDomains, ...userDomains];
 };
-
-const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
 
 export interface PageComponentData {
   component: string;
@@ -84,18 +90,13 @@ export function createLiveHandler<LoaderData = LivePageData>(
   options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
 ) {
   const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
-  console.log("deployment id", Deno.env.get("DENO_DEPLOYMENT_ID"));
-  const isDeployPreview = (url: URL) =>
-    isDenoDeploy &&
-    url.hostname.match(`deco\-pages\-${userOptions.site}\-.*\.deno\.dev`);
-
   const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
       const { start, end, printTimings } = createServerTiming();
       const domains: string[] = userOptions.domains || [];
       const url = new URL(req.url);
 
-      if (!domains.includes(url.hostname) && !isDeployPreview(url)) {
+      if (!domains.includes(url.hostname)) {
         console.log("Domain not found:", url.hostname);
         console.log("Configured domains:", domains);
 
