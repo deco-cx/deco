@@ -16,6 +16,13 @@ let userOptions: LiveOptions;
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   userManifest = manifest;
   userOptions = liveOptions;
+  const defaultDomains = [
+    `${userOptions.site}.deco.page`,
+    `deco-pages-${userOptions.site}.deno.dev`,
+    `localhost`,
+  ];
+  const userDomains = liveOptions.domains || [];
+  userOptions.domains = [...defaultDomains, ...userDomains];
 };
 
 const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
@@ -77,12 +84,6 @@ export function createLiveHandler<LoaderData = LivePageData>(
   options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
 ) {
   const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
-  const domains: string[] = userOptions.domains || [];
-  domains.push(
-    `${userOptions.site}.deco.page`,
-    `deco-pages-${userOptions.site}.deno.dev`,
-    `localhost`,
-  );
   console.log("deployment id", Deno.env.get("DENO_DEPLOYMENT_ID"));
   const isDeployPreview = (url: URL) =>
     isDenoDeploy &&
@@ -91,6 +92,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
   const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
       const { start, end, printTimings } = createServerTiming();
+      const domains: string[] = userOptions.domains || [];
       const url = new URL(req.url);
 
       if (!domains.includes(url.hostname) && !isDeployPreview(url)) {
