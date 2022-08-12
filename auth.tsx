@@ -1,13 +1,15 @@
 /** @jsx h */
 import { h } from "preact";
 import { useEffect } from "preact/hooks";
+import { AuthChangeEvent } from "supabase";
 import { Handler, Handlers } from "$fresh/server.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
-
 import getSupabaseClient from "./supabase.ts";
 
-export const useAuthStateChange = () =>
+export const useAuthStateChange = (
+  callback: (event: AuthChangeEvent) => void,
+) =>
   useEffect(() => {
     const client = getSupabaseClient();
     const { data: authListener } = client.auth.onAuthStateChange(
@@ -17,7 +19,7 @@ export const useAuthStateChange = () =>
           headers: new Headers({ "Content-Type": "application/json" }),
           credentials: "same-origin",
           body: JSON.stringify({ event, session }),
-        });
+        }).then(() => callback(event));
       },
     );
 
@@ -25,11 +27,6 @@ export const useAuthStateChange = () =>
       authListener?.unsubscribe();
     };
   }, []);
-
-export function AuthListener() {
-  useAuthStateChange();
-  return <span data-live="auth-listener"></span>;
-}
 
 export function getUser(req: Request) {
   const cookies = getCookies(req.headers);
