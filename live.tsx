@@ -65,7 +65,7 @@ export async function loadLiveComponents(
     .join(",");
 
   const { data: Pages, error } = await getSupabaseClient()
-    .from("Pages")
+    .from("pages")
     .select(`components, path, site!inner(name, id)`)
     .eq("site.name", site)
     .or(queries);
