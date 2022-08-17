@@ -1,3 +1,4 @@
+import { getCookies } from "std/http/mod.ts";
 import { createClient, SupabaseClient } from "supabase";
 
 let client: SupabaseClient | null = null;
@@ -21,5 +22,13 @@ export default function getSupabaseClient() {
     client = createClient(userEndpoint, userKey);
   }
 
+  return client;
+}
+
+export function getSupabaseClientForUser(req: Request) {
+  const client = createClient(userEndpoint, userKey);
+  const cookies = getCookies(req.headers);
+  const jwt = cookies["live-access-token"];
+  client.auth.setAuth(jwt);
   return client;
 }
