@@ -19,3 +19,9 @@ export interface LiveOptions {
   site: string;
   domains?: string[];
 }
+
+export interface PageComponentData {
+  id: string;
+  component: string;
+  props?: Record<string, unknown>;
+}

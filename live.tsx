@@ -2,16 +2,17 @@
 /** @jsxFrag Fragment */
 import { Fragment, h } from "preact";
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
-import { DecoManifest, LiveOptions } from "$live/types.ts";
+import { DecoManifest, LiveOptions, PageComponentData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
-import getSupabaseClient from "$live/supabase.ts";
+import getSupabaseClient, { getSupabaseClientForUser } from "$live/supabase.ts";
 import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
+import { IslandModule } from "$fresh/src/server/types.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
 let userManifest: DecoManifest;
-let userOptions: LiveOptions;
+let userOptions: LiveOptions & { siteId?: number };
 const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
 const isDenoDeploy = deploymentId !== undefined;
 
@@ -33,13 +34,12 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   userOptions.domains = [...defaultDomains, ...userDomains];
 };
 
-export interface PageComponentData {
-  component: string;
-  props?: Record<string, unknown>;
-}
+type Mode = "edit" | "none";
 
 export interface LivePageData {
   components?: PageComponentData[];
+  mode: Mode;
+  template: string;
 }
 
 export interface LoadLiveComponentsOptions {
@@ -76,7 +76,17 @@ export async function loadLiveComponents(
     console.log("Found page:", Pages);
   }
 
-  return { components: Pages?.[0]?.components ?? null };
+  if (!userOptions.siteId && Pages?.[0]?.site) {
+    userOptions.siteId = Pages?.[0]?.site.id;
+  }
+
+  const isEditor = url.searchParams.has("editor");
+
+  return {
+    components: Pages?.[0]?.components ?? null,
+    mode: isEditor ? "edit" : "none",
+    template: options?.template || url.pathname,
+  };
 }
 
 interface CreateLivePageOptions<LoaderData> {
@@ -140,6 +150,30 @@ export function createLiveHandler<LoaderData = LivePageData>(
       if (url.pathname === "/live/api/credentials") {
         return await authHandler.POST!(req, ctx);
       }
+      if (url.pathname === "/live/api/editor") {
+        // req.referrer is undefined, so this trick is needed.
+        const referer = Object.values(req.headers.get("referer")).join("");
+
+        try {
+          const { components, template } = await req.json();
+          console.log("Post editor", components, template, userOptions.siteId);
+
+          if (!userOptions.siteId) {
+            // fetch site id from supabase
+          }
+
+          const res = await getSupabaseClientForUser(req).from("pages").update({
+            components: components,
+          }).match({ site: 7, path: "/" });
+
+          console.log("Supabase res", res);
+        } catch (e) {
+          console.log(e);
+        }
+
+        console.log("Referer", referer);
+        return new Response(null, { status: 200 });
+      }
       return new Response("Not found", { status: 404 });
     },
   };
@@ -147,32 +181,63 @@ export function createLiveHandler<LoaderData = LivePageData>(
   return handler;
 }
 
-interface LiveComponentsProps {
+interface Module extends IslandModule {
+  schema?: any; // TODO: get zod type
+}
+
+function getComponentModule(filename: string): Module | undefined {
+  return userManifest.islands?.[`./islands/${filename}.tsx`] ??
+    userManifest.components?.[`./components/${filename}.tsx`];
+}
+
+interface LiveComponentsProps extends LivePageData {
   components: PageComponentData[];
 }
 
-export function LiveComponents({ components }: LiveComponentsProps) {
+export function LiveComponents(
+  { components, mode = "none", template }: LiveComponentsProps,
+) {
+  const Editor = userManifest.islands[`./islands/Editor.tsx`]?.default;
+
+  if (!Editor) {
+    console.log("Missing Island: ./island/Editor.tsx");
+  }
+
+  if (mode === "none" || !Editor) {
+    return (
+      <>
+        {components.map(({ component, props }: PageComponentData) => {
+          const Comp = getComponentModule(component)?.default;
+
+          return <Comp {...props} />;
+        })}
+      </>
+    );
+  }
+
   return (
-    <>
-      {components.map(({ component, props }: PageComponentData) => {
-        const Comp =
-          userManifest.islands[`./islands/${component}.tsx`]?.default ||
-          userManifest.components?.[`./components/${component}.tsx`]?.default;
-        return <Comp {...props} />;
-      })}
-    </>
+    <div class="flex">
+      <div class="relative w-full">
+        {components.map(
+          ({ component, props }) => {
+            const Comp = getComponentModule(component)?.default;
+
+            return <Comp {...props} />;
+          },
+        )}
+      </div>
+      <Editor components={components} template={template} />
+    </div>
   );
 }
 
 export function LivePage({ data }: PageProps<LivePageData>) {
-  const { components = [] } = data;
-
   const InspectVSCode = !isDenoDeploy &&
     userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   return (
     <>
-      <LiveComponents components={components} />
+      <LiveComponents {...data} />
       {InspectVSCode ? <InspectVSCode /> : null}
     </>
   );
