@@ -23,11 +23,11 @@ export default function EditorSidebar() {
       </header>
       <div>
         <form id="editor-form" onSubmit={(e) => e.preventDefault()}>
-          {components.map(({ component, id, props }, index) => {
+          {components.map(({ component, props }, index) => {
             const isFirst = index === 0;
             const isLast = index === components.length - 1;
             return (
-              <fieldset class="border-b py-1">
+              <fieldset class="border-b py-1" key={Math.random()}>
                 <legend>{component}</legend>
                 {props && Object.entries(props).map(([prop, value], idx) => {
                   const inputId = `${idx}_${component}`;

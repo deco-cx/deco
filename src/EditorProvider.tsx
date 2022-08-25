@@ -63,7 +63,7 @@ export default function EditorProvider(
       oldComponents[newPos] = oldComponents[pos];
       oldComponents[pos] = prevComp;
 
-      return [...components];
+      return [...oldComponents];
     });
   }, []);
 
