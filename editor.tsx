@@ -1,6 +1,17 @@
+import { HandlerContext } from "$fresh/server.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
 
-export const updateComponentProps = async (req, ctx, { userOptions }) => {
+type Options = {
+  userOptions: {
+    siteId: number;
+  };
+};
+
+export const updateComponentProps = async (
+  req: Request,
+  _: HandlerContext,
+  { userOptions }: Options,
+) => {
   // req.referrer is undefined, so this trick is needed.
   // const referer = Object.values(req.headers.get("referer")).join("");
   let status;
@@ -12,6 +23,8 @@ export const updateComponentProps = async (req, ctx, { userOptions }) => {
       // TODO: fetch site id from supabase
     }
 
+    // TODO: Validate components props on schema
+
     const res = await getSupabaseClientForUser(req).from("pages").update({
       components: components,
     }).match({ site: userOptions.siteId, path: template });
@@ -21,6 +34,5 @@ export const updateComponentProps = async (req, ctx, { userOptions }) => {
     console.log(e);
   }
 
-  const response = new Response(null, { status });
-  return response;
+  return new Response(null, { status });
 };
