@@ -4,7 +4,8 @@ import { Fragment, h } from "preact";
 import { useEditor } from "./EditorProvider.tsx";
 
 export default function EditorSidebar() {
-  const { components, updateComponentProp, template } = useEditor();
+  const { components, updateComponentProp, template, changeOrder } =
+    useEditor();
 
   const saveProps = async () => {
     await fetch("/live/api/editor", {
@@ -23,8 +24,10 @@ export default function EditorSidebar() {
       <div>
         <form id="editor-form" onSubmit={(e) => e.preventDefault()}>
           {components.map(({ component, id, props }, index) => {
+            const isFirst = index === 0;
+            const isLast = index === components.length - 1;
             return props && (
-              <fieldset>
+              <fieldset class="border-b py-1">
                 <legend>{component}{"  "}Props</legend>
                 {Object.entries(props).map(([prop, value], idx) => {
                   const inputId = `${idx}_${component}`;
@@ -47,6 +50,27 @@ export default function EditorSidebar() {
                     </div>
                   );
                 })}
+
+                <div class="flex justify-end gap-2 mt-1 px-2">
+                  <button
+                    class="bg-gray-200 px-1"
+                    disabled={isLast}
+                    onClick={!isLast
+                      ? () => changeOrder("next", index)
+                      : undefined}
+                  >
+                    ↓
+                  </button>
+                  <button
+                    class="bg-gray-200 px-1"
+                    disabled={isFirst}
+                    onClick={!isFirst
+                      ? () => changeOrder("prev", index)
+                      : undefined}
+                  >
+                    ↑
+                  </button>
+                </div>
               </fieldset>
             );
           })}
