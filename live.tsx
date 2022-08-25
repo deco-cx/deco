@@ -195,6 +195,9 @@ export function LiveComponents(
 
   const projectComponentsSchema: Record<string, any> = {};
 
+  // This only handles islands and components at rootPath.
+  // Ex: ./islands/Foo.tsx or ./components/Bar.tsx .
+  // This ./components/My/Nested/Component.tsx won't work
   const setComponentSchema = (componentType?: Record<string, Module>) => {
     if (!componentType) {
       return;

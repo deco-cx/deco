@@ -26,10 +26,10 @@ export default function EditorSidebar() {
           {components.map(({ component, id, props }, index) => {
             const isFirst = index === 0;
             const isLast = index === components.length - 1;
-            return props && (
+            return (
               <fieldset class="border-b py-1">
-                <legend>{component}{"  "}Props</legend>
-                {Object.entries(props).map(([prop, value], idx) => {
+                <legend>{component}</legend>
+                {props && Object.entries(props).map(([prop, value], idx) => {
                   const inputId = `${idx}_${component}`;
                   return (
                     <div class="px-4">
