@@ -9,6 +9,7 @@ export default function EditorSidebar() {
   const saveProps = async () => {
     await fetch("/live/api/editor", {
       method: "POST",
+      redirect: "manual",
       body: JSON.stringify({ components, template }),
     });
     document.location.reload();
@@ -20,7 +21,7 @@ export default function EditorSidebar() {
         <h2>Editor</h2>
       </header>
       <div>
-        <form id="editor-form">
+        <form id="editor-form" onSubmit={(e) => e.preventDefault()}>
           {components.map(({ component, id, props }, index) => {
             return props && (
               <fieldset>

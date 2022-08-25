@@ -8,6 +8,7 @@ import getSupabaseClient, { getSupabaseClientForUser } from "$live/supabase.ts";
 import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { IslandModule } from "$fresh/src/server/types.ts";
+import { updateComponentProps } from "./editor.tsx";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -151,28 +152,8 @@ export function createLiveHandler<LoaderData = LivePageData>(
         return await authHandler.POST!(req, ctx);
       }
       if (url.pathname === "/live/api/editor") {
-        // req.referrer is undefined, so this trick is needed.
-        const referer = Object.values(req.headers.get("referer")).join("");
-
-        try {
-          const { components, template } = await req.json();
-          console.log("Post editor", components, template, userOptions.siteId);
-
-          if (!userOptions.siteId) {
-            // fetch site id from supabase
-          }
-
-          const res = await getSupabaseClientForUser(req).from("pages").update({
-            components: components,
-          }).match({ site: 7, path: "/" });
-
-          console.log("Supabase res", res);
-        } catch (e) {
-          console.log(e);
-        }
-
-        console.log("Referer", referer);
-        return new Response(null, { status: 200 });
+        const options = { userOptions };
+        return await updateComponentProps(req, ctx, options);
       }
       return new Response("Not found", { status: 404 });
     },
