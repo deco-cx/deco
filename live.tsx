@@ -4,11 +4,12 @@ import { Fragment, h } from "preact";
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import { DecoManifest, LiveOptions, PageComponentData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
-import getSupabaseClient, { getSupabaseClientForUser } from "$live/supabase.ts";
+import getSupabaseClient from "$live/supabase.ts";
 import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { IslandModule } from "$fresh/src/server/types.ts";
-import { updateComponentProps } from "./editor.tsx";
+import { updateComponentProps } from "$live/editor.tsx";
+import { generateObjectFromShape } from "$live/utils/zodToObject.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -171,12 +172,8 @@ function getComponentModule(filename: string): Module | undefined {
     userManifest.components?.[`./components/${filename}.tsx`];
 }
 
-interface LiveComponentsProps extends LivePageData {
-  components: PageComponentData[];
-}
-
 export function LiveComponents(
-  { components, mode = "none", template }: LiveComponentsProps,
+  { components, mode = "none", template }: LivePageData,
 ) {
   const Editor = userManifest.islands[`./islands/Editor.tsx`]?.default;
 
@@ -187,7 +184,7 @@ export function LiveComponents(
   if (mode === "none" || !Editor) {
     return (
       <>
-        {components.map(({ component, props }: PageComponentData) => {
+        {components?.map(({ component, props }: PageComponentData) => {
           const Comp = getComponentModule(component)?.default;
 
           return <Comp {...props} />;
@@ -196,10 +193,38 @@ export function LiveComponents(
     );
   }
 
+  const projectComponentsSchema: Record<string, any> = {};
+
+  const setComponentSchema = (componentType?: Record<string, Module>) => {
+    if (!componentType) {
+      return;
+    }
+
+    Object.keys(componentType).forEach((key) => {
+      if (!componentType[key].schema) {
+        return;
+      }
+
+      const componentName = key.replace(
+        /\.\/(islands|components)\/(.*)\.tsx/,
+        "$2",
+      );
+
+      projectComponentsSchema[componentName] = generateObjectFromShape(
+        componentType[key].schema.shape,
+      );
+    });
+  };
+
+  setComponentSchema(userManifest.islands);
+  setComponentSchema(userManifest.components);
+
+  console.log("Schemas from project:", projectComponentsSchema);
+
   return (
     <div class="flex">
       <div class="relative w-full">
-        {components.map(
+        {components?.map(
           ({ component, props }) => {
             const Comp = getComponentModule(component)?.default;
 
