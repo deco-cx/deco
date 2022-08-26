@@ -5,53 +5,97 @@ import { useState } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import { tw } from "twind";
 
+function deepClone(value: Record<any, any>) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+// set nested value in place
+function setValue(target: Record<string, any>, path: string, value: any) {
+  const pathList = path.split(".");
+  let localValue = target;
+  const lastIdx = pathList.length - 1;
+
+  pathList.forEach((key, idx) => {
+    if (idx === lastIdx) {
+      localValue[key] = value;
+      return;
+    }
+
+    localValue = localValue[key];
+  });
+
+  return { ...target };
+}
+
+interface InputProps extends h.JSX.HTMLAttributes<HTMLInputElement> {
+  prop: string;
+}
+
+function PropInput({ prop, ...props }: InputProps) {
+  return (
+    <>
+      <label for={prop}>{prop}</label>
+      <input
+        {...props}
+      />
+    </>
+  );
+}
+
 function ComponentForm({ componentSchema, componentName, handleSubmit }) {
   const { addComponents } = useEditor();
-  const [props, setProps] = useState({ ...(componentSchema || {}) });
+  const [props, setProps] = useState(
+    deepClone(componentSchema || {}),
+  );
+
+  console.log("foo", props);
+  // propPrefix is used for nestedValues
+  function getRecursivePropsInputs(localProps, propPrefix) {
+    return Object.entries(localProps).map(([prop, value]) => {
+      if (typeof value === "object") {
+        return getRecursivePropsInputs(value, `${propPrefix}${prop}.`);
+      }
+
+      const defaultProps = {
+        prop,
+        id: prop,
+        name: prop,
+        value: localProps[prop],
+        onChange: (e: KeyboardEvent) =>
+          setProps((oldProps) =>
+            setValue(oldProps, propPrefix.concat(prop), e.target?.value)
+          ),
+      };
+      let customProps = {};
+
+      if (typeof value === "boolean") {
+        customProps = {
+          ...customProps,
+          type: "checkbox",
+          onChange: () =>
+            setProps((oldProps) =>
+              setValue(oldProps, propPrefix.concat(prop), !value)
+            ),
+        };
+      }
+
+      return (
+        <PropInput
+          {...defaultProps}
+          {...customProps}
+          class={tw`border last:mb-2`}
+        />
+      );
+    });
+  }
 
   return (
     <div>
       {componentSchema
         ? (
-          <form class={tw`flex flex-col`}>
-            {/* This is not performatic due to set state */}
-            {Object.entries(componentSchema).map(([prop, value]) => {
-              if (typeof value === "boolean") {
-                return (
-                  <>
-                    <label for={prop}>{prop}</label>
-                    <input
-                      id={prop}
-                      name={prop}
-                      value={props[prop]}
-                      class="block border"
-                      onChange={() =>
-                        setProps((oldProps) => ({
-                          ...oldProps,
-                          [prop]: !value,
-                        }))}
-                    />
-                  </>
-                );
-              }
-
-              return (
-                <>
-                  <label for={prop}>{prop}</label>
-                  <input
-                    id={prop}
-                    name={prop}
-                    class="block border"
-                    value={props[prop]}
-                    onChange={(e) =>
-                      setProps((oldProps) => ({
-                        ...oldProps,
-                        [prop]: e.target?.value,
-                      }))}
-                  />
-                </>
-              );
-            })}
+          <form class={tw`flex flex-col items-start`}>
+            {/* TODO: improve performance related to setState.*/}
+            {getRecursivePropsInputs(props, "")}
           </form>
         )
         : null}
@@ -78,7 +122,7 @@ function AddNewComponent() {
 
   return (
     <div>
-      Selectione componente para adicionar
+      Selecione componente para adicionar
       <select
         class={tw`border px-2 py-1`}
         value={selectedComponent}
