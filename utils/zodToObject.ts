@@ -1,16 +1,36 @@
-import { ZodObject } from "zod";
+import { ZodFirstPartyTypeKind, ZodObject } from "zod";
 
-function getDefaultByZodTypename(typename: string) {
-  switch (typename) {
-    case "ZodBoolean":
-      return false;
-    case "ZodNumber":
-      return 0;
-    case "ZodLiteral":
-    case "ZodString":
-    default:
-      return "";
-  }
+type Def = { defaultValue?: () => any; value?: any };
+
+const zodTypeKindParser: Record<
+  ZodFirstPartyTypeKind,
+  (
+    def: Def,
+    typename: ZodFirstPartyTypeKind,
+  ) => any
+> = {
+  ZodDefault: (def) => {
+    return def.defaultValue?.();
+  },
+  ZodBoolean: (def) => {
+    return false;
+  },
+  ZodNumber: (def) => {
+    return 0;
+  },
+  ZodLiteral: (def) => {
+    return def.value;
+  },
+  ZodString: (def) => {
+    return "";
+  },
+};
+
+function parseDef(
+  def: Def,
+  typename: ZodFirstPartyTypeKind,
+) {
+  return zodTypeKindParser[typename]?.(def, typename) ?? "";
 }
 
 export function generateObjectFromShape(shape: ZodObject<any>) {
@@ -22,18 +42,7 @@ export function generateObjectFromShape(shape: ZodObject<any>) {
     }
 
     const shapeDef = shape[key]._def;
-
-    if (shapeDef.defaultValue) {
-      res[key] = shapeDef.defaultValue();
-      return;
-    }
-
-    if (shapeDef.value) {
-      res[key] = shapeDef.value;
-      return;
-    }
-
-    res[key] = getDefaultByZodTypename(shape[key]._def.typeName);
+    res[key] = parseDef(shapeDef, shapeDef.typeName);
   });
 
   return res;
