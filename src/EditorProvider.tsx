@@ -10,6 +10,7 @@ interface Props {
     schema: ZodObject<any>;
   })[];
   template: string;
+  projectComponents: Record<string, any>;
 }
 
 interface EditorContext extends Props {
@@ -17,6 +18,8 @@ interface EditorContext extends Props {
     { index, prop, value }: { index: number; prop: string; value: any },
   ) => void;
   changeOrder: (dir: "prev" | "next", pos: number) => void;
+  addComponents: (newComponents: any[]) => void;
+  removeComponents: (removedComponents: number[]) => void;
 }
 
 export const EditorContext = createContext<EditorContext>(
@@ -26,7 +29,7 @@ export const EditorContext = createContext<EditorContext>(
 export const useEditor = () => useContext(EditorContext);
 
 export default function EditorProvider(
-  { children, components: _components, template }: Props & {
+  { children, components: _components, template, projectComponents }: Props & {
     children: ComponentChildren;
   },
 ) {
@@ -47,29 +50,60 @@ export default function EditorProvider(
     setComponents([...components]);
   };
 
-  const changeOrder = useCallback((dir: "prev" | "next", pos: number) => {
-    setComponents((oldComponents) => {
-      let newPos: number;
+  const changeOrder: EditorContext["changeOrder"] = useCallback(
+    (dir: "prev" | "next", pos: number) => {
+      setComponents((oldComponents) => {
+        let newPos: number;
 
-      if (dir === "prev") {
-        newPos = pos - 1;
-      }
+        if (dir === "prev") {
+          newPos = pos - 1;
+        }
 
-      if (dir === "next") {
-        newPos = pos + 1;
-      }
+        if (dir === "next") {
+          newPos = pos + 1;
+        }
 
-      const prevComp = oldComponents[newPos];
-      oldComponents[newPos] = oldComponents[pos];
-      oldComponents[pos] = prevComp;
+        const prevComp = oldComponents[newPos];
+        oldComponents[newPos] = oldComponents[pos];
+        oldComponents[pos] = prevComp;
 
-      return [...oldComponents];
-    });
-  }, []);
+        return [...oldComponents];
+      });
+    },
+    [],
+  );
+
+  const addComponents: EditorContext["addComponents"] = useCallback(
+    (newComponents) => {
+      setComponents((oldComponents) => [...oldComponents, ...newComponents]);
+    },
+    [],
+  );
+
+  const removeComponents: EditorContext["removeComponents"] = useCallback(
+    (componentIndexes) => {
+      setComponents((
+        oldComponents,
+      ) => [
+        ...oldComponents.filter((_, index) =>
+          !componentIndexes.includes(index)
+        ),
+      ]);
+    },
+    [],
+  );
 
   return (
     <EditorContext.Provider
-      value={{ components, updateComponentProp, template, changeOrder }}
+      value={{
+        components,
+        updateComponentProp,
+        template,
+        changeOrder,
+        projectComponents,
+        addComponents,
+        removeComponents,
+      }}
     >
       {children}
     </EditorContext.Provider>

@@ -1,11 +1,113 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
 import { Fragment, h } from "preact";
-import { useEditor } from "./EditorProvider.tsx";
+import { useState } from "preact/hooks";
+import { useEditor } from "$live/src/EditorProvider.tsx";
+import { tw } from "twind";
+
+function ComponentForm({ componentSchema, componentName, handleSubmit }) {
+  const { addComponents } = useEditor();
+  const [props, setProps] = useState({ ...(componentSchema || {}) });
+
+  return (
+    <div>
+      {componentSchema
+        ? (
+          <form class={tw`flex flex-col`}>
+            {/* This is not performatic due to set state */}
+            {Object.entries(componentSchema).map(([prop, value]) => {
+              if (typeof value === "boolean") {
+                return (
+                  <>
+                    <label for={prop}>{prop}</label>
+                    <input
+                      id={prop}
+                      name={prop}
+                      value={props[prop]}
+                      class="block border"
+                      onChange={() =>
+                        setProps((oldProps) => ({
+                          ...oldProps,
+                          [prop]: !value,
+                        }))}
+                    />
+                  </>
+                );
+              }
+
+              return (
+                <>
+                  <label for={prop}>{prop}</label>
+                  <input
+                    id={prop}
+                    name={prop}
+                    class="block border"
+                    value={props[prop]}
+                    onChange={(e) =>
+                      setProps((oldProps) => ({
+                        ...oldProps,
+                        [prop]: e.target?.value,
+                      }))}
+                  />
+                </>
+              );
+            })}
+          </form>
+        )
+        : null}
+      <button
+        type="button"
+        class={tw`border px-2 py-1`}
+        onClick={() => {
+          addComponents([{
+            component: componentName,
+            props: componentSchema ? props : undefined,
+          }]);
+          handleSubmit();
+        }}
+      >
+        Adicionar componente
+      </button>
+    </div>
+  );
+}
+
+function AddNewComponent() {
+  const { projectComponents } = useEditor();
+  const [selectedComponent, setSelectedComponent] = useState("");
+
+  return (
+    <div>
+      Selectione componente para adicionar
+      <select
+        class={tw`border px-2 py-1`}
+        value={selectedComponent}
+        onChange={(e) => setSelectedComponent(e.currentTarget.value)}
+      >
+        {Object.keys(projectComponents).map((componentName) => (
+          <option value={componentName}>{componentName}</option>
+        ))}
+      </select>
+      {selectedComponent && (
+        <ComponentForm
+          key={selectedComponent}
+          componentSchema={projectComponents[selectedComponent]}
+          componentName={selectedComponent}
+          handleSubmit={() => setSelectedComponent("")}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function EditorSidebar() {
-  const { components, updateComponentProp, template, changeOrder } =
-    useEditor();
+  const {
+    components,
+    updateComponentProp,
+    template,
+    changeOrder,
+    removeComponents,
+  } = useEditor();
 
   const saveProps = async () => {
     await fetch("/live/api/editor", {
@@ -70,10 +172,19 @@ export default function EditorSidebar() {
                   >
                     ↑
                   </button>
+                  <button
+                    class="bg-gray-200 px-1"
+                    onClick={() => removeComponents([index])}
+                  >
+                    remover
+                  </button>
                 </div>
               </fieldset>
             );
           })}
+          <div class="py-1 px-2 ">
+            <AddNewComponent />
+          </div>
           <br />
           <button type="button" class="border px-2 py-1" onClick={saveProps}>
             Salvar
