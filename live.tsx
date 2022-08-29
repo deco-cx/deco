@@ -10,7 +10,6 @@ import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { IslandModule } from "$fresh/src/server/types.ts";
 import { updateComponentProps } from "$live/editor.tsx";
 import { generateObjectFromShape } from "$live/utils/zodToObject.ts";
-import EditorPageWrapper from "./src/EditorPageWrapper.tsx";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -225,37 +224,15 @@ function getUserComponents() {
 }
 
 export function LiveComponents(
-  { components, mode = "none", template }: LivePageData,
+  { components }: LivePageData,
 ) {
-  const Editor = userManifest.islands[`./islands/Editor.tsx`]?.default;
-
-  if (!Editor) {
-    console.log("Missing Island: ./island/Editor.tsx");
-  }
-
-  if (mode === "none" || !Editor) {
-    return (
-      <>
-        {components?.map(({ component, props }: PageComponentData) => {
-          const Comp = getComponentModule(component)?.default;
-
-          return <Comp {...props} />;
-        })}
-      </>
-    );
-  }
-
-  const projectComponents = getUserComponents();
-  console.log("Schemas from project:", projectComponents);
-
   return (
-    <div class="flex">
-      <EditorPageWrapper manifest={userManifest} components={components} />
-      <Editor
-        components={components}
-        template={template}
-        projectComponents={projectComponents}
-      />
+    <div class="relative w-full">
+      {components?.map(({ component, props }: PageComponentData) => {
+        const Comp = getComponentModule(component)?.default;
+
+        return <Comp {...props} />;
+      })}
     </div>
   );
 }
@@ -263,11 +240,27 @@ export function LiveComponents(
 export function LivePage({ data }: PageProps<LivePageData>) {
   const InspectVSCode = !isDenoDeploy &&
     userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
+  const Editor = userManifest.islands[`./islands/Editor.tsx`]?.default;
+
+  if (!Editor) {
+    console.log("Missing Island: ./island/Editor.tsx");
+  }
+
+  const renderEditor = Boolean(Editor) && data.mode === "edit";
+
+  const projectComponents = getUserComponents();
 
   return (
-    <>
+    <div class="flex">
       <LiveComponents {...data} />
+      {renderEditor && (
+        <Editor
+          components={data.components}
+          template={data.template}
+          projectComponents={projectComponents}
+        />
+      )}
       {InspectVSCode ? <InspectVSCode /> : null}
-    </>
+    </div>
   );
 }
