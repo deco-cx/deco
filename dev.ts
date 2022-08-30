@@ -67,7 +67,11 @@ async function extractComponentsSchema(
 ): Promise<SchemaMap[]> {
   const modules = await Promise.all(
     componentsList.map((componentPath) =>
-      import(`${directory}/${prefix}${componentPath}`)
+      import(
+        toFileUrl(
+          join(directory, prefix, componentPath),
+        ).href
+      )
     ),
   );
 
