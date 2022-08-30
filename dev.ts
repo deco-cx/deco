@@ -5,6 +5,11 @@ import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
 import { generateObjectFromShape } from "./utils/zodToObject.ts";
 
+const BLOCKED_SCHEMAS = new Set([
+  "Editor",
+  "InspectVSCode",
+]);
+
 interface DevManifest {
   routes: string[];
   islands: string[];
@@ -48,6 +53,10 @@ interface SchemaMap {
   schema: Record<string, any> | null;
 }
 
+function filterBlockedSchemas(schema: SchemaMap | null): schema is SchemaMap {
+  return Boolean(schema) && !BLOCKED_SCHEMAS.has(schema.component);
+}
+
 // This only handles islands and components at rootPath.
 // Ex: ./islands/Foo.tsx or ./components/Bar.tsx .
 // This ./components/My/Nested/Component.tsx won't work
@@ -80,9 +89,7 @@ async function extractComponentsSchema(
         ? generateObjectFromShape(componentModule.schema.shape)
         : null,
     };
-  }).filter((
-    val,
-  ): val is SchemaMap => Boolean(val));
+  }).filter(filterBlockedSchemas);
 }
 
 export async function generate(directory: string, manifest: DevManifest) {
