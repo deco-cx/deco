@@ -26,6 +26,11 @@ export function setValue(
 }
 
 export function mergePropsOnSchema(schema: Record<any, any>, props) {
-  // Shallow merge
-  return { ...schema, ...props };
+  return Object.keys(schema).reduce(
+    (merged, key) => {
+      merged[key] = props[key] ?? schema[key];
+      return merged;
+    },
+    {} as Record<string, any>,
+  );
 }
