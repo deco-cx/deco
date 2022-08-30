@@ -2,7 +2,8 @@ import { IslandModule } from "$fresh/src/server/types.ts";
 import { Manifest } from "$fresh/server.ts";
 import { Configuration } from "twind";
 
-export type Schemas = Record<string, null | Record<string, any>>;
+export type Schema = Record<string, any> | null;
+export type Schemas = Record<string, Schema>;
 
 export interface DecoManifest extends Manifest {
   components?: Record<string, IslandModule>;

@@ -9,7 +9,6 @@ import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { IslandModule } from "$fresh/src/server/types.ts";
 import { updateComponentProps } from "$live/editor.tsx";
-import { generateObjectFromShape } from "$live/utils/zodToObject.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.

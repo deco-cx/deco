@@ -4,245 +4,18 @@ import { Fragment, h } from "preact";
 import { useState } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import { tw } from "twind";
-
-function deepClone(value: Record<any, any>) {
-  // Find a faster approach
-  return JSON.parse(JSON.stringify(value));
-}
-
-// set nested value in place
-function setValue(target: Record<string, any>, path: string, value: any) {
-  const pathList = path.split(".");
-  let localValue = target;
-  const lastIdx = pathList.length - 1;
-
-  pathList.forEach((key, idx) => {
-    if (idx === lastIdx) {
-      localValue[key] = value;
-      return;
-    }
-
-    localValue = localValue[key];
-  });
-
-  return { ...target };
-}
-
-function TrashIcon(
-  { class: className, width = 16, height = 16 }: h.JSX.SVGAttributes<
-    SVGElement
-  >,
-) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={width}
-      height={height}
-      class={className}
-      fill="#000000"
-      viewBox="0 0 256 256"
-    >
-      <rect width="256" height="256" fill="none"></rect>
-      <line
-        x1="216"
-        y1="56"
-        x2="40"
-        y2="56"
-        fill="none"
-        stroke="#000000"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="16"
-      >
-      </line>
-      <line
-        x1="104"
-        y1="104"
-        x2="104"
-        y2="168"
-        fill="none"
-        stroke="#000000"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="16"
-      >
-      </line>
-      <line
-        x1="152"
-        y1="104"
-        x2="152"
-        y2="168"
-        fill="none"
-        stroke="#000000"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="16"
-      >
-      </line>
-      <path
-        d="M200,56V208a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V56"
-        fill="none"
-        stroke="#000000"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="16"
-      >
-      </path>
-      <path
-        d="M168,56V40a16,16,0,0,0-16-16H104A16,16,0,0,0,88,40V56"
-        fill="none"
-        stroke="#000000"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="16"
-      >
-      </path>
-    </svg>
-  );
-}
-
-function CaretDownIcon(
-  { class: className, width = 16, height = 16 }: h.JSX.SVGAttributes<
-    SVGElement
-  >,
-) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="#000000"
-      width={width}
-      height={height}
-      viewBox="0 0 256 256"
-      class={className}
-    >
-      <rect width="256" height="256" fill="none"></rect>
-      <polyline
-        points="208 96 128 176 48 96"
-        fill="none"
-        stroke="#000000"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="16"
-      >
-      </polyline>
-    </svg>
-  );
-}
-
-interface InputProps extends h.JSX.HTMLAttributes<HTMLInputElement> {
-  prop: string;
-}
-
-function PropInput({ prop, ...props }: InputProps) {
-  return (
-    <>
-      <label for={prop}>{prop}</label>
-      <input
-        {...props}
-        class={tw`border rounded p-1 w-full ${props.class}`}
-      />
-    </>
-  );
-}
-
-function ActionButton(props: h.JSX.HTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      {...props}
-      class={tw`border py-1 px-2 rounded transition-colors ease-in ${
-        !props.disabled ? "hover:bg-gray-100" : ""
-      } ${props.class}`}
-    />
-  );
-}
-
-// propPrefix is used for nested values
-function PropsInputs({ props, propPrefix, onInput }) {
-  return (
-    <>
-      {Object.entries(props).map(([prop, value]) => {
-        if (typeof value === "object") {
-          return (
-            <PropsInputs
-              props={value}
-              propPrefix={`${propPrefix}${prop}.`}
-              onInput={onInput}
-            />
-          );
-        }
-
-        const defaultProps: InputProps = {
-          prop,
-          id: prop,
-          name: prop,
-          value: props[prop],
-          onInput: (e) => onInput(e.target?.value, propPrefix.concat(prop)),
-        };
-        let customProps: InputProps = {} as InputProps;
-
-        if (typeof value === "boolean") {
-          customProps = {
-            ...customProps,
-            type: "checkbox",
-            onInput: () => onInput(!value, propPrefix.concat(prop)),
-          };
-        }
-
-        return (
-          <PropInput
-            {...defaultProps}
-            {...customProps}
-            class={tw`last:mb-2`}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-function NewComponentForm({ componentSchema, componentName, handleSubmit }) {
-  const { addComponents } = useEditor();
-  const [props, setProps] = useState(
-    deepClone(componentSchema || {}),
-  );
-
-  const handleChange = (value: any, path: string) => {
-    setProps((oldProps) => setValue(oldProps, path, value));
-  };
-
-  console.log("render");
-  return (
-    <div class={componentSchema ? tw`rounded-md border p-2` : ""}>
-      {componentSchema
-        ? (
-          <form class={tw`flex flex-col items-start`}>
-            {/* TODO: improve performance related to setState.*/}
-            <PropsInputs props={props} propPrefix="" onInput={handleChange} />
-          </form>
-        )
-        : null}
-      <ActionButton
-        type="button"
-        onClick={() => {
-          addComponents([{
-            component: componentName,
-            props: componentSchema ? props : undefined,
-          }]);
-          handleSubmit();
-        }}
-      >
-        Adicionar componente
-      </ActionButton>
-    </div>
-  );
-}
+import CaretDownIcon from "./icons/CaretDownIcon.tsx";
+import TrashIcon from "./icons/TrashIcon.tsx";
+import Button from "./ui/Button.tsx";
+import NewComponentForm from "./NewComponentForm.tsx";
+import PropsInputs from "./ui/PropsInput.tsx";
 
 function AddNewComponent() {
   const { componentSchemas } = useEditor();
   const [selectedComponent, setSelectedComponent] = useState("");
 
   return (
-    <div>
+    <div class="py-1">
       Selecione componente para adicionar
       <select
         class={tw`border rounded px-2 py-1 mb-2`}
@@ -302,8 +75,8 @@ export default function EditorSidebar() {
                     }`}
                   >
                     <legend class="font-bold">{component}</legend>
-                    <div class="flex justify-end gap-2">
-                      <ActionButton
+                    <div class="flex gap-2">
+                      <Button
                         disabled={isLast}
                         onClick={!isLast
                           ? () => {
@@ -312,8 +85,8 @@ export default function EditorSidebar() {
                           : undefined}
                       >
                         <CaretDownIcon />
-                      </ActionButton>
-                      <ActionButton
+                      </Button>
+                      <Button
                         disabled={isFirst}
                         onClick={!isFirst
                           ? () => {
@@ -322,43 +95,34 @@ export default function EditorSidebar() {
                           : undefined}
                       >
                         <CaretDownIcon class="rotate-180" />
-                      </ActionButton>
-                      <ActionButton
+                      </Button>
+                      <Button
                         onClick={() => removeComponents([index])}
                       >
                         <TrashIcon />
-                      </ActionButton>
+                      </Button>
                     </div>
                   </div>
 
-                  {/* TODO: handle nested values */}
-                  {props && Object.entries(props).map(([prop, value], idx) => {
-                    const inputId = `${idx}_${component}`;
-                    return (
-                      <PropInput
-                        prop={prop}
-                        id={inputId}
-                        value={value}
-                        onChange={(e) =>
-                          updateComponentProp({
-                            index,
-                            prop,
-                            value: e.currentTarget.value,
-                          })}
-                      />
-                    );
-                  })}
+                  {props && (
+                    <PropsInputs
+                      props={props}
+                      propPrefix=""
+                      onInput={(value, prop) => {
+                        /* TODO: handle nested values */
+                        updateComponentProp({ index, prop, value });
+                      }}
+                    />
+                  )}
                 </fieldset>
               </div>
             );
           })}
-          <div class="py-1">
-            <AddNewComponent />
-          </div>
+          <AddNewComponent />
           <br />
-          <ActionButton type="button" onClick={saveProps}>
+          <Button type="button" onClick={saveProps}>
             Salvar
-          </ActionButton>
+          </Button>
         </form>
       </div>
     </div>
