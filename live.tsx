@@ -195,7 +195,6 @@ export function LivePage({ data }: PageProps<LivePageData>) {
   }
 
   const renderEditor = Boolean(Editor) && data.mode === "edit";
-
   const componentSchemas = userManifest.schemas;
 
   return (

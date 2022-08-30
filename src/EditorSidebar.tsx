@@ -18,7 +18,7 @@ function AddNewComponent() {
     <div class="py-1">
       Selecione componente para adicionar
       <select
-        class={tw`border rounded px-2 py-1 mb-2`}
+        class={tw`border hover:border-black transition-colors ease-in rounded px-2 py-1 mb-2`}
         value={selectedComponent}
         onChange={(e) => setSelectedComponent(e.currentTarget.value)}
       >

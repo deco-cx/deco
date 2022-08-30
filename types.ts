@@ -25,7 +25,6 @@ export interface LiveOptions {
 }
 
 export interface PageComponentData {
-  id: string;
   component: string;
   props?: Record<string, unknown>;
 }

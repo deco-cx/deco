@@ -2,14 +2,10 @@
 /** @jsxFrag Fragment */
 import { ComponentChildren, createContext, Fragment, h } from "preact";
 import { useCallback, useContext, useState } from "preact/hooks";
-import { ZodObject } from "zod";
-import { Schemas } from "../types.ts";
+import { PageComponentData, Schemas } from "../types.ts";
 
 interface Props {
-  components: ({ component: string; props: any } & {
-    id: string;
-    schema: ZodObject<any>;
-  })[];
+  components: PageComponentData[];
   template: string;
   componentSchemas: Schemas;
 }
@@ -36,20 +32,26 @@ export default function EditorProvider(
 ) {
   const [components, setComponents] = useState(_components);
 
-  const updateComponentProp: EditorContext["updateComponentProp"] = (
-    { index, prop, value },
-  ) => {
-    const oldComponent = components[index];
-    components[index] = {
-      ...oldComponent,
-      props: {
-        ...(oldComponent.props ?? {}),
-        [prop]: value,
-      },
-    };
+  const updateComponentProp: EditorContext["updateComponentProp"] = useCallback(
+    (
+      { index, prop, value },
+    ) => {
+      setComponents((oldComponents) => {
+        const oldComponent = oldComponents[index];
 
-    setComponents([...components]);
-  };
+        oldComponents[index] = {
+          ...oldComponent,
+          props: {
+            ...(oldComponent.props ?? {}),
+            [prop]: value,
+          },
+        };
+
+        return [...oldComponents];
+      });
+    },
+    [],
+  );
 
   const changeOrder: EditorContext["changeOrder"] = useCallback(
     (dir: "prev" | "next", pos: number) => {

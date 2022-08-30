@@ -16,7 +16,7 @@ export default function PropInput({ prop, ...props }: Props) {
       <label for={prop}>{prop}</label>
       <input
         {...props}
-        class={tw`border rounded p-1 w-full ${props.class}`}
+        class={tw`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
       />
     </>
   );
