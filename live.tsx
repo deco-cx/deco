@@ -17,8 +17,6 @@ let userManifest: DecoManifest;
 let userOptions: LiveOptions & { siteId?: number };
 const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
 const isDenoDeploy = deploymentId !== undefined;
-// This object will contain "ComponentName: schema or empty string"
-let userComponents: Record<string, string | Record<string, any>>;
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   userManifest = manifest;
@@ -174,55 +172,6 @@ function getComponentModule(filename: string): Module | undefined {
     userManifest.components?.[`./components/${filename}.tsx`];
 }
 
-function getUserComponents() {
-  if (userComponents) {
-    return userComponents;
-  }
-
-  userComponents = {};
-
-  // This only handles islands and components at rootPath.
-  // Ex: ./islands/Foo.tsx or ./components/Bar.tsx .
-  // This ./components/My/Nested/Component.tsx won't work
-  const setComponentSchema = (componentType?: Record<string, Module>) => {
-    if (!componentType) {
-      return;
-    }
-
-    Object.keys(componentType).forEach((key) => {
-      const componentNameRegex = /\.\/(islands|components)\/(\w*)\.tsx/;
-
-      if (!componentNameRegex.test(key)) {
-        return;
-      }
-
-      const componentName = key.replace(
-        componentNameRegex,
-        "$2",
-      );
-
-      // Island and Component with same name
-      if (userComponents[componentName]) {
-        return;
-      }
-
-      if (!componentType[key].schema) {
-        userComponents[componentName] = "";
-        return;
-      }
-
-      userComponents[componentName] = generateObjectFromShape(
-        componentType[key].schema.shape,
-      );
-    });
-  };
-
-  setComponentSchema(userManifest.islands);
-  setComponentSchema(userManifest.components);
-
-  return userComponents;
-}
-
 export function LiveComponents(
   { components }: LivePageData,
 ) {
@@ -248,7 +197,7 @@ export function LivePage({ data }: PageProps<LivePageData>) {
 
   const renderEditor = Boolean(Editor) && data.mode === "edit";
 
-  const projectComponents = getUserComponents();
+  const componentSchemas = userManifest.schemas;
 
   return (
     <div class="flex">
@@ -257,7 +206,7 @@ export function LivePage({ data }: PageProps<LivePageData>) {
         <Editor
           components={data.components}
           template={data.template}
-          projectComponents={projectComponents}
+          componentSchemas={componentSchemas}
         />
       )}
       {InspectVSCode ? <InspectVSCode /> : null}

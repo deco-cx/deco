@@ -223,10 +223,7 @@ const templates = {
       `${JSON.stringify(`./components${file}`)}: $$$${i},`,
   },
   schemas: (
-    { component, schema }: {
-      component: string;
-      schema: Record<any, any> | null;
-    },
+    { component, schema }: SchemaMap,
   ) => `${component}: ${JSON.stringify(schema)},`,
   twind: `{
     mode: "warn",

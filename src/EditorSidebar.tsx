@@ -157,7 +157,7 @@ function ActionButton(props: h.JSX.HTMLAttributes<HTMLButtonElement>) {
 }
 
 // propPrefix is used for nested values
-function PropsInputs({ props, propPrefix, onChange }) {
+function PropsInputs({ props, propPrefix, onInput }) {
   return (
     <>
       {Object.entries(props).map(([prop, value]) => {
@@ -166,7 +166,7 @@ function PropsInputs({ props, propPrefix, onChange }) {
             <PropsInputs
               props={value}
               propPrefix={`${propPrefix}${prop}.`}
-              onChange={onChange}
+              onInput={onInput}
             />
           );
         }
@@ -176,7 +176,7 @@ function PropsInputs({ props, propPrefix, onChange }) {
           id: prop,
           name: prop,
           value: props[prop],
-          onChange: (e) => onChange(e.target?.value, propPrefix.concat(prop)),
+          onInput: (e) => onInput(e.target?.value, propPrefix.concat(prop)),
         };
         let customProps: InputProps = {} as InputProps;
 
@@ -184,7 +184,7 @@ function PropsInputs({ props, propPrefix, onChange }) {
           customProps = {
             ...customProps,
             type: "checkbox",
-            onChange: () => onChange(!value, propPrefix.concat(prop)),
+            onInput: () => onInput(!value, propPrefix.concat(prop)),
           };
         }
 
@@ -210,13 +210,14 @@ function NewComponentForm({ componentSchema, componentName, handleSubmit }) {
     setProps((oldProps) => setValue(oldProps, path, value));
   };
 
+  console.log("render");
   return (
-    <div class={componentSchema ? tw`rounded-md border mt-2 p-2` : "mt-2"}>
+    <div class={componentSchema ? tw`rounded-md border p-2` : ""}>
       {componentSchema
         ? (
           <form class={tw`flex flex-col items-start`}>
             {/* TODO: improve performance related to setState.*/}
-            <PropsInputs props={props} propPrefix="" onChange={handleChange} />
+            <PropsInputs props={props} propPrefix="" onInput={handleChange} />
           </form>
         )
         : null}
@@ -237,25 +238,25 @@ function NewComponentForm({ componentSchema, componentName, handleSubmit }) {
 }
 
 function AddNewComponent() {
-  const { projectComponents } = useEditor();
+  const { componentSchemas } = useEditor();
   const [selectedComponent, setSelectedComponent] = useState("");
 
   return (
     <div>
       Selecione componente para adicionar
       <select
-        class={tw`border rounded px-2 py-1`}
+        class={tw`border rounded px-2 py-1 mb-2`}
         value={selectedComponent}
         onChange={(e) => setSelectedComponent(e.currentTarget.value)}
       >
-        {Object.keys(projectComponents).map((componentName) => (
+        {Object.keys(componentSchemas).map((componentName) => (
           <option value={componentName}>{componentName}</option>
         ))}
       </select>
       {selectedComponent && (
         <NewComponentForm
           key={selectedComponent}
-          componentSchema={projectComponents[selectedComponent]}
+          componentSchema={componentSchemas[selectedComponent]}
           componentName={selectedComponent}
           handleSubmit={() => setSelectedComponent("")}
         />

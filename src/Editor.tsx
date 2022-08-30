@@ -4,12 +4,12 @@ import { Fragment, h } from "preact";
 import EditorProvider from "./EditorProvider.tsx";
 import EditorSidebar from "./EditorSidebar.tsx";
 
-export default function Editor({ components, template, projectComponents }) {
+export default function Editor({ components, template, componentSchemas }) {
   return (
     <EditorProvider
       components={components}
       template={template}
-      projectComponents={projectComponents}
+      componentSchemas={componentSchemas}
     >
       <EditorSidebar />
     </EditorProvider>

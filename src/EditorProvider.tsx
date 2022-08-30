@@ -3,6 +3,7 @@
 import { ComponentChildren, createContext, Fragment, h } from "preact";
 import { useCallback, useContext, useState } from "preact/hooks";
 import { ZodObject } from "zod";
+import { Schemas } from "../types.ts";
 
 interface Props {
   components: ({ component: string; props: any } & {
@@ -10,7 +11,7 @@ interface Props {
     schema: ZodObject<any>;
   })[];
   template: string;
-  projectComponents: Record<string, any>;
+  componentSchemas: Schemas;
 }
 
 interface EditorContext extends Props {
@@ -29,7 +30,7 @@ export const EditorContext = createContext<EditorContext>(
 export const useEditor = () => useContext(EditorContext);
 
 export default function EditorProvider(
-  { children, components: _components, template, projectComponents }: Props & {
+  { children, components: _components, template, componentSchemas }: Props & {
     children: ComponentChildren;
   },
 ) {
@@ -100,7 +101,7 @@ export default function EditorProvider(
         updateComponentProp,
         template,
         changeOrder,
-        projectComponents,
+        componentSchemas,
         addComponents,
         removeComponents,
       }}
