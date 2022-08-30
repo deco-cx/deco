@@ -24,3 +24,8 @@ export function setValue(
 
   return { ...target };
 }
+
+export function mergePropsOnSchema(schema: Record<any, any>, props) {
+  // Shallow merge
+  return { ...schema, ...props };
+}

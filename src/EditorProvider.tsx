@@ -3,6 +3,7 @@
 import { ComponentChildren, createContext, Fragment, h } from "preact";
 import { useCallback, useContext, useState } from "preact/hooks";
 import { PageComponentData, Schemas } from "../types.ts";
+import { mergePropsOnSchema } from "../utils/object.ts";
 
 interface Props {
   components: PageComponentData[];
@@ -12,7 +13,7 @@ interface Props {
 
 interface EditorContext extends Props {
   updateComponentProp: (
-    { index, prop, value }: { index: number; prop: string; value: any },
+    newComponentPropData: { index: number; prop: string; value: any },
   ) => void;
   changeOrder: (dir: "prev" | "next", pos: number) => void;
   addComponents: (newComponents: any[]) => void;
@@ -30,7 +31,19 @@ export default function EditorProvider(
     children: ComponentChildren;
   },
 ) {
-  const [components, setComponents] = useState(_components);
+  const [components, setComponents] = useState(function _mergePropsOnSchema() {
+    return _components.map(({ component, props }) => ({
+      component,
+      ...(componentSchemas[component]
+        ? {
+          props: mergePropsOnSchema(
+            componentSchemas[component]!,
+            props ?? {},
+          ),
+        }
+        : {}),
+    }));
+  });
 
   const updateComponentProp: EditorContext["updateComponentProp"] = useCallback(
     (
