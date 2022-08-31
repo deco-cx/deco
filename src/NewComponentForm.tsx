@@ -30,7 +30,7 @@ export default function NewComponentForm(
     <div class={componentSchema ? tw`rounded-md border p-2` : ""}>
       {componentSchema
         ? (
-          <form class={tw`flex flex-col items-start`}>
+          <form class={tw`flex flex-col items-start mb-2`}>
             {/* TODO: improve performance related to setState.*/}
             <PropsInputs props={props} propPrefix="" onInput={handleChange} />
           </form>

@@ -2,13 +2,19 @@
 /** @jsxFrag Fragment */
 import { Fragment, h } from "preact";
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
-import { DecoManifest, LiveOptions, PageComponentData } from "$live/types.ts";
+import {
+  DecoManifest,
+  LiveOptions,
+  Mode,
+  PageComponentData,
+} from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { IslandModule } from "$fresh/src/server/types.ts";
 import { updateComponentProps } from "$live/editor.tsx";
+import type { ZodObject, ZodRawShape } from "zod";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -34,8 +40,6 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   const userDomains = liveOptions.domains || [];
   userOptions.domains = [...defaultDomains, ...userDomains];
 };
-
-type Mode = "edit" | "none";
 
 export interface LivePageData {
   components?: PageComponentData[];
@@ -163,7 +167,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
 }
 
 interface Module extends IslandModule {
-  schema?: any; // TODO: get zod type
+  schema?: ZodObject<ZodRawShape>;
 }
 
 function getComponentModule(filename: string): Module | undefined {
@@ -194,19 +198,22 @@ export function LivePage({ data }: PageProps<LivePageData>) {
     console.log("Missing Island: ./island/Editor.tsx");
   }
 
-  const renderEditor = Boolean(Editor) && data.mode === "edit";
+  const renderEditor = Boolean(Editor);
   const componentSchemas = userManifest.schemas;
 
   return (
     <div class="flex">
       <LiveComponents {...data} />
-      {renderEditor && (
-        <Editor
-          components={data.components}
-          template={data.template}
-          componentSchemas={componentSchemas}
-        />
-      )}
+      {renderEditor
+        ? (
+          <Editor
+            mode={data.mode}
+            components={data.components}
+            template={data.template}
+            componentSchemas={componentSchemas}
+          />
+        )
+        : null}
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );

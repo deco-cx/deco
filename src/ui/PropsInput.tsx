@@ -56,7 +56,6 @@ export default function PropsInputs({ props, propPrefix, onInput }: Props) {
           <PropInput
             {...defaultProps}
             {...customProps}
-            class={tw`last:mb-2`}
           />
         );
       })}

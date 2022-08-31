@@ -28,3 +28,5 @@ export interface PageComponentData {
   component: string;
   props?: Record<string, unknown>;
 }
+
+export type Mode = "edit" | "none";
