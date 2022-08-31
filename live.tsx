@@ -15,6 +15,7 @@ import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { IslandModule } from "$fresh/src/server/types.ts";
 import { updateComponentProps } from "$live/editor.tsx";
 import type { ZodObject, ZodRawShape } from "zod";
+import EditorListener from "./src/EditorListener.tsx";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -198,7 +199,7 @@ export function LivePage({ data }: PageProps<LivePageData>) {
     console.log("Missing Island: ./island/Editor.tsx");
   }
 
-  const renderEditor = Boolean(Editor);
+  const renderEditor = Boolean(Editor) && data.mode === "edit";
   const componentSchemas = userManifest.schemas;
 
   return (
@@ -207,13 +208,14 @@ export function LivePage({ data }: PageProps<LivePageData>) {
       {renderEditor
         ? (
           <Editor
-            mode={data.mode}
             components={data.components}
             template={data.template}
             componentSchemas={componentSchemas}
           />
         )
         : null}
+      {/* TODO: Remove this at production domain */}
+      <EditorListener />
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );
