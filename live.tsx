@@ -23,15 +23,18 @@ let userManifest: DecoManifest;
 let userOptions: LiveOptions & { siteId?: number };
 const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
 const isDenoDeploy = deploymentId !== undefined;
+const defaultDomains = [
+  `localhost`,
+];
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   userManifest = manifest;
   userOptions = liveOptions;
-  const defaultDomains = [
+  defaultDomains.push(
     `${userOptions.site}.deco.page`,
     `deco-pages-${userOptions.site}.deno.dev`,
-    `localhost`,
-  ];
+  );
+
   // Support deploy preview domains
   if (deploymentId) {
     defaultDomains.push(
@@ -86,7 +89,8 @@ export async function loadLiveComponents(
     userOptions.siteId = Pages?.[0]?.site.id;
   }
 
-  const isEditor = url.searchParams.has("editor");
+  const isEditor = url.searchParams.has("editor") &&
+    defaultDomains.includes(url.hostname);
 
   return {
     components: Pages?.[0]?.components ?? null,
