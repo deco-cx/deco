@@ -9,6 +9,26 @@ import TrashIcon from "./icons/TrashIcon.tsx";
 import Button from "./ui/Button.tsx";
 import NewComponentForm from "./NewComponentForm.tsx";
 import PropsInputs from "./ui/PropsInput.tsx";
+import JSONSchemaForm, {
+  FormProps,
+} from "https://esm.sh/@rjsf/core@4.2.3/?alias=react:preact/compat";
+import validator from "https://esm.sh/@rjsf/validator-ajv6";
+
+const testSchema: FormProps["schema"] = {
+  title: "Product Shelf",
+  "type": "object",
+  required: ["title", "collection"],
+  properties: {
+    title: {
+      "type": "string",
+      title: "Título",
+    },
+    collection: {
+      "type": "string",
+      title: "Título",
+    },
+  },
+};
 
 function AddNewComponent() {
   const { componentSchemas } = useEditor();
@@ -124,6 +144,7 @@ export default function EditorSidebar() {
             Salvar
           </Button>
         </form>
+        <JSONSchemaForm schema={testSchema} validator={validator} />
       </div>
     </div>
   );
