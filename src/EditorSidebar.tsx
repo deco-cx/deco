@@ -57,7 +57,7 @@ export default function EditorSidebar() {
   };
 
   return (
-    <div class="w-3/12 border-l-2 p-2">
+    <div class="min-h-screen w-3/12 border-l-2 p-2">
       <header>
         <h2 class="font-bold text-lg">Editor</h2>
       </header>
