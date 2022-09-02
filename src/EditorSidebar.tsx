@@ -4,31 +4,8 @@ import { Fragment, h } from "preact";
 import { useState } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import { tw } from "twind";
-import CaretDownIcon from "./icons/CaretDownIcon.tsx";
-import TrashIcon from "./icons/TrashIcon.tsx";
+import JSONSchemaForm from "rjsf";
 import Button from "./ui/Button.tsx";
-import NewComponentForm from "./NewComponentForm.tsx";
-import PropsInputs from "./ui/PropsInput.tsx";
-import JSONSchemaForm, {
-  FormProps,
-} from "https://esm.sh/@rjsf/core@4.2.3/?alias=react:preact/compat";
-import validator from "https://esm.sh/@rjsf/validator-ajv6";
-
-const testSchema: FormProps["schema"] = {
-  title: "Product Shelf",
-  "type": "object",
-  required: ["title", "collection"],
-  properties: {
-    title: {
-      "type": "string",
-      title: "Título",
-    },
-    collection: {
-      "type": "string",
-      title: "Título",
-    },
-  },
-};
 
 function AddNewComponent() {
   const { componentSchemas } = useEditor();
@@ -47,11 +24,10 @@ function AddNewComponent() {
         ))}
       </select>
       {selectedComponent && (
-        <NewComponentForm
-          key={selectedComponent}
-          componentSchema={componentSchemas[selectedComponent]}
-          componentName={selectedComponent}
-          handleSubmit={() => setSelectedComponent("")}
+        <JSONSchemaForm
+          schema={componentSchemas[selectedComponent] ??
+            { title: selectedComponent, type: "object", properties: {} }}
+          validator={() => true}
         />
       )}
     </div>
@@ -61,10 +37,8 @@ function AddNewComponent() {
 export default function EditorSidebar() {
   const {
     components,
-    updateComponentProp,
     template,
-    changeOrder,
-    removeComponents,
+    componentSchemas,
   } = useEditor();
 
   const saveProps = async () => {
@@ -82,69 +56,27 @@ export default function EditorSidebar() {
         <h2 class="font-bold text-lg">Editor</h2>
       </header>
       <div class="mt-4">
-        <form id="editor-sidebar" onSubmit={(e) => e.preventDefault()}>
-          {components.map(({ component, props }, index) => {
-            const isFirst = index === 0;
-            const isLast = index === components.length - 1;
-            return (
-              <div class="rounded-md border mb-2 p-2">
-                <fieldset key={Math.random()}>
-                  <div
-                    class={tw`flex justify-between items-center ${
-                      props ? "mb-2" : ""
-                    }`}
-                  >
-                    <legend class="font-bold">{component}</legend>
-                    <div class="flex gap-2">
-                      <Button
-                        disabled={isLast}
-                        onClick={!isLast
-                          ? () => {
-                            changeOrder("next", index);
-                          }
-                          : undefined}
-                      >
-                        <CaretDownIcon />
-                      </Button>
-                      <Button
-                        disabled={isFirst}
-                        onClick={!isFirst
-                          ? () => {
-                            changeOrder("prev", index);
-                          }
-                          : undefined}
-                      >
-                        <CaretDownIcon class="rotate-180" />
-                      </Button>
-                      <Button
-                        onClick={() => removeComponents([index])}
-                      >
-                        <TrashIcon />
-                      </Button>
-                    </div>
-                  </div>
+        {components.map(({
+          component,
+          props,
+        }) => {
+          return (
+            <JSONSchemaForm
+              schema={componentSchemas[component] ??
+                { title: component, type: "object", properties: {} }}
+              validator={() => true}
+              formData={props}
+            >
+              {<Fragment />}
+            </JSONSchemaForm>
+          );
+        })}
 
-                  {props && (
-                    <PropsInputs
-                      props={props}
-                      propPrefix=""
-                      onInput={(value, prop) => {
-                        /* TODO: handle nested values */
-                        updateComponentProp({ index, prop, value });
-                      }}
-                    />
-                  )}
-                </fieldset>
-              </div>
-            );
-          })}
-          <AddNewComponent />
-          <br />
-          <Button type="button" onClick={saveProps}>
-            Salvar
-          </Button>
-        </form>
-        <JSONSchemaForm schema={testSchema} validator={validator} />
+        <AddNewComponent />
+        <br />
+        <Button type="button" onClick={saveProps}>
+          Salvar
+        </Button>
       </div>
     </div>
   );

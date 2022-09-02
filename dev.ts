@@ -37,9 +37,10 @@ export async function dev(
   const newManifest: DevManifest = await collect(dir) as DevManifest;
   newManifest.components = await collectComponents(dir);
   Deno.env.set("FRSH_DEV_PREVIOUS_MANIFEST", JSON.stringify(newManifest));
-  newManifest.schemas = collectComponentsSchemas(
+  newManifest.schemas = await collectComponentsSchemas(
     newManifest.islands,
     newManifest.components,
+    dir,
   );
 
   const manifestChanged =
@@ -56,43 +57,50 @@ export async function dev(
 
 interface SchemaMap {
   component: string;
-  type: "component" | "island";
-  index: number;
+  schema: Record<string, any>;
 }
 
 // This only handles islands and components at rootPath.
 // Ex: ./islands/Foo.tsx or ./components/Bar.tsx .
 // This ./components/My/Nested/Component.tsx won't work
-function collectComponentsSchemas(
+async function collectComponentsSchemas(
   islands: string[],
   components: string[],
-): SchemaMap[] {
+  directory: string,
+): Promise<SchemaMap[]> {
   // Islands has precedence over components
   const islandComponents = new Set<string>([...islands]);
 
-  const mapComponentToSchemaMap = (
+  const mapComponentToSchemaMap = async (
     componentName: string,
-    type: SchemaMap["type"],
-    index: number,
-  ) => ({
-    component: componentName.replace(COMPONENT_NAME_REGEX, "$1"),
-    type,
-    index,
-  });
+    type: "islands" | "components",
+  ) => {
+    const componentFile = await import(
+      toFileUrl(
+        join(directory, type, componentName),
+      ).href
+    );
 
-  const islandsSchemaMaps: SchemaMap[] = [];
-  islands.forEach((islandName, index) => {
+    const schema = componentFile.schema ?? null;
+
+    return {
+      component: componentName.replace(COMPONENT_NAME_REGEX, "$1"),
+      schema,
+    };
+  };
+
+  const componentsSchemas: Promise<SchemaMap>[] = [];
+  islands.forEach((islandName) => {
     if (BLOCKED_ISLANDS_SCHEMAS.has(islandName)) {
       return;
     }
 
-    islandsSchemaMaps.push(
-      mapComponentToSchemaMap(islandName, "island", index),
+    componentsSchemas.push(
+      mapComponentToSchemaMap(islandName, "islands"),
     );
   });
 
-  const componentsSchemaMaps: SchemaMap[] = [];
-  components.forEach((componentName, index) => {
+  components.forEach((componentName) => {
     if (
       !islandComponents.has(componentName) &&
       !COMPONENT_NAME_REGEX.test(componentName)
@@ -100,12 +108,12 @@ function collectComponentsSchemas(
       return;
     }
 
-    componentsSchemaMaps.push(
-      mapComponentToSchemaMap(componentName, "component", index),
+    componentsSchemas.push(
+      mapComponentToSchemaMap(componentName, "components"),
     );
   });
 
-  return [...islandsSchemaMaps, ...componentsSchemaMaps];
+  return await Promise.all(componentsSchemas);
 }
 
 export async function generate(directory: string, manifest: DevManifest) {
@@ -242,11 +250,8 @@ const templates = {
       `${JSON.stringify(`./components${file}`)}: $$$${i},`,
   },
   schemas: (
-    { component, type, index }: SchemaMap,
-  ) =>
-    `${component}: ${
-      type === "component" ? "$" : ""
-    }$$${index}.schema ?? null,`,
+    { component, schema }: SchemaMap,
+  ) => `${component}: ${schema ? JSON.stringify(schema) : null},`,
   twind: `{
     mode: "warn",
     theme: {}

@@ -31,19 +31,7 @@ export default function EditorProvider(
     children: ComponentChildren;
   },
 ) {
-  const [components, setComponents] = useState(function _mergePropsOnSchema() {
-    return _components.map(({ component, props }) => ({
-      component,
-      ...(componentSchemas[component]
-        ? {
-          props: mergePropsOnSchema(
-            componentSchemas[component]!,
-            props ?? {},
-          ),
-        }
-        : {}),
-    }));
-  });
+  const [components, setComponents] = useState(_components);
 
   const updateComponentProp: EditorContext["updateComponentProp"] = useCallback(
     (
