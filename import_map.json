@@ -7,7 +7,8 @@
     "preact-render-to-string": "https://esm.sh/preact-render-to-string@5.2.0?deps=preact@10.10.6",
     "twind": "https://esm.sh/twind@0.16.17",
     "twind/": "https://esm.sh/twind@0.16.17/",
-    "rjsf": "https://esm.sh/@rjsf/core@5.0.0-beta.2?deps=preact@10.10.6&alias=react:preact/compat",
+    "react-hook-form": "https://esm.sh/react-hook-form@7.34.2?deps=preact@10.10.6&alias=react:preact/compat",
+    "@hookform/resolvers": "https://esm.sh/@hookform/resolvers@2.9.7",
     "std/": "https://deno.land/std@0.147.0/",
     "supabase": "https://esm.sh/@supabase/supabase-js@1.35.4"
   }
