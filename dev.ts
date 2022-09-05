@@ -146,8 +146,8 @@ async function generateTwind(dir: string) {
   // We transform the file to ESM for deno importing.
   const rawConfig = await Deno
     .readTextFileSync(join(dir, "./tailwind.config.js"))
-    .replace("module.exports = {\n", "")
-    .replace("\n};", "\n}")
+    .replace(/module.exports = {\r?\n/, "")
+    .replace(/\r?\n};/, "}")
     .replace(/,(\n|\r\n)}(\n|\r\n)$/, "")
     .replace(/\(theme\)/g, "(theme: any)");
 
