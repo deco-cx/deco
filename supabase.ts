@@ -32,3 +32,9 @@ export function getSupabaseClientForUser(req: Request) {
   client.auth.setAuth(jwt);
   return client;
 }
+
+export function getSupabaseClientForUserFromToken(jwt: string) {
+  const client = createClient(userEndpoint, userKey);
+  client.auth.setAuth(jwt);
+  return client;
+}
