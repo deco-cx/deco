@@ -76,6 +76,7 @@ export default function EditorSidebar() {
     defaultValues: mapComponentsToFormData(initialComponents),
   });
 
+  const reloadPage = () => document.location.reload();
   const saveProps = async () => {
     const components = mapFormDataToComponents(
       methods.getValues(),
@@ -87,7 +88,7 @@ export default function EditorSidebar() {
       redirect: "manual",
       body: JSON.stringify({ components, template }),
     });
-    document.location.reload();
+    reloadPage();
   };
 
   const handleChangeOrder = (dir: "prev" | "next", pos: number) => {
@@ -133,8 +134,16 @@ export default function EditorSidebar() {
 
   return (
     <div class="min-h-screen w-3/12 border-l-2 p-2">
-      <header>
+      <header class="flex justify-between items-center">
         <h2 class="font-bold text-lg">Editor</h2>
+        <div class="flex gap-2">
+          <Button type="button" onClick={reloadPage}>
+            Descartar
+          </Button>
+          <Button type="button" onClick={saveProps}>
+            Salvar
+          </Button>
+        </div>
       </header>
       <div class="mt-4">
         <FormProvider {...methods}>
@@ -160,11 +169,6 @@ export default function EditorSidebar() {
 
           <AddNewComponent onAddComponent={handleAddComponent} />
         </FormProvider>
-
-        <br />
-        <Button type="button" onClick={saveProps}>
-          Salvar
-        </Button>
       </div>
     </div>
   );
