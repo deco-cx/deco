@@ -25,7 +25,9 @@ function AddNewComponent({ onAddComponent }) {
           }}
         >
           {Object.keys(componentSchemas).map((componentName) => (
-            <option value={componentName}>{componentName}</option>
+            <option value={componentName}>
+              {componentSchemas[componentName]?.title ?? componentName}
+            </option>
           ))}
         </select>
         <Button
