@@ -22,7 +22,6 @@ function AddNewComponent({ onAddComponent }) {
           value={"-1"}
           onInput={(e) => {
             selectedComponent.current = e.target.value;
-            console.log();
           }}
         >
           {Object.keys(componentSchemas).map((componentName) => (
