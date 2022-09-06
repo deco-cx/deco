@@ -2,7 +2,6 @@
 /** @jsxFrag Fragment */
 import type {
   JSONSchema7,
-  JSONSchema7Definition,
   JSONSchema7TypeName,
 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 import { Fragment, FunctionComponent, h } from "preact";

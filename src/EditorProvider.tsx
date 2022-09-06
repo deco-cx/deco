@@ -1,8 +1,8 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
-import { ComponentChildren, createContext, Fragment, h } from "preact";
-import { useCallback, useContext, useState } from "preact/hooks";
-import { PageComponentData, Schemas } from "../types.ts";
+import { ComponentChildren, createContext, h } from "preact";
+import { useContext } from "preact/hooks";
+import type { PageComponentData, Schemas } from "../types.ts";
 
 interface Props {
   components: PageComponentData[];

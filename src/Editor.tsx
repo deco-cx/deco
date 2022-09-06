@@ -20,11 +20,7 @@ export default function Editor(
       template={template}
       componentSchemas={componentSchemas}
     >
-      <EditorSidebar
-        components={components}
-        template={template}
-        componentSchemas={componentSchemas}
-      />
+      <EditorSidebar />
     </EditorProvider>
   );
 }

@@ -14,8 +14,8 @@ import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { IslandModule } from "$fresh/src/server/types.ts";
 import { updateComponentProps } from "$live/editor.tsx";
-import type { ZodObject, ZodRawShape } from "zod";
 import EditorListener from "./src/EditorListener.tsx";
+import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -44,6 +44,10 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   const userDomains = liveOptions.domains || [];
   userOptions.domains = [...defaultDomains, ...userDomains];
 };
+
+function isPrivateDomain(domain: string) {
+  return defaultDomains.includes(domain);
+}
 
 export interface LivePageData {
   components?: PageComponentData[];
@@ -89,8 +93,7 @@ export async function loadLiveComponents(
     userOptions.siteId = Pages?.[0]?.site.id;
   }
 
-  const isEditor = url.searchParams.has("editor") &&
-    defaultDomains.includes(url.hostname);
+  const isEditor = url.searchParams.has("editor");
 
   return {
     components: Pages?.[0]?.components ?? null,
@@ -172,7 +175,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
 }
 
 interface Module extends IslandModule {
-  schema?: ZodObject<ZodRawShape>;
+  schema?: JSONSchema7;
 }
 
 function getComponentModule(filename: string): Module | undefined {
@@ -194,7 +197,7 @@ export function LiveComponents(
   );
 }
 
-export function LivePage({ data }: PageProps<LivePageData>) {
+export function LivePage({ data, ...otherProps }: PageProps<LivePageData>) {
   const InspectVSCode = !isDenoDeploy &&
     userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
   const Editor = userManifest.islands[`./islands/Editor.tsx`]?.default;
@@ -204,12 +207,13 @@ export function LivePage({ data }: PageProps<LivePageData>) {
   }
 
   const renderEditor = Boolean(Editor) && data.mode === "edit";
+  const privateDomain = isPrivateDomain(otherProps.url.hostname);
   const componentSchemas = userManifest.schemas;
 
   return (
     <div class="flex">
       <LiveComponents {...data} />
-      {renderEditor
+      {renderEditor && privateDomain
         ? (
           <Editor
             components={data.components}
@@ -218,8 +222,7 @@ export function LivePage({ data }: PageProps<LivePageData>) {
           />
         )
         : null}
-      {/* TODO: Remove this at production domain */}
-      <EditorListener />
+      {privateDomain && <EditorListener />}
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );

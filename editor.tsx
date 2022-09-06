@@ -12,8 +12,6 @@ export const updateComponentProps = async (
   _: HandlerContext,
   { userOptions }: Options,
 ) => {
-  // req.referrer is undefined, so this trick is needed.
-  // const referer = Object.values(req.headers.get("referer")).join("");
   let status;
 
   try {
@@ -31,7 +29,8 @@ export const updateComponentProps = async (
 
     status = res.status;
   } catch (e) {
-    console.log(e);
+    console.error(e);
+    status = 400;
   }
 
   return new Response(null, { status });

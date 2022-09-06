@@ -1,13 +1,13 @@
 /** @jsx h */
 /** @jsxFrag Fragment */
 import { Fragment, h } from "preact";
-import { useRef, useState } from "preact/hooks";
+import { useRef } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import { tw } from "twind";
 import Button from "./ui/Button.tsx";
 import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
 import { FormProvider, useForm } from "react-hook-form";
-import { PageComponentData, Schemas } from "../types.ts";
+import type { PageComponentData } from "../types.ts";
 
 function AddNewComponent({ onAddComponent }) {
   const { componentSchemas } = useEditor();
@@ -16,26 +16,28 @@ function AddNewComponent({ onAddComponent }) {
   return (
     <div class="py-1 mb-2">
       Selecione componente para adicionar
-      <select
-        class={tw`border hover:border-black py-1 px-2 mr-1 rounded transition-colors ease-in`}
-        value={""}
-        onInput={(e) => {
-          selectedComponent.current = e.target.value;
-          console.log();
-        }}
-      >
-        {Object.keys(componentSchemas).map((componentName) => (
-          <option value={componentName}>{componentName}</option>
-        ))}
-      </select>
-      <Button
-        onClick={() => {
-          onAddComponent(selectedComponent.current);
-          selectedComponent.current = "";
-        }}
-      >
-        Adicionar
-      </Button>
+      <div class="flex">
+        <select
+          class={tw`border hover:border-black py-1 px-2 mr-1 rounded transition-colors ease-in`}
+          value={"-1"}
+          onInput={(e) => {
+            selectedComponent.current = e.target.value;
+            console.log();
+          }}
+        >
+          {Object.keys(componentSchemas).map((componentName) => (
+            <option value={componentName}>{componentName}</option>
+          ))}
+        </select>
+        <Button
+          onClick={() => {
+            onAddComponent(selectedComponent.current);
+            selectedComponent.current = "";
+          }}
+        >
+          Adicionar
+        </Button>
+      </div>
     </div>
   );
 }
@@ -65,15 +67,9 @@ function mapFormDataToComponents(
 
 type FormValues = Record<number, Record<string, unknown>>;
 
-interface Props {
-  components: PageComponentData[];
-  template: string;
-  componentSchemas: Schemas;
-}
-
-export default function EditorSidebar(
-  { componentSchemas, template, components: initialComponents }: Props,
-) {
+export default function EditorSidebar() {
+  const { componentSchemas, template, components: initialComponents } =
+    useEditor();
   const componentsRef = useRef(initialComponents);
   const methods = useForm<FormValues>({
     defaultValues: mapComponentsToFormData(initialComponents),
@@ -144,7 +140,6 @@ export default function EditorSidebar(
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              console.log("Submit", methods.getValues());
             }}
           >
             {components.map(({

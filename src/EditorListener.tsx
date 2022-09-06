@@ -1,7 +1,7 @@
 /* @jsx h */
 import { h } from "preact";
 
-function handleKeyDown(event) {
+const handleKeyDownFunction = (function handleKeyDown(event) {
   if (
     event.ctrlKey && event.shiftKey && event.key === "E"
   ) {
@@ -14,14 +14,14 @@ function handleKeyDown(event) {
 
     window.location = url.toString();
   }
-}
+}).toString();
 
 export default function EditorListener() {
   return (
     <script
       dangerouslySetInnerHTML={{
         __html:
-          `document.body.addEventListener("keydown", ${handleKeyDown.toString()})`,
+          `document.body.addEventListener("keydown", ${handleKeyDownFunction})`,
       }}
     >
     </script>
