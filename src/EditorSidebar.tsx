@@ -55,8 +55,8 @@ function mapFormDataToComponents(
   currentComponents: PageComponentData[],
 ) {
   const components: PageComponentData[] = [];
-  Object.entries(formData).forEach(([index, props]) => {
-    const component = currentComponents[index].component;
+  currentComponents.forEach(({ component }, index) => {
+    const props = formData[index];
     components.push({
       component,
       props,
@@ -109,7 +109,15 @@ export default function EditorSidebar() {
     components[newPos] = components[pos];
     components[pos] = prevComp;
 
-    methods.reset(mapComponentsToFormData(components));
+    const newPosComponentValue = methods.getValues(newPos.toString());
+    const posComponentValue = methods.getValues(pos.toString());
+    methods.setValue(newPos.toString(), posComponentValue, {
+      shouldDirty: true,
+    });
+
+    methods.setValue(pos.toString(), newPosComponentValue, {
+      shouldDirty: true,
+    });
   };
 
   const handleRemoveComponent = (removedIndex: number) => {
@@ -123,11 +131,17 @@ export default function EditorSidebar() {
         components,
       ),
     );
+    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
+    methods.setValue("noop", 0, { shouldDirty: true });
   };
 
   const handleAddComponent = (componentName: string) => {
-    componentsRef.current.push({ component: componentName });
-    methods.reset(mapComponentsToFormData(componentsRef.current));
+    const components = componentsRef.current;
+    components.push({ component: componentName });
+
+    methods.setValue(components.length.toString(), undefined, {
+      shouldDirty: true,
+    });
   };
 
   const components = componentsRef.current;
@@ -137,10 +151,18 @@ export default function EditorSidebar() {
       <header class="flex justify-between items-center">
         <h2 class="font-bold text-lg">Editor</h2>
         <div class="flex gap-2">
-          <Button type="button" onClick={reloadPage}>
+          <Button
+            type="button"
+            onClick={reloadPage}
+            disabled={!methods.formState.isDirty}
+          >
             Descartar
           </Button>
-          <Button type="button" onClick={saveProps}>
+          <Button
+            type="button"
+            onClick={saveProps}
+            disabled={!methods.formState.isDirty}
+          >
             Salvar
           </Button>
         </div>
