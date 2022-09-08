@@ -1,44 +1,10 @@
 import { useRef } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
-import { tw } from "twind";
 import Button from "./ui/Button.tsx";
 import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
 import { FormProvider, useForm } from "react-hook-form";
 import type { PageComponentData } from "../types.ts";
-
-function AddNewComponent({ onAddComponent }) {
-  const { componentSchemas } = useEditor();
-  const selectedComponent = useRef("");
-
-  return (
-    <div class="py-1 mb-2">
-      Selecione componente para adicionar
-      <div class="flex">
-        <select
-          class={tw`border hover:border-black py-1 px-2 mr-1 rounded transition-colors ease-in`}
-          value={"-1"}
-          onInput={(e) => {
-            selectedComponent.current = e.target.value;
-          }}
-        >
-          {Object.keys(componentSchemas).map((componentName) => (
-            <option value={componentName}>
-              {componentSchemas[componentName]?.title ?? componentName}
-            </option>
-          ))}
-        </select>
-        <Button
-          onClick={() => {
-            onAddComponent(selectedComponent.current);
-            selectedComponent.current = "";
-          }}
-        >
-          Adicionar
-        </Button>
-      </div>
-    </div>
-  );
-}
+import AddNewComponent from "./AddNewComponent.tsx";
 
 function mapComponentsToFormData(components: PageComponentData[]) {
   return components.reduce((curr, component, index) => {

@@ -30,9 +30,6 @@ function ModalContent({ children, ...props }: ModalContentProps) {
         role="dialog"
         tabIndex={-1}
         {...props}
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
       >
         {children}
       </div>
@@ -79,7 +76,7 @@ export default function Modal(
     ? createPortal(
       <div
         {...modalProps}
-        class={tw`bg-gray-500 bg-opacity-50 ${modalProps?.class}`}
+        class={tw`bg-gray-500 bg-opacity-50 fixed inset-0 z-50 flex justify-center items-center ${modalProps?.class}`}
         onKeyDown={handleBackdropKeyDown}
         onClick={handleBackdropClick}
       >
