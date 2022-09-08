@@ -3,13 +3,11 @@ import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
-
-const COMPONENT_NAME_REGEX = /^\/(\w*)\.(tsx|jsx|js|ts)/;
-
-const BLOCKED_ISLANDS_SCHEMAS = new Set([
-  "/Editor.tsx",
-  "/InspectVSCode.tsx",
-]);
+import {
+  COMPONENT_NAME_REGEX,
+  componentNameFromPath,
+  isValidIsland,
+} from "./utils/component.ts";
 
 interface DevManifest {
   routes: string[];
@@ -84,14 +82,14 @@ async function collectComponentsSchemas(
     const schema = componentFile.schema ?? null;
 
     return {
-      component: componentName.replace(COMPONENT_NAME_REGEX, "$1"),
+      component: componentNameFromPath(componentName),
       schema,
     };
   };
 
   const componentsSchemas: Promise<SchemaMap>[] = [];
   islands.forEach((islandName) => {
-    if (BLOCKED_ISLANDS_SCHEMAS.has(islandName)) {
+    if (!isValidIsland(islandName)) {
       return;
     }
 

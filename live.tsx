@@ -3,6 +3,7 @@ import {
   DecoManifest,
   LiveOptions,
   Mode,
+  Module,
   PageComponentData,
 } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
@@ -13,6 +14,8 @@ import { IslandModule } from "$fresh/src/server/types.ts";
 import { updateComponentProps } from "$live/editor.tsx";
 import EditorListener from "./src/EditorListener.tsx";
 import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import { renderToString } from "preact-render-to-string";
+import { componentNameFromPath } from "./utils/component.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -172,15 +175,33 @@ export function createLiveHandler<LoaderData = LivePageData>(
         const options = { userOptions };
         return await updateComponentProps(req, ctx, options);
       }
+      if (url.pathname === "/live/api/components") {
+        // Should be a GET
+        // TODO: Render islands too
+        // TODO: Get component props
+        const components = Object.entries(userManifest.schemas).map(
+          ([componentName, componentSchema]) => {
+            const componentModule = getComponentModule(componentName);
+            const Component = componentModule!.default;
+
+            return {
+              html: renderToString(<Component />),
+              component: componentName,
+              componentLabel: componentSchema?.title ?? componentName,
+            };
+          },
+        );
+
+        return new Response(JSON.stringify({ components }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
       return new Response("Not found", { status: 404 });
     },
   };
 
   return handler;
-}
-
-interface Module extends IslandModule {
-  schema?: JSONSchema7;
 }
 
 function getComponentModule(filename: string): Module | undefined {

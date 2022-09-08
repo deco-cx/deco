@@ -5,8 +5,13 @@ import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9y
 export type Schema = JSONSchema7 | null;
 export type Schemas = Record<string, Schema>;
 
+export interface Module extends IslandModule {
+  schema?: JSONSchema7;
+}
+
 export interface DecoManifest extends Manifest {
-  components?: Record<string, IslandModule>;
+  islands: Record<string, Module>;
+  components: Record<string, Module>;
   schemas: Schemas;
 }
 
