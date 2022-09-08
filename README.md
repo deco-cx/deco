@@ -93,10 +93,6 @@ deno task component MyTestComponent
 The new component will be generated in `./components/MyTestComponent.tsx` and should look like this:
 
 ```jsx
-/** @jsx h */
-/** @jsxFrag Fragment */
-import { Fragment, h } from "preact";
-
 export default function MyTestComponent() {
   return (
     <div>

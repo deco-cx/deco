@@ -1,6 +1,4 @@
-/** @jsx h */
-/** @jsxFrag Fragment */
-import { ComponentChildren, createContext, h } from "preact";
+import { ComponentChildren, createContext } from "preact";
 import { useContext } from "preact/hooks";
 import type { PageComponentData, Schemas } from "../types.ts";
 
