@@ -11,7 +11,7 @@ export default function PlusIcon(
       width={width}
       height={height}
       class={className}
-      fill="#000000"
+      fill="currentColor"
       viewBox="0 0 256 256"
     >
       <rect width="256" height="256" fill="none"></rect>
@@ -21,7 +21,7 @@ export default function PlusIcon(
         x2="216"
         y2="128"
         fill="none"
-        stroke="#000000"
+        stroke="currentColor"
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
@@ -33,7 +33,7 @@ export default function PlusIcon(
         x2="128"
         y2="216"
         fill="none"
-        stroke="#000000"
+        stroke="currentColor"
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"

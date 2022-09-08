@@ -80,7 +80,9 @@ export default function Modal(
         onKeyDown={handleBackdropKeyDown}
         onClick={handleBackdropClick}
       >
-        <ModalContent {...props}>{children}</ModalContent>
+        <ModalContent {...props} onClick={(e) => e.stopPropagation()}>
+          {children}
+        </ModalContent>
       </div>,
       document.body,
     )
