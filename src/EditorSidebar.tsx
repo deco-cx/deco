@@ -1,6 +1,3 @@
-/** @jsx h */
-/** @jsxFrag Fragment */
-import { Fragment, h } from "preact";
 import { useRef } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import { tw } from "twind";

@@ -1,5 +1,4 @@
-/* @jsx h */
-import { h } from "preact";
+import type { h } from "preact";
 
 export default function CaretDownIcon(
   { class: className, width = 16, height = 16 }: h.JSX.SVGAttributes<

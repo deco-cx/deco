@@ -1,5 +1,3 @@
-/** @jsx h */
-import { h } from "preact";
 import { useEffect } from "preact/hooks";
 import { AuthChangeEvent } from "supabase";
 import { Handler, Handlers } from "$fresh/server.ts";

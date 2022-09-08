@@ -123,6 +123,7 @@ export async function generate(directory: string, manifest: DevManifest) {
     // This file SHOULD be checked into source version control.
     // This file is automatically updated during development when running \`dev.ts\`.
 
+    import config from "./deno.json" assert { type: "json" };
     import { DecoManifest } from "$live/types.ts";
     ${routes.map(templates.routes.imports).join("\n")}
     ${islands.map(templates.islands.imports).join("\n")}
@@ -135,6 +136,7 @@ export async function generate(directory: string, manifest: DevManifest) {
       schemas: {${schemas.map(templates.schemas).join("\n")}},
       twind: ${await generateTwind(directory)},
       baseUrl: import.meta.url,
+      config,
     };
 
     export default manifest;

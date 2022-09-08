@@ -1,10 +1,8 @@
-/** @jsx h */
-/** @jsxFrag Fragment */
 import type {
   JSONSchema7,
   JSONSchema7TypeName,
 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
-import { Fragment, FunctionComponent, h } from "preact";
+import type { FunctionComponent } from "preact";
 import { tw } from "twind";
 import { useFormContext } from "react-hook-form";
 import { forwardRef } from "preact/compat";
@@ -63,11 +61,6 @@ function RenderFields(
   return (
     <>
       {properties.map(([field, property]) => {
-        if (typeof property === "boolean") {
-          // TODO: improve this
-          return;
-        }
-
         const { type, title, properties: nestedProperties } = property;
         if (Array.isArray(type) || type === undefined) {
           console.log("Type must be a string");

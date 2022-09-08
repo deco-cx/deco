@@ -2,5 +2,9 @@
   "tasks": {
     "start": "deno run -A --watch=tailwind.config.js,static/ dev.ts"
   },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
   "importMap": "./import_map.json"
 }

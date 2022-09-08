@@ -1,6 +1,3 @@
-/* @jsx h */
-import { h } from "preact";
-
 const handleKeyDownFunction = (function handleKeyDown(event) {
   if (
     event.ctrlKey && event.shiftKey && event.key === "E"
