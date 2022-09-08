@@ -109,15 +109,14 @@ export default function EditorSidebar() {
     components[newPos] = components[pos];
     components[pos] = prevComp;
 
-    const newPosComponentValue = methods.getValues(newPos.toString());
-    const posComponentValue = methods.getValues(pos.toString());
-    methods.setValue(newPos.toString(), posComponentValue, {
-      shouldDirty: true,
-    });
+    methods.reset(
+      mapComponentsToFormData(
+        components,
+      ),
+    );
 
-    methods.setValue(pos.toString(), newPosComponentValue, {
-      shouldDirty: true,
-    });
+    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
+    methods.setValue("noop", 0, { shouldDirty: true });
   };
 
   const handleRemoveComponent = (removedIndex: number) => {
@@ -139,15 +138,19 @@ export default function EditorSidebar() {
     const components = componentsRef.current;
     components.push({ component: componentName });
 
-    methods.setValue(components.length.toString(), undefined, {
-      shouldDirty: true,
-    });
+    methods.reset(
+      mapComponentsToFormData(
+        components,
+      ),
+    );
+    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
+    methods.setValue("noop", 0, { shouldDirty: true });
   };
 
   const components = componentsRef.current;
 
   return (
-    <div class="min-h-screen w-3/12 border-l-2 p-2">
+    <div class="bg-white min-h-screen w-3/12 border-l-2 p-2">
       <header class="flex justify-between items-center">
         <h2 class="font-bold text-lg">Editor</h2>
         <div class="flex gap-2">
