@@ -171,14 +171,9 @@ export function createLiveHandler<LoaderData = LivePageData>(
         const options = { userOptions };
         return await updateComponentProps(req, ctx, options);
       }
+      // TODO: change this to GET
       if (url.pathname === "/live/api/components") {
-        // TODO: change this to GET
-        const components = componentsPreview(userManifest);
-
-        return new Response(JSON.stringify({ components }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        });
+        return componentsPreview(userManifest);
       }
       return new Response("Not found", { status: 404 });
     },

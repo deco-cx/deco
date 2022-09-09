@@ -3,6 +3,7 @@ import { renderToString } from "preact-render-to-string";
 import { getSupabaseClientForUser } from "./supabase.ts";
 import type { DecoManifest } from "./types.ts";
 import { getComponentModule } from "./utils/component.ts";
+import { createServerTiming } from "./utils/serverTimings.ts";
 
 type Options = {
   userOptions: {
@@ -47,8 +48,11 @@ export interface ComponentPreview {
 
 export function componentsPreview(
   manifest: DecoManifest,
-): ComponentPreview[] {
-  const components = Object.entries(manifest.schemas).map(
+) {
+  const { start, end, printTimings } = createServerTiming();
+
+  start("render-components");
+  const components: ComponentPreview[] = Object.entries(manifest.schemas).map(
     ([componentName, componentSchema]) => {
       const componentModule = getComponentModule(manifest, componentName);
       const Component = componentModule!.default;
@@ -60,6 +64,13 @@ export function componentsPreview(
       };
     },
   );
+  end("render-components");
 
-  return components;
+  return new Response(JSON.stringify({ components }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "Server-Timing": printTimings(),
+    },
+  });
 }
