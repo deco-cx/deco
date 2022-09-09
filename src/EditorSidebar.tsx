@@ -2,47 +2,63 @@ import { useRef } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import Button from "./ui/Button.tsx";
 import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import type { PageComponentData } from "../types.ts";
 import AddNewComponent from "./AddNewComponent.tsx";
 
-function mapComponentsToFormData(components: PageComponentData[]) {
-  return components.reduce((curr, component, index) => {
-    curr[index] = component.props;
-    return curr;
-  }, {});
+const COMPONENTS_KEY_NAME: "components" = "components" as const;
+
+function mapComponentsToFormData(
+  components: PageComponentData[],
+): ComponentProp[] {
+  return components.map((component) => {
+    return component.props || {};
+  });
 }
 
 function mapFormDataToComponents(
-  formData: FormValues,
+  formData: ComponentProp[],
   currentComponents: PageComponentData[],
 ) {
   const components: PageComponentData[] = [];
   currentComponents.forEach(({ component }, index) => {
     const props = formData[index];
+
     components.push({
       component,
-      props,
+      // Required check this, because the form doesn't handle undefined values
+      props: Object.keys(props).length === 0 ? undefined : props,
     });
   });
 
   return components;
 }
 
-type FormValues = Record<number, Record<string, unknown>>;
+type ComponentProp = Record<string, any>;
+type FormValues = {
+  [COMPONENTS_KEY_NAME]: ComponentProp[];
+};
 
 export default function EditorSidebar() {
   const { componentSchemas, template, components: initialComponents } =
     useEditor();
   const componentsRef = useRef(initialComponents);
+  const components = componentsRef.current;
+
   const methods = useForm<FormValues>({
-    defaultValues: mapComponentsToFormData(initialComponents),
+    defaultValues: {
+      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(initialComponents),
+    },
+  });
+  const { append, fields, remove, swap } = useFieldArray({
+    control: methods.control,
+    name: COMPONENTS_KEY_NAME,
   });
 
   const reloadPage = () => document.location.reload();
   const saveProps = async () => {
     const components = mapFormDataToComponents(
-      methods.getValues(),
+      methods.getValues(COMPONENTS_KEY_NAME),
       componentsRef.current,
     );
 
@@ -63,7 +79,6 @@ export default function EditorSidebar() {
       newPos = pos + 1;
     }
 
-    const components = componentsRef.current;
     if (newPos < 0 || newPos >= components.length) {
       return;
     }
@@ -72,45 +87,22 @@ export default function EditorSidebar() {
     components[newPos] = components[pos];
     components[pos] = prevComp;
 
-    methods.reset(
-      mapComponentsToFormData(
-        components,
-      ),
-    );
-
-    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
-    methods.setValue("noop", 0, { shouldDirty: true });
+    swap(pos, newPos);
   };
 
   const handleRemoveComponent = (removedIndex: number) => {
     componentsRef.current = componentsRef.current.filter((_, index) =>
       index !== removedIndex
     );
-    const components = componentsRef.current;
 
-    methods.reset(
-      mapComponentsToFormData(
-        components,
-      ),
-    );
-    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
-    methods.setValue("noop", 0, { shouldDirty: true });
+    remove(removedIndex);
   };
 
   const handleAddComponent = (componentName: string) => {
-    const components = componentsRef.current;
     components.push({ component: componentName });
 
-    methods.reset(
-      mapComponentsToFormData(
-        components,
-      ),
-    );
-    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
-    methods.setValue("noop", 0, { shouldDirty: true });
+    append({});
   };
-
-  const components = componentsRef.current;
 
   return (
     <div class="bg-white min-h-screen w-3/12 border-l-2 p-2">
@@ -140,13 +132,14 @@ export default function EditorSidebar() {
               e.preventDefault();
             }}
           >
-            {components.map(({
-              component,
-            }, index) => {
+            {fields.map((field, index) => {
+              const { component } = components[index];
               return (
                 <JSONSchemaForm
+                  key={field.id}
                   changeOrder={handleChangeOrder}
                   removeComponents={handleRemoveComponent}
+                  prefix={`components.${index}` as const}
                   index={index}
                   schema={componentSchemas[component] ??
                     { title: component, type: "object", properties: {} }}

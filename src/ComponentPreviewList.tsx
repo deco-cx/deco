@@ -4,6 +4,8 @@ import { IS_BROWSER } from "$fresh/runtime.ts";
 import PlusIcon from "./icons/PlusIcon.tsx";
 import type { ComponentPreview } from "../editor.tsx";
 
+let _components: ComponentPreview[] | undefined = undefined;
+
 interface Props {
   onClickComponent: (componentName: string) => void;
 }
@@ -11,12 +13,16 @@ interface Props {
 export default function ComponentPreviewList({ onClickComponent }: Props) {
   const [components, setComponents] = useState<
     ComponentPreview[] | undefined
-  >(undefined);
+  >(_components);
 
-  if (IS_BROWSER && !components) {
+  // Fetch components once
+  if (IS_BROWSER && !_components) {
     // TODO: change this to GET
     fetch("/live/api/components", { method: "POST" }).then((res) => res.json())
-      .then(({ components: apiComponents }) => setComponents(apiComponents));
+      .then(({ components: apiComponents }) => {
+        _components = apiComponents;
+        setComponents(apiComponents);
+      });
   }
 
   return (

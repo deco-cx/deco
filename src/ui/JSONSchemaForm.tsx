@@ -2,7 +2,7 @@ import type {
   JSONSchema7,
   JSONSchema7TypeName,
 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
-import type { FunctionComponent } from "preact";
+import type { FunctionComponent, h } from "preact";
 import { tw } from "twind";
 import { useFormContext } from "react-hook-form";
 import { forwardRef } from "preact/compat";
@@ -85,13 +85,7 @@ function RenderFields(
               {title}
             </label>
             <Field
-              {...register(fullPathField, {
-                value: property.default,
-                minLength: property.minLength,
-                maxLength: property.maxLength,
-                min: property.minimum,
-                max: property.maximum,
-              })}
+              {...register(fullPathField)}
             />
           </div>
         );
@@ -103,12 +97,13 @@ function RenderFields(
 interface Props {
   schema: JSONSchema7;
   index?: number;
+  prefix?: string;
   changeOrder: (dir: "prev" | "next", pos: number) => void;
   removeComponents: (removedComponents: number) => void;
 }
 
 export default function JSONSchemaForm(
-  { schema, index, changeOrder, removeComponents }: Props,
+  { schema, index, changeOrder, removeComponents, prefix }: Props,
 ) {
   if (schema.type !== "object") {
     throw new Error("Schema must be type object");
@@ -150,7 +145,7 @@ export default function JSONSchemaForm(
       </div>
       <RenderFields
         properties={schema.properties}
-        prefix={index !== undefined ? `${index}.` : ""}
+        prefix={prefix !== undefined ? `${prefix}.` : ""}
       />
     </div>
   );
