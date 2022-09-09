@@ -3,19 +3,15 @@ import {
   DecoManifest,
   LiveOptions,
   Mode,
-  Module,
   PageComponentData,
 } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
-import { IslandModule } from "$fresh/src/server/types.ts";
-import { updateComponentProps } from "$live/editor.tsx";
+import { componentsPreview, updateComponentProps } from "$live/editor.tsx";
 import EditorListener from "./src/EditorListener.tsx";
-import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
-import { renderToString } from "preact-render-to-string";
-import { componentNameFromPath } from "./utils/component.ts";
+import { getComponentModule } from "./utils/component.ts";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -176,21 +172,8 @@ export function createLiveHandler<LoaderData = LivePageData>(
         return await updateComponentProps(req, ctx, options);
       }
       if (url.pathname === "/live/api/components") {
-        // Should be a GET
-        // TODO: Render islands too
-        // TODO: Get component props
-        const components = Object.entries(userManifest.schemas).map(
-          ([componentName, componentSchema]) => {
-            const componentModule = getComponentModule(componentName);
-            const Component = componentModule!.default;
-
-            return {
-              html: renderToString(<Component />),
-              component: componentName,
-              componentLabel: componentSchema?.title ?? componentName,
-            };
-          },
-        );
+        // TODO: change this to GET
+        const components = componentsPreview(userManifest);
 
         return new Response(JSON.stringify({ components }), {
           status: 200,
@@ -204,18 +187,13 @@ export function createLiveHandler<LoaderData = LivePageData>(
   return handler;
 }
 
-function getComponentModule(filename: string): Module | undefined {
-  return userManifest.islands?.[`./islands/${filename}.tsx`] ??
-    userManifest.components?.[`./components/${filename}.tsx`];
-}
-
 export function LiveComponents(
   { components }: LivePageData,
 ) {
   return (
     <div class="relative w-full">
       {components?.map(({ component, props }: PageComponentData) => {
-        const Comp = getComponentModule(component)?.default;
+        const Comp = getComponentModule(userManifest, component)?.default;
 
         return <Comp {...props} />;
       })}
