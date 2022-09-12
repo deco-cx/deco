@@ -2,15 +2,20 @@ import type { DecoManifest, Module } from "../types.ts";
 
 // Valid expressions: https://regex101.com/r/YCTBSM/2
 // /Component.tsx
-export const COMPONENT_NAME_REGEX = /^\/(\w*)\.(tsx|jsx|js|ts)/;
+// ./islands/Component.tsx
+// ./components/Component.tsx
+export const COMPONENT_NAME_REGEX =
+  /^(\.\/islands|\.\/components)?\/(\w*)\.(tsx|jsx|js|ts)/;
 
 export const BLOCKED_ISLANDS_SCHEMAS = new Set([
   "/Editor.tsx",
   "/InspectVSCode.tsx",
+  "./islands/Editor.tsx",
+  "./islands/InspectVSCode.tsx",
 ]);
 
 export function componentNameFromPath(componentPath: string) {
-  return componentPath.replace(COMPONENT_NAME_REGEX, "$1");
+  return componentPath.replace(COMPONENT_NAME_REGEX, "$2");
 }
 
 export function isValidIsland(componentPath: string) {
