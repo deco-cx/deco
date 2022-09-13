@@ -16,7 +16,7 @@ import {
 } from "$live/editor.tsx";
 import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
-import type { ComponentType } from "preact";
+import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
 import {
   getDefaultDomains,
@@ -222,7 +222,11 @@ export function LiveComponents(
   );
 }
 
-export function LivePage({ data, ...otherProps }: PageProps<LivePageData>) {
+export function LivePage(
+  { data, children, ...otherProps }: PageProps<LivePageData> & {
+    children: ComponentChildren;
+  },
+) {
   const manifest = getManifest();
   const InspectVSCode = !isDenoDeploy &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
@@ -240,7 +244,7 @@ export function LivePage({ data, ...otherProps }: PageProps<LivePageData>) {
 
   return (
     <div class="flex">
-      <LiveComponents {...data} />
+      {children ? children : <LiveComponents {...data} />}
       {renderEditor && privateDomain
         ? (
           <Editor

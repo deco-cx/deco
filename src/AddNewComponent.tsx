@@ -31,7 +31,6 @@ export default function AddNewComponent({ onAddComponent }: Props) {
     ToCState
   >({ islands: [], components: [] });
   const registerToC = (newToC: Partial<ToCState>) => {
-    console.log("New ToC", newToC);
     setToCComponents((oldToCComponents) => ({
       ...oldToCComponents,
       ...newToC,
