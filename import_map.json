@@ -7,6 +7,7 @@
     "preact-render-to-string": "https://esm.sh/preact-render-to-string@5.2.0?deps=preact@10.10.6",
     "twind": "https://esm.sh/twind@0.16.17",
     "twind/": "https://esm.sh/twind@0.16.17/",
+    "partytown": "https://esm.sh/@builder.io/partytown@0.7.0/integration",
     "react-hook-form": "https://esm.sh/react-hook-form@7.34.2?deps=preact@10.10.6&alias=react:preact/compat",
     "std/": "https://deno.land/std@0.147.0/",
     "supabase": "https://esm.sh/@supabase/supabase-js@1.35.4"
