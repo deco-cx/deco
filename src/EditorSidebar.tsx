@@ -1,4 +1,4 @@
-import { useRef } from "preact/hooks";
+import { useCallback, useRef } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import Button from "./ui/Button.tsx";
 import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
@@ -98,11 +98,12 @@ export default function EditorSidebar() {
     remove(removedIndex);
   };
 
-  const handleAddComponent = (componentName: string) => {
-    components.push({ component: componentName });
+  const handleAddComponent = useCallback((componentName: string) => {
+    const _components = componentsRef.current;
+    _components.push({ component: componentName });
 
     append({});
-  };
+  }, [componentsRef]);
 
   return (
     <div class="bg-white min-h-screen w-3/12 border-l-2 p-2">

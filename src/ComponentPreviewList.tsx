@@ -8,29 +8,25 @@ let components: ComponentPreview[] | undefined = undefined;
 let islands: ComponentPreview[] | undefined = undefined;
 
 interface ComponentPreviewProps extends ComponentPreview {
-  onClick: () => void;
+  onClickComponent: (componentName: string) => void;
 }
 
 function ComponentPreview(
-  { componentLabel, link, onClick }: ComponentPreviewProps,
+  { componentLabel, link, onClickComponent, component }: ComponentPreviewProps,
 ) {
   return (
-    <div class={tw`mb-3 last-child:mb-0`}>
-      <label class={tw`font-bold`}>{componentLabel}</label>
+    <div class={tw`mb-3 last-child:mb-0`} id={component}>
+      <label class={tw`font-medium`}>{componentLabel}</label>
       <div
         class={tw`relative border rounded min-h-[50px] max-h-[250px]`}
       >
-        {link
-          ? (
-            <iframe
-              src={link}
-              class={tw`max-h-[250px] w-full`}
-            />
-          )
-          : null}
+        <iframe
+          src={link}
+          class={tw`max-h-[250px] w-full`}
+        />
         <div
           class={tw`group flex items-center justify-center absolute inset-0 cursor-pointer hover:bg-gray-200 hover:bg-opacity-50 transition-colors ease-in`}
-          onClick={onClick}
+          onClick={() => onClickComponent(component)}
         >
           <PlusIcon
             width={32}
@@ -45,16 +41,20 @@ function ComponentPreview(
 
 interface Props {
   onClickComponent: (componentName: string) => void;
+  registerToC: (
+    tocList: { islands?: ComponentPreview[]; components?: ComponentPreview[] },
+  ) => void;
 }
 
-export default function ComponentPreviewList({ onClickComponent }: Props) {
+export default function ComponentPreviewList(
+  { onClickComponent, registerToC }: Props,
+) {
   const [_, update] = useState<boolean>(false);
 
   // Fetch components once
   useEffect(function fetchComponentAndIslands() {
     let cancel = false;
     if (IS_BROWSER && !components) {
-      // TODO: change this to GET
       fetch("/live/api/components").then((res) => res.json())
         .then(({ components: apiComponents }) => {
           if (cancel) {
@@ -63,11 +63,12 @@ export default function ComponentPreviewList({ onClickComponent }: Props) {
 
           components = apiComponents;
           update((oldValue) => !oldValue);
+          registerToC({ components: apiComponents });
         });
     }
 
     if (IS_BROWSER && !islands) {
-      fetch("/live/api/components").then((res) => res.json())
+      fetch("/live/api/islands").then((res) => res.json())
         .then(({ islands: apiIslands }) => {
           if (cancel) {
             return;
@@ -75,6 +76,7 @@ export default function ComponentPreviewList({ onClickComponent }: Props) {
 
           islands = apiIslands;
           update((oldValue) => !oldValue);
+          registerToC({ islands: apiIslands });
         });
     }
 
@@ -90,9 +92,7 @@ export default function ComponentPreviewList({ onClickComponent }: Props) {
           return (
             <ComponentPreview
               {...componentPreview}
-              onClick={() => {
-                onClickComponent(componentPreview.component);
-              }}
+              onClickComponent={onClickComponent}
             />
           );
         },
@@ -102,9 +102,7 @@ export default function ComponentPreviewList({ onClickComponent }: Props) {
           return (
             <ComponentPreview
               {...componentPreview}
-              onClick={() => {
-                onClickComponent(componentPreview.component);
-              }}
+              onClickComponent={onClickComponent}
             />
           );
         },
