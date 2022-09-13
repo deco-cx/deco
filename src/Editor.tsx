@@ -2,7 +2,7 @@ import type { PageComponentData, Schemas } from "../types.ts";
 import EditorProvider from "./EditorProvider.tsx";
 import EditorSidebar from "./EditorSidebar.tsx";
 
-interface Props {
+export interface Props {
   components: PageComponentData[];
   template: string;
   componentSchemas: Schemas;

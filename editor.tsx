@@ -2,7 +2,12 @@ import { HandlerContext } from "$fresh/server.ts";
 import { renderToString } from "preact-render-to-string";
 import { getSupabaseClientForUser } from "./supabase.ts";
 import type { DecoManifest } from "./types.ts";
-import { getComponentModule } from "./utils/component.ts";
+import {
+  COMPONENT_NAME_REGEX,
+  componentNameFromPath,
+  getComponentModule,
+  isValidIsland,
+} from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 
 type Options = {
@@ -41,36 +46,74 @@ export async function updateComponentProps(
 }
 
 export interface ComponentPreview {
-  html: string;
   componentLabel: string;
   component: string;
+  link: string;
 }
 
 export function componentsPreview(
   manifest: DecoManifest,
+  componentType: "components" | "islands",
 ) {
   const { start, end, printTimings } = createServerTiming();
 
-  start("render-components");
-  const components: ComponentPreview[] = Object.entries(manifest.schemas).map(
-    ([componentName, componentSchema]) => {
-      const componentModule = getComponentModule(manifest, componentName);
-      const Component = componentModule!.default;
+  start("map-components");
+  const components: ComponentPreview[] = Object.entries(manifest[componentType])
+    .map(
+      ([componentPath, componentModule]) => {
+        if (
+          !COMPONENT_NAME_REGEX.test(componentPath) ||
+          !isValidIsland(componentPath)
+        ) {
+          return;
+        }
 
-      return {
-        html: renderToString(<Component />),
-        component: componentName,
-        componentLabel: componentSchema?.title ?? componentName,
-      };
-    },
-  );
-  end("render-components");
+        const { schema } = componentModule;
+        const componentName = componentNameFromPath(componentPath);
 
-  return new Response(JSON.stringify({ components }), {
+        return {
+          link: `/live/api/${componentType}/${componentName}`,
+          component: componentName,
+          componentLabel: schema?.title ?? componentName,
+        };
+      },
+    ).filter(
+      (componentPreviewData): componentPreviewData is ComponentPreview =>
+        Boolean(componentPreviewData),
+    );
+  end("map-components");
+
+  return new Response(JSON.stringify({ [componentType]: components }), {
     status: 200,
     headers: {
       "content-type": "application/json",
       "Server-Timing": printTimings(),
     },
   });
+}
+
+export function renderComponent(
+  manifest: DecoManifest,
+  componentName: string,
+) {
+  const { start, end, printTimings } = createServerTiming();
+
+  const Component = getComponentModule(manifest, componentName)?.default;
+  if (!Component) {
+    return new Response("Component Not Found", { status: 400 });
+  }
+
+  start("render-component");
+  const html = renderToString(<Component />);
+  end("render-component");
+
+  return new Response(
+    html,
+    {
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "Server-Timing": printTimings(),
+      },
+    },
+  );
 }

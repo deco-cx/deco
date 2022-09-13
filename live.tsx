@@ -9,9 +9,15 @@ import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handl
 import getSupabaseClient from "$live/supabase.ts";
 import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
-import { componentsPreview, updateComponentProps } from "$live/editor.tsx";
+import {
+  componentsPreview,
+  renderComponent,
+  updateComponentProps,
+} from "$live/editor.tsx";
 import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
+import type { ComponentType } from "preact";
+import type { Props as EditorProps } from "./src/Editor.tsx";
 
 // While Fresh doesn't allow for injecting routes and middlewares,
 // we have to deliberately store the manifest in this scope.
@@ -46,7 +52,7 @@ function isPrivateDomain(domain: string) {
 }
 
 export interface LivePageData {
-  components?: PageComponentData[];
+  components: PageComponentData[];
   mode: Mode;
   template: string;
 }
@@ -92,7 +98,7 @@ export async function loadLiveComponents(
   const isEditor = url.searchParams.has("editor");
 
   return {
-    components: Pages?.[0]?.components ?? null,
+    components: Pages?.[0]?.components ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
   };
@@ -109,11 +115,31 @@ export function createLiveHandler<LoaderData = LivePageData>(
   options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
 ) {
   const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
+
   const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
+      const url = new URL(req.url);
+      // TODO: Find a better way to embedded this route on project routes.
+      // Follow up here: https://github.com/denoland/fresh/issues/516
+      // TODO: Protect these endpoints
+      if (url.pathname === "/live/api/components") {
+        return componentsPreview(userManifest, "components");
+      }
+      if (url.pathname === "/live/api/islands") {
+        return componentsPreview(userManifest, "islands");
+      }
+      if (
+        url.pathname.startsWith("/live/api/islands/") ||
+        url.pathname.startsWith("/live/api/components/")
+      ) {
+        const componentName = url.pathname.split("/").pop() ?? "";
+
+        console.log("FOOO");
+        return renderComponent(userManifest, componentName);
+      }
+
       const { start, end, printTimings } = createServerTiming();
       const domains: string[] = userOptions.domains || [];
-      const url = new URL(req.url);
 
       if (!domains.includes(url.hostname)) {
         console.log("Domain not found:", url.hostname);
@@ -171,10 +197,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
         const options = { userOptions };
         return await updateComponentProps(req, ctx, options);
       }
-      // TODO: change this to GET
-      if (url.pathname === "/live/api/components") {
-        return componentsPreview(userManifest);
-      }
+
       return new Response("Not found", { status: 404 });
     },
   };
@@ -199,7 +222,9 @@ export function LiveComponents(
 export function LivePage({ data, ...otherProps }: PageProps<LivePageData>) {
   const InspectVSCode = !isDenoDeploy &&
     userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
-  const Editor = userManifest.islands[`./islands/Editor.tsx`]?.default;
+  const Editor: ComponentType<EditorProps> = userManifest
+    .islands[`./islands/Editor.tsx`]
+    ?.default;
 
   if (!Editor) {
     console.log("Missing Island: ./island/Editor.tsx");
