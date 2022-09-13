@@ -18,37 +18,42 @@ import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
 import type { ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
+import {
+  getDefaultDomains,
+  getLiveOptions,
+  getManifest,
+  pushDefaultDomains,
+  setLiveOptions,
+  setManifest,
+} from "./context.ts";
 
-// While Fresh doesn't allow for injecting routes and middlewares,
-// we have to deliberately store the manifest in this scope.
-let userManifest: DecoManifest;
-let userOptions: LiveOptions & { siteId?: number };
 const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
 const isDenoDeploy = deploymentId !== undefined;
-const defaultDomains = [
-  `localhost`,
-];
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
-  userManifest = manifest;
-  userOptions = liveOptions;
-  defaultDomains.push(
-    `${userOptions.site}.deco.page`,
-    `deco-pages-${userOptions.site}.deno.dev`,
+  setManifest(manifest);
+
+  pushDefaultDomains(
+    `${liveOptions.site}.deco.page`,
+    `deco-pages-${liveOptions.site}.deno.dev`,
   );
 
   // Support deploy preview domains
   if (deploymentId) {
-    defaultDomains.push(
-      `deco-pages-${userOptions.site}-${deploymentId}.deno.dev`,
+    pushDefaultDomains(
+      `deco-pages-${liveOptions.site}-${deploymentId}.deno.dev`,
     );
   }
+
   const userDomains = liveOptions.domains || [];
-  userOptions.domains = [...defaultDomains, ...userDomains];
+  setLiveOptions({
+    ...liveOptions,
+    domains: [...getDefaultDomains(), ...userDomains],
+  });
 };
 
 function isPrivateDomain(domain: string) {
-  return defaultDomains.includes(domain);
+  return getDefaultDomains().includes(domain);
 }
 
 export interface LivePageData {
@@ -66,7 +71,8 @@ export async function loadLiveComponents(
   _: HandlerContext<any>,
   options?: LoadLiveComponentsOptions,
 ): Promise<LivePageData> {
-  const site = userOptions.site;
+  const liveOptions = getLiveOptions();
+  const site = liveOptions.site;
   const url = new URL(req.url);
   const { template } = options ?? {};
 
@@ -91,8 +97,8 @@ export async function loadLiveComponents(
     console.log("Found page:", Pages);
   }
 
-  if (!userOptions.siteId && Pages?.[0]?.site) {
-    userOptions.siteId = Pages?.[0]?.site.id;
+  if (!liveOptions.siteId && Pages?.[0]?.site) {
+    liveOptions.siteId = Pages?.[0]?.site.id;
   }
 
   const isEditor = url.searchParams.has("editor");
@@ -123,10 +129,10 @@ export function createLiveHandler<LoaderData = LivePageData>(
       // Follow up here: https://github.com/denoland/fresh/issues/516
       // TODO: Protect these endpoints
       if (url.pathname === "/live/api/components") {
-        return componentsPreview(userManifest, "components");
+        return componentsPreview("components");
       }
       if (url.pathname === "/live/api/islands") {
-        return componentsPreview(userManifest, "islands");
+        return componentsPreview("islands");
       }
       if (
         url.pathname.startsWith("/live/api/islands/") ||
@@ -134,12 +140,12 @@ export function createLiveHandler<LoaderData = LivePageData>(
       ) {
         const componentName = url.pathname.split("/").pop() ?? "";
 
-        console.log("FOOO");
-        return renderComponent(userManifest, componentName);
+        return renderComponent(componentName);
       }
 
       const { start, end, printTimings } = createServerTiming();
-      const domains: string[] = userOptions.domains || [];
+      const liveOptions = getLiveOptions();
+      const domains: string[] = liveOptions.domains || [];
 
       if (!domains.includes(url.hostname)) {
         console.log("Domain not found:", url.hostname);
@@ -194,8 +200,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
         return await authHandler.POST!(req, ctx);
       }
       if (url.pathname === "/live/api/editor") {
-        const options = { userOptions };
-        return await updateComponentProps(req, ctx, options);
+        return await updateComponentProps(req, ctx);
       }
 
       return new Response("Not found", { status: 404 });
@@ -208,10 +213,11 @@ export function createLiveHandler<LoaderData = LivePageData>(
 export function LiveComponents(
   { components }: LivePageData,
 ) {
+  const manifest = getManifest();
   return (
     <div class="relative w-full">
       {components?.map(({ component, props }: PageComponentData) => {
-        const Comp = getComponentModule(userManifest, component)?.default;
+        const Comp = getComponentModule(manifest, component)?.default;
 
         return <Comp {...props} />;
       })}
@@ -220,9 +226,10 @@ export function LiveComponents(
 }
 
 export function LivePage({ data, ...otherProps }: PageProps<LivePageData>) {
+  const manifest = getManifest();
   const InspectVSCode = !isDenoDeploy &&
-    userManifest.islands[`./islands/InspectVSCode.tsx`]?.default;
-  const Editor: ComponentType<EditorProps> = userManifest
+    manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
+  const Editor: ComponentType<EditorProps> = manifest
     .islands[`./islands/Editor.tsx`]
     ?.default;
 
@@ -232,7 +239,7 @@ export function LivePage({ data, ...otherProps }: PageProps<LivePageData>) {
 
   const renderEditor = Boolean(Editor) && data.mode === "edit";
   const privateDomain = isPrivateDomain(otherProps.url.hostname);
-  const componentSchemas = userManifest.schemas;
+  const componentSchemas = manifest.schemas;
 
   return (
     <div class="flex">

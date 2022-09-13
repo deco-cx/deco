@@ -1,7 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { renderToString } from "preact-render-to-string";
+import { getLiveOptions, getManifest } from "./context.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
-import type { DecoManifest } from "./types.ts";
 import {
   COMPONENT_NAME_REGEX,
   componentNameFromPath,
@@ -10,23 +10,17 @@ import {
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 
-type Options = {
-  userOptions: {
-    siteId: number;
-  };
-};
-
 export async function updateComponentProps(
   req: Request,
   _: HandlerContext,
-  { userOptions }: Options,
 ) {
   let status;
+  const liveOptions = getLiveOptions();
 
   try {
     const { components, template } = await req.json();
 
-    if (!userOptions.siteId) {
+    if (!liveOptions.siteId) {
       // TODO: fetch site id from supabase
     }
 
@@ -34,7 +28,7 @@ export async function updateComponentProps(
 
     const res = await getSupabaseClientForUser(req).from("pages").update({
       components: components,
-    }).match({ site: userOptions.siteId, path: template });
+    }).match({ site: liveOptions.siteId, path: template });
 
     status = res.status;
   } catch (e) {
@@ -52,10 +46,10 @@ export interface ComponentPreview {
 }
 
 export function componentsPreview(
-  manifest: DecoManifest,
   componentType: "components" | "islands",
 ) {
   const { start, end, printTimings } = createServerTiming();
+  const manifest = getManifest();
 
   start("map-components");
   const components: ComponentPreview[] = Object.entries(manifest[componentType])
@@ -93,11 +87,11 @@ export function componentsPreview(
 }
 
 export function renderComponent(
-  manifest: DecoManifest,
   componentName: string,
 ) {
   const { start, end, printTimings } = createServerTiming();
 
+  const manifest = getManifest();
   const Component = getComponentModule(manifest, componentName)?.default;
   if (!Component) {
     return new Response("Component Not Found", { status: 400 });
