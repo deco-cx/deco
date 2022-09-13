@@ -1,4 +1,4 @@
-import { IslandModule } from "$fresh/src/server/types.ts";
+import { IslandModule, Plugin } from "$fresh/src/server/types.ts";
 import { Manifest } from "$fresh/server.ts";
 import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 
@@ -21,6 +21,7 @@ export interface Page {
 export interface LiveOptions {
   site: string;
   domains?: string[];
+  plugins?: Plugin[];
 }
 
 export interface PageComponentData {

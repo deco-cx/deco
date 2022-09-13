@@ -1,7 +1,7 @@
 {
   "recommendations": [
     "ecmel.vscode-html-css",
-    "bradlc.vscode-tailwindcss",
+    "sastan.twind-intellisense",
     "tobermory.es6-string-html",
     "denoland.vscode-deno"
   ]
