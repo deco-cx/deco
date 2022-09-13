@@ -124,6 +124,14 @@ export function createLiveHandler<LoaderData = LivePageData>(
         return new Response("Site not found", { status: 404 });
       }
 
+      if (url.pathname === "/live/proxy/gtag/js") {
+        const trackingId = url.searchParams.get("id");
+        console.log("Proxying gtag", trackingId);
+        return fetch(
+          `https://www.googletagmanager.com/gtag/js?id=${trackingId}`,
+        );
+      }
+
       start("fetch-page-data");
       let loaderData = undefined;
 
