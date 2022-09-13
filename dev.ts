@@ -134,7 +134,6 @@ export async function generate(directory: string, manifest: DevManifest) {
       islands: {${islands.map(templates.islands.obj).join("\n")}},
       components: {${components.map(templates.components.obj).join("\n")}},
       schemas: {${schemas.map(templates.schemas).join("\n")}},
-      twind: ${await generateTwind(directory)},
       baseUrl: import.meta.url,
       config,
     };
@@ -218,20 +217,6 @@ async function collectComponents(dir: string): Promise<string[]> {
   return components;
 }
 
-async function generateTwind(dir: string) {
-  // Tailwind config file is CommonJS only, and plugins expect that.
-  // We transform the file to ESM for deno importing.
-  const rawConfig = await Deno
-    .readTextFileSync(join(dir, "./tailwind.config.js"))
-    .replace(/module.exports = {\r?\n/, "")
-    .replace(/\r?\n};/, "}")
-    .replace(/,(\n|\r\n)}(\n|\r\n)$/, "")
-    .replace(/\(theme\)/g, "(theme: any)");
-
-  // Inline config
-  return templates.twind.replace("theme: {}", rawConfig);
-}
-
 const templates = {
   routes: {
     imports: (file: string, i: number) =>
@@ -254,8 +239,4 @@ const templates = {
   schemas: (
     { component, schema }: SchemaMap,
   ) => `${component}: ${schema ? JSON.stringify(schema) : null},`,
-  twind: `{
-    mode: "warn",
-    theme: {}
-  }`,
 };
