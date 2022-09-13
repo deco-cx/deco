@@ -21,12 +21,8 @@ Add the `$live` import to your `import_map.json` file:
 Then replace your `routes/index.tsx` file with this:
 
 ```tsx
-/** @jsx h */
-import { h } from "preact";
-import { createLivePage } from "$live/live.tsx";
-import Placeholder from "../components/Placeholder.tsx";
-
-export const { handler, LivePage } = createLivePage(() => <Placeholder />);
+import { createLiveHandler, LivePage } from "$live/live.tsx";
+export const handler = createLiveHandler();
 export default LivePage;
 ```
 
@@ -45,8 +41,8 @@ import manifest from "./deco.gen.ts";
 import { start } from "$live/server.ts";
 
 await start(manifest, {
-  site: "deco",
-  domains: ["deco.cx"],
+  site: "mysitename",
+  domains: ["mysitename.com"],
 });
 ```
 
