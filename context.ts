@@ -18,6 +18,10 @@ export function pushDefaultDomains(...domains: string[]) {
   defaultDomains.push(...domains);
 }
 
+export function isPrivateDomain(domain: string) {
+  return defaultDomains.includes(domain);
+}
+
 export function getManifest() {
   return manifest;
 }

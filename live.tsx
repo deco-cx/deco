@@ -22,6 +22,7 @@ import {
   getDefaultDomains,
   getLiveOptions,
   getManifest,
+  isPrivateDomain,
   pushDefaultDomains,
   setLiveOptions,
   setManifest,
@@ -51,10 +52,6 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
     domains: [...getDefaultDomains(), ...userDomains],
   });
 };
-
-function isPrivateDomain(domain: string) {
-  return getDefaultDomains().includes(domain);
-}
 
 export interface LivePageData {
   components: PageComponentData[];
@@ -129,10 +126,10 @@ export function createLiveHandler<LoaderData = LivePageData>(
       // Follow up here: https://github.com/denoland/fresh/issues/516
       // TODO: Protect these endpoints
       if (url.pathname === "/live/api/components") {
-        return componentsPreview("components");
+        return componentsPreview(url, "components");
       }
       if (url.pathname === "/live/api/islands") {
-        return componentsPreview("islands");
+        return componentsPreview(url, "islands");
       }
       if (
         url.pathname.startsWith("/live/api/islands/") ||
@@ -140,7 +137,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
       ) {
         const componentName = url.pathname.split("/").pop() ?? "";
 
-        return renderComponent(componentName);
+        return renderComponent(url, componentName);
       }
 
       const { start, end, printTimings } = createServerTiming();

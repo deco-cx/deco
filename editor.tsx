@@ -1,6 +1,11 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { renderToString } from "preact-render-to-string";
-import { getLiveOptions, getManifest } from "./context.ts";
+import {
+  getDefaultDomains,
+  getLiveOptions,
+  getManifest,
+  isPrivateDomain,
+} from "./context.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
 import {
   COMPONENT_NAME_REGEX,
@@ -14,6 +19,11 @@ export async function updateComponentProps(
   req: Request,
   _: HandlerContext,
 ) {
+  const url = new URL(req.url);
+  if (!isPrivateDomain(url.hostname)) {
+    return new Response("Not found", { status: 404 });
+  }
+
   let status;
   const liveOptions = getLiveOptions();
 
@@ -46,8 +56,13 @@ export interface ComponentPreview {
 }
 
 export function componentsPreview(
+  url: URL,
   componentType: "components" | "islands",
 ) {
+  if (!isPrivateDomain(url.hostname)) {
+    return new Response("Not found", { status: 404 });
+  }
+
   const { start, end, printTimings } = createServerTiming();
   const manifest = getManifest();
 
@@ -87,14 +102,19 @@ export function componentsPreview(
 }
 
 export function renderComponent(
+  url: URL,
   componentName: string,
 ) {
+  if (!isPrivateDomain(url.hostname)) {
+    return new Response("Not found", { status: 404 });
+  }
+
   const { start, end, printTimings } = createServerTiming();
 
   const manifest = getManifest();
   const Component = getComponentModule(manifest, componentName)?.default;
   if (!Component) {
-    return new Response("Component Not Found", { status: 400 });
+    return new Response("Component Not Found", { status: 404 });
   }
 
   start("render-component");
