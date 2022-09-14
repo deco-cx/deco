@@ -124,15 +124,13 @@ export function createLiveHandler<LoaderData = LivePageData>(
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
       if (url.pathname === "/live/api/components") {
-        return componentsPreview(url);
+        return componentsPreview(req);
       }
 
       if (
         url.pathname.startsWith("/live/api/components/")
       ) {
-        const componentName = url.pathname.split("/").pop() ?? "";
-
-        return renderComponent(url, componentName);
+        return renderComponent(req);
       }
 
       const { start, end, printTimings } = createServerTiming();

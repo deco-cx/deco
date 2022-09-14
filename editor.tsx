@@ -79,8 +79,10 @@ function mapComponentsToPreview(
 }
 
 export function componentsPreview(
-  url: URL,
+  req: Request,
 ) {
+  const url = new URL(req.url);
+
   if (!isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
   }
@@ -121,23 +123,37 @@ export function componentsPreview(
 }
 
 export function renderComponent(
-  url: URL,
-  componentName: string,
+  req: Request,
 ) {
+  const url = new URL(req.url);
+
   if (!isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
   }
 
   const { start, end, printTimings } = createServerTiming();
 
+  const componentName = url.pathname.split("/").pop() ?? "";
   const manifest = getManifest();
   const Component = getComponentModule(manifest, componentName)?.default;
+
   if (!Component) {
-    return new Response("Component Not Found", { status: 404 });
+    return new Response(JSON.stringify({ error: "Component Not Found" }), {
+      status: 404,
+    });
   }
 
+  let html: string;
   start("render-component");
-  const html = renderToString(<Component />);
+  try {
+    html = renderToString(<Component />);
+  } catch (e) {
+    if (url.hostname === "localhost") {
+      throw e;
+    }
+
+    html = renderToString(<div>Failed to load component</div>);
+  }
   end("render-component");
 
   return new Response(
