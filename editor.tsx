@@ -1,9 +1,9 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { renderToString } from "preact-render-to-string";
 import {
-  getDefaultDomains,
   getLiveOptions,
   getManifest,
+  isDenoDeploy,
   isPrivateDomain,
 } from "./context.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
@@ -14,6 +14,10 @@ import {
   isValidIsland,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
+
+const ONE_MINUTE = 60;
+const ONE_HOUR = 60 * ONE_MINUTE;
+const ONE_DAY = 24 * ONE_HOUR;
 
 export async function updateComponentProps(
   req: Request,
@@ -97,6 +101,13 @@ export function componentsPreview(
     headers: {
       "content-type": "application/json",
       "Server-Timing": printTimings(),
+      ...(isDenoDeploy()
+        ? {
+          "Cache-Control": `max-age=${ONE_DAY}, stale-while-revalidate=${
+            15 * ONE_MINUTE
+          }`,
+        }
+        : {}),
     },
   });
 }
@@ -127,6 +138,13 @@ export function renderComponent(
       headers: {
         "content-type": "text/html; charset=utf-8",
         "Server-Timing": printTimings(),
+        ...(isDenoDeploy()
+          ? {
+            "Cache-Control": `max-age=${ONE_DAY}, stale-while-revalidate=${
+              15 * ONE_MINUTE
+            }`,
+          }
+          : {}),
       },
     },
   );

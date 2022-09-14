@@ -4,8 +4,6 @@ import { IS_BROWSER } from "$fresh/runtime.ts";
 import PlusIcon from "./icons/PlusIcon.tsx";
 import type { ComponentPreview } from "../editor.tsx";
 
-let components: ComponentPreview[] | undefined = undefined;
-
 interface Props {
   onClickComponent: (componentName: string) => void;
   registerToC: (
@@ -16,11 +14,13 @@ interface Props {
 export default function ComponentPreviewList(
   { onClickComponent, registerToC }: Props,
 ) {
-  const [_, update] = useState<boolean>(false);
+  const [components, setComponents] = useState<ComponentPreview[] | undefined>(
+    undefined,
+  );
 
   useEffect(function fetchComponentAndIslands() {
     let cancel = false;
-    if (IS_BROWSER && !components) {
+    if (IS_BROWSER) {
       const effect = async () => {
         const [{ components: apiComponents }, { islands }] = await Promise.all([
           fetch("/live/api/components").then((res) => res.json()),
@@ -28,13 +28,12 @@ export default function ComponentPreviewList(
         ]);
 
         if (cancel) return;
-
-        components = [
+        const newComponents = [
           ...apiComponents,
           ...islands,
         ];
-        update((old) => !old);
-        registerToC(components);
+        setComponents(newComponents);
+        registerToC(newComponents);
       };
 
       effect();
@@ -50,7 +49,10 @@ export default function ComponentPreviewList(
       {components?.map(
         ({ component, componentLabel, link }) => {
           return (
-            <div class={tw`mb-3 last-child:mb-0`} id={component}>
+            <div
+              id={component}
+              class={tw`mb-3 last-child:mb-0`}
+            >
               <label class={tw`font-medium`}>{componentLabel}</label>
               <div
                 class={tw`relative border rounded min-h-[50px] max-h-[250px]`}

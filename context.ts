@@ -9,6 +9,8 @@ let liveOptions: EnhancedLiveOptions;
 const defaultDomains = [
   `localhost`,
 ];
+const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+const _isDenoDeploy = deploymentId !== undefined;
 
 export function getDefaultDomains() {
   return defaultDomains;
@@ -36,4 +38,12 @@ export function getLiveOptions() {
 
 export function setLiveOptions(newLiveOptions: EnhancedLiveOptions) {
   liveOptions = newLiveOptions;
+}
+
+export function getDeploymentId() {
+  return deploymentId;
+}
+
+export function isDenoDeploy() {
+  return _isDenoDeploy;
 }

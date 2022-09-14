@@ -20,16 +20,15 @@ import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
 import {
   getDefaultDomains,
+  getDeploymentId,
   getLiveOptions,
   getManifest,
+  isDenoDeploy,
   isPrivateDomain,
   pushDefaultDomains,
   setLiveOptions,
   setManifest,
 } from "./context.ts";
-
-const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
-const isDenoDeploy = deploymentId !== undefined;
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   setManifest(manifest);
@@ -40,9 +39,9 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   );
 
   // Support deploy preview domains
-  if (deploymentId) {
+  if (isDenoDeploy()) {
     pushDefaultDomains(
-      `deco-pages-${liveOptions.site}-${deploymentId}.deno.dev`,
+      `deco-pages-${liveOptions.site}-${getDeploymentId()}.deno.dev`,
     );
   }
 
