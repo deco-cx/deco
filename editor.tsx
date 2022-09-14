@@ -1,4 +1,5 @@
 import { HandlerContext } from "$fresh/server.ts";
+import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
 import {
   getLiveOptions,
@@ -14,9 +15,7 @@ import {
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 
-const ONE_MINUTE = 60;
-const ONE_HOUR = 60 * ONE_MINUTE;
-const ONE_DAY = 24 * ONE_HOUR;
+const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
 export async function updateComponentProps(
   req: Request,
@@ -104,16 +103,17 @@ export function componentsPreview(
   );
   end("map-components");
 
+  const cache = isDenoDeploy() &&
+    url.searchParams.has(ASSET_CACHE_BUST_KEY);
+
   return new Response(JSON.stringify({ components, islands }), {
     status: 200,
     headers: {
       "content-type": "application/json",
       "Server-Timing": printTimings(),
-      ...(isDenoDeploy()
+      ...(cache
         ? {
-          "Cache-Control": `max-age=${
-            15 * ONE_MINUTE
-          }, stale-while-revalidate=${ONE_DAY}`,
+          "Cache-Control": ONE_YEAR_CACHE,
         }
         : {}),
     },
@@ -154,17 +154,18 @@ export function renderComponent(
   }
   end("render-component");
 
+  const cache = isDenoDeploy() &&
+    url.searchParams.has(ASSET_CACHE_BUST_KEY);
+
   return new Response(
     html,
     {
       headers: {
         "content-type": "text/html; charset=utf-8",
         "Server-Timing": printTimings(),
-        ...(isDenoDeploy()
+        ...(cache
           ? {
-            "Cache-Control": `max-age=${
-              15 * ONE_MINUTE
-            }, stale-while-revalidate=${ONE_DAY}`,
+            "Cache-Control": ONE_YEAR_CACHE,
           }
           : {}),
       },

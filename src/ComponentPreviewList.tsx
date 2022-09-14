@@ -1,6 +1,6 @@
 import { tw } from "twind";
 import { useEffect, useState } from "preact/hooks";
-import { IS_BROWSER } from "$fresh/runtime.ts";
+import { asset, IS_BROWSER } from "$fresh/runtime.ts";
 import PlusIcon from "./icons/PlusIcon.tsx";
 import type { ComponentPreview } from "../editor.tsx";
 
@@ -22,8 +22,9 @@ export default function ComponentPreviewList(
     let cancel = false;
     if (IS_BROWSER) {
       const effect = async () => {
+        // Using asset to add the querystring __fresh_c=BUILD_ID
         const { components: apiComponents, islands } = await fetch(
-          "/live/api/components",
+          asset("/live/api/components"),
         ).then((res) => res.json());
 
         if (cancel) return;
@@ -57,7 +58,7 @@ export default function ComponentPreviewList(
                 class={tw`relative border rounded min-h-[50px] max-h-[250px]`}
               >
                 <iframe
-                  data-src={link}
+                  data-src={asset(link)}
                   class={tw`max-h-[250px] w-full`}
                 />
                 <div
