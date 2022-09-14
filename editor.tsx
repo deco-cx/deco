@@ -9,10 +9,8 @@ import {
 import { getSupabaseClientForUser } from "./supabase.ts";
 import { Module } from "./types.ts";
 import {
-  COMPONENT_NAME_REGEX,
   componentNameFromPath,
   getComponentModule,
-  isValidIsland,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 
@@ -133,7 +131,7 @@ export function renderComponent(
 
   const { start, end, printTimings } = createServerTiming();
 
-  const componentName = url.pathname.split("/").pop() ?? "";
+  const componentName = url.pathname.replace("/live/api/components/", "") ?? "";
   const manifest = getManifest();
   const Component = getComponentModule(manifest, componentName)?.default;
 

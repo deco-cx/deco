@@ -1,11 +1,13 @@
 import type { DecoManifest, Module } from "../types.ts";
 
-// Valid expressions: https://regex101.com/r/YCTBSM/2
+// Valid expressions: https://regex101.com/r/7sPtnb/1
 // /Component.tsx
-// ./islands/Component.tsx
-// ./components/Component.tsx
+// ./components/Foo.tsx
+// /islands/Foo.tsx
+// ./islands/Foo.tsx
+// ./components/deep/Test.tsx
 export const COMPONENT_NAME_REGEX =
-  /^(\.\/islands|\.\/components)?\/(\w*)\.(tsx|jsx|js|ts)/;
+  /^(\.?\/islands|\.?\/components)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
 
 export const BLOCKED_ISLANDS_SCHEMAS = new Set([
   "/Editor.tsx",

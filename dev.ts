@@ -6,7 +6,6 @@ import { walk } from "std/fs/walk.ts";
 import {
   COMPONENT_NAME_REGEX,
   componentNameFromPath,
-  isValidIsland,
 } from "./utils/component.ts";
 
 interface DevManifest {
@@ -73,13 +72,17 @@ async function collectComponentsSchemas(
     componentName: string,
     type: "islands" | "components",
   ) => {
-    const componentFile = await import(
+    const componentModule = await import(
       toFileUrl(
         join(directory, type, componentName),
       ).href
     );
 
-    const schema = componentFile.schema ?? null;
+    const schema = componentModule.schema;
+
+    if (!schema) {
+      return;
+    }
 
     return {
       component: componentNameFromPath(componentName),
@@ -87,31 +90,30 @@ async function collectComponentsSchemas(
     };
   };
 
-  const componentsSchemas: Promise<SchemaMap>[] = [];
+  const componentSchemasPromises: Promise<SchemaMap | undefined>[] = [];
   islands.forEach((islandName) => {
-    if (!isValidIsland(islandName)) {
-      return;
-    }
-
-    componentsSchemas.push(
+    componentSchemasPromises.push(
       mapComponentToSchemaMap(islandName, "islands"),
     );
   });
 
   components.forEach((componentName) => {
     if (
-      !islandComponents.has(componentName) &&
-      !COMPONENT_NAME_REGEX.test(componentName)
+      islandComponents.has(componentName)
     ) {
       return;
     }
 
-    componentsSchemas.push(
+    componentSchemasPromises.push(
       mapComponentToSchemaMap(componentName, "components"),
     );
   });
 
-  return await Promise.all(componentsSchemas);
+  const componentsSchemas = await Promise.all(componentSchemasPromises);
+
+  return componentsSchemas.filter((value): value is SchemaMap =>
+    Boolean(value)
+  );
 }
 
 export async function generate(directory: string, manifest: DevManifest) {
@@ -236,5 +238,5 @@ const templates = {
   },
   schemas: (
     { component, schema }: SchemaMap,
-  ) => `${component}: ${schema ? JSON.stringify(schema) : null},`,
+  ) => `"${component}": ${schema ? JSON.stringify(schema) : null},`,
 };
