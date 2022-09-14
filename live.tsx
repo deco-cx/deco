@@ -123,15 +123,11 @@ export function createLiveHandler<LoaderData = LivePageData>(
       const url = new URL(req.url);
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
-      // TODO: Protect these endpoints
       if (url.pathname === "/live/api/components") {
-        return componentsPreview(url, "components");
+        return componentsPreview(url);
       }
-      if (url.pathname === "/live/api/islands") {
-        return componentsPreview(url, "islands");
-      }
+
       if (
-        url.pathname.startsWith("/live/api/islands/") ||
         url.pathname.startsWith("/live/api/components/")
       ) {
         const componentName = url.pathname.split("/").pop() ?? "";

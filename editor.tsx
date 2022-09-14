@@ -7,6 +7,7 @@ import {
   isPrivateDomain,
 } from "./context.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
+import { Module } from "./types.ts";
 import {
   COMPONENT_NAME_REGEX,
   componentNameFromPath,
@@ -59,9 +60,26 @@ export interface ComponentPreview {
   link: string;
 }
 
+function mapComponentsToPreview(
+  [componentPath, componentModule]: [string, Module],
+) {
+  const { schema } = componentModule;
+
+  if (!schema) {
+    return;
+  }
+
+  const componentName = componentNameFromPath(componentPath);
+
+  return {
+    link: `/live/api/components/${componentName}`,
+    component: componentName,
+    componentLabel: schema.title ?? componentName,
+  };
+}
+
 export function componentsPreview(
   url: URL,
-  componentType: "components" | "islands",
 ) {
   if (!isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
@@ -71,41 +89,31 @@ export function componentsPreview(
   const manifest = getManifest();
 
   start("map-components");
-  const components: ComponentPreview[] = Object.entries(manifest[componentType])
+  const components: ComponentPreview[] = Object.entries(manifest.components)
     .map(
-      ([componentPath, componentModule]) => {
-        if (
-          !COMPONENT_NAME_REGEX.test(componentPath) ||
-          !isValidIsland(componentPath)
-        ) {
-          return;
-        }
-
-        const { schema } = componentModule;
-        const componentName = componentNameFromPath(componentPath);
-
-        return {
-          link: `/live/api/${componentType}/${componentName}`,
-          component: componentName,
-          componentLabel: schema?.title ?? componentName,
-        };
-      },
+      mapComponentsToPreview,
     ).filter(
       (componentPreviewData): componentPreviewData is ComponentPreview =>
         Boolean(componentPreviewData),
     );
+
+  const islands: ComponentPreview[] = Object.entries(manifest.islands).map(
+    mapComponentsToPreview,
+  ).filter((componentPreviewData): componentPreviewData is ComponentPreview =>
+    Boolean(componentPreviewData)
+  );
   end("map-components");
 
-  return new Response(JSON.stringify({ [componentType]: components }), {
+  return new Response(JSON.stringify({ components, islands }), {
     status: 200,
     headers: {
       "content-type": "application/json",
       "Server-Timing": printTimings(),
       ...(isDenoDeploy()
         ? {
-          "Cache-Control": `max-age=${ONE_DAY}, stale-while-revalidate=${
+          "Cache-Control": `max-age=${
             15 * ONE_MINUTE
-          }`,
+          }, stale-while-revalidate=${ONE_DAY}`,
         }
         : {}),
     },
@@ -140,9 +148,9 @@ export function renderComponent(
         "Server-Timing": printTimings(),
         ...(isDenoDeploy()
           ? {
-            "Cache-Control": `max-age=${ONE_DAY}, stale-while-revalidate=${
+            "Cache-Control": `max-age=${
               15 * ONE_MINUTE
-            }`,
+            }, stale-while-revalidate=${ONE_DAY}`,
           }
           : {}),
       },

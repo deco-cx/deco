@@ -22,10 +22,9 @@ export default function ComponentPreviewList(
     let cancel = false;
     if (IS_BROWSER) {
       const effect = async () => {
-        const [{ components: apiComponents }, { islands }] = await Promise.all([
-          fetch("/live/api/components").then((res) => res.json()),
-          fetch("/live/api/islands").then((res) => res.json()),
-        ]);
+        const { components: apiComponents, islands } = await fetch(
+          "/live/api/components",
+        ).then((res) => res.json());
 
         if (cancel) return;
         const newComponents = [
