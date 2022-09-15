@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { asset, IS_BROWSER } from "$fresh/runtime.ts";
+import { asset } from "$fresh/runtime.ts";
 import PlusIcon from "./icons/PlusIcon.tsx";
 import type { ComponentPreview } from "../editor.tsx";
 
@@ -19,24 +19,22 @@ export default function ComponentPreviewList(
 
   useEffect(function fetchComponentAndIslands() {
     let cancel = false;
-    if (IS_BROWSER) {
-      const effect = async () => {
-        // Using asset to add the querystring __fresh_c=BUILD_ID
-        const { components: apiComponents, islands } = await fetch(
-          asset("/live/api/components"),
-        ).then((res) => res.json());
+    const effect = async () => {
+      // Using asset to add the querystring __fresh_c=BUILD_ID
+      const { components: apiComponents, islands } = await fetch(
+        asset("/live/api/components"),
+      ).then((res) => res.json());
 
-        if (cancel) return;
-        const newComponents = [
-          ...apiComponents,
-          ...islands,
-        ];
-        setComponents(newComponents);
-        registerToC(newComponents);
-      };
+      if (cancel) return;
+      const newComponents = [
+        ...apiComponents,
+        ...islands,
+      ];
+      setComponents(newComponents);
+      registerToC(newComponents);
+    };
 
-      effect();
-    }
+    effect();
 
     return () => {
       cancel = true;
