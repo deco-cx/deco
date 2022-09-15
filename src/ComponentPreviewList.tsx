@@ -55,7 +55,7 @@ export default function ComponentPreviewList(
               <label class="font-medium">{componentLabel}</label>
               <div class="relative border rounded min-h-[50px] max-h-[250px]">
                 <iframe
-                  data-src={asset(link)}
+                  src={asset(link)}
                   class="max-h-[250px] w-full"
                 />
                 <div

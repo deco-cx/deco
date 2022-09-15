@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import PlusIcon from "./icons/PlusIcon.tsx";
 import Button from "./ui/Button.tsx";
 import Modal from "./ui/Modal.tsx";
@@ -28,39 +28,6 @@ export default function AddNewComponent({ onAddComponent }: Props) {
   const [tocComponents, setToCComponents] = useState<
     ComponentPreview[]
   >([]);
-
-  useEffect(function initObserverIframes() {
-    if (!targetRef.current || !(openModal && tocComponents.length > 0)) {
-      return;
-    }
-
-    const target = targetRef.current;
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.intersectionRatio > 0) {
-          const iframe = (entry.target as HTMLIFrameElement);
-
-          // Prevent set the src and make the browser fetch the page multiple times
-          if (!iframe.src) {
-            iframe.src = iframe.dataset.src ?? "";
-          }
-        }
-      });
-    }, {
-      root: target,
-    });
-
-    const iframes = target.getElementsByTagName("iframe");
-    for (const iframe of iframes) {
-      observer.observe(iframe);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-    // tocComponents are the components fetched by the ComponentsPreviewList and they doesn't exist when openModal = true at the first time
-  }, [openModal, tocComponents]);
 
   return (
     <>
