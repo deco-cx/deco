@@ -1,109 +1,29 @@
-import { useCallback, useRef } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import Button from "./ui/Button.tsx";
 import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
-import { FormProvider, useFieldArray, useForm } from "react-hook-form";
-import type { PageComponentData } from "../types.ts";
+import { FormProvider } from "react-hook-form";
 import AddNewComponent from "./AddNewComponent.tsx";
-
-const COMPONENTS_KEY_NAME: "components" = "components" as const;
-
-function mapComponentsToFormData(
-  components: PageComponentData[],
-): ComponentProp[] {
-  return components.map((component) => {
-    return component.props || {};
-  });
-}
-
-function mapFormDataToComponents(
-  formData: ComponentProp[],
-  currentComponents: PageComponentData[],
-) {
-  const components: PageComponentData[] = [];
-  currentComponents.forEach(({ component }, index) => {
-    const props = formData[index];
-
-    components.push({
-      component,
-      // Required check this, because the form doesn't handle undefined values
-      props: Object.keys(props).length === 0 ? undefined : props,
-    });
-  });
-
-  return components;
-}
-
-type ComponentProp = Record<string, any>;
-type FormValues = {
-  [COMPONENTS_KEY_NAME]: ComponentProp[];
-};
+import useEditorOperations from "./useEditorForm.tsx";
 
 export default function EditorSidebar() {
   const { componentSchemas, template, components: initialComponents } =
     useEditor();
-  const componentsRef = useRef(initialComponents);
+
+  const {
+    reloadPage,
+    saveProps,
+    handleAddComponent,
+    handleRemoveComponent,
+    handleChangeOrder,
+    componentsRef,
+    methods,
+    fields,
+  } = useEditorOperations({
+    template,
+    components: initialComponents,
+  });
+
   const components = componentsRef.current;
-
-  const methods = useForm<FormValues>({
-    defaultValues: {
-      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(initialComponents),
-    },
-  });
-  const { append, fields, remove, swap } = useFieldArray({
-    control: methods.control,
-    name: COMPONENTS_KEY_NAME,
-  });
-
-  const reloadPage = () => document.location.reload();
-  const saveProps = async () => {
-    const components = mapFormDataToComponents(
-      methods.getValues(COMPONENTS_KEY_NAME),
-      componentsRef.current,
-    );
-
-    await fetch("/live/api/editor", {
-      method: "POST",
-      redirect: "manual",
-      body: JSON.stringify({ components, template }),
-    });
-    reloadPage();
-  };
-
-  const handleChangeOrder = (dir: "prev" | "next", pos: number) => {
-    let newPos: number;
-
-    if (dir === "prev") {
-      newPos = pos - 1;
-    } else {
-      newPos = pos + 1;
-    }
-
-    if (newPos < 0 || newPos >= components.length) {
-      return;
-    }
-
-    const prevComp = components[newPos];
-    components[newPos] = components[pos];
-    components[pos] = prevComp;
-
-    swap(pos, newPos);
-  };
-
-  const handleRemoveComponent = (removedIndex: number) => {
-    componentsRef.current = componentsRef.current.filter((_, index) =>
-      index !== removedIndex
-    );
-
-    remove(removedIndex);
-  };
-
-  const handleAddComponent = useCallback((componentName: string) => {
-    const _components = componentsRef.current;
-    _components.push({ component: componentName });
-
-    append({});
-  }, [componentsRef]);
 
   return (
     <div class="bg-white min-h-screen w-3/12 border-l-2 p-2">
