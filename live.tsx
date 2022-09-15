@@ -18,37 +18,27 @@ import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
-import {
-  getDefaultDomains,
-  getDeploymentId,
-  getLiveOptions,
-  getManifest,
-  isDenoDeploy,
-  isPrivateDomain,
-  pushDefaultDomains,
-  setLiveOptions,
-  setManifest,
-} from "./context.ts";
+import LiveContext from "./context.ts";
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
-  setManifest(manifest);
+  LiveContext.setupManifestAndOptions({ manifest, liveOptions });
 
-  pushDefaultDomains(
+  LiveContext.pushDefaultDomains(
     `${liveOptions.site}.deco.page`,
     `deco-pages-${liveOptions.site}.deno.dev`,
   );
 
   // Support deploy preview domains
-  if (isDenoDeploy()) {
-    pushDefaultDomains(
-      `deco-pages-${liveOptions.site}-${getDeploymentId()}.deno.dev`,
+  if (LiveContext.isDenoDeploy()) {
+    LiveContext.pushDefaultDomains(
+      `deco-pages-${liveOptions.site}-${LiveContext.getDeploymentId()}.deno.dev`,
     );
   }
 
   const userDomains = liveOptions.domains || [];
-  setLiveOptions({
+  LiveContext.setLiveOptions({
     ...liveOptions,
-    domains: [...getDefaultDomains(), ...userDomains],
+    domains: [...LiveContext.getDefaultDomains(), ...userDomains],
   });
 };
 
@@ -67,7 +57,7 @@ export async function loadLiveComponents(
   _: HandlerContext<any>,
   options?: LoadLiveComponentsOptions,
 ): Promise<LivePageData> {
-  const liveOptions = getLiveOptions();
+  const liveOptions = LiveContext.getLiveOptions();
   const site = liveOptions.site;
   const url = new URL(req.url);
   const { template } = options ?? {};
@@ -134,7 +124,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
       }
 
       const { start, end, printTimings } = createServerTiming();
-      const liveOptions = getLiveOptions();
+      const liveOptions = LiveContext.getLiveOptions();
       const domains: string[] = liveOptions.domains || [];
 
       if (!domains.includes(url.hostname)) {
@@ -183,7 +173,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
     },
     async POST(req, ctx) {
       const url = new URL(req.url);
-      if (url.pathname === "/inspect-vscode" && !isDenoDeploy) {
+      if (url.pathname === "/inspect-vscode" && !LiveContext.isDenoDeploy()) {
         return await InspectVSCodeHandler.POST!(req, ctx);
       }
       if (url.pathname === "/live/api/credentials") {
@@ -203,7 +193,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
 export function LiveComponents(
   { components }: LivePageData,
 ) {
-  const manifest = getManifest();
+  const manifest = LiveContext.getManifest();
   return (
     <div class="relative w-full">
       {components?.map(({ component, props }: PageComponentData) => {
@@ -220,8 +210,8 @@ export function LivePage(
     children: ComponentChildren;
   },
 ) {
-  const manifest = getManifest();
-  const InspectVSCode = !isDenoDeploy &&
+  const manifest = LiveContext.getManifest();
+  const InspectVSCode = !LiveContext.isDenoDeploy() &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
   const Editor: ComponentType<EditorProps> = manifest
     .islands[`./islands/Editor.tsx`]
@@ -232,7 +222,7 @@ export function LivePage(
   }
 
   const renderEditor = Boolean(Editor) && data.mode === "edit";
-  const privateDomain = isPrivateDomain(otherProps.url.hostname);
+  const privateDomain = LiveContext.isPrivateDomain(otherProps.url.hostname);
   const componentSchemas = manifest.schemas;
 
   return (

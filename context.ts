@@ -2,48 +2,71 @@ import type { DecoManifest, LiveOptions } from "./types.ts";
 
 type EnhancedLiveOptions = LiveOptions & { siteId?: number };
 
-// While Fresh doesn't allow for injecting routes and middlewares,
-// we have to deliberately store the manifest in this scope.
-let manifest: DecoManifest;
-let liveOptions: EnhancedLiveOptions;
-const defaultDomains = [
-  `localhost`,
-];
-const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
-const _isDenoDeploy = deploymentId !== undefined;
+class LiveContext {
+  // While Fresh doesn't allow for injecting routes and middlewares,
+  // we have to deliberately store the manifest in this scope.
+  #manifest: DecoManifest;
+  #liveOptions: EnhancedLiveOptions;
+  #defaultDomains: string[];
+  #deploymentId: string | undefined;
+  #isDenoDeploy: boolean;
 
-export function getDefaultDomains() {
-  return defaultDomains;
+  constructor() {
+    this.#deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+    this.#isDenoDeploy = this.#deploymentId !== undefined;
+    this.#defaultDomains = ["localhost"];
+  }
+
+  public setupManifestAndOptions({ manifest, liveOptions }: {
+    manifest: DecoManifest;
+    liveOptions: EnhancedLiveOptions;
+  }) {
+    if (!this.#manifest) {
+      this.setManifest(manifest);
+    }
+
+    if (!this.#liveOptions) {
+      this.setLiveOptions(liveOptions);
+    }
+  }
+
+  public getDefaultDomains() {
+    return this.#defaultDomains;
+  }
+
+  public pushDefaultDomains(...domains: string[]) {
+    this.#defaultDomains.push(...domains);
+  }
+
+  public isPrivateDomain(domain: string) {
+    return this.#defaultDomains.includes(domain);
+  }
+
+  public getManifest() {
+    return this.#manifest;
+  }
+
+  public setManifest(manifest: DecoManifest) {
+    this.#manifest = manifest;
+  }
+
+  public getLiveOptions() {
+    return this.#liveOptions;
+  }
+
+  public setLiveOptions(liveOptions: EnhancedLiveOptions) {
+    this.#liveOptions = liveOptions;
+  }
+
+  public getDeploymentId() {
+    return this.#deploymentId;
+  }
+
+  public isDenoDeploy() {
+    return this.#isDenoDeploy;
+  }
 }
 
-export function pushDefaultDomains(...domains: string[]) {
-  defaultDomains.push(...domains);
-}
+const liveContext: LiveContext = new LiveContext();
 
-export function isPrivateDomain(domain: string) {
-  return defaultDomains.includes(domain);
-}
-
-export function getManifest() {
-  return manifest;
-}
-
-export function setManifest(newManifest: DecoManifest) {
-  manifest = newManifest;
-}
-
-export function getLiveOptions() {
-  return liveOptions;
-}
-
-export function setLiveOptions(newLiveOptions: EnhancedLiveOptions) {
-  liveOptions = newLiveOptions;
-}
-
-export function getDeploymentId() {
-  return deploymentId;
-}
-
-export function isDenoDeploy() {
-  return _isDenoDeploy;
-}
+export default liveContext;

@@ -1,12 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
-import {
-  getLiveOptions,
-  getManifest,
-  isDenoDeploy,
-  isPrivateDomain,
-} from "./context.ts";
+import LiveContext from "./context.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
 import { Module } from "./types.ts";
 import {
@@ -22,12 +17,12 @@ export async function updateComponentProps(
   _: HandlerContext,
 ) {
   const url = new URL(req.url);
-  if (!isPrivateDomain(url.hostname)) {
+  if (!LiveContext.isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
   }
 
   let status;
-  const liveOptions = getLiveOptions();
+  const liveOptions = LiveContext.getLiveOptions();
 
   try {
     const { components, template } = await req.json();
@@ -80,12 +75,12 @@ export function componentsPreview(
 ) {
   const url = new URL(req.url);
 
-  if (!isPrivateDomain(url.hostname)) {
+  if (!LiveContext.isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
   }
 
   const { start, end, printTimings } = createServerTiming();
-  const manifest = getManifest();
+  const manifest = LiveContext.getManifest();
 
   start("map-components");
   const components: ComponentPreview[] = Object.entries(manifest.components)
@@ -103,7 +98,7 @@ export function componentsPreview(
   );
   end("map-components");
 
-  const cache = isDenoDeploy() &&
+  const cache = LiveContext.isDenoDeploy() &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
   return new Response(JSON.stringify({ components, islands }), {
@@ -125,14 +120,14 @@ export function renderComponent(
 ) {
   const url = new URL(req.url);
 
-  if (!isPrivateDomain(url.hostname)) {
+  if (!LiveContext.isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
   }
 
   const { start, end, printTimings } = createServerTiming();
 
   const componentName = url.pathname.replace("/live/api/components/", "") ?? "";
-  const manifest = getManifest();
+  const manifest = LiveContext.getManifest();
   const Component = getComponentModule(manifest, componentName)?.default;
 
   if (!Component) {
@@ -154,7 +149,7 @@ export function renderComponent(
   }
   end("render-component");
 
-  const cache = isDenoDeploy() &&
+  const cache = LiveContext.isDenoDeploy() &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
   return new Response(
