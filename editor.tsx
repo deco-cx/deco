@@ -101,7 +101,7 @@ export function componentsPreview(
   const cache = LiveContext.isDenoDeploy() &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
-  return new Response(JSON.stringify({ components, islands }), {
+  return Response.json({ components, islands }, {
     status: 200,
     headers: {
       "content-type": "application/json",
@@ -131,7 +131,7 @@ export function renderComponent(
   const Component = getComponentModule(manifest, componentName)?.default;
 
   if (!Component) {
-    return new Response(JSON.stringify({ error: "Component Not Found" }), {
+    return new Response("Component Not Found", {
       status: 404,
     });
   }
