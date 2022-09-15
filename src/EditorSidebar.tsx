@@ -5,6 +5,8 @@ import { FormProvider } from "react-hook-form";
 import AddNewComponent from "./AddNewComponent.tsx";
 import useEditorOperations from "./useEditorForm.tsx";
 
+const DEFAULT_SCHEMA = { title: "default", type: "object", properties: {} };
+
 export default function EditorSidebar() {
   const { componentSchemas, template, components: initialComponents } =
     useEditor();
@@ -62,15 +64,14 @@ export default function EditorSidebar() {
                   removeComponents={handleRemoveComponent}
                   prefix={`components.${index}` as const}
                   index={index}
-                  schema={componentSchemas[component] ??
-                    { title: component, type: "object", properties: {} }}
+                  schema={componentSchemas[component] ?? DEFAULT_SCHEMA}
                 />
               );
             })}
           </form>
-
-          <AddNewComponent onAddComponent={handleAddComponent} />
         </FormProvider>
+
+        <AddNewComponent onAddComponent={handleAddComponent} />
       </div>
     </div>
   );
