@@ -2,7 +2,6 @@ import type { h } from "preact";
 import { useRef } from "preact/hooks";
 import { createPortal } from "preact/compat";
 import useTrapFocus from "./hooks/useTrapFocus.tsx";
-import { tw } from "twind";
 
 interface ModalContentProps extends h.JSX.HTMLAttributes<HTMLDivElement> {}
 
@@ -76,7 +75,7 @@ export default function Modal(
     ? createPortal(
       <div
         {...modalProps}
-        class={tw`bg-gray-500 bg-opacity-50 fixed inset-0 z-50 flex justify-center items-center ${modalProps?.class}`}
+        class={`bg-gray-500 bg-opacity-50 fixed inset-0 z-50 flex justify-center items-center ${modalProps?.class}`}
         onKeyDown={handleBackdropKeyDown}
         onClick={handleBackdropClick}
       >

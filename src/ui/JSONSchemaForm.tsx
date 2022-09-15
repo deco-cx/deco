@@ -3,7 +3,6 @@ import type {
   JSONSchema7TypeName,
 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 import type { FunctionComponent, h } from "preact";
-import { tw } from "twind";
 import { useFormContext } from "react-hook-form";
 import { forwardRef } from "preact/compat";
 import Button from "./Button.tsx";
@@ -21,7 +20,7 @@ const FieldTypes: Record<
     <input
       {...props}
       ref={ref}
-      class={tw`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
     />
   )),
   "number": forwardRef((props: h.JSX.HTMLAttributes<HTMLInputElement>, ref) => (
@@ -29,7 +28,7 @@ const FieldTypes: Record<
       {...props}
       type="number"
       ref={ref}
-      class={tw`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
     />
   )),
   "boolean": forwardRef((
@@ -40,7 +39,7 @@ const FieldTypes: Record<
       {...props}
       type="checkbox"
       ref={ref}
-      class={tw`border hover:border-black transition-colors ease-in rounded p-1 ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 ${props.class}`}
     />
   )),
 };
@@ -110,11 +109,9 @@ export default function JSONSchemaForm(
   }
 
   return (
-    <div class={tw`rounded-md border mb-2 p-2`}>
-      <div
-        class={tw`flex justify-between items-center`}
-      >
-        <legend class={tw`font-bold`}>{schema.title}</legend>
+    <div class="rounded-md border mb-2 p-2">
+      <div class="flex justify-between items-center">
+        <legend class="font-bold">{schema.title}</legend>
 
         {index !== undefined &&
           (

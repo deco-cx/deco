@@ -1,4 +1,3 @@
-import { tw } from "twind";
 import { useEffect, useState } from "preact/hooks";
 import { asset, IS_BROWSER } from "$fresh/runtime.ts";
 import PlusIcon from "./icons/PlusIcon.tsx";
@@ -51,24 +50,22 @@ export default function ComponentPreviewList(
           return (
             <div
               id={component}
-              class={tw`mb-3 last-child:mb-0`}
+              class="mb-3 last-child:mb-0"
             >
-              <label class={tw`font-medium`}>{componentLabel}</label>
-              <div
-                class={tw`relative border rounded min-h-[50px] max-h-[250px]`}
-              >
+              <label class="font-medium">{componentLabel}</label>
+              <div class="relative border rounded min-h-[50px] max-h-[250px]">
                 <iframe
                   data-src={asset(link)}
-                  class={tw`max-h-[250px] w-full`}
+                  class="max-h-[250px] w-full"
                 />
                 <div
-                  class={tw`group flex items-center justify-center absolute inset-0 cursor-pointer hover:bg-gray-200 hover:bg-opacity-50 transition-colors ease-in`}
+                  class="group flex items-center justify-center absolute inset-0 cursor-pointer hover:bg-gray-200 hover:bg-opacity-50 transition-colors ease-in"
                   onClick={() => onClickComponent(component)}
                 >
                   <PlusIcon
                     width={32}
                     height={32}
-                    class={tw`hidden group-hover:block text-gray-400`}
+                    class="hidden group-hover:block text-gray-400"
                   />
                 </div>
               </div>

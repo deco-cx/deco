@@ -1,4 +1,3 @@
-import { tw } from "twind";
 import { useEffect, useRef, useState } from "preact/hooks";
 import PlusIcon from "./icons/PlusIcon.tsx";
 import Button from "./ui/Button.tsx";
@@ -10,7 +9,7 @@ function ToCItem({ component, componentLabel }: ComponentPreview) {
   return (
     <li key={component}>
       <a
-        class={tw`font-medium  text-gray-500 hover:text-black`}
+        class="font-medium  text-gray-500 hover:text-black"
         href={`#${component}`}
       >
         {componentLabel}
@@ -75,18 +74,18 @@ export default function AddNewComponent({ onAddComponent }: Props) {
       <Modal
         open={openModal}
         onDismiss={() => setOpenModal(false)}
-        class={tw`container rounded bg-white p-5`}
+        class="container rounded bg-white p-5"
       >
         <div class="w-full flex justify-between mb-4">
-          <span class={tw`text-xl font-bold`}>Componentes</span>
+          <span class="text-xl font-bold">Componentes</span>
           <Button onClick={() => setOpenModal(false)}>
-            <PlusIcon class={tw`rotate-45`} />
+            <PlusIcon class="rotate-45" />
           </Button>
         </div>
 
-        <div class={tw`flex`}>
+        <div class="flex">
           <div
-            class={tw`overflow-y-auto max-h-[80vh] h-[80vh] w-full`}
+            class="overflow-y-auto max-h-[80vh] h-[80vh] w-full"
             ref={targetRef}
           >
             <ComponentPreviewList
@@ -98,7 +97,7 @@ export default function AddNewComponent({ onAddComponent }: Props) {
             />
           </div>
           <nav
-            class={tw`ml-4 px-4 border-l w-1/6`}
+            class="ml-4 px-4 border-l w-1/6"
             aria-label="Table of components"
           >
             <ul>
