@@ -1,9 +1,14 @@
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import Button from "./ui/Button.tsx";
 import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
-import { FormProvider } from "react-hook-form";
+import { FormProvider as FP } from "react-hook-form";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import AddNewComponent from "./AddNewComponent.tsx";
 import useEditorOperations from "./useEditorForm.tsx";
+
+const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
+  props: UseFormReturn<TFieldValues, TContext>,
+) => JSX.Element;
 
 const DEFAULT_SCHEMA = { title: "default", type: "object", properties: {} };
 
