@@ -1,148 +1,34 @@
-import { useRef } from "preact/hooks";
 import { useEditor } from "$live/src/EditorProvider.tsx";
-import { tw } from "twind";
 import Button from "./ui/Button.tsx";
 import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
-import { FormProvider, useForm } from "react-hook-form";
-import type { PageComponentData } from "../types.ts";
+import { FormProvider as FP } from "react-hook-form";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
+import AddNewComponent from "./AddNewComponent.tsx";
+import useEditorOperations from "./useEditorForm.tsx";
 
-function AddNewComponent({ onAddComponent }) {
-  const { componentSchemas } = useEditor();
-  const selectedComponent = useRef("");
+const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
+  props: UseFormReturn<TFieldValues, TContext>,
+) => JSX.Element;
 
-  return (
-    <div class="py-1 mb-2">
-      Selecione componente para adicionar
-      <div class="flex">
-        <select
-          class={tw`border hover:border-black py-1 px-2 mr-1 rounded transition-colors ease-in`}
-          value={"-1"}
-          onInput={(e) => {
-            selectedComponent.current = e.target.value;
-          }}
-        >
-          {Object.keys(componentSchemas).map((componentName) => (
-            <option value={componentName}>
-              {componentSchemas[componentName]?.title ?? componentName}
-            </option>
-          ))}
-        </select>
-        <Button
-          onClick={() => {
-            onAddComponent(selectedComponent.current);
-            selectedComponent.current = "";
-          }}
-        >
-          Adicionar
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function mapComponentsToFormData(components: PageComponentData[]) {
-  return components.reduce((curr, component, index) => {
-    curr[index] = component.props;
-    return curr;
-  }, {});
-}
-
-function mapFormDataToComponents(
-  formData: FormValues,
-  currentComponents: PageComponentData[],
-) {
-  const components: PageComponentData[] = [];
-  currentComponents.forEach(({ component }, index) => {
-    const props = formData[index];
-    components.push({
-      component,
-      props,
-    });
-  });
-
-  return components;
-}
-
-type FormValues = Record<number, Record<string, unknown>>;
+const DEFAULT_SCHEMA = { title: "default", type: "object", properties: {} };
 
 export default function EditorSidebar() {
   const { componentSchemas, template, components: initialComponents } =
     useEditor();
-  const componentsRef = useRef(initialComponents);
-  const methods = useForm<FormValues>({
-    defaultValues: mapComponentsToFormData(initialComponents),
+
+  const {
+    reloadPage,
+    saveProps,
+    handleAddComponent,
+    handleRemoveComponent,
+    handleChangeOrder,
+    componentsRef,
+    methods,
+    fields,
+  } = useEditorOperations({
+    template,
+    components: initialComponents,
   });
-
-  const reloadPage = () => document.location.reload();
-  const saveProps = async () => {
-    const components = mapFormDataToComponents(
-      methods.getValues(),
-      componentsRef.current,
-    );
-
-    await fetch("/live/api/editor", {
-      method: "POST",
-      redirect: "manual",
-      body: JSON.stringify({ components, template }),
-    });
-    reloadPage();
-  };
-
-  const handleChangeOrder = (dir: "prev" | "next", pos: number) => {
-    let newPos: number;
-
-    if (dir === "prev") {
-      newPos = pos - 1;
-    } else {
-      newPos = pos + 1;
-    }
-
-    const components = componentsRef.current;
-    if (newPos < 0 || newPos >= components.length) {
-      return;
-    }
-
-    const prevComp = components[newPos];
-    components[newPos] = components[pos];
-    components[pos] = prevComp;
-
-    methods.reset(
-      mapComponentsToFormData(
-        components,
-      ),
-    );
-
-    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
-    methods.setValue("noop", 0, { shouldDirty: true });
-  };
-
-  const handleRemoveComponent = (removedIndex: number) => {
-    componentsRef.current = componentsRef.current.filter((_, index) =>
-      index !== removedIndex
-    );
-    const components = componentsRef.current;
-
-    methods.reset(
-      mapComponentsToFormData(
-        components,
-      ),
-    );
-    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
-    methods.setValue("noop", 0, { shouldDirty: true });
-  };
-
-  const handleAddComponent = (componentName: string) => {
-    const components = componentsRef.current;
-    components.push({ component: componentName });
-
-    methods.reset(
-      mapComponentsToFormData(
-        components,
-      ),
-    );
-    // Needs to set this noop value to mimic that form has changed, since has no imperative way to set dirty
-    methods.setValue("noop", 0, { shouldDirty: true });
-  };
 
   const components = componentsRef.current;
 
@@ -174,23 +60,23 @@ export default function EditorSidebar() {
               e.preventDefault();
             }}
           >
-            {components.map(({
-              component,
-            }, index) => {
+            {fields.map((field, index) => {
+              const { component } = components[index];
               return (
                 <JSONSchemaForm
+                  key={field.id}
                   changeOrder={handleChangeOrder}
                   removeComponents={handleRemoveComponent}
+                  prefix={`components.${index}` as const}
                   index={index}
-                  schema={componentSchemas[component] ??
-                    { title: component, type: "object", properties: {} }}
+                  schema={componentSchemas[component] ?? DEFAULT_SCHEMA}
                 />
               );
             })}
           </form>
-
-          <AddNewComponent onAddComponent={handleAddComponent} />
         </FormProvider>
+
+        <AddNewComponent onAddComponent={handleAddComponent} />
       </div>
     </div>
   );

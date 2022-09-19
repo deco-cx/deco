@@ -3,13 +3,10 @@ import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
-
-const COMPONENT_NAME_REGEX = /^\/(\w*)\.(tsx|jsx|js|ts)/;
-
-const BLOCKED_ISLANDS_SCHEMAS = new Set([
-  "/Editor.tsx",
-  "/InspectVSCode.tsx",
-]);
+import {
+  COMPONENT_NAME_REGEX,
+  componentNameFromPath,
+} from "./utils/component.ts";
 
 interface DevManifest {
   routes: string[];
@@ -75,45 +72,48 @@ async function collectComponentsSchemas(
     componentName: string,
     type: "islands" | "components",
   ) => {
-    const componentFile = await import(
+    const componentModule = await import(
       toFileUrl(
         join(directory, type, componentName),
       ).href
     );
 
-    const schema = componentFile.schema ?? null;
+    const schema = componentModule.schema;
+
+    if (!schema) {
+      return;
+    }
 
     return {
-      component: componentName.replace(COMPONENT_NAME_REGEX, "$1"),
+      component: componentNameFromPath(componentName),
       schema,
     };
   };
 
-  const componentsSchemas: Promise<SchemaMap>[] = [];
+  const componentSchemasPromises: Promise<SchemaMap | undefined>[] = [];
   islands.forEach((islandName) => {
-    if (BLOCKED_ISLANDS_SCHEMAS.has(islandName)) {
-      return;
-    }
-
-    componentsSchemas.push(
+    componentSchemasPromises.push(
       mapComponentToSchemaMap(islandName, "islands"),
     );
   });
 
   components.forEach((componentName) => {
     if (
-      !islandComponents.has(componentName) &&
-      !COMPONENT_NAME_REGEX.test(componentName)
+      islandComponents.has(componentName)
     ) {
       return;
     }
 
-    componentsSchemas.push(
+    componentSchemasPromises.push(
       mapComponentToSchemaMap(componentName, "components"),
     );
   });
 
-  return await Promise.all(componentsSchemas);
+  const componentsSchemas = await Promise.all(componentSchemasPromises);
+
+  return componentsSchemas.filter((value): value is SchemaMap =>
+    Boolean(value)
+  );
 }
 
 export async function generate(directory: string, manifest: DevManifest) {
@@ -238,5 +238,5 @@ const templates = {
   },
   schemas: (
     { component, schema }: SchemaMap,
-  ) => `${component}: ${schema ? JSON.stringify(schema) : null},`,
+  ) => `"${component}": ${schema ? JSON.stringify(schema) : null},`,
 };

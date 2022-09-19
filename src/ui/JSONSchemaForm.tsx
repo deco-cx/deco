@@ -1,9 +1,9 @@
 import type {
   JSONSchema7,
+  JSONSchema7Definition,
   JSONSchema7TypeName,
 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
-import type { FunctionComponent } from "preact";
-import { tw } from "twind";
+import type { FunctionComponent, h } from "preact";
 import { useFormContext } from "react-hook-form";
 import { forwardRef } from "preact/compat";
 import Button from "./Button.tsx";
@@ -13,7 +13,7 @@ import TrashIcon from "../icons/TrashIcon.tsx";
 const FieldTypes: Record<
   Exclude<
     JSONSchema7TypeName,
-    "object" | "integer" | "array" | "null"
+    "object" | "array" | "null"
   >,
   FunctionComponent
 > = {
@@ -21,7 +21,7 @@ const FieldTypes: Record<
     <input
       {...props}
       ref={ref}
-      class={tw`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
     />
   )),
   "number": forwardRef((props: h.JSX.HTMLAttributes<HTMLInputElement>, ref) => (
@@ -29,7 +29,18 @@ const FieldTypes: Record<
       {...props}
       type="number"
       ref={ref}
-      class={tw`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+    />
+  )),
+  "integer": forwardRef((
+    props: h.JSX.HTMLAttributes<HTMLInputElement>,
+    ref,
+  ) => (
+    <input
+      {...props}
+      type="number"
+      ref={ref}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
     />
   )),
   "boolean": forwardRef((
@@ -40,7 +51,7 @@ const FieldTypes: Record<
       {...props}
       type="checkbox"
       ref={ref}
-      class={tw`border hover:border-black transition-colors ease-in rounded p-1 ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 ${props.class}`}
     />
   )),
 };
@@ -61,8 +72,12 @@ function RenderFields(
   return (
     <>
       {properties.map(([field, property]) => {
-        const { type, title, properties: nestedProperties } = property;
-        if (Array.isArray(type) || type === undefined) {
+        const { type, title, properties: nestedProperties } =
+          property as JSONSchema7;
+        if (
+          Array.isArray(type) || type === undefined || type === "null" ||
+          type === "array"
+        ) {
           console.log("Type must be a string");
           return null;
         }
@@ -85,13 +100,7 @@ function RenderFields(
               {title}
             </label>
             <Field
-              {...register(fullPathField, {
-                value: property.default,
-                minLength: property.minLength,
-                maxLength: property.maxLength,
-                min: property.minimum,
-                max: property.maximum,
-              })}
+              {...register(fullPathField)}
             />
           </div>
         );
@@ -102,55 +111,51 @@ function RenderFields(
 
 interface Props {
   schema: JSONSchema7;
-  index?: number;
+  index: number;
+  prefix: string;
   changeOrder: (dir: "prev" | "next", pos: number) => void;
   removeComponents: (removedComponents: number) => void;
 }
 
 export default function JSONSchemaForm(
-  { schema, index, changeOrder, removeComponents }: Props,
+  { schema, index, changeOrder, removeComponents, prefix }: Props,
 ) {
   if (schema.type !== "object") {
     throw new Error("Schema must be type object");
   }
 
   return (
-    <div class={tw`rounded-md border mb-2 p-2`}>
-      <div
-        class={tw`flex justify-between items-center`}
-      >
-        <legend class={tw`font-bold`}>{schema.title}</legend>
+    <div class="rounded-md border mb-2 p-2">
+      <div class="flex justify-between items-center">
+        <legend class="font-bold">{schema.title}</legend>
 
-        {index !== undefined &&
-          (
-            <div class="flex gap-2">
-              <Button
-                onClick={() => {
-                  changeOrder("next", index);
-                }}
-              >
-                <CaretDownIcon />
-              </Button>
-              <Button
-                onClick={() => {
-                  changeOrder("prev", index);
-                }}
-              >
-                <CaretDownIcon class="rotate-180" />
-              </Button>
-              <Button
-                onClick={() => {
-                  removeComponents(index);
-                }}
-              >
-                <TrashIcon />
-              </Button>
-            </div>
-          )}
+        <div class="flex gap-2">
+          <Button
+            onClick={() => {
+              changeOrder("next", index);
+            }}
+          >
+            <CaretDownIcon />
+          </Button>
+          <Button
+            onClick={() => {
+              changeOrder("prev", index);
+            }}
+          >
+            <CaretDownIcon class="rotate-180" />
+          </Button>
+          <Button
+            onClick={() => {
+              removeComponents(index);
+            }}
+          >
+            <TrashIcon />
+          </Button>
+        </div>
       </div>
       <RenderFields
         properties={schema.properties}
-        prefix={index !== undefined ? `${index}.` : ""}
+        prefix={prefix !== undefined ? `${prefix}.` : ""}
       />
     </div>
   );
