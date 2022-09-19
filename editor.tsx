@@ -9,6 +9,7 @@ import {
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
+import { h } from "preact";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -136,10 +137,50 @@ export function renderComponent(
     });
   }
 
-  let html: string;
+  let html = "";
   start("render-component");
-  try {
+
+  const render = () => {
     html = renderToString(<Component />);
+
+    // TODO: handle hydration
+    // https://github.com/denoland/fresh/blob/1b3c9f2569c5d56a6d37c366cb5940f26b7e131e/plugins/twind.ts#L24
+
+    return {
+      htmlText: html,
+      requiresHydration: false,
+    };
+  };
+
+  const twindPlugin = LiveContext.getLiveOptions().plugins?.find((plugin) => {
+    return plugin.name === "twind";
+  });
+
+  try {
+    if (twindPlugin) {
+      // Mimic the fresh render function that run plugins.render
+      // https://github.com/denoland/fresh/blob/main/src/server/render.ts#L174
+      const res = twindPlugin.render?.({
+        render,
+      }) ?? {};
+
+      if (res.styles) {
+        const [style] = res.styles;
+
+        const styleNode = (
+          <style
+            id={style.id}
+            dangerouslySetInnerHTML={{ __html: style.cssText }}
+            media={style.media}
+          />
+        );
+
+        const styleString = renderToString(styleNode);
+        html = styleString + html;
+      }
+    } else {
+      render();
+    }
   } catch (e) {
     if (url.hostname === "localhost") {
       throw e;
