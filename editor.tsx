@@ -140,16 +140,10 @@ export function renderComponent(
   let html = "";
   start("render-component");
 
-  // Try to find twindPlugin to add the stylesheet to the sandbox
-  const twindPlugin = LiveContext.getLiveOptions().plugins?.find((plugin) => {
-    return plugin.name === "twind";
-  });
-
   const render = () => {
     html = renderToString(<Component />);
 
     // TODO: handle hydration
-    // requiresHydration = false because the preview won't be interactive
     // https://github.com/denoland/fresh/blob/1b3c9f2569c5d56a6d37c366cb5940f26b7e131e/plugins/twind.ts#L24
 
     return {
@@ -157,6 +151,10 @@ export function renderComponent(
       requiresHydration: false,
     };
   };
+
+  const twindPlugin = LiveContext.getLiveOptions().plugins?.find((plugin) => {
+    return plugin.name === "twind";
+  });
 
   try {
     if (twindPlugin) {
@@ -169,11 +167,13 @@ export function renderComponent(
       if (res.styles) {
         const [style] = res.styles;
 
-        const styleNode = h("style", {
-          id: style.id,
-          dangerouslySetInnerHTML: { __html: style.cssText },
-          media: style.media,
-        });
+        const styleNode = (
+          <style
+            id={style.id}
+            dangerouslySetInnerHTML={{ __html: style.cssText }}
+            media={style.media}
+          />
+        );
 
         const styleString = renderToString(styleNode);
         html = styleString + html;
