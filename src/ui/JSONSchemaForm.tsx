@@ -11,10 +11,17 @@ import TrashIcon from "../icons/TrashIcon.tsx";
 
 const getInputTypeFromFormat = (format: JSONSchema7["format"]) => {
   switch (format) {
-    case "uri":
-      return "url";
+    case "date":
+      return "date";
+    case "date-time":
+      return "datetime-local";
     case "email":
       return "email";
+    case "iri":
+    case "uri":
+      return "url";
+    case "time":
+      return "time";
     default:
       return "";
   }
