@@ -18,7 +18,7 @@ export default function EditorSidebar() {
 
   const {
     reloadPage,
-    saveProps,
+    onSubmit,
     handleAddComponent,
     handleRemoveComponent,
     handleChangeOrder,
@@ -34,32 +34,29 @@ export default function EditorSidebar() {
 
   return (
     <div class="bg-white min-h-screen w-3/12 border-l-2 p-2">
-      <header class="flex justify-between items-center">
-        <h2 class="font-bold text-lg">Editor</h2>
-        <div class="flex gap-2">
-          <Button
-            type="button"
-            onClick={reloadPage}
-            disabled={!methods.formState.isDirty}
-          >
-            Descartar
-          </Button>
-          <Button
-            type="button"
-            onClick={saveProps}
-            disabled={!methods.formState.isDirty}
-          >
-            Salvar
-          </Button>
-        </div>
-      </header>
-      <div class="mt-4">
-        <FormProvider {...methods}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
+      <FormProvider {...methods}>
+        <form
+          onSubmit={onSubmit}
+        >
+          <header class="flex justify-between items-center">
+            <h2 class="font-bold text-lg">Editor</h2>
+            <div class="flex gap-2">
+              <Button
+                type="button"
+                onClick={reloadPage}
+                disabled={!methods.formState.isDirty}
+              >
+                Descartar
+              </Button>
+              <Button
+                type="submit"
+                disabled={!methods.formState.isDirty}
+              >
+                Salvar
+              </Button>
+            </div>
+          </header>
+          <div class="mt-4">
             {fields.map((field, index) => {
               const { component } = components[index];
               return (
@@ -73,11 +70,10 @@ export default function EditorSidebar() {
                 />
               );
             })}
-          </form>
-        </FormProvider>
-
-        <AddNewComponent onAddComponent={handleAddComponent} />
-      </div>
+          </div>
+        </form>
+      </FormProvider>
+      <AddNewComponent onAddComponent={handleAddComponent} />
     </div>
   );
 }

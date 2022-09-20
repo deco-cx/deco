@@ -55,19 +55,21 @@ export default function useEditorOperations(
   const components = componentsRef.current;
 
   const reloadPage = () => document.location.reload();
-  const saveProps = async () => {
-    const components = mapFormDataToComponents(
-      methods.getValues(COMPONENTS_KEY_NAME),
-      componentsRef.current,
-    );
+  const onSubmit = methods.handleSubmit(
+    async ({ components: formComponents }) => {
+      const components = mapFormDataToComponents(
+        formComponents,
+        componentsRef.current,
+      );
 
-    await fetch("/live/api/editor", {
-      method: "POST",
-      redirect: "manual",
-      body: JSON.stringify({ components, template }),
-    });
-    reloadPage();
-  };
+      await fetch("/live/api/editor", {
+        method: "POST",
+        redirect: "manual",
+        body: JSON.stringify({ components, template }),
+      });
+      reloadPage();
+    },
+  );
 
   const handleChangeOrder = (dir: "prev" | "next", pos: number) => {
     let newPos: number;
@@ -106,7 +108,7 @@ export default function useEditorOperations(
 
   return {
     reloadPage,
-    saveProps,
+    onSubmit,
     handleAddComponent,
     handleRemoveComponent,
     handleChangeOrder,
