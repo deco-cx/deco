@@ -41,9 +41,17 @@ export default function useEditorOperations(
     template: string;
   },
 ) {
+  const componentsRef = useRef<PageComponentData[]>();
+
+  if (componentsRef.current === undefined) {
+    componentsRef.current = structuredClone(initialComponents);
+  }
+
+  const components = componentsRef.current as PageComponentData[];
+
   const methods = useForm<FormValues>({
     defaultValues: {
-      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(initialComponents),
+      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(components),
     },
   });
   const { fields, swap, remove, append } = useFieldArray({
@@ -51,23 +59,27 @@ export default function useEditorOperations(
     name: COMPONENTS_KEY_NAME,
   });
 
-  const componentsRef = useRef(initialComponents);
-  const components = componentsRef.current;
+  const onReset = () => {
+    componentsRef.current = structuredClone(initialComponents);
 
-  const reloadPage = () => document.location.reload();
+    methods.reset({
+      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(componentsRef.current),
+    });
+  };
+
   const onSubmit = methods.handleSubmit(
     async ({ components: formComponents }) => {
-      const components = mapFormDataToComponents(
+      const newComponents = mapFormDataToComponents(
         formComponents,
-        componentsRef.current,
+        components,
       );
 
       await fetch("/live/api/editor", {
         method: "POST",
         redirect: "manual",
-        body: JSON.stringify({ components, template }),
+        body: JSON.stringify({ components: newComponents, template }),
       });
-      reloadPage();
+      document.location.reload();
     },
   );
 
@@ -92,7 +104,7 @@ export default function useEditorOperations(
   };
 
   const handleRemoveComponent = (removedIndex: number) => {
-    componentsRef.current = componentsRef.current.filter((_, index) =>
+    componentsRef.current = components.filter((_, index) =>
       index !== removedIndex
     );
 
@@ -100,14 +112,14 @@ export default function useEditorOperations(
   };
 
   const handleAddComponent = useCallback((componentName: string) => {
-    const _components = componentsRef.current;
+    const _components = componentsRef.current as PageComponentData[];
     _components.push({ component: componentName });
 
     append({});
   }, [componentsRef]);
 
   return {
-    reloadPage,
+    onReset,
     onSubmit,
     handleAddComponent,
     handleRemoveComponent,

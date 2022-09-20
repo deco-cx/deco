@@ -9,7 +9,6 @@ import {
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
-import { h } from "preact";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 

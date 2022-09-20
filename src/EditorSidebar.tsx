@@ -17,7 +17,7 @@ export default function EditorSidebar() {
     useEditor();
 
   const {
-    reloadPage,
+    onReset,
     onSubmit,
     handleAddComponent,
     handleRemoveComponent,
@@ -43,7 +43,7 @@ export default function EditorSidebar() {
             <div class="flex gap-2">
               <Button
                 type="button"
-                onClick={reloadPage}
+                onClick={onReset}
                 disabled={!methods.formState.isDirty}
               >
                 Descartar
