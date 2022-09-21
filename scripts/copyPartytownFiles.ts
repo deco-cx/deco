@@ -32,19 +32,23 @@ async function fetchAndWriteFiles(files: string[], dest: string) {
 }
 
 export async function copyLibFiles(dest: string, opts: { debugDir?: boolean }) {
+  const fullPathDest = join(Deno.cwd(), dest);
   console.log("Creating destination folder:", dest);
   ensureDirSync(dest);
 
   console.log("Fetching and writing partytown files...");
-  await fetchAndWriteFiles(partytownFiles, dest);
+  await fetchAndWriteFiles(partytownFiles, fullPathDest);
 
   if (opts.debugDir) {
-    const debugFolder = join(dest, "./debug/");
+    const debugFolder = join(fullPathDest, "./debug/");
 
-    console.log("Debug flag enabled. Creating debug folder: ", debugFolder);
+    console.log(
+      "Debug flag enabled. Creating debug folder: ",
+      dest.concat("/debug/"),
+    );
     ensureDirSync(debugFolder);
 
-    await fetchAndWriteFiles(partytownDebugFiles, dest);
+    await fetchAndWriteFiles(partytownDebugFiles, fullPathDest);
   }
 
   console.log("Finished.");
