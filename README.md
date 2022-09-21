@@ -107,7 +107,7 @@ import MyTestComponent from '../components/MyTestComponent.tsx';
 ```
 ### Copy Partytown files script
 
-The partytown library need the web workers and service workers static files to work, this script copy those required files. More info: https://partytown.builder.io/copy-library-files
+The partytown library needs the web and service workers' static files to work. This script copies these required files. More info: https://partytown.builder.io/copy-library-files
 Add the `copyPartytown` task to your `deno.json` file:
 
 ```json
@@ -126,7 +126,7 @@ Then run the `copyPartytown` task with the first argument destination folder to 
 deno task copyPartytown "./static/~partytown/"
 ```
 
-To copy the debug files pass the flag `--debug`
+Pass the `--debug` flag to also copy Partytown's debug files.
 
 ```bash
 deno task copyPartytown "./static/~partytown/" -- "--debug"
