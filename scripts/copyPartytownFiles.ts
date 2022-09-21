@@ -1,7 +1,7 @@
 import { ensureDirSync } from "https://deno.land/std@0.156.0/fs/mod.ts";
 import { join } from "https://deno.land/std@0.156.0/path/mod.ts";
 
-const partytownUrlPrefix = "https://unpkg.com/@builder.io/partytown@0";
+const partytownUrlPrefix = "https://unpkg.com/@builder.io/partytown@0/lib/";
 const partytownFiles = [
   "partytown.js",
   "partytown-sw.js",
