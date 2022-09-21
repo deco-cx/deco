@@ -105,6 +105,33 @@ Aditionally, the import snippet will replace your clipboard content:
 ```jsx
 import MyTestComponent from '../components/MyTestComponent.tsx';
 ```
+### Copy Partytown files script
+
+The partytown library need the web workers and service workers static files to work, this script copy those required files. More info: https://partytown.builder.io/copy-library-files
+Add the `copyPartytown` task to your `deno.json` file:
+
+```json
+{
+  "tasks": {
+    // ...
+   "copyPartytown": "deno eval 'import \"$live/scripts/copyPartytownFiles.ts\"'"
+  },
+  "importMap": "./import_map.json"
+}
+```
+
+Then run the `copyPartytown` task with the first argument destination folder to copy partytown files
+
+```bash
+deno task copyPartytown "./static/~partytown/"
+```
+
+To copy the debug files pass the flag `--debug`
+
+```bash
+deno task copyPartytown "./static/~partytown/" -- "--debug"
+```
+
 
 ## Local development
 
