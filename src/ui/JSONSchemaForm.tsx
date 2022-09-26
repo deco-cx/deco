@@ -1,6 +1,5 @@
 import type {
   JSONSchema7,
-  JSONSchema7Definition,
   JSONSchema7TypeName,
 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 import type { FunctionComponent, h } from "preact";
@@ -10,18 +9,38 @@ import Button from "./Button.tsx";
 import CaretDownIcon from "../icons/CaretDownIcon.tsx";
 import TrashIcon from "../icons/TrashIcon.tsx";
 
+const getInputTypeFromFormat = (format: JSONSchema7["format"]) => {
+  switch (format) {
+    case "date":
+      return "date";
+    case "date-time":
+      return "datetime-local";
+    case "email":
+      return "email";
+    case "iri":
+    case "uri":
+      return "url";
+    case "time":
+      return "time";
+    default:
+      return "";
+  }
+};
+
 const FieldTypes: Record<
   Exclude<
     JSONSchema7TypeName,
     "object" | "array" | "null"
   >,
-  FunctionComponent
+  FunctionComponent<h.JSX.HTMLAttributes<HTMLInputElement>>
 > = {
   "string": forwardRef((props: h.JSX.HTMLAttributes<HTMLInputElement>, ref) => (
     <input
       {...props}
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${
+        props.class ?? ""
+      }`}
     />
   )),
   "number": forwardRef((props: h.JSX.HTMLAttributes<HTMLInputElement>, ref) => (
@@ -29,7 +48,9 @@ const FieldTypes: Record<
       {...props}
       type="number"
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${
+        props.class ?? ""
+      }`}
     />
   )),
   "integer": forwardRef((
@@ -40,7 +61,9 @@ const FieldTypes: Record<
       {...props}
       type="number"
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${
+        props.class ?? ""
+      }`}
     />
   )),
   "boolean": forwardRef((
@@ -51,18 +74,20 @@ const FieldTypes: Record<
       {...props}
       type="checkbox"
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 ${props.class}`}
+      class={`border hover:border-black transition-colors ease-in rounded p-1 ${
+        props.class ?? ""
+      }`}
     />
   )),
 };
 
-interface RenderFieldProps {
-  properties: JSONSchema7["properties"];
+interface RenderFieldProps
+  extends Pick<JSONSchema7, "required" | "properties"> {
   prefix: string;
 }
 
 function RenderFields(
-  { properties: jsonSchemaProperties, prefix }: RenderFieldProps,
+  { properties: jsonSchemaProperties, prefix, required = [] }: RenderFieldProps,
 ) {
   const { register } = useFormContext();
 
@@ -72,8 +97,14 @@ function RenderFields(
   return (
     <>
       {properties.map(([field, property]) => {
-        const { type, title, properties: nestedProperties } =
-          property as JSONSchema7;
+        const {
+          type,
+          title,
+          minLength,
+          maxLength,
+          pattern,
+          format,
+        } = property as JSONSchema7;
         if (
           Array.isArray(type) || type === undefined || type === "null" ||
           type === "array"
@@ -83,8 +114,11 @@ function RenderFields(
         }
 
         if (type === "object") {
+          const { properties: nestedProperties, required: nestedRequired } =
+            property as JSONSchema7;
           return (
             <RenderFields
+              required={nestedRequired}
               properties={nestedProperties}
               prefix={`${prefix}${field}.`}
             />
@@ -93,6 +127,8 @@ function RenderFields(
 
         const fullPathField = `${prefix}${field}`;
         const Field = FieldTypes[type];
+        const inputType = getInputTypeFromFormat(format);
+        const isFieldRequired = required.includes(field);
 
         return (
           <div class="flex flex-col items-start">
@@ -100,7 +136,15 @@ function RenderFields(
               {title}
             </label>
             <Field
-              {...register(fullPathField)}
+              type={inputType}
+              pattern={pattern}
+              required={isFieldRequired}
+              {...register(fullPathField, {
+                minLength,
+                maxLength,
+                pattern: pattern ? new RegExp(pattern) : undefined,
+                required: isFieldRequired,
+              })}
             />
           </div>
         );
@@ -154,6 +198,7 @@ export default function JSONSchemaForm(
         </div>
       </div>
       <RenderFields
+        required={schema.required}
         properties={schema.properties}
         prefix={prefix !== undefined ? `${prefix}.` : ""}
       />
