@@ -3,10 +3,8 @@ import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
-import {
-  COMPONENT_NAME_REGEX,
-  componentNameFromPath,
-} from "./utils/component.ts";
+import { componentNameFromPath } from "./utils/component.ts";
+import { setupGithooks } from "https://deno.land/x/githooks@0.0.2/githooks.ts";
 
 interface DevManifest {
   routes: string[];
@@ -46,6 +44,8 @@ export async function dev(
     !arraysEqual(newManifest.components, currentManifest.components);
 
   if (manifestChanged) await generate(dir, newManifest);
+
+  await setupGithooks();
 
   if (onListen) onListen();
 
