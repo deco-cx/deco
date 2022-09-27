@@ -170,6 +170,12 @@ export async function generate(directory: string, manifest: DevManifest) {
 function arraysEqual<T>(a: T[], b: T[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; ++i) {
+    if (typeof a[i] === "object") {
+      if (JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
+
+      continue;
+    }
+
     if (a[i] !== b[i]) return false;
   }
   return true;
