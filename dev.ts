@@ -148,7 +148,7 @@ export async function generate(directory: string, manifest: DevManifest) {
       routes: {${routes.map(templates.routes.obj).join("\n")}},
       islands: {${islands.map(templates.islands.obj).join("\n")}},
       components: {${components.map(templates.components.obj).join("\n")}},
-      loaders: {${loaders.map(templates.loaders.obj)}},
+      loaders: {${loaders.map(templates.loaders.obj).join("\n")}},
       schemas: {${schemas.map(templates.schemas).join("\n")}},
       baseUrl: import.meta.url,
       config,
