@@ -4,7 +4,7 @@ import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
 import { componentNameFromPath } from "./utils/component.ts";
-import { setupGithooks } from "https://deno.land/x/githooks@0.0.2/githooks.ts";
+import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 
 interface DevManifest {
   routes: string[];
