@@ -10,7 +10,7 @@ export interface Module extends IslandModule {
 }
 
 interface LoaderModule {
-  default: (req: Request, ctx: HandlerContext<any>, props: unknown) => unknown;
+  default: (req: Request, ctx: HandlerContext<any>, props: any) => unknown;
 }
 
 export interface DecoManifest extends Manifest {

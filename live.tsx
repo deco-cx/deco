@@ -109,25 +109,16 @@ export async function loadLiveComponents(
   const isEditor = url.searchParams.has("editor");
 
   return {
-    components: firstPage?.components ?? [],
-    loaders: firstPage?.loaders ?? [],
+    components: firstPage?.components?.components ?? [],
+    loaders: firstPage?.components?.loaders ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
   };
 }
 
-interface CreateLivePageOptions<LoaderData> {
-  loader?: (
-    req: Request,
-    ctx: HandlerContext<LoaderData>,
-  ) => Promise<LoaderData>;
-}
-
 export function createLiveHandler<LoaderData = LivePageData>(
-  options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
+  options?: LoadLiveComponentsOptions,
 ) {
-  const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
-
   const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
@@ -171,17 +162,6 @@ export function createLiveHandler<LoaderData = LivePageData>(
       );
       end("fetch-page-data");
 
-      // mock loaders at pageData
-      pageData.loaders = [{
-        name: "shelf1",
-        loader: "vtex/searchCollections",
-        props: { collection: "organico" },
-      }, {
-        name: "shelf2",
-        loader: "vtex/searchCollections",
-        props: { collection: "cafe" },
-      }];
-
       start("fetch-loader-data");
       const loadersResponse = await Promise.all(
         pageData.loaders?.map(async ({ loader, props, name }) => {
@@ -214,8 +194,8 @@ export function createLiveHandler<LoaderData = LivePageData>(
          * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
          */
 
-        Object.entries(componentData.props ?? {}).forEach(
-          ([propName, value]) => {
+        Object.values(componentData.props ?? {}).forEach(
+          (value) => {
             if (
               typeof value === "string" && value.charAt(0) === "{" &&
               value.charAt(value.length - 1) === "}"

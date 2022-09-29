@@ -3,12 +3,15 @@ import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
 import LiveContext from "./context.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
-import { Module } from "./types.ts";
+import { Module, PageLoaderData } from "./types.ts";
 import {
   componentNameFromPath,
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
+import {
+  JSONSchema7,
+} from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -33,8 +36,51 @@ export async function updateComponentProps(
 
     // TODO: Validate components props on schema
 
+    const loaders: PageLoaderData[] = [];
+
+    for (const component of components) {
+      const componentSchema =
+        LiveContext.getManifest().schemas[component.component];
+
+      if (!componentSchema) {
+        continue;
+      }
+
+      const componentRequiresLoader = Object.entries(
+        componentSchema.properties ?? {},
+      )
+        .filter(([, value]) => Boolean((value as JSONSchema7).$ref));
+
+      if (componentRequiresLoader.length === 0) {
+        continue;
+      }
+
+      componentRequiresLoader.forEach(([property, propertySchema]) => {
+        if (typeof propertySchema !== "object") {
+          return;
+        }
+
+        if (!propertySchema?.$ref) {
+          throw new Error(`Property ${property} doesn't have $ref on schema`);
+        }
+
+        const loaderProp = component.props[property];
+        // TODO: Use uuid v4
+        const loaderInstanceName = `${propertySchema?.$ref}-${
+          Math.trunc(Math.random() * 1_000)
+        }`;
+        component.props[property] = `{${loaderInstanceName}}`;
+
+        loaders.push({
+          loader: propertySchema.$ref,
+          name: loaderInstanceName,
+          props: loaderProp,
+        });
+      });
+    }
+
     const res = await getSupabaseClientForUser(req).from("pages").update({
-      components: components,
+      components: { components, loaders },
     }).match({ site: liveOptions.siteId, path: template });
 
     status = res.status;
