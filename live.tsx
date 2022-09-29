@@ -59,6 +59,7 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
 };
 
 export interface LivePageData {
+  editorComponents?: PageComponentData[];
   components: PageComponentData[];
   loaders: PageLoaderData[];
   mode: Mode;
@@ -162,6 +163,36 @@ export function createLiveHandler<LoaderData = LivePageData>(
       );
       end("fetch-page-data");
 
+      const isLoaderProp = (value: any): value is string =>
+        typeof value === "string" && value.charAt(0) === "{" &&
+        value.charAt(value.length - 1) === "}";
+
+      // map back components from database to components for the editor, merging loader props into component props
+      const editorComponents = pageData.components.map((componentData) => {
+        if (
+          Object.values(componentData.props ?? {}).some(isLoaderProp)
+        ) {
+          const newComponentData = structuredClone(componentData);
+
+          for (
+            const [propName, value] of Object.entries(newComponentData.props)
+          ) {
+            if (isLoaderProp(value)) {
+              const loaderName = value.substring(1, value.length - 1);
+              newComponentData.props[propName] = structuredClone(
+                pageData.loaders.find(({ name }) => name === loaderName) ?? {},
+              ).props;
+            }
+          }
+
+          return newComponentData;
+        }
+
+        return componentData;
+      });
+
+      pageData.editorComponents = editorComponents;
+
       start("fetch-loader-data");
       const loadersResponse = await Promise.all(
         pageData.loaders?.map(async ({ loader, props, name }) => {
@@ -196,10 +227,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
 
         Object.values(componentData.props ?? {}).forEach(
           (value) => {
-            if (
-              typeof value === "string" && value.charAt(0) === "{" &&
-              value.charAt(value.length - 1) === "}"
-            ) {
+            if (isLoaderProp(value)) {
               componentData.props = {
                 ...componentData.props,
                 ...path(
@@ -283,7 +311,7 @@ export function LivePage(
       {renderEditor && privateDomain
         ? (
           <Editor
-            components={data.components}
+            components={data.editorComponents!}
             template={data.template}
             componentSchemas={componentSchemas}
           />
