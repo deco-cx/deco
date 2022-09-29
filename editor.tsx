@@ -12,6 +12,11 @@ import { createServerTiming } from "./utils/serverTimings.ts";
 import {
   JSONSchema7,
 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import {
+  generateLoaderInstance,
+  loaderInstanceToProp,
+  loaderPathToKey,
+} from "./utils/loaders.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -19,6 +24,7 @@ export async function updateComponentProps(
   req: Request,
   _: HandlerContext,
 ) {
+  const { start, end, printTimings } = createServerTiming();
   const url = new URL(req.url);
   if (!LiveContext.isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
@@ -37,8 +43,9 @@ export async function updateComponentProps(
     // TODO: Validate components props on schema
 
     const loaders: PageLoaderData[] = [];
-
     const manifest = LiveContext.getManifest();
+
+    start("generating-loaders");
     for (const component of components) {
       const componentSchema = manifest.schemas[component.component];
 
@@ -46,16 +53,16 @@ export async function updateComponentProps(
         continue;
       }
 
-      const componentRequiresLoader = Object.entries(
+      const propsThatRequireLoader = Object.entries(
         componentSchema.properties ?? {},
       )
         .filter(([, value]) => Boolean((value as JSONSchema7).$ref));
 
-      if (componentRequiresLoader.length === 0) {
+      if (propsThatRequireLoader.length === 0) {
         continue;
       }
 
-      componentRequiresLoader.forEach(([property, propertySchema]) => {
+      propsThatRequireLoader.forEach(([property, propertySchema]) => {
         if (typeof propertySchema !== "object") {
           return;
         }
@@ -65,34 +72,34 @@ export async function updateComponentProps(
         }
 
         // Match property ref input into loader output
-        const [loaderKey] = Object.entries(manifest.loaders).find((
+        const [loaderPath] = Object.entries(manifest.loaders).find((
           [, loader],
         ) => loader.default.outputSchema.$ref === propertySchema.$ref) ?? [];
 
-        if (!loaderKey) {
+        if (!loaderPath) {
           throw new Error(
             `Doesn't exists loader with this $ref: ${propertySchema.$ref}`,
           );
         }
 
         const loaderProp = component.props[property];
-        // TODO: Use uuid v4
-        const loaderInstanceName = `${propertySchema?.$ref}-${
-          Math.trunc(Math.random() * 1_000)
-        }`;
-        component.props[property] = `{${loaderInstanceName}}`;
+        const loaderInstanceName = generateLoaderInstance(propertySchema.$ref);
+        component.props[property] = loaderInstanceToProp(loaderInstanceName);
 
         loaders.push({
-          loader: loaderKey.replace(/\.\/loaders\/(.*)\.ts$/, "$1"),
+          loader: loaderPathToKey(loaderPath),
           name: loaderInstanceName,
           props: loaderProp,
         });
       });
     }
+    end("generating-loaders");
 
+    start("saving-data");
     const res = await getSupabaseClientForUser(req).from("pages").update({
       components: { components, loaders },
     }).match({ site: liveOptions.siteId, path: template });
+    end("saving-data");
 
     status = res.status;
   } catch (e) {
@@ -100,7 +107,10 @@ export async function updateComponentProps(
     status = 400;
   }
 
-  return new Response(null, { status });
+  return new Response(null, {
+    status,
+    headers: { "Server-Timing": printTimings() },
+  });
 }
 
 export interface ComponentPreview {

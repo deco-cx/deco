@@ -20,6 +20,7 @@ import { getComponentModule } from "./utils/component.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
 import LiveContext from "./context.ts";
+import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
 
 function path(obj: Record<string, any>, path: string) {
   const pathList = path.split(".").filter(Boolean);
@@ -163,32 +164,22 @@ export function createLiveHandler<LoaderData = LivePageData>(
       );
       end("fetch-page-data");
 
-      const isLoaderProp = (value: any): value is string =>
-        typeof value === "string" && value.charAt(0) === "{" &&
-        value.charAt(value.length - 1) === "}";
-
       // map back components from database to components for the editor, merging loader props into component props
       const editorComponents = pageData.components.map((componentData) => {
-        if (
-          Object.values(componentData.props ?? {}).some(isLoaderProp)
+        const newComponentData = structuredClone(componentData);
+
+        for (
+          const [propName, value] of Object.entries(newComponentData.props)
         ) {
-          const newComponentData = structuredClone(componentData);
-
-          for (
-            const [propName, value] of Object.entries(newComponentData.props)
-          ) {
-            if (isLoaderProp(value)) {
-              const loaderName = value.substring(1, value.length - 1);
-              newComponentData.props[propName] = structuredClone(
-                pageData.loaders.find(({ name }) => name === loaderName) ?? {},
-              ).props;
-            }
+          if (isLoaderProp(value)) {
+            const loaderName = value.substring(1, value.length - 1);
+            newComponentData.props[propName] = structuredClone(
+              pageData.loaders.find(({ name }) => name === loaderName) ?? {},
+            ).props;
           }
-
-          return newComponentData;
         }
 
-        return componentData;
+        return newComponentData;
       });
 
       pageData.editorComponents = editorComponents;
@@ -232,7 +223,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
                 ...componentData.props,
                 ...path(
                   loadersResponseMap,
-                  value.substring(1, value.length - 1),
+                  propToLoaderInstance(value),
                 ),
               };
             }
