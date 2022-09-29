@@ -1,6 +1,7 @@
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import {
   DecoManifest,
+  Flag,
   LiveOptions,
   Mode,
   PageComponentData,
@@ -19,6 +20,10 @@ import { getComponentModule } from "./utils/component.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
 import LiveContext from "./context.ts";
+
+let flags: Flag[];
+export const flag = (name: string) =>
+  flags.find((flag) => flag.name === name)?.active;
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   LiveContext.setupManifestAndOptions({ manifest, liveOptions });
@@ -134,6 +139,36 @@ export function createLiveHandler<LoaderData = LivePageData>(
         // TODO: render custom 404 page
         return new Response("Site not found", { status: 404 });
       }
+
+      if (url.pathname === "/live/proxy/gtag/js") {
+        const trackingId = url.searchParams.get("id");
+        console.log("Proxying gtag", trackingId);
+        return fetch(
+          `https://www.googletagmanager.com/gtag/js?id=${trackingId}`,
+        );
+      }
+
+      start("fetch-flags");
+      const site = liveOptions.site;
+      const { data: Flags, error: error2 } = await getSupabaseClient()
+        .from("flags")
+        .select(`name, audience, traffic, site!inner(name, id)`)
+        .eq("site.name", site);
+
+      if (error2) {
+        console.log("Error fetching flags:", error2);
+      } else {
+        console.log("Found flags:", Flags);
+      }
+      end("fetch-flags");
+
+      start("calc-flags");
+      // TODO: Cookie answer
+      Flags?.map((flag: Flag) => {
+        flag.active = Math.random() < flag.traffic;
+      });
+      end("calc-flags");
+      flags = Flags ?? [];
 
       start("fetch-page-data");
       let loaderData = undefined;
