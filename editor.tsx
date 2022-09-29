@@ -38,9 +38,9 @@ export async function updateComponentProps(
 
     const loaders: PageLoaderData[] = [];
 
+    const manifest = LiveContext.getManifest();
     for (const component of components) {
-      const componentSchema =
-        LiveContext.getManifest().schemas[component.component];
+      const componentSchema = manifest.schemas[component.component];
 
       if (!componentSchema) {
         continue;
@@ -64,6 +64,17 @@ export async function updateComponentProps(
           throw new Error(`Property ${property} doesn't have $ref on schema`);
         }
 
+        // Match property ref input into loader output
+        const [loaderKey] = Object.entries(manifest.loaders).find((
+          [, loader],
+        ) => loader.default.outputSchema.$ref === propertySchema.$ref) ?? [];
+
+        if (!loaderKey) {
+          throw new Error(
+            `Doesn't exists loader with this $ref: ${propertySchema.$ref}`,
+          );
+        }
+
         const loaderProp = component.props[property];
         // TODO: Use uuid v4
         const loaderInstanceName = `${propertySchema?.$ref}-${
@@ -72,7 +83,7 @@ export async function updateComponentProps(
         component.props[property] = `{${loaderInstanceName}}`;
 
         loaders.push({
-          loader: propertySchema.$ref,
+          loader: loaderKey.replace(/\.\/loaders\/(.*)\.ts$/, "$1"),
           name: loaderInstanceName,
           props: loaderProp,
         });

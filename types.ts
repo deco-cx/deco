@@ -9,8 +9,18 @@ export interface Module extends IslandModule {
   schema?: JSONSchema7;
 }
 
-interface LoaderModule {
-  default: (req: Request, ctx: HandlerContext<any>, props: any) => unknown;
+export interface Loader {
+  loader: (
+    req: Request,
+    ctx: HandlerContext<any>,
+    props: any,
+  ) => Promise<unknown>;
+  inputSchema: JSONSchema7;
+  outputSchema: { "$ref": NonNullable<JSONSchema7["$ref"]> };
+}
+
+export interface LoaderModule {
+  default: Loader;
 }
 
 export interface DecoManifest extends Manifest {

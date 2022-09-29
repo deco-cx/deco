@@ -198,7 +198,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
         pageData.loaders?.map(async ({ loader, props, name }) => {
           const loaderFn =
             LiveContext.getManifest().loaders[`./loaders/${loader}.ts`]
-              .default;
+              .default.loader;
           start(`loader#${name}`);
           const loaderData = await loaderFn(req, ctx, props);
           end(`loader#${name}`);
@@ -216,7 +216,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
           result[currentResponse.name] = currentResponse.data;
           return result;
         },
-        {} as Record<string, any>,
+        {} as Record<string, unknown>,
       );
 
       pageData.components = pageData.components.map((componentData) => {
