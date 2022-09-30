@@ -9,7 +9,7 @@ export default function ga(options: GAOptions): Plugin {
   const main = `data:application/javascript,export default function(state){
       var ga = document.createElement("script");
       ga.type = "text/partytown";
-      ga.src = "/live/proxy/gtag/js?id=${trackingId}";
+      ga.src = "https://www.googletagmanager.com/gtag/js?id=${trackingId}";
       document.head.appendChild(ga);
 
       var snippet = document.createElement("script");
