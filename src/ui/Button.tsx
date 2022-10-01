@@ -7,10 +7,8 @@ export default function Button(
     <button
       type="button"
       {...props}
-      class={`border py-1 px-2 rounded transition-colors ease-in ${
-        props.disabled
-          ? "text-gray-400"
-          : "hover:border-black hover:bg-gray-100"
+      class={`border border-primary-dark py-1 px-2 bg-primary-dark text-primary rounded transition-colors ease-in ${
+        props.disabled ? "text-gray-500 bg-gray-200" : "hover:border-black"
       } ${props.class}`}
     />
   );

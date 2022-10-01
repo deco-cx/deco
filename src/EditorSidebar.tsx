@@ -33,47 +33,49 @@ export default function EditorSidebar() {
   const components = componentsRef.current;
 
   return (
-    <div class="bg-white min-h-screen w-3/12 border-l-2 p-2">
-      <FormProvider {...methods}>
-        <form
-          onSubmit={onSubmit}
-        >
-          <header class="flex justify-between items-center">
-            <h2 class="font-bold text-lg">Editor</h2>
-            <div class="flex gap-2">
-              <Button
-                type="button"
-                onClick={onReset}
-                disabled={!methods.formState.isDirty}
-              >
-                Descartar
-              </Button>
-              <Button
-                type="submit"
-                disabled={!methods.formState.isDirty}
-              >
-                Salvar
-              </Button>
+    <div class="min-h-screen w-1/3 shadow-xl text-primary-dark">
+      <div class="bg-gray-50 p-5 shadow-xl rounded-2xl min-h-full">
+        <FormProvider {...methods}>
+          <form
+            onSubmit={onSubmit}
+          >
+            <header class="flex justify-between items-center">
+              <span class="text-gray-400">last edited...</span>
+              <div class="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={onReset}
+                  disabled={!methods.formState.isDirty}
+                >
+                  Descartar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!methods.formState.isDirty}
+                >
+                  Salvar
+                </Button>
+              </div>
+            </header>
+            <div class="mt-4">
+              {fields.map((field, index) => {
+                const { component } = components[index];
+                return (
+                  <JSONSchemaForm
+                    key={field.id}
+                    changeOrder={handleChangeOrder}
+                    removeComponents={handleRemoveComponent}
+                    prefix={`components.${index}` as const}
+                    index={index}
+                    schema={componentSchemas[component] ?? DEFAULT_SCHEMA}
+                  />
+                );
+              })}
             </div>
-          </header>
-          <div class="mt-4">
-            {fields.map((field, index) => {
-              const { component } = components[index];
-              return (
-                <JSONSchemaForm
-                  key={field.id}
-                  changeOrder={handleChangeOrder}
-                  removeComponents={handleRemoveComponent}
-                  prefix={`components.${index}` as const}
-                  index={index}
-                  schema={componentSchemas[component] ?? DEFAULT_SCHEMA}
-                />
-              );
-            })}
-          </div>
-        </form>
-      </FormProvider>
-      <AddNewComponent onAddComponent={handleAddComponent} />
+          </form>
+        </FormProvider>
+        <AddNewComponent onAddComponent={handleAddComponent} />
+      </div>
     </div>
   );
 }

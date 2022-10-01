@@ -38,7 +38,7 @@ const FieldTypes: Record<
     <input
       {...props}
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${
+      class={`transition-colors ease-in rounded-xl shadow p-2 mb-2 w-full ${
         props.class ?? ""
       }`}
     />
@@ -48,7 +48,7 @@ const FieldTypes: Record<
       {...props}
       type="number"
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${
+      class={`transition-colors ease-in rounded-xl p-2 mb-2 w-full ${
         props.class ?? ""
       }`}
     />
@@ -61,7 +61,7 @@ const FieldTypes: Record<
       {...props}
       type="number"
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 w-full ${
+      class={`transition-colors ease-in rounded-xl p-2 mb-2 w-full ${
         props.class ?? ""
       }`}
     />
@@ -74,9 +74,7 @@ const FieldTypes: Record<
       {...props}
       type="checkbox"
       ref={ref}
-      class={`border hover:border-black transition-colors ease-in rounded p-1 ${
-        props.class ?? ""
-      }`}
+      class={`transition-colors ease-in w-5 h-5 p-2 mb-2 ${props.class ?? ""}`}
     />
   )),
 };
@@ -132,7 +130,7 @@ function RenderFields(
 
         return (
           <div class="flex flex-col items-start">
-            <label htmlFor={fullPathField}>
+            <label class="text-sm pb-1" htmlFor={fullPathField}>
               {title}
             </label>
             <Field
@@ -169,10 +167,9 @@ export default function JSONSchemaForm(
   }
 
   return (
-    <div class="rounded-md border mb-2 p-2">
-      <div class="flex justify-between items-center">
-        <legend class="font-bold">{schema.title}</legend>
-
+    <div class="bg-primary-light rounded-xl shadow-md mb-2 py-2 px-4">
+      <div class="mb-4 flex justify-between items-center">
+        <legend class="font-bold text-md">{schema.title}</legend>
         <div class="flex gap-2">
           <Button
             onClick={() => {
