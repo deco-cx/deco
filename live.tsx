@@ -82,12 +82,14 @@ export async function loadLiveComponents(
   let pages = [];
 
   try {
-    pages = draftId ? await getPageFromId(req, draftId) : await getProdPage(
-      req,
-      liveOptions.siteId!.toString(),
-      url.pathname,
-      template,
-    );
+    pages = draftId
+      ? await getPageFromId(req, draftId, liveOptions.siteId!.toString())
+      : await getProdPage(
+        req,
+        liveOptions.siteId!.toString(),
+        url.pathname,
+        template,
+      );
     console.log("Found page:", pages);
   } catch (error) {
     console.log("Error fetching page:", error.message);
