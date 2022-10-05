@@ -9,6 +9,7 @@ import {
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
+import { duplicateProdPage } from "./utils/supabase.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -22,20 +23,23 @@ export async function updateComponentProps(
   }
 
   let status;
+  let pageId;
   const liveOptions = LiveContext.getLiveOptions();
 
   try {
-    const { components, template } = await req.json();
+    const { components, template, siteId, draftId } = await req.json();
 
-    if (!liveOptions.siteId) {
-      // TODO: fetch site id from supabase
-    }
-
-    // TODO: Validate components props on schema
+    pageId = draftId
+      ? draftId
+      : await duplicateProdPage(req, url.pathname, template, siteId);
 
     const res = await getSupabaseClientForUser(req).from("pages").update({
       components: components,
-    }).match({ site: liveOptions.siteId, path: template });
+    }).match({ id: pageId });
+
+    if (res.error) {
+      throw new Error(res.error.message);
+    }
 
     status = res.status;
   } catch (e) {
@@ -43,7 +47,7 @@ export async function updateComponentProps(
     status = 400;
   }
 
-  return new Response(null, { status });
+  return Response.json({ draftId: pageId }, { status });
 }
 
 export interface ComponentPreview {
