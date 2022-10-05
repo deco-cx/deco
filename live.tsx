@@ -17,6 +17,11 @@ import {
 } from "$live/editor.tsx";
 import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
+import {
+  getPageFromId,
+  getProdPage,
+  getSiteIdFromName,
+} from "./utils/supabase.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
 import LiveContext from "./context.ts";
@@ -51,6 +56,7 @@ export interface LivePageData {
   components: PageComponentData[];
   mode: Mode;
   template: string;
+  siteId: number;
 }
 
 export interface LoadLiveComponentsOptions {
@@ -67,37 +73,33 @@ export async function loadLiveComponents(
   const url = new URL(req.url);
   const { template } = options ?? {};
 
-  /**
-   * Queries follow PostgREST syntax
-   * https://postgrest.org/en/stable/api.html#horizontal-filtering-rows
-   */
-  const queries = [url.pathname, template]
-    .filter((query) => Boolean(query))
-    .map((query) => `path.eq.${query}`)
-    .join(",");
+  const draftId = url.searchParams.get("editor");
 
-  const { data: Pages, error } = await getSupabaseClient()
-    .from("pages")
-    .select(`components, path, site!inner(name, id)`)
-    .eq("site.name", site)
-    .or(queries);
-
-  if (error) {
-    console.log("Error fetching page:", error);
-  } else {
-    console.log("Found page:", Pages);
+  if (!liveOptions.siteId) {
+    liveOptions.siteId = await getSiteIdFromName(req, site);
   }
 
-  if (!liveOptions.siteId && Pages?.[0]?.site) {
-    liveOptions.siteId = Pages?.[0]?.site.id;
+  let pages = [];
+
+  try {
+    pages = draftId ? await getPageFromId(req, draftId) : await getProdPage(
+      req,
+      liveOptions.siteId!.toString(),
+      url.pathname,
+      template,
+    );
+    console.log("Found page:", pages);
+  } catch (error) {
+    console.log("Error fetching page:", error.message);
   }
 
   const isEditor = url.searchParams.has("editor");
 
   return {
-    components: Pages?.[0]?.components ?? [],
+    components: pages?.[0]?.components ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
+    siteId: liveOptions.siteId!,
   };
 }
 
@@ -261,6 +263,7 @@ export function LivePage(
             components={data.components}
             template={data.template}
             componentSchemas={componentSchemas}
+            siteId={data.siteId}
           />
         )
         : null}
