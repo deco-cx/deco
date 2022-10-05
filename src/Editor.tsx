@@ -6,16 +6,18 @@ export interface Props {
   components: PageComponentData[];
   template: string;
   componentSchemas: Schemas;
+  siteId: number;
 }
 
 export default function Editor(
-  { components, template, componentSchemas }: Props,
+  { components, template, componentSchemas, siteId, draftId }: Props,
 ) {
   return (
     <EditorProvider
       components={components}
       template={template}
       componentSchemas={componentSchemas}
+      siteId={siteId}
     >
       <EditorSidebar />
     </EditorProvider>

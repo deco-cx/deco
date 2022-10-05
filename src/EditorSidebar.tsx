@@ -13,8 +13,12 @@ const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
 const DEFAULT_SCHEMA = { title: "default", type: "object", properties: {} };
 
 export default function EditorSidebar() {
-  const { componentSchemas, template, components: initialComponents } =
-    useEditor();
+  const {
+    componentSchemas,
+    template,
+    components: initialComponents,
+    siteId,
+  } = useEditor();
 
   const {
     onReset,
@@ -28,6 +32,7 @@ export default function EditorSidebar() {
   } = useEditorOperations({
     template,
     components: initialComponents,
+    siteId,
   });
 
   const components = componentsRef.current;
