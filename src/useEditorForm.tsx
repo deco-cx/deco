@@ -76,7 +76,7 @@ export default function useEditorOperations(
       );
 
       const searchParams = new URLSearchParams(window.location.search);
-      const draftId = searchParams.get("editor");
+      const draftId = searchParams.get("draft");
 
       const { draftId: newDraftId } = await fetch("/live/api/editor", {
         method: "POST",
@@ -90,7 +90,7 @@ export default function useEditorOperations(
       }).then((res) => res.json());
 
       const url = new URL(window.location.href);
-      url.searchParams.set("editor", newDraftId);
+      url.searchParams.set("draft", newDraftId);
       document.location.replace(url);
     },
   );

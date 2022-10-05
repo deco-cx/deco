@@ -73,7 +73,7 @@ export async function loadLiveComponents(
   const url = new URL(req.url);
   const { template } = options ?? {};
 
-  const draftId = url.searchParams.get("editor");
+  const draftId = url.searchParams.get("draft");
 
   if (!liveOptions.siteId) {
     liveOptions.siteId = await getSiteIdFromName(req, site);
