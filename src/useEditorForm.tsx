@@ -36,9 +36,10 @@ function mapFormDataToComponents(
 }
 
 export default function useEditorOperations(
-  { components: initialComponents, template }: {
+  { components: initialComponents, template, siteId }: {
     components: PageComponentData[];
     template: string;
+    siteId: number;
   },
 ) {
   const componentsRef = useRef<PageComponentData[]>();
@@ -74,12 +75,23 @@ export default function useEditorOperations(
         components,
       );
 
-      await fetch("/live/api/editor", {
+      const searchParams = new URLSearchParams(window.location.search);
+      const draftId = searchParams.get("editor");
+
+      const { draftId: newDraftId } = await fetch("/live/api/editor", {
         method: "POST",
         redirect: "manual",
-        body: JSON.stringify({ components: newComponents, template }),
-      });
-      document.location.reload();
+        body: JSON.stringify({
+          components: newComponents,
+          template,
+          siteId,
+          draftId,
+        }),
+      }).then((res) => res.json());
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("editor", newDraftId);
+      document.location.replace(url);
     },
   );
 
