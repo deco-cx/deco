@@ -18,6 +18,7 @@ import {
 import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
 import {
+  getFlagFromId,
   getPageFromId,
   getProdPage,
   getSiteIdFromName,
@@ -27,8 +28,7 @@ import type { Props as EditorProps } from "./src/Editor.tsx";
 import LiveContext from "./context.ts";
 
 let flags: Flag[];
-export const flag = (name: string) =>
-  flags.find((flag) => flag.name === name)?.active;
+export const flag = (id: string) => flags.find((flag) => flag.id === id);
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   LiveContext.setupManifestAndOptions({ manifest, liveOptions });
@@ -57,6 +57,7 @@ export interface LivePageData {
   mode: Mode;
   template: string;
   siteId: number;
+  flag: Flag | null;
 }
 
 export interface LoadLiveComponentsOptions {
@@ -79,18 +80,24 @@ export async function loadLiveComponents(
     liveOptions.siteId = await getSiteIdFromName(req, site);
   }
 
+  let flag = null;
   let pages = [];
+  const siteId = liveOptions.siteId!.toString();
 
   try {
     pages = draftId
-      ? await getPageFromId(req, draftId, liveOptions.siteId!.toString())
+      ? await getPageFromId(req, draftId, siteId)
       : await getProdPage(
         req,
-        liveOptions.siteId!.toString(),
+        siteId,
         url.pathname,
         template,
       );
-    console.log("Found page:", pages);
+
+    const flagId = pages![0]!.flag;
+    flag = flagId ? await getFlagFromId(req, flagId, siteId) : null;
+
+    console.log("Found page:", pages, flag);
   } catch (error) {
     console.log("Error fetching page:", error.message);
   }
@@ -102,6 +109,7 @@ export async function loadLiveComponents(
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
     siteId: liveOptions.siteId!,
+    flag: flag,
   };
 }
 
@@ -156,7 +164,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
       const site = liveOptions.site;
       const { data: Flags, error: error2 } = await getSupabaseClient()
         .from("flags")
-        .select(`name, audience, traffic, site!inner(name, id)`)
+        .select(`id, name, audience, traffic, site!inner(name, id)`)
         .eq("site.name", site);
 
       if (error2) {
@@ -191,7 +199,6 @@ export function createLiveHandler<LoaderData = LivePageData>(
         console.log("Error running loader. \n", error);
         // TODO: Do a better error handler. Maybe redirect to 500 page.
       }
-
       end("fetch-page-data");
 
       start("render");
@@ -266,6 +273,7 @@ export function LivePage(
             template={data.template}
             componentSchemas={componentSchemas}
             siteId={data.siteId}
+            flag={data.flag}
           />
         )
         : null}
