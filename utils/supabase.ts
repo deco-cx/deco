@@ -120,8 +120,23 @@ export const duplicateProdPage = async (
   // Getting prod page in order to duplicate
   const pages = await getProdPage(req, siteId, pathName, template);
 
+  // Create flag
+  const flagResponse = await getSupabaseClientForUser(req)
+    .from("flags")
+    .insert({
+      name: pages?.[0]?.name,
+      audience: "",
+      site: pages?.[0]?.site,
+      traffic: 0,
+    })
+
+
+  if (flagResponse.error) {
+    throw new Error(flagResponse.error.message);
+  }
+
   // Insert the same prod page
-  const { data: id, error } = await getSupabaseClientForUser(req)
+  const pageResponse = await getSupabaseClientForUser(req)
     .from("pages")
     .insert({
       components: pages?.[0]?.components ?? [],
@@ -130,13 +145,12 @@ export const duplicateProdPage = async (
       name: pages?.[0]?.name,
       site: pages?.[0]?.site,
       archived: false,
-      // TODO: Create flag and get ID
-      flag: 1,
+      flag: flagResponse.data![0]!.id,
     });
 
-  if (error) {
-    throw new Error(error.message);
+  if (pageResponse.error) {
+    throw new Error(pageResponse.error.message);
   }
 
-  return id![0]!.id;
+  return pageResponse.data![0]!.id;
 };
