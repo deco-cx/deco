@@ -1,4 +1,4 @@
-import type { PageComponentData, Schemas } from "../types.ts";
+import type { Flag, PageComponentData, Schemas } from "../types.ts";
 import EditorProvider from "./EditorProvider.tsx";
 import EditorSidebar from "./EditorSidebar.tsx";
 
@@ -7,10 +7,11 @@ export interface Props {
   template: string;
   componentSchemas: Schemas;
   siteId: number;
+  flag: Flag | null;
 }
 
 export default function Editor(
-  { components, template, componentSchemas, siteId, draftId }: Props,
+  { components, template, componentSchemas, siteId, flag }: Props,
 ) {
   return (
     <EditorProvider
@@ -18,6 +19,7 @@ export default function Editor(
       template={template}
       componentSchemas={componentSchemas}
       siteId={siteId}
+      flag={flag}
     >
       <EditorSidebar />
     </EditorProvider>

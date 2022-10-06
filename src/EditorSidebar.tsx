@@ -18,6 +18,7 @@ export default function EditorSidebar() {
     template,
     components: initialComponents,
     siteId,
+    flag,
   } = useEditor();
 
   const {
@@ -33,6 +34,7 @@ export default function EditorSidebar() {
     template,
     components: initialComponents,
     siteId,
+    flag,
   });
 
   const components = componentsRef.current;
@@ -62,6 +64,13 @@ export default function EditorSidebar() {
                 </Button>
               </div>
             </header>
+            <div>
+              <input
+                type="checkbox"
+                {...methods.register("experiment")}
+              />
+              Experiment
+            </div>
             <div class="mt-4">
               {fields.map((field, index) => {
                 const { component } = components[index];
