@@ -1,4 +1,5 @@
 import { getSupabaseClientForUser } from "../supabase.ts";
+import { Flag } from "../types.ts"
 
 export const getSiteIdFromName = async (req: Request, siteName: string) => {
   const { data: Site, error } = await getSupabaseClientForUser(req)
@@ -33,6 +34,51 @@ export const getPageFromId = async (
   }
 
   return Pages;
+};
+
+export const getFlagFromPageId = async (
+  req: Request,
+  pageId: string,
+  siteId: string,
+): Promise<Flag> => {
+  // Getting prod page in order to duplicate
+
+  const { data: Flags, error: error } = await getSupabaseClientForUser(req)
+    .from("flags")
+    .select(`id, name, audience, traffic, pages!inner(flag, id)`)
+    .match({ "pages.id": pageId, site: siteId });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (Flags.length == 0) {
+    throw new Error("flag not found")
+  }
+
+  return Flags[0] as Flag;
+}
+
+export const getFlagFromId = async (
+  req: Request,
+  flagId: string,
+  siteId: string,
+): Promise<Flag> => {
+  // Getting prod page in order to duplicate
+  const { data: Flags, error } = await getSupabaseClientForUser(req)
+    .from("flags")
+    .select("*")
+    .match({ id: flagId, site: siteId });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (Flags.length == 0) {
+    throw new Error("flag not found")
+  }
+
+  return Flags[0] as Flag;
 };
 
 export const getProdPage = async (
