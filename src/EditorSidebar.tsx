@@ -49,13 +49,17 @@ export default function EditorSidebar() {
             <header class="flex justify-between items-center">
               <span class="text-gray-400">last edited...</span>
               <div class="flex gap-2">
-                <Button
-                  type="button"
+                <p
+                  class={`cursor-pointer py-1 px-2 ${
+                    methods.formState.isDirty
+                      ? "text-gray-400 hover:text-gray-500"
+                      : "text-gray-400"
+                  }`}
                   onClick={onReset}
                   disabled={!methods.formState.isDirty}
                 >
                   Descartar
-                </Button>
+                </p>
                 <Button
                   type="submit"
                   disabled={!methods.formState.isDirty}
