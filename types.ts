@@ -35,6 +35,7 @@ export interface PageComponentData {
 }
 
 export interface Flag {
+  id: string;
   name: string;
   audience: string;
   traffic: number;
