@@ -1,6 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { getSupabaseClientForUser } from "$live/supabase.ts";
+import { createPrivateHandler } from "$live/auth.tsx";
 import LiveContext from "./context.ts";
 
 const PageRow = (props: { page: any }) => {
@@ -8,8 +9,8 @@ const PageRow = (props: { page: any }) => {
   return (
     <tr>
       <td>{page.id}</td>
-      <td>{page.name}</td>
       <td>{page.path}</td>
+      <td>{page.name}</td>
       <td>{page.created_at}</td>
     </tr>
   );
@@ -23,8 +24,8 @@ export default function LiveAdmin(props: PageProps<any>) {
       <table>
         <tr>
           <th>id</th>
-          <th>name</th>
           <th>path</th>
+          <th>name</th>
           <th>created</th>
         </tr>
         {data.map((page: any) => <PageRow page={page} />)}
@@ -34,7 +35,7 @@ export default function LiveAdmin(props: PageProps<any>) {
 }
 
 export const adminHandler: Handlers<any> = {
-  async GET(req, ctx) {
+  GET: createPrivateHandler(async (req, ctx) => {
     const { start, end, printTimings } = createServerTiming();
     const { site } = LiveContext.getLiveOptions();
 
@@ -54,5 +55,5 @@ export const adminHandler: Handlers<any> = {
 
     res.headers.set("Server-Timing", printTimings());
     return res;
-  },
+  }),
 };
