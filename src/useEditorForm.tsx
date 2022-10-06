@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "preact/hooks";
 import { useFieldArray, useForm } from "react-hook-form";
-import { PageComponentData } from "../types.ts";
+import { Flag, PageComponentData } from "../types.ts";
 
 const COMPONENTS_KEY_NAME: "components" = "components" as const;
 
@@ -35,12 +35,15 @@ function mapFormDataToComponents(
   return components;
 }
 
+interface EditorProps {
+  components: PageComponentData[];
+  template: string;
+  siteId: number;
+  flag: Flag | null;
+}
+
 export default function useEditorOperations(
-  { components: initialComponents, template, siteId }: {
-    components: PageComponentData[];
-    template: string;
-    siteId: number;
-  },
+  { components: initialComponents, template, siteId, flag }: EditorProps,
 ) {
   const componentsRef = useRef<PageComponentData[]>();
 
@@ -49,10 +52,10 @@ export default function useEditorOperations(
   }
 
   const components = componentsRef.current as PageComponentData[];
-
   const methods = useForm<FormValues>({
     defaultValues: {
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(components),
+      experiment: flag ? flag.traffic > 0 : false,
     },
   });
   const { fields, swap, remove, append } = useFieldArray({
@@ -65,6 +68,7 @@ export default function useEditorOperations(
 
     methods.reset({
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(componentsRef.current),
+      experiment: flag ? flag.traffic > 0 : false,
     });
   };
 
@@ -78,6 +82,8 @@ export default function useEditorOperations(
       const searchParams = new URLSearchParams(window.location.search);
       const draftId = searchParams.get("draft");
 
+      const experiment = methods.getValues("experiment");
+
       const { draftId: newDraftId } = await fetch("/live/api/editor", {
         method: "POST",
         redirect: "manual",
@@ -86,6 +92,7 @@ export default function useEditorOperations(
           template,
           siteId,
           draftId,
+          experiment,
         }),
       }).then((res) => res.json());
 
