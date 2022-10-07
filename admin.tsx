@@ -13,7 +13,7 @@ const PageRow = (props: { page: any }) => {
       </td>
       <td class="border-b border-primary-light text-primary-dark">
         <a
-          href={`${page.path}?editor`}
+          href={`${page.path}?editor&variantId=${page.id}`}
           target="_blank"
           class="w-full h-full block p-4 pl-8"
         >
