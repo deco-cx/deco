@@ -1,7 +1,7 @@
 import type { h } from "preact";
 
 export default function TrashIcon(
-  { class: className, width = 16, height = 16 }: h.JSX.SVGAttributes<
+  { class: className, width = 16, height = 16, fill = "#2FD180" }: h.JSX.SVGAttributes<
     SVGElement
   >,
 ) {
@@ -11,7 +11,7 @@ export default function TrashIcon(
       width={width}
       height={height}
       class={className}
-      fill="#2FD180"
+      fill={fill}
       viewBox="0 0 256 256"
     >
       <rect width="256" height="256" fill="none"></rect>

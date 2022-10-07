@@ -38,7 +38,7 @@ export default function Audience(
         <div class="w-full flex justify-between mb-4">
           <span class="text-xl font-bold">Audiência</span>
           <Button onClick={() => setOpenModal(false)}>
-            <PlusIcon class="rotate-45" />
+            <PlusIcon fill="#ffffff" class="rotate-45" />
           </Button>
         </div>
 

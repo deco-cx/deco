@@ -267,7 +267,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
 export function LiveComponents({ components }: LivePageData) {
   const manifest = LiveContext.getManifest();
   return (
-    <div class="relative w-full">
+    <div class="flex-auto">
       {components?.map(({ component, props }: PageComponentData) => {
         const Comp = getComponentModule(manifest, component)?.default;
 
@@ -299,7 +299,7 @@ export function LivePage({
   const componentSchemas = manifest.schemas;
 
   return (
-    <div class="flex">
+    <div class="flex w-full">
       {children ? children : <LiveComponents {...data} />}
       {renderEditor && privateDomain
         ? (

@@ -6,6 +6,8 @@ import type { FunctionComponent, h } from "preact";
 import { useFormContext } from "react-hook-form";
 import { forwardRef } from "preact/compat";
 import Button from "./Button.tsx";
+import IconButton from "./IconButton.tsx";
+import LinkButton from "./LinkButton.tsx";
 import CaretDownIcon from "../icons/CaretDownIcon.tsx";
 import TrashIcon from "../icons/TrashIcon.tsx";
 
@@ -129,14 +131,15 @@ function RenderFields(
         const isFieldRequired = required.includes(field);
 
         return (
-          <div class="flex flex-col items-start">
-            <label class="text-sm pb-1" htmlFor={fullPathField}>
+          <label class="flex flex-col items-start mb-2">
+            <div class="text-sm pb-1" htmlFor={fullPathField}>
               {title}
-            </label>
+            </div>
             <Field
               type={inputType}
               pattern={pattern}
               required={isFieldRequired}
+              class="text-sm rounded-sm"
               {...register(fullPathField, {
                 minLength,
                 maxLength,
@@ -144,7 +147,7 @@ function RenderFields(
                 required: isFieldRequired,
               })}
             />
-          </div>
+          </label>
         );
       })}
     </>
@@ -167,38 +170,38 @@ export default function JSONSchemaForm(
   }
 
   return (
-    <div class="bg-primary-light rounded-xl shadow-md mb-2 py-2 px-4">
-      <div class="mb-4 flex justify-between items-center">
-        <legend class="font-bold text-md">{schema.title}</legend>
-        <div class="flex gap-2">
-          <Button
-            onClick={() => {
-              changeOrder("next", index);
-            }}
-          >
-            <CaretDownIcon />
-          </Button>
-          <Button
-            onClick={() => {
-              changeOrder("prev", index);
-            }}
-          >
-            <CaretDownIcon class="rotate-180" />
-          </Button>
-          <Button
-            onClick={() => {
-              removeComponents(index);
-            }}
-          >
-            <TrashIcon />
-          </Button>
-        </div>
+    <div class="bg-primary-light border border-gray-300 rounded-l mb-4">
+      <div class="px-5 pt-4 pb-2">
+        <legend class="font-medium mb-2 text-lg">{schema.title}</legend>
+        <RenderFields
+          required={schema.required}
+          properties={schema.properties}
+          prefix={prefix !== undefined ? `${prefix}.` : ""}
+        />
       </div>
-      <RenderFields
-        required={schema.required}
-        properties={schema.properties}
-        prefix={prefix !== undefined ? `${prefix}.` : ""}
-      />
+      <div class="px-4 py-2 border-t-1 border-gray-300 flex justify-end gap-2">
+        <IconButton
+          onClick={() => {
+            changeOrder("prev", index);
+          }}
+        >
+          <CaretDownIcon fill="#170DAB" class="rotate-180" />
+        </IconButton>
+        <IconButton
+          onClick={() => {
+            changeOrder("next", index);
+          }}
+        >
+          <CaretDownIcon fill="#170DAB" />
+        </IconButton>
+        <LinkButton
+          onClick={() => {
+            removeComponents(index);
+          }}
+        >
+          <span class="text-sm text-red">Remover</span>
+        </LinkButton>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import type { h } from "preact";
 
 export default function PlusIcon(
-  { class: className, width = 16, height = 16 }: h.JSX.SVGAttributes<
+  { class: className, width = 16, height = 16, fill = "#2FD180" }: h.JSX.SVGAttributes<
     SVGElement
   >,
 ) {
@@ -11,7 +11,7 @@ export default function PlusIcon(
       width={width}
       height={height}
       class={className}
-      fill="#2FD180"
+      fill={fill}
       viewBox="0 0 256 256"
     >
       <rect width="256" height="256" fill="none"></rect>
@@ -21,7 +21,7 @@ export default function PlusIcon(
         x2="216"
         y2="128"
         fill="none"
-        stroke="#2FD180"
+        stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
@@ -33,7 +33,7 @@ export default function PlusIcon(
         x2="128"
         y2="216"
         fill="none"
-        stroke="#2FD180"
+        stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
