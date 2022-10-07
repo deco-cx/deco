@@ -64,6 +64,21 @@ export interface LoadLiveComponentsOptions {
   template?: string;
 }
 
+const getComponentsFromFlags = (
+  prodComponents: PageComponentData[],
+): PageComponentData[] => {
+  const activePages: PageComponentData[][] = [prodComponents];
+  flags.forEach((flag) => {
+    if (flag.traffic > 0) {
+      activePages.push(flag.components!);
+    }
+  });
+
+  // Randomly choose any active experiment
+  const randomIdx = Math.floor(Math.random() * activePages.length);
+  return activePages[randomIdx];
+};
+
 export async function loadLiveComponents(
   req: Request,
   _: HandlerContext<any>,
@@ -83,6 +98,7 @@ export async function loadLiveComponents(
   let flag = null;
   let pages = [];
   const siteId = liveOptions.siteId!.toString();
+  let components: PageComponentData[] = [];
 
   try {
     pages = draftId
@@ -94,8 +110,13 @@ export async function loadLiveComponents(
         template,
       );
 
+    const prodComponents = pages![0]!.components;
     const flagId = pages![0]!.flag;
     flag = flagId ? await getFlagFromId(req, flagId, siteId) : null;
+
+    components = draftId
+      ? prodComponents
+      : getComponentsFromFlags(prodComponents);
 
     console.log("Found page:", pages, flag);
   } catch (error) {
@@ -105,7 +126,7 @@ export async function loadLiveComponents(
   const isEditor = url.searchParams.has("editor");
 
   return {
-    components: pages?.[0]?.components ?? [],
+    components: components,
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
     siteId: liveOptions.siteId!,
@@ -162,9 +183,13 @@ export function createLiveHandler<LoaderData = LivePageData>(
 
       start("fetch-flags");
       const site = liveOptions.site;
+
+      // TODO: Change change inner site.name to page.site (this site is id)
       const { data: Flags, error: error2 } = await getSupabaseClient()
         .from("flags")
-        .select(`id, name, audience, traffic, site!inner(name, id)`)
+        .select(
+          `id, name, audience, traffic, site!inner(name, id), pages!inner(components, id)`,
+        )
         .eq("site.name", site);
 
       if (error2) {
@@ -176,8 +201,11 @@ export function createLiveHandler<LoaderData = LivePageData>(
 
       start("calc-flags");
       // TODO: Cookie answer
-      Flags?.map((flag: Flag) => {
+      Flags?.map((flag) => {
         flag.active = Math.random() < flag.traffic;
+
+        // TODO: Query from supabase return pages: [{components:[{}]}]. Transform to components:[{}]
+        flag.components = flag.pages[0].components;
       });
       end("calc-flags");
       flags = Flags ?? [];
