@@ -49,7 +49,7 @@ export default function EditorSidebar() {
             onSubmit={onSubmit}
           >
             <header class="flex justify-between items-center">
-              <Audience methods={methods} onSubmit={onSubmit} />
+              <Audience methods={methods} onSubmit={onSubmit} flag={flag} />
               <div class="flex gap-2">
                 <p
                   class={`cursor-pointer py-1 px-2 ${
