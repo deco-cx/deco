@@ -42,7 +42,7 @@ export default function EditorSidebar() {
   const components = componentsRef.current;
 
   return (
-    <div class="flex-none w-80 shadow-xl text-primary-dark z-10">
+    <div class="flex-none w-80 shadow-xl text-primary-dark z-10 h-screen overflow-y-auto fixed right-0">
       <div class="bg-gray-50 p-5 min-h-full">
         <FormProvider {...methods}>
           <form

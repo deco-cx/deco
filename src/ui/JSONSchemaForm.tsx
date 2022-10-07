@@ -199,7 +199,7 @@ export default function JSONSchemaForm(
             removeComponents(index);
           }}
         >
-          <span class="text-sm text-red">Remover</span>
+          <span class="text-sm text-custom-red">Remover</span>
         </LinkButton>
       </div>
     </div>

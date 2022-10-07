@@ -267,13 +267,11 @@ export function createLiveHandler<LoaderData = LivePageData>(
 export function LiveComponents({ components }: LivePageData) {
   const manifest = LiveContext.getManifest();
   return (
-    <div class="flex-auto">
-      {components?.map(({ component, props }: PageComponentData) => {
+      components?.map(({ component, props }: PageComponentData) => {
         const Comp = getComponentModule(manifest, component)?.default;
 
         return <Comp {...props} />;
-      })}
-    </div>
+      })
   );
 }
 
@@ -299,8 +297,10 @@ export function LivePage({
   const componentSchemas = manifest.schemas;
 
   return (
-    <div class="flex w-full">
-      {children ? children : <LiveComponents {...data} />}
+    <div class="flex">
+      <div class={`w-full relative ${ renderEditor && privateDomain ? 'pr-80' : '' }`}>
+        {children ? children : <LiveComponents {...data} />}
+      </div>
       {renderEditor && privateDomain
         ? (
           <Editor
