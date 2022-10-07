@@ -7,28 +7,60 @@ import LiveContext from "./context.ts";
 const PageRow = (props: { page: any }) => {
   const { page } = props;
   return (
-    <tr>
-      <td>{page.id}</td>
-      <td>{page.path}</td>
-      <td>{page.name}</td>
-      <td>{page.created_at}</td>
+    <tr class="hover:bg-primary-light">
+      <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
+        {page.id}
+      </td>
+      <td class="border-b border-primary-light text-primary-dark">
+        <a
+          href={`${page.path}?editor`}
+          target="_blank"
+          class="w-full h-full block p-4 pl-8"
+        >
+          {page.path}
+        </a>
+      </td>
+      <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
+        {page.name}
+      </td>
+      <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
+        {page.created_at}
+      </td>
     </tr>
   );
 };
 
 export default function LiveAdmin(props: PageProps<any>) {
-  const { data } = props;
+  const { data: { pages, site } } = props;
   return (
     <div class="bg-white min-h-screen border-l-2 p-2">
-      Admin...
-      <table>
-        <tr>
-          <th>id</th>
-          <th>path</th>
-          <th>name</th>
-          <th>created</th>
-        </tr>
-        {data.map((page: any) => <PageRow page={page} />)}
+      <div class="mb-5">
+        <p>
+          Welcome to <strong>{site}</strong>.
+        </p>
+      </div>
+
+      <h2 class="mb-2 text-xl font-bold">My pages</h2>
+      <table class="border-collapse table-fixed w-full text-sm text-primary-dark">
+        <thead>
+          <tr>
+            <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left w-4">
+              id
+            </th>
+            <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left w-1/4">
+              path
+            </th>
+            <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left">
+              name
+            </th>
+            <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left">
+              created
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          {pages.map((page: any) => <PageRow page={page} />)}
+        </tbody>
       </table>
     </div>
   );
@@ -50,7 +82,7 @@ export const adminHandler: Handlers<any> = {
     end("fetch");
 
     start("render");
-    const res = await ctx.render(Pages);
+    const res = await ctx.render({ pages: Pages, site });
     end("render");
 
     res.headers.set("Server-Timing", printTimings());
