@@ -6,6 +6,7 @@ import type { FieldValues, UseFormReturn } from "react-hook-form";
 import AddNewComponent from "./AddNewComponent.tsx";
 import useEditorOperations from "./useEditorForm.tsx";
 import SaveIcon from "./ui/SaveIcon.tsx";
+import AudienceIcon from "./ui/AudienceIcon.tsx";
 
 const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
   props: UseFormReturn<TFieldValues, TContext>,
@@ -48,7 +49,11 @@ export default function EditorSidebar() {
             onSubmit={onSubmit}
           >
             <header class="flex justify-between items-center">
-              <span class="text-gray-400">last edited...</span>
+              <Button>
+                <span class="px-1">
+                  <AudienceIcon />
+                </span>
+              </Button>
               <div class="flex gap-2">
                 <p
                   class={`cursor-pointer py-1 px-2 ${

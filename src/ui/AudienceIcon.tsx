@@ -1,4 +1,4 @@
-export default function SaveIcon({ disabled }: { disabled?: boolean }) {
+export default function AudienceIcon({ disabled }: { disabled?: boolean }) {
   const fill = disabled ? "#003232" : "#2FD180";
   return (
     <svg
@@ -9,8 +9,18 @@ export default function SaveIcon({ disabled }: { disabled?: boolean }) {
       viewBox="0 0 256 256"
     >
       <rect width="256" height="256" fill="none"></rect>
+      <circle
+        cx="88"
+        cy="108"
+        r="52"
+        fill="none"
+        stroke={fill}
+        stroke-miterlimit="10"
+        stroke-width="16"
+      >
+      </circle>
       <path
-        d="M216,91.3V208a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V48a8,8,0,0,1,8-8H164.7a7.9,7.9,0,0,1,5.6,2.3l43.4,43.4A7.9,7.9,0,0,1,216,91.3Z"
+        d="M155.4,57.9A54.5,54.5,0,0,1,169.5,56a52,52,0,0,1,0,104"
         fill="none"
         stroke={fill}
         stroke-linecap="round"
@@ -19,7 +29,7 @@ export default function SaveIcon({ disabled }: { disabled?: boolean }) {
       >
       </path>
       <path
-        d="M80,216V152a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8v64"
+        d="M16,197.4a88,88,0,0,1,144,0"
         fill="none"
         stroke={fill}
         stroke-linecap="round"
@@ -27,18 +37,15 @@ export default function SaveIcon({ disabled }: { disabled?: boolean }) {
         stroke-width="16"
       >
       </path>
-      <line
-        x1="152"
-        y1="72"
-        x2="96"
-        y2="72"
+      <path
+        d="M169.5,160a87.9,87.9,0,0,1,72,37.4"
         fill="none"
         stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
       >
-      </line>
+      </path>
     </svg>
   );
 }
