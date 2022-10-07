@@ -34,7 +34,7 @@ export default function Audience(
       <Modal
         open={openModal}
         onDismiss={() => setOpenModal(false)}
-        class="container rounded bg-white p-5 w-1/3"
+        class="rounded bg-white p-5 w-1/3"
       >
         <div class="w-full flex justify-between mb-4">
           <span class="text-xl font-bold">Audiência</span>
