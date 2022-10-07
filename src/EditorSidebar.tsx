@@ -5,6 +5,8 @@ import { FormProvider as FP } from "react-hook-form";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import AddNewComponent from "./AddNewComponent.tsx";
 import useEditorOperations from "./useEditorForm.tsx";
+import SaveIcon from "./ui/SaveIcon.tsx";
+import Audience from "./Audience.tsx";
 
 const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
   props: UseFormReturn<TFieldValues, TContext>,
@@ -13,8 +15,13 @@ const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
 const DEFAULT_SCHEMA = { title: "default", type: "object", properties: {} };
 
 export default function EditorSidebar() {
-  const { componentSchemas, template, components: initialComponents } =
-    useEditor();
+  const {
+    componentSchemas,
+    template,
+    components: initialComponents,
+    siteId,
+    flag,
+  } = useEditor();
 
   const {
     onReset,
@@ -28,6 +35,8 @@ export default function EditorSidebar() {
   } = useEditorOperations({
     template,
     components: initialComponents,
+    siteId,
+    flag,
   });
 
   const components = componentsRef.current;
@@ -40,19 +49,28 @@ export default function EditorSidebar() {
             onSubmit={onSubmit}
           >
             <header class="flex justify-between items-center">
-              <span class="text-gray-400">last edited...</span>
+              <Audience methods={methods} onSubmit={onSubmit} />
               <div class="flex gap-2">
-                <Button
-                  type="button"
+                <p
+                  class={`cursor-pointer py-1 px-2 ${
+                    methods.formState.isDirty
+                      ? "text-gray-400 hover:text-gray-500"
+                      : "text-gray-400"
+                  }`}
                   onClick={onReset}
                   disabled={!methods.formState.isDirty}
                 >
                   Descartar
-                </Button>
+                </p>
                 <Button
                   type="submit"
                   disabled={!methods.formState.isDirty}
                 >
+                  <span class="pr-1">
+                    <SaveIcon
+                      disabled={!methods.formState.isDirty}
+                    />
+                  </span>
                   Salvar
                 </Button>
               </div>

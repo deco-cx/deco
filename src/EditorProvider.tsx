@@ -1,11 +1,13 @@
 import { ComponentChildren, createContext } from "preact";
 import { useContext } from "preact/hooks";
-import type { PageComponentData, Schemas } from "../types.ts";
+import type { Flag, PageComponentData, Schemas } from "../types.ts";
 
 interface Props {
   components: PageComponentData[];
   template: string;
   componentSchemas: Schemas;
+  siteId: number;
+  flag: Flag | null;
 }
 
 export interface EditorContext extends Props {}
@@ -17,9 +19,11 @@ export const EditorContext = createContext<EditorContext>(
 export const useEditor = () => useContext(EditorContext);
 
 export default function EditorProvider(
-  { children, components, template, componentSchemas }: Props & {
-    children: ComponentChildren;
-  },
+  { children, components, template, componentSchemas, siteId, flag }:
+    & Props
+    & {
+      children: ComponentChildren;
+    },
 ) {
   return (
     <EditorContext.Provider
@@ -27,6 +31,8 @@ export default function EditorProvider(
         components,
         template,
         componentSchemas,
+        siteId,
+        flag,
       }}
     >
       {children}

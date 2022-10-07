@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "preact/hooks";
 import { useFieldArray, useForm } from "react-hook-form";
-import { PageComponentData } from "../types.ts";
+import { Flag, PageComponentData } from "../types.ts";
 
 const COMPONENTS_KEY_NAME: "components" = "components" as const;
 
@@ -35,11 +35,15 @@ function mapFormDataToComponents(
   return components;
 }
 
+interface EditorProps {
+  components: PageComponentData[];
+  template: string;
+  siteId: number;
+  flag: Flag | null;
+}
+
 export default function useEditorOperations(
-  { components: initialComponents, template }: {
-    components: PageComponentData[];
-    template: string;
-  },
+  { components: initialComponents, template, siteId, flag }: EditorProps,
 ) {
   const componentsRef = useRef<PageComponentData[]>();
 
@@ -48,10 +52,10 @@ export default function useEditorOperations(
   }
 
   const components = componentsRef.current as PageComponentData[];
-
   const methods = useForm<FormValues>({
     defaultValues: {
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(components),
+      experiment: flag ? flag.traffic > 0 : false,
     },
   });
   const { fields, swap, remove, append } = useFieldArray({
@@ -64,6 +68,7 @@ export default function useEditorOperations(
 
     methods.reset({
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(componentsRef.current),
+      experiment: flag ? flag.traffic > 0 : false,
     });
   };
 
@@ -74,12 +79,26 @@ export default function useEditorOperations(
         components,
       );
 
-      await fetch("/live/api/editor", {
+      const searchParams = new URLSearchParams(window.location.search);
+      const variantId = searchParams.get("variantId");
+
+      const experiment = methods.getValues("experiment");
+
+      const { variantId: newvariantId } = await fetch("/live/api/editor", {
         method: "POST",
         redirect: "manual",
-        body: JSON.stringify({ components: newComponents, template }),
-      });
-      document.location.reload();
+        body: JSON.stringify({
+          components: newComponents,
+          template,
+          siteId,
+          variantId,
+          experiment,
+        }),
+      }).then((res) => res.json());
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("variantId", newvariantId);
+      document.location.replace(url);
     },
   );
 

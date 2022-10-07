@@ -7,8 +7,8 @@ export default function Button(
     <button
       type="button"
       {...props}
-      class={`border border-primary-dark py-1 px-2 bg-primary-dark text-primary rounded transition-colors ease-in ${
-        props.disabled ? "text-gray-500 bg-gray-200" : "hover:border-black"
+      class={`py-1 px-2 bg-primary-dark text-primary rounded flex items-center transition-colors ease-in ${
+        props.disabled ? "text-gray-500 bg-gray-200" : "shadow-md"
       } ${props.class}`}
     />
   );

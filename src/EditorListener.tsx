@@ -11,6 +11,12 @@ const handleKeyDownFunction = (function handleKeyDown(event) {
 
     window.location = url.toString();
   }
+
+  if (
+    event.key === "Escape"
+  ) {
+    window.location = "/admin";
+  }
 }).toString();
 
 export default function EditorListener() {

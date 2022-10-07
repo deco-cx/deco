@@ -3,12 +3,13 @@ import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
 import LiveContext from "./context.ts";
 import { getSupabaseClientForUser } from "./supabase.ts";
-import { Module } from "./types.ts";
+import { Flag, Module } from "./types.ts";
 import {
   componentNameFromPath,
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
+import { duplicateProdPage, getFlagFromPageId } from "./utils/supabase.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -22,28 +23,43 @@ export async function updateComponentProps(
   }
 
   let status;
-  const liveOptions = LiveContext.getLiveOptions();
+  let pageId;
+  let supabaseReponse;
 
   try {
-    const { components, template } = await req.json();
+    const { components, template, siteId, variantId, experiment } = await req
+      .json();
 
-    if (!liveOptions.siteId) {
-      // TODO: fetch site id from supabase
+    pageId = variantId
+      ? variantId
+      : await duplicateProdPage(req, url.pathname, template, siteId);
+
+    const flag: Flag = await getFlagFromPageId(req, pageId, siteId);
+    flag.traffic = (experiment as boolean) ? 0.5 : 0;
+
+    supabaseReponse = await getSupabaseClientForUser(req).from("pages").update({
+      components: components,
+    }).match({ id: pageId });
+
+    if (supabaseReponse.error) {
+      throw new Error(supabaseReponse.error.message);
     }
 
-    // TODO: Validate components props on schema
+    supabaseReponse = await getSupabaseClientForUser(req).from("flags").update({
+      traffic: flag.traffic,
+    }).match({ id: flag.id });
 
-    const res = await getSupabaseClientForUser(req).from("pages").update({
-      components: components,
-    }).match({ site: liveOptions.siteId, path: template });
+    if (supabaseReponse.error) {
+      throw new Error(supabaseReponse.error.message);
+    }
 
-    status = res.status;
+    status = supabaseReponse.status;
   } catch (e) {
     console.error(e);
     status = 400;
   }
 
-  return new Response(null, { status });
+  return Response.json({ variantId: pageId }, { status });
 }
 
 export interface ComponentPreview {

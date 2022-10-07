@@ -34,4 +34,13 @@ export interface PageComponentData {
   props?: Record<string, unknown>;
 }
 
+export interface Flag {
+  id: string;
+  name: string;
+  audience: string;
+  traffic: number;
+  active?: boolean;
+  components?: PageComponentData[]
+}
+
 export type Mode = "edit" | "none";

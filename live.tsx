@@ -1,6 +1,7 @@
 import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import {
   DecoManifest,
+  Flag,
   LiveOptions,
   Mode,
   PageComponentData,
@@ -16,9 +17,18 @@ import {
 } from "$live/editor.tsx";
 import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
+import {
+  getFlagFromId,
+  getPageFromId,
+  getProdPage,
+  getSiteIdFromName,
+} from "./utils/supabase.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
 import LiveContext from "./context.ts";
+
+let flags: Flag[];
+export const flag = (id: string) => flags.find((flag) => flag.id === id);
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   LiveContext.setupManifestAndOptions({ manifest, liveOptions });
@@ -46,11 +56,28 @@ export interface LivePageData {
   components: PageComponentData[];
   mode: Mode;
   template: string;
+  siteId: number;
+  flag: Flag | null;
 }
 
 export interface LoadLiveComponentsOptions {
   template?: string;
 }
+
+const getComponentsFromFlags = (
+  prodComponents: PageComponentData[],
+): PageComponentData[] => {
+  const activePages: PageComponentData[][] = [prodComponents];
+  flags.forEach((flag) => {
+    if (flag.traffic > 0) {
+      activePages.push(flag.components!);
+    }
+  });
+
+  // Randomly choose any active experiment
+  const randomIdx = Math.floor(Math.random() * activePages.length);
+  return activePages[randomIdx];
+};
 
 export async function loadLiveComponents(
   req: Request,
@@ -62,37 +89,48 @@ export async function loadLiveComponents(
   const url = new URL(req.url);
   const { template } = options ?? {};
 
-  /**
-   * Queries follow PostgREST syntax
-   * https://postgrest.org/en/stable/api.html#horizontal-filtering-rows
-   */
-  const queries = [url.pathname, template]
-    .filter((query) => Boolean(query))
-    .map((query) => `path.eq.${query}`)
-    .join(",");
+  const variantId = url.searchParams.get("variantId");
 
-  const { data: Pages, error } = await getSupabaseClient()
-    .from("pages")
-    .select(`components, path, site!inner(name, id)`)
-    .eq("site.name", site)
-    .or(queries);
-
-  if (error) {
-    console.log("Error fetching page:", error);
-  } else {
-    console.log("Found page:", Pages);
+  if (!liveOptions.siteId) {
+    liveOptions.siteId = await getSiteIdFromName(req, site);
   }
 
-  if (!liveOptions.siteId && Pages?.[0]?.site) {
-    liveOptions.siteId = Pages?.[0]?.site.id;
+  let flag = null;
+  let pages = [];
+  const siteId = liveOptions.siteId!.toString();
+  let components: PageComponentData[] = [];
+
+  try {
+    pages = variantId
+      ? await getPageFromId(req, variantId, siteId)
+      : await getProdPage(
+        req,
+        siteId,
+        url.pathname,
+        template,
+      );
+
+    const prodComponents = pages![0]!.components;
+    const flagId = pages![0]!.flag;
+    flag = flagId ? await getFlagFromId(req, flagId, siteId) : null;
+
+    components = variantId
+      ? prodComponents
+      : getComponentsFromFlags(prodComponents);
+
+    console.log("Found page:", pages, flag);
+  } catch (error) {
+    console.log("Error fetching page:", error.message);
   }
 
   const isEditor = url.searchParams.has("editor");
 
   return {
-    components: Pages?.[0]?.components ?? [],
+    components: components,
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
+    siteId: liveOptions.siteId!,
+    flag: flag,
   };
 }
 
@@ -135,6 +173,41 @@ export function createLiveHandler<LoaderData = LivePageData>(
         return new Response("Site not found", { status: 404 });
       }
 
+      if (url.pathname === "/live/proxy/gtag/js") {
+        const trackingId = url.searchParams.get("id");
+        console.log("Proxying gtag", trackingId);
+        return fetch(
+          `https://www.googletagmanager.com/gtag/js?id=${trackingId}`,
+        );
+      }
+
+      start("fetch-flags");
+      const site = liveOptions.site;
+
+      // TODO: Change change inner site.name to page.site (this site is id)
+      const { data: Flags, error } = await getSupabaseClient()
+        .from("flags")
+        .select(
+          `id, name, audience, traffic, site!inner(name, id), pages!inner(components, id)`,
+        )
+        .eq("site.name", site);
+
+      if (error) {
+        console.log("Error fetching flags:", error);
+      }
+      end("fetch-flags");
+
+      start("calc-flags");
+      // TODO: Cookie answer
+      Flags?.map((flag) => {
+        flag.active = Math.random() < flag.traffic;
+
+        // TODO: Query from supabase return pages: [{components:[{}]}]. Transform to components:[{}]
+        flag.components = flag.pages[0].components;
+      });
+      end("calc-flags");
+      flags = Flags ?? [];
+
       start("fetch-page-data");
       let loaderData = undefined;
 
@@ -152,7 +225,6 @@ export function createLiveHandler<LoaderData = LivePageData>(
         console.log("Error running loader. \n", error);
         // TODO: Do a better error handler. Maybe redirect to 500 page.
       }
-
       end("fetch-page-data");
 
       start("render");
@@ -226,6 +298,8 @@ export function LivePage(
             components={data.components}
             template={data.template}
             componentSchemas={componentSchemas}
+            siteId={data.siteId}
+            flag={data.flag}
           />
         )
         : null}
