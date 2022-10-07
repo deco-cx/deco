@@ -41,9 +41,9 @@ export default function AddNewComponent({ onAddComponent }: Props) {
       <Modal
         open={openModal}
         onDismiss={() => setOpenModal(false)}
-        class="container rounded bg-white p-5"
+        class="rounded bg-white p-5 w-2/3"
       >
-        <div class="w-full flex justify-between mb-4">
+        <div class="w-full container flex justify-between mb-4">
           <span class="text-xl font-bold">Componentes</span>
           <Button onClick={() => setOpenModal(false)}>
             <PlusIcon class="rotate-45" />

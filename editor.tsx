@@ -13,6 +13,76 @@ import { duplicateProdPage, getFlagFromPageId } from "./utils/supabase.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
+const updateDraft = async (req: Request, url: URL, ctx: any) => {
+  const { components, template, siteId, variantId, experiment } = ctx;
+
+  let supabaseReponse;
+  const pageId = variantId
+    ? variantId
+    : await duplicateProdPage(url.pathname, template, siteId);
+
+  const flag: Flag = await getFlagFromPageId(pageId, siteId);
+  flag.traffic = (experiment as boolean) ? 0.5 : 0;
+
+  supabaseReponse = await getSupabaseClientForUser(req).from("pages").update({
+    components: components,
+  }).match({ id: pageId });
+
+  if (supabaseReponse.error) {
+    throw new Error(supabaseReponse.error.message);
+  }
+
+  supabaseReponse = await getSupabaseClientForUser(req).from("flags").update({
+    traffic: flag.traffic,
+  }).match({ id: flag.id });
+
+  if (supabaseReponse.error) {
+    throw new Error(supabaseReponse.error.message);
+  }
+
+  return { pageId, status: supabaseReponse.status };
+};
+
+const updateProd = async (req: Request, url: URL, ctx: any) => {
+  const { template, siteId, pageId } = ctx;
+  let supabaseResponse;
+
+  const queries = [url.pathname, template]
+    .filter((query) => Boolean(query))
+    .map((query) => `path.eq.${query}`)
+    .join(",");
+
+  // Archive prod
+  supabaseResponse = await getSupabaseClientForUser(req)
+    .from("pages")
+    .update({
+      archived: true,
+    })
+    .match({ site: siteId })
+    .is("flag", null)
+    .is("archived", false)
+    .or(queries);
+
+  if (supabaseResponse.error) {
+    throw new Error(supabaseResponse.error.message);
+  }
+
+  // Promote variant to prod
+  supabaseResponse = await getSupabaseClientForUser(req)
+    .from("pages")
+    .update({
+      archived: false,
+      flag: null,
+    })
+    .eq("id", pageId);
+
+  if (supabaseResponse.error) {
+    throw new Error(supabaseResponse.error.message);
+  }
+
+  return { pageId, status: supabaseResponse.status };
+};
+
 export async function updateComponentProps(
   req: Request,
   _: HandlerContext,
@@ -22,44 +92,25 @@ export async function updateComponentProps(
     return new Response("Not found", { status: 404 });
   }
 
-  let status;
-  let pageId;
-  let supabaseReponse;
-
+  let response: { pageId: string; status: number } = { pageId: "", status: 0 };
   try {
-    const { components, template, siteId, variantId, experiment } = await req
-      .json();
+    const ctx = await req.json();
+    const shouldDeployProd = ctx.audience == "public" && !ctx.experiment;
+    response = await updateDraft(req, url, ctx);
 
-    pageId = variantId
-      ? variantId
-      : await duplicateProdPage(req, url.pathname, template, siteId);
-
-    const flag: Flag = await getFlagFromPageId(req, pageId, siteId);
-    flag.traffic = (experiment as boolean) ? 0.5 : 0;
-
-    supabaseReponse = await getSupabaseClientForUser(req).from("pages").update({
-      components: components,
-    }).match({ id: pageId });
-
-    if (supabaseReponse.error) {
-      throw new Error(supabaseReponse.error.message);
+    // Deploy production
+    if (shouldDeployProd) {
+      ctx.pageId = response.pageId;
+      response = await updateProd(req, url, ctx);
     }
-
-    supabaseReponse = await getSupabaseClientForUser(req).from("flags").update({
-      traffic: flag.traffic,
-    }).match({ id: flag.id });
-
-    if (supabaseReponse.error) {
-      throw new Error(supabaseReponse.error.message);
-    }
-
-    status = supabaseReponse.status;
   } catch (e) {
     console.error(e);
-    status = 400;
+    response.status = 400;
   }
 
-  return Response.json({ variantId: pageId }, { status });
+  return Response.json({ variantId: response.pageId }, {
+    status: response.status,
+  });
 }
 
 export interface ComponentPreview {

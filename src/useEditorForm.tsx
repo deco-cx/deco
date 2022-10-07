@@ -7,6 +7,8 @@ const COMPONENTS_KEY_NAME: "components" = "components" as const;
 type ComponentProp = Record<string, any>;
 type FormValues = {
   [COMPONENTS_KEY_NAME]: ComponentProp[];
+  experiment: boolean;
+  audience: "draft" | "public";
 };
 
 function mapComponentsToFormData(
@@ -56,6 +58,7 @@ export default function useEditorOperations(
     defaultValues: {
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(components),
       experiment: flag ? flag.traffic > 0 : false,
+      audience: flag && flag.traffic === 0 ? "draft" : "public",
     },
   });
   const { fields, swap, remove, append } = useFieldArray({
@@ -69,11 +72,12 @@ export default function useEditorOperations(
     methods.reset({
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(componentsRef.current),
       experiment: flag ? flag.traffic > 0 : false,
+      audience: flag && flag.traffic === 0 ? "draft" : "public",
     });
   };
 
   const onSubmit = methods.handleSubmit(
-    async ({ components: formComponents }) => {
+    async ({ components: formComponents, audience, experiment }) => {
       const newComponents = mapFormDataToComponents(
         formComponents,
         components,
@@ -81,8 +85,6 @@ export default function useEditorOperations(
 
       const searchParams = new URLSearchParams(window.location.search);
       const variantId = searchParams.get("variantId");
-
-      const experiment = methods.getValues("experiment");
 
       const { variantId: newvariantId } = await fetch("/live/api/editor", {
         method: "POST",
@@ -93,6 +95,7 @@ export default function useEditorOperations(
           siteId,
           variantId,
           experiment,
+          audience,
         }),
       }).then((res) => res.json());
 

@@ -1,8 +1,8 @@
-import { getSupabaseClientForUser } from "../supabase.ts";
+import getSupabaseClient from "../supabase.ts"
 import { Flag } from "../types.ts"
 
-export const getSiteIdFromName = async (req: Request, siteName: string) => {
-  const { data: Site, error } = await getSupabaseClientForUser(req)
+export const getSiteIdFromName = async (siteName: string) => {
+  const { data: Site, error } = await getSupabaseClient()
     .from("sites")
     .select("id")
     .match({ name: siteName });
@@ -15,12 +15,11 @@ export const getSiteIdFromName = async (req: Request, siteName: string) => {
 };
 
 export const getPageFromId = async (
-  req: Request,
   pageId: string,
   siteId: string,
 ) => {
   // Getting prod page in order to duplicate
-  const { data: Pages, error } = await getSupabaseClientForUser(req)
+  const { data: Pages, error } = await getSupabaseClient()
     .from("pages")
     .select("*")
     .match({ id: pageId, site: siteId });
@@ -37,13 +36,12 @@ export const getPageFromId = async (
 };
 
 export const getFlagFromPageId = async (
-  req: Request,
   pageId: string,
   siteId: string,
 ): Promise<Flag> => {
   // Getting prod page in order to duplicate
 
-  const { data: Flags, error: error } = await getSupabaseClientForUser(req)
+  const { data: Flags, error: error } = await getSupabaseClient()
     .from("flags")
     .select(`id, name, audience, traffic, pages!inner(flag, id)`)
     .match({ "pages.id": pageId, site: siteId });
@@ -60,12 +58,11 @@ export const getFlagFromPageId = async (
 }
 
 export const getFlagFromId = async (
-  req: Request,
   flagId: string,
   siteId: string,
 ): Promise<Flag> => {
   // Getting prod page in order to duplicate
-  const { data: Flags, error } = await getSupabaseClientForUser(req)
+  const { data: Flags, error } = await getSupabaseClient()
     .from("flags")
     .select("*")
     .match({ id: flagId, site: siteId });
@@ -82,7 +79,6 @@ export const getFlagFromId = async (
 };
 
 export const getProdPage = async (
-  req: Request,
   siteId: string,
   pathName: string,
   template: string | undefined,
@@ -97,11 +93,12 @@ export const getProdPage = async (
     .join(",");
 
   // TODO: Ensure pages list are correct (only 1 prod and flags list)
-  const { data: Pages, error } = await getSupabaseClientForUser(req)
+  const { data: Pages, error } = await getSupabaseClient()
     .from("pages")
     .select("*")
     .match({ site: siteId, archived: false })
     .is("flag", null)
+    .is("archived", false)
     .or(queries);
 
   if (error) {
@@ -112,16 +109,15 @@ export const getProdPage = async (
 };
 
 export const duplicateProdPage = async (
-  req: Request,
   pathName: string,
   template: string,
   siteId: string,
 ): Promise<string> => {
   // Getting prod page in order to duplicate
-  const pages = await getProdPage(req, siteId, pathName, template);
+  const pages = await getProdPage(siteId, pathName, template);
 
   // Create flag
-  const flagResponse = await getSupabaseClientForUser(req)
+  const flagResponse = await getSupabaseClient()
     .from("flags")
     .insert({
       name: pages?.[0]?.name,
@@ -136,7 +132,7 @@ export const duplicateProdPage = async (
   }
 
   // Insert the same prod page
-  const pageResponse = await getSupabaseClientForUser(req)
+  const pageResponse = await getSupabaseClient()
     .from("pages")
     .insert({
       components: pages?.[0]?.components ?? [],
