@@ -27,11 +27,11 @@ export async function updateComponentProps(
   let supabaseReponse;
 
   try {
-    const { components, template, siteId, draftId, experiment } = await req
+    const { components, template, siteId, variantId, experiment } = await req
       .json();
 
-    pageId = draftId
-      ? draftId
+    pageId = variantId
+      ? variantId
       : await duplicateProdPage(req, url.pathname, template, siteId);
 
     const flag: Flag = await getFlagFromPageId(req, pageId, siteId);
@@ -59,7 +59,7 @@ export async function updateComponentProps(
     status = 400;
   }
 
-  return Response.json({ draftId: pageId }, { status });
+  return Response.json({ variantId: pageId }, { status });
 }
 
 export interface ComponentPreview {

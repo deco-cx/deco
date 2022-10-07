@@ -89,7 +89,7 @@ export async function loadLiveComponents(
   const url = new URL(req.url);
   const { template } = options ?? {};
 
-  const draftId = url.searchParams.get("draft");
+  const variantId = url.searchParams.get("variantId");
 
   if (!liveOptions.siteId) {
     liveOptions.siteId = await getSiteIdFromName(req, site);
@@ -101,8 +101,8 @@ export async function loadLiveComponents(
   let components: PageComponentData[] = [];
 
   try {
-    pages = draftId
-      ? await getPageFromId(req, draftId, siteId)
+    pages = variantId
+      ? await getPageFromId(req, variantId, siteId)
       : await getProdPage(
         req,
         siteId,
@@ -114,7 +114,7 @@ export async function loadLiveComponents(
     const flagId = pages![0]!.flag;
     flag = flagId ? await getFlagFromId(req, flagId, siteId) : null;
 
-    components = draftId
+    components = variantId
       ? prodComponents
       : getComponentsFromFlags(prodComponents);
 
@@ -185,17 +185,15 @@ export function createLiveHandler<LoaderData = LivePageData>(
       const site = liveOptions.site;
 
       // TODO: Change change inner site.name to page.site (this site is id)
-      const { data: Flags, error: error2 } = await getSupabaseClient()
+      const { data: Flags, error } = await getSupabaseClient()
         .from("flags")
         .select(
           `id, name, audience, traffic, site!inner(name, id), pages!inner(components, id)`,
         )
         .eq("site.name", site);
 
-      if (error2) {
-        console.log("Error fetching flags:", error2);
-      } else {
-        console.log("Found flags:", Flags);
+      if (error) {
+        console.log("Error fetching flags:", error);
       }
       end("fetch-flags");
 

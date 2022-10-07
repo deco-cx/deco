@@ -80,24 +80,24 @@ export default function useEditorOperations(
       );
 
       const searchParams = new URLSearchParams(window.location.search);
-      const draftId = searchParams.get("draft");
+      const variantId = searchParams.get("variantId");
 
       const experiment = methods.getValues("experiment");
 
-      const { draftId: newDraftId } = await fetch("/live/api/editor", {
+      const { variantId: newvariantId } = await fetch("/live/api/editor", {
         method: "POST",
         redirect: "manual",
         body: JSON.stringify({
           components: newComponents,
           template,
           siteId,
-          draftId,
+          variantId,
           experiment,
         }),
       }).then((res) => res.json());
 
       const url = new URL(window.location.href);
-      url.searchParams.set("draft", newDraftId);
+      url.searchParams.set("variantId", newvariantId);
       document.location.replace(url);
     },
   );
