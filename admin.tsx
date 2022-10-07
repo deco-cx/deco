@@ -244,9 +244,7 @@ const ArchivedBadge = () => (
 
 const PageRow = (props: { page: any }) => {
   const { page } = props;
-  const pageLink = `${page.path}?editor${
-    page.flag ? `&variantId=${page.id}` : ""
-  }`;
+  const pageLink = `${page.path}?editor&variantId=${page.id}`;
   const date = {
     year: "numeric",
     month: "numeric",
@@ -291,6 +289,7 @@ const PageRow = (props: { page: any }) => {
 
 export default function LiveAdmin(props: PageProps<any>) {
   const { data: { pages, site } } = props;
+  const sortedPages = pages.sort((a, b) => a.path.localeCompare(b.path));
   return (
     <div class="bg-white min-h-screen border-l-2 p-2">
       <div class="mb-5">
@@ -324,7 +323,7 @@ export default function LiveAdmin(props: PageProps<any>) {
           </tr>
         </thead>
         <tbody class="bg-white">
-          {pages.map((page: any) => <PageRow page={page} />)}
+          {sortedPages.map((page: any) => <PageRow page={page} />)}
         </tbody>
       </table>
     </div>
