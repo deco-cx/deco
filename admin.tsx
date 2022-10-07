@@ -27,7 +27,15 @@ const PageRow = (props: { page: any }) => {
         {page.created_at}
       </td>
       <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
-        {page.flags.traffic > 0 ? "TRUE" : "FALSE"}
+        {page.flag
+          ? page.flag.traffic === 0 ? "Draft" : "Experiment"
+          : "Production"}
+      </td>
+      <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
+        {page.flag?.traffic}
+      </td>
+      <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
+        {JSON.stringify(page.archived)}
       </td>
     </tr>
   );
@@ -60,7 +68,13 @@ export default function LiveAdmin(props: PageProps<any>) {
               created
             </th>
             <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left">
-              experiment
+              status
+            </th>
+            <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left">
+              traffic
+            </th>
+            <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left">
+              archived
             </th>
           </tr>
         </thead>
@@ -81,7 +95,7 @@ export const adminHandler: Handlers<any> = {
     const { data: Pages, error } = await getSupabaseClientForUser(req)
       .from("pages")
       .select(
-        "id, created_at, path, public, name, site!inner(name, id), archived, flags!inner(traffic, id)",
+        "id, created_at, path, public, name, site!inner(name, id), archived, flag(traffic, id)",
       )
       .eq("site.name", site);
 
