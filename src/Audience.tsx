@@ -70,7 +70,9 @@ export default function Audience(
                   <p>{globalThis.window?.location?.href}</p>
                 </div>
                 <div class="mt-4">
-                  <Button>Copiar link</Button>
+                  {traffic > 0
+                    ? <Button>Salvar como rascunho</Button>
+                    : <Button>Copiar link</Button>}
                 </div>
               </div>
             )}
