@@ -190,11 +190,71 @@ const ExperimentBadge = () => (
   </div>
 );
 
+const ArchivedBadge = () => (
+  <div class="flex items-center">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      class="mr-1"
+      fill="#003232"
+      viewBox="0 0 256 256"
+    >
+      <rect width="256" height="256" fill="none"></rect>
+      <rect
+        x="24"
+        y="56"
+        width="208"
+        height="40"
+        rx="8"
+        fill="none"
+        stroke="#003232"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="16"
+      >
+      </rect>
+      <path
+        d="M216,96v96a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V96"
+        fill="none"
+        stroke="#003232"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="16"
+      >
+      </path>
+      <line
+        x1="104"
+        y1="136"
+        x2="152"
+        y2="136"
+        fill="none"
+        stroke="#003232"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="16"
+      >
+      </line>
+    </svg>
+    <span>
+      Archived
+    </span>
+  </div>
+);
+
 const PageRow = (props: { page: any }) => {
   const { page } = props;
   const pageLink = `${page.path}?editor${
     page.flag ? `&variantId=${page.id}` : ""
   }`;
+  const date = {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  };
   return (
     <tr class="hover:bg-primary-light">
       <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
@@ -213,7 +273,9 @@ const PageRow = (props: { page: any }) => {
         {page.name}
       </td>
       <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
-        {page.flag
+        {page.archived
+          ? <ArchivedBadge />
+          : page.flag
           ? page.flag.traffic === 0 ? <DraftBadge /> : <ExperimentBadge />
           : <LiveBadge />}
       </td>
@@ -221,10 +283,7 @@ const PageRow = (props: { page: any }) => {
         {page.flag?.traffic}
       </td>
       <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
-        {JSON.stringify(page.archived)}
-      </td>
-      <td class="border-b border-primary-light p-4 pl-8 text-primary-dark">
-        {page.created_at}
+        {new Date(page.created_at).toLocaleDateString("pt-BR", date)}
       </td>
     </tr>
   );
@@ -258,9 +317,6 @@ export default function LiveAdmin(props: PageProps<any>) {
             </th>
             <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left ">
               traffic
-            </th>
-            <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left">
-              archived
             </th>
             <th class="border-b border-primary-light font-medium p-4 pl-8 pt-0 pb-3 text-left">
               created
