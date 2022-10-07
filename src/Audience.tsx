@@ -3,7 +3,7 @@ import PlusIcon from "./icons/PlusIcon.tsx";
 import Button from "./ui/Button.tsx";
 import Modal from "./ui/Modal.tsx";
 import AudienceIcon from "./ui/AudienceIcon.tsx";
-import { UseFormReturn } from "https://esm.sh/v94/react-hook-form@7.34.2/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/dist/index.d.ts";
+import { UseFormReturn, useWatch } from "react-hook-form";
 
 interface Props {
   methods: UseFormReturn<any>;
@@ -16,9 +16,8 @@ export default function Audience(
 ) {
   const targetRef = useRef<HTMLDivElement>(null);
   const [openModal, setOpenModal] = useState<boolean>(false);
-  const initialState = flag ? "draft" : "public";
   const traffic = flag?.traffic;
-  const [audience, setAudience] = useState<string>(initialState);
+  const audience = useWatch({ name: "audience", control: methods.control });
 
   return (
     <>
@@ -51,7 +50,7 @@ export default function Audience(
             <select
               class="p-2 my-2 shadow-md"
               value={audience}
-              onChange={(e: any) => setAudience(e.target.value)}
+              {...methods.register("audience")}
             >
               <option value="draft">
                 Rascunho (apenas com o link)

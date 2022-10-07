@@ -7,6 +7,8 @@ const COMPONENTS_KEY_NAME: "components" = "components" as const;
 type ComponentProp = Record<string, any>;
 type FormValues = {
   [COMPONENTS_KEY_NAME]: ComponentProp[];
+  experiment: boolean;
+  audience: "draft" | "public";
 };
 
 function mapComponentsToFormData(
@@ -56,6 +58,7 @@ export default function useEditorOperations(
     defaultValues: {
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(components),
       experiment: flag ? flag.traffic > 0 : false,
+      audience: flag && flag.traffic === 0 ? "draft" : "public",
     },
   });
   const { fields, swap, remove, append } = useFieldArray({
@@ -69,6 +72,7 @@ export default function useEditorOperations(
     methods.reset({
       [COMPONENTS_KEY_NAME]: mapComponentsToFormData(componentsRef.current),
       experiment: flag ? flag.traffic > 0 : false,
+      audience: flag && flag.traffic === 0 ? "draft" : "public",
     });
   };
 
