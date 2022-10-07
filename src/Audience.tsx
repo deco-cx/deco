@@ -23,9 +23,37 @@ interface Props {
   onAddComponent: (componentName: string) => void;
 }
 
+const DraftAudience = () => {
+  return (
+    <div class="flex-row items-center gap-1">
+      <p class="text-sm font-medium">
+        Essa página só pode ser acessada pelo link:
+      </p>
+      <div class="flex w-full items-center gap-1">
+        <p>{window.location.href}</p>
+      </div>
+      <div class="mt-4">
+        <Button>Copiar link</Button>
+      </div>
+    </div>
+  );
+};
+
+const PublicAudience = () => {
+  return (
+    <div class="flex-row items-center gap-1">
+      <p class="text-sm font-medium">Público</p>
+      <div class="mt-4">
+        <Button>Publicar</Button>
+      </div>
+    </div>
+  );
+};
+
 export default function Audience({ onAddComponent }: Props) {
   const targetRef = useRef<HTMLDivElement>(null);
   const [openModal, setOpenModal] = useState<boolean>(false);
+  const [audience, setAudience] = useState<string>("draft");
   const [tocComponents, setToCComponents] = useState<
     ComponentPreview[]
   >([]);
@@ -57,15 +85,17 @@ export default function Audience({ onAddComponent }: Props) {
             class="overflow-y-auto w-full"
             ref={targetRef}
           >
-            <select>
-              <option value="1">Rascunho (apenas com o link)</option>
-              <option value="2">Público</option>
-              <option value="3" disabled>Nova audiência...</option>
+            <select
+              class="p-2 my-2 shadow-md"
+              onInput={(e: any) => setAudience(e.target.value)}
+            >
+              <option value="draft">Rascunho (apenas com o link)</option>
+              <option value="public">Público</option>
+              <option value="new" disabled>Nova audiência...</option>
             </select>
 
-            <div class="mt-4">
-              <Button>Publicar</Button>
-            </div>
+            {audience == "draft" && <DraftAudience />}
+            {audience == "public" && <PublicAudience />}
           </div>
         </div>
       </Modal>
