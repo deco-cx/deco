@@ -40,6 +40,7 @@ export interface Flag {
   audience: string;
   traffic: number;
   active?: boolean;
+  path: string;
   components?: PageComponentData[]
 }
 
