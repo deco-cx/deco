@@ -2,7 +2,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
 import LiveContext from "./context.ts";
-import { getSupabaseClientForUser } from "./supabase.ts";
+import getSupabaseClient, { getSupabaseClientForUser } from "./supabase.ts";
 import { Flag, Module } from "./types.ts";
 import {
   componentNameFromPath,
@@ -95,7 +95,20 @@ export async function updateComponentProps(
   let response: { pageId: string; status: number } = { pageId: "", status: 0 };
   try {
     const ctx = await req.json();
-    const shouldDeployProd = ctx.audience == "public" && !ctx.experiment;
+
+    const { data: Pages, error } = await getSupabaseClient()
+      .from("pages")
+      .select("*")
+      .match({ id: ctx.variantId });
+
+    const isProd = !Pages![0]!.flag;
+
+    if (isProd) {
+      ctx.variantId = null;
+    }
+
+    const shouldDeployProd = !isProd && ctx.audience == "public" &&
+      !ctx.experiment;
     response = await updateDraft(req, url, ctx);
 
     // Deploy production
