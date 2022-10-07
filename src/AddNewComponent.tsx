@@ -32,10 +32,10 @@ export default function AddNewComponent({ onAddComponent }: Props) {
   return (
     <>
       <Button
-        class="w-full flex justify-center"
+        class="py-2 w-full flex justify-center"
         onClick={() => setOpenModal(true)}
       >
-        <PlusIcon />
+        <PlusIcon fill="#ffffff" />
       </Button>
 
       <Modal
@@ -46,7 +46,7 @@ export default function AddNewComponent({ onAddComponent }: Props) {
         <div class="w-full container flex justify-between mb-4">
           <span class="text-xl font-bold">Componentes</span>
           <Button onClick={() => setOpenModal(false)}>
-            <PlusIcon class="rotate-45" />
+            <PlusIcon fill="#ffffff" class="rotate-45" />
           </Button>
         </div>
 

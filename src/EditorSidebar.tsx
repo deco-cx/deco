@@ -42,8 +42,8 @@ export default function EditorSidebar() {
   const components = componentsRef.current;
 
   return (
-    <div class="min-h-screen w-1/3 shadow-xl text-primary-dark">
-      <div class="bg-gray-50 p-5 shadow-xl rounded-2xl min-h-full">
+    <div class="flex-none w-80 shadow-xl text-primary-dark z-10">
+      <div class="bg-gray-50 p-5 min-h-full">
         <FormProvider {...methods}>
           <form
             onSubmit={onSubmit}
@@ -52,7 +52,7 @@ export default function EditorSidebar() {
               <Audience methods={methods} onSubmit={onSubmit} flag={flag} />
               <div class="flex gap-2">
                 <p
-                  class={`cursor-pointer py-1 px-2 ${
+                  class={`cursor-pointer py-1 px-2 text-sm ${
                     methods.formState.isDirty
                       ? "text-gray-400 hover:text-gray-500"
                       : "text-gray-400"
@@ -66,7 +66,7 @@ export default function EditorSidebar() {
                   type="submit"
                   disabled={!methods.formState.isDirty}
                 >
-                  <span class="pr-1">
+                  <span class="pr-1 hidden">
                     <SaveIcon
                       disabled={!methods.formState.isDirty}
                     />

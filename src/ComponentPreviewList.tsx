@@ -63,6 +63,7 @@ export default function ComponentPreviewList(
                   <PlusIcon
                     width={32}
                     height={32}
+                    fill="#ffffff"
                     class="hidden group-hover:block text-gray-400"
                   />
                 </div>

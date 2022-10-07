@@ -1,5 +1,5 @@
 export default function AudienceIcon({ disabled }: { disabled?: boolean }) {
-  const fill = disabled ? "#003232" : "#2FD180";
+  const fill = disabled ? "#003232" : "#ffffff";
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
