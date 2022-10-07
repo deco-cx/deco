@@ -98,6 +98,7 @@ export const getProdPage = async (
     .select("*")
     .match({ site: siteId, archived: false })
     .is("flag", null)
+    .is("archived", false)
     .or(queries);
 
   if (error) {

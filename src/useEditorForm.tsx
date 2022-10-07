@@ -77,7 +77,7 @@ export default function useEditorOperations(
   };
 
   const onSubmit = methods.handleSubmit(
-    async ({ components: formComponents }) => {
+    async ({ components: formComponents, audience, experiment }) => {
       const newComponents = mapFormDataToComponents(
         formComponents,
         components,
@@ -85,8 +85,6 @@ export default function useEditorOperations(
 
       const searchParams = new URLSearchParams(window.location.search);
       const variantId = searchParams.get("variantId");
-
-      const experiment = methods.getValues("experiment");
 
       const { variantId: newvariantId } = await fetch("/live/api/editor", {
         method: "POST",
@@ -97,6 +95,7 @@ export default function useEditorOperations(
           siteId,
           variantId,
           experiment,
+          audience,
         }),
       }).then((res) => res.json());
 
