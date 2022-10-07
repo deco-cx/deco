@@ -72,7 +72,7 @@ const getComponentsFromFlags = (
   const activePages: PageComponentData[][] = [prodComponents];
 
   flags
-    .filter(({ path: _path }) => _path === path)
+    .filter(({ pages }) => pages[0].path === path)
     .forEach((flag) => {
       if (flag.traffic > 0) {
         activePages.push(flag.components!);
