@@ -49,7 +49,7 @@ export default function EditorSidebar() {
             onSubmit={onSubmit}
           >
             <header class="flex justify-between items-center">
-              <Audience />
+              <Audience methods={methods} onSubmit={onSubmit} />
               <div class="flex gap-2">
                 <p
                   class={`cursor-pointer py-1 px-2 ${
@@ -75,13 +75,6 @@ export default function EditorSidebar() {
                 </Button>
               </div>
             </header>
-            <div>
-              <input
-                type="checkbox"
-                {...methods.register("experiment")}
-              />
-              Experiment
-            </div>
             <div class="mt-4">
               {fields.map((field, index) => {
                 const { component } = components[index];

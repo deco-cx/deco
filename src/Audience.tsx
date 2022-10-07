@@ -5,6 +5,7 @@ import Modal from "./ui/Modal.tsx";
 import AudienceIcon from "./ui/AudienceIcon.tsx";
 import ComponentPreviewList from "./ComponentPreviewList.tsx";
 import type { ComponentPreview } from "../editor.tsx";
+import { UseFormReturn } from "https://esm.sh/v94/react-hook-form@7.34.2/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/dist/index.d.ts";
 
 function ToCItem({ component, componentLabel }: ComponentPreview) {
   return (
@@ -21,6 +22,7 @@ function ToCItem({ component, componentLabel }: ComponentPreview) {
 
 interface Props {
   onAddComponent: (componentName: string) => void;
+  methods: UseFormReturn<any>;
 }
 
 const DraftAudience = () => {
@@ -42,7 +44,39 @@ const DraftAudience = () => {
 const PublicAudience = () => {
   return (
     <div class="flex-row items-center gap-1">
-      <p class="text-sm font-medium">Público</p>
+      <div>
+        <div class="flex items-center mb-4">
+          <input
+            id="experiment"
+            type="radio"
+            value="experiment"
+            name="mode"
+            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          />
+          <label
+            for="experiment"
+            class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+          >
+            Experimento
+          </label>
+        </div>
+        <div class="flex items-center">
+          <input
+            checked
+            id="publish"
+            type="radio"
+            value="publish"
+            name="mode"
+            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          />
+          <label
+            for="publish"
+            class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+          >
+            Publicar
+          </label>
+        </div>
+      </div>
       <div class="mt-4">
         <Button>Publicar</Button>
       </div>
@@ -50,7 +84,7 @@ const PublicAudience = () => {
   );
 };
 
-export default function Audience({ onAddComponent }: Props) {
+export default function Audience({ onAddComponent, methods, onSubmit }: Props) {
   const targetRef = useRef<HTMLDivElement>(null);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [audience, setAudience] = useState<string>("draft");
@@ -95,7 +129,30 @@ export default function Audience({ onAddComponent }: Props) {
             </select>
 
             {audience == "draft" && <DraftAudience />}
-            {audience == "public" && <PublicAudience />}
+            {audience == "public" && (
+              <div class="flex-row items-center gap-1">
+                <div>
+                  <div class="flex items-center mb-4">
+                    <input
+                      id="experiment"
+                      type="checkbox"
+                      value="true"
+                      {...methods.register("experiment")}
+                      class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <label
+                      for="experiment"
+                      class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                    >
+                      Experimento
+                    </label>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <Button onClick={(e) => onSubmit(e)}>Publicar</Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Modal>
