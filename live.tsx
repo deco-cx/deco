@@ -35,13 +35,13 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
 
   LiveContext.pushDefaultDomains(
     `${liveOptions.site}.deco.page`,
-    `deco-pages-${liveOptions.site}.deno.dev`,
+    `deco-pages-${liveOptions.site}.deno.dev`
   );
 
   // Support deploy preview domains
   if (LiveContext.isDenoDeploy()) {
     LiveContext.pushDefaultDomains(
-      `deco-pages-${liveOptions.site}-${LiveContext.getDeploymentId()}.deno.dev`,
+      `deco-pages-${liveOptions.site}-${LiveContext.getDeploymentId()}.deno.dev`
     );
   }
 
@@ -65,14 +65,18 @@ export interface LoadLiveComponentsOptions {
 }
 
 const getComponentsFromFlags = (
-  prodComponents: PageComponentData[],
+  path: string,
+  prodComponents: PageComponentData[]
 ): PageComponentData[] => {
   const activePages: PageComponentData[][] = [prodComponents];
-  flags.forEach((flag) => {
-    if (flag.traffic > 0) {
-      activePages.push(flag.components!);
-    }
-  });
+
+  flags
+    .filter(({ path: _path }) => _path === path)
+    .forEach((flag) => {
+      if (flag.traffic > 0) {
+        activePages.push(flag.components!);
+      }
+    });
 
   // Randomly choose any active experiment
   const randomIdx = Math.floor(Math.random() * activePages.length);
@@ -82,7 +86,7 @@ const getComponentsFromFlags = (
 export async function loadLiveComponents(
   req: Request,
   _: HandlerContext<any>,
-  options?: LoadLiveComponentsOptions,
+  options?: LoadLiveComponentsOptions
 ): Promise<LivePageData> {
   const liveOptions = LiveContext.getLiveOptions();
   const site = liveOptions.site;
@@ -103,12 +107,7 @@ export async function loadLiveComponents(
   try {
     pages = variantId
       ? await getPageFromId(req, variantId, siteId)
-      : await getProdPage(
-        req,
-        siteId,
-        url.pathname,
-        template,
-      );
+      : await getProdPage(req, siteId, url.pathname, template);
 
     const prodComponents = pages![0]!.components;
     const flagId = pages![0]!.flag;
@@ -116,7 +115,7 @@ export async function loadLiveComponents(
 
     components = variantId
       ? prodComponents
-      : getComponentsFromFlags(prodComponents);
+      : getComponentsFromFlags(pages![0]!.path, prodComponents);
 
     console.log("Found page:", pages, flag);
   } catch (error) {
@@ -137,12 +136,12 @@ export async function loadLiveComponents(
 interface CreateLivePageOptions<LoaderData> {
   loader?: (
     req: Request,
-    ctx: HandlerContext<LoaderData>,
+    ctx: HandlerContext<LoaderData>
   ) => Promise<LoaderData>;
 }
 
 export function createLiveHandler<LoaderData = LivePageData>(
-  options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
+  options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions
 ) {
   const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
 
@@ -155,9 +154,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
         return componentsPreview(req);
       }
 
-      if (
-        url.pathname.startsWith("/live/api/components/")
-      ) {
+      if (url.pathname.startsWith("/live/api/components/")) {
         return renderComponent(req);
       }
 
@@ -177,7 +174,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
         const trackingId = url.searchParams.get("id");
         console.log("Proxying gtag", trackingId);
         return fetch(
-          `https://www.googletagmanager.com/gtag/js?id=${trackingId}`,
+          `https://www.googletagmanager.com/gtag/js?id=${trackingId}`
         );
       }
 
@@ -188,7 +185,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
       const { data: Flags, error } = await getSupabaseClient()
         .from("flags")
         .select(
-          `id, name, audience, traffic, site!inner(name, id), pages!inner(components, id)`,
+          `id, name, audience, traffic, site!inner(name, id), pages!inner(components, path, id)`
         )
         .eq("site.name", site);
 
@@ -218,7 +215,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
           loaderData = await loadLiveComponents(
             req,
             ctx,
-            options as LoadLiveComponentsOptions,
+            options as LoadLiveComponentsOptions
           );
         }
       } catch (error) {
@@ -254,9 +251,7 @@ export function createLiveHandler<LoaderData = LivePageData>(
   return handler;
 }
 
-export function LiveComponents(
-  { components }: LivePageData,
-) {
+export function LiveComponents({ components }: LivePageData) {
   const manifest = LiveContext.getManifest();
   return (
     <div class="relative w-full">
@@ -269,17 +264,19 @@ export function LiveComponents(
   );
 }
 
-export function LivePage(
-  { data, children, ...otherProps }: PageProps<LivePageData> & {
-    children: ComponentChildren;
-  },
-) {
+export function LivePage({
+  data,
+  children,
+  ...otherProps
+}: PageProps<LivePageData> & {
+  children: ComponentChildren;
+}) {
   const manifest = LiveContext.getManifest();
-  const InspectVSCode = !LiveContext.isDenoDeploy() &&
+  const InspectVSCode =
+    !LiveContext.isDenoDeploy() &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
-  const Editor: ComponentType<EditorProps> = manifest
-    .islands[`./islands/Editor.tsx`]
-    ?.default;
+  const Editor: ComponentType<EditorProps> =
+    manifest.islands[`./islands/Editor.tsx`]?.default;
 
   if (!Editor) {
     console.log("Missing Island: ./island/Editor.tsx");
@@ -292,17 +289,15 @@ export function LivePage(
   return (
     <div class="flex">
       {children ? children : <LiveComponents {...data} />}
-      {renderEditor && privateDomain
-        ? (
-          <Editor
-            components={data.components}
-            template={data.template}
-            componentSchemas={componentSchemas}
-            siteId={data.siteId}
-            flag={data.flag}
-          />
-        )
-        : null}
+      {renderEditor && privateDomain ? (
+        <Editor
+          components={data.components}
+          template={data.template}
+          componentSchemas={componentSchemas}
+          siteId={data.siteId}
+          flag={data.flag}
+        />
+      ) : null}
       {privateDomain && <EditorListener />}
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
