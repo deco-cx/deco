@@ -32,9 +32,9 @@ export async function updateComponentProps(
 
     pageId = variantId
       ? variantId
-      : await duplicateProdPage(req, url.pathname, template, siteId);
+      : await duplicateProdPage(url.pathname, template, siteId);
 
-    const flag: Flag = await getFlagFromPageId(req, pageId, siteId);
+    const flag: Flag = await getFlagFromPageId(pageId, siteId);
     flag.traffic = (experiment as boolean) ? 0.5 : 0;
 
     supabaseReponse = await getSupabaseClientForUser(req).from("pages").update({
