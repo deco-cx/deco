@@ -4,6 +4,7 @@ import {
   LiveOptions,
   Mode,
   PageComponentData,
+  PageLoaderData,
 } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import getSupabaseClient from "$live/supabase.ts";
@@ -19,6 +20,22 @@ import { getComponentModule } from "./utils/component.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import type { Props as EditorProps } from "./src/Editor.tsx";
 import LiveContext from "./context.ts";
+import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
+
+function path(obj: Record<string, any>, path: string) {
+  const pathList = path.split(".").filter(Boolean);
+  let result = obj;
+
+  pathList.forEach((key) => {
+    if (!result[key]) {
+      return result[key];
+    }
+
+    result = result[key];
+  });
+
+  return result;
+}
 
 export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   LiveContext.setupManifestAndOptions({ manifest, liveOptions });
@@ -43,7 +60,9 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
 };
 
 export interface LivePageData {
+  editorComponents?: PageComponentData[];
   components: PageComponentData[];
+  loaders: PageLoaderData[];
   mode: Mode;
   template: string;
 }
@@ -71,7 +90,7 @@ export async function loadLiveComponents(
     .map((query) => `path.eq.${query}`)
     .join(",");
 
-  const { data: Pages, error } = await getSupabaseClient()
+  const { data: pagesData, error } = await getSupabaseClient()
     .from("pages")
     .select(`components, path, site!inner(name, id)`)
     .eq("site.name", site)
@@ -80,34 +99,28 @@ export async function loadLiveComponents(
   if (error) {
     console.log("Error fetching page:", error);
   } else {
-    console.log("Found page:", Pages);
+    console.log("Found page:", pagesData);
   }
 
-  if (!liveOptions.siteId && Pages?.[0]?.site) {
-    liveOptions.siteId = Pages?.[0]?.site.id;
+  const [firstPage] = pagesData ?? [];
+
+  if (!liveOptions.siteId && firstPage?.site) {
+    liveOptions.siteId = firstPage?.site.id;
   }
 
   const isEditor = url.searchParams.has("editor");
 
   return {
-    components: Pages?.[0]?.components ?? [],
+    components: firstPage?.components?.components ?? [],
+    loaders: firstPage?.components?.loaders ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
   };
 }
 
-interface CreateLivePageOptions<LoaderData> {
-  loader?: (
-    req: Request,
-    ctx: HandlerContext<LoaderData>,
-  ) => Promise<LoaderData>;
-}
-
 export function createLiveHandler<LoaderData = LivePageData>(
-  options?: CreateLivePageOptions<LoaderData> | LoadLiveComponentsOptions,
+  options?: LoadLiveComponentsOptions,
 ) {
-  const { loader } = (options ?? {}) as CreateLivePageOptions<LoaderData>;
-
   const handler: Handlers<LoaderData | LivePageData> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
@@ -144,27 +157,85 @@ export function createLiveHandler<LoaderData = LivePageData>(
       }
 
       start("fetch-page-data");
-      let loaderData = undefined;
-
-      try {
-        if (typeof loader === "function") {
-          loaderData = await loader(req, ctx);
-        } else {
-          loaderData = await loadLiveComponents(
-            req,
-            ctx,
-            options as LoadLiveComponentsOptions,
-          );
-        }
-      } catch (error) {
-        console.log("Error running loader. \n", error);
-        // TODO: Do a better error handler. Maybe redirect to 500 page.
-      }
-
+      const pageData = await loadLiveComponents(
+        req,
+        ctx,
+        options as LoadLiveComponentsOptions,
+      );
       end("fetch-page-data");
 
+      // map back components from database to components for the editor, merging loader props into component props
+      const editorComponents = pageData.components.map((componentData) => {
+        const newComponentData = structuredClone(componentData);
+
+        for (
+          const [propName, value] of Object.entries(newComponentData.props)
+        ) {
+          if (isLoaderProp(value)) {
+            const loaderName = value.substring(1, value.length - 1);
+            newComponentData.props[propName] = structuredClone(
+              pageData.loaders.find(({ name }) => name === loaderName) ?? {},
+            ).props;
+          }
+        }
+
+        return newComponentData;
+      });
+
+      pageData.editorComponents = editorComponents;
+
+      start("fetch-loader-data");
+      const loadersResponse = await Promise.all(
+        pageData.loaders?.map(async ({ loader, props, name }) => {
+          const loaderFn =
+            LiveContext.getManifest().loaders[`./loaders/${loader}.ts`]
+              .default.loader;
+          start(`loader#${name}`);
+          const loaderData = await loaderFn(req, ctx, props);
+          end(`loader#${name}`);
+          return {
+            name,
+            data: loaderData,
+          };
+        }) ?? [],
+      );
+      end("fetch-loader-data");
+
+      start("map-loader-data");
+      const loadersResponseMap = loadersResponse.reduce(
+        (result, currentResponse) => {
+          result[currentResponse.name] = currentResponse.data;
+          return result;
+        },
+        {} as Record<string, unknown>,
+      );
+
+      pageData.components = pageData.components.map((componentData) => {
+        /*
+         * if any shallow prop that contains a mustache like `{loaderName.*}`,
+         * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
+         */
+
+        Object.values(componentData.props ?? {}).forEach(
+          (value) => {
+            if (isLoaderProp(value)) {
+              componentData.props = {
+                ...componentData.props,
+                ...path(
+                  loadersResponseMap,
+                  propToLoaderInstance(value),
+                ),
+              };
+            }
+          },
+        );
+
+        return componentData;
+      });
+      end("map-loader-data");
+
       start("render");
-      const res = await ctx.render(loaderData);
+      const res = await ctx.render(pageData);
       end("render");
 
       res.headers.set("Server-Timing", printTimings());
@@ -231,7 +302,7 @@ export function LivePage(
       {renderEditor && privateDomain
         ? (
           <Editor
-            components={data.components}
+            components={data.editorComponents!}
             template={data.template}
             componentSchemas={componentSchemas}
           />
