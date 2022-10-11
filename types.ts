@@ -56,7 +56,10 @@ export interface Flag {
   traffic: number;
   active?: boolean;
   path: string;
-  components?: PageComponentData[];
+  components?: {
+    components: PageComponentData[];
+    loaders: PageLoaderData[];
+  };
 }
 
 export type Mode = "edit" | "none";

@@ -16,6 +16,7 @@ import {
   loaderInstanceToProp,
   loaderPathToKey,
 } from "./utils/loaders.ts";
+import { LivePageData } from "./live.tsx";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -176,7 +177,7 @@ interface EditorLoaders {
 
 export async function updateComponentProps(
   req: Request,
-  _: HandlerContext,
+  _: HandlerContext<LivePageData>,
 ) {
   const { start, end, printTimings } = createServerTiming();
   const url = new URL(req.url);
