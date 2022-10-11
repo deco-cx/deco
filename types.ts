@@ -1,6 +1,6 @@
-import { IslandModule } from "$fresh/src/server/types.ts";
-import { HandlerContext, Manifest, Plugin } from "$fresh/server.ts";
-import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import type { IslandModule } from "$fresh/src/server/types.ts";
+import type { HandlerContext, Manifest, Plugin } from "$fresh/server.ts";
+import type { JSONSchema7 } from "json-schema";
 
 export type Schema = JSONSchema7;
 export type Schemas = Record<string, Schema>;
@@ -49,6 +49,17 @@ export interface PageComponentData {
   props?: Record<string, unknown>;
 }
 
+export interface PageLoaderData {
+  name: string;
+  loader: string;
+  props?: Record<string, unknown>;
+}
+
+export interface PageDataData {
+  components: PageComponentData[];
+  loaders: PageLoaderData[];
+}
+
 export interface Flag {
   id: string;
   name: string;
@@ -56,16 +67,7 @@ export interface Flag {
   traffic: number;
   active?: boolean;
   path: string;
-  components?: {
-    components: PageComponentData[];
-    loaders: PageLoaderData[];
-  };
+  components?: PageDataData;
 }
 
 export type Mode = "edit" | "none";
-
-export interface PageLoaderData {
-  name: string;
-  loader: string;
-  props?: Record<string, unknown>;
-}
