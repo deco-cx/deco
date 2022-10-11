@@ -3,20 +3,26 @@ import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
 import LiveContext from "./context.ts";
 import getSupabaseClient, { getSupabaseClientForUser } from "./supabase.ts";
-import { Flag, Module, PageComponentData, PageLoaderData } from "./types.ts";
+import type {
+  Flag,
+  Module,
+  PageComponentData,
+  PageDataData,
+  PageLoaderData,
+} from "./types.ts";
 import {
   componentNameFromPath,
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 import { duplicateProdPage, getFlagFromPageId } from "./utils/supabase.ts";
-import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import type { JSONSchema7 } from "json-schema";
 import {
   generateLoaderInstance,
   loaderInstanceToProp,
   loaderPathToKey,
 } from "./utils/loaders.ts";
-import { LivePageData } from "./live.tsx";
+import type { LivePageData } from "./live.tsx";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -28,8 +34,9 @@ const generateLoadersFromComponents = (
   _: Request,
   __: URL,
   ctx: any,
-): PageLoaderData[] => {
-  const { components } = ctx;
+): PageDataData => {
+  const { components: ctxComponents } = ctx;
+  const components = JSON.parse(JSON.stringify(ctxComponents));
   const loaders: PageLoaderData[] = [];
   const manifest = LiveContext.getManifest();
 
@@ -43,21 +50,12 @@ const generateLoadersFromComponents = (
     const propsThatRequireLoader = Object.entries(
       componentSchema.properties ?? {},
     )
-      .filter(([, value]) => Boolean((value as JSONSchema7).$ref));
-
-    if (propsThatRequireLoader.length === 0) {
-      continue;
-    }
+      .filter((entry): entry is [
+        string,
+        JSONSchema7 & { $ref: NonNullable<JSONSchema7["$ref"]> },
+      ] => Boolean((entry[1] as JSONSchema7).$ref));
 
     propsThatRequireLoader.forEach(([property, propertySchema]) => {
-      if (typeof propertySchema !== "object") {
-        return;
-      }
-
-      if (!propertySchema?.$ref) {
-        throw new Error(`Property ${property} doesn't have $ref on schema`);
-      }
-
       // Match property ref input into loader output
       const [loaderPath] = Object.entries(manifest.loaders).find((
         [, loader],
@@ -81,7 +79,7 @@ const generateLoadersFromComponents = (
     });
   }
 
-  return loaders;
+  return { loaders, components };
 };
 
 const updateDraft = async (
@@ -162,12 +160,14 @@ const updateProd = async (
   return { pageId, status: supabaseResponse.status };
 };
 
+export type Audience = "draft" | "public";
+
 interface EditorRequestData {
-  components: PageComponentData;
+  components: PageComponentData[];
   siteId: number;
   template?: string;
   experiment: number;
-  audience: "draft" | "public";
+  audience: Audience;
   variantId: string | null;
 }
 
@@ -193,7 +193,12 @@ export async function updateComponentProps(
     const ctx = await req.json() as EditorRequestData;
 
     start("generating-loaders");
-    const loaders = generateLoadersFromComponents(req, url, ctx);
+    const { loaders, components } = generateLoadersFromComponents(
+      req,
+      url,
+      ctx,
+    );
+    ctx.components = components;
     end("generating-loaders");
 
     start("saving-data");

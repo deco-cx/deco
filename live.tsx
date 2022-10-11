@@ -5,6 +5,7 @@ import {
   LiveOptions,
   Mode,
   PageComponentData,
+  PageDataData,
   PageLoaderData,
 } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
@@ -70,10 +71,8 @@ export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
   });
 };
 
-export interface LivePageData {
+export interface LivePageData extends PageDataData {
   editorComponents?: PageComponentData[];
-  components: PageComponentData[];
-  loaders: PageLoaderData[];
   mode: Mode;
   template: string;
   siteId: number;
@@ -86,18 +85,9 @@ export interface LoadLiveComponentsOptions {
 
 const getComponentsFromFlags = (
   path: string,
-  prodComponents: {
-    components: PageComponentData[];
-    loaders: PageLoaderData[];
-  },
-): {
-  components: PageComponentData[];
-  loaders: PageLoaderData[];
-} => {
-  const activePages: {
-    components: PageComponentData[];
-    loaders: PageLoaderData[];
-  }[] = [
+  prodComponents: PageDataData,
+): PageDataData => {
+  const activePages: PageDataData[] = [
     prodComponents,
   ];
 
@@ -133,10 +123,7 @@ export async function loadLiveComponents(
   let flag = null;
   let pages = [];
   const siteId = liveOptions.siteId!.toString();
-  let components: {
-    components: PageComponentData[];
-    loaders: PageLoaderData[];
-  } = { components: [], loaders: [] };
+  let components: PageDataData = { components: [], loaders: [] };
 
   try {
     pages = variantId
@@ -147,10 +134,7 @@ export async function loadLiveComponents(
         template,
       );
 
-    const prodComponents: {
-      components: PageComponentData[];
-      loaders: PageLoaderData[];
-    } = pages![0]!.components;
+    const prodComponents: PageDataData = pages![0]!.components;
     const flagId = pages![0]!.flag;
     flag = flagId ? await getFlagFromId(flagId, siteId) : null;
 
@@ -249,7 +233,7 @@ export function createLiveHandler(
             const [propName, value] of Object.entries(newComponentData.props)
           ) {
             if (isLoaderProp(value)) {
-              const loaderName = value.substring(1, value.length - 1);
+              const loaderName = propToLoaderInstance(value);
               newComponentData.props[propName] = structuredClone(
                 pageData.loaders.find(({ name }) => name === loaderName) ?? {},
               ).props;
@@ -295,15 +279,19 @@ export function createLiveHandler(
 
           Object.values(componentData.props ?? {}).forEach(
             (value) => {
-              if (isLoaderProp(value)) {
-                componentData.props = {
-                  ...componentData.props,
-                  ...path(
-                    loadersResponseMap,
-                    propToLoaderInstance(value),
-                  ),
-                };
+              if (!isLoaderProp(value)) {
+                return;
               }
+
+              const loaderForwardedProps = path(
+                loadersResponseMap,
+                propToLoaderInstance(value),
+              );
+
+              componentData.props = {
+                ...componentData.props,
+                ...loaderForwardedProps,
+              };
             },
           );
 
