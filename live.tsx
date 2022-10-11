@@ -227,16 +227,16 @@ export function createLiveHandler(
 
         // map back components from database to components for the editor, merging loader props into component props
         const editorComponents = pageData.components.map((componentData) => {
-          const newComponentData = structuredClone(componentData);
+          const newComponentData = JSON.parse(JSON.stringify(componentData));
 
           for (
             const [propName, value] of Object.entries(newComponentData.props)
           ) {
             if (isLoaderProp(value)) {
               const loaderName = propToLoaderInstance(value);
-              newComponentData.props[propName] = structuredClone(
+              newComponentData.props[propName] = JSON.parse(JSON.stringify(
                 pageData.loaders.find(({ name }) => name === loaderName) ?? {},
-              ).props;
+              )).props;
             }
           }
 
