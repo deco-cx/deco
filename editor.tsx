@@ -3,18 +3,92 @@ import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
 import LiveContext from "./context.ts";
 import getSupabaseClient, { getSupabaseClientForUser } from "./supabase.ts";
-import { Flag, Module } from "./types.ts";
+import { Flag, Module, PageComponentData, PageLoaderData } from "./types.ts";
 import {
   componentNameFromPath,
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 import { duplicateProdPage, getFlagFromPageId } from "./utils/supabase.ts";
+import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import {
+  generateLoaderInstance,
+  loaderInstanceToProp,
+  loaderPathToKey,
+} from "./utils/loaders.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
-const updateDraft = async (req: Request, url: URL, ctx: any) => {
-  const { components, template, siteId, variantId, experiment } = ctx;
+/**
+ * @description This function creates a loaders list based on component props that depends on Loaders.
+ *  Also, mutate prop that depends on Loaders to component[index].props.[propName] = `loadername-uuid`
+ */
+const generateLoadersFromComponents = (
+  _: Request,
+  __: URL,
+  ctx: any,
+): PageLoaderData[] => {
+  const { components } = ctx;
+  const loaders: PageLoaderData[] = [];
+  const manifest = LiveContext.getManifest();
+
+  for (const component of components) {
+    const componentSchema = manifest.schemas[component.component];
+
+    if (!componentSchema) {
+      continue;
+    }
+
+    const propsThatRequireLoader = Object.entries(
+      componentSchema.properties ?? {},
+    )
+      .filter(([, value]) => Boolean((value as JSONSchema7).$ref));
+
+    if (propsThatRequireLoader.length === 0) {
+      continue;
+    }
+
+    propsThatRequireLoader.forEach(([property, propertySchema]) => {
+      if (typeof propertySchema !== "object") {
+        return;
+      }
+
+      if (!propertySchema?.$ref) {
+        throw new Error(`Property ${property} doesn't have $ref on schema`);
+      }
+
+      // Match property ref input into loader output
+      const [loaderPath] = Object.entries(manifest.loaders).find((
+        [, loader],
+      ) => loader.default.outputSchema.$ref === propertySchema.$ref) ?? [];
+
+      if (!loaderPath) {
+        throw new Error(
+          `Doesn't exists loader with this $ref: ${propertySchema.$ref}`,
+        );
+      }
+
+      const loaderProp = component.props[property];
+      const loaderInstanceName = generateLoaderInstance(propertySchema.$ref);
+      component.props[property] = loaderInstanceToProp(loaderInstanceName);
+
+      loaders.push({
+        loader: loaderPathToKey(loaderPath),
+        name: loaderInstanceName,
+        props: loaderProp,
+      });
+    });
+  }
+
+  return loaders;
+};
+
+const updateDraft = async (
+  req: Request,
+  url: URL,
+  ctx: EditorRequestData & EditorLoaders,
+) => {
+  const { components, template, siteId, variantId, experiment, loaders } = ctx;
 
   let supabaseReponse;
   const pageId = variantId
@@ -22,10 +96,10 @@ const updateDraft = async (req: Request, url: URL, ctx: any) => {
     : await duplicateProdPage(url.pathname, template, siteId);
 
   const flag: Flag = await getFlagFromPageId(pageId, siteId);
-  flag.traffic = (experiment as boolean) ? 0.5 : 0;
+  flag.traffic = experiment ? 0.5 : 0;
 
   supabaseReponse = await getSupabaseClientForUser(req).from("pages").update({
-    components: components,
+    components: { components, loaders },
   }).match({ id: pageId });
 
   if (supabaseReponse.error) {
@@ -43,7 +117,11 @@ const updateDraft = async (req: Request, url: URL, ctx: any) => {
   return { pageId, status: supabaseReponse.status };
 };
 
-const updateProd = async (req: Request, url: URL, ctx: any) => {
+const updateProd = async (
+  req: Request,
+  url: URL,
+  ctx: EditorRequestData & { pageId: number | string },
+) => {
   const { template, siteId, pageId } = ctx;
   let supabaseResponse;
 
@@ -83,25 +161,47 @@ const updateProd = async (req: Request, url: URL, ctx: any) => {
   return { pageId, status: supabaseResponse.status };
 };
 
+interface EditorRequestData {
+  components: PageComponentData;
+  siteId: number;
+  template?: string;
+  experiment: number;
+  audience: "draft" | "public";
+  variantId: string | null;
+}
+
+interface EditorLoaders {
+  loaders: PageLoaderData[];
+}
+
 export async function updateComponentProps(
   req: Request,
   _: HandlerContext,
 ) {
+  const { start, end, printTimings } = createServerTiming();
   const url = new URL(req.url);
   if (!LiveContext.isPrivateDomain(url.hostname)) {
     return new Response("Not found", { status: 404 });
   }
 
-  let response: { pageId: string; status: number } = { pageId: "", status: 0 };
+  let response: { pageId: string | number; status: number } = {
+    pageId: "",
+    status: 0,
+  };
   try {
-    const ctx = await req.json();
+    const ctx = await req.json() as EditorRequestData;
 
+    start("generating-loaders");
+    const loaders = generateLoadersFromComponents(req, url, ctx);
+    end("generating-loaders");
+
+    start("saving-data");
     const { data: Pages, error } = await getSupabaseClient()
       .from("pages")
-      .select("*")
+      .select("flag")
       .match({ id: ctx.variantId });
 
-    const isProd = !Pages![0]!.flag;
+    const isProd = !Pages?.[0]!.flag;
 
     if (isProd) {
       ctx.variantId = null;
@@ -109,13 +209,16 @@ export async function updateComponentProps(
 
     const shouldDeployProd = !isProd && ctx.audience == "public" &&
       !ctx.experiment;
-    response = await updateDraft(req, url, ctx);
+    response = await updateDraft(req, url, { ...ctx, loaders });
 
     // Deploy production
     if (shouldDeployProd) {
-      ctx.pageId = response.pageId;
-      response = await updateProd(req, url, ctx);
+      response = await updateProd(req, url, {
+        ...ctx,
+        pageId: response.pageId,
+      });
     }
+    end("saving-data");
   } catch (e) {
     console.error(e);
     response.status = 400;
@@ -123,6 +226,9 @@ export async function updateComponentProps(
 
   return Response.json({ variantId: response.pageId }, {
     status: response.status,
+    headers: {
+      "Server-Timing": printTimings(),
+    },
   });
 }
 
