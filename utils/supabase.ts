@@ -114,15 +114,15 @@ export const duplicateProdPage = async (
   siteId: number,
 ): Promise<string> => {
   // Getting prod page in order to duplicate
-  const pages = await getProdPage(siteId, pathName, template);
+  const [prodPage] = await getProdPage(siteId, pathName, template);
 
   // Create flag
   const flagResponse = await getSupabaseClient()
     .from("flags")
     .insert({
-      name: pages?.[0]?.name,
+      name: prodPage?.name,
       audience: "",
-      site: pages?.[0]?.site,
+      site: prodPage?.site,
       traffic: 0,
     });
 
@@ -134,11 +134,12 @@ export const duplicateProdPage = async (
   const pageResponse = await getSupabaseClient()
     .from("pages")
     .insert({
-      components: pages?.[0]?.components ?? [],
-      path: pages?.[0]?.path ?? "",
-      public: pages?.[0]?.public ?? false,
-      name: pages?.[0]?.name,
-      site: pages?.[0]?.site,
+      data: prodPage?.data ?? {},
+      full_name: prodPage['full_name'],
+      path: prodPage?.path ?? "",
+      public: prodPage?.public ?? false,
+      name: prodPage?.name,
+      site: prodPage?.site,
       archived: false,
       flag: flagResponse.data![0]!.id,
     });

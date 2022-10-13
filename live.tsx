@@ -79,11 +79,11 @@ export interface LivePageData extends PageDataData {
   flag: Flag | null;
 }
 
-export interface LoadLiveComponentsOptions {
+export interface LoadLiveDataOptions {
   template?: string;
 }
 
-const getComponentsFromFlags = (
+const getPageDataFromFlags = (
   path: string,
   prodComponents: PageDataData,
 ): PageDataData => {
@@ -95,7 +95,7 @@ const getComponentsFromFlags = (
     .filter(({ pages }) => pages[0].path === path)
     .forEach((flag) => {
       if (flag.traffic > 0) {
-        activePages.push(flag.components!);
+        activePages.push(flag.data!);
       }
     });
 
@@ -104,10 +104,10 @@ const getComponentsFromFlags = (
   return activePages[randomIdx];
 };
 
-export async function loadLiveComponents(
+export async function loadLiveData(
   req: Request,
   _: HandlerContext<LivePageData>,
-  options?: LoadLiveComponentsOptions,
+  options?: LoadLiveDataOptions,
 ): Promise<LivePageData> {
   const liveOptions = LiveContext.getLiveOptions();
   const site = liveOptions.site;
@@ -123,7 +123,7 @@ export async function loadLiveComponents(
   let flag = null;
   let pages = [];
   const siteId = liveOptions.siteId!.toString();
-  let components: PageDataData = { components: [], loaders: [] };
+  let pageData: PageDataData = { components: [], loaders: [] };
 
   try {
     pages = variantId
@@ -134,13 +134,13 @@ export async function loadLiveComponents(
         template,
       );
 
-    const prodComponents: PageDataData = pages![0]!.components;
+    const prodData: PageDataData = pages![0]!.data;
     const flagId = pages![0]!.flag;
     flag = flagId ? await getFlagFromId(flagId, siteId) : null;
 
-    components = variantId
-      ? prodComponents
-      : getComponentsFromFlags(pages![0]!.path, prodComponents);
+    pageData = variantId
+      ? prodData
+      : getPageDataFromFlags(pages![0]!.path, prodData);
 
     console.log("Found page:", pages, flag);
   } catch (error) {
@@ -150,8 +150,8 @@ export async function loadLiveComponents(
   const isEditor = url.searchParams.has("editor");
 
   return {
-    components: components.components ?? [],
-    loaders: components.loaders ?? [],
+    components: pageData.components ?? [],
+    loaders: pageData.loaders ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
     siteId: liveOptions.siteId!,
@@ -160,7 +160,7 @@ export async function loadLiveComponents(
 }
 
 export function createLiveHandler(
-  options?: LoadLiveComponentsOptions,
+  options?: LoadLiveDataOptions,
 ) {
   const handler: Handlers<LivePageData> = {
     async GET(req, ctx) {
@@ -194,7 +194,7 @@ export function createLiveHandler(
       const { data: Flags, error } = await getSupabaseClient()
         .from("flags")
         .select(
-          `id, name, audience, traffic, site!inner(name, id), pages!inner(components, path, id)`,
+          `id, name, audience, traffic, site!inner(name, id), pages!inner(data, path, id)`,
         )
         .eq("site.name", site);
 
@@ -209,7 +209,7 @@ export function createLiveHandler(
         flag.active = Math.random() < flag.traffic;
 
         // TODO: Query from supabase return pages: [{components:[{}]}]. Transform to components:[{}]
-        flag.components = flag.pages[0].components;
+        flag.data = flag.pages[0].data;
       });
       end("calc-flags");
       flags = Flags ?? [];
@@ -218,10 +218,10 @@ export function createLiveHandler(
 
       try {
         start("fetch-page-data");
-        pageData = await loadLiveComponents(
+        pageData = await loadLiveData(
           req,
           ctx,
-          options as LoadLiveComponentsOptions,
+          options as LoadLiveDataOptions,
         );
         end("fetch-page-data");
 
