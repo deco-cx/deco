@@ -67,7 +67,7 @@ export interface Flag {
   traffic: number;
   active?: boolean;
   path: string;
-  components?: PageDataData;
+  data?: PageDataData;
 }
 
 export type Mode = "edit" | "none";

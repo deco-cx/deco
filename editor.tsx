@@ -108,7 +108,7 @@ const updateDraft = async (
   supabaseReponse = await getSupabaseClientForUser(req)
     .from("pages")
     .update({
-      components: { components, loaders },
+      data: { components, loaders },
     })
     .match({ id: pageId });
 
