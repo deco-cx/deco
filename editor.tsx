@@ -67,7 +67,11 @@ const generateLoadersFromComponents = (
         );
       }
 
-      const loaderProp = component.props[property];
+      if (!component.props) {
+        component.props = {};
+      }
+
+      const loaderProp = component.props[property] ?? {};
       const loaderInstanceName = generateLoaderInstance(propertySchema.$ref);
       component.props[property] = loaderInstanceToProp(loaderInstanceName);
 
@@ -84,7 +88,7 @@ const generateLoadersFromComponents = (
 
 const updateDraft = async (
   req: Request,
-  url: URL,
+  pathname: string,
   ctx: EditorRequestData & EditorLoaders,
 ) => {
   const { components, template, siteId, variantId, experiment, loaders } = ctx;
@@ -92,7 +96,7 @@ const updateDraft = async (
   let supabaseReponse;
   const pageId = variantId
     ? variantId
-    : await duplicateProdPage(url.pathname, template, siteId);
+    : await duplicateProdPage(pathname, template, siteId);
 
   const flag: Flag = await getFlagFromPageId(pageId, siteId);
   flag.traffic = experiment ? 0.5 : 0;
@@ -118,13 +122,13 @@ const updateDraft = async (
 
 const updateProd = async (
   req: Request,
-  url: URL,
+  pathname: string,
   ctx: EditorRequestData & { pageId: number | string },
 ) => {
   const { template, siteId, pageId } = ctx;
   let supabaseResponse;
 
-  const queries = [url.pathname, template]
+  const queries = [pathname, template]
     .filter((query) => Boolean(query))
     .map((query) => `path.eq.${query}`)
     .join(",");
@@ -213,13 +217,20 @@ export async function updateComponentProps(
       ctx.variantId = null;
     }
 
+    const referer = req.headers.get("referer");
+
+    if (!referer && !ctx.template) {
+      throw new Error("Referer or template not found");
+    }
+
+    const refererPathname = referer ? new URL(referer).pathname : "";
     const shouldDeployProd = !isProd && ctx.audience == "public" &&
       !ctx.experiment;
-    response = await updateDraft(req, url, { ...ctx, loaders });
+    response = await updateDraft(req, refererPathname, { ...ctx, loaders });
 
     // Deploy production
     if (shouldDeployProd) {
-      response = await updateProd(req, url, {
+      response = await updateProd(req, refererPathname, {
         ...ctx,
         pageId: response.pageId,
       });
