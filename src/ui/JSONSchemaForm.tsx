@@ -99,12 +99,16 @@ function RenderFields(
           maxLength,
           pattern,
           format,
+          $ref,
         } = property as JSONSchema7;
         if (
           Array.isArray(type) || type === undefined || type === "null" ||
           type === "array"
         ) {
-          console.log("Type must be a string");
+          if (type && !$ref) {
+            console.log("Invalid type: ", type);
+          }
+
           return null;
         }
 

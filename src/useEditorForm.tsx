@@ -71,7 +71,7 @@ export default function useEditorOperations(
     componentsRef.current = structuredClone(initialComponents);
 
     methods.reset({
-      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(componentsRef.current),
+      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(components),
       experiment: flag ? flag.traffic > 0 : false,
       audience: flag && flag.traffic === 0 ? "draft" : "public",
     });

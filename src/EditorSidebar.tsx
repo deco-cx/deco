@@ -12,8 +12,6 @@ const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
   props: UseFormReturn<TFieldValues, TContext>,
 ) => JSX.Element;
 
-const DEFAULT_SCHEMA = { title: "default", type: "object", properties: {} };
-
 export default function EditorSidebar() {
   const {
     componentSchemas,
@@ -85,7 +83,8 @@ export default function EditorSidebar() {
                     removeComponents={handleRemoveComponent}
                     prefix={`components.${index}` as const}
                     index={index}
-                    schema={componentSchemas[component] ?? DEFAULT_SCHEMA}
+                    schema={componentSchemas[component] ??
+                      { type: "object", properties: {}, title: component }}
                   />
                 );
               })}
