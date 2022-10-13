@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "preact/hooks";
 import { useFieldArray, useForm } from "react-hook-form";
-import { Flag, PageComponentData } from "../types.ts";
+import type { Audience } from "../editor.tsx";
+import type { Flag, PageComponentData } from "../types.ts";
 
 const COMPONENTS_KEY_NAME: "components" = "components" as const;
 
@@ -8,7 +9,7 @@ type ComponentProp = Record<string, any>;
 type FormValues = {
   [COMPONENTS_KEY_NAME]: ComponentProp[];
   experiment: boolean;
-  audience: "draft" | "public";
+  audience: Audience;
 };
 
 function mapComponentsToFormData(
@@ -70,7 +71,7 @@ export default function useEditorOperations(
     componentsRef.current = structuredClone(initialComponents);
 
     methods.reset({
-      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(componentsRef.current),
+      [COMPONENTS_KEY_NAME]: mapComponentsToFormData(components),
       experiment: flag ? flag.traffic > 0 : false,
       audience: flag && flag.traffic === 0 ? "draft" : "public",
     });

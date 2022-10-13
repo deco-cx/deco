@@ -1,15 +1,10 @@
-import type {
-  JSONSchema7,
-  JSONSchema7TypeName,
-} from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import type { JSONSchema7, JSONSchema7TypeName } from "json-schema";
 import type { FunctionComponent, h } from "preact";
 import { useFormContext } from "react-hook-form";
 import { forwardRef } from "preact/compat";
-import Button from "./Button.tsx";
 import IconButton from "./IconButton.tsx";
 import LinkButton from "./LinkButton.tsx";
 import CaretDownIcon from "../icons/CaretDownIcon.tsx";
-import TrashIcon from "../icons/TrashIcon.tsx";
 
 const getInputTypeFromFormat = (format: JSONSchema7["format"]) => {
   switch (format) {
@@ -104,12 +99,16 @@ function RenderFields(
           maxLength,
           pattern,
           format,
+          $ref,
         } = property as JSONSchema7;
         if (
           Array.isArray(type) || type === undefined || type === "null" ||
           type === "array"
         ) {
-          console.log("Type must be a string");
+          if (type && !$ref) {
+            console.log("Invalid type: ", type);
+          }
+
           return null;
         }
 

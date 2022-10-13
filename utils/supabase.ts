@@ -1,5 +1,5 @@
-import getSupabaseClient from "../supabase.ts"
-import { Flag } from "../types.ts"
+import getSupabaseClient from "../supabase.ts";
+import { Flag } from "../types.ts";
 
 export const getSiteIdFromName = async (siteName: string) => {
   const { data: Site, error } = await getSupabaseClient()
@@ -29,7 +29,7 @@ export const getPageFromId = async (
   }
 
   if (Pages.length == 0) {
-    throw new Error("page not found")
+    throw new Error("page not found");
   }
 
   return Pages;
@@ -37,7 +37,7 @@ export const getPageFromId = async (
 
 export const getFlagFromPageId = async (
   pageId: string,
-  siteId: string,
+  siteId: number,
 ): Promise<Flag> => {
   // Getting prod page in order to duplicate
 
@@ -51,11 +51,11 @@ export const getFlagFromPageId = async (
   }
 
   if (Flags.length == 0) {
-    throw new Error("flag not found")
+    throw new Error("flag not found");
   }
 
   return Flags[0] as Flag;
-}
+};
 
 export const getFlagFromId = async (
   flagId: string,
@@ -72,16 +72,16 @@ export const getFlagFromId = async (
   }
 
   if (Flags.length == 0) {
-    throw new Error("flag not found")
+    throw new Error("flag not found");
   }
 
   return Flags[0] as Flag;
 };
 
 export const getProdPage = async (
-  siteId: string,
+  siteId: number,
   pathName: string,
-  template: string | undefined,
+  template?: string,
 ) => {
   /**
    * Queries follow PostgREST syntax
@@ -110,8 +110,8 @@ export const getProdPage = async (
 
 export const duplicateProdPage = async (
   pathName: string,
-  template: string,
-  siteId: string,
+  template: string | undefined,
+  siteId: number,
 ): Promise<string> => {
   // Getting prod page in order to duplicate
   const pages = await getProdPage(siteId, pathName, template);
@@ -124,8 +124,7 @@ export const duplicateProdPage = async (
       audience: "",
       site: pages?.[0]?.site,
       traffic: 0,
-    })
-
+    });
 
   if (flagResponse.error) {
     throw new Error(flagResponse.error.message);
