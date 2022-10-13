@@ -49,17 +49,21 @@ const generateLoadersFromComponents = (
 
     const propsThatRequireLoader = Object.entries(
       componentSchema.properties ?? {},
-    )
-      .filter((entry): entry is [
+    ).filter(
+      (
+        entry,
+      ): entry is [
         string,
         JSONSchema7 & { $ref: NonNullable<JSONSchema7["$ref"]> },
-      ] => Boolean((entry[1] as JSONSchema7).$ref));
+      ] => Boolean((entry[1] as JSONSchema7).$ref),
+    );
 
     propsThatRequireLoader.forEach(([property, propertySchema]) => {
       // Match property ref input into loader output
-      const [loaderPath] = Object.entries(manifest.loaders).find((
-        [, loader],
-      ) => loader.default.outputSchema.$ref === propertySchema.$ref) ?? [];
+      const [loaderPath] = Object.entries(manifest.loaders).find(
+        ([, loader]) =>
+          loader.default.outputSchema.$ref === propertySchema.$ref,
+      ) ?? [];
 
       if (!loaderPath) {
         throw new Error(
@@ -101,17 +105,23 @@ const updateDraft = async (
   const flag: Flag = await getFlagFromPageId(pageId, siteId);
   flag.traffic = experiment ? 0.5 : 0;
 
-  supabaseReponse = await getSupabaseClientForUser(req).from("pages").update({
-    components: { components, loaders },
-  }).match({ id: pageId });
+  supabaseReponse = await getSupabaseClientForUser(req)
+    .from("pages")
+    .update({
+      components: { components, loaders },
+    })
+    .match({ id: pageId });
 
   if (supabaseReponse.error) {
     throw new Error(supabaseReponse.error.message);
   }
 
-  supabaseReponse = await getSupabaseClientForUser(req).from("flags").update({
-    traffic: flag.traffic,
-  }).match({ id: flag.id });
+  supabaseReponse = await getSupabaseClientForUser(req)
+    .from("flags")
+    .update({
+      traffic: flag.traffic,
+    })
+    .match({ id: flag.id });
 
   if (supabaseReponse.error) {
     throw new Error(supabaseReponse.error.message);
@@ -194,7 +204,7 @@ export async function updateComponentProps(
     status: 0,
   };
   try {
-    const ctx = await req.json() as EditorRequestData;
+    const ctx = (await req.json()) as EditorRequestData;
 
     start("generating-loaders");
     const { loaders, components } = generateLoadersFromComponents(
@@ -241,12 +251,15 @@ export async function updateComponentProps(
     response.status = 400;
   }
 
-  return Response.json({ variantId: response.pageId }, {
-    status: response.status,
-    headers: {
-      "Server-Timing": printTimings(),
+  return Response.json(
+    { variantId: response.pageId },
+    {
+      status: response.status,
+      headers: {
+        "Server-Timing": printTimings(),
+      },
     },
-  });
+  );
 }
 
 export interface ComponentPreview {
@@ -255,9 +268,10 @@ export interface ComponentPreview {
   link: string;
 }
 
-function mapComponentsToPreview(
-  [componentPath, componentModule]: [string, Module],
-) {
+function mapComponentsToPreview([componentPath, componentModule]: [
+  string,
+  Module,
+]) {
   const { schema } = componentModule;
 
   if (!schema) {
@@ -273,9 +287,7 @@ function mapComponentsToPreview(
   };
 }
 
-export function componentsPreview(
-  req: Request,
-) {
+export function componentsPreview(req: Request) {
   const url = new URL(req.url);
 
   if (!LiveContext.isPrivateDomain(url.hostname)) {
@@ -287,40 +299,39 @@ export function componentsPreview(
 
   start("map-components");
   const components: ComponentPreview[] = Object.entries(manifest.components)
-    .map(
-      mapComponentsToPreview,
-    ).filter(
-      (componentPreviewData): componentPreviewData is ComponentPreview =>
-        Boolean(componentPreviewData),
+    .map(mapComponentsToPreview)
+    .filter((componentPreviewData): componentPreviewData is ComponentPreview =>
+      Boolean(componentPreviewData)
     );
 
-  const islands: ComponentPreview[] = Object.entries(manifest.islands).map(
-    mapComponentsToPreview,
-  ).filter((componentPreviewData): componentPreviewData is ComponentPreview =>
-    Boolean(componentPreviewData)
-  );
+  const islands: ComponentPreview[] = Object.entries(manifest.islands)
+    .map(mapComponentsToPreview)
+    .filter((componentPreviewData): componentPreviewData is ComponentPreview =>
+      Boolean(componentPreviewData)
+    );
   end("map-components");
 
   const cache = LiveContext.isDenoDeploy() &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
-  return Response.json({ components, islands }, {
-    status: 200,
-    headers: {
-      "content-type": "application/json",
-      "Server-Timing": printTimings(),
-      ...(cache
-        ? {
-          "Cache-Control": ONE_YEAR_CACHE,
-        }
-        : {}),
+  return Response.json(
+    { components, islands },
+    {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+        "Server-Timing": printTimings(),
+        ...(cache
+          ? {
+            "Cache-Control": ONE_YEAR_CACHE,
+          }
+          : {}),
+      },
     },
-  });
+  );
 }
 
-export function renderComponent(
-  req: Request,
-) {
+export function renderComponent(req: Request) {
   const url = new URL(req.url);
 
   if (!LiveContext.isPrivateDomain(url.hostname)) {
@@ -395,18 +406,15 @@ export function renderComponent(
   const cache = LiveContext.isDenoDeploy() &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
-  return new Response(
-    html,
-    {
-      headers: {
-        "content-type": "text/html; charset=utf-8",
-        "Server-Timing": printTimings(),
-        ...(cache
-          ? {
-            "Cache-Control": ONE_YEAR_CACHE,
-          }
-          : {}),
-      },
+  return new Response(html, {
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "Server-Timing": printTimings(),
+      ...(cache
+        ? {
+          "Cache-Control": ONE_YEAR_CACHE,
+        }
+        : {}),
     },
-  );
+  });
 }

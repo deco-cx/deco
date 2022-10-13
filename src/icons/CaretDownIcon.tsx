@@ -1,9 +1,10 @@
 import type { h } from "preact";
 
 export default function CaretDownIcon(
-  { class: className, width = 16, height = 16, fill = "#2FD180" }: h.JSX.SVGAttributes<
-    SVGElement
-  >,
+  { class: className, width = 16, height = 16, fill = "#2FD180" }:
+    h.JSX.SVGAttributes<
+      SVGElement
+    >,
 ) {
   return (
     <svg
