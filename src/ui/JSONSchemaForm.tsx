@@ -169,16 +169,18 @@ export default function JSONSchemaForm(
   }
 
   return (
-    <div class="bg-primary-light border border-gray-300 rounded-l mb-4">
-      <div class="px-5 pt-4 pb-2">
-        <legend class="font-medium mb-2 text-lg">{schema.title}</legend>
+    <div class="bg-[#F8F8F8] hover:bg-[#F4F4F4] border border-[#F4F4F4] rounded-l mb-4 transition-colors ease-in">
+      <details class="p-3 cursor-pointer">
+        <summary class="font-semibold text-xs leading-4 list-none">
+          {schema.title}
+        </summary>
         <RenderFields
           required={schema.required}
           properties={schema.properties}
           prefix={prefix !== undefined ? `${prefix}.` : ""}
         />
-      </div>
-      <div class="px-4 py-2 border-t-1 border-gray-300 flex justify-end gap-2">
+      </details>
+      <div class="px-4 py-2 border-t-1 border-[#F4F4F4] flex justify-end gap-2">
         <IconButton
           onClick={() => {
             changeOrder("prev", index);
