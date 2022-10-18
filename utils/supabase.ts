@@ -135,7 +135,7 @@ export const duplicateProdPage = async (
     .from("pages")
     .insert({
       data: prodPage?.data ?? {},
-      full_name: prodPage['full_name'],
+      full_name: prodPage["full_name"],
       path: prodPage?.path ?? "",
       public: prodPage?.public ?? false,
       name: prodPage?.name,

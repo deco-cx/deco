@@ -159,50 +159,59 @@ interface Props {
   prefix: string;
   changeOrder: (dir: "prev" | "next", pos: number) => void;
   removeComponents: (removedComponents: number) => void;
+  component: string;
 }
 
 export default function JSONSchemaForm(
-  { schema, index, changeOrder, removeComponents, prefix }: Props,
+  { schema, index, changeOrder, removeComponents, prefix, component }: Props,
 ) {
   if (schema.type !== "object") {
     throw new Error("Schema must be type object");
   }
 
+  const handleHover = () => {
+    window.location.hash = `#${component}-${index}`;
+  };
+
   return (
     <div class="bg-[#F8F8F8] hover:bg-[#F4F4F4] border border-[#F4F4F4] rounded-l mb-4 transition-colors ease-in">
-      <details class="p-3 cursor-pointer">
-        <summary class="font-semibold text-xs leading-4 list-none">
+      <article
+        class="cursor-pointer p-3 font-semibold text-xs leading-4 list-none flex justify-between"
+        onMouseEnter={handleHover}
+      >
+        <h3>
           {schema.title}
-        </summary>
-        <RenderFields
-          required={schema.required}
-          properties={schema.properties}
-          prefix={prefix !== undefined ? `${prefix}.` : ""}
-        />
-      </details>
-      <div class="px-4 py-2 border-t-1 border-[#F4F4F4] flex justify-end gap-2">
-        <IconButton
-          onClick={() => {
-            changeOrder("prev", index);
-          }}
-        >
-          <CaretDownIcon fill="#170DAB" class="rotate-180" />
-        </IconButton>
-        <IconButton
-          onClick={() => {
-            changeOrder("next", index);
-          }}
-        >
-          <CaretDownIcon fill="#170DAB" />
-        </IconButton>
-        <LinkButton
-          onClick={() => {
-            removeComponents(index);
-          }}
-        >
-          <span class="text-sm text-custom-red">Remover</span>
-        </LinkButton>
-      </div>
+        </h3>
+      </article>
+      {/* <RenderFields */}
+      {/* required={schema.required} */}
+      {/* properties={schema.properties} */}
+      {/* prefix={prefix !== undefined ? `${prefix}.` : ""} */}
+      {/* /> */}
+
+      {/* <div class="px-4 py-2 border-t-1 border-[#F4F4F4] flex justify-end gap-2"> */}
+      {/* <IconButton */}
+      {/* onClick={() => { */}
+      {/* changeOrder("prev", index); */}
+      {/* }} */}
+      {/* > */}
+      {/* <CaretDownIcon fill="#170DAB" class="rotate-180" /> */}
+      {/* </IconButton> */}
+      {/* <IconButton */}
+      {/* onClick={() => { */}
+      {/* changeOrder("next", index); */}
+      {/* }} */}
+      {/* > */}
+      {/* <CaretDownIcon fill="#170DAB" /> */}
+      {/* </IconButton> */}
+      {/* <LinkButton */}
+      {/* onClick={() => { */}
+      {/* removeComponents(index); */}
+      {/* }} */}
+      {/* > */}
+      {/* <span class="text-sm text-custom-red">Remover</span> */}
+      {/* </LinkButton> */}
+      {/* </div> */}
     </div>
   );
 }

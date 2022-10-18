@@ -342,15 +342,22 @@ export function createLiveHandler(
   return handler;
 }
 
-export function LiveComponents({ components }: LivePageData) {
+export function LiveComponents({ components, mode }: LivePageData) {
   const manifest = LiveContext.getManifest();
   return (
     <>
-      {components?.map(({ component, props }: PageComponentData) => {
-        const Comp = getComponentModule(manifest, component)?.default;
+      {components?.map(
+        ({ component, props }: PageComponentData, index: number) => {
+          const Comp = getComponentModule(manifest, component)?.default;
+          const renderedComponent = <Comp {...props} />;
 
-        return <Comp {...props} />;
-      })}
+          if (mode === "edit") {
+            return <div id={`${component}-${index}`}>{renderedComponent}</div>;
+          }
+
+          return renderedComponent;
+        },
+      )}
     </>
   );
 }

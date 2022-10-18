@@ -9,7 +9,7 @@ function ToCItem({ component, componentLabel }: ComponentPreview) {
   return (
     <li key={component}>
       <a
-        class="font-medium  text-gray-500 hover:text-black"
+        class="font-medium text-gray-500 hover:text-black"
         href={`#${component}`}
       >
         {componentLabel}

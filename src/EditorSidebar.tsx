@@ -83,6 +83,7 @@ export default function EditorSidebar() {
                     removeComponents={handleRemoveComponent}
                     prefix={`components.${index}` as const}
                     index={index}
+                    component={component}
                     schema={componentSchemas[component] ??
                       { type: "object", properties: {}, title: component }}
                   />
