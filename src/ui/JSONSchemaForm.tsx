@@ -177,17 +177,20 @@ export default function JSONSchemaForm(
   }
 
   const handleHover = () => {
-    window.location.hash = `#${component}-${index}`;
+    const componentId = `${component}-${index}`;
+    const componentWrapper = document.getElementById(componentId);
+    componentWrapper?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "nearest",
+    });
   };
 
   const getOptionsStyle = () => {
     if (!buttonRef.current) return;
 
-    // forwardedRef set the DOM node to ref.current.base
     const { right, top, height } = buttonRef
       .current.getBoundingClientRect();
-    console.log(buttonRef
-      .current.getBoundingClientRect());
     // 112 = 7rem = ModalContent width
     const style = { top: top + height + 5, left: right - 112 };
 
