@@ -5,7 +5,7 @@ import useTrapFocus from "./hooks/useTrapFocus.tsx";
 
 interface ModalContentProps extends h.JSX.HTMLAttributes<HTMLDivElement> {}
 
-function ModalContent({ children, ...props }: ModalContentProps) {
+export function ModalContent({ children, ...props }: ModalContentProps) {
   const trapFocusRef = useRef<HTMLDivElement>(null);
   const beforeElementRef = useRef<HTMLDivElement>(null);
   const afterElementRef = useRef<HTMLDivElement>(null);
@@ -75,7 +75,8 @@ export default function Modal(
     ? createPortal(
       <div
         {...modalProps}
-        class={`bg-gray-500 bg-opacity-50 fixed inset-0 z-50 flex justify-center items-center ${modalProps?.class}`}
+        class={modalProps.class ??
+          `bg-gray-500 bg-opacity-50 fixed inset-0 z-50 flex justify-center items-center`}
         onKeyDown={handleBackdropKeyDown}
         onClick={handleBackdropClick}
       >

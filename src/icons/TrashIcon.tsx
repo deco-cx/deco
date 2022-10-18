@@ -22,7 +22,7 @@ export default function TrashIcon(
         x2="40"
         y2="56"
         fill="none"
-        stroke="#2FD180"
+        stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
@@ -34,7 +34,7 @@ export default function TrashIcon(
         x2="104"
         y2="168"
         fill="none"
-        stroke="#2FD180"
+        stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
@@ -46,7 +46,7 @@ export default function TrashIcon(
         x2="152"
         y2="168"
         fill="none"
-        stroke="#2FD180"
+        stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
@@ -55,7 +55,7 @@ export default function TrashIcon(
       <path
         d="M200,56V208a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V56"
         fill="none"
-        stroke="#2FD180"
+        stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"
@@ -64,7 +64,7 @@ export default function TrashIcon(
       <path
         d="M168,56V40a16,16,0,0,0-16-16H104A16,16,0,0,0,88,40V56"
         fill="none"
-        stroke="#2FD180"
+        stroke={fill}
         stroke-linecap="round"
         stroke-linejoin="round"
         stroke-width="16"

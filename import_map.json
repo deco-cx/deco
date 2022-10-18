@@ -12,6 +12,8 @@
     "react-hook-form": "https://esm.sh/*react-hook-form@7.34.2?alias=react:preact/compat",
     "std/": "https://deno.land/std@0.147.0/",
     "supabase": "https://esm.sh/@supabase/supabase-js@1.35.4",
-    "json-schema": "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts"
+    "json-schema": "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts",
+    "@preact/signals": "https://esm.sh/*@preact/signals@1.0.3",
+    "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.0.1"
   }
 }
