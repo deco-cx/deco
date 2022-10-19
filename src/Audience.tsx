@@ -1,9 +1,18 @@
-import { useRef, useState } from "preact/hooks";
+import { useRef } from "preact/hooks";
 import PlusIcon from "./icons/PlusIcon.tsx";
 import Button from "./ui/Button.tsx";
 import Modal from "./ui/Modal.tsx";
-import AudienceIcon from "./ui/AudienceIcon.tsx";
 import { UseFormReturn, useWatch } from "react-hook-form";
+import LinkButton from "./ui/LinkButton.tsx";
+import { signal } from "@preact/signals";
+
+const openModal = signal(false);
+const handleOpenModal = () => {
+  openModal.value = true;
+};
+const handleCloseModal = () => {
+  openModal.value = false;
+};
 
 interface Props {
   methods: UseFormReturn<any>;
@@ -15,29 +24,27 @@ export default function Audience(
   { methods, onSubmit, flag }: Props,
 ) {
   const targetRef = useRef<HTMLDivElement>(null);
-  const [openModal, setOpenModal] = useState<boolean>(false);
   const traffic = flag?.traffic;
   const audience = useWatch({ name: "audience", control: methods.control });
 
   return (
     <>
-      <Button
-        onClick={() => setOpenModal(true)}
+      <LinkButton
+        onClick={handleOpenModal}
         disabled={!flag}
+        class="bg-[#23AB6E] hover:bg-[#23AB6E] text-white text-xs font-semibold"
       >
-        <span class="px-1">
-          <AudienceIcon disabled={!flag} />
-        </span>
-      </Button>
+        Test & Publish
+      </LinkButton>
 
       <Modal
-        open={openModal}
-        onDismiss={() => setOpenModal(false)}
+        open={openModal.value}
+        onDismiss={handleCloseModal}
         class="rounded bg-white p-5 w-1/3"
       >
         <div class="w-full flex justify-between mb-4">
           <span class="text-xl font-bold">Audiência</span>
-          <Button onClick={() => setOpenModal(false)}>
+          <Button onClick={handleCloseModal}>
             <PlusIcon fill="#ffffff" class="rotate-45" />
           </Button>
         </div>

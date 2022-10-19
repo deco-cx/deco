@@ -1,13 +1,11 @@
 import { useEditor } from "$live/src/EditorProvider.tsx";
-import Button from "./ui/Button.tsx";
-import ComponentPropsForm from "./ui/ComponentPropsForm.tsx";
 import { FormProvider as FP } from "react-hook-form";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import AddNewComponent from "./AddNewComponent.tsx";
 import useEditorOperations from "./useEditorForm.tsx";
-import SaveIcon from "./ui/SaveIcon.tsx";
-import Audience from "./Audience.tsx";
 import ComponentCard from "./ui/ComponentCard.tsx";
+import LinkButton from "./ui/LinkButton.tsx";
+import Audience from "./Audience.tsx";
 
 const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
   props: UseFormReturn<TFieldValues, TContext>,
@@ -43,11 +41,15 @@ export default function EditorSidebar() {
 
   return (
     <div class="flex-none w-80 shadow-xl text-primary-dark z-10 h-screen overflow-y-auto fixed right-0">
-      {/* <header class="p-4 flex border-b border-[#F4F4F4]"> */}
-      {/* <div> */}
-      {/* <h2 class="font-medium text-base leading-5">{name}</h2> */}
-      {/* </div> */}
-      {/* </header> */}
+      <div class="p-3 flex gap-2 justify-end border-b border-[#F4F4F4]">
+        <LinkButton
+          onClick={onSubmit}
+          class="bg-[#F4F4F4] text-xs font-semibold"
+        >
+          Save draft
+        </LinkButton>
+        <Audience methods={methods} onSubmit={onSubmit} flag={flag} />
+      </div>
       <div class="p-4">
         <header class="flex justify-between">
           <h3 class="font-medium text-sm leading-4">{name}</h3>
@@ -97,12 +99,12 @@ export default function EditorSidebar() {
         {/* </Button> */}
         {/* </div> */}
         {/* </header> */}
-        {/* <FormProvider {...methods}> */}
-        {/* <form */}
-        {/* onSubmit={onSubmit} */}
-        {/* > */}
-        {/* </form> */}
-        {/* </FormProvider> */}
+        <FormProvider {...methods}>
+          <form
+            onSubmit={onSubmit}
+          >
+          </form>
+        </FormProvider>
       </div>
     </div>
   );

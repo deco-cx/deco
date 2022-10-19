@@ -1,13 +1,7 @@
 import type { JSONSchema7, JSONSchema7TypeName } from "json-schema";
 import { FunctionComponent, h } from "preact";
 import { useFormContext } from "react-hook-form";
-import { forwardRef, useRef } from "preact/compat";
-import IconButton from "./IconButton.tsx";
-import LinkButton from "./LinkButton.tsx";
-import DotsThreeIcon from "../icons/DotsThreeIcon.tsx";
-import TrashIcon from "../icons/TrashIcon.tsx";
-import Modal from "./Modal.tsx";
-import { tw } from "twind";
+import { forwardRef } from "preact/compat";
 
 const getInputTypeFromFormat = (format: JSONSchema7["format"]) => {
   switch (format) {
@@ -79,13 +73,12 @@ const FieldTypes: Record<
   )),
 };
 
-interface RenderFieldProps
-  extends Pick<JSONSchema7, "required" | "properties"> {
+interface Props extends Pick<JSONSchema7, "required" | "properties"> {
   prefix: string;
 }
 
 export default function ComponentPropsForm(
-  { properties: jsonSchemaProperties, prefix, required = [] }: RenderFieldProps,
+  { properties: jsonSchemaProperties, prefix, required = [] }: Props,
 ) {
   const { register } = useFormContext();
 
@@ -119,7 +112,7 @@ export default function ComponentPropsForm(
           const { properties: nestedProperties, required: nestedRequired } =
             property as JSONSchema7;
           return (
-            <RenderFields
+            <ComponentPropsForm
               required={nestedRequired}
               properties={nestedProperties}
               prefix={`${prefix}${field}.`}

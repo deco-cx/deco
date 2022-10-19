@@ -7,9 +7,9 @@ export default function LinkButton(
     <button
       type="button"
       {...props}
-      class={`rounded hover:bg-[#E1E1E1] py-1 px-2 flex items-center transition-colors ease-in ${
-        props.disabled ? "text-gray-500 bg-gray-200" : ""
-      } ${props.class ?? ""}`}
+      class={`rounded hover:bg-[#E1E1E1] py-1 px-2 flex items-center transition-colors ease-in disabled:text-gray-500 disabled:bg-gray-200 ${
+        props.class ?? ""
+      }`}
     />
   );
 }

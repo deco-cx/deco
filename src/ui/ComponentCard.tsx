@@ -1,6 +1,5 @@
 import { useSignal } from "@preact/signals";
 import { useRef } from "preact/compat";
-import type { JSONSchema7 } from "json-schema";
 import IconButton from "./IconButton.tsx";
 import DotsThreeIcon from "../icons/DotsThreeIcon.tsx";
 import LinkButton from "./LinkButton.tsx";
