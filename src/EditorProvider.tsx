@@ -8,6 +8,7 @@ interface Props {
   componentSchemas: Schemas;
   siteId: number;
   flag: Flag | null;
+  name: string;
 }
 
 export interface EditorContext extends Props {}
@@ -19,7 +20,7 @@ export const EditorContext = createContext<EditorContext>(
 export const useEditor = () => useContext(EditorContext);
 
 export default function EditorProvider(
-  { children, components, template, componentSchemas, siteId, flag }:
+  { children, components, template, componentSchemas, siteId, flag, name }:
     & Props
     & {
       children: ComponentChildren;
@@ -33,6 +34,7 @@ export default function EditorProvider(
         componentSchemas,
         siteId,
         flag,
+        name,
       }}
     >
       {children}

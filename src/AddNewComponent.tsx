@@ -4,6 +4,7 @@ import Button from "./ui/Button.tsx";
 import Modal from "./ui/Modal.tsx";
 import ComponentPreviewList from "./ComponentPreviewList.tsx";
 import type { ComponentPreview } from "../editor.tsx";
+import IconButton from "./ui/IconButton.tsx";
 
 function ToCItem({ component, componentLabel }: ComponentPreview) {
   return (
@@ -31,12 +32,12 @@ export default function AddNewComponent({ onAddComponent }: Props) {
 
   return (
     <>
-      <Button
-        class="py-2 w-full flex justify-center"
+      <IconButton
+        class=""
         onClick={() => setOpenModal(true)}
       >
-        <PlusIcon fill="#ffffff" />
-      </Button>
+        <PlusIcon fill="#000" />
+      </IconButton>
 
       <Modal
         open={openModal}

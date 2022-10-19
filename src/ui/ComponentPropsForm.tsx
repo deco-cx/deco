@@ -1,12 +1,11 @@
 import type { JSONSchema7, JSONSchema7TypeName } from "json-schema";
-import { FunctionComponent, h, options } from "preact";
+import { FunctionComponent, h } from "preact";
 import { useFormContext } from "react-hook-form";
 import { forwardRef, useRef } from "preact/compat";
 import IconButton from "./IconButton.tsx";
 import LinkButton from "./LinkButton.tsx";
 import DotsThreeIcon from "../icons/DotsThreeIcon.tsx";
 import TrashIcon from "../icons/TrashIcon.tsx";
-import { useSignal } from "@preact/signals";
 import Modal from "./Modal.tsx";
 import { tw } from "twind";
 
@@ -85,7 +84,7 @@ interface RenderFieldProps
   prefix: string;
 }
 
-function RenderFields(
+export default function ComponentPropsForm(
   { properties: jsonSchemaProperties, prefix, required = [] }: RenderFieldProps,
 ) {
   const { register } = useFormContext();
@@ -154,116 +153,5 @@ function RenderFields(
         );
       })}
     </>
-  );
-}
-
-interface Props {
-  schema: JSONSchema7;
-  index: number;
-  prefix: string;
-  changeOrder: (dir: "prev" | "next", pos: number) => void;
-  removeComponents: (removedComponents: number) => void;
-  component: string;
-}
-
-export default function JSONSchemaForm(
-  { schema, index, changeOrder, removeComponents, prefix, component }: Props,
-) {
-  const openOptions = useSignal(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  if (schema.type !== "object") {
-    throw new Error("Schema must be type object");
-  }
-
-  const handleHover = () => {
-    const componentId = `${component}-${index}`;
-    const componentWrapper = document.getElementById(componentId);
-    componentWrapper?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-      inline: "nearest",
-    });
-  };
-
-  const getOptionsStyle = () => {
-    if (!buttonRef.current) return;
-
-    const { right, top, height } = buttonRef
-      .current.getBoundingClientRect();
-    // 112 = 7rem = ModalContent width
-    const style = { top: top + height + 5, left: right - 112 };
-
-    return style;
-  };
-
-  return (
-    <div class="bg-[#F8F8F8] hover:bg-[#F4F4F4] border border-[#F4F4F4] rounded-l mb-4 transition-colors ease-in">
-      <article
-        class="cursor-pointer p-3 font-semibold text-xs leading-4 list-none flex justify-between items-center"
-        onMouseEnter={handleHover}
-        onClick={() => (openOptions.value = true)}
-      >
-        <h3>
-          {schema.title}
-        </h3>
-        <IconButton ref={buttonRef}>
-          <DotsThreeIcon />
-        </IconButton>
-      </article>
-
-      <Modal
-        open={openOptions.value}
-        style={getOptionsStyle()}
-        class="absolute z-10 bg-white rounded-lg p-2 border w-28"
-        modalProps={{
-          class:
-            tw`bg-transparente fixed inset-0 z-50 flex justify-center items-center`,
-        }}
-        onDismiss={() => openOptions.value = false}
-      >
-        <menu class="list-none m-0 p-0">
-          <LinkButton
-            class="flex gap-2 text-xs w-full"
-            onClick={() => {
-              removeComponents(index);
-              openOptions.value = false;
-            }}
-          >
-            <TrashIcon fill="black" /> <span>Remover</span>
-          </LinkButton>
-        </menu>
-      </Modal>
-
-      {/* <RenderFields */}
-      {/* required={schema.required} */}
-      {/* properties={schema.properties} */}
-      {/* prefix={prefix !== undefined ? `${prefix}.` : ""} */}
-      {/* /> */}
-
-      {/* <div class="px-4 py-2 border-t-1 border-[#F4F4F4] flex justify-end gap-2"> */}
-      {/* <IconButton */}
-      {/* onClick={() => { */}
-      {/* changeOrder("prev", index); */}
-      {/* }} */}
-      {/* > */}
-      {/* <CaretDownIcon fill="#170DAB" class="rotate-180" /> */}
-      {/* </IconButton> */}
-      {/* <IconButton */}
-      {/* onClick={() => { */}
-      {/* changeOrder("next", index); */}
-      {/* }} */}
-      {/* > */}
-      {/* <CaretDownIcon fill="#170DAB" /> */}
-      {/* </IconButton> */}
-      {/* <LinkButton */}
-      {/* onClick={() => { */}
-      {/* removeComponents(index); */}
-      {/* }} */}
-      {/* > */}
-      {/* <span class="text-sm text-custom-red">Remover</span> */}
-      {/* </LinkButton> */}
-      {/* </div> */}
-    </div>
   );
 }

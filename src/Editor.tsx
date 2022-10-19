@@ -8,10 +8,11 @@ export interface Props {
   componentSchemas: Schemas;
   siteId: number;
   flag: Flag | null;
+  name: string;
 }
 
 export default function Editor(
-  { components, template, componentSchemas, siteId, flag }: Props,
+  { components, template, componentSchemas, siteId, flag, name }: Props,
 ) {
   return (
     <EditorProvider
@@ -20,6 +21,7 @@ export default function Editor(
       componentSchemas={componentSchemas}
       siteId={siteId}
       flag={flag}
+      name={name}
     >
       <EditorSidebar />
     </EditorProvider>

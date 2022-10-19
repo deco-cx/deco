@@ -1,12 +1,13 @@
 import { useEditor } from "$live/src/EditorProvider.tsx";
 import Button from "./ui/Button.tsx";
-import JSONSchemaForm from "./ui/JSONSchemaForm.tsx";
+import ComponentPropsForm from "./ui/ComponentPropsForm.tsx";
 import { FormProvider as FP } from "react-hook-form";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import AddNewComponent from "./AddNewComponent.tsx";
 import useEditorOperations from "./useEditorForm.tsx";
 import SaveIcon from "./ui/SaveIcon.tsx";
 import Audience from "./Audience.tsx";
+import ComponentCard from "./ui/ComponentCard.tsx";
 
 const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
   props: UseFormReturn<TFieldValues, TContext>,
@@ -14,6 +15,7 @@ const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
 
 export default function EditorSidebar() {
   const {
+    name,
     componentSchemas,
     template,
     components: initialComponents,
@@ -41,58 +43,66 @@ export default function EditorSidebar() {
 
   return (
     <div class="flex-none w-80 shadow-xl text-primary-dark z-10 h-screen overflow-y-auto fixed right-0">
-      <div class="bg-gray-50 p-5 min-h-full">
-        <FormProvider {...methods}>
-          <form
-            onSubmit={onSubmit}
-          >
-            <header class="flex justify-between items-center">
-              <Audience methods={methods} onSubmit={onSubmit} flag={flag} />
-              <div class="flex gap-2">
-                <p
-                  class={`cursor-pointer py-1 px-2 text-sm ${
-                    methods.formState.isDirty
-                      ? "text-gray-400 hover:text-gray-500"
-                      : "text-gray-400"
-                  }`}
-                  onClick={onReset}
-                  disabled={!methods.formState.isDirty}
-                >
-                  Descartar
-                </p>
-                <Button
-                  type="submit"
-                  disabled={!methods.formState.isDirty}
-                >
-                  <span class="pr-1 hidden">
-                    <SaveIcon
-                      disabled={!methods.formState.isDirty}
-                    />
-                  </span>
-                  Salvar
-                </Button>
-              </div>
-            </header>
-            <div class="mt-4">
-              {fields.map((field, index) => {
-                const { component } = components[index];
-                return (
-                  <JSONSchemaForm
-                    key={field.id}
-                    changeOrder={handleChangeOrder}
-                    removeComponents={handleRemoveComponent}
-                    prefix={`components.${index}` as const}
-                    index={index}
-                    component={component}
-                    schema={componentSchemas[component] ??
-                      { type: "object", properties: {}, title: component }}
-                  />
-                );
-              })}
-            </div>
-          </form>
-        </FormProvider>
-        <AddNewComponent onAddComponent={handleAddComponent} />
+      {/* <header class="p-4 flex border-b border-[#F4F4F4]"> */}
+      {/* <div> */}
+      {/* <h2 class="font-medium text-base leading-5">{name}</h2> */}
+      {/* </div> */}
+      {/* </header> */}
+      <div class="p-4">
+        <header class="flex justify-between">
+          <h3 class="font-medium text-sm leading-4">{name}</h3>
+
+          <AddNewComponent onAddComponent={handleAddComponent} />
+        </header>
+        <div class="mt-4 flex flex-col gap-2">
+          {fields.map((field, index) => {
+            const { component } = components[index];
+            const componentLabel = componentSchemas[component]?.title ??
+              component;
+            return (
+              <ComponentCard
+                key={field.id}
+                removeComponents={handleRemoveComponent}
+                index={index}
+                component={component}
+                componentLabel={componentLabel}
+              />
+            );
+          })}
+        </div>
+        {/* <header class="flex justify-between items-center"> */}
+        {/* <Audience methods={methods} onSubmit={onSubmit} flag={flag} /> */}
+        {/* <div class="flex gap-2"> */}
+        {/* <p */}
+        {/* class={`cursor-pointer py-1 px-2 text-sm ${ */}
+        {/* methods.formState.isDirty */}
+        {/* ? "text-gray-400 hover:text-gray-500" */}
+        {/* : "text-gray-400" */}
+        {/* }`} */}
+        {/* onClick={onReset} */}
+        {/* disabled={!methods.formState.isDirty} */}
+        {/* > */}
+        {/* Descartar */}
+        {/* </p> */}
+        {/* <Button */}
+        {/* type="submit" */}
+        {/* disabled={!methods.formState.isDirty} */}
+        {/* > */}
+        {/* <span class="pr-1 hidden"> */}
+        {/* <SaveIcon */}
+        {/* disabled={!methods.formState.isDirty} */}
+        {/* /> */}
+        {/* </span> */}
+        {/* Salvar */}
+        {/* </Button> */}
+        {/* </div> */}
+        {/* </header> */}
+        {/* <FormProvider {...methods}> */}
+        {/* <form */}
+        {/* onSubmit={onSubmit} */}
+        {/* > */}
+        {/* </form> */}
+        {/* </FormProvider> */}
       </div>
     </div>
   );

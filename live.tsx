@@ -77,6 +77,7 @@ export interface LivePageData extends PageDataData {
   template: string;
   siteId: number;
   flag: Flag | null;
+  name: string;
 }
 
 export interface LoadLiveDataOptions {
@@ -156,6 +157,7 @@ export async function loadLiveData(
     template: options?.template || url.pathname,
     siteId: liveOptions.siteId!,
     flag: flag,
+    name: pages?.[0]?.name ?? pages?.[0]?.path,
   };
 }
 
@@ -400,6 +402,7 @@ export function LivePage({
             componentSchemas={componentSchemas}
             siteId={data.siteId}
             flag={data.flag}
+            name={data.name}
           />
         )
         : null}
