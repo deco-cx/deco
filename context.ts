@@ -9,6 +9,7 @@ class LiveContext {
   #liveOptions: EnhancedLiveOptions;
   #defaultDomains: string[];
   #deploymentId: string | undefined;
+  #loginUrl = "/login";
   #isDenoDeploy: boolean;
 
   constructor() {
@@ -60,6 +61,10 @@ class LiveContext {
 
   public getDeploymentId() {
     return this.#deploymentId;
+  }
+
+  public getLoginUrl() {
+    return this.#loginUrl;
   }
 
   public isDenoDeploy() {

@@ -40,6 +40,7 @@ export interface Page {
 
 export interface LiveOptions {
   site: string;
+  loginUrl?: string;
   domains?: string[];
   plugins?: Plugin[];
 }

@@ -4,6 +4,7 @@ import { Handler, Handlers } from "$fresh/server.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 import getSupabaseClient from "./supabase.ts";
+import LiveContext from "./context.ts";
 
 export const useAuthStateChange = (
   callback: (event: AuthChangeEvent, res?: Response) => void,
@@ -42,7 +43,7 @@ export function createPrivateHandler<T>(handler: Handler<T>): Handler<T> {
     if (!user || user.error) {
       res = new Response(user.error ? user.error.message : "Redirect", {
         status: 302,
-        headers: { location: "/live/login" },
+        headers: { location: LiveContext.getLoginUrl() },
       });
     } else {
       ctx.state.user = user;
