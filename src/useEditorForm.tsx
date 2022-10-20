@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "preact/hooks";
+import { MutableRef, useCallback, useRef } from "preact/hooks";
 import { useFieldArray, useForm } from "react-hook-form";
 import type { Audience } from "../editor.tsx";
 import type { Flag, PageComponentData } from "../types.ts";
@@ -48,7 +48,9 @@ interface EditorProps {
 export default function useEditorOperations(
   { components: initialComponents, template, siteId, flag }: EditorProps,
 ) {
-  const componentsRef = useRef<PageComponentData[]>();
+  const componentsRef = useRef<PageComponentData[]>() as MutableRef<
+    PageComponentData[]
+  >;
 
   if (componentsRef.current === undefined) {
     componentsRef.current = structuredClone(initialComponents);

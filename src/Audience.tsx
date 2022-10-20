@@ -32,7 +32,7 @@ export default function Audience(
       <LinkButton
         onClick={handleOpenModal}
         disabled={!flag}
-        class="bg-[#23AB6E] hover:bg-[#23AB6E] text-white text-xs font-semibold"
+        class="bg-[#23AB6E] hover:bg-[#1B8756] text-white text-xs font-semibold"
       >
         Test & Publish
       </LinkButton>

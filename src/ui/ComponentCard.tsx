@@ -11,11 +11,14 @@ interface Props {
   index: number;
   removeComponents: (removedComponents: number) => void;
   component: string;
-  componentLabel: string;
+  componentTitle: string;
+  onClick: () => void;
+  hasError: boolean;
 }
 
 export default function ComponentCard(
-  { componentLabel, index, removeComponents, component }: Props,
+  { componentTitle, index, removeComponents, component, onClick, hasError }:
+    Props,
 ) {
   const openOptions = useSignal(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -43,18 +46,26 @@ export default function ComponentCard(
   };
 
   return (
-    <div class="bg-[#F8F8F8] hover:bg-[#F4F4F4] border border-[#F4F4F4] rounded transition-colors ease-in">
+    <div
+      class={`bg-[#F8F8F8] hover:bg-[#F4F4F4] border border-[#F4F4F4] rounded transition-colors ease-in ${
+        hasError ? "bg-red-200 hover:bg-red-300" : ""
+      }`}
+    >
       <article
         class="cursor-pointer p-3 font-semibold text-xs leading-4 list-none flex justify-between items-center group h-10"
         onMouseEnter={handleHover}
+        onClick={onClick}
       >
         <h3>
-          {componentLabel}
+          {componentTitle}
         </h3>
         <IconButton
           ref={buttonRef}
-          onClick={() => (openOptions.value = true)}
-          class="hidden group-hover:flex"
+          onClick={(e) => {
+            e.stopPropagation();
+            openOptions.value = true;
+          }}
+          class="hidden group-hover:flex bg-transparent"
         >
           <DotsThreeIcon />
         </IconButton>

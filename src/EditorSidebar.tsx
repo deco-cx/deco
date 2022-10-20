@@ -6,10 +6,28 @@ import useEditorOperations from "./useEditorForm.tsx";
 import ComponentCard from "./ui/ComponentCard.tsx";
 import LinkButton from "./ui/LinkButton.tsx";
 import Audience from "./Audience.tsx";
+import { signal } from "@preact/signals";
+import IconButton from "./ui/IconButton.tsx";
+import ArrowLeftIcon from "./icons/ArrowLeftIcon.tsx";
+import ComponentPropsForm from "./ui/ComponentPropsForm.tsx";
+import type { h } from "preact";
 
 const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
   props: UseFormReturn<TFieldValues, TContext>,
-) => JSX.Element;
+) => h.JSX.Element;
+
+const editorView = signal<"list" | "edit">("list");
+const openEditorList = () => {
+  editorView.value = "list";
+};
+const openEditorEdit = () => {
+  editorView.value = "edit";
+};
+
+const selectedComponent = signal<number | null>(null);
+const cleanSelectedComponent = () => {
+  selectedComponent.value = null;
+};
 
 export default function EditorSidebar() {
   const {
@@ -22,11 +40,9 @@ export default function EditorSidebar() {
   } = useEditor();
 
   const {
-    onReset,
     onSubmit,
     handleAddComponent,
     handleRemoveComponent,
-    handleChangeOrder,
     componentsRef,
     methods,
     fields,
@@ -45,64 +61,98 @@ export default function EditorSidebar() {
         <LinkButton
           onClick={onSubmit}
           class="bg-[#F4F4F4] text-xs font-semibold"
+          disabled={!methods.formState.isDirty}
         >
           Save draft
         </LinkButton>
         <Audience methods={methods} onSubmit={onSubmit} flag={flag} />
       </div>
       <div class="p-4">
-        <header class="flex justify-between">
-          <h3 class="font-medium text-sm leading-4">{name}</h3>
+        {editorView.value === "list" && (
+          <>
+            <header class="flex justify-between">
+              <h3 class="font-medium text-sm leading-4">{name}</h3>
 
-          <AddNewComponent onAddComponent={handleAddComponent} />
-        </header>
-        <div class="mt-4 flex flex-col gap-2">
-          {fields.map((field, index) => {
-            const { component } = components[index];
-            const componentLabel = componentSchemas[component]?.title ??
-              component;
-            return (
-              <ComponentCard
-                key={field.id}
-                removeComponents={handleRemoveComponent}
-                index={index}
-                component={component}
-                componentLabel={componentLabel}
-              />
-            );
-          })}
-        </div>
-        {/* <header class="flex justify-between items-center"> */}
-        {/* <Audience methods={methods} onSubmit={onSubmit} flag={flag} /> */}
-        {/* <div class="flex gap-2"> */}
-        {/* <p */}
-        {/* class={`cursor-pointer py-1 px-2 text-sm ${ */}
-        {/* methods.formState.isDirty */}
-        {/* ? "text-gray-400 hover:text-gray-500" */}
-        {/* : "text-gray-400" */}
-        {/* }`} */}
-        {/* onClick={onReset} */}
-        {/* disabled={!methods.formState.isDirty} */}
-        {/* > */}
-        {/* Descartar */}
-        {/* </p> */}
-        {/* <Button */}
-        {/* type="submit" */}
-        {/* disabled={!methods.formState.isDirty} */}
-        {/* > */}
-        {/* <span class="pr-1 hidden"> */}
-        {/* <SaveIcon */}
-        {/* disabled={!methods.formState.isDirty} */}
-        {/* /> */}
-        {/* </span> */}
-        {/* Salvar */}
-        {/* </Button> */}
-        {/* </div> */}
-        {/* </header> */}
+              <AddNewComponent onAddComponent={handleAddComponent} />
+            </header>
+            <div class="mt-4 flex flex-col gap-2">
+              {fields.map((field, index) => {
+                const { component } = components[index];
+                const componentTitle = componentSchemas[component]?.title ??
+                  component;
+                const hasError =
+                  !!(methods.formState.errors.components?.[index]);
+
+                const handleClickCard = () => {
+                  openEditorEdit();
+                  selectedComponent.value = index;
+                };
+                return (
+                  <ComponentCard
+                    key={field.id}
+                    removeComponents={handleRemoveComponent}
+                    index={index}
+                    component={component}
+                    componentTitle={componentTitle}
+                    onClick={handleClickCard}
+                    hasError={hasError}
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
         <FormProvider {...methods}>
           <form
             onSubmit={onSubmit}
           >
+            {editorView.value === "edit" && selectedComponent.value !== null &&
+              (
+                <header class="flex items-center gap-2 mb-4">
+                  <IconButton
+                    onClick={() => {
+                      openEditorList();
+                      cleanSelectedComponent();
+                    }}
+                    class="bg-transparent"
+                  >
+                    <ArrowLeftIcon />
+                  </IconButton>
+                  <h3 class="font-medium text-sm leading-4">
+                    {componentSchemas[
+                      components[selectedComponent.value].component
+                    ].title ?? components[selectedComponent.value].component}
+                  </h3>
+                </header>
+              )}
+
+            {
+              /*
+               * React Hook Form needs the input in the DOM to catch validation.
+               * So, to prevent the user submit the form with invalid values,
+               * all fields are rendered and hidded
+                * */
+            }
+            {fields.map((field, index) => {
+              const { component } = components[index];
+              const componentSchema = componentSchemas[component];
+
+              return (
+                <div
+                  class={index === selectedComponent.value &&
+                      editorView.value === "edit"
+                    ? undefined
+                    : "hidden"}
+                >
+                  <ComponentPropsForm
+                    key={field.id}
+                    prefix={`components.${index}.`}
+                    properties={componentSchema.properties}
+                    required={componentSchema.required}
+                  />
+                </div>
+              );
+            })}
           </form>
         </FormProvider>
       </div>
