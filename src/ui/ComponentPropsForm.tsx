@@ -1,5 +1,5 @@
 import type { JSONSchema7, JSONSchema7TypeName } from "json-schema";
-import { FunctionComponent, h } from "preact";
+import type { FunctionComponent, h, Ref } from "preact";
 import { useFormContext } from "react-hook-form";
 import { forwardRef } from "preact/compat";
 
@@ -21,6 +21,21 @@ const getInputTypeFromFormat = (format: JSONSchema7["format"]) => {
   }
 };
 
+const BaseInput = forwardRef(
+  function BaseInput(
+    props: h.JSX.HTMLAttributes<HTMLInputElement>,
+    ref: Ref<HTMLInputElement>,
+  ) {
+    return (
+      <input
+        {...props}
+        ref={ref}
+        class={`rounded-sm text-sm shadow p-2 mb-2 w-full ${props.class ?? ""}`}
+      />
+    );
+  },
+);
+
 const FieldTypes: Record<
   Exclude<
     JSONSchema7TypeName,
@@ -29,48 +44,19 @@ const FieldTypes: Record<
   FunctionComponent<h.JSX.HTMLAttributes<HTMLInputElement>>
 > = {
   "string": forwardRef((props: h.JSX.HTMLAttributes<HTMLInputElement>, ref) => (
-    <input
-      {...props}
-      ref={ref}
-      class={`transition-colors ease-in rounded-xl shadow p-2 mb-2 w-full ${
-        props.class ?? ""
-      }`}
-    />
+    <BaseInput {...props} ref={ref} type="text" />
   )),
   "number": forwardRef((props: h.JSX.HTMLAttributes<HTMLInputElement>, ref) => (
-    <input
-      {...props}
-      type="number"
-      ref={ref}
-      class={`transition-colors ease-in rounded-xl p-2 mb-2 w-full ${
-        props.class ?? ""
-      }`}
-    />
+    <BaseInput {...props} ref={ref} type="number" />
   )),
   "integer": forwardRef((
     props: h.JSX.HTMLAttributes<HTMLInputElement>,
     ref,
-  ) => (
-    <input
-      {...props}
-      type="number"
-      ref={ref}
-      class={`transition-colors ease-in rounded-xl p-2 mb-2 w-full ${
-        props.class ?? ""
-      }`}
-    />
-  )),
+  ) => <BaseInput {...props} ref={ref} type="number" />),
   "boolean": forwardRef((
     props: h.JSX.HTMLAttributes<HTMLInputElement>,
     ref,
-  ) => (
-    <input
-      {...props}
-      type="checkbox"
-      ref={ref}
-      class={`transition-colors ease-in w-5 h-5 p-2 mb-2 ${props.class ?? ""}`}
-    />
-  )),
+  ) => <BaseInput {...props} ref={ref} type="checkbox" />),
 };
 
 interface Props extends Pick<JSONSchema7, "required" | "properties"> {
@@ -126,15 +112,17 @@ export default function ComponentPropsForm(
         const isFieldRequired = required.includes(field);
 
         return (
-          <label class="flex flex-col items-start mb-2">
-            <div class="text-sm pb-1" htmlFor={fullPathField}>
+          <div class="flex flex-col items-start mb-3">
+            <label
+              htmlFor={fullPathField}
+              class="text-sm pb-1"
+            >
               {title}
-            </div>
+            </label>
             <Field
               type={inputType}
               pattern={pattern}
               required={isFieldRequired}
-              class="text-sm rounded-sm"
               {...register(fullPathField, {
                 minLength,
                 maxLength,
@@ -142,7 +130,7 @@ export default function ComponentPropsForm(
                 required: isFieldRequired,
               })}
             />
-          </label>
+          </div>
         );
       })}
     </>
