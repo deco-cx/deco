@@ -83,27 +83,6 @@ export interface LoadLiveDataOptions {
   template?: string;
 }
 
-const getPageDataFromFlags = (
-  path: string,
-  prodComponents: PageDataData,
-): PageDataData => {
-  const activePages: PageDataData[] = [
-    prodComponents,
-  ];
-
-  flags
-    .filter(({ pages }) => pages[0].path === path)
-    .forEach((flag) => {
-      if (flag.traffic > 0) {
-        activePages.push(flag.data!);
-      }
-    });
-
-  // Randomly choose any active experiment
-  const randomIdx = Math.floor(Math.random() * activePages.length);
-  return activePages[randomIdx];
-};
-
 export async function loadLiveData(
   req: Request,
   _: HandlerContext<LivePageData>,
@@ -125,26 +104,24 @@ export async function loadLiveData(
   const siteId = liveOptions.siteId!.toString();
   let pageData: PageDataData = { components: [], loaders: [] };
 
-  try {
-    pages = variantId
-      ? await getPageFromId(variantId, siteId)
-      : await getProdPage(
-        siteId,
-        url.pathname,
-        template,
-      );
+  pages = variantId
+    ? await getPageFromId(variantId, siteId)
+    : await getProdPage(
+      siteId,
+      url.pathname,
+      template,
+    );
 
-    const prodData: PageDataData = pages![0]!.data;
-    const flagId = pages![0]!.flag;
-    flag = flagId ? await getFlagFromId(flagId, siteId) : null;
+  const prodData: PageDataData = pages![0]?.data;
+  const flagId = pages![0]?.flag;
+  flag = flagId ? await getFlagFromId(flagId, siteId) : null;
 
-    pageData = variantId
-      ? prodData
-      : getPageDataFromFlags(pages![0]!.path, prodData);
+  pageData = prodData || {};
 
-    console.log("Found page:", pages, flag);
-  } catch (error) {
-    console.log("Error fetching page:", error.message);
+  if (pages[0]) {
+    console.log("Live page:", siteId, url.pathname, pages[0], flag);
+  } else {
+    console.log("Live page not found", siteId, url.pathname, template);
   }
 
   const isEditor = url.searchParams.has("editor");
@@ -216,104 +193,91 @@ export function createLiveHandler(
 
       let pageData: LivePageData;
 
-      try {
-        start("fetch-page-data");
-        pageData = await loadLiveData(
-          req,
-          ctx,
-          options as LoadLiveDataOptions,
-        );
-        end("fetch-page-data");
+      start("fetch-page-data");
+      pageData = await loadLiveData(
+        req,
+        ctx,
+        options as LoadLiveDataOptions,
+      );
+      end("fetch-page-data");
 
-        // map back components from database to components for the editor, merging loader props into component props
-        const editorComponents = pageData.components.map((componentData) => {
-          if (!componentData.props) {
-            return componentData;
-          }
-
-          const newComponentData = JSON.parse(JSON.stringify(componentData));
-
-          for (
-            const [propName, value] of Object.entries(newComponentData.props)
-          ) {
-            if (isLoaderProp(value)) {
-              const loaderName = propToLoaderInstance(value);
-              newComponentData.props[propName] = JSON.parse(JSON.stringify(
-                pageData.loaders.find(({ name }) => name === loaderName) ?? {},
-              )).props;
-            }
-          }
-
-          return newComponentData;
-        });
-
-        pageData.editorComponents = editorComponents;
-
-        start("fetch-loader-data");
-        const loadersResponse = await Promise.all(
-          pageData.loaders?.map(async ({ loader, props, name }) => {
-            const loaderFn =
-              LiveContext.getManifest().loaders[`./loaders/${loader}.ts`]
-                .default.loader;
-            start(`loader#${name}`);
-            const loaderData = await loaderFn(req, ctx, props);
-            end(`loader#${name}`);
-            return {
-              name,
-              data: loaderData,
-            };
-          }) ?? [],
-        );
-        end("fetch-loader-data");
-
-        start("map-loader-data");
-        const loadersResponseMap = loadersResponse.reduce(
-          (result, currentResponse) => {
-            result[currentResponse.name] = currentResponse.data;
-            return result;
-          },
-          {} as Record<string, unknown>,
-        );
-
-        pageData.components = pageData.components.map((componentData) => {
-          /*
-         * if any shallow prop that contains a mustache like `{loaderName.*}`,
-         * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
-         */
-
-          Object.values(componentData.props ?? {}).forEach(
-            (value) => {
-              if (!isLoaderProp(value)) {
-                return;
-              }
-
-              const loaderForwardedProps = path(
-                loadersResponseMap,
-                propToLoaderInstance(value),
-              );
-
-              componentData.props = {
-                ...componentData.props,
-                ...loaderForwardedProps,
-              };
-            },
-          );
-
+      // map back components from database to components for the editor, merging loader props into component props
+      const editorComponents = pageData.components.map((componentData) => {
+        if (!componentData.props) {
           return componentData;
-        });
-        end("map-loader-data");
-      } catch (error) {
-        // TODO: Do a better error handler. Maybe redirect to 500 page.
-        console.log("Error running loader. \n", error);
-        const headers = new Headers();
-        headers.append("location", "/live/login");
-        deleteCookie(headers, "live-access-token");
-        deleteCookie(headers, "live-refresh-token");
-        return new Response("Redirect", {
-          status: 302,
-          headers,
-        });
-      }
+        }
+
+        const newComponentData = JSON.parse(JSON.stringify(componentData));
+
+        for (
+          const [propName, value] of Object.entries(newComponentData.props)
+        ) {
+          if (isLoaderProp(value)) {
+            const loaderName = propToLoaderInstance(value);
+            newComponentData.props[propName] = JSON.parse(JSON.stringify(
+              pageData.loaders.find(({ name }) => name === loaderName) ?? {},
+            )).props;
+          }
+        }
+
+        return newComponentData;
+      });
+
+      pageData.editorComponents = editorComponents;
+
+      start("fetch-loader-data");
+      const loadersResponse = await Promise.all(
+        pageData.loaders?.map(async ({ loader, props, name }) => {
+          const loaderFn =
+            LiveContext.getManifest().loaders[`./loaders/${loader}.ts`]
+              .default.loader;
+          start(`loader#${name}`);
+          const loaderData = await loaderFn(req, ctx, props);
+          end(`loader#${name}`);
+          return {
+            name,
+            data: loaderData,
+          };
+        }) ?? [],
+      );
+      end("fetch-loader-data");
+
+      start("map-loader-data");
+      const loadersResponseMap = loadersResponse.reduce(
+        (result, currentResponse) => {
+          result[currentResponse.name] = currentResponse.data;
+          return result;
+        },
+        {} as Record<string, unknown>,
+      );
+
+      pageData.components = pageData.components.map((componentData) => {
+        /*
+        * if any shallow prop that contains a mustache like `{loaderName.*}`,
+        * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
+        */
+
+        Object.values(componentData.props ?? {}).forEach(
+          (value) => {
+            if (!isLoaderProp(value)) {
+              return;
+            }
+
+            const loaderForwardedProps = path(
+              loadersResponseMap,
+              propToLoaderInstance(value),
+            );
+
+            componentData.props = {
+              ...componentData.props,
+              ...loaderForwardedProps,
+            };
+          },
+        );
+
+        return componentData;
+      });
+      end("map-loader-data");
 
       start("render");
       const res = await ctx.render(pageData);

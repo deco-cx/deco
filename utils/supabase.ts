@@ -79,7 +79,7 @@ export const getFlagFromId = async (
 };
 
 export const getProdPage = async (
-  siteId: number,
+  siteId: string,
   pathName: string,
   template?: string,
 ) => {
@@ -111,7 +111,7 @@ export const getProdPage = async (
 export const duplicateProdPage = async (
   pathName: string,
   template: string | undefined,
-  siteId: number,
+  siteId: string,
 ): Promise<string> => {
   // Getting prod page in order to duplicate
   const [prodPage] = await getProdPage(siteId, pathName, template);
@@ -135,7 +135,7 @@ export const duplicateProdPage = async (
     .from("pages")
     .insert({
       data: prodPage?.data ?? {},
-      full_name: prodPage['full_name'],
+      full_name: prodPage["full_name"],
       path: prodPage?.path ?? "",
       public: prodPage?.public ?? false,
       name: prodPage?.name,
