@@ -11,6 +11,7 @@ import IconButton from "./ui/IconButton.tsx";
 import ArrowLeftIcon from "./icons/ArrowLeftIcon.tsx";
 import ComponentPropsForm from "./ui/ComponentPropsForm.tsx";
 import type { h } from "preact";
+import Draggable from "./Draggable.tsx";
 
 const FormProvider = FP as <TFieldValues extends FieldValues, TContext = any>(
   props: UseFormReturn<TFieldValues, TContext>,
@@ -42,6 +43,7 @@ export default function EditorSidebar() {
   const {
     onSubmit,
     handleAddComponent,
+    handleChangeOrder,
     handleRemoveComponent,
     componentsRef,
     methods,
@@ -76,29 +78,31 @@ export default function EditorSidebar() {
               <AddNewComponent onAddComponent={handleAddComponent} />
             </header>
             <div class="mt-4 flex flex-col gap-2">
-              {fields.map((field, index) => {
-                const { component } = components[index];
-                const componentTitle = componentSchemas[component]?.title ??
-                  component;
-                const hasError =
-                  !!(methods.formState.errors.components?.[index]);
+              <Draggable onPosChange={handleChangeOrder}>
+                {fields.map((field, index) => {
+                  const { component } = components[index];
+                  const componentTitle = componentSchemas[component]?.title ??
+                    component;
+                  const hasError =
+                    !!(methods.formState.errors.components?.[index]);
 
-                const handleClickCard = () => {
-                  openEditorEdit();
-                  selectedComponent.value = index;
-                };
-                return (
-                  <ComponentCard
-                    key={field.id}
-                    removeComponents={handleRemoveComponent}
-                    index={index}
-                    component={component}
-                    componentTitle={componentTitle}
-                    onClick={handleClickCard}
-                    hasError={hasError}
-                  />
-                );
-              })}
+                  const handleClickCard = () => {
+                    openEditorEdit();
+                    selectedComponent.value = index;
+                  };
+                  return (
+                    <ComponentCard
+                      key={field.id}
+                      removeComponents={handleRemoveComponent}
+                      index={index}
+                      component={component}
+                      componentTitle={componentTitle}
+                      onClick={handleClickCard}
+                      hasError={hasError}
+                    />
+                  );
+                })}
+              </Draggable>
             </div>
           </>
         )}

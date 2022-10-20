@@ -12,6 +12,13 @@ type FormValues = {
   audience: Audience;
 };
 
+function arrayMove(array: any[], from: number, to: number) {
+  const res = [...array];
+  res.splice(to, 0, res.splice(from, 1)[0]);
+
+  return res;
+}
+
 function mapComponentsToFormData(
   components: PageComponentData[],
 ): ComponentProp[] {
@@ -64,7 +71,7 @@ export default function useEditorOperations(
       audience: flag && flag.traffic === 0 ? "draft" : "public",
     },
   });
-  const { fields, swap, remove, append } = useFieldArray({
+  const { fields, move, remove, append } = useFieldArray({
     control: methods.control,
     name: COMPONENTS_KEY_NAME,
   });
@@ -108,24 +115,12 @@ export default function useEditorOperations(
     },
   );
 
-  const handleChangeOrder = (dir: "prev" | "next", pos: number) => {
-    let newPos: number;
+  const handleChangeOrder = (from: number, to: number) => {
+    if (from !== to) {
+      componentsRef.current = arrayMove(components, from, to);
 
-    if (dir === "prev") {
-      newPos = pos - 1;
-    } else {
-      newPos = pos + 1;
+      move(from, to);
     }
-
-    if (newPos < 0 || newPos >= components.length) {
-      return;
-    }
-
-    const prevComp = components[newPos];
-    components[newPos] = components[pos];
-    components[pos] = prevComp;
-
-    swap(pos, newPos);
   };
 
   const handleRemoveComponent = (removedIndex: number) => {

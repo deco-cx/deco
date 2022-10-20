@@ -6,6 +6,7 @@ import LinkButton from "./LinkButton.tsx";
 import TrashIcon from "../icons/TrashIcon.tsx";
 import { tw } from "twind";
 import Modal from "./Modal.tsx";
+import DotsSixIcon from "../icons/DotsSixIcon.tsx";
 
 interface Props {
   index: number;
@@ -47,12 +48,17 @@ export default function ComponentCard(
 
   return (
     <div
-      class={`bg-[#F8F8F8] hover:bg-[#F4F4F4] border border-[#F4F4F4] rounded transition-colors ease-in ${
-        hasError ? "bg-red-200 hover:bg-red-300" : ""
-      }`}
+      class={`relative group`}
     >
+      <div class="bg-white z-10 absolute -left-4 h-10 w-4 hidden group-hover:flex justify-center items-center cursor-grab">
+        <DotsSixIcon />
+      </div>
       <article
-        class="cursor-pointer p-3 font-semibold text-xs leading-4 list-none flex justify-between items-center group h-10"
+        class={tw`${
+          hasError
+            ? "bg-red-200 hover:bg-red-300"
+            : "bg-[#F8F8F8] hover:bg-[#F4F4F4]"
+        } border border-[#F4F4F4] rounded transition-colors ease-in cursor-pointer p-3 font-semibold text-xs leading-4 list-none flex justify-between items-center h-10`}
         onMouseEnter={handleHover}
         onClick={onClick}
       >
