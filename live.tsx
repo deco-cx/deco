@@ -1,15 +1,6 @@
-import { HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
-import {
-  DecoManifest,
-  Flag,
-  LiveOptions,
-  Mode,
-  PageComponentData,
-  PageDataData,
-  PageLoaderData,
-} from "$live/types.ts";
+import { Handlers, PageProps } from "$fresh/server.ts";
+import { PageComponentData, PageData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
-import getSupabaseClient from "$live/supabase.ts";
 import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import {
@@ -19,127 +10,16 @@ import {
 } from "$live/editor.tsx";
 import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
-import {
-  getFlagFromId,
-  getPageFromId,
-  getProdPage,
-  getSiteIdFromName,
-} from "./utils/supabase.ts";
 import type { ComponentChildren, ComponentType } from "preact";
-import type { Props as EditorProps } from "./src/Editor.tsx";
-import LiveContext from "./context.ts";
-import { deleteCookie } from "std/http/mod.ts";
-import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
+import type { EditorProps } from "./src/Editor.tsx";
 
-const path = (obj: Record<string, any>, path: string) => {
-  const pathList = path.split(".").filter(Boolean);
-  let result = obj;
+import { context } from "$live/server.ts";
+import { loadData, loadLivePage, LoadLivePageOptions } from "./pages.ts";
 
-  pathList.forEach((key) => {
-    if (!result[key]) {
-      return result[key];
-    }
-
-    result = result[key];
-  });
-
-  return result;
-};
-
-let flags: Flag[];
-export const flag = (id: string) => flags.find((flag) => flag.id === id);
-
-export const setupLive = (manifest: DecoManifest, liveOptions: LiveOptions) => {
-  LiveContext.setupManifestAndOptions({ manifest, liveOptions });
-
-  LiveContext.pushDefaultDomains(
-    `${liveOptions.site}.deco.page`,
-    `deco-pages-${liveOptions.site}.deno.dev`,
-  );
-
-  // Support deploy preview domains
-  if (LiveContext.isDenoDeploy()) {
-    LiveContext.pushDefaultDomains(
-      `deco-pages-${liveOptions.site}-${LiveContext.getDeploymentId()}.deno.dev`,
-    );
-  }
-
-  const userDomains = liveOptions.domains || [];
-  LiveContext.setLiveOptions({
-    ...liveOptions,
-    domains: [...LiveContext.getDefaultDomains(), ...userDomains],
-  });
-};
-
-export interface LivePageData extends PageDataData {
-  editorComponents?: PageComponentData[];
-  mode: Mode;
-  template: string;
-  siteId: number;
-  flag: Flag | null;
-}
-
-export interface LoadLiveDataOptions {
-  template?: string;
-}
-
-export async function loadLiveData(
-  req: Request,
-  _: HandlerContext<LivePageData>,
-  options?: LoadLiveDataOptions,
-): Promise<LivePageData> {
-  const liveOptions = LiveContext.getLiveOptions();
-  const site = liveOptions.site;
-  const url = new URL(req.url);
-  const { template } = options ?? {};
-
-  const variantId = url.searchParams.get("variantId");
-
-  if (!liveOptions.siteId) {
-    liveOptions.siteId = await getSiteIdFromName(site);
-  }
-
-  let flag = null;
-  let pages = [];
-  const siteId = liveOptions.siteId!.toString();
-  let pageData: PageDataData = { components: [], loaders: [] };
-
-  pages = variantId
-    ? await getPageFromId(variantId, siteId)
-    : await getProdPage(
-      siteId,
-      url.pathname,
-      template,
-    );
-
-  const prodData: PageDataData = pages![0]?.data;
-  const flagId = pages![0]?.flag;
-  flag = flagId ? await getFlagFromId(flagId, siteId) : null;
-
-  pageData = prodData || {};
-
-  if (pages[0]) {
-    console.log("Live page:", siteId, url.pathname, pages[0], flag);
-  } else {
-    console.log("Live page not found", siteId, url.pathname, template);
-  }
-
-  const isEditor = url.searchParams.has("editor");
-
-  return {
-    components: pageData.components ?? [],
-    loaders: pageData.loaders ?? [],
-    mode: isEditor ? "edit" : "none",
-    template: options?.template || url.pathname,
-    siteId: liveOptions.siteId!,
-    flag: flag,
-  };
-}
-
-export function createLiveHandler(
-  options?: LoadLiveDataOptions,
+export function live(
+  options?: LoadLivePageOptions,
 ) {
-  const handler: Handlers<LivePageData> = {
+  const handler: Handlers<PageData> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
       // TODO: Find a better way to embedded this route on project routes.
@@ -153,131 +33,27 @@ export function createLiveHandler(
       }
 
       const { start, end, printTimings } = createServerTiming();
-      const liveOptions = LiveContext.getLiveOptions();
-      const domains: string[] = liveOptions.domains || [];
 
-      if (!domains.includes(url.hostname)) {
+      if (!context.domains.includes(url.hostname)) {
         console.log("Domain not found:", url.hostname);
-        console.log("Configured domains:", domains);
+        console.log("Configured domains:", context.domains);
 
         // TODO: render custom 404 page
         return new Response("Site not found", { status: 404 });
       }
 
-      start("fetch-flags");
-      const site = liveOptions.site;
+      // TODO: Fetch flags with stale cache and use them to select page
+      // start("load-flags");
+      // await ensureFlags();
+      // end("load-flags");
 
-      // TODO: Change change inner site.name to page.site (this site is id)
-      const { data: Flags, error } = await getSupabaseClient()
-        .from("flags")
-        .select(
-          `id, name, audience, traffic, site!inner(name, id), pages!inner(data, path, id)`,
-        )
-        .eq("site.name", site);
+      start("load-page");
+      const pageData = await loadLivePage(req, ctx, options);
+      end("load-page");
 
-      if (error) {
-        console.log("Error fetching flags:", error);
-      }
-      end("fetch-flags");
-
-      start("calc-flags");
-      // TODO: Cookie answer
-      Flags?.map((flag) => {
-        flag.active = Math.random() < flag.traffic;
-
-        // TODO: Query from supabase return pages: [{components:[{}]}]. Transform to components:[{}]
-        flag.data = flag.pages[0].data;
-      });
-      end("calc-flags");
-      flags = Flags ?? [];
-
-      let pageData: LivePageData;
-
-      start("fetch-page-data");
-      pageData = await loadLiveData(
-        req,
-        ctx,
-        options as LoadLiveDataOptions,
-      );
-      end("fetch-page-data");
-
-      // map back components from database to components for the editor, merging loader props into component props
-      const editorComponents = pageData.components.map((componentData) => {
-        if (!componentData.props) {
-          return componentData;
-        }
-
-        const newComponentData = JSON.parse(JSON.stringify(componentData));
-
-        for (
-          const [propName, value] of Object.entries(newComponentData.props)
-        ) {
-          if (isLoaderProp(value)) {
-            const loaderName = propToLoaderInstance(value);
-            newComponentData.props[propName] = JSON.parse(JSON.stringify(
-              pageData.loaders.find(({ name }) => name === loaderName) ?? {},
-            )).props;
-          }
-        }
-
-        return newComponentData;
-      });
-
-      pageData.editorComponents = editorComponents;
-
-      start("fetch-loader-data");
-      const loadersResponse = await Promise.all(
-        pageData.loaders?.map(async ({ loader, props, name }) => {
-          const loaderFn =
-            LiveContext.getManifest().loaders[`./loaders/${loader}.ts`]
-              .default.loader;
-          start(`loader#${name}`);
-          const loaderData = await loaderFn(req, ctx, props);
-          end(`loader#${name}`);
-          return {
-            name,
-            data: loaderData,
-          };
-        }) ?? [],
-      );
-      end("fetch-loader-data");
-
-      start("map-loader-data");
-      const loadersResponseMap = loadersResponse.reduce(
-        (result, currentResponse) => {
-          result[currentResponse.name] = currentResponse.data;
-          return result;
-        },
-        {} as Record<string, unknown>,
-      );
-
-      pageData.components = pageData.components.map((componentData) => {
-        /*
-        * if any shallow prop that contains a mustache like `{loaderName.*}`,
-        * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
-        */
-
-        Object.values(componentData.props ?? {}).forEach(
-          (value) => {
-            if (!isLoaderProp(value)) {
-              return;
-            }
-
-            const loaderForwardedProps = path(
-              loadersResponseMap,
-              propToLoaderInstance(value),
-            );
-
-            componentData.props = {
-              ...componentData.props,
-              ...loaderForwardedProps,
-            };
-          },
-        );
-
-        return componentData;
-      });
-      end("map-loader-data");
+      start("load-data");
+      await loadData(req, ctx, pageData, start, end);
+      end("load-data");
 
       start("render");
       const res = await ctx.render(pageData);
@@ -289,7 +65,10 @@ export function createLiveHandler(
     },
     async POST(req, ctx) {
       const url = new URL(req.url);
-      if (url.pathname === "/inspect-vscode" && !LiveContext.isDenoDeploy()) {
+      if (
+        url.pathname === "/inspect-vscode" &&
+        context.deploymentId !== undefined
+      ) {
         return await InspectVSCodeHandler.POST!(req, ctx);
       }
       if (url.pathname === "/live/api/credentials") {
@@ -306,13 +85,15 @@ export function createLiveHandler(
   return handler;
 }
 
-export function LiveComponents({ components }: LivePageData) {
-  const manifest = LiveContext.getManifest();
+export function LiveComponents({ components }: PageData) {
+  const manifest = context.manifest!;
   return (
     <>
       {components?.map(({ component, props }: PageComponentData) => {
         const Comp = getComponentModule(manifest, component)?.default;
-
+        if (!Comp) {
+          return;
+        }
         return <Comp {...props} />;
       })}
     </>
@@ -323,11 +104,11 @@ export function LivePage({
   data,
   children,
   ...otherProps
-}: PageProps<LivePageData> & {
+}: PageProps<PageData> & {
   children: ComponentChildren;
 }) {
-  const manifest = LiveContext.getManifest();
-  const InspectVSCode = !LiveContext.isDenoDeploy() &&
+  const manifest = context.manifest!;
+  const InspectVSCode = context.deploymentId !== undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
   const Editor: ComponentType<EditorProps> = manifest
     .islands[`./islands/Editor.tsx`]?.default;
@@ -337,30 +118,26 @@ export function LivePage({
   }
 
   const renderEditor = Boolean(Editor) && data.mode === "edit";
-  const privateDomain = LiveContext.isPrivateDomain(otherProps.url.hostname);
   const componentSchemas = manifest.schemas;
 
   return (
     <div class="flex">
       <div
-        class={`w-full relative ${
-          renderEditor && privateDomain ? "pr-80" : ""
-        }`}
+        class={`w-full relative ${renderEditor ? "pr-80" : ""}`}
       >
         {children ? children : <LiveComponents {...data} />}
       </div>
-      {renderEditor && privateDomain
+      {renderEditor
         ? (
           <Editor
             components={data.editorComponents!}
-            template={data.template}
+            template={data.template!}
             componentSchemas={componentSchemas}
-            siteId={data.siteId}
-            flag={data.flag}
+            siteId={context.siteId}
           />
         )
         : null}
-      {privateDomain && <EditorListener />}
+      <EditorListener />
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );

@@ -8,25 +8,23 @@ import { UseFormReturn, useWatch } from "react-hook-form";
 interface Props {
   methods: UseFormReturn<any>;
   onSubmit: () => void;
-  flag: any;
 }
 
 export default function Audience(
-  { methods, onSubmit, flag }: Props,
+  { methods, onSubmit }: Props,
 ) {
   const targetRef = useRef<HTMLDivElement>(null);
   const [openModal, setOpenModal] = useState<boolean>(false);
-  const traffic = flag?.traffic;
+  const traffic = 0;
   const audience = useWatch({ name: "audience", control: methods.control });
 
   return (
     <>
       <Button
         onClick={() => setOpenModal(true)}
-        disabled={!flag}
       >
         <span class="px-1">
-          <AudienceIcon disabled={!flag} />
+          <AudienceIcon />
         </span>
       </Button>
 

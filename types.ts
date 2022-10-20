@@ -40,6 +40,7 @@ export interface Page {
 
 export interface LiveOptions {
   site: string;
+  siteId: number;
   loginUrl?: string;
   domains?: string[];
   plugins?: Plugin[];
@@ -56,9 +57,12 @@ export interface PageLoaderData {
   props?: Record<string, unknown>;
 }
 
-export interface PageDataData {
+export interface PageData {
   components: PageComponentData[];
   loaders: PageLoaderData[];
+  editorComponents?: PageComponentData[];
+  mode?: Mode;
+  template?: string;
 }
 
 export interface Flag {
@@ -68,7 +72,6 @@ export interface Flag {
   traffic: number;
   active?: boolean;
   path: string;
-  data?: PageDataData;
 }
 
 export type Mode = "edit" | "none";

@@ -16,7 +16,7 @@ export const getSiteIdFromName = async (siteName: string) => {
 
 export const getPageFromId = async (
   pageId: string,
-  siteId: string,
+  siteId: number,
 ) => {
   // Getting prod page in order to duplicate
   const { data: Pages, error } = await getSupabaseClient()
@@ -57,29 +57,29 @@ export const getFlagFromPageId = async (
   return Flags[0] as Flag;
 };
 
-export const getFlagFromId = async (
-  flagId: string,
-  siteId: string,
-): Promise<Flag> => {
-  // Getting prod page in order to duplicate
-  const { data: Flags, error } = await getSupabaseClient()
-    .from("flags")
-    .select("*")
-    .match({ id: flagId, site: siteId });
+// export const getFlagFromId = async (
+//   flagId: string,
+//   siteId: string,
+// ): Promise<Flag> => {
+//   // Getting prod page in order to duplicate
+//   const { data: Flags, error } = await getSupabaseClient()
+//     .from("flags")
+//     .select("*")
+//     .match({ id: flagId, site: siteId });
 
-  if (error) {
-    throw new Error(error.message);
-  }
+//   if (error) {
+//     throw new Error(error.message);
+//   }
 
-  if (Flags.length == 0) {
-    throw new Error("flag not found");
-  }
+//   if (Flags.length == 0) {
+//     throw new Error("flag not found");
+//   }
 
-  return Flags[0] as Flag;
-};
+//   return Flags[0] as Flag;
+// };
 
 export const getProdPage = async (
-  siteId: string,
+  siteId: number,
   pathName: string,
   template?: string,
 ) => {
@@ -111,7 +111,7 @@ export const getProdPage = async (
 export const duplicateProdPage = async (
   pathName: string,
   template: string | undefined,
-  siteId: string,
+  siteId: number,
 ): Promise<string> => {
   // Getting prod page in order to duplicate
   const [prodPage] = await getProdPage(siteId, pathName, template);

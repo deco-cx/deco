@@ -1,13 +1,13 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
-import LiveContext from "./context.ts";
+import { context } from "./server.ts";
 import getSupabaseClient, { getSupabaseClientForUser } from "./supabase.ts";
 import type {
   Flag,
   Module,
   PageComponentData,
-  PageDataData,
+  PageData,
   PageLoaderData,
 } from "./types.ts";
 import {
@@ -22,7 +22,6 @@ import {
   loaderInstanceToProp,
   loaderPathToKey,
 } from "./utils/loaders.ts";
-import type { LivePageData } from "./live.tsx";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 
@@ -34,11 +33,11 @@ const generateLoadersFromComponents = (
   _: Request,
   __: URL,
   ctx: any,
-): PageDataData => {
+): PageData => {
   const { components: ctxComponents } = ctx;
   const components = JSON.parse(JSON.stringify(ctxComponents));
   const loaders: PageLoaderData[] = [];
-  const manifest = LiveContext.getManifest();
+  const manifest = context.manifest!;
 
   for (const component of components) {
     const componentSchema = manifest.schemas[component.component];
@@ -191,13 +190,10 @@ interface EditorLoaders {
 
 export async function updateComponentProps(
   req: Request,
-  _: HandlerContext<LivePageData>,
+  _: HandlerContext<PageData>,
 ) {
   const { start, end, printTimings } = createServerTiming();
   const url = new URL(req.url);
-  if (!LiveContext.isPrivateDomain(url.hostname)) {
-    return new Response("Not found", { status: 404 });
-  }
 
   let response: { pageId: string | number; status: number } = {
     pageId: "",
@@ -290,12 +286,8 @@ function mapComponentsToPreview([componentPath, componentModule]: [
 export function componentsPreview(req: Request) {
   const url = new URL(req.url);
 
-  if (!LiveContext.isPrivateDomain(url.hostname)) {
-    return new Response("Not found", { status: 404 });
-  }
-
   const { start, end, printTimings } = createServerTiming();
-  const manifest = LiveContext.getManifest();
+  const manifest = context.manifest!;
 
   start("map-components");
   const components: ComponentPreview[] = Object.entries(manifest.components)
@@ -311,7 +303,7 @@ export function componentsPreview(req: Request) {
     );
   end("map-components");
 
-  const cache = LiveContext.isDenoDeploy() &&
+  const cache = context.deploymentId !== undefined &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
   return Response.json(
@@ -334,14 +326,10 @@ export function componentsPreview(req: Request) {
 export function renderComponent(req: Request) {
   const url = new URL(req.url);
 
-  if (!LiveContext.isPrivateDomain(url.hostname)) {
-    return new Response("Not found", { status: 404 });
-  }
-
   const { start, end, printTimings } = createServerTiming();
 
   const componentName = url.pathname.replace("/live/api/components/", "") ?? "";
-  const manifest = LiveContext.getManifest();
+  const manifest = context.manifest!;
   const Component = getComponentModule(manifest, componentName)?.default;
 
   if (!Component) {
@@ -365,7 +353,7 @@ export function renderComponent(req: Request) {
     };
   };
 
-  const twindPlugin = LiveContext.getLiveOptions().plugins?.find((plugin) => {
+  const twindPlugin = context.plugins?.find((plugin) => {
     return plugin.name === "twind";
   });
 
@@ -403,7 +391,7 @@ export function renderComponent(req: Request) {
   }
   end("render-component");
 
-  const cache = LiveContext.isDenoDeploy() &&
+  const cache = context.deploymentId !== undefined &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
   return new Response(html, {

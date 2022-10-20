@@ -18,7 +18,6 @@ export default function EditorSidebar() {
     template,
     components: initialComponents,
     siteId,
-    flag,
   } = useEditor();
 
   const {
@@ -34,7 +33,7 @@ export default function EditorSidebar() {
     template,
     components: initialComponents,
     siteId,
-    flag,
+    flag: null,
   });
 
   const components = componentsRef.current;
@@ -47,7 +46,7 @@ export default function EditorSidebar() {
             onSubmit={onSubmit}
           >
             <header class="flex justify-between items-center">
-              <Audience methods={methods} onSubmit={onSubmit} flag={flag} />
+              <Audience methods={methods} onSubmit={onSubmit} />
               <div class="flex gap-2">
                 <p
                   class={`cursor-pointer py-1 px-2 text-sm ${
