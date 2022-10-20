@@ -79,7 +79,7 @@ export default function EditorSidebar() {
             </header>
             <div class="mt-4 flex flex-col gap-2">
               <Draggable onPosChange={handleChangeOrder}>
-                {fields.map((field, index) => {
+                {components.map((_, index) => {
                   const { component } = components[index];
                   const componentTitle = componentSchemas[component]?.title ??
                     component;
@@ -92,7 +92,7 @@ export default function EditorSidebar() {
                   };
                   return (
                     <ComponentCard
-                      key={field.id}
+                      key={fields[index].id}
                       removeComponents={handleRemoveComponent}
                       index={index}
                       component={component}
