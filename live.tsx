@@ -1,17 +1,14 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { PageComponentData, PageData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
-import { authHandler } from "$live/auth.tsx";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import {
   componentsPreview,
   renderComponent,
   updateComponentProps,
 } from "$live/editor.tsx";
-import EditorListener from "./src/EditorListener.tsx";
 import { getComponentModule } from "./utils/component.ts";
 import type { ComponentChildren, ComponentType } from "preact";
-import type { EditorProps } from "./src/Editor.tsx";
 
 import { context } from "$live/server.ts";
 import { loadData, loadLivePage, LoadLivePageOptions } from "./pages.ts";
@@ -71,9 +68,6 @@ export function live(
       ) {
         return await InspectVSCodeHandler.POST!(req, ctx);
       }
-      if (url.pathname === "/live/api/credentials") {
-        return await authHandler.POST!(req, ctx);
-      }
       if (url.pathname === "/live/api/editor") {
         return await updateComponentProps(req, ctx);
       }
@@ -103,22 +97,14 @@ export function LiveComponents({ components }: PageData) {
 export function LivePage({
   data,
   children,
-  ...otherProps
 }: PageProps<PageData> & {
   children: ComponentChildren;
 }) {
   const manifest = context.manifest!;
   const InspectVSCode = context.deploymentId !== undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
-  const Editor: ComponentType<EditorProps> = manifest
-    .islands[`./islands/Editor.tsx`]?.default;
 
-  if (!Editor) {
-    console.log("Missing Island: ./island/Editor.tsx");
-  }
-
-  const renderEditor = Boolean(Editor) && data.mode === "edit";
-  const componentSchemas = manifest.schemas;
+  const renderEditor = data.mode === "edit";
 
   return (
     <div class="flex">
@@ -127,17 +113,7 @@ export function LivePage({
       >
         {children ? children : <LiveComponents {...data} />}
       </div>
-      {renderEditor
-        ? (
-          <Editor
-            components={data.editorComponents!}
-            template={data.template!}
-            componentSchemas={componentSchemas}
-            siteId={context.siteId}
-          />
-        )
-        : null}
-      <EditorListener />
+
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );
