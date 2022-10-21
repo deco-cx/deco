@@ -30,7 +30,10 @@ const BaseInput = forwardRef(
       <input
         {...props}
         ref={ref}
-        class={`rounded-sm text-sm shadow p-2 mb-2 w-full ${props.class ?? ""}`}
+        class={`rounded border border-[#DADADA] text-sm p-2 w-full ${
+          props.class ?? ""
+        }  placeholder-shown:sibling:(top-1/2 -translate-y-1/2 scale-100) focus:sibling:(top-[0.35rem] left-1 -translate-y-4 scale-75)`}
+        placeholder=" "
       />
     );
   },
@@ -112,14 +115,9 @@ export default function ComponentPropsForm(
         const isFieldRequired = required.includes(field);
 
         return (
-          <div class="flex flex-col items-start mb-3">
-            <label
-              htmlFor={fullPathField}
-              class="text-sm pb-1"
-            >
-              {title}
-            </label>
+          <div class="relative items-start mb-3">
             <Field
+              id={fullPathField}
               type={inputType}
               pattern={pattern}
               required={isFieldRequired}
@@ -130,6 +128,12 @@ export default function ComponentPropsForm(
                 required: isFieldRequired,
               })}
             />
+            <label
+              htmlFor={fullPathField}
+              class="text-sm text-[#787878] tracking-wider bg-white px-2 z-10 absolute top-[0.35rem] left-1 -translate-y-4 scale-75 origin-[0] transform duration-300"
+            >
+              {title}
+            </label>
           </div>
         );
       })}
