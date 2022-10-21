@@ -50,7 +50,7 @@ export default function ComponentCard(
     <div
       class={`relative group`}
     >
-      <div class="bg-white z-10 absolute -left-4 h-10 w-4 hidden group-hover:flex justify-center items-center cursor-grab">
+      <div class="bg-white z-10 absolute -left-4 h-10 w-4 hidden group-hover:flex justify-center items-center cursor-grab active:cursor-grabbing">
         <DotsSixIcon />
       </div>
       <article
@@ -58,9 +58,10 @@ export default function ComponentCard(
           hasError
             ? "bg-red-200 hover:bg-red-300"
             : "bg-[#F8F8F8] hover:bg-[#F4F4F4]"
-        } border border-[#F4F4F4] rounded transition-colors ease-in cursor-pointer p-3 font-semibold text-xs leading-4 list-none flex justify-between items-center h-10`}
+        } border border-[#F4F4F4] rounded transition-colors ease-in cursor-pointer active:cursor-grabbing p-3 font-semibold text-xs leading-4 list-none flex justify-between items-center h-10`}
         onMouseEnter={handleHover}
         onClick={onClick}
+        data-index={index}
       >
         <h3>
           {componentTitle}

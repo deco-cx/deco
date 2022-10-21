@@ -59,8 +59,15 @@ export default function Draggable({ children, onPosChange }: Props) {
     <>
       {children?.map((child, i) => (
         <DraggableChild
-          onDragStart={() => setFrom(i)}
-          onDragEnter={() => setTo(i)}
+          onDragStart={() => {
+            setFrom(i);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+          }}
+          onDragEnter={() => {
+            setTo(i);
+          }}
           onDragEnd={dragDrop}
           key={i}
         >
