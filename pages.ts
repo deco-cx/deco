@@ -21,7 +21,7 @@ export async function loadLivePage(
 ): Promise<PageData> {
   const url = new URL(req.url);
   const { template } = options ?? {};
-  const pageId = parseInt(url.searchParams.get("pageId"), 10);
+  const pageId = parseInt(url.searchParams.get("pageId")!, 10);
 
   let pages = [];
   let pageData: PageData = { components: [], loaders: [] };

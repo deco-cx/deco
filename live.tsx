@@ -6,12 +6,12 @@ import {
   componentsPreview,
   renderComponent,
   updateComponentProps,
-} from "$live/editor.tsx";
-import { getComponentModule } from "./utils/component.ts";
-import type { ComponentChildren, ComponentType } from "preact";
+} from "$live/canvas.tsx";
+import { getComponentModule } from "$live/utils/component.ts";
+import type { ComponentChildren } from "preact";
 
 import { context } from "$live/server.ts";
-import { loadData, loadLivePage, LoadLivePageOptions } from "./pages.ts";
+import { loadData, loadLivePage, LoadLivePageOptions } from "$live/pages.ts";
 
 export function live(
   options?: LoadLivePageOptions,
