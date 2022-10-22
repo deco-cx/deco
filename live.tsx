@@ -48,6 +48,14 @@ export function live(
       const pageData = await loadLivePage(req, ctx, options);
       end("load-page");
 
+      if (url.searchParams.has("editorData")) {
+        pageData.components = pageData.editorComponents!;
+        delete pageData.editorComponents;
+        return new Response(JSON.stringify(pageData, null, 2), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
       start("load-data");
       await loadData(req, ctx, pageData, start, end);
       end("load-data");
@@ -98,10 +106,10 @@ export function LivePage({
   data,
   children,
 }: PageProps<PageData> & {
-  children: ComponentChildren;
+  children?: ComponentChildren;
 }) {
   const manifest = context.manifest!;
-  const InspectVSCode = context.deploymentId !== undefined &&
+  const InspectVSCode = context.deploymentId == undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   const renderEditor = data.mode === "edit";

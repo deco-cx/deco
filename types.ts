@@ -62,6 +62,7 @@ export interface PageData {
   loaders: PageLoaderData[];
   editorComponents?: PageComponentData[];
   mode?: Mode;
+  schemas?: Schemas;
   template?: string;
 }
 

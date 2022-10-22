@@ -44,8 +44,11 @@ export async function loadLivePage(
 
   const isEditor = url.searchParams.has("editor");
 
+  const schemas: Record<string, any> = {};
   // map back components from database to components for the editor, merging loader props into component props
   const editorComponents = pageData.components?.map((componentData) => {
+    schemas[componentData.component] =
+      context.manifest?.schemas[componentData.component];
     if (!componentData.props) {
       return componentData;
     }
@@ -69,6 +72,7 @@ export async function loadLivePage(
   return {
     components: pageData.components ?? [],
     editorComponents,
+    schemas,
     loaders: pageData.loaders ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
