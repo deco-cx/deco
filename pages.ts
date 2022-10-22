@@ -21,13 +21,13 @@ export async function loadLivePage(
 ): Promise<PageData> {
   const url = new URL(req.url);
   const { template } = options ?? {};
-  const variantId = url.searchParams.get("variantId");
+  const pageId = url.searchParams.get("pageId");
 
   let pages = [];
   let pageData: PageData = { components: [], loaders: [] };
 
-  pages = variantId
-    ? await getPageFromId(variantId, context.siteId)
+  pages = pageId
+    ? await getPageFromId(pageId, context.siteId)
     : await getProdPage(
       context.siteId,
       url.pathname,

@@ -15,17 +15,16 @@ export const getSiteIdFromName = async (siteName: string) => {
 };
 
 export const getPageFromId = async (
-  pageId: string,
+  pageId: number,
   siteId: number,
 ) => {
-  // Getting prod page in order to duplicate
   const { data: Pages, error } = await getSupabaseClient()
     .from("pages")
     .select("*")
     .match({ id: pageId, site: siteId });
 
   if (error) {
-    throw new Error(error.message);
+    throw error;
   }
 
   if (Pages.length == 0) {
