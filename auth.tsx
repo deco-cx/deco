@@ -35,15 +35,20 @@ export function getUser(req: Request) {
 export function createPrivateHandler<T>(handler: Handler<T>): Handler<T> {
   return async (req, ctx) => {
     let res: Response;
+    const url = new URL(req.url);
+    const pathname = url.pathname;
     const { start, end, printTimings } = createServerTiming();
     start("auth");
     const user = await getUser(req);
     end("auth");
     if (!user || user.error) {
-      res = new Response(user.error ? user.error.message : "Redirect", {
-        status: 302,
-        headers: { location: "/login" },
-      });
+      res = new Response(
+        user.error ? user.error.message : "Redirect to login",
+        {
+          status: 302,
+          headers: { location: `/login${pathname}` },
+        },
+      );
     } else {
       ctx.state.user = user;
       res = await handler(req, ctx);

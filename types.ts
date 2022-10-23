@@ -31,6 +31,7 @@ export interface DecoManifest extends Manifest {
 }
 
 export interface Site {
+  id: number;
   name: string;
 }
 
