@@ -72,7 +72,7 @@ export default function EditorSidebar() {
       <div class="p-4">
         {editorView.value === "list" && (
           <>
-            <header class="flex justify-between">
+            <header class="flex justify-between items-center">
               <h3 class="font-medium text-sm leading-4">{name}</h3>
 
               <AddNewComponent onAddComponent={handleAddComponent} />
