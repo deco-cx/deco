@@ -349,12 +349,12 @@ export function LiveComponents({ components, mode }: LivePageData) {
   return (
     <>
       {components?.map(
-        ({ component, props }: PageComponentData, index: number) => {
+        ({ component, props, id }: PageComponentData) => {
           const Comp = getComponentModule(manifest, component)?.default;
           const renderedComponent = <Comp {...props} />;
 
           if (mode === "edit") {
-            return <div id={`${component}-${index}`}>{renderedComponent}</div>;
+            return <div id={id}>{renderedComponent}</div>;
           }
 
           return renderedComponent;

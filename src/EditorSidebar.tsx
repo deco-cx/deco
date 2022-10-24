@@ -78,9 +78,10 @@ export default function EditorSidebar() {
               <AddNewComponent onAddComponent={handleAddComponent} />
             </header>
             <div class="mt-4 flex flex-col gap-2">
-              <Draggable onPosChange={handleChangeOrder}>
-                {components.map((_, index) => {
-                  const { component } = components[index];
+              <Draggable
+                onPosChange={handleChangeOrder}
+              >
+                {components.map(({ component, id }, index) => {
                   const componentTitle = componentSchemas[component]?.title ??
                     component;
                   const hasError =
@@ -95,8 +96,8 @@ export default function EditorSidebar() {
                       key={fields[index].id}
                       removeComponents={handleRemoveComponent}
                       index={index}
-                      component={component}
                       componentTitle={componentTitle}
+                      componentId={id}
                       onClick={handleClickCard}
                       hasError={hasError}
                     />

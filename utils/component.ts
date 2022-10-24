@@ -31,3 +31,7 @@ export function getComponentModule(
   return manifest.islands?.[`./islands/${filename}.tsx`] ??
     manifest.components?.[`./components/${filename}.tsx`];
 }
+
+export function generateComponentId(component: string) {
+  return `${component}-${crypto.randomUUID().slice(0, 4)}`;
+}

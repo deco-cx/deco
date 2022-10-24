@@ -32,11 +32,12 @@ function mapFormDataToComponents(
   currentComponents: PageComponentData[],
 ) {
   const components: PageComponentData[] = [];
-  currentComponents.forEach(({ component }, index) => {
+  currentComponents.forEach(({ component, id }, index) => {
     const props = formData[index];
 
     components.push({
       component,
+      id,
       // Required check this, because the form doesn't handle undefined values
       props: Object.keys(props).length === 0 ? undefined : props,
     });

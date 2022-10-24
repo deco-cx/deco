@@ -11,21 +11,20 @@ import DotsSixIcon from "../icons/DotsSixIcon.tsx";
 interface Props {
   index: number;
   removeComponents: (removedComponents: number) => void;
-  component: string;
   componentTitle: string;
+  componentId: string;
   onClick: () => void;
   hasError: boolean;
 }
 
 export default function ComponentCard(
-  { componentTitle, index, removeComponents, component, onClick, hasError }:
+  { componentTitle, index, removeComponents, componentId, onClick, hasError }:
     Props,
 ) {
   const openOptions = useSignal(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleHover = () => {
-    const componentId = `${component}-${index}`;
     const componentWrapper = document.getElementById(componentId);
     componentWrapper?.scrollIntoView({
       behavior: "smooth",

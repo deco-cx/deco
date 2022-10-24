@@ -12,6 +12,7 @@ import type {
 } from "./types.ts";
 import {
   componentNameFromPath,
+  generateComponentId,
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
@@ -177,7 +178,7 @@ const updateProd = async (
 export type Audience = "draft" | "public";
 
 interface EditorRequestData {
-  components: PageComponentData[];
+  components: (PageComponentData & { id?: string })[];
   siteId: number;
   template?: string;
   experiment: number;
@@ -205,6 +206,14 @@ export async function updateComponentProps(
   };
   try {
     const ctx = (await req.json()) as EditorRequestData;
+
+    ctx.components.forEach((component) => {
+      if (component.id) {
+        return;
+      }
+
+      component.id = generateComponentId(component.component);
+    });
 
     start("generating-loaders");
     const { loaders, components } = generateLoadersFromComponents(
