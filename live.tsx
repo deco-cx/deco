@@ -48,9 +48,6 @@ export function live(options?: LoadLivePageOptions) {
       end("load-page");
 
       if (url.searchParams.has("editorData")) {
-        pageData.components = pageData.editorComponents!;
-        delete pageData.editorComponents;
-
         const editorData = generateEditorData(pageData);
         return Response.json(editorData);
       }
