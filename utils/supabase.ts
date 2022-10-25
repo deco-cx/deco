@@ -14,10 +14,7 @@ export const getSiteIdFromName = async (siteName: string) => {
   return Site![0].id;
 };
 
-export const getPageFromId = async (
-  pageId: number,
-  siteId: number,
-) => {
+export const getPageFromId = async (pageId: number, siteId: number) => {
   const { data: Pages, error } = await getSupabaseClient()
     .from("pages")
     .select("*")
@@ -36,7 +33,7 @@ export const getPageFromId = async (
 
 export const getFlagFromPageId = async (
   pageId: string,
-  siteId: number,
+  siteId: number
 ): Promise<Flag> => {
   // Getting prod page in order to duplicate
 
@@ -80,7 +77,7 @@ export const getFlagFromPageId = async (
 export const getProdPage = async (
   siteId: number,
   pathName: string,
-  template?: string,
+  template?: string
 ) => {
   /**
    * Queries follow PostgREST syntax
@@ -110,20 +107,18 @@ export const getProdPage = async (
 export const duplicateProdPage = async (
   pathName: string,
   template: string | undefined,
-  siteId: number,
+  siteId: number
 ): Promise<string> => {
   // Getting prod page in order to duplicate
   const [prodPage] = await getProdPage(siteId, pathName, template);
 
   // Create flag
-  const flagResponse = await getSupabaseClient()
-    .from("flags")
-    .insert({
-      name: prodPage?.name,
-      audience: "",
-      site: prodPage?.site,
-      traffic: 0,
-    });
+  const flagResponse = await getSupabaseClient().from("flags").insert({
+    name: prodPage?.name,
+    audience: "",
+    site: prodPage?.site,
+    traffic: 0,
+  });
 
   if (flagResponse.error) {
     throw new Error(flagResponse.error.message);

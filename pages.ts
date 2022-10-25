@@ -17,24 +17,21 @@ export interface LoadLivePageOptions {
 export async function loadLivePage(
   req: Request,
   _: HandlerContext<PageData>,
-  options?: LoadLivePageOptions,
+  options?: LoadLivePageOptions
 ): Promise<PageData> {
   const url = new URL(req.url);
   const { template } = options ?? {};
   const pageId = parseInt(url.searchParams.get("pageId")!, 10);
 
+  // TODO: Aaaaaaaaaaa
   let pages = [];
-  let pageData: PageData = { components: [], loaders: [] };
+  let pageData: PageData = { components: [], loaders: [], title: "" };
 
   pages = pageId
     ? await getPageFromId(pageId, context.siteId)
-    : await getProdPage(
-      context.siteId,
-      url.pathname,
-      template,
-    );
+    : await getProdPage(context.siteId, url.pathname, template);
 
-  pageData = pages![0]?.data || {};
+  pageData = { ...pages![0]?.data, title: pages![0]?.name } || {};
 
   if (pages[0]) {
     console.log("Live page:", url.pathname, pages[0]);
@@ -55,14 +52,14 @@ export async function loadLivePage(
 
     const newComponentData = JSON.parse(JSON.stringify(componentData));
 
-    for (
-      const [propName, value] of Object.entries(newComponentData.props)
-    ) {
+    for (const [propName, value] of Object.entries(newComponentData.props)) {
       if (isLoaderProp(value)) {
         const loaderName = propToLoaderInstance(value);
-        newComponentData.props[propName] = JSON.parse(JSON.stringify(
-          pageData.loaders.find(({ name }) => name === loaderName) ?? {},
-        )).props;
+        newComponentData.props[propName] = JSON.parse(
+          JSON.stringify(
+            pageData.loaders.find(({ name }) => name === loaderName) ?? {}
+          )
+        ).props;
       }
     }
 
@@ -76,6 +73,8 @@ export async function loadLivePage(
     loaders: pageData.loaders ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
+    // TODO: Pass whole page here
+    title: pageData?.title,
   };
 }
 
@@ -84,12 +83,12 @@ export async function loadData(
   ctx: HandlerContext<PageData>,
   pageData: PageData,
   start: (l: string) => void,
-  end: (l: string) => void,
+  end: (l: string) => void
 ): Promise<void> {
   const loadersResponse = await Promise.all(
     pageData.loaders?.map(async ({ loader, props, name }) => {
-      const loaderFn = context.manifest!.loaders[`./loaders/${loader}.ts`]
-        .default.loader;
+      const loaderFn =
+        context.manifest!.loaders[`./loaders/${loader}.ts`].default.loader;
       start(`loader#${name}`);
       const loaderData = await loaderFn(req, ctx, props);
       end(`loader#${name}`);
@@ -97,7 +96,7 @@ export async function loadData(
         name,
         data: loaderData,
       };
-    }) ?? [],
+    }) ?? []
   );
 
   const loadersResponseMap = loadersResponse.reduce(
@@ -105,32 +104,30 @@ export async function loadData(
       result[currentResponse.name] = currentResponse.data;
       return result;
     },
-    {} as Record<string, unknown>,
+    {} as Record<string, unknown>
   );
 
   pageData.components = pageData.components.map((componentData) => {
     /*
-    * if any shallow prop that contains a mustache like `{loaderName.*}`,
-    * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
-    */
+     * if any shallow prop that contains a mustache like `{loaderName.*}`,
+     * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
+     */
 
-    Object.values(componentData.props ?? {}).forEach(
-      (value) => {
-        if (!isLoaderProp(value)) {
-          return;
-        }
+    Object.values(componentData.props ?? {}).forEach((value) => {
+      if (!isLoaderProp(value)) {
+        return;
+      }
 
-        const loaderForwardedProps = path(
-          loadersResponseMap,
-          propToLoaderInstance(value),
-        );
+      const loaderForwardedProps = path(
+        loadersResponseMap,
+        propToLoaderInstance(value)
+      );
 
-        componentData.props = {
-          ...componentData.props,
-          ...loaderForwardedProps,
-        };
-      },
-    );
+      componentData.props = {
+        ...componentData.props,
+        ...loaderForwardedProps,
+      };
+    });
 
     return componentData;
   });

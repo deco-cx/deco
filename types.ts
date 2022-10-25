@@ -49,6 +49,7 @@ export interface LiveOptions {
 
 export interface PageComponentData {
   component: string;
+  id: string;
   props?: Record<string, unknown>;
 }
 
@@ -59,6 +60,7 @@ export interface PageLoaderData {
 }
 
 export interface PageData {
+  title: string;
   components: PageComponentData[];
   loaders: PageLoaderData[];
   editorComponents?: PageComponentData[];
