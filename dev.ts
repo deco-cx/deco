@@ -3,21 +3,25 @@ import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
-import { componentNameFromPath } from "./utils/component.ts";
+import { filenameFromPath } from "./utils/component.ts";
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
+
+interface EntityWithSchema {
+  name: string;
+  schema: Record<string, any>;
+}
 
 interface DevManifest {
   routes: string[];
-  islands: string[];
-  components: string[];
-  schemas: SchemaMap[];
-  loaders: string[];
+  islands: EntityWithSchema[];
+  components: EntityWithSchema[];
+  loaders: EntityWithSchema[];
 }
 
 export async function dev(
   base: string,
   entrypoint: string,
-  onListen?: () => void,
+  onListen?: () => void
 ) {
   entrypoint = new URL(entrypoint, base).href;
 
@@ -26,6 +30,7 @@ export async function dev(
   let currentManifest: DevManifest;
 
   const prevManifest = Deno.env.get("FRSH_DEV_PREVIOUS_MANIFEST");
+
   if (prevManifest) {
     currentManifest = JSON.parse(prevManifest);
   } else {
@@ -33,31 +38,18 @@ export async function dev(
       islands: [],
       routes: [],
       components: [],
-      schemas: [],
       loaders: [],
     };
   }
 
-  const [newManifest, components, loaders] = await Promise.all([
-    collect(dir) as Promise<DevManifest>,
-    collectComponents(dir),
-    collectLoaders(dir),
-  ]);
-  newManifest.components = components;
-  newManifest.loaders = loaders;
+  const newManifest = await generateManifest(dir);
 
-  newManifest.schemas = await collectComponentsSchemas(
-    newManifest.islands,
-    newManifest.components,
-    dir,
-  );
   Deno.env.set("FRSH_DEV_PREVIOUS_MANIFEST", JSON.stringify(newManifest));
 
   const manifestChanged =
     !arraysEqual(newManifest.routes, currentManifest.routes) ||
     !arraysEqual(newManifest.islands, currentManifest.islands) ||
     !arraysEqual(newManifest.components, currentManifest.components) ||
-    !arraysEqual(newManifest.schemas, currentManifest.schemas) ||
     !arraysEqual(newManifest.loaders, currentManifest.loaders);
 
   if (manifestChanged) await generate(dir, newManifest);
@@ -69,68 +61,61 @@ export async function dev(
   await import(entrypoint);
 }
 
-interface SchemaMap {
-  component: string;
-  schema: Record<string, any>;
+async function loadModuleForEntity(
+  dir: string,
+  entityName: string,
+  type: "loaders" | "islands" | "components"
+) {
+  const fileModule = await import(toFileUrl(join(dir, type, entityName)).href);
+
+  return fileModule;
 }
 
-// This only handles islands and components at rootPath.
-// Ex: ./islands/Foo.tsx or ./components/Bar.tsx .
-// This ./components/My/Nested/Component.tsx won't work
-async function collectComponentsSchemas(
-  islands: string[],
-  components: string[],
-  directory: string,
-): Promise<SchemaMap[]> {
-  // Islands has precedence over components
-  const islandComponents = new Set<string>([...islands]);
+async function generateManifest(dir: string): Promise<DevManifest> {
+  const [manifestFile, components, loaders] = await Promise.all([
+    collect(dir),
+    collectComponents(dir),
+    collectLoaders(dir),
+  ]);
 
-  const mapComponentToSchemaMap = async (
-    componentName: string,
-    type: "islands" | "components",
-  ) => {
-    const componentModule = await import(
-      toFileUrl(
-        join(directory, type, componentName),
-      ).href
-    );
+  const componentsWithSchema = await Promise.all(
+    components.map(async (componentName) => {
+      const module = await loadModuleForEntity(
+        dir,
+        componentName,
+        "components"
+      );
 
-    const schema = componentModule.schema;
-
-    if (!schema) {
-      return;
-    }
-
-    return {
-      component: componentNameFromPath(componentName),
-      schema,
-    };
-  };
-
-  const componentSchemasPromises: Promise<SchemaMap | undefined>[] = [];
-  islands.forEach((islandName) => {
-    componentSchemasPromises.push(
-      mapComponentToSchemaMap(islandName, "islands"),
-    );
-  });
-
-  components.forEach((componentName) => {
-    if (
-      islandComponents.has(componentName)
-    ) {
-      return;
-    }
-
-    componentSchemasPromises.push(
-      mapComponentToSchemaMap(componentName, "components"),
-    );
-  });
-
-  const componentsSchemas = await Promise.all(componentSchemasPromises);
-
-  return componentsSchemas.filter((value): value is SchemaMap =>
-    Boolean(value)
+      const schema = module?.schema || {};
+      return { name: filenameFromPath(componentName), schema };
+    })
   );
+
+  const islandsWithSchema = await Promise.all(
+    manifestFile.islands.map(async (islandName) => {
+      const module = await loadModuleForEntity(dir, islandName, "islands");
+
+      const schema = module?.schema || {};
+      return { name: filenameFromPath(islandName), schema };
+    })
+  );
+
+  const loadersWithSchema = await Promise.all(
+    loaders.map(async (loaderName) => {
+      const module = await loadModuleForEntity(dir, loaderName, "loaders");
+
+      const schema = module?.default?.inputSchema || {};
+      return { name: filenameFromPath(loaderName), schema };
+    })
+  );
+
+  return {
+    ...manifestFile,
+    loaders: loadersWithSchema,
+    components: componentsWithSchema,
+    // TODO: Islands have one type in the original manifest and other here. Double check that
+    islands: islandsWithSchema,
+  };
 }
 
 export async function generate(directory: string, manifest: DevManifest) {
@@ -166,7 +151,7 @@ export async function generate(directory: string, manifest: DevManifest) {
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands and ${components.length} components.`,
-    "color: green; font-weight: bold",
+    "color: green; font-weight: bold"
   );
 }
 
@@ -206,16 +191,20 @@ export async function format(content: string) {
   return new TextDecoder().decode(out);
 }
 
-function collectComponents(dir: string): Promise<string[]> {
+async function collectComponents(dir: string): Promise<string[]> {
   const componentsDir = join(dir, "./components");
 
-  return collectFilesFromDir(componentsDir);
+  const componentNames = await collectFilesFromDir(componentsDir);
+
+  return componentNames;
 }
 
-function collectLoaders(dir: string): Promise<string[]> {
+async function collectLoaders(dir: string): Promise<string[]> {
   const loadersDir = join(dir, "./loaders");
 
-  return collectFilesFromDir(loadersDir);
+  const loaderNames = await collectFilesFromDir(loadersDir);
+
+  return loaderNames;
 }
 
 async function collectFilesFromDir(dir: string) {
@@ -236,9 +225,7 @@ async function collectFilesFromDir(dir: string) {
 
     for await (const entry of filesFromDir) {
       if (entry.isFile) {
-        const file = toFileUrl(entry.path).href.substring(
-          dirURL.href.length,
-        );
+        const file = toFileUrl(entry.path).href.substring(dirURL.href.length);
         files.push(file);
       }
     }
@@ -278,7 +265,6 @@ const templates = {
       `import * as $$$$${i} from "./loaders${file}";`,
     obj: (file: string, i: number) => `"./loaders${file}": $$$$${i},`,
   },
-  schemas: (
-    { component, schema }: SchemaMap,
-  ) => `"${component}": ${schema ? JSON.stringify(schema) : null},`,
+  schemas: ({ component, schema }: SchemaMap) =>
+    `"${component}": ${schema ? JSON.stringify(schema) : null},`,
 };

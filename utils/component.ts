@@ -1,5 +1,8 @@
 import type { DecoManifest, Module } from "../types.ts";
 
+/**
+ * TODO: There's probably a file util for that 
+ */
 // Valid expressions: https://regex101.com/r/7sPtnb/1
 // /Component.tsx
 // ./components/Foo.tsx
@@ -7,7 +10,7 @@ import type { DecoManifest, Module } from "../types.ts";
 // ./islands/Foo.tsx
 // ./components/deep/Test.tsx
 export const COMPONENT_NAME_REGEX =
-  /^(\.?\/islands|\.?\/components)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
+  /^(\.?\/islands|\.?\/components|\.?\/loaders)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
 
 export const BLOCKED_ISLANDS_SCHEMAS = new Set([
   "/Editor.tsx",
@@ -16,8 +19,8 @@ export const BLOCKED_ISLANDS_SCHEMAS = new Set([
   "./islands/InspectVSCode.tsx",
 ]);
 
-export function componentNameFromPath(componentPath: string) {
-  return componentPath.replace(COMPONENT_NAME_REGEX, "$2");
+export function filenameFromPath(path: string) {
+  return path.replace(COMPONENT_NAME_REGEX, "$2");
 }
 
 export function isValidIsland(componentPath: string) {

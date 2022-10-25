@@ -11,7 +11,7 @@ import type {
   PageLoaderData,
 } from "./types.ts";
 import {
-  componentNameFromPath,
+  filenameFromPath,
   getComponentModule,
 } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
@@ -274,7 +274,7 @@ function mapComponentsToPreview([componentPath, componentModule]: [
     return;
   }
 
-  const componentName = componentNameFromPath(componentPath);
+  const componentName = filenameFromPath(componentPath);
 
   return {
     link: `/live/api/components/${componentName}`,
