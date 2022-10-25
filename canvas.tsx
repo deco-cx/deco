@@ -10,10 +10,7 @@ import type {
   PageData,
   PageLoaderData,
 } from "./types.ts";
-import {
-  filenameFromPath,
-  getComponentModule,
-} from "./utils/component.ts";
+import { filenameFromPath, getComponentModule } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 import { duplicateProdPage, getFlagFromPageId } from "./utils/supabase.ts";
 import type { JSONSchema7 } from "json-schema";
@@ -259,15 +256,15 @@ export async function updateComponentProps(
 }
 
 export interface ComponentPreview {
-  componentLabel: string;
-  component: string;
+  schema: JSONSchema7;
+  name: string;
   link: string;
 }
 
 function mapComponentsToPreview([componentPath, componentModule]: [
   string,
   Module,
-]) {
+]): ComponentPreview | undefined {
   const { schema } = componentModule;
 
   if (!schema) {
@@ -278,8 +275,8 @@ function mapComponentsToPreview([componentPath, componentModule]: [
 
   return {
     link: `/live/api/components/${componentName}`,
-    component: componentName,
-    componentLabel: schema.title ?? componentName,
+    name: componentName,
+    schema,
   };
 }
 
