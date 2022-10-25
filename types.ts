@@ -78,3 +78,18 @@ export interface Flag {
 }
 
 export type Mode = "edit" | "none";
+
+interface ConfigurablePageEntity {
+  // "./components/Header.tsx"
+  name: string; // Maybe changing this to 'path' instead
+  // "Header-432js"
+  id: string;
+  props?: Record<string, any>;
+  schema?: JSONSchema7;
+}
+
+export interface EditorData {
+  title: string;
+  components: Array<ConfigurablePageEntity>;
+  loaders: Array<ConfigurablePageEntity>;
+}

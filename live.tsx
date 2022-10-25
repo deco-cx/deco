@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { PageComponentData, PageData } from "$live/types.ts";
+import { EditorData, PageComponentData, PageData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import {
@@ -107,8 +107,7 @@ export function LivePage({
   children?: ComponentChildren;
 }) {
   const manifest = context.manifest!;
-  const InspectVSCode =
-    context.deploymentId == undefined &&
+  const InspectVSCode = context.deploymentId == undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   const renderEditor = data.mode === "edit";
@@ -122,21 +121,6 @@ export function LivePage({
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );
-}
-
-interface ConfigurablePageEntity {
-  // "./components/Header.tsx"
-  name: string; // Maybe changing this to 'path' instead
-  // "Header-432js"
-  id: string;
-  props?: Record<string, any>;
-  schema?: JSONSchema7;
-}
-
-interface EditorData {
-  title: string;
-  components: Array<ConfigurablePageEntity>;
-  loaders: Array<ConfigurablePageEntity>;
 }
 
 function generateEditorData(pageData: PageData): EditorData {
