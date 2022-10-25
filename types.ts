@@ -1,5 +1,5 @@
 import type { IslandModule } from "$fresh/src/server/types.ts";
-import type { HandlerContext, Manifest, Plugin } from "$fresh/server.ts";
+import type { HandlerContext, Manifest } from "$fresh/server.ts";
 import type { JSONSchema7 } from "json-schema";
 
 export type Schema = JSONSchema7;
@@ -49,7 +49,6 @@ export interface LiveOptions {
 export interface PageComponentData {
   id: string;
   component: string;
-  id: string;
   props?: Record<string, unknown>;
 }
 
@@ -67,7 +66,6 @@ export interface PageData {
   mode?: Mode;
   schemas?: Schemas;
   template?: string;
-  title?: string;
 }
 
 export interface Flag {

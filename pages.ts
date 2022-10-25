@@ -25,14 +25,17 @@ export async function loadLivePage(
 
   // TODO: Aaaaaaaaaaa
   let pages = [];
-  let pageData: PageData = { components: [], loaders: [] };
+  let pageData: Pick<PageData, "components" | "loaders"> = {
+    components: [],
+    loaders: [],
+  };
 
   pages = pageId
     ? await getPageFromId(pageId, context.siteId)
     : await getProdPage(context.siteId, url.pathname, template);
 
   const page = pages![0];
-  pageData = page ?? {};
+  pageData = page?.data ?? {};
 
   if (page) {
     console.log("Live page:", url.pathname, pages[0]);
