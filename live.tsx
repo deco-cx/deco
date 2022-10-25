@@ -161,8 +161,16 @@ function generateEditorData(pageData: PageData): EditorData {
 
   // TODO: What's loader, what's name? Do we have ids?
   const loadersWithSchema = loaders.map(({ loader, name, props }) => {
-    const __loaderKeyInManifest = `./loaders/${name}.ts`;
+    // const __loaderKeyInManifest = `./loaders/${name}.ts`;
+    const __loaderKeyInManifest = `./loaders/vtex/searchCollections.ts`;
+
     const loaderModule = context.manifest?.loaders[__loaderKeyInManifest];
+
+    console.log({
+      name,
+      __loaderKeyInManifest,
+      loadersIn: context?.manifest?.loaders,
+    });
 
     return {
       name: name,
