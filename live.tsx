@@ -8,14 +8,13 @@ import {
   updateComponentProps,
 } from "$live/canvas.tsx";
 import { getComponentModule } from "$live/utils/component.ts";
-import type { ComponentChildren } from "preact";
+import type { ComponentChildren, Context } from "preact";
 
 import { context } from "$live/server.ts";
 import { loadData, loadLivePage, LoadLivePageOptions } from "$live/pages.ts";
+import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 
-export function live(
-  options?: LoadLivePageOptions,
-) {
+export function live(options?: LoadLivePageOptions) {
   const handler: Handlers<PageData> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
@@ -51,9 +50,9 @@ export function live(
       if (url.searchParams.has("editorData")) {
         pageData.components = pageData.editorComponents!;
         delete pageData.editorComponents;
-        return new Response(JSON.stringify(pageData, null, 2), {
-          headers: { "Content-Type": "application/json" },
-        });
+
+        const editorData = generateEditorData(pageData);
+        return Response.json(editorData);
       }
 
       start("load-data");
@@ -111,20 +110,74 @@ export function LivePage({
   children?: ComponentChildren;
 }) {
   const manifest = context.manifest!;
-  const InspectVSCode = context.deploymentId == undefined &&
+  const InspectVSCode =
+    context.deploymentId == undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   const renderEditor = data.mode === "edit";
 
   return (
     <div class="flex">
-      <div
-        class={`w-full relative ${renderEditor ? "pr-80" : ""}`}
-      >
+      <div class={`w-full relative ${renderEditor ? "pr-80" : ""}`}>
         {children ? children : <LiveComponents {...data} />}
       </div>
 
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );
+}
+
+interface ConfigurablePageEntity {
+  // "./components/Header.tsx"
+  name: string; // Maybe changing this to 'path' instead
+  // "Header-432js"
+  id: string;
+  props?: Record<string, any>;
+  schema?: JSONSchema7;
+}
+
+interface EditorData {
+  title: string;
+  components: Array<ConfigurablePageEntity>;
+  loaders: Array<ConfigurablePageEntity>;
+}
+
+function generateEditorData(pageData: PageData): EditorData {
+  const { components, loaders, title } = pageData;
+
+  const componentsWithSchema = components.map(({ component, props, id }) => {
+    // TODO: This should be saved in the DB
+    const __componentKeyInManifest = `./components/${component}.tsx`;
+    const __islandKeyInManifest = `./islands/${component}.tsx`;
+
+    const componentModule =
+      context.manifest?.components[__islandKeyInManifest] ||
+      context.manifest?.components[__componentKeyInManifest];
+
+    return {
+      name: component,
+      id,
+      props,
+      schema: componentModule?.schema,
+    };
+  });
+
+  // TODO: What's loader, what's name? Do we have ids?
+  const loadersWithSchema = loaders.map(({ loader, name, props }) => {
+    const __loaderKeyInManifest = `./loaders/${name}.ts`;
+    const loaderModule = context.manifest?.loaders[__loaderKeyInManifest];
+
+    return {
+      name: name,
+      id: loader,
+      props,
+      schema: loaderModule?.default?.inputSchema,
+    };
+  });
+
+  return {
+    title,
+    components: componentsWithSchema,
+    loaders: loadersWithSchema,
+  };
 }
