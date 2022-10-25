@@ -48,7 +48,8 @@ export const start = async (
   }
 
   const plugins = liveOptions.plugins || [];
-  const port = liveOptions.port ?? 8080;
+  const envPort = Deno.env.get("PORT");
+  const port = envPort ? parseInt(envPort) : (liveOptions.port ?? 8080);
   context.manifest = manifest;
   context.site = liveOptions.site;
   context.siteId = liveOptions.siteId;
