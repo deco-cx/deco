@@ -91,12 +91,14 @@ export function LiveComponents({ components }: PageData) {
   const manifest = context.manifest!;
   return (
     <>
-      {components?.map(({ component, props }: PageComponentData) => {
+      {components?.map(({ component, props, id }: PageComponentData) => {
         const Comp = getComponentModule(manifest, component)?.default;
-        if (!Comp) {
-          return;
-        }
-        return <Comp {...props} />;
+
+        return (
+          <div id={id}>
+            <Comp {...props} />
+          </div>
+        );
       })}
     </>
   );

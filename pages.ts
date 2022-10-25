@@ -17,7 +17,7 @@ export interface LoadLivePageOptions {
 export async function loadLivePage(
   req: Request,
   _: HandlerContext<PageData>,
-  options?: LoadLivePageOptions
+  options?: LoadLivePageOptions,
 ): Promise<PageData> {
   const url = new URL(req.url);
   const { template } = options ?? {};
@@ -25,15 +25,16 @@ export async function loadLivePage(
 
   // TODO: Aaaaaaaaaaa
   let pages = [];
-  let pageData: PageData = { components: [], loaders: [], title: "" };
+  let pageData: PageData = { components: [], loaders: [] };
 
   pages = pageId
     ? await getPageFromId(pageId, context.siteId)
     : await getProdPage(context.siteId, url.pathname, template);
 
-  pageData = { ...pages![0]?.data, title: pages![0]?.name } || {};
+  const page = pages![0];
+  pageData = page ?? {};
 
-  if (pages[0]) {
+  if (page) {
     console.log("Live page:", url.pathname, pages[0]);
   } else {
     console.log("Live page not found", url.pathname, template);
@@ -57,8 +58,8 @@ export async function loadLivePage(
         const loaderName = propToLoaderInstance(value);
         newComponentData.props[propName] = JSON.parse(
           JSON.stringify(
-            pageData.loaders.find(({ name }) => name === loaderName) ?? {}
-          )
+            pageData.loaders.find(({ name }) => name === loaderName) ?? {},
+          ),
         ).props;
       }
     }
@@ -73,8 +74,7 @@ export async function loadLivePage(
     loaders: pageData.loaders ?? [],
     mode: isEditor ? "edit" : "none",
     template: options?.template || url.pathname,
-    // TODO: Pass whole page here
-    title: pageData?.title,
+    title: page?.name,
   };
 }
 
@@ -83,7 +83,7 @@ export async function loadData(
   ctx: HandlerContext<PageData>,
   pageData: PageData,
   start: (l: string) => void,
-  end: (l: string) => void
+  end: (l: string) => void,
 ): Promise<void> {
   const loadersResponse = await Promise.all(
     pageData.loaders?.map(async ({ loader, props, name }) => {
@@ -96,7 +96,7 @@ export async function loadData(
         name,
         data: loaderData,
       };
-    }) ?? []
+    }) ?? [],
   );
 
   const loadersResponseMap = loadersResponse.reduce(
@@ -104,7 +104,7 @@ export async function loadData(
       result[currentResponse.name] = currentResponse.data;
       return result;
     },
-    {} as Record<string, unknown>
+    {} as Record<string, unknown>,
   );
 
   pageData.components = pageData.components.map((componentData) => {
@@ -120,7 +120,7 @@ export async function loadData(
 
       const loaderForwardedProps = path(
         loadersResponseMap,
-        propToLoaderInstance(value)
+        propToLoaderInstance(value),
       );
 
       componentData.props = {

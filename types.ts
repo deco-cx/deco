@@ -44,10 +44,10 @@ export interface LiveOptions {
   siteId: number;
   loginUrl?: string;
   domains?: string[];
-  plugins?: Plugin[];
 }
 
 export interface PageComponentData {
+  id: string;
   component: string;
   id: string;
   props?: Record<string, unknown>;
@@ -67,6 +67,7 @@ export interface PageData {
   mode?: Mode;
   schemas?: Schemas;
   template?: string;
+  title?: string;
 }
 
 export interface Flag {

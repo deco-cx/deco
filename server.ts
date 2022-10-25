@@ -4,7 +4,7 @@
 /// <reference lib="deno.ns" />
 /// <reference lib="deno.unstable" />
 
-import { Plugin, start as freshStart } from "$fresh/server.ts";
+import { Plugin, start as freshStart, StartOptions } from "$fresh/server.ts";
 
 import { DecoManifest, LiveOptions } from "$live/types.ts";
 
@@ -31,7 +31,7 @@ export const context: LiveContext = {
 
 export const start = async (
   manifest: DecoManifest,
-  liveOptions?: LiveOptions,
+  liveOptions?: LiveOptions & StartOptions,
 ) => {
   if (!liveOptions) {
     throw new Error("liveOptions is required.");
@@ -48,7 +48,7 @@ export const start = async (
   }
 
   const plugins = liveOptions.plugins || [];
-  const port = parseInt(Deno.env.get("PORT") || "8080");
+  const port = liveOptions.port ?? 8080;
   context.manifest = manifest;
   context.site = liveOptions.site;
   context.siteId = liveOptions.siteId;
