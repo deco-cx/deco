@@ -169,11 +169,11 @@ export const ___tempMigratePageData = async (page: Page): Promise<Page> => {
       name: string;
       props: Record<string, any>;
     };
-    const key = oldLoader.loader;
+    const key = `./loaders/${oldLoader.loader}.ts`;
     const uniqueId = oldLoader.name;
     const label = "VTEX - Search Products";
     const outputSchema =
-      context?.manifest?.loaders[`./loaders/${key}.ts`]?.default?.outputSchema
+      context?.manifest?.loaders[key]?.default?.outputSchema
         ?.$ref;
 
     return {

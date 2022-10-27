@@ -74,11 +74,17 @@ export function live() {
       }
 
       start("load-data");
-      await loadData(req, ctx, pageData, start, end);
+      const pageDataAfterLoaders = await loadData(
+        req,
+        ctx,
+        page?.data,
+        start,
+        end
+      );
       end("load-data");
 
       start("render");
-      const res = await ctx.render(pageData);
+      const res = await ctx.render(pageDataAfterLoaders);
       end("render");
 
       res.headers.set("Server-Timing", printTimings());
@@ -108,11 +114,11 @@ export function LiveComponents({ components }: PageData) {
   const manifest = context.manifest!;
   return (
     <>
-      {components?.map(({ component, props, id }: PageComponentData) => {
-        const Comp = getComponentModule(manifest, component)?.default;
+      {components?.map(({ key, props, uniqueId }) => {
+        const Comp = getComponentModule(manifest, key)?.default;
 
         return (
-          <div id={id}>
+          <div id={uniqueId}>
             <Comp {...props} />
           </div>
         );
@@ -132,11 +138,9 @@ export function LivePage({
     context.deploymentId == undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
-  const renderEditor = data.mode === "edit";
-
   return (
     <div class="flex">
-      <div class={`w-full relative ${renderEditor ? "pr-80" : ""}`}>
+      <div class={`w-full relative `}>
         {children ? children : <LiveComponents {...data} />}
       </div>
 
@@ -146,14 +150,14 @@ export function LivePage({
 }
 
 /**
+ * Based on data from the backend and the page's manifest,
+ * generates all the necessary information for the CMS
  *
- * @param page
- * @returns
+ * TODO: After we approve this, move this function elsewhere
  */
 function generateEditorData(page: Page): EditorData {
   const {
     data: { components, loaders },
-    name,
   } = page;
 
   const componentsWithSchema = components.map(
@@ -163,15 +167,13 @@ function generateEditorData(page: Page): EditorData {
     })
   );
 
-  const loadersWithSchema = components.map(
-    (loader): EditorData["loaders"][0] => ({
-      ...loader,
-      schema: context.manifest?.loaders[loader.key]?.default?.inputSchema,
-      // TODO: We might move this to use $id instead
-      outputSchema: context.manifest?.loaders[loader.key]?.default
-        ?.outputSchema?.["$ref"] as string,
-    })
-  );
+  const loadersWithSchema = loaders.map((loader): EditorData["loaders"][0] => ({
+    ...loader,
+    schema: context.manifest?.loaders[loader.key]?.default?.inputSchema,
+    // TODO: We might move this to use $id instead
+    outputSchema: context.manifest?.loaders[loader.key]?.default
+      ?.outputSchema?.["$ref"] as string,
+  }));
 
   const availableComponents = Object.keys(
     context.manifest?.components || {}

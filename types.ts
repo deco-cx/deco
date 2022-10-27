@@ -13,7 +13,7 @@ export interface Loader {
     req: Request,
     ctx: HandlerContext<any>,
     props: any
-  ) => Promise<Record<string | number | symbol, unknown>>;
+  ) => Promise<any>;
   inputSchema: JSONSchema7;
   outputSchema: { $ref: NonNullable<JSONSchema7["$ref"]> };
 }

@@ -29,7 +29,12 @@ export async function loadData(
 ): Promise<PageData> {
   const loadersResponse = await Promise.all(
     pageData.loaders?.map(async ({ key, props, uniqueId }) => {
-      const loaderFn = context.manifest!.loaders[key].default.loader;
+      const loaderFn = context.manifest!.loaders[key]?.default.loader;
+
+      if (!loaderFn) {
+        console.log(`Not found loader implementation for ${key}`);
+      }
+
       start(`loader#${uniqueId}`);
       const loaderData = await loaderFn(req, ctx, props);
       end(`loader#${uniqueId}`);
@@ -69,7 +74,7 @@ export async function loadData(
 
         return { key: propKey, value: loaderValue };
       })
-      .reduce((acc, cur) => ({ ...acc, [cur.key]: [cur.value] }));
+      .reduce((acc, cur) => ({ ...acc, [cur.key]: cur.value }), {});
 
     return { ...componentData, props: propsWithLoaderData };
   });

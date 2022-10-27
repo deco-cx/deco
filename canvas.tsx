@@ -3,24 +3,20 @@ import { ASSET_CACHE_BUST_KEY } from "$fresh/runtime.ts";
 import { renderToString } from "preact-render-to-string";
 import { context } from "./server.ts";
 import getSupabaseClient, { getSupabaseClientForUser } from "./supabase.ts";
-import type {
-  Flag,
-  Module,
-  PageComponentData,
-  PageData,
-  PageLoaderData,
-} from "./types.ts";
+import type { Flag, Module, PageData, PageLoader } from "./types.ts";
 import { filenameFromPath, getComponentModule } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 import { duplicateProdPage, getFlagFromPageId } from "./utils/supabase.ts";
 import type { JSONSchema7 } from "json-schema";
 import {
-  generateLoaderInstance,
+  appendHash,
   loaderInstanceToProp,
   loaderPathToKey,
 } from "./utils/loaders.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
+
+// Warning: I just changed this file to make it compile. Will still take a look at it.
 
 /**
  * @description This function creates a loaders list based on component props that depends on Loaders.
@@ -29,11 +25,11 @@ const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
 const generateLoadersFromComponents = (
   _: Request,
   __: URL,
-  ctx: any,
+  ctx: any
 ): PageData => {
   const { components: ctxComponents } = ctx;
   const components = JSON.parse(JSON.stringify(ctxComponents));
-  const loaders: PageLoaderData[] = [];
+  const loaders: PageLoader[] = [];
   const manifest = context.manifest!;
 
   for (const component of components) {
@@ -44,26 +40,27 @@ const generateLoadersFromComponents = (
     }
 
     const propsThatRequireLoader = Object.entries(
-      componentSchema.properties ?? {},
+      componentSchema.properties ?? {}
     ).filter(
       (
-        entry,
+        entry
       ): entry is [
         string,
-        JSONSchema7 & { $ref: NonNullable<JSONSchema7["$ref"]> },
-      ] => Boolean((entry[1] as JSONSchema7).$ref),
+        JSONSchema7 & { $ref: NonNullable<JSONSchema7["$ref"]> }
+      ] => Boolean((entry[1] as JSONSchema7).$ref)
     );
 
     propsThatRequireLoader.forEach(([property, propertySchema]) => {
       // Match property ref input into loader output
-      const [loaderPath] = Object.entries(manifest.loaders).find(
-        ([, loader]) =>
-          loader.default.outputSchema.$ref === propertySchema.$ref,
-      ) ?? [];
+      const [loaderPath] =
+        Object.entries(manifest.loaders).find(
+          ([, loader]) =>
+            loader.default.outputSchema.$ref === propertySchema.$ref
+        ) ?? [];
 
       if (!loaderPath) {
         throw new Error(
-          `Doesn't exists loader with this $ref: ${propertySchema.$ref}`,
+          `Doesn't exists loader with this $ref: ${propertySchema.$ref}`
         );
       }
 
@@ -72,12 +69,15 @@ const generateLoadersFromComponents = (
       }
 
       const loaderProp = component.props[property] ?? {};
-      const loaderInstanceName = generateLoaderInstance(propertySchema.$ref);
+      const loaderInstanceName = appendHash(propertySchema.$ref);
       component.props[property] = loaderInstanceToProp(loaderInstanceName);
 
+      // TODO: Remove
+      // @ts-ignore
       loaders.push({
-        loader: loaderPathToKey(loaderPath),
-        name: loaderInstanceName,
+        uniqueId: loaderPathToKey(loaderPath),
+        label: loaderInstanceName,
+        key: loaderPath,
         props: loaderProp,
       });
     });
@@ -89,14 +89,15 @@ const generateLoadersFromComponents = (
 const updateDraft = async (
   req: Request,
   pathname: string,
-  ctx: EditorRequestData & EditorLoaders,
+  ctx: EditorRequestData & EditorLoaders
 ) => {
-  const { components, template, siteId, variantId, experiment, loaders } = ctx;
+  const { components, siteId, variantId, experiment, loaders } = ctx;
 
   let supabaseReponse;
   const pageId = variantId
     ? variantId
-    : await duplicateProdPage(pathname, template, siteId);
+    // TODO: Fix this
+    : await duplicateProdPage(siteId, 0);
 
   const flag: Flag = await getFlagFromPageId(pageId, siteId);
   flag.traffic = experiment ? 0.5 : 0;
@@ -129,7 +130,7 @@ const updateDraft = async (
 const updateProd = async (
   req: Request,
   pathname: string,
-  ctx: EditorRequestData & { pageId: number | string },
+  ctx: EditorRequestData & { pageId: number | string }
 ) => {
   const { template, siteId, pageId } = ctx;
   let supabaseResponse;
@@ -173,7 +174,7 @@ const updateProd = async (
 export type Audience = "draft" | "public";
 
 interface EditorRequestData {
-  components: PageComponentData[];
+  components: PageData[];
   siteId: number;
   template?: string;
   experiment: number;
@@ -182,12 +183,12 @@ interface EditorRequestData {
 }
 
 interface EditorLoaders {
-  loaders: PageLoaderData[];
+  loaders: PageLoader[];
 }
 
 export async function updateComponentProps(
   req: Request,
-  _: HandlerContext<PageData>,
+  _: HandlerContext<PageData>
 ) {
   const { start, end, printTimings } = createServerTiming();
   const url = new URL(req.url);
@@ -203,7 +204,7 @@ export async function updateComponentProps(
     const { loaders, components } = generateLoadersFromComponents(
       req,
       url,
-      ctx,
+      ctx
     );
     ctx.components = components;
     end("generating-loaders");
@@ -227,8 +228,8 @@ export async function updateComponentProps(
     }
 
     const refererPathname = referer ? new URL(referer).pathname : "";
-    const shouldDeployProd = !isProd && ctx.audience == "public" &&
-      !ctx.experiment;
+    const shouldDeployProd =
+      !isProd && ctx.audience == "public" && !ctx.experiment;
     response = await updateDraft(req, refererPathname, { ...ctx, loaders });
 
     // Deploy production
@@ -251,7 +252,7 @@ export async function updateComponentProps(
       headers: {
         "Server-Timing": printTimings(),
       },
-    },
+    }
   );
 }
 
@@ -263,7 +264,7 @@ export interface ComponentPreview {
 
 function mapComponentsToPreview([componentPath, componentModule]: [
   string,
-  Module,
+  Module
 ]): ComponentPreview | undefined {
   const { schema } = componentModule;
 
@@ -300,7 +301,8 @@ export function componentsPreview(req: Request) {
     );
   end("map-components");
 
-  const cache = context.deploymentId !== undefined &&
+  const cache =
+    context.deploymentId !== undefined &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
   return Response.json(
@@ -312,11 +314,11 @@ export function componentsPreview(req: Request) {
         "Server-Timing": printTimings(),
         ...(cache
           ? {
-            "Cache-Control": ONE_YEAR_CACHE,
-          }
+              "Cache-Control": ONE_YEAR_CACHE,
+            }
           : {}),
       },
-    },
+    }
   );
 }
 
@@ -358,9 +360,10 @@ export function renderComponent(req: Request) {
     if (twindPlugin) {
       // Mimic the fresh render function that run plugins.render
       // https://github.com/denoland/fresh/blob/main/src/server/render.ts#L174
-      const res = twindPlugin.render?.({
-        render,
-      }) ?? {};
+      const res =
+        twindPlugin.render?.({
+          render,
+        }) ?? {};
 
       if (res.styles) {
         const [style] = res.styles;
@@ -388,7 +391,8 @@ export function renderComponent(req: Request) {
   }
   end("render-component");
 
-  const cache = context.deploymentId !== undefined &&
+  const cache =
+    context.deploymentId !== undefined &&
     url.searchParams.has(ASSET_CACHE_BUST_KEY);
 
   return new Response(html, {
@@ -397,8 +401,8 @@ export function renderComponent(req: Request) {
       "Server-Timing": printTimings(),
       ...(cache
         ? {
-          "Cache-Control": ONE_YEAR_CACHE,
-        }
+            "Cache-Control": ONE_YEAR_CACHE,
+          }
         : {}),
     },
   });
