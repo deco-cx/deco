@@ -12,7 +12,7 @@ export interface Loader {
   loader: (
     req: Request,
     ctx: HandlerContext<any>,
-    props: any
+    props: any,
   ) => Promise<any>;
   inputSchema: JSONSchema7;
   outputSchema: { $ref: NonNullable<JSONSchema7["$ref"]> };
@@ -82,8 +82,8 @@ export interface WithSchema {
   schema?: JSONSchema7;
 }
 
-type AvailableComponent = Omit<PageComponent, "uniqueId"> & WithSchema;
-type AvailableLoader = Omit<PageLoader, "uniqueId"> & WithSchema;
+export type AvailableComponent = Omit<PageComponent, "uniqueId"> & WithSchema;
+export type AvailableLoader = Omit<PageLoader, "uniqueId"> & WithSchema;
 
 export interface EditorData {
   pageName: string;

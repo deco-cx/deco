@@ -14,7 +14,7 @@ import {
   updateComponentProps,
 } from "$live/canvas.tsx";
 import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
-import type { ComponentChildren, Context } from "preact";
+import type { ComponentChildren } from "preact";
 
 import { context } from "$live/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
@@ -26,11 +26,7 @@ export function live() {
       const url = new URL(req.url);
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
-      if (url.pathname === "/live/api/components") {
-        return componentsPreview(req);
-      }
-
-      if (url.pathname.startsWith("/live/api/components/")) {
+      if (url.pathname.startsWith("/live/api/components")) {
         return renderComponent(req);
       }
 
@@ -59,7 +55,7 @@ export function live() {
         // TODO: Perform this to all pages when we release this
         // or continue doing it gracefully
         const _______needsMigration = page?.data?.components?.some(
-          (c) => (c as unknown as any)["component"]
+          (c) => (c as unknown as any)["component"],
         );
 
         if (_______needsMigration) {
@@ -79,7 +75,7 @@ export function live() {
         ctx,
         page?.data,
         start,
-        end
+        end,
       );
       end("load-data");
 
@@ -134,8 +130,7 @@ export function LivePage({
   children?: ComponentChildren;
 }) {
   const manifest = context.manifest!;
-  const InspectVSCode =
-    context.deploymentId == undefined &&
+  const InspectVSCode = context.deploymentId == undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   return (
@@ -163,8 +158,8 @@ function generateEditorData(page: Page): EditorData {
   const componentsWithSchema = components.map(
     (component): EditorData["components"][0] => ({
       ...component,
-      schema: context.manifest?.components[component.path]?.schema,
-    })
+      schema: context.manifest?.components[component.key]?.schema,
+    }),
   );
 
   const loadersWithSchema = loaders.map((loader): EditorData["loaders"][0] => ({
@@ -176,7 +171,7 @@ function generateEditorData(page: Page): EditorData {
   }));
 
   const availableComponents = Object.keys(
-    context.manifest?.components || {}
+    context.manifest?.components || {},
   ).map((componentKey) => {
     const schema = context.manifest?.components[componentKey]?.schema;
     const label = filenameFromPath(componentKey);
@@ -207,7 +202,7 @@ function generateEditorData(page: Page): EditorData {
         // TODO: Centralize this logic
         outputSchema: outputSchema?.$ref,
       } as EditorData["availableLoaders"][0];
-    }
+    },
   );
 
   return {
