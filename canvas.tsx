@@ -11,91 +11,16 @@ import type {
   PageLoader,
   WithSchema,
 } from "./types.ts";
-import { filenameFromPath, getComponentModule } from "./utils/component.ts";
+import { filenameFromPath } from "./utils/component.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 import { duplicateProdPage, getFlagFromPageId } from "./utils/supabase.ts";
-import type { JSONSchema7 } from "json-schema";
-import {
-  appendHash,
-  loaderInstanceToProp,
-  loaderPathToKey,
-} from "./utils/loaders.ts";
 
 const ONE_YEAR_CACHE = "public, max-age=31536000, immutable";
-
-// Warning: I just changed this file to make it compile. Will still take a look at it.
-
-/**
- * @description This function creates a loaders list based on component props that depends on Loaders.
- *  Also, mutate prop that depends on Loaders to component[index].props.[propName] = `loadername-uuid`
- */
-const generateLoadersFromComponents = (
-  _: Request,
-  __: URL,
-  ctx: any,
-): PageData => {
-  const { components: ctxComponents } = ctx;
-  const components = JSON.parse(JSON.stringify(ctxComponents));
-  const loaders: PageLoader[] = [];
-  const manifest = context.manifest!;
-
-  for (const component of components) {
-    const componentSchema = manifest.schemas[component.component];
-
-    if (!componentSchema) {
-      continue;
-    }
-
-    const propsThatRequireLoader = Object.entries(
-      componentSchema.properties ?? {},
-    ).filter(
-      (
-        entry,
-      ): entry is [
-        string,
-        JSONSchema7 & { $ref: NonNullable<JSONSchema7["$ref"]> },
-      ] => Boolean((entry[1] as JSONSchema7).$ref),
-    );
-
-    propsThatRequireLoader.forEach(([property, propertySchema]) => {
-      // Match property ref input into loader output
-      const [loaderPath] = Object.entries(manifest.loaders).find(
-        ([, loader]) =>
-          loader.default.outputSchema.$ref === propertySchema.$ref,
-      ) ?? [];
-
-      if (!loaderPath) {
-        throw new Error(
-          `Doesn't exists loader with this $ref: ${propertySchema.$ref}`,
-        );
-      }
-
-      if (!component.props) {
-        component.props = {};
-      }
-
-      const loaderProp = component.props[property] ?? {};
-      const loaderInstanceName = appendHash(propertySchema.$ref);
-      component.props[property] = loaderInstanceToProp(loaderInstanceName);
-
-      // TODO: Remove
-      // @ts-ignore
-      loaders.push({
-        uniqueId: loaderPathToKey(loaderPath),
-        label: loaderInstanceName,
-        key: loaderPath,
-        props: loaderProp,
-      });
-    });
-  }
-
-  return { loaders, components };
-};
 
 const updateDraft = async (
   req: Request,
   pathname: string,
-  ctx: EditorRequestData & EditorLoaders,
+  ctx: EditorRequestData,
 ) => {
   const { components, siteId, variantId, experiment, loaders } = ctx;
 
@@ -180,16 +105,13 @@ const updateProd = async (
 export type Audience = "draft" | "public";
 
 interface EditorRequestData {
-  components: PageData[];
+  components: PageComponent[];
+  loaders: PageLoader[];
   siteId: number;
   template?: string;
   experiment: number;
   audience: Audience;
   variantId: string | null;
-}
-
-interface EditorLoaders {
-  loaders: PageLoader[];
 }
 
 export async function updateComponentProps(
@@ -205,15 +127,6 @@ export async function updateComponentProps(
   };
   try {
     const ctx = (await req.json()) as EditorRequestData;
-
-    start("generating-loaders");
-    const { loaders, components } = generateLoadersFromComponents(
-      req,
-      url,
-      ctx,
-    );
-    ctx.components = components;
-    end("generating-loaders");
 
     start("saving-data");
     const { data: Pages, error } = await getSupabaseClient()
@@ -236,7 +149,7 @@ export async function updateComponentProps(
     const refererPathname = referer ? new URL(referer).pathname : "";
     const shouldDeployProd = !isProd && ctx.audience == "public" &&
       !ctx.experiment;
-    response = await updateDraft(req, refererPathname, { ...ctx, loaders });
+    response = await updateDraft(req, refererPathname, ctx);
 
     // Deploy production
     if (shouldDeployProd) {

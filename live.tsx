@@ -134,11 +134,8 @@ export function LivePage({
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   return (
-    <div class="flex">
-      <div class={`w-full relative `}>
-        {children ? children : <LiveComponents {...data} />}
-      </div>
-
+    <div>
+      {children ? children : <LiveComponents {...data} />}
       {InspectVSCode ? <InspectVSCode /> : null}
     </div>
   );
