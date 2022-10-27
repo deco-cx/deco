@@ -1,5 +1,11 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { EditorData, PageComponentData, PageData } from "$live/types.ts";
+import {
+  EditorData,
+  Page,
+  PageComponent,
+  PageData,
+  PageLoader,
+} from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import {
@@ -7,14 +13,14 @@ import {
   renderComponent,
   updateComponentProps,
 } from "$live/canvas.tsx";
-import { getComponentModule } from "$live/utils/component.ts";
+import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
 import type { ComponentChildren, Context } from "preact";
 
 import { context } from "$live/server.ts";
-import { loadData, loadLivePage, LoadLivePageOptions } from "$live/pages.ts";
-import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import { loadData, loadLivePage } from "$live/pages.ts";
+import { ___tempMigratePageData } from "./utils/supabase.ts";
 
-export function live(options?: LoadLivePageOptions) {
+export function live() {
   const handler: Handlers<PageData> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
@@ -44,11 +50,26 @@ export function live(options?: LoadLivePageOptions) {
       // end("load-flags");
 
       start("load-page");
-      const pageData = await loadLivePage(req, ctx, options);
+      const page = await loadLivePage(req, ctx);
       end("load-page");
 
       if (url.searchParams.has("editorData")) {
-        const editorData = generateEditorData(pageData);
+        // ALERT: This is only being used while we're developing this refact.
+
+        // TODO: Perform this to all pages when we release this
+        // or continue doing it gracefully
+        const _______needsMigration = page?.data?.components?.some(
+          (c) => (c as unknown as any)["component"]
+        );
+
+        if (_______needsMigration) {
+          const updatedPage = await ___tempMigratePageData(page);
+
+          const editorData = generateEditorData(updatedPage);
+          return Response.json(editorData);
+        }
+
+        const editorData = generateEditorData(page);
         return Response.json(editorData);
       }
 
@@ -107,7 +128,8 @@ export function LivePage({
   children?: ComponentChildren;
 }) {
   const manifest = context.manifest!;
-  const InspectVSCode = context.deploymentId == undefined &&
+  const InspectVSCode =
+    context.deploymentId == undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   const renderEditor = data.mode === "edit";
@@ -123,50 +145,74 @@ export function LivePage({
   );
 }
 
-function generateEditorData(pageData: PageData): EditorData {
-  const { components, loaders, title } = pageData;
+/**
+ *
+ * @param page
+ * @returns
+ */
+function generateEditorData(page: Page): EditorData {
+  const {
+    data: { components, loaders },
+    name,
+  } = page;
 
-  const componentsWithSchema = components.map(({ component, props, id }) => {
-    // TODO: This should be saved in the DB
-    const __componentKeyInManifest = `./components/${component}.tsx`;
-    const __islandKeyInManifest = `./islands/${component}.tsx`;
+  const componentsWithSchema = components.map(
+    (component): EditorData["components"][0] => ({
+      ...component,
+      schema: context.manifest?.components[component.path]?.schema,
+    })
+  );
 
-    const componentModule =
-      context.manifest?.components[__islandKeyInManifest] ||
-      context.manifest?.components[__componentKeyInManifest];
+  const loadersWithSchema = components.map(
+    (loader): EditorData["loaders"][0] => ({
+      ...loader,
+      schema: context.manifest?.loaders[loader.key]?.default?.inputSchema,
+      // TODO: We might move this to use $id instead
+      outputSchema: context.manifest?.loaders[loader.key]?.default
+        ?.outputSchema?.["$ref"] as string,
+    })
+  );
+
+  const availableComponents = Object.keys(
+    context.manifest?.components || {}
+  ).map((componentKey) => {
+    const schema = context.manifest?.components[componentKey]?.schema;
+    const label = filenameFromPath(componentKey);
+
+    // TODO: Should we extract defaultProps from the schema here?
 
     return {
-      name: component,
-      id,
-      props,
-      schema: componentModule?.schema,
-    };
+      key: componentKey,
+      label,
+      props: {},
+      schema,
+    } as EditorData["availableComponents"][0];
   });
 
-  // TODO: What's loader, what's name? Do we have ids?
-  const loadersWithSchema = loaders.map(({ loader, name, props }) => {
-    // const __loaderKeyInManifest = `./loaders/${name}.ts`;
-    const __loaderKeyInManifest = `./loaders/vtex/searchCollections.ts`;
+  const availableLoaders = Object.keys(context.manifest?.components || {}).map(
+    (loaderKey) => {
+      const { inputSchema, outputSchema } =
+        context.manifest?.loaders[loaderKey]?.default || {};
+      const label = filenameFromPath(loaderKey);
 
-    const loaderModule = context.manifest?.loaders[__loaderKeyInManifest];
+      // TODO: Should we extract defaultProps from the schema here?
 
-    console.log({
-      name,
-      __loaderKeyInManifest,
-      loadersIn: context?.manifest?.loaders,
-    });
-
-    return {
-      name: name,
-      id: loader,
-      props,
-      schema: loaderModule?.default?.inputSchema,
-    };
-  });
+      return {
+        key: loaderKey,
+        label,
+        props: {},
+        schema: inputSchema,
+        // TODO: Centralize this logic
+        outputSchema: outputSchema?.$ref,
+      } as EditorData["availableLoaders"][0];
+    }
+  );
 
   return {
-    title,
+    pageName: page?.name,
     components: componentsWithSchema,
     loaders: loadersWithSchema,
+    availableComponents,
+    availableLoaders,
   };
 }

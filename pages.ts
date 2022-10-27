@@ -1,60 +1,23 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { PageData } from "$live/types.ts";
-import { getPageFromId, getProdPage } from "./utils/supabase.ts";
+import { fetchPageFromId, fetchPageFromPathname } from "./utils/supabase.ts";
 import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
 import { context } from "$live/server.ts";
 import { path } from "./utils/path.ts";
 import { Page } from "./types.ts";
 
-export const getPages = async (): Promise<Page[]> => {
-  return await Promise.resolve([{ name: "default" }]);
-};
-
-export interface LoadLivePageOptions {
-  template?: string;
-}
-
 export async function loadLivePage(
   req: Request,
-  _: HandlerContext<PageData>,
-  options?: LoadLivePageOptions
-): Promise<PageData> {
+  _: HandlerContext<PageData>
+): Promise<Page> {
   const url = new URL(req.url);
-  const { template } = options ?? {};
   const pageId = parseInt(url.searchParams.get("pageId")!, 10);
 
-  // TODO: Aaaaaaaaaaa
-  let pages = [];
-  let pageData: Pick<PageData, "components" | "loaders"> = {
-    components: [],
-    loaders: [],
-  };
+  const page = pageId
+    ? await fetchPageFromId(pageId, context.siteId)
+    : await fetchPageFromPathname(url.pathname, context.siteId);
 
-  pages = pageId
-    ? await getPageFromId(pageId, context.siteId)
-    : await getProdPage(context.siteId, url.pathname, template);
-
-  const page = pages![0];
-  pageData = page?.data ?? {};
-
-  if (page) {
-    console.log("Live page:", url.pathname, pages[0]);
-  } else {
-    console.log("Live page not found", url.pathname, template);
-  }
-
-  const isEditor = url.searchParams.has("editor");
-
-  const schemas: Record<string, any> = {};
-
-  return {
-    components: pageData.components ?? [],
-    schemas,
-    loaders: pageData.loaders ?? [],
-    mode: isEditor ? "edit" : "none",
-    template: options?.template || url.pathname,
-    title: page?.name,
-  };
+  return page;
 }
 
 export async function loadData(
@@ -63,16 +26,15 @@ export async function loadData(
   pageData: PageData,
   start: (l: string) => void,
   end: (l: string) => void
-): Promise<void> {
+): Promise<PageData> {
   const loadersResponse = await Promise.all(
-    pageData.loaders?.map(async ({ loader, props, name }) => {
-      const loaderFn =
-        context.manifest!.loaders[`./loaders/${loader}.ts`].default.loader;
-      start(`loader#${name}`);
+    pageData.loaders?.map(async ({ key, props, uniqueId }) => {
+      const loaderFn = context.manifest!.loaders[key].default.loader;
+      start(`loader#${uniqueId}`);
       const loaderData = await loaderFn(req, ctx, props);
-      end(`loader#${name}`);
+      end(`loader#${uniqueId}`);
       return {
-        name,
+        uniqueId,
         data: loaderData,
       };
     }) ?? []
@@ -80,34 +42,37 @@ export async function loadData(
 
   const loadersResponseMap = loadersResponse.reduce(
     (result, currentResponse) => {
-      result[currentResponse.name] = currentResponse.data;
+      result[currentResponse.uniqueId] = currentResponse.data;
       return result;
     },
     {} as Record<string, unknown>
   );
 
-  pageData.components = pageData.components.map((componentData) => {
+  const componentsWithData = pageData.components.map((componentData) => {
     /*
      * if any shallow prop that contains a mustache like `{loaderName.*}`,
      * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
      */
 
-    Object.values(componentData.props ?? {}).forEach((value) => {
-      if (!isLoaderProp(value)) {
-        return;
-      }
+    const propsWithLoaderData = Object.keys(componentData.props || {})
+      .map((propKey) => {
+        const propValue = componentData.props?.[propKey];
 
-      const loaderForwardedProps = path(
-        loadersResponseMap,
-        propToLoaderInstance(value)
-      );
+        if (!isLoaderProp(propValue)) {
+          return { key: propKey, value: propValue };
+        }
 
-      componentData.props = {
-        ...componentData.props,
-        ...loaderForwardedProps,
-      };
-    });
+        const loaderValue = path(
+          loadersResponseMap,
+          propToLoaderInstance(propValue)
+        );
 
-    return componentData;
+        return { key: propKey, value: loaderValue };
+      })
+      .reduce((acc, cur) => ({ ...acc, [cur.key]: [cur.value] }));
+
+    return { ...componentData, props: propsWithLoaderData };
   });
+
+  return { ...pageData, components: componentsWithData };
 }

@@ -1,7 +1,7 @@
 import type { DecoManifest, Module } from "../types.ts";
 
 /**
- * TODO: There's probably a file util for that 
+ * TODO: There's probably a file util for that
  */
 // Valid expressions: https://regex101.com/r/7sPtnb/1
 // /Component.tsx
@@ -29,8 +29,7 @@ export function isValidIsland(componentPath: string) {
 
 export function getComponentModule(
   manifest: DecoManifest,
-  filename: string,
+  key: string
 ): Module | undefined {
-  return manifest.islands?.[`./islands/${filename}.tsx`] ??
-    manifest.components?.[`./components/${filename}.tsx`];
+  return manifest.islands?.[key] ?? manifest.components?.[key];
 }
