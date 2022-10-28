@@ -2,17 +2,11 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import {
   EditorData,
   Page,
-  PageComponent,
   PageData,
-  PageLoader,
 } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
-import {
-  componentsPreview,
-  renderComponent,
-  updateComponentProps,
-} from "$live/canvas.tsx";
+import { updateComponentProps } from "$live/canvas.tsx";
 import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
 import type { ComponentChildren } from "preact";
 
@@ -26,8 +20,12 @@ export function live() {
       const url = new URL(req.url);
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
-      if (url.pathname.startsWith("/live/api/components")) {
-        return renderComponent(req);
+      const component = url.searchParams.get('component')
+      if (url.pathname.startsWith('/live/api/components') && typeof component === 'string') {
+        return ctx.render({
+          components: [{key: `./components/${component}`, label: '', uniqueId: '', props: {}}],
+          loaders: []
+        });
       }
 
       const { start, end, printTimings } = createServerTiming();
