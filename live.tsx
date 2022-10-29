@@ -1,9 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import {
-  EditorData,
-  Page,
-  PageData,
-} from "$live/types.ts";
+import { EditorData, Page, PageData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import { updateComponentProps } from "$live/canvas.tsx";
@@ -20,11 +16,21 @@ export function live() {
       const url = new URL(req.url);
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
-      const component = url.searchParams.get('component')
-      if (url.pathname.startsWith('/live/api/components') && typeof component === 'string') {
+      const component = url.searchParams.get("component");
+      if (
+        url.pathname.startsWith("/live/api/components") &&
+        typeof component === "string"
+      ) {
         return ctx.render({
-          components: [{key: `./components/${component}`, label: '', uniqueId: '', props: {}}],
-          loaders: []
+          components: [
+            {
+              key: `./components/${component}`,
+              label: "",
+              uniqueId: "",
+              props: {},
+            },
+          ],
+          loaders: [],
         });
       }
 
@@ -53,7 +59,7 @@ export function live() {
         // TODO: Perform this to all pages when we release this
         // or continue doing it gracefully
         const _______needsMigration = page?.data?.components?.some(
-          (c) => (c as unknown as any)["component"],
+          (c) => (c as unknown as any)["component"]
         );
 
         if (_______needsMigration) {
@@ -73,7 +79,7 @@ export function live() {
         ctx,
         page?.data,
         start,
-        end,
+        end
       );
       end("load-data");
 
@@ -128,7 +134,8 @@ export function LivePage({
   children?: ComponentChildren;
 }) {
   const manifest = context.manifest!;
-  const InspectVSCode = context.deploymentId == undefined &&
+  const InspectVSCode =
+    context.deploymentId == undefined &&
     manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
 
   return (
@@ -154,7 +161,7 @@ function generateEditorData(page: Page): EditorData {
     (component): EditorData["components"][0] => ({
       ...component,
       schema: context.manifest?.components[component.key]?.schema,
-    }),
+    })
   );
 
   const loadersWithSchema = loaders.map((loader): EditorData["loaders"][0] => ({
@@ -166,7 +173,7 @@ function generateEditorData(page: Page): EditorData {
   }));
 
   const availableComponents = Object.keys(
-    context.manifest?.components || {},
+    context.manifest?.components || {}
   ).map((componentKey) => {
     const schema = context.manifest?.components[componentKey]?.schema;
     const label = filenameFromPath(componentKey);
@@ -197,7 +204,7 @@ function generateEditorData(page: Page): EditorData {
         // TODO: Centralize this logic
         outputSchema: outputSchema?.$ref,
       } as EditorData["availableLoaders"][0];
-    },
+    }
   );
 
   return {

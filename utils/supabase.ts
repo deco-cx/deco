@@ -24,7 +24,7 @@ export const fetchPageFromId = async (
   const { data: pages, error } = await getSupabaseClient()
     .from("pages")
     .select("id, name, data, path")
-    .match({ id: pageId, site: siteId });
+    .match({ id: pageId });
 
   const match = pages?.[0];
 
