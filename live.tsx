@@ -49,7 +49,7 @@ export function live() {
               ) // allow components/[component].tsx only
               .map((component) => ({
                 name: component.replace("./components/", ""),
-                path: component,
+                path: component.replace("./", ""),
                 link: `vscode://file/${resolveFilePath(component)}`,
               }))
           ),
