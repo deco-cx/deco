@@ -8,6 +8,7 @@ import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
 import { context } from "$live/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
 import { ___tempMigratePageData } from "./utils/supabase.ts";
+import { resolveFilePath } from "./utils/filesystem.ts";
 
 export function live() {
   const handler: Handlers<Page> = {
@@ -40,10 +41,17 @@ export function live() {
 
         return new Response(
           JSON.stringify(
-            Object.keys(context.manifest?.components ?? {}).filter(
-              (component) =>
-                component.split("/").length === 3 && component.endsWith(".tsx")
-            ) // allow components/[component].tsx only
+            Object.keys(context.manifest?.components ?? {})
+              .filter(
+                (component) =>
+                  component.split("/").length === 3 &&
+                  component.endsWith(".tsx")
+              ) // allow components/[component].tsx only
+              .map((component) => ({
+                name: component.replace("./components/", ""),
+                path: component,
+                link: `vscode://file/${resolveFilePath(component)}`,
+              }))
           ),
           {
             status: 200,
