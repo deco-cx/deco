@@ -7,16 +7,23 @@ interface Props {
 }
 
 type IframeCommand = {
-  type: "scrollTo";
-  args: ScrollToOptions;
+  type: "scrollToComponent";
+  args: { id: string };
 };
 
-export const sendCommandToIframe = (
-  iframe: HTMLIFrameElement,
-  command: IframeCommand
-) => {
-  iframe.contentWindow?.postMessage(command);
+export const sendCommandToIframe = ({
+  iframe,
+  command,
+  targetOrigin,
+}: {
+  iframe: HTMLIFrameElement;
+  command: IframeCommand;
+  targetOrigin: string;
+}) => {
+  iframe.contentWindow?.postMessage(command, targetOrigin);
 };
+
+const EDITOR_ORIGINS = ["http://localhost:4200", "https://deco.cx"];
 
 export default function InjectLiveScripts({ page }: Props) {
   useEffect(() => {
@@ -27,11 +34,17 @@ export default function InjectLiveScripts({ page }: Props) {
     };
 
     addEventListener("message", (event) => {
+      if (!EDITOR_ORIGINS.includes(event.origin)) {
+        return;
+      }
       const data = event.data as IframeCommand;
 
       switch (data.type) {
-        case "scrollTo": {
-          window.scrollTo(data.args);
+        case "scrollToComponent": {
+          const element = document.getElementById(data.args.id);
+          element?.scrollIntoView({
+            behavior: "smooth",
+          });
         }
       }
     });
