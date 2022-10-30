@@ -50,13 +50,17 @@ export function live() {
               .map((component) => ({
                 name: component.replace("./components/", ""),
                 path: component.replace("./", ""),
-                link: `vscode://file/${resolveFilePath(component)}`,
+                link:
+                  context.deploymentId === undefined // only allow vscode when developing locally
+                    ? `vscode://file/${resolveFilePath(component)}`
+                    : undefined,
               }))
           ),
           {
             status: 200,
             headers: {
               "content-type": "application/json",
+              "Access-Control-Allow-Origin": "*",
             },
           }
         );
