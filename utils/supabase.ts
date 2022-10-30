@@ -17,10 +17,7 @@ export const getSiteIdFromName = async (siteName: string) => {
   return Site![0].id;
 };
 
-export const fetchPageFromId = async (
-  pageId: number,
-  siteId: number
-): Promise<Page> => {
+export const fetchPageFromId = async (pageId: number): Promise<Page> => {
   const { data: pages, error } = await getSupabaseClient()
     .from("pages")
     .select("id, name, data, path")
@@ -113,7 +110,7 @@ export const duplicateProdPage = async (
   siteId: number
 ): Promise<string> => {
   // Getting prod page in order to duplicate
-  const page = await fetchPageFromId(pageId, siteId);
+  const page = await fetchPageFromId(pageId);
 
   // Create flag
   const flagResponse = await getSupabaseClient().from("flags").insert({
@@ -173,8 +170,7 @@ export const ___tempMigratePageData = async (page: Page): Promise<Page> => {
     const uniqueId = oldLoader.name;
     const label = "VTEX - Search Products";
     const outputSchema =
-      context?.manifest?.loaders[key]?.default?.outputSchema
-        ?.$ref;
+      context?.manifest?.loaders[key]?.default?.outputSchema?.$ref;
 
     return {
       key,

@@ -1,17 +1,16 @@
+import type { ComponentChildren } from "preact";
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { EditorData, Page, PageData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
-import { updateComponentProps } from "$live/canvas.tsx";
 import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
-import type { ComponentChildren } from "preact";
 
 import { context } from "$live/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
 import { ___tempMigratePageData } from "./utils/supabase.ts";
 
 export function live() {
-  const handler: Handlers<PageData> = {
+  const handler: Handlers<Page> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
       // TODO: Find a better way to embedded this route on project routes.
@@ -22,15 +21,20 @@ export function live() {
         typeof component === "string"
       ) {
         return ctx.render({
-          components: [
-            {
-              key: `./components/${component}`,
-              label: "",
-              uniqueId: "",
-              props: {},
-            },
-          ],
-          loaders: [],
+          id: -1,
+          name: "The Impossible Page",
+          path: "/",
+          data: {
+            components: [
+              {
+                key: `./components/${component}`,
+                label: "",
+                uniqueId: "",
+                props: {},
+              },
+            ],
+            loaders: [],
+          },
         });
       }
 
@@ -50,7 +54,8 @@ export function live() {
       // end("load-flags");
 
       start("load-page");
-      const page = await loadLivePage(req, ctx);
+      const page = await loadLivePage(req);
+      console.log({ "Found Page": page });
       end("load-page");
 
       if (url.searchParams.has("editorData")) {
@@ -84,7 +89,7 @@ export function live() {
       end("load-data");
 
       start("render");
-      const res = await ctx.render(pageDataAfterLoaders);
+      const res = await ctx.render({ ...page, data: pageDataAfterLoaders });
       end("render");
 
       res.headers.set("Server-Timing", printTimings());
@@ -98,9 +103,6 @@ export function live() {
         context.deploymentId !== undefined
       ) {
         return await InspectVSCodeHandler.POST!(req, ctx);
-      }
-      if (url.pathname === "/live/api/editor") {
-        return await updateComponentProps(req, ctx);
       }
 
       return new Response("Not found", { status: 404 });
@@ -130,18 +132,20 @@ export function LiveComponents({ components }: PageData) {
 export function LivePage({
   data,
   children,
-}: PageProps<PageData> & {
+}: PageProps<Page> & {
   children?: ComponentChildren;
 }) {
   const manifest = context.manifest!;
-  const InspectVSCode =
-    context.deploymentId == undefined &&
-    manifest.islands[`./islands/InspectVSCode.tsx`]?.default;
+  // TODO: Read this from context
+  const isProduction = context.deploymentId !== undefined;
+  const InjectLiveScripts =
+    !isProduction &&
+    manifest.islands[`./islands/InjectLiveScripts.tsx`]?.default;
 
   return (
     <div>
-      {children ? children : <LiveComponents {...data} />}
-      {InspectVSCode ? <InspectVSCode /> : null}
+      {children ? children : <LiveComponents {...data.data} />}
+      {InjectLiveScripts ? <InjectLiveScripts page={data} /> : null}
     </div>
   );
 }

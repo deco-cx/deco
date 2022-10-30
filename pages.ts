@@ -6,15 +6,12 @@ import { context } from "$live/server.ts";
 import { path } from "./utils/path.ts";
 import { Page } from "./types.ts";
 
-export async function loadLivePage(
-  req: Request,
-  _: HandlerContext<PageData>
-): Promise<Page> {
+export async function loadLivePage(req: Request): Promise<Page> {
   const url = new URL(req.url);
   const pageId = parseInt(url.searchParams.get("pageId")!, 10);
 
   const page = pageId
-    ? await fetchPageFromId(pageId, context.siteId)
+    ? await fetchPageFromId(pageId)
     : await fetchPageFromPathname(url.pathname, context.siteId);
 
   return page;
@@ -22,7 +19,7 @@ export async function loadLivePage(
 
 export async function loadData(
   req: Request,
-  ctx: HandlerContext<PageData>,
+  ctx: HandlerContext<Page>,
   pageData: PageData,
   start: (l: string) => void,
   end: (l: string) => void
