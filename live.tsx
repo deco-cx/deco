@@ -8,34 +8,62 @@ import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
 import { context } from "$live/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
 import { ___tempMigratePageData } from "./utils/supabase.ts";
+import { resolveFilePath } from "./utils/filesystem.ts";
 
 export function live() {
   const handler: Handlers<Page> = {
     async GET(req, ctx) {
       const url = new URL(req.url);
+
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
-      const component = url.searchParams.get("component");
-      if (
-        url.pathname.startsWith("/live/api/components") &&
-        typeof component === "string"
-      ) {
-        return ctx.render({
-          id: -1,
-          name: "The Impossible Page",
-          path: "/",
-          data: {
-            components: [
-              {
-                key: `./components/${component}`,
-                label: "",
-                uniqueId: "",
-                props: {},
-              },
-            ],
-            loaders: [],
-          },
-        });
+      if (url.pathname.startsWith("/_live/components")) {
+        const component = url.searchParams.get("component");
+
+        if (component) {
+          return ctx.render({
+            id: -1,
+            name: "The Impossible Page",
+            path: "/",
+            data: {
+              components: [
+                {
+                  key: component,
+                  label: "",
+                  uniqueId: "",
+                  props: {},
+                },
+              ],
+              loaders: [],
+            },
+          });
+        }
+
+        return new Response(
+          JSON.stringify(
+            Object.keys(context.manifest?.components ?? {})
+              .filter(
+                (component) =>
+                  component.split("/").length === 3 &&
+                  component.endsWith(".tsx")
+              ) // allow components/[component].tsx only
+              .map((component) => ({
+                name: component.replace("./components/", ""),
+                path: component.replace("./", ""),
+                link:
+                  context.deploymentId === undefined // only allow vscode when developing locally
+                    ? `vscode://file/${resolveFilePath(component)}`
+                    : undefined,
+              }))
+          ),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+          }
+        );
       }
 
       const { start, end, printTimings } = createServerTiming();
