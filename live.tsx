@@ -64,7 +64,7 @@ export function live() {
         // TODO: Perform this to all pages when we release this
         // or continue doing it gracefully
         const _______needsMigration = page?.data?.components?.some(
-          (c) => (c as unknown as any)["component"]
+          (c) => (c as unknown as any)["component"],
         );
 
         if (_______needsMigration) {
@@ -84,7 +84,7 @@ export function live() {
         ctx,
         page?.data,
         start,
-        end
+        end,
       );
       end("load-data");
 
@@ -138,8 +138,7 @@ export function LivePage({
   const manifest = context.manifest!;
   // TODO: Read this from context
   const isProduction = context.deploymentId !== undefined;
-  const InjectLiveScripts =
-    !isProduction &&
+  const InjectLiveScripts = !isProduction &&
     manifest.islands[`./islands/InjectLiveScripts.tsx`]?.default;
 
   return (
@@ -165,7 +164,7 @@ function generateEditorData(page: Page): EditorData {
     (component): EditorData["components"][0] => ({
       ...component,
       schema: context.manifest?.components[component.key]?.schema,
-    })
+    }),
   );
 
   const loadersWithSchema = loaders.map((loader): EditorData["loaders"][0] => ({
@@ -177,7 +176,7 @@ function generateEditorData(page: Page): EditorData {
   }));
 
   const availableComponents = Object.keys(
-    context.manifest?.components || {}
+    context.manifest?.components || {},
   ).map((componentKey) => {
     const schema = context.manifest?.components[componentKey]?.schema;
     const label = filenameFromPath(componentKey);
@@ -192,7 +191,7 @@ function generateEditorData(page: Page): EditorData {
     } as EditorData["availableComponents"][0];
   });
 
-  const availableLoaders = Object.keys(context.manifest?.components || {}).map(
+  const availableLoaders = Object.keys(context.manifest?.loaders || {}).map(
     (loaderKey) => {
       const { inputSchema, outputSchema } =
         context.manifest?.loaders[loaderKey]?.default || {};
@@ -208,7 +207,7 @@ function generateEditorData(page: Page): EditorData {
         // TODO: Centralize this logic
         outputSchema: outputSchema?.$ref,
       } as EditorData["availableLoaders"][0];
-    }
+    },
   );
 
   return {
