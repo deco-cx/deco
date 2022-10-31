@@ -1,9 +1,8 @@
 import type { IslandModule } from "$fresh/src/server/types.ts";
-import type { HandlerContext, Manifest, Plugin } from "$fresh/server.ts";
+import type { HandlerContext, Manifest } from "$fresh/server.ts";
 import type { JSONSchema7 } from "json-schema";
 
 export type Schema = JSONSchema7;
-export type Schemas = Record<string, Schema>;
 
 export interface Module extends IslandModule {
   schema?: JSONSchema7;
@@ -14,9 +13,9 @@ export interface Loader {
     req: Request,
     ctx: HandlerContext<any>,
     props: any,
-  ) => Promise<Record<string | number | symbol, unknown>>;
+  ) => Promise<any>;
   inputSchema: JSONSchema7;
-  outputSchema: { "$ref": NonNullable<JSONSchema7["$ref"]> };
+  outputSchema: { $ref: NonNullable<JSONSchema7["$ref"]> };
 }
 
 export interface LoaderModule {
@@ -27,37 +26,45 @@ export interface DecoManifest extends Manifest {
   islands: Record<string, Module>;
   components: Record<string, Module>;
   loaders: Record<string, LoaderModule>;
-  schemas: Schemas;
+  schemas: Record<string, JSONSchema7>;
 }
 
 export interface Site {
-  name: string;
-}
-
-export interface Page {
+  id: number;
   name: string;
 }
 
 export interface LiveOptions {
   site: string;
+  siteId: number;
+  loginUrl?: string;
   domains?: string[];
-  plugins?: Plugin[];
 }
 
-export interface PageComponentData {
-  component: string;
+export interface PageComponent {
+  // Identifies the component uniquely in the project (e.g: "./components/Header.tsx")
+  key: string;
+  // Pretty name for the entity
+  label: string;
+  // Uniquely identifies this entity in the scope of a page (that can have multiple loaders, components)
+  uniqueId: string;
   props?: Record<string, unknown>;
 }
 
-export interface PageLoaderData {
+export interface PageLoader extends PageComponent {
+  outputSchema: string;
+}
+
+export interface PageData {
+  components: PageComponent[];
+  loaders: PageLoader[];
+}
+
+export interface Page {
+  id: number;
+  data: PageData;
   name: string;
-  loader: string;
-  props?: Record<string, unknown>;
-}
-
-export interface PageDataData {
-  components: PageComponentData[];
-  loaders: PageLoaderData[];
+  path: string;
 }
 
 export interface Flag {
@@ -67,7 +74,21 @@ export interface Flag {
   traffic: number;
   active?: boolean;
   path: string;
-  data?: PageDataData;
 }
 
 export type Mode = "edit" | "none";
+
+export interface WithSchema {
+  schema?: JSONSchema7;
+}
+
+export type AvailableComponent = Omit<PageComponent, "uniqueId"> & WithSchema;
+export type AvailableLoader = Omit<PageLoader, "uniqueId"> & WithSchema;
+
+export interface EditorData {
+  pageName: string;
+  components: Array<PageComponent & WithSchema>;
+  loaders: Array<PageLoader & WithSchema>;
+  availableComponents: Array<AvailableComponent>;
+  availableLoaders: Array<AvailableLoader>;
+}

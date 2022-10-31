@@ -17,9 +17,9 @@ export function setupSupabase(endpoint: string, key: string) {
   userKey = key;
 }
 
-export default function getSupabaseClient() {
+export default function getSupabaseClient(accessToken?: string) {
   if (!client) {
-    client = createClient(userEndpoint, userKey);
+    client = createClient(userEndpoint, accessToken || userKey);
   }
 
   return client;

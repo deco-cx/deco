@@ -3,138 +3,88 @@ import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
-import { componentNameFromPath } from "./utils/component.ts";
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 
-interface DevManifest {
+/**
+ * This interface represents an intermediate state used to generate
+ * the final manifest (in the target project's deco.gen.ts).
+ *
+ * The final manifest follows @DecoManifest type
+ */
+interface DevManifestData {
   routes: string[];
   islands: string[];
   components: string[];
-  schemas: SchemaMap[];
   loaders: string[];
 }
+
+const defaultManifestData: DevManifestData = {
+  routes: [],
+  islands: [],
+  components: [],
+  loaders: [],
+};
 
 export async function dev(
   base: string,
   entrypoint: string,
-  onListen?: () => void,
+  onListen?: () => void
 ) {
-  entrypoint = new URL(entrypoint, base).href;
+  const prevManifestData = Deno.env.get("FRSH_DEV_PREVIOUS_MANIFEST");
+
+  const currentManifestData: DevManifestData = prevManifestData
+    ? JSON.parse(prevManifestData)
+    : defaultManifestData;
 
   const dir = dirname(fromFileUrl(base));
 
-  let currentManifest: DevManifest;
+  const newManifestData = await generateDevManifestData(dir);
 
-  const prevManifest = Deno.env.get("FRSH_DEV_PREVIOUS_MANIFEST");
-  if (prevManifest) {
-    currentManifest = JSON.parse(prevManifest);
-  } else {
-    currentManifest = {
-      islands: [],
-      routes: [],
-      components: [],
-      schemas: [],
-      loaders: [],
-    };
-  }
+  Deno.env.set("FRSH_DEV_PREVIOUS_MANIFEST", JSON.stringify(newManifestData));
 
-  const [newManifest, components, loaders] = await Promise.all([
-    collect(dir) as Promise<DevManifest>,
-    collectComponents(dir),
-    collectLoaders(dir),
-  ]);
-  newManifest.components = components;
-  newManifest.loaders = loaders;
-
-  newManifest.schemas = await collectComponentsSchemas(
-    newManifest.islands,
-    newManifest.components,
-    dir,
+  const manifestDataChanged = !manifestDataEquals(
+    currentManifestData,
+    newManifestData
   );
-  Deno.env.set("FRSH_DEV_PREVIOUS_MANIFEST", JSON.stringify(newManifest));
 
-  const manifestChanged =
-    !arraysEqual(newManifest.routes, currentManifest.routes) ||
-    !arraysEqual(newManifest.islands, currentManifest.islands) ||
-    !arraysEqual(newManifest.components, currentManifest.components) ||
-    !arraysEqual(newManifest.schemas, currentManifest.schemas) ||
-    !arraysEqual(newManifest.loaders, currentManifest.loaders);
-
-  if (manifestChanged) await generate(dir, newManifest);
+  if (manifestDataChanged) await generate(dir, newManifestData);
 
   await setupGithooks();
 
-  if (onListen) onListen();
+  onListen?.();
 
-  await import(entrypoint);
+  const entrypointHref = new URL(entrypoint, base).href;
+
+  await import(entrypointHref);
 }
 
-interface SchemaMap {
-  component: string;
-  schema: Record<string, any>;
-}
+// TODO: I'm double checking if we need this
+// async function loadModuleForEntity(
+//   dir: string,
+//   entityName: string,
+//   type: "loaders" | "islands" | "components"
+// ) {
+//   const fileModule = await import(toFileUrl(join(dir, type, entityName)).href);
 
-// This only handles islands and components at rootPath.
-// Ex: ./islands/Foo.tsx or ./components/Bar.tsx .
-// This ./components/My/Nested/Component.tsx won't work
-async function collectComponentsSchemas(
-  islands: string[],
-  components: string[],
-  directory: string,
-): Promise<SchemaMap[]> {
-  // Islands has precedence over components
-  const islandComponents = new Set<string>([...islands]);
+//   return fileModule;
+// }
 
-  const mapComponentToSchemaMap = async (
-    componentName: string,
-    type: "islands" | "components",
-  ) => {
-    const componentModule = await import(
-      toFileUrl(
-        join(directory, type, componentName),
-      ).href
-    );
-
-    const schema = componentModule.schema;
-
-    if (!schema) {
-      return;
-    }
-
-    return {
-      component: componentNameFromPath(componentName),
-      schema,
-    };
+async function generateDevManifestData(dir: string): Promise<DevManifestData> {
+  const [manifestFile, components, loaders] = await Promise.all([
+    collect(dir),
+    collectComponents(dir),
+    collectLoaders(dir),
+  ]);
+  return {
+    routes: manifestFile.routes,
+    islands: manifestFile.islands,
+    loaders,
+    components,
   };
-
-  const componentSchemasPromises: Promise<SchemaMap | undefined>[] = [];
-  islands.forEach((islandName) => {
-    componentSchemasPromises.push(
-      mapComponentToSchemaMap(islandName, "islands"),
-    );
-  });
-
-  components.forEach((componentName) => {
-    if (
-      islandComponents.has(componentName)
-    ) {
-      return;
-    }
-
-    componentSchemasPromises.push(
-      mapComponentToSchemaMap(componentName, "components"),
-    );
-  });
-
-  const componentsSchemas = await Promise.all(componentSchemasPromises);
-
-  return componentsSchemas.filter((value): value is SchemaMap =>
-    Boolean(value)
-  );
 }
 
-export async function generate(directory: string, manifest: DevManifest) {
-  const { routes, islands, components, schemas, loaders } = manifest;
+export async function generate(directory: string, manifest: DevManifestData) {
+  const { routes, islands, components, loaders } = manifest;
 
   const output = `// DO NOT EDIT. This file is generated by deco.
     // This file SHOULD be checked into source version control.
@@ -152,7 +102,6 @@ export async function generate(directory: string, manifest: DevManifest) {
       islands: {${islands.map(templates.islands.obj).join("\n")}},
       components: {${components.map(templates.components.obj).join("\n")}},
       loaders: {${loaders.map(templates.loaders.obj).join("\n")}},
-      schemas: {${schemas.map(templates.schemas).join("\n")}},
       baseUrl: import.meta.url,
       config,
     };
@@ -166,7 +115,16 @@ export async function generate(directory: string, manifest: DevManifest) {
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands and ${components.length} components.`,
-    "color: green; font-weight: bold",
+    "color: green; font-weight: bold"
+  );
+}
+
+function manifestDataEquals(a: DevManifestData, b: DevManifestData) {
+  return (
+    arraysEqual(a.routes, b.routes) &&
+    arraysEqual(a.islands, b.islands) &&
+    arraysEqual(a.components, b.components) &&
+    arraysEqual(a.loaders, b.loaders)
   );
 }
 
@@ -206,16 +164,20 @@ export async function format(content: string) {
   return new TextDecoder().decode(out);
 }
 
-function collectComponents(dir: string): Promise<string[]> {
+async function collectComponents(dir: string): Promise<string[]> {
   const componentsDir = join(dir, "./components");
 
-  return collectFilesFromDir(componentsDir);
+  const componentNames = await collectFilesFromDir(componentsDir);
+
+  return componentNames;
 }
 
-function collectLoaders(dir: string): Promise<string[]> {
+async function collectLoaders(dir: string): Promise<string[]> {
   const loadersDir = join(dir, "./loaders");
 
-  return collectFilesFromDir(loadersDir);
+  const loaderNames = await collectFilesFromDir(loadersDir);
+
+  return loaderNames;
 }
 
 async function collectFilesFromDir(dir: string) {
@@ -236,9 +198,7 @@ async function collectFilesFromDir(dir: string) {
 
     for await (const entry of filesFromDir) {
       if (entry.isFile) {
-        const file = toFileUrl(entry.path).href.substring(
-          dirURL.href.length,
-        );
+        const file = toFileUrl(entry.path).href.substring(dirURL.href.length);
         files.push(file);
       }
     }
@@ -278,7 +238,4 @@ const templates = {
       `import * as $$$$${i} from "./loaders${file}";`,
     obj: (file: string, i: number) => `"./loaders${file}": $$$$${i},`,
   },
-  schemas: (
-    { component, schema }: SchemaMap,
-  ) => `"${component}": ${schema ? JSON.stringify(schema) : null},`,
 };

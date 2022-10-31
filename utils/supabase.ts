@@ -1,5 +1,8 @@
+import { Context } from "https://esm.sh/v96/preact@10.11.1/src/index.d.ts";
+import { context } from "../server.ts";
 import getSupabaseClient from "../supabase.ts";
-import { Flag } from "../types.ts";
+import { Flag, Page, PageComponent, PageLoader } from "../types.ts";
+import { appendHash } from "./loaders.ts";
 
 export const getSiteIdFromName = async (siteName: string) => {
   const { data: Site, error } = await getSupabaseClient()
@@ -14,30 +17,24 @@ export const getSiteIdFromName = async (siteName: string) => {
   return Site![0].id;
 };
 
-export const getPageFromId = async (
-  pageId: string,
-  siteId: string,
-) => {
-  // Getting prod page in order to duplicate
-  const { data: Pages, error } = await getSupabaseClient()
+export const fetchPageFromId = async (pageId: number): Promise<Page> => {
+  const { data: pages, error } = await getSupabaseClient()
     .from("pages")
-    .select("*")
-    .match({ id: pageId, site: siteId });
+    .select("id, name, data, path")
+    .match({ id: pageId });
 
-  if (error) {
-    throw new Error(error.message);
+  const match = pages?.[0];
+
+  if (error || !match) {
+    throw new Error(error?.message || `Page with id ${pageId} not found`);
   }
 
-  if (Pages.length == 0) {
-    throw new Error("page not found");
-  }
-
-  return Pages;
+  return match as Page;
 };
 
 export const getFlagFromPageId = async (
   pageId: string,
-  siteId: number,
+  siteId: number
 ): Promise<Flag> => {
   // Getting prod page in order to duplicate
 
@@ -57,74 +54,71 @@ export const getFlagFromPageId = async (
   return Flags[0] as Flag;
 };
 
-export const getFlagFromId = async (
-  flagId: string,
-  siteId: string,
-): Promise<Flag> => {
-  // Getting prod page in order to duplicate
-  const { data: Flags, error } = await getSupabaseClient()
-    .from("flags")
-    .select("*")
-    .match({ id: flagId, site: siteId });
+// export const getFlagFromId = async (
+//   flagId: string,
+//   siteId: string,
+// ): Promise<Flag> => {
+//   // Getting prod page in order to duplicate
+//   const { data: Flags, error } = await getSupabaseClient()
+//     .from("flags")
+//     .select("*")
+//     .match({ id: flagId, site: siteId });
 
-  if (error) {
-    throw new Error(error.message);
-  }
+//   if (error) {
+//     throw new Error(error.message);
+//   }
 
-  if (Flags.length == 0) {
-    throw new Error("flag not found");
-  }
+//   if (Flags.length == 0) {
+//     throw new Error("flag not found");
+//   }
 
-  return Flags[0] as Flag;
-};
+//   return Flags[0] as Flag;
+// };
 
-export const getProdPage = async (
-  siteId: number,
-  pathName: string,
-  template?: string,
-) => {
+export const fetchPageFromPathname = async (
+  path: string,
+  siteId: number
+): Promise<Page> => {
+  // TODO: If page has dynamic params, query all prod pages and run
+  // matchPath
+  const __pathToLookFor = path.endsWith("/p") ? "/:slug/p" : path;
+
   /**
    * Queries follow PostgREST syntax
    * https://postgrest.org/en/stable/api.html#horizontal-filtering-rows
    */
-  const queries = [pathName, template]
-    .filter((query) => Boolean(query))
-    .map((query) => `path.eq.${query}`)
-    .join(",");
 
-  // TODO: Ensure pages list are correct (only 1 prod and flags list)
   const { data: Pages, error } = await getSupabaseClient()
     .from("pages")
-    .select("*")
+    .select("id, name, data, path")
     .match({ site: siteId, archived: false })
     .is("flag", null)
     .is("archived", false)
-    .or(queries);
+    .eq("path", __pathToLookFor);
 
-  if (error) {
-    throw new Error(error.message);
+  const match = Pages?.[0];
+
+  if (error || !match) {
+    throw new Error(error?.message || `Page with path "${path}" not found`);
   }
 
-  return Pages;
+  return match as Page;
 };
 
 export const duplicateProdPage = async (
-  pathName: string,
-  template: string | undefined,
-  siteId: number,
+  pageId: number,
+  siteId: number
 ): Promise<string> => {
   // Getting prod page in order to duplicate
-  const [prodPage] = await getProdPage(siteId, pathName, template);
+  const page = await fetchPageFromId(pageId);
 
   // Create flag
-  const flagResponse = await getSupabaseClient()
-    .from("flags")
-    .insert({
-      name: prodPage?.name,
-      audience: "",
-      site: prodPage?.site,
-      traffic: 0,
-    });
+  const flagResponse = await getSupabaseClient().from("flags").insert({
+    name: page?.name,
+    audience: "",
+    site: siteId,
+    traffic: 0,
+  });
 
   if (flagResponse.error) {
     throw new Error(flagResponse.error.message);
@@ -134,12 +128,7 @@ export const duplicateProdPage = async (
   const pageResponse = await getSupabaseClient()
     .from("pages")
     .insert({
-      data: prodPage?.data ?? {},
-      full_name: prodPage['full_name'],
-      path: prodPage?.path ?? "",
-      public: prodPage?.public ?? false,
-      name: prodPage?.name,
-      site: prodPage?.site,
+      ...page,
       archived: false,
       flag: flagResponse.data![0]!.id,
     });
@@ -149,4 +138,60 @@ export const duplicateProdPage = async (
   }
 
   return pageResponse.data![0]!.id;
+};
+
+export const ___tempMigratePageData = async (page: Page): Promise<Page> => {
+  const newComponents = page?.data?.components.map((c): PageComponent => {
+    const oldComponent = c as unknown as { component: string };
+    const oldComponentKey = oldComponent?.component;
+
+    const __componentKeyInManifest = `./components/${oldComponentKey}.tsx`;
+
+    const __islandKeyInManifest = `./islands/${oldComponentKey}.tsx`;
+
+    const key = context.manifest?.islands[__islandKeyInManifest]
+      ? __islandKeyInManifest
+      : __componentKeyInManifest;
+
+    return {
+      key,
+      label: oldComponentKey,
+      uniqueId: appendHash(oldComponentKey),
+      props: c.props,
+    };
+  });
+  const newLoaders = page?.data?.loaders.map((loader) => {
+    const oldLoader = loader as unknown as {
+      loader: string;
+      name: string;
+      props: Record<string, any>;
+    };
+    const key = `./loaders/${oldLoader.loader}.ts`;
+    const uniqueId = oldLoader.name;
+    const label = "VTEX - Search Products";
+    const outputSchema =
+      context?.manifest?.loaders[key]?.default?.outputSchema?.$ref;
+
+    return {
+      key,
+      label,
+      outputSchema,
+      uniqueId,
+      props: loader.props,
+    } as PageLoader;
+  });
+
+  const newData = { components: newComponents, loaders: newLoaders };
+  const { data: pages, error } = await getSupabaseClient()
+    .from("pages")
+    .update({ data: newData })
+    .match({ id: page?.id });
+
+  const match = pages?.[0];
+
+  if (error || !match) {
+    throw new Error(error?.message || `Unable to update `);
+  }
+
+  return { ...page, data: newData } as Page;
 };

@@ -1,7 +1,7 @@
 import { useEffect } from "preact/hooks";
 import { AuthChangeEvent } from "supabase";
-import { Handler, Handlers } from "$fresh/server.ts";
-import { getCookies, setCookie } from "std/http/mod.ts";
+import { Handler } from "$fresh/server.ts";
+import { getCookies } from "std/http/mod.ts";
 import { createServerTiming } from "./utils/serverTimings.ts";
 import getSupabaseClient from "./supabase.ts";
 
@@ -35,15 +35,20 @@ export function getUser(req: Request) {
 export function createPrivateHandler<T>(handler: Handler<T>): Handler<T> {
   return async (req, ctx) => {
     let res: Response;
+    const url = new URL(req.url);
+    const pathname = url.pathname;
     const { start, end, printTimings } = createServerTiming();
     start("auth");
     const user = await getUser(req);
     end("auth");
     if (!user || user.error) {
-      res = new Response(user.error ? user.error.message : "Redirect", {
-        status: 302,
-        headers: { location: "/live/login" },
-      });
+      res = new Response(
+        user.error ? user.error.message : "Redirect to login",
+        {
+          status: 302,
+          headers: { location: `/login${pathname}` },
+        },
+      );
     } else {
       ctx.state.user = user;
       res = await handler(req, ctx);
@@ -56,40 +61,3 @@ export function createPrivateHandler<T>(handler: Handler<T>): Handler<T> {
     return res;
   };
 }
-
-export const authHandler: Handlers = {
-  async POST(req, ctx) {
-    const headers = new Headers();
-    const { event, session } = await req.json();
-    console.log({ event, session });
-    if (!event) throw new Error("Auth event missing!");
-    if (event === "SIGNED_IN") {
-      if (!session) throw new Error("Auth session missing!");
-
-      [
-        { key: "access-token", value: session.access_token },
-        { key: "refresh-token", value: session.refresh_token },
-      ]
-        .map((token) => ({
-          name: `live-${token.key}`,
-          value: token.value,
-          path: "/",
-          // domain: this.cookieOptions.domain,
-          // maxAge: this.cookieOptions.lifetime ?? 0,
-          // sameSite: this.cookieOptions.sameSite,
-        }))
-        .forEach((cookie) => setCookie(headers, cookie));
-    }
-    if (event === "SIGNED_OUT") {
-      ["access-token", "refresh-token"]
-        .map((key) => ({
-          name: `live-${key}`,
-          value: "",
-          maxAge: -1,
-        }))
-        .forEach((cookie) => setCookie(headers, cookie));
-    }
-
-    return new Response(null, { status: 200, headers });
-  },
-};

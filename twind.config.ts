@@ -1,9 +1,20 @@
-import { Options } from "$fresh/plugins/twind.ts";
-import * as colors from "twind/colors";
-
+/** @type {import('$fresh/plugins/twind').Options} */
 export default {
-  selfURL: import.meta.url,
   theme: {
+    extend: {
+      colors: {
+        primary: "#2FD180",
+        "primary-green-light": "#2EAE80",
+        "primary-green-dark": "#177151",
+        "primary-dark": "#221E1F",
+        "primary-light": "#f4f4f4",
+        "custom-brown": "#f8f5f1",
+        "custom-gray": "#f4f4f4",
+        "primary-red": "#D10923",
+        "primary-red-light": "#DA262B",
+        "primary-red-dark": "#A1061A",
+      },
+    },
     screens: {
       sm: "640px",
       md: "768px",
@@ -11,18 +22,5 @@ export default {
       xl: "1280px",
       "2xl": "1536px",
     },
-    colors: {
-      primary: "#2FD180",
-      "primary-dark": "#003232",
-      "primary-light": "#C5FFE9",
-      blue: colors.blue,
-      black: colors.black,
-      gray: colors.gray,
-      green: colors.green,
-      white: colors.white,
-      yellow: colors.yellow,
-      red: "#FF4C4C",
-      transparent: "transparent",
-    },
   },
-} as Options;
+};
