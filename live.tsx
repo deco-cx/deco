@@ -1,4 +1,4 @@
-import type { ComponentChildren } from "preact";
+import type { ComponentChildren, FunctionComponent } from "preact";
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { EditorData, Page, PageData } from "$live/types.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
@@ -7,7 +7,6 @@ import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
 
 import { context } from "$live/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
-import { ___tempMigratePageData } from "./utils/supabase.ts";
 import { resolveFilePath } from "./utils/filesystem.ts";
 
 export function live() {
@@ -87,21 +86,6 @@ export function live() {
       end("load-page");
 
       if (url.searchParams.has("editorData")) {
-        // ALERT: This is only being used while we're developing this refact.
-
-        // TODO: Perform this to all pages when we release this
-        // or continue doing it gracefully
-        const _______needsMigration = page?.data?.components?.some(
-          (c) => (c as unknown as any)["component"],
-        );
-
-        if (_______needsMigration) {
-          const updatedPage = await ___tempMigratePageData(page);
-
-          const editorData = generateEditorData(updatedPage);
-          return Response.json(editorData);
-        }
-
         const editorData = generateEditorData(page);
         return Response.json(editorData);
       }
@@ -112,7 +96,7 @@ export function live() {
         ctx,
         page?.data,
         start,
-        end,
+        end
       );
       end("load-data");
 
@@ -145,7 +129,7 @@ export function LiveComponents({ components }: PageData) {
   return (
     <>
       {components?.map(({ key, props, uniqueId }) => {
-        const Comp = getComponentModule(manifest, key)?.default;
+        const Comp = (getComponentModule(manifest, key)?.default) as FunctionComponent;
 
         return (
           <div id={uniqueId}>
@@ -166,7 +150,8 @@ export function LivePage({
   const manifest = context.manifest!;
   // TODO: Read this from context
   const isProduction = context.deploymentId !== undefined;
-  const InjectLiveScripts = !isProduction &&
+  const InjectLiveScripts =
+    !isProduction &&
     manifest.islands[`./islands/InjectLiveScripts.tsx`]?.default;
 
   return (
@@ -192,7 +177,7 @@ function generateEditorData(page: Page): EditorData {
     (component): EditorData["components"][0] => ({
       ...component,
       schema: context.manifest?.components[component.key]?.schema,
-    }),
+    })
   );
 
   const loadersWithSchema = loaders.map((loader): EditorData["loaders"][0] => ({
@@ -204,7 +189,7 @@ function generateEditorData(page: Page): EditorData {
   }));
 
   const availableComponents = Object.keys(
-    context.manifest?.components || {},
+    context.manifest?.components || {}
   ).map((componentKey) => {
     const schema = context.manifest?.components[componentKey]?.schema;
     const label = filenameFromPath(componentKey);
@@ -235,7 +220,7 @@ function generateEditorData(page: Page): EditorData {
         // TODO: Centralize this logic
         outputSchema: outputSchema?.$ref,
       } as EditorData["availableLoaders"][0];
-    },
+    }
   );
 
   return {
