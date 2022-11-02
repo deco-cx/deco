@@ -63,7 +63,7 @@ export function live() {
         ctx,
         page?.data,
         start,
-        end
+        end,
       );
       end("load-data");
 
@@ -79,7 +79,7 @@ export function live() {
       const url = new URL(req.url);
       if (
         url.pathname === "/inspect-vscode" &&
-        context.deploymentId !== undefined
+        context.deploymentId === undefined
       ) {
         return await InspectVSCodeHandler.POST!(req, ctx);
       }
@@ -96,7 +96,8 @@ export function LiveComponents({ components }: PageData) {
   return (
     <>
       {components?.map(({ key, props, uniqueId }) => {
-        const Comp = (getComponentModule(manifest, key)?.default) as FunctionComponent;
+        const Comp =
+          (getComponentModule(manifest, key)?.default) as FunctionComponent;
 
         return (
           <div id={uniqueId}>
@@ -117,8 +118,7 @@ export function LivePage({
   const manifest = context.manifest!;
   // TODO: Read this from context
   const isProduction = context.deploymentId !== undefined;
-  const InjectLiveScripts =
-    !isProduction &&
+  const InjectLiveScripts = !isProduction &&
     manifest.islands[`./islands/InjectLiveScripts.tsx`]?.default;
 
   return (
@@ -144,7 +144,7 @@ function generateEditorData(page: Page): EditorData {
     (component): EditorData["components"][0] => ({
       ...component,
       schema: context.manifest?.components[component.key]?.schema,
-    })
+    }),
   );
 
   const loadersWithSchema = loaders.map((loader): EditorData["loaders"][0] => ({
@@ -156,7 +156,7 @@ function generateEditorData(page: Page): EditorData {
   }));
 
   const availableComponents = Object.keys(
-    context.manifest?.components || {}
+    context.manifest?.components || {},
   ).map((componentKey) => {
     const schema = context.manifest?.components[componentKey]?.schema;
     const label = filenameFromPath(componentKey);
@@ -187,7 +187,7 @@ function generateEditorData(page: Page): EditorData {
         // TODO: Centralize this logic
         outputSchema: outputSchema?.$ref,
       } as EditorData["availableLoaders"][0];
-    }
+    },
   );
 
   return {
