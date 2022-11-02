@@ -55,17 +55,17 @@ export async function copyLibFiles(dest: string, opts: { debugDir?: boolean }) {
 }
 
 let destination = "";
+const defaultDest = "static/~partytown";
 const opts = { debugDir: false };
 
 const [arg0, arg1] = Deno.args;
 
 if (typeof arg0 !== "string" || arg0.length === 0 || arg0.startsWith("-")) {
-  throw new Error(
-    "Missing destination directory. \n Run deno task <taskName> <destination_folder>",
-  );
+  console.log(`Using default directory ${defaultDest}`);
+  destination = defaultDest;
+} else {
+  destination = arg0;
 }
-
-destination = arg0;
 
 if (arg1 === "--debug") {
   opts.debugDir = true;
