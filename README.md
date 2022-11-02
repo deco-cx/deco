@@ -4,7 +4,7 @@ Live is the edge-native CMS based on fresh. It lets your business users live
 edit any fresh site.
 
 Want to create a Live Site? Use the
-[deco start template repo](https://github.com/deco-pages/start) to create a new
+[deco start template repo](https://github.com/deco-sites/start) to create a new
 site. Clone it and run `deno task start`. That's it.
 
 ## Adding live to an existing fresh site
@@ -14,7 +14,7 @@ Add the `$live` import to your `import_map.json` file:
 ```json
 {
   "imports": {
-    "$live/": "https://deno.land/x/live@0.0.8/",
+    "$live/": "https://deno.land/x/live@0.1.17/",
     "(...)": "(...)"
   }
 }
@@ -23,8 +23,8 @@ Add the `$live` import to your `import_map.json` file:
 Then replace your `routes/index.tsx` file with this:
 
 ```tsx
-import { createLiveHandler, LivePage } from "$live/live.tsx";
-export const handler = createLiveHandler();
+import { live, LivePage } from "$live/live.tsx";
+export const handler = live();
 export default LivePage;
 ```
 
@@ -44,6 +44,7 @@ import { start } from "$live/server.ts";
 
 await start(manifest, {
   site: "mysitename",
+  siteId: 420,
   domains: ["mysitename.com"],
 });
 ```
@@ -52,7 +53,7 @@ Replacing `site` and `domains` for your own values. Haven't created a site yet?
 Go to `deco.cx` and create one for free.
 
 **PROTIP:** When you create a site on `deco.cx`, you automatically get a working
-repository at `deco-pages/<your-site>`. You can clone it, start coding your
+repository at `deco-sites/<your-site>`. You can clone it, start coding your
 components and deploying right away, with zero setup.
 
 ## Live scripts
@@ -116,7 +117,7 @@ import MyTestComponent from "../components/MyTestComponent.tsx";
 
 The partytown library needs the web and service workers' static files to work.
 This script copies these required files. More info:
-https://partytown.builder.io/copy-library-files Add the `copyPartytown` task to
+<https://partytown.builder.io/copy-library-files> Add the `copyPartytown` task to
 your `deno.json` file:
 
 ```json

@@ -57,13 +57,18 @@ export const start = async (
   context.plugins = liveOptions.plugins || [];
   context.domains.push(
     `${liveOptions.site}.deco.page`,
+    `${liveOptions.site}.deco.site`,
     `deco-pages-${liveOptions.site}.deno.dev`,
+    `deco-sites-${liveOptions.site}.deno.dev`,
   );
   liveOptions.domains?.forEach((domain) => context.domains.push(domain));
   // Support deploy preview domains
   if (context.deploymentId !== undefined) {
     context.domains.push(
       `deco-pages-${context.site}-${context.deploymentId}.deno.dev`,
+    );
+    context.domains.push(
+      `deco-sites-${context.site}-${context.deploymentId}.deno.dev`,
     );
   }
 
