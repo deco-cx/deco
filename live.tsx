@@ -1,14 +1,16 @@
-import type { ComponentChildren, FunctionComponent } from "preact";
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { EditorData, Page, PageData } from "$live/types.ts";
-import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
-import { createServerTiming } from "$live/utils/serverTimings.ts";
-import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
-
-import { context } from "$live/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
-import { resolveFilePath } from "./utils/filesystem.ts";
+import { context } from "$live/server.ts";
+import { EditorData, Page, PageData } from "$live/types.ts";
+import {
+  filenameFromPath,
+  getComponentList,
+  getComponentModule,
+} from "$live/utils/component.ts";
+import { createServerTiming } from "$live/utils/serverTimings.ts";
+import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 
+import type { ComponentChildren, FunctionComponent } from "preact";
 export function live() {
   const handler: Handlers<Page> = {
     async GET(req, ctx) {
@@ -17,52 +19,13 @@ export function live() {
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
       if (url.pathname.startsWith("/_live/components")) {
-        const component = url.searchParams.get("component");
-
-        if (component) {
-          return ctx.render({
-            id: -1,
-            name: "The Impossible Page",
-            path: "/",
-            data: {
-              components: [
-                {
-                  key: component,
-                  label: "",
-                  uniqueId: "",
-                  props: {},
-                },
-              ],
-              loaders: [],
-            },
-          });
-        }
-
-        return new Response(
-          JSON.stringify(
-            Object.keys(context.manifest?.components ?? {})
-              .filter(
-                (component) =>
-                  component.split("/").length === 3 &&
-                  component.endsWith(".tsx")
-              ) // allow components/[component].tsx only
-              .map((component) => ({
-                name: component.replace("./components/", ""),
-                path: component.replace("./", ""),
-                link:
-                  context.deploymentId === undefined // only allow vscode when developing locally
-                    ? `vscode://file/${resolveFilePath(component)}`
-                    : undefined,
-              }))
-          ),
-          {
-            status: 200,
-            headers: {
-              "content-type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
-          }
-        );
+        return new Response(JSON.stringify(getComponentList()), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
       }
 
       const { start, end, printTimings } = createServerTiming();
@@ -87,7 +50,11 @@ export function live() {
 
       if (url.searchParams.has("editorData")) {
         const editorData = generateEditorData(page);
-        return Response.json(editorData);
+        return Response.json(editorData, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
       }
 
       start("load-data");
