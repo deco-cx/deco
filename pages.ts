@@ -1,16 +1,21 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { PageData } from "$live/types.ts";
-import { fetchPageFromId, fetchPageFromPathname } from "./utils/supabase.ts";
-import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
 import { context } from "$live/server.ts";
-import { path } from "./utils/path.ts";
+import { PageData } from "$live/types.ts";
+
 import { Page } from "./types.ts";
+import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
+import { path } from "./utils/path.ts";
+import { fetchPageFromComponent, fetchPageFromId, fetchPageFromPathname } from "./utils/supabase.ts";
 
 export async function loadLivePage(req: Request): Promise<Page> {
   const url = new URL(req.url);
-  const pageId = parseInt(url.searchParams.get("pageId")!, 10);
+  const pageIdParam = url.searchParams.get("pageId");
+  const component = url.searchParams.get("component");
+  const pageId = pageIdParam && parseInt(pageIdParam, 10);
 
-  const page = pageId
+  const page = component
+    ? await fetchPageFromComponent(component)
+    : pageId
     ? await fetchPageFromId(pageId)
     : await fetchPageFromPathname(url.pathname, context.siteId);
 

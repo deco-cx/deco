@@ -1,8 +1,10 @@
-import { Context } from "https://esm.sh/v96/preact@10.11.1/src/index.d.ts";
-import { context } from "../server.ts";
 import getSupabaseClient from "../supabase.ts";
-import { Flag, Page, PageComponent, PageLoader } from "../types.ts";
-import { appendHash } from "./loaders.ts";
+import { Flag, Page } from "../types.ts";
+import {
+  createComponent,
+  createPageForComponent,
+  exists,
+} from "./component.ts";
 
 export const getSiteIdFromName = async (siteName: string) => {
   const { data: Site, error } = await getSupabaseClient()
@@ -15,6 +17,45 @@ export const getSiteIdFromName = async (siteName: string) => {
   }
 
   return Site![0].id;
+};
+
+/**
+ * Fetches a page containing this component.
+ *
+ * This is used for creating the canvas. It retrieves
+ * or generates a fake page from the database at
+ * /_live/components/<componentName.tsx>
+ *
+ * This way we can use the page editor to edit components too
+ */
+export const fetchPageFromComponent = async (
+  component: string, // Ex: Banner.tsx
+) => {
+  const supabase = getSupabaseClient();
+  const { component: instance, loaders } = createComponent(
+    `./components/${component}`,
+  );
+  const page = createPageForComponent(component, {
+    components: [instance],
+    loaders,
+  });
+
+  if (!exists(`./components/${component}`)) {
+    throw new Error(`Component at ${component} Not Found`);
+  }
+
+  const { data } = await supabase
+    .from<Page>("pages")
+    .select("id, path")
+    .match({ path: page.path });
+
+  const match = data?.[0];
+
+  if (match) {
+    return fetchPageFromId(match.id);
+  }
+
+  return page;
 };
 
 export const fetchPageFromId = async (pageId: number): Promise<Page> => {
