@@ -9,11 +9,7 @@ export interface Module extends IslandModule {
 }
 
 export interface Loader {
-  loader: (
-    req: Request,
-    ctx: HandlerContext<any>,
-    props: any,
-  ) => Promise<any>;
+  loader: (req: Request, ctx: HandlerContext<any>, props: any) => Promise<any>;
   inputSchema: JSONSchema7;
   outputSchema: { $ref: NonNullable<JSONSchema7["$ref"]> };
 }
@@ -65,6 +61,16 @@ export interface Page {
   data: PageData;
   name: string;
   path: string;
+}
+
+/**
+ * This type is used only on the render flow, after we matched an URL path
+ * and possibly found page params (e.g: "/:slug/p" with the url "/blouse/p"
+ * generates params: { slug: "blouse"})
+ */
+export interface PageWithParams {
+  page: Page;
+  params?: Record<string, string>;
 }
 
 export interface Flag {
