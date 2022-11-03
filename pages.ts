@@ -13,7 +13,7 @@ import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
 import { path } from "./utils/path.ts";
 
 export async function loadLivePage(
-  req: Request
+  req: Request,
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
@@ -25,7 +25,7 @@ export async function loadLivePage(
       return fetchPageFromComponent(component);
     }
     if (pageId) {
-      return fetchPageFromId(pageId);
+      return fetchPageFromId(pageId, url.pathname);
     }
     return fetchPageFromPathname(url.pathname, context.siteId);
   })();
@@ -38,7 +38,7 @@ export async function loadData(
   ctx: HandlerContext<Page>,
   pageData: PageData,
   start: (l: string) => void,
-  end: (l: string) => void
+  end: (l: string) => void,
 ): Promise<PageData> {
   const loadersResponse = await Promise.all(
     pageData.loaders?.map(async ({ key, props, uniqueId }) => {
@@ -55,7 +55,7 @@ export async function loadData(
         uniqueId,
         data: loaderData,
       };
-    }) ?? []
+    }) ?? [],
   );
 
   const loadersResponseMap = loadersResponse.reduce(
@@ -63,7 +63,7 @@ export async function loadData(
       result[currentResponse.uniqueId] = currentResponse.data;
       return result;
     },
-    {} as Record<string, unknown>
+    {} as Record<string, unknown>,
   );
 
   const componentsWithData = pageData.components.map((componentData) => {
@@ -82,7 +82,7 @@ export async function loadData(
 
         const loaderValue = path(
           loadersResponseMap,
-          propToLoaderInstance(propValue)
+          propToLoaderInstance(propValue),
         );
 
         return { key: propKey, value: loaderValue };
@@ -97,7 +97,7 @@ export async function loadData(
 
 export const fetchPageFromPathname = async (
   path: string,
-  siteId: number
+  siteId: number,
 ): Promise<PageWithParams | null> => {
   const { data: pages, error } = await getSupabaseClient()
     .from("pages")
@@ -137,7 +137,7 @@ export const fetchPageFromPathname = async (
  */
 export const fetchPageFromId = async (
   pageId: number,
-  pathname?: string
+  pathname?: string,
 ): Promise<PageWithParams> => {
   const { data: pages, error } = await getSupabaseClient()
     .from("pages")
@@ -150,9 +150,9 @@ export const fetchPageFromId = async (
     throw new Error(error?.message || `Page with id ${pageId} not found`);
   }
 
-  const urlPattern = new URLPattern(matchPage.path);
+  const urlPattern = new URLPattern({ pathname: matchPage.path });
   const params = pathname
-    ? urlPattern.exec(pathname)?.pathname.groups
+    ? urlPattern.exec({ pathname })?.pathname.groups
     : undefined;
 
   return {
@@ -171,11 +171,11 @@ export const fetchPageFromId = async (
  * This way we can use the page editor to edit components too
  */
 export const fetchPageFromComponent = async (
-  component: string // Ex: Banner.tsx
+  component: string, // Ex: Banner.tsx
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
   const { component: instance, loaders } = createComponent(
-    `./components/${component}`
+    `./components/${component}`,
   );
   const page = createPageForComponent(component, {
     components: [instance],
@@ -206,7 +206,6 @@ export const fetchPageFromComponent = async (
  *
  * Logic extracted from:
  * https://github.com/denoland/fresh/blob/046fcde959041ac9cd5f2b39671c819c4af5cc24/src/server/context.ts#L683
- * 
  */
 export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
   const rankRoute = (pattern: string) => {
