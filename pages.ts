@@ -1,25 +1,36 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { context } from "$live/server.ts";
-import { PageData } from "$live/types.ts";
+import { PageData, PageWithParams } from "$live/types.ts";
+import getSupabaseClient from "./supabase.ts";
 
 import { Page } from "./types.ts";
+import {
+  createComponent,
+  createPageForComponent,
+  exists,
+} from "./utils/component.ts";
 import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
 import { path } from "./utils/path.ts";
-import { fetchPageFromComponent, fetchPageFromId, fetchPageFromPathname } from "./utils/supabase.ts";
 
-export async function loadLivePage(req: Request): Promise<Page> {
+export async function loadLivePage(
+  req: Request
+): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
   const component = url.searchParams.get("component");
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
 
-  const page = component
-    ? await fetchPageFromComponent(component)
-    : pageId
-    ? await fetchPageFromId(pageId)
-    : await fetchPageFromPathname(url.pathname, context.siteId);
+  const pageWithParams = await ((): Promise<PageWithParams | null> => {
+    if (component) {
+      return fetchPageFromComponent(component);
+    }
+    if (pageId) {
+      return fetchPageFromId(pageId);
+    }
+    return fetchPageFromPathname(url.pathname, context.siteId);
+  })();
 
-  return page;
+  return pageWithParams;
 }
 
 export async function loadData(
@@ -82,4 +93,141 @@ export async function loadData(
   });
 
   return { ...pageData, components: componentsWithData };
+}
+
+export const fetchPageFromPathname = async (
+  path: string,
+  siteId: number
+): Promise<PageWithParams | null> => {
+  const { data: pages, error } = await getSupabaseClient()
+    .from("pages")
+    .select("id, name, data, path")
+    .match({ site: siteId, archived: false })
+    .is("flag", null)
+    .is("archived", false);
+
+  const routes = pages?.map((page) => ({
+    page,
+    pattern: page.path,
+  })) as Array<{ pattern: string; page: Page }>;
+
+  sortRoutes(routes);
+
+  const matchRoute = routes
+    .map(({ pattern, page }) => {
+      const urlPattern = new URLPattern({ pathname: pattern });
+      const result = urlPattern.exec({ pathname: path });
+
+      return { match: !!result, params: result?.pathname.groups, page };
+    })
+    .find(({ match }) => match);
+
+  if (error || !matchRoute) {
+    console.error(error?.message || `Page with path "${path}" not found`);
+
+    return null;
+  }
+
+  return matchRoute;
+};
+
+/**
+ * Fetchs a specific page from the database and also
+ * computes the page params base on the request's URL if provided
+ */
+export const fetchPageFromId = async (
+  pageId: number,
+  pathname?: string
+): Promise<PageWithParams> => {
+  const { data: pages, error } = await getSupabaseClient()
+    .from("pages")
+    .select("id, name, data, path")
+    .match({ id: pageId });
+
+  const matchPage = pages?.[0];
+
+  if (error || !matchPage) {
+    throw new Error(error?.message || `Page with id ${pageId} not found`);
+  }
+
+  const urlPattern = new URLPattern(matchPage.path);
+  const params = pathname
+    ? urlPattern.exec(pathname)?.pathname.groups
+    : undefined;
+
+  return {
+    page: matchPage as Page,
+    params,
+  };
+};
+
+/**
+ * Fetches a page containing this component.
+ *
+ * This is used for creating the canvas. It retrieves
+ * or generates a fake page from the database at
+ * /_live/components/<componentName.tsx>
+ *
+ * This way we can use the page editor to edit components too
+ */
+export const fetchPageFromComponent = async (
+  component: string // Ex: Banner.tsx
+): Promise<PageWithParams> => {
+  const supabase = getSupabaseClient();
+  const { component: instance, loaders } = createComponent(
+    `./components/${component}`
+  );
+  const page = createPageForComponent(component, {
+    components: [instance],
+    loaders,
+  });
+
+  if (!exists(`./components/${component}`)) {
+    throw new Error(`Component at ${component} Not Found`);
+  }
+
+  const { data } = await supabase
+    .from<Page>("pages")
+    .select("id, path")
+    .match({ path: page.path });
+
+  const match = data?.[0];
+
+  if (match) {
+    return fetchPageFromId(match.id);
+  }
+
+  return { page };
+};
+
+/**
+ * Sort pages by their relative routing priority, based on the parts in the
+ * route matcher
+ *
+ * Extracted from: https://github.com/denoland/fresh/blob/046fcde959041ac9cd5f2b39671c819c4af5cc24/src/server/context.ts#L683
+ */
+export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
+  routes.sort((a, b) => {
+    const partsA = a.pattern.split("/");
+    const partsB = b.pattern.split("/");
+    for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+      const partA = partsA[i];
+      const partB = partsB[i];
+      if (partA === undefined) return -1;
+      if (partB === undefined) return 1;
+      if (partA === partB) continue;
+      const priorityA = partA.startsWith(":")
+        ? partA.endsWith("*")
+          ? 0
+          : 1
+        : 2;
+      const priorityB = partB.startsWith(":")
+        ? partB.endsWith("*")
+          ? 0
+          : 1
+        : 2;
+      return Math.max(Math.min(priorityB - priorityA, 1), -1);
+    }
+    return 0;
+  });
 }

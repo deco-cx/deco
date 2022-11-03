@@ -44,9 +44,16 @@ export function live() {
       // end("load-flags");
 
       start("load-page");
-      const page = await loadLivePage(req);
-      console.log({ "Found Page": page });
+      const pageWithParams = await loadLivePage(req);
       end("load-page");
+
+      if (!pageWithParams) {
+        return ctx.renderNotFound();
+      }
+
+      const { page, params = {} } = pageWithParams;
+
+      console.log({ "Found Page": page });
 
       if (url.searchParams.has("editorData")) {
         const editorData = generateEditorData(page);
@@ -60,7 +67,10 @@ export function live() {
       start("load-data");
       const pageDataAfterLoaders = await loadData(
         req,
-        ctx,
+        {
+          ...ctx,
+          params,
+        },
         page?.data,
         start,
         end,

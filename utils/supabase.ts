@@ -5,6 +5,7 @@ import {
   createPageForComponent,
   exists,
 } from "./component.ts";
+import { fetchPageFromId } from "../pages.ts";
 
 export const getSiteIdFromName = async (siteName: string) => {
   const { data: Site, error } = await getSupabaseClient()
@@ -58,21 +59,6 @@ export const fetchPageFromComponent = async (
   return page;
 };
 
-export const fetchPageFromId = async (pageId: number): Promise<Page> => {
-  const { data: pages, error } = await getSupabaseClient()
-    .from("pages")
-    .select("id, name, data, path")
-    .match({ id: pageId });
-
-  const match = pages?.[0];
-
-  if (error || !match) {
-    throw new Error(error?.message || `Page with id ${pageId} not found`);
-  }
-
-  return match as Page;
-};
-
 export const getFlagFromPageId = async (
   pageId: string,
   siteId: number
@@ -95,63 +81,12 @@ export const getFlagFromPageId = async (
   return Flags[0] as Flag;
 };
 
-// export const getFlagFromId = async (
-//   flagId: string,
-//   siteId: string,
-// ): Promise<Flag> => {
-//   // Getting prod page in order to duplicate
-//   const { data: Flags, error } = await getSupabaseClient()
-//     .from("flags")
-//     .select("*")
-//     .match({ id: flagId, site: siteId });
-
-//   if (error) {
-//     throw new Error(error.message);
-//   }
-
-//   if (Flags.length == 0) {
-//     throw new Error("flag not found");
-//   }
-
-//   return Flags[0] as Flag;
-// };
-
-export const fetchPageFromPathname = async (
-  path: string,
-  siteId: number
-): Promise<Page> => {
-  // TODO: If page has dynamic params, query all prod pages and run
-  // matchPath
-  const __pathToLookFor = path.endsWith("/p") ? "/:slug/p" : path;
-
-  /**
-   * Queries follow PostgREST syntax
-   * https://postgrest.org/en/stable/api.html#horizontal-filtering-rows
-   */
-
-  const { data: Pages, error } = await getSupabaseClient()
-    .from("pages")
-    .select("id, name, data, path")
-    .match({ site: siteId, archived: false })
-    .is("flag", null)
-    .is("archived", false)
-    .eq("path", __pathToLookFor);
-
-  const match = Pages?.[0];
-
-  if (error || !match) {
-    throw new Error(error?.message || `Page with path "${path}" not found`);
-  }
-
-  return match as Page;
-};
-
 export const duplicateProdPage = async (
   pageId: number,
   siteId: number
 ): Promise<string> => {
   // Getting prod page in order to duplicate
-  const page = await fetchPageFromId(pageId);
+  const { page } = await fetchPageFromId(pageId);
 
   // Create flag
   const flagResponse = await getSupabaseClient().from("flags").insert({
