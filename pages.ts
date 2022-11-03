@@ -204,30 +204,28 @@ export const fetchPageFromComponent = async (
  * Sort pages by their relative routing priority, based on the parts in the
  * route matcher
  *
- * Extracted from: https://github.com/denoland/fresh/blob/046fcde959041ac9cd5f2b39671c819c4af5cc24/src/server/context.ts#L683
+ * Logic extracted from:
+ * https://github.com/denoland/fresh/blob/046fcde959041ac9cd5f2b39671c819c4af5cc24/src/server/context.ts#L683
+ * 
  */
 export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
-  routes.sort((a, b) => {
-    const partsA = a.pattern.split("/");
-    const partsB = b.pattern.split("/");
-    for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-      const partA = partsA[i];
-      const partB = partsB[i];
-      if (partA === undefined) return -1;
-      if (partB === undefined) return 1;
-      if (partA === partB) continue;
-      const priorityA = partA.startsWith(":")
-        ? partA.endsWith("*")
-          ? 0
-          : 1
-        : 2;
-      const priorityB = partB.startsWith(":")
-        ? partB.endsWith("*")
-          ? 0
-          : 1
-        : 2;
-      return Math.max(Math.min(priorityB - priorityA, 1), -1);
-    }
-    return 0;
-  });
+  const rankRoute = (pattern: string) => {
+    let routeScore = 0;
+    const parts = pattern.split("/");
+    parts.forEach((routePart) => {
+      if (!routePart) {
+        return;
+      }
+      if (routePart.endsWith("*")) {
+        routeScore += 0;
+      } else if (routePart.startsWith(":")) {
+        routeScore += 1;
+      } else {
+        routeScore += 2;
+      }
+    });
+
+    return routeScore;
+  };
+  routes.sort((a, z) => rankRoute(z.pattern) - rankRoute(a.pattern));
 }
