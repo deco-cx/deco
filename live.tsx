@@ -8,7 +8,7 @@ import {
   getComponentModule,
 } from "$live/utils/component.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
-import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
+import InspectVSCodeHandler from "inspect_vscode/handler.ts";
 
 import type { ComponentChildren, FunctionComponent } from "preact";
 export function live() {
@@ -88,7 +88,7 @@ export function live() {
     async POST(req, ctx) {
       const url = new URL(req.url);
       if (
-        url.pathname === "/inspect-vscode" &&
+        url.pathname.startsWith("/_live/inspect") &&
         context.deploymentId === undefined
       ) {
         return await InspectVSCodeHandler.POST!(req, ctx);
@@ -110,7 +110,7 @@ export function LiveComponents({ components }: PageData) {
           (getComponentModule(manifest, key)?.default) as FunctionComponent;
 
         return (
-          <div id={uniqueId}>
+          <div id={uniqueId} data-manifest-key={key}>
             <Comp {...props} />
           </div>
         );
@@ -128,14 +128,22 @@ export function LivePage({
   const manifest = context.manifest!;
   // TODO: Read this from context
   const isProduction = context.deploymentId !== undefined;
-  const InjectLiveScripts = !isProduction &&
-    manifest.islands[`./islands/InjectLiveScripts.tsx`]?.default;
+  const LiveControls = !isProduction &&
+    manifest.islands[`./islands/LiveControls.tsx`]?.default;
 
   return (
-    <div>
+    <>
       {children ? children : <LiveComponents {...data.data} />}
-      {InjectLiveScripts ? <InjectLiveScripts page={data} /> : null}
-    </div>
+      {LiveControls
+        ? (
+          <LiveControls
+            site={{ id: context.siteId, name: context.site }}
+            page={data}
+            isProduction={isProduction}
+          />
+        )
+        : null}
+    </>
   );
 }
 

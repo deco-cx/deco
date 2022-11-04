@@ -11,6 +11,6 @@
     "std/": "https://deno.land/std@0.147.0/",
     "supabase": "https://esm.sh/@supabase/supabase-js@1.35.4",
     "json-schema": "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts",
-    "inspect_vscode/": "https://deno.land/x/inspect_vscode@0.0.6/"
+    "inspect_vscode/": "https://deno.land/x/inspect_vscode@0.1.2/"
   }
 }
