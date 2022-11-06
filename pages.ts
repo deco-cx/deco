@@ -171,6 +171,7 @@ export const fetchPageFromId = async (
     ? urlPattern.exec({ pathname })?.pathname.groups
     : undefined;
 
+  console.log({ matchPage, params, pathname });
   return {
     page: matchPage as Page,
     params,
