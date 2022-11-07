@@ -1,6 +1,13 @@
 import { useEffect, useState } from "preact/hooks";
 import { Page, Site } from "$live/types.ts";
-import InspectVSCode from "inspect_vscode/island.tsx";
+import DomInspector from "inspect_vscode/inspector.ts";
+import { ViewfinderCircleIcon } from "heroicons";
+
+declare global {
+  interface Window {
+    inspectVSCode: DomInspector;
+  }
+}
 
 interface Props {
   site: Site;
@@ -51,7 +58,7 @@ export default function LiveControls({ site, page, isProduction }: Props) {
     ) {
       event.stopPropagation();
       window.location =
-        `https://deco.cx/live/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`;
+        `https://deco.cx/live/${window.LIVE.site.id}/pages/${window.LIVE.page.id}` as any;
     }
   };
 
@@ -61,6 +68,8 @@ export default function LiveControls({ site, page, isProduction }: Props) {
       site,
       page,
     };
+
+    window.inspectVSCode = new DomInspector(document.body);
 
     document.body.addEventListener("keydown", handleKeyDownFunction);
 
@@ -85,17 +94,20 @@ export default function LiveControls({ site, page, isProduction }: Props) {
   }, []);
 
   return (
-    <div class="fixed left-3 bottom-3 rounded-xl bg-primary-dark text-primary-light px-3 py-1">
+    <div class="fixed left-3 bottom-3 flex flex-row justify-center pt-4">
       {!isProduction &&
         (
-          <button
-            id="inspect-vscode-button"
-            style={{ padding: "2px" }}
-            onClick={handleInspectClick}
-          >
-            {inspectActive ? "Stop Inspect" : "Inspect"}
-            <InspectVSCode />
-          </button>
+          <span class="relative z-0 inline-flex shadow-sm ">
+            <button
+              type="button"
+              onClick={handleInspectClick}
+              class={`${
+                inspectActive ? "bg-gray-300" : "bg-white hover:bg-gray-50 "
+              } relative inline-flex rounded-md items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-1 focus:ring-primary-green-dark focus:border-primary-green-dark`}
+            >
+              <ViewfinderCircleIcon className="w-6 h-6" />
+            </button>
+          </span>
         )}
     </div>
   );
