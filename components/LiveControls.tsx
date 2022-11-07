@@ -52,7 +52,9 @@ export default function LiveControls({ site, page, isProduction }: Props) {
   };
 
   const handleKeyDownFunction = function handleKeyDown(event: any) {
+    const isLoadedInIframe = window !== window.parent;
     if (
+      !isLoadedInIframe && // Avoid redirect to editor while in editor
       event.ctrlKey && event.shiftKey && event.key === "E" &&
       !event.defaultPrevented
     ) {
