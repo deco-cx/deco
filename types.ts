@@ -2,6 +2,8 @@ import type { IslandModule } from "$fresh/src/server/types.ts";
 import type { HandlerContext, Manifest } from "$fresh/server.ts";
 import type { JSONSchema7 } from "json-schema";
 
+export type { Node } from "./utils/workbench.ts";
+
 export type Schema = JSONSchema7;
 
 export interface Module extends IslandModule {
