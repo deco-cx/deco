@@ -2,15 +2,14 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
 import { context } from "$live/server.ts";
 import { EditorData, Page, PageData } from "$live/types.ts";
-import {
-  filenameFromPath,
-  getComponentList,
-  getComponentModule,
-} from "$live/utils/component.ts";
+import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import InspectVSCodeHandler from "https://deno.land/x/inspect_vscode@0.0.5/handler.ts";
 
+import { getWorkbenchTree } from "./utils/workbench.ts";
+
 import type { ComponentChildren, FunctionComponent } from "preact";
+
 export function live() {
   const handler: Handlers<Page> = {
     async GET(req, ctx) {
@@ -18,8 +17,8 @@ export function live() {
 
       // TODO: Find a better way to embedded this route on project routes.
       // Follow up here: https://github.com/denoland/fresh/issues/516
-      if (url.pathname.startsWith("/_live/components")) {
-        return new Response(JSON.stringify(getComponentList()), {
+      if (url.pathname === "/_live/workbench") {
+        return new Response(JSON.stringify(getWorkbenchTree()), {
           status: 200,
           headers: {
             "content-type": "application/json",

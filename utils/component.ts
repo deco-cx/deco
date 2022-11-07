@@ -47,20 +47,6 @@ export function getComponentModule(
   return manifest.islands?.[key] ?? manifest.components?.[key];
 }
 
-export const getComponentList = () =>
-  Object.keys(context.manifest?.components ?? {})
-    .filter(
-      (component) =>
-        component.split("/").length === 3 && component.endsWith(".tsx"),
-    ) // allow components/[component].tsx only
-    .map((component) => ({
-      name: component.replace("./components/", ""),
-      path: component.replace("./", ""),
-      link: context.deploymentId === undefined // only allow vscode when developing locally
-        ? `vscode://file/${resolveFilePath(component)}`
-        : undefined,
-    }));
-
 export const createLoadersForComponent = (instance: ComponentInstance) => {
   const loaders = context.manifest?.loaders ?? {};
   const loadersByOutputSchema = Object
