@@ -11,12 +11,12 @@ export interface Node {
 }
 
 export const getWorkbenchTree = (): Node[] => {
-  const components = context.manifest?.components ?? {};
+  const sections = context.manifest?.sections ?? {};
 
   const firstLevel = Object
-    .keys(components)
-    .filter((component) =>
-      component.split("/").length === 3 && component.endsWith(".tsx")
+    .keys(sections)
+    .filter((section) =>
+      section.split("/").length === 3 && section.endsWith(".tsx")
     )
     .map((component) => ({
       label: basename(component),
@@ -27,8 +27,8 @@ export const getWorkbenchTree = (): Node[] => {
     }));
 
   return [{
-    label: 'components',
-    fullPath: './components',
+    label: 'sections',
+    fullPath: './sections',
     children: firstLevel
   }]
 };

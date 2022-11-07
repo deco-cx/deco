@@ -1,6 +1,5 @@
 import { propertyHasRef } from "./schema.ts";
 import { context } from "../server.ts";
-import { resolveFilePath } from "./filesystem.ts";
 
 import type { DecoManifest, Loader, Module, Page, PageData } from "../types.ts";
 import { appendHash, loaderInstanceToProp } from "./loaders.ts";
@@ -22,7 +21,7 @@ interface ComponentInstance {
 // ./islands/Foo.tsx
 // ./components/deep/Test.tsx
 export const COMPONENT_NAME_REGEX =
-  /^(\.?\/islands|\.?\/components|\.?\/loaders)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
+  /^(\.?\/islands|\.?\/sections|\.?\/loaders)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
 
 export const BLOCKED_ISLANDS_SCHEMAS = new Set([
   "/Editor.tsx",
@@ -37,14 +36,6 @@ export function filenameFromPath(path: string) {
 
 export function isValidIsland(componentPath: string) {
   return !BLOCKED_ISLANDS_SCHEMAS.has(componentPath);
-}
-
-// Creates a fake page from a component
-export function getComponentModule(
-  manifest: DecoManifest,
-  key: string
-): Module | undefined {
-  return manifest.islands?.[key] ?? manifest.components?.[key];
 }
 
 export const createLoadersForComponent = (instance: ComponentInstance) => {
@@ -120,10 +111,10 @@ export const createPageForComponent = (
 ): Page => ({
   id: -1,
   name: componentName,
-  path: `/_live/components/${componentName}`,
+  path: `/_live/sections/${componentName}`,
   data,
 });
 
-const getDefinition = (path: string) => context.manifest?.components[path];
+const getDefinition = (path: string) => context.manifest?.sections[path];
 
 export const exists = (path: string) => Boolean(getDefinition(path));

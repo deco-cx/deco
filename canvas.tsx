@@ -2,7 +2,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import getSupabaseClient, { getSupabaseClientForUser } from "./supabase.ts";
 import type {
   Flag,
-  PageComponent,
+  PageSection,
   PageData,
   PageLoader,
   WithSchema,
@@ -14,7 +14,7 @@ const updateDraft = async (
   req: Request,
   ctx: EditorRequestData,
 ) => {
-  const { components, siteId, variantId, experiment, loaders } = ctx;
+  const { sections, siteId, variantId, experiment, loaders } = ctx;
 
   let supabaseReponse;
   const pageId = variantId
@@ -28,7 +28,7 @@ const updateDraft = async (
   supabaseReponse = await getSupabaseClientForUser(req)
     .from("pages")
     .update({
-      data: { components, loaders },
+      data: { sections, loaders },
     })
     .match({ id: pageId });
 
@@ -97,7 +97,7 @@ const updateProd = async (
 export type Audience = "draft" | "public";
 
 interface EditorRequestData {
-  components: PageComponent[];
+  sections: PageSection[];
   loaders: PageLoader[];
   siteId: number;
   template?: string;
@@ -168,6 +168,6 @@ export async function updateComponentProps(
 }
 
 export interface ComponentPreview
-  extends Omit<PageComponent, "uniqueId" | "props">, WithSchema {
+  extends Omit<PageSection, "uniqueId" | "props">, WithSchema {
   link: string;
 }

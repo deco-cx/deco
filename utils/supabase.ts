@@ -25,7 +25,7 @@ export const getSiteIdFromName = async (siteName: string) => {
  *
  * This is used for creating the canvas. It retrieves
  * or generates a fake page from the database at
- * /_live/components/<componentName.tsx>
+ * /_live/sections/<componentName.tsx>
  *
  * This way we can use the page editor to edit components too
  */
@@ -34,14 +34,14 @@ export const fetchPageFromComponent = async (
 ) => {
   const supabase = getSupabaseClient();
   const { component: instance, loaders } = createComponent(
-    `./components/${component}`,
+    `./sections/${component}`,
   );
   const page = createPageForComponent(component, {
-    components: [instance],
+    sections: [instance],
     loaders,
   });
 
-  if (!exists(`./components/${component}`)) {
+  if (!exists(`./sections/${component}`)) {
     throw new Error(`Component at ${component} Not Found`);
   }
 

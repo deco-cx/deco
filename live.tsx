@@ -2,7 +2,7 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { loadData, loadLivePage } from "$live/pages.ts";
 import { context } from "$live/server.ts";
 import { EditorData, Page, PageData } from "$live/types.ts";
-import { filenameFromPath, getComponentModule } from "$live/utils/component.ts";
+import { filenameFromPath } from "$live/utils/component.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import InspectVSCodeHandler from "inspect_vscode/handler.ts";
 
@@ -100,17 +100,22 @@ export function live() {
   return handler;
 }
 
-export function LiveComponents({ components }: PageData) {
+export function LiveSections({ sections }: PageData) {
   const manifest = context.manifest!;
   return (
     <>
-      {components?.map(({ key, props, uniqueId }) => {
-        const Comp =
-          (getComponentModule(manifest, key)?.default) as FunctionComponent;
+      {sections?.map(({ key, props, uniqueId }) => {
+        const Component = manifest.sections[key]?.default as FunctionComponent | undefined;
+
+        if (!Component) {
+          console.error(`Section not found ${key}`)
+
+          return null
+        }
 
         return (
           <div id={uniqueId} data-manifest-key={key}>
-            <Comp {...props} />
+            <Component {...props} />
           </div>
         );
       })}
@@ -132,7 +137,7 @@ export function LivePage({
 
   return (
     <>
-      {children ? children : <LiveComponents {...data.data} />}
+      {children ? children : <LiveSections {...data.data} />}
       {LiveControls
         ? (
           <LiveControls
@@ -154,13 +159,13 @@ export function LivePage({
  */
 function generateEditorData(page: Page): EditorData {
   const {
-    data: { components, loaders },
+    data: { sections, loaders },
   } = page;
 
-  const componentsWithSchema = components.map(
-    (component): EditorData["components"][0] => ({
+  const sectionsWithSchema = sections.map(
+    (component): EditorData["sections"][0] => ({
       ...component,
-      schema: context.manifest?.components[component.key]?.schema,
+      schema: context.manifest?.sections[component.key]?.schema,
     }),
   );
 
@@ -172,10 +177,10 @@ function generateEditorData(page: Page): EditorData {
       ?.outputSchema?.["$ref"] as string,
   }));
 
-  const availableComponents = Object.keys(
-    context.manifest?.components || {},
+  const availableSections = Object.keys(
+    context.manifest?.sections || {},
   ).map((componentKey) => {
-    const schema = context.manifest?.components[componentKey]?.schema;
+    const schema = context.manifest?.sections[componentKey]?.schema;
     const label = filenameFromPath(componentKey);
 
     // TODO: Should we extract defaultProps from the schema here?
@@ -185,7 +190,7 @@ function generateEditorData(page: Page): EditorData {
       label,
       props: {},
       schema,
-    } as EditorData["availableComponents"][0];
+    } as EditorData["availableSections"][0];
   });
 
   const availableLoaders = Object.keys(context.manifest?.loaders || {}).map(
@@ -209,9 +214,9 @@ function generateEditorData(page: Page): EditorData {
 
   return {
     pageName: page?.name,
-    components: componentsWithSchema,
+    sections: sectionsWithSchema,
     loaders: loadersWithSchema,
-    availableComponents,
+    availableSections,
     availableLoaders,
   };
 }

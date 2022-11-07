@@ -1,10 +1,20 @@
 {
   "tasks": {
-    "start": "deno run -A --watch=tailwind.config.js,static/ dev.ts"
+    "start": "deno run -A --watch=static/ dev.ts",
+    "component": "deno eval 'import \"$live/scripts/component.ts\"'",
+    "check": "deno fmt && deno check dev.ts live.ts"
   },
+  "githooks": {
+    "pre-commit": "check"
+  },
+  "fmt": {
+    "files": {
+      "exclude": ["static/", "README.md"]
+    }
+  },
+  "importMap": "./import_map.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
-  },
-  "importMap": "./import_map.json"
+  }
 }
