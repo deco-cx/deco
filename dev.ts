@@ -4,6 +4,7 @@ import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
+import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
 /**
  * This interface represents an intermediate state used to generate
@@ -49,7 +50,11 @@ export async function dev(
 
   if (manifestDataChanged) await generate(dir, newManifestData);
 
-  await setupGithooks();
+  const shouldSetupGithooks = os.platform() !== "windows";
+
+  if (shouldSetupGithooks) {
+    await setupGithooks();
+  }
 
   onListen?.();
 
