@@ -19,14 +19,14 @@ const result = (new HTMLtoJSX({ name })).convert(raw);
 const formatted = await format(result);
 // Try to create /components folder, ignore if already exists
 try {
-  await Deno.mkdir("./components");
+  await Deno.mkdir("./sections");
 } catch (e) {
   if (!(e instanceof Deno.errors.AlreadyExists)) {
     console.error(e);
   }
 }
-const outputPath = `./components/${name}.tsx`;
-const importSnippet = `import ${name} from '../components/${name}.tsx';\n`;
+const outputPath = `./sections/${name}.tsx`;
+const importSnippet = `import ${name} from '../sections/${name}.tsx';\n`;
 // Write the component
 await Deno.writeTextFile(outputPath, formatted);
 // Copy import snippet to clipboard

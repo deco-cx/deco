@@ -1,9 +1,8 @@
 import { propertyHasRef } from "./schema.ts";
 import { context } from "../server.ts";
-import { resolveFilePath } from "./filesystem.ts";
 
-import type { DecoManifest, Loader, Module, Page, PageData } from "../types.ts";
 import { appendHash, loaderInstanceToProp } from "./loaders.ts";
+import type { Loader, Page, PageData } from "../types.ts";
 
 interface ComponentInstance {
   key: string;
@@ -22,7 +21,7 @@ interface ComponentInstance {
 // ./islands/Foo.tsx
 // ./components/deep/Test.tsx
 export const COMPONENT_NAME_REGEX =
-  /^(\.?\/islands|\.?\/components|\.?\/loaders)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
+  /^(\.?\/islands|\.?\/sections|\.?\/loaders)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
 
 export const BLOCKED_ISLANDS_SCHEMAS = new Set([
   "/Editor.tsx",
@@ -39,15 +38,7 @@ export function isValidIsland(componentPath: string) {
   return !BLOCKED_ISLANDS_SCHEMAS.has(componentPath);
 }
 
-// Creates a fake page from a component
-export function getComponentModule(
-  manifest: DecoManifest,
-  key: string
-): Module | undefined {
-  return manifest.islands?.[key] ?? manifest.components?.[key];
-}
-
-export const createLoadersForComponent = (instance: ComponentInstance) => {
+export const createLoadersForSection = (instance: ComponentInstance) => {
   const loaders = context.manifest?.loaders ?? {};
   const loadersByOutputSchema = Object
     .entries(loaders)
@@ -98,32 +89,32 @@ export const createLoadersForComponent = (instance: ComponentInstance) => {
   return loaderInstances;
 };
 
-export const createComponent = (componentKey: string) => {
-  const component: ComponentInstance = {
-    key: componentKey,
-    label: componentKey,
-    uniqueId: componentKey,
+export const createSection = (sectionKey: string) => {
+  const section: ComponentInstance = {
+    key: sectionKey,
+    label: sectionKey,
+    uniqueId: sectionKey,
     props: {},
   };
 
-  const loaders = createLoadersForComponent(component);
+  const loaders = createLoadersForSection(section);
 
   return {
-    component,
+    section,
     loaders,
   };
 };
 
-export const createPageForComponent = (
-  componentName: string,
+export const createPageForSection = (
+  sectionName: string,
   data: PageData,
 ): Page => ({
   id: -1,
-  name: componentName,
-  path: `/_live/components/${componentName}`,
+  name: sectionName,
+  path: `/_live/sections/${sectionName}`,
   data,
 });
 
-const getDefinition = (path: string) => context.manifest?.components[path];
+const getDefinition = (path: string) => context.manifest?.sections[path];
 
 export const exists = (path: string) => Boolean(getDefinition(path));

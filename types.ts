@@ -22,7 +22,7 @@ export interface LoaderModule {
 
 export interface DecoManifest extends Manifest {
   islands: Record<string, Module>;
-  components: Record<string, Module>;
+  sections: Record<string, Module>;
   loaders: Record<string, LoaderModule>;
   schemas: Record<string, JSONSchema7>;
 }
@@ -39,22 +39,22 @@ export interface LiveOptions {
   domains?: string[];
 }
 
-export interface PageComponent {
-  // Identifies the component uniquely in the project (e.g: "./components/Header.tsx")
+export interface PageSection {
+  // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;
   // Pretty name for the entity
   label: string;
-  // Uniquely identifies this entity in the scope of a page (that can have multiple loaders, components)
+  // Uniquely identifies this entity in the scope of a page (that can have multiple loaders, sections)
   uniqueId: string;
   props?: Record<string, unknown>;
 }
 
-export interface PageLoader extends PageComponent {
+export interface PageLoader extends PageSection {
   outputSchema: string;
 }
 
 export interface PageData {
-  components: PageComponent[];
+  sections: PageSection[];
   loaders: PageLoader[];
 }
 
@@ -90,13 +90,13 @@ export interface WithSchema {
   schema?: JSONSchema7;
 }
 
-export type AvailableComponent = Omit<PageComponent, "uniqueId"> & WithSchema;
+export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;
 export type AvailableLoader = Omit<PageLoader, "uniqueId"> & WithSchema;
 
 export interface EditorData {
   pageName: string;
-  components: Array<PageComponent & WithSchema>;
+  sections: Array<PageSection & WithSchema>;
   loaders: Array<PageLoader & WithSchema>;
-  availableComponents: Array<AvailableComponent>;
+  availableSections: Array<AvailableSection>;
   availableLoaders: Array<AvailableLoader>;
 }

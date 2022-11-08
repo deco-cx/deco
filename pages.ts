@@ -5,8 +5,8 @@ import getSupabaseClient from "./supabase.ts";
 
 import { Page } from "./types.ts";
 import {
-  createComponent,
-  createPageForComponent,
+  createSection,
+  createPageForSection,
   exists,
 } from "./utils/component.ts";
 import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
@@ -22,7 +22,7 @@ export async function loadLivePage(
 
   const pageWithParams = await ((): Promise<PageWithParams | null> => {
     if (component) {
-      return fetchPageFromComponent(component);
+      return fetchPageFromComponent(component, context.siteId);
     }
     if (pageId) {
       return fetchPageFromId(pageId, url.pathname);
@@ -30,7 +30,23 @@ export async function loadLivePage(
     return fetchPageFromPathname(url.pathname, context.siteId);
   })();
 
-  return pageWithParams;
+  if (!pageWithParams) {
+    return null
+  }
+
+  return {
+    ...pageWithParams,
+    page: {
+      ...pageWithParams?.page,
+      data: {
+        loaders: pageWithParams?.page.data.loaders,
+        sections: (pageWithParams?.page.data.sections ?? (pageWithParams?.page.data as any).components)?.map(section => ({
+          ...section,
+          key: section.key.replace('./components/', './sections/')
+        }))
+      }
+    }
+  }
 }
 
 export async function loadData(
@@ -66,7 +82,7 @@ export async function loadData(
     {} as Record<string, unknown>,
   );
 
-  const componentsWithData = pageData.components.map((componentData) => {
+  const sectionsWithData = pageData.sections.map((componentData) => {
     /*
      * if any shallow prop that contains a mustache like `{loaderName.*}`,
      * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
@@ -92,7 +108,7 @@ export async function loadData(
     return { ...componentData, props: propsWithLoaderData };
   });
 
-  return { ...pageData, components: componentsWithData };
+  return { ...pageData, sections: sectionsWithData };
 }
 
 export const fetchPageFromPathname = async (
@@ -166,30 +182,31 @@ export const fetchPageFromId = async (
  *
  * This is used for creating the canvas. It retrieves
  * or generates a fake page from the database at
- * /_live/components/<componentName.tsx>
+ * /_live/sections/<componentName.tsx>
  *
  * This way we can use the page editor to edit components too
  */
 export const fetchPageFromComponent = async (
   component: string, // Ex: Banner.tsx
+  siteId: number
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
-  const { component: instance, loaders } = createComponent(
-    `./components/${component}`,
+  const { section: instance, loaders } = createSection(
+    `./sections/${component}`,
   );
-  const page = createPageForComponent(component, {
-    components: [instance],
+  const page = createPageForSection(component, {
+    sections: [instance],
     loaders,
   });
 
-  if (!exists(`./components/${component}`)) {
-    throw new Error(`Component at ${component} Not Found`);
+  if (!exists(`./sections/${component}`)) {
+    throw new Error(`Section at ${component} Not Found`);
   }
-
+  
   const { data } = await supabase
     .from<Page>("pages")
     .select("id, path")
-    .match({ path: page.path });
+    .match({ path: page.path, site: siteId });
 
   const match = data?.[0];
 
