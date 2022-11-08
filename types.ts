@@ -90,13 +90,13 @@ export interface WithSchema {
   schema?: JSONSchema7;
 }
 
-export type AvailableSections = Omit<PageSection, "uniqueId"> & WithSchema;
+export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;
 export type AvailableLoader = Omit<PageLoader, "uniqueId"> & WithSchema;
 
 export interface EditorData {
   pageName: string;
   sections: Array<PageSection & WithSchema>;
   loaders: Array<PageLoader & WithSchema>;
-  availableSections: Array<AvailableSections>;
+  availableSections: Array<AvailableSection>;
   availableLoaders: Array<AvailableLoader>;
 }

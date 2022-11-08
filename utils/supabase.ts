@@ -2,7 +2,7 @@ import getSupabaseClient from "../supabase.ts";
 import { Flag, Page } from "../types.ts";
 import {
   createComponent,
-  createPageForComponent,
+  createPageForSection,
   exists,
 } from "./component.ts";
 import { fetchPageFromId } from "../pages.ts";
@@ -36,7 +36,7 @@ export const fetchPageFromComponent = async (
   const { component: instance, loaders } = createComponent(
     `./sections/${component}`,
   );
-  const page = createPageForComponent(component, {
+  const page = createPageForSection(component, {
     sections: [instance],
     loaders,
   });

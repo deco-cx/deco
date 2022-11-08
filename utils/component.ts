@@ -1,8 +1,8 @@
 import { propertyHasRef } from "./schema.ts";
 import { context } from "../server.ts";
 
-import type { DecoManifest, Loader, Module, Page, PageData } from "../types.ts";
 import { appendHash, loaderInstanceToProp } from "./loaders.ts";
+import type { Loader, Page, PageData } from "../types.ts";
 
 interface ComponentInstance {
   key: string;
@@ -38,7 +38,7 @@ export function isValidIsland(componentPath: string) {
   return !BLOCKED_ISLANDS_SCHEMAS.has(componentPath);
 }
 
-export const createLoadersForComponent = (instance: ComponentInstance) => {
+export const createLoadersForSection = (instance: ComponentInstance) => {
   const loaders = context.manifest?.loaders ?? {};
   const loadersByOutputSchema = Object
     .entries(loaders)
@@ -89,29 +89,29 @@ export const createLoadersForComponent = (instance: ComponentInstance) => {
   return loaderInstances;
 };
 
-export const createComponent = (componentKey: string) => {
-  const component: ComponentInstance = {
-    key: componentKey,
-    label: componentKey,
-    uniqueId: componentKey,
+export const createSection = (sectionKey: string) => {
+  const section: ComponentInstance = {
+    key: sectionKey,
+    label: sectionKey,
+    uniqueId: sectionKey,
     props: {},
   };
 
-  const loaders = createLoadersForComponent(component);
+  const loaders = createLoadersForSection(section);
 
   return {
-    component,
+    section,
     loaders,
   };
 };
 
-export const createPageForComponent = (
-  componentName: string,
+export const createPageForSection = (
+  sectionName: string,
   data: PageData,
 ): Page => ({
   id: -1,
-  name: componentName,
-  path: `/_live/sections/${componentName}`,
+  name: sectionName,
+  path: `/_live/sections/${sectionName}`,
   data,
 });
 

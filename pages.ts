@@ -5,8 +5,8 @@ import getSupabaseClient from "./supabase.ts";
 
 import { Page } from "./types.ts";
 import {
-  createComponent,
-  createPageForComponent,
+  createSection,
+  createPageForSection,
   exists,
 } from "./utils/component.ts";
 import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
@@ -22,7 +22,7 @@ export async function loadLivePage(
 
   const pageWithParams = await ((): Promise<PageWithParams | null> => {
     if (component) {
-      return fetchPageFromComponent(component);
+      return fetchPageFromComponent(component, context.siteId);
     }
     if (pageId) {
       return fetchPageFromId(pageId, url.pathname);
@@ -188,24 +188,25 @@ export const fetchPageFromId = async (
  */
 export const fetchPageFromComponent = async (
   component: string, // Ex: Banner.tsx
+  siteId: number
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
-  const { component: instance, loaders } = createComponent(
+  const { section: instance, loaders } = createSection(
     `./sections/${component}`,
   );
-  const page = createPageForComponent(component, {
+  const page = createPageForSection(component, {
     sections: [instance],
     loaders,
   });
 
   if (!exists(`./sections/${component}`)) {
-    throw new Error(`Component at ${component} Not Found`);
+    throw new Error(`Section at ${component} Not Found`);
   }
-
+  
   const { data } = await supabase
     .from<Page>("pages")
     .select("id, path")
-    .match({ path: page.path });
+    .match({ path: page.path, site: siteId });
 
   const match = data?.[0];
 
