@@ -211,270 +211,272 @@ export interface Literal {
 }
 
 console.log(
-  getJsonSchemaFromDocs([
-    {
-      kind: "interface",
-      name: "Props",
-      location: {
-        filename:
-          "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-        line: 4,
-        col: 0,
+  JSON.stringify(
+    getJsonSchemaFromDocs([
+      {
+        kind: "interface",
+        name: "Props",
+        location: {
+          filename:
+            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+          line: 4,
+          col: 0,
+        },
+        declarationKind: "export",
+        interfaceDef: {
+          extends: [],
+          methods: [],
+          properties: [
+            {
+              name: "collection",
+              location: {
+                filename:
+                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+                line: 6,
+                col: 2,
+              },
+              params: [],
+              computed: false,
+              optional: false,
+              tsType: {
+                repr: "string",
+                kind: "keyword",
+                keyword: "string",
+              },
+              typeParams: [],
+            },
+            {
+              name: "title",
+              location: {
+                filename:
+                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+                line: 11,
+                col: 2,
+              },
+              jsDoc: {
+                tags: [
+                  {
+                    kind: "unsupported",
+                    value: "@label Title",
+                  },
+                  {
+                    kind: "unsupported",
+                    value: "@show false",
+                  },
+                ],
+              },
+              params: [],
+              computed: false,
+              optional: false,
+              tsType: {
+                repr: "string",
+                kind: "keyword",
+                keyword: "string",
+              },
+              typeParams: [],
+            },
+            {
+              name: "products",
+              location: {
+                filename:
+                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+                line: 13,
+                col: 2,
+              },
+              params: [],
+              computed: false,
+              optional: false,
+              tsType: {
+                repr: "",
+                kind: "array",
+                array: {
+                  repr: "Product",
+                  kind: "typeRef",
+                  typeRef: {
+                    typeParams: null,
+                    typeName: "Product",
+                  },
+                },
+              },
+              typeParams: [],
+            },
+            {
+              name: "customOptions",
+              location: {
+                filename:
+                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+                line: 14,
+                col: 2,
+              },
+              params: [],
+              computed: false,
+              optional: false,
+              tsType: {
+                repr: "",
+                kind: "union",
+                union: [
+                  {
+                    repr: "option_1",
+                    kind: "literal",
+                    literal: {
+                      kind: "string",
+                      string: "option_1",
+                    },
+                  },
+                  {
+                    repr: "option_2",
+                    kind: "literal",
+                    literal: {
+                      kind: "string",
+                      string: "option_2",
+                    },
+                  },
+                  {
+                    repr: "option_3",
+                    kind: "literal",
+                    literal: {
+                      kind: "string",
+                      string: "option_3",
+                    },
+                  },
+                ],
+              },
+              typeParams: [],
+            },
+            {
+              name: "myNumber",
+              location: {
+                filename:
+                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+                line: 15,
+                col: 2,
+              },
+              params: [],
+              computed: false,
+              optional: false,
+              tsType: {
+                repr: "number",
+                kind: "keyword",
+                keyword: "number",
+              },
+              typeParams: [],
+            },
+            {
+              name: "myObj",
+              location: {
+                filename:
+                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+                line: 16,
+                col: 2,
+              },
+              params: [],
+              computed: false,
+              optional: false,
+              tsType: {
+                repr: "",
+                kind: "typeLiteral",
+                typeLiteral: {
+                  methods: [],
+                  properties: [
+                    {
+                      name: "innerProp",
+                      params: [],
+                      computed: false,
+                      optional: false,
+                      tsType: {
+                        repr: "string",
+                        kind: "keyword",
+                        keyword: "string",
+                      },
+                      typeParams: [],
+                    },
+                  ],
+                  callSignatures: [],
+                  indexSignatures: [],
+                },
+              },
+              typeParams: [],
+            },
+          ],
+          callSignatures: [],
+          indexSignatures: [],
+          typeParams: [],
+        },
       },
-      declarationKind: "export",
-      interfaceDef: {
-        extends: [],
-        methods: [],
-        properties: [
-          {
-            name: "collection",
-            location: {
-              filename:
-                "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-              line: 6,
-              col: 2,
-            },
-            params: [],
-            computed: false,
-            optional: false,
-            tsType: {
-              repr: "string",
-              kind: "keyword",
-              keyword: "string",
-            },
-            typeParams: [],
-          },
-          {
-            name: "title",
-            location: {
-              filename:
-                "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-              line: 11,
-              col: 2,
-            },
-            jsDoc: {
-              tags: [
+      {
+        kind: "function",
+        name: "default",
+        location: {
+          filename:
+            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+          line: 21,
+          col: 0,
+        },
+        declarationKind: "export",
+        functionDef: {
+          params: [
+            {
+              kind: "object",
+              props: [
                 {
-                  kind: "unsupported",
-                  value: "@label Title",
+                  kind: "assign",
+                  key: "title",
+                  value: null,
                 },
                 {
-                  kind: "unsupported",
-                  value: "@show false",
+                  kind: "assign",
+                  key: "products",
+                  value: null,
                 },
               ],
-            },
-            params: [],
-            computed: false,
-            optional: false,
-            tsType: {
-              repr: "string",
-              kind: "keyword",
-              keyword: "string",
-            },
-            typeParams: [],
-          },
-          {
-            name: "products",
-            location: {
-              filename:
-                "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-              line: 13,
-              col: 2,
-            },
-            params: [],
-            computed: false,
-            optional: false,
-            tsType: {
-              repr: "",
-              kind: "array",
-              array: {
-                repr: "Product",
+              optional: false,
+              tsType: {
+                repr: "Props",
                 kind: "typeRef",
                 typeRef: {
                   typeParams: null,
-                  typeName: "Product",
+                  typeName: "Props",
                 },
               },
             },
-            typeParams: [],
-          },
-          {
-            name: "customOptions",
-            location: {
-              filename:
-                "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-              line: 14,
-              col: 2,
-            },
-            params: [],
-            computed: false,
-            optional: false,
-            tsType: {
-              repr: "",
-              kind: "union",
-              union: [
-                {
-                  repr: "option_1",
-                  kind: "literal",
-                  literal: {
-                    kind: "string",
-                    string: "option_1",
-                  },
-                },
-                {
-                  repr: "option_2",
-                  kind: "literal",
-                  literal: {
-                    kind: "string",
-                    string: "option_2",
-                  },
-                },
-                {
-                  repr: "option_3",
-                  kind: "literal",
-                  literal: {
-                    kind: "string",
-                    string: "option_3",
-                  },
-                },
-              ],
-            },
-            typeParams: [],
-          },
-          {
-            name: "myNumber",
-            location: {
-              filename:
-                "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-              line: 15,
-              col: 2,
-            },
-            params: [],
-            computed: false,
-            optional: false,
-            tsType: {
-              repr: "number",
-              kind: "keyword",
-              keyword: "number",
-            },
-            typeParams: [],
-          },
-          {
-            name: "myObj",
-            location: {
-              filename:
-                "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-              line: 16,
-              col: 2,
-            },
-            params: [],
-            computed: false,
-            optional: false,
-            tsType: {
-              repr: "",
-              kind: "typeLiteral",
-              typeLiteral: {
-                methods: [],
-                properties: [
-                  {
-                    name: "innerProp",
-                    params: [],
-                    computed: false,
-                    optional: false,
-                    tsType: {
-                      repr: "string",
-                      kind: "keyword",
-                      keyword: "string",
-                    },
-                    typeParams: [],
-                  },
-                ],
-                callSignatures: [],
-                indexSignatures: [],
-              },
-            },
-            typeParams: [],
-          },
-        ],
-        callSignatures: [],
-        indexSignatures: [],
-        typeParams: [],
+          ],
+          returnType: null,
+          hasBody: true,
+          isAsync: false,
+          isGenerator: false,
+          typeParams: [],
+        },
       },
-    },
-    {
-      kind: "function",
-      name: "default",
-      location: {
-        filename:
-          "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-        line: 21,
-        col: 0,
+      {
+        kind: "import",
+        name: "ProductCard",
+        location: {
+          filename:
+            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+          line: 1,
+          col: 0,
+        },
+        declarationKind: "private",
+        importDef: {
+          src: "file:///Users/lucis/deco/fashion/components/ProductCard.tsx",
+          imported: "default",
+        },
       },
-      declarationKind: "export",
-      functionDef: {
-        params: [
-          {
-            kind: "object",
-            props: [
-              {
-                kind: "assign",
-                key: "title",
-                value: null,
-              },
-              {
-                kind: "assign",
-                key: "products",
-                value: null,
-              },
-            ],
-            optional: false,
-            tsType: {
-              repr: "Props",
-              kind: "typeRef",
-              typeRef: {
-                typeParams: null,
-                typeName: "Props",
-              },
-            },
-          },
-        ],
-        returnType: null,
-        hasBody: true,
-        isAsync: false,
-        isGenerator: false,
-        typeParams: [],
+      {
+        kind: "import",
+        name: "Product",
+        location: {
+          filename:
+            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
+          line: 2,
+          col: 0,
+        },
+        declarationKind: "private",
+        importDef: {
+          src: "file:///Users/lucis/deco/fashion/components/ProductCard.tsx",
+          imported: "Product",
+        },
       },
-    },
-    {
-      kind: "import",
-      name: "ProductCard",
-      location: {
-        filename:
-          "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-        line: 1,
-        col: 0,
-      },
-      declarationKind: "private",
-      importDef: {
-        src: "file:///Users/lucis/deco/fashion/components/ProductCard.tsx",
-        imported: "default",
-      },
-    },
-    {
-      kind: "import",
-      name: "Product",
-      location: {
-        filename:
-          "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-        line: 2,
-        col: 0,
-      },
-      declarationKind: "private",
-      importDef: {
-        src: "file:///Users/lucis/deco/fashion/components/ProductCard.tsx",
-        imported: "Product",
-      },
-    },
-  ])
+    ])
+  )
 );
