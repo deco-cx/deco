@@ -6,6 +6,7 @@ import { walk } from "std/fs/walk.ts";
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
+
 /**
  * This interface represents an intermediate state used to generate
  * the final manifest (in the target project's deco.gen.ts).
@@ -185,7 +186,7 @@ async function collectLoaders(dir: string): Promise<string[]> {
   return loaderNames;
 }
 
-async function collectFilesFromDir(dir: string) {
+export async function collectFilesFromDir(dir: string) {
   const files = [];
   try {
     const dirURL = toFileUrl(dir);

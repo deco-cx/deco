@@ -1,11 +1,31 @@
 import { JSONSchema7 } from "json-schema";
 
+/**
+ * Transforms myPropName into "My Prop Name" for cases
+ * when there's no label specified
+ * 
+ * TODO: Support i18n in the future
+ */
+const beautifyPropName = (propName: string) => {
+  return propName
+    // insert a space before all caps
+    .replace(/([A-Z])/g, " $1")
+    // uppercase the first character
+    .replace(/^./, function (str) {
+      return str.toUpperCase();
+    });
+};
+
 export function getJsonSchemaFromDocs(
-  docs: DenoDocResponse[]
+  docs: DenoDocResponse[],
+  entityName?: string
 ): JSONSchema7 | null {
   const propsExport = docs.find(({ name }) => name === "Props");
 
   if (!propsExport) {
+    console.log(
+      `${entityName} doesn't export a Props interface definition, couldn't extract schema.`
+    );
     return null;
   }
 
@@ -18,11 +38,13 @@ export function getJsonSchemaFromDocs(
   const jsonSchemaProperties = properties?.reduce((acc, cur) => {
     const propName = cur.name;
     const propType = cur.tsType.repr as "string" | "number" | "array" | "";
-    console.log(cur.jsDoc?.tags);
-    const title = cur.jsDoc?.tags
+
+    const specifiedLabel = cur.jsDoc?.tags
       ?.find(({ value }) => value.includes("@label"))
       ?.value?.replace("@label", "")
       .trim();
+
+    const title = specifiedLabel || beautifyPropName(propName);
 
     const baseProp: JSONSchema7 = {
       title,
@@ -40,6 +62,8 @@ export function getJsonSchemaFromDocs(
               return {
                 ...acc,
                 [name]: {
+                  // TODO: Support annotated @label here as well (recursion?)
+                  title: beautifyPropName(name),
                   type,
                 },
               };
@@ -164,9 +188,7 @@ export interface Location {
   col: number;
 }
 
-export enum Filename {
-  FileUsersLucisDecoFashionComponentsProductShelfDTsx = "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-}
+export type Filename = string;
 
 export interface PurpleTsType {
   repr: string;
@@ -209,274 +231,3 @@ export interface Literal {
   kind: string;
   string: string;
 }
-
-console.log(
-  JSON.stringify(
-    getJsonSchemaFromDocs([
-      {
-        kind: "interface",
-        name: "Props",
-        location: {
-          filename:
-            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-          line: 4,
-          col: 0,
-        },
-        declarationKind: "export",
-        interfaceDef: {
-          extends: [],
-          methods: [],
-          properties: [
-            {
-              name: "collection",
-              location: {
-                filename:
-                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-                line: 6,
-                col: 2,
-              },
-              params: [],
-              computed: false,
-              optional: false,
-              tsType: {
-                repr: "string",
-                kind: "keyword",
-                keyword: "string",
-              },
-              typeParams: [],
-            },
-            {
-              name: "title",
-              location: {
-                filename:
-                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-                line: 11,
-                col: 2,
-              },
-              jsDoc: {
-                tags: [
-                  {
-                    kind: "unsupported",
-                    value: "@label Title",
-                  },
-                  {
-                    kind: "unsupported",
-                    value: "@show false",
-                  },
-                ],
-              },
-              params: [],
-              computed: false,
-              optional: false,
-              tsType: {
-                repr: "string",
-                kind: "keyword",
-                keyword: "string",
-              },
-              typeParams: [],
-            },
-            {
-              name: "products",
-              location: {
-                filename:
-                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-                line: 13,
-                col: 2,
-              },
-              params: [],
-              computed: false,
-              optional: false,
-              tsType: {
-                repr: "",
-                kind: "array",
-                array: {
-                  repr: "Product",
-                  kind: "typeRef",
-                  typeRef: {
-                    typeParams: null,
-                    typeName: "Product",
-                  },
-                },
-              },
-              typeParams: [],
-            },
-            {
-              name: "customOptions",
-              location: {
-                filename:
-                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-                line: 14,
-                col: 2,
-              },
-              params: [],
-              computed: false,
-              optional: false,
-              tsType: {
-                repr: "",
-                kind: "union",
-                union: [
-                  {
-                    repr: "option_1",
-                    kind: "literal",
-                    literal: {
-                      kind: "string",
-                      string: "option_1",
-                    },
-                  },
-                  {
-                    repr: "option_2",
-                    kind: "literal",
-                    literal: {
-                      kind: "string",
-                      string: "option_2",
-                    },
-                  },
-                  {
-                    repr: "option_3",
-                    kind: "literal",
-                    literal: {
-                      kind: "string",
-                      string: "option_3",
-                    },
-                  },
-                ],
-              },
-              typeParams: [],
-            },
-            {
-              name: "myNumber",
-              location: {
-                filename:
-                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-                line: 15,
-                col: 2,
-              },
-              params: [],
-              computed: false,
-              optional: false,
-              tsType: {
-                repr: "number",
-                kind: "keyword",
-                keyword: "number",
-              },
-              typeParams: [],
-            },
-            {
-              name: "myObj",
-              location: {
-                filename:
-                  "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-                line: 16,
-                col: 2,
-              },
-              params: [],
-              computed: false,
-              optional: false,
-              tsType: {
-                repr: "",
-                kind: "typeLiteral",
-                typeLiteral: {
-                  methods: [],
-                  properties: [
-                    {
-                      name: "innerProp",
-                      params: [],
-                      computed: false,
-                      optional: false,
-                      tsType: {
-                        repr: "string",
-                        kind: "keyword",
-                        keyword: "string",
-                      },
-                      typeParams: [],
-                    },
-                  ],
-                  callSignatures: [],
-                  indexSignatures: [],
-                },
-              },
-              typeParams: [],
-            },
-          ],
-          callSignatures: [],
-          indexSignatures: [],
-          typeParams: [],
-        },
-      },
-      {
-        kind: "function",
-        name: "default",
-        location: {
-          filename:
-            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-          line: 21,
-          col: 0,
-        },
-        declarationKind: "export",
-        functionDef: {
-          params: [
-            {
-              kind: "object",
-              props: [
-                {
-                  kind: "assign",
-                  key: "title",
-                  value: null,
-                },
-                {
-                  kind: "assign",
-                  key: "products",
-                  value: null,
-                },
-              ],
-              optional: false,
-              tsType: {
-                repr: "Props",
-                kind: "typeRef",
-                typeRef: {
-                  typeParams: null,
-                  typeName: "Props",
-                },
-              },
-            },
-          ],
-          returnType: null,
-          hasBody: true,
-          isAsync: false,
-          isGenerator: false,
-          typeParams: [],
-        },
-      },
-      {
-        kind: "import",
-        name: "ProductCard",
-        location: {
-          filename:
-            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-          line: 1,
-          col: 0,
-        },
-        declarationKind: "private",
-        importDef: {
-          src: "file:///Users/lucis/deco/fashion/components/ProductCard.tsx",
-          imported: "default",
-        },
-      },
-      {
-        kind: "import",
-        name: "Product",
-        location: {
-          filename:
-            "file:///Users/lucis/deco/fashion/components/ProductShelfD.tsx",
-          line: 2,
-          col: 0,
-        },
-        declarationKind: "private",
-        importDef: {
-          src: "file:///Users/lucis/deco/fashion/components/ProductCard.tsx",
-          imported: "Product",
-        },
-      },
-    ])
-  )
-);
