@@ -114,9 +114,9 @@ export function LiveSections({ sections }: PageData) {
         }
 
         return (
-          <div id={uniqueId} data-manifest-key={key}>
+          <section id={uniqueId} data-manifest-key={key}>
             <Component {...props} />
-          </div>
+          </section>
         );
       })}
     </>
