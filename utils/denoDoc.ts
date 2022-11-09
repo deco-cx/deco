@@ -28,6 +28,8 @@ const beautifyPropName = (propName: string) => {
  * E.g: importUrl: file:///Users/lucis/deco/live/std/commerce/types/Product.ts
  */
 const get$idFromImportUrl = (importUrl: string) => {
+  // TODO: Improve this to not include live's version when using deno.lan
+  // E.g: live@0.1.16-functions/std/commerce/types/ProductList.ts
   return "live" + importUrl?.split("/live")[1];
 };
 
