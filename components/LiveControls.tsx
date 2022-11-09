@@ -8,7 +8,7 @@ declare global {
     inspectVSCode: DomInspector;
     LIVE: {
       page: Page
-      site: Site      
+      site: Site
     }
   }
 }
@@ -69,7 +69,6 @@ export default function LiveControls({ site, page, isProduction }: Props) {
   };
 
   useEffect(() => {
-    
     window["LIVE"] = {
       site,
       page,
