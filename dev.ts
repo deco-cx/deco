@@ -3,12 +3,12 @@ import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
 import { walk } from "std/fs/walk.ts";
-import { exec, OutputMode } from "https://deno.land/x/exec/mod.ts";
+
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
 import { JSONSchema7 } from "json-schema";
-import { getJsonSchemaFromDocs } from "./utils/denoDoc.ts";
+import { getInputSchemaFromDocs, readDenoDocJson } from "./utils/denoDoc.ts";
 
 /**
  * This interface represents an intermediate state used to generate
@@ -21,7 +21,10 @@ interface DevManifestData {
   islands: string[];
   sections: string[];
   loaders: string[];
-  schemas: Record<string, JSONSchema7>;
+  schemas: Record<
+    string,
+    { inputSchema: JSONSchema7; outputSchema?: JSONSchema7 }
+  >;
 }
 
 const defaultManifestData: DevManifestData = {
@@ -94,7 +97,7 @@ async function generateDevManifestData(dir: string): Promise<DevManifestData> {
     islands: manifestFile.islands,
     loaders,
     sections,
-    schemas: schemasGroupedByKey
+    schemas: schemasGroupedByKey,
   };
 }
 
@@ -256,33 +259,65 @@ const templates = {
   },
 };
 
-async function extractSectionSchemas(sections: string[]) {
-  console.log({ sections })
-  const schemas = (
-    await Promise.all(
-      sections.slice(0, 1).map(async (section) => {
-        const pathForSection = `./sections${section}`;
-        const { output: rawOutput } = await exec(
-          `deno doc ${pathForSection} --json`,
-          {
-            output: OutputMode.Capture,
-          }
-        );
-        const denoDocOutput = JSON.parse(rawOutput);
+/**
+ * Extracts JSONSChemas from types definitions in sections and functions.
+ *
+ * Read more about it here: TODO
+ *
+ */
+async function extractAllSchemas(
+  sections: string[],
+  functions: string[]
+): Promise<DevManifestData["schemas"]> {
+  const sectionSchemasAsArray = await Promise.all(
+    // TODO: Remove
+    sections.slice(0, 1).map(async (section) => {
+      const pathForSection = `./sections${section}`;
 
-        const sectionSchema = getJsonSchemaFromDocs(
-          denoDocOutput,
-          `Section ${section}`
-        );
+      const denoDocJson = await readDenoDocJson(pathForSection);
+      const sectionSchema = getInputSchemaFromDocs(
+        denoDocJson,
+        `Section ${section}`
+      );
 
-        return { key: pathForSection, schema: sectionSchema };
-      })
+      return {
+        key: pathForSection,
+        inputSchema: sectionSchema,
+        outputSchema: null,
+      };
+    })
+  );
+  const functionSchemasAsArray = await Promise.all(
+    functions.map((functionName) => {
+      const pathForFunction = `./functions${functionName}`;
+      const denoDocJson = await readDenoDocJson(pathForFunction);
+      const entityNameForLogging = `Function ${functionName}`;
+      const inputSchema = getInputSchemaFromDocs(
+        denoDocJson,
+        entityNameForLogging
+      );
+      const outputSchema = getFunctionOutputSchemaFromDocs(
+        denoDocJson,
+        entityNameForLogging
+      );
+
+      return { key: pathForFunction, inputSchema, outputSchema };
+    })
+  );
+  const schemas = [...sectionSchemasAsArray, ...functionSchemasAsArray]
+    .filter(
+      ({ inputSchema, outputSchema }) =>
+        Boolean(inputSchema) || Boolean(outputSchema)
     )
-  )
-    .filter(({ schema }) => Boolean(schema))
     .reduce((acc, cur) => {
-      return { ...acc, [cur.key]: cur.schema as JSONSchema7 };
-    }, {} as Record<string, JSONSchema7>);
+      return {
+        ...acc,
+        [cur.key]: {
+          inputSchema: cur.inputSchema as JSONSchema7,
+          outputSchema: cur.outputSchema as JSONSchema7,
+        },
+      };
+    }, {} as Record<string, { inputSchema: JSONSchema7 }>);
 
   return schemas;
 }
