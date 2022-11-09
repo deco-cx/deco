@@ -8,7 +8,11 @@ import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
 import { JSONSchema7 } from "json-schema";
-import { getFunctionOutputSchemaFromDocs, getInputSchemaFromDocs, readDenoDocJson } from "./utils/denoDoc.ts";
+import {
+  getFunctionOutputSchemaFromDocs,
+  getInputSchemaFromDocs,
+  readDenoDocJson,
+} from "./utils/denoDoc.ts";
 
 /**
  * This interface represents an intermediate state used to generate
@@ -259,7 +263,7 @@ async function extractAllSchemas(
 ): Promise<DevManifestData["schemas"]> {
   const sectionSchemasAsArray = await Promise.all(
     // TODO: Remove
-    sections.slice(0, 1).map(async (section) => {
+    sections.map(async (section) => {
       const pathForSection = `./sections${section}`;
 
       const denoDocJson = await readDenoDocJson(pathForSection);
@@ -280,10 +284,7 @@ async function extractAllSchemas(
       const pathForFunction = `./functions${functionName}`;
       const denoDocJson = await readDenoDocJson(pathForFunction);
       const entityNameForLogging = `Function ${functionName}`;
-      const inputSchema = getInputSchemaFromDocs(
-        denoDocJson,
-        entityNameForLogging
-      );
+      const inputSchema = getInputSchemaFromDocs(denoDocJson);
       const outputSchema = getFunctionOutputSchemaFromDocs(
         denoDocJson,
         entityNameForLogging
