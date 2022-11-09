@@ -24,7 +24,6 @@ export interface DecoManifest extends Manifest {
   islands: Record<string, Module>;
   sections: Record<string, Module>;
   loaders: Record<string, LoaderModule>;
-  schemas: Record<string, JSONSchema7>;
 }
 
 export interface Site {

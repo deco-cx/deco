@@ -6,6 +6,10 @@ import { ViewfinderCircleIcon } from "heroicons";
 declare global {
   interface Window {
     inspectVSCode: DomInspector;
+    LIVE: {
+      page: Page
+      site: Site
+    }
   }
 }
 
@@ -65,7 +69,6 @@ export default function LiveControls({ site, page, isProduction }: Props) {
   };
 
   useEffect(() => {
-    // @ts-expect-error: Create global types for this later
     window["LIVE"] = {
       site,
       page,
