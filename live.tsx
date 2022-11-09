@@ -5,14 +5,45 @@ import { EditorData, Page, PageData } from "$live/types.ts";
 import { filenameFromPath } from "$live/utils/component.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import InspectVSCodeHandler from "inspect_vscode/handler.ts";
+import { blue, cyan, green, magenta, red, yellow } from "std/fmt/colors.ts";
 
 import { getWorkbenchTree } from "./utils/workbench.ts";
 
 import type { ComponentChildren, FunctionComponent } from "preact";
 
+const DEPLOY = Boolean(context.deploymentId);
+
+const formatLog = (opts: {
+  status: number;
+  begin: number;
+  page: Page;
+  url: URL;
+}) => {
+  const statusFormatter = opts.status < 300
+    ? green
+    : opts.status < 400
+    ? blue
+    : opts.status < 500
+    ? yellow
+    : red;
+  const duration = ((performance.now() - opts.begin) / 1e3).toFixed(0);
+  const { path, id, name } = opts.page;
+
+  if (DEPLOY) {
+    return `[${
+      statusFormatter(`${opts.status}`)
+    }]: ${duration}ms ${path} ${opts.url.pathname} ${id}`;
+  }
+
+  return `[${statusFormatter(`${opts.status}`)}]: ${duration}ms ${name} ${
+    magenta(path)
+  } ${cyan(opts.url.pathname)} ${green(`https://deco.cx/live/${context.siteId}/pages/${id}`)}`;
+};
+
 export function live() {
   const handler: Handlers<Page> = {
     async GET(req, ctx) {
+      const begin = performance.now();
       const url = new URL(req.url);
 
       // TODO: Find a better way to embedded this route on project routes.
@@ -52,8 +83,6 @@ export function live() {
 
       const { page, params = {} } = pageWithParams;
 
-      console.log({ "Found Page": page });
-
       if (url.searchParams.has("editorData")) {
         const editorData = generateEditorData(page);
         return Response.json(editorData, {
@@ -82,13 +111,15 @@ export function live() {
 
       res.headers.set("Server-Timing", printTimings());
 
+      console.info(formatLog({ status: res.status, url, page, begin }));
+
       return res;
     },
     async POST(req, ctx) {
       const url = new URL(req.url);
       if (
         url.pathname.startsWith("/_live/inspect") &&
-        context.deploymentId === undefined
+        DEPLOY === false
       ) {
         return await InspectVSCodeHandler.POST!(req, ctx);
       }
@@ -105,12 +136,14 @@ export function LiveSections({ sections }: PageData) {
   return (
     <>
       {sections?.map(({ key, props, uniqueId }) => {
-        const Component = manifest.sections[key]?.default as FunctionComponent | undefined;
+        const Component = manifest.sections[key]?.default as
+          | FunctionComponent
+          | undefined;
 
         if (!Component) {
-          console.error(`Section not found ${key}`)
+          console.error(`Section not found ${key}`);
 
-          return null
+          return null;
         }
 
         return (
