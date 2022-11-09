@@ -27,7 +27,7 @@ const formatLog = (opts: {
     ? yellow
     : red;
   const duration = ((performance.now() - opts.begin) / 1e3).toFixed(0);
-  const { path, id, name } = opts.page;
+  const { path, id } = opts.page;
 
   if (DEPLOY) {
     return `[${
@@ -35,7 +35,7 @@ const formatLog = (opts: {
     }]: ${duration}ms ${path} ${opts.url.pathname} ${id}`;
   }
 
-  return `[${statusFormatter(`${opts.status}`)}]: ${duration}ms ${name} ${
+  return `[${statusFormatter(`${opts.status}`)}]: ${duration}ms ${
     magenta(path)
   } ${cyan(opts.url.pathname)} ${green(`https://deco.cx/live/${context.siteId}/pages/${id}`)}`;
 };
