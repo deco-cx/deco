@@ -1,4 +1,4 @@
-import { exec, OutputMode } from "https://deno.land/x/exec/mod.ts";
+import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import { JSONSchema7 } from "json-schema";
 
 /**
@@ -116,9 +116,10 @@ export function getInputSchemaFromDocs(
   const propsExport = docs.find(({ name }) => name === "Props");
 
   if (!propsExport) {
-    console.log(
-      `${entityName} doesn't export a Props interface definition, couldn't extract schema.`
-    );
+    entityName &&
+      console.log(
+        `${entityName} doesn't export a Props interface definition, couldn't extract schema.`
+      );
     return null;
   }
 
@@ -144,7 +145,9 @@ export function getInputSchemaFromDocs(
       type: propType || "string",
     };
 
-    if (!propType) {
+    const isComplexType = cur.tsType.kind === 'typeRef'
+
+    if (!propType || isComplexType) {
       // Some options: Inline object (typeLiteral), enum (kind: union)
       switch (cur.tsType.kind) {
         case "typeLiteral": {
