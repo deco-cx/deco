@@ -19,6 +19,18 @@ const beautifyPropName = (propName: string) => {
   );
 };
 
+/**
+ * We use $id inside of schemas to match components and functions.
+ *
+ * This function is responsible for generating this $id from the
+ * type's import URL
+ *
+ * E.g: importUrl: file:///Users/lucis/deco/live/std/commerce/types/Product.ts
+ */
+const get$idFromImportUrl = (importUrl: string) => {
+  return "live" + importUrl?.split("/live")[1];
+};
+
 export async function readDenoDocJson(filePath: string) {
   const { output: rawOutput } = await exec(`deno doc ${filePath} --json`, {
     output: OutputMode.Capture,
@@ -77,10 +89,10 @@ export function getFunctionOutputSchemaFromDocs(
     console.log(
       `Couldn't find import for output type '${outputTypeName}' in ${entityName}.`
     );
+    return null;
   }
 
-  // TODO: Do this more elegantly
-  const typeId = "live" + outputTypeUrl?.split("/live")[1];
+  const typeId = get$idFromImportUrl(outputTypeUrl);
 
   const outputSchema: JSONSchema7 = {
     type: "object",
@@ -156,11 +168,32 @@ export function getInputSchemaFromDocs(
           break;
         }
         case "union": {
+          // E.g: { state: 'open' | 'false' }
           baseProp.type = "array";
           baseProp.items = {
             type: "string",
             enum: cur.tsType.union?.map(({ repr }) => repr),
           };
+          break;
+        }
+        case "typeRef": {
+          // E.g: { productsResponse: ProductList }
+          const typeName = cur.tsType.repr;
+          const typeImportUrl = docs.find(
+            ({ kind, name }) => kind === "import" && name === typeName
+          )?.importDef?.src;
+
+          if (!typeImportUrl) {
+            console.log(
+              `${entityName} declares dependency on a type that is not being imported in this file.`
+            );
+            return acc;
+          }
+
+          const typeId = get$idFromImportUrl(typeImportUrl);
+
+          baseProp.$id = typeId;
+          baseProp.type = undefined;
         }
       }
     }
