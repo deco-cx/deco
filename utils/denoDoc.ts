@@ -1,22 +1,103 @@
+import { exec, OutputMode } from "https://deno.land/x/exec/mod.ts";
 import { JSONSchema7 } from "json-schema";
 
 /**
  * Transforms myPropName into "My Prop Name" for cases
  * when there's no label specified
- * 
+ *
  * TODO: Support i18n in the future
  */
 const beautifyPropName = (propName: string) => {
-  return propName
-    // insert a space before all caps
-    .replace(/([A-Z])/g, " $1")
-    // uppercase the first character
-    .replace(/^./, function (str) {
-      return str.toUpperCase();
-    });
+  return (
+    propName
+      // insert a space before all caps
+      .replace(/([A-Z])/g, " $1")
+      // uppercase the first character
+      .replace(/^./, function (str) {
+        return str.toUpperCase();
+      })
+  );
 };
 
-export function getJsonSchemaFromDocs(
+export async function readDenoDocJson(filePath: string) {
+  const { output: rawOutput } = await exec(`deno doc ${filePath} --json`, {
+    output: OutputMode.Capture,
+  });
+  const denoDocOutput = JSON.parse(rawOutput);
+  return denoDocOutput;
+}
+
+export function getFunctionOutputSchemaFromDocs(
+  docs: DenoDocResponse[],
+  entityName: string
+) {
+  const defaultFunctionExport = docs.find(
+    ({ name, kind }) => name === "default" && kind === "variable"
+  );
+
+  if (!defaultFunctionExport) {
+    console.log(
+      `${entityName} should have a named function as the default export. Check the docs here: #TODO`
+    );
+  }
+
+  const functionTsType = defaultFunctionExport?.variableDef?.tsType;
+  const functionTypeName = functionTsType?.repr; // E.g: LoaderFunction
+
+  const VALID_FUNCTION_TYPES = ["LoaderFunction"];
+
+  if (
+    !functionTypeName ||
+    !functionTsType ||
+    !VALID_FUNCTION_TYPES.includes(functionTypeName)
+  ) {
+    console.log(
+      `${entityName} should export a function with one of Live's provided types: LoaderFunction.`
+    );
+
+    return null;
+  }
+
+  const outputTypeName = functionTsType?.typeRef?.typeParams?.map(
+    ({ repr }) => repr
+  )[1]; // E.g: Product
+
+  if (!outputTypeName && functionTypeName === "LoaderFunction") {
+    console.log(
+      `${entityName} should specify its return type like this: LoaderFunction<Props, Product>, where Product is the return type.`
+    );
+    return null;
+  }
+
+  const outputTypeUrl = docs.find(
+    ({ kind, name }) => kind === "import" && name === outputTypeName
+  )?.importDef?.src; // E.g: file:///Users/lucis/deco/live/std/commerce/types/Product.ts
+
+  if (!outputTypeUrl) {
+    console.log(
+      `Couldn't find import for output type '${outputTypeName}' in ${entityName}.`
+    );
+  }
+
+  // TODO: Do this more elegantly
+  const typeId = "live" + outputTypeUrl?.split("/live")[1];
+
+  const outputSchema: JSONSchema7 = {
+    type: "object",
+    properties: {
+      data: {
+        $id: typeId,
+      },
+    },
+    // Technically, this function might return additional data (like headers and status), but
+    // they don't matter for the schema now
+    additionalProperties: true,
+  };
+
+  return outputSchema;
+}
+
+export function getInputSchemaFromDocs(
   docs: DenoDocResponse[],
   entityName?: string
 ): JSONSchema7 | null {
@@ -112,7 +193,18 @@ export interface DenoDocResponse {
   declarationKind: string;
   interfaceDef?: InterfaceDef;
   functionDef?: FunctionDef;
+  variableDef?: VariableDef;
   importDef?: ImportDef;
+}
+export interface VariableDef {
+  tsType: TsTypeElement;
+  kind: string;
+}
+
+export interface TsTypeElement {
+  repr: string;
+  kind: string;
+  typeRef: TypeRef;
 }
 
 export interface FunctionDef {
@@ -144,7 +236,7 @@ export interface TsType {
 }
 
 export interface TypeRef {
-  typeParams: null;
+  typeParams: null | Array<TsTypeElement>;
   typeName: string;
 }
 
