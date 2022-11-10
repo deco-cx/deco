@@ -1,6 +1,7 @@
 import type { IslandModule } from "$fresh/src/server/types.ts";
-import type { HandlerContext, Manifest } from "$fresh/server.ts";
+import type { Manifest } from "$fresh/server.ts";
 import type { JSONSchema7 } from "json-schema";
+import { LoaderFunction } from "./std/types.ts";
 
 export type { Node } from "./utils/workbench.ts";
 
@@ -10,20 +11,14 @@ export interface Module extends IslandModule {
   schema?: JSONSchema7;
 }
 
-export interface Loader {
-  loader: (req: Request, ctx: HandlerContext<any>, props: any) => Promise<any>;
-  inputSchema: JSONSchema7;
-  outputSchema: { $ref: NonNullable<JSONSchema7["$ref"]> };
-}
-
-export interface LoaderModule {
-  default: Loader;
+export interface FunctionModule {
+  default: LoaderFunction;
 }
 
 export interface DecoManifest extends Manifest {
   islands: Record<string, Module>;
   sections: Record<string, Module>;
-  loaders: Record<string, LoaderModule>;
+  functions: Record<string, FunctionModule>;
   schemas: Record<
     string,
     { inputSchema: JSONSchema7 | null; outputSchema: JSONSchema7 | null }
@@ -47,18 +42,18 @@ export interface PageSection {
   key: string;
   // Pretty name for the entity
   label: string;
-  // Uniquely identifies this entity in the scope of a page (that can have multiple loaders, sections)
+  // Uniquely identifies this entity in the scope of a page (that can have multiple functions, sections)
   uniqueId: string;
   props?: Record<string, unknown>;
 }
 
-export interface PageLoader extends PageSection {
-  outputSchema: string;
+export interface PageFunction extends PageSection {
+  outputSchema?: JSONSchema7;
 }
 
 export interface PageData {
   sections: PageSection[];
-  loaders: PageLoader[];
+  functions: PageFunction[];
 }
 
 export type PageState = "archived" | "draft" | "published" | "dev";
@@ -97,13 +92,13 @@ export interface WithSchema {
 }
 
 export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;
-export type AvailableLoader = Omit<PageLoader, "uniqueId"> & WithSchema;
+export type AvailableFunction = Omit<PageFunction, "uniqueId"> & WithSchema;
 
 export interface EditorData {
   pageName: string;
   sections: Array<PageSection & WithSchema>;
-  loaders: Array<PageLoader & WithSchema>;
+  functions: Array<PageFunction & WithSchema>;
   availableSections: Array<AvailableSection>;
-  availableLoaders: Array<AvailableLoader>;
+  availableFunctions: Array<AvailableFunction>;
   state: PageState;
 }

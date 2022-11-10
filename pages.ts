@@ -1,16 +1,13 @@
-import { HandlerContext } from "$fresh/server.ts";
 import { context } from "$live/server.ts";
-import { PageData, PageWithParams } from "$live/types.ts";
+import { PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
 
 import { Page } from "./types.ts";
 import {
   createPageForSection,
-  createSection,
-  exists,
-} from "./utils/component.ts";
-import { isLoaderProp, propToLoaderInstance } from "./utils/loaders.ts";
-import { path } from "./utils/path.ts";
+  createSectionFromSectionKey,
+  doesSectionExist,
+} from "./utils/page.ts";
 
 export async function loadLivePage(
   req: Request,
@@ -39,77 +36,24 @@ export async function loadLivePage(
     page: {
       ...pageWithParams?.page,
       data: {
-        loaders: pageWithParams?.page.data.loaders,
-        sections: (pageWithParams?.page.data.sections ??
-          (pageWithParams?.page.data as any).components)?.map((section) => ({
-            ...section,
-            key: section.key.replace("./components/", "./sections/"),
-          })),
+        // TODO: Remove this after we eventually migrate everything
+        functions: (
+          pageWithParams?.page.data.functions ??
+            (pageWithParams?.page.data as any).loaders
+        )?.map((loader) => ({
+          ...loader,
+          key: loader.key.replace("./loaders", "./functions"),
+        })),
+        sections: (
+          pageWithParams?.page.data.sections ??
+            (pageWithParams?.page.data as any).components
+        )?.map((section) => ({
+          ...section,
+          key: section.key.replace("./components/", "./sections/"),
+        })),
       },
     },
   };
-}
-
-export async function loadData(
-  req: Request,
-  ctx: HandlerContext<Page>,
-  pageData: PageData,
-  start: (l: string) => void,
-  end: (l: string) => void,
-): Promise<PageData> {
-  const loadersResponse = await Promise.all(
-    pageData.loaders?.map(async ({ key, props, uniqueId }) => {
-      const loaderFn = context.manifest!.loaders[key]?.default.loader;
-
-      if (!loaderFn) {
-        console.log(`Not found loader implementation for ${key}`);
-      }
-
-      start(`loader#${uniqueId}`);
-      const loaderData = await loaderFn(req, ctx, props);
-      end(`loader#${uniqueId}`);
-      return {
-        uniqueId,
-        data: loaderData,
-      };
-    }) ?? [],
-  );
-
-  const loadersResponseMap = loadersResponse.reduce(
-    (result, currentResponse) => {
-      result[currentResponse.uniqueId] = currentResponse.data;
-      return result;
-    },
-    {} as Record<string, unknown>,
-  );
-
-  const sectionsWithData = pageData.sections.map((componentData) => {
-    /*
-     * if any shallow prop that contains a mustache like `{loaderName.*}`,
-     * then get the loaderData using path(loadersResponseMap, value.substring(1, value.length - 1))
-     */
-
-    const propsWithLoaderData = Object.keys(componentData.props || {})
-      .map((propKey) => {
-        const propValue = componentData.props?.[propKey];
-
-        if (!isLoaderProp(propValue)) {
-          return { key: propKey, value: propValue };
-        }
-
-        const loaderValue = path(
-          loadersResponseMap,
-          propToLoaderInstance(propValue),
-        );
-
-        return { key: propKey, value: loaderValue };
-      })
-      .reduce((acc, cur) => ({ ...acc, [cur.key]: cur.value }), {});
-
-    return { ...componentData, props: propsWithLoaderData };
-  });
-
-  return { ...pageData, sections: sectionsWithData };
 }
 
 export const fetchPageFromPathname = async (
@@ -171,7 +115,6 @@ export const fetchPageFromId = async (
     ? urlPattern.exec({ pathname })?.pathname.groups
     : undefined;
 
-  console.log({ matchPage, params, pathname });
   return {
     page: matchPage as Page,
     params,
@@ -188,20 +131,20 @@ export const fetchPageFromId = async (
  * This way we can use the page editor to edit components too
  */
 export const fetchPageFromComponent = async (
-  component: string, // Ex: Banner.tsx
+  sectionFileName: string, // Ex: Banner.tsx
   siteId: number,
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
-  const { section: instance, loaders } = createSection(
-    `./sections/${component}`,
+  const { section: instance, functions } = createSectionFromSectionKey(
+    `./sections/${sectionFileName}`,
   );
-  const page = createPageForSection(component, {
+  const page = createPageForSection(sectionFileName, {
     sections: [instance],
-    loaders,
+    functions,
   });
 
-  if (!exists(`./sections/${component}`)) {
-    throw new Error(`Section at ${component} Not Found`);
+  if (!doesSectionExist(`./sections/${sectionFileName}`)) {
+    throw new Error(`Section at ${sectionFileName} Not Found`);
   }
 
   const { data } = await supabase
