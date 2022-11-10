@@ -34,6 +34,7 @@ const get$idFromImportUrl = (importUrl: string) => {
 };
 
 export async function readDenoDocJson(filePath: string) {
+  // TODO: Test on windows
   const { output: rawOutput } = await exec(`deno doc ${filePath} --json`, {
     output: OutputMode.Capture,
   });
@@ -125,7 +126,7 @@ export function getInputSchemaFromDocs(
     return null;
   }
 
-  const componentName = propsExport.location.filename
+  const fileName = propsExport.location.filename
     .split("/")
     .pop()
     ?.replace(/\.ts(x|)/g, "");
@@ -212,7 +213,7 @@ export function getInputSchemaFromDocs(
   }, {} as JSONSchema7["properties"]);
 
   const baseJsonSchema: JSONSchema7 = {
-    title: componentName,
+    title: fileName,
     type: "object",
   };
 
