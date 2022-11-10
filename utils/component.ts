@@ -108,7 +108,7 @@ export const createSection = (sectionKey: string) => {
 export const createPageForSection = (
   sectionName: string,
   data: PageData,
-): Page => ({
+): Omit<Page, "state"> => ({
   id: -1,
   name: sectionName,
   path: `/_live/sections/${sectionName}`,
