@@ -84,7 +84,6 @@ export function live() {
       }
 
       const { page, params = {} } = pageWithParams;
-      // console.log(JSON.stringify(page, null, 2));
 
       if (url.searchParams.has("editorData")) {
         const editorData = generateEditorData(page);
@@ -212,8 +211,6 @@ function generateEditorData(page: Page): EditorData {
     ...functionData,
     schema: context.manifest?.schemas[functionData.key]?.inputSchema ||
       undefined,
-    // schema: context.manifest?.functions[functionData.key]?.default?.inputSchema,
-    // TODO: We might move this to use $id instead
     outputSchema: context.manifest?.schemas[functionData.key]?.outputSchema ||
       undefined,
   }));
