@@ -108,11 +108,12 @@ export const createSection = (sectionKey: string) => {
 export const createPageForSection = (
   sectionName: string,
   data: PageData,
-): Omit<Page, "state"> => ({
+): Page => ({
   id: -1,
   name: sectionName,
   path: `/_live/sections/${sectionName}`,
   data,
+  state: "dev",
 });
 
 const getDefinition = (path: string) => context.manifest?.sections[path];

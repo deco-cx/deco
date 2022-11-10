@@ -57,7 +57,7 @@ export interface PageData {
   loaders: PageLoader[];
 }
 
-export type PageState = "archived" | "draft" | "published";
+export type PageState = "archived" | "draft" | "published" | "dev";
 
 export interface Page {
   id: number;
