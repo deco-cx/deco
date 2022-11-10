@@ -299,13 +299,11 @@ async function extractAllSchemas(
         Boolean(inputSchema) || Boolean(outputSchema)
     )
     .reduce((acc, cur) => {
-      return {
-        ...acc,
-        [cur.key]: {
-          inputSchema: cur.inputSchema as JSONSchema7,
-          outputSchema: cur.outputSchema as JSONSchema7,
-        },
+      acc[cur.key]: {
+        inputSchema: cur.inputSchema as JSONSchema7,
+        outputSchema: cur.outputSchema as JSONSchema7,
       };
+      return acc;
     }, {} as Record<string, { inputSchema: JSONSchema7 }>);
 
   return schemas;
