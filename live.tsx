@@ -26,7 +26,7 @@ const formatLog = (opts: {
     : opts.status < 500
     ? yellow
     : red;
-  const duration = ((performance.now() - opts.begin) / 1e3).toFixed(0);
+  const duration = (performance.now() - opts.begin).toFixed(0);
   const { path, id } = opts.page;
 
   if (DEPLOY) {
