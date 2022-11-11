@@ -57,11 +57,14 @@ export interface PageData {
   loaders: PageLoader[];
 }
 
+export type PageState = "archived" | "draft" | "published" | "dev";
+
 export interface Page {
   id: number;
   data: PageData;
   name: string;
   path: string;
+  state: PageState;
 }
 
 /**
@@ -98,4 +101,5 @@ export interface EditorData {
   loaders: Array<PageLoader & WithSchema>;
   availableSections: Array<AvailableSection>;
   availableLoaders: Array<AvailableLoader>;
+  state: PageState;
 }

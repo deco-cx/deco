@@ -37,7 +37,9 @@ const formatLog = (opts: {
 
   return `[${statusFormatter(`${opts.status}`)}]: ${duration}ms ${
     magenta(path)
-  } ${cyan(opts.url.pathname)} ${green(`https://deco.cx/live/${context.siteId}/pages/${id}`)}`;
+  } ${cyan(opts.url.pathname)} ${
+    green(`https://deco.cx/live/${context.siteId}/pages/${id}`)
+  }`;
 };
 
 export function live() {
@@ -193,6 +195,7 @@ export function LivePage({
 function generateEditorData(page: Page): EditorData {
   const {
     data: { sections, loaders },
+    state,
   } = page;
 
   const sectionsWithSchema = sections.map(
@@ -251,5 +254,6 @@ function generateEditorData(page: Page): EditorData {
     loaders: loadersWithSchema,
     availableSections,
     availableLoaders,
+    state,
   };
 }

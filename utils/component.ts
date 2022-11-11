@@ -113,6 +113,7 @@ export const createPageForSection = (
   name: sectionName,
   path: `/_live/sections/${sectionName}`,
   data,
+  state: "dev",
 });
 
 const getDefinition = (path: string) => context.manifest?.sections[path];
