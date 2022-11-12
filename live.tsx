@@ -1,6 +1,9 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { loadLivePage } from "$live/pages.ts";
-import { filenameFromPath, loadPageData } from "$live/utils/page.ts";
+import {
+  generateAvailableEntitiesFromManifest,
+  loadPageData,
+} from "$live/utils/manifest.ts";
 import { context } from "$live/server.ts";
 import { EditorData, Page, PageData } from "$live/types.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
@@ -215,47 +218,15 @@ function generateEditorData(page: Page): EditorData {
       undefined,
   }));
 
-  const availableSections = Object.keys(
-    context.manifest?.sections || {},
-  ).map((componentKey) => {
-    const schema = context.manifest?.sections[componentKey]?.schema;
-    const label = filenameFromPath(componentKey);
-
-    // TODO: Should we extract defaultProps from the schema here?
-
-    return {
-      key: componentKey,
-      label,
-      props: {},
-      schema,
-    } as EditorData["availableSections"][0];
-  });
-
-  const availableFunctions = Object.keys(context.manifest?.functions || {}).map(
-    (functionKey) => {
-      const { inputSchema, outputSchema } =
-        context.manifest?.schemas[functionKey] || {};
-      const label = filenameFromPath(functionKey);
-
-      // TODO: Should we extract defaultProps from the schema here?
-
-      return {
-        key: functionKey,
-        label,
-        props: {},
-        schema: inputSchema,
-        // TODO: Centralize this logic
-        outputSchema: outputSchema?.$ref,
-      } as EditorData["availableFunctions"][0];
-    },
-  );
+  const { availableFunctions, availableSections } =
+    generateAvailableEntitiesFromManifest();
 
   return {
     pageName: page?.name,
     sections: sectionsWithSchema,
     functions: functionsWithSchema,
     availableSections,
-    availableFunctions,
+    availableFunctions: [...availableFunctions, ...functionsWithSchema],
     state,
   };
 }

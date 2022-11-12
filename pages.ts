@@ -3,11 +3,11 @@ import { PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
 
 import { Page } from "./types.ts";
+import { createPageForSection } from "./utils/page.ts";
 import {
-  createPageForSection,
   createSectionFromSectionKey,
   doesSectionExist,
-} from "./utils/page.ts";
+} from "./utils/manifest.ts";
 
 export async function loadLivePage(
   req: Request,

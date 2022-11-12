@@ -1,15 +1,13 @@
 import type { JSONSchema7, JSONSchema7Definition } from "json-schema";
-import { HandlerContext } from "$fresh/server.ts";
-import { context } from "../server.ts";
 
-import type { Page, PageData, PageFunction } from "../types.ts";
-
-interface SectionInstance {
-  key: string;
-  label: string;
-  uniqueId: string;
-  props: Record<string, unknown>;
-}
+import type {
+  AvailableFunction,
+  AvailableSection,
+  Page,
+  PageData,
+  PageFunction,
+  PageSection,
+} from "../types.ts";
 
 /**
  * TODO: There's probably a file util for that
@@ -52,10 +50,10 @@ export const isNotNullOrUndefined = <T extends unknown>(
   item: T | null | undefined
 ): item is T => item !== null && item !== undefined;
 
-type AvailableFunctionsForSection = Array<{
+export type AvailableFunctionsForSection = Array<{
   sectionPropKey: string;
   sectionPropTitle?: string;
-  availableFunctionKeys: string[];
+  availableFunctions: AvailableFunction[];
 }>;
 
 /**
@@ -66,35 +64,35 @@ type AvailableFunctionsForSection = Array<{
  *  Used the data from the fn above
  */
 export const availableFunctionsForSection = (
-  sectionKey: string
+  section: AvailableSection,
+  functions: AvailableFunction[]
 ): AvailableFunctionsForSection => {
-  const functions = context.manifest?.functions ?? {};
+  console.log({ section, functions });
+  const functionsAvailableByOutputSchema$id: Record<
+    string,
+    AvailableFunction[]
+  > = functions.reduce((acc, availableFunction) => {
+    const dataAttr = availableFunction.outputSchema?.properties?.data;
 
-  const functionsAvailableByOutputSchema$id: Record<string, string[]> =
-    Object.entries(functions).reduce((acc, [key]) => {
-      const functionOutputSchema = context.manifest?.schemas[key]?.outputSchema;
-      const dataAttr = functionOutputSchema?.properties?.data;
-
-      if (typeof dataAttr !== "object") {
-        return acc;
-      }
-
-      const functionType$Id = dataAttr.$id; // E.g: live/std/commerce/ProductList.ts
-
-      if (!functionType$Id) {
-        return acc;
-      }
-
-      if (!acc[functionType$Id]) {
-        acc[functionType$Id] = [];
-      }
-
-      acc[functionType$Id].push(key);
+    if (typeof dataAttr !== "object") {
       return acc;
-    }, {} as Record<string, string[]>);
+    }
 
-  const sectionInputSchema =
-    context?.manifest?.schemas[sectionKey]?.inputSchema;
+    const functionType$Id = dataAttr.$id; // E.g: live/std/commerce/ProductList.ts
+
+    if (!functionType$Id) {
+      return acc;
+    }
+
+    if (!acc[functionType$Id]) {
+      acc[functionType$Id] = [];
+    }
+
+    acc[functionType$Id].push(availableFunction);
+    return acc;
+  }, {} as Record<string, AvailableFunction[]>);
+
+  const sectionInputSchema = section?.schema;
 
   if (!sectionInputSchema) {
     return [];
@@ -113,14 +111,14 @@ export const availableFunctionsForSection = (
       const sectionPropTitle = propDefinition.title;
       const prop$id = propDefinition.$id;
 
-      const availableFunctionKeys = prop$id
+      const availableFunctions = prop$id
         ? functionsAvailableByOutputSchema$id[prop$id] || []
         : [];
 
       return {
         sectionPropKey,
         sectionPropTitle,
-        availableFunctionKeys,
+        availableFunctions,
       };
     })
     .filter(isNotNullOrUndefined);
@@ -128,107 +126,57 @@ export const availableFunctionsForSection = (
   return availableFunctions;
 };
 
-export const createFunctionInstanceFromFunctionKey = (
-  functionKey: string
-): PageFunction => {
-  // TODO: Make sure that dev.ts is adding top-level title to inputSchema
-  const functionLabel =
-    context.manifest?.schemas[functionKey]?.inputSchema?.title ?? functionKey;
+function addUniqueIdToEntity<T extends AvailableFunction | AvailableSection>(
+  entity: T
+): T & { uniqueId: string } {
+  return { ...entity, uniqueId: appendHash(entity.key) };
+}
+export const prepareSectionWithFunctions = ({
+  selectedFunctions,
+  selectedSection,
+}: {
+  selectedSection: AvailableSection;
+  selectedFunctions: Record<string, AvailableFunction>;
+}): {
+  sectionToBeAdded: PageSection;
+  functionsToBeAdded: PageFunction[];
+} => {
+  const baseSection: PageSection = addUniqueIdToEntity(selectedSection);
 
-  const uniqueId = appendHash(functionKey);
-
-  // TODO: Get initial props from introspecting JSON Schema
-  const initialProps = {};
-
-  const functionInstance: PageFunction = {
-    key: functionKey,
-    label: functionLabel,
-    uniqueId,
-    props: initialProps,
-  };
-
-  return functionInstance;
-};
-
-type SelectDefaultFunctionReturn = {
-  sectionProps: Record<string, unknown>;
-  newFunctionsToAdd: Array<PageFunction>;
-};
-/**
- * This function should be used only in the initial stage of the product.
- *
- * Since we don't yet have an UI to select which function a sections should bind
- * itself to (for each one of the props that might require this),
- * this utility function selects the first one available.
- *
- */
-export const selectDefaultFunctionsForSection = (
-  sectionKey: string
-): SelectDefaultFunctionReturn => {
-  const sectionInputSchema =
-    context?.manifest?.schemas[sectionKey]?.inputSchema;
-
-  if (!sectionInputSchema) {
-    return {
-      sectionProps: {},
-      newFunctionsToAdd: [],
-    };
-  }
-
-  const availableFunctions = availableFunctionsForSection(sectionKey);
-
-  const returnData = availableFunctions.reduce(
-    (acc, { availableFunctionKeys, sectionPropKey }) => {
-      const chosenFunctionKey = availableFunctionKeys[0];
-      if (!chosenFunctionKey) {
-        console.log(
-          `Couldn't find a function for prop ${sectionPropKey} of section ${sectionKey}.`
-        );
+  const { functionsToBeAdded, sectionInitialProps } = Object.keys(
+    selectedFunctions
+  ).reduce(
+    (acc, propKey) => {
+      const fn = selectedFunctions[propKey];
+      if (!fn) {
         return acc;
       }
 
-      const functionInstance =
-        createFunctionInstanceFromFunctionKey(chosenFunctionKey);
+      if (!fn.uniqueId) {
+        const fnToBeAdded = addUniqueIdToEntity(fn);
+        acc.functionsToBeAdded.push(fnToBeAdded);
+        acc.sectionInitialProps[propKey] = functionUniqueIdToPropReference(
+          fnToBeAdded.uniqueId
+        );
 
-      acc.newFunctionsToAdd.push(functionInstance);
-      acc.sectionProps[sectionPropKey] =
-        functionUniqueIdToPropReference(chosenFunctionKey);
-      return acc;
+        return acc;
+      } else {
+        acc.sectionInitialProps[propKey] = functionUniqueIdToPropReference(
+          fn.uniqueId
+        );
+
+        return acc;
+      }
     },
-    {
-      sectionProps: {},
-      newFunctionsToAdd: [],
-    } as SelectDefaultFunctionReturn
+    { functionsToBeAdded: [], sectionInitialProps: {} } as {
+      functionsToBeAdded: PageFunction[];
+      sectionInitialProps: Record<string, string>;
+    }
   );
 
-  return returnData;
-};
+  const sectionToBeAdded = { ...baseSection, props: sectionInitialProps };
 
-type CreateSectionFromSectionKeyReturn = {
-  section: SectionInstance;
-  functions: PageFunction[];
-};
-
-/**
- * Used to generate dev pages (/_live/Banner.tsx), adding new functions to the page if necessary
- */
-export const createSectionFromSectionKey = (
-  sectionKey: string
-): CreateSectionFromSectionKeyReturn => {
-  const { newFunctionsToAdd, sectionProps } =
-    selectDefaultFunctionsForSection(sectionKey);
-
-  const section: SectionInstance = {
-    key: sectionKey,
-    label: sectionKey,
-    uniqueId: sectionKey,
-    props: sectionProps,
-  };
-
-  return {
-    section,
-    functions: newFunctionsToAdd,
-  };
+  return { sectionToBeAdded, functionsToBeAdded };
 };
 
 export const createPageForSection = (
@@ -240,79 +188,6 @@ export const createPageForSection = (
   path: `/_live/sections/${sectionName}`,
   data,
 });
-
-export async function loadPageData(
-  req: Request,
-  ctx: HandlerContext<Page>,
-  pageData: PageData,
-  start: (l: string) => void,
-  end: (l: string) => void
-): Promise<PageData> {
-  const functionsResponse = await Promise.all(
-    pageData.functions?.map(async ({ key, props, uniqueId }) => {
-      const loaderFn = context.manifest!.functions[key]?.default;
-
-      if (!loaderFn) {
-        console.log(`Not found function implementation for ${key}`);
-        return { uniqueId, data: null };
-      }
-
-      start(`loader#${uniqueId}`);
-      // TODO: Set status and headers
-      const {
-        data,
-        headers: _headers,
-        status: _status,
-      } = await loaderFn(req, ctx, props);
-      end(`loader#${uniqueId}`);
-
-      return {
-        uniqueId,
-        data,
-      };
-    }) ?? []
-  );
-
-  const loadersResponseMap = functionsResponse.reduce(
-    (result, currentResponse) => {
-      result[currentResponse.uniqueId] = currentResponse.data;
-      return result;
-    },
-    {} as Record<string, unknown>
-  );
-
-  const sectionsWithData = pageData.sections.map((componentData) => {
-    /*
-     * if any shallow prop that contains a mustache like `{functionName.*}`,
-     * then get the functionData using path(functionResponseMap, value.substring(1, value.length - 1))
-     */
-
-    const propsWithLoaderData = Object.keys(componentData.props || {})
-      .map((propKey) => {
-        const propValue = componentData.props?.[propKey];
-
-        if (!isFunctionProp(propValue)) {
-          return { key: propKey, value: propValue };
-        }
-
-        const loaderValue = path(
-          loadersResponseMap,
-          propReferenceToFunctionKey(propValue)
-        );
-
-        return { key: propKey, value: loaderValue };
-      })
-      .reduce((acc, cur) => ({ ...acc, [cur.key]: cur.value }), {});
-
-    return { ...componentData, props: propsWithLoaderData };
-  });
-
-  return { ...pageData, sections: sectionsWithData };
-}
-
-const getDefinition = (path: string) => context.manifest?.sections[path];
-
-export const doesSectionExist = (path: string) => Boolean(getDefinition(path));
 
 export const isFunctionProp = (value: unknown): value is string =>
   typeof value === "string" &&

@@ -92,7 +92,10 @@ export interface WithSchema {
 }
 
 export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;
-export type AvailableFunction = Omit<PageFunction, "uniqueId"> & WithSchema;
+// We re-add the uniqueId here to allow user to select functions that were already
+// added in the page
+export type AvailableFunction = Omit<PageFunction, "uniqueId"> &
+  WithSchema & { uniqueId?: string };
 
 export interface EditorData {
   pageName: string;
