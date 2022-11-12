@@ -6,7 +6,6 @@ import type {
   EditorData,
   Page,
   PageData,
-  PageFunction,
   PageSection,
 } from "../types.ts";
 
@@ -132,6 +131,33 @@ function addUniqueIdToEntity<T extends AvailableFunction | AvailableSection>(
 ): T & { uniqueId: string } {
   return { ...entity, uniqueId: appendHash(entity.key) };
 }
+
+export function getSelectedFunctionsForDuplication({
+  section,
+  availableFunctions,
+}: {
+  section: PageSection;
+  availableFunctions: AvailableFunction[];
+}): Record<string, AvailableFunction> {
+  return Object.keys(section.props ?? {}).reduce((acc, propKey) => {
+    const propValue = section?.props?.[propKey];
+    if (!propValue || !isFunctionProp(propValue)) return acc;
+
+    const functionUniqueId = propReferenceToFunctionKey(propValue);
+
+    const relatedFunction = availableFunctions.find(
+      ({ uniqueId }) => uniqueId === functionUniqueId
+    );
+
+    if (!relatedFunction) return acc;
+
+    const { uniqueId: _, ...functionCopy } = relatedFunction;
+    acc[propKey] = functionCopy;
+
+    return acc;
+  }, {} as Record<string, AvailableFunction>);
+}
+
 export const prepareSectionWithFunctions = ({
   selectedFunctions,
   selectedSection,
@@ -140,7 +166,7 @@ export const prepareSectionWithFunctions = ({
   selectedFunctions: Record<string, AvailableFunction>;
 }): {
   sectionToBeAdded: PageSection;
-  functionsToBeAdded: PageFunction[];
+  functionsToBeAdded: Array<AvailableFunction & { uniqueId: string }>;
 } => {
   const baseSection: PageSection = addUniqueIdToEntity(selectedSection);
 
@@ -170,7 +196,7 @@ export const prepareSectionWithFunctions = ({
       }
     },
     { functionsToBeAdded: [], sectionInitialProps: {} } as {
-      functionsToBeAdded: PageFunction[];
+      functionsToBeAdded: Array<AvailableFunction & { uniqueId: string }>;
       sectionInitialProps: Record<string, string>;
     }
   );
@@ -277,18 +303,3 @@ export const propReferenceToFunctionKey = (prop: string) =>
 
 export const appendHash = (value: string) =>
   `${value}-${crypto.randomUUID().slice(0, 4)}`;
-
-export const path = (obj: Record<string, any>, path: string) => {
-  const pathList = path.split(".").filter(Boolean);
-  let result = obj;
-
-  pathList.forEach((key) => {
-    if (!result[key]) {
-      return result[key];
-    }
-
-    result = result[key];
-  });
-
-  return result;
-};

@@ -15,7 +15,6 @@ import {
   filenameFromPath,
   functionUniqueIdToPropReference,
   isFunctionProp,
-  path,
   propReferenceToFunctionKey,
 } from "./page.ts";
 
@@ -144,21 +143,21 @@ export async function loadPageData(
 ): Promise<PageData> {
   const functionsResponse = await Promise.all(
     pageData.functions?.map(async ({ key, props, uniqueId }) => {
-      const loaderFn = context.manifest!.functions[key]?.default;
+      const functionFn = context.manifest!.functions[key]?.default;
 
-      if (!loaderFn) {
+      if (!functionFn) {
         console.log(`Not found function implementation for ${key}`);
         return { uniqueId, data: null };
       }
 
-      start(`loader#${uniqueId}`);
+      start(`function#${uniqueId}`);
       // TODO: Set status and headers
       const {
         data,
         headers: _headers,
         status: _status,
-      } = await loaderFn(req, ctx, props);
-      end(`loader#${uniqueId}`);
+      } = await functionFn(req, ctx, props);
+      end(`function#${uniqueId}`);
 
       return {
         uniqueId,
@@ -167,7 +166,7 @@ export async function loadPageData(
     }) ?? []
   );
 
-  const loadersResponseMap = functionsResponse.reduce(
+  const functionsResponseMap = functionsResponse.reduce(
     (result, currentResponse) => {
       result[currentResponse.uniqueId] = currentResponse.data;
       return result;
@@ -181,7 +180,7 @@ export async function loadPageData(
      * then get the functionData using path(functionResponseMap, value.substring(1, value.length - 1))
      */
 
-    const propsWithLoaderData = Object.keys(componentData.props || {})
+    const propsWithFunctionData = Object.keys(componentData.props || {})
       .map((propKey) => {
         const propValue = componentData.props?.[propKey];
 
@@ -189,16 +188,15 @@ export async function loadPageData(
           return { key: propKey, value: propValue };
         }
 
-        const loaderValue = path(
-          loadersResponseMap,
-          propReferenceToFunctionKey(propValue)
-        );
+        // In the future, we'll need to be more smart here (something like Liqui)
+        const functionValue =
+          functionsResponseMap[propReferenceToFunctionKey(propValue)];
 
-        return { key: propKey, value: loaderValue };
+        return { key: propKey, value: functionValue };
       })
       .reduce((acc, cur) => ({ ...acc, [cur.key]: cur.value }), {});
 
-    return { ...componentData, props: propsWithLoaderData };
+    return { ...componentData, props: propsWithFunctionData };
   });
 
   return { ...pageData, sections: sectionsWithData };

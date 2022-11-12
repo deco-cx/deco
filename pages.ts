@@ -131,19 +131,19 @@ export const fetchPageFromId = async (
  * This way we can use the page editor to edit components too
  */
 export const fetchPageFromComponent = async (
-  sectionFileName: string, // Ex: Banner.tsx
+  sectionFileName: string, // Ex: ./sections/Banner.tsx
   siteId: number,
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
   const { section: instance, functions } = createSectionFromSectionKey(
-    `./sections/${sectionFileName}`,
+    sectionFileName,
   );
   const page = createPageForSection(sectionFileName, {
     sections: [instance],
     functions,
   });
 
-  if (!doesSectionExist(`./sections/${sectionFileName}`)) {
+  if (!doesSectionExist(sectionFileName)) {
     throw new Error(`Section at ${sectionFileName} Not Found`);
   }
 
