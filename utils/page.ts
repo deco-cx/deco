@@ -3,6 +3,7 @@ import type { JSONSchema7, JSONSchema7Definition } from "json-schema";
 import type {
   AvailableFunction,
   AvailableSection,
+  EditorData,
   Page,
   PageData,
   PageFunction,
@@ -178,6 +179,80 @@ export const prepareSectionWithFunctions = ({
 
   return { sectionToBeAdded, functionsToBeAdded };
 };
+
+type SectionFunction = {
+  functionIndex: number;
+  function: EditorData["functions"][number];
+};
+
+export function getMetadataForSectionEditor({
+  section,
+  pageFunctions,
+}: {
+  section: EditorData["sections"][number];
+  pageFunctions: EditorData["functions"];
+}): {
+  ownPropsSchema?: JSONSchema7;
+  functionsForComponent?: SectionFunction[];
+} {
+  const sectionSchema = section.schema;
+  if (!sectionSchema || !section) {
+    return {};
+  }
+
+  const propsThatMapToLoader = Object.keys(section.props || {})
+    .map((propKey) => {
+      const propValue = section?.props?.[propKey]; // E.g: "Shelf Title" or "{vtexSearchResults-4ad5}"
+
+      if (
+        typeof propValue !== "string" ||
+        !isFunctionProp(section.props?.[propKey])
+      ) {
+        return null;
+      }
+
+      const functionUniqueId = propReferenceToFunctionKey(propValue);
+
+      return { propKey, functionUniqueId };
+    })
+    .filter(isNotNullOrUndefined);
+
+  const schemaPropertiesWithoutThoseFromLoaders = Object.keys(
+    sectionSchema.properties || {}
+  )
+    .filter((propKey) => !isFunctionProp(section?.props?.[propKey]))
+    .reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur]: sectionSchema.properties?.[cur] || {},
+      }),
+      {} as JSONSchema7["properties"]
+    );
+
+  const ownPropsSchema = {
+    ...sectionSchema,
+    properties: schemaPropertiesWithoutThoseFromLoaders,
+  } as JSONSchema7;
+
+  const functionsForComponent = propsThatMapToLoader
+    .map(({ functionUniqueId }) => {
+      const functionIndex = pageFunctions.findIndex(
+        ({ uniqueId }) => functionUniqueId === uniqueId
+      );
+
+      if (functionIndex < 0) {
+        return null;
+      }
+
+      return {
+        functionIndex,
+        function: pageFunctions[functionIndex],
+      };
+    })
+    .filter(isNotNullOrUndefined);
+
+  return { ownPropsSchema, functionsForComponent };
+}
 
 export const createPageForSection = (
   sectionName: string,
