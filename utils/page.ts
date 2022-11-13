@@ -131,6 +131,58 @@ function addUniqueIdToEntity<T extends AvailableFunction | AvailableSection>(
   return { ...entity, uniqueId: appendHash(entity.key) };
 }
 
+/**
+ * Function used in the "delete section" flow, where we need to 
+ * calculate which associated functions for a section can be removed
+ * from the page as well (if they're not being used elsewhere)
+ * 
+ */
+export function getFunctionIdsOnlyUsedForSection(
+  section: PageSection,
+  allPageSections: PageSection[]
+): string[] {
+  const functionOcurrences: Record<string, number> = allPageSections.reduce(
+    (acc, { props }) => {
+      if (!props) {
+        return acc;
+      }
+      Object.keys(props).forEach((propKey) => {
+        const propValue = section?.props?.[propKey];
+
+        if (!propValue || !isFunctionProp(propValue)) return;
+
+        const functionUniqueId = propReferenceToFunctionKey(propValue);
+
+        if (!acc[functionUniqueId]) {
+          acc[functionUniqueId] = 0;
+        }
+        acc[functionUniqueId] += 1;
+      });
+
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+  return Object.keys(section.props ?? {}).reduce((acc, propKey) => {
+    const propValue = section?.props?.[propKey];
+    if (!propValue || !isFunctionProp(propValue)) return acc;
+
+    const functionUniqueId = propReferenceToFunctionKey(propValue);
+
+    const numberOfOcurrencedForFunction = functionOcurrences[functionUniqueId];
+
+    if (numberOfOcurrencedForFunction === 1) {
+      acc.push(functionUniqueId);
+    }
+
+    return acc;
+  }, [] as string[]);
+}
+
+/**
+ * For a given section, create copies of associated functions 
+ * to be added in the page as well.
+ */
 export function getSelectedFunctionsForDuplication({
   section,
   availableFunctions,
@@ -157,6 +209,13 @@ export function getSelectedFunctionsForDuplication({
   }, {} as Record<string, AvailableFunction>);
 }
 
+/**
+ * When a new section is to be added in the page, we need to
+ * calculate it's initial props to link section with functions,
+ * and also potentially create new functions in the page.
+ * 
+ * This function returns the necessary metadata for that to happen
+ */
 export const prepareSectionWithFunctions = ({
   selectedFunctions,
   selectedSection,
@@ -210,6 +269,12 @@ type SectionFunction = {
   function: EditorData["functions"][number];
 };
 
+/**
+ * When a section is selected in the editor, we promptly display
+ * the props editor for the native/normal props, but also the
+ * form for associated function's props.
+ * 
+ */
 export function getMetadataForSectionEditor({
   section,
   pageFunctions,
