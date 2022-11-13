@@ -67,7 +67,6 @@ export const availableFunctionsForSection = (
   section: AvailableSection,
   functions: AvailableFunction[]
 ): AvailableFunctionsForSection => {
-  console.log({ section, functions });
   const functionsAvailableByOutputSchema$id: Record<
     string,
     AvailableFunction[]

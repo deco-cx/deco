@@ -19,6 +19,15 @@ const beautifyPropName = (propName: string) => {
   );
 };
 
+const getFieldFromJsDoc = (
+  jsDoc: JSDoc | undefined,
+  field: "label" | "description"
+) => {
+  return jsDoc?.tags
+    ?.find(({ value }) => value.includes(`@${field}`))
+    ?.value?.replace(`@${field} `, "");
+};
+
 /**
  * We use $id inside of schemas to match components and functions.
  *
@@ -123,16 +132,18 @@ export function getInputSchemaFromDocs(
       console.log(
         `${entityName} doesn't export a Props interface definition, couldn't extract schema.`
       );
-    return null;
   }
 
-  const fileName = propsExport.location.filename
+  const defaultExport = docs.find(({ name }) => name === "default");
+
+  const fileName = defaultExport?.location.filename
     .split("/")
     .pop()
     ?.replace(/\.ts(x|)/g, "");
-  const properties = propsExport.interfaceDef?.properties;
 
-  const jsonSchemaProperties = properties?.reduce((acc, cur) => {
+  const properties = propsExport?.interfaceDef?.properties ?? [];
+
+  const jsonSchemaProperties = properties.reduce((acc, cur) => {
     const propName = cur.name;
     const propType = cur.tsType.repr as "string" | "number" | "array" | "";
 
@@ -148,7 +159,7 @@ export function getInputSchemaFromDocs(
       type: propType || "string",
     };
 
-    const isComplexType = cur.tsType.kind === 'typeRef'
+    const isComplexType = cur.tsType.kind === "typeRef";
 
     if (!propType || isComplexType) {
       // Some options: Inline object (typeLiteral), enum (kind: union)
@@ -212,8 +223,13 @@ export function getInputSchemaFromDocs(
     };
   }, {} as JSONSchema7["properties"]);
 
+  const jsDoc = defaultExport?.jsDoc;
+  const optionalLabel = getFieldFromJsDoc(jsDoc, "label");
+  const optionalDescription = getFieldFromJsDoc(jsDoc, "description");
+
   const baseJsonSchema: JSONSchema7 = {
-    title: fileName,
+    title: optionalLabel || fileName,
+    description: optionalDescription,
     type: "object",
   };
 
@@ -234,6 +250,7 @@ export interface DenoDocResponse {
   functionDef?: FunctionDef;
   variableDef?: VariableDef;
   importDef?: ImportDef;
+  jsDoc?: JSDoc;
 }
 export interface VariableDef {
   tsType: TsTypeElement;

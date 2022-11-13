@@ -53,7 +53,7 @@ Deno.test(
           type: "string",
         },
         productsResponse: {
-          $id: 'live/std/commerce/types/ProductList.ts', 
+          $id: "live/std/commerce/types/ProductList.ts",
           title: "Products Response",
           type: undefined,
         },
@@ -62,3 +62,20 @@ Deno.test(
     assertEquals(generatedSchema, expectedSchema);
   }
 );
+
+Deno.test("should extract label and description from jsDoc", () => {
+  const fnWithLabelAndDescription = `[{"kind":"variable","name":"default","location":{"filename":"file:///Users/lucis/deco/zeedog/functions/vtexProductPage.ts","line":12,"col":0},"declarationKind":"export","jsDoc":{"tags":[{"kind":"unsupported","value":"@label VTEX - Página de Produto"},{"kind":"unsupported","value":"@description Para rotas /:slug/p"}]},"variableDef":{"tsType":{"repr":"LoaderFunction","kind":"typeRef","typeRef":{"typeParams":[{"repr":"null","kind":"keyword","keyword":"null"},{"repr":"Product","kind":"typeRef","typeRef":{"typeParams":null,"typeName":"Product"}}],"typeName":"LoaderFunction"}},"kind":"const"}},{"kind":"import","name":"VTEXIntelligentSearch","location":{"filename":"file:///Users/lucis/deco/zeedog/functions/vtexProductPage.ts","line":1,"col":0},"declarationKind":"private","importDef":{"src":"file:///Users/lucis/deco/live/std/commerce/clients/vtex.ts","imported":"default"}},{"kind":"import","name":"mapVTEXIntelligentSearchProduct","location":{"filename":"file:///Users/lucis/deco/zeedog/functions/vtexProductPage.ts","line":1,"col":0},"declarationKind":"private","importDef":{"src":"file:///Users/lucis/deco/live/std/commerce/clients/vtex.ts","imported":"mapVTEXIntelligentSearchProduct"}},{"kind":"import","name":"Product","location":{"filename":"file:///Users/lucis/deco/zeedog/functions/vtexProductPage.ts","line":4,"col":0},"declarationKind":"private","importDef":{"src":"file:///Users/lucis/deco/live/std/commerce/types/Product.ts","imported":"Product"}},{"kind":"import","name":"LoaderFunction","location":{"filename":"file:///Users/lucis/deco/zeedog/functions/vtexProductPage.ts","line":5,"col":0},"declarationKind":"private","importDef":{"src":"file:///Users/lucis/deco/live/std/types.ts","imported":"LoaderFunction"}},{"kind":"import","name":"VTEX_ACCOUNT","location":{"filename":"file:///Users/lucis/deco/zeedog/functions/vtexProductPage.ts","line":6,"col":0},"declarationKind":"private","importDef":{"src":"file:///Users/lucis/deco/zeedog/routes/api/searchFacets.ts","imported":"VTEX_ACCOUNT"}}]`;
+
+  const generatedSchema = getInputSchemaFromDocs(
+    JSON.parse(fnWithLabelAndDescription)
+  );
+
+  const expectedSchema = {
+    title: "VTEX - Página de Produto",
+    description: "Para rotas /:slug/p",
+    type: "object",
+    properties: {},
+  } as JSONSchema7;
+
+  assertEquals(generatedSchema, expectedSchema);
+});
