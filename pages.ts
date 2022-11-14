@@ -117,11 +117,10 @@ export const fetchPageFromPathname = async (
   siteId: number,
 ): Promise<PageWithParams | null> => {
   const { data: pages, error } = await getSupabaseClient()
-    .from("pages")
+    .from<Page & { site: number }>("pages")
     .select("id, name, data, path, state")
-    .match({ site: siteId, archived: false })
-    .is("flag", null)
-    .is("archived", false);
+    .eq("site", siteId)
+    .eq("state", "published");
 
   const routes = pages?.map((page) => ({
     page,
@@ -157,7 +156,7 @@ export const fetchPageFromId = async (
   pathname?: string,
 ): Promise<PageWithParams> => {
   const { data: pages, error } = await getSupabaseClient()
-    .from("pages")
+    .from<Page>("pages")
     .select("id, name, data, path, state")
     .match({ id: pageId });
 
@@ -206,13 +205,13 @@ export const fetchPageFromComponent = async (
 
   const { data } = await supabase
     .from<Page>("pages")
-    .select("id, path")
+    .select("id, name, data, path, state")
     .match({ path: page.path, site: siteId });
 
   const match = data?.[0];
 
   if (match) {
-    return fetchPageFromId(match.id);
+    return { page: match };
   }
 
   return { page };
