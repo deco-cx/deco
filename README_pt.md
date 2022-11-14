@@ -89,3 +89,10 @@ O tipo `LoaderFunction` é usado para indicar que essa função tem papel de car
 
 Funções podem executar qualquer tipo de processamento de dados em seu código, porém devem sempre focar em **reduzir o tempo de carregamento**.
 
+## Tipos complexos
+
+No exemplo acima podemos observar o uso do tipo `ProductList`, um tipo exportado pelo _Live_ que é usado tanto em seções como em funções. Mesmo que os dados carregados tenham sido de uma API específica (VTEX), os dados relevantes são enviados das funções para as seções em um formato independente e comum, observando representar todas as subpropriedades comum em entidades como Produto.
+
+É através dependência nestes tipos que o _Live_ consegue relacionar seções e funções, oferecendo ao usuário final a possibilidade de **escolher quais das funções disponíveis será utilizada para carregar os dados**.
+
+> Utilizamos o https://schema.org/Product como referência na definição dos tipos do _Live_.
