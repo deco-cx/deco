@@ -10,16 +10,16 @@ import {
 } from "./utils/manifest.ts";
 
 export async function loadLivePage(
-  req: Request,
+  req: Request
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
-  const component = url.searchParams.get("component");
+  const sectionName = url.searchParams.get("section"); // E.g: section=Banner.tsx
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
 
   const pageWithParams = await ((): Promise<PageWithParams | null> => {
-    if (component) {
-      return fetchPageFromComponent(component, context.siteId);
+    if (sectionName) {
+      return fetchPageFromSection(sectionName, context.siteId);
     }
     if (pageId) {
       return fetchPageFromId(pageId, url.pathname);
@@ -39,14 +39,14 @@ export async function loadLivePage(
         // TODO: Remove this after we eventually migrate everything
         functions: (
           pageWithParams?.page.data.functions ??
-            (pageWithParams?.page.data as any).loaders
+          (pageWithParams?.page.data as any).loaders
         )?.map((loader) => ({
           ...loader,
           key: loader.key.replace("./loaders", "./functions"),
         })),
         sections: (
           pageWithParams?.page.data.sections ??
-            (pageWithParams?.page.data as any).components
+          (pageWithParams?.page.data as any).components
         )?.map((section) => ({
           ...section,
           key: section.key.replace("./components/", "./sections/"),
@@ -58,7 +58,7 @@ export async function loadLivePage(
 
 export const fetchPageFromPathname = async (
   path: string,
-  siteId: number,
+  siteId: number
 ): Promise<PageWithParams | null> => {
   const { data: pages, error } = await getSupabaseClient()
     .from<Page & { site: number }>("pages")
@@ -97,7 +97,7 @@ export const fetchPageFromPathname = async (
  */
 export const fetchPageFromId = async (
   pageId: number,
-  pathname?: string,
+  pathname?: string
 ): Promise<PageWithParams> => {
   const { data: pages, error } = await getSupabaseClient()
     .from<Page>("pages")
@@ -130,15 +130,16 @@ export const fetchPageFromId = async (
  *
  * This way we can use the page editor to edit components too
  */
-export const fetchPageFromComponent = async (
+export const fetchPageFromSection = async (
   sectionFileName: string, // Ex: ./sections/Banner.tsx
-  siteId: number,
+  siteId: number
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
-  const { section: instance, functions } = createSectionFromSectionKey(
-    sectionFileName,
-  );
-  const page = createPageForSection(sectionFileName, {
+  const sectionKey = `./sections/${sectionFileName}`;
+  const { section: instance, functions } =
+    createSectionFromSectionKey(sectionKey);
+
+  const page = createPageForSection(sectionKey, {
     sections: [instance],
     functions,
   });

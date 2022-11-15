@@ -352,6 +352,7 @@ export const createPageForSection = (
   name: sectionName,
   path: `/_live/sections/${sectionName}`,
   data,
+  state: 'dev'
 });
 
 export const isFunctionProp = (value: unknown): value is string =>
