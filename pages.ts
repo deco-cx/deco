@@ -144,7 +144,7 @@ export const fetchPageFromSection = async (
     functions,
   });
 
-  if (!doesSectionExist(sectionFileName)) {
+  if (!doesSectionExist(sectionKey)) {
     throw new Error(`Section at ${sectionFileName} Not Found`);
   }
 
