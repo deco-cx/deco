@@ -1,8 +1,11 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { loadData, loadLivePage } from "$live/pages.ts";
+import { loadLivePage } from "$live/pages.ts";
+import {
+  generateAvailableEntitiesFromManifest,
+  loadPageData,
+} from "$live/utils/manifest.ts";
 import { context } from "$live/server.ts";
 import { EditorData, Page, PageData } from "$live/types.ts";
-import { filenameFromPath } from "$live/utils/component.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import InspectVSCodeHandler from "inspect_vscode/handler.ts";
 import { blue, cyan, green, magenta, red, yellow } from "std/fmt/colors.ts";
@@ -95,7 +98,7 @@ export function live() {
       }
 
       start("load-data");
-      const pageDataAfterLoaders = await loadData(
+      const pageDataAfterFunctions = await loadPageData(
         req,
         {
           ...ctx,
@@ -108,7 +111,7 @@ export function live() {
       end("load-data");
 
       start("render");
-      const res = await ctx.render({ ...page, data: pageDataAfterLoaders });
+      const res = await ctx.render({ ...page, data: pageDataAfterFunctions });
       end("render");
 
       res.headers.set("Server-Timing", printTimings());
@@ -194,66 +197,36 @@ export function LivePage({
  */
 function generateEditorData(page: Page): EditorData {
   const {
-    data: { sections, loaders },
+    data: { sections, functions },
     state,
   } = page;
 
   const sectionsWithSchema = sections.map(
-    (component): EditorData["sections"][0] => ({
-      ...component,
-      schema: context.manifest?.sections[component.key]?.schema,
+    (section): EditorData["sections"][0] => ({
+      ...section,
+      schema: context.manifest?.schemas[section.key]?.inputSchema || undefined,
     }),
   );
 
-  const loadersWithSchema = loaders.map((loader): EditorData["loaders"][0] => ({
-    ...loader,
-    schema: context.manifest?.loaders[loader.key]?.default?.inputSchema,
-    // TODO: We might move this to use $id instead
-    outputSchema: context.manifest?.loaders[loader.key]?.default
-      ?.outputSchema?.["$ref"] as string,
+  const functionsWithSchema = functions.map((
+    functionData,
+  ): EditorData["functions"][0] => ({
+    ...functionData,
+    schema: context.manifest?.schemas[functionData.key]?.inputSchema ||
+      undefined,
+    outputSchema: context.manifest?.schemas[functionData.key]?.outputSchema ||
+      undefined,
   }));
 
-  const availableSections = Object.keys(
-    context.manifest?.sections || {},
-  ).map((componentKey) => {
-    const schema = context.manifest?.sections[componentKey]?.schema;
-    const label = filenameFromPath(componentKey);
-
-    // TODO: Should we extract defaultProps from the schema here?
-
-    return {
-      key: componentKey,
-      label,
-      props: {},
-      schema,
-    } as EditorData["availableSections"][0];
-  });
-
-  const availableLoaders = Object.keys(context.manifest?.loaders || {}).map(
-    (loaderKey) => {
-      const { inputSchema, outputSchema } =
-        context.manifest?.loaders[loaderKey]?.default || {};
-      const label = filenameFromPath(loaderKey);
-
-      // TODO: Should we extract defaultProps from the schema here?
-
-      return {
-        key: loaderKey,
-        label,
-        props: {},
-        schema: inputSchema,
-        // TODO: Centralize this logic
-        outputSchema: outputSchema?.$ref,
-      } as EditorData["availableLoaders"][0];
-    },
-  );
+  const { availableFunctions, availableSections } =
+    generateAvailableEntitiesFromManifest();
 
   return {
     pageName: page?.name,
     sections: sectionsWithSchema,
-    loaders: loadersWithSchema,
+    functions: functionsWithSchema,
     availableSections,
-    availableLoaders,
+    availableFunctions: [...availableFunctions, ...functionsWithSchema],
     state,
   };
 }

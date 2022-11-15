@@ -9,7 +9,7 @@
   },
   "editor.defaultFormatter": "denoland.vscode-deno",
   "[markdown]": {
-    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
