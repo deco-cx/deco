@@ -9,6 +9,7 @@ import { EditorData, Page, PageData } from "$live/types.ts";
 import { createServerTiming } from "$live/utils/serverTimings.ts";
 import InspectVSCodeHandler from "inspect_vscode/handler.ts";
 import { blue, cyan, green, magenta, red, yellow } from "std/fmt/colors.ts";
+import Jitsu from "partytown/integrations/Jitsu.tsx";
 
 import { getWorkbenchTree } from "./utils/workbench.ts";
 
@@ -175,7 +176,12 @@ export function LivePage({
 
   return (
     <>
+      {DEPLOY && ( // Add analytcs in production only
+        <Jitsu data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2" />
+      )}
+
       {children ? children : <LiveSections {...data.data} />}
+
       {LiveControls
         ? (
           <LiveControls

@@ -4,7 +4,7 @@
     "$fresh/": "https://deno.land/x/fresh@1.1.2/",
     "preact": "https://esm.sh/preact@10.11.2",
     "preact/": "https://esm.sh/preact@10.11.2/",
-    "partytown": "https://esm.sh/@builder.io/partytown@0.7.0/integration",
+    "partytown/": "https://deno.land/x/partytown@0.0.5/",
     "std/": "https://deno.land/std@0.147.0/",
     "supabase": "https://esm.sh/@supabase/supabase-js@1.35.4",
     "json-schema": "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts",
