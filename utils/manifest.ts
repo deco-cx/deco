@@ -2,7 +2,6 @@ import { context } from "../server.ts";
 import type { HandlerContext } from "$fresh/server.ts";
 
 import type {
-  AvailableFunction,
   AvailableSection,
   EditorData,
   Page,

@@ -12,7 +12,7 @@ export interface Module extends IslandModule {
 }
 
 export interface FunctionModule {
-  default: LoaderFunction;
+  default: LoaderFunction<any, any>;
 }
 
 export interface DecoManifest extends Manifest {
