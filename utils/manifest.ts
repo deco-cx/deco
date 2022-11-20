@@ -1,4 +1,4 @@
-import { context } from "../server.ts";
+import { context } from "$live/live.ts";
 
 import type {
   AvailableSection,
