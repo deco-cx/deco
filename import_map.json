@@ -3,9 +3,6 @@
     "$live/": "./",
     "$fresh/": "https://deno.land/x/fresh@1.1.2/",
     "preact": "https://esm.sh/preact@10.11.2",
-    "preact/": "https://esm.sh/preact@10.11.2/",
-    "partytown/": "https://deno.land/x/partytown@0.0.7/",
-    "inspect_vscode/": "../../inspect-vscode/",
-    "heroicons": "https://esm.sh/@heroicons/react@2.0.12/24/outline?alias=react:preact/compat&external=preact/compat"
+    "preact/": "https://esm.sh/preact@10.11.2/"
   }
 }

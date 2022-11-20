@@ -5,7 +5,7 @@ import { createServerTimings } from "$live/utils/timings.ts";
 import { verifyDomain } from "$live/utils/domains.ts";
 import { withPages } from "$live/pages.ts";
 import { withWorkbench } from "$live/workbench.ts";
-import { withInspect } from "$live/inspect.tsx";
+import { withInspect } from "$live/inspect.ts";
 
 // The global live context
 export type LiveContext = {
@@ -113,6 +113,7 @@ export const live: () => Handlers<Page, WithLiveState> = () => ({
     if (context.isDeploy && !ctx.state.page) {
       ctx.renderNotFound();
     }
+    // TODO: If !isDeploy, render "create new page" component
     return ctx.render(ctx.state.page);
   },
 });

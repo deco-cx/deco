@@ -4,7 +4,7 @@ import { context } from "$live/live.ts";
 import { Page } from "$live/types.ts";
 import CoreWebVitals from "$live/components/CoreWebVitals.tsx";
 import LiveSections from "$live/components/LiveSections.tsx";
-import Jitsu from "partytown/integrations/Jitsu.tsx";
+import Jitsu from "https://deno.land/x/partytown@0.0.7/integrations/Jitsu.tsx";
 
 const DEPLOY = Boolean(context.deploymentId);
 

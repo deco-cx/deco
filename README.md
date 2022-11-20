@@ -1,12 +1,12 @@
-# deco live — the edge-native CMS
+# deco live — the edge-native DXP
 
-Live is the edge-native Headless CMS based on [deno](https://deno.land) and [fresh](https://fresh.deno.dev). 
+Live is the **edge-native digital experience platform** for [fresh](https://fresh.deno.dev) apps.
 
-Live allows developers to create `sections` (UI) and `functions` (data fetchers) that can be **configured in UI by everyone in an commerce experience team.** This means business users can **create and evolve** the content and configuration of their digital experience without the need for developers.
+Live allows developers to create `sections` (UI components) and `functions` (data fetchers) that can be **configured in a visual editor UI by everyone in a digital experience team.** This means business users can now **create and evolve** the content and configuration of their digital experience without the need for developers to deploy changes. Developers can add edit functions to existing routes, and business users can create completely dynamic pages composed from these building blocks via UI.
 
-Besides pages, live also lets teams manage **flags, experiments and campaigns** with an instant, global configuration management service. Using `matcher` and `effect` functions, configuration changes can be applied to any specific audience. Every change is instantly available to matched users, from gradual rollout of features, to A/B testing content, to targeting specific users with personalized content.
+Besides pages, live also lets teams manage **flags, experiments and campaigns** with an instant, global configuration management service optimized for the edge. Using `matcher` and `effect` functions, configuration changes can be applied to any specific audience. Every change is instantly available to matched users, from gradual rollout of features, to A/B testing content, to targeting specific users with personalized content.
 
-Live is built on top of extraordinary open-source libraries, including [fresh](https://fresh.deno.dev), a framework for building edge-native applications, [supabase](https://supabase.io), a managed postgres and auth wrapper, and [jitsu](https://jitsu.io). It is designed to be **fast, secure and easy to use**. It is also **open source** and **free**. We, the creators of live, offer a managed live service at [deco.cx](https://deco.cx) where you can scale from zero to millions of users without worrying about infrastructure.
+Live is designed to be **fast, secure and easy to use**. That's why we built it on top of extraordinary open-source libraries, including [fresh](https://fresh.deno.dev), a framework for building edge-native applications, [supabase](https://supabase.io), a managed postgres and auth wrapper, and [jitsu](https://jitsu.io), a data collector. And that's why it is also **open source** and **free**. We, the creators of Live, offer a managed Live infrastructure at [deco.cx](https://deco.cx) where you can scale from zero to millions of users without worrying about infrastructure. If you like the framework, give us a try :)
 
 Want to create a Live Site? Use the
 [deco start template repo](https://github.com/deco-sites/start) to create a new
@@ -41,7 +41,13 @@ import { withLive } from "$live/live.tsx";
 export const handler = withLive();
 ```
 
-Great! We're almost there. Now, let's create a configurable `section`.
+Great! Now add `export interface Props {}` to any route, like `index.ts`, and use those props in your route component.
+
+When you open this route in the deco.cx/live editor, you will notice that you can edit this route's props. You can also add new routes and edit their props.
+
+### Sections: creating configurable components
+
+Now, let's create a configurable `section`.
 **Sections** are ordinary UI components, but they can be configured in the live UI. 
 They are the building blocks of your site.
 
