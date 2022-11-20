@@ -1,4 +1,7 @@
-import type { JSONSchema7, JSONSchema7Definition } from "json-schema";
+import type {
+  JSONSchema7,
+  JSONSchema7Definition,
+} from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 
 import type {
   AvailableFunction,
@@ -37,7 +40,7 @@ export function isValidIsland(componentPath: string) {
 }
 
 export const propertyHasId = (
-  propDefinition: JSONSchema7Definition | undefined
+  propDefinition: JSONSchema7Definition | undefined,
 ) => {
   // Property is undefined | boolean | object, so if property[key] is === "object" and $id in property[key]
   return (
@@ -47,7 +50,7 @@ export const propertyHasId = (
 };
 
 export const isNotNullOrUndefined = <T extends unknown>(
-  item: T | null | undefined
+  item: T | null | undefined,
 ): item is T => item !== null && item !== undefined;
 
 export type AvailableFunctionsForSection = Array<{
@@ -65,7 +68,7 @@ export type AvailableFunctionsForSection = Array<{
  */
 export const availableFunctionsForSection = (
   section: AvailableSection,
-  functions: AvailableFunction[]
+  functions: AvailableFunction[],
 ): AvailableFunctionsForSection => {
   const functionsAvailableByOutputSchema$id: Record<
     string,
@@ -126,20 +129,19 @@ export const availableFunctionsForSection = (
 };
 
 function addUniqueIdToEntity<T extends AvailableFunction | AvailableSection>(
-  entity: T
+  entity: T,
 ): T & { uniqueId: string } {
   return { ...entity, uniqueId: appendHash(entity.key) };
 }
 
 /**
- * Function used in the "delete section" flow, where we need to 
+ * Function used in the "delete section" flow, where we need to
  * calculate which associated functions for a section can be removed
  * from the page as well (if they're not being used elsewhere)
- * 
  */
 export function getFunctionIdsOnlyUsedForSection(
   section: PageSection,
-  allPageSections: PageSection[]
+  allPageSections: PageSection[],
 ): string[] {
   const functionOcurrences: Record<string, number> = allPageSections.reduce(
     (acc, { props }) => {
@@ -161,7 +163,7 @@ export function getFunctionIdsOnlyUsedForSection(
 
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
   return Object.keys(section.props ?? {}).reduce((acc, propKey) => {
     const propValue = section?.props?.[propKey];
@@ -180,7 +182,7 @@ export function getFunctionIdsOnlyUsedForSection(
 }
 
 /**
- * For a given section, create copies of associated functions 
+ * For a given section, create copies of associated functions
  * to be added in the page as well.
  */
 export function getSelectedFunctionsForDuplication({
@@ -197,7 +199,7 @@ export function getSelectedFunctionsForDuplication({
     const functionUniqueId = propReferenceToFunctionKey(propValue);
 
     const relatedFunction = availableFunctions.find(
-      ({ uniqueId }) => uniqueId === functionUniqueId
+      ({ uniqueId }) => uniqueId === functionUniqueId,
     );
 
     if (!relatedFunction) return acc;
@@ -213,7 +215,7 @@ export function getSelectedFunctionsForDuplication({
  * When a new section is to be added in the page, we need to
  * calculate it's initial props to link section with functions,
  * and also potentially create new functions in the page.
- * 
+ *
  * This function returns the necessary metadata for that to happen
  */
 export const prepareSectionWithFunctions = ({
@@ -229,7 +231,7 @@ export const prepareSectionWithFunctions = ({
   const baseSection: PageSection = addUniqueIdToEntity(selectedSection);
 
   const { functionsToBeAdded, sectionInitialProps } = Object.keys(
-    selectedFunctions
+    selectedFunctions,
   ).reduce(
     (acc, propKey) => {
       const fn = selectedFunctions[propKey];
@@ -241,13 +243,13 @@ export const prepareSectionWithFunctions = ({
         const fnToBeAdded = addUniqueIdToEntity(fn);
         acc.functionsToBeAdded.push(fnToBeAdded);
         acc.sectionInitialProps[propKey] = functionUniqueIdToPropReference(
-          fnToBeAdded.uniqueId
+          fnToBeAdded.uniqueId,
         );
 
         return acc;
       } else {
         acc.sectionInitialProps[propKey] = functionUniqueIdToPropReference(
-          fn.uniqueId
+          fn.uniqueId,
         );
 
         return acc;
@@ -256,7 +258,7 @@ export const prepareSectionWithFunctions = ({
     { functionsToBeAdded: [], sectionInitialProps: {} } as {
       functionsToBeAdded: Array<AvailableFunction & { uniqueId: string }>;
       sectionInitialProps: Record<string, string>;
-    }
+    },
   );
 
   const sectionToBeAdded = { ...baseSection, props: sectionInitialProps };
@@ -273,7 +275,6 @@ type SectionFunction = {
  * When a section is selected in the editor, we promptly display
  * the props editor for the native/normal props, but also the
  * form for associated function's props.
- * 
  */
 export function getMetadataForSectionEditor({
   section,
@@ -308,7 +309,7 @@ export function getMetadataForSectionEditor({
     .filter(isNotNullOrUndefined);
 
   const schemaPropertiesWithoutThoseFromLoaders = Object.keys(
-    sectionSchema.properties || {}
+    sectionSchema.properties || {},
   )
     .filter((propKey) => !isFunctionProp(section?.props?.[propKey]))
     .reduce(
@@ -316,7 +317,7 @@ export function getMetadataForSectionEditor({
         ...acc,
         [cur]: sectionSchema.properties?.[cur] || {},
       }),
-      {} as JSONSchema7["properties"]
+      {} as JSONSchema7["properties"],
     );
 
   const ownPropsSchema = {
@@ -327,7 +328,7 @@ export function getMetadataForSectionEditor({
   const functionsForComponent = propsThatMapToLoader
     .map(({ functionUniqueId }) => {
       const functionIndex = pageFunctions.findIndex(
-        ({ uniqueId }) => functionUniqueId === uniqueId
+        ({ uniqueId }) => functionUniqueId === uniqueId,
       );
 
       if (functionIndex < 0) {
@@ -346,13 +347,13 @@ export function getMetadataForSectionEditor({
 
 export const createPageForSection = (
   sectionName: string,
-  data: PageData
+  data: PageData,
 ): Page => ({
   id: -1,
   name: sectionName,
   path: `/_live/sections/${sectionName}`,
   data,
-  state: 'dev'
+  state: "dev",
 });
 
 export const isFunctionProp = (value: unknown): value is string =>

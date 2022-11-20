@@ -1,16 +1,20 @@
-import { context } from "$live/server.ts";
+import { context } from "$live/live.ts";
 import { PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
-
-import { Page } from "./types.ts";
-import { createPageForSection } from "./utils/page.ts";
+import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { EditorData, Page, WithLiveState, WithPageState } from "$live/types.ts";
+import {
+  generateAvailableEntitiesFromManifest,
+  loadPageData,
+} from "$live/utils/manifest.ts";
+import { createPageForSection } from "$live/utils/page.ts";
 import {
   createSectionFromSectionKey,
   doesSectionExist,
 } from "./utils/manifest.ts";
 
 export async function loadLivePage(
-  req: Request
+  req: Request,
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
@@ -39,14 +43,14 @@ export async function loadLivePage(
         // TODO: Remove this after we eventually migrate everything
         functions: (
           pageWithParams?.page.data.functions ??
-          (pageWithParams?.page.data as any).loaders
+            (pageWithParams?.page.data as any).loaders
         )?.map((loader) => ({
           ...loader,
           key: loader.key.replace("./loaders", "./functions"),
         })),
         sections: (
           pageWithParams?.page.data.sections ??
-          (pageWithParams?.page.data as any).components
+            (pageWithParams?.page.data as any).components
         )?.map((section) => ({
           ...section,
           key: section.key.replace("./components/", "./sections/"),
@@ -58,7 +62,7 @@ export async function loadLivePage(
 
 export const fetchPageFromPathname = async (
   path: string,
-  siteId: number
+  siteId: number,
 ): Promise<PageWithParams | null> => {
   const { data: pages, error } = await getSupabaseClient()
     .from<Page & { site: number }>("pages")
@@ -97,7 +101,7 @@ export const fetchPageFromPathname = async (
  */
 export const fetchPageFromId = async (
   pageId: number,
-  pathname?: string
+  pathname?: string,
 ): Promise<PageWithParams> => {
   const { data: pages, error } = await getSupabaseClient()
     .from<Page>("pages")
@@ -132,12 +136,13 @@ export const fetchPageFromId = async (
  */
 export const fetchPageFromSection = async (
   sectionFileName: string, // Ex: ./sections/Banner.tsx
-  siteId: number
+  siteId: number,
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
   const sectionKey = `./sections/${sectionFileName}`;
-  const { section: instance, functions } =
-    createSectionFromSectionKey(sectionKey);
+  const { section: instance, functions } = createSectionFromSectionKey(
+    sectionKey,
+  );
 
   const page = createPageForSection(sectionKey, {
     sections: [instance],
@@ -190,3 +195,97 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
   };
   routes.sort((a, z) => rankRoute(z.pattern) - rankRoute(a.pattern));
 }
+
+/**
+ * Based on data from the backend and the page's manifest,
+ * generates all the necessary information for the CMS
+ *
+ * TODO: After we approve this, move this function elsewhere
+ */
+function generateEditorData(page: Page): EditorData {
+  const {
+    data: { sections, functions },
+    state,
+  } = page;
+
+  const sectionsWithSchema = sections.map(
+    (section): EditorData["sections"][0] => ({
+      ...section,
+      schema: context.manifest?.schemas[section.key]?.inputSchema || undefined,
+    }),
+  );
+
+  const functionsWithSchema = functions.map((
+    functionData,
+  ): EditorData["functions"][0] => ({
+    ...functionData,
+    schema: context.manifest?.schemas[functionData.key]?.inputSchema ||
+      undefined,
+    outputSchema: context.manifest?.schemas[functionData.key]?.outputSchema ||
+      undefined,
+  }));
+
+  const { availableFunctions, availableSections } =
+    generateAvailableEntitiesFromManifest();
+
+  return {
+    pageName: page?.name,
+    sections: sectionsWithSchema,
+    functions: functionsWithSchema,
+    availableSections,
+    availableFunctions: [...availableFunctions, ...functionsWithSchema],
+    state,
+  };
+}
+
+export const withPages = async (
+  req: Request,
+  ctx: MiddlewareHandlerContext<
+    WithLiveState & WithPageState
+  >,
+) => {
+  const url = new URL(req.url);
+  const { start, end } = ctx.state.t;
+
+  start("load-page");
+  // TODO: Ensure loadLivePage only goes to DB if there is a page published with this path
+  // ... This will be possible when all published pages are synced to the edge
+  // ... for now, we need to go to the DB every time, even when there's no data for this page
+  const pageWithParams = await loadLivePage(req);
+  end("load-page");
+
+  // If there's a page match, populate ctx.state.page
+  if (pageWithParams) {
+    const { page, params = {} } = pageWithParams;
+
+    if (url.searchParams.has("editorData")) {
+      const editorData = generateEditorData(page);
+      return Response.json(editorData, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    start("load-data");
+    const pageDataAfterFunctions = await loadPageData(
+      req,
+      {
+        ...ctx,
+        params,
+      },
+      page?.data,
+      start,
+      end,
+    );
+    end("load-data");
+
+    ctx.state.page = { ...page, data: pageDataAfterFunctions };
+  }
+
+  start("render");
+  const res = await ctx.next();
+  end("render");
+
+  return res;
+};

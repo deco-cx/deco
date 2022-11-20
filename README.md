@@ -1,53 +1,70 @@
 # deco live — the edge-native CMS
 
-Live is the edge-native CMS based on fresh. It lets your business users live
-edit any fresh site.
+Live is the edge-native Headless CMS based on [deno](https://deno.land) and [fresh](https://fresh.deno.dev). 
+
+Live allows developers to create `sections` (UI) and `functions` (data fetchers) that can be **configured in UI by everyone in an commerce experience team.** This means business users can **create and evolve** the content and configuration of their digital experience without the need for developers.
+
+Besides pages, live also lets teams manage **flags, experiments and campaigns** with an instant, global configuration management service. Using `matcher` and `effect` functions, configuration changes can be applied to any specific audience. Every change is instantly available to matched users, from gradual rollout of features, to A/B testing content, to targeting specific users with personalized content.
+
+Live is built on top of extraordinary open-source libraries, including [fresh](https://fresh.deno.dev), a framework for building edge-native applications, [supabase](https://supabase.io), a managed postgres and auth wrapper, and [jitsu](https://jitsu.io). It is designed to be **fast, secure and easy to use**. It is also **open source** and **free**. We, the creators of live, offer a managed live service at [deco.cx](https://deco.cx) where you can scale from zero to millions of users without worrying about infrastructure.
 
 Want to create a Live Site? Use the
 [deco start template repo](https://github.com/deco-sites/start) to create a new
-site. Clone it and run `deno task start`. That's it.
+site. Clone it and run `deno task start`. Finally, go to https://localhost:8080 and follow the instructions in the home page.
 
 ## Adding live to an existing fresh site
 
-Add the `$live` import to your `import_map.json` file:
+First add the `$live` import to your `import_map.json` file:
 
 ```json
 {
   "imports": {
-    "$live/": "https://deno.land/x/live@0.1.8/",
+    "$live/": "https://deno.land/x/live@0.2.0/",
     "(...)": "(...)"
   }
 }
 ```
 
-Then replace your `routes/index.tsx` file with this:
+Now, replace the `dev` import in `dev.ts` with `$live`:
+
+```ts
+import { dev } from "$live/dev.ts";
+
+await dev(import.meta.url, "./main.ts");
+```
+
+Then create a `routes/_middleware.tsx` file and add the following code:
 
 ```tsx
-import { live, LivePage } from "$live/live.tsx";
+import { withLive } from "$live/live.tsx";
+
+export const handler = withLive();
+```
+
+Great! We're almost there. Now, let's create a configurable `section`.
+**Sections** are ordinary UI components, but they can be configured in the live UI. 
+They are the building blocks of your site.
+
+Create the `sections/` folder and a new `sections/Hello.tsx` file with the following code:
+
+```tsx
+export interface Props {
+  name: string;
+}
+
+export default function Hello({ name }: Props) {
+  return <div>Hello {name}</div>;
+}
+```
+
+Finally, in order to allow fully dynamic pages, mount `live` as a handler for a catch-all route. Create `routes/[...path].tsx`:
+
+```tsx
+import { live, LivePage } from "$live/live.ts";
 export const handler = live();
 export default LivePage;
 ```
 
-Add the fallback route at: `routes/[...path].tsx` with this:
-
-```tsx
-import LivePage from "./index.tsx";
-export * from "./index.tsx";
-export default LivePage;
-```
-
-And finally, create the `live.ts` file with this:
-
-```ts
-import manifest from "./deco.gen.ts";
-import { start } from "$live/server.ts";
-
-await start(manifest, {
-  site: "mysitename",
-  siteId: 420,
-  domains: ["mysitename.com"],
-});
-```
 
 Replacing `site` and `domains` for your own values. Haven't created a site yet?
 Go to `deco.cx` and create one for free.

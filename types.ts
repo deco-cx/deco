@@ -1,9 +1,13 @@
-import type { IslandModule } from "$fresh/src/server/types.ts";
+import type {
+  IslandModule,
+  MiddlewareHandlerContext,
+} from "$fresh/src/server/types.ts";
 import type { Manifest } from "$fresh/server.ts";
-import type { JSONSchema7 } from "json-schema";
-import { LoaderFunction } from "./std/types.ts";
+import type { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import { LoaderFunction } from "$live/std/types.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
 
-export type { Node } from "./utils/workbench.ts";
+export type { Node } from "$live/workbench.ts";
 
 export type Schema = JSONSchema7;
 
@@ -94,8 +98,10 @@ export interface WithSchema {
 export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;
 // We re-add the uniqueId here to allow user to select functions that were already
 // added in the page
-export type AvailableFunction = Omit<PageFunction, "uniqueId"> &
-  WithSchema & { uniqueId?: string };
+export type AvailableFunction =
+  & Omit<PageFunction, "uniqueId">
+  & WithSchema
+  & { uniqueId?: string };
 
 export interface EditorData {
   pageName: string;
@@ -104,4 +110,25 @@ export interface EditorData {
   availableSections: Array<AvailableSection>;
   availableFunctions: Array<AvailableFunction>;
   state: PageState;
+}
+
+export type WithLiveState =
+  & {
+    site: string;
+    t: ReturnType<typeof createServerTimings>;
+  }
+  & WithFlagState
+  & WithPageState;
+
+export interface WithFlagState {
+  flags: string;
+}
+
+export interface WithPageState {
+  page?: Page;
+}
+
+export interface LiveFunctionContext<State = unknown>
+  extends MiddlewareHandlerContext<State> {
+  params: Record<string, string>;
 }

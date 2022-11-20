@@ -1,5 +1,5 @@
 import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
-import { JSONSchema7 } from "json-schema";
+import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 
 /**
  * Transforms myPropName into "My Prop Name" for cases
@@ -21,7 +21,7 @@ const beautifyPropName = (propName: string) => {
 
 const getFieldFromJsDoc = (
   jsDoc: JSDoc | undefined,
-  field: "label" | "description"
+  field: "label" | "description",
 ) => {
   return jsDoc?.tags
     ?.find(({ value }) => value.includes(`@${field}`))
@@ -53,15 +53,15 @@ export async function readDenoDocJson(filePath: string) {
 
 export function getFunctionOutputSchemaFromDocs(
   docs: DenoDocResponse[],
-  entityName: string
+  entityName: string,
 ) {
   const defaultFunctionExport = docs.find(
-    ({ name, kind }) => name === "default" && kind === "variable"
+    ({ name, kind }) => name === "default" && kind === "variable",
   );
 
   if (!defaultFunctionExport) {
     console.log(
-      `${entityName} should have a named function as the default export. Check the docs here: #TODO`
+      `${entityName} should have a named function as the default export. Check the docs here: #TODO`,
     );
   }
 
@@ -76,30 +76,30 @@ export function getFunctionOutputSchemaFromDocs(
     !VALID_FUNCTION_TYPES.includes(functionTypeName)
   ) {
     console.log(
-      `${entityName} should export a function with one of Live's provided types: LoaderFunction.`
+      `${entityName} should export a function with one of Live's provided types: LoaderFunction.`,
     );
 
     return null;
   }
 
   const outputTypeName = functionTsType?.typeRef?.typeParams?.map(
-    ({ repr }) => repr
+    ({ repr }) => repr,
   )[1]; // E.g: Product
 
   if (!outputTypeName && functionTypeName === "LoaderFunction") {
     console.log(
-      `${entityName} should specify its return type like this: LoaderFunction<Props, Product>, where Product is the return type.`
+      `${entityName} should specify its return type like this: LoaderFunction<Props, Product>, where Product is the return type.`,
     );
     return null;
   }
 
   const outputTypeUrl = docs.find(
-    ({ kind, name }) => kind === "import" && name === outputTypeName
+    ({ kind, name }) => kind === "import" && name === outputTypeName,
   )?.importDef?.src; // E.g: file:///Users/lucis/deco/live/std/commerce/types/Product.ts
 
   if (!outputTypeUrl) {
     console.log(
-      `Couldn't find import for output type '${outputTypeName}' in ${entityName}.`
+      `Couldn't find import for output type '${outputTypeName}' in ${entityName}.`,
     );
     return null;
   }
@@ -123,14 +123,14 @@ export function getFunctionOutputSchemaFromDocs(
 
 export function getInputSchemaFromDocs(
   docs: DenoDocResponse[],
-  entityName?: string
+  entityName?: string,
 ): JSONSchema7 | null {
   const propsExport = docs.find(({ name }) => name === "Props");
 
   if (!propsExport) {
     entityName &&
       console.log(
-        `${entityName} doesn't export a Props interface definition, couldn't extract schema.`
+        `${entityName} doesn't export a Props interface definition, couldn't extract schema.`,
       );
   }
 
@@ -178,7 +178,7 @@ export function getInputSchemaFromDocs(
                 },
               };
             },
-            {} as JSONSchema7["properties"]
+            {} as JSONSchema7["properties"],
           );
           baseProp.type = "object";
           baseProp.properties = innerProperties;
@@ -197,12 +197,12 @@ export function getInputSchemaFromDocs(
           // E.g: { productsResponse: ProductList }
           const typeName = cur.tsType.repr;
           const typeImportUrl = docs.find(
-            ({ kind, name }) => kind === "import" && name === typeName
+            ({ kind, name }) => kind === "import" && name === typeName,
           )?.importDef?.src;
 
           if (!typeImportUrl) {
             console.log(
-              `${entityName} declares dependency on a type that is not being imported in this file.`
+              `${entityName} declares dependency on a type that is not being imported in this file.`,
             );
             return acc;
           }
