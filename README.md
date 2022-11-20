@@ -41,7 +41,7 @@ First add the `$live` import to your `import_map.json` file:
 Now, let's replace the `dev` import in `dev.ts`. Just change `$fresh/dev.ts` to `$live/dev.ts`:
 
 ```ts
-import { dev } from "$live/dev.ts";
+import dev from "$live/dev.ts";
 
 await dev(import.meta.url, "./main.ts");
 ```
