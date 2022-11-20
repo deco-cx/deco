@@ -21,7 +21,7 @@ import {
 
 /**
  * This interface represents an intermediate state used to generate
- * the final manifest (in the target project's deco.gen.ts).
+ * the final manifest (in the target project's fresh.gen.ts).
  *
  * The final manifest follows @DecoManifest type
  */
@@ -44,7 +44,7 @@ const defaultManifestData: DevManifestData = {
   schemas: {},
 };
 
-export async function dev(
+export default async function dev(
   base: string,
   entrypoint: string,
   onListen?: () => void,
@@ -126,7 +126,7 @@ export async function generate(directory: string, manifest: DevManifestData) {
     `;
 
   const manifestStr = await format(output);
-  const manifestPath = join(directory, "./deco.gen.ts");
+  const manifestPath = join(directory, "./fresh.gen.ts");
 
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(

@@ -51,7 +51,7 @@ await dev(import.meta.url, "./main.ts");
 Then create a `routes/_middleware.tsx` file and add the following code:
 
 ```tsx
-import manifest from "../deco.gen.ts";
+import manifest from "../fresh.gen.ts";
 import { withLive } from "$live/live.ts";
 
 export const handler = withLive(manifest, {
