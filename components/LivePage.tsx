@@ -6,7 +6,13 @@ import CoreWebVitals from "$live/components/CoreWebVitals.tsx";
 import LiveSections from "$live/components/LiveSections.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.0.7/integrations/Jitsu.tsx";
 
-const DEPLOY = Boolean(context.deploymentId);
+const EmptyPage = () => (
+  <div>
+    <h1>No page here :(</h1>
+    <p>Let's create one!</p>
+    <button>Add Section</button>
+  </div>
+);
 
 export default function LivePage({
   data: page,
@@ -16,25 +22,32 @@ export default function LivePage({
 }) {
   const manifest = context.manifest!;
   // TODO: Read this from context
-  const isProduction = context.deploymentId !== undefined;
-  const LiveControls = !isProduction &&
+  const LiveControls = !context.isDeploy &&
     manifest.islands[`./islands/LiveControls.tsx`]?.default;
 
   return (
     <>
-      {DEPLOY && ( // Add analytcs in production only
+      {context.isDeploy && ( // Add analytcs in production only
         <Jitsu data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2" />
       )}
-      <CoreWebVitals page={page} />
 
-      {children ? children : <LiveSections {...page.data} />}
+      {
+        // Track only managed pages
+        page && <CoreWebVitals page={page} />
+      }
+
+      {children
+        ? children
+        : page
+        ? <LiveSections {...page.data} />
+        : <EmptyPage />}
 
       {LiveControls
         ? (
           <LiveControls
             site={{ id: context.siteId, name: context.site }}
             page={page}
-            isProduction={isProduction}
+            isProduction={context.isDeploy}
           />
         )
         : null}

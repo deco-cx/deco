@@ -7,8 +7,6 @@ import {
 } from "https://deno.land/std@0.147.0/fmt/colors.ts";
 import { context } from "$live/live.ts";
 
-const DEPLOY = Boolean(context.deploymentId);
-
 export const formatLog = (opts: {
   status: number;
   begin: number;
@@ -24,7 +22,7 @@ export const formatLog = (opts: {
     : red;
   const duration = (performance.now() - opts.begin).toFixed(0);
 
-  if (DEPLOY) {
+  if (context.isDeploy) {
     return `[${
       statusFormatter(`${opts.status}`)
     }]: ${duration}ms ${opts.url.pathname} ${opts.pageId ? opts.pageId : ""}`;

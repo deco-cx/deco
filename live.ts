@@ -27,9 +27,11 @@ export const context: LiveContext = {
   site: "",
   siteId: 0,
 };
+declare global {
+  var manifest: DecoManifest;
+}
 
 export const withLive = (
-  manifest: DecoManifest,
   liveOptions?: LiveOptions,
 ) => {
   if (!liveOptions) {
@@ -46,7 +48,6 @@ export const withLive = (
     );
   }
 
-  context.manifest = manifest;
   context.site = liveOptions.site;
   context.siteId = liveOptions.siteId;
   context.loginUrl = liveOptions.loginUrl;
@@ -75,6 +76,10 @@ export const withLive = (
     req: Request,
     ctx: MiddlewareHandlerContext<WithLiveState>,
   ) => {
+    if (!context.manifest) {
+      context.manifest = globalThis.manifest;
+    }
+
     const begin = performance.now();
     const url = new URL(req.url);
 

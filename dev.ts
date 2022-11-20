@@ -122,6 +122,9 @@ export async function generate(directory: string, manifest: DevManifestData) {
       config,
     };
 
+    // live — this exposes the manifest so the live server can render components dynamically
+    globalThis.manifest = manifest;
+
     export default manifest;
     `;
 
