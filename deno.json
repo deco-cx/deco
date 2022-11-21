@@ -2,7 +2,7 @@
   "tasks": {
     "start": "deno run -A --watch=static/ dev.ts",
     "component": "deno eval 'import \"$live/scripts/component.ts\"'",
-    "check": "deno fmt && deno check dev.ts live.ts"
+    "check": "deno fmt && deno check dev.ts live.ts && deno test -A ."
   },
   "githooks": {
     "pre-commit": "check"

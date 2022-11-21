@@ -14,10 +14,9 @@ import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
 import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 import {
-  getFunctionOutputSchemaFromDocs,
-  getInputSchemaFromDocs,
-  readDenoDocJson,
-} from "./utils/denoDoc.ts";
+  getSchemaFromLoaderExport,
+  getSchemaFromSectionExport,
+} from "./utils/schema/utils.ts";
 
 /**
  * This interface represents an intermediate state used to generate
@@ -32,7 +31,7 @@ interface DevManifestData {
   functions: string[];
   schemas: Record<
     string,
-    { inputSchema: JSONSchema7; outputSchema?: JSONSchema7 }
+    { inputSchema: JSONSchema7 | null; outputSchema: JSONSchema7 | null }
   >;
 }
 
@@ -268,56 +267,34 @@ async function extractAllSchemas(
   sections: string[],
   functions: string[],
 ): Promise<DevManifestData["schemas"]> {
-  const sectionSchemasAsArray = await Promise.all(
-    // TODO: Remove
-    sections.map(async (section) => {
-      const pathForSection = `./sections${section}`;
-
-      const denoDocJson = await readDenoDocJson(pathForSection);
-      const sectionSchema = getInputSchemaFromDocs(
-        denoDocJson,
-        `Section ${section}`,
-      );
-
-      return {
-        key: pathForSection,
-        inputSchema: sectionSchema,
-        outputSchema: null,
-      };
-    }),
-  );
   const functionSchemasAsArray = await Promise.all(
     functions.map(async (functionName) => {
-      const pathForFunction = `./functions${functionName}`;
-      const denoDocJson = await readDenoDocJson(pathForFunction);
-      const entityNameForLogging = `Function ${functionName}`;
-      const inputSchema = getInputSchemaFromDocs(denoDocJson);
-      const outputSchema = getFunctionOutputSchemaFromDocs(
-        denoDocJson,
-        entityNameForLogging,
-      );
+      const path = `./functions${functionName}`;
+      const functionSchema = await getSchemaFromLoaderExport(path);
 
-      return { key: pathForFunction, inputSchema, outputSchema };
+      return [
+        path,
+        functionSchema,
+      ] as const;
     }),
   );
-  const schemas = [...sectionSchemasAsArray, ...functionSchemasAsArray]
-    .filter(
-      ({ inputSchema, outputSchema }) =>
-        Boolean(inputSchema) || Boolean(outputSchema),
-    )
-    .reduce(
-      (acc, cur) => {
-        acc[cur.key] = {
-          inputSchema: cur.inputSchema as JSONSchema7,
-          outputSchema: cur.outputSchema as JSONSchema7,
-        };
-        return acc;
-      },
-      {} as Record<
-        string,
-        { inputSchema: JSONSchema7; outputSchema?: JSONSchema7 }
-      >,
-    );
+
+  const sectionSchemasAsArray = await Promise.all(
+    sections.map(async (section) => {
+      const path = `./sections${section}`;
+      const sectionSchema = await getSchemaFromSectionExport(path);
+
+      return [
+        path,
+        sectionSchema,
+      ] as const;
+    }),
+  );
+
+  const schemas = Object.fromEntries([
+    ...sectionSchemasAsArray,
+    ...functionSchemasAsArray,
+  ]);
 
   return schemas;
 }
