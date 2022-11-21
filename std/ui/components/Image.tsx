@@ -64,8 +64,6 @@ const Image = forwardRef<HTMLImageElement, Props>((props, ref) => {
         {...props}
         src={sources[0]}
         srcSet={srcSet}
-        width={`${props.width}px`}
-        height={`${props.height}px`}
         loading={loading}
         ref={ref}
       />
