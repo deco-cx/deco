@@ -1,4 +1,4 @@
-# deco live — the edge-native DXP
+# deco.cx/live — the edge-native DXP
 
 **Live** is the **edge-native digital experience platform** for [fresh](https://fresh.deno.dev) apps.
 
