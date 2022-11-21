@@ -1,14 +1,7 @@
-import { basename } from "std/path/mod.ts";
-
-import { context } from "../server.ts";
-import { resolveFilePath } from "./filesystem.ts";
-
-export interface Node {
-  label: string;
-  fullPath: string;
-  editLink?: string;
-  children?: Node[];
-}
+import { basename } from "https://deno.land/std@0.147.0/path/mod.ts";
+import { context } from "$live/live.ts";
+import { resolveFilePath } from "$live/utils/filesystem.ts";
+import { Node } from "$live/types.ts";
 
 export const getWorkbenchTree = (): Node[] => {
   const sections = context.manifest?.sections ?? {};
@@ -27,8 +20,18 @@ export const getWorkbenchTree = (): Node[] => {
     }));
 
   return [{
-    label: 'sections',
-    fullPath: './sections',
-    children: firstLevel
-  }]
+    label: "sections",
+    fullPath: "./sections",
+    children: firstLevel,
+  }];
+};
+
+export const workbenchHandler = () => {
+  return new Response(JSON.stringify(getWorkbenchTree()), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
 };

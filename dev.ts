@@ -1,13 +1,18 @@
 #!/usr/bin/env -S deno run -A --watch=static/,routes/
-import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
-import "std/dotenv/load.ts";
+import {
+  dirname,
+  fromFileUrl,
+  join,
+  toFileUrl,
+} from "https://deno.land/std@0.147.0/path/mod.ts";
+import "https://deno.land/std@0.147.0/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
-import { walk } from "std/fs/walk.ts";
+import { walk } from "https://deno.land/std@0.147.0/fs/walk.ts";
 
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
-import { JSONSchema7 } from "json-schema";
+import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 import {
   getFunctionOutputSchemaFromDocs,
   getInputSchemaFromDocs,
@@ -16,7 +21,7 @@ import {
 
 /**
  * This interface represents an intermediate state used to generate
- * the final manifest (in the target project's deco.gen.ts).
+ * the final manifest (in the target project's fresh.gen.ts).
  *
  * The final manifest follows @DecoManifest type
  */
@@ -39,10 +44,10 @@ const defaultManifestData: DevManifestData = {
   schemas: {},
 };
 
-export async function dev(
+export default async function dev(
   base: string,
   entrypoint: string,
-  onListen?: () => void
+  onListen?: () => void,
 ) {
   const prevManifestData = Deno.env.get("FRSH_DEV_PREVIOUS_MANIFEST");
 
@@ -58,7 +63,7 @@ export async function dev(
 
   const manifestDataChanged = !manifestDataEquals(
     currentManifestData,
-    newManifestData
+    newManifestData,
   );
 
   if (manifestDataChanged) await generate(dir, newManifestData);
@@ -117,16 +122,19 @@ export async function generate(directory: string, manifest: DevManifestData) {
       config,
     };
 
+    // live — this exposes the manifest so the live server can render components dynamically
+    globalThis.manifest = manifest;
+
     export default manifest;
     `;
 
   const manifestStr = await format(output);
-  const manifestPath = join(directory, "./deco.gen.ts");
+  const manifestPath = join(directory, "./fresh.gen.ts");
 
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands and ${sections.length} sections.`,
-    "color: green; font-weight: bold"
+    "color: green; font-weight: bold",
   );
 }
 
@@ -255,11 +263,10 @@ const templates = {
  * Extracts JSONSChemas from types definitions in sections and functions.
  *
  * Read more about it here: TODO
- *
  */
 async function extractAllSchemas(
   sections: string[],
-  functions: string[]
+  functions: string[],
 ): Promise<DevManifestData["schemas"]> {
   const sectionSchemasAsArray = await Promise.all(
     // TODO: Remove
@@ -269,7 +276,7 @@ async function extractAllSchemas(
       const denoDocJson = await readDenoDocJson(pathForSection);
       const sectionSchema = getInputSchemaFromDocs(
         denoDocJson,
-        `Section ${section}`
+        `Section ${section}`,
       );
 
       return {
@@ -277,7 +284,7 @@ async function extractAllSchemas(
         inputSchema: sectionSchema,
         outputSchema: null,
       };
-    })
+    }),
   );
   const functionSchemasAsArray = await Promise.all(
     functions.map(async (functionName) => {
@@ -287,24 +294,30 @@ async function extractAllSchemas(
       const inputSchema = getInputSchemaFromDocs(denoDocJson);
       const outputSchema = getFunctionOutputSchemaFromDocs(
         denoDocJson,
-        entityNameForLogging
+        entityNameForLogging,
       );
 
       return { key: pathForFunction, inputSchema, outputSchema };
-    })
+    }),
   );
   const schemas = [...sectionSchemasAsArray, ...functionSchemasAsArray]
     .filter(
       ({ inputSchema, outputSchema }) =>
-        Boolean(inputSchema) || Boolean(outputSchema)
+        Boolean(inputSchema) || Boolean(outputSchema),
     )
-    .reduce((acc, cur) => {
-      acc[cur.key] = {
-        inputSchema: cur.inputSchema as JSONSchema7,
-        outputSchema: cur.outputSchema as JSONSchema7,
-      };
-      return acc;
-    }, {} as Record<string, { inputSchema: JSONSchema7, outputSchema?: JSONSchema7 }>);
+    .reduce(
+      (acc, cur) => {
+        acc[cur.key] = {
+          inputSchema: cur.inputSchema as JSONSchema7,
+          outputSchema: cur.outputSchema as JSONSchema7,
+        };
+        return acc;
+      },
+      {} as Record<
+        string,
+        { inputSchema: JSONSchema7; outputSchema?: JSONSchema7 }
+      >,
+    );
 
   return schemas;
 }

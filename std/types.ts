@@ -1,8 +1,7 @@
-import { HandlerContext } from "$fresh/server.ts";
-import { Page } from "../types.ts";
+import { LiveFunctionContext, Page } from "$live/types.ts";
 
-export type LoaderFunction<I = unknown, O = unknown> = (
+export type LoaderFunction<Props = unknown, Data = unknown, State = unknown> = (
   req: Request,
-  ctx: HandlerContext<Page>,
-  props: I,
-) => Promise<{ data: O } & Partial<Pick<Response, "status" | "headers">>>;
+  ctx: LiveFunctionContext<State>,
+  props: Props,
+) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;

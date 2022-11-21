@@ -3,12 +3,6 @@
     "$live/": "./",
     "$fresh/": "https://deno.land/x/fresh@1.1.2/",
     "preact": "https://esm.sh/preact@10.11.2",
-    "preact/": "https://esm.sh/preact@10.11.2/",
-    "partytown/": "https://deno.land/x/partytown@0.0.7/",
-    "std/": "https://deno.land/std@0.147.0/",
-    "supabase": "https://esm.sh/@supabase/supabase-js@1.35.4",
-    "json-schema": "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts",
-    "inspect_vscode/": "https://deno.land/x/inspect_vscode@0.1.2/",
-    "heroicons": "https://esm.sh/@heroicons/react@2.0.12/24/outline?alias=react:preact/compat&external=preact/compat"
+    "preact/": "https://esm.sh/preact@10.11.2/"
   }
 }

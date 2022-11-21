@@ -1,7 +1,7 @@
-import { context } from "$live/server.ts";
+import { context } from "$live/live.ts";
 
-import { join, fromFileUrl } from 'std/path/mod.ts'
+import { fromFileUrl, join } from "https://deno.land/std@0.147.0/path/mod.ts";
 
 export const resolveFilePath = (path: string) => {
-  return join(fromFileUrl(context.manifest?.baseUrl ?? ""), '..', path)
-}
+  return join(fromFileUrl(context.manifest?.baseUrl ?? ""), "..", path);
+};

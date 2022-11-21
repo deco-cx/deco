@@ -1,4 +1,4 @@
-import Script from "partytown/Script.tsx";
+import Script from "https://deno.land/x/partytown@0.0.7/Script.tsx";
 import { Page } from "$live/types.ts";
 
 const innerHtml = ({ id, path }: Page) => `

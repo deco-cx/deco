@@ -1,5 +1,5 @@
 import { Flag } from "$live/types.ts";
-import { context } from "$live/server.ts";
+import { context } from "$live/live.ts";
 import getSupabaseClient from "./supabase.ts";
 
 let flags: Flag[];
