@@ -1,11 +1,11 @@
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
+import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import { DecoManifest, LiveOptions, Page, WithLiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { verifyDomain } from "$live/utils/domains.ts";
 import { withPages } from "$live/pages.ts";
 import { withWorkbench } from "$live/workbench.ts";
-import { withInspect } from "$live/inspect.ts";
 
 // The global live context
 export type LiveContext = {
@@ -32,11 +32,8 @@ declare global {
 }
 
 export const withLive = (
-  liveOptions?: LiveOptions,
+  liveOptions: LiveOptions,
 ) => {
-  if (!liveOptions) {
-    throw new Error("liveOptions is required.");
-  }
   if (!liveOptions.site) {
     throw new Error(
       "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
@@ -47,6 +44,9 @@ export const withLive = (
       "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
     );
   }
+
+  // Enable InspectVSCode library
+  const inspectPath = liveOptions.inspectPath || "/_live/inspect/";
 
   context.site = liveOptions.site;
   context.siteId = liveOptions.siteId;
@@ -91,9 +91,12 @@ export const withLive = (
       return domainRes;
     }
 
-    const inspectRes = await withInspect(req);
-    if (inspectRes) {
-      return inspectRes;
+    if (
+      req.method === "POST" &&
+      url.pathname.startsWith(inspectPath) &&
+      context.isDeploy === false
+    ) {
+      return await inspectHandler(inspectPath, req);
     }
 
     const workbenchRes = withWorkbench(url.pathname);

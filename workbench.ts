@@ -1,13 +1,7 @@
 import { basename } from "https://deno.land/std@0.147.0/path/mod.ts";
 import { context } from "$live/live.ts";
 import { resolveFilePath } from "$live/utils/filesystem.ts";
-
-export interface Node {
-  label: string;
-  fullPath: string;
-  editLink?: string;
-  children?: Node[];
-}
+import { Node } from "$live/types.ts";
 
 export const getWorkbenchTree = (): Node[] => {
   const sections = context.manifest?.sections ?? {};
