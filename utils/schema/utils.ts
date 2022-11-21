@@ -19,6 +19,7 @@ const withErrorPath = <T>(cb: (x: string) => T) => async (path: string) => {
 export const getSchemaFromSectionExport = withErrorPath(
   async (path: string) => {
     const nodes = await denoDoc(path);
+    console.log(path, nodes);
     const node = findExport("default", nodes);
 
     if (node.kind !== "variable" && node.kind !== "function") {
@@ -58,7 +59,8 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
 
   if (
     tsType.kind !== "typeRef" ||
-    tsType.typeRef.typeName !== "LoaderFunction"
+    tsType.typeRef.typeName in
+      ["LoaderFunction", "MatchFunction", "EffectFunction"]
   ) {
     throw new Error(`Default export needs to be of type LoaderFunction`);
   }

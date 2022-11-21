@@ -4,8 +4,12 @@ import type {
 } from "$fresh/src/server/types.ts";
 import type { Manifest } from "$fresh/server.ts";
 import type { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
-import { LoaderFunction } from "$live/std/types.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import {
+  EffectFunction,
+  LoaderFunction,
+  MatchFunction,
+} from "$live/std/types.ts";
 
 export interface Node {
   label: string;
@@ -21,7 +25,7 @@ export interface Module extends IslandModule {
 }
 
 export interface FunctionModule {
-  default: LoaderFunction<any, any>;
+  default: LoaderFunction<any, any> | MatchFunction | EffectFunction;
 }
 
 export interface DecoManifest extends Manifest {
@@ -75,6 +79,12 @@ export interface Page {
   name: string;
   path: string;
   state: PageState;
+  site?: Site;
+}
+
+export interface LivePage {
+  page: Page;
+  flags: Flags;
 }
 
 /**
@@ -87,13 +97,35 @@ export interface PageWithParams {
   params?: Record<string, string>;
 }
 
+export interface Match {
+  // Identifies the MatchFunction uniquely in the project (e.g: "./functions/MatchRandom.ts")
+  key: string;
+  props?: Record<string, unknown>;
+}
+export interface Effect {
+  // Identifies the EffectFunction uniquely in the project (e.g: "./functions/OverridePageEffect.ts")
+  key: string;
+  props?: Record<string, unknown>;
+}
+
+export interface FlagData {
+  matches: Match[];
+  effects: Effect[];
+}
+
+export type FlagState = "archived" | "draft" | "published";
+
 export interface Flag {
   id: string;
   name: string;
-  audience: string;
-  traffic: number;
-  active?: boolean;
-  path: string;
+  state: FlagState;
+  data: FlagData;
+  site: number;
+  key: string;
+}
+
+export interface Flags {
+  [key: string]: true;
 }
 
 export type Mode = "edit" | "none";
@@ -119,21 +151,23 @@ export interface EditorData {
   state: PageState;
 }
 
-export type WithLiveState =
+export type LiveState =
   & {
     site: string;
-    t: ReturnType<typeof createServerTimings>;
+    t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
   }
   & WithFlagState
   & WithPageState;
 
 export interface WithFlagState {
-  flags: string;
+  loadFlags: () => Promise<Flag[]> | undefined;
+  flags: Flag[];
 }
 
 export interface WithPageState {
   loadPage: () => Promise<Page> | undefined;
   page?: Page;
+  selectedPageIds: number[];
 }
 
 export interface LiveFunctionContext<State = unknown>
