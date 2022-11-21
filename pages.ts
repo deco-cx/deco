@@ -2,7 +2,7 @@ import { context } from "$live/live.ts";
 import { PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { EditorData, Page, WithLiveState, WithPageState } from "$live/types.ts";
+import { EditorData, Page, WithLiveState } from "$live/types.ts";
 import {
   generateAvailableEntitiesFromManifest,
   loadPageData,
@@ -242,7 +242,6 @@ export const loadPage = async (
   req: Request,
   ctx: MiddlewareHandlerContext<WithLiveState>,
 ) => {
-  const url = new URL(req.url);
   const { start, end } = ctx.state.t;
 
   start("load-page");
