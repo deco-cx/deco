@@ -1,11 +1,11 @@
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import { DecoManifest, LiveOptions, Page, WithLiveState } from "$live/types.ts";
+import { generateEditorData, loadPage } from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { verifyDomain } from "$live/utils/domains.ts";
-import { withPages } from "$live/pages.ts";
-import { withWorkbench } from "$live/workbench.ts";
+import { workbenchHandler } from "$live/utils/workbench.ts";
 
 // The global live context
 export type LiveContext = {
@@ -46,7 +46,9 @@ export const withLive = (
   }
 
   // Enable InspectVSCode library
-  const inspectPath = liveOptions.inspectPath || "/_live/inspect/";
+  const inspectPath = liveOptions.inspectPath || "/_live/inspect";
+  // Enable Workbench
+  const workbenchPath = liveOptions.workbenchPath || "/_live/workbench";
 
   context.site = liveOptions.site;
   context.siteId = liveOptions.siteId;
@@ -91,6 +93,8 @@ export const withLive = (
       return domainRes;
     }
 
+    // TODO: Find a better way to embedded these routes on project routes.
+    // Follow up here: https://github.com/denoland/fresh/issues/516
     if (
       req.method === "POST" &&
       url.pathname.startsWith(inspectPath) &&
@@ -99,13 +103,35 @@ export const withLive = (
       return await inspectHandler(inspectPath, req);
     }
 
-    const workbenchRes = withWorkbench(url.pathname);
-    if (workbenchRes) {
-      return workbenchRes;
+    if (
+      url.pathname === workbenchPath
+    ) {
+      return workbenchHandler();
     }
 
-    const res = await withPages(req, ctx);
+    // TODO add custom middleware optional
 
+    // Prepare ctx.state for page handlers
+    ctx.state.loadPage = async () => {
+      ctx.state.page = await loadPage(req, ctx) as Page;
+      return ctx.state.page;
+    };
+
+    // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
+    const res = await ctx.next();
+
+    // Allow introspection of page by editor
+    if (url.searchParams.has("editorData")) {
+      // Assume ctx.state.page is already loaded if asking for editorData
+      const editorData = generateEditorData(ctx.state.page as Page);
+      return Response.json(editorData, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    // Print server timings for diagnostics
     res.headers.set("Server-Timing", printTimings());
 
     console.info(
@@ -117,11 +143,12 @@ export const withLive = (
 };
 
 export const live: () => Handlers<Page, WithLiveState> = () => ({
-  GET(_, ctx) {
-    if (context.isDeploy && !ctx.state.page) {
+  async GET(_, ctx) {
+    const page = await ctx.state.loadPage();
+    if (context.isDeploy && !page) {
       ctx.renderNotFound();
     }
     // TODO: If !isDeploy, render "create new page" component
-    return ctx.render(ctx.state.page);
+    return ctx.render(page as Page);
   },
 });

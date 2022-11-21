@@ -202,7 +202,7 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
  *
  * TODO: After we approve this, move this function elsewhere
  */
-function generateEditorData(page: Page): EditorData {
+export function generateEditorData(page: Page): EditorData {
   const {
     data: { sections, functions },
     state,
@@ -238,11 +238,9 @@ function generateEditorData(page: Page): EditorData {
   };
 }
 
-export const withPages = async (
+export const loadPage = async (
   req: Request,
-  ctx: MiddlewareHandlerContext<
-    WithLiveState & WithPageState
-  >,
+  ctx: MiddlewareHandlerContext<WithLiveState>,
 ) => {
   const url = new URL(req.url);
   const { start, end } = ctx.state.t;
@@ -254,38 +252,24 @@ export const withPages = async (
   const pageWithParams = await loadLivePage(req);
   end("load-page");
 
-  // If there's a page match, populate ctx.state.page
-  if (pageWithParams) {
-    const { page, params = {} } = pageWithParams;
-
-    if (url.searchParams.has("editorData")) {
-      const editorData = generateEditorData(page);
-      return Response.json(editorData, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
-    start("load-data");
-    const pageDataAfterFunctions = await loadPageData(
-      req,
-      {
-        ...ctx,
-        params,
-      },
-      page?.data,
-      start,
-      end,
-    );
-    end("load-data");
-
-    ctx.state.page = { ...page, data: pageDataAfterFunctions };
+  if (!pageWithParams) {
+    return null;
   }
+  // If there's a page match, populate ctx.state.page
+  const { page, params = {} } = pageWithParams;
 
-  start("render");
-  const res = await ctx.next();
-  end("render");
+  start("load-data");
+  const pageDataAfterFunctions = await loadPageData(
+    req,
+    {
+      ...ctx,
+      params,
+    },
+    page?.data,
+    start,
+    end,
+  );
+  end("load-data");
 
-  return res;
+  return { ...page, data: pageDataAfterFunctions };
 };

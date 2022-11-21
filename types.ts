@@ -44,6 +44,7 @@ export interface LiveOptions {
   loginUrl?: string;
   domains?: string[];
   inspectPath?: string;
+  workbenchPath?: string;
 }
 
 export interface PageSection {
@@ -130,6 +131,7 @@ export interface WithFlagState {
 }
 
 export interface WithPageState {
+  loadPage: () => Promise<Page> | undefined;
   page?: Page;
 }
 

@@ -30,5 +30,9 @@ export const formatLog = (opts: {
 
   return `[${statusFormatter(`${opts.status}`)}]: ${duration}ms ${
     cyan(opts.url.pathname)
-  } ${green(`https://deco.cx/live/${context.siteId}/pages/${opts.pageId}`)}`;
+  } ${
+    opts.pageId
+      ? green(`https://deco.cx/live/${context.siteId}/pages/${opts.pageId}`)
+      : ""
+  }`;
 };
