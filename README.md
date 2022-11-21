@@ -16,7 +16,7 @@ Want to create a **Live** site from scratch?
 
 - First, fork and clone the [deco start template repo](https://github.com/deco-sites/start).
 - Then, in the project directory, run `deno task start`.
-- Finally, go to https://localhost:8000 and follow the instructions in the home page.
+- Finally, go to https://localhost:8080 and follow the instructions in the home page.
 - From there, you can sign up at `deco.cx` to use the online editor and deploy your site to the edge.
 
 ## Adding live to an existing fresh site
