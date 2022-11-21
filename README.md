@@ -123,6 +123,49 @@ Now, let's create a configurable `function`.
 
 Live ships some utilitary scripts which you can add to your project as needed.
 
+## Images
+One of the most transfered data on the internet are images. Live has first class support for uploading, storing and optimizing images.
+
+### Uploading images
+To upload images, you first need a [section component](https://github.com/deco-cx/live#sections-creating-configurable-components) setup. In your section componet import our special Image type and export it as the section prop.
+```tsx
+// ./sectios/MySection.tsx
+import type { Image } from "$live/std/ui/types/Image.ts";
+
+export interface Props {
+  src: Image
+  alt: string
+}
+
+export default function MySection({ src, alt }: Props) {
+  return <img  src={src} alt={alt} />
+}
+```
+
+This will create the following image uploader widget on the section editor. 
+<img width="331" alt="image" src="https://user-images.githubusercontent.com/1753396/203119882-0e3ce76c-d1e7-42a2-aae8-4b384dfc7169.png">
+
+After drag and dropping the target image on this widget, live will upload the image and generate a url. This url will be passed as a prop to your component. Use this prop to render the image in your section
+
+### Optmizing images
+Business users may upload huge images (>500Kb) on the image uploader. It's up to the developer to make sure all images are loaded efficiently by making the images responsive, light and correctly encoded. Hopefully, live already ships all of these best practices into an `<Image />` component. To use this image component on the above example:
+```tsx
+// ./sectios/MySection.tsx
+import LiveImage from "$live/std/ui/components/Image.tsx";
+import type { Image } from "$live/std/ui/types/Image.ts";
+
+export interface Props {
+  src: Image
+  alt: string
+}
+
+export default function MySection({ src, alt }: Props) {
+  return <LiveImage src={src} alt={alt} width={500} height={350} />
+}
+```
+
+This will create a responsive image that fits most screens and encode it depending on the browser's User Agent, all while distributing the image globally in a CDN!
+
 ### HTML to Component script
 
 You can use the `component` script to **transform any HTML in your clipboard**
@@ -174,36 +217,6 @@ Aditionally, the import snippet will replace your clipboard content:
 
 ```jsx
 import MyTestComponent from "../components/MyTestComponent.tsx";
-```
-
-### Copy Partytown files script
-
-The partytown library needs the web and service workers' static files to work.
-This script copies these required files. More info:
-<https://partytown.builder.io/copy-library-files> Add the `copyPartytown` task to
-your `deno.json` file:
-
-```json
-{
-  "tasks": {
-    // ...
-    "copyPartytown": "deno eval 'import \"$live/scripts/copyPartytownFiles.ts\"'"
-  },
-  "importMap": "./import_map.json"
-}
-```
-
-Then run the `copyPartytown` task with the first argument destination folder to
-copy partytown files
-
-```bash
-deno task copyPartytown "./static/~partytown/"
-```
-
-Pass the `--debug` flag to also copy Partytown's debug files.
-
-```bash
-deno task copyPartytown "./static/~partytown/" -- "--debug"
 ```
 
 ## Local development
