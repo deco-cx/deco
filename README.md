@@ -143,7 +143,7 @@ export default function MySection({ src, alt }: Props) {
 ```
 
 This will create the following image uploader widget on the section editor. 
-
+<img width="331" alt="image" src="https://user-images.githubusercontent.com/1753396/203119882-0e3ce76c-d1e7-42a2-aae8-4b384dfc7169.png">
 
 After drag and dropping the target image on this widget, live will upload the image and generate a url. This url will be passed as a prop to your component. Use this prop to render the image in your section
 
