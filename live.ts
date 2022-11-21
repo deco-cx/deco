@@ -148,6 +148,6 @@ export const live: () => Handlers<Page, WithLiveState> = () => ({
       ctx.renderNotFound();
     }
     // TODO: If !isDeploy, render "create new page" component
-    return ctx.render(page as Page);
+    return ctx.render(page);
   },
 });
