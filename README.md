@@ -36,6 +36,9 @@ First add the `$live` import to your `import_map.json` file:
 }
 ```
 
+![CleanShot 2022-11-20 at 22 23 51](https://user-images.githubusercontent.com/1633518/202938953-172c6118-86cb-4a0e-8779-ee02ce070157.png)
+
+
 ### 2. Replace the `dev` task from fresh with Live's
 
 Now, let's replace the `dev` import in `dev.ts`. Just change `$fresh/dev.ts` to `$live/dev.ts`:
@@ -45,6 +48,8 @@ import dev from "$live/dev.ts";
 
 await dev(import.meta.url, "./main.ts");
 ```
+
+![CleanShot 2022-11-20 at 22 22 55](https://user-images.githubusercontent.com/1633518/202938923-066e5faa-f15f-4e6c-b17e-d9f7d670c9fb.png)
 
 ### 3. Add the middleware to allow Live to intercept requests and access components
 
@@ -61,15 +66,21 @@ export const handler = withLive(manifest, {
 });
 ```
 
+![CleanShot 2022-11-20 at 22 24 08](https://user-images.githubusercontent.com/1633518/202938980-5bba5561-4e72-4b39-8cc5-c296668b7015.png)
+
+
 ### 4. Mount the Live handler on a catch-all route
 
 Finally, in order to allow the creation of dynamic pages in any route, mount `live` as a handler for a catch-all route. Create `routes/[...path].tsx`:
 
 ```tsx
-import { live, LivePage } from "$live/mod.ts";
+import { live } from "$live/live.ts";
+import LivePage from "$live/components/LivePage.tsx";
 export const handler = live();
 export default LivePage;
 ```
+
+![CleanShot 2022-11-20 at 22 24 43](https://user-images.githubusercontent.com/1633518/202939025-a51f0342-6e37-4bf5-86db-b8772e10abe2.png)
 
 Great! **Live** is now setup. You can verify it's working by going to any route that will trigger the catch all. For example, go to https://localhost:8080/start. You should see an empty page with an "Edit in deco.cx" button. Clicking it will redirect you to the deco.cx/live editor, which opens your site in an iframe.
 
@@ -92,6 +103,11 @@ export default function Hello({ name }: Props) {
   return <div>Hello {name}</div>;
 }
 ```
+
+![CleanShot 2022-11-20 at 22 25 10](https://user-images.githubusercontent.com/1633518/202939072-f384cbd5-675b-47ae-89f9-d7d584ffc32f.png)
+
+
+Go to http://localhost:8080/start to see a page that mounts the Hello section. This page was already created, as an example.
 
 Now, when you go to any page, you should see the `Hello` section available in the `Add Component` drawer.
 Add it to a page. You should see a `name` field in the section's configuration editor.
