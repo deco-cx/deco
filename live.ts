@@ -121,8 +121,7 @@ export const withLive = (
     const res = await ctx.next();
 
     // Allow introspection of page by editor
-    if (url.searchParams.has("editorData")) {
-      // Assume ctx.state.page is already loaded if asking for editorData
+    if (url.searchParams.has("editorData") && ctx.state.page) {
       const editorData = generateEditorData(ctx.state.page as Page);
       return Response.json(editorData, {
         headers: {
