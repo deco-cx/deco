@@ -2,9 +2,9 @@ import type { ComponentChildren } from "preact";
 import { PageProps } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
 import { Page } from "$live/types.ts";
-import CoreWebVitals from "$live/components/CoreWebVitals.tsx";
+import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveSections from "$live/components/LiveSections.tsx";
-import Jitsu from "https://deno.land/x/partytown@0.0.7/integrations/Jitsu.tsx";
+import Jitsu from "https://deno.land/x/partytown@0.1.0/integrations/Jitsu.tsx";
 
 const EmptyPage = () => (
   <div>
@@ -17,9 +17,10 @@ const EmptyPage = () => (
 export default function LivePage({
   data: page,
   children,
-}: PageProps<Page> & {
+}: PageProps<Page | undefined> & {
   children?: ComponentChildren;
 }) {
+  const site = { name: context.site, id: context.siteId };
   const manifest = context.manifest!;
   // TODO: Read this from context
   const LiveControls = !context.isDeploy &&
@@ -33,7 +34,7 @@ export default function LivePage({
 
       {
         // Track only managed pages
-        page && <CoreWebVitals page={page} />
+        page && <LiveAnalytics page={page} site={site} />
       }
 
       {children
