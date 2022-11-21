@@ -5,3 +5,5 @@ export type LoaderFunction<Props = unknown, Data = unknown, State = unknown> = (
   ctx: LiveFunctionContext<State>,
   props: Props,
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
+
+export type LoaderReturnType<O = unknown> = O;
