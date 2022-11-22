@@ -20,10 +20,16 @@ export function setupSupabase(endpoint: string, key: string) {
   userKey = key;
 }
 
-export default function getSupabaseClient(accessToken?: string) {
+export default function getSupabaseClient() {
   if (!client) {
-    client = createClient(userEndpoint, accessToken || userKey);
+    client = createClient(userEndpoint, userKey);
   }
+
+  return client;
+}
+
+export function createSupabaseClient(accessToken?: string) {
+  const client = createClient(userEndpoint, accessToken || userKey);
 
   return client;
 }
