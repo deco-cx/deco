@@ -30,7 +30,7 @@ export const loadFlags = async (
   }
 
   // TODO: if queryString.flagIds, then activate those flags and skip matching
-  const activeFlags = availableFlags?.filter((flag) => {
+  const activeFlags: Flag[] = (availableFlags ?? [])?.filter((flag) => {
     const { data: { matches } } = flag;
 
     for (const match of matches) {
