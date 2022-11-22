@@ -105,8 +105,6 @@ export const fetchPageFromPathname = async (
     })
     .filter(({ match }) => match);
 
-  console.log("matchRoutes", matchRoutes);
-
   if (error || matchRoutes.length === 0) {
     console.error(error?.message || `Page with path "${path}" not found`);
 
