@@ -1,3 +1,4 @@
+import { PageOptions } from "$live/pages.ts";
 import { EffectFunction } from "$live/std/types.ts";
 import { LiveState } from "$live/types.ts";
 
@@ -6,15 +7,11 @@ export interface Props {
 }
 
 const SelectPageEffect: EffectFunction<Props, LiveState> = (
-  _,
-  ctx,
+  _req,
+  _ctx,
   props,
-) => {
-  if (!ctx.state.selectedPageIds) {
-    ctx.state.selectedPageIds = props.pageIds;
-  } else {
-    ctx.state.selectedPageIds = ctx.state.selectedPageIds.concat(props.pageIds);
-  }
-};
+): PageOptions => ({
+  selectedPageIds: props.pageIds,
+});
 
 export default SelectPageEffect;

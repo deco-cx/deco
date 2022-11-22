@@ -1,7 +1,7 @@
 import { context } from "$live/live.ts";
 import { LivePageData, PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
-import { HandlerContext, MiddlewareHandlerContext } from "$fresh/server.ts";
+import { HandlerContext } from "$fresh/server.ts";
 import { EditorData, LiveState, Page } from "$live/types.ts";
 import {
   generateAvailableEntitiesFromManifest,

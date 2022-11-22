@@ -20,7 +20,7 @@ export const loadFlags = async (
   const { data: availableFlags, error } = await getSupabaseClient()
     .from<Flag>("flags")
     .select(
-      `id, name, key, state, site!inner(name, id), data`,
+      `id, name, key, state, data`,
     )
     .eq("site", site)
     .eq("state", "published");
