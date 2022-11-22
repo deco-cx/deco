@@ -93,6 +93,10 @@ export const withLive = (
     if (!context.manifest) {
       context.manifest = globalThis.manifest;
     }
+    ctx.state.site = {
+      id: context.siteId,
+      name: context.site,
+    };
 
     const begin = performance.now();
     const url = new URL(req.url);
@@ -168,7 +172,7 @@ export const getLivePageData = async (
     acc[flag.key] = flag.value;
     return acc;
   }, {} as Record<string, unknown>);
-  
+
   return {
     flags: flagsByKey,
     page: await loadPage(req, ctx, pageOptions),

@@ -266,7 +266,7 @@ export function generateEditorData(page: Page): EditorData {
 export const loadPage = async (
   req: Request,
   ctx: HandlerContext<LivePageData, LiveState>,
-  options: PageOptions
+  options: PageOptions,
 ) => {
   const { start, end } = ctx.state.t;
 

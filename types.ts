@@ -122,7 +122,7 @@ export interface Flag<T = unknown> {
   data: FlagData;
   site: number;
   key: string;
-  value: T
+  value: T;
 }
 
 export interface Flags {
@@ -152,21 +152,8 @@ export interface EditorData {
   state: PageState;
 }
 
-export type LiveState =
-  & {
-    site: string;
-    t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
-  }
-  & WithFlagState
-  & WithPageState;
-
-export interface WithFlagState {
-  loadFlags: () => Promise<Flag[]> | undefined;
-  flags: Flag[];
-}
-
-export interface WithPageState {
-  loadPage: () => Promise<Page> | undefined;
-  page?: Page;
-  selectedPageIds: number[];
-}
+export type LiveState = {
+  page: Page;
+  site: Site;
+  t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+};

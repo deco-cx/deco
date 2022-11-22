@@ -4,6 +4,7 @@ import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { EffectFunction, MatchFunction } from "$live/std/types.ts";
 import RandomMatch from "$live/functions/RandomMatch.ts";
+import SiteMatch from "$live/functions/SiteMatch.ts";
 import SelectPageEffect from "$live/functions/SelectPageEffect.ts";
 
 let flags: Flag[];
@@ -37,6 +38,8 @@ export const loadFlags = async (
       const { key, props } = match;
       const matchFn = (key === "$live/functions/RandomMatch.ts")
         ? RandomMatch
+        : (key === "$live/functions/SiteMatch.ts")
+        ? SiteMatch
         : manifest.functions[key]?.default as MatchFunction;
       // RandomMatch.ts
       // GradualRolloutMatch.ts
