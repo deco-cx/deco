@@ -74,7 +74,5 @@ export const loadFlags = async (
 
   // TODO: set cookie with flag ids
 
-  ctx.state.flags = activeFlags as Flag[];
-
   return activeFlags;
 };
