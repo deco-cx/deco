@@ -19,7 +19,6 @@ const withErrorPath = <T>(cb: (x: string) => T) => async (path: string) => {
 export const getSchemaFromSectionExport = withErrorPath(
   async (path: string) => {
     const nodes = await denoDoc(path);
-    console.log(path, nodes);
     const node = findExport("default", nodes);
 
     if (node.kind !== "variable" && node.kind !== "function") {

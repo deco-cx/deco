@@ -82,7 +82,7 @@ export interface Page {
   site?: Site;
 }
 
-export interface LivePage {
+export interface LivePageData {
   page: Page;
   flags: Flags;
 }

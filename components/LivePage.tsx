@@ -1,7 +1,7 @@
 import type { ComponentChildren } from "preact";
 import { PageProps } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
-import { Page } from "$live/types.ts";
+import { LivePageData } from "$live/types.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveSections from "$live/components/LiveSections.tsx";
 
@@ -14,11 +14,12 @@ const EmptyPage = () => (
 );
 
 export default function LivePage({
-  data: page,
+  data,
   children,
-}: PageProps<Page | undefined> & {
+}: PageProps<LivePageData | undefined> & {
   children?: ComponentChildren;
 }) {
+  const { page, flags } = data ?? {};
   const manifest = context.manifest!;
   // TODO: Read this from context
   const LiveControls = !context.isDeploy &&
@@ -26,7 +27,7 @@ export default function LivePage({
 
   return (
     <>
-      <LiveAnalytics {...page} />
+      <LiveAnalytics {...page} flags={flags!} />
 
       {children
         ? children
@@ -39,6 +40,7 @@ export default function LivePage({
           <LiveControls
             site={{ id: context.siteId, name: context.site }}
             page={page}
+            flags={flags}
             isProduction={context.isDeploy}
           />
         )

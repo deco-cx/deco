@@ -20,7 +20,7 @@ export const loadFlags = async (
   const { data: availableFlags, error } = await getSupabaseClient()
     .from<Flag>("flags")
     .select(
-      `id, name, state, site!inner(name, id), data`,
+      `id, name, key, state, site!inner(name, id), data`,
     )
     .eq("site", site)
     .eq("state", "published");
@@ -28,7 +28,6 @@ export const loadFlags = async (
   if (error) {
     console.log("Error fetching flags:", error);
   }
-  console.log("Available flags:", availableFlags);
 
   // TODO: if queryString.flagIds, then activate those flags and skip matching
   const activeFlags = availableFlags?.filter((flag) => {
@@ -36,13 +35,20 @@ export const loadFlags = async (
 
     for (const match of matches) {
       const { key, props } = match;
-      const matchFn = (key === "$live/functions/RandomMatch")
+      const matchFn = (key === "$live/functions/RandomMatch.ts")
         ? RandomMatch
-        : manifest.functions[key].default as MatchFunction;
+        : manifest.functions[key]?.default as MatchFunction;
       // RandomMatch.ts
       // GradualRolloutMatch.ts
       // UserIdMatch.ts
-      const { isMatch, duration } = matchFn(req, ctx, props);
+      if (!matchFn) {
+        throw new Error("No match function found for key: " + key);
+      }
+      const { isMatch, duration } = matchFn(
+        req,
+        ctx,
+        props as any,
+      );
       if (duration === "session") {
         // TODO: Store in session
       }
@@ -59,10 +65,10 @@ export const loadFlags = async (
 
     effects.forEach((effect) => {
       const { key, props } = effect;
-      const effectFn = (key === "$live/functions/SelectPageEffect")
+      const effectFn = (key === "$live/functions/SelectPageEffect.ts")
         ? SelectPageEffect
         : manifest.functions[key].default as EffectFunction;
-      effectFn(req, ctx, props);
+      effectFn(req, ctx, props as any);
     });
   });
 

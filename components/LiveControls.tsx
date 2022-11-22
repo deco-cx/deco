@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { Flag, Page, Site } from "$live/types.ts";
+import { Flags, Page, Site } from "$live/types.ts";
 import { DomInspector } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import { ViewfinderCircleIcon } from "https://esm.sh/@heroicons/react@2.0.12/24/outline?alias=react:preact/compat&external=preact/compat";
 
@@ -9,7 +9,7 @@ declare global {
     LIVE: {
       page: Page;
       site: Site;
-      flags: Flag[];
+      flags: Flags;
     };
   }
 }
@@ -17,7 +17,7 @@ declare global {
 interface Props {
   site: Site;
   page: Page;
-  flags: Flag[];
+  flags: Flags;
   isProduction: boolean;
 }
 

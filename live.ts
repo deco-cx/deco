@@ -4,7 +4,7 @@ import {
   DecoManifest,
   Flag,
   LiveOptions,
-  LivePage,
+  LivePageData,
   LiveState,
   Page,
 } from "$live/types.ts";
@@ -155,7 +155,7 @@ export const withLive = (
 
 // Wrap any handler and it will receive `page` and `flags` along with any data on render.
 export const withLivePage = <Data>(
-  handler: Handler<Data & LivePage, LiveState>,
+  handler: Handler<Data & LivePageData, LiveState>,
 ): Handler<Data, LiveState> => {
   return async (req: Request, ctx) => {
     await ctx.state.loadFlags();
@@ -180,7 +180,7 @@ export const withLivePage = <Data>(
   };
 };
 
-export const live: () => Handlers<LivePage, LiveState> = () => ({
+export const live: () => Handlers<LivePageData, LiveState> = () => ({
   GET: withLivePage((_, ctx) => {
     if (context.isDeploy && !ctx.state.page) {
       ctx.renderNotFound();
