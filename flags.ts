@@ -3,6 +3,8 @@ import { DecoManifest, Flag, LiveState } from "$live/types.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { EffectFunction, MatchFunction } from "$live/std/types.ts";
+import RandomMatch from "$live/functions/RandomMatch.ts";
+import SelectPageEffect from "$live/functions/SelectPageEffect.ts";
 
 let flags: Flag[];
 export const flag = (id: string) => flags.find((flag) => flag.id === id);
@@ -34,7 +36,9 @@ export const loadFlags = async (
 
     for (const match of matches) {
       const { key, props } = match;
-      const matchFn = manifest.functions[key].default as MatchFunction;
+      const matchFn = (key === "$live/functions/RandomMatch")
+        ? RandomMatch
+        : manifest.functions[key].default as MatchFunction;
       // RandomMatch.ts
       // GradualRolloutMatch.ts
       // UserIdMatch.ts
@@ -55,7 +59,9 @@ export const loadFlags = async (
 
     effects.forEach((effect) => {
       const { key, props } = effect;
-      const effectFn = manifest.functions[key].default as EffectFunction;
+      const effectFn = (key === "$live/functions/SelectPageEffect")
+        ? SelectPageEffect
+        : manifest.functions[key].default as EffectFunction;
       effectFn(req, ctx, props);
     });
   });
