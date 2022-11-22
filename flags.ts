@@ -1,5 +1,5 @@
-import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { DecoManifest, Flag, LiveState } from "$live/types.ts";
+import { HandlerContext } from "$fresh/server.ts";
+import { DecoManifest, Flag, LivePageData, LiveState } from "$live/types.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { EffectFunction, MatchFunction } from "$live/std/types.ts";
@@ -11,7 +11,7 @@ export const flag = (id: string) => flags.find((flag) => flag.id === id);
 
 export const loadFlags = async (
   req: Request,
-  ctx: MiddlewareHandlerContext<LiveState>,
+  ctx: HandlerContext<LivePageData, LiveState>,
 ) => {
   const site = context.siteId;
   const manifest = context.manifest as DecoManifest;
@@ -61,18 +61,18 @@ export const loadFlags = async (
   });
 
   activeFlags?.forEach((flag) => {
-    const { data: { effects } } = flag;
+    const { data: { effect } } = flag;
 
-    effects.forEach((effect) => {
-      const { key, props } = effect;
-      const effectFn = (key === "$live/functions/SelectPageEffect.ts")
+    const effectFn = effect
+      ? (effect.key === "$live/functions/SelectPageEffect.ts")
         ? SelectPageEffect
-        : manifest.functions[key].default as EffectFunction;
-      effectFn(req, ctx, props as any);
-    });
+        : manifest.functions[effect.key].default as EffectFunction
+      : null;
+
+    flag.value = effectFn?.(req, ctx, effect?.props as any) ?? true;
   });
 
   // TODO: set cookie with flag ids
 
-  return activeFlags;
+  return activeFlags ?? [];
 };

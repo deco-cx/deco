@@ -1,9 +1,9 @@
-import { LiveFunctionContext } from "$live/types.ts";
-import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { HandlerContext } from "$fresh/server.ts";
+import { LivePageData } from "../types.ts";
 
 export type LoaderFunction<Props = unknown, Data = unknown, State = unknown> = (
   req: Request,
-  ctx: LiveFunctionContext<State>,
+  ctx: HandlerContext<LivePageData, State>,
   props: Props,
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
 
@@ -14,7 +14,7 @@ export type MatchFunction<
   State = unknown,
 > = (
   req: Request,
-  ctx: MiddlewareHandlerContext<State>,
+  ctx: HandlerContext<LivePageData, State>,
   props: Props,
 ) => { isMatch: boolean; duration: MatchDuration };
 
@@ -23,6 +23,6 @@ export type EffectFunction<
   State = unknown,
 > = (
   req: Request,
-  ctx: MiddlewareHandlerContext<State>,
+  ctx: HandlerContext<LivePageData, State>,
   props: Props,
 ) => void;

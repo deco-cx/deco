@@ -1,7 +1,7 @@
 import { context } from "$live/live.ts";
-import { PageWithParams } from "$live/types.ts";
+import { LivePageData, PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
-import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { HandlerContext, MiddlewareHandlerContext } from "$fresh/server.ts";
 import { EditorData, LiveState, Page } from "$live/types.ts";
 import {
   generateAvailableEntitiesFromManifest,
@@ -13,15 +13,21 @@ import {
   doesSectionExist,
 } from "./utils/manifest.ts";
 
+export interface PageOptions {
+  selectedPageIds: number[];
+}
+
+export const isPageOptions = (x: any): x is PageOptions =>
+  Array.isArray(x.selectedPageIds);
+
 export async function loadLivePage(
   req: Request,
-  ctx: MiddlewareHandlerContext<LiveState>,
+  { selectedPageIds }: PageOptions,
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
   const sectionName = url.searchParams.get("section"); // E.g: section=Banner.tsx
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
-  const selectedPageIds = ctx.state.selectedPageIds as number[] || [];
 
   const pageWithParams = await (async (): Promise<PageWithParams | null> => {
     if (sectionName) {
@@ -259,7 +265,8 @@ export function generateEditorData(page: Page): EditorData {
 
 export const loadPage = async (
   req: Request,
-  ctx: MiddlewareHandlerContext<LiveState>,
+  ctx: HandlerContext<LivePageData, LiveState>,
+  options: PageOptions
 ) => {
   const { start, end } = ctx.state.t;
 
@@ -267,7 +274,7 @@ export const loadPage = async (
   // TODO: Ensure loadLivePage only goes to DB if there is a page published with this path
   // ... This will be possible when all published pages are synced to the edge
   // ... for now, we need to go to the DB every time, even when there's no data for this page
-  const pageWithParams = await loadLivePage(req, ctx);
+  const pageWithParams = await loadLivePage(req, options);
   end("load-page");
 
   if (!pageWithParams) {

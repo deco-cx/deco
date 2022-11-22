@@ -110,22 +110,23 @@ export interface Effect {
 
 export interface FlagData {
   matches: Match[];
-  effects: Effect[];
+  effect?: Effect;
 }
 
 export type FlagState = "archived" | "draft" | "published";
 
-export interface Flag {
+export interface Flag<T = unknown> {
   id: string;
   name: string;
   state: FlagState;
   data: FlagData;
   site: number;
   key: string;
+  value: T
 }
 
 export interface Flags {
-  [key: string]: true;
+  [key: string]: unknown;
 }
 
 export type Mode = "edit" | "none";
@@ -168,9 +169,4 @@ export interface WithPageState {
   loadPage: () => Promise<Page> | undefined;
   page?: Page;
   selectedPageIds: number[];
-}
-
-export interface LiveFunctionContext<State = unknown>
-  extends MiddlewareHandlerContext<State> {
-  params: Record<string, string>;
 }

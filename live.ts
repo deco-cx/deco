@@ -1,4 +1,9 @@
-import { Handler, Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
+import { PageOptions } from "./pages.ts";
+import {
+  HandlerContext,
+  Handlers,
+  MiddlewareHandlerContext,
+} from "$fresh/server.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import {
   DecoManifest,
@@ -8,12 +13,13 @@ import {
   LiveState,
   Page,
 } from "$live/types.ts";
-import { generateEditorData, loadPage } from "$live/pages.ts";
+import { generateEditorData, isPageOptions, loadPage } from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { verifyDomain } from "$live/utils/domains.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
 import { loadFlags } from "$live/flags.ts";
+import { accepts } from "https://deno.land/std@0.147.0/http/negotiation.ts";
 
 // The global live context
 export type LiveContext = {
@@ -119,16 +125,6 @@ export const withLive = (
 
     // TODO add custom middleware optional
 
-    // Prepare ctx.state for page handlers
-    ctx.state.loadFlags = async () => {
-      ctx.state.flags = await loadFlags(req, ctx) as Flag[];
-      return ctx.state.flags;
-    };
-    ctx.state.loadPage = async () => {
-      ctx.state.page = await loadPage(req, ctx) as Page;
-      return ctx.state.page;
-    };
-
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     const res = await ctx.next();
 
@@ -153,38 +149,40 @@ export const withLive = (
   };
 };
 
-// Wrap any handler and it will receive `page` and `flags` along with any data on render.
-export const withLivePage = <Data>(
-  handler: Handler<Data & LivePageData, LiveState>,
-): Handler<Data, LiveState> => {
-  return async (req: Request, ctx) => {
-    await ctx.state.loadFlags();
-    await ctx.state.loadPage();
-    const freshRender = ctx.render;
-    ctx.render = (data?: Data) => {
-      const live = {
-        page: ctx.state.page,
-        flags: ctx.state.flags
-          ? ctx.state.flags.reduce((acc, flag) => {
-            acc[flag.key] = true;
-            return acc;
-          }, {} as Record<string, boolean>)
-          : {},
-      };
-      return freshRender({
-        ...data as Data,
-        ...live,
-      });
-    };
-    return handler(req, ctx);
+export const getLivePageData = async (
+  req: Request,
+  ctx: HandlerContext<LivePageData, LiveState>,
+) => {
+  const flags = await loadFlags(req, ctx);
+
+  const pageOptions = flags.reduce((acc, curr) => {
+    if (isPageOptions(curr.value)) {
+      acc.selectedPageIds = [
+        ...acc.selectedPageIds,
+        ...curr.value.selectedPageIds,
+      ];
+    }
+
+    return acc;
+  }, { selectedPageIds: [] } as PageOptions);
+
+  return {
+    flags: flags.reduce((acc, flag) => {
+      acc[flag.key] = flag.value;
+      return acc;
+    }, {} as Record<string, unknown>),
+    page: await loadPage(req, ctx, pageOptions),
   };
 };
 
 export const live: () => Handlers<LivePageData, LiveState> = () => ({
-  GET: withLivePage((_, ctx) => {
-    if (context.isDeploy && !ctx.state.page) {
-      ctx.renderNotFound();
+  GET: async (req, ctx) => {
+    const { page, flags } = await getLivePageData(req, ctx);
+
+    if (!page) {
+      return ctx.renderNotFound();
     }
-    return ctx.render();
-  }),
+
+    return ctx.render({ page, flags });
+  },
 });

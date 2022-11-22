@@ -1,9 +1,11 @@
+import { HandlerContext } from '$fresh/server.ts';
 import { context } from "$live/live.ts";
 
 import type {
   AvailableSection,
   EditorData,
   LiveFunctionContext,
+  LivePageData,
   PageData,
   PageFunction,
 } from "$live/types.ts";
@@ -136,7 +138,7 @@ export const createFunctionInstanceFromFunctionKey = (
 
 export async function loadPageData<State>(
   req: Request,
-  ctx: LiveFunctionContext<State>,
+  ctx: HandlerContext<LivePageData, State>,
   pageData: PageData,
   start: (l: string) => void,
   end: (l: string) => void,
