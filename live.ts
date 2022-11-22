@@ -7,7 +7,6 @@ import {
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import {
   DecoManifest,
-  Flag,
   LiveOptions,
   LivePageData,
   LiveState,
@@ -19,7 +18,6 @@ import { createServerTimings } from "$live/utils/timings.ts";
 import { verifyDomain } from "$live/utils/domains.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
 import { loadFlags } from "$live/flags.ts";
-import { accepts } from "https://deno.land/std@0.147.0/http/negotiation.ts";
 
 // The global live context
 export type LiveContext = {
