@@ -1,6 +1,6 @@
 import { HandlerContext } from "$fresh/server.ts";
 
-export type LoaderFunction<Props = unknown, Data = unknown, State = unknown> = (
+export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<any, State>,
   props?: Props,
@@ -9,9 +9,9 @@ export type LoaderFunction<Props = unknown, Data = unknown, State = unknown> = (
 export type MatchDuration = "request" | "session";
 
 export type MatchFunction<
-  Props = Record<string, unknown> | undefined,
-  Data = unknown,
-  State = unknown,
+  Props = any,
+  Data = any,
+  State = any,
 > = (
   req: Request,
   ctx: HandlerContext<Data, State>,
@@ -19,9 +19,9 @@ export type MatchFunction<
 ) => { isMatch: boolean; duration: MatchDuration };
 
 export type EffectFunction<
-  Props = Record<string, unknown> | undefined,
-  Data = unknown,
-  State = unknown,
+  Props = any,
+  Data = any,
+  State = any,
 > = (
   req: Request,
   ctx: HandlerContext<Data, State>,
