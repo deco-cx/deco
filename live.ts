@@ -143,9 +143,17 @@ export const withLive = (
     // Print server timings for diagnostics
     res.headers.set("Server-Timing", printTimings());
 
-    console.info(
-      formatLog({ status: res.status, url, pageId: ctx.state.page?.id, begin }),
-    );
+    // TODO: print these on debug mode when there's debug mode.
+    if (!url.pathname.startsWith("/_frsh")) {
+      console.info(
+        formatLog({
+          status: res.status,
+          url,
+          pageId: ctx.state.page?.id,
+          begin,
+        }),
+      );
+    }
 
     return res;
   };
