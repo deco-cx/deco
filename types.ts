@@ -41,6 +41,7 @@ export interface DecoManifest extends Manifest {
 export interface Site {
   id: number;
   name: string;
+  thumb_url?: string;
 }
 
 export interface LiveOptions {
@@ -155,5 +156,6 @@ export interface EditorData {
 export type LiveState = {
   page: Page;
   site: Site;
+  flags: Flags;
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
 };

@@ -168,13 +168,8 @@ export const getLivePageData = async (
     return acc;
   }, { selectedPageIds: [] } as PageOptions);
 
-  const flagsByKey = flags.reduce((acc, flag) => {
-    acc[flag.key] = flag.value;
-    return acc;
-  }, {} as Record<string, unknown>);
-
   return {
-    flags: flagsByKey,
+    flags: ctx.state.flags,
     page: await loadPage(req, ctx, pageOptions),
   };
 };

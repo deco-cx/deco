@@ -75,7 +75,11 @@ export const loadFlags = async (
     flag.value = effectFn?.(req, ctx, effect?.props as any) ?? true;
   });
 
-  // TODO: set cookie with flag ids
+  ctx.state.flags = activeFlags.reduce((acc, flag) => {
+    acc[flag.key] = flag.value;
+    return acc;
+  }, {} as Record<string, unknown>);
 
+  // TODO: set cookie with flag ids
   return activeFlags ?? [];
 };
