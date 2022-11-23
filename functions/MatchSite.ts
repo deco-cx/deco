@@ -7,10 +7,10 @@ export interface Props {
 
 const MatchSite: MatchFunction<Props, unknown, LiveState> = (
   _req,
-  _ctx,
+  ctx,
   props,
 ) => {
-  return { isMatch: _ctx.state.site.id === props.siteId, duration: "request" };
+  return { isMatch: ctx.state.site.id === props.siteId, duration: "request" };
 };
 
 export default MatchSite;
