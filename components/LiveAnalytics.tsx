@@ -1,9 +1,9 @@
 import { context } from "$live/live.ts";
 import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
-import type { Page } from "$live/types.ts";
+import type { Flags, Page } from "$live/types.ts";
 
-const innerHtml = ({ id, path }: Partial<Page>) => `
+const innerHtml = ({ id, path, flags }: Partial<Page> & { flags: Flags }) => `
 import { onCLS, onFID, onLCP } from "https://esm.sh/web-vitals@3.1.0";
 
 function onWebVitalsReport(event) {
@@ -16,7 +16,9 @@ function init() {
   }
 
   /* Add these trackers to all analytics sent to our server */
-  window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}" });
+  window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", ${
+  Object.keys(flags).map((key) => `flag_${key}: true`).join(",")
+} });
   /* Send page-view event */
   window.jitsu('track', 'pageview');
 
@@ -33,9 +35,9 @@ if (document.readyState === 'complete') {
 };
 `;
 
-type Props = Partial<Page>;
+type Props = Partial<Page> & { flags: Flags };
 
-function LiveAnalytics({ id = -1, path = "defined_on_code" }: Props) {
+function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
     <>
       {context.isDeploy && ( // Add analytcs in production only
@@ -47,7 +49,7 @@ function LiveAnalytics({ id = -1, path = "defined_on_code" }: Props) {
 
       <Script
         type="module"
-        dangerouslySetInnerHTML={{ __html: innerHtml({ id, path }) }}
+        dangerouslySetInnerHTML={{ __html: innerHtml({ id, path, flags }) }}
       />
     </>
   );

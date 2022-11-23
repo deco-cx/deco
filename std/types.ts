@@ -1,9 +1,29 @@
-import { LiveFunctionContext, Page } from "$live/types.ts";
+import { HandlerContext } from "$fresh/server.ts";
 
-export type LoaderFunction<Props = unknown, Data = unknown, State = unknown> = (
+export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
-  ctx: LiveFunctionContext<State>,
-  props: Props,
+  ctx: HandlerContext<any, State>,
+  props?: Props,
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
 
-export type LoaderReturnType<O = unknown> = O;
+export type MatchDuration = "request" | "session";
+
+export type MatchFunction<
+  Props = any,
+  Data = any,
+  State = any,
+> = (
+  req: Request,
+  ctx: HandlerContext<Data, State>,
+  props: Props,
+) => { isMatch: boolean; duration: MatchDuration };
+
+export type EffectFunction<
+  Props = any,
+  Data = any,
+  State = any,
+> = (
+  req: Request,
+  ctx: HandlerContext<Data, State>,
+  props: Props,
+) => void;

@@ -58,7 +58,8 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
 
   if (
     tsType.kind !== "typeRef" ||
-    tsType.typeRef.typeName !== "LoaderFunction"
+    tsType.typeRef.typeName in
+      ["LoaderFunction", "MatchFunction", "EffectFunction"]
   ) {
     throw new Error(`Default export needs to be of type LoaderFunction`);
   }

@@ -1,11 +1,23 @@
-import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
+import { PageOptions } from "./pages.ts";
+import {
+  HandlerContext,
+  Handlers,
+  MiddlewareHandlerContext,
+} from "$fresh/server.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
-import { DecoManifest, LiveOptions, Page, WithLiveState } from "$live/types.ts";
-import { generateEditorData, loadPage } from "$live/pages.ts";
+import {
+  DecoManifest,
+  LiveOptions,
+  LivePageData,
+  LiveState,
+  Page,
+} from "$live/types.ts";
+import { generateEditorData, isPageOptions, loadPage } from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { verifyDomain } from "$live/utils/domains.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
+import { loadFlags } from "$live/flags.ts";
 
 // The global live context
 export type LiveContext = {
@@ -76,17 +88,21 @@ export const withLive = (
 
   return async (
     req: Request,
-    ctx: MiddlewareHandlerContext<WithLiveState>,
+    ctx: MiddlewareHandlerContext<LiveState>,
   ) => {
     if (!context.manifest) {
       context.manifest = globalThis.manifest;
     }
+    ctx.state.site = {
+      id: context.siteId,
+      name: context.site,
+    };
 
     const begin = performance.now();
     const url = new URL(req.url);
 
     const { start, end, printTimings } = createServerTimings();
-    ctx.state.t = { start, end, printTimings };
+    ctx.state.t = { start, end };
 
     const domainRes = verifyDomain(url.hostname);
     if (domainRes) {
@@ -109,14 +125,6 @@ export const withLive = (
       return workbenchHandler();
     }
 
-    // TODO add custom middleware optional
-
-    // Prepare ctx.state for page handlers
-    ctx.state.loadPage = async () => {
-      ctx.state.page = await loadPage(req, ctx) as Page;
-      return ctx.state.page;
-    };
-
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     const res = await ctx.next();
 
@@ -133,21 +141,53 @@ export const withLive = (
     // Print server timings for diagnostics
     res.headers.set("Server-Timing", printTimings());
 
-    console.info(
-      formatLog({ status: res.status, url, pageId: ctx.state.page?.id, begin }),
-    );
+    // TODO: print these on debug mode when there's debug mode.
+    if (!url.pathname.startsWith("/_frsh")) {
+      console.info(
+        formatLog({
+          status: res.status,
+          url,
+          pageId: ctx.state.page?.id,
+          begin,
+        }),
+      );
+    }
 
     return res;
   };
 };
 
-export const live: () => Handlers<Page, WithLiveState> = () => ({
-  async GET(_, ctx) {
-    const page = await ctx.state.loadPage();
-    if (context.isDeploy && !page) {
-      ctx.renderNotFound();
+export const getLivePageData = async <Data>(
+  req: Request,
+  ctx: HandlerContext<Data, LiveState>,
+) => {
+  const flags = await loadFlags(req, ctx);
+
+  const pageOptions = flags.reduce((acc, curr) => {
+    if (isPageOptions(curr.value)) {
+      acc.selectedPageIds = [
+        ...acc.selectedPageIds,
+        ...curr.value.selectedPageIds,
+      ];
     }
-    // TODO: If !isDeploy, render "create new page" component
-    return ctx.render(page);
+
+    return acc;
+  }, { selectedPageIds: [] } as PageOptions);
+
+  return {
+    flags: ctx.state.flags,
+    page: await loadPage(req, ctx, pageOptions),
+  };
+};
+
+export const live: () => Handlers<LivePageData, LiveState> = () => ({
+  GET: async (req, ctx) => {
+    const { page, flags } = await getLivePageData(req, ctx);
+
+    if (!page) {
+      return ctx.renderNotFound();
+    }
+
+    return ctx.render({ page, flags });
   },
 });

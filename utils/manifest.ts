@@ -1,9 +1,10 @@
+import { HandlerContext } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
 
 import type {
   AvailableSection,
   EditorData,
-  LiveFunctionContext,
+  LivePageData,
   PageData,
   PageFunction,
 } from "$live/types.ts";
@@ -16,6 +17,7 @@ import {
   isFunctionProp,
   propReferenceToFunctionKey,
 } from "$live/utils/page.ts";
+import { LoaderFunction } from "$live/std/types.ts";
 
 /**
  * This function should be used only in the initial stage of the product.
@@ -134,16 +136,17 @@ export const createFunctionInstanceFromFunctionKey = (
   return functionInstance;
 };
 
-export async function loadPageData<State>(
+export async function loadPageData<Data, State>(
   req: Request,
-  ctx: LiveFunctionContext<State>,
+  ctx: HandlerContext<Data, State>,
   pageData: PageData,
   start: (l: string) => void,
   end: (l: string) => void,
 ): Promise<PageData> {
   const functionsResponse = await Promise.all(
     pageData.functions?.map(async ({ key, props, uniqueId }) => {
-      const functionFn = context.manifest!.functions[key]?.default;
+      const functionFn = context.manifest!.functions[key]
+        ?.default as LoaderFunction<any, any, unknown>;
 
       if (!functionFn) {
         console.log(`Not found function implementation for ${key}`);

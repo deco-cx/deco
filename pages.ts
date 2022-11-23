@@ -1,8 +1,8 @@
 import { context } from "$live/live.ts";
-import { PageWithParams } from "$live/types.ts";
+import { LivePageData, PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
-import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { EditorData, Page, WithLiveState } from "$live/types.ts";
+import { HandlerContext } from "$fresh/server.ts";
+import { EditorData, LiveState, Page } from "$live/types.ts";
 import {
   generateAvailableEntitiesFromManifest,
   loadPageData,
@@ -13,22 +13,49 @@ import {
   doesSectionExist,
 } from "./utils/manifest.ts";
 
+export interface PageOptions {
+  selectedPageIds: number[];
+}
+
+export const isPageOptions = (x: any): x is PageOptions =>
+  Array.isArray(x.selectedPageIds);
+
 export async function loadLivePage(
   req: Request,
+  { selectedPageIds }: PageOptions,
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
-  const sectionName = url.searchParams.get("section"); // E.g: section=Banner.tsx
+  const sectionPathStart = "/_live/workbench/sections/";
+  const sectionName = url.pathname.startsWith(sectionPathStart) &&
+    url.pathname.replace(sectionPathStart, "");
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
 
-  const pageWithParams = await ((): Promise<PageWithParams | null> => {
+  const pageWithParams = await (async (): Promise<PageWithParams | null> => {
     if (sectionName) {
       return fetchPageFromSection(sectionName, context.siteId);
     }
     if (pageId) {
       return fetchPageFromId(pageId, url.pathname);
     }
-    return fetchPageFromPathname(url.pathname, context.siteId);
+    const candidatePages = await fetchPageFromPathname(
+      url.pathname,
+      context.siteId,
+    );
+    if (candidatePages && candidatePages.length !== 0) {
+      let firstPublished;
+      for (const candidatePage of candidatePages) {
+        if (selectedPageIds.includes(candidatePage.page.id)) {
+          return candidatePage;
+        }
+        // Retain support for "published" state while we migrate to "published flag" approach
+        if (!firstPublished && candidatePage.page.state === "published") {
+          firstPublished = candidatePage;
+        }
+      }
+      return firstPublished as PageWithParams;
+    }
+    return null;
   })();
 
   if (!pageWithParams) {
@@ -63,12 +90,12 @@ export async function loadLivePage(
 export const fetchPageFromPathname = async (
   path: string,
   siteId: number,
-): Promise<PageWithParams | null> => {
+): Promise<PageWithParams[] | null> => {
   const { data: pages, error } = await getSupabaseClient()
     .from<Page & { site: number }>("pages")
     .select("id, name, data, path, state")
     .eq("site", siteId)
-    .eq("state", "published");
+    .in("state", ["published", "draft"]);
 
   const routes = pages?.map((page) => ({
     page,
@@ -77,22 +104,22 @@ export const fetchPageFromPathname = async (
 
   sortRoutes(routes);
 
-  const matchRoute = routes
+  const matchRoutes = routes
     .map(({ pattern, page }) => {
       const urlPattern = new URLPattern({ pathname: pattern });
       const result = urlPattern.exec({ pathname: path });
 
       return { match: !!result, params: result?.pathname.groups, page };
     })
-    .find(({ match }) => match);
+    .filter(({ match }) => match);
 
-  if (error || !matchRoute) {
+  if (error || matchRoutes.length === 0) {
     console.error(error?.message || `Page with path "${path}" not found`);
 
     return null;
   }
 
-  return matchRoute;
+  return matchRoutes;
 };
 
 /**
@@ -238,9 +265,10 @@ export function generateEditorData(page: Page): EditorData {
   };
 }
 
-export const loadPage = async (
+export const loadPage = async <Data = unknown>(
   req: Request,
-  ctx: MiddlewareHandlerContext<WithLiveState>,
+  ctx: HandlerContext<Data, LiveState>,
+  options: PageOptions,
 ) => {
   const { start, end } = ctx.state.t;
 
@@ -248,7 +276,7 @@ export const loadPage = async (
   // TODO: Ensure loadLivePage only goes to DB if there is a page published with this path
   // ... This will be possible when all published pages are synced to the edge
   // ... for now, we need to go to the DB every time, even when there's no data for this page
-  const pageWithParams = await loadLivePage(req);
+  const pageWithParams = await loadLivePage(req, options);
   end("load-page");
 
   if (!pageWithParams) {
@@ -270,5 +298,6 @@ export const loadPage = async (
   );
   end("load-data");
 
-  return { ...page, data: pageDataAfterFunctions };
+  ctx.state.page = { ...page, data: pageDataAfterFunctions };
+  return ctx.state.page;
 };
