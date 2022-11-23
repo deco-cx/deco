@@ -4,7 +4,6 @@ import { context } from "$live/live.ts";
 import { Page } from "$live/types.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveSections from "$live/components/LiveSections.tsx";
-import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 
 const EmptyPage = () => (
   <div>
@@ -20,7 +19,6 @@ export default function LivePage({
 }: PageProps<Page | undefined> & {
   children?: ComponentChildren;
 }) {
-  const site = { name: context.site, id: context.siteId };
   const manifest = context.manifest!;
   // TODO: Read this from context
   const LiveControls = !context.isDeploy &&
@@ -28,15 +26,7 @@ export default function LivePage({
 
   return (
     <>
-      {context.isDeploy && ( // Add analytcs in production only
-        <Jitsu
-          data-init-only="true"
-          data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
-        />
-      )}
-
-      {/* Track only managed pages */}
-      {page && <LiveAnalytics page={page} site={site} />}
+      <LiveAnalytics {...page} />
 
       {children
         ? children
