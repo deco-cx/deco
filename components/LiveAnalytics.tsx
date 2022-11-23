@@ -3,7 +3,7 @@ import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
 
-const innerHtml = ({ id, path, flags }: Partial<Page> & { flags: Flags }) => `
+const innerHtml = ({ id, path, flags = {} }: Partial<Page> & { flags?: Flags }) => `
 import { onCLS, onFID, onLCP } from "https://esm.sh/web-vitals@3.1.0";
 
 function onWebVitalsReport(event) {
@@ -35,7 +35,7 @@ if (document.readyState === 'complete') {
 };
 `;
 
-type Props = Partial<Page> & { flags: Flags };
+type Props = Partial<Page> & { flags?: Flags };
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
