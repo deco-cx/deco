@@ -125,8 +125,6 @@ export const withLive = (
       return workbenchHandler();
     }
 
-    // TODO add custom middleware optional
-
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     const res = await ctx.next();
 

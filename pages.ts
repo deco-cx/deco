@@ -26,7 +26,9 @@ export async function loadLivePage(
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
-  const sectionName = url.searchParams.get("section"); // E.g: section=Banner.tsx
+  const sectionPathStart = "/_live/workbench/sections/";
+  const sectionName = url.pathname.startsWith(sectionPathStart) &&
+    url.pathname.replace(sectionPathStart, "");
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
 
   const pageWithParams = await (async (): Promise<PageWithParams | null> => {
