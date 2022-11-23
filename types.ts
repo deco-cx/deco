@@ -1,7 +1,4 @@
-import type {
-  IslandModule,
-  MiddlewareHandlerContext,
-} from "$fresh/src/server/types.ts";
+import type { IslandModule } from "$fresh/src/server/types.ts";
 import type { Manifest } from "$fresh/server.ts";
 import type { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
 import { createServerTimings } from "$live/utils/timings.ts";

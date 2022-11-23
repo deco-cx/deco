@@ -136,9 +136,9 @@ export const createFunctionInstanceFromFunctionKey = (
   return functionInstance;
 };
 
-export async function loadPageData<State>(
+export async function loadPageData<Data, State>(
   req: Request,
-  ctx: HandlerContext<LivePageData, State>,
+  ctx: HandlerContext<Data, State>,
   pageData: PageData,
   start: (l: string) => void,
   end: (l: string) => void,

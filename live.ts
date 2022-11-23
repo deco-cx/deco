@@ -151,9 +151,9 @@ export const withLive = (
   };
 };
 
-export const getLivePageData = async (
+export const getLivePageData = async <Data>(
   req: Request,
-  ctx: HandlerContext<LivePageData, LiveState>,
+  ctx: HandlerContext<Data, LiveState>,
 ) => {
   const flags = await loadFlags(req, ctx);
 

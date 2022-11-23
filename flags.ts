@@ -1,18 +1,18 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { DecoManifest, Flag, LivePageData, LiveState } from "$live/types.ts";
+import { DecoManifest, Flag, LiveState } from "$live/types.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { EffectFunction, MatchFunction } from "$live/std/types.ts";
-import RandomMatch from "$live/functions/RandomMatch.ts";
-import SiteMatch from "$live/functions/SiteMatch.ts";
-import SelectPageEffect from "$live/functions/SelectPageEffect.ts";
+import MatchRandom from "$live/functions/MatchRandom.ts";
+import MatchSite from "$live/functions/MatchSite.ts";
+import EffectSelectPage from "$live/functions/EffectSelectPage.ts";
 
 let flags: Flag[];
 export const flag = (id: string) => flags.find((flag) => flag.id === id);
 
-export const loadFlags = async (
+export const loadFlags = async <Data = unknown>(
   req: Request,
-  ctx: HandlerContext<LivePageData, LiveState>,
+  ctx: HandlerContext<Data, LiveState>,
 ) => {
   const site = context.siteId;
   const manifest = context.manifest as DecoManifest;
@@ -36,11 +36,12 @@ export const loadFlags = async (
 
     for (const match of matches) {
       const { key, props } = match;
-      const matchFn = (key === "$live/functions/RandomMatch.ts")
-        ? RandomMatch
-        : (key === "$live/functions/SiteMatch.ts")
-        ? SiteMatch
-        : manifest.functions[key]?.default as MatchFunction;
+      const matchFn: MatchFunction<any, any, any> =
+        (key === "$live/functions/MatchRandom.ts")
+          ? MatchRandom
+          : (key === "$live/functions/MatchSite.ts")
+          ? MatchSite
+          : manifest.functions[key]?.default as MatchFunction;
       // RandomMatch.ts
       // GradualRolloutMatch.ts
       // UserIdMatch.ts
@@ -66,9 +67,9 @@ export const loadFlags = async (
   activeFlags?.forEach((flag) => {
     const { data: { effect } } = flag;
 
-    const effectFn = effect
-      ? (effect.key === "$live/functions/SelectPageEffect.ts")
-        ? SelectPageEffect
+    const effectFn: EffectFunction<any, any, any> | null = effect
+      ? (effect.key === "$live/functions/EffectSelectPage.ts")
+        ? EffectSelectPage
         : manifest.functions[effect.key].default as EffectFunction
       : null;
 

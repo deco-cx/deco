@@ -4,6 +4,8 @@ import {
   SupabaseClient,
 } from "https://esm.sh/@supabase/supabase-js@1.35.4";
 
+export type { User } from "https://esm.sh/@supabase/supabase-js@1.35.4";
+
 let client: SupabaseClient | null = null;
 
 // From supabase docs:

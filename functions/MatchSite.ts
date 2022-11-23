@@ -5,8 +5,12 @@ export interface Props {
   siteId: number;
 }
 
-const SiteMatch: MatchFunction<Props, LiveState> = (_req, _ctx, props) => {
+const MatchSite: MatchFunction<Props, unknown, LiveState> = (
+  _req,
+  _ctx,
+  props,
+) => {
   return { isMatch: _ctx.state.site.id === props.siteId, duration: "request" };
 };
 
-export default SiteMatch;
+export default MatchSite;

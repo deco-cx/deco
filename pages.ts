@@ -263,9 +263,9 @@ export function generateEditorData(page: Page): EditorData {
   };
 }
 
-export const loadPage = async (
+export const loadPage = async <Data = unknown>(
   req: Request,
-  ctx: HandlerContext<LivePageData, LiveState>,
+  ctx: HandlerContext<Data, LiveState>,
   options: PageOptions,
 ) => {
   const { start, end } = ctx.state.t;
