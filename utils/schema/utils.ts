@@ -4,7 +4,7 @@ import {
   getSchemaId,
   tsTypeToSchema,
 } from "./transform.ts";
-import { JSONSchema7 } from "json-schema";
+import { Schema } from "$live/types.ts";
 
 const withErrorPath = <T>(cb: (x: string) => T) => async (path: string) => {
   try {
@@ -67,7 +67,7 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
 
   const inputSchema = propType && await tsTypeToSchema(propType, nodes);
   const outputType = returnType && await tsTypeToSchema(returnType, nodes);
-  const outputSchema: JSONSchema7 | null = outputType && {
+  const outputSchema: Schema | null = outputType && {
     type: "object",
     properties: {
       data: {
