@@ -30,7 +30,7 @@ First add the `$live` import to your `import_map.json` file:
 ```json
 {
   "imports": {
-    "$live/": "https://deno.land/x/live@0.2.0/",
+    "$live/": "https://deno.land/x/live@0.3.0/",
     "(...)": "(...)"
   }
 }
