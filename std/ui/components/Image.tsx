@@ -3,13 +3,15 @@ import { forwardRef } from "preact/compat";
 import ImageKit from "https://esm.sh/imagekit-javascript@1.5.4";
 import type { JSX } from "preact";
 
-type Props = Omit<JSX.IntrinsicElements["img"], "width" | "height"> & {
-  width: number;
-  height: number;
-  src: string;
-  preload?: boolean;
-  fetchPriority?: "high" | "low" | "auto";
-};
+type Props =
+  & Omit<JSX.IntrinsicElements["img"], "width" | "height" | "preload">
+  & {
+    width: number;
+    height: number;
+    src: string;
+    preload?: boolean;
+    fetchPriority?: "high" | "low" | "auto";
+  };
 
 const imageKit = new ImageKit({
   urlEndpoint: "https://ik.imagekit.io/decocx",
@@ -62,6 +64,7 @@ const Image = forwardRef<HTMLImageElement, Props>((props, ref) => {
       )}
       <img
         {...props}
+        preload={undefined}
         src={sources[0]}
         srcSet={srcSet}
         loading={loading}
