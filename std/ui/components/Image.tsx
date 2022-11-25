@@ -1,11 +1,11 @@
 import { Head } from "$fresh/runtime.ts";
-import { forwardRef } from "preact/compat";
 import ImageKit from "https://esm.sh/imagekit-javascript@1.5.4";
-import type { JSX } from "preact";
+import type { ComponentType, JSX } from "preact";
 
-type Props =
-  & Omit<JSX.IntrinsicElements["img"], "width" | "height" | "preload">
+type Props<T extends "img" | "source" = "img"> =
+  & Omit<JSX.IntrinsicElements[T], "width" | "height" | "preload" | "as">
   & {
+    as?: T;
     width: number;
     height: number;
     src: string;
@@ -32,22 +32,26 @@ export const rescale = (
     }],
   });
 
-const Image = forwardRef<HTMLImageElement, Props>((props, ref) => {
-  const { preload, loading = "lazy" } = props;
+export const getSrcSet = (src: string, width: number, height: number) =>
+  FACTORS.map((factor) => {
+    const w = width * factor;
+    const h = height * factor;
 
-  const sources = FACTORS.map((factor) => {
-    const w = props.width * factor;
-    const h = props.height * factor;
-
-    return `${rescale(props.src, w, h)} ${w}w`;
+    return `${rescale(src, w, h)} ${w}w`;
   });
 
+const Image = <T extends "img" | "source">(props: Props<T>) => {
+  const { preload, loading = "lazy", as = "img" } = props;
+  const Component = as as unknown as ComponentType<JSX.IntrinsicElements[T]>;
+
+  const sources = getSrcSet(props.src, props.width, props.height);
   const srcSet = sources.join(", ");
 
   const linkProps = {
-    imageSrcSet: srcSet,
-    imageSizes: props.sizes,
+    imagesrcset: srcSet,
+    imagesizes: props.sizes,
     fetchpriority: props.fetchPriority,
+    media: props.media
   };
 
   return (
@@ -57,21 +61,20 @@ const Image = forwardRef<HTMLImageElement, Props>((props, ref) => {
           <link
             as="image"
             rel="preload"
-            href={sources[0]}
+            href={props.src}
             {...linkProps}
           />
         </Head>
       )}
-      <img
+      <Component
         {...props}
         preload={undefined}
-        src={sources[0]}
+        src={props.src}
         srcSet={srcSet}
         loading={loading}
-        ref={ref}
       />
     </>
   );
-});
+};
 
 export default Image;
