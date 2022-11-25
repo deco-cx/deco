@@ -125,18 +125,20 @@ export const withLive = (
       return workbenchHandler();
     }
 
-    // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-    const res = await ctx.next();
-
     // Allow introspection of page by editor
-    if (url.searchParams.has("editorData") && ctx.state.page) {
-      const editorData = generateEditorData(ctx.state.page as Page);
+    if (url.searchParams.has("editorData")) {
+      const pageId = url.searchParams.get("pageId");
+      const editorData = await generateEditorData(req, pageId);
+
       return Response.json(editorData, {
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
       });
     }
+
+    // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
+    const res = await ctx.next();
 
     // Print server timings for diagnostics
     res.headers.set("Server-Timing", printTimings());

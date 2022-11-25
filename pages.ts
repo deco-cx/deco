@@ -1,5 +1,5 @@
 import { context } from "$live/live.ts";
-import { LivePageData, PageWithParams } from "$live/types.ts";
+import { PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
 import { HandlerContext } from "$fresh/server.ts";
 import { EditorData, LiveState, Page } from "$live/types.ts";
@@ -229,11 +229,19 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
  *
  * TODO: After we approve this, move this function elsewhere
  */
-export function generateEditorData(page: Page): EditorData {
-  const {
-    data: { sections, functions },
-    state,
-  } = page;
+export const generateEditorData = async (
+  req: Request,
+  pageId: string | null,
+): Promise<EditorData> => {
+  const selectedPageIds = pageId ? [Number(pageId)] : [];
+
+  const pageWithParams = await loadLivePage(req, { selectedPageIds });
+
+  if (!pageWithParams) {
+    throw new Error("Could not find page to generate editor data");
+  }
+
+  const { page, page: { data: { sections, functions } } } = pageWithParams;
 
   const sectionsWithSchema = sections.map(
     (section): EditorData["sections"][0] => ({
@@ -256,14 +264,14 @@ export function generateEditorData(page: Page): EditorData {
     generateAvailableEntitiesFromManifest();
 
   return {
-    pageName: page?.name,
+    state: page.state,
+    pageName: page.name,
     sections: sectionsWithSchema,
     functions: functionsWithSchema,
     availableSections,
     availableFunctions: [...availableFunctions, ...functionsWithSchema],
-    state,
   };
-}
+};
 
 export const loadPage = async <Data = unknown>(
   req: Request,
