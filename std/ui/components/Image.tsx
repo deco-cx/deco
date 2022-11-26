@@ -47,8 +47,8 @@ const Image = forwardRef<HTMLImageElement, Props>((props, ref) => {
 
   const srcSet = getSrcSet(props.src, props.width, props.height);
   const linkProps = {
-    imageSrcSet: srcSet,
-    imageSizes: props.sizes,
+    imagesrcset: srcSet,
+    imagesizes: props.sizes,
     fetchpriority: props.fetchPriority,
     media: props.media,
   };
