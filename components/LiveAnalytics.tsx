@@ -3,14 +3,14 @@ import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
 
-const innerHtml = ({ id, path, flags = {} }: Partial<Page> & { flags?: Flags }) => `
-import { onCLS, onFID, onLCP } from "https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js";
-
-function onWebVitalsReport(event) {
+const innerHtml = (
+  { id, path, flags = {} }: Partial<Page> & { flags?: Flags },
+) => `
+const onWebVitalsReport = (event) => {
   window.jitsu('track', 'web-vitals', event);
 };
 
-function init() {
+const init = async () => {
   if (typeof window.jitsu !== "function") {
     return;
   }
@@ -23,6 +23,8 @@ function init() {
   window.jitsu('track', 'pageview');
 
   /* Listen web-vitals */
+  const { onCLS, onFID, onLCP } = await import("https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js");
+      
   onCLS(onWebVitalsReport);
   onFID(onWebVitalsReport);
   onLCP(onWebVitalsReport);
