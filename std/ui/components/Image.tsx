@@ -1,11 +1,11 @@
 import { Head } from "$fresh/runtime.ts";
+import { forwardRef } from "preact/compat";
 import ImageKit from "https://esm.sh/imagekit-javascript@1.5.4";
-import type { ComponentType, JSX } from "preact";
+import type { JSX } from "preact";
 
-type Props<T extends "img" | "source" = "img"> =
-  & Omit<JSX.IntrinsicElements[T], "width" | "height" | "preload" | "as">
+type Props =
+  & Omit<JSX.IntrinsicElements["img"], "width" | "height" | "preload">
   & {
-    as?: T;
     width: number;
     height: number;
     src: string;
@@ -33,25 +33,24 @@ export const rescale = (
   });
 
 export const getSrcSet = (src: string, width: number, height: number) =>
-  FACTORS.map((factor) => {
-    const w = width * factor;
-    const h = height * factor;
+  FACTORS
+    .map((factor) => {
+      const w = width * factor;
+      const h = height * factor;
 
-    return `${rescale(src, w, h)} ${w}w`;
-  });
+      return `${rescale(src, w, h)} ${w}w`;
+    })
+    .join(", ");
 
-const Image = <T extends "img" | "source">(props: Props<T>) => {
-  const { preload, loading = "lazy", as = "img" } = props;
-  const Component = as as unknown as ComponentType<JSX.IntrinsicElements[T]>;
+const Image = forwardRef<HTMLImageElement, Props>((props, ref) => {
+  const { preload, loading = "lazy" } = props;
 
-  const sources = getSrcSet(props.src, props.width, props.height);
-  const srcSet = sources.join(", ");
-
+  const srcSet = getSrcSet(props.src, props.width, props.height);
   const linkProps = {
-    imagesrcset: srcSet,
-    imagesizes: props.sizes,
+    imageSrcSet: srcSet,
+    imageSizes: props.sizes,
     fetchpriority: props.fetchPriority,
-    media: props.media
+    media: props.media,
   };
 
   return (
@@ -66,15 +65,16 @@ const Image = <T extends "img" | "source">(props: Props<T>) => {
           />
         </Head>
       )}
-      <Component
+      <img
         {...props}
         preload={undefined}
         src={props.src}
         srcSet={srcSet}
         loading={loading}
+        ref={ref}
       />
     </>
   );
-};
+});
 
 export default Image;
