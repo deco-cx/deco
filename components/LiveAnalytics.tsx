@@ -4,7 +4,7 @@ import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
 
 const innerHtml = ({ id, path, flags = {} }: Partial<Page> & { flags?: Flags }) => `
-import { onCLS, onFID, onLCP } from "https://esm.sh/web-vitals@3.1.0";
+import { onCLS, onFID, onLCP } from "https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js";
 
 function onWebVitalsReport(event) {
   window.jitsu('track', 'web-vitals', event);
