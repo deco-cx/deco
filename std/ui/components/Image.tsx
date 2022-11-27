@@ -17,29 +17,22 @@ const imageKit = new ImageKit({
   urlEndpoint: "https://ik.imagekit.io/decocx",
 });
 
-const FACTORS = [1, 2, 3];
-
-export const rescale = (
-  src: string,
-  width: string | number,
-  height: string | number,
-) =>
-  imageKit.url({
-    path: src,
-    transformation: [{
-      width: width.toString(),
-      height: height.toString(),
-    }],
-  });
+const FACTORS = ["1", "2", "3"];
 
 export const getSrcSet = (src: string, width: number, height: number) =>
   FACTORS
-    .map((factor) => {
-      const w = width * factor;
-      const h = height * factor;
-
-      return `${rescale(src, w, h)} ${w}w`;
-    })
+    .map((factor) =>
+      `${
+        imageKit.url({
+          path: src,
+          transformation: [{
+            width: `${width}`,
+            height: `${height}`,
+            dpr: factor,
+          }],
+        })
+      } ${factor}x`
+    )
     .join(", ");
 
 const Image = forwardRef<HTMLImageElement, Props>((props, ref) => {
