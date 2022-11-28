@@ -1,4 +1,7 @@
-import { Head } from "$fresh/runtime.ts";
+/**
+ * TODO: Implement video preload with link[rel="preload"] tags once
+ * browsers support it. More info at: https://stackoverflow.com/a/68368601
+ */
 import { forwardRef } from "preact/compat";
 import type { JSX } from "preact";
 
@@ -10,42 +13,21 @@ type Props =
     width: number;
     height: number;
     src: string;
-    preload?: boolean;
-    fetchPriority?: "high" | "low" | "auto";
   };
 
 const Video = forwardRef<HTMLVideoElement, Props>((props, ref) => {
-  const { preload, loading = "lazy" } = props;
-
+  const { loading = "lazy" } = props;
   const srcSet = getSrcSet(props.src, props.width, props.height);
-  const linkProps = {
-    imagesrcset: srcSet,
-    imagesizes: props.sizes,
-    fetchpriority: props.fetchPriority,
-    media: props.media,
-  };
 
   return (
-    <>
-      {preload && (
-        <Head>
-          <link
-            as="video"
-            rel="preload"
-            href={props.src}
-            {...linkProps}
-          />
-        </Head>
-      )}
-      <video
-        {...props}
-        preload={undefined}
-        src={props.src}
-        srcSet={srcSet}
-        loading={loading}
-        ref={ref}
-      />
-    </>
+    <video
+      {...props}
+      preload={undefined}
+      src={props.src}
+      srcSet={srcSet}
+      loading={loading}
+      ref={ref}
+    />
   );
 });
 
