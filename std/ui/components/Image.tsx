@@ -17,7 +17,7 @@ const imageKit = new ImageKit({
   urlEndpoint: "https://ik.imagekit.io/decocx",
 });
 
-const FACTORS = ["1", "2", "3"];
+const FACTORS = ["1", "1.5", "2"];
 
 export const getSrcSet = (src: string, width: number, height: number) =>
   FACTORS
