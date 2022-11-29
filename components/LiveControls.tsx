@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { Flags, Page, Site } from "$live/types.ts";
 import { DomInspector } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
-import { ViewfinderCircleIcon } from "https://esm.sh/@heroicons/react@2.0.12/24/outline?alias=react:preact/compat&external=preact/compat";
+import Viewfinder from "https://deno.land/x/tabler_icons_tsx@0.0.2/tsx/viewfinder.tsx";
 
 declare global {
   interface Window {
@@ -115,7 +115,7 @@ export default function LiveControls(
                 inspectActive ? "bg-gray-300" : "bg-white hover:bg-gray-50 "
               } relative inline-flex rounded-md items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-1 focus:ring-primary-green-dark focus:border-primary-green-dark`}
             >
-              <ViewfinderCircleIcon className="w-6 h-6" />
+              <Viewfinder className="w-6 h-6" />
             </button>
           </span>
         )}
