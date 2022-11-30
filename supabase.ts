@@ -1,10 +1,7 @@
-import { getCookies } from "https://deno.land/std@0.147.0/http/mod.ts";
-import {
-  createClient,
-  SupabaseClient,
-} from "https://esm.sh/@supabase/supabase-js@1.35.4";
+import { getCookies } from "std/http/mod.ts";
+import { createClient, SupabaseClient, User } from "supabase";
 
-export type { User } from "https://esm.sh/@supabase/supabase-js@1.35.4";
+export type { User };
 
 let client: SupabaseClient | null = null;
 

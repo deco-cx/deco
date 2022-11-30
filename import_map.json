@@ -2,8 +2,11 @@
   "imports": {
     "$live/": "./",
     "$fresh/": "https://deno.land/x/fresh@1.1.2/",
-    "preact": "https://esm.sh/preact@10.11.2",
-    "preact/": "https://esm.sh/preact@10.11.2/",
-    "preact-render-to-string": "https://esm.sh/*preact-render-to-string@5.2.4"
+    "preact": "https://esm.sh/v96/preact@10.11.2",
+    "preact/": "https://esm.sh/v96/preact@10.11.2/",
+    "preact-render-to-string": "https://esm.sh/v96/*preact-render-to-string@5.2.4",
+    "supabase": "https://esm.sh/v96/@supabase/supabase-js@1.35.7",
+    "std/": "https://deno.land/std@0.162.0/",
+    "json-schema": "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts"
   }
 }

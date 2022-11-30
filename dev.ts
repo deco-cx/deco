@@ -1,18 +1,13 @@
 #!/usr/bin/env -S deno run -A --watch=static/,routes/
-import {
-  dirname,
-  fromFileUrl,
-  join,
-  toFileUrl,
-} from "https://deno.land/std@0.147.0/path/mod.ts";
-import "https://deno.land/std@0.147.0/dotenv/load.ts";
+import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
+import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
-import { walk } from "https://deno.land/std@0.147.0/fs/walk.ts";
+import { walk } from "std/fs/walk.ts";
 
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
-import { JSONSchema7 } from "https://esm.sh/v92/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts";
+import { JSONSchema7 } from "json-schema";
 import {
   getSchemaFromLoaderExport,
   getSchemaFromSectionExport,
