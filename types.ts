@@ -39,6 +39,9 @@ export interface Site {
   id: number;
   name: string;
   thumb_url?: string;
+  github_repo_url?: string;
+  created_from?: Site;
+  domains?: string[];
 }
 
 export interface LiveOptions {
