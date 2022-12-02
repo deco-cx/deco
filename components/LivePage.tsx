@@ -21,9 +21,7 @@ export default function LivePage({
 }) {
   const { page, flags } = data ?? {};
   const manifest = context.manifest!;
-  // TODO: Read this from context
-  const LiveControls = !context.isDeploy &&
-    manifest.islands[`./islands/LiveControls.tsx`]?.default;
+  const LiveControls = manifest.islands[`./islands/LiveControls.tsx`]?.default;
 
   return (
     <>
