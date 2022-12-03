@@ -46,12 +46,12 @@ declare global {
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx."
+      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
     );
   }
   if (!liveOptions.siteId) {
     throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}"
+      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
     );
   }
 
@@ -67,21 +67,21 @@ export const withLive = (liveOptions: LiveOptions) => {
     `${liveOptions.site}.deco.page`,
     `${liveOptions.site}.deco.site`,
     `deco-pages-${liveOptions.site}.deno.dev`,
-    `deco-sites-${liveOptions.site}.deno.dev`
+    `deco-sites-${liveOptions.site}.deno.dev`,
   );
   liveOptions.domains?.forEach((domain) => context.domains.push(domain));
   // Support deploy preview domains
   if (context.deploymentId !== undefined) {
     context.domains.push(
-      `deco-pages-${context.site}-${context.deploymentId}.deno.dev`
+      `deco-pages-${context.site}-${context.deploymentId}.deno.dev`,
     );
     context.domains.push(
-      `deco-sites-${context.site}-${context.deploymentId}.deno.dev`
+      `deco-sites-${context.site}-${context.deploymentId}.deno.dev`,
     );
   }
 
   console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`
+    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
@@ -148,7 +148,7 @@ export const withLive = (liveOptions: LiveOptions) => {
           url,
           pageId: ctx.state.page?.id,
           begin,
-        })
+        }),
       );
     }
 
@@ -158,7 +158,7 @@ export const withLive = (liveOptions: LiveOptions) => {
 
 export const getLivePageData = async <Data>(
   req: Request,
-  ctx: HandlerContext<Data, LiveState>
+  ctx: HandlerContext<Data, LiveState>,
 ) => {
   const flags = await loadFlags(req, ctx);
 
@@ -173,7 +173,7 @@ export const getLivePageData = async <Data>(
 
       return acc;
     },
-    { selectedPageIds: [] } as PageOptions
+    { selectedPageIds: [] } as PageOptions,
   );
 
   return {
