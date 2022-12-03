@@ -43,17 +43,15 @@ declare global {
   var manifest: DecoManifest;
 }
 
-export const withLive = (
-  liveOptions: LiveOptions,
-) => {
+export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
+      "liveOptions.site is required. It should be the name of the site you created in deco.cx."
     );
   }
   if (!liveOptions.siteId) {
     throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
+      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}"
     );
   }
 
@@ -69,27 +67,24 @@ export const withLive = (
     `${liveOptions.site}.deco.page`,
     `${liveOptions.site}.deco.site`,
     `deco-pages-${liveOptions.site}.deno.dev`,
-    `deco-sites-${liveOptions.site}.deno.dev`,
+    `deco-sites-${liveOptions.site}.deno.dev`
   );
   liveOptions.domains?.forEach((domain) => context.domains.push(domain));
   // Support deploy preview domains
   if (context.deploymentId !== undefined) {
     context.domains.push(
-      `deco-pages-${context.site}-${context.deploymentId}.deno.dev`,
+      `deco-pages-${context.site}-${context.deploymentId}.deno.dev`
     );
     context.domains.push(
-      `deco-sites-${context.site}-${context.deploymentId}.deno.dev`,
+      `deco-sites-${context.site}-${context.deploymentId}.deno.dev`
     );
   }
 
   console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
+    `Starting live middleware: siteId=${context.siteId} site=${context.site}`
   );
 
-  return async (
-    req: Request,
-    ctx: MiddlewareHandlerContext<LiveState>,
-  ) => {
+  return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
     if (!context.manifest) {
       context.manifest = globalThis.manifest;
     }
@@ -119,9 +114,7 @@ export const withLive = (
       return await inspectHandler(inspectPath, req);
     }
 
-    if (
-      url.pathname === workbenchPath
-    ) {
+    if (url.pathname === workbenchPath) {
       return workbenchHandler();
     }
 
@@ -141,7 +134,11 @@ export const withLive = (
     const res = await ctx.next();
 
     // Print server timings for diagnostics
-    res.headers.set("Server-Timing", printTimings());
+    try {
+      res.headers.set("Server-Timing", printTimings());
+    } catch {
+      // TODO: How to mutate headers without breaking
+    }
 
     // TODO: print these on debug mode when there's debug mode.
     if (!url.pathname.startsWith("/_frsh")) {
@@ -151,7 +148,7 @@ export const withLive = (
           url,
           pageId: ctx.state.page?.id,
           begin,
-        }),
+        })
       );
     }
 
@@ -161,20 +158,23 @@ export const withLive = (
 
 export const getLivePageData = async <Data>(
   req: Request,
-  ctx: HandlerContext<Data, LiveState>,
+  ctx: HandlerContext<Data, LiveState>
 ) => {
   const flags = await loadFlags(req, ctx);
 
-  const pageOptions = flags.reduce((acc, curr) => {
-    if (isPageOptions(curr.value)) {
-      acc.selectedPageIds = [
-        ...acc.selectedPageIds,
-        ...curr.value.selectedPageIds,
-      ];
-    }
+  const pageOptions = flags.reduce(
+    (acc, curr) => {
+      if (isPageOptions(curr.value)) {
+        acc.selectedPageIds = [
+          ...acc.selectedPageIds,
+          ...curr.value.selectedPageIds,
+        ];
+      }
 
-    return acc;
-  }, { selectedPageIds: [] } as PageOptions);
+      return acc;
+    },
+    { selectedPageIds: [] } as PageOptions
+  );
 
   return {
     flags: ctx.state.flags,
