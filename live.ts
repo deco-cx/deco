@@ -43,9 +43,7 @@ declare global {
   var manifest: DecoManifest;
 }
 
-export const withLive = (
-  liveOptions: LiveOptions,
-) => {
+export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
       "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
@@ -86,10 +84,7 @@ export const withLive = (
     `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
   );
 
-  return async (
-    req: Request,
-    ctx: MiddlewareHandlerContext<LiveState>,
-  ) => {
+  return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
     if (!context.manifest) {
       context.manifest = globalThis.manifest;
     }
@@ -119,9 +114,7 @@ export const withLive = (
       return await inspectHandler(inspectPath, req);
     }
 
-    if (
-      url.pathname === workbenchPath
-    ) {
+    if (url.pathname === workbenchPath) {
       return workbenchHandler();
     }
 
@@ -138,16 +131,21 @@ export const withLive = (
     }
 
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-    const res = await ctx.next();
+    const initialResponse = await ctx.next();
 
-    // Print server timings for diagnostics
-    res.headers.set("Server-Timing", printTimings());
+    const newHeaders = new Headers(initialResponse.headers);
+    newHeaders.set("Server-Timing", printTimings());
+
+    const newResponse = new Response(initialResponse.body, {
+      status: initialResponse.status,
+      headers: newHeaders,
+    });
 
     // TODO: print these on debug mode when there's debug mode.
     if (!url.pathname.startsWith("/_frsh")) {
       console.info(
         formatLog({
-          status: res.status,
+          status: initialResponse.status,
           url,
           pageId: ctx.state.page?.id,
           begin,
@@ -155,7 +153,7 @@ export const withLive = (
       );
     }
 
-    return res;
+    return newResponse;
   };
 };
 
@@ -165,16 +163,19 @@ export const getLivePageData = async <Data>(
 ) => {
   const flags = await loadFlags(req, ctx);
 
-  const pageOptions = flags.reduce((acc, curr) => {
-    if (isPageOptions(curr.value)) {
-      acc.selectedPageIds = [
-        ...acc.selectedPageIds,
-        ...curr.value.selectedPageIds,
-      ];
-    }
+  const pageOptions = flags.reduce(
+    (acc, curr) => {
+      if (isPageOptions(curr.value)) {
+        acc.selectedPageIds = [
+          ...acc.selectedPageIds,
+          ...curr.value.selectedPageIds,
+        ];
+      }
 
-    return acc;
-  }, { selectedPageIds: [] } as PageOptions);
+      return acc;
+    },
+    { selectedPageIds: [] } as PageOptions,
+  );
 
   return {
     flags: ctx.state.flags,
