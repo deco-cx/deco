@@ -171,7 +171,7 @@ export const fetchPageFromSection = async (
     sectionKey,
   );
 
-  const page = createPageForSection(sectionKey, {
+  const page = createPageForSection(sectionFileName, {
     sections: [instance],
     functions,
   });
