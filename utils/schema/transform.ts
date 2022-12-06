@@ -91,6 +91,8 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
 
       return {
         "$id": await getSchemaId(transformed),
+        format: "live-function",
+        type: "string",
       };
     }
   }
