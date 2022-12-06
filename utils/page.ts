@@ -36,15 +36,12 @@ export function isValidIsland(componentPath: string) {
   return !BLOCKED_ISLANDS_SCHEMAS.has(componentPath);
 }
 
+/** Property is undefined | boolean | object, so if property[key] is === "object" and $id in property[key] */
 export const propertyHasId = (
   propDefinition: JSONSchema7Definition | undefined,
-) => {
-  // Property is undefined | boolean | object, so if property[key] is === "object" and $id in property[key]
-  return (
-    typeof propDefinition === "object" &&
-    "$id" in (propDefinition as JSONSchema7)
-  );
-};
+): propDefinition is JSONSchema7 => (
+  typeof propDefinition === "object" && "$id" in propDefinition
+);
 
 export const isNotNullOrUndefined = <T extends unknown>(
   item: T | null | undefined,
@@ -125,7 +122,9 @@ export const availableFunctionsForSection = (
   return availableFunctions;
 };
 
-function addUniqueIdToEntity<T extends AvailableFunction | AvailableSection>(
+export function addUniqueIdToEntity<
+  T extends AvailableFunction | AvailableSection,
+>(
   entity: T,
 ): T & { uniqueId: string } {
   return { ...entity, uniqueId: appendHash(entity.key) };
