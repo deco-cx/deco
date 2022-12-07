@@ -83,3 +83,21 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
     outputSchema: outputSchema ?? null,
   };
 });
+
+// TODO: Should we extract defaultProps from the schema here?
+export const generatePropsForSchema = (schema: Schema | null | undefined) => {
+  if (schema?.type == null || Array.isArray(schema.type)) {
+    return null
+  }
+
+  const cases: Record<string, unknown> = {
+    object: {},
+    array: [],
+    boolean: true,
+    number: 0,
+    integer: 0,
+    null: null
+  }
+
+  return cases[schema.type] ?? null
+}
