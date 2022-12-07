@@ -1,10 +1,10 @@
+import { generatePropsForSchema } from "./schema/utils.ts";
 import { HandlerContext } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
 
 import type {
   AvailableSection,
   EditorData,
-  LivePageData,
   PageData,
   PageFunction,
 } from "$live/types.ts";
@@ -98,12 +98,10 @@ export function generateAvailableEntitiesFromManifest() {
         context.manifest?.schemas[functionKey] || {};
       const label = filenameFromPath(functionKey);
 
-      // TODO: Should we extract defaultProps from the schema here?
-
       return {
         key: functionKey,
         label,
-        props: {},
+        props: generatePropsForSchema(inputSchema),
         schema: inputSchema,
         // TODO: Centralize this logic
         outputSchema: outputSchema,
