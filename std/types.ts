@@ -1,6 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
+import type { BreadcrumbList, ProductLeaf } from "./schema-org.types.ts";
+
 export * from "./schema-org.types.ts";
-export * from "./commerce.types.ts";
 
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
@@ -31,3 +32,12 @@ export type EffectFunction<
 ) => void;
 
 export type LoaderReturnType<O = unknown> = O;
+
+export interface ProductPage {
+  breadcrumbList: BreadcrumbList;
+  product: ProductLeaf;
+}
+
+export interface ProductList {
+  product: ProductLeaf[];
+}

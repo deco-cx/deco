@@ -1,4 +1,11 @@
 import { fetchAPI } from "$live/utils/fetchAPI.ts";
+import {
+  FacetSearchResult,
+  ProductSearchResult,
+  SearchArgs,
+  SelectedFacet,
+  Suggestion,
+} from "./types.ts";
 
 export interface ProductLocator {
   field: "id" | "slug";
@@ -13,7 +20,7 @@ export interface Options {
   platform: "vtex";
   account: string;
   defaultLocale?: string;
-  defaultSalesChannel?: string | number;
+  defaultSalesChannel?: string;
   defaultRegionId?: string;
   defaultHideUnnavailableItems?: boolean;
 }
@@ -22,7 +29,7 @@ export const createClient = ({
   platform,
   account,
   defaultLocale = "en-US",
-  defaultSalesChannel = 1,
+  defaultSalesChannel = "1",
   defaultRegionId = "",
   defaultHideUnnavailableItems = false,
 }: Options) => {
@@ -56,6 +63,7 @@ export const createClient = ({
     selectedFacets = [],
     type,
     fuzzy = "auto",
+    locale = defaultLocale,
   }: SearchArgs): Promise<T> => {
     const params = new URLSearchParams({
       page: (page + 1).toString(),
@@ -63,11 +71,14 @@ export const createClient = ({
       query,
       sort,
       fuzzy,
-      locale: ctx.storage.locale,
+      locale,
     });
 
-    if (hideUnavailableItems !== undefined) {
-      params.append("hideUnavailableItems", hideUnavailableItems.toString());
+    if (defaultHideUnnavailableItems !== undefined) {
+      params.append(
+        "hideUnavailableItems",
+        defaultHideUnnavailableItems.toString(),
+      );
     }
 
     const pathname = addDefaultFacets(selectedFacets)
@@ -75,7 +86,7 @@ export const createClient = ({
       .join("/");
 
     return fetchAPI(
-      `${base}/_v/api/intelligent-search/${type}/${pathname}?${params.toString()}`,
+      `${baseUrl}/intelligent-search/${type}/${pathname}?${params.toString()}`,
     );
   };
 
@@ -87,21 +98,21 @@ export const createClient = ({
   ): Promise<Suggestion> => {
     const params = new URLSearchParams({
       query: args.query?.toString() ?? "",
-      locale: ctx.storage.locale,
+      locale: defaultLocale,
     });
 
     return fetchAPI(
-      `${base}/_v/api/intelligent-search/search_suggestions?${params.toString()}`,
+      `${baseUrl}/intelligent-search/search_suggestions?${params.toString()}`,
     );
   };
 
   const topSearches = (): Promise<Suggestion> => {
     const params = new URLSearchParams({
-      locale: ctx.storage.locale,
+      locale: defaultLocale,
     });
 
     return fetchAPI(
-      `${base}/_v/api/intelligent-search/top_searches?${params.toString()}`,
+      `${baseUrl}/intelligent-search/top_searches?${params.toString()}`,
     );
   };
 
@@ -118,7 +129,3 @@ export const createClient = ({
     },
   };
 };
-
-export const isFacetBoolean = (
-  facet: Facet,
-): facet is Facet<FacetValueBoolean> => facet.type === "TEXT";

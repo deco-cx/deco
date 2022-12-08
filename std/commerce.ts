@@ -3,7 +3,7 @@ import type { LiveState } from "$live/types.ts";
 import {
   createClient as createClientVTEX,
   Options as VTEXOptions,
-} from "./commerce/clients/vtex.ts";
+} from "./commerce/vtex/client.ts";
 
 type CommerceOptions = VTEXOptions;
 
@@ -42,7 +42,7 @@ export const getClientPlatform = <P extends Client["platform"]>(
   if (isClientPlatform(client, platform)) {
     return client;
   }
-  
+
   throw new Error(
     `Client is not from platform ${platform}. Did you include withLiveCommerce on _middleware.ts?`,
   );
