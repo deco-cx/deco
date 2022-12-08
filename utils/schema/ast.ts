@@ -80,12 +80,24 @@ export type TsType =
   | TsTypeUnion
   | TsTypeIndexedAccess
   | TsTypeTypeLiteral
-  | TsTypeArray;
+  | TsTypeArray
+  | TsTypeLiteral;
 
 export interface TsTypeArray {
   repr: "";
   kind: "array";
   array: TsType;
+}
+
+export interface TsTypeLiteral {
+  repr: string;
+  kind: "literal";
+  literal: Literal;
+}
+
+export interface Literal {
+  kind: "string" | "number";
+  string: string | number;
 }
 
 export interface TsTypeTypeLiteral {
@@ -159,7 +171,7 @@ export interface Property {
 }
 
 export interface JSDoc {
-  tags: Tag[];
+  tags?: Tag[];
 }
 
 export interface Tag {

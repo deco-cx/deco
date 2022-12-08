@@ -13,18 +13,9 @@ import type {
 
 const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped" });
-
-  const status = await process.status();
-
-  if (!status.success) {
-    throw new Error(
-      `Error while running ${cmd.join(" ")} with status ${status.code}`,
-    );
-  }
-
   const stdout = await process.output();
 
-  process.close()
+  process.close();
 
   return new TextDecoder().decode(stdout);
 };
@@ -133,22 +124,24 @@ export const findExport = (name: string, root: ASTNode[]) => {
 };
 
 const jsDocToSchema = (node: JSDoc) =>
-  Object.fromEntries(
-    node.tags
-      .map((tag: Tag) => {
-        const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
+  node.tags
+    ? Object.fromEntries(
+      node.tags
+        .map((tag: Tag) => {
+          const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
 
-        const key = match?.groups?.key;
-        const value = match?.groups?.value;
+          const key = match?.groups?.key;
+          const value = match?.groups?.value;
 
-        if (typeof key === "string" && typeof value === "string") {
-          return [key, value] as const;
-        }
+          if (typeof key === "string" && typeof value === "string") {
+            return [key, value] as const;
+          }
 
-        return null;
-      })
-      .filter((e): e is [string, string] => !!e),
-  );
+          return null;
+        })
+        .filter((e): e is [string, string] => !!e),
+    )
+    : undefined;
 
 const typeDefToSchema = async (
   node: TypeDef,
@@ -224,7 +217,14 @@ export const tsTypeToSchema = async (
       };
     }
 
+    case "literal": {
+      return {
+        const: node.literal.string,
+      };
+    }
+
     default:
+      console.log({ node });
       throw new Error(`Unknown kind ${kind}`);
   }
 };

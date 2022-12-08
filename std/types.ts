@@ -1,4 +1,6 @@
 import { HandlerContext } from "$fresh/server.ts";
+export * from "./schema-org.types.ts";
+export * from "./commerce.types.ts";
 
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,

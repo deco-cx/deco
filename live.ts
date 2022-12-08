@@ -10,7 +10,6 @@ import {
   LiveOptions,
   LivePageData,
   LiveState,
-  Page,
 } from "$live/types.ts";
 import { generateEditorData, isPageOptions, loadPage } from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
