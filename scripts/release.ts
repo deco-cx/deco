@@ -2,7 +2,7 @@ import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import { increment } from "https://deno.land/std@0.167.0/semver/mod.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
 
-await exec("git fetch");
+await exec("git fetch --tags");
 
 const response = await exec(`bash -c "git tag | sort -V | tail -1"`, {
   output: OutputMode.Capture,
