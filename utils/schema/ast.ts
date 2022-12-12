@@ -80,7 +80,16 @@ export type TsType =
   | TsTypeUnion
   | TsTypeIndexedAccess
   | TsTypeTypeLiteral
-  | TsTypeArray;
+  | TsTypeArray
+  | TsTypeLiteral;
+
+export interface TsTypeLiteral {
+  repr: string;
+  kind: "literal";
+  literal: Record<string, string | number | boolean> & {
+    kind: "string" | "number" | "boolean";
+  };
+}
 
 export interface TsTypeArray {
   repr: "";
