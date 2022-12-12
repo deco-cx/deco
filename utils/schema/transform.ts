@@ -24,7 +24,7 @@ const exec = async (cmd: string[]) => {
 
   const stdout = await process.output();
 
-  process.close()
+  process.close();
 
   return new TextDecoder().decode(stdout);
 };
@@ -210,17 +210,29 @@ export const tsTypeToSchema = async (
       return await typeDefToSchema(node.typeLiteral, root);
     }
 
-    case "union":
+    case "union": {
+      // The case of:  field: 'a' | 'b' | 'c'
+      const child = node.union[0];
+      const type = child.kind === "literal" ? child.literal.kind : undefined;
+
       return {
+        ...{ type },
         anyOf: await Promise.all(
           node.union.map((n) => tsTypeToSchema(n, root)),
         ),
       };
+    }
 
     case "array": {
       return {
         type: "array",
         items: await tsTypeToSchema(node.array, root),
+      };
+    }
+
+    case "literal": {
+      return {
+        const: node.literal[node.literal.kind],
       };
     }
 
