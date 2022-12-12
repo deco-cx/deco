@@ -236,3 +236,11 @@ Now browse:
 
 `http://localhost:8080/` for a dynamic page `http://localhost:8080/test` for a
 static page
+
+## Distribution
+
+Live is deployed on https://deno.land/x/live using Git Tags.
+
+To release a new version, run the following command and follow the instructions:
+
+```deno task release```
