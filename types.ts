@@ -41,7 +41,7 @@ export interface Site {
   thumb_url?: string;
   github_repo_url?: string;
   created_from?: Site;
-  domains?: string[];
+  domains?: Array<{ domain: string; production: boolean }>;
 }
 
 export interface LiveOptions {
