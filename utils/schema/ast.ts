@@ -168,7 +168,7 @@ export interface Property {
 }
 
 export interface JSDoc {
-  tags: Tag[];
+  tags?: Tag[];
 }
 
 export interface Tag {
