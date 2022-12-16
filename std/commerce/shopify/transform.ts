@@ -4,6 +4,7 @@ import type {
   Product,
   ProductDetailsPage,
   PropertyValue,
+  UnitPriceSpecification,
 } from "../types.ts";
 
 import {
@@ -92,12 +93,26 @@ export const toProduct = (
     price,
     availableForSale,
     quantityAvailable,
+    compareAtPrice,
   } = sku;
 
   const additionalProperty = selectedOptions.map(toPropertyValue);
   const allImages = nonEmptyArray([image, ...images.nodes]) ?? [DEFAULT_IMAGE];
   const hasVariant = level < 1 &&
     variants.nodes.map((variant) => toProduct(product, variant, 1));
+  const priceSpec: UnitPriceSpecification[] = [{
+    "@type": "UnitPriceSpecification",
+    priceType: "https://schema.org/SalePrice",
+    price: Number(price.amount),
+  }];
+
+  if (compareAtPrice) {
+    priceSpec.push({
+      "@type": "UnitPriceSpecification",
+      priceType: "https://schema.org/ListPrice",
+      price: Number(compareAtPrice.amount),
+    });
+  }
 
   return {
     "@type": "Product",
@@ -124,7 +139,9 @@ export const toProduct = (
     })),
     offers: {
       "@type": "AggregateOffer",
-      highPrice: Number(price.amount),
+      highPrice: compareAtPrice
+        ? Number(compareAtPrice.amount)
+        : Number(price.amount),
       lowPrice: Number(price.amount),
       offerCount: 1,
       offers: [{
@@ -135,7 +152,7 @@ export const toProduct = (
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
         inventoryLevel: { value: quantityAvailable },
-        priceSpecification: [],
+        priceSpecification: priceSpec,
       }],
     },
   };
