@@ -139,6 +139,29 @@ export const findExport = (name: string, root: ASTNode[]) => {
   return node;
 };
 
+const parseJSDocAttribute = (key: string, value: string) => {
+  switch (key) {
+    case "maximum":
+    case "exclusiveMaximum":
+    case "minimum":
+    case "exclusiveMinimum":
+    case "maxLength":
+    case "minLength":
+    case "multipleOf":
+    case "maxItems":
+    case "minItems":
+    case "maxProperties":
+    case "minProperties":
+      return Number(value);
+    case "readOnly":
+    case "writeOnly":
+    case "uniqueItems":
+      return Boolean(value);
+    default:
+      return value;
+  }
+};
+
 const jsDocToSchema = (node: JSDoc) =>
   node.tags
     ? Object.fromEntries(
@@ -150,12 +173,12 @@ const jsDocToSchema = (node: JSDoc) =>
           const value = match?.groups?.value;
 
           if (typeof key === "string" && typeof value === "string") {
-            return [key, value] as const;
+            return [key, parseJSDocAttribute(key, value)] as const;
           }
 
           return null;
         })
-        .filter((e): e is [string, string] => !!e),
+        .filter((e): e is [string, string | number | boolean] => !!e),
     )
     : undefined;
 
