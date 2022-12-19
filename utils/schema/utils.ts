@@ -1,10 +1,12 @@
 import {
+  beautify,
   denoDoc,
   findExport,
   getSchemaId,
   tsTypeToSchema,
 } from "./transform.ts";
 import { Schema } from "$live/types.ts";
+import { basename } from "std/path/mod.ts";
 
 const withErrorPath = <T>(cb: (x: string) => T) => async (path: string) => {
   try {
@@ -38,6 +40,11 @@ export const getSchemaFromSectionExport = withErrorPath(
       : node.functionDef.params[0]?.tsType;
 
     const inputSchema = tsType && await tsTypeToSchema(tsType, nodes);
+
+    // Add a rich name to the editor
+    if (inputSchema) {
+      inputSchema.title = beautify(basename(path));
+    }
 
     return {
       inputSchema: inputSchema ?? null,
@@ -78,6 +85,11 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
     additionalProperties: true,
   };
 
+  // Add a rich name to the editor
+  if (inputSchema) {
+    inputSchema.title = beautify(basename(path));
+  }
+
   return {
     inputSchema: inputSchema ?? null,
     outputSchema: outputSchema ?? null,
@@ -87,7 +99,7 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
 // TODO: Should we extract defaultProps from the schema here?
 export const generatePropsForSchema = (schema: Schema | null | undefined) => {
   if (schema?.type == null || Array.isArray(schema.type)) {
-    return null
+    return null;
   }
 
   const cases: Record<string, unknown> = {
@@ -96,8 +108,8 @@ export const generatePropsForSchema = (schema: Schema | null | undefined) => {
     boolean: true,
     number: 0,
     integer: 0,
-    null: null
-  }
+    null: null,
+  };
 
-  return cases[schema.type] ?? null
-}
+  return cases[schema.type] ?? null;
+};

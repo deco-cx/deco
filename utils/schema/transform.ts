@@ -14,7 +14,10 @@ import type {
 const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped" });
 
-  const status = await process.status();
+  const [stdout, status] = await Promise.all([
+    process.output(),
+    process.status(),
+  ]);
 
   if (!status.success) {
     throw new Error(
@@ -22,17 +25,21 @@ const exec = async (cmd: string[]) => {
     );
   }
 
-  const stdout = await process.output();
-
   process.close();
 
   return new TextDecoder().decode(stdout);
 };
 
-export const denoDoc = async (path: string) => {
-  const stdout = await exec(["deno", "doc", "--json", path]);
+const denoDocCache = new Map<string, Promise<string>>();
 
-  return JSON.parse(stdout) as ASTNode[];
+export const denoDoc = async (path: string): Promise<ASTNode[]> => {
+  const promise = denoDocCache.get(path) ??
+    exec(["deno", "doc", "--json", path]);
+
+  denoDocCache.set(path, promise);
+
+  const stdout = await promise;
+  return JSON.parse(stdout);
 };
 
 export const getSchemaId = async (schema: Schema) => {
@@ -133,22 +140,24 @@ export const findExport = (name: string, root: ASTNode[]) => {
 };
 
 const jsDocToSchema = (node: JSDoc) =>
-  Object.fromEntries(
-    node.tags
-      .map((tag: Tag) => {
-        const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
+  node.tags
+    ? Object.fromEntries(
+      node.tags
+        .map((tag: Tag) => {
+          const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
 
-        const key = match?.groups?.key;
-        const value = match?.groups?.value;
+          const key = match?.groups?.key;
+          const value = match?.groups?.value;
 
-        if (typeof key === "string" && typeof value === "string") {
-          return [key, value] as const;
-        }
+          if (typeof key === "string" && typeof value === "string") {
+            return [key, value] as const;
+          }
 
-        return null;
-      })
-      .filter((e): e is [string, string] => !!e),
-  );
+          return null;
+        })
+        .filter((e): e is [string, string] => !!e),
+    )
+    : undefined;
 
 const typeDefToSchema = async (
   node: TypeDef,
@@ -195,7 +204,12 @@ export const tsTypeToSchema = async (
 
       const r = findType(node.typeRef.typeName, root);
 
-      return docToSchema(r, root);
+      const schema = await docToSchema(r, root);
+
+      return {
+        ...schema,
+        title: schema.title || node.repr,
+      };
     }
     case "indexedAccess":
       throw new Error("Not Implemented");
@@ -211,15 +225,13 @@ export const tsTypeToSchema = async (
     }
 
     case "union": {
-      // The case of:  field: 'a' | 'b' | 'c'
-      const child = node.union[0];
-      const type = child.kind === "literal" ? child.literal.kind : undefined;
+      const children = await Promise.all(
+        node.union.map((n) => tsTypeToSchema(n, root)),
+      );
 
       return {
-        ...{ type },
-        anyOf: await Promise.all(
-          node.union.map((n) => tsTypeToSchema(n, root)),
-        ),
+        type: children[0].type,
+        anyOf: children,
       };
     }
 
@@ -232,6 +244,7 @@ export const tsTypeToSchema = async (
 
     case "literal": {
       return {
+        type: node.literal.kind,
         const: node.literal[node.literal.kind],
       };
     }
