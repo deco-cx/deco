@@ -139,6 +139,33 @@ export const findExport = (name: string, root: ASTNode[]) => {
   return node;
 };
 
+/** 
+ * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
+ * For instance, maxLength and maxItems have to be parsed to number. readOnly should be a boolean etc
+ */
+const parseJSDocAttribute = (key: string, value: string) => {
+  switch (key) {
+    case "maximum":
+    case "exclusiveMaximum":
+    case "minimum":
+    case "exclusiveMinimum":
+    case "maxLength":
+    case "minLength":
+    case "multipleOf":
+    case "maxItems":
+    case "minItems":
+    case "maxProperties":
+    case "minProperties":
+      return Number(value);
+    case "readOnly":
+    case "writeOnly":
+    case "uniqueItems":
+      return Boolean(value);
+    default:
+      return value;
+  }
+};
+
 const jsDocToSchema = (node: JSDoc) =>
   node.tags
     ? Object.fromEntries(
@@ -150,12 +177,13 @@ const jsDocToSchema = (node: JSDoc) =>
           const value = match?.groups?.value;
 
           if (typeof key === "string" && typeof value === "string") {
-            return [key, value] as const;
+            const parsedValue = parseJSDocAttribute(key, value);
+            return [key, parsedValue] as const;
           }
 
           return null;
         })
-        .filter((e): e is [string, string] => !!e),
+        .filter((e): e is [string, string | number | boolean] => !!e),
     )
     : undefined;
 
