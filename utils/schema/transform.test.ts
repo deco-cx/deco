@@ -34,7 +34,7 @@ Deno.test("Non required fields generation", async () => {
     type: "object",
     properties: {
       name: { type: "string", title: "Name" },
-      maybeName: { type: "string", title: "Maybe Name" },
+      maybeName: { type: ["string", "null"], title: "Maybe Name" },
     },
     required: ["name"],
   });
@@ -47,7 +47,7 @@ Deno.test("Union types generation", async () => {
     title: undefined,
     type: "object",
     properties: {
-      name: { anyOf: [{ type: "string" }, { type: "number" }], title: "Name" },
+      name: { anyOf: [{ type: "string" }, { type: "number" }], title: "Name", type: "string"}
     },
     required: ["name"],
   });
@@ -128,8 +128,10 @@ Deno.test("Built in types generation", async () => {
         additionalProperties: { type: "string" },
       },
       loaderReturnType: {
+        format: "live-function",
         "$id": "168110fffa5b1102c412d4eb453091e0cdfc8ba1",
         title: "Loader Return Type",
+        type: "string",
       },
     },
     required: ["array", "record", "loaderReturnType"],
