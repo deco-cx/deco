@@ -1,4 +1,4 @@
-const CURRENT_ESM_VER = "100";
+const CURRENT_ESM_VER = "96";
 
 export async function orderImports() {
   const importMapFile = await Deno.readTextFile("./import_map.json");
