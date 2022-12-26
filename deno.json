@@ -2,6 +2,7 @@
   "tasks": {
     "start": "deno run -A --watch=static/ dev.ts",
     "component": "deno eval 'import \"$live/scripts/component.ts\"'",
+    "order_imports": "deno eval 'import \"$live/scripts/order_imports.ts\"'",
     "release": "deno run -A ./scripts/release.ts",
     "check": "deno fmt && deno check dev.ts live.ts && deno test -A ."
   },
