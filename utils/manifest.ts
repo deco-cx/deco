@@ -18,6 +18,7 @@ import {
   propReferenceToFunctionKey,
 } from "$live/utils/page.ts";
 import { LoaderFunction } from "$live/std/types.ts";
+import { getKeyForLoaderFunction, runLoaderFunction } from "./functions.ts";
 
 /**
  * This function should be used only in the initial stage of the product.
@@ -153,11 +154,16 @@ export async function loadPageData<Data, State>(
 
       start(`function#${uniqueId}`);
       // TODO: Set status and headers
+
+      const cacheKey = getKeyForLoaderFunction(key, req.url, props);
+      console.log({ cacheKey })
+
       const {
         data,
         headers: _headers,
         status: _status,
-      } = await functionFn(req, ctx, props);
+      } = await runLoaderFunction(() => functionFn(req, ctx, props), cacheKey);
+
       end(`function#${uniqueId}`);
 
       return {
