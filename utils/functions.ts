@@ -2,7 +2,7 @@ import { WeakLRUCache } from "https://deno.land/x/weakcache@v1.1.4/index.js";
 import merge from "https://esm.sh/lodash-es@4/merge?pin=v99";
 import Murmurhash3 from "https://deno.land/x/murmurhash/mod.ts";
 
-type CacheOptions = {
+export type CacheOptions = {
   maxAgeInSeconds: number;
   staleIfErrorMaxAgeInSeconds: number;
   staleMaxAgeInSeconds: number;
@@ -93,8 +93,6 @@ export const runLoaderFunction = async (
   const runningFunctionPromise = fn().then(
     (functionResponse) => {
       const cacheOptions = mergeDefaultCacheOptions(functionResponse);
-
-      // console.log({ cacheOptions });
 
       console.log(`Updating cache value for ${cacheKey}`);
       functionsCache.set(cacheKey, { ...cacheOptions, lastUpdated: now });
