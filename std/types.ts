@@ -1,10 +1,11 @@
 import { HandlerContext } from "$fresh/server.ts";
+import { CacheOptions } from "../utils/functions.ts";
 
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<any, State>,
   props: Props,
-) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
+) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>> & Partial<CacheOptions>;
 
 export type MatchDuration = "request" | "session";
 
