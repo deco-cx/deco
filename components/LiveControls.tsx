@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { Flags, Page, Site } from "$live/types.ts";
 import { DomInspector } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
-import Viewfinder from "https://deno.land/x/tabler_icons_tsx@0.0.2/tsx/viewfinder.tsx";
+import Viewfinder from "./icons/Viewfinder.tsx";
 
 declare global {
   interface Window {
