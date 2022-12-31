@@ -3,10 +3,12 @@
     "$live/": "./",
     "std/": "https://deno.land/std@0.170.0/",
     "$fresh/": "https://deno.land/x/fresh@1.1.2/",
-    "supabase": "https://esm.sh/v96/@supabase/supabase-js@1.35.7",
-    "json-schema": "https://esm.sh/v96/@types/json-schema@7.0.11/X-YS9yZWFjdDpwcmVhY3QvY29tcGF0CmQvcHJlYWN0QDEwLjEwLjY/index.d.ts",
-    "preact-render-to-string": "https://esm.sh/v96/*preact-render-to-string@5.2.3",
-    "preact": "https://esm.sh/v96/preact@10.11.2",
-    "preact/": "https://esm.sh/v96/preact@10.11.2/"
+    "supabase": "https://esm.sh/@supabase/supabase-js@1.35.7?pin=102",
+    "json-schema": "https://esm.sh/@types/json-schema@7.0.11?pin=102",
+    "preact-render-to-string": "https://esm.sh/*preact-render-to-string@5.2.4?pin=102",
+    "preact": "https://esm.sh/preact@10.11.3?pin=102",
+    "preact/": "https://esm.sh/preact@10.11.3/",
+    "https://deno.land/std@0.150.0": "https://deno.land/std@0.170.0",
+    "https://deno.land/std@0.150.0/": "https://deno.land/std@0.170.0/"
   }
 }

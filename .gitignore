@@ -68,3 +68,5 @@ yarn-error.log
 
 dist/
 server/
+
+deps.json
