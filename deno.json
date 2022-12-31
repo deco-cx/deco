@@ -4,7 +4,11 @@
     "component": "deno eval 'import \"$live/scripts/component.ts\"'",
     "order_imports": "deno eval 'import \"$live/scripts/order_imports.ts\"'",
     "release": "deno run -A ./scripts/release.ts",
-    "check": "deno fmt && deno check dev.ts live.ts && deno test -A ."
+    "check": "deno fmt && deno check dev.ts live.ts && deno test -A .",
+    "cache_clean": "rm deno.lock; deno cache -r live.ts",
+    "info_json": "deno info --json live.ts > deps.json",
+    "detective": "deno run -A https://deno.land/x/detective/detective.ts deps.json",
+    "deps": "deno task cache_clean && deno task info_json && deno task detective"
   },
   "githooks": {
     "pre-commit": "check"

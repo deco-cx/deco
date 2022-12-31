@@ -1,5 +1,3 @@
-const CURRENT_ESM_VER = "96";
-
 export async function orderImports() {
   const importMapFile = await Deno.readTextFile("./import_map.json");
   const importMap = JSON.parse(importMapFile);
@@ -10,9 +8,10 @@ export async function orderImports() {
     const isEsm = value.startsWith("https://esm.sh/");
 
     if (isEsm) {
+      // Always remove /vXYZ/ from esm.sh imports.
       importMap.imports[key as keyof typeof importMap.imports] = value.replace(
         /https:\/\/esm.sh\/(v.\d*\/)?/,
-        `https://esm.sh/v${CURRENT_ESM_VER}/`,
+        `https://esm.sh/`,
       );
     }
   }
@@ -31,7 +30,6 @@ export async function orderImports() {
 }
 
 console.log(
-  "Ordering import_map.json and pinning esm.sh version to",
-  CURRENT_ESM_VER,
+  "Ordering import_map.json",
 );
 await orderImports();

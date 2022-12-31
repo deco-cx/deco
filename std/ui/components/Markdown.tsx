@@ -1,18 +1,12 @@
-import { CSS, render } from "https://deno.land/x/gfm@0.1.26/mod.ts";
-import { LoaderReturnType } from "$live/std/types.ts";
+import { marky } from "https://deno.land/x/marky@v1.1.6/mod.ts";
 
 export type Props = {
-  text: LoaderReturnType<string>;
+  text: string;
 };
 
 export default function Markdown({ text }: Props) {
-  const body = render(text);
+  const body = marky(text);
   return (
-    <>
-      <style>
-        ${CSS}
-      </style>
-      <div class="markdown-body" dangerouslySetInnerHTML={{ __html: body }} />
-    </>
+    <div class="markdown-body" dangerouslySetInnerHTML={{ __html: body }} />
   );
 }
