@@ -85,7 +85,7 @@ export const runLoaderFunction = async (
   console.log({ isCacheHit });
   if (isCacheHit) {
     console.log(`Cache hit for ${cacheKey}`);
-    return data; // { data: any, status: number, headers: {} }
+    return cacheEntry; // { data: any, status: number, headers: {} }
   }
 
   const isStaleHit = (lastUpdated + staleMaxAgeInSeconds * 1000) > now;
@@ -109,7 +109,7 @@ export const runLoaderFunction = async (
 
   if (isStaleHit) {
     console.log(`Stale hit for ${cacheKey}`);
-    return data;
+    return cacheEntry;
   }
 
   const functionResponse = await runningFunctionPromise;
