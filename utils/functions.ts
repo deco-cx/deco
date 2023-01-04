@@ -1,6 +1,6 @@
 import { WeakLRUCache } from "https://deno.land/x/weakcache@v1.1.4/index.js";
 import merge from "https://esm.sh/lodash-es@4/merge?pin=v99";
-import Murmurhash3 from "https://deno.land/x/murmurhash/mod.ts";
+import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 
 export type CacheOptions = {
   maxAgeInSeconds: number;

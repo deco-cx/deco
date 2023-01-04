@@ -16,6 +16,7 @@ import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
 import { cookies, loadFlags } from "$live/flags.ts";
+import { sendEvent } from "./utils/track.ts";
 
 // The global live context
 export type LiveContext = {
@@ -117,6 +118,34 @@ export const withLive = (liveOptions: LiveOptions) => {
     }
 
     return newResponse;
+  };
+};
+
+export const getLivePageData = async <Data>(
+  req: Request,
+  ctx: HandlerContext<Data, LiveState>,
+) => {
+  sendEvent("backend-event", { url: req.url });
+
+  const flags = await loadFlags(req, ctx);
+
+  const pageOptions = flags.reduce(
+    (acc, curr) => {
+      if (isPageOptions(curr.value)) {
+        acc.selectedPageIds = [
+          ...acc.selectedPageIds,
+          ...curr.value.selectedPageIds,
+        ];
+      }
+
+      return acc;
+    },
+    { selectedPageIds: [] } as PageOptions,
+  );
+
+  return {
+    flags: ctx.state.flags,
+    page: await loadPage(req, ctx, pageOptions),
   };
 };
 
