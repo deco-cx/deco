@@ -1,5 +1,5 @@
 import { fetchAPI } from "$live/utils/fetchAPI.ts";
-import { OccProdutoPage, OccSearch } from "./types.ts";
+import { OccProductPage, OccSearch } from "./types.ts";
 
 export interface Options {
   platform: "occ";
@@ -20,7 +20,7 @@ export const createClient = ({
   };
 
   const productBySlug = (slug: string) => {
-    return fetchAPI<OccProdutoPage>(
+    return fetchAPI<OccProductPage>(
       `${baseUrl}/ccstoreui/v1/pages/produto/${slug}?dataOnly=false&cacheableDataOnly=true&productTypesRequired=false`,
     );
   };
