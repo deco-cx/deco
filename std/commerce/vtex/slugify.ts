@@ -2,9 +2,6 @@
 /**
  * VTEX catalog slugify function
  *
- * Copied from:
- * https://github.com/vtex/rewriter/blob/1ce2010783e0586cab42534ce2fb7a983d8a3a84/node/clients/catalog.ts#L72
- *
  * Sometimes, we need to slugify strings for creating urls. An example is the
  * brand urls, where we create them from the brand's name.
  * This slugify function should match exactly what VTEX catalog generates. Any mismatch
