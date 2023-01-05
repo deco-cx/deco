@@ -1,3 +1,4 @@
+import { getCookies } from "std/http/mod.ts";
 import { createClient, SupabaseClient } from "supabase";
 
 let client: SupabaseClient | null = null;
@@ -22,5 +23,21 @@ export default function getSupabaseClient(accessToken?: string) {
     client = createClient(userEndpoint, accessToken || userKey);
   }
 
+  return client;
+}
+
+/**
+ * @deprecated
+ */
+export function getSupabaseClientForUser(req: Request) {
+  const cookies = getCookies(req.headers);
+  const accessToken = cookies["live-access-token"];
+  const client = createClient(userEndpoint, userKey, {
+    globals: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  });
   return client;
 }
