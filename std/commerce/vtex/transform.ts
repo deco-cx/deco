@@ -10,6 +10,7 @@ import type {
 
 import { slugify } from "./slugify.ts";
 import type {
+  CommertialOffer,
   Facet as FacetVTEX,
   FacetValueBoolean,
   FacetValueRange,
@@ -46,6 +47,24 @@ export const toProductPage = (
   };
 };
 
+export const inStock = (offer: CommertialOffer) => offer.AvailableQuantity > 0;
+
+// Smallest Available Spot Price First
+export const bestOfferFirst = (
+  a: SellerVTEX,
+  b: SellerVTEX,
+) => {
+  if (inStock(a.commertialOffer) && !inStock(b.commertialOffer)) {
+    return -1;
+  }
+
+  if (!inStock(a.commertialOffer) && inStock(b.commertialOffer)) {
+    return 1;
+  }
+
+  return a.commertialOffer.spotPrice - b.commertialOffer.spotPrice;
+};
+
 export const toProduct = (
   product: ProductVTEX,
   sku: SkuVTEX,
@@ -61,7 +80,7 @@ export const toProduct = (
   const { name, referenceId, itemId: skuId } = sku;
   const additionalProperty = toAdditionalProperties(sku);
   const images = nonEmptyArray(sku.images) ?? [DEFAULT_IMAGE];
-  const offers = sku.sellers.map(toOffer);
+  const offers = sku.sellers.sort(bestOfferFirst).map(toOffer);
   const hasVariant = level < 1 &&
     items.map((sku) => toProduct(product, sku, 1));
 
