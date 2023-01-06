@@ -62,7 +62,7 @@ export const bestOfferFirst = (
     return 1;
   }
 
-  return a.commertialOffer.Price - b.commertialOffer.Price;
+  return a.commertialOffer.spotPrice - b.commertialOffer.spotPrice;
 };
 
 export const toProduct = (
