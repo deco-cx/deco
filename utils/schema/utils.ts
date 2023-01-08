@@ -39,6 +39,8 @@ export const getSchemaFromSectionExport = withErrorPath(
       ? node.variableDef.tsType
       : node.functionDef.params[0]?.tsType;
 
+    // Only fetching inputSchema (from exported Props) if the default function
+    // has its input type specified ({ ... }: Props)
     const inputSchema = tsType && await tsTypeToSchema(tsType, nodes);
 
     // Add a rich name to the editor
