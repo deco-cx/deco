@@ -19,7 +19,7 @@ export const loadFlags = async <Data = unknown>(
 
   // TODO: Cache flags stale for 5 minutes, refresh every 30s
   const { data: availableFlags, error } = await getSupabaseClient()
-    .from<Flag>("flags")
+    .from("flags")
     .select(
       `id, name, key, state, data`,
     )
@@ -31,7 +31,7 @@ export const loadFlags = async <Data = unknown>(
   }
 
   // TODO: if queryString.flagIds, then activate those flags and skip matching
-  const activeFlags: Flag[] = (availableFlags ?? [])?.filter((flag) => {
+  const activeFlags = (availableFlags ?? [])?.filter((flag) => {
     const { data: { matches } } = flag;
 
     for (const match of matches) {
@@ -64,7 +64,7 @@ export const loadFlags = async <Data = unknown>(
     return false;
   });
 
-  activeFlags?.forEach((flag) => {
+  (activeFlags as Flag[])?.forEach((flag) => {
     const { data: { effect } } = flag;
 
     const effectFn: EffectFunction<any, any, any> | null = effect
@@ -76,11 +76,11 @@ export const loadFlags = async <Data = unknown>(
     flag.value = effectFn?.(req, ctx, effect?.props as any) ?? true;
   });
 
-  ctx.state.flags = activeFlags.reduce((acc, flag) => {
+  ctx.state.flags = (activeFlags as Flag[])?.reduce((acc, flag) => {
     acc[flag.key] = flag.value;
     return acc;
   }, {} as Record<string, unknown>);
 
   // TODO: set cookie with flag ids
-  return activeFlags ?? [];
+  return (activeFlags as Flag[]) ?? [];
 };
