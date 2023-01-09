@@ -92,7 +92,7 @@ export const fetchPageFromPathname = async (
   siteId: number,
 ): Promise<PageWithParams[] | null> => {
   const { data: pages, error } = await getSupabaseClient()
-    .from<Page & { site: number }>("pages")
+    .from("pages")
     .select("id, name, data, path, state")
     .eq("site", siteId)
     .in("state", ["published", "draft"]);
@@ -131,7 +131,7 @@ export const fetchPageFromId = async (
   pathname?: string,
 ): Promise<PageWithParams> => {
   const { data: pages, error } = await getSupabaseClient()
-    .from<Page>("pages")
+    .from("pages")
     .select("id, name, data, path, state")
     .match({ id: pageId });
 
@@ -181,7 +181,7 @@ export const fetchPageFromSection = async (
   }
 
   const { data } = await supabase
-    .from<Page>("pages")
+    .from("pages")
     .select("id, name, data, path, state")
     .match({ path: page.path, site: siteId });
 
