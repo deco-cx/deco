@@ -1,4 +1,4 @@
-import { WeakLRUCache } from "https://deno.land/x/weakcache@v1.1.4/index.js";
+import redisCache from "$live/utils/redisCache.ts";
 import merge from "https://esm.sh/lodash-es@4/merge?pin=v99";
 import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 
@@ -16,7 +16,7 @@ export type CacheOptions = {
 // TODO: Fix typings to accept generics
 // type Cache = Record<string, CacheEntry>;
 
-const functionsCache = new WeakLRUCache();
+const functionsCache = redisCache;
 
 type RunLoaderFunctionResponse = {
   data?: any;
@@ -66,7 +66,7 @@ export const runLoaderFunction = async (
   cacheKey: string,
 ): Promise<RunLoaderFunctionResponse> => {
   console.log(functionsCache);
-  const cacheEntry = functionsCache.get(cacheKey);
+  const cacheEntry = await functionsCache.get(cacheKey);
 
   const {
     lastUpdated,
