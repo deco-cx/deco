@@ -223,9 +223,9 @@ export interface ProductLeaf extends Omit<Product, "isVariantOf"> {}
 export interface ProductGroup extends Omit<Thing, "@type"> {
   "@type": "ProductGroup";
   /** Indicates a {@link https://schema.org/Product Product} that is a member of this {@link https://schema.org/ProductGroup ProductGroup} (or {@link https://schema.org/ProductModel ProductModel}). */
-  "hasVariant": ProductLeaf[];
+  hasVariant: ProductLeaf[];
   /** Indicates a textual identifier for a ProductGroup. */
-  "productGroupID": string;
+  productGroupID: string;
 }
 
 export interface Product extends Omit<Thing, "@type"> {
@@ -337,5 +337,6 @@ export interface ProductListingPage {
   products: Product[];
   pageInfo: {
     hasNextPage: boolean;
+    category?: Thing;
   };
 }
