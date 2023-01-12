@@ -10,7 +10,7 @@ export default function LiveSections({ sections }: PageData) {
       | PageData["sections"]
       | null;
 
-    const children = childrenDefinition?.length
+    const children = Array.isArray(childrenDefinition)
       ? <>{childrenDefinition?.map(renderSection)}</>
       : null;
 
