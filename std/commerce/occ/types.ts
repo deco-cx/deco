@@ -869,12 +869,23 @@ export interface LinkElement {
   href: string;
 }
 
+export interface CategoryDetailsImage {
+  url?: string;
+}
+
+export interface CategoryDetails {
+  displayName?: string;
+  description?: string;
+  longDescription?: string;
+  categoryImages?: CategoryDetailsImage[];
+}
+
 export interface CategorySearchResult {
   totalResults: number;
   offset: number;
   limit: number;
   links: any;
-  category: any;
+  category?: CategoryDetails;
   items: any;
 }
 

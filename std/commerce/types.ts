@@ -337,6 +337,6 @@ export interface ProductListingPage {
   products: Product[];
   pageInfo: {
     hasNextPage: boolean;
-    description?: any;
+    category?: Thing;
   };
 }
