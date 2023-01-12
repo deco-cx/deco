@@ -10,6 +10,10 @@ const onWebVitalsReport = (event) => {
   window.jitsu('track', 'web-vitals', event);
 };
 
+const onError = ( message, url, lineNo, columnNo, error) => {
+    window.jitsu('track', 'error', {message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
+}
+
 const init = async () => {
   if (typeof window.jitsu !== "function") {
     return;
@@ -35,14 +39,30 @@ if (document.readyState === 'complete') {
 } else {
   window.addEventListener('load', init);
 };
+
+window.onerror = function (message, url, lineNo, columnNo, error) {
+  onError(message, url, lineNo, columnNo, error)
+}
+
+// Array de todos os scripts da página
+const script = document.querySelectorAll("script");
+console.log(script)
+// teste para verificar se o onerror está sendo chamando
+script.forEach((e) => e.onerror = () => { alert("aaaa") })
+
+// caso o onerror esteja sendo chamado, subistituir "alert("aaaa")" por "window.jitsu('track', 'error', {errorType:"Network test", msg: "Teste" })"
+
+
 `;
 
 type Props = Partial<Page> & { flags?: Flags };
 
+const IS_TESTING_JITSU = true;
+
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
     <>
-      {context.isDeploy && ( // Add analytcs in production only
+      {(context.isDeploy || IS_TESTING_JITSU)  && ( // Add analytcs in production only
         <Jitsu
           data-init-only="true"
           data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
