@@ -7,6 +7,9 @@ export type Props = {
 export default function Markdown({ text }: Props) {
   const body = marky(text);
   return (
-    <div class="markdown-body" dangerouslySetInnerHTML={{ __html: body }} />
+    <div
+      class="markdown-body prose"
+      dangerouslySetInnerHTML={{ __html: body }}
+    />
   );
 }
