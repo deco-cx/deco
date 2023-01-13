@@ -62,7 +62,6 @@ import { withLive } from "$live/live.ts";
 export const handler = withLive(manifest, {
   site: "start",
   siteId: 8,
-  domains: ["mysitename.com"],
 });
 ```
 

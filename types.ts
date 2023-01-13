@@ -48,7 +48,6 @@ export interface LiveOptions {
   site: string;
   siteId: number;
   loginUrl?: string;
-  domains?: string[];
   inspectPath?: string;
   workbenchPath?: string;
 }
