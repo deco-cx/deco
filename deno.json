@@ -1,0 +1,34 @@
+{
+  "tasks": {
+    "start": "deno run -A --watch=static/ dev.ts",
+    "debug": "deno run -A --inspect-brk dev.ts",
+    "component": "deno eval 'import \"$live/scripts/component.ts\"'",
+    "sort_imports": "deno eval 'import \"$live/scripts/order_imports.ts\"'",
+    "check": "deno fmt && deno lint && deno check main.ts",
+    "cache_clean": "rm deno.lock; deno cache -r main.ts",
+    "info_json": "deno info --json main.ts > deps.json",
+    "detective": "deno run -A https://deno.land/x/detective/detective.ts deps.json",
+    "deps": "deno task cache_clean && deno task info_json && deno task detective"
+  },
+  "githooks": {
+    "pre-commit": "check"
+  },
+  "lint": {
+    "files": {
+      "exclude": ["static/"]
+    },
+    "rules": {
+      "exclude": ["no-explicit-any", "no-extra-boolean-cast"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "exclude": ["static/"]
+    }
+  },
+  "importMap": "./import_map.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  }
+}

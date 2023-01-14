@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "ecmel.vscode-html-css",
+    "sastan.twind-intellisense",
+    "tobermory.es6-string-html",
+    "denoland.vscode-deno"
+  ]
+}
