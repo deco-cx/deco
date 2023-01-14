@@ -3,8 +3,8 @@ export interface Props {
 }
 
 export default function randomAudience(
-  _: Request,
   { traffic }: Props,
+  _: Request,
 ): boolean {
   return Math.random() < traffic;
 }

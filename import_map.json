@@ -1,6 +1,6 @@
 {
   "imports": {
-    "deconfig/": "./",
+    "deco/": "./",
     "preact": "https://esm.sh/preact@10.11.3",
     "preact/": "https://esm.sh/preact@10.11.3/"
   }

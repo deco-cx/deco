@@ -3,8 +3,8 @@ export interface Props {
 }
 
 export default function pathTemplateAudience(
-  req: Request,
   { pathTemplate }: Props,
+  req: Request,
 ): boolean {
   const path = new URL(req.url).pathname;
   return pathTemplate === path;

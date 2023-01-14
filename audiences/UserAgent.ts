@@ -4,8 +4,8 @@ export interface Props {
 }
 
 export default function userAgentAudience(
-  req: Request,
   { includes, match }: Props,
+  req: Request,
 ): boolean {
   const ua = req.headers.get("user-agent") || "";
   if (match) {
