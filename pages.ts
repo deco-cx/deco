@@ -1,5 +1,5 @@
 import { context } from "$live/live.ts";
-import { PageWithParams } from "$live/types.ts";
+import { PageData, PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
 import { HandlerContext } from "$fresh/server.ts";
 import { EditorData, LiveState, Page } from "$live/types.ts";
@@ -301,11 +301,40 @@ export const loadPage = async <Data = unknown>(
       params,
     },
     page?.data,
-    start,
-    end,
   );
   end("load-data");
 
   ctx.state.page = { ...page, data: pageDataAfterFunctions };
   return ctx.state.page;
+};
+
+export const loadGlobal = async () => {
+  const { data: globalPages } = await getSupabaseClient()
+    .from("pages")
+    .select("data")
+    .eq("state", "global")
+    .eq("site", context.siteId);
+
+  // https://regex101.com/r/zSyTir/1
+  const stripGlobalKey = (key: string) => {
+    return key.replace(/(.*)\/(\w*)\.global\.tsx$/, "$2");
+  };
+
+  const globals = (globalPages ?? []).reduce(
+    (result, page: Pick<Page, "data">) => {
+      const firstSection = page.data.sections?.[0];
+
+      if (!firstSection) {
+        return result;
+      }
+
+      const stripedKey = stripGlobalKey(firstSection.key);
+
+      result[stripedKey] = firstSection.props;
+      return result;
+    },
+    {} as Record<string, unknown>,
+  );
+
+  return Object.freeze(globals);
 };

@@ -158,4 +158,5 @@ export type LiveState = {
   site: Site;
   flags: Flags;
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+  global: Record<string, unknown>;
 };

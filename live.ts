@@ -1,4 +1,4 @@
-import { PageOptions } from "./pages.ts";
+import { loadGlobal, PageOptions } from "./pages.ts";
 import {
   HandlerContext,
   Handlers,
@@ -160,7 +160,12 @@ export const getLivePageData = async <Data>(
   req: Request,
   ctx: HandlerContext<Data, LiveState>,
 ) => {
-  const flags = await loadFlags(req, ctx);
+  const [flags, globalConfig] = await Promise.all([
+    loadFlags(req, ctx),
+    loadGlobal(),
+  ]);
+
+  ctx.state.global = globalConfig;
 
   const pageOptions = flags.reduce(
     (acc, curr) => {
