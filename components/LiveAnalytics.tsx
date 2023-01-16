@@ -1,4 +1,5 @@
 import { context } from "$live/live.ts";
+import { Head } from "$fresh/runtime.ts";
 import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
@@ -43,16 +44,6 @@ if (document.readyState === 'complete') {
 window.onerror = function (message, url, lineNo, columnNo, error) {
   onError(message, url, lineNo, columnNo, error)
 }
-
-// Array de todos os scripts da página
-const script = document.querySelectorAll("script");
-console.log(script)
-// teste para verificar se o onerror está sendo chamando
-script.forEach((e) => e.onerror = () => { alert("aaaa") })
-
-// caso o onerror esteja sendo chamado, subistituir "alert("aaaa")" por "window.jitsu('track', 'error', {errorType:"Network test", msg: "Teste" })"
-
-
 `;
 
 type Props = Partial<Page> & { flags?: Flags };
@@ -62,7 +53,31 @@ const IS_TESTING_JITSU = true;
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
     <>
-      {(context.isDeploy || IS_TESTING_JITSU)  && ( // Add analytcs in production only
+      <Head>
+        {/* 
+        1. Extrair essa string pra um const errorHandlingScript = `...`
+        2. O jitsu não vai estar disponível nesse momento aqui (ou no onError do script), então precisa de outra estratégia. 
+
+          Sugestão:
+
+          Cria uma variável global chamada window.__decoLoadingErrors = [];
+          Para cada onerror que acontecer, dá push nessa variávels
+          No script acima (que roda depois), faz um __decoLoadingErrors.forEach(error => {
+            // Logica para mandar o erro pro Jitsu
+          })
+        
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `const scripts = document.querySelectorAll("script");
+            console.log('now here')
+console.log([...scripts].map(e => e.src))
+scripts.forEach((e) => e.onerror = () => { console.log("onError " + e.src) })`,
+          }}
+        >
+        </script>
+      </Head>
+      {(context.isDeploy || IS_TESTING_JITSU) && ( // Add analytcs in production only
         <Jitsu
           data-init-only="true"
           data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
