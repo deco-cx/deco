@@ -1,20 +1,21 @@
 # deco-runtime
 
-deco-fresh builds on top of deno, fresh, deconfig and supabase to provide a simple way to manage your digital experience on the edge.
+deco-runtime builds on top of deno, fresh, deconfig and supabase to provide a simple way to manage your digital experience on the edge.
 
 ## Concepts
 
 The core `deconfig` schema is:
 
 ```typescript
-export type ConfigKey = string;
+export type ConfigId = number;
 
 export interface Config<T> {
-  id: string;
-  key: ConfigKey;
+  id: ConfigId;
+  created_at: Date;
   active: boolean;
-  description?: string;
+  key: string;
   value?: T;
+  description?: string;
 }
 ```
 
@@ -56,10 +57,16 @@ export type Workflow<Props> = Config<{
 
 export type AudienceOperator = "and" | "or";
 
+export type Variation<V> = Config<{
+  variation: FnProps<Props, V>;
+}>
+
 // Flags are compositions of audiences which are used to prioritize specific configs
 export type Flag = Config<{
+  traffic: number; // 0.3 = 30% of traffic
   audiences: Array<AudienceOperator | Audience>;
-  prioritize: ConfigKey[];
+  variations?: string[] | number[] | boolean[] | ConfigId[] | Variation;
+  value: any;
 }>
 
 // Pages are compositions of loaders and sections which are rendered to HTML + JS + CSS
@@ -68,3 +75,12 @@ export type Page = Config<{
   sections: Array<Section>;
 }>
 ```
+
+## Experiment and Campaign tracking
+
+Experiments and Campaigns are types of `Flags`, which are composed of `Audiences` and `Prioritize` a list of `ConfigKey`s.
+
+When you create pages, there may be multiple versions of the same page in a giver route, each with a different `ConfigKey` and `value` (different loaders and sections). You can use `Flags` to prioritize which version of the page is shown to a specific audience.
+
+## Flag and page evaluation order
+
