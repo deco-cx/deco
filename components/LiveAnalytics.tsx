@@ -4,6 +4,14 @@ import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
 
+// declare global {
+//   interface Window {
+//     __decoLoadingErrors: Array<any>
+//   }
+// }
+
+// window.__decoLoadingErrors = []
+
 const innerHtml = (
   { id, path, flags = {} }: Partial<Page> & { flags?: Flags },
 ) => `
@@ -44,19 +52,30 @@ if (document.readyState === 'complete') {
 window.onerror = function (message, url, lineNo, columnNo, error) {
   onError(message, url, lineNo, columnNo, error)
 }
+
+__decoLoadingErrors.forEach((e) => window.jitsu('track', 'error', {eventType:"scriptLoad", url: e.src}))
+
 `;
 
 type Props = Partial<Page> & { flags?: Flags };
 
 const IS_TESTING_JITSU = true;
 
+const errorHandlingScript = `
+window.__decoLoadingErrors = []
+            const scripts = document.querySelectorAll("script");
+            scripts.forEach((e) => e.onerror = () => __decoLoadingErrors.push(e.src))
+            console.log(__decoLoadingErrors)
+`;
+
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
     <>
       <Head>
-        {/* 
+        {
+          /*
         1. Extrair essa string pra um const errorHandlingScript = `...`
-        2. O jitsu não vai estar disponível nesse momento aqui (ou no onError do script), então precisa de outra estratégia. 
+        2. O jitsu não vai estar disponível nesse momento aqui (ou no onError do script), então precisa de outra estratégia.
 
           Sugestão:
 
@@ -65,14 +84,20 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
           No script acima (que roda depois), faz um __decoLoadingErrors.forEach(error => {
             // Logica para mandar o erro pro Jitsu
           })
+
+        */
+        }
         
-        */}
+        {/* 1. O Browser irá ler esse script e irá executar
+        2. Ele vai pegar todos os scripts q rodaram e vai armazenar na variável "scripts"
+        3. Depois ele vai dar uma passada nesse array de variaveis e as que tiverem erro, ele vai dar um push para o "__decoLoadingErrors"
+        4. Após tudo isso o jitsu ainda não está disponivel/ não carregou.
+        5. Com todo esse processo terminado, o script para enviar os erros para o jitsu é injetado na pag e assim o jitsu é acionado
+        6. __decoLoadingErrors.forEach Da uma passada no array e envia para o jitsu cada script q tiver com o erro dentro do array */}
+
         <script
           dangerouslySetInnerHTML={{
-            __html: `const scripts = document.querySelectorAll("script");
-            console.log('now here')
-console.log([...scripts].map(e => e.src))
-scripts.forEach((e) => e.onerror = () => { console.log("onError " + e.src) })`,
+            __html: errorHandlingScript,
           }}
         >
         </script>
