@@ -13,7 +13,6 @@ const CHANNEL_KEYS = new Set([POLICY_KEY, REGION_KEY]);
 
 export interface Options {
   platform: "vtex";
-  account: string;
   defaultLocale?: string;
   defaultSalesChannel?: string;
   defaultRegionId?: string;
@@ -22,13 +21,12 @@ export interface Options {
 
 export const createClient = ({
   platform,
-  account,
   defaultLocale = "en-US",
   defaultSalesChannel = "1",
   defaultRegionId = "",
   defaultHideUnnavailableItems = false,
 }: Options) => {
-  const baseUrl = `https://vtex-search-proxy.global.ssl.fastly.net/${account}`;
+  const baseUrl = `https://vtex-search-proxy.global.ssl.fastly.net/`;
 
   const addDefaultFacets = (facets: SelectedFacet[]) => {
     const withDefaltFacets = facets.filter(({ key }) => !CHANNEL_KEYS.has(key));
@@ -59,6 +57,7 @@ export const createClient = ({
     type,
     fuzzy = "auto",
     locale = defaultLocale,
+    account,
   }: SearchArgs): Promise<T> => {
     const params = new URLSearchParams({
       page: (page + 1).toString(),
@@ -81,7 +80,7 @@ export const createClient = ({
       .join("/");
 
     return fetchAPI(
-      `${baseUrl}/intelligent-search/${type}/${pathname}?${params.toString()}`,
+      `${baseUrl}/${account}/intelligent-search/${type}/${pathname}?${params.toString()}`,
     );
   };
 
@@ -89,25 +88,27 @@ export const createClient = ({
     search<ProductSearchResult>({ ...args, type: "product_search" });
 
   const suggestedTerms = (
-    args: Omit<SearchArgs, "type">,
+    { query, account }: Omit<SearchArgs, "type">,
   ): Promise<Suggestion> => {
     const params = new URLSearchParams({
-      query: args.query?.toString() ?? "",
+      query: query?.toString() ?? "",
       locale: defaultLocale,
     });
 
     return fetchAPI(
-      `${baseUrl}/intelligent-search/search_suggestions?${params.toString()}`,
+      `${baseUrl}/${account}/intelligent-search/search_suggestions?${params.toString()}`,
     );
   };
 
-  const topSearches = (): Promise<Suggestion> => {
+  const topSearches = (
+    { account }: Pick<SearchArgs, "account">,
+  ): Promise<Suggestion> => {
     const params = new URLSearchParams({
       locale: defaultLocale,
     });
 
     return fetchAPI(
-      `${baseUrl}/intelligent-search/top_searches?${params.toString()}`,
+      `${baseUrl}/${account}/intelligent-search/top_searches?${params.toString()}`,
     );
   };
 

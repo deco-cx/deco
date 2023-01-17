@@ -1,4 +1,8 @@
 export interface SearchArgs {
+  /**
+   * @description VTEX Account name.
+   */
+  account: string;
   query?: string;
   page: number;
   count: number;
