@@ -4,13 +4,7 @@ import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
 
-// declare global {
-//   interface Window {
-//     __decoLoadingErrors: Array<any>
-//   }
-// }
 
-// window.__decoLoadingErrors = []
 
 const innerHtml = (
   { id, path, flags = {} }: Partial<Page> & { flags?: Flags },
@@ -27,6 +21,13 @@ const init = async () => {
   if (typeof window.jitsu !== "function") {
     return;
   }
+
+  window.onerror = function (message, url, lineNo, columnNo, error) {
+    onError(message, url, lineNo, columnNo, error)
+  }
+
+
+  __decoLoadingErrors.forEach((e) => window.jitsu('track', 'error', {error_type:"scriptLoad", url: e.src}))
 
   /* Add these trackers to all analytics sent to our server */
   window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", ${
@@ -49,11 +50,8 @@ if (document.readyState === 'complete') {
   window.addEventListener('load', init);
 };
 
-window.onerror = function (message, url, lineNo, columnNo, error) {
-  onError(message, url, lineNo, columnNo, error)
-}
 
-__decoLoadingErrors.forEach((e) => window.jitsu('track', 'error', {eventType:"scriptLoad", url: e.src}))
+
 
 `;
 
