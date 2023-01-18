@@ -4,8 +4,6 @@ import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
 
-
-
 const innerHtml = (
   { id, path, flags = {} }: Partial<Page> & { flags?: Flags },
 ) => `
@@ -13,8 +11,10 @@ const onWebVitalsReport = (event) => {
   window.jitsu('track', 'web-vitals', event);
 };
 
+/* Send exception error to jitsu
+
 const onError = ( message, url, lineNo, columnNo, error) => {
-    window.jitsu('track', 'error', {message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
+    window.jitsu('track', 'error', {error_type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
 }
 
 const init = async () => {
@@ -26,8 +26,8 @@ const init = async () => {
     onError(message, url, lineNo, columnNo, error)
   }
 
-
-  __decoLoadingErrors.forEach((e) => window.jitsu('track', 'error', {error_type:"scriptLoad", url: e.src}))
+  /* Send scriptLoad event */
+  __decoLoadingErrors.forEach((e) => window.jitsu('track', 'error',{error_type:"ScriptLoad", url: e.src}))
 
   /* Add these trackers to all analytics sent to our server */
   window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", ${
@@ -49,21 +49,17 @@ if (document.readyState === 'complete') {
 } else {
   window.addEventListener('load', init);
 };
-
-
-
-
 `;
 
 type Props = Partial<Page> & { flags?: Flags };
 
 const IS_TESTING_JITSU = true;
 
+// Get all the scripts and check which ones have errors
 const errorHandlingScript = `
 window.__decoLoadingErrors = []
             const scripts = document.querySelectorAll("script");
             scripts.forEach((e) => e.onerror = () => __decoLoadingErrors.push(e.src))
-            console.log(__decoLoadingErrors)
 `;
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
@@ -85,13 +81,15 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
 
         */
         }
-        
-        {/* 1. O Browser irá ler esse script e irá executar
+
+        {
+          /* 1. O Browser irá ler esse script e irá executar
         2. Ele vai pegar todos os scripts q rodaram e vai armazenar na variável "scripts"
         3. Depois ele vai dar uma passada nesse array de variaveis e as que tiverem erro, ele vai dar um push para o "__decoLoadingErrors"
         4. Após tudo isso o jitsu ainda não está disponivel/ não carregou.
         5. Com todo esse processo terminado, o script para enviar os erros para o jitsu é injetado na pag e assim o jitsu é acionado
-        6. __decoLoadingErrors.forEach Da uma passada no array e envia para o jitsu cada script q tiver com o erro dentro do array */}
+        6. __decoLoadingErrors.forEach Da uma passada no array e envia para o jitsu cada script q tiver com o erro dentro do array */
+        }
 
         <script
           dangerouslySetInnerHTML={{
