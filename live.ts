@@ -160,12 +160,7 @@ export const getLivePageData = async <Data>(
   req: Request,
   ctx: HandlerContext<Data, LiveState>,
 ) => {
-  const [flags, globalConfig] = await Promise.all([
-    loadFlags(req, ctx),
-    loadGlobal(),
-  ]);
-
-  ctx.state.global = globalConfig;
+  const flags = await loadFlags(req, ctx);
 
   const pageOptions = flags.reduce(
     (acc, curr) => {
