@@ -12,7 +12,6 @@ const onWebVitalsReport = (event) => {
 };
 
 /* Send exception error to jitsu
-
 const onError = ( message, url, lineNo, columnNo, error) => {
     window.jitsu('track', 'error', {error_type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
 }
@@ -26,7 +25,7 @@ const init = async () => {
     onError(message, url, lineNo, columnNo, error)
   }
 
-  /* Send scriptLoad event */
+  /* Send scriptLoad event to jitsu */
   __decoLoadingErrors.forEach((e) => window.jitsu('track', 'error',{error_type:"ScriptLoad", url: e.src}))
 
   /* Add these trackers to all analytics sent to our server */
@@ -66,29 +65,15 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
     <>
       <Head>
-        {
-          /*
-        1. Extrair essa string pra um const errorHandlingScript = `...`
-        2. O jitsu não vai estar disponível nesse momento aqui (ou no onError do script), então precisa de outra estratégia.
 
-          Sugestão:
-
-          Cria uma variável global chamada window.__decoLoadingErrors = [];
-          Para cada onerror que acontecer, dá push nessa variávels
-          No script acima (que roda depois), faz um __decoLoadingErrors.forEach(error => {
-            // Logica para mandar o erro pro Jitsu
-          })
-
-        */
-        }
 
         {
           /* 1. O Browser irá ler esse script e irá executar
         2. Ele vai pegar todos os scripts q rodaram e vai armazenar na variável "scripts"
         3. Depois ele vai dar uma passada nesse array de variaveis e as que tiverem erro, ele vai dar um push para o "__decoLoadingErrors"
         4. Após tudo isso o jitsu ainda não está disponivel/ não carregou.
-        5. Com todo esse processo terminado, o script para enviar os erros para o jitsu é injetado na pag e assim o jitsu é acionado
-        6. __decoLoadingErrors.forEach Da uma passada no array e envia para o jitsu cada script q tiver com o erro dentro do array */
+        5. Com todo esse processo terminado, o script para enviar os erros para o jitsu é injetado na página, assim, o jitsu é acionado
+        6. __decoLoadingErrors.forEach Da uma passada no array e envia para o jitsu cada script que tiver com o erro dentro do array */
         }
 
         <script
