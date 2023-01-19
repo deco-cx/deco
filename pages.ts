@@ -242,13 +242,14 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
  *
  * TODO: After we approve this, move this function elsewhere
  */
-export const generateEditorData = async (
+export const generateEditorData = async <Data = unknown>(
   req: Request,
+  ctx: HandlerContext<Data, LiveState>,
   pageId: string | null,
 ): Promise<EditorData> => {
   const selectedPageIds = pageId ? [Number(pageId)] : [];
 
-  const pageWithParams = await loadLivePage(req, { selectedPageIds });
+  const pageWithParams = await loadLivePage(req, ctx, { selectedPageIds });
 
   if (!pageWithParams) {
     throw new Error("Could not find page to generate editor data");
