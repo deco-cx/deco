@@ -13,22 +13,24 @@ const CHANNEL_KEYS = new Set([POLICY_KEY, REGION_KEY]);
 
 export interface Options {
   platform: "vtex";
-  defaultLocale?: string;
-  defaultSalesChannel?: string;
   defaultRegionId?: string;
   defaultHideUnnavailableItems?: boolean;
 }
 
 export const createClient = ({
   platform,
-  defaultLocale = "en-US",
-  defaultSalesChannel = "1",
   defaultRegionId = "",
   defaultHideUnnavailableItems = false,
 }: Options) => {
   const baseUrl = `https://vtex-search-proxy.global.ssl.fastly.net/`;
 
-  const addDefaultFacets = (facets: SelectedFacet[]) => {
+  const addDefaultFacets = (
+    facets: SelectedFacet[],
+    { defaultSalesChannel = "1" }: Pick<
+      SearchArgs,
+      "defaultSalesChannel"
+    >,
+  ) => {
     const withDefaltFacets = facets.filter(({ key }) => !CHANNEL_KEYS.has(key));
 
     const policyFacet = facets.find(({ key }) => key === POLICY_KEY) ??
@@ -56,8 +58,9 @@ export const createClient = ({
     selectedFacets = [],
     type,
     fuzzy = "auto",
-    locale = defaultLocale,
+    locale = "en-US",
     account,
+    defaultSalesChannel,
   }: SearchArgs): Promise<T> => {
     const params = new URLSearchParams({
       page: (page + 1).toString(),
@@ -75,7 +78,7 @@ export const createClient = ({
       );
     }
 
-    const pathname = addDefaultFacets(selectedFacets)
+    const pathname = addDefaultFacets(selectedFacets, { defaultSalesChannel })
       .map(({ key, value }) => `${key}/${value}`)
       .join("/");
 
@@ -88,11 +91,11 @@ export const createClient = ({
     search<ProductSearchResult>({ ...args, type: "product_search" });
 
   const suggestedTerms = (
-    { query, account }: Omit<SearchArgs, "type">,
+    { query, account, locale = "en-US" }: Omit<SearchArgs, "type">,
   ): Promise<Suggestion> => {
     const params = new URLSearchParams({
       query: query?.toString() ?? "",
-      locale: defaultLocale,
+      locale,
     });
 
     return fetchAPI(
@@ -101,10 +104,10 @@ export const createClient = ({
   };
 
   const topSearches = (
-    { account }: Pick<SearchArgs, "account">,
+    { account, locale = "en-US" }: Pick<SearchArgs, "account" | "locale">,
   ): Promise<Suggestion> => {
     const params = new URLSearchParams({
-      locale: defaultLocale,
+      locale,
     });
 
     return fetchAPI(

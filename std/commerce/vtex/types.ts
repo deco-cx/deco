@@ -12,6 +12,7 @@ export interface SearchArgs {
   fuzzy?: "0" | "1" | "auto";
   hideUnavailableItems?: boolean;
   locale?: string;
+  defaultSalesChannel?: string;
 }
 
 export interface SelectedFacet {
