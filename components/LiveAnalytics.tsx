@@ -52,30 +52,17 @@ if (document.readyState === 'complete') {
 
 type Props = Partial<Page> & { flags?: Flags };
 
-const IS_TESTING_JITSU = true;
-
 // Get all the scripts and check which ones have errors
 const errorHandlingScript = `
-window.__decoLoadingErrors = []
-            const scripts = document.querySelectorAll("script");
-            scripts.forEach((e) => e.onerror = () => __decoLoadingErrors.push(e.src))
+      window.__decoLoadingErrors = []
+      const scripts = document.querySelectorAll("script");
+      scripts.forEach((e) => e.onerror = () => __decoLoadingErrors.push(e.src))
 `;
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
     <>
       <Head>
-
-
-        {
-          /* 1. O Browser irá ler esse script e irá executar
-        2. Ele vai pegar todos os scripts q rodaram e vai armazenar na variável "scripts"
-        3. Depois ele vai dar uma passada nesse array de variaveis e as que tiverem erro, ele vai dar um push para o "__decoLoadingErrors"
-        4. Após tudo isso o jitsu ainda não está disponivel/ não carregou.
-        5. Com todo esse processo terminado, o script para enviar os erros para o jitsu é injetado na página, assim, o jitsu é acionado
-        6. __decoLoadingErrors.forEach Da uma passada no array e envia para o jitsu cada script que tiver com o erro dentro do array */
-        }
-
         <script
           dangerouslySetInnerHTML={{
             __html: errorHandlingScript,
@@ -83,7 +70,7 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
         >
         </script>
       </Head>
-      {(context.isDeploy || IS_TESTING_JITSU) && ( // Add analytcs in production only
+      {(context.isDeploy) && ( // Add analytcs in production only
         <Jitsu
           data-init-only="true"
           data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
