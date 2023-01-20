@@ -11,7 +11,7 @@ const onWebVitalsReport = (event) => {
   window.jitsu('track', 'web-vitals', event);
 };
 
-/* Send exception error to jitsu
+/* Send exception error to jitsu */
 const onError = ( message, url, lineNo, columnNo, error) => {
     window.jitsu('track', 'error', {error_type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
 }
