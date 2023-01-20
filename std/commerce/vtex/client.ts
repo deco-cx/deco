@@ -13,28 +13,28 @@ const CHANNEL_KEYS = new Set([POLICY_KEY, REGION_KEY]);
 
 export interface Options {
   platform: "vtex";
-  account: string;
-  defaultLocale?: string;
-  defaultSalesChannel?: string;
   defaultRegionId?: string;
   defaultHideUnnavailableItems?: boolean;
 }
 
 export const createClient = ({
   platform,
-  account,
-  defaultLocale = "en-US",
-  defaultSalesChannel = "1",
   defaultRegionId = "",
   defaultHideUnnavailableItems = false,
 }: Options) => {
-  const baseUrl = `https://vtex-search-proxy.global.ssl.fastly.net/${account}`;
+  const baseUrl = `https://vtex-search-proxy.global.ssl.fastly.net`;
 
-  const addDefaultFacets = (facets: SelectedFacet[]) => {
+  const addDefaultFacets = (
+    facets: SelectedFacet[],
+    { salesChannel = "1" }: Pick<
+      SearchArgs,
+      "salesChannel"
+    >,
+  ) => {
     const withDefaltFacets = facets.filter(({ key }) => !CHANNEL_KEYS.has(key));
 
     const policyFacet = facets.find(({ key }) => key === POLICY_KEY) ??
-      { key: POLICY_KEY, value: defaultSalesChannel };
+      { key: POLICY_KEY, value: salesChannel };
 
     const regionFacet = facets.find(({ key }) => key === REGION_KEY) ??
       { key: REGION_KEY, value: defaultRegionId };
@@ -58,7 +58,9 @@ export const createClient = ({
     selectedFacets = [],
     type,
     fuzzy = "auto",
-    locale = defaultLocale,
+    locale = "en-US",
+    account,
+    salesChannel,
   }: SearchArgs): Promise<T> => {
     const params = new URLSearchParams({
       page: (page + 1).toString(),
@@ -76,12 +78,12 @@ export const createClient = ({
       );
     }
 
-    const pathname = addDefaultFacets(selectedFacets)
+    const pathname = addDefaultFacets(selectedFacets, { salesChannel })
       .map(({ key, value }) => `${key}/${value}`)
       .join("/");
 
     return fetchAPI(
-      `${baseUrl}/intelligent-search/${type}/${pathname}?${params.toString()}`,
+      `${baseUrl}/${account}/intelligent-search/${type}/${pathname}?${params.toString()}`,
     );
   };
 
@@ -89,25 +91,27 @@ export const createClient = ({
     search<ProductSearchResult>({ ...args, type: "product_search" });
 
   const suggestedTerms = (
-    args: Omit<SearchArgs, "type">,
+    { query, account, locale = "en-US" }: Omit<SearchArgs, "type">,
   ): Promise<Suggestion> => {
     const params = new URLSearchParams({
-      query: args.query?.toString() ?? "",
-      locale: defaultLocale,
+      query: query?.toString() ?? "",
+      locale,
     });
 
     return fetchAPI(
-      `${baseUrl}/intelligent-search/search_suggestions?${params.toString()}`,
+      `${baseUrl}/${account}/intelligent-search/search_suggestions?${params.toString()}`,
     );
   };
 
-  const topSearches = (): Promise<Suggestion> => {
+  const topSearches = (
+    { account, locale = "en-US" }: Pick<SearchArgs, "account" | "locale">,
+  ): Promise<Suggestion> => {
     const params = new URLSearchParams({
-      locale: defaultLocale,
+      locale,
     });
 
     return fetchAPI(
-      `${baseUrl}/intelligent-search/top_searches?${params.toString()}`,
+      `${baseUrl}/${account}/intelligent-search/top_searches?${params.toString()}`,
     );
   };
 

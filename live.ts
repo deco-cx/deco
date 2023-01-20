@@ -120,7 +120,11 @@ export const withLive = (liveOptions: LiveOptions) => {
     // Allow introspection of page by editor
     if (url.searchParams.has("editorData")) {
       const pageId = url.searchParams.get("pageId");
-      const editorData = await generateEditorData(req, pageId);
+      const editorData = await generateEditorData(
+        req,
+        ctx as unknown as HandlerContext<any, LiveState>,
+        pageId,
+      );
 
       return Response.json(editorData, {
         headers: {

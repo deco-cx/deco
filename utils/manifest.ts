@@ -5,6 +5,7 @@ import { context } from "$live/live.ts";
 import type {
   AvailableSection,
   EditorData,
+  LiveState,
   PageData,
   PageFunction,
 } from "$live/types.ts";
@@ -134,13 +135,12 @@ export const createFunctionInstanceFromFunctionKey = (
   return functionInstance;
 };
 
-export async function loadPageData<Data, State>(
+export async function loadPageData<Data, State extends LiveState>(
   req: Request,
   ctx: HandlerContext<Data, State>,
   pageData: PageData,
-  start: (l: string) => void,
-  end: (l: string) => void,
 ): Promise<PageData> {
+  const { start, end } = ctx.state.t;
   const functionsResponse = await Promise.all(
     pageData.functions?.map(async ({ key, props, uniqueId }) => {
       const functionFn = context.manifest!.functions[key]

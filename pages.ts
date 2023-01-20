@@ -12,6 +12,7 @@ import {
   createSectionFromSectionKey,
   doesSectionExist,
 } from "./utils/manifest.ts";
+import { PostgrestError } from "supabase";
 
 export interface PageOptions {
   selectedPageIds: number[];
@@ -22,6 +23,7 @@ export const isPageOptions = (x: any): x is PageOptions =>
 
 export async function loadLivePage(
   req: Request,
+  ctx: HandlerContext<any, LiveState>,
   { selectedPageIds }: PageOptions,
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
@@ -32,16 +34,28 @@ export async function loadLivePage(
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
 
   const pageWithParams = await (async (): Promise<PageWithParams | null> => {
+    const { data: pages, error } = await getSupabaseClient()
+      .from("pages")
+      .select("id, name, data, path, state")
+      .eq("site", context.siteId)
+      .in("state", ["published", "draft", "global"]);
+
+    const globalSettings = pages?.filter((page) => page.state === "global") ??
+      [];
+    ctx.state.global = loadGlobal({ globalSettings });
+
     if (sectionName) {
       return fetchPageFromSection(sectionName, context.siteId);
     }
     if (pageId) {
       return fetchPageFromId(pageId, url.pathname);
     }
-    const candidatePages = await fetchPageFromPathname(
-      url.pathname,
-      context.siteId,
-    );
+
+    const candidatePages = getPageFromPathname({
+      pages,
+      error,
+      path: url.pathname,
+    });
     if (candidatePages && candidatePages.length !== 0) {
       let firstPublished;
       for (const candidatePage of candidatePages) {
@@ -87,16 +101,15 @@ export async function loadLivePage(
   };
 }
 
-export const fetchPageFromPathname = async (
-  path: string,
-  siteId: number,
-): Promise<PageWithParams[] | null> => {
-  const { data: pages, error } = await getSupabaseClient()
-    .from("pages")
-    .select("id, name, data, path, state")
-    .eq("site", siteId)
-    .in("state", ["published", "draft"]);
+interface FetPageFromPathnameParams {
+  pages: Page[] | null;
+  error: PostgrestError | null;
+  path: string;
+}
 
+const getPageFromPathname = (
+  { pages, error, path }: FetPageFromPathnameParams,
+): PageWithParams[] | null => {
   const routes = pages?.map((page) => ({
     page,
     pattern: page.path,
@@ -229,13 +242,14 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
  *
  * TODO: After we approve this, move this function elsewhere
  */
-export const generateEditorData = async (
+export const generateEditorData = async <Data = unknown>(
   req: Request,
+  ctx: HandlerContext<Data, LiveState>,
   pageId: string | null,
 ): Promise<EditorData> => {
   const selectedPageIds = pageId ? [Number(pageId)] : [];
 
-  const pageWithParams = await loadLivePage(req, { selectedPageIds });
+  const pageWithParams = await loadLivePage(req, ctx, { selectedPageIds });
 
   if (!pageWithParams) {
     throw new Error("Could not find page to generate editor data");
@@ -284,7 +298,7 @@ export const loadPage = async <Data = unknown>(
   // TODO: Ensure loadLivePage only goes to DB if there is a page published with this path
   // ... This will be possible when all published pages are synced to the edge
   // ... for now, we need to go to the DB every time, even when there's no data for this page
-  const pageWithParams = await loadLivePage(req, options);
+  const pageWithParams = await loadLivePage(req, ctx, options);
   end("load-page");
 
   if (!pageWithParams) {
@@ -301,11 +315,34 @@ export const loadPage = async <Data = unknown>(
       params,
     },
     page?.data,
-    start,
-    end,
   );
   end("load-data");
 
   ctx.state.page = { ...page, data: pageDataAfterFunctions };
   return ctx.state.page;
+};
+
+const loadGlobal = ({ globalSettings }: { globalSettings: Page[] }) => {
+  // https://regex101.com/r/zSyTir/1
+  const stripGlobalKey = (key: string) => {
+    return key.replace(/(.*)\/(\w*)\.global\.tsx$/, "$2");
+  };
+
+  const globals = globalSettings.reduce(
+    (result, page: Page) => {
+      const firstSection = page.data.sections?.[0];
+
+      if (!firstSection) {
+        return result;
+      }
+
+      const stripedKey = stripGlobalKey(firstSection.key);
+
+      result[stripedKey] = firstSection.props;
+      return result;
+    },
+    {} as Record<string, unknown>,
+  );
+
+  return Object.freeze(globals);
 };

@@ -1,4 +1,8 @@
 export interface SearchArgs {
+  /**
+   * @description VTEX Account name.
+   */
+  account: string;
   query?: string;
   page: number;
   count: number;
@@ -8,6 +12,7 @@ export interface SearchArgs {
   fuzzy?: "0" | "1" | "auto";
   hideUnavailableItems?: boolean;
   locale?: string;
+  salesChannel?: string;
 }
 
 export interface SelectedFacet {

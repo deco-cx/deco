@@ -3,26 +3,43 @@ import { context } from "$live/live.ts";
 import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { Node } from "$live/types.ts";
 
+const mapSectionToNode = (component: string) => ({
+  label: basename(component),
+  fullPath: component,
+  editLink: context.deploymentId === undefined // only allow vscode when developing locally
+    ? `vscode://file/${resolveFilePath(component)}`
+    : undefined,
+});
+
+const isFirstLevelSection = (section: string) =>
+  section.split("/").length === 3 && section.endsWith(".tsx");
+
+export const isGlobalSection = (section: string) =>
+  section.endsWith(".global.tsx");
+
 export const getWorkbenchTree = (): Node[] => {
   const sections = context.manifest?.sections ?? {};
 
-  const firstLevel = Object
+  const firstLevelSection = Object
     .keys(sections)
-    .filter((section) =>
-      section.split("/").length === 3 && section.endsWith(".tsx")
-    )
-    .map((component) => ({
-      label: basename(component),
-      fullPath: component,
-      editLink: context.deploymentId === undefined // only allow vscode when developing locally
-        ? `vscode://file/${resolveFilePath(component)}`
-        : undefined,
-    }));
+    .filter((section) => isFirstLevelSection(section));
+
+  const firstLevelNonGlobalSectionNodes: Node[] = firstLevelSection.filter((
+    section,
+  ) => !isGlobalSection(section)).map(mapSectionToNode);
+
+  const firstLevelGlobalSectionNodes: Node[] = firstLevelSection.filter(
+    isGlobalSection,
+  ).map(mapSectionToNode);
 
   return [{
     label: "sections",
     fullPath: "./sections",
-    children: firstLevel,
+    children: firstLevelNonGlobalSectionNodes,
+  }, {
+    label: "globals",
+    fullPath: "./sections",
+    children: firstLevelGlobalSectionNodes,
   }];
 };
 

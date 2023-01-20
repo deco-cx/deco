@@ -153,9 +153,10 @@ export interface EditorData {
   state: PageState;
 }
 
-export type LiveState = {
+export type LiveState<T = unknown> = {
   page: Page;
   site: Site;
   flags: Flags;
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+  global: T;
 };
