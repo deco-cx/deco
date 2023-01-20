@@ -22,19 +22,19 @@ export const createClient = ({
   defaultRegionId = "",
   defaultHideUnnavailableItems = false,
 }: Options) => {
-  const baseUrl = `https://vtex-search-proxy.global.ssl.fastly.net/`;
+  const baseUrl = `https://vtex-search-proxy.global.ssl.fastly.net`;
 
   const addDefaultFacets = (
     facets: SelectedFacet[],
-    { defaultSalesChannel = "1" }: Pick<
+    { salesChannel = "1" }: Pick<
       SearchArgs,
-      "defaultSalesChannel"
+      "salesChannel"
     >,
   ) => {
     const withDefaltFacets = facets.filter(({ key }) => !CHANNEL_KEYS.has(key));
 
     const policyFacet = facets.find(({ key }) => key === POLICY_KEY) ??
-      { key: POLICY_KEY, value: defaultSalesChannel };
+      { key: POLICY_KEY, value: salesChannel };
 
     const regionFacet = facets.find(({ key }) => key === REGION_KEY) ??
       { key: REGION_KEY, value: defaultRegionId };
@@ -60,7 +60,7 @@ export const createClient = ({
     fuzzy = "auto",
     locale = "en-US",
     account,
-    defaultSalesChannel,
+    salesChannel,
   }: SearchArgs): Promise<T> => {
     const params = new URLSearchParams({
       page: (page + 1).toString(),
@@ -78,7 +78,7 @@ export const createClient = ({
       );
     }
 
-    const pathname = addDefaultFacets(selectedFacets, { defaultSalesChannel })
+    const pathname = addDefaultFacets(selectedFacets, { salesChannel })
       .map(({ key, value }) => `${key}/${value}`)
       .join("/");
 
