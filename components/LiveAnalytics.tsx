@@ -13,16 +13,12 @@ const onWebVitalsReport = (event) => {
 
 /* Send exception error to jitsu */
 const onError = ( message, url, lineNo, columnNo, error) => {
-    window.jitsu('track', 'error', {error_type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
+    window.jitsu('track', 'error', {error_1type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
 }
 
 const init = async () => {
   if (typeof window.jitsu !== "function") {
     return;
-  }
-
-  window.onerror = function (message, url, lineNo, columnNo, error) {
-    onError(message, url, lineNo, columnNo, error)
   }
 
   /* Send scriptLoad event to jitsu */
@@ -43,10 +39,14 @@ const init = async () => {
   onLCP(onWebVitalsReport);
 };
 
-if (document.readyState === 'complete') {
-  init();
-} else {
-  window.addEventListener('load', init);
+  window.onerror = function (message, url, lineNo, columnNo, error) {
+      onError(message, url, lineNo, columnNo, error)  
+  }
+
+  if (document.readyState === 'complete') {
+      init();
+  } else {
+      window.addEventListener('load', init);
 };
 `;
 
