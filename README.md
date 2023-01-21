@@ -24,13 +24,13 @@ We extend that with new types of configuration:
 ```typescript
 // FnProps are generic functions defined in your deno source code which accept props, req? and return data
 export type FnProps<Props, Result> = {
-  fn: (props: Props, req?: Request) => Promise<Result> | Result;
+  fn: (props: Props, req?: Request, ctx?: any) => Promise<Result> | Result;
   props: Props;
 };
 
 // Accounts are FnProps configs which store account credentials
 export type Account<Props> = Config<{
-  account: FnProps<Props, boolean>;
+  account: FnProps<Props, any>;
 }>
 
 // Audiences are FnProps configs which return a boolean if the current request matches the audience
@@ -54,7 +54,6 @@ export type Workflow<Props> = Config<{
 }>
 
 // All of the above are the "building blocks" for pages and flags, which are composed in the UI:
-
 export type AudienceOperator = "and" | "or";
 
 export type Variation<V> = Config<{
@@ -62,11 +61,15 @@ export type Variation<V> = Config<{
 }>
 
 // Flags are compositions of audiences which are used to prioritize specific configs
-export type Flag = Config<{
+export type Flag<V> = Config<{
   traffic: number; // 0.3 = 30% of traffic
   audiences: Array<AudienceOperator | Audience>;
-  variations?: string[] | number[] | boolean[] | ConfigId[] | Variation;
+  variations?: string[] | number[] | boolean[] | Variation<V>;
   value: any;
+}>
+
+export type Redirect = Config<{
+  redirect: string;
 }>
 
 // Pages are compositions of loaders and sections which are rendered to HTML + JS + CSS
