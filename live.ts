@@ -14,7 +14,6 @@ import {
 import { generateEditorData, isPageOptions, loadPage } from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { verifyDomain } from "$live/utils/domains.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
 import { loadFlags } from "$live/flags.ts";
 
@@ -23,7 +22,6 @@ export type LiveContext = {
   manifest?: DecoManifest;
   deploymentId: string | undefined;
   isDeploy: boolean;
-  domains: string[];
   site: string;
   siteId: number;
   loginUrl?: string;
@@ -34,7 +32,6 @@ export type LiveContext = {
 export const context: LiveContext = {
   deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
-  domains: ["localhost"],
   site: "",
   siteId: 0,
 };
@@ -62,22 +59,6 @@ export const withLive = (liveOptions: LiveOptions) => {
   context.site = liveOptions.site;
   context.siteId = liveOptions.siteId;
   context.loginUrl = liveOptions.loginUrl;
-  context.domains.push(
-    `${liveOptions.site}.deco.page`,
-    `${liveOptions.site}.deco.site`,
-    `deco-pages-${liveOptions.site}.deno.dev`,
-    `deco-sites-${liveOptions.site}.deno.dev`,
-  );
-  liveOptions.domains?.forEach((domain) => context.domains.push(domain));
-  // Support deploy preview domains
-  if (context.deploymentId !== undefined) {
-    context.domains.push(
-      `deco-pages-${context.site}-${context.deploymentId}.deno.dev`,
-    );
-    context.domains.push(
-      `deco-sites-${context.site}-${context.deploymentId}.deno.dev`,
-    );
-  }
 
   console.log(
     `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
@@ -97,11 +78,6 @@ export const withLive = (liveOptions: LiveOptions) => {
 
     const { start, end, printTimings } = createServerTimings();
     ctx.state.t = { start, end };
-
-    const domainRes = verifyDomain(url.hostname);
-    if (domainRes) {
-      return domainRes;
-    }
 
     // TODO: Find a better way to embedded these routes on project routes.
     // Follow up here: https://github.com/denoland/fresh/issues/516
