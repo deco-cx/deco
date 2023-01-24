@@ -38,10 +38,9 @@ const init = async () => {
   onFID(onWebVitalsReport);
   onLCP(onWebVitalsReport);
 };
-
-  window.onerror = function (message, url, lineNo, columnNo, error) {
-      onError(message, url, lineNo, columnNo, error)  
-  }
+  /* Send exception error event to jitsu */
+  window.addEventListener('error', function ({message, url, lineNo, columnNo, error}) {
+    onError(message, url, lineNo, columnNo, error)})
 
   if (document.readyState === 'complete') {
       init();
@@ -56,7 +55,7 @@ type Props = Partial<Page> & { flags?: Flags };
 const errorHandlingScript = `
       window.__decoLoadingErrors = []
       const scripts = document.querySelectorAll("script");
-      scripts.forEach((e) => e.onerror = () => __decoLoadingErrors.push(e.src))
+      scripts.forEach((e) => {e.onerror = () => __decoLoadingErrors.push(e.src)})
 `;
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
@@ -69,7 +68,7 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
           }}
         >
         </script>
-      </Head>
+      </Head>11
       {(context.isDeploy) && ( // Add analytcs in production only
         <Jitsu
           data-init-only="true"
