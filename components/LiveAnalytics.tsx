@@ -1,4 +1,5 @@
 import { context } from "$live/live.ts";
+import { Head } from "$fresh/runtime.ts";
 import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
@@ -10,10 +11,18 @@ const onWebVitalsReport = (event) => {
   window.jitsu('track', 'web-vitals', event);
 };
 
+/* Send exception error to jitsu */
+const onError = ( message, url, lineNo, columnNo, error) => {
+    window.jitsu('track', 'error', {error_1type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
+}
+
 const init = async () => {
   if (typeof window.jitsu !== "function") {
     return;
   }
+
+  /* Send scriptLoad event to jitsu */
+  __decoLoadingErrors.forEach((e) => window.jitsu('track', 'error',{error_type:"ScriptLoad", url: e.src}))
 
   /* Add these trackers to all analytics sent to our server */
   window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", ${
@@ -29,20 +38,38 @@ const init = async () => {
   onFID(onWebVitalsReport);
   onLCP(onWebVitalsReport);
 };
+  /* Send exception error event to jitsu */
+  window.addEventListener('error', function ({message, url, lineNo, columnNo, error}) {
+    onError(message, url, lineNo, columnNo, error)})
 
-if (document.readyState === 'complete') {
-  init();
-} else {
-  window.addEventListener('load', init);
+  if (document.readyState === 'complete') {
+      init();
+  } else {
+      window.addEventListener('load', init);
 };
 `;
 
 type Props = Partial<Page> & { flags?: Flags };
 
+// Get all the scripts and check which ones have errors
+const errorHandlingScript = `
+      window.__decoLoadingErrors = []
+      const scripts = document.querySelectorAll("script");
+      scripts.forEach((e) => {e.onerror = () => __decoLoadingErrors.push(e.src)})
+`;
+
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
     <>
-      {context.isDeploy && ( // Add analytcs in production only
+      <Head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: errorHandlingScript,
+          }}
+        >
+        </script>
+      </Head>11
+      {(context.isDeploy) && ( // Add analytcs in production only
         <Jitsu
           data-init-only="true"
           data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
