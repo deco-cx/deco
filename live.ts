@@ -1,6 +1,4 @@
-import { PageOptions } from "./pages.ts";
 import {
-  HandlerContext,
   Handlers,
   MiddlewareHandlerContext,
 } from "$fresh/server.ts";
@@ -11,7 +9,7 @@ import {
   LivePageData,
   LiveState,
 } from "$live/types.ts";
-import { generateEditorData, isPageOptions, loadPage } from "$live/pages.ts";
+import { generateEditorData, isPageOptions, loadPage, PageOptions } from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
@@ -93,22 +91,6 @@ export const withLive = (liveOptions: LiveOptions) => {
       return workbenchHandler();
     }
 
-    // Allow introspection of page by editor
-    if (url.searchParams.has("editorData")) {
-      const pageId = url.searchParams.get("pageId");
-      const editorData = await generateEditorData(
-        req,
-        ctx as unknown as HandlerContext<any, LiveState>,
-        pageId,
-      );
-
-      return Response.json(editorData, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     const initialResponse = await ctx.next();
 
@@ -136,40 +118,42 @@ export const withLive = (liveOptions: LiveOptions) => {
   };
 };
 
-export const getLivePageData = async <Data>(
-  req: Request,
-  ctx: HandlerContext<Data, LiveState>,
-) => {
-  const flags = await loadFlags(req, ctx);
-
-  const pageOptions = flags.reduce(
-    (acc, curr) => {
-      if (isPageOptions(curr.value)) {
-        acc.selectedPageIds = [
-          ...acc.selectedPageIds,
-          ...curr.value.selectedPageIds,
-        ];
-      }
-
-      return acc;
-    },
-    { selectedPageIds: [] } as PageOptions,
-  );
-
-  return {
-    flags: ctx.state.flags,
-    page: await loadPage(req, ctx, pageOptions),
-  };
-};
-
 export const live: () => Handlers<LivePageData, LiveState> = () => ({
   GET: async (req, ctx) => {
-    const { page, flags } = await getLivePageData(req, ctx);
+    const url = new URL(req.url)
+
+    const flags = await loadFlags(req, ctx);
+    const pageOptions = flags.reduce(
+      (acc, curr) => {
+        if (isPageOptions(curr.value)) {
+          acc.selectedPageIds = [
+            ...acc.selectedPageIds,
+            ...curr.value.selectedPageIds,
+          ];
+        }
+  
+        return acc;
+      },
+      { selectedPageIds: [] } as PageOptions,
+    );
+    
+    // Allow introspection of page by editor
+    if (url.searchParams.has("editorData")) {
+      const editorData = await generateEditorData(req, ctx, pageOptions);
+      
+      return Response.json(editorData, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    const page = await loadPage(req, ctx, pageOptions)
 
     if (!page) {
       return ctx.renderNotFound();
     }
 
-    return ctx.render({ page, flags });
+    return ctx.render({ page, flags: ctx.state.flags });
   },
 });
