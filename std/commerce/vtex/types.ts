@@ -1,3 +1,27 @@
+export interface LegacySearchArgs {
+  query?: string;
+  page: number;
+  count: number;
+  type: "product_search" | "facets";
+  selectedFacets?: SelectedFacet[];
+  // fuzzy?: "0" | "1" | "auto";
+  // hideUnavailableItems?: boolean;
+  // locale?: string;
+  sort?: LegacySort;
+}
+
+export type LegacySort =
+  | "OrderByPriceDESC"
+  | "OrderByPriceASC"
+  | "OrderByTopSaleDESC"
+  | "OrderByReviewRateDESC"
+  | "OrderByNameASC"
+  | "OrderByNameDESC"
+  | "OrderByReleaseDateDESC"
+  | "OrderByBestDiscountDESC"
+  | "OrderByScoreDESC"
+  | "";
+
 export interface SearchArgs {
   /**
    * @description VTEX Account name.
@@ -148,6 +172,33 @@ interface Installment {
   PaymentSystemName: string;
   PaymentSystemGroupName: string;
   Name: string;
+}
+
+export interface LegacyItem {
+  itemId: string;
+  name: string;
+  nameComplete: string;
+  complementName: string;
+  ean: string;
+  referenceId: Array<{ Key: string; Value: string }>;
+  measurementUnit: string;
+  unitMultiplier: number;
+  modalType: unknown | null;
+  images: Image[];
+  Videos: string[];
+  variations: Array<string>;
+  sellers: Seller[];
+  attachments: Array<{
+    id: number;
+    name: string;
+    required: boolean;
+    domainValues: string;
+  }>;
+  isKit: boolean;
+  kitItems?: Array<{
+    itemId: string;
+    amount: number;
+  }>;
 }
 
 export interface Item {

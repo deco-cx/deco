@@ -1,6 +1,7 @@
 import { fetchAPI } from "$live/utils/fetchAPI.ts";
 import {
   FacetSearchResult,
+  LegacySearchArgs,
   ProductSearchResult,
   SearchArgs,
   SelectedFacet,
@@ -49,6 +50,26 @@ export const createClient = ({
 
     return withDefaltFacets;
   };
+
+  // const legacySearch = <t>({
+  //   query = "",
+  //   page,
+  //   count,
+  //   sort = "",
+  //   selectedFacets = [],
+  //   type,
+  //   fuzzy = "auto",
+  //   locale = defaultLocale,
+  // }: LegacySearchArgs): Promise <T> => {
+  //   const params = new URLSearchParams({
+  //     page: (page + 1).toString(),
+  //     count: count.toString(),
+  //     query,
+  //     sort,
+  //     fuzzy,
+  //     locale,
+  //   })
+  // }
 
   const search = <T>({
     query = "",
