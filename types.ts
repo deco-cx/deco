@@ -123,6 +123,7 @@ export interface Flag<T = unknown> {
   site: number;
   key: string;
   value: T;
+  updated_at: string
 }
 
 export interface Flags {

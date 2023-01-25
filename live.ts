@@ -1,7 +1,4 @@
-import {
-  Handlers,
-  MiddlewareHandlerContext,
-} from "$fresh/server.ts";
+import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import {
   DecoManifest,
@@ -9,11 +6,16 @@ import {
   LivePageData,
   LiveState,
 } from "$live/types.ts";
-import { generateEditorData, isPageOptions, loadPage, PageOptions } from "$live/pages.ts";
+import {
+  generateEditorData,
+  isPageOptions,
+  loadPage,
+  PageOptions,
+} from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
-import { loadFlags } from "$live/flags.ts";
+import { cookies, loadFlags } from "$live/flags.ts";
 
 // The global live context
 export type LiveContext = {
@@ -120,23 +122,26 @@ export const withLive = (liveOptions: LiveOptions) => {
 
 export const live: () => Handlers<LivePageData, LiveState> = () => ({
   GET: async (req, ctx) => {
-    const url = new URL(req.url)
+    const url = new URL(req.url);
 
-    const flags = await loadFlags(req, ctx);
-    const pageOptions = flags.reduce(
-      (acc, curr) => {
-        if (isPageOptions(curr.value)) {
+    const { activeFlags, flagsToCookie } = await loadFlags(req, ctx);
+
+    ctx.state.flags = activeFlags;
+
+    const pageOptions = Object.values(ctx.state.flags).reduce(
+      (acc: PageOptions, curr) => {
+        if (isPageOptions(curr)) {
           acc.selectedPageIds = [
             ...acc.selectedPageIds,
-            ...curr.value.selectedPageIds,
+            ...curr.selectedPageIds,
           ];
         }
-  
+
         return acc;
       },
       { selectedPageIds: [] } as PageOptions,
     );
-    
+
     // Allow introspection of page by editor
     if (url.searchParams.has("editorData")) {
       const editorData = await generateEditorData(req, ctx, pageOptions);
@@ -148,12 +153,18 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       });
     }
 
-    const page = await loadPage(req, ctx, pageOptions)
+    const page = await loadPage(req, ctx, pageOptions);
 
     if (!page) {
       return ctx.renderNotFound();
     }
 
-    return ctx.render({ page, flags: ctx.state.flags });
+    const response = await ctx.render({ page, flags: ctx.state.flags });
+
+    if (flagsToCookie.length > 0) {
+      response.headers.append("set-cookie", cookies.format(flagsToCookie));
+    }
+
+    return response;
   },
 });
