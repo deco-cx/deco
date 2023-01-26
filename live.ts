@@ -149,7 +149,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return Response.json(editorData, {
           headers: {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": req.headers.get("origin") || "*",
           },
         });
       }
