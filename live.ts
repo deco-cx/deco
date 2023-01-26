@@ -145,7 +145,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
     // Allow introspection of page by editor
     if (url.searchParams.has("editorData")) {
       const editorData = await generateEditorData(req, ctx, pageOptions);
-      
+
       return Response.json(editorData, {
         headers: {
           "Access-Control-Allow-Origin": "*",
@@ -162,7 +162,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
     const response = await ctx.render({ page, flags: ctx.state.flags });
 
     if (flagsToCookie.length > 0) {
-      response.headers.append("set-cookie", cookies.format(flagsToCookie));
+      cookies.setFlags(response.headers, flagsToCookie);
     }
 
     return response;

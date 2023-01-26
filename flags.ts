@@ -6,16 +6,16 @@ import { EffectFunction, MatchFunction } from "$live/std/types.ts";
 import MatchRandom from "$live/functions/MatchRandom.ts";
 import MatchSite from "$live/functions/MatchSite.ts";
 import EffectSelectPage from "$live/functions/EffectSelectPage.ts";
+import { getCookies, setCookie } from "std/http/mod.ts";
 
-const DECO_COOKIE = "deco_flag_";
+const DECO_COOKIE = "dcxf_";
 
 export const cookies = {
-  parse: (rawCookies: string | null) => {
-    const flags: CookiedFlag[] | undefined = rawCookies
-      ?.split("; ")
-      .map((c) => c.split("="))
-      .filter((cookie) => cookie[0].startsWith(DECO_COOKIE))
-      .map((cookie) => JSON.parse(atob(cookie[1])));
+  getFlags: (headers: Headers) => {
+    const cookies = getCookies(headers);
+    const flags: CookiedFlag[] | undefined = Object.keys(cookies)
+      .filter((cookie) => cookie.startsWith(DECO_COOKIE))
+      .map((cookie) => JSON.parse(atob(cookies[cookie])));
 
     if (!flags) {
       return null;
@@ -28,12 +28,13 @@ export const cookies = {
 
     return flagSet;
   },
-  format: (flags: CookiedFlag[]) => {
-    return flags.reduce(
-      (acc, flag) =>
-        `${DECO_COOKIE}${flag.key}=${btoa(JSON.stringify(flag))}; ${acc}`,
-      "",
-    );
+  setFlags: (headers: Headers, flags: CookiedFlag[]) => {
+    for (const flag of flags) {
+      const name = `${DECO_COOKIE}${flag.key}`;
+      const value = btoa(JSON.stringify(flag));
+
+      setCookie(headers, { name, value });
+    }
   },
 };
 
@@ -41,7 +42,7 @@ interface CookiedFlag {
   key: string;
   isMatch: boolean;
   value: any;
-  timestamp: string;
+  updated_at: string;
 }
 
 let flags: Flag[];
@@ -99,12 +100,8 @@ const runFlagEffect = <D>(
   return effectFn?.(req, ctx, effect?.props as any) ?? true;
 };
 
-const isCookieExpired = (cookie: CookiedFlag, flag: Flag) => {
-  const { timestamp } = cookie;
-  const { updated_at } = flag;
-
-  return timestamp !== updated_at;
-};
+const isCookieExpired = (cookie: CookiedFlag, flag: Flag) =>
+  cookie.updated_at !== flag.updated_at;
 
 export const loadFlags = async <Data = unknown>(
   req: Request,
@@ -128,7 +125,7 @@ export const loadFlags = async <Data = unknown>(
   const activeFlags: Record<string, unknown> = {};
 
   const flagsToCookie: CookiedFlag[] = [];
-  const cookiedFlags = cookies.parse(req.headers.get("cookie"));
+  const cookiedFlags = cookies.getFlags(req.headers);
 
   // TODO: if queryString.flagIds, then activate those flags and skip matching
   for (const flag of availableFlags) {
@@ -139,8 +136,6 @@ export const loadFlags = async <Data = unknown>(
       if (cookied.isMatch) {
         activeFlags[flag.key] = cookied.value;
       }
-
-      flagsToCookie.push(cookied);
 
       continue;
     }
@@ -158,7 +153,7 @@ export const loadFlags = async <Data = unknown>(
           key: flag.key,
           isMatch: matched.isMatch,
           value: activeFlags[flag.key],
-          timestamp: flag.updated_at,
+          updated_at: flag.updated_at,
         });
       }
     }
