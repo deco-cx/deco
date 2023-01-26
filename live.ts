@@ -142,24 +142,28 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       { selectedPageIds: [] } as PageOptions,
     );
 
-    // Allow introspection of page by editor
-    if (url.searchParams.has("editorData")) {
-      const editorData = await generateEditorData(req, ctx, pageOptions);
+    const getResponse = async () => {
+      // Allow introspection of page by editor
+      if (url.searchParams.has("editorData")) {
+        const editorData = await generateEditorData(req, ctx, pageOptions);
 
-      return Response.json(editorData, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
+        return Response.json(editorData, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      }
 
-    const page = await loadPage(req, ctx, pageOptions);
+      const page = await loadPage(req, ctx, pageOptions);
 
-    if (!page) {
-      return ctx.renderNotFound();
-    }
+      if (!page) {
+        return ctx.renderNotFound();
+      }
 
-    const response = await ctx.render({ page, flags: ctx.state.flags });
+      return await ctx.render({ page, flags: ctx.state.flags });
+    };
+
+    const response = await getResponse()
 
     if (flagsToCookie.length > 0) {
       cookies.setFlags(response.headers, flagsToCookie);
