@@ -33,7 +33,7 @@ export const cookies = {
       const name = `${DECO_COOKIE}${flag.key}`;
       const value = btoa(JSON.stringify(flag));
 
-      setCookie(headers, { name, value });
+      setCookie(headers, { name, value, secure: true, sameSite: 'None' });
     }
   },
 };
