@@ -68,7 +68,7 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
           }}
         >
         </script>
-      </Head>11
+      </Head>
       {(context.isDeploy) && ( // Add analytcs in production only
         <Jitsu
           data-init-only="true"
