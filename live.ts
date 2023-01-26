@@ -150,6 +150,9 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
         return Response.json(editorData, {
           headers: {
             "Access-Control-Allow-Origin": req.headers.get("origin") || "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, *"
           },
         });
       }
@@ -163,7 +166,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       return await ctx.render({ page, flags: ctx.state.flags });
     };
 
-    const response = await getResponse()
+    const response = await getResponse();
 
     if (flagsToCookie.length > 0) {
       cookies.setFlags(response.headers, flagsToCookie);
