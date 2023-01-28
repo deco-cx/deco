@@ -1,7 +1,7 @@
 import { context } from "$live/live.ts";
 import { Head } from "$fresh/runtime.ts";
-import Script from "https://deno.land/x/partytown@0.1.3/Script.tsx";
-import Jitsu from "https://deno.land/x/partytown@0.1.3/integrations/Jitsu.tsx";
+import Script from "https://deno.land/x/partytown@0.2.1/Script.tsx";
+import Jitsu from "https://deno.land/x/partytown@0.2.1/integrations/Jitsu.tsx";
 import type { Flags, Page } from "$live/types.ts";
 
 const innerHtml = (
