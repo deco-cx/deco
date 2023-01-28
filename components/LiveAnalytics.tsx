@@ -18,6 +18,8 @@ const onError = ( message, url, lineNo, columnNo, error) => {
 
 const init = async () => {
   if (typeof window.jitsu !== "function") {
+    // retry init after 50ms
+    setTimeout(init, 50)
     return;
   }
 
