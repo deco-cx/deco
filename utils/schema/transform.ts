@@ -131,7 +131,7 @@ export const findExport = (name: string, root: ASTNode[]) => {
   );
 
   if (!node) {
-    throw new Error(
+    console.error(
       `Could not find export for ${name}. Are you exporting all necessary elements?`,
     );
   }

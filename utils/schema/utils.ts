@@ -23,6 +23,8 @@ export const getSchemaFromSectionExport = withErrorPath(
     const nodes = await denoDoc(path);
     const node = findExport("default", nodes);
 
+    if (!node) return { inputSchema: null, outputSchema: null };
+
     if (node.kind !== "variable" && node.kind !== "function") {
       throw new Error(
         `Section default export needs to be a component like element`,
@@ -58,6 +60,8 @@ export const getSchemaFromSectionExport = withErrorPath(
 export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
   const nodes = await denoDoc(path);
   const node = findExport("default", nodes);
+
+  if (!node) return { inputSchema: null, outputSchema: null };
 
   if (node.kind !== "variable") {
     throw new Error("Default export needs to be a const variable");
