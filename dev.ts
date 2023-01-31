@@ -137,15 +137,20 @@ function manifestDataEquals(a: DevManifestData, b: DevManifestData) {
     arraysEqual(a.routes, b.routes) &&
     arraysEqual(a.islands, b.islands) &&
     arraysEqual(a.sections, b.sections) &&
-    arraysEqual(a.functions, b.functions)
+    arraysEqual(a.functions, b.functions) &&
+    objectEquals(a.schemas, b.schemas)
   );
+}
+
+function objectEquals<T>(a: T, b: T) {
+  return JSON.stringify(a) === JSON.stringify(b);
 }
 
 function arraysEqual<T>(a: T[], b: T[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; ++i) {
     if (typeof a[i] === "object") {
-      if (JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
+      if (!objectEquals(a[i], b[i])) return false;
 
       continue;
     }
