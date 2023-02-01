@@ -11,9 +11,10 @@ const MatchDate: MatchFunction<Props> = (
   __,
   props,
 ) => {
-  console.log("MatchDate", props);
   const now = new Date();
-  const isMatch = now > props.start && now < props.end;
+  const start = new Date(props.start);
+  const end = new Date(props.end);
+  const isMatch = now > start && now < end;
   const duration = props.session ? "session" : "request";
   return { isMatch, duration };
 };
