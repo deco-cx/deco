@@ -17,7 +17,7 @@ const imageKit = new ImageKit({
   urlEndpoint: "https://ik.imagekit.io/decocx",
 });
 
-const FACTORS = ["1", "1.5", "2"];
+const FACTORS = [1, 1.5, 2];
 
 export const getSrcSet = (src: string, width: number, height: number) =>
   FACTORS
@@ -26,12 +26,11 @@ export const getSrcSet = (src: string, width: number, height: number) =>
         imageKit.url({
           path: src,
           transformation: [{
-            width: `${width}`,
-            height: `${height}`,
-            dpr: factor,
+            width: `${Math.trunc(factor * width)}`,
+            height: `${Math.trunc(factor * height)}`,
           }],
         })
-      } ${factor}x`
+      } ${Math.trunc(factor * width)}w`
     )
     .join(", ");
 
