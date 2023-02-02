@@ -3,6 +3,7 @@ import { DecoManifest, Flag, LiveState } from "$live/types.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { EffectFunction, MatchFunction } from "$live/std/types.ts";
+import MatchDate from "$live/functions/MatchDate.ts";
 import MatchRandom from "$live/functions/MatchRandom.ts";
 import MatchSite from "$live/functions/MatchSite.ts";
 import EffectSelectPage from "$live/functions/EffectSelectPage.ts";
@@ -62,12 +63,11 @@ const runFlagMatchers = <D>(
     const matchFn: MatchFunction<any, any, any> =
       (key === "$live/functions/MatchRandom.ts")
         ? MatchRandom
+        : (key === "$live/functions/MatchDate.ts")
+        ? MatchDate
         : (key === "$live/functions/MatchSite.ts")
         ? MatchSite
         : manifest.functions[key]?.default as MatchFunction;
-    // RandomMatch.ts
-    // GradualRolloutMatch.ts
-    // UserIdMatch.ts
 
     if (!matchFn) {
       throw new Error("No match function found for key: " + key);
