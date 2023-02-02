@@ -78,7 +78,7 @@ export const toProduct = (
     items,
   } = product;
   const { name, referenceId, itemId: skuId } = sku;
-  const additionalProperty = toAdditionalProperties(sku);
+  const additionalProperty = toAdditionalProperties(product, sku);
   const images = nonEmptyArray(sku.images) ?? [DEFAULT_IMAGE];
   const offers = sku.sellers.sort(bestOfferFirst).map(toOffer);
   const hasVariant = level < 1 &&
@@ -152,17 +152,29 @@ const toBreadcrumbList = (
 };
 
 const toAdditionalProperties = (
+  { properties }: ProductVTEX,
   { variations: specifications }: SkuVTEX,
-): PropertyValue[] =>
-  specifications.flatMap(
+): PropertyValue[] => {
+  const fromSku = specifications.flatMap(
     ({ name, values }) =>
       values.map((value) => ({
         "@type": "PropertyValue",
         name,
         value,
-        valueReference: "SPECIFICATION",
-      })),
+        valueReference: "SPECIFICATION" as string,
+      }) as const),
   );
+  const fromProducts = properties.flatMap(({ name, values }) =>
+    values.map((value) => ({
+      "@type": "PropertyValue",
+      name,
+      value,
+      valueReference: "PROPERTY" as string,
+    }) as const)
+  );
+
+  return fromSku.concat(fromProducts);
+};
 
 const toOffer = ({
   commertialOffer: offer,
