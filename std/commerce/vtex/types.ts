@@ -4,9 +4,6 @@ export interface LegacySearchArgs {
   count: number;
   type: "product_search" | "facets";
   selectedFacets?: SelectedFacet[];
-  // fuzzy?: "0" | "1" | "auto";
-  // hideUnavailableItems?: boolean;
-  // locale?: string;
   sort?: LegacySort;
 }
 

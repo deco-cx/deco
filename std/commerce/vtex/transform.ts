@@ -39,16 +39,10 @@ export const toProductPage = (
   const skuId = maybeSkuId ?? product.items[0]?.itemId;
   const sku = product.items.find((item) => item.itemId === skuId);
 
-  // console.log("Variation", {
-  //   var: sku?.variations,
-  //   tam: product[sku?.variations[0] ?? ""],
-  // });
-
   if (!sku) {
     throw new Error(`Missing sku ${skuId} on product ${product.productName}`);
   }
 
-  // console.log("From", from);
   return {
     breadcrumbList: toBreadcrumbList(product, sku),
     product: toProduct(product, sku, 0, from),
@@ -87,13 +81,6 @@ export const toProduct = (
     items,
   } = product;
   const { name, referenceId, itemId: skuId } = sku;
-  // console.log("sku >>>>", sku);
-  // console.log(
-  //   "IS >>>>>",
-  //   toAdditionalProperties(sku),
-  //   "\n legacy >>>>>>",
-  //   toAdditionalPropertiesLegacy(sku),
-  // );
 
   const isLegacy = from === "Legacy";
   const additionalProperty = isLegacy
@@ -104,10 +91,6 @@ export const toProduct = (
   const offers = sku.sellers.sort(bestOfferFirst).map(toOffer);
   const hasVariant = level < 1 &&
     items.map((sku) => toProduct(product, sku, 1, from));
-  // console.log(
-  //   "PATH LEGACY >>>>>>>>",
-  //   getPath(product, sku),
-  // );
   return {
     "@type": "Product",
     productID: skuId,
@@ -206,7 +189,6 @@ const toAdditionalPropertiesLegacy = (
 ): PropertyValue[] =>
   sku.variations.flatMap(
     (name) => {
-      // console.log("sku >>>>>", sku);
       return sku[name]?.map((value) => ({
         "@type": "PropertyValue",
         name,
