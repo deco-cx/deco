@@ -25,9 +25,9 @@ const init = async () => {
   __decoLoadingErrors.forEach((e) => window.jitsu('track', 'error',{error_type:"ScriptLoad", url: e.src}))
 
   /* Add these trackers to all analytics sent to our server */
-  window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", ${
-  Object.keys(flags).map((key) => `flag_${key}: true`).join(",")
-} });
+  window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", 
+    active_flags: "${Object.keys(flags).join(',')}"
+   });
   /* Send page-view event */
   window.jitsu('track', 'pageview');
 
@@ -58,7 +58,14 @@ const errorHandlingScript = `
       scripts.forEach((e) => {e.onerror = () => __decoLoadingErrors.push(e.src)})
 `;
 
+/**
+ * We don't send Jitsu events on localhost by default, so
+ * turn this flag on if you want to test the event sending code.
+ */
+const IS_TESTING_JITSU = true;
+
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
+  console.log({ flags });
   return (
     <>
       <Head>
@@ -69,7 +76,7 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
         >
         </script>
       </Head>
-      {(context.isDeploy) && ( // Add analytcs in production only
+      {(context.isDeploy || IS_TESTING_JITSU) && ( // Add analytcs in production only
         <Jitsu
           data-init-only="true"
           data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
