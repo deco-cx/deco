@@ -5,6 +5,10 @@ export interface Props {
   pageIds: number[];
 }
 
+export interface Return {
+  selectedPageIds: number[];
+}
+
 const EffectSelectPage: EffectFunction<Props> = (
   _req,
   _ctx,

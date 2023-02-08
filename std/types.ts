@@ -26,6 +26,6 @@ export type EffectFunction<
   req: Request,
   ctx: HandlerContext<Data, State>,
   props: Props,
-) => void;
+) => Record<string, any>;
 
 export type LoaderReturnType<O = unknown> = O;

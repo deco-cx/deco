@@ -7,8 +7,10 @@ import { DecoManifest } from "$live/types.ts";
 
 import * as $$$$0 from "./functions/EffectSelectPage.ts";
 import * as $$$$1 from "./functions/MatchDate.ts";
-import * as $$$$2 from "./functions/MatchRandom.ts";
-import * as $$$$3 from "./functions/MatchSite.ts";
+import * as $$$$2 from "./functions/MatchEnvironment.ts";
+import * as $$$$3 from "./functions/MatchRandom.ts";
+import * as $$$$4 from "./functions/MatchSite.ts";
+import * as $$$$5 from "./functions/MatchUserAgent.ts";
 
 const manifest: DecoManifest = {
   routes: {},
@@ -17,8 +19,10 @@ const manifest: DecoManifest = {
   functions: {
     "./functions/EffectSelectPage.ts": $$$$0,
     "./functions/MatchDate.ts": $$$$1,
-    "./functions/MatchRandom.ts": $$$$2,
-    "./functions/MatchSite.ts": $$$$3,
+    "./functions/MatchEnvironment.ts": $$$$2,
+    "./functions/MatchRandom.ts": $$$$3,
+    "./functions/MatchSite.ts": $$$$4,
+    "./functions/MatchUserAgent.ts": $$$$5,
   },
   schemas: {
     "./functions/EffectSelectPage.ts": {
@@ -47,14 +51,14 @@ const manifest: DecoManifest = {
         "properties": {
           "start": {
             "type": [
-              "string",
+              "number",
               "null",
             ],
             "title": "Start",
           },
           "end": {
             "type": [
-              "string",
+              "number",
               "null",
             ],
             "title": "End",
@@ -69,6 +73,40 @@ const manifest: DecoManifest = {
         ],
       },
       "outputSchema": null,
+    },
+    "./functions/MatchEnvironment.ts": {
+      "inputSchema": {
+        "title": " Match Environment",
+        "type": "object",
+        "properties": {
+          "environment": {
+            "type": "string",
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "production",
+              },
+              {
+                "type": "string",
+                "const": "development",
+              },
+            ],
+            "title": "Environment",
+          },
+        },
+        "required": [
+          "environment",
+        ],
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$id": "c995d72dc372b1b50bf9f70943e37fc94e1ccac9",
+          },
+        },
+        "additionalProperties": true,
+      },
     },
     "./functions/MatchRandom.ts": {
       "inputSchema": {
@@ -104,6 +142,38 @@ const manifest: DecoManifest = {
         "required": [
           "siteId",
         ],
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$id": "c995d72dc372b1b50bf9f70943e37fc94e1ccac9",
+          },
+        },
+        "additionalProperties": true,
+      },
+    },
+    "./functions/MatchUserAgent.ts": {
+      "inputSchema": {
+        "title": " Match User Agent",
+        "type": "object",
+        "properties": {
+          "includes": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Includes",
+          },
+          "match": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Match",
+          },
+        },
+        "required": [],
       },
       "outputSchema": {
         "type": "object",
