@@ -127,7 +127,7 @@ export async function generate(directory: string, manifest: DevManifestData) {
 
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
-    `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands and ${sections.length} sections.`,
+    `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands, ${sections.length} sections and ${functions.length} functions.`,
     "color: green; font-weight: bold",
   );
 }
@@ -297,4 +297,11 @@ async function extractAllSchemas(
   ]);
 
   return schemas;
+}
+
+// Generate live own manifest data so that other sites can import native functions and sections.
+if (import.meta.main) {
+  const dir = Deno.cwd();
+  const newManifestData = await generateDevManifestData(dir);
+  await generate(dir, newManifestData);
 }

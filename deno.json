@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "start": "deno run -A --watch=static/ dev.ts",
+    "start": "deno run -A dev.ts",
     "component": "deno eval 'import \"$live/scripts/component.ts\"'",
     "order_imports": "deno eval 'import \"$live/scripts/order_imports.ts\"'",
     "release": "deno run -A ./scripts/release.ts",
