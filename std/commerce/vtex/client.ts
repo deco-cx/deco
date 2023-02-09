@@ -1,6 +1,9 @@
 import { fetchAPI } from "$live/utils/fetchAPI.ts";
 import {
   FacetSearchResult,
+  LegacyFacets,
+  LegacyProduct,
+  LegacySort,
   ProductSearchResult,
   SearchArgs,
   SelectedFacet,
@@ -15,6 +18,15 @@ export interface Options {
   platform: "vtex";
   defaultRegionId?: string;
   defaultHideUnnavailableItems?: boolean;
+}
+
+interface LegacyParams {
+  ft?: string;
+  fq?: string;
+  _from?: number;
+  _to?: number;
+  O?: LegacySort;
+  map?: string;
 }
 
 export const createClient = ({
@@ -83,7 +95,7 @@ export const createClient = ({
       .join("/");
 
     return fetchAPI(
-      `${baseUrl}/${account}/intelligent-search/${type}/${pathname}?${params.toString()}`,
+      `${baseUrl}/v2/${account}/api/io/_v/api/intelligent-search/${type}/${pathname}?${params.toString()}`,
     );
   };
 
@@ -99,7 +111,7 @@ export const createClient = ({
     });
 
     return fetchAPI(
-      `${baseUrl}/${account}/intelligent-search/search_suggestions?${params.toString()}`,
+      `${baseUrl}/v2/${account}/api/io/_v/api/intelligent-search/search_suggestions?${params.toString()}`,
     );
   };
 
@@ -111,12 +123,66 @@ export const createClient = ({
     });
 
     return fetchAPI(
-      `${baseUrl}/${account}/intelligent-search/top_searches?${params.toString()}`,
+      `${baseUrl}/v2/${account}/api/io/_v/api/intelligent-search/top_searches?${params.toString()}`,
     );
   };
 
   const facets = (args: Omit<SearchArgs, "type">) =>
     search<FacetSearchResult>({ ...args, type: "facets" });
+
+  const withLegacyParams = (
+    url: URL,
+    params: LegacyParams,
+  ) => {
+    for (const key of Object.keys(params)) {
+      const value = params[key as keyof LegacyParams]?.toString();
+
+      if (value) {
+        url.searchParams.set(key, value);
+      }
+    }
+
+    return url;
+  };
+
+  const legacyProducts = (
+    { account, term, ...params }: {
+      account: string;
+      term?: string;
+    } & LegacyParams,
+  ) => {
+    const url = withLegacyParams(
+      new URL(
+        `/v2/${account}/api/catalog_system/pub/products/search/${term ?? ""}`,
+        baseUrl,
+      ),
+      params,
+    );
+
+    return fetchAPI<LegacyProduct[]>(url.href);
+  };
+
+  const legacyFacets = (
+    { account, term, ...params }:
+      & { account: string; term: string }
+      & LegacyParams,
+  ) => {
+    const url = withLegacyParams(
+      new URL(
+        `/v2/${account}/api/catalog_system/pub/facets/search/${term ?? ""}`,
+        baseUrl,
+      ),
+      params,
+    );
+
+    return fetchAPI<LegacyFacets>(url.href);
+  };
+
+  const pageType = ({ account, slug }: { account: string; slug: string }) => {
+    return fetchAPI(
+      `${baseUrl}/v2/${account}/api/catalog_system/pub/portal/pagetype/${slug}`,
+    );
+  };
 
   return {
     platform,
@@ -125,6 +191,11 @@ export const createClient = ({
       products,
       suggestedTerms,
       topSearches,
+    },
+    catalog_system: {
+      products: legacyProducts,
+      facets: legacyFacets,
+      pageType,
     },
   };
 };

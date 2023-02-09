@@ -17,5 +17,8 @@
   "deno.inlayHints.parameterNames.enabled": "none",
   "deno.inlayHints.parameterTypes.enabled": false,
   "deno.inlayHints.variableTypes.enabled": false,
-  "deno.inlayHints.functionLikeReturnTypes.enabled": false
+  "deno.inlayHints.functionLikeReturnTypes.enabled": false,
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  }
 }
