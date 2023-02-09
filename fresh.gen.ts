@@ -5,6 +5,7 @@
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 
+import * as $$$0 from "./sections/Head.tsx";
 import * as $$$$0 from "./functions/EffectSelectPage.ts";
 import * as $$$$1 from "./functions/MatchDate.ts";
 import * as $$$$2 from "./functions/MatchEnvironment.ts";
@@ -15,7 +16,7 @@ import * as $$$$5 from "./functions/MatchUserAgent.ts";
 const manifest: DecoManifest = {
   routes: {},
   islands: {},
-  sections: {},
+  sections: { "./sections/Head.tsx": $$$0 },
   functions: {
     "./functions/EffectSelectPage.ts": $$$$0,
     "./functions/MatchDate.ts": $$$$1,
@@ -25,6 +26,86 @@ const manifest: DecoManifest = {
     "./functions/MatchUserAgent.ts": $$$$5,
   },
   schemas: {
+    "./sections/Head.tsx": {
+      "inputSchema": {
+        "title": " Head",
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Title",
+          },
+          "description": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Description",
+          },
+          "url": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Url",
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Image Url",
+          },
+          "faviconUrl": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Favicon Url",
+          },
+          "styleUrls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+            },
+            "title": "Style Urls",
+          },
+          "inlineStyles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+            },
+            "title": "Inline Styles",
+          },
+          "scriptUrls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+            },
+            "title": "Script Urls",
+          },
+          "inlineScripts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+            },
+            "title": "Inline Scripts",
+          },
+          "themeColor": {
+            "type": [
+              "string",
+              "null",
+            ],
+            "title": "Theme Color",
+          },
+        },
+        "required": [],
+      },
+      "outputSchema": null,
+    },
     "./functions/EffectSelectPage.ts": {
       "inputSchema": {
         "title": " Effect Select Page",
@@ -189,8 +270,5 @@ const manifest: DecoManifest = {
   baseUrl: import.meta.url,
   config,
 };
-
-// live — this exposes the manifest so the live server can render components dynamically
-globalThis.manifest = manifest;
 
 export default manifest;

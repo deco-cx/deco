@@ -60,17 +60,12 @@ const runFlagMatchers = <D>(
   for (const match of matches) {
     const { key, props } = match;
 
-    const matchFn: MatchFunction<any, any, any> =
-      (key === "$live/functions/MatchRandom.ts")
-        ? MatchRandom
-        : (key === "$live/functions/MatchDate.ts")
-        ? MatchDate
-        : (key === "$live/functions/MatchSite.ts")
-        ? MatchSite
-        : manifest.functions[key]?.default as MatchFunction;
+    const matchFn: MatchFunction<any, any, any> = manifest.functions[key]
+      ?.default as MatchFunction;
 
     if (!matchFn) {
-      throw new Error("No match function found for key: " + key);
+      console.error("No match function found for key: " + key);
+      return { isMatch: false, duration: "request" };
     }
 
     const { isMatch, duration } = matchFn(
@@ -92,9 +87,7 @@ const runFlagEffect = <D>(
   const { data: { effect } } = flag;
 
   const effectFn: EffectFunction<any, any, any> | null = effect
-    ? (effect.key === "$live/functions/EffectSelectPage.ts")
-      ? EffectSelectPage
-      : manifest.functions[effect.key].default as EffectFunction
+    ? manifest.functions[effect.key].default as EffectFunction
     : null;
 
   return effectFn?.(req, ctx, effect?.props as any) ?? true;
@@ -119,7 +112,7 @@ export const loadFlags = async <Data = unknown>(
   const availableFlags = response.data ?? [];
 
   if (response.error) {
-    console.log("Error fetching flags:", response.error);
+    console.error("Error fetching flags:", response.error);
   }
 
   const activeFlags: Record<string, unknown> = {};
