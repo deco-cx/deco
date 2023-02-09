@@ -215,25 +215,18 @@ export const fetchPageFromSection = async (
  * https://github.com/denoland/fresh/blob/046fcde959041ac9cd5f2b39671c819c4af5cc24/src/server/context.ts#L683
  */
 export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
-  const rankRoute = (pattern: string) => {
-    let routeScore = 0;
-    const parts = pattern.split("/");
-    parts.forEach((routePart) => {
-      if (!routePart) {
-        return;
-      }
-      if (routePart.endsWith("*")) {
-        routeScore += 0;
-      } else if (routePart.startsWith(":")) {
-        routeScore += 1;
-      } else {
-        routeScore += 2;
-      }
-    });
+  const rankRoute = (pattern: string) =>
+    pattern.split("/").reduce(
+      (acc, routePart) =>
+        routePart.endsWith("*")
+          ? acc
+          : routePart.startsWith(":")
+          ? acc + 1
+          : acc + 2,
+      0,
+    );
 
-    return routeScore;
-  };
-  routes.sort((a, z) => rankRoute(z.pattern) - rankRoute(a.pattern));
+  routes.sort((a, b) => rankRoute(b.pattern) - rankRoute(a.pattern));
 }
 
 /**
