@@ -135,6 +135,27 @@ export const createFunctionInstanceFromFunctionKey = (
   return functionInstance;
 };
 
+
+/**
+ * The database may have more functions than what's referenced by the sections.
+ * Maybe, this is due to a bug on the live editor's interface. Anyways, it's always
+ * good to prune and only run the necessary functions once
+ */
+const pruneFunctions = (data: PageData) => {
+  const { sections, functions } = data;
+  const str = JSON.stringify(sections);
+
+  const functionsMap = new Map<string, PageData["functions"][number]>();
+
+  for (const fn of functions) {
+    if (str.includes(fn.uniqueId)) {
+      functionsMap.set(fn.uniqueId, fn);
+    }
+  }
+
+  return [...functionsMap.values()];
+};
+
 export async function loadPageData<Data, State extends LiveState>(
   req: Request,
   ctx: HandlerContext<Data, State>,
@@ -142,7 +163,7 @@ export async function loadPageData<Data, State extends LiveState>(
 ): Promise<PageData> {
   const { start, end } = ctx.state.t;
   const functionsResponse = await Promise.all(
-    pageData.functions?.map(async ({ key, props, uniqueId }) => {
+    pruneFunctions(pageData).map(async ({ key, props, uniqueId }) => {
       const functionFn = context.manifest!.functions[key]
         ?.default as LoaderFunction<any, any, unknown>;
 
@@ -164,7 +185,7 @@ export async function loadPageData<Data, State extends LiveState>(
         uniqueId,
         data,
       };
-    }) ?? [],
+    }),
   );
 
   const functionsResponseMap = functionsResponse.reduce(
