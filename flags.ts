@@ -3,10 +3,6 @@ import { DecoManifest, Flag, LiveState } from "$live/types.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { EffectFunction, MatchFunction } from "$live/std/types.ts";
-import MatchDate from "$live/functions/MatchDate.ts";
-import MatchRandom from "$live/functions/MatchRandom.ts";
-import MatchSite from "$live/functions/MatchSite.ts";
-import EffectSelectPage from "$live/functions/EffectSelectPage.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 
 const DECO_COOKIE = "dcxf_";

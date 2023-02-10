@@ -35,9 +35,6 @@ export const context: LiveContext = {
   site: "",
   siteId: 0,
 };
-declare global {
-  var manifest: DecoManifest;
-}
 
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
@@ -48,6 +45,12 @@ export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.siteId) {
     throw new Error(
       "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
+    );
+  }
+
+  if (!liveOptions.manifest) {
+    throw new Error(
+      "liveOptions.manifest is required. In _middleware.ts, you can import it from '../fresh.gen.ts'",
     );
   }
 
@@ -66,7 +69,7 @@ export const withLive = (liveOptions: LiveOptions) => {
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
     if (!context.manifest) {
-      context.manifest = globalThis.manifest;
+      context.manifest = liveOptions.manifest;
     }
     ctx.state.site = {
       id: context.siteId,

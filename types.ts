@@ -50,6 +50,7 @@ export interface LiveOptions {
   loginUrl?: string;
   inspectPath?: string;
   workbenchPath?: string;
+  manifest: DecoManifest;
 }
 
 export interface PageSection {
@@ -110,6 +111,7 @@ export interface Effect {
 
 export interface FlagData {
   matches: Match[];
+  matchType: "AND" | "OR";
   effect?: Effect;
 }
 
@@ -123,7 +125,7 @@ export interface Flag<T = unknown> {
   site: number;
   key: string;
   value: T;
-  updated_at: string
+  updated_at: string;
 }
 
 export interface Flags {

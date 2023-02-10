@@ -80,7 +80,7 @@ export default async function dev(
 
 async function generateDevManifestData(
   dir: string,
-  imports: Record<string, any>,
+  imports?: Record<string, any>,
 ): Promise<DevManifestData> {
   const mapWith = (pre: string) => (list: string[]) =>
     list.map((name) => "./" + join(pre, name));
@@ -93,7 +93,7 @@ async function generateDevManifestData(
   let schemas = await extractAllSchemas(sections, functions);
 
   // "imports" is of format { "nameOfImport" : manifest }
-  for (const [key, importManifest] of Object.entries(imports)) {
+  for (const [key, importManifest] of Object.entries(imports || {})) {
     const importFunctionNames = Object.keys(importManifest.functions).map((
       name,
     ) => name.replace(`./`, `${key}/`));
