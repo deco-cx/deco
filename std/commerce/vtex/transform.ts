@@ -6,7 +6,7 @@ import type {
   ProductDetailsPage,
   PropertyValue,
   UnitPriceSpecification,
-} from "../types.ts";
+} from "./../types.ts";
 
 import { slugify } from "./slugify.ts";
 import type {
@@ -25,6 +25,10 @@ import type {
 const isLegacySku = (
   sku: LegacySkuVTEX | SkuVTEX,
 ): sku is LegacySkuVTEX => typeof (sku as any).variations?.[0] === "string";
+
+const isLegacyProduct = (
+  product: ProductVTEX | LegacyProductVTEX,
+): product is LegacyProductVTEX => product.origin !== "intelligent-search";
 
 const getPath = ({ linkText }: { linkText: string }, skuId?: string) => {
   const params = new URLSearchParams();
@@ -93,6 +97,10 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
     items,
   } = product;
   const { name, referenceId, itemId: skuId } = sku;
+
+  const groupAdditionalProperty = isLegacyProduct(product)
+    ? legacyToProductGroupAdditionalProperties(product)
+    : toProductGroupAdditionalProperties(product);
   const additionalProperty = isLegacySku(sku)
     ? toAdditionalPropertiesLegacy(sku)
     : toAdditionalProperties(sku);
@@ -118,6 +126,7 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
       hasVariant: hasVariant || [],
       url: getPath(product, sku.itemId),
       name: product.productName,
+      additionalProperty: groupAdditionalProperty,
     },
     image: images.map(({ imageUrl, imageText }) => ({
       "@type": "ImageObject" as const,
@@ -168,99 +177,99 @@ const toBreadcrumbList = (
   };
 };
 
-const toAdditionalProperties = (
-  sku: SkuVTEX,
-): PropertyValue[] =>
-  sku.variations?.flatMap(
-    ({ name, values }) =>
-      values.map((value) => ({
+const legacyToProductGroupAdditionalProperties = ({}: LegacyProductVTEX) => [];
+
+const toProductGroupAdditionalProperties = ({ properties = [] }: ProductVTEX) =>
+  properties.flatMap(({ name, values }) =>
+    values.map((value) =>
+      ({
         "@type": "PropertyValue",
         name,
         value,
-        valueReference: "SPECIFICATION" as string,
-      }) as const),
-  );
-  const fromProducts = properties.flatMap(({ name, values }) =>
-    values.map((value) => ({
-      "@type": "PropertyValue",
-      name,
-      value,
-      valueReference: "PROPERTY" as string,
-    }) as const)
+        valueReference: "PROPERTY" as string,
+      }) as const
+    )
   );
 
-  return fromSku.concat(fromProducts);
-};
-
-const toAdditionalPropertiesLegacy = (
-  sku: LegacySkuVTEX,
+const toAdditionalProperties = (
+  sku: SkuVTEX,
 ): PropertyValue[] =>
-  sku.variations.flatMap(
-    (name) => {
-      return sku[name]?.map((value) => ({
+  sku.variations?.flatMap(({ name, values }) =>
+    values.map((value) =>
+      ({
         "@type": "PropertyValue",
         name,
         value,
         valueReference: "SPECIFICATION",
-      }));
-    },
-  );
+      }) as const
+    )
+  ) ?? [];
+
+const toAdditionalPropertiesLegacy = (sku: LegacySkuVTEX): PropertyValue[] =>
+  sku.variations?.flatMap((variation) =>
+    sku[variation].map((value) =>
+      ({
+        "@type": "PropertyValue",
+        name: variation,
+        value,
+        valueReference: "SPECIFICATION",
+      }) as const
+    )
+  ) ?? [];
 
 const toOffer = ({
   commertialOffer: offer,
   sellerId,
-}: SellerVTEX): Offer => {
-  return {
-    "@type": "Offer",
-    price: offer.spotPrice,
-    seller: sellerId,
-    priceValidUntil: offer.PriceValidUntil,
-    inventoryLevel: { value: offer.AvailableQuantity },
-    priceSpecification: [
-      {
-        "@type": "UnitPriceSpecification",
-        priceType: "https://schema.org/ListPrice",
-        price: offer.ListPrice,
-      },
-      {
-        "@type": "UnitPriceSpecification",
-        priceType: "https://schema.org/SalePrice",
-        price: offer.Price,
-      },
-      ...offer.Installments.map((installment): UnitPriceSpecification => ({
-        "@type": "UnitPriceSpecification",
-        priceType: "https://schema.org/SalePrice",
-        priceComponentType: "https://schema.org/Installment",
-        name: installment.PaymentSystemName,
-        description: installment.Name,
-        billingDuration: installment.NumberOfInstallments,
-        billingIncrement: installment.Value,
-        price: installment.TotalValuePlusInterestRate,
-      })),
-    ],
-    availability: offer.AvailableQuantity > 0
-      ? "https://schema.org/InStock"
-      : "https://schema.org/OutOfStock",
-  };
-};
+}: SellerVTEX): Offer => ({
+  "@type": "Offer",
+  price: offer.spotPrice ?? offer.Price,
+  seller: sellerId,
+  priceValidUntil: offer.PriceValidUntil,
+  inventoryLevel: { value: offer.AvailableQuantity },
+  priceSpecification: [
+    {
+      "@type": "UnitPriceSpecification",
+      priceType: "https://schema.org/ListPrice",
+      price: offer.ListPrice,
+    },
+    {
+      "@type": "UnitPriceSpecification",
+      priceType: "https://schema.org/SalePrice",
+      price: offer.Price,
+    },
+    ...offer.Installments.map((installment): UnitPriceSpecification => ({
+      "@type": "UnitPriceSpecification",
+      priceType: "https://schema.org/SalePrice",
+      priceComponentType: "https://schema.org/Installment",
+      name: installment.PaymentSystemName,
+      description: installment.Name,
+      billingDuration: installment.NumberOfInstallments,
+      billingIncrement: installment.Value,
+      price: installment.TotalValuePlusInterestRate,
+    })),
+  ],
+  availability: offer.AvailableQuantity > 0
+    ? "https://schema.org/InStock"
+    : "https://schema.org/OutOfStock",
+});
 
-const unselect = (facet: LegacyFacet, url: URL) => {
-  const map = url.searchParams.get("map")!.split(",");
+const unselect = (facet: LegacyFacet, url: URL, map: string) => {
+  const mapSegments = map.split(",");
 
   // Do not allow removing root facet to avoid going back to home page
-  if (map.length === 1) {
+  if (mapSegments.length === 1) {
     return `${url.pathname}${url.search}`;
   }
 
-  const index = map.findIndex((segment) => segment === facet.Map);
-  map.splice(index, index > -1 ? 1 : 0);
+  const index = mapSegments.findIndex((segment) => segment === facet.Map);
+  mapSegments.splice(index, index > -1 ? 1 : 0);
   const newUrl = new URL(
     url.pathname.replace(`/${facet.Value}`, ""),
     url.origin,
   );
   newUrl.search = url.search;
-  if (map.length > 0) {
-    newUrl.searchParams.set("map", map.join(","));
+  if (mapSegments.length > 0) {
+    newUrl.searchParams.set("map", mapSegments.join(","));
   }
 
   return `${newUrl.pathname}${newUrl.search}`;
@@ -270,9 +279,8 @@ export const legacyFacetToFilter = (
   name: string,
   facets: LegacyFacet[],
   url: URL,
+  map: string,
 ): Filter | null => {
-  const map = url.searchParams.get("map")!;
-
   const mapSegments = new Set(map.split(","));
   const pathSegments = new Set(
     url.pathname.split("/").slice(0, mapSegments.size + 1),
@@ -286,7 +294,7 @@ export const legacyFacetToFilter = (
     values: facets.map((facet) => {
       const selected = mapSegments.has(facet.Map) &&
         pathSegments.has(facet.Value);
-      const href = selected ? unselect(facet, url) : facet.LinkEncoded;
+      const href = selected ? unselect(facet, url, map) : facet.LinkEncoded;
 
       return ({
         value: facet.Value,
@@ -299,7 +307,36 @@ export const legacyFacetToFilter = (
   };
 };
 
-export const toFilter = (facet: FacetVTEX): Filter | null => {
+export const filtersToSearchParams = (
+  selectedFacets: { key: string; value: string }[],
+) => {
+  const searchParams = new URLSearchParams();
+
+  for (const { key, value } of selectedFacets) {
+    searchParams.append(`filter.${key}`, value);
+  }
+
+  return searchParams;
+};
+
+export const filtersFromSearchParams = (params: URLSearchParams) => {
+  const selectedFacets: { key: string; value: string }[] = [];
+
+  params.forEach((value, name) => {
+    const [filter, key] = name.split(".");
+
+    if (filter === "filter" && typeof key === "string") {
+      selectedFacets.push({ key, value });
+    }
+  });
+
+  return selectedFacets;
+};
+
+export const toFilter = (
+  facet: FacetVTEX,
+  selectedFacets: { key: string; value: string }[],
+): Filter | null => {
   if (facet.hidden) {
     return null;
   }
@@ -328,13 +365,22 @@ export const toFilter = (facet: FacetVTEX): Filter | null => {
     label: facet.name,
     quantity: facet.quantity,
     values: (facet.values as FacetValueBoolean[]).map((
-      { quantity, name, value, selected, href },
-    ) => ({
-      value,
-      quantity,
-      selected,
-      url: href,
-      label: name,
-    })),
+      { quantity, name, value, selected },
+    ) => {
+      const newFacet = { key: facet.name, value };
+      const filters = selected
+        ? selectedFacets.filter((facet) =>
+          facet.key !== newFacet.key && facet.value !== newFacet.value
+        )
+        : [...selectedFacets, newFacet];
+
+      return {
+        value,
+        quantity,
+        selected,
+        url: `?${filtersToSearchParams(filters).toString()}`,
+        label: name,
+      };
+    }),
   };
 };

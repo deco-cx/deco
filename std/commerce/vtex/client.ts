@@ -4,6 +4,7 @@ import {
   LegacyFacets,
   LegacyProduct,
   LegacySort,
+  PageType,
   ProductSearchResult,
   SearchArgs,
   SelectedFacet,
@@ -178,11 +179,10 @@ export const createClient = ({
     return fetchAPI<LegacyFacets>(url.href);
   };
 
-  const pageType = ({ account, slug }: { account: string; slug: string }) => {
-    return fetchAPI(
+  const pageType = ({ account, slug }: { account: string; slug: string }) =>
+    fetchAPI<PageType>(
       `${baseUrl}/v2/${account}/api/catalog_system/pub/portal/pagetype/${slug}`,
     );
-  };
 
   return {
     platform,

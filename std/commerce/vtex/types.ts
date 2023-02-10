@@ -153,15 +153,33 @@ interface IProduct {
   releaseDate: string;
 }
 
-export type Product = IProduct & { items: Item[] };
+export type Product = IProduct & { items: Item[]; origin?: string };
 
-export type LegacyProduct = IProduct & { items: LegacyItem[] };
+export type LegacyProduct = IProduct & { items: LegacyItem[]; origin?: string };
 
 export type LegacyFacets = {
   Departments: LegacyFacet[];
   Brands: LegacyFacet[];
   SpecificationFilters: Record<string, LegacyFacet[]>;
 };
+
+export interface PageType {
+  id: string | null;
+  name: string | null;
+  url: string | null;
+  title: string | null;
+  metaTagDescription: string | null;
+  pageType:
+    | "Brand"
+    | "Category"
+    | "Department"
+    | "SubCategory"
+    | "Product"
+    | "Collection"
+    | "Cluster"
+    | "NotFound"
+    | "FullText";
+}
 
 export interface LegacyFacet {
   Quantity: number;
