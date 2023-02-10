@@ -367,7 +367,7 @@ export const toFilter = (
     values: (facet.values as FacetValueBoolean[]).map((
       { quantity, name, value, selected },
     ) => {
-      const newFacet = { key: facet.name, value };
+      const newFacet = { key: facet.key, value };
       const filters = selected
         ? selectedFacets.filter((facet) =>
           facet.key !== newFacet.key && facet.value !== newFacet.value
