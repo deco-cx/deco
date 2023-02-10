@@ -1,4 +1,10 @@
 #!/usr/bin/env -S deno run -A --watch=static/,routes/
+/// <reference no-default-lib="true"/>
+/// <reference lib="deno.ns" />
+/// <reference lib="esnext" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
 import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
@@ -131,6 +137,7 @@ export async function generate(directory: string, manifest: DevManifestData) {
     // This file is automatically updated during development when running \`dev.ts\`.
 
     import config from "./deno.json" assert { type: "json" };
+    import { context } from "$live/live.ts";
     import { DecoManifest } from "$live/types.ts";
     ${routes.map(templates.routes.imports).join("\n")}
     ${islands.map(templates.islands.imports).join("\n")}
@@ -146,6 +153,9 @@ export async function generate(directory: string, manifest: DevManifestData) {
       baseUrl: import.meta.url,
       config,
     };
+
+    // live — this exposes the manifest so the live server can render components dynamically
+    context.manifest = manifest;
 
     export default manifest;
     `;
@@ -328,6 +338,6 @@ async function extractAllSchemas(
 // Generate live own manifest data so that other sites can import native functions and sections.
 if (import.meta.main) {
   const dir = Deno.cwd();
-  const newManifestData = await generateDevManifestData(dir, {});
+  const newManifestData = await generateDevManifestData(dir);
   await generate(dir, newManifestData);
 }

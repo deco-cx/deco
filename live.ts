@@ -1,3 +1,9 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="deno.ns" />
+/// <reference lib="esnext" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import {
@@ -48,12 +54,6 @@ export const withLive = (liveOptions: LiveOptions) => {
     );
   }
 
-  if (!liveOptions.manifest) {
-    throw new Error(
-      "liveOptions.manifest is required. In _middleware.ts, you can import it from '../fresh.gen.ts'",
-    );
-  }
-
   // Enable InspectVSCode library
   const inspectPath = liveOptions.inspectPath || "/_live/inspect";
   // Enable Workbench
@@ -68,9 +68,6 @@ export const withLive = (liveOptions: LiveOptions) => {
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
-    if (!context.manifest) {
-      context.manifest = liveOptions.manifest;
-    }
     ctx.state.site = {
       id: context.siteId,
       name: context.site,

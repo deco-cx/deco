@@ -26,7 +26,7 @@ const init = async () => {
 
   /* Add these trackers to all analytics sent to our server */
   window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", 
-    active_flags: "${Object.keys(flags).join(',')}"
+    active_flags: "${Object.keys(flags).join(",")}"
    });
   /* Send page-view event */
   window.jitsu('track', 'pageview');

@@ -23,13 +23,13 @@ export interface SearchCategoryArgs {
 export const createClient = ({ platform, baseUrl, nrpp = "12" }: Options) => {
   const searchByTerm = (term: string) => {
     return fetchAPI<OccSearch>(
-      `${baseUrl}/ccstoreui/v1/search?Ntt=${term}&Nrpp=${nrpp}`
+      `${baseUrl}/ccstoreui/v1/search?Ntt=${term}&Nrpp=${nrpp}`,
     );
   };
 
   const productBySlug = (slug: string) => {
     return fetchAPI<OccProductPage>(
-      `${baseUrl}/ccstoreui/v1/pages/produto/${slug}?dataOnly=false&cacheableDataOnly=true&productTypesRequired=false`
+      `${baseUrl}/ccstoreui/v1/pages/produto/${slug}?dataOnly=false&cacheableDataOnly=true&productTypesRequired=false`,
     );
   };
 
@@ -47,13 +47,13 @@ export const createClient = ({ platform, baseUrl, nrpp = "12" }: Options) => {
     });
 
     return fetchAPI<CategorySearchResult>(
-      `${baseUrl}/ccstoreui/v1/products?${params.toString()}`
+      `${baseUrl}/ccstoreui/v1/products?${params.toString()}`,
     );
   };
 
   const stockStatus = (productId: string) => {
     return fetchAPI<ProductSkuInventoryStatus>(
-      `${baseUrl}/ccstoreui/v1/stockStatus/${productId}`
+      `${baseUrl}/ccstoreui/v1/stockStatus/${productId}`,
     );
   };
 

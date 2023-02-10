@@ -99,11 +99,12 @@ export const loadFlags = async <Data = unknown>(
   const site = context.siteId;
 
   // TODO: Cache flags stale for 5 minutes, refresh every 30s
-  const response: { data: Flag[]; error: unknown } = await getSupabaseClient()
-    .from("flags")
-    .select(`id, name, key, state, data, updated_at`)
-    .eq("site", site)
-    .eq("state", "published");
+  const response: { data: Array<Flag> | null; error: unknown } =
+    await getSupabaseClient()
+      .from("flags")
+      .select(`id, name, key, state, data, updated_at, site`)
+      .eq("site", site)
+      .eq("state", "published");
 
   const availableFlags = response.data ?? [];
 

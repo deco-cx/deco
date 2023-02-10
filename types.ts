@@ -50,7 +50,6 @@ export interface LiveOptions {
   loginUrl?: string;
   inspectPath?: string;
   workbenchPath?: string;
-  manifest: DecoManifest;
 }
 
 export interface PageSection {
@@ -124,7 +123,7 @@ export interface Flag<T = unknown> {
   data: FlagData;
   site: number;
   key: string;
-  value: T;
+  value?: T;
   updated_at: string;
 }
 
