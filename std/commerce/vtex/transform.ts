@@ -96,7 +96,7 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
     releaseDate,
     items,
   } = product;
-  const { name, referenceId, itemId: skuId } = sku;
+  const { name, ean, itemId: skuId } = sku;
 
   const groupAdditionalProperty = isLegacyProduct(product)
     ? legacyToProductGroupAdditionalProperties(product)
@@ -117,7 +117,7 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
     description,
     brand,
     sku: skuId,
-    gtin: referenceId[0]?.Value,
+    gtin: ean,
     releaseDate,
     additionalProperty,
     isVariantOf: {

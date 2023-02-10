@@ -135,7 +135,6 @@ export const createFunctionInstanceFromFunctionKey = (
   return functionInstance;
 };
 
-
 /**
  * The database may have more functions than what's referenced by the sections.
  * Maybe, this is due to a bug on the live editor's interface. Anyways, it's always
