@@ -1,8 +1,14 @@
 import { MatchFunction } from "$live/std/types.ts";
 
 export interface Props {
-  start?: number;
-  end?: number;
+  /**
+   * @format date-time
+   */
+  start?: string;
+  /**
+   * @format date-time
+   */
+  end?: string;
   session: boolean;
 }
 

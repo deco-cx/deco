@@ -133,17 +133,19 @@ const manifest: DecoManifest = {
         "properties": {
           "start": {
             "type": [
-              "number",
+              "string",
               "null",
             ],
             "title": "Start",
+            "format": "date-time",
           },
           "end": {
             "type": [
-              "number",
+              "string",
               "null",
             ],
             "title": "End",
+            "format": "date-time",
           },
           "session": {
             "type": "boolean",
