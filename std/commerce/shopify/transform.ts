@@ -131,6 +131,7 @@ export const toProduct = (
       hasVariant: hasVariant || [],
       url: getPath(product),
       name: product.title,
+      additionalProperty: []
     },
     image: allImages.map((img): ImageObject => ({
       "@type": "ImageObject",

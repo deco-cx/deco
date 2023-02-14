@@ -238,7 +238,7 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
 export const generateEditorData = async <Data = unknown>(
   req: Request,
   ctx: HandlerContext<Data, LiveState>,
-  options: PageOptions
+  options: PageOptions,
 ): Promise<EditorData> => {
   const pageWithParams = await loadLivePage(req, ctx, options);
 

@@ -1,3 +1,24 @@
+export interface LegacySearchArgs {
+  query?: string;
+  page: number;
+  count: number;
+  type: "product_search" | "facets";
+  selectedFacets?: SelectedFacet[];
+  sort?: LegacySort;
+}
+
+export type LegacySort =
+  | "OrderByPriceDESC"
+  | "OrderByPriceASC"
+  | "OrderByTopSaleDESC"
+  | "OrderByReviewRateDESC"
+  | "OrderByNameASC"
+  | "OrderByNameDESC"
+  | "OrderByReleaseDateDESC"
+  | "OrderByBestDiscountDESC"
+  | "OrderByScoreDESC"
+  | "";
+
 export interface SearchArgs {
   /**
    * @description VTEX Account name.
@@ -105,7 +126,7 @@ export interface Search {
   count: number;
 }
 
-export interface Product {
+interface IProduct {
   productId: string;
   productName: string;
   brand: string;
@@ -132,6 +153,44 @@ export interface Product {
   releaseDate: string;
 }
 
+export type Product = IProduct & { items: Item[]; origin?: string };
+
+export type LegacyProduct = IProduct & { items: LegacyItem[]; origin?: string };
+
+export type LegacyFacets = {
+  Departments: LegacyFacet[];
+  Brands: LegacyFacet[];
+  SpecificationFilters: Record<string, LegacyFacet[]>;
+};
+
+export interface PageType {
+  id: string | null;
+  name: string | null;
+  url: string | null;
+  title: string | null;
+  metaTagDescription: string | null;
+  pageType:
+    | "Brand"
+    | "Category"
+    | "Department"
+    | "SubCategory"
+    | "Product"
+    | "Collection"
+    | "Cluster"
+    | "NotFound"
+    | "FullText";
+}
+
+export interface LegacyFacet {
+  Quantity: number;
+  Name: string;
+  Link: string;
+  LinkEncoded: string;
+  Map: string;
+  Value: string;
+  Children: LegacyFacet[];
+}
+
 interface Image {
   imageId: string;
   imageLabel: string | null;
@@ -149,6 +208,10 @@ interface Installment {
   PaymentSystemGroupName: string;
   Name: string;
 }
+
+export type LegacyItem = Omit<Item, "variations"> & {
+  variations: string[];
+} & Record<string, string[]>;
 
 export interface Item {
   itemId: string;

@@ -226,6 +226,12 @@ export interface ProductGroup extends Omit<Thing, "@type"> {
   hasVariant: ProductLeaf[];
   /** Indicates a textual identifier for a ProductGroup. */
   productGroupID: string;
+  /**
+   * A property-value pair representing an additional characteristics of the entitity, e.g. a product feature or another characteristic for which there is no matching property in schema.org.
+   *
+   * Note: Publishers should be aware that applications designed to use specific schema.org properties (e.g. https://schema.org/width, https://schema.org/color, https://schema.org/gtin13, ...) will typically expect such data to be provided using those properties, rather than using the generic property/value mechanism.
+   */
+  additionalProperty: PropertyValue[];
 }
 
 export interface Product extends Omit<Thing, "@type"> {
