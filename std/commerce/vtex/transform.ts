@@ -81,7 +81,21 @@ export const bestOfferFirst = (
     return 1;
   }
 
-  return a.commertialOffer.spotPrice - b.commertialOffer.spotPrice;
+  const aPrice = a.commertialOffer.spotPrice ?? a.commertialOffer.Price ?? 0;
+  const bPrice = b.commertialOffer.spotPrice ?? b.commertialOffer.Price ?? 0;
+
+  return aPrice - bPrice;
+};
+
+const getHightPriceIndex = (offers: Offer[]) => {
+  for (let it = offers.length - 1; it >= 0; it--) {
+    const offer = offers[it];
+
+    if (offer.availability === "https://schema.org/InStock") {
+      return it;
+    }
+  }
+  return 0;
 };
 
 export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
@@ -136,8 +150,8 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
     offers: offers.length > 0
       ? {
         "@type": "AggregateOffer",
-        highPrice: offers[0].price,
-        lowPrice: offers[offers.length - 1].price,
+        highPrice: offers[getHightPriceIndex(offers)]?.price ?? null,
+        lowPrice: offers[0]?.price ?? null,
         offerCount: offers.length,
         offers,
       }
