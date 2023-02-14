@@ -66,36 +66,26 @@ export const toProductPage = (
   };
 };
 
-export const inStock = (offer: CommertialOffer) => offer.AvailableQuantity > 0;
+export const inStock = (offer: Offer) =>
+  offer.availability === "https://schema.org/InStock";
 
 // Smallest Available Spot Price First
-export const bestOfferFirst = (
-  a: SellerVTEX,
-  b: SellerVTEX,
-) => {
-  if (inStock(a.commertialOffer) && !inStock(b.commertialOffer)) {
+export const bestOfferFirst = (a: Offer, b: Offer) => {
+  if (inStock(a) && !inStock(b)) {
     return -1;
   }
 
-  if (!inStock(a.commertialOffer) && inStock(b.commertialOffer)) {
+  if (!inStock(a) && inStock(b)) {
     return 1;
   }
 
-  const aPrice = a.commertialOffer.spotPrice ?? a.commertialOffer.Price ?? 0;
-  const bPrice = b.commertialOffer.spotPrice ?? b.commertialOffer.Price ?? 0;
-
-  return aPrice - bPrice;
+  return a.price - b.price;
 };
 
-const getHightPriceIndex = (offers: Offer[]) => {
-  for (let it = offers.length - 1; it >= 0; it--) {
-    const offer = offers[it];
-
-    if (offer.availability === "https://schema.org/InStock") {
-      return it;
-    }
-  }
-  return 0;
+const getHighPriceIndex = (offers: Offer[]) => {
+  let it = offers.length - 1;
+  for (; it >= 0 && !inStock(offers[it]); it--);
+  return it;
 };
 
 export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
@@ -119,9 +109,11 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
     ? toAdditionalPropertiesLegacy(sku)
     : toAdditionalProperties(sku);
   const images = nonEmptyArray(sku.images) ?? [DEFAULT_IMAGE];
-  const offers = sku.sellers.sort(bestOfferFirst).map(toOffer);
+  const offers = sku.sellers.map(toOffer).sort(bestOfferFirst);
   const hasVariant = level < 1 &&
     items.map((sku) => toProduct(product, sku, 1));
+  const highPriceIndex = getHighPriceIndex(offers);
+  const lowPriceIndex = 0;
 
   return {
     "@type": "Product",
@@ -150,8 +142,8 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
     offers: offers.length > 0
       ? {
         "@type": "AggregateOffer",
-        highPrice: offers[getHightPriceIndex(offers)]?.price ?? null,
-        lowPrice: offers[0]?.price ?? null,
+        highPrice: offers[highPriceIndex]?.price ?? null,
+        lowPrice: offers[lowPriceIndex]?.price ?? null,
         offerCount: offers.length,
         offers,
       }
