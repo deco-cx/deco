@@ -110,7 +110,6 @@ export interface Effect {
 
 export interface FlagData {
   matches: Match[];
-  matchType: "AND" | "OR";
   effect?: Effect;
 }
 
