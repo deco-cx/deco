@@ -182,29 +182,10 @@ const toBreadcrumbList = (
   };
 };
 
-<<<<<<< HEAD
 const legacyToProductGroupAdditionalProperties = ({}: LegacyProductVTEX) => [];
 
 const toProductGroupAdditionalProperties = ({ properties = [] }: ProductVTEX) =>
   properties.flatMap(({ name, values }) =>
-=======
-const toAdditionalProperties = (
-  { properties }: ProductVTEX,
-  { variations: specifications }: SkuVTEX,
-): PropertyValue[] => {
-  const fromSku = specifications.flatMap(
-    ({ name, values }) =>
-      values.map((value) =>
-        ({
-          "@type": "PropertyValue",
-          name,
-          value,
-          valueReference: "SPECIFICATION" as string,
-        }) as const
-      ),
-  );
-  const fromProducts = properties.flatMap(({ name, values }) =>
->>>>>>> d8adca4 (Eyes wide shut)
     values.map((value) =>
       ({
         "@type": "PropertyValue",
