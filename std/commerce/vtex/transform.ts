@@ -10,7 +10,6 @@ import type {
 
 import { slugify } from "./slugify.ts";
 import type {
-  CommertialOffer,
   Facet as FacetVTEX,
   FacetValueBoolean,
   FacetValueRange,
@@ -84,7 +83,7 @@ export const bestOfferFirst = (a: Offer, b: Offer) => {
 
 const getHighPriceIndex = (offers: Offer[]) => {
   let it = offers.length - 1;
-  for (; it >= 0 && !inStock(offers[it]); it--);
+  for (; it > 0 && !inStock(offers[it]); it--);
   return it;
 };
 
