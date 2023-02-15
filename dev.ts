@@ -1,4 +1,10 @@
 #!/usr/bin/env -S deno run -A --watch=static/,routes/
+/// <reference no-default-lib="true"/>
+/// <reference lib="deno.ns" />
+/// <reference lib="esnext" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
 import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import "std/dotenv/load.ts";
 import { collect } from "$fresh/src/dev/mod.ts";
@@ -41,7 +47,10 @@ const defaultManifestData: DevManifestData = {
 export default async function dev(
   base: string,
   entrypoint: string,
-  onListen?: () => void,
+  { imports = {}, onListen }: {
+    imports?: Record<string, unknown>;
+    onListen?: () => void;
+  } = {},
 ) {
   const prevManifestData = Deno.env.get("FRSH_DEV_PREVIOUS_MANIFEST");
 
@@ -51,7 +60,7 @@ export default async function dev(
 
   const dir = dirname(fromFileUrl(base));
 
-  const newManifestData = await generateDevManifestData(dir);
+  const newManifestData = await generateDevManifestData(dir, imports);
 
   Deno.env.set("FRSH_DEV_PREVIOUS_MANIFEST", JSON.stringify(newManifestData));
 
@@ -75,13 +84,41 @@ export default async function dev(
   await import(entrypointHref);
 }
 
-async function generateDevManifestData(dir: string): Promise<DevManifestData> {
+async function generateDevManifestData(
+  dir: string,
+  imports?: Record<string, any>,
+): Promise<DevManifestData> {
+  const mapWith = (pre: string) => (list: string[]) =>
+    list.map((name) => "./" + join(pre, name));
   const [manifestFile, sections, functions] = await Promise.all([
     collect(dir),
-    collectSections(dir),
-    collectFunctions(dir),
+    collectSections(dir).then(mapWith("./sections")),
+    collectFunctions(dir).then(mapWith("./functions")),
   ]);
-  const schemas = await extractAllSchemas(sections, functions);
+
+  let schemas = await extractAllSchemas(sections, functions);
+
+  // "imports" is of format { "nameOfImport" : manifest }
+  for (const [key, importManifest] of Object.entries(imports || {})) {
+    const importFunctionNames = Object.keys(importManifest.functions).map((
+      name,
+    ) => name.replace(`./`, `${key}/`));
+    functions.push(...importFunctionNames);
+
+    const importSectionNames = Object.keys(importManifest.sections).map((
+      name,
+    ) => name.replace(`./`, `${key}/`));
+    sections.push(...importSectionNames);
+
+    const importSchemas = Object.keys(importManifest.schemas).reduce(
+      (acc: any, val) => {
+        acc[val.replace("./", `${key}/`)] = importManifest.schemas[val];
+        return acc;
+      },
+      {},
+    );
+    schemas = { ...schemas, ...importSchemas };
+  }
 
   return {
     routes: manifestFile.routes,
@@ -100,6 +137,7 @@ export async function generate(directory: string, manifest: DevManifestData) {
     // This file is automatically updated during development when running \`dev.ts\`.
 
     import config from "./deno.json" assert { type: "json" };
+    import { context } from "$live/live.ts";
     import { DecoManifest } from "$live/types.ts";
     ${routes.map(templates.routes.imports).join("\n")}
     ${islands.map(templates.islands.imports).join("\n")}
@@ -117,7 +155,7 @@ export async function generate(directory: string, manifest: DevManifestData) {
     };
 
     // live — this exposes the manifest so the live server can render components dynamically
-    globalThis.manifest = manifest;
+    context.manifest = manifest;
 
     export default manifest;
     `;
@@ -127,7 +165,7 @@ export async function generate(directory: string, manifest: DevManifestData) {
 
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
-    `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands and ${sections.length} sections.`,
+    `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands, ${sections.length} sections and ${functions.length} functions.`,
     "color: green; font-weight: bold",
   );
 }
@@ -246,15 +284,13 @@ const templates = {
       `${JSON.stringify(`./islands${file}`)}: $$${i},`,
   },
   sections: {
-    imports: (file: string, i: number) =>
-      `import * as $$$${i} from "./sections${file}";`,
-    obj: (file: string, i: number) =>
-      `${JSON.stringify(`./sections${file}`)}: $$$${i},`,
+    imports: (file: string, i: number) => `import * as $$$${i} from "${file}";`,
+    obj: (file: string, i: number) => `${JSON.stringify(`${file}`)}: $$$${i},`,
   },
   functions: {
     imports: (file: string, i: number) =>
-      `import * as $$$$${i} from "./functions${file}";`,
-    obj: (file: string, i: number) => `"./functions${file}": $$$$${i},`,
+      `import * as $$$$${i} from "${file}";`,
+    obj: (file: string, i: number) => `"${file}": $$$$${i},`,
   },
 };
 
@@ -268,8 +304,8 @@ async function extractAllSchemas(
   functions: string[],
 ): Promise<DevManifestData["schemas"]> {
   const functionSchemasAsArray = await Promise.all(
-    functions.map(async (functionName) => {
-      const path = `./functions${functionName}`;
+    functions.map(async (functionPath) => {
+      const path = `${functionPath}`;
       const functionSchema = await getSchemaFromLoaderExport(path);
 
       return [
@@ -280,8 +316,8 @@ async function extractAllSchemas(
   );
 
   const sectionSchemasAsArray = await Promise.all(
-    sections.map(async (section) => {
-      const path = `./sections${section}`;
+    sections.map(async (sectionPath) => {
+      const path = `${sectionPath}`;
       const sectionSchema = await getSchemaFromSectionExport(path);
 
       return [
@@ -297,4 +333,11 @@ async function extractAllSchemas(
   ]);
 
   return schemas;
+}
+
+// Generate live own manifest data so that other sites can import native functions and sections.
+if (import.meta.main) {
+  const dir = Deno.cwd();
+  const newManifestData = await generateDevManifestData(dir);
+  await generate(dir, newManifestData);
 }

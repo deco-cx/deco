@@ -36,9 +36,9 @@ const newVersion = newVersionByUser === "custom"
 const GIT_TAG_COMMAND = `git tag ${newVersion}`;
 console.log(`Running \`${GIT_TAG_COMMAND}\``);
 
-await exec(GIT_TAG_COMMAND)
+await exec(GIT_TAG_COMMAND);
 
 const GIT_PUSH_TAGS_COMMAND = `git push --tags`;
 console.log(`Running \`${GIT_PUSH_TAGS_COMMAND}\``);
 
-await exec(GIT_PUSH_TAGS_COMMAND)
+await exec(GIT_PUSH_TAGS_COMMAND);

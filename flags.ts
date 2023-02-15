@@ -3,10 +3,6 @@ import { DecoManifest, Flag, LiveState } from "$live/types.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { EffectFunction, MatchFunction } from "$live/std/types.ts";
-import MatchDate from "$live/functions/MatchDate.ts";
-import MatchRandom from "$live/functions/MatchRandom.ts";
-import MatchSite from "$live/functions/MatchSite.ts";
-import EffectSelectPage from "$live/functions/EffectSelectPage.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 
 const DECO_COOKIE = "dcxf_";
@@ -60,17 +56,12 @@ const runFlagMatchers = <D>(
   for (const match of matches) {
     const { key, props } = match;
 
-    const matchFn: MatchFunction<any, any, any> =
-      (key === "$live/functions/MatchRandom.ts")
-        ? MatchRandom
-        : (key === "$live/functions/MatchDate.ts")
-        ? MatchDate
-        : (key === "$live/functions/MatchSite.ts")
-        ? MatchSite
-        : manifest.functions[key]?.default as MatchFunction;
+    const matchFn: MatchFunction<any, any, any> = manifest.functions[key]
+      ?.default as MatchFunction;
 
     if (!matchFn) {
-      throw new Error("No match function found for key: " + key);
+      console.error("No match function found for key: " + key);
+      return { isMatch: false, duration: "request" };
     }
 
     const { isMatch, duration } = matchFn(
@@ -92,9 +83,7 @@ const runFlagEffect = <D>(
   const { data: { effect } } = flag;
 
   const effectFn: EffectFunction<any, any, any> | null = effect
-    ? (effect.key === "$live/functions/EffectSelectPage.ts")
-      ? EffectSelectPage
-      : manifest.functions[effect.key].default as EffectFunction
+    ? manifest.functions[effect.key].default as EffectFunction
     : null;
 
   return effectFn?.(req, ctx, effect?.props as any) ?? true;
@@ -110,16 +99,17 @@ export const loadFlags = async <Data = unknown>(
   const site = context.siteId;
 
   // TODO: Cache flags stale for 5 minutes, refresh every 30s
-  const response: { data: Flag[]; error: unknown } = await getSupabaseClient()
-    .from("flags")
-    .select(`id, name, key, state, data, updated_at`)
-    .eq("site", site)
-    .eq("state", "published");
+  const response: { data: Array<Flag> | null; error: unknown } =
+    await getSupabaseClient()
+      .from("flags")
+      .select(`id, name, key, state, data, updated_at, site`)
+      .eq("site", site)
+      .eq("state", "published");
 
   const availableFlags = response.data ?? [];
 
   if (response.error) {
-    console.log("Error fetching flags:", response.error);
+    console.error("Error fetching flags:", response.error);
   }
 
   const activeFlags: Record<string, unknown> = {};

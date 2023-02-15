@@ -1,3 +1,9 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="deno.ns" />
+/// <reference lib="esnext" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import {
@@ -35,9 +41,6 @@ export const context: LiveContext = {
   site: "",
   siteId: 0,
 };
-declare global {
-  var manifest: DecoManifest;
-}
 
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
@@ -65,9 +68,6 @@ export const withLive = (liveOptions: LiveOptions) => {
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
-    if (!context.manifest) {
-      context.manifest = globalThis.manifest;
-    }
     ctx.state.site = {
       id: context.siteId,
       name: context.site,

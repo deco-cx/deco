@@ -1,8 +1,14 @@
 import { MatchFunction } from "$live/std/types.ts";
 
 export interface Props {
-  start: Date;
-  end: Date;
+  /**
+   * @format date-time
+   */
+  start?: string;
+  /**
+   * @format date-time
+   */
+  end?: string;
   session: boolean;
 }
 
@@ -12,11 +18,10 @@ const MatchDate: MatchFunction<Props> = (
   props,
 ) => {
   const now = new Date();
-  const start = new Date(props.start);
-  const end = new Date(props.end);
-  const isMatch = now > start && now < end;
+  const start = props.start ? now > new Date(props.start) : true;
+  const end = props.end ? now < new Date(props.end) : true;
   const duration = props.session ? "session" : "request";
-  return { isMatch, duration };
+  return { isMatch: start && end, duration };
 };
 
 export default MatchDate;

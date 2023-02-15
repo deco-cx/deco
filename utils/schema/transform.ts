@@ -194,7 +194,11 @@ const typeDefToSchema = async (
   const properties = await Promise.all(
     node.properties.map(async (property) => {
       const jsDocSchema = property.jsDoc && jsDocToSchema(property.jsDoc);
-      const schema = await tsTypeToSchema(property.tsType, root, property.optional);
+      const schema = await tsTypeToSchema(
+        property.tsType,
+        root,
+        property.optional,
+      );
 
       return [property.name, {
         ...schema,
@@ -219,7 +223,7 @@ const typeDefToSchema = async (
 export const tsTypeToSchema = async (
   node: TsType,
   root: ASTNode[],
-  optional?: boolean
+  optional?: boolean,
 ): Promise<Schema> => {
   const kind = node.kind;
 

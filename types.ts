@@ -122,8 +122,8 @@ export interface Flag<T = unknown> {
   data: FlagData;
   site: number;
   key: string;
-  value: T;
-  updated_at: string
+  value?: T;
+  updated_at: string;
 }
 
 export interface Flags {

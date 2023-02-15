@@ -1,3 +1,9 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="deno.ns" />
+/// <reference lib="esnext" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
 import { assertEquals } from "https://deno.land/std@0.147.0/testing/asserts.ts";
 
 import { tsToSchema } from "./transform.ts";
@@ -47,7 +53,11 @@ Deno.test("Union types generation", async () => {
     title: undefined,
     type: "object",
     properties: {
-      name: { anyOf: [{ type: "string" }, { type: "number" }], title: "Name", type: "string"}
+      name: {
+        anyOf: [{ type: "string" }, { type: "number" }],
+        title: "Name",
+        type: "string",
+      },
     },
     required: ["name"],
   });
