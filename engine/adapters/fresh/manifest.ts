@@ -1,15 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext, PageProps } from "$fresh/server.ts";
-import { Rezolver } from "../../core/mod.ts";
-import { mapObjKeys } from "../../core/utils.ts";
-import { PromiseOrValue } from "../../core/utils.ts";
+import { Rezolver } from "$live/engine/core/mod.ts";
+import { mapObjKeys } from "$live/engine/core/utils.ts";
+import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import {
   componentAdapter,
   ComponentFunc,
   FreshContext,
   FreshHandler,
   loaderAdapter,
-} from "./adapters.ts";
+} from "$live/engine/adapters/fresh/adapters.ts";
 
 type RouteWithHandler<TConfig = any, TData = any, TState = any> = {
   default?: ComponentFunc<PageProps<any>>;
@@ -43,9 +43,9 @@ export type Loader<T = any, TConfig = any, TData = any, TState = any> = (
   ctx: HandlerContext<TData, TState & LiveConfig<TConfig>>
 ) => PromiseOrValue<T>;
 
-export interface Resolvers {
-  loaders: Record<string, Loader>;
-  sections: Record<string, ComponentFunc>;
+export interface Resolvers<T = any, TConfig = any, TData = any, TState = any> {
+  loaders: Record<string, Loader<T, TConfig, TData, TState>>;
+  sections: Record<string, ComponentFunc<TConfig>>;
 }
 
 export interface ConfigProvider {
