@@ -320,7 +320,7 @@ export type FilterType = "PRICERANGE" | "TEXT" | "NUMBER" | "CATEGORYTREE";
 
 export interface FacetSearchResult {
   facets: Facet[];
-  breadcrumb: Breadcrumb;
+  breadcrumb: Breadcrumb[];
 }
 
 export interface Facet<T = FacetValueBoolean | FacetValueRange> {

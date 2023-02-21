@@ -49,6 +49,7 @@ const DEFAULT_IMAGE = {
 };
 
 export const toProductPage = (
+  url: URL,
   product: ProductVTEX | LegacyProductVTEX,
   maybeSkuId?: string,
 ): ProductDetailsPage => {
@@ -60,7 +61,7 @@ export const toProductPage = (
   }
 
   return {
-    breadcrumbList: toBreadcrumbList(product, sku),
+    breadcrumbList: toBreadcrumbList(url, product, sku),
     product: toProduct(product, sku, 0),
   };
 };
@@ -151,6 +152,7 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
 };
 
 const toBreadcrumbList = (
+  url: URL,
   product: ProductVTEX,
   sku: SkuVTEX,
 ): BreadcrumbList => {
@@ -160,21 +162,21 @@ const toBreadcrumbList = (
     "@type": "BreadcrumbList",
     itemListElement: [
       ...categories.reverse().map((categoryPath, index) => {
-        const splitted = categoryPath.split("/");
-        const name = splitted[splitted.length - 2];
+        const splitted = categoryPath.split("/").filter(Boolean);
+        const name = splitted[splitted.length - 1];
         const item = splitted.map(slugify).join("/");
 
         return {
           "@type": "ListItem" as const,
           name,
-          item,
+          item: new URL(`/${item}`, url.origin).href,
           position: index + 1,
         };
       }),
       {
         "@type": "ListItem",
         name: productName,
-        item: getPath(product, sku.itemId),
+        item: new URL(getPath(product, sku.itemId), url.origin).href,
         position: categories.length + 1,
       },
     ],
