@@ -43,7 +43,7 @@ export type ResolverFunc<
   T = any,
   TParent = any,
   TContext extends BaseContext = BaseContext
-> = (parent: TParent, context: TContext) => PromiseOrValue<Resolvable<T>>;
+> = (parent: TParent, context: TContext) => PromiseOrValue<Resolvable<T> | T>;
 
 export type Resolver<
   T = any,

@@ -1,23 +1,22 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext, PageProps } from "$fresh/server.ts";
-import { Rezolver } from "$live/engine/core/mod.ts";
-import { mapObjKeys } from "$live/engine/core/utils.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import {
-  componentAdapter,
   ComponentFunc,
   FreshContext,
   FreshHandler,
-  loaderAdapter,
 } from "$live/engine/adapters/fresh/adapters.ts";
+import { Rezolver } from "$live/engine/core/mod.ts";
+import { mapObjKeys } from "$live/engine/core/utils.ts";
+import { ResolverMap } from "../../core/resolver.ts";
+import { useFileProvider } from "./fileProvider.ts";
 
 type RouteWithHandler<TConfig = any, TData = any, TState = any> = {
-  default?: ComponentFunc<PageProps<any>>;
+  default?: ComponentFunc<any, PageProps<any>>;
   handler?: FreshHandler<TConfig, TData, TState>;
 };
 
 type PageRoute<TConfig = any> = {
-  default?: ComponentFunc<PageProps<TConfig>>;
+  default?: ComponentFunc<any, PageProps<TConfig>>;
 };
 
 function hasHandler<TConfig = any, TData = any, TState = any>(
@@ -33,38 +32,21 @@ type Routes = Record<string, FreshRoute>;
 
 interface FreshManifest {
   routes: Routes;
+  resolvers: ResolverMap;
 }
 
-export interface LiveConfig<T> {
+export type LiveState<T, TState = unknown> = TState & {
   $config: T;
-}
-export type Loader<T = any, TConfig = any, TData = any, TState = any> = (
-  req: Request,
-  ctx: HandlerContext<TData, TState & LiveConfig<TConfig>>
-) => PromiseOrValue<T>;
-
-export interface Resolvers<T = any, TConfig = any, TData = any, TState = any> {
-  loaders: Record<string, Loader<T, TConfig, TData, TState>>;
-  sections: Record<string, ComponentFunc<TConfig>>;
-}
+};
 
 export interface ConfigProvider {
   get<T>(id: string): T;
 }
 
-export const configurable = <T extends FreshManifest>(
-  m: T,
-  provider: ConfigProvider,
-  { loaders, sections }: Resolvers = {
-    loaders: {},
-    sections: {},
-  }
-): T => {
+export const configurable = <T extends FreshManifest>(m: T): T => {
+  const provider = useFileProvider("./config.json");
   const resolver = new Rezolver<FreshContext>({
-    resolvers: {
-      ...mapObjKeys(loaders, loaderAdapter),
-      ...mapObjKeys(sections, componentAdapter),
-    },
+    resolvers: m.resolvers,
     getResolvable: provider.get.bind(provider),
   });
   const routes = mapObjKeys<Routes, Routes>(m.routes, (route, key) => {
@@ -84,13 +66,13 @@ export const configurable = <T extends FreshManifest>(
     return {
       default: route.default,
       handler: async (request: Request, context: HandlerContext) => {
-        const $config = await resolver.resolve(key, {
+        const $live = await resolver.resolve(key, {
           context,
           request,
         });
         return route.handler!(request, {
           ...context,
-          state: { ...context.state, $config },
+          state: { ...context.state, $live },
         });
       },
     };

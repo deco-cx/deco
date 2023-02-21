@@ -14,15 +14,21 @@ export type FreshHandler<
   ctx: HandlerContext<TData, TState & { $config: TConfig }>
 ) => PromiseOrValue<Resp>;
 
-export type ComponentFunc<TProps = any> = (props: TProps) => JSX.Element;
+export type ComponentFunc<
+  TReturn extends JSX.Element = JSX.Element,
+  TProps = any
+> = (props: TProps) => TReturn;
 
-export interface PreactComponent<TProps = any> {
-  Component: ComponentFunc<TProps>;
+export interface PreactComponent<
+  TReturn extends JSX.Element = JSX.Element,
+  TProps = any
+> {
+  Component: ComponentFunc<TReturn, TProps>;
   props: TProps;
 }
 
 export const componentAdapter = <TProps>(
-  Component: ComponentFunc<TProps>
+  Component: ComponentFunc<any, TProps>
 ): ((props: TProps) => PreactComponent) => {
   const func = (props: TProps): PreactComponent => {
     return {
