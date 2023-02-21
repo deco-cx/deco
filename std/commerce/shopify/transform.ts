@@ -140,6 +140,7 @@ export const toProduct = (
     })),
     offers: {
       "@type": "AggregateOffer",
+      priceCurrency: price.currencyCode,
       highPrice: compareAtPrice
         ? Number(compareAtPrice.amount)
         : Number(price.amount),
@@ -148,7 +149,6 @@ export const toProduct = (
       offers: [{
         "@type": "Offer",
         price: Number(price.amount),
-        priceCurrency: price.currencyCode,
         availability: availableForSale
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
