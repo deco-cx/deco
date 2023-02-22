@@ -110,7 +110,7 @@ interface Pagination {
 
 interface Page {
   index: number;
-  proxyURL: string;
+  proxyUrl: string;
 }
 
 export interface First {

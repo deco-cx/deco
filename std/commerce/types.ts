@@ -342,7 +342,8 @@ export interface ProductListingPage {
   filters: Filter[];
   products: Product[];
   pageInfo: {
-    hasNextPage: boolean;
-    category?: Thing;
+    currentPage: number;
+    nextPage: string | undefined;
+    previousPage: string | undefined;
   };
 }
