@@ -110,7 +110,7 @@ interface Pagination {
 
 interface Page {
   index: number;
-  proxyURL: string;
+  proxyUrl: string;
 }
 
 export interface First {
@@ -320,7 +320,7 @@ export type FilterType = "PRICERANGE" | "TEXT" | "NUMBER" | "CATEGORYTREE";
 
 export interface FacetSearchResult {
   facets: Facet[];
-  breadcrumb: Breadcrumb;
+  breadcrumb: Breadcrumb[];
 }
 
 export interface Facet<T = FacetValueBoolean | FacetValueRange> {

@@ -160,12 +160,6 @@ export interface Offer extends Omit<Thing, "@type"> {
    * - Use values from 0123456789 (Unicode 'DIGIT ZERO' (U+0030) to 'DIGIT NINE' (U+0039)) rather than superficially similiar Unicode symbols.
    */
   price: number;
-  /**
-   * The currency of the price, or a price component when attached to {@link https://schema.org/PriceSpecification PriceSpecification} and its subtypes.
-   *
-   * Use standard formats: {@link http://en.wikipedia.org/wiki/ISO_4217 ISO 4217 currency format} e.g. "USD"; {@link https://en.wikipedia.org/wiki/List_of_cryptocurrencies Ticker symbol} for cryptocurrencies e.g. "BTC"; well known names for {@link https://en.wikipedia.org/wiki/Local_exchange_trading_system Local Exchange Tradings Systems} (LETS) and other currency types e.g. "Ithaca HOUR".
-   */
-  priceCurrency?: string;
   /** One or more detailed price specifications, indicating the unit price and delivery or payment charges. */
   priceSpecification: UnitPriceSpecification[];
   /** The date after which the price is no longer available. */
@@ -198,6 +192,12 @@ export interface AggregateOffer {
   offerCount: number;
   /** An offer to provide this item—for example, an offer to sell a product, rent the DVD of a movie, perform a service, or give away tickets to an event. Use {@link https://schema.org/businessFunction businessFunction} to indicate the kind of transaction offered, i.e. sell, lease, etc. This property can also be used to describe a {@link https://schema.org/Demand Demand}. While this property is listed as expected on a number of common types, it can be used in others. In that case, using a second type, such as Product or a subtype of Product, can clarify the nature of the offer. */
   offers: Offer[];
+  /**
+   * The currency of the price, or a price component when attached to {@link https://schema.org/PriceSpecification PriceSpecification} and its subtypes.
+   *
+   * Use standard formats: {@link http://en.wikipedia.org/wiki/ISO_4217 ISO 4217 currency format} e.g. "USD"; {@link https://en.wikipedia.org/wiki/List_of_cryptocurrencies Ticker symbol} for cryptocurrencies e.g. "BTC"; well known names for {@link https://en.wikipedia.org/wiki/Local_exchange_trading_system Local Exchange Tradings Systems} (LETS) and other currency types e.g. "Ithaca HOUR".
+   */
+  priceCurrency?: string;
 }
 
 export interface Review extends Omit<Thing, "@type"> {
@@ -342,7 +342,8 @@ export interface ProductListingPage {
   filters: Filter[];
   products: Product[];
   pageInfo: {
-    hasNextPage: boolean;
-    category?: Thing;
+    currentPage: number;
+    nextPage: string | undefined;
+    previousPage: string | undefined;
   };
 }

@@ -29,14 +29,18 @@ const isLegacyProduct = (
   product: ProductVTEX | LegacyProductVTEX,
 ): product is LegacyProductVTEX => product.origin !== "intelligent-search";
 
-const getPath = ({ linkText }: { linkText: string }, skuId?: string) => {
+const getProductURL = (
+  url: URL,
+  { linkText }: { linkText: string },
+  skuId?: string,
+) => {
   const params = new URLSearchParams();
 
   if (skuId) {
     params.set("skuId", skuId);
   }
 
-  return `/${linkText}/p?${params.toString()}`;
+  return new URL(`/${linkText}/p?${params.toString()}`, url.origin).href;
 };
 
 const nonEmptyArray = <T>(array: T[] | null | undefined) =>
@@ -48,9 +52,16 @@ const DEFAULT_IMAGE = {
     "https://storecomponents.vtexassets.com/assets/faststore/images/image___117a6d3e229a96ad0e0d0876352566e2.svg",
 };
 
+interface ProductOptions {
+  url: URL;
+  /** Price coded currency, e.g.: USD, BRL */
+  priceCurrency: string;
+}
+
 export const toProductPage = (
   product: ProductVTEX | LegacyProductVTEX,
-  maybeSkuId?: string,
+  maybeSkuId: string | undefined,
+  options: ProductOptions,
 ): ProductDetailsPage => {
   const skuId = maybeSkuId ?? product.items[0]?.itemId;
   const sku = product.items.find((item) => item.itemId === skuId);
@@ -60,8 +71,8 @@ export const toProductPage = (
   }
 
   return {
-    breadcrumbList: toBreadcrumbList(product, sku),
-    product: toProduct(product, sku, 0),
+    breadcrumbList: toBreadcrumbList(product, sku, options),
+    product: toProduct(product, sku, 0, options),
   };
 };
 
@@ -91,7 +102,9 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
   product: P,
   sku: P["items"][number],
   level = 0, // prevent inifinte loop while self referencing the product
+  options: ProductOptions,
 ): Product => {
+  const { url, priceCurrency } = options
   const {
     brand,
     productId,
@@ -110,14 +123,14 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
   const images = nonEmptyArray(sku.images) ?? [DEFAULT_IMAGE];
   const offers = sku.sellers.map(toOffer).sort(bestOfferFirst);
   const hasVariant = level < 1 &&
-    items.map((sku) => toProduct(product, sku, 1));
+    items.map((sku) => toProduct(product, sku, 1, options));
   const highPriceIndex = getHighPriceIndex(offers);
   const lowPriceIndex = 0;
 
   return {
     "@type": "Product",
     productID: skuId,
-    url: getPath(product, sku.itemId),
+    url: getProductURL(url, product, sku.itemId),
     name,
     description,
     brand,
@@ -129,7 +142,7 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
       "@type": "ProductGroup",
       productGroupID: productId,
       hasVariant: hasVariant || [],
-      url: getPath(product, sku.itemId),
+      url: getProductURL(url, product, sku.itemId),
       name: product.productName,
       additionalProperty: groupAdditionalProperty,
     },
@@ -141,6 +154,7 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
     offers: offers.length > 0
       ? {
         "@type": "AggregateOffer",
+        priceCurrency,
         highPrice: offers[highPriceIndex]?.price ?? null,
         lowPrice: offers[lowPriceIndex]?.price ?? null,
         offerCount: offers.length,
@@ -153,6 +167,7 @@ export const toProduct = <P extends LegacyProductVTEX | ProductVTEX>(
 const toBreadcrumbList = (
   product: ProductVTEX,
   sku: SkuVTEX,
+  { url }: ProductOptions,
 ): BreadcrumbList => {
   const { categories, productName } = product;
 
@@ -160,21 +175,21 @@ const toBreadcrumbList = (
     "@type": "BreadcrumbList",
     itemListElement: [
       ...categories.reverse().map((categoryPath, index) => {
-        const splitted = categoryPath.split("/");
-        const name = splitted[splitted.length - 2];
+        const splitted = categoryPath.split("/").filter(Boolean);
+        const name = splitted[splitted.length - 1];
         const item = splitted.map(slugify).join("/");
 
         return {
           "@type": "ListItem" as const,
           name,
-          item,
+          item: new URL(`/${item}`, url.origin).href,
           position: index + 1,
         };
       }),
       {
         "@type": "ListItem",
         name: productName,
-        item: getPath(product, sku.itemId),
+        item: new URL(getProductURL(url, product, sku.itemId), url.origin).href,
         position: categories.length + 1,
       },
     ],
