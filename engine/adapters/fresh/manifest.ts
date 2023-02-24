@@ -30,26 +30,32 @@ type FreshRoute<TConfig = any, TData = any, TState = any> =
 
 type Routes = Record<string, FreshRoute>;
 
-interface FreshManifest {
-  routes: Routes;
-  resolvers: ResolverMap;
-}
+export type DecoManifest = {
+  routes?: Routes;
+  islands?: unknown;
+  definitions?: unknown;
+};
 
 export type LiveState<T, TState = unknown> = TState & {
-  $config: T;
+  $live: T;
 };
 
 export interface ConfigProvider {
   get<T>(id: string): T;
 }
 
-export const configurable = <T extends FreshManifest>(m: T): T => {
+export const configurable = (m: DecoManifest): DecoManifest => {
+  const { islands, routes: _ignore, definitions } = m;
+  const resolvers = (Object.values(m) as ResolverMap[]).reduce(
+    (r, rm) => ({ ...r, ...rm }),
+    {} as ResolverMap
+  );
   const provider = useFileProvider("./config.json");
   const resolver = new Rezolver<FreshContext>({
-    resolvers: m.resolvers,
+    resolvers,
     getResolvable: provider.get.bind(provider),
   });
-  const routes = mapObjKeys<Routes, Routes>(m.routes, (route, key) => {
+  const routes = mapObjKeys<Routes, Routes>(m.routes ?? {}, (route, key) => {
     if (!hasHandler(route)) {
       return {
         default: route.default,
@@ -77,5 +83,5 @@ export const configurable = <T extends FreshManifest>(m: T): T => {
       },
     };
   });
-  return { ...m, routes };
+  return { ...m, routes, islands, definitions } as DecoManifest;
 };

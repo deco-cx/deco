@@ -13,9 +13,18 @@ export interface RezolverConfig<TContext extends BaseContext = BaseContext> {
 
 export class Rezolver<TContext extends BaseContext = BaseContext> {
   protected getResolvable: <T>(type: string) => Resolvable<T>;
+  protected resolvers: ResolverMap<TContext>;
   constructor(protected config: RezolverConfig<TContext>) {
+    this.resolvers = {};
     this.getResolvable = this.config.getResolvable.bind(this.config);
   }
+
+  public addResolvers = (resolvers: ResolverMap<TContext>) => {
+    this.resolvers = {
+      ...this.resolvers,
+      ...resolvers,
+    };
+  };
 
   public resolve = <T = any>(
     type: string,
@@ -24,6 +33,7 @@ export class Rezolver<TContext extends BaseContext = BaseContext> {
     const { resolvers: res, getResolvable } = this.config;
     const resolvers = {
       ...res,
+      ...this.resolvers,
       resolve: function _resolve(obj: any, { resolve }: BaseContext) {
         return resolve(obj);
       },

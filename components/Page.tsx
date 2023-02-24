@@ -6,6 +6,6 @@ import { PreactComponent } from "$live/blocks/loader.ts";
 export interface Props {
   sections: PreactComponent<Section>[];
 }
-export default function Page(p: PageProps<Props>): Page {
-  return <div></div>;
+export default function Page(p: Props): Page {
+  return <div>{p.sections.map((s) => <s></s>)}</div>;
 }

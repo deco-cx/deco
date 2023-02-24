@@ -1,6 +1,6 @@
+import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { Schemeable } from "$live/engine/schema/transformv2.ts";
 import * as J from "https://deno.land/x/jsonschema@v1.4.1/jsonschema.ts";
-import { mapObjKeys } from "$live/engine/core/utils.ts";
 
 const schemeableToJSONSchemaFunc = (
   schemeable: Schemeable

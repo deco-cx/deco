@@ -8,8 +8,9 @@ export interface Product {
 }
 export function MyLoader(
   _: Request,
-  __: HandlerContext<any, LiveState<unknown>>
+  ctx: HandlerContext<any, LiveState<unknown>>
 ): LReturn<Product[]> {
+  ctx.state.$live
   return [];
 }
 
@@ -20,3 +21,5 @@ export function MyLoader2(): VTEXAccount {
 export const f = (): VTEXAccount => {
   return {} as VTEXAccount;
 };
+
+export const route = "/api/x";

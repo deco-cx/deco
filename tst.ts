@@ -1,71 +1,61 @@
+import { Block, buildingBlocks, ModuleAST } from "$live/engine/block.ts";
+import { denoDoc } from "$live/engine/schema/transform.ts";
+import { dirname } from "https://deno.land/std@0.170.0/path/win32.ts";
 import { walk } from "std/fs/walk.ts";
 import { globToRegExp } from "std/path/glob.ts";
-import { buildingBlocks, isFunctionBlock, ModuleAST } from "$live/block.ts";
-import loaderBlock from "$live/blocks/loader.ts";
-import pageBlock from "$live/blocks/page.ts";
-import sectionBlock from "$live/blocks/section.ts";
-import { denoDoc } from "$live/engine/schema/transform.ts";
-import accountBlock from "$live/blocks/account.ts";
-import { dirname } from "https://deno.land/std@0.170.0/path/win32.ts";
+import accountBlock from "./blocks/account.ts";
+import loaderBlock from "./blocks/loader.ts";
+import pageBlock from "./blocks/page.ts";
+import sectionBlock from "./blocks/section.ts";
+import { format } from "./dev.ts";
+import { ManifestBuilder } from "./engine/adapters/fresh/manifestBuilder.ts";
 
-const dir = dirname(import.meta.url);
-const modulePromises: Promise<ModuleAST>[] = [];
-for await (const entry of walk(".", {
-  match: [globToRegExp("**/*.tsx"), globToRegExp("**/*.ts")],
-})) {
-  modulePromises.push(
-    denoDoc(entry.path).then((doc) => [dir, `./${entry.path}`, doc])
-  );
-}
+export const decoManifestBuilder = async (
+  blocks: Block[]
+): Promise<ManifestBuilder> => {
+  const liveIgnore = "./.liveignore";
+  const st = await Deno.stat(liveIgnore);
 
-const blocks = [sectionBlock, pageBlock, loaderBlock, accountBlock];
-const modules = await Promise.all(modulePromises);
+  const ignoreGlobs = !st.isFile
+    ? []
+    : await Deno.readTextFile(liveIgnore).then((txt) => txt.split("\n"));
 
-const manifestData = await buildingBlocks(blocks, modules);
-const resolvers: [string, string][] = [];
-const r = `
-${blocks
-  .map(
-    (block) =>
-      `import * as ${block.type}Block from "$live/blocks/${block.type}.ts"`
-  )
-  .join("\n")}
-${blocks
-  .map((block) => {
-    const imports = Object.keys(manifestData.blocks[block.type]);
-    const isFuncblock = isFunctionBlock(block);
-    const strImports = imports
-      .map((importStr, i) => {
-        const [from, name] = importStr.split("@");
-        const alias = `$${block.type}${i}`;
-        const importAsDefault = `* as ${alias}`;
-        const importClause = !isFuncblock
-          ? importAsDefault
-          : name !== undefined && name !== ""
-          ? `{ ${name} as ${alias} }`
-          : importAsDefault;
-
-        const resolverAdapt = isFuncblock
-          ? `${block.type}Block.default.adapt(${
-              name === "" || name === undefined ? alias + ".default" : alias
-            })`
-          : `${block.type}Block.default.intercept(${alias + ".default"})`;
-        resolvers.push([importStr, resolverAdapt]);
-        return `import ${importClause} from "${from}"`;
-      })
-      .join("\n");
-    return strImports;
-  })
-  .flat()
-  .join("\n")}
-
-const manifest = {
-  blocks: ${JSON.stringify(manifestData.blocks)},
-  definitions: ${JSON.stringify(manifestData.definitions)},
-  resolvers: {
-    ${resolvers.map(([k, v]) => `"${k}": ${v}`).join(",\n")}
+  const dir = dirname(import.meta.url);
+  const modulePromises: Promise<ModuleAST>[] = [];
+  for await (const entry of walk(".", {
+    includeDirs: false,
+    includeFiles: true,
+    exts: ["tsx", "jsx", "ts", "js"],
+    skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
+  })) {
+    modulePromises.push(
+      denoDoc(entry.path).then((doc) => [dir, entry.path, doc])
+    );
   }
-}
 
-`;
-console.log(r);
+  const modules = await Promise.all(modulePromises);
+  const transformContext = modules.reduce(
+    (ctx, module) => {
+      return {
+        ...ctx,
+        code: {
+          ...ctx.code,
+          [`${ctx.base}/${module[1]}`]: [
+            module[0],
+            `./${module[1]}`,
+            module[2],
+          ],
+        },
+      };
+    },
+    { base: dir, code: {} }
+  );
+
+  return buildingBlocks(blocks, transformContext);
+};
+
+if (import.meta.main) {
+  const blks = [accountBlock, sectionBlock, pageBlock, loaderBlock];
+  const manifestData = await decoManifestBuilder(blks);
+  await Deno.writeTextFile("./live.gen.ts", await format(manifestData.build()));
+}

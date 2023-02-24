@@ -1,7 +1,6 @@
-import { PageProps } from "$fresh/server.ts";
-import { Block, FunctionBlockDefinition } from "$live/block.ts";
 import { ComponentFunc, PreactComponent } from "$live/blocks/loader.ts";
-import { TsType } from "$live/engine/schema/ast.ts";
+import { fnDefinitionToSchemeable } from "$live/blocks/utils.ts";
+import { Block } from "$live/engine/block.ts";
 import { findAllReturning } from "$live/engine/schema/utils.ts";
 import { JSX } from "preact";
 
@@ -10,53 +9,38 @@ const pageAddr = "$live/blocks/page.ts@Page";
 const pageJSONSchema = {
   $ref: `#/definitions/${pageAddr}`,
 };
-
+const blockType = "page";
 export type Page = JSX.Element;
-const pageBlock: Block<
-  ComponentFunc<Page, PageProps>,
-  PreactComponent<Page, PageProps>
-> = {
+
+const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
+  import: import.meta.url,
   defaultJSONSchemaDefinitions: {
     [pageAddr]: {
       type: "object",
     },
   },
-  preview: (page) => {
-    return page;
-  },
-  // TODO inspect?
-  run: (section, ctx) => {
-    return ctx.context.render(section);
-  },
   adapt:
-    <TProps>(Component: ComponentFunc<Page, PageProps<TProps>>) =>
+    <TProps>(Component: ComponentFunc<Page, TProps>) =>
     (props: TProps) => ({ Component, props }),
-  type: "page",
-  findModuleDefinitions: async (ast) => {
-    const fns = await findAllReturning(
+  type: blockType,
+  findModuleDefinitions: (transformContext, [path, ast]) => {
+    const fns = findAllReturning(
+      transformContext,
       { typeName: "Page", importUrl: import.meta.url },
       ast
     );
-    return fns.reduce((fns, fn) => {
-      let typeRef: TsType | undefined = undefined;
-      if (fn.params.length >= 1) {
-        if (
-          fn.params[0].kind !== "typeRef" ||
-          !fn.params[0].typeRef.typeParams
-        ) {
-          return fns;
-        }
-        typeRef = fn.params[0].typeRef.typeParams[0];
-      }
-      return [
-        ...fns,
-        {
-          name: fn.name,
-          input: typeRef,
-          output: pageJSONSchema,
-        },
-      ];
-    }, [] as FunctionBlockDefinition[]);
+    const schemeables = fns
+      .map((fn) => ({
+        name: fn.name === "default" ? path : `${path}@${fn.name}`,
+        input: fn.params.length > 0 ? fn.params[0] : undefined,
+        output: pageJSONSchema,
+      }))
+      .map((fn) => fnDefinitionToSchemeable(transformContext, ast, fn));
+
+    return {
+      imports: schemeables.map((s) => s.id!),
+      schemeables,
+    };
   },
 };
 

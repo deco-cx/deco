@@ -11,7 +11,7 @@ export type FreshHandler<
   Resp = Response
 > = (
   request: Request,
-  ctx: HandlerContext<TData, TState & { $config: TConfig }>
+  ctx: HandlerContext<TData, TState & { $live: TConfig }>
 ) => PromiseOrValue<Resp>;
 
 export type ComponentFunc<
@@ -49,27 +49,27 @@ export const loaderAdapter =
     loader: FreshHandler<TConfig, TData, TState, T>
   ) =>
   <TContext extends FreshContext>(
-    $config: TConfig,
+    $live: TConfig,
     ctx: TContext
   ): PromiseOrValue<T> => {
     return loader(ctx.request, {
       ...ctx.context,
-      state: { ...ctx.context.state, $config },
+      state: { ...ctx.context.state, $live },
     });
   };
 
 export const freshAdapter =
   <TConfig, TData, TState>(handler: FreshHandler<TConfig, TData, TState>) =>
   <TContext extends FreshContext>(
-    $config: TConfig,
+    $live: TConfig,
     ctx: TContext
   ): PromiseOrValue<Response> => {
     return handler(ctx.request, {
       ...ctx.context,
-      state: { ...ctx.context.state, $config },
+      state: { ...ctx.context.state, $live },
     });
   };
 
 export const Fresh = freshAdapter((_, ctx) => {
-  return ctx.render(ctx.state.$config);
+  return ctx.render(ctx.state.$live);
 });
