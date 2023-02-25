@@ -239,10 +239,11 @@ interface SectionInstance {
  */
 export const createSectionFromSectionKey = (
   sectionKey: string,
+  sectionName?: string,
 ): CreateSectionFromSectionKeyReturn => {
   const section: SectionInstance = {
     key: sectionKey,
-    label: sectionKey,
+    label: sectionKey + sectionName ? ` (${sectionName})` : "",
     uniqueId: sectionKey,
     props: {},
   };
