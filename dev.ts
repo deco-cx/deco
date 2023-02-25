@@ -10,69 +10,27 @@ import {
 } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
-import { buildingBlocks, ModuleAST } from "$live/engine/block.ts";
-import { denoDoc } from "$live/engine/schema/transform.ts";
-import { globToRegExp } from "std/path/glob.ts";
+import accountBlock from "$live/blocks/account.ts";
+import loaderBlock from "$live/blocks/loader.ts";
+import pageBlock from "$live/blocks/page.ts";
+import sectionBlock from "$live/blocks/section.ts";
+import { DecoManifest } from "$live/engine/adapters/fresh/manifest.ts";
 import {
   ManifestBuilder,
   newManifestBuilder,
-} from "./engine/adapters/fresh/manifestBuilder.ts";
-import { Block } from "./engine/block.ts";
-import { error } from "./error.ts";
+} from "$live/engine/adapters/fresh/manifestBuilder.ts";
+import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts";
+import { error } from "$live/error.ts";
+import { ResolverMap } from "./engine/core/resolver.ts";
 
-export const decoManifestBuilder = async (
-  dir: string,
-  blocks: Block[],
-): Promise<ManifestBuilder> => {
-  const liveIgnore = join(dir, ".liveignore");
-  const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
-
-  const ignoreGlobs = !st.isFile
-    ? []
-    : await Deno.readTextFile(liveIgnore).then((txt) => txt.split("\n"));
-
-  const modulePromises: Promise<ModuleAST>[] = [];
-  for await (
-    const entry of walk(dir, {
-      includeDirs: false,
-      includeFiles: true,
-      exts: ["tsx", "jsx", "ts", "js"],
-      skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
-    })
-  ) {
-    modulePromises.push(
-      denoDoc(entry.path).then((doc) => [
-        dir,
-        entry.path.substring(dir.length),
-        doc,
-      ]),
-    );
-  }
-
-  const modules = await Promise.all(modulePromises);
-  const transformContext = modules.reduce(
-    (ctx, module) => {
-      return {
-        ...ctx,
-        code: {
-          ...ctx.code,
-          [join(ctx.base, module[1])]: [module[0], `.${module[1]}`, module[2]],
-        },
-      };
-    },
-    { base: dir, code: {} },
-  );
-
-  return buildingBlocks(blocks, transformContext);
-};
+const defaultBlocks = [accountBlock, sectionBlock, loaderBlock, pageBlock];
 
 const MIN_DENO_VERSION = "1.25.0";
 
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
   if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
-    let message =
-      `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
+    let message = `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
 
     if (Deno.execPath().includes("homebrew")) {
       message +=
@@ -110,7 +68,7 @@ export async function collect(directory: string): Promise<Manifest> {
     for await (const entry of routesFolder) {
       if (entry.isFile) {
         const file = toFileUrl(entry.path).href.substring(
-          routesUrl.href.length,
+          routesUrl.href.length
         );
         routes.push(file);
       }
@@ -130,7 +88,7 @@ export async function collect(directory: string): Promise<Manifest> {
     for await (const entry of Deno.readDir(islandsDir)) {
       if (entry.isDirectory) {
         error(
-          `Found subdirectory '${entry.name}' in islands/. The islands/ folder must not contain any subdirectories.`,
+          `Found subdirectory '${entry.name}' in islands/. The islands/ folder must not contain any subdirectories.`
         );
       }
       if (entry.isFile) {
@@ -160,6 +118,7 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
     stdout: "piped",
     stderr: "null",
   });
+  console.log(manifest.build());
   const raw = new ReadableStream({
     start(controller) {
       controller.enqueue(new TextEncoder().encode(manifest.build()));
@@ -178,15 +137,15 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated.`,
-    "color: blue; font-weight: bold",
+    "color: blue; font-weight: bold"
   );
 }
 
 const withImport =
-  (blk: string, prefix: string) =>
+  (blk: string, pathBase: string, prefix: string) =>
   (m: ManifestBuilder, imp: string, i: number) => {
     const alias = `${prefix}${i}`;
-    const from = `./${blk}${imp}`;
+    const from = `${pathBase}${imp}`;
     return m
       .addImports({
         from,
@@ -201,14 +160,15 @@ export default async function dev(
   base: string,
   entrypoint: string,
   {
-    imports: _imports = {},
-    blocks = [],
+    imports = {},
     onListen,
   }: {
-    imports?: Record<string, unknown>;
-    blocks?: Block[];
+    imports?: Record<
+      string,
+      DecoManifest & Partial<Record<string, ResolverMap>>
+    >;
     onListen?: () => void;
-  } = {},
+  } = {}
 ) {
   ensureMinDenoVersion();
 
@@ -225,20 +185,46 @@ export default async function dev(
       imports: [],
       manifest: {},
       exports: [],
+      manifestDef: {},
     });
   }
   const newManifest = await collect(dir);
 
-  const manifestBase = await decoManifestBuilder(dir, blocks);
+  let manifest = await decoManifestBuilder(dir, defaultBlocks);
+  // "imports" is of format { "nameOfImport" : manifest }
+  for (const [key, importManifest] of Object.entries(imports || {})) {
+    for (const blk of defaultBlocks) {
+      const blockCollection = `${blk.type}s`;
+      const blkFns = importManifest[blockCollection] ?? {};
+      const importFunctionNames = Object.keys(blkFns).map((name) =>
+        name.replace(`./`, `${key}/`)
+      );
+      manifest = importFunctionNames.reduce(
+        withImport(blockCollection, "", `$${key}${blk.type}`),
+        manifest
+      );
+    }
+
+    const importDef = Object.keys(importManifest.definitions ?? {}).reduce(
+      (acc: Record<string, unknown>, val) => {
+        acc[val.replace("./", `${key}/`)] = (importManifest.definitions ?? {})[
+          val
+        ];
+        return acc;
+      },
+      {}
+    );
+    manifest = manifest.withDefinitions(importDef);
+  }
 
   const withRoutesMan = newManifest.routes.reduce(
-    withImport("routes", "$"),
-    manifestBase,
+    withImport("routes", "./routes", "$"),
+    manifest
   );
 
   const withIslandsMan = newManifest.islands.reduce(
-    withImport("islands", "$$"),
-    withRoutesMan,
+    withImport("islands", "./islands", "$$"),
+    withRoutesMan
   );
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", withIslandsMan.toJSONString());
@@ -278,4 +264,11 @@ export async function format(content: string) {
   proc.close();
 
   return new TextDecoder().decode(out);
+}
+
+// Generate live own manifest data so that other sites can import native functions and sections.
+if (import.meta.main) {
+  const dir = Deno.cwd();
+  const newManifestData = await decoManifestBuilder(dir, defaultBlocks);
+  await generate(dir, newManifestData);
 }

@@ -21,7 +21,7 @@ const accountBlock: Block<Account> = {
   findModuleDefinitions: (transformContext, [_, ast]) => {
     const tps = findAllExtends(
       { typeName: "Account", importUrl: import.meta.url },
-      ast,
+      ast
     ).map((fn) => tsTypeToSchemeable(transformContext, fn, ast));
 
     return tps.reduce(
@@ -33,7 +33,7 @@ const accountBlock: Block<Account> = {
         const [defaultImport] = fn.id.split("@");
         return { ...defnz, imports: [...defnz.imports, defaultImport] };
       },
-      { imports: [], schemeables: [] } as BlockDefinitions,
+      { imports: [], schemeables: [] } as BlockDefinitions
     );
   },
 };
