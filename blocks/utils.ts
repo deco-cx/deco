@@ -10,17 +10,17 @@ import {
 export const fnDefinitionToSchemeable = (
   transformContext: TransformContext,
   ast: ASTNode[],
-  validFn: FunctionBlockDefinition
+  validFn: FunctionBlockDefinition,
 ): Schemeable => {
   const inputSchemeable = inlineOrSchemeable(
     transformContext,
     ast,
-    validFn.input
+    validFn.input,
   );
   const outputSchemeable = inlineOrSchemeable(
     transformContext,
     ast,
-    validFn.output
+    validFn.output,
   );
   return {
     required: ["input", "output"],
@@ -29,22 +29,20 @@ export const fnDefinitionToSchemeable = (
     id: validFn.name,
     value: {
       output: {
-        title:
-          (validFn.output as TsType).repr ??
+        title: (validFn.output as TsType).repr ??
           (validFn.output as JSONSchema7).title,
         jsDocSchema: {},
         schemeable: outputSchemeable!,
       },
       ...(inputSchemeable
         ? {
-            input: {
-              title:
-                (validFn.input as TsType).repr ??
-                (validFn.input as JSONSchema7).title,
-              jsDocSchema: {},
-              schemeable: inputSchemeable,
-            },
-          }
+          input: {
+            title: (validFn.input as TsType).repr ??
+              (validFn.input as JSONSchema7).title,
+            jsDocSchema: {},
+            schemeable: inputSchemeable,
+          },
+        }
         : {}),
     },
   };

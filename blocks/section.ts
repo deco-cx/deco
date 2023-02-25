@@ -1,4 +1,4 @@
-import { ComponentFunc, PreactComponent } from "$live/blocks/loader.ts";
+import { ComponentFunc, PreactComponent } from "$live/blocks/types.ts";
 import { fnDefinitionToSchemeable } from "$live/blocks/utils.ts";
 import { Block } from "$live/engine/block.ts";
 import { findAllReturning } from "$live/engine/schema/utils.ts";
@@ -19,15 +19,16 @@ const sectionBlock: Block<ComponentFunc<Section>, PreactComponent<Section>> = {
       type: "object",
     },
   },
-  adapt:
-    <TProps>(Component: ComponentFunc<Section>) =>
-    (props: TProps) => ({ Component, props }),
+  adapt: <TProps>(Component: ComponentFunc<Section>) => (props: TProps) => ({
+    Component,
+    props,
+  }),
   type: blockType,
   findModuleDefinitions: (transformContext, [path, ast]) => {
     const fns = findAllReturning(
       transformContext,
       { typeName: "Section", importUrl: import.meta.url },
-      ast
+      ast,
     );
     const schemeables = fns
       .map((fn) => ({

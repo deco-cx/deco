@@ -1,65 +1,251 @@
-#!/usr/bin/env -S deno run -A --watch=static/,routes/
-/// <reference no-default-lib="true"/>
-/// <reference lib="deno.ns" />
-/// <reference lib="esnext" />
-/// <reference lib="dom" />
-/// <reference lib="dom.iterable" />
-
-import { collect } from "$fresh/src/dev/mod.ts";
-import "std/dotenv/load.ts";
-import { walk } from "std/fs/walk.ts";
-import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
-
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
+import { walk } from "std/fs/walk.ts";
+import {
+  dirname,
+  extname,
+  fromFileUrl,
+  join,
+  toFileUrl,
+} from "std/path/mod.ts";
+import { gte } from "std/semver/mod.ts";
 
-/**
- * This interface represents an intermediate state used to generate
- * the final manifest (in the target project's fresh.gen.ts).
- *
- * The final manifest follows @DecoManifest type
- */
-interface DevManifestData {
-  routes: string[];
-  islands: string[];
-  sections: string[];
-  functions: string[];
-}
+import { buildingBlocks, ModuleAST } from "$live/engine/block.ts";
+import { denoDoc } from "$live/engine/schema/transform.ts";
+import { globToRegExp } from "std/path/glob.ts";
+import {
+  ManifestBuilder,
+  newManifestBuilder,
+} from "./engine/adapters/fresh/manifestBuilder.ts";
+import { Block } from "./engine/block.ts";
+import { error } from "./error.ts";
 
-const defaultManifestData: DevManifestData = {
-  routes: [],
-  islands: [],
-  sections: [],
-  functions: [],
+export const decoManifestBuilder = async (
+  dir: string,
+  blocks: Block[],
+): Promise<ManifestBuilder> => {
+  const liveIgnore = join(dir, ".liveignore");
+  const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
+
+  const ignoreGlobs = !st.isFile
+    ? []
+    : await Deno.readTextFile(liveIgnore).then((txt) => txt.split("\n"));
+
+  const modulePromises: Promise<ModuleAST>[] = [];
+  for await (
+    const entry of walk(dir, {
+      includeDirs: false,
+      includeFiles: true,
+      exts: ["tsx", "jsx", "ts", "js"],
+      skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
+    })
+  ) {
+    modulePromises.push(
+      denoDoc(entry.path).then((doc) => [
+        dir,
+        entry.path.substring(dir.length),
+        doc,
+      ]),
+    );
+  }
+
+  const modules = await Promise.all(modulePromises);
+  const transformContext = modules.reduce(
+    (ctx, module) => {
+      return {
+        ...ctx,
+        code: {
+          ...ctx.code,
+          [join(ctx.base, module[1])]: [module[0], `.${module[1]}`, module[2]],
+        },
+      };
+    },
+    { base: dir, code: {} },
+  );
+
+  return buildingBlocks(blocks, transformContext);
 };
 
-export interface DevOptions {
-  imports?: Record<string, unknown>;
-  onListen?: () => void;
+const MIN_DENO_VERSION = "1.25.0";
+
+export function ensureMinDenoVersion() {
+  // Check that the minimum supported Deno version is being used.
+  if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
+    let message =
+      `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
+
+    if (Deno.execPath().includes("homebrew")) {
+      message +=
+        "You seem to have installed Deno via homebrew. To update, run: `brew upgrade deno`\n";
+    } else {
+      message += "To update, run: `deno upgrade`\n";
+    }
+
+    error(message);
+  }
 }
+
+interface Manifest {
+  routes: string[];
+  islands: string[];
+}
+
+export async function collect(directory: string): Promise<Manifest> {
+  const routesDir = join(directory, "./routes");
+  const islandsDir = join(directory, "./islands");
+
+  const routes = [];
+  try {
+    const routesUrl = toFileUrl(routesDir);
+    // TODO(lucacasonato): remove the extranious Deno.readDir when
+    // https://github.com/denoland/deno_std/issues/1310 is fixed.
+    for await (const _ of Deno.readDir(routesDir)) {
+      // do nothing
+    }
+    const routesFolder = walk(routesDir, {
+      includeDirs: false,
+      includeFiles: true,
+      exts: ["tsx", "jsx", "ts", "js"],
+    });
+    for await (const entry of routesFolder) {
+      if (entry.isFile) {
+        const file = toFileUrl(entry.path).href.substring(
+          routesUrl.href.length,
+        );
+        routes.push(file);
+      }
+    }
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      // Do nothing.
+    } else {
+      throw err;
+    }
+  }
+  routes.sort();
+
+  const islands = [];
+  try {
+    const islandsUrl = toFileUrl(islandsDir);
+    for await (const entry of Deno.readDir(islandsDir)) {
+      if (entry.isDirectory) {
+        error(
+          `Found subdirectory '${entry.name}' in islands/. The islands/ folder must not contain any subdirectories.`,
+        );
+      }
+      if (entry.isFile) {
+        const ext = extname(entry.name);
+        if (![".tsx", ".jsx", ".ts", ".js"].includes(ext)) continue;
+        const path = join(islandsDir, entry.name);
+        const file = toFileUrl(path).href.substring(islandsUrl.href.length);
+        islands.push(file);
+      }
+    }
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      // Do nothing.
+    } else {
+      throw err;
+    }
+  }
+  islands.sort();
+
+  return { routes, islands };
+}
+
+export async function generate(directory: string, manifest: ManifestBuilder) {
+  const proc = Deno.run({
+    cmd: [Deno.execPath(), "fmt", "-"],
+    stdin: "piped",
+    stdout: "piped",
+    stderr: "null",
+  });
+  const raw = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(manifest.build()));
+      controller.close();
+    },
+  });
+  await raw.pipeTo(proc.stdin.writable);
+  const out = await proc.output();
+  await proc.status();
+  proc.close();
+
+  const manifestStr = new TextDecoder().decode(out);
+
+  const manifestPath = join(directory, "./live.gen.ts");
+
+  await Deno.writeTextFile(manifestPath, manifestStr);
+  console.log(
+    `%cThe manifest has been generated.`,
+    "color: blue; font-weight: bold",
+  );
+}
+
+const withImport =
+  (blk: string, prefix: string) =>
+  (m: ManifestBuilder, imp: string, i: number) => {
+    const alias = `${prefix}${i}`;
+    const from = `./${blk}${imp}`;
+    return m
+      .addImports({
+        from,
+        clauses: [{ alias: alias }],
+      })
+      .addValuesOnManifestKey(blk, [
+        from,
+        { kind: "js", raw: { identifier: alias } },
+      ]);
+  };
 export default async function dev(
   base: string,
   entrypoint: string,
-  { imports = {}, onListen }: DevOptions = {}
+  {
+    imports: _imports = {},
+    blocks = [],
+    onListen,
+  }: {
+    imports?: Record<string, unknown>;
+    blocks?: Block[];
+    onListen?: () => void;
+  } = {},
 ) {
-  const prevManifestData = Deno.env.get("FRSH_DEV_PREVIOUS_MANIFEST");
+  ensureMinDenoVersion();
 
-  const currentManifestData: DevManifestData = prevManifestData
-    ? JSON.parse(prevManifestData)
-    : defaultManifestData;
+  entrypoint = new URL(entrypoint, base).href;
 
   const dir = dirname(fromFileUrl(base));
 
-  const newManifestData = await generateDevManifestData(dir, imports);
+  let currentManifest: ManifestBuilder;
+  const prevManifest = Deno.env.get("LIVE_DEV_PREVIOUS_MANIFEST");
+  if (prevManifest) {
+    currentManifest = newManifestBuilder(JSON.parse(prevManifest));
+  } else {
+    currentManifest = newManifestBuilder({
+      imports: [],
+      manifest: {},
+      exports: [],
+    });
+  }
+  const newManifest = await collect(dir);
 
-  Deno.env.set("FRSH_DEV_PREVIOUS_MANIFEST", JSON.stringify(newManifestData));
+  const manifestBase = await decoManifestBuilder(dir, blocks);
 
-  const manifestDataChanged = !manifestDataEquals(
-    currentManifestData,
-    newManifestData
+  const withRoutesMan = newManifest.routes.reduce(
+    withImport("routes", "$"),
+    manifestBase,
   );
 
-  if (manifestDataChanged) await generate(dir, newManifestData);
+  const withIslandsMan = newManifest.islands.reduce(
+    withImport("islands", "$$"),
+    withRoutesMan,
+  );
+
+  Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", withIslandsMan.toJSONString());
+
+  const manifestChanged = !currentManifest.equal(withIslandsMan);
+
+  if (manifestChanged) await generate(dir, withIslandsMan);
 
   const shouldSetupGithooks = os.platform() !== "windows";
 
@@ -69,108 +255,7 @@ export default async function dev(
 
   onListen?.();
 
-  const entrypointHref = new URL(entrypoint, base).href;
-
-  await import(entrypointHref);
-}
-
-async function generateDevManifestData(
-  dir: string,
-  imports?: Record<string, any>
-): Promise<DevManifestData> {
-  const mapWith = (pre: string) => (list: string[]) =>
-    list.map((name) => "./" + join(pre, name));
-  const [manifestFile, sections, functions] = await Promise.all([
-    collect(dir),
-    collectSections(dir).then(mapWith("./sections")),
-    collectFunctions(dir).then(mapWith("./functions")),
-  ]);
-
-  // "imports" is of format { "nameOfImport" : manifest }
-  for (const [key, importManifest] of Object.entries(imports || {})) {
-    const importFunctionNames = Object.keys(importManifest.functions).map(
-      (name) => name.replace(`./`, `${key}/`)
-    );
-    functions.push(...importFunctionNames);
-
-    const importSectionNames = Object.keys(importManifest.sections).map(
-      (name) => name.replace(`./`, `${key}/`)
-    );
-    sections.push(...importSectionNames);
-  }
-  return {
-    routes: manifestFile.routes,
-    islands: manifestFile.islands,
-    functions,
-    sections,
-  };
-}
-
-export async function generate(directory: string, manifest: DevManifestData) {
-  const { routes, islands, sections, functions } = manifest;
-
-  const output = `// DO NOT EDIT. This file is generated by deco.
-    // This file SHOULD be checked into source version control.
-    // This file is automatically updated during development when running \`dev.ts\`.
-
-    import config from "./deno.json" assert { type: "json" };
-    import { context } from "$live/live.ts";
-    import { DecoManifest } from "$live/types.ts";
-    ${routes.map(templates.routes.imports).join("\n")}
-    ${islands.map(templates.islands.imports).join("\n")}
-    ${sections.map(templates.sections.imports).join("\n")}
-    ${functions.map(templates.functions.imports).join("\n")}
-
-    const manifest: DecoManifest = {
-      routes: {${routes.map(templates.routes.obj).join("\n")}},
-      islands: {${islands.map(templates.islands.obj).join("\n")}},
-      sections: {${sections.map(templates.sections.obj).join("\n")}},
-      functions: {${functions.map(templates.functions.obj).join("\n")}},
-      baseUrl: import.meta.url,
-      config,
-    };
-
-    // live — this exposes the manifest so the live server can render components dynamically
-    context.manifest = manifest;
-
-    export default manifest;
-    `;
-
-  const manifestStr = await format(output);
-  const manifestPath = join(directory, "./fresh.gen.ts");
-
-  await Deno.writeTextFile(manifestPath, manifestStr);
-  console.log(
-    `%cThe manifest has been generated for ${routes.length} routes, ${islands.length} islands, ${sections.length} sections and ${functions.length} functions.`,
-    "color: green; font-weight: bold"
-  );
-}
-
-function manifestDataEquals(a: DevManifestData, b: DevManifestData) {
-  return (
-    arraysEqual(a.routes, b.routes) &&
-    arraysEqual(a.islands, b.islands) &&
-    arraysEqual(a.sections, b.sections) &&
-    arraysEqual(a.functions, b.functions)
-  );
-}
-
-function objectEquals<T>(a: T, b: T) {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
-
-function arraysEqual<T>(a: T[], b: T[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; ++i) {
-    if (typeof a[i] === "object") {
-      if (!objectEquals(a[i], b[i])) return false;
-
-      continue;
-    }
-
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
+  await import(entrypoint);
 }
 
 export async function format(content: string) {
@@ -193,85 +278,4 @@ export async function format(content: string) {
   proc.close();
 
   return new TextDecoder().decode(out);
-}
-
-async function collectSections(dir: string): Promise<string[]> {
-  const sectionsDir = join(dir, "./sections");
-
-  const sectionNames = await collectFilesFromDir(sectionsDir);
-
-  return sectionNames;
-}
-
-async function collectFunctions(dir: string): Promise<string[]> {
-  const functionsDir = join(dir, "./functions");
-
-  const loaderNames = await collectFilesFromDir(functionsDir);
-
-  return loaderNames;
-}
-
-export async function collectFilesFromDir(dir: string) {
-  const files = [];
-  try {
-    const dirURL = toFileUrl(dir);
-    // TODO(lucacasonato): remove the extranious Deno.readDir when
-    // https://github.com/denoland/deno_std/issues/1310 is fixed.
-    for await (const _ of Deno.readDir(dir)) {
-      // do nothing
-    }
-
-    const filesFromDir = walk(dir, {
-      includeDirs: false,
-      includeFiles: true,
-      exts: ["tsx", "jsx", "ts", "js"],
-    });
-
-    for await (const entry of filesFromDir) {
-      if (entry.isFile) {
-        const file = toFileUrl(entry.path).href.substring(dirURL.href.length);
-        files.push(file);
-      }
-    }
-  } catch (err) {
-    if (err instanceof Deno.errors.NotFound) {
-      // Do nothing.
-    } else {
-      throw err;
-    }
-  }
-  files.sort();
-
-  return files;
-}
-
-const templates = {
-  routes: {
-    imports: (file: string, i: number) =>
-      `import * as $${i} from "./routes${file}";`,
-    obj: (file: string, i: number) =>
-      `${JSON.stringify(`./routes${file}`)}: $${i},`,
-  },
-  islands: {
-    imports: (file: string, i: number) =>
-      `import * as $$${i} from "./islands${file}";`,
-    obj: (file: string, i: number) =>
-      `${JSON.stringify(`./islands${file}`)}: $$${i},`,
-  },
-  sections: {
-    imports: (file: string, i: number) => `import * as $$$${i} from "${file}";`,
-    obj: (file: string, i: number) => `${JSON.stringify(`${file}`)}: $$$${i},`,
-  },
-  functions: {
-    imports: (file: string, i: number) =>
-      `import * as $$$$${i} from "${file}";`,
-    obj: (file: string, i: number) => `"${file}": $$$$${i},`,
-  },
-};
-
-// Generate live own manifest data so that other sites can import native functions and sections.
-if (import.meta.main) {
-  const dir = Deno.cwd();
-  const newManifestData = await generateDevManifestData(dir);
-  await generate(dir, newManifestData);
 }

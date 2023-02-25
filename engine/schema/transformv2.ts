@@ -1,5 +1,6 @@
 import { ASTNode, TsType, TypeDef, TypeRef } from "$live/engine/schema/ast.ts";
 import { beautify, jsDocToSchema } from "$live/engine/schema/transform.ts";
+import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
 import * as J from "https://deno.land/x/jsonschema@v1.4.1/jsonschema.ts";
 import { Type } from "https://deno.land/x/jsonschema@v1.4.1/types.ts";
 import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
@@ -13,7 +14,7 @@ export interface TransformContext {
 export const inlineOrSchemeable = (
   transformContext: TransformContext,
   ast: ASTNode[],
-  tp: TsType | JSONSchema7 | undefined
+  tp: TsType | JSONSchema7 | undefined,
 ): Schemeable | undefined => {
   if ((tp as TsType).repr !== undefined) {
     return tsTypeToSchemeable(transformContext, tp as TsType, ast);
@@ -71,10 +72,33 @@ export type Schemeable =
   | RecordSchemeable
   | UnknownSchemable;
 
+export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
+  if (a.id !== b.id) {
+    return false;
+  }
+  if (a.type !== b.type) {
+    return false;
+  }
+  if (a.type === "array" && b.type === "array") {
+    return schemeableEqual(a.value, b.value);
+  }
+  if (a.type === "inline" && b.type === "inline") {
+    return J.print(a.value) === J.print(b.value);
+  }
+
+  if (a.type === "unknown" && b.type === "unknown") {
+    return true;
+  }
+
+  // TODO dumbway
+  const aStr = JSON.stringify(a);
+  const bStr = JSON.stringify(b);
+  return aStr === bStr;
+};
 const schemeableWellKnownType = (
   transformContext: TransformContext,
   ref: TypeRef,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Schemeable | undefined => {
   switch (ref.typeName) {
     case "PreactComponent": {
@@ -125,7 +149,7 @@ const schemeableWellKnownType = (
       const typeSchemeable = tsTypeToSchemeable(
         transformContext,
         ref.typeParams![0],
-        root
+        root,
       );
 
       return {
@@ -144,7 +168,7 @@ const schemeableWellKnownType = (
       const recordSchemeable = tsTypeToSchemeable(
         transformContext,
         ref.typeParams[1],
-        root
+        root,
       );
 
       return {
@@ -161,16 +185,18 @@ const schemeableWellKnownType = (
 const findSchemeableFromNode = (
   transformContext: TransformContext,
   rootNode: ASTNode,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Schemeable => {
   const kind = rootNode.kind;
   switch (kind) {
     case "interface": {
       return {
-        id: `${rootNode.location.filename.replaceAll(
-          transformContext.base,
-          "."
-        )}@${rootNode.name}`,
+        id: `${
+          fromFileUrl(rootNode.location.filename).replaceAll(
+            transformContext.base,
+            ".",
+          )
+        }@${rootNode.name}`,
         type: "object",
         ...typeDefToSchemeable(transformContext, rootNode.interfaceDef, root),
       };
@@ -179,11 +205,12 @@ const findSchemeableFromNode = (
       return tsTypeToSchemeable(
         transformContext,
         rootNode.typeAliasDef.tsType,
-        root
+        root,
       );
     }
     case "import": {
-      const newRoots = transformContext.code[rootNode.importDef.src][2];
+      const newRoots =
+        transformContext.code[fromFileUrl(rootNode.importDef.src)][2];
       const node = newRoots.find((n) => {
         return n.name === rootNode.importDef.imported;
       });
@@ -203,7 +230,7 @@ const findSchemeableFromNode = (
 const typeDefToSchemeable = (
   transformContext: TransformContext,
   node: TypeDef,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Omit<ObjectSchemeable, "id" | "type"> => {
   const properties = node.properties.map((property) => {
     const jsDocSchema = property.jsDoc && jsDocToSchema(property.jsDoc);
@@ -211,7 +238,7 @@ const typeDefToSchemeable = (
       transformContext,
       property.tsType,
       root,
-      property.optional
+      property.optional,
     );
 
     return [
@@ -238,7 +265,7 @@ export const tsTypeToSchemeable = (
   transformContext: TransformContext,
   node: TsType,
   root: ASTNode[],
-  optional?: boolean
+  optional?: boolean,
 ): Schemeable => {
   const kind = node.kind;
 
@@ -247,7 +274,7 @@ export const tsTypeToSchemeable = (
       const typeSchemeable = tsTypeToSchemeable(
         transformContext,
         node.array,
-        root
+        root,
       );
 
       return {
@@ -260,7 +287,7 @@ export const tsTypeToSchemeable = (
       const wellknown = schemeableWellKnownType(
         transformContext,
         node.typeRef,
-        root
+        root,
       );
       if (wellknown) {
         return wellknown;

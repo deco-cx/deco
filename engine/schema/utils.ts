@@ -1,3 +1,4 @@
+import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
 import type { JSONSchema7 as Schema } from "json-schema";
 import { basename } from "std/path/mod.ts";
 import { notUndefined } from "../core/utils.ts";
@@ -17,7 +18,7 @@ import { TransformContext } from "./transformv2.ts";
 
 export const getSchemaFromSectionExport = async (
   nodes: ASTNode[],
-  path: string
+  path: string,
 ) => {
   const node = findExport("default", nodes);
 
@@ -25,20 +26,19 @@ export const getSchemaFromSectionExport = async (
 
   if (node.kind !== "variable" && node.kind !== "function") {
     throw new Error(
-      `Section default export needs to be a component like element`
+      `Section default export needs to be a component like element`,
     );
   }
 
   if (node.kind === "function" && node.functionDef.params.length > 1) {
     throw new Error(
-      `Section function component should have at most one argument`
+      `Section function component should have at most one argument`,
     );
   }
 
-  const tsType =
-    node.kind === "variable"
-      ? node.variableDef.tsType
-      : node.functionDef.params[0]?.tsType;
+  const tsType = node.kind === "variable"
+    ? node.variableDef.tsType
+    : node.functionDef.params[0]?.tsType;
 
   // Only fetching inputSchema (from exported Props) if the default function
   // has its input type specified ({ ... }: Props)
@@ -57,7 +57,7 @@ export const getSchemaFromSectionExport = async (
 
 export const getSchemaFromLoaderExport = async (
   nodes: ASTNode[],
-  path: string
+  path: string,
 ) => {
   const node = findExport("default", nodes);
 
@@ -132,19 +132,20 @@ export const isFunctionDef = (node: ASTNode): node is FunctionDefNode => {
 const extendsTypeFromNode = (
   transformContext: TransformContext,
   rootNode: ASTNode,
-  type: string
+  type: string,
 ): boolean => {
   if (rootNode.kind === "interface") {
     return (
       rootNode.interfaceDef.extends.find(
-        (n) => n.kind === "typeRef" && n.typeRef.typeName === type
+        (n) => n.kind === "typeRef" && n.typeRef.typeName === type,
       ) !== undefined
     );
   }
   if (rootNode.kind !== "import") {
     return false;
   }
-  const newRoots = transformContext.code[rootNode.importDef.src][2];
+  const newRoots =
+    transformContext.code[fromFileUrl(rootNode.importDef.src)][2];
   const node = newRoots.find((n: ASTNode) => {
     return n.name === rootNode.importDef.imported;
   });
@@ -158,7 +159,7 @@ export const extendsType = (
   transformContext: TransformContext,
   tsType: TsType,
   root: ASTNode[],
-  type: string
+  type: string,
 ): boolean => {
   if (tsType.kind !== "typeRef") {
     return false;
@@ -177,7 +178,7 @@ const isFunctionDefOfReturn = (
   originalName: string,
   root: ASTNode[],
   returnRef: string,
-  node: ASTNode
+  node: ASTNode,
 ): boolean => {
   return (
     isFunctionDef(node) &&
@@ -187,7 +188,7 @@ const isFunctionDefOfReturn = (
         transformContext,
         node.functionDef.returnType,
         root,
-        originalName
+        originalName,
       ))
   );
 };
@@ -199,14 +200,14 @@ export interface FunctionTypeDef {
 }
 
 export const isFnOrConstructor = (
-  tsType: TsType
+  tsType: TsType,
 ): tsType is TsTypeFnOrConstructor => {
   return tsType.kind === "fnOrConstructor";
 };
 
 const findImportAliasOrName = (
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[]
+  asts: ASTNode[],
 ): ASTNode | undefined => {
   return asts.find((ast) => {
     return (
@@ -219,7 +220,7 @@ const findImportAliasOrName = (
 
 export const findAllExtends = (
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[]
+  asts: ASTNode[],
 ): TsType[] => {
   const importNode = findImportAliasOrName({ typeName, importUrl }, asts);
   if (importNode === undefined) {
@@ -248,7 +249,7 @@ export const findAllExtends = (
 export const findAllReturning = (
   transformContext: TransformContext,
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[]
+  asts: ASTNode[],
 ): FunctionTypeDef[] => {
   const importNode = asts.find((ast) => {
     return (
@@ -283,13 +284,13 @@ export const findAllReturning = (
             transformContext,
             variableTsType.fnOrConstructor.tsType,
             asts,
-            typeName
+            typeName,
           ))
       ) {
         return {
           name: ast.name,
           params: variableTsType.fnOrConstructor.params.map(
-            ({ tsType }) => tsType
+            ({ tsType }) => tsType,
           ),
           return: variableTsType.fnOrConstructor.tsType,
         };

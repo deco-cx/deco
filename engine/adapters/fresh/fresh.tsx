@@ -1,5 +1,5 @@
 import { PageProps } from "$fresh/server.ts";
-import { PreactComponent } from "$live/engine/adapters/fresh/adapters.ts";
+import { PreactComponent } from "$live/blocks/types.ts";
 
 export default function Render({
   data: {

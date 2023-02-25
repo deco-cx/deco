@@ -3,7 +3,7 @@ import { Schemeable } from "$live/engine/schema/transformv2.ts";
 import * as J from "https://deno.land/x/jsonschema@v1.4.1/jsonschema.ts";
 
 const schemeableToJSONSchemaFunc = (
-  schemeable: Schemeable
+  schemeable: Schemeable,
 ): J.JsonSchema<unknown> => {
   const type = schemeable.type;
   switch (type) {
@@ -29,9 +29,10 @@ const schemeableToJSONSchemaFunc = (
         mapObjKeys<
           typeof schemeable["value"],
           Record<string, J.JsonSchema<unknown>>
-        >(schemeable.value, ({ schemeable }) =>
-          schemeableToJSONSchema(schemeable)
-        )
+        >(
+          schemeable.value,
+          ({ schemeable }) => schemeableToJSONSchema(schemeable),
+        ),
       );
     }
     case "record":
@@ -42,7 +43,7 @@ const schemeableToJSONSchemaFunc = (
   }
 };
 export const schemeableToJSONSchema = (
-  schemeable: Schemeable
+  schemeable: Schemeable,
 ): J.JsonSchema<unknown> => {
   const schemeableId = schemeable.id;
   const f = () => schemeableToJSONSchemaFunc(schemeable);

@@ -4,20 +4,6 @@ import { fnDefinitionToSchemeable } from "$live/blocks/utils.ts";
 import { Block, BlockDefinitions } from "$live/engine/block.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { findAllReturning } from "$live/engine/schema/utils.ts";
-import { JSX } from "preact";
-
-export type ComponentFunc<
-  TReturn extends JSX.Element = JSX.Element,
-  TProps = any
-> = (props: TProps) => TReturn;
-
-export interface PreactComponent<
-  TReturn extends JSX.Element = JSX.Element,
-  TProps = any
-> {
-  Component: ComponentFunc<TReturn, TProps>;
-  props: TProps;
-}
 
 export type LoaderReturn<TReturn = any> = PromiseOrValue<TReturn>;
 
@@ -25,10 +11,10 @@ export type LoaderFunction<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response
+  Resp = Response,
 > = (
   request: Request,
-  ctx: HandlerContext<TData, TState & { $live: TConfig }>
+  ctx: HandlerContext<TData, TState & { $live: TConfig }>,
 ) => PromiseOrValue<Resp>;
 
 const blockType = "loader";
@@ -45,7 +31,7 @@ const loaderBlock: Block<LoaderFunction<any, any, any, any>> = {
     const fns = findAllReturning(
       transformContext,
       { typeName: "LoaderReturn", importUrl: import.meta.url },
-      ast
+      ast,
     );
 
     return fns.reduce(
@@ -96,7 +82,7 @@ const loaderBlock: Block<LoaderFunction<any, any, any, any>> = {
           ],
         };
       },
-      { imports: [], schemeables: [] } as BlockDefinitions
+      { imports: [], schemeables: [] } as BlockDefinitions,
     );
   },
 };

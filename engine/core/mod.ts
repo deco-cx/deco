@@ -28,7 +28,7 @@ export class Rezolver<TContext extends BaseContext = BaseContext> {
 
   public resolve = <T = any>(
     type: string,
-    context: Omit<TContext, keyof BaseContext>
+    context: Omit<TContext, keyof BaseContext>,
   ): PromiseOrValue<T> => {
     const { resolvers: res, getResolvable } = this.config;
     const resolvers = {
@@ -57,7 +57,7 @@ export class Rezolver<TContext extends BaseContext = BaseContext> {
       resolvers,
       this.getResolvable(type),
       this.getResolvable,
-      ctx as TContext
+      ctx as TContext,
     );
   };
 }

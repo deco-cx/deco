@@ -14,7 +14,7 @@ export function isAwaitable<T>(v: T | Promise<T>): v is Promise<T> {
 export const mapObjKeys = <T, R>(
   obj: T,
   // deno-lint-ignore no-explicit-any
-  mapper: (value: T[keyof T], key: keyof T) => any
+  mapper: (value: T[keyof T], key: keyof T) => any,
 ): R => {
   const entries = Object.entries(obj ?? {}) as Entries<T>;
 
@@ -35,7 +35,7 @@ export const waitKeys = async <T>(p: Promisified<T>): Promise<T> => {
   const entries = Object.entries(p) as Entries<Promisified<T>>;
 
   const keyResults = await Promise.all(
-    entries.map(([k, v]) => v.then((r) => [k, r] as [keyof T, T[keyof T]]))
+    entries.map(([k, v]) => v.then((r) => [k, r] as [keyof T, T[keyof T]])),
   );
 
   return keyResults.reduce((obj, [key, value]) => {
