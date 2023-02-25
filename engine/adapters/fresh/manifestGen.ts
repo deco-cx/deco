@@ -20,49 +20,48 @@ import { fromFileUrl, join } from "https://deno.land/std@0.61.0/path/mod.ts";
 
 const blockTypeToImportClause = (
   blockAlias: string,
-  imp: ImportString
+  imp: ImportString,
 ): [Import, string] => {
   const [from, name] = imp.split("@");
   const [clause, ref]: [ImportClause, string] =
     name === "" || name === undefined
       ? [{ alias: blockAlias }, `${blockAlias}.default`]
       : [
-          { import: name, as: `${blockAlias}$${name}` },
-          `${blockAlias}$${name}`,
-        ];
+        { import: name, as: `${blockAlias}$${name}` },
+        `${blockAlias}$${name}`,
+      ];
   return [{ from, clauses: [clause] }, ref];
 };
 
-const withDefinition =
-  (block: BlockType) =>
-  (
-    man: ManifestBuilder,
-    { schemeables, imports }: BlockDefinitions
-  ): ManifestBuilder => {
-    return imports.reduce((manz, imp, i) => {
-      const fAlias = `$${block}${i}`;
-      const [importClause, ref] = blockTypeToImportClause(fAlias, imp);
-      return manz.addImports(importClause).addValuesOnManifestKey(`${block}s`, [
-        imp,
-        {
-          kind: "js",
-          raw: {
-            identifier: `${block}.default.adapt`,
-            params: [
-              {
-                kind: "js",
-                raw: { identifier: ref },
-              },
-            ],
-          },
+const withDefinition = (block: BlockType) =>
+(
+  man: ManifestBuilder,
+  { schemeables, imports }: BlockDefinitions,
+): ManifestBuilder => {
+  return imports.reduce((manz, imp, i) => {
+    const fAlias = `$${block}${i}`;
+    const [importClause, ref] = blockTypeToImportClause(fAlias, imp);
+    return manz.addImports(importClause).addValuesOnManifestKey(`${block}s`, [
+      imp,
+      {
+        kind: "js",
+        raw: {
+          identifier: `${block}.default.adapt`,
+          params: [
+            {
+              kind: "js",
+              raw: { identifier: ref },
+            },
+          ],
         },
-      ]);
-    }, man.addSchemeables(...schemeables));
-  };
+      },
+    ]);
+  }, man.addSchemeables(...schemeables));
+};
 
 const addDefinitions = (
   blocks: Block[],
-  transformContext: TransformContext
+  transformContext: TransformContext,
 ): ManifestBuilder => {
   const initialManifest = newManifestBuilder({
     imports: [],
@@ -72,7 +71,7 @@ const addDefinitions = (
   });
 
   const code = Object.values(transformContext.code).map(
-    (m) => [m[1], m[2]] as [string, ASTNode[]]
+    (m) => [m[1], m[2]] as [string, ASTNode[]],
   );
   return blocks
     .reduce((manz, blk) => {
@@ -95,7 +94,7 @@ const addDefinitions = (
 
 export const decoManifestBuilder = async (
   dir: string,
-  blocks: Block[]
+  blocks: Block[],
 ): Promise<ManifestBuilder> => {
   const liveIgnore = join(dir, ".liveignore");
   const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
@@ -105,18 +104,20 @@ export const decoManifestBuilder = async (
     : await Deno.readTextFile(liveIgnore).then((txt) => txt.split("\n"));
 
   const modulePromises: Promise<ModuleAST>[] = [];
-  for await (const entry of walk(dir, {
-    includeDirs: false,
-    includeFiles: true,
-    exts: ["tsx", "jsx", "ts", "js"],
-    skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
-  })) {
+  for await (
+    const entry of walk(dir, {
+      includeDirs: false,
+      includeFiles: true,
+      exts: ["tsx", "jsx", "ts", "js"],
+      skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
+    })
+  ) {
     modulePromises.push(
       denoDoc(entry.path).then((doc) => [
         dir,
         entry.path.substring(dir.length),
         doc,
-      ])
+      ]),
     );
   }
 
@@ -131,7 +132,7 @@ export const decoManifestBuilder = async (
         },
       };
     },
-    { base: dir, code: {} }
+    { base: dir, code: {} },
   );
 
   return addDefinitions(blocks, transformContext);

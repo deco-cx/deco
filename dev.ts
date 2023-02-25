@@ -30,7 +30,8 @@ const MIN_DENO_VERSION = "1.25.0";
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
   if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
-    let message = `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
+    let message =
+      `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
 
     if (Deno.execPath().includes("homebrew")) {
       message +=
@@ -68,7 +69,7 @@ export async function collect(directory: string): Promise<Manifest> {
     for await (const entry of routesFolder) {
       if (entry.isFile) {
         const file = toFileUrl(entry.path).href.substring(
-          routesUrl.href.length
+          routesUrl.href.length,
         );
         routes.push(file);
       }
@@ -88,7 +89,7 @@ export async function collect(directory: string): Promise<Manifest> {
     for await (const entry of Deno.readDir(islandsDir)) {
       if (entry.isDirectory) {
         error(
-          `Found subdirectory '${entry.name}' in islands/. The islands/ folder must not contain any subdirectories.`
+          `Found subdirectory '${entry.name}' in islands/. The islands/ folder must not contain any subdirectories.`,
         );
       }
       if (entry.isFile) {
@@ -137,7 +138,7 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated.`,
-    "color: blue; font-weight: bold"
+    "color: blue; font-weight: bold",
   );
 }
 
@@ -168,7 +169,7 @@ export default async function dev(
       DecoManifest & Partial<Record<string, ResolverMap>>
     >;
     onListen?: () => void;
-  } = {}
+  } = {},
 ) {
   ensureMinDenoVersion();
 
@@ -201,7 +202,7 @@ export default async function dev(
       );
       manifest = importFunctionNames.reduce(
         withImport(blockCollection, "", `$${key}${blk.type}`),
-        manifest
+        manifest,
       );
     }
 
@@ -212,19 +213,19 @@ export default async function dev(
         ];
         return acc;
       },
-      {}
+      {},
     );
     manifest = manifest.withDefinitions(importDef);
   }
 
   const withRoutesMan = newManifest.routes.reduce(
     withImport("routes", "./routes", "$"),
-    manifest
+    manifest,
   );
 
   const withIslandsMan = newManifest.islands.reduce(
     withImport("islands", "./islands", "$$"),
-    withRoutesMan
+    withRoutesMan,
   );
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", withIslandsMan.toJSONString());

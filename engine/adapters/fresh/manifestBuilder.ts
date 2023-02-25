@@ -1,7 +1,7 @@
 // deno-lint-ignore-file
 import { schemeableToJSONSchema } from "../../schema/schemeable.ts";
 import { Schemeable, schemeableEqual } from "../../schema/transformv2.ts";
-import * as J from "https://deno.land/x/jsonschema@v1.4.1/jsonschema.ts";
+import * as J from "https://deno.land/x/fun@v2.0.0-alpha.10/json_schema.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -42,7 +42,7 @@ export interface JS {
   raw: FunctionCall | Variable | Record<string, unknown>;
 }
 const isObjRaw = (
-  v: FunctionCall | Variable | Record<string, unknown>
+  v: FunctionCall | Variable | Record<string, unknown>,
 ): v is Record<string, unknown> => {
   return (v as FunctionCall).identifier === undefined;
 };
@@ -127,22 +127,26 @@ const stringifyStatement = (st: Statement): string => {
 };
 
 const stringifyImport = ({ clauses, from }: Import): string => {
-  return `import ${clauses
-    .map((clause) =>
-      isDefaultClause(clause)
-        ? `* as ${clause.alias}`
-        : `{ ${clause.import} ${clause.as ? "as " + clause.as : ""}}`
-    )
-    .join(",")} from "${from}"`;
+  return `import ${
+    clauses
+      .map((clause) =>
+        isDefaultClause(clause)
+          ? `* as ${clause.alias}`
+          : `{ ${clause.import} ${clause.as ? "as " + clause.as : ""}}`
+      )
+      .join(",")
+  } from "${from}"`;
 };
 
 const stringifyObj = (obj: JSONObject): string => {
   return `{
-    ${Object.entries(obj)
+    ${
+    Object.entries(obj)
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
-      .join(",\n")}
+      .join(",\n")
+  }
 }
 `;
 };
@@ -165,9 +169,11 @@ const stringifyJS = (js: JS): string => {
     return JSON.stringify(js.raw);
   }
   if (isFunctionCall(js.raw)) {
-    return `${js.raw.identifier}(${js.raw.params
-      .map(stringifyJSONValue)
-      .join(",")})`;
+    return `${js.raw.identifier}(${
+      js.raw.params
+        .map(stringifyJSONValue)
+        .join(",")
+    })`;
   }
 
   return js.raw.identifier;
@@ -329,7 +335,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           {
             ...initial.manifest,
             [key]: initial.manifest[key] ?? { kind: "obj", value: {} },
-          }
+          },
         ),
       });
     },

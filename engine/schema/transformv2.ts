@@ -1,7 +1,7 @@
 import { ASTNode, TsType, TypeDef, TypeRef } from "$live/engine/schema/ast.ts";
 import { beautify, jsDocToSchema } from "$live/engine/schema/transform.ts";
 import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
-import * as J from "https://deno.land/x/jsonschema@v1.4.1/jsonschema.ts";
+import * as J from "https://deno.land/x/fun@v2.0.0-alpha.10/json_schema.ts";
 import { Type } from "https://deno.land/x/jsonschema@v1.4.1/types.ts";
 import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 import { ModuleAST } from "../block.ts";
@@ -19,7 +19,7 @@ export const inlineOrSchemeable = (
   if ((tp as TsType).repr !== undefined) {
     return tsTypeToSchemeable(transformContext, tp as TsType, ast);
   } else if (tp !== undefined) {
-    const inlineValue: J.JsonSchema<unknown> = () => [tp as Type, {}];
+    const inlineValue: J.JsonBuilder<unknown> = () => [tp as Type, {}];
     return {
       type: "inline",
       value: inlineValue,
@@ -33,7 +33,7 @@ export interface SchemeableBase {
 }
 export interface InlineSchemeable extends SchemeableBase {
   type: "inline";
-  value: J.JsonSchema<unknown>;
+  value: J.JsonBuilder<unknown>;
 }
 export interface ObjectSchemeable extends SchemeableBase {
   type: "object";
@@ -125,7 +125,7 @@ const schemeableWellKnownType = (
         };
       }
 
-      const v: J.JsonSchema<unknown> = () => [
+      const v: J.JsonBuilder<unknown> = () => [
         {
           $ref,
         },
@@ -304,10 +304,10 @@ export const tsTypeToSchemeable = (
     }
     case "keyword": {
       const byKeyword = {
-        string: J.string,
-        number: J.number,
-        boolean: J.boolean,
-        unknown: J.unknown,
+        string: J.string(),
+        number: J.number(),
+        boolean: J.boolean(),
+        unknown: J.unknown(),
       };
       return {
         type: "inline",
