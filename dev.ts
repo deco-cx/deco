@@ -119,7 +119,6 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
     stdout: "piped",
     stderr: "null",
   });
-  console.log(manifest.build());
   const raw = new ReadableStream({
     start(controller) {
       controller.enqueue(new TextEncoder().encode(manifest.build()));

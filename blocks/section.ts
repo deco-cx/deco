@@ -2,7 +2,7 @@ import { ComponentFunc, PreactComponent } from "$live/blocks/types.ts";
 import { fnDefinitionToSchemeable } from "$live/blocks/utils.ts";
 import { Block } from "$live/engine/block.ts";
 import { findAllReturning } from "$live/engine/schema/utils.ts";
-import { JSX } from "https://esm.sh/v103/preact@10.11.3/src/index";
+import { JSX } from "preact";
 
 const sectionAddr = "$live/blocks/section.ts@Section";
 
@@ -19,24 +19,28 @@ const sectionBlock: Block<ComponentFunc<Section>, PreactComponent<Section>> = {
       type: "object",
     },
   },
-  adapt: <TProps>(Component: ComponentFunc<Section>) => (props: TProps) => ({
-    Component,
-    props,
-  }),
+  adapt:
+    <TProps>(Component: ComponentFunc<Section>) =>
+    (props: TProps) => ({
+      Component,
+      props,
+    }),
   type: blockType,
-  findModuleDefinitions: (transformContext, [path, ast]) => {
-    const fns = findAllReturning(
+  findModuleDefinitions: async (transformContext, [path, ast]) => {
+    const fns = await findAllReturning(
       transformContext,
       { typeName: "Section", importUrl: import.meta.url },
-      ast,
+      ast
     );
-    const schemeables = fns
-      .map((fn) => ({
-        name: fn.name === "default" ? path : `${path}@${fn.name}`,
-        input: fn.params.length > 0 ? fn.params[0] : undefined,
-        output: sectionJSONSchema,
-      }))
-      .map((fn) => fnDefinitionToSchemeable(transformContext, ast, fn));
+    const schemeables = await Promise.all(
+      fns
+        .map((fn) => ({
+          name: fn.name === "default" ? path : `${path}@${fn.name}`,
+          input: fn.params.length > 0 ? fn.params[0] : undefined,
+          output: sectionJSONSchema,
+        }))
+        .map((fn) => fnDefinitionToSchemeable(transformContext, ast, fn))
+    );
 
     return {
       imports: schemeables.map((s) => s.id!),

@@ -7,20 +7,20 @@ import {
   TransformContext,
 } from "$live/engine/schema/transformv2.ts";
 
-export const fnDefinitionToSchemeable = (
+export const fnDefinitionToSchemeable = async (
   transformContext: TransformContext,
   ast: ASTNode[],
-  validFn: FunctionBlockDefinition,
-): Schemeable => {
-  const inputSchemeable = inlineOrSchemeable(
+  validFn: FunctionBlockDefinition
+): Promise<Schemeable> => {
+  const inputSchemeable = await inlineOrSchemeable(
     transformContext,
     ast,
-    validFn.input,
+    validFn.input
   );
-  const outputSchemeable = inlineOrSchemeable(
+  const outputSchemeable = await inlineOrSchemeable(
     transformContext,
     ast,
-    validFn.output,
+    validFn.output
   );
   return {
     required: ["input", "output"],
@@ -29,20 +29,22 @@ export const fnDefinitionToSchemeable = (
     id: validFn.name,
     value: {
       output: {
-        title: (validFn.output as TsType).repr ??
+        title:
+          (validFn.output as TsType).repr ??
           (validFn.output as JSONSchema7).title,
         jsDocSchema: {},
         schemeable: outputSchemeable!,
       },
       ...(inputSchemeable
         ? {
-          input: {
-            title: (validFn.input as TsType).repr ??
-              (validFn.input as JSONSchema7).title,
-            jsDocSchema: {},
-            schemeable: inputSchemeable,
-          },
-        }
+            input: {
+              title:
+                (validFn.input as TsType).repr ??
+                (validFn.input as JSONSchema7).title,
+              jsDocSchema: {},
+              schemeable: inputSchemeable,
+            },
+          }
         : {}),
     },
   };

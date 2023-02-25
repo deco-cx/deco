@@ -18,11 +18,13 @@ const accountBlock: Block<Account> = {
     }
     return account;
   },
-  findModuleDefinitions: (transformContext, [_, ast]) => {
-    const tps = findAllExtends(
-      { typeName: "Account", importUrl: import.meta.url },
-      ast,
-    ).map((fn) => tsTypeToSchemeable(transformContext, fn, ast));
+  findModuleDefinitions: async (transformContext, [_, ast]) => {
+    const tps = await Promise.all(
+      findAllExtends(
+        { typeName: "Account", importUrl: import.meta.url },
+        ast
+      ).map((fn) => tsTypeToSchemeable(transformContext, fn, ast))
+    );
 
     return tps.reduce(
       (def, fn) => {
@@ -33,7 +35,7 @@ const accountBlock: Block<Account> = {
         const [defaultImport] = fn.id.split("@");
         return { ...defnz, imports: [...defnz.imports, defaultImport] };
       },
-      { imports: [], schemeables: [] } as BlockDefinitions,
+      { imports: [], schemeables: [] } as BlockDefinitions
     );
   },
 };

@@ -18,10 +18,10 @@ export type FreshHandler<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response,
+  Resp = Response
 > = (
   request: Request,
-  ctx: HandlerContext<TData, TState & { $live: TConfig }>,
+  ctx: HandlerContext<TData, TState & { $live: TConfig }>
 ) => PromiseOrValue<Resp>;
 
 export interface FreshContext<Data = any, State = any> extends BaseContext {
@@ -36,7 +36,7 @@ const isRouteModule = (
     | MiddlewareModule
     | AppModule
     | ErrorPageModule
-    | UnknownPageModule,
+    | UnknownPageModule
 ): _ is RouteModule | AppModule => {
   return !key.startsWith("./routes/_");
 };
@@ -48,7 +48,7 @@ const _isUnknownPageModule = (
     | MiddlewareModule
     | AppModule
     | ErrorPageModule
-    | UnknownPageModule,
+    | UnknownPageModule
 ): _ is UnknownPageModule => {
   return key === "./routes/_404.ts";
 };
@@ -60,7 +60,7 @@ const _isErrorPageModule = (
     | MiddlewareModule
     | AppModule
     | ErrorPageModule
-    | UnknownPageModule,
+    | UnknownPageModule
 ): _ is ErrorPageModule => {
   return key.startsWith("./routes/_500.ts");
 };
@@ -72,7 +72,7 @@ const _isMiddlewareModule = (
     | MiddlewareModule
     | AppModule
     | ErrorPageModule
-    | UnknownPageModule,
+    | UnknownPageModule
 ): _ is MiddlewareModule => {
   return key === "./routes/_middleware.ts";
 };
@@ -94,7 +94,7 @@ export interface ConfigProvider {
 const mapHandlers = (
   key: string,
   rz: Rezolver<FreshContext>,
-  handlers: Handler<any, any> | Handlers<any, any>,
+  handlers: Handler<any, any> | Handlers<any, any> | undefined
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
@@ -111,10 +111,12 @@ const mapHandlers = (
     });
   }
   return async function (request: Request, context: HandlerContext) {
-    const $live = (await rz.resolve(key, {
-      context,
-      request,
-    })) ?? {};
+    const $live =
+      (await rz.resolve(key, {
+        context,
+        request,
+      })) ?? {};
+
     if (typeof handlers === "function") {
       return handlers(request, {
         ...context,
@@ -125,10 +127,17 @@ const mapHandlers = (
   };
 };
 export const configurable = (m: DecoManifest): DecoManifest => {
-  const { islands, routes: _ignore, definitions } = m;
-  const resolvers = (Object.values(m) as ResolverMap[]).reduce(
+  const {
+    islands,
+    routes: _ignore,
+    definitions,
+    baseUrl: _baseUrl,
+    config: _config,
+    ...rest
+  } = m;
+  const resolvers = (Object.values(rest) as ResolverMap[]).reduce(
     (r, rm) => ({ ...r, ...rm }),
-    {} as ResolverMap,
+    {} as ResolverMap
   );
   const provider = useFileProvider("./config.json");
   const resolver = new Rezolver<FreshContext>({
@@ -141,13 +150,11 @@ export const configurable = (m: DecoManifest): DecoManifest => {
       const handl = routeMod.handler;
       return {
         ...route,
-        handler: handl
-          ? mapHandlers(
-            (routeMod.config as { liveKey: string }).liveKey ?? key,
-            resolver,
-            handl,
-          )
-          : undefined,
+        handler: mapHandlers(
+          (routeMod.config as { liveKey: string })?.liveKey ?? key,
+          resolver,
+          handl
+        ),
       };
     }
     return route;

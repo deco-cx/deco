@@ -20,24 +20,27 @@ const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
     },
   },
   adapt:
-    <TProps>(Component: ComponentFunc<Page, TProps>) => (props: TProps) => ({
+    <TProps>(Component: ComponentFunc<Page, TProps>) =>
+    (props: TProps) => ({
       Component,
       props,
     }),
   type: blockType,
-  findModuleDefinitions: (transformContext, [path, ast]) => {
-    const fns = findAllReturning(
+  findModuleDefinitions: async (transformContext, [path, ast]) => {
+    const fns = await findAllReturning(
       transformContext,
       { typeName: "Page", importUrl: import.meta.url },
-      ast,
+      ast
     );
-    const schemeables = fns
-      .map((fn) => ({
-        name: fn.name === "default" ? path : `${path}@${fn.name}`,
-        input: fn.params.length > 0 ? fn.params[0] : undefined,
-        output: pageJSONSchema,
-      }))
-      .map((fn) => fnDefinitionToSchemeable(transformContext, ast, fn));
+    const schemeables = await Promise.all(
+      fns
+        .map((fn) => ({
+          name: fn.name === "default" ? path : `${path}@${fn.name}`,
+          input: fn.params.length > 0 ? fn.params[0] : undefined,
+          output: pageJSONSchema,
+        }))
+        .map((fn) => fnDefinitionToSchemeable(transformContext, ast, fn))
+    );
 
     return {
       imports: schemeables.map((s) => s.id!),

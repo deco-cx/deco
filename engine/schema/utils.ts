@@ -18,7 +18,7 @@ import { TransformContext } from "./transformv2.ts";
 
 export const getSchemaFromSectionExport = async (
   nodes: ASTNode[],
-  path: string,
+  path: string
 ) => {
   const node = findExport("default", nodes);
 
@@ -26,19 +26,20 @@ export const getSchemaFromSectionExport = async (
 
   if (node.kind !== "variable" && node.kind !== "function") {
     throw new Error(
-      `Section default export needs to be a component like element`,
+      `Section default export needs to be a component like element`
     );
   }
 
   if (node.kind === "function" && node.functionDef.params.length > 1) {
     throw new Error(
-      `Section function component should have at most one argument`,
+      `Section function component should have at most one argument`
     );
   }
 
-  const tsType = node.kind === "variable"
-    ? node.variableDef.tsType
-    : node.functionDef.params[0]?.tsType;
+  const tsType =
+    node.kind === "variable"
+      ? node.variableDef.tsType
+      : node.functionDef.params[0]?.tsType;
 
   // Only fetching inputSchema (from exported Props) if the default function
   // has its input type specified ({ ... }: Props)
@@ -57,7 +58,7 @@ export const getSchemaFromSectionExport = async (
 
 export const getSchemaFromLoaderExport = async (
   nodes: ASTNode[],
-  path: string,
+  path: string
 ) => {
   const node = findExport("default", nodes);
 
@@ -129,23 +130,24 @@ export const isFunctionDef = (node: ASTNode): node is FunctionDefNode => {
   return node.kind === "function";
 };
 
-const extendsTypeFromNode = (
+const extendsTypeFromNode = async (
   transformContext: TransformContext,
   rootNode: ASTNode,
-  type: string,
-): boolean => {
+  type: string
+): Promise<boolean> => {
   if (rootNode.kind === "interface") {
     return (
       rootNode.interfaceDef.extends.find(
-        (n) => n.kind === "typeRef" && n.typeRef.typeName === type,
+        (n) => n.kind === "typeRef" && n.typeRef.typeName === type
       ) !== undefined
     );
   }
   if (rootNode.kind !== "import") {
     return false;
   }
-  const newRoots =
-    transformContext.code[fromFileUrl(rootNode.importDef.src)][2];
+  const newRoots = (
+    await transformContext.denoDoc(fromFileUrl(rootNode.importDef.src))
+  )[2];
   const node = newRoots.find((n: ASTNode) => {
     return n.name === rootNode.importDef.imported;
   });
@@ -155,13 +157,13 @@ const extendsTypeFromNode = (
   return extendsTypeFromNode(transformContext, node, type);
 };
 
-export const extendsType = (
+export const extendsType = async (
   transformContext: TransformContext,
   tsType: TsType,
   root: ASTNode[],
-  type: string,
-): boolean => {
-  if (tsType.kind !== "typeRef") {
+  type: string
+): Promise<boolean> => {
+  if (tsType?.kind !== "typeRef") {
     return false;
   }
   const rootNode = root.find((n) => {
@@ -170,26 +172,28 @@ export const extendsType = (
   if (!rootNode) {
     return false;
   }
-  return extendsTypeFromNode(transformContext, rootNode, type);
+  return await extendsTypeFromNode(transformContext, rootNode, type);
 };
 
-const isFunctionDefOfReturn = (
+const isFunctionDefOfReturn = async (
   transformContext: TransformContext,
   originalName: string,
   root: ASTNode[],
   returnRef: string,
-  node: ASTNode,
-): boolean => {
+  node: ASTNode
+): Promise<boolean> => {
   return (
     isFunctionDef(node) &&
     node.declarationKind === "export" &&
-    (node.functionDef.returnType.repr === returnRef ||
-      extendsType(
-        transformContext,
-        node.functionDef.returnType,
-        root,
-        originalName,
-      ))
+    ((node.functionDef?.returnType !== null &&
+      node.functionDef.returnType.repr === returnRef) ||
+      (node.functionDef?.returnType !== null &&
+        (await extendsType(
+          transformContext,
+          node.functionDef.returnType,
+          root,
+          originalName
+        ))))
   );
 };
 
@@ -200,14 +204,14 @@ export interface FunctionTypeDef {
 }
 
 export const isFnOrConstructor = (
-  tsType: TsType,
+  tsType: TsType
 ): tsType is TsTypeFnOrConstructor => {
   return tsType.kind === "fnOrConstructor";
 };
 
 const findImportAliasOrName = (
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[],
+  asts: ASTNode[]
 ): ASTNode | undefined => {
   return asts.find((ast) => {
     return (
@@ -220,7 +224,7 @@ const findImportAliasOrName = (
 
 export const findAllExtends = (
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[],
+  asts: ASTNode[]
 ): TsType[] => {
   const importNode = findImportAliasOrName({ typeName, importUrl }, asts);
   if (importNode === undefined) {
@@ -246,11 +250,11 @@ export const findAllExtends = (
     };
   });
 };
-export const findAllReturning = (
+export const findAllReturning = async (
   transformContext: TransformContext,
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[],
-): FunctionTypeDef[] => {
+  asts: ASTNode[]
+): Promise<FunctionTypeDef[]> => {
   const importNode = asts.find((ast) => {
     return (
       ast.kind === "import" &&
@@ -263,40 +267,48 @@ export const findAllReturning = (
   }
   const importAlias = importNode.name;
 
-  const fns = asts.map((ast) => {
-    if (
-      isFunctionDefOfReturn(transformContext, typeName, asts, importAlias, ast)
-    ) {
-      const fAst = ast as FunctionDefNode;
-      return {
-        name: ast.name,
-        params: fAst.functionDef.params.map(({ tsType }) => tsType),
-        return: fAst.functionDef.returnType,
-      };
-    }
-
-    if (ast.kind === "variable") {
-      const variableTsType = ast.variableDef.tsType;
+  const fns = await Promise.all(
+    asts.map(async (ast) => {
       if (
-        isFnOrConstructor(variableTsType) &&
-        (variableTsType.fnOrConstructor.tsType.repr === importAlias ||
-          extendsType(
-            transformContext,
-            variableTsType.fnOrConstructor.tsType,
-            asts,
-            typeName,
-          ))
+        await isFunctionDefOfReturn(
+          transformContext,
+          typeName,
+          asts,
+          importAlias,
+          ast
+        )
       ) {
+        const fAst = ast as FunctionDefNode;
         return {
           name: ast.name,
-          params: variableTsType.fnOrConstructor.params.map(
-            ({ tsType }) => tsType,
-          ),
-          return: variableTsType.fnOrConstructor.tsType,
+          params: fAst.functionDef.params.map(({ tsType }) => tsType),
+          return: fAst.functionDef.returnType,
         };
       }
-    }
-    return undefined;
-  });
+
+      if (ast.kind === "variable") {
+        const variableTsType = ast.variableDef.tsType;
+        if (
+          isFnOrConstructor(variableTsType) &&
+          (variableTsType.fnOrConstructor.tsType.repr === importAlias ||
+            extendsType(
+              transformContext,
+              variableTsType.fnOrConstructor.tsType,
+              asts,
+              typeName
+            ))
+        ) {
+          return {
+            name: ast.name,
+            params: variableTsType.fnOrConstructor.params.map(
+              ({ tsType }) => tsType
+            ),
+            return: variableTsType.fnOrConstructor.tsType,
+          };
+        }
+      }
+      return undefined;
+    })
+  );
   return fns.filter(notUndefined);
 };
