@@ -6,7 +6,7 @@ import { ASTNode, TsType } from "$live/engine/schema/ast.ts";
 import {
   Schemeable,
   TransformContext,
-} from "$live/engine/schema/transformv2.ts";
+} from "$live/engine/schema/transform.ts";
 import {
   JSONSchema7,
   JSONSchema7Definition,

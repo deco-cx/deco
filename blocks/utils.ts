@@ -5,7 +5,7 @@ import {
   inlineOrSchemeable,
   Schemeable,
   TransformContext,
-} from "$live/engine/schema/transformv2.ts";
+} from "$live/engine/schema/transform.ts";
 
 export const fnDefinitionToSchemeable = async (
   transformContext: TransformContext,

@@ -1,53 +1,84 @@
-import { mapObjKeys } from "$live/engine/core/utils.ts";
-import { Schemeable } from "$live/engine/schema/transformv2.ts";
-import * as J from "https://deno.land/x/fun@v2.0.0-alpha.10/json_schema.ts";
+import { Schemeable } from "$live/engine/schema/transform.ts";
+import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 
 const schemeableToJSONSchemaFunc = (
-  schemeable: Schemeable,
-): J.JsonBuilder<unknown> => {
+  def: Record<string, JSONSchema7>,
+  schemeable: Schemeable
+): [Record<string, JSONSchema7>, JSONSchema7] => {
   const type = schemeable.type;
   switch (type) {
     case "array": {
-      return J.array(schemeableToJSONSchema(schemeable.value));
+      return schemeableToJSONSchema(def, schemeable.value);
     }
     case "inline":
-      return schemeable.value;
+      return [def, schemeable.value];
     case "union": {
-      const tps = schemeable.value.map(schemeableToJSONSchema);
-      let curr: J.JsonBuilder<unknown> | undefined = undefined;
-      for (const tp of tps) {
-        if (curr === undefined) {
-          curr = tp;
-        } else {
-          curr = J.union(curr)(tp);
-        }
-      }
-      return curr!;
-    }
-    case "object": {
-      return J.struct(
-        mapObjKeys<
-          typeof schemeable["value"],
-          Record<string, J.JsonBuilder<unknown>>
-        >(
-          schemeable.value,
-          (
-            { schemeable }, // FIXME is not considering properties jsDocs schema
-          ) => schemeableToJSONSchema(schemeable),
-        ),
+      return schemeable.value.reduce(
+        ([currDef, currSchema], schemeable) => {
+          const [ndef, sc] = schemeableToJSONSchema(currDef, schemeable);
+          return [ndef, { ...currSchema, anyOf: [...currSchema.anyOf!, sc] }];
+        },
+        [
+          def,
+          {
+            type: schemeable.value[0].type,
+            anyOf: [],
+          },
+        ] as [Record<string, JSONSchema7>, JSONSchema7]
       );
     }
-    case "record":
-      return J.record(schemeableToJSONSchema(schemeable.value));
+    case "object": {
+      const [_, properties] = Object.entries(schemeable.value).reduce(
+        (
+          [currDef, properties],
+          [property, { schemeable, title, jsDocSchema }]
+        ) => {
+          const [nDef, sc] = schemeableToJSONSchema(currDef, schemeable);
+          return [
+            nDef,
+            { ...properties, [property]: { title, ...sc, ...jsDocSchema } },
+          ];
+        },
+        [def, {}]
+      );
+      return [
+        def,
+        {
+          type: "object",
+          properties,
+          required: schemeable.required,
+          title: schemeable.title,
+        },
+      ];
+    }
+    case "record": {
+      const [nDef, properties] = schemeableToJSONSchema(def, schemeable.value);
+      return [
+        nDef,
+        {
+          title: "Record",
+          type: "object",
+          additionalProperties: properties,
+        },
+      ];
+    }
     case "unknown":
     default:
-      return J.unknown();
+      return [def, {}];
   }
 };
 export const schemeableToJSONSchema = (
-  schemeable: Schemeable,
-): J.JsonBuilder<unknown> => {
+  def: Record<string, JSONSchema7>,
+  schemeable: Schemeable
+): [Record<string, JSONSchema7>, JSONSchema7] => {
   const schemeableId = schemeable.id;
-  const f = () => schemeableToJSONSchemaFunc(schemeable);
-  return schemeableId ? J.lazy(schemeableId, f) : f();
+  if (schemeableId && def[schemeableId]) {
+    return [def, def[schemeableId]];
+  }
+  const [nSchema, curr] = schemeableToJSONSchemaFunc(def, schemeable);
+
+  if (schemeableId) {
+    return [{ ...nSchema, [schemeableId]: curr }, curr];
+  }
+  return [nSchema, curr];
 };

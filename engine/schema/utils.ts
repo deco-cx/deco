@@ -1,105 +1,127 @@
 import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
 import type { JSONSchema7 as Schema } from "json-schema";
-import { basename } from "std/path/mod.ts";
 import { notUndefined } from "../core/utils.ts";
 import {
   ASTNode,
   FunctionDefNode,
+  JSDoc,
+  Tag,
   TsType,
   TsTypeFnOrConstructor,
 } from "./ast.ts";
-import {
-  beautify,
-  findExport,
-  getSchemaId,
-  tsTypeToSchema,
-} from "./transform.ts";
-import { TransformContext } from "./transformv2.ts";
+import { TransformContext } from "./transform.ts";
 
-export const getSchemaFromSectionExport = async (
-  nodes: ASTNode[],
-  path: string,
-) => {
-  const node = findExport("default", nodes);
-
-  if (!node) return { inputSchema: null, outputSchema: null };
-
-  if (node.kind !== "variable" && node.kind !== "function") {
-    throw new Error(
-      `Section default export needs to be a component like element`,
-    );
+/**
+ * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
+ * For instance, maxLength and maxItems have to be parsed to number. readOnly should be a boolean etc
+ */
+const parseJSDocAttribute = (key: string, value: string) => {
+  switch (key) {
+    case "maximum":
+    case "exclusiveMaximum":
+    case "minimum":
+    case "exclusiveMinimum":
+    case "maxLength":
+    case "minLength":
+    case "multipleOf":
+    case "maxItems":
+    case "minItems":
+    case "maxProperties":
+    case "minProperties":
+      return Number(value);
+    case "readOnly":
+    case "writeOnly":
+    case "uniqueItems":
+      return Boolean(value);
+    default:
+      return value;
   }
-
-  if (node.kind === "function" && node.functionDef.params.length > 1) {
-    throw new Error(
-      `Section function component should have at most one argument`,
-    );
-  }
-
-  const tsType = node.kind === "variable"
-    ? node.variableDef.tsType
-    : node.functionDef.params[0]?.tsType;
-
-  // Only fetching inputSchema (from exported Props) if the default function
-  // has its input type specified ({ ... }: Props)
-  const inputSchema = tsType && (await tsTypeToSchema(tsType, nodes));
-
-  // Add a rich name to the editor
-  if (inputSchema) {
-    inputSchema.title = beautify(basename(path));
-  }
-
-  return {
-    inputSchema: inputSchema ?? null,
-    outputSchema: null,
-  };
 };
 
-export const getSchemaFromLoaderExport = async (
-  nodes: ASTNode[],
-  path: string,
-) => {
-  const node = findExport("default", nodes);
+export const jsDocToSchema = (node: JSDoc) =>
+  node.tags
+    ? Object.fromEntries(
+        node.tags
+          .map((tag: Tag) => {
+            const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
 
-  if (!node) return { inputSchema: null, outputSchema: null };
+            const key = match?.groups?.key;
+            const value = match?.groups?.value;
 
-  if (node.kind !== "variable") {
-    throw new Error("Default export needs to be a const variable");
+            if (typeof key === "string" && typeof value === "string") {
+              const parsedValue = parseJSDocAttribute(key, value);
+              return [key, parsedValue] as const;
+            }
+
+            return null;
+          })
+          .filter((e): e is [string, string | number | boolean] => !!e)
+      )
+    : undefined;
+
+export const findExport = (name: string, root: ASTNode[]) => {
+  const node = root.find(
+    (n) => n.name === name && n.declarationKind === "export"
+  );
+
+  if (!node) {
+    console.error(
+      `Could not find export for ${name}. Are you exporting all necessary elements?`
+    );
   }
 
-  const tsType = node.variableDef.tsType;
+  return node;
+};
 
-  if (
-    tsType.kind !== "typeRef" ||
-    tsType.typeRef.typeName in
-      ["LoaderFunction", "MatchFunction", "EffectFunction"]
-  ) {
-    throw new Error(`Default export needs to be of type LoaderFunction`);
+/**
+ * Transforms myPropName into "My Prop Name" for cases
+ * when there's no label specified
+ *
+ * TODO: Support i18n in the future
+ */
+export const beautify = (propName: string) => {
+  return (
+    propName
+      // insert a space before all caps
+      .replace(/([A-Z])/g, " $1")
+      // uppercase the first character
+      .replace(/^./, function (str) {
+        return str.toUpperCase();
+      })
+      // Remove startsWith("/"")
+      .replace(/^\//, "")
+      // Remove endsdWith('.ts' or '.tsx')
+      .replace(/\.tsx?$/, "")
+  );
+};
+const denoDocCache = new Map<string, Promise<string>>();
+
+const exec = async (cmd: string[]) => {
+  const process = Deno.run({ cmd, stdout: "piped" });
+
+  const [stdout, status] = await Promise.all([
+    process.output(),
+    process.status(),
+  ]);
+
+  if (!status.success) {
+    throw new Error(
+      `Error while running ${cmd.join(" ")} with status ${status.code}`
+    );
   }
 
-  const [propType = null, returnType = null] = tsType.typeRef.typeParams ?? [];
+  process.close();
 
-  const inputSchema = propType && (await tsTypeToSchema(propType, nodes));
-  const outputType = returnType && (await tsTypeToSchema(returnType, nodes));
-  const outputSchema: Schema | null = outputType && {
-    type: "object",
-    properties: {
-      data: {
-        $id: await getSchemaId(outputType),
-      },
-    },
-    additionalProperties: true,
-  };
+  return new TextDecoder().decode(stdout);
+};
+export const denoDoc = async (path: string): Promise<ASTNode[]> => {
+  const promise =
+    denoDocCache.get(path) ?? exec(["deno", "doc", "--json", path]);
 
-  // Add a rich name to the editor
-  if (inputSchema) {
-    inputSchema.title = beautify(basename(path));
-  }
+  denoDocCache.set(path, promise);
 
-  return {
-    inputSchema: inputSchema ?? null,
-    outputSchema: outputSchema ?? null,
-  };
+  const stdout = await promise;
+  return JSON.parse(stdout);
 };
 
 // TODO: Should we extract defaultProps from the schema here?
@@ -132,12 +154,12 @@ export const isFunctionDef = (node: ASTNode): node is FunctionDefNode => {
 const extendsTypeFromNode = async (
   transformContext: TransformContext,
   rootNode: ASTNode,
-  type: string,
+  type: string
 ): Promise<boolean> => {
   if (rootNode.kind === "interface") {
     return (
       rootNode.interfaceDef.extends.find(
-        (n) => n.kind === "typeRef" && n.typeRef.typeName === type,
+        (n) => n.kind === "typeRef" && n.typeRef.typeName === type
       ) !== undefined
     );
   }
@@ -160,7 +182,7 @@ export const extendsType = async (
   transformContext: TransformContext,
   tsType: TsType,
   root: ASTNode[],
-  type: string,
+  type: string
 ): Promise<boolean> => {
   if (tsType?.kind !== "typeRef") {
     return false;
@@ -179,7 +201,7 @@ const isFunctionDefOfReturn = async (
   originalName: string,
   root: ASTNode[],
   returnRef: string,
-  node: ASTNode,
+  node: ASTNode
 ): Promise<boolean> => {
   return (
     isFunctionDef(node) &&
@@ -191,7 +213,7 @@ const isFunctionDefOfReturn = async (
           transformContext,
           node.functionDef.returnType,
           root,
-          originalName,
+          originalName
         ))))
   );
 };
@@ -203,14 +225,14 @@ export interface FunctionTypeDef {
 }
 
 export const isFnOrConstructor = (
-  tsType: TsType,
+  tsType: TsType
 ): tsType is TsTypeFnOrConstructor => {
   return tsType.kind === "fnOrConstructor";
 };
 
 const findImportAliasOrName = (
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[],
+  asts: ASTNode[]
 ): ASTNode | undefined => {
   return asts.find((ast) => {
     return (
@@ -223,7 +245,7 @@ const findImportAliasOrName = (
 
 export const findAllExtends = (
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[],
+  asts: ASTNode[]
 ): TsType[] => {
   const importNode = findImportAliasOrName({ typeName, importUrl }, asts);
   if (importNode === undefined) {
@@ -252,7 +274,7 @@ export const findAllExtends = (
 export const findAllReturning = async (
   transformContext: TransformContext,
   { typeName, importUrl }: TypeRef,
-  asts: ASTNode[],
+  asts: ASTNode[]
 ): Promise<FunctionTypeDef[]> => {
   const importNode = asts.find((ast) => {
     return (
@@ -274,7 +296,7 @@ export const findAllReturning = async (
           typeName,
           asts,
           importAlias,
-          ast,
+          ast
         )
       ) {
         const fAst = ast as FunctionDefNode;
@@ -294,20 +316,20 @@ export const findAllReturning = async (
               transformContext,
               variableTsType.fnOrConstructor.tsType,
               asts,
-              typeName,
+              typeName
             ))
         ) {
           return {
             name: ast.name,
             params: variableTsType.fnOrConstructor.params.map(
-              ({ tsType }) => tsType,
+              ({ tsType }) => tsType
             ),
             return: variableTsType.fnOrConstructor.tsType,
           };
         }
       }
       return undefined;
-    }),
+    })
   );
   return fns.filter(notUndefined);
 };

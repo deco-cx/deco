@@ -1,214 +1,250 @@
-import type { JSONSchema7 as Schema } from "json-schema";
-import type {
-  ASTNode,
-  ImportDefNode,
-  InterfaceDefNode,
-  JSDoc,
-  Tag,
-  TsType,
-  TypeAliasDefNode,
-  TypeDef,
-  TypeRef,
-} from "./ast.ts";
+import { ASTNode, TsType, TypeDef, TypeRef } from "$live/engine/schema/ast.ts";
+import { beautify, jsDocToSchema } from "$live/engine/schema/utils.ts";
+import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
+import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
+import { ModuleAST } from "../block.ts";
 
-const exec = async (cmd: string[]) => {
-  const process = Deno.run({ cmd, stdout: "piped" });
+export interface TransformContext {
+  base: string;
+  code: Record<string, ModuleAST>;
+  denoDoc: (src: string) => Promise<ModuleAST>;
+}
 
-  const [stdout, status] = await Promise.all([
-    process.output(),
-    process.status(),
-  ]);
+export const inlineOrSchemeable = async (
+  transformContext: TransformContext,
+  ast: ASTNode[],
+  tp: TsType | JSONSchema7 | undefined
+): Promise<Schemeable | undefined> => {
+  if ((tp as TsType).repr !== undefined) {
+    return await tsTypeToSchemeable(transformContext, tp as TsType, ast);
+  } else if (tp !== undefined) {
+    return {
+      type: "inline",
+      value: tp as JSONSchema7,
+    };
+  }
+  return undefined;
+};
 
-  if (!status.success) {
-    throw new Error(
-      `Error while running ${cmd.join(" ")} with status ${status.code}`,
-    );
+export interface SchemeableBase {
+  id?: string;
+}
+export interface InlineSchemeable extends SchemeableBase {
+  type: "inline";
+  value: JSONSchema7;
+}
+export interface ObjectSchemeable extends SchemeableBase {
+  type: "object";
+  title: string;
+  value: Record<
+    string,
+    { title: string; schemeable: Schemeable; jsDocSchema: JSONSchema7 }
+  >;
+  required: string[];
+}
+
+export interface RecordSchemeable extends SchemeableBase {
+  type: "record";
+  value: Schemeable;
+}
+
+export interface UnionSchemeable extends SchemeableBase {
+  type: "union";
+  value: Schemeable[];
+}
+
+export interface ArraySchemeable extends SchemeableBase {
+  type: "array";
+  value: Schemeable;
+}
+
+export interface UnknownSchemable extends SchemeableBase {
+  type: "unknown";
+}
+
+export type Schemeable =
+  | ObjectSchemeable
+  | UnionSchemeable
+  | ArraySchemeable
+  | InlineSchemeable
+  | RecordSchemeable
+  | UnknownSchemable;
+
+export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
+  if (a.id !== b.id) {
+    return false;
+  }
+  if (a.type !== b.type) {
+    return false;
+  }
+  if (a.type === "array" && b.type === "array") {
+    return schemeableEqual(a.value, b.value);
   }
 
-  process.close();
+  if (a.type === "unknown" && b.type === "unknown") {
+    return true;
+  }
 
-  return new TextDecoder().decode(stdout);
+  // TODO dumbway
+  const aStr = JSON.stringify(a);
+  const bStr = JSON.stringify(b);
+  return aStr === bStr;
 };
+const schemeableWellKnownType = async (
+  transformContext: TransformContext,
+  ref: TypeRef,
+  root: ASTNode[]
+): Promise<Schemeable | undefined> => {
+  switch (ref.typeName) {
+    case "PreactComponent": {
+      if (ref.typeParams && ref.typeParams.length < 1) {
+        return {
+          type: "unknown",
+        };
+      }
+      const typeRef = ref.typeParams![0];
+      if (typeRef.kind !== "typeRef") {
+        return {
+          type: "unknown",
+        };
+      }
 
-const denoDocCache = new Map<string, Promise<string>>();
-
-export const denoDoc = async (path: string): Promise<ASTNode[]> => {
-  const promise = denoDocCache.get(path) ??
-    exec(["deno", "doc", "--json", path]);
-
-  denoDocCache.set(path, promise);
-
-  const stdout = await promise;
-  return JSON.parse(stdout);
-};
-
-export const getSchemaId = async (schema: Schema) => {
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-1",
-    new TextEncoder().encode(JSON.stringify(schema)),
-  );
-
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-};
-
-const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
-  switch (node.typeName) {
-    case "Record": {
-      if (node.typeParams?.length !== 2) {
-        throw new Error("Built in type Record requires two parameters");
+      const def: Record<string, string> = {
+        Section: "#/definitions/$live/blocks/section.ts#Section",
+        Page: "#/definitions/$live/blocks/page.ts#Page",
+      };
+      const $ref = def[typeRef.typeRef.typeName];
+      if (!$ref) {
+        return {
+          type: "unknown",
+        };
       }
 
       return {
-        title: "Record",
-        type: "object",
-        additionalProperties: await tsTypeToSchema(node.typeParams[1], root),
-      } as const;
-    }
-
-    case "Array": {
-      if (node.typeParams?.length !== 1) {
-        throw new Error("Built in type Array requires one parameter");
-      }
-
-      return {
-        title: "Array",
-        type: "array",
-        items: await tsTypeToSchema(node.typeParams[0], root),
-      } as const;
-    }
-
-    case "LoaderReturnType": {
-      const typeDef = findType(node.typeName, root);
-      const isLiveType = typeDef?.kind === "import" &&
-        typeDef.importDef.src.endsWith("std/types.ts");
-
-      if (!isLiveType) {
-        return;
-      }
-
-      const param = node.typeParams?.[0];
-
-      if (!param) {
-        throw new Error("Missing param for LoaderReturnType");
-      }
-
-      const transformed = await tsTypeToSchema(param, root);
-
-      return {
-        $id: await getSchemaId(transformed),
-        format: "live-function",
-        type: "string" as const,
+        type: "inline",
+        value: {
+          $ref,
+        },
       };
     }
-  }
+    case "Array": {
+      if (ref.typeParams && ref.typeParams.length < 1) {
+        return {
+          id: "unknown[]",
+          type: "array",
+          value: {
+            type: "unknown",
+          },
+        };
+      }
+      const typeSchemeable = await tsTypeToSchemeable(
+        transformContext,
+        ref.typeParams![0],
+        root
+      );
 
-  return null;
-};
+      return {
+        id: `${typeSchemeable.id}[]`,
+        type: "array",
+        value: typeSchemeable,
+      };
+    }
+    case "Record": {
+      if (ref.typeParams?.length !== 2) {
+        return {
+          type: "unknown",
+        };
+      }
 
-export const findType = (type: string, root: ASTNode[]) => {
-  const node = root.find(
-    (node): node is InterfaceDefNode | TypeAliasDefNode | ImportDefNode =>
-      node.name === type &&
-      (node.kind === "interface" ||
-        node.kind === "typeAlias" ||
-        node.kind === "import"),
-  );
+      const recordSchemeable = await tsTypeToSchemeable(
+        transformContext,
+        ref.typeParams[1],
+        root
+      );
 
-  if (!node) {
-    throw new Error(
-      `Could not find type definition for ${type}. Are you exporting it?`,
-    );
-  }
-
-  return node;
-};
-
-export const findExport = (name: string, root: ASTNode[]) => {
-  const node = root.find(
-    (n) => n.name === name && n.declarationKind === "export",
-  );
-
-  if (!node) {
-    console.error(
-      `Could not find export for ${name}. Are you exporting all necessary elements?`,
-    );
-  }
-
-  return node;
-};
-
-/**
- * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
- * For instance, maxLength and maxItems have to be parsed to number. readOnly should be a boolean etc
- */
-const parseJSDocAttribute = (key: string, value: string) => {
-  switch (key) {
-    case "maximum":
-    case "exclusiveMaximum":
-    case "minimum":
-    case "exclusiveMinimum":
-    case "maxLength":
-    case "minLength":
-    case "multipleOf":
-    case "maxItems":
-    case "minItems":
-    case "maxProperties":
-    case "minProperties":
-      return Number(value);
-    case "readOnly":
-    case "writeOnly":
-    case "uniqueItems":
-      return Boolean(value);
+      return {
+        id: `record<?, ${recordSchemeable.id}>`,
+        type: "record",
+        value: recordSchemeable,
+      };
+    }
     default:
-      return value;
+      return undefined;
   }
 };
 
-export const jsDocToSchema = (node: JSDoc) =>
-  node.tags
-    ? Object.fromEntries(
-      node.tags
-        .map((tag: Tag) => {
-          const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
+const findSchemeableFromNode = async (
+  transformContext: TransformContext,
+  rootNode: ASTNode,
+  root: ASTNode[]
+): Promise<Schemeable> => {
+  const kind = rootNode.kind;
+  switch (kind) {
+    case "interface": {
+      return {
+        id: `${fromFileUrl(rootNode.location.filename).replaceAll(
+          transformContext.base,
+          "."
+        )}@${rootNode.name}`,
+        type: "object",
+        ...(await typeDefToSchemeable(
+          transformContext,
+          rootNode.interfaceDef,
+          root
+        )),
+      };
+    }
+    case "typeAlias": {
+      return tsTypeToSchemeable(
+        transformContext,
+        rootNode.typeAliasDef.tsType,
+        root
+      );
+    }
+    case "import": {
+      const newRoots = (
+        await transformContext.denoDoc(fromFileUrl(rootNode.importDef.src))
+      )[2];
+      const node = newRoots.find((n) => {
+        return n.name === rootNode.importDef.imported;
+      });
+      if (!node) {
+        return {
+          type: "unknown",
+        };
+      }
+      return findSchemeableFromNode(transformContext, node, root);
+    }
+  }
+  return {
+    type: "unknown",
+  };
+};
 
-          const key = match?.groups?.key;
-          const value = match?.groups?.value;
-
-          if (typeof key === "string" && typeof value === "string") {
-            const parsedValue = parseJSDocAttribute(key, value);
-            return [key, parsedValue] as const;
-          }
-
-          return null;
-        })
-        .filter((e): e is [string, string | number | boolean] => !!e),
-    )
-    : undefined;
-
-const typeDefToSchema = async (
+const typeDefToSchemeable = async (
+  transformContext: TransformContext,
   node: TypeDef,
-  root: ASTNode[],
-): Promise<Schema> => {
+  root: ASTNode[]
+): Promise<Omit<ObjectSchemeable, "id" | "type">> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
       const jsDocSchema = property.jsDoc && jsDocToSchema(property.jsDoc);
-      const schema = await tsTypeToSchema(
+      const schema = await tsTypeToSchemeable(
+        transformContext,
         property.tsType,
         root,
-        property.optional,
+        property.optional
       );
 
       return [
         property.name,
         {
-          ...schema,
+          schemeable: schema,
+          jsDocSchema: jsDocSchema,
           title: beautify(property.name),
-          ...jsDocSchema,
         },
-      ] as const;
-    }),
+      ];
+    })
   );
 
   const required = node.properties
@@ -217,134 +253,95 @@ const typeDefToSchema = async (
 
   return {
     title: node.name,
-    type: "object",
-    properties: Object.fromEntries(properties),
+    value: Object.fromEntries(properties),
     required,
   };
 };
-
-export const tsTypeToSchema = async (
+export const tsTypeToSchemeable = async (
+  transformContext: TransformContext,
   node: TsType,
   root: ASTNode[],
-  optional?: boolean,
-): Promise<Schema> => {
+  optional?: boolean
+): Promise<Schemeable> => {
   const kind = node.kind;
 
   switch (kind) {
-    case "typeRef": {
-      const maybeSchema = await schemaForTSBuiltinType(node.typeRef, root);
-
-      if (maybeSchema) {
-        return maybeSchema;
-      }
-
-      const r = findType(node.typeRef.typeName, root);
-
-      const schema = await docToSchema(r, root);
-
-      return {
-        ...schema,
-        title: schema.title || node.repr,
-      };
-    }
-    case "indexedAccess":
-      throw new Error("Not Implemented");
-
-    case "keyword": {
-      return {
-        type: optional ? [node.keyword, "null"] : node.keyword,
-      };
-    }
-
-    case "typeLiteral": {
-      return await typeDefToSchema(node.typeLiteral, root);
-    }
-
-    case "union": {
-      const children = await Promise.all(
-        node.union.map((n) => tsTypeToSchema(n, root)),
+    case "array": {
+      const typeSchemeable = await tsTypeToSchemeable(
+        transformContext,
+        node.array,
+        root
       );
 
       return {
-        type: children[0].type,
-        anyOf: children,
-      };
-    }
-
-    case "array": {
-      return {
+        id: typeSchemeable.id ? `${typeSchemeable.id}[]` : undefined,
         type: "array",
-        items: await tsTypeToSchema(node.array, root),
+        value: typeSchemeable,
       };
     }
-
+    case "typeRef": {
+      const wellknown = await schemeableWellKnownType(
+        transformContext,
+        node.typeRef,
+        root
+      );
+      if (wellknown) {
+        return wellknown;
+      }
+      const rootNode = root.find((n) => {
+        return n.name === node.typeRef.typeName;
+      });
+      if (!rootNode) {
+        return {
+          type: "unknown",
+        };
+      }
+      return await findSchemeableFromNode(transformContext, rootNode, root);
+    }
+    case "keyword": {
+      return {
+        type: "inline",
+        value: {
+          type: optional ? [node.keyword, "null"] : node.keyword,
+        },
+      };
+    }
+    case "typeLiteral":
+      return {
+        type: "object",
+        ...(await typeDefToSchemeable(
+          transformContext,
+          node.typeLiteral,
+          root
+        )),
+      };
     case "literal": {
       return {
-        type: node.literal.kind,
-        const: node.literal[node.literal.kind],
+        type: "inline",
+        value: {
+          type: node.literal.kind,
+          const: node.literal[node.literal.kind],
+        },
       };
     }
-
-    default:
-      throw new Error(`Unknown kind ${kind}`);
-  }
-};
-
-const docToSchema = async (node: ASTNode, root: ASTNode[]): Promise<Schema> => {
-  const kind = node.kind;
-
-  switch (kind) {
-    case "import":
-      return tsToSchema(node.importDef.src, node.importDef.imported);
-
-    case "interface":
-      return typeDefToSchema(node.interfaceDef, root);
-
-    case "typeAlias": {
-      const jsDocSchema = node.jsDoc && jsDocToSchema(node.jsDoc);
-      const schema = await tsTypeToSchema(node.typeAliasDef.tsType, root);
-
+    case "union": {
+      const values = await Promise.all(
+        node.union.map((t) => tsTypeToSchemeable(transformContext, t, root))
+      );
+      const ids = values.map((tp) => tp.id);
+      ids.sort();
+      const unionTypeId = ids.join("|");
       return {
-        ...jsDocSchema,
-        ...schema,
+        id: unionTypeId,
+        value: values,
+        type: "union",
       };
     }
-
-    case "variable":
-      throw new Error("Not Implemented");
-
-    case "function":
-      throw new Error("Not Implemented");
-
+    case "fnOrConstructor":
+    case "indexedAccess":
     default:
-      throw new Error(`Unknown kind ${kind}`);
+      return {
+        type: "unknown",
+      };
   }
-};
-
-export const tsToSchema = async (path: string, type: string) => {
-  const nodes = await denoDoc(path);
-  const node = findType(type, nodes);
-  return docToSchema(node, nodes);
-};
-
-/**
- * Transforms myPropName into "My Prop Name" for cases
- * when there's no label specified
- *
- * TODO: Support i18n in the future
- */
-export const beautify = (propName: string) => {
-  return (
-    propName
-      // insert a space before all caps
-      .replace(/([A-Z])/g, " $1")
-      // uppercase the first character
-      .replace(/^./, function (str) {
-        return str.toUpperCase();
-      })
-      // Remove startsWith("/"")
-      .replace(/^\//, "")
-      // Remove endsdWith('.ts' or '.tsx')
-      .replace(/\.tsx?$/, "")
-  );
 };

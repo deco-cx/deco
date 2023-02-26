@@ -24,54 +24,59 @@ const manifest = {
   "config": config,
   "baseUrl": import.meta.url,
   "definitions": {
-    "./sections/Head.tsx@Props": {
-      "type": "object",
-      "properties": {
-        "title": {},
-        "description": {},
-        "url": {},
-        "imageUrl": {},
-        "faviconUrl": {},
-        "styleUrls": {},
-        "inlineStyles": {},
-        "scriptUrls": {},
-        "inlineScripts": {},
-        "themeColor": {},
-      },
-      "required": [
-        "description",
-        "faviconUrl",
-        "imageUrl",
-        "inlineScripts",
-        "inlineStyles",
-        "scriptUrls",
-        "styleUrls",
-        "themeColor",
-        "title",
-        "url",
-      ],
-    },
     "./sections/Head.tsx": {
       "type": "object",
       "properties": {
         "output": { "$ref": "#/definitions/$live/blocks/section.ts@Section" },
-        "input": { "$ref": "#/definitions/./sections/Head.tsx@Props" },
+        "input": {
+          "type": "object",
+          "properties": {
+            "title": { "title": "Title", "type": ["string", "null"] },
+            "description": {
+              "title": "Description",
+              "type": ["string", "null"],
+            },
+            "url": { "title": "Url", "type": ["string", "null"] },
+            "imageUrl": { "title": "Image Url", "type": ["string", "null"] },
+            "faviconUrl": {
+              "title": "Favicon Url",
+              "type": ["string", "null"],
+            },
+            "styleUrls": { "title": "Style Urls", "type": "string" },
+            "inlineStyles": { "title": "Inline Styles", "type": "string" },
+            "scriptUrls": { "title": "Script Urls", "type": "string" },
+            "inlineScripts": { "title": "Inline Scripts", "type": "string" },
+            "themeColor": {
+              "title": "Theme Color",
+              "type": ["string", "null"],
+            },
+          },
+          "required": [],
+        },
       },
       "required": ["input", "output"],
-    },
-    "./components/LivePage.tsx@Props": {
-      "type": "object",
-      "properties": { "sections": {} },
-      "required": ["sections"],
+      "title": "./sections/Head.tsx",
     },
     "./components/LivePage.tsx": {
       "type": "object",
       "properties": {
         "output": { "$ref": "#/definitions/$live/blocks/page.ts@Page" },
-        "input": { "$ref": "#/definitions/./components/LivePage.tsx@Props" },
+        "input": {
+          "type": "object",
+          "properties": {
+            "sections": {
+              "title": "Sections",
+              "$ref": "#/definitions/$live/blocks/section.ts#Section",
+            },
+          },
+          "required": ["sections"],
+        },
       },
       "required": ["input", "output"],
+      "title": "./components/LivePage.tsx",
     },
+    "$live/blocks/section.ts@Section": { "type": "object" },
+    "$live/blocks/page.ts@Page": { "type": "object" },
   },
 };
 

@@ -1,5 +1,5 @@
 import { Block, BlockDefinitions } from "$live/engine/block.ts";
-import { tsTypeToSchemeable } from "$live/engine/schema/transformv2.ts";
+import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
 import { findAllExtends } from "$live/engine/schema/utils.ts";
 
 const brand = Symbol();
