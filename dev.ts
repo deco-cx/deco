@@ -142,7 +142,7 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
 }
 
 const withImport =
-  (blk: string, pathBase: string, prefix: string) =>
+  (blk: string, pathBase: string, prefix: string, adapt?: string) =>
   (m: ManifestBuilder, imp: string, i: number) => {
     const alias = `${prefix}${i}`;
     const from = `${pathBase}${imp}`;
@@ -153,7 +153,10 @@ const withImport =
       })
       .addValuesOnManifestKey(blk, [
         from,
-        { kind: "js", raw: { identifier: alias } },
+        {
+          kind: "js",
+          raw: { identifier: adapt ? `${adapt}(${alias}.default)` : alias },
+        },
       ]);
   };
 export default async function dev(
@@ -165,7 +168,7 @@ export default async function dev(
   }: {
     imports?: Record<
       string,
-      DecoManifest & Partial<Record<string, ResolverMap>>
+      DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
     >;
     onListen?: () => void;
   } = {},
@@ -195,12 +198,18 @@ export default async function dev(
   for (const [key, importManifest] of Object.entries(imports || {})) {
     for (const blk of defaultBlocks) {
       const blockCollection = `${blk.type}s`;
-      const blkFns = importManifest[blockCollection] ?? {};
+      const blkFns =
+        (importManifest as Record<string, ResolverMap>)[blockCollection] ?? {};
       const importFunctionNames = Object.keys(blkFns).map((name) =>
         name.replace(`./`, `${key}/`)
       );
       manifest = importFunctionNames.reduce(
-        withImport(blockCollection, "", `$${key}${blk.type}`),
+        withImport(
+          blockCollection,
+          "",
+          `$${key}${blk.type}`,
+          `${blk.type}.default.adapt`,
+        ),
         manifest,
       );
     }
@@ -217,6 +226,9 @@ export default async function dev(
     manifest = manifest.withDefinitions(importDef);
   }
 
+  // TODO @Author Marcos V. Candeia
+  // Make routes and islands blocks
+  // set the route override config to allow import routes from different repositories
   const withRoutesMan = newManifest.routes.reduce(
     withImport("routes", "./routes", "$"),
     manifest,

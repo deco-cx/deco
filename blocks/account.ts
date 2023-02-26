@@ -22,8 +22,8 @@ const accountBlock: Block<Account> = {
     const tps = await Promise.all(
       findAllExtends(
         { typeName: "Account", importUrl: import.meta.url },
-        ast
-      ).map((fn) => tsTypeToSchemeable(transformContext, fn, ast))
+        ast,
+      ).map((fn) => tsTypeToSchemeable(transformContext, fn, ast)),
     );
 
     return tps.reduce(
@@ -35,7 +35,7 @@ const accountBlock: Block<Account> = {
         const [defaultImport] = fn.id.split("@");
         return { ...defnz, imports: [...defnz.imports, defaultImport] };
       },
-      { imports: [], schemeables: [] } as BlockDefinitions
+      { imports: [], schemeables: [] } as BlockDefinitions,
     );
   },
 };

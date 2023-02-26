@@ -20,5 +20,5 @@ export type LiveConfig<TConfig = any, TState = unknown> = TState & {
 };
 
 export interface LiveRouteConfig extends RouteConfig {
-  liveKey: string;
+  liveKey?: string;
 }
