@@ -3,7 +3,7 @@ import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 
 const schemeableToJSONSchemaFunc = (
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable
+  schemeable: Schemeable,
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const type = schemeable.type;
   switch (type) {
@@ -24,14 +24,14 @@ const schemeableToJSONSchemaFunc = (
             type: schemeable.value[0].type,
             anyOf: [],
           },
-        ] as [Record<string, JSONSchema7>, JSONSchema7]
+        ] as [Record<string, JSONSchema7>, JSONSchema7],
       );
     }
     case "object": {
       const [_, properties] = Object.entries(schemeable.value).reduce(
         (
           [currDef, properties],
-          [property, { schemeable, title, jsDocSchema }]
+          [property, { schemeable, title, jsDocSchema }],
         ) => {
           const [nDef, sc] = schemeableToJSONSchema(currDef, schemeable);
           return [
@@ -39,7 +39,7 @@ const schemeableToJSONSchemaFunc = (
             { ...properties, [property]: { title, ...sc, ...jsDocSchema } },
           ];
         },
-        [def, {}]
+        [def, {}],
       );
       return [
         def,
@@ -69,7 +69,7 @@ const schemeableToJSONSchemaFunc = (
 };
 export const schemeableToJSONSchema = (
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable
+  schemeable: Schemeable,
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const schemeableId = schemeable.id;
   if (schemeableId && def[schemeableId]) {

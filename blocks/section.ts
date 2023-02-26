@@ -20,18 +20,16 @@ const sectionBlock: Block<ComponentFunc<Section>, PreactComponent<Section>> = {
       additionalProperties: true,
     },
   },
-  adapt:
-    <TProps>(Component: ComponentFunc<Section>) =>
-    (props: TProps) => ({
-      Component,
-      props,
-    }),
+  adapt: <TProps>(Component: ComponentFunc<Section>) => (props: TProps) => ({
+    Component,
+    props,
+  }),
   type: blockType,
   findModuleDefinitions: async (transformContext, [path, ast]) => {
     const fns = await findAllReturning(
       transformContext,
       { typeName: "Section", importUrl: import.meta.url },
-      ast
+      ast,
     );
     const schemeables = await Promise.all(
       fns
@@ -42,7 +40,7 @@ const sectionBlock: Block<ComponentFunc<Section>, PreactComponent<Section>> = {
         }))
         .map((fn) =>
           fnDefinitionToSchemeable(transformContext, [path, ast], fn)
-        )
+        ),
     );
 
     return {

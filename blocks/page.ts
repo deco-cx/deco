@@ -21,8 +21,7 @@ const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
     },
   },
   adapt:
-    <TProps>(Component: ComponentFunc<Page, TProps>) =>
-    (props: TProps) => ({
+    <TProps>(Component: ComponentFunc<Page, TProps>) => (props: TProps) => ({
       Component,
       props,
     }),
@@ -31,7 +30,7 @@ const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
     const fns = await findAllReturning(
       transformContext,
       { typeName: "Page", importUrl: import.meta.url },
-      ast
+      ast,
     );
     const schemeables = await Promise.all(
       fns
@@ -42,7 +41,7 @@ const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
         }))
         .map((fn) =>
           fnDefinitionToSchemeable(transformContext, [path, ast], fn)
-        )
+        ),
     );
 
     return {

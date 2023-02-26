@@ -20,14 +20,14 @@ type ConfigurableRoute = {
 };
 
 const isConfigurableRoute = (
-  v: DecoManifest["routes"][string] | ConfigurableRoute
+  v: DecoManifest["routes"][string] | ConfigurableRoute,
 ): v is ConfigurableRoute => {
   return (v as ConfigurableRoute)?.config?.liveKey !== undefined;
 };
 const mapHandlers = (
   key: string,
   rz: Rezolver<FreshContext>,
-  handlers: Handler<any, any> | Handlers<any, any> | undefined
+  handlers: Handler<any, any> | Handlers<any, any> | undefined,
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
@@ -44,11 +44,10 @@ const mapHandlers = (
     });
   }
   return async function (request: Request, context: HandlerContext) {
-    const $live =
-      (await rz.resolve(key, {
-        context,
-        request,
-      })) ?? {};
+    const $live = (await rz.resolve(key, {
+      context,
+      request,
+    })) ?? {};
 
     if (typeof handlers === "function") {
       return handlers(request, {
@@ -86,7 +85,7 @@ const routeBlock: ConfigurableBlock<DecoManifest["routes"][string]> = {
     };
 
     const handlerNode = ast.find(
-      (node) => node.name === "handler" && node.declarationKind === "export"
+      (node) => node.name === "handler" && node.declarationKind === "export",
     );
     const liveConfigImport = ast.find((node) => {
       return node.kind === "import" && node.importDef.imported === "LiveConfig";
@@ -95,7 +94,7 @@ const routeBlock: ConfigurableBlock<DecoManifest["routes"][string]> = {
     if (handlerNode && liveConfigImport) {
       const handlerSchemeable = schemeableFromHandleNode(
         handlerNode,
-        liveConfigImport.name
+        liveConfigImport.name,
       );
       if (handlerSchemeable) {
         return {
@@ -163,7 +162,7 @@ export default routeBlock;
 
 function schemeableFromHandleNode(
   handlerNode: ASTNode,
-  liveImportAs: string
+  liveImportAs: string,
 ): TsType | null {
   let contextParam: Param | null = null;
   if (handlerNode.kind === "function") {

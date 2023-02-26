@@ -13,7 +13,7 @@ export interface TransformContext {
 export const inlineOrSchemeable = async (
   transformContext: TransformContext,
   ast: [string, ASTNode[]],
-  tp: TsType | JSONSchema7 | undefined
+  tp: TsType | JSONSchema7 | undefined,
 ): Promise<Schemeable | undefined> => {
   if ((tp as TsType).repr !== undefined) {
     return await tsTypeToSchemeable(transformContext, tp as TsType, ast);
@@ -93,7 +93,7 @@ export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
 const schemeableWellKnownType = async (
   transformContext: TransformContext,
   ref: TypeRef,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
     case "PreactComponent": {
@@ -140,7 +140,7 @@ const schemeableWellKnownType = async (
       const typeSchemeable = await tsTypeToSchemeableRec(
         transformContext,
         ref.typeParams![0],
-        root
+        root,
       );
 
       return {
@@ -159,7 +159,7 @@ const schemeableWellKnownType = async (
       const recordSchemeable = await tsTypeToSchemeableRec(
         transformContext,
         ref.typeParams[1],
-        root
+        root,
       );
 
       return {
@@ -176,21 +176,23 @@ const schemeableWellKnownType = async (
 const findSchemeableFromNode = async (
   transformContext: TransformContext,
   rootNode: ASTNode,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Promise<Schemeable> => {
   const kind = rootNode.kind;
   switch (kind) {
     case "interface": {
       return {
-        id: `${fromFileUrl(rootNode.location.filename).replaceAll(
-          transformContext.base,
-          "."
-        )}@${rootNode.name}`,
+        id: `${
+          fromFileUrl(rootNode.location.filename).replaceAll(
+            transformContext.base,
+            ".",
+          )
+        }@${rootNode.name}`,
         type: "object",
         ...(await typeDefToSchemeable(
           transformContext,
           rootNode.interfaceDef,
-          root
+          root,
         )),
       };
     }
@@ -198,7 +200,7 @@ const findSchemeableFromNode = async (
       return tsTypeToSchemeableRec(
         transformContext,
         rootNode.typeAliasDef.tsType,
-        root
+        root,
       );
     }
     case "import": {
@@ -224,7 +226,7 @@ const findSchemeableFromNode = async (
 const typeDefToSchemeable = async (
   transformContext: TransformContext,
   node: TypeDef,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Promise<Omit<ObjectSchemeable, "id" | "type">> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
@@ -233,7 +235,7 @@ const typeDefToSchemeable = async (
         transformContext,
         property.tsType,
         root,
-        property.optional
+        property.optional,
       );
 
       return [
@@ -244,7 +246,7 @@ const typeDefToSchemeable = async (
           title: beautify(property.name),
         },
       ];
-    })
+    }),
   );
 
   const required = node.properties
@@ -261,13 +263,13 @@ export const tsTypeToSchemeable = async (
   transformContext: TransformContext,
   node: TsType,
   root: [string, ASTNode[]],
-  optional?: boolean
+  optional?: boolean,
 ): Promise<Schemeable> => {
   const schemeable = await tsTypeToSchemeableRec(
     transformContext,
     node,
     root[1],
-    optional
+    optional,
   );
   return {
     ...schemeable,
@@ -279,7 +281,7 @@ const tsTypeToSchemeableRec = async (
   transformContext: TransformContext,
   node: TsType,
   root: ASTNode[],
-  optional?: boolean
+  optional?: boolean,
 ): Promise<Schemeable> => {
   const kind = node.kind;
 
@@ -288,7 +290,7 @@ const tsTypeToSchemeableRec = async (
       const typeSchemeable = await tsTypeToSchemeableRec(
         transformContext,
         node.array,
-        root
+        root,
       );
 
       return {
@@ -301,7 +303,7 @@ const tsTypeToSchemeableRec = async (
       const wellknown = await schemeableWellKnownType(
         transformContext,
         node.typeRef,
-        root
+        root,
       );
       if (wellknown) {
         return wellknown;
@@ -330,7 +332,7 @@ const tsTypeToSchemeableRec = async (
         ...(await typeDefToSchemeable(
           transformContext,
           node.typeLiteral,
-          root
+          root,
         )),
       };
     case "literal": {
@@ -344,7 +346,7 @@ const tsTypeToSchemeableRec = async (
     }
     case "union": {
       const values = await Promise.all(
-        node.union.map((t) => tsTypeToSchemeableRec(transformContext, t, root))
+        node.union.map((t) => tsTypeToSchemeableRec(transformContext, t, root)),
       );
       const ids = values.map((tp) => tp.id);
       ids.sort();

@@ -5,12 +5,12 @@ import { RouteModule } from "$fresh/src/server/types.ts";
 
 export type ComponentFunc<
   TReturn extends JSX.Element = JSX.Element,
-  TProps = any
+  TProps = any,
 > = (props: TProps) => TReturn;
 
 export interface PreactComponent<
   TReturn extends JSX.Element = JSX.Element,
-  TProps = any
+  TProps = any,
 > {
   Component: ComponentFunc<TReturn, TProps>;
   props: TProps;

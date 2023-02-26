@@ -34,22 +34,22 @@ export interface BlockBase {
   defaultJSONSchemaDefinitions?: Record<string, JSONSchema7Definition>;
   findModuleDefinitions: (
     transformContext: TransformContext,
-    ast: [string, ASTNode[]]
+    ast: [string, ASTNode[]],
   ) => Promise<BlockDefinitions>;
 }
 
 export interface DataBlock<TBlock = any> extends BlockBase {
   adapt: <TExtension extends TBlock>(
-    block: (blk: TExtension, ctx: FreshContext) => PromiseOrValue<TExtension>
+    block: (blk: TExtension, ctx: FreshContext) => PromiseOrValue<TExtension>,
   ) => Resolver<TExtension, TExtension, FreshContext>;
 }
 
 export interface FunctionBlock<
   TBlockDefinition = any,
-  TIntermediate = TBlockDefinition
+  TIntermediate = TBlockDefinition,
 > extends BlockBase {
   adapt: <TProps>(
-    block: TBlockDefinition
+    block: TBlockDefinition,
   ) => Resolver<TIntermediate, TProps, FreshContext>;
 }
 
@@ -63,7 +63,7 @@ export interface ConfigurableBlock<TBlockDefinition> extends BlockBase {
 
 export type Block<
   TBlockDefinition = any,
-  TIntermediate = TBlockDefinition
+  TIntermediate = TBlockDefinition,
 > = TBlockDefinition extends (...args: any[]) => any
   ? FunctionBlock<TBlockDefinition, TIntermediate>
   : DataBlock<TBlockDefinition> | ConfigurableBlock<TBlockDefinition>;

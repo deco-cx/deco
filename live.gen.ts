@@ -78,7 +78,7 @@ const manifest = {
       "required": ["input", "output"],
       "title": "./components/LivePage.tsx",
     },
-    "./routes/[...catchall].tsx@3f579c29-0f0a-4d3f-a3ad-44f8c7470dff": {
+    "./routes/[...catchall].tsx@3d198bd1-8935-4f80-a786-6896647d3d56": {
       "type": "object",
       "properties": { "index": { "title": "Index", "type": "number" } },
       "required": ["index"],

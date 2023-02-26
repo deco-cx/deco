@@ -11,10 +11,10 @@ export type FreshHandler<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response
+  Resp = Response,
 > = (
   request: Request,
-  ctx: HandlerContext<TData, TState & { $live: TConfig }>
+  ctx: HandlerContext<TData, TState & { $live: TConfig }>,
 ) => PromiseOrValue<Resp>;
 
 export interface FreshContext<Data = any, State = any> extends BaseContext {
@@ -48,7 +48,7 @@ export const configurable = (m: DecoManifest): DecoManifest => {
   } = m;
   const resolvers = (Object.values(rest) as ResolverMap[]).reduce(
     (r, rm) => ({ ...r, ...rm }),
-    {} as ResolverMap
+    {} as ResolverMap,
   );
   const provider = useFileProvider("./config.json");
   const resolver = new Rezolver<FreshContext>({
