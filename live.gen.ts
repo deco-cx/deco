@@ -3,13 +3,14 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import config from "./deno.json" assert { type: "json" };
-import * as account from "./blocks/account.ts";
-import * as section from "./blocks/section.ts";
+import * as island from "$live/blocks/island.ts";
+import * as account from "$live/blocks/account.ts";
+import * as section from "$live/blocks/section.ts";
 import * as $section0 from "./sections/Head.tsx";
-import * as loader from "./blocks/loader.ts";
-import * as page from "./blocks/page.ts";
+import * as loader from "$live/blocks/loader.ts";
+import * as page from "$live/blocks/page.ts";
 import * as $page0 from "./components/LivePage.tsx";
-import * as route from "./blocks/route.ts";
+import * as route from "$live/blocks/route.ts";
 import * as $route0 from "./routes/[...catchall].tsx";
 import { configurable } from "$live/engine/adapters/fresh/manifest.ts";
 
@@ -78,7 +79,7 @@ const manifest = {
       "required": ["input", "output"],
       "title": "./components/LivePage.tsx",
     },
-    "./routes/[...catchall].tsx@3d198bd1-8935-4f80-a786-6896647d3d56": {
+    "./routes/[...catchall].tsx@e60299cb-56c0-49c4-b2bb-005e20fad7e3": {
       "type": "object",
       "properties": { "index": { "title": "Index", "type": "number" } },
       "required": ["index"],

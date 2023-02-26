@@ -11,7 +11,7 @@ export interface Account {
 
 const blockType = "account";
 const accountBlock: DataBlock<Account> = {
-  import: import.meta.url,
+  import: "$live/blocks/account.ts",
   type: blockType,
   adapt: (interceptor) => (account, ctx) => {
     if (interceptor) {
@@ -23,8 +23,8 @@ const accountBlock: DataBlock<Account> = {
     const tps = await Promise.all(
       findAllExtends(
         { typeName: "Account", importUrl: import.meta.url },
-        ast,
-      ).map((fn) => tsTypeToSchemeable(transformContext, fn, [path, ast])),
+        ast
+      ).map((fn) => tsTypeToSchemeable(transformContext, fn, [path, ast]))
     );
 
     return tps.reduce(
@@ -36,7 +36,7 @@ const accountBlock: DataBlock<Account> = {
         const [defaultImport] = fn.id.split("@");
         return { ...defnz, imports: [...defnz.imports, defaultImport] };
       },
-      { imports: [], schemeables: [] } as BlockDefinitions,
+      { imports: [], schemeables: [] } as BlockDefinitions
     );
   },
 };

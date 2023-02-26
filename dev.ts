@@ -16,8 +16,10 @@ import {
 import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts";
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { error } from "$live/error.ts";
+import islandBlock from "$live/blocks/island.ts";
 
 const defaultBlocks = [
+  islandBlock,
   accountBlock,
   sectionBlock,
   loaderBlock,
@@ -30,8 +32,7 @@ const MIN_DENO_VERSION = "1.25.0";
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
   if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
-    let message =
-      `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
+    let message = `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
 
     if (Deno.execPath().includes("homebrew")) {
       message +=
@@ -74,7 +75,7 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated.`,
-    "color: blue; font-weight: bold",
+    "color: blue; font-weight: bold"
   );
 }
 
@@ -108,7 +109,7 @@ export default async function dev(
       DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
     >;
     onListen?: () => void;
-  } = {},
+  } = {}
 ) {
   ensureMinDenoVersion();
 
@@ -143,9 +144,9 @@ export default async function dev(
           blockCollection,
           "",
           `$${key}${blk.type}`,
-          `${blk.type}.default.adapt`,
+          `${blk.type}.default.adapt`
         ),
-        manifest,
+        manifest
       );
     }
 
@@ -156,7 +157,7 @@ export default async function dev(
         ];
         return acc;
       },
-      {},
+      {}
     );
     manifest = manifest.withDefinitions(importDef);
   }

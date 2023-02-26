@@ -11,15 +11,15 @@ export type LoaderFunction<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response,
+  Resp = Response
 > = (
   request: Request,
-  ctx: HandlerContext<TData, TState & { $live: TConfig }>,
+  ctx: HandlerContext<TData, TState & { $live: TConfig }>
 ) => PromiseOrValue<Resp>;
 
 const blockType = "loader";
 const loaderBlock: Block<LoaderFunction<any, any, any, any>> = {
-  import: import.meta.url,
+  import: "$live/blocks/loader.ts",
   type: blockType,
   adapt: (loaderFunc) => ($live, ctx) => {
     return loaderFunc(ctx.request, {
@@ -31,7 +31,7 @@ const loaderBlock: Block<LoaderFunction<any, any, any, any>> = {
     const fns = await findAllReturning(
       transformContext,
       { typeName: "LoaderReturn", importUrl: import.meta.url },
-      ast,
+      ast
     );
 
     const validFns = await Promise.all(
@@ -75,10 +75,10 @@ const loaderBlock: Block<LoaderFunction<any, any, any, any>> = {
               name: fn.name === "default" ? path : `${path}@${fn.name}`,
               input: configType,
               output: fn.return.typeRef.typeParams![0],
-            },
+            }
           ),
         };
-      }),
+      })
     );
     return validFns.reduce(
       (def, fn) => {
@@ -94,7 +94,7 @@ const loaderBlock: Block<LoaderFunction<any, any, any, any>> = {
       {
         imports: [],
         schemeables: [],
-      } as BlockDefinitions,
+      } as BlockDefinitions
     );
   },
 };

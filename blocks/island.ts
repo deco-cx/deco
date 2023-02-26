@@ -3,7 +3,7 @@ import { DecoManifest } from "$live/types.ts";
 
 const blockType = "island";
 const islandBlock: ConfigurableBlock<DecoManifest["islands"]["string"]> = {
-  import: import.meta.url,
+  import: "$live/blocks/island.ts",
   type: blockType,
   adapt: (blk) => blk,
   findModuleDefinitions: (_, [path]) => {
