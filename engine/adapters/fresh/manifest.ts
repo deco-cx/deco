@@ -1,20 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext, Manifest } from "$fresh/server.ts";
+import defaultResolvers from "$live/engine/adapters/fresh/defaults.ts";
 import { useFileProvider } from "$live/engine/adapters/fresh/fileProvider.ts";
 import { Rezolver } from "$live/engine/core/mod.ts";
 import { BaseContext, ResolverMap } from "$live/engine/core/resolver.ts";
-import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
-import { liveRoute } from "$live/live.ts";
-import defaultResolvers from "$live/engine/adapters/fresh/defaults.ts";
-import {
-  AppModule,
-  ErrorPageModule,
-  Handler,
-  Handlers,
-  MiddlewareModule,
-  RouteModule,
-  UnknownPageModule,
-} from "https://deno.land/x/fresh@1.1.2/src/server/types.ts";
+import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { context } from "$live/live.ts";
 
 export type FreshHandler<
   TConfig = any,
@@ -31,56 +22,6 @@ export interface FreshContext<Data = any, State = any> extends BaseContext {
   request: Request;
 }
 
-const isRouteModule = (
-  key: string,
-  _:
-    | RouteModule
-    | MiddlewareModule
-    | AppModule
-    | ErrorPageModule
-    | UnknownPageModule
-): _ is RouteModule | AppModule => {
-  return !key.startsWith("./routes/_");
-};
-
-const _isUnknownPageModule = (
-  key: string,
-  _:
-    | RouteModule
-    | MiddlewareModule
-    | AppModule
-    | ErrorPageModule
-    | UnknownPageModule
-): _ is UnknownPageModule => {
-  return key === "./routes/_404.ts";
-};
-
-const _isErrorPageModule = (
-  key: string,
-  _:
-    | RouteModule
-    | MiddlewareModule
-    | AppModule
-    | ErrorPageModule
-    | UnknownPageModule
-): _ is ErrorPageModule => {
-  return key.startsWith("./routes/_500.ts");
-};
-
-const _isMiddlewareModule = (
-  key: string,
-  _:
-    | RouteModule
-    | MiddlewareModule
-    | AppModule
-    | ErrorPageModule
-    | UnknownPageModule
-): _ is MiddlewareModule => {
-  return key === "./routes/_middleware.ts";
-};
-
-type Routes = Manifest["routes"];
-
 export interface DecoManifest extends Manifest {
   definitions: Record<
     string,
@@ -96,44 +37,6 @@ export interface ConfigProvider {
   get<T>(id: string): T;
 }
 
-const mapHandlers = (
-  key: string,
-  rz: Rezolver<FreshContext>,
-  handlers: Handler<any, any> | Handlers<any, any> | undefined
-): Handler<any, any> | Handlers<any, any> => {
-  if (typeof handlers === "object") {
-    return mapObjKeys(handlers, (val) => {
-      return async function (request: Request, context: HandlerContext) {
-        // definir o estado da configuration
-        // rodar as flags
-        // getCurrentState() => state
-        const $live = await rz.resolve(key, {
-          context,
-          request,
-        });
-        return val!(request, {
-          ...context,
-          state: { ...context.state, $live },
-        });
-      };
-    });
-  }
-  return async function (request: Request, context: HandlerContext) {
-    const $live =
-      (await rz.resolve(key, {
-        context,
-        request,
-      })) ?? {};
-
-    if (typeof handlers === "function") {
-      return handlers(request, {
-        ...context,
-        state: { ...context.state, $live },
-      });
-    }
-    return context.render($live);
-  };
-};
 export const configurable = (m: DecoManifest): DecoManifest => {
   const {
     islands,
@@ -152,25 +55,13 @@ export const configurable = (m: DecoManifest): DecoManifest => {
     resolvers: { ...resolvers, ...defaultResolvers },
     getResolvable: provider.get.bind(provider),
   });
-  const routes = mapObjKeys<Routes, Routes>(m.routes ?? {}, (route, key) => {
-    if (isRouteModule(key, route)) {
-      const routeMod = route as RouteModule;
-      const handl = routeMod.handler;
-      return {
-        ...route,
-        handler: mapHandlers(
-          (routeMod.config as { liveKey: string })?.liveKey ?? key,
-          resolver,
-          handl
-        ),
-      };
-    }
-    return route;
-  });
-  return {
+  // should be set first
+  context.configResolver = resolver;
+  context.manifest = {
     ...m,
-    routes: { ...routes, "./routes/$live.ts": liveRoute(resolver) },
     islands,
     definitions,
   } as DecoManifest;
+
+  return context.manifest;
 };

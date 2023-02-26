@@ -17,10 +17,12 @@ const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
   defaultJSONSchemaDefinitions: {
     [pageAddr]: {
       type: "object",
+      additionalProperties: true,
     },
   },
   adapt:
-    <TProps>(Component: ComponentFunc<Page, TProps>) => (props: TProps) => ({
+    <TProps>(Component: ComponentFunc<Page, TProps>) =>
+    (props: TProps) => ({
       Component,
       props,
     }),
@@ -29,7 +31,7 @@ const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
     const fns = await findAllReturning(
       transformContext,
       { typeName: "Page", importUrl: import.meta.url },
-      ast,
+      ast
     );
     const schemeables = await Promise.all(
       fns
@@ -38,7 +40,9 @@ const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
           input: fn.params.length > 0 ? fn.params[0] : undefined,
           output: pageJSONSchema,
         }))
-        .map((fn) => fnDefinitionToSchemeable(transformContext, ast, fn)),
+        .map((fn) =>
+          fnDefinitionToSchemeable(transformContext, [path, ast], fn)
+        )
     );
 
     return {

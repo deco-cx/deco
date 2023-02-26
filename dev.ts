@@ -1,18 +1,12 @@
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
-import { walk } from "std/fs/walk.ts";
-import {
-  dirname,
-  extname,
-  fromFileUrl,
-  join,
-  toFileUrl,
-} from "std/path/mod.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
 import accountBlock from "$live/blocks/account.ts";
 import loaderBlock from "$live/blocks/loader.ts";
 import pageBlock from "$live/blocks/page.ts";
+import routeBlock from "$live/blocks/route.ts";
 import sectionBlock from "$live/blocks/section.ts";
 import { DecoManifest } from "$live/engine/adapters/fresh/manifest.ts";
 import {
@@ -20,18 +14,23 @@ import {
   newManifestBuilder,
 } from "$live/engine/adapters/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts";
+import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { error } from "$live/error.ts";
-import { ResolverMap } from "./engine/core/resolver.ts";
 
-const defaultBlocks = [accountBlock, sectionBlock, loaderBlock, pageBlock];
+const defaultBlocks = [
+  accountBlock,
+  sectionBlock,
+  loaderBlock,
+  pageBlock,
+  routeBlock,
+];
 
 const MIN_DENO_VERSION = "1.25.0";
 
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
   if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
-    let message =
-      `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
+    let message = `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
 
     if (Deno.execPath().includes("homebrew")) {
       message +=
@@ -47,69 +46,6 @@ export function ensureMinDenoVersion() {
 interface Manifest {
   routes: string[];
   islands: string[];
-}
-
-export async function collect(directory: string): Promise<Manifest> {
-  const routesDir = join(directory, "./routes");
-  const islandsDir = join(directory, "./islands");
-
-  const routes = [];
-  try {
-    const routesUrl = toFileUrl(routesDir);
-    // TODO(lucacasonato): remove the extranious Deno.readDir when
-    // https://github.com/denoland/deno_std/issues/1310 is fixed.
-    for await (const _ of Deno.readDir(routesDir)) {
-      // do nothing
-    }
-    const routesFolder = walk(routesDir, {
-      includeDirs: false,
-      includeFiles: true,
-      exts: ["tsx", "jsx", "ts", "js"],
-    });
-    for await (const entry of routesFolder) {
-      if (entry.isFile) {
-        const file = toFileUrl(entry.path).href.substring(
-          routesUrl.href.length,
-        );
-        routes.push(file);
-      }
-    }
-  } catch (err) {
-    if (err instanceof Deno.errors.NotFound) {
-      // Do nothing.
-    } else {
-      throw err;
-    }
-  }
-  routes.sort();
-
-  const islands = [];
-  try {
-    const islandsUrl = toFileUrl(islandsDir);
-    for await (const entry of Deno.readDir(islandsDir)) {
-      if (entry.isDirectory) {
-        error(
-          `Found subdirectory '${entry.name}' in islands/. The islands/ folder must not contain any subdirectories.`,
-        );
-      }
-      if (entry.isFile) {
-        const ext = extname(entry.name);
-        if (![".tsx", ".jsx", ".ts", ".js"].includes(ext)) continue;
-        const path = join(islandsDir, entry.name);
-        const file = toFileUrl(path).href.substring(islandsUrl.href.length);
-        islands.push(file);
-      }
-    }
-  } catch (err) {
-    if (err instanceof Deno.errors.NotFound) {
-      // Do nothing.
-    } else {
-      throw err;
-    }
-  }
-  islands.sort();
-
-  return { routes, islands };
 }
 
 export async function generate(directory: string, manifest: ManifestBuilder) {
@@ -137,7 +73,7 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated.`,
-    "color: blue; font-weight: bold",
+    "color: blue; font-weight: bold"
   );
 }
 
@@ -171,7 +107,7 @@ export default async function dev(
       DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
     >;
     onListen?: () => void;
-  } = {},
+  } = {}
 ) {
   ensureMinDenoVersion();
 
@@ -191,8 +127,6 @@ export default async function dev(
       manifestDef: {},
     });
   }
-  const newManifest = await collect(dir);
-
   let manifest = await decoManifestBuilder(dir, defaultBlocks);
   // "imports" is of format { "nameOfImport" : manifest }
   for (const [key, importManifest] of Object.entries(imports || {})) {
@@ -208,9 +142,9 @@ export default async function dev(
           blockCollection,
           "",
           `$${key}${blk.type}`,
-          `${blk.type}.default.adapt`,
+          `${blk.type}.default.adapt`
         ),
-        manifest,
+        manifest
       );
     }
 
@@ -221,29 +155,16 @@ export default async function dev(
         ];
         return acc;
       },
-      {},
+      {}
     );
     manifest = manifest.withDefinitions(importDef);
   }
 
-  // TODO @Author Marcos V. Candeia
-  // Make routes and islands blocks
-  // set the route override config to allow import routes from different repositories
-  const withRoutesMan = newManifest.routes.reduce(
-    withImport("routes", "./routes", "$"),
-    manifest,
-  );
+  Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());
 
-  const withIslandsMan = newManifest.islands.reduce(
-    withImport("islands", "./islands", "$$"),
-    withRoutesMan,
-  );
+  const manifestChanged = !currentManifest.equal(manifest);
 
-  Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", withIslandsMan.toJSONString());
-
-  const manifestChanged = !currentManifest.equal(withIslandsMan);
-
-  if (manifestChanged) await generate(dir, withIslandsMan);
+  if (manifestChanged) await generate(dir, manifest);
 
   const shouldSetupGithooks = os.platform() !== "windows";
 

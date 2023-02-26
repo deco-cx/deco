@@ -5,27 +5,25 @@
 /// <reference lib="dom.iterable" />
 
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
-import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
+import { cookies, loadFlags } from "$live/flags.ts";
+import {
+  PageOptions,
+  generateEditorData,
+  isPageOptions,
+  loadPage,
+} from "$live/pages.ts";
 import {
   DecoManifest,
   LiveOptions,
   LivePageData,
   LiveState,
 } from "$live/types.ts";
-import {
-  generateEditorData,
-  isPageOptions,
-  loadPage,
-  PageOptions,
-} from "$live/pages.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
-import { cookies, loadFlags } from "$live/flags.ts";
-import { RouteModule } from "$fresh/src/server/types.ts";
-import Render from "./engine/adapters/fresh/fresh.tsx";
-import { Rezolver } from "./engine/core/mod.ts";
+import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import { FreshContext } from "./engine/adapters/fresh/manifest.ts";
+import { Rezolver } from "./engine/core/mod.ts";
 
 // The global live context
 export type LiveContext = {
@@ -35,6 +33,7 @@ export type LiveContext = {
   site: string;
   siteId: number;
   loginUrl?: string;
+  configResolver?: Rezolver<FreshContext>;
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -49,12 +48,12 @@ export const context: LiveContext = {
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
+      "liveOptions.site is required. It should be the name of the site you created in deco.cx."
     );
   }
   if (!liveOptions.siteId) {
     throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
+      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}"
     );
   }
 
@@ -68,7 +67,7 @@ export const withLive = (liveOptions: LiveOptions) => {
   context.loginUrl = liveOptions.loginUrl;
 
   console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
+    `Starting live middleware: siteId=${context.siteId} site=${context.site}`
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
@@ -116,7 +115,7 @@ export const withLive = (liveOptions: LiveOptions) => {
           url,
           pageId: ctx.state.page?.id,
           begin,
-        }),
+        })
       );
     }
 
@@ -143,7 +142,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return acc;
       },
-      { selectedPageIds: [] } as PageOptions,
+      { selectedPageIds: [] } as PageOptions
     );
 
     const getResponse = async () => {
@@ -177,15 +176,5 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
     }
 
     return response;
-  },
-});
-
-export const liveRoute = (rz: Rezolver<FreshContext>): RouteModule => ({
-  default: Render,
-  handler: (req, ctx) => {
-    return rz.resolve("Routes", { request: req, context: ctx });
-  },
-  config: {
-    routeOverride: "/live/*",
   },
 });

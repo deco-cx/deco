@@ -3,10 +3,7 @@ import { FreshContext } from "$live/engine/adapters/fresh/manifest.ts";
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { ASTNode, TsType } from "$live/engine/schema/ast.ts";
-import {
-  Schemeable,
-  TransformContext,
-} from "$live/engine/schema/transform.ts";
+import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
 import {
   JSONSchema7,
   JSONSchema7Definition,
@@ -37,22 +34,22 @@ export interface BlockBase {
   defaultJSONSchemaDefinitions?: Record<string, JSONSchema7Definition>;
   findModuleDefinitions: (
     transformContext: TransformContext,
-    ast: [string, ASTNode[]],
+    ast: [string, ASTNode[]]
   ) => Promise<BlockDefinitions>;
 }
 
 export interface DataBlock<TBlock = any> extends BlockBase {
   adapt: <TExtension extends TBlock>(
-    block: (blk: TExtension, ctx: FreshContext) => PromiseOrValue<TExtension>,
+    block: (blk: TExtension, ctx: FreshContext) => PromiseOrValue<TExtension>
   ) => Resolver<TExtension, TExtension, FreshContext>;
 }
 
 export interface FunctionBlock<
   TBlockDefinition = any,
-  TIntermediate = TBlockDefinition,
+  TIntermediate = TBlockDefinition
 > extends BlockBase {
   adapt: <TProps>(
-    block: TBlockDefinition,
+    block: TBlockDefinition
   ) => Resolver<TIntermediate, TProps, FreshContext>;
 }
 
@@ -60,9 +57,13 @@ export const isFunctionBlock = (b: Block): b is FunctionBlock => {
   return (b as FunctionBlock).adapt !== undefined;
 };
 
+export interface ConfigurableBlock<TBlockDefinition> extends BlockBase {
+  adapt: (block: TBlockDefinition) => TBlockDefinition;
+}
+
 export type Block<
   TBlockDefinition = any,
-  TIntermediate = TBlockDefinition,
+  TIntermediate = TBlockDefinition
 > = TBlockDefinition extends (...args: any[]) => any
   ? FunctionBlock<TBlockDefinition, TIntermediate>
-  : DataBlock<TBlockDefinition>;
+  : DataBlock<TBlockDefinition> | ConfigurableBlock<TBlockDefinition>;

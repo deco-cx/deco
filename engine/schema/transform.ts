@@ -12,7 +12,7 @@ export interface TransformContext {
 
 export const inlineOrSchemeable = async (
   transformContext: TransformContext,
-  ast: ASTNode[],
+  ast: [string, ASTNode[]],
   tp: TsType | JSONSchema7 | undefined
 ): Promise<Schemeable | undefined> => {
   if ((tp as TsType).repr !== undefined) {
@@ -137,7 +137,7 @@ const schemeableWellKnownType = async (
           },
         };
       }
-      const typeSchemeable = await tsTypeToSchemeable(
+      const typeSchemeable = await tsTypeToSchemeableRec(
         transformContext,
         ref.typeParams![0],
         root
@@ -156,7 +156,7 @@ const schemeableWellKnownType = async (
         };
       }
 
-      const recordSchemeable = await tsTypeToSchemeable(
+      const recordSchemeable = await tsTypeToSchemeableRec(
         transformContext,
         ref.typeParams[1],
         root
@@ -195,7 +195,7 @@ const findSchemeableFromNode = async (
       };
     }
     case "typeAlias": {
-      return tsTypeToSchemeable(
+      return tsTypeToSchemeableRec(
         transformContext,
         rootNode.typeAliasDef.tsType,
         root
@@ -229,7 +229,7 @@ const typeDefToSchemeable = async (
   const properties = await Promise.all(
     node.properties.map(async (property) => {
       const jsDocSchema = property.jsDoc && jsDocToSchema(property.jsDoc);
-      const schema = await tsTypeToSchemeable(
+      const schema = await tsTypeToSchemeableRec(
         transformContext,
         property.tsType,
         root,
@@ -260,6 +260,24 @@ const typeDefToSchemeable = async (
 export const tsTypeToSchemeable = async (
   transformContext: TransformContext,
   node: TsType,
+  root: [string, ASTNode[]],
+  optional?: boolean
+): Promise<Schemeable> => {
+  const schemeable = await tsTypeToSchemeableRec(
+    transformContext,
+    node,
+    root[1],
+    optional
+  );
+  return {
+    ...schemeable,
+    id: schemeable.id ?? `${root[0]}@${crypto.randomUUID()}`,
+  };
+};
+
+const tsTypeToSchemeableRec = async (
+  transformContext: TransformContext,
+  node: TsType,
   root: ASTNode[],
   optional?: boolean
 ): Promise<Schemeable> => {
@@ -267,7 +285,7 @@ export const tsTypeToSchemeable = async (
 
   switch (kind) {
     case "array": {
-      const typeSchemeable = await tsTypeToSchemeable(
+      const typeSchemeable = await tsTypeToSchemeableRec(
         transformContext,
         node.array,
         root
@@ -326,7 +344,7 @@ export const tsTypeToSchemeable = async (
     }
     case "union": {
       const values = await Promise.all(
-        node.union.map((t) => tsTypeToSchemeable(transformContext, t, root))
+        node.union.map((t) => tsTypeToSchemeableRec(transformContext, t, root))
       );
       const ids = values.map((tp) => tp.id);
       ids.sort();

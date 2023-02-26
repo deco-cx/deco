@@ -3,13 +3,14 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import config from "./deno.json" assert { type: "json" };
-import { context } from "$live/live.ts";
 import * as account from "./blocks/account.ts";
 import * as section from "./blocks/section.ts";
 import * as $section0 from "./sections/Head.tsx";
 import * as loader from "./blocks/loader.ts";
 import * as page from "./blocks/page.ts";
 import * as $page0 from "./components/LivePage.tsx";
+import * as route from "./blocks/route.ts";
+import * as $route0 from "./routes/[...catchall].tsx";
 import { configurable } from "$live/engine/adapters/fresh/manifest.ts";
 
 const manifest = {
@@ -19,7 +20,9 @@ const manifest = {
   "pages": {
     "./components/LivePage.tsx": page.default.adapt($page0.default),
   },
-  "routes": {},
+  "routes": {
+    "./routes/[...catchall].tsx": route.default.adapt($route0),
+  },
   "islands": {},
   "config": config,
   "baseUrl": import.meta.url,
@@ -75,10 +78,20 @@ const manifest = {
       "required": ["input", "output"],
       "title": "./components/LivePage.tsx",
     },
-    "$live/blocks/section.ts@Section": { "type": "object" },
-    "$live/blocks/page.ts@Page": { "type": "object" },
+    "./routes/[...catchall].tsx@3f579c29-0f0a-4d3f-a3ad-44f8c7470dff": {
+      "type": "object",
+      "properties": { "index": { "title": "Index", "type": "number" } },
+      "required": ["index"],
+    },
+    "$live/blocks/section.ts@Section": {
+      "type": "object",
+      "additionalProperties": true,
+    },
+    "$live/blocks/page.ts@Page": {
+      "type": "object",
+      "additionalProperties": true,
+    },
   },
 };
 
-context.manifest = manifest;
 export default configurable(manifest);

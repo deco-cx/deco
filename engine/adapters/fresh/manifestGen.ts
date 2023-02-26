@@ -21,8 +21,12 @@ import { fromFileUrl, join } from "https://deno.land/std@0.61.0/path/mod.ts";
 const blockTypeToImportClause = (
   blockAlias: string,
   imp: ImportString
-): [Import, string] => {
+): [string, Import, string] => {
   const [from, name] = imp.split("@");
+  if (name === "$") {
+    // if $ is used as name it means that the import clause is the default one (in other words: does not need to access .default)
+    return [from, { from, clauses: [{ alias: blockAlias }] }, blockAlias];
+  }
   const [clause, ref]: [ImportClause, string] =
     name === "" || name === undefined
       ? [{ alias: blockAlias }, `${blockAlias}.default`]
@@ -30,11 +34,11 @@ const blockTypeToImportClause = (
           { import: name, as: `${blockAlias}$${name}` },
           `${blockAlias}$${name}`,
         ];
-  return [{ from, clauses: [clause] }, ref];
+  return [imp, { from, clauses: [clause] }, ref];
 };
 
 const withDefinition =
-  (block: BlockType) =>
+  (block: BlockType, adapt: boolean) =>
   (
     blkN: number,
     man: ManifestBuilder,
@@ -42,50 +46,41 @@ const withDefinition =
   ): ManifestBuilder => {
     return imports.reduce((manz, imp, i) => {
       const fAlias = `$${block}${blkN + i}`;
-      const [importClause, ref] = blockTypeToImportClause(fAlias, imp);
+      const [importKey, importClause, ref] = blockTypeToImportClause(
+        fAlias,
+        imp
+      );
+      const blockRef = {
+        kind: "js",
+        raw: { identifier: ref },
+      };
       return manz.addImports(importClause).addValuesOnManifestKey(`${block}s`, [
-        imp,
+        importKey,
         {
           kind: "js",
-          raw: {
-            identifier: `${block}.default.adapt`,
-            params: [
-              {
-                kind: "js",
-                raw: { identifier: ref },
-              },
-            ],
-          },
+          raw: adapt
+            ? {
+                identifier: `${block}.default.adapt`,
+                params: [blockRef],
+              }
+            : blockRef,
         },
       ]);
     }, man.addSchemeables(...schemeables));
   };
 
-const addLiveContext = (man: ManifestBuilder): ManifestBuilder => {
-  return man
-    .addImports({
-      from: "$live/live.ts",
-      clauses: [{ import: "context" }],
-    })
-    .addStatements({
-      variable: "context.manifest",
-      assign: { identifier: "manifest" },
-    });
-};
 const addDefinitions = async (
   blocks: Block[],
   transformContext: TransformContext
 ): Promise<ManifestBuilder> => {
-  const initialManifest = addLiveContext(
-    newManifestBuilder({
-      imports: [],
-      exports: [],
-      manifest: {},
-      manifestDef: blocks.reduce((def, blk) => {
-        return { ...def, ...blk.defaultJSONSchemaDefinitions };
-      }, {}),
-    })
-  );
+  const initialManifest = newManifestBuilder({
+    imports: [],
+    exports: [],
+    manifest: {},
+    manifestDef: blocks.reduce((def, blk) => {
+      return { ...def, ...blk.defaultJSONSchemaDefinitions };
+    }, {}),
+  });
 
   const code = Object.values(transformContext.code).map(
     (m) => [m[1], m[2]] as [string, ASTNode[]]
@@ -106,7 +101,10 @@ const addDefinitions = async (
         from: fromFileUrl(blk.import).replace(transformContext.base, "."),
         clauses: [{ alias: blkAlias }],
       });
-      const useDef = withDefinition(blkAlias);
+      const useDef = withDefinition(
+        blkAlias,
+        (blk as { adapt: unknown }).adapt !== undefined
+      );
       let totalBlks = 0;
       return blockDefinitions[i].reduce((nMan, def) => {
         const n = useDef(totalBlks, nMan, def);
