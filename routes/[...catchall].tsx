@@ -1,7 +1,6 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { LiveRouteConfig, PreactComponent } from "$live/blocks/types.ts";
 import { context } from "$live/live.ts";
-import { LiveConfig as LC } from "$live/blocks/types.ts";
 
 export default function Render({
   data: {
@@ -13,7 +12,7 @@ export default function Render({
 
 export const handler = (
   req: Request,
-  ctx: HandlerContext<unknown, LC<{ index: number }>>,
+  ctx: HandlerContext,
 ) => {
   return context.configResolver!.resolve("Routes", {
     request: req,
@@ -23,5 +22,4 @@ export const handler = (
 
 export const config: LiveRouteConfig = {
   routeOverride: "/live/*",
-  liveKey: "live",
 };

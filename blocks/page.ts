@@ -9,7 +9,7 @@ const pageAddr = "$live/blocks/page.ts@Page";
 const pageJSONSchema = {
   $ref: `#/definitions/${pageAddr}`,
 };
-const blockType = "page";
+const blockType = "pages";
 export type Page = JSX.Element;
 
 const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {

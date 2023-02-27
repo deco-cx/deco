@@ -1,7 +1,7 @@
 import { ConfigurableBlock } from "$live/engine/block.ts";
 import { DecoManifest } from "$live/types.ts";
 
-const blockType = "island";
+const blockType = "islands";
 const islandBlock: ConfigurableBlock<DecoManifest["islands"]["string"]> = {
   import: "$live/blocks/island.ts",
   type: blockType,

@@ -9,7 +9,7 @@ export interface Account {
   [brand]: never;
 }
 
-const blockType = "account";
+const blockType = "accounts";
 const accountBlock: DataBlock<Account> = {
   import: "$live/blocks/account.ts",
   type: blockType,

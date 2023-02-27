@@ -17,7 +17,7 @@ export type LoaderFunction<
   ctx: HandlerContext<TData, TState & { $live: TConfig }>
 ) => PromiseOrValue<Resp>;
 
-const blockType = "loader";
+const blockType = "loaders";
 const loaderBlock: Block<LoaderFunction<any, any, any, any>> = {
   import: "$live/blocks/loader.ts",
   type: blockType,

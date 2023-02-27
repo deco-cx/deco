@@ -60,22 +60,24 @@ const mapHandlers = (
   };
 };
 
-const blockType = "route";
+const adaptFreshRoute = (route: DecoManifest["routes"][string]) => {
+  if (isConfigurableRoute(route)) {
+    const configurableRoute = route;
+    const handl = configurableRoute.handler;
+    const liveKey = configurableRoute.config?.liveKey;
+    return {
+      ...route,
+      handler: mapHandlers(liveKey, liveContext.configResolver!, handl),
+    };
+  }
+  return route;
+};
+
+const blockType = "routes";
 const routeBlock: ConfigurableBlock<DecoManifest["routes"][string]> = {
   import: "$live/blocks/route.ts",
   type: blockType,
-  adapt: (route) => {
-    if (isConfigurableRoute(route)) {
-      const configurableRoute = route;
-      const handl = configurableRoute.handler;
-      const liveKey = configurableRoute.config?.liveKey;
-      return {
-        ...route,
-        handler: mapHandlers(liveKey, liveContext.configResolver!, handl),
-      };
-    }
-    return route;
-  },
+  adapt: adaptFreshRoute,
   findModuleDefinitions: async (transformContext, [path, ast]) => {
     if (!path.startsWith("./routes/")) {
       return { imports: [], schemeables: [] };
@@ -200,3 +202,7 @@ function schemeableFromHandleNode(
   }
   return liveConfig.typeRef.typeParams && liveConfig.typeRef.typeParams[0];
 }
+
+// TODO Routes needs to be transformed into resolvers.
+// additionally we need to map route handlers by default because they are named-blocks
+// import blocks from manifest and apply adapters to them

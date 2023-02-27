@@ -3,26 +3,26 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import config from "./deno.json" assert { type: "json" };
-import * as island from "$live/blocks/island.ts";
-import * as account from "$live/blocks/account.ts";
-import * as section from "$live/blocks/section.ts";
-import * as $section0 from "./sections/Head.tsx";
-import * as loader from "$live/blocks/loader.ts";
-import * as page from "$live/blocks/page.ts";
-import * as $page0 from "./components/LivePage.tsx";
-import * as route from "$live/blocks/route.ts";
-import * as $route0 from "./routes/[...catchall].tsx";
+import * as islands from "$live/blocks/island.ts";
+import * as accounts from "$live/blocks/account.ts";
+import * as sections from "$live/blocks/section.ts";
+import * as $sections0 from "./sections/Head.tsx";
+import * as loaders from "$live/blocks/loader.ts";
+import * as pages from "$live/blocks/page.ts";
+import * as $pages0 from "./components/LivePage.tsx";
+import * as routes from "$live/blocks/route.ts";
+import * as $routes0 from "./routes/[...catchall].tsx";
 import { configurable } from "$live/engine/adapters/fresh/manifest.ts";
 
 const manifest = {
   "sections": {
-    "./sections/Head.tsx": section.default.adapt($section0.default),
+    "./sections/Head.tsx": sections.default.adapt($sections0.default),
   },
   "pages": {
-    "./components/LivePage.tsx": page.default.adapt($page0.default),
+    "./components/LivePage.tsx": pages.default.adapt($pages0.default),
   },
   "routes": {
-    "./routes/[...catchall].tsx": route.default.adapt($route0),
+    "./routes/[...catchall].tsx": routes.default.adapt($routes0),
   },
   "islands": {},
   "config": config,
@@ -79,10 +79,10 @@ const manifest = {
       "required": ["input", "output"],
       "title": "./components/LivePage.tsx",
     },
-    "./routes/[...catchall].tsx@e60299cb-56c0-49c4-b2bb-005e20fad7e3": {
+    "./routes/[...catchall].tsx@e7cfd514-23ff-4121-a9c0-1014b7802382": {
       "type": "object",
-      "properties": { "index": { "title": "Index", "type": "number" } },
-      "required": ["index"],
+      "properties": { "component": { "title": "Component" } },
+      "required": ["component"],
     },
     "$live/blocks/section.ts@Section": {
       "type": "object",

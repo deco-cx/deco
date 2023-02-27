@@ -10,7 +10,7 @@ const sectionJSONSchema = {
   $ref: `#/definitions/${sectionAddr}`,
 };
 
-const blockType = "section";
+const blockType = "sections";
 export type Section = JSX.Element;
 const sectionBlock: Block<ComponentFunc<Section>, PreactComponent<Section>> = {
   import: "$live/blocks/section.ts",

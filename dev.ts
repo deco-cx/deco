@@ -3,11 +3,6 @@ import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
-import accountBlock from "$live/blocks/account.ts";
-import loaderBlock from "$live/blocks/loader.ts";
-import pageBlock from "$live/blocks/page.ts";
-import routeBlock from "$live/blocks/route.ts";
-import sectionBlock from "$live/blocks/section.ts";
 import { DecoManifest } from "$live/engine/adapters/fresh/manifest.ts";
 import {
   ManifestBuilder,
@@ -16,16 +11,7 @@ import {
 import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts";
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { error } from "$live/error.ts";
-import islandBlock from "$live/blocks/island.ts";
-
-const defaultBlocks = [
-  islandBlock,
-  accountBlock,
-  sectionBlock,
-  loaderBlock,
-  pageBlock,
-  routeBlock,
-];
+import { blocks } from "$live/blocks/index.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 
@@ -80,20 +66,27 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
 }
 
 const withImport =
-  (blk: string, pathBase: string, prefix: string, adapt?: string) =>
+  (
+    blk: string,
+    pathBase: (imp: string) => [string, string],
+    prefix: string,
+    adapt?: string,
+    importDefault?: boolean
+  ) =>
   (m: ManifestBuilder, imp: string, i: number) => {
     const alias = `${prefix}${i}`;
-    const from = `${pathBase}${imp}`;
+    const [from, key] = pathBase(imp);
+    const variable = importDefault ? `${alias}.default` : alias;
     return m
       .addImports({
         from,
         clauses: [{ alias: alias }],
       })
       .addValuesOnManifestKey(blk, [
-        from,
+        key,
         {
           kind: "js",
-          raw: { identifier: adapt ? `${adapt}(${alias}.default)` : alias },
+          raw: { identifier: adapt ? `${adapt}(${variable})` : alias },
         },
       ]);
   };
@@ -129,22 +122,25 @@ export default async function dev(
       manifestDef: {},
     });
   }
-  let manifest = await decoManifestBuilder(dir, defaultBlocks);
+  let manifest = await decoManifestBuilder(dir);
   // "imports" is of format { "nameOfImport" : manifest }
   for (const [key, importManifest] of Object.entries(imports || {})) {
-    for (const blk of defaultBlocks) {
-      const blockCollection = `${blk.type}s`;
+    for (const blk of blocks) {
       const blkFns =
-        (importManifest as Record<string, ResolverMap>)[blockCollection] ?? {};
-      const importFunctionNames = Object.keys(blkFns).map((name) =>
-        name.replace(`./`, `${key}/`)
-      );
-      manifest = importFunctionNames.reduce(
+        (importManifest as Record<string, ResolverMap>)[blk.type] ?? {};
+      const isRoutes = blk.type === "routes";
+      const blockKeys = Object.keys(blkFns);
+      manifest = blockKeys.reduce(
         withImport(
-          blockCollection,
-          "",
+          blk.type,
+          (imp) =>
+            [
+              imp.replace(`./`, `${key}/`),
+              !isRoutes ? imp.replace(`./`, `${key}/`) : imp,
+            ] as [string, string],
           `$${key}${blk.type}`,
-          `${blk.type}.default.adapt`
+          `${blk.type}.default.adapt`,
+          !isRoutes
         ),
         manifest
       );
@@ -204,6 +200,6 @@ export async function format(content: string) {
 // Generate live own manifest data so that other sites can import native functions and sections.
 if (import.meta.main) {
   const dir = Deno.cwd();
-  const newManifestData = await decoManifestBuilder(dir, defaultBlocks);
+  const newManifestData = await decoManifestBuilder(dir);
   await generate(dir, newManifestData);
 }
