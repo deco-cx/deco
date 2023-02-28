@@ -85,6 +85,7 @@ export async function loadLivePage(
       const [sectionPath] = section.key.split("@");
       // Look for an override from a feature flag in selectedPageIds
       let overrideGlobalSection = null;
+      let overrideGlobalLoaders = null;
       for (const selectedPageId of selectedPageIds) {
         const selectedGlobalSectionPage = globals.find((globalPage) =>
           globalPage.path.startsWith(sectionPath) &&
@@ -93,23 +94,31 @@ export async function loadLivePage(
         if (selectedGlobalSectionPage) {
           overrideGlobalSection = selectedGlobalSectionPage.data
             .sections[0] as PageSection;
+          overrideGlobalLoaders = selectedGlobalSectionPage.data.functions;
           break;
         }
       }
       // Look for a global section that matches provided section path exactly
       let byPathGlobalSection = null;
+      let byPathGlobalLoaders = null;
       for (const globalPage of globals) {
         if (globalPage.path === section.key) {
           byPathGlobalSection = globalPage.data.sections[0] as PageSection;
+          byPathGlobalLoaders = globalPage.data.functions;
           break;
         }
       }
       // Override this section key and props with found match
       const globalSection = overrideGlobalSection || byPathGlobalSection;
+      const globalLoaders = overrideGlobalLoaders || byPathGlobalLoaders;
       if (globalSection) {
         section.key = globalSection.key;
         section.label = globalSection.label;
         section.props = globalSection.props;
+        pageWithParams.page.data.functions = [
+          ...(globalLoaders ?? []),
+          ...(pageWithParams.page.data.functions ?? []),
+        ];
       }
     }
   }
