@@ -274,8 +274,8 @@ const fixFilePath = (file: string) => {
   if (os.platform() === "windows") {
     return file.replace("\\", "/");
   }
-return file;
-}
+  return file;
+};
 
 const templates = {
   routes: {
@@ -292,9 +292,10 @@ const templates = {
   },
   sections: {
     imports: (file: string, i: number) => {
-      return `import * as $$$${i} from "${fixFilePath(file)}";`
+      return `import * as $$$${i} from "${fixFilePath(file)}";`;
     },
-    obj: (file: string, i: number) => `${JSON.stringify(`${fixFilePath(file)}`)}: $$$${i},`,
+    obj: (file: string, i: number) =>
+      `${JSON.stringify(`${fixFilePath(file)}`)}: $$$${i},`,
   },
   functions: {
     imports: (file: string, i: number) =>
