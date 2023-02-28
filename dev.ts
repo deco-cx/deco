@@ -270,27 +270,36 @@ export async function collectFilesFromDir(dir: string) {
   return files;
 }
 
+const fixFilePath = (file: string) => {
+  if (os.platform() === "windows") {
+    return file.replace("\\", "/");
+  }
+return file;
+}
+
 const templates = {
   routes: {
     imports: (file: string, i: number) =>
-      `import * as $${i} from "./routes${file}";`,
+      `import * as $${i} from "./routes${fixFilePath(file)}";`,
     obj: (file: string, i: number) =>
-      `${JSON.stringify(`./routes${file}`)}: $${i},`,
+      `${JSON.stringify(`./routes${fixFilePath(file)}`)}: $${i},`,
   },
   islands: {
     imports: (file: string, i: number) =>
-      `import * as $$${i} from "./islands${file}";`,
+      `import * as $$${i} from "./islands${fixFilePath(file)}";`,
     obj: (file: string, i: number) =>
-      `${JSON.stringify(`./islands${file}`)}: $$${i},`,
+      `${JSON.stringify(`./islands${fixFilePath(file)}`)}: $$${i},`,
   },
   sections: {
-    imports: (file: string, i: number) => `import * as $$$${i} from "${file}";`,
-    obj: (file: string, i: number) => `${JSON.stringify(`${file}`)}: $$$${i},`,
+    imports: (file: string, i: number) => {
+      return `import * as $$$${i} from "${fixFilePath(file)}";`
+    },
+    obj: (file: string, i: number) => `${JSON.stringify(`${fixFilePath(file)}`)}: $$$${i},`,
   },
   functions: {
     imports: (file: string, i: number) =>
-      `import * as $$$$${i} from "${file}";`,
-    obj: (file: string, i: number) => `"${file}": $$$$${i},`,
+      `import * as $$$$${i} from "${fixFilePath(file)}";`,
+    obj: (file: string, i: number) => `"${fixFilePath(file)}": $$$$${i},`,
   },
 };
 
@@ -305,7 +314,7 @@ async function extractAllSchemas(
 ): Promise<DevManifestData["schemas"]> {
   const functionSchemasAsArray = await Promise.all(
     functions.map(async (functionPath) => {
-      const path = `${functionPath}`;
+      const path = `${fixFilePath(functionPath)}`;
       const functionSchema = await getSchemaFromLoaderExport(path);
 
       return [
@@ -317,7 +326,7 @@ async function extractAllSchemas(
 
   const sectionSchemasAsArray = await Promise.all(
     sections.map(async (sectionPath) => {
-      const path = `${sectionPath}`;
+      const path = `${fixFilePath(sectionPath)}`;
       const sectionSchema = await getSchemaFromSectionExport(path);
 
       return [
