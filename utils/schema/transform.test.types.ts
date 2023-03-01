@@ -1,4 +1,4 @@
-import type { LoaderReturnType } from "$live/std/types.ts";
+import type { LoaderReturnType } from "$live/types.ts";
 
 export type SimpleType = {
   name: string;

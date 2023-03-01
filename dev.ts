@@ -18,6 +18,7 @@ import {
   getSchemaFromLoaderExport,
   getSchemaFromSectionExport,
 } from "./utils/schema/utils.ts";
+import { unique } from "./utils/unique.ts";
 
 /**
  * This interface represents an intermediate state used to generate
@@ -123,8 +124,8 @@ async function generateDevManifestData(
   return {
     routes: manifestFile.routes,
     islands: manifestFile.islands,
-    functions,
-    sections,
+    functions: unique(functions),
+    sections: unique(sections),
     schemas,
   };
 }

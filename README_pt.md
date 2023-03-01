@@ -85,7 +85,7 @@ import {
   vtexClient,
 } from "$live/std/commerce/clients/vtex.ts";
 import { ProductList } from "$live/std/commerce/types/ProductList.ts";
-import { LoaderFunction } from "$live/std/types.ts";
+import { LoaderFunction } from "$live/types.ts";
 
 export interface Props {
   searchQuery: string;

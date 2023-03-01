@@ -18,7 +18,7 @@ import {
   isFunctionProp,
   propReferenceToFunctionKey,
 } from "$live/utils/page.ts";
-import { LoaderFunction } from "$live/std/types.ts";
+import { LoaderFunction } from "$live/types.ts";
 
 /**
  * This function should be used only in the initial stage of the product.

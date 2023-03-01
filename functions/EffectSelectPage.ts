@@ -1,5 +1,5 @@
 import { PageOptions } from "$live/pages.ts";
-import { EffectFunction } from "$live/std/types.ts";
+import { EffectFunction } from "$live/types.ts";
 
 export interface Props {
   pageIds: number[];
