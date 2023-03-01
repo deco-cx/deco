@@ -1,4 +1,4 @@
-import { basename } from "https://deno.land/std@0.147.0/path/mod.ts";
+import { basename } from "std/path/mod.ts";
 import { context } from "$live/live.ts";
 import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { Node } from "$live/types.ts";
@@ -11,8 +11,7 @@ const mapSectionToNode = (component: string) => ({
     : undefined,
 });
 
-const isFirstLevelSection = (section: string) =>
-  section.split("/").length === 3 && section.endsWith(".tsx");
+const isTSXFile = (section: string) => section.endsWith(".tsx");
 
 export const isGlobalSection = (section: string) =>
   section.endsWith(".global.tsx");
@@ -20,15 +19,15 @@ export const isGlobalSection = (section: string) =>
 export const getWorkbenchTree = (): Node[] => {
   const sections = context.manifest?.sections ?? {};
 
-  const firstLevelSection = Object
+  const tsxFileSections = Object
     .keys(sections)
-    .filter((section) => isFirstLevelSection(section));
+    .filter((section) => isTSXFile(section));
 
-  const firstLevelNonGlobalSectionNodes: Node[] = firstLevelSection.filter((
+  const firstLevelNonGlobalSectionNodes: Node[] = tsxFileSections.filter((
     section,
   ) => !isGlobalSection(section)).map(mapSectionToNode);
 
-  const firstLevelGlobalSectionNodes: Node[] = firstLevelSection.filter(
+  const firstLevelGlobalSectionNodes: Node[] = tsxFileSections.filter(
     isGlobalSection,
   ).map(mapSectionToNode);
 

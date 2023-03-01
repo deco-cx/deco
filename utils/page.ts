@@ -347,7 +347,7 @@ export const createPageForSection = (
 ): Page => ({
   id: -1,
   name: sectionName,
-  path: `/_live/workbench/sections/${sectionName}`,
+  path: `/_live/workbench/block?key=${sectionName}`,
   data,
   state: "dev",
 });
