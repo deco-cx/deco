@@ -1,7 +1,7 @@
 import type { HandlerContext } from "$fresh/server.ts";
 import type { IslandModule } from "$fresh/src/server/types.ts";
 import type { Manifest } from "$fresh/server.ts";
-import type { JSONSchema7 } from "json-schema";
+import type { jsonSchema } from "./deps.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 
 export interface Node {
@@ -11,10 +11,10 @@ export interface Node {
   children?: Node[];
 }
 
-export type Schema = JSONSchema7;
+export type Schema = jsonSchema.JSONSchema7;
 
 export interface Module extends IslandModule {
-  schema?: JSONSchema7;
+  schema?: jsonSchema.JSONSchema7;
 }
 
 export interface FunctionModule {
@@ -27,7 +27,10 @@ export interface DecoManifest extends Manifest {
   functions: Record<string, FunctionModule>;
   schemas: Record<
     string,
-    { inputSchema: JSONSchema7 | null; outputSchema: JSONSchema7 | null }
+    {
+      inputSchema: jsonSchema.JSONSchema7 | null;
+      outputSchema: jsonSchema.JSONSchema7 | null;
+    }
   >;
 }
 
@@ -59,7 +62,7 @@ export interface PageSection {
 }
 
 export interface PageFunction extends PageSection {
-  outputSchema?: JSONSchema7;
+  outputSchema?: jsonSchema.JSONSchema7;
 }
 
 export interface PageData {
@@ -129,7 +132,7 @@ export interface Flags {
 export type Mode = "edit" | "none";
 
 export interface WithSchema {
-  schema?: JSONSchema7;
+  schema?: jsonSchema.JSONSchema7;
 }
 
 export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;

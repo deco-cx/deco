@@ -13,7 +13,7 @@ import { walk } from "std/fs/walk.ts";
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
-import { JSONSchema7 } from "json-schema";
+import { jsonSchema } from "./deps.ts";
 import {
   getSchemaFromLoaderExport,
   getSchemaFromSectionExport,
@@ -33,7 +33,10 @@ interface DevManifestData {
   functions: string[];
   schemas: Record<
     string,
-    { inputSchema: JSONSchema7 | null; outputSchema: JSONSchema7 | null }
+    {
+      inputSchema: jsonSchema.JSONSchema7 | null;
+      outputSchema: jsonSchema.JSONSchema7 | null;
+    }
   >;
 }
 

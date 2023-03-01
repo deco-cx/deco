@@ -12,7 +12,7 @@ import {
   createSectionFromSectionKey,
   doesSectionExist,
 } from "./utils/manifest.ts";
-import { PostgrestError } from "supabase";
+import { supabase } from "./deps.ts";
 
 export interface PageOptions {
   selectedPageIds: number[];
@@ -103,7 +103,7 @@ export async function loadLivePage(
 
 interface FetPageFromPathnameParams {
   pages: Page[] | null;
-  error: PostgrestError | null;
+  error: supabase.PostgrestError | null;
   path: string;
 }
 

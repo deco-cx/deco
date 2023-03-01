@@ -1,4 +1,4 @@
-import type { JSONSchema7, JSONSchema7Definition } from "json-schema";
+import type { jsonSchema } from "../deps.ts";
 
 import type {
   AvailableFunction,
@@ -38,8 +38,8 @@ export function isValidIsland(componentPath: string) {
 
 /** Property is undefined | boolean | object, so if property[key] is === "object" and $id in property[key] */
 export const propertyHasId = (
-  propDefinition: JSONSchema7Definition | undefined,
-): propDefinition is JSONSchema7 => (
+  propDefinition: jsonSchema.JSONSchema7Definition | undefined,
+): propDefinition is jsonSchema.JSONSchema7 => (
   typeof propDefinition === "object" && "$id" in propDefinition
 );
 
@@ -279,7 +279,7 @@ export function getMetadataForSectionEditor({
   section: EditorData["sections"][number];
   pageFunctions: EditorData["functions"];
 }): {
-  ownPropsSchema?: JSONSchema7;
+  ownPropsSchema?: jsonSchema.JSONSchema7;
   functionsForComponent?: SectionFunction[];
 } {
   const sectionSchema = section.schema;
@@ -313,13 +313,13 @@ export function getMetadataForSectionEditor({
         ...acc,
         [cur]: sectionSchema.properties?.[cur] || {},
       }),
-      {} as JSONSchema7["properties"],
+      {} as jsonSchema.JSONSchema7["properties"],
     );
 
   const ownPropsSchema = {
     ...sectionSchema,
     properties: schemaPropertiesWithoutThoseFromLoaders,
-  } as JSONSchema7;
+  } as jsonSchema.JSONSchema7;
 
   const functionsForComponent = propsThatMapToLoader
     .map(({ functionUniqueId }) => {
