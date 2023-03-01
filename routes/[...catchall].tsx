@@ -1,4 +1,5 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
+import { PageInstance } from "$live/blocks/page.ts";
 import { LiveRouteConfig, PreactComponent } from "$live/blocks/types.ts";
 import { context } from "$live/live.ts";
 
@@ -6,7 +7,7 @@ export default function Render({
   data: {
     component: { Component, props },
   },
-}: PageProps<{ component: PreactComponent }>) {
+}: PageProps<{ component: PreactComponent<PageInstance> }>) {
   return <Component {...props}></Component>;
 }
 

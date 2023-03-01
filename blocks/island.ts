@@ -1,20 +1,62 @@
-import { ConfigurableBlock } from "$live/engine/block.ts";
-import { DecoManifest } from "$live/types.ts";
+import { Block } from "$live/engine/block.ts";
+import { findExport } from "$live/engine/schema/utils.ts";
+import { JSX } from "preact";
+import { nodeToFunctionDefinition } from "../engine/schema/utils.ts";
+import { ComponentFunc, PreactComponent } from "./types.ts";
+import { tsTypeToSchemeable } from "../engine/schema/transform.ts";
 
-const blockType = "islands";
-const islandBlock: ConfigurableBlock<DecoManifest["islands"]["string"]> = {
-  import: "$live/blocks/island.ts",
-  type: blockType,
-  adapt: (blk) => blk,
-  findModuleDefinitions: (_, [path]) => {
-    if (!path.startsWith("./islands/")) {
-      return Promise.resolve({ imports: [], schemeables: [] });
+export type IslandInstance = JSX.Element;
+export type Island<TProps = unknown> = ComponentFunc<TProps, IslandInstance>;
+
+const islandAddr = "$live/blocks/island.ts@Island";
+
+const islandJSONSchema = {
+  $ref: `#/definitions/${islandAddr}`,
+};
+
+const islandBlock: Block<Island, PreactComponent<IslandInstance>> = {
+  defaultPreview: (island) => island,
+  type: "islands",
+  baseSchema: [
+    islandAddr,
+    {
+      type: "object",
+      additionalProperties: true,
+    },
+  ],
+  introspect: async (ctx, path, ast) => {
+    if (!path.startsWith("./islands")) {
+      return undefined;
     }
-    return Promise.resolve({
-      imports: [`${path}@$`], // adding $ on the end of the path to mark as default exported
-      schemeables: [],
-    });
+    const func = findExport("default", ast);
+    if (!func) {
+      return undefined;
+    }
+    const fn = nodeToFunctionDefinition(func);
+    if (!fn) {
+      throw new Error(
+        `Default export of ${path} needs to be a const variable or a function`
+      );
+    }
+    const inputTsType = fn.params.length > 0 ? fn.params[0] : undefined;
+    return {
+      functionRef: path,
+      inputSchema: inputTsType
+        ? await tsTypeToSchemeable(ctx, inputTsType, [path, ast])
+        : undefined,
+      outputSchema: {
+        id: islandAddr,
+        type: "inline",
+        value: islandJSONSchema,
+      },
+    };
   },
+  adapt:
+    ({ default: Component }) =>
+    (props) => ({
+      Component,
+      props,
+    }),
 };
 
 export default islandBlock;

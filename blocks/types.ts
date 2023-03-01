@@ -4,15 +4,15 @@ import { JSX } from "preact";
 import { RouteModule } from "$fresh/src/server/types.ts";
 
 export type ComponentFunc<
-  TReturn extends JSX.Element = JSX.Element,
   TProps = any,
+  TReturn extends JSX.Element = JSX.Element
 > = (props: TProps) => TReturn;
 
 export interface PreactComponent<
   TReturn extends JSX.Element = JSX.Element,
-  TProps = any,
+  TProps = any
 > {
-  Component: ComponentFunc<TReturn, TProps>;
+  Component: ComponentFunc<TProps, TReturn>;
   props: TProps;
 }
 

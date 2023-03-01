@@ -4,10 +4,69 @@ import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { ASTNode, TsType } from "$live/engine/schema/ast.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
-import {
-  JSONSchema7,
-  JSONSchema7Definition,
-} from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+import { PreactComponent } from "../blocks/types.ts";
+
+export interface BlockModuleRef {
+  inputSchema?: Schemeable;
+  outputSchema: Schemeable;
+  functionRef: ImportString;
+}
+
+export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
+export interface BlockModule<
+  T = any,
+  RLike extends ResolverLike<T> = ResolverLike<T>,
+  TSerializable = T
+> {
+  default: RLike;
+  preview?: Resolver<PreactComponent, TSerializable>;
+}
+
+type UnPromisify<T> = T extends Promise<infer U> ? U : T;
+
+export interface Block<
+  TBlockFunc extends (...args: any[]) => any = any,
+  TSerializable = UnPromisify<ReturnType<TBlockFunc>>
+> {
+  defaultPreview?: Resolver<PreactComponent, TSerializable>;
+  baseSchema?: [string, JSONSchema7];
+  type: BlockType;
+  introspect: (
+    transformationContext: TransformContext,
+    path: string,
+    ast: ASTNode[]
+  ) => Promise<BlockModuleRef | undefined>;
+  decorate?: <
+    TBlockModule extends BlockModule<
+      UnPromisify<ReturnType<TBlockFunc>>,
+      TBlockFunc,
+      TSerializable
+    > = BlockModule<
+      UnPromisify<ReturnType<TBlockFunc>>,
+      TBlockFunc,
+      TSerializable
+    >
+  >(
+    blockModule: TBlockModule,
+    key: string
+  ) => TBlockModule;
+  adapt?: <
+    TProps = any,
+    TBlockModule extends BlockModule<
+      UnPromisify<ReturnType<TBlockFunc>>,
+      TBlockFunc,
+      TSerializable
+    > = BlockModule<
+      UnPromisify<ReturnType<TBlockFunc>>,
+      TBlockFunc,
+      TSerializable
+    >
+  >(
+    blockModule: TBlockModule,
+    key: string
+  ) => Resolver<TSerializable, TProps, FreshContext>;
+}
 
 export type ModuleAST = [string, string, ASTNode[]];
 
@@ -22,48 +81,3 @@ export interface FunctionBlockDefinition {
 export type BlockType = string;
 export type ImportString = string;
 export type BlockAlias = string;
-
-export interface BlockDefinitions {
-  imports: ImportString[];
-  schemeables: Schemeable[];
-}
-
-export interface BlockBase {
-  import: string;
-  type: BlockType;
-  defaultJSONSchemaDefinitions?: Record<string, JSONSchema7Definition>;
-  findModuleDefinitions: (
-    transformContext: TransformContext,
-    ast: [string, ASTNode[]],
-  ) => Promise<BlockDefinitions>;
-}
-
-export interface DataBlock<TBlock = any> extends BlockBase {
-  adapt: <TExtension extends TBlock>(
-    block: (blk: TExtension, ctx: FreshContext) => PromiseOrValue<TExtension>,
-  ) => Resolver<TExtension, TExtension, FreshContext>;
-}
-
-export interface FunctionBlock<
-  TBlockDefinition = any,
-  TIntermediate = TBlockDefinition,
-> extends BlockBase {
-  adapt: <TProps>(
-    block: TBlockDefinition,
-  ) => Resolver<TIntermediate, TProps, FreshContext>;
-}
-
-export const isFunctionBlock = (b: Block): b is FunctionBlock => {
-  return (b as FunctionBlock).adapt !== undefined;
-};
-
-export interface ConfigurableBlock<TBlockDefinition> extends BlockBase {
-  adapt: (block: TBlockDefinition) => TBlockDefinition;
-}
-
-export type Block<
-  TBlockDefinition = any,
-  TIntermediate = TBlockDefinition,
-> = TBlockDefinition extends (...args: any[]) => any
-  ? FunctionBlock<TBlockDefinition, TIntermediate>
-  : DataBlock<TBlockDefinition> | ConfigurableBlock<TBlockDefinition>;

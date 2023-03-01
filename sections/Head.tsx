@@ -25,7 +25,7 @@ export default function HeadComponent({
   scriptUrls,
   inlineScripts,
   themeColor,
-}: Props): Section {
+}: Props) {
   return (
     <Head>
       <title>{title}</title>

@@ -1,6 +1,7 @@
 // deno-lint-ignore-file
 import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
 import { Schemeable, schemeableEqual } from "$live/engine/schema/transform.ts";
+import { union } from "$live/engine/schema/schemeable.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -9,7 +10,10 @@ export interface NamedImport {
   import: string;
   as?: string;
 }
-export type ImportClause = DefaultImport | NamedImport;
+export interface ModuleImport {
+  as: string;
+}
+export type ImportClause = DefaultImport | NamedImport | ModuleImport;
 
 const equalClause = (a: ImportClause, b: ImportClause): boolean => {
   return (
@@ -41,7 +45,7 @@ export interface JS {
   raw: FunctionCall | Variable | Record<string, unknown>;
 }
 const isObjRaw = (
-  v: FunctionCall | Variable | Record<string, unknown>,
+  v: FunctionCall | Variable | Record<string, unknown>
 ): v is Record<string, unknown> => {
   return (v as FunctionCall).identifier === undefined;
 };
@@ -87,6 +91,7 @@ export interface ManifestBuilder {
   addExportDefault: (dfs: ExportDefault) => ManifestBuilder;
   addStatements: (...statements: Statement[]) => ManifestBuilder;
   addSchemeables: (...s: Schemeable[]) => ManifestBuilder;
+  addOutputSchemeable: (s: Schemeable, ref: string) => ManifestBuilder;
   build(): string;
 }
 
@@ -118,7 +123,7 @@ export interface ManifestData {
   exports: Export[];
   statements?: Statement[];
   exportDefault?: ExportDefault;
-  schemeables?: Schemeable[];
+  schemeables?: Record<string, Schemeable>;
 }
 
 const stringifyStatement = (st: Statement): string => {
@@ -126,26 +131,26 @@ const stringifyStatement = (st: Statement): string => {
 };
 
 const stringifyImport = ({ clauses, from }: Import): string => {
-  return `import ${
-    clauses
-      .map((clause) =>
-        isDefaultClause(clause)
-          ? `* as ${clause.alias}`
-          : `{ ${clause.import} ${clause.as ? "as " + clause.as : ""}}`
-      )
-      .join(",")
-  } from "${from}"`;
+  return `import ${clauses
+    .map((clause) =>
+      isDefaultClause(clause)
+        ? `* as ${clause.alias}`
+        : (clause as NamedImport).import
+        ? `{ ${(clause as NamedImport).import} ${
+            clause.as ? "as " + clause.as : ""
+          }}`
+        : clause.as
+    )
+    .join(",")} from "${from}"`;
 };
 
 const stringifyObj = (obj: JSONObject): string => {
   return `{
-    ${
-    Object.entries(obj)
+    ${Object.entries(obj)
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
-      .join(",\n")
-  }
+      .join(",\n")}
 }
 `;
 };
@@ -168,11 +173,9 @@ const stringifyJS = (js: JS): string => {
     return JSON.stringify(js.raw);
   }
   if (isFunctionCall(js.raw)) {
-    return `${js.raw.identifier}(${
-      js.raw.params
-        .map(stringifyJSONValue)
-        .join(",")
-    })`;
+    return `${js.raw.identifier}(${js.raw.params
+      .map(stringifyJSONValue)
+      .join(",")})`;
   }
 
   return js.raw.identifier;
@@ -205,10 +208,13 @@ export const stringify = ({
     kind: "js",
     raw: { identifier: "import.meta.url" },
   };
-  const definitions = (schemeables ?? []).reduce((def, schemeable) => {
-    const [nDef, _] = schemeableToJSONSchema(def, schemeable);
-    return nDef;
-  }, {});
+  const definitions = Object.values(schemeables ?? {}).reduce(
+    (def, schemeable) => {
+      const [nDef, _] = schemeableToJSONSchema(def, schemeable);
+      return nDef;
+    },
+    {}
+  );
   manifest["definitions"] = {
     kind: "js",
     raw: { ...definitions, ...manifestDef },
@@ -228,6 +234,22 @@ ${exportDefault ? `export default ${exportDefault.variable.identifier}` : ""}
 `;
 };
 
+const resolvable = (id: string, ref: string): Schemeable => {
+  return {
+    id,
+    type: "inline",
+    value: {
+      required: ["__resolveType"],
+      properties: {
+        __resolveType: {
+          type: "string",
+          enum: [ref],
+        },
+      },
+      additionalProperties: true,
+    },
+  };
+};
 export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
   return {
     withDefinitions: (def): ManifestBuilder => {
@@ -237,6 +259,17 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
       });
     },
     data: initial,
+    addOutputSchemeable: (s: Schemeable, ref: string) => {
+      const id = s.id ?? crypto.randomUUID();
+      const n = newManifestBuilder(initial).addSchemeables({ ...s, id });
+      const actual = n.data.schemeables?.[id];
+      return newManifestBuilder({
+        ...initial,
+        schemeables: {
+          [id]: actual ? union(actual, resolvable(id, ref)) : s,
+        },
+      });
+    },
     equal: (other: ManifestBuilder): boolean => {
       const sameImportLength =
         other.data.imports.length === initial.imports.length;
@@ -288,7 +321,13 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
     addSchemeables: (...s: Schemeable[]): ManifestBuilder => {
       return newManifestBuilder({
         ...initial,
-        schemeables: [...(initial.schemeables ?? []), ...s],
+        schemeables: s.reduce((curr, n) => {
+          const schemeableID = n.id ?? crypto.randomUUID();
+          return {
+            ...curr,
+            [schemeableID]: n,
+          };
+        }, initial.schemeables ?? {}),
       });
     },
     addExportDefault: (dfs: ExportDefault): ManifestBuilder => {
@@ -334,7 +373,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           {
             ...initial.manifest,
             [key]: initial.manifest[key] ?? { kind: "obj", value: {} },
-          },
+          }
         ),
       });
     },

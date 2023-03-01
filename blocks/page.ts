@@ -1,55 +1,62 @@
-import { ComponentFunc, PreactComponent } from "$live/blocks/types.ts";
-import { fnDefinitionToSchemeable } from "$live/blocks/utils.ts";
 import { Block } from "$live/engine/block.ts";
-import { findAllReturning } from "$live/engine/schema/utils.ts";
+import { findExport } from "$live/engine/schema/utils.ts";
 import { JSX } from "preact";
+import { nodeToFunctionDefinition } from "../engine/schema/utils.ts";
+import { ComponentFunc, PreactComponent } from "./types.ts";
+import { tsTypeToSchemeable } from "../engine/schema/transform.ts";
+
+export type PageInstance = JSX.Element;
+export type Page<TProps = unknown> = ComponentFunc<TProps, PageInstance>;
 
 const pageAddr = "$live/blocks/page.ts@Page";
 
 const pageJSONSchema = {
   $ref: `#/definitions/${pageAddr}`,
 };
-const blockType = "pages";
-export type Page = JSX.Element;
 
-const pageBlock: Block<ComponentFunc<Page>, PreactComponent<Page>> = {
-  import: "$live/blocks/page.ts",
-  defaultJSONSchemaDefinitions: {
-    [pageAddr]: {
+const pageBlock: Block<Page, PreactComponent<PageInstance>> = {
+  defaultPreview: (page) => page,
+  type: "pages",
+  baseSchema: [
+    pageAddr,
+    {
       type: "object",
       additionalProperties: true,
     },
+  ],
+  introspect: async (ctx, path, ast) => {
+    if (!path.startsWith("./pages")) {
+      return undefined;
+    }
+    const func = findExport("default", ast);
+    if (!func) {
+      return undefined;
+    }
+    const fn = nodeToFunctionDefinition(func);
+    if (!fn) {
+      throw new Error(
+        `Default export of ${path} needs to be a const variable or a function`
+      );
+    }
+    const inputTsType = fn.params.length > 0 ? fn.params[0] : undefined;
+    return {
+      functionRef: path,
+      inputSchema: inputTsType
+        ? await tsTypeToSchemeable(ctx, inputTsType, [path, ast])
+        : undefined,
+      outputSchema: {
+        id: pageAddr,
+        type: "inline",
+        value: pageJSONSchema,
+      },
+    };
   },
   adapt:
-    <TProps>(Component: ComponentFunc<Page, TProps>) =>
-    (props: TProps) => ({
+    ({ default: Component }) =>
+    (props) => ({
       Component,
       props,
     }),
-  type: blockType,
-  findModuleDefinitions: async (transformContext, [path, ast]) => {
-    const fns = await findAllReturning(
-      transformContext,
-      { typeName: "Page", importUrl: import.meta.url },
-      ast
-    );
-    const schemeables = await Promise.all(
-      fns
-        .map((fn) => ({
-          name: fn.name === "default" ? path : `${path}@${fn.name}`,
-          input: fn.params.length > 0 ? fn.params[0] : undefined,
-          output: pageJSONSchema,
-        }))
-        .map((fn) =>
-          fnDefinitionToSchemeable(transformContext, [path, ast], fn)
-        )
-    );
-
-    return {
-      imports: schemeables.map((s) => s.id!),
-      schemeables,
-    };
-  },
 };
 
 export default pageBlock;

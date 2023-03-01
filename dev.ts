@@ -11,7 +11,7 @@ import {
 import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts";
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { error } from "$live/error.ts";
-import { blocks } from "$live/blocks/index.ts";
+import blocks from "$live/blocks/index.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 

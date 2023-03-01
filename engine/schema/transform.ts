@@ -96,6 +96,14 @@ const schemeableWellKnownType = async (
   root: ASTNode[]
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
+    case "Response": {
+      return {
+        type: "inline",
+        value: {
+          $ref: "#/definitions/$live/blocks/route.ts@Response",
+        },
+      };
+    }
     case "PreactComponent": {
       if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
         return {
@@ -110,8 +118,9 @@ const schemeableWellKnownType = async (
       }
 
       const def: Record<string, string> = {
-        Section: "#/definitions/$live/blocks/section.ts#Section",
-        Page: "#/definitions/$live/blocks/page.ts#Page",
+        SectionInstance: "#/definitions/$live/blocks/section.ts@Section",
+        PageInstance: "#/definitions/$live/blocks/page.ts@Page",
+        IslandInstance: "#/definitions/$live/blocks/island.ts@Island",
       };
       const $ref = def[typeRef.typeRef.typeName];
       if (!$ref) {

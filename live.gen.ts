@@ -3,96 +3,94 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import config from "./deno.json" assert { type: "json" };
-import * as islands from "$live/blocks/island.ts";
-import * as accounts from "$live/blocks/account.ts";
-import * as sections from "$live/blocks/section.ts";
-import * as $sections0 from "./sections/Head.tsx";
-import * as loaders from "$live/blocks/loader.ts";
-import * as pages from "$live/blocks/page.ts";
-import * as $pages0 from "./components/LivePage.tsx";
-import * as routes from "$live/blocks/route.ts";
-import * as $routes0 from "./routes/[...catchall].tsx";
+import * as $0 from "./routes/[...catchall].tsx";
+import * as $$$0 from "./pages/LivePage.tsx";
+import * as $$$$0 from "./sections/Head.tsx";
+import blocks from "$live/blocks/index.ts";
 import { configurable } from "$live/engine/adapters/fresh/manifest.ts";
 
 const manifest = {
-  "sections": {
-    "./sections/Head.tsx": sections.default.adapt($sections0.default),
-  },
-  "pages": {
-    "./components/LivePage.tsx": pages.default.adapt($pages0.default),
+  "functions": {
+    "./routes/[...catchall].tsx": {
+      "inputSchema":
+        "./routes/[...catchall].tsx@d01232b2-892f-426f-93cd-bdbb23855065",
+      "outputSchema": "$live/blocks/route.ts@Response",
+    },
+    "./pages/LivePage.tsx": {
+      "inputSchema": "./components/LivePage.tsx@Props",
+      "outputSchema": "$live/blocks/page.ts@Page",
+    },
+    "./sections/Head.tsx": {
+      "inputSchema": "./sections/Head.tsx@Props",
+      "outputSchema": "$live/blocks/section.ts@Section",
+    },
   },
   "routes": {
-    "./routes/[...catchall].tsx": routes.default.adapt($routes0),
+    "./routes/[...catchall].tsx": $0,
+  },
+  "pages": {
+    "./pages/LivePage.tsx": $$$0,
+  },
+  "sections": {
+    "./sections/Head.tsx": $$$$0,
   },
   "islands": {},
   "config": config,
   "baseUrl": import.meta.url,
   "definitions": {
-    "./sections/Head.tsx": {
+    "./routes/[...catchall].tsx@d01232b2-892f-426f-93cd-bdbb23855065": {
       "type": "object",
       "properties": {
-        "output": { "$ref": "#/definitions/$live/blocks/section.ts@Section" },
-        "input": {
-          "type": "object",
-          "properties": {
-            "title": { "title": "Title", "type": ["string", "null"] },
-            "description": {
-              "title": "Description",
-              "type": ["string", "null"],
-            },
-            "url": { "title": "Url", "type": ["string", "null"] },
-            "imageUrl": { "title": "Image Url", "type": ["string", "null"] },
-            "faviconUrl": {
-              "title": "Favicon Url",
-              "type": ["string", "null"],
-            },
-            "styleUrls": { "title": "Style Urls", "type": "string" },
-            "inlineStyles": { "title": "Inline Styles", "type": "string" },
-            "scriptUrls": { "title": "Script Urls", "type": "string" },
-            "inlineScripts": { "title": "Inline Scripts", "type": "string" },
-            "themeColor": {
-              "title": "Theme Color",
-              "type": ["string", "null"],
-            },
-          },
-          "required": [],
+        "component": {
+          "title": "Component",
+          "$ref": "#/definitions/$live/blocks/page.ts@Page",
         },
       },
-      "required": ["input", "output"],
-      "title": "./sections/Head.tsx",
-    },
-    "./components/LivePage.tsx": {
-      "type": "object",
-      "properties": {
-        "output": { "$ref": "#/definitions/$live/blocks/page.ts@Page" },
-        "input": {
-          "type": "object",
-          "properties": {
-            "sections": {
-              "title": "Sections",
-              "$ref": "#/definitions/$live/blocks/section.ts#Section",
-            },
-          },
-          "required": ["sections"],
-        },
-      },
-      "required": ["input", "output"],
-      "title": "./components/LivePage.tsx",
-    },
-    "./routes/[...catchall].tsx@e7cfd514-23ff-4121-a9c0-1014b7802382": {
-      "type": "object",
-      "properties": { "component": { "title": "Component" } },
       "required": ["component"],
+    },
+    "$live/blocks/route.ts@Response": {
+      "type": "object",
+      "additionalProperties": true,
+    },
+    "./components/LivePage.tsx@Props": {
+      "type": "object",
+      "properties": {
+        "sections": {
+          "title": "Sections",
+          "$ref": "#/definitions/$live/blocks/section.ts@Section",
+        },
+      },
+      "required": ["sections"],
+    },
+    "$live/blocks/page.ts@Page": {
+      "type": "object",
+      "additionalProperties": true,
+    },
+    "./sections/Head.tsx@Props": {
+      "type": "object",
+      "properties": {
+        "title": { "title": "Title", "type": ["string", "null"] },
+        "description": { "title": "Description", "type": ["string", "null"] },
+        "url": { "title": "Url", "type": ["string", "null"] },
+        "imageUrl": { "title": "Image Url", "type": ["string", "null"] },
+        "faviconUrl": { "title": "Favicon Url", "type": ["string", "null"] },
+        "styleUrls": { "title": "Style Urls", "type": "string" },
+        "inlineStyles": { "title": "Inline Styles", "type": "string" },
+        "scriptUrls": { "title": "Script Urls", "type": "string" },
+        "inlineScripts": { "title": "Inline Scripts", "type": "string" },
+        "themeColor": { "title": "Theme Color", "type": ["string", "null"] },
+      },
+      "required": [],
     },
     "$live/blocks/section.ts@Section": {
       "type": "object",
       "additionalProperties": true,
     },
-    "$live/blocks/page.ts@Page": {
+    "$live/blocks/island.ts@Island": {
       "type": "object",
       "additionalProperties": true,
     },
   },
 };
 
-export default configurable(manifest);
+export default configurable(manifest, blocks);

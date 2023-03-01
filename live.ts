@@ -22,8 +22,9 @@ import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
-import { FreshContext } from "./engine/adapters/fresh/manifest.ts";
-import { Rezolver } from "./engine/core/mod.ts";
+import { FreshContext } from "$live/engine/adapters/fresh/manifest.ts";
+import { Block } from "$live/engine/block.ts";
+import { Rezolver } from "$live/engine/core/mod.ts";
 
 // The global live context
 export type LiveContext = {
@@ -34,6 +35,7 @@ export type LiveContext = {
   siteId: number;
   loginUrl?: string;
   configResolver?: Rezolver<FreshContext>;
+  blocks?: Block[];
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -48,12 +50,12 @@ export const context: LiveContext = {
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
+      "liveOptions.site is required. It should be the name of the site you created in deco.cx."
     );
   }
   if (!liveOptions.siteId) {
     throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
+      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}"
     );
   }
 
@@ -67,7 +69,7 @@ export const withLive = (liveOptions: LiveOptions) => {
   context.loginUrl = liveOptions.loginUrl;
 
   console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
+    `Starting live middleware: siteId=${context.siteId} site=${context.site}`
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
@@ -115,7 +117,7 @@ export const withLive = (liveOptions: LiveOptions) => {
           url,
           pageId: ctx.state.page?.id,
           begin,
-        }),
+        })
       );
     }
 
@@ -142,7 +144,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return acc;
       },
-      { selectedPageIds: [] } as PageOptions,
+      { selectedPageIds: [] } as PageOptions
     );
 
     const getResponse = async () => {

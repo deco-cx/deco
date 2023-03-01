@@ -3,9 +3,15 @@ import { HandlerContext, Manifest } from "$fresh/server.ts";
 import defaultResolvers from "$live/engine/adapters/fresh/defaults.ts";
 import { useFileProvider } from "$live/engine/adapters/fresh/fileProvider.ts";
 import { Rezolver } from "$live/engine/core/mod.ts";
-import { BaseContext, ResolverMap } from "$live/engine/core/resolver.ts";
+import {
+  BaseContext,
+  Resolver,
+  ResolverMap,
+} from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
+import { Block, BlockModule } from "$live/engine/block.ts";
+import { mapObjKeys } from "$live/engine/core/utils.ts";
 
 export type FreshHandler<
   TConfig = any,
@@ -37,18 +43,43 @@ export interface ConfigProvider {
   get<T>(id: string): T;
 }
 
-export const configurable = (m: DecoManifest): DecoManifest => {
-  const {
-    islands: _islands,
-    routes: _routes,
-    definitions: _definitions,
-    baseUrl: _baseUrl,
-    config: _config,
-    ...rest
-  } = m;
-  const resolvers = (Object.values(rest) as ResolverMap[]).reduce(
-    (r, rm) => ({ ...r, ...rm }),
-    {} as ResolverMap
+const asManifest = (
+  d: DecoManifest
+): Record<string, Record<string, BlockModule>> =>
+  d as unknown as Record<string, Record<string, BlockModule>>;
+export const configurable = (
+  m: DecoManifest,
+  blocks: Block[]
+): DecoManifest => {
+  context.blocks = blocks;
+  const [newManifest, resolvers] = (context.blocks ?? []).reduce(
+    ([currMan, currMap], blk) => {
+      const blocks = asManifest(currMan)[blk.type] ?? {};
+      const decorated: Record<string, BlockModule> = blk.decorate
+        ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
+            blocks,
+            blk.decorate
+          )
+        : blocks;
+
+      const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
+        if (mod.preview) {
+          return { ...prv, ["Preview@" + key]: mod.preview };
+        }
+        return prv;
+      }, {} as ResolverMap);
+      const adapted = blk.adapt
+        ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
+            decorated,
+            blk.adapt
+          )
+        : {}; // if block has no adapt so it's not considered a resolver.
+      return [
+        { ...currMan, [blk.type]: decorated },
+        { ...currMap, ...adapted, ...previews },
+      ];
+    },
+    [m, {}] as [DecoManifest, ResolverMap]
   );
   const provider = useFileProvider("./config.json");
   const resolver = new Rezolver<FreshContext>({
@@ -57,7 +88,7 @@ export const configurable = (m: DecoManifest): DecoManifest => {
   });
   // should be set first
   context.configResolver = resolver;
-  context.manifest = m as DecoManifest;
+  context.manifest = newManifest;
 
   return context.manifest;
 };

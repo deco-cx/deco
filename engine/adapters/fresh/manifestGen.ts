@@ -1,73 +1,53 @@
+import blocks from "$live/blocks/index.ts";
 import {
-  Import,
-  ImportClause,
   ManifestBuilder,
   newManifestBuilder,
 } from "$live/engine/adapters/fresh/manifestBuilder.ts";
 import {
   Block,
-  BlockDefinitions,
+  BlockModuleRef,
   BlockType,
-  ImportString,
   ModuleAST,
 } from "$live/engine/block.ts";
 import { ASTNode } from "$live/engine/schema/ast.ts";
-import { denoDoc } from "$live/engine/schema/utils.ts";
 import { TransformContext } from "$live/engine/schema/transform.ts";
+import { denoDoc } from "$live/engine/schema/utils.ts";
 import { walk } from "https://deno.land/std@0.170.0/fs/walk.ts";
 import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
-import { fromFileUrl, join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { blocks } from "$live/blocks/index.ts";
-
-const blockTypeToImportClause = (
-  blockAlias: string,
-  imp: ImportString
-): [string, Import, string] => {
-  const [from, name] = imp.split("@");
-  if (name === "$") {
-    // if $ is used as name it means that the import clause is the default one (in other words: does not need to access .default)
-    return [from, { from, clauses: [{ alias: blockAlias }] }, blockAlias];
-  }
-  const [clause, ref]: [ImportClause, string] =
-    name === "" || name === undefined
-      ? [{ alias: blockAlias }, `${blockAlias}.default`]
-      : [
-          { import: name, as: `${blockAlias}$${name}` },
-          `${blockAlias}$${name}`,
-        ];
-  return [imp, { from, clauses: [clause] }, ref];
-};
+import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 
 const withDefinition =
-  (block: BlockType, adapt: boolean) =>
+  (block: BlockType, blockIdx: number) =>
   (
     blkN: number,
     man: ManifestBuilder,
-    { schemeables, imports }: BlockDefinitions
+    { inputSchema, outputSchema, functionRef }: BlockModuleRef
   ): ManifestBuilder => {
-    return imports.reduce((manz, imp, i) => {
-      const fAlias = `$${block}${blkN + i}`;
-      const [importKey, importClause, ref] = blockTypeToImportClause(
-        fAlias,
-        imp
-      );
-      const blockRef = {
-        kind: "js",
-        raw: { identifier: ref },
-      };
-      return manz.addImports(importClause).addValuesOnManifestKey(block, [
-        importKey,
+    const ref = `${"$".repeat(blockIdx)}${blkN}`;
+    const withInput = inputSchema ? man.addSchemeables(inputSchema) : man;
+    return withInput
+      .addOutputSchemeable(outputSchema, functionRef)
+      .addValuesOnManifestKey("functions", [
+        functionRef,
         {
           kind: "js",
-          raw: adapt
-            ? {
-                identifier: `${block}.default.adapt`,
-                params: [blockRef],
-              }
-            : blockRef,
+          raw: {
+            inputSchema: inputSchema?.id,
+            outputSchema: outputSchema?.id,
+          },
+        },
+      ])
+      .addImports({
+        from: functionRef,
+        clauses: [{ alias: ref }],
+      })
+      .addValuesOnManifestKey(block, [
+        functionRef,
+        {
+          kind: "js",
+          raw: { identifier: ref },
         },
       ]);
-    }, man.addSchemeables(...schemeables));
   };
 
 const addDefinitions = async (
@@ -79,7 +59,11 @@ const addDefinitions = async (
     exports: [],
     manifest: {},
     manifestDef: blocks.reduce((def, blk) => {
-      return { ...def, ...blk.defaultJSONSchemaDefinitions };
+      const [name = null, schema = null] = blk.baseSchema ?? [];
+      if (name && schema) {
+        return { ...def, [name]: schema };
+      }
+      return def;
     }, {}),
   });
 
@@ -89,38 +73,35 @@ const addDefinitions = async (
 
   const blockDefinitions = await Promise.all(
     blocks.map((blk) =>
-      Promise.all(
-        code.map((c) => blk.findModuleDefinitions(transformContext, c))
-      )
+      Promise.all(code.map((c) => blk.introspect(transformContext, c[0], c[1])))
     )
   );
 
   return blocks
     .reduce((manz, blk, i) => {
       const blkAlias = blk.type;
-      const man = manz.addImports({
-        from: (blk.import.startsWith("file://")
-          ? fromFileUrl(blk.import)
-          : blk.import
-        ).replace(transformContext.base, "."),
-        clauses: [{ alias: blkAlias }],
-      });
-      const useDef = withDefinition(
-        blkAlias,
-        (blk as { adapt: unknown }).adapt !== undefined
-      );
+      const useDef = withDefinition(blkAlias, i + 1);
       let totalBlks = 0;
       return blockDefinitions[i].reduce((nMan, def) => {
+        if (!def) {
+          return nMan;
+        }
         const n = useDef(totalBlks, nMan, def);
-        totalBlks += def.imports.length;
+        totalBlks += 1;
         return n;
-      }, man);
+      }, manz);
     }, initialManifest)
+    .addImports({
+      from: "$live/blocks/index.ts",
+      clauses: [{ as: "blocks" }],
+    })
     .addImports({
       from: "$live/engine/adapters/fresh/manifest.ts",
       clauses: [{ import: "configurable" }],
     })
-    .addExportDefault({ variable: { identifier: "configurable(manifest)" } });
+    .addExportDefault({
+      variable: { identifier: "configurable(manifest, blocks)" },
+    });
 };
 
 export const decoManifestBuilder = async (
