@@ -1,6 +1,6 @@
-import { createClient, SupabaseClient } from "supabase";
+import { supabase } from "./deps.ts";
 
-let client: SupabaseClient | null = null;
+let client: supabase.SupabaseClient | null = null;
 
 // From supabase docs:
 // "This key is safe to use in a browser if you have enabled Row Level Security for your tables and configured policies."
@@ -19,7 +19,7 @@ export function setupSupabase(endpoint: string, key: string) {
 
 export default function getSupabaseClient(accessToken?: string) {
   if (!client) {
-    client = createClient(userEndpoint, accessToken || userKey);
+    client = supabase.createClient(userEndpoint, accessToken || userKey);
   }
 
   return client;
