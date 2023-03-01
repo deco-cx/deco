@@ -1,12 +1,8 @@
+import type { HandlerContext } from "$fresh/server.ts";
 import type { IslandModule } from "$fresh/src/server/types.ts";
 import type { Manifest } from "$fresh/server.ts";
 import type { JSONSchema7 } from "json-schema";
 import { createServerTimings } from "$live/utils/timings.ts";
-import {
-  EffectFunction,
-  LoaderFunction,
-  MatchFunction,
-} from "$live/std/types.ts";
 
 export interface Node {
   label: string;
@@ -160,3 +156,33 @@ export type LiveState<T = unknown> = {
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
   global: T;
 };
+
+export type LoaderFunction<Props = any, Data = any, State = any> = (
+  req: Request,
+  ctx: HandlerContext<any, State>,
+  props: Props,
+) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
+
+export type MatchDuration = "request" | "session";
+
+export type MatchFunction<
+  Props = any,
+  Data = any,
+  State = any,
+> = (
+  req: Request,
+  ctx: HandlerContext<Data, State>,
+  props: Props,
+) => { isMatch: boolean; duration: MatchDuration };
+
+export type EffectFunction<
+  Props = any,
+  Data = any,
+  State = any,
+> = (
+  req: Request,
+  ctx: HandlerContext<Data, State>,
+  props: Props,
+) => Record<string, any>;
+
+export type LoaderReturnType<O = unknown> = O;

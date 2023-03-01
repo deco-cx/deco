@@ -82,7 +82,7 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
     case "LoaderReturnType": {
       const typeDef = findType(node.typeName, root);
       const isLiveType = typeDef?.kind === "import" &&
-        typeDef.importDef.src.endsWith("std/types.ts");
+        typeDef.importDef.src.endsWith("/types.ts");
 
       if (!isLiveType) {
         return;

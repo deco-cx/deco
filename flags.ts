@@ -2,7 +2,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { DecoManifest, Flag, LiveState } from "$live/types.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
-import { EffectFunction, MatchFunction } from "$live/std/types.ts";
+import { EffectFunction, MatchFunction } from "$live/types.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 
 const DECO_COOKIE = "dcxf_";

@@ -1,4 +1,4 @@
-import { MatchFunction } from "$live/std/types.ts";
+import { MatchFunction } from "$live/types.ts";
 
 export interface Props {
   traffic: number;
