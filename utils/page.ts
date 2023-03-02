@@ -341,6 +341,9 @@ export function getMetadataForSectionEditor({
   return { ownPropsSchema, functionsForComponent };
 }
 
+export const getSectionPath = (sectionKey: string) =>
+  `/_live/workbench/sections/${sectionKey.replace("./sections/", "")}`;
+
 export const createPageForSection = (
   sectionKey: string,
   data: PageData,
@@ -348,7 +351,7 @@ export const createPageForSection = (
   id: -1,
   name: sectionKey,
   // TODO: Use path join
-  path: `/_live/workbench/sections/${sectionKey.replace("./sections/", "")}`,
+  path: getSectionPath(sectionKey),
   data,
   state: "dev",
 });
