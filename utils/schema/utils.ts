@@ -5,7 +5,7 @@ import {
   getSchemaId,
   tsTypeToSchema,
 } from "./transform.ts";
-import { Schema } from "$live/types.ts";
+import { JSONSchema } from "$live/types.ts";
 import { basename } from "std/path/mod.ts";
 
 const withErrorPath = <T>(cb: (x: string) => T) => async (path: string) => {
@@ -81,7 +81,7 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
 
   const inputSchema = propType && await tsTypeToSchema(propType, nodes);
   const outputType = returnType && await tsTypeToSchema(returnType, nodes);
-  const outputSchema: Schema | null = outputType && {
+  const outputSchema: JSONSchema | null = outputType && {
     type: "object",
     properties: {
       data: {
@@ -103,7 +103,7 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
 });
 
 // TODO: Should we extract defaultProps from the schema here?
-export const generatePropsForSchema = (schema: Schema | null | undefined) => {
+export const generatePropsForSchema = (schema: JSONSchema | null | undefined) => {
   if (schema?.type == null || Array.isArray(schema.type)) {
     return null;
   }
