@@ -166,7 +166,18 @@ const parseJSDocAttribute = (key: string, value: string) => {
   }
 };
 
-const jsDocToSchema = (node: JSDoc) =>
+const parseJSDocType = (value: string, type: string) => {
+  switch (type) {
+    case "number":
+      return Number(value);
+    case "boolean":
+      return Boolean(value);
+    default:
+      return value;
+  }
+};
+
+const jsDocToSchema = (node: JSDoc, type?: string | string[]) =>
   node.tags
     ? Object.fromEntries(
       node.tags
@@ -175,6 +186,13 @@ const jsDocToSchema = (node: JSDoc) =>
 
           const key = match?.groups?.key;
           const value = match?.groups?.value;
+
+          if (
+            key === "default" && typeof value === "string" &&
+            typeof type === "string"
+          ) {
+            return [key, parseJSDocType(value, type)] as const;
+          }
 
           if (typeof key === "string" && typeof value === "string") {
             const parsedValue = parseJSDocAttribute(key, value);
@@ -193,12 +211,13 @@ const typeDefToSchema = async (
 ): Promise<JSONSchema> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
-      const jsDocSchema = property.jsDoc && jsDocToSchema(property.jsDoc);
       const schema = await tsTypeToSchema(
         property.tsType,
         root,
         property.optional,
       );
+      const jsDocSchema = property.jsDoc &&
+        jsDocToSchema(property.jsDoc, schema.type);
 
       return [property.name, {
         ...schema,
@@ -287,7 +306,10 @@ export const tsTypeToSchema = async (
   }
 };
 
-const docToSchema = async (node: ASTNode, root: ASTNode[]): Promise<JSONSchema> => {
+const docToSchema = async (
+  node: ASTNode,
+  root: ASTNode[],
+): Promise<JSONSchema> => {
   const kind = node.kind;
 
   switch (kind) {
@@ -298,11 +320,11 @@ const docToSchema = async (node: ASTNode, root: ASTNode[]): Promise<JSONSchema> 
       return typeDefToSchema(node.interfaceDef, root);
 
     case "typeAlias": {
-      const jsDocSchema = node.jsDoc && jsDocToSchema(node.jsDoc);
       const schema = await tsTypeToSchema(
         node.typeAliasDef.tsType,
         root,
       );
+      const jsDocSchema = node.jsDoc && jsDocToSchema(node.jsDoc, schema.type);
 
       return {
         ...jsDocSchema,
