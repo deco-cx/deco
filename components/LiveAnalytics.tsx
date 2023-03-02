@@ -7,45 +7,59 @@ import type { Flags, Page } from "$live/types.ts";
 const innerHtml = (
   { id, path, flags = {} }: Partial<Page> & { flags?: Flags },
 ) => `
+const pushToJitsu = (...args) => typeof window.jitsu === 'function' && window.jitsu(...args)
+const pushToDatalayer = (arg) => window.dayaLayer && window.dayaLayer.push && window.dataLayer.push(arg)
+
 const onWebVitalsReport = (event) => {
-  window.jitsu('track', 'web-vitals', event);
+  pushToJitsu('track', 'web-vitals', event);
 };
 
 /* Send exception error to jitsu */
-const onError = ( message, url, lineNo, columnNo, error) => {
-    window.jitsu('track', 'error', {error_1type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
+const onError = (message, url, lineNo, columnNo, error) => {
+  pushToJitsu('track', 'error', { error_1type: "Exception", message, url, lineNo, columnNo, error_stack: error.stack, error_name: error.name })
 }
 
 const init = async () => {
-  if (typeof window.jitsu !== "function") {
-    return;
-  }
-
   /* Send scriptLoad event to jitsu */
-  __decoLoadingErrors.forEach((e) => window.jitsu('track', 'error',{error_type:"ScriptLoad", url: e.src}))
+  __decoLoadingErrors.forEach((e) => pushToJitsu('track', 'error', { error_type: "ScriptLoad", url: e.src }))
 
   /* Add these trackers to all analytics sent to our server */
-  window.jitsu('set', { page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", 
-    active_flags: "${Object.keys(flags).join(",")}"
-   });
-  /* Send page-view event */
-  window.jitsu('track', 'pageview');
+  const flags = ${JSON.stringify(Object.entries(flags))};
 
-  /* Listen web-vitals */
-  const { onCLS, onFID, onLCP } = await import("https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js");
-      
-  onCLS(onWebVitalsReport);
-  onFID(onWebVitalsReport);
-  onLCP(onWebVitalsReport);
+pushToJitsu('set', {
+  page_id: "${id}",
+  page_path: "${path}",
+  site_id: "${context.siteId}",
+  active_flags: flags.map(([key]) => key).join(",")
+});
+
+for (const [key, value] of flags) {
+  pushToDatalayer({
+    'event': 'live-flag',
+    'live-flagKey': key,
+    'live-flagValue': value,
+  });
+}
+
+/* Send page-view event */
+pushToJitsu('track', 'pageview');
+
+/* Listen web-vitals */
+const { onCLS, onFID, onLCP } = await import("https://esm.sh/v110/web-vitals@3.1.1/es2022/web-vitals.js");
+
+onCLS(onWebVitalsReport);
+onFID(onWebVitalsReport);
+onLCP(onWebVitalsReport);
 };
-  /* Send exception error event to jitsu */
-  window.addEventListener('error', function ({message, url, lineNo, columnNo, error}) {
-    onError(message, url, lineNo, columnNo, error)})
+/* Send exception error event to jitsu */
+window.addEventListener('error', function ({ message, url, lineNo, columnNo, error }) {
+  onError(message, url, lineNo, columnNo, error)
+})
 
-  if (document.readyState === 'complete') {
-      init();
-  } else {
-      window.addEventListener('load', init);
+if (document.readyState === 'complete') {
+  init();
+} else {
+  window.addEventListener('load', init);
 };
 `;
 
