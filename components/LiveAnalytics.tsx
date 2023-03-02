@@ -26,31 +26,32 @@ const init = async () => {
   /* Add these trackers to all analytics sent to our server */
   const flags = ${JSON.stringify(Object.entries(flags))};
 
-pushToJitsu('set', {
-  page_id: "${id}",
-  page_path: "${path}",
-  site_id: "${context.siteId}",
-  active_flags: flags.map(([key]) => key).join(",")
-});
-
-for (const [key, value] of flags) {
-  pushToDatalayer({
-    'event': 'live-flag',
-    'live-flagKey': key,
-    'live-flagValue': value,
+  pushToJitsu('set', {
+    page_id: "${id}",
+    page_path: "${path}",
+    site_id: "${context.siteId}",
+    active_flags: flags.map(([key]) => key).join(",")
   });
-}
 
-/* Send page-view event */
-pushToJitsu('track', 'pageview');
+  for (const [key, value] of flags) {
+    pushToDatalayer({
+      'event': 'live-flag',
+      'live-flagKey': key,
+      'live-flagValue': JSON.stringify(value),
+    });
+  }
 
-/* Listen web-vitals */
-const { onCLS, onFID, onLCP } = await import("https://esm.sh/v110/web-vitals@3.1.1/es2022/web-vitals.js");
+  /* Send page-view event */
+  pushToJitsu('track', 'pageview');
 
-onCLS(onWebVitalsReport);
-onFID(onWebVitalsReport);
-onLCP(onWebVitalsReport);
+  /* Listen web-vitals */
+  const { onCLS, onFID, onLCP } = await import("https://esm.sh/v110/web-vitals@3.1.1/es2022/web-vitals.js");
+
+  onCLS(onWebVitalsReport);
+  onFID(onWebVitalsReport);
+  onLCP(onWebVitalsReport);
 };
+
 /* Send exception error event to jitsu */
 window.addEventListener('error', function ({ message, url, lineNo, columnNo, error }) {
   onError(message, url, lineNo, columnNo, error)
