@@ -28,9 +28,7 @@ export async function loadLivePage(
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
-  const sectionPathStart = "/_live/workbench/sections/";
-  const sectionName = url.pathname.startsWith(sectionPathStart) &&
-    url.pathname.replace(sectionPathStart, "");
+  const blockName = url.searchParams.get("key");
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
 
   const pageWithParams = await (async (): Promise<PageWithParams | null> => {
@@ -44,8 +42,8 @@ export async function loadLivePage(
       [];
     ctx.state.global = loadGlobal({ globalSettings });
 
-    if (sectionName) {
-      return fetchPageFromSection(sectionName, context.siteId);
+    if (blockName) {
+      return fetchPageFromSection(blockName, context.siteId);
     }
     if (pageId) {
       return fetchPageFromId(pageId, url.pathname);
@@ -179,9 +177,8 @@ export const fetchPageFromSection = async (
   siteId: number,
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
-  const sectionKey = `./sections/${sectionFileName}`;
   const { section: instance, functions } = createSectionFromSectionKey(
-    sectionKey,
+    sectionFileName,
   );
 
   const page = createPageForSection(sectionFileName, {
@@ -189,7 +186,8 @@ export const fetchPageFromSection = async (
     functions,
   });
 
-  if (!doesSectionExist(sectionKey)) {
+  // Handle ./sections/SectionName.tsx and $imported/section/Section.tsx
+  if (!doesSectionExist(sectionFileName)) {
     throw new Error(`Section at ${sectionFileName} Not Found`);
   }
 
