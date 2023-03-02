@@ -342,12 +342,13 @@ export function getMetadataForSectionEditor({
 }
 
 export const createPageForSection = (
-  sectionName: string,
+  sectionKey: string,
   data: PageData,
 ): Page => ({
   id: -1,
-  name: sectionName,
-  path: `/_live/workbench/block?key=${sectionName}`,
+  name: sectionKey,
+  // TODO: Use path join
+  path: `/_live/workbench/sections/${sectionKey.replace("./sections/", "")}`,
   data,
   state: "dev",
 });
