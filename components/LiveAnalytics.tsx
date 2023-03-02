@@ -7,10 +7,8 @@ import type { Flags, Page } from "$live/types.ts";
 const innerHtml = (
   { id, path, flags = {} }: Partial<Page> & { flags?: Flags },
 ) => `
-window.dataLayer = window.dataLayer || [];
-
-const pushToJitsu = (...args) => typeof window.jitsu === 'function' && window.jitsu(...args)
-const pushToDatalayer = (arg) => window.dataLayer.push(arg)
+const pushToJitsu = (...args) => typeof window.jitsu === 'function' && window.jitsu(...args);
+const pushToDatalayer = (arg) => typeof window.dataLayer !== 'undefined' && window.dataLayer.push(arg);
 
 const onWebVitalsReport = (event) => {
   pushToJitsu('track', 'web-vitals', event);
