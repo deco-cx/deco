@@ -1,4 +1,4 @@
-import type { Schema } from "$live/types.ts";
+import type { JSONSchema } from "$live/types.ts";
 import type {
   ASTNode,
   ImportDefNode,
@@ -42,7 +42,7 @@ export const denoDoc = async (path: string): Promise<ASTNode[]> => {
   return JSON.parse(stdout);
 };
 
-export const getSchemaId = async (schema: Schema) => {
+export const getSchemaId = async (schema: JSONSchema) => {
   const hashBuffer = await crypto.subtle.digest(
     "SHA-1",
     new TextEncoder().encode(JSON.stringify(schema)),
@@ -190,7 +190,7 @@ const jsDocToSchema = (node: JSDoc) =>
 const typeDefToSchema = async (
   node: TypeDef,
   root: ASTNode[],
-): Promise<Schema> => {
+): Promise<JSONSchema> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
       const jsDocSchema = property.jsDoc && jsDocToSchema(property.jsDoc);
@@ -224,7 +224,7 @@ export const tsTypeToSchema = async (
   node: TsType,
   root: ASTNode[],
   optional?: boolean,
-): Promise<Schema> => {
+): Promise<JSONSchema> => {
   const kind = node.kind;
 
   switch (kind) {
@@ -287,7 +287,7 @@ export const tsTypeToSchema = async (
   }
 };
 
-const docToSchema = async (node: ASTNode, root: ASTNode[]): Promise<Schema> => {
+const docToSchema = async (node: ASTNode, root: ASTNode[]): Promise<JSONSchema> => {
   const kind = node.kind;
 
   switch (kind) {

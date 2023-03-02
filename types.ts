@@ -1,8 +1,11 @@
+import { createServerTimings } from "$live/utils/timings.ts";
 import type { HandlerContext } from "$fresh/server.ts";
 import type { IslandModule } from "$fresh/src/server/types.ts";
 import type { Manifest } from "$fresh/server.ts";
-import type { jsonSchema } from "./deps.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
+import type {
+  JSONSchema7,
+  JSONSchema7Definition,
+} from "https://esm.sh/@types/json-schema@7.0.11?pin=v110";
 
 export interface Node {
   label: string;
@@ -11,10 +14,11 @@ export interface Node {
   children?: Node[];
 }
 
-export type Schema = jsonSchema.JSONSchema7;
+export type JSONSchema = JSONSchema7;
+export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface Module extends IslandModule {
-  schema?: jsonSchema.JSONSchema7;
+  schema?: JSONSchema;
 }
 
 export interface FunctionModule {
@@ -28,8 +32,8 @@ export interface DecoManifest extends Manifest {
   schemas: Record<
     string,
     {
-      inputSchema: jsonSchema.JSONSchema7 | null;
-      outputSchema: jsonSchema.JSONSchema7 | null;
+      inputSchema: JSONSchema | null;
+      outputSchema: JSONSchema | null;
     }
   >;
 }
@@ -62,7 +66,7 @@ export interface PageSection {
 }
 
 export interface PageFunction extends PageSection {
-  outputSchema?: jsonSchema.JSONSchema7;
+  outputSchema?: JSONSchema;
 }
 
 export interface PageData {
@@ -132,7 +136,7 @@ export interface Flags {
 export type Mode = "edit" | "none";
 
 export interface WithSchema {
-  schema?: jsonSchema.JSONSchema7;
+  schema?: JSONSchema;
 }
 
 export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;

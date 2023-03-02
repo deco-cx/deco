@@ -12,13 +12,12 @@ import { walk } from "std/fs/walk.ts";
 
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
 import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
-
-import { jsonSchema } from "./deps.ts";
 import {
   getSchemaFromLoaderExport,
   getSchemaFromSectionExport,
 } from "./utils/schema/utils.ts";
 import { unique } from "./utils/unique.ts";
+import type { JSONSchema } from "./types.ts";
 
 /**
  * This interface represents an intermediate state used to generate
@@ -34,8 +33,8 @@ interface DevManifestData {
   schemas: Record<
     string,
     {
-      inputSchema: jsonSchema.JSONSchema7 | null;
-      outputSchema: jsonSchema.JSONSchema7 | null;
+      inputSchema: JSONSchema | null;
+      outputSchema: JSONSchema | null;
     }
   >;
 }
