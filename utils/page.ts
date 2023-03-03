@@ -43,6 +43,26 @@ export const propertyHasId = (
   typeof propDefinition === "object" && "$id" in propDefinition
 );
 
+/** Property is undefined | boolean | object, so if property[key] is === "object" and $id in property[key] */
+export const propertyHasReturnType = (
+  propDefinition: JSONSchemaDefinition | undefined,
+): propDefinition is JSONSchema => (
+  typeof propDefinition === "object" && propDefinition.properties ? "returnType" in propDefinition.properties : false
+);
+
+export const getReturnType = (
+  propDefinition: JSONSchemaDefinition | undefined,
+) => {
+  if (typeof propDefinition !== "object") {
+    return null;
+  }
+  const returnTypeProp = propDefinition.properties?.["returnType"];
+  if (typeof returnTypeProp !== "object") {
+    return null;
+  }
+  return returnTypeProp.const as "string";
+}
+
 export const isNotNullOrUndefined = <T extends unknown>(
   item: T | null | undefined,
 ): item is T => item !== null && item !== undefined;
@@ -96,7 +116,7 @@ export const availableFunctionsForSection = (
 
   const availableFunctions = Object.keys(sectionInputSchema.properties ?? {})
     .filter((propName) =>
-      propertyHasId(sectionInputSchema.properties?.[propName])
+      propertyHasReturnType(sectionInputSchema.properties?.[propName])
     )
     .map((sectionPropKey) => {
       const propDefinition = sectionInputSchema.properties?.[sectionPropKey];
@@ -105,7 +125,11 @@ export const availableFunctionsForSection = (
       }
 
       const sectionPropTitle = propDefinition.title;
-      const prop$id = propDefinition.$id;
+      const returnTypeProp = propDefinition.properties?.["returnType"];
+      if (typeof returnTypeProp !== "object") {
+        return null;
+      }
+      const prop$id = returnTypeProp.const as "string";
 
       const availableFunctions = prop$id
         ? functionsAvailableByOutputSchema$id[prop$id] || []

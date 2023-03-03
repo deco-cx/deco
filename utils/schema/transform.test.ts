@@ -139,7 +139,11 @@ Deno.test("Built in types generation", async () => {
       },
       loaderReturnType: {
         format: "live-function",
-        "$id": "168110fffa5b1102c412d4eb453091e0cdfc8ba1",
+        properties: {
+          returnType: {
+            const: "168110fffa5b1102c412d4eb453091e0cdfc8ba1",
+          },
+        },  
         title: "Loader Return Type",
         type: "string",
       },
