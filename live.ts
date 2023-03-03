@@ -50,12 +50,12 @@ export const context: LiveContext = {
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx."
+      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
     );
   }
   if (!liveOptions.siteId) {
     throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}"
+      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
     );
   }
 
@@ -69,7 +69,7 @@ export const withLive = (liveOptions: LiveOptions) => {
   context.loginUrl = liveOptions.loginUrl;
 
   console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`
+    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
@@ -117,7 +117,7 @@ export const withLive = (liveOptions: LiveOptions) => {
           url,
           pageId: ctx.state.page?.id,
           begin,
-        })
+        }),
       );
     }
 
@@ -144,7 +144,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return acc;
       },
-      { selectedPageIds: [] } as PageOptions
+      { selectedPageIds: [] } as PageOptions,
     );
 
     const getResponse = async () => {

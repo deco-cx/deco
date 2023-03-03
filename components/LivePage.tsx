@@ -1,9 +1,8 @@
-import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
-import { PreactComponent } from "$live/blocks/types.ts";
 import { SectionInstance } from "$live/blocks/section.ts";
+import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 
 export interface Props {
-  sections: PreactComponent<SectionInstance>[];
+  sections: SectionInstance[];
 }
 // FIXME MISSING UniqueID and Data-manifest-key
 

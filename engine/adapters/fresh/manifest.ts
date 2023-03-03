@@ -1,38 +1,38 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext, Manifest } from "$fresh/server.ts";
+import blocks from "$live/blocks/index.ts";
 import defaultResolvers from "$live/engine/adapters/fresh/defaults.ts";
 import { useFileProvider } from "$live/engine/adapters/fresh/fileProvider.ts";
+import { BlockModule } from "$live/engine/block.ts";
 import { Rezolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
-import { Block, BlockModule } from "$live/engine/block.ts";
-import { mapObjKeys } from "$live/engine/core/utils.ts";
+import { Schemas } from "./manifestBuilder.ts";
+import { LiveConfig } from "$live/blocks/types.ts";
 
 export type FreshHandler<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response
+  Resp = Response,
 > = (
   request: Request,
-  ctx: HandlerContext<TData, TState & { $live: TConfig }>
+  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>,
 ) => PromiseOrValue<Resp>;
 
-export interface FreshContext<Data = any, State = any> extends BaseContext {
-  context: HandlerContext<Data, State>;
+export interface FreshContext<Data = any, State = any, TConfig = any>
+  extends BaseContext {
+  context: HandlerContext<Data, LiveConfig<State, TConfig>>;
   request: Request;
 }
 
 export interface DecoManifest extends Manifest {
-  definitions: Record<
-    string,
-    { inputSchema: unknown; outputSchema: unknown } | any
-  >;
+  schemas: Schemas;
 }
 
 export type LiveState<T, TState = unknown> = TState & {
@@ -44,42 +44,40 @@ export interface ConfigProvider {
 }
 
 const asManifest = (
-  d: DecoManifest
+  d: DecoManifest,
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
-export const configurable = (
-  m: DecoManifest,
-  blocks: Block[]
-): DecoManifest => {
+export const configurable = (m: DecoManifest): DecoManifest => {
   context.blocks = blocks;
   const [newManifest, resolvers] = (context.blocks ?? []).reduce(
     ([currMan, currMap], blk) => {
       const blocks = asManifest(currMan)[blk.type] ?? {};
       const decorated: Record<string, BlockModule> = blk.decorate
         ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
-            blocks,
-            blk.decorate
-          )
+          blocks,
+          blk.decorate,
+        )
         : blocks;
 
       const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
-        if (mod.preview) {
-          return { ...prv, ["Preview@" + key]: mod.preview };
+        const previewFunc = mod.preview ?? blk.defaultPreview;
+        if (previewFunc) {
+          return { ...prv, ["Preview@" + key]: previewFunc };
         }
         return prv;
       }, {} as ResolverMap);
       const adapted = blk.adapt
         ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
-            decorated,
-            blk.adapt
-          )
+          decorated,
+          blk.adapt,
+        )
         : {}; // if block has no adapt so it's not considered a resolver.
       return [
         { ...currMan, [blk.type]: decorated },
         { ...currMap, ...adapted, ...previews },
       ];
     },
-    [m, {}] as [DecoManifest, ResolverMap]
+    [m, {}] as [DecoManifest, ResolverMap],
   );
   const provider = useFileProvider("./config.json");
   const resolver = new Rezolver<FreshContext>({

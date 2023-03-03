@@ -3,6 +3,8 @@ export type Entries<T> = {
   [K in keyof T]: [K, T[K]];
 }[keyof T][];
 
+export type UnPromisify<T> = T extends Promise<infer U> ? U : T;
+
 export type SameKeys<T> = {
   [key in keyof T]: unknown;
 };

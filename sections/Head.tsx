@@ -1,5 +1,5 @@
 import { asset, Head } from "$fresh/runtime.ts";
-import { Section } from "$live/blocks/section.ts";
+import { PageInstance } from "../blocks/page.ts";
 
 export interface Props {
   title?: string;

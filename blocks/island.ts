@@ -1,62 +1,8 @@
-import { Block } from "$live/engine/block.ts";
-import { findExport } from "$live/engine/schema/utils.ts";
-import { JSX } from "preact";
-import { nodeToFunctionDefinition } from "../engine/schema/utils.ts";
-import { ComponentFunc, PreactComponent } from "./types.ts";
-import { tsTypeToSchemeable } from "../engine/schema/transform.ts";
+import { InstanceOf } from "$live/blocks/types.ts";
+import { newComponentBlock } from "$live/blocks/utils.ts";
 
-export type IslandInstance = JSX.Element;
-export type Island<TProps = unknown> = ComponentFunc<TProps, IslandInstance>;
+export type IslandInstance = InstanceOf<typeof island, "#/root/islands">;
 
-const islandAddr = "$live/blocks/island.ts@Island";
+const island = newComponentBlock("islands");
 
-const islandJSONSchema = {
-  $ref: `#/definitions/${islandAddr}`,
-};
-
-const islandBlock: Block<Island, PreactComponent<IslandInstance>> = {
-  defaultPreview: (island) => island,
-  type: "islands",
-  baseSchema: [
-    islandAddr,
-    {
-      type: "object",
-      additionalProperties: true,
-    },
-  ],
-  introspect: async (ctx, path, ast) => {
-    if (!path.startsWith("./islands")) {
-      return undefined;
-    }
-    const func = findExport("default", ast);
-    if (!func) {
-      return undefined;
-    }
-    const fn = nodeToFunctionDefinition(func);
-    if (!fn) {
-      throw new Error(
-        `Default export of ${path} needs to be a const variable or a function`
-      );
-    }
-    const inputTsType = fn.params.length > 0 ? fn.params[0] : undefined;
-    return {
-      functionRef: path,
-      inputSchema: inputTsType
-        ? await tsTypeToSchemeable(ctx, inputTsType, [path, ast])
-        : undefined,
-      outputSchema: {
-        id: islandAddr,
-        type: "inline",
-        value: islandJSONSchema,
-      },
-    };
-  },
-  adapt:
-    ({ default: Component }) =>
-    (props) => ({
-      Component,
-      props,
-    }),
-};
-
-export default islandBlock;
+export default island;

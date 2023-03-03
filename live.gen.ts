@@ -3,94 +3,415 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import config from "./deno.json" assert { type: "json" };
-import * as $0 from "./routes/[...catchall].tsx";
-import * as $$$0 from "./pages/LivePage.tsx";
-import * as $$$$0 from "./sections/Head.tsx";
-import blocks from "$live/blocks/index.ts";
+import * as $$0 from "./routes/[...catchall].tsx";
+import * as $$$$0 from "./handlers/router.ts";
+import * as $$$$1 from "./handlers/fresh.ts";
+import * as $$$$$0 from "./pages/LivePage.tsx";
+import * as $$$$$$0 from "./sections/Head.tsx";
+import * as $$$$$$$0 from "./matchers/MatchDate.ts";
+import * as $$$$$$$1 from "./matchers/MatchUserAgent.ts";
+import * as $$$$$$$2 from "./matchers/MatchSite.ts";
+import * as $$$$$$$3 from "./matchers/MatchMulti.ts";
+import * as $$$$$$$4 from "./matchers/MatchRandom.ts";
+import * as $$$$$$$5 from "./matchers/MatchEnvironment.ts";
+import * as $$$$$$$6 from "./matchers/MatchAlways.ts";
+import * as $$$$$$$$0 from "./flags/audience.ts";
+import * as $$$$$$$$1 from "./flags/everyone.ts";
 import { configurable } from "$live/engine/adapters/fresh/manifest.ts";
 
 const manifest = {
-  "functions": {
-    "./routes/[...catchall].tsx": {
-      "inputSchema":
-        "./routes/[...catchall].tsx@d01232b2-892f-426f-93cd-bdbb23855065",
-      "outputSchema": "$live/blocks/route.ts@Response",
-    },
-    "./pages/LivePage.tsx": {
-      "inputSchema": "./components/LivePage.tsx@Props",
-      "outputSchema": "$live/blocks/page.ts@Page",
-    },
-    "./sections/Head.tsx": {
-      "inputSchema": "./sections/Head.tsx@Props",
-      "outputSchema": "$live/blocks/section.ts@Section",
-    },
-  },
   "routes": {
-    "./routes/[...catchall].tsx": $0,
+    "./routes/[...catchall].tsx": $$0,
+  },
+  "handlers": {
+    "./handlers/router.ts": $$$$0,
+    "./handlers/fresh.ts": $$$$1,
   },
   "pages": {
-    "./pages/LivePage.tsx": $$$0,
+    "./pages/LivePage.tsx": $$$$$0,
   },
   "sections": {
-    "./sections/Head.tsx": $$$$0,
+    "./sections/Head.tsx": $$$$$$0,
+  },
+  "matchers": {
+    "./matchers/MatchDate.ts": $$$$$$$0,
+    "./matchers/MatchUserAgent.ts": $$$$$$$1,
+    "./matchers/MatchSite.ts": $$$$$$$2,
+    "./matchers/MatchMulti.ts": $$$$$$$3,
+    "./matchers/MatchRandom.ts": $$$$$$$4,
+    "./matchers/MatchEnvironment.ts": $$$$$$$5,
+    "./matchers/MatchAlways.ts": $$$$$$$6,
+  },
+  "flags": {
+    "./flags/audience.ts": $$$$$$$$0,
+    "./flags/everyone.ts": $$$$$$$$1,
   },
   "islands": {},
   "config": config,
   "baseUrl": import.meta.url,
-  "definitions": {
-    "./routes/[...catchall].tsx@d01232b2-892f-426f-93cd-bdbb23855065": {
-      "type": "object",
-      "properties": {
-        "component": {
-          "title": "Component",
-          "$ref": "#/definitions/$live/blocks/page.ts@Page",
+  "schemas": {
+    "definitions": {
+      "./routes/[...catchall].tsx@7d819057-b845-4046-abf6-049f6f9c1760": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "component": { "title": "Component", "$ref": "#/root/pages" },
+        },
+        "required": ["component"],
+        "$id":
+          "./routes/[...catchall].tsx@7d819057-b845-4046-abf6-049f6f9c1760",
+      },
+      "./routes/[...catchall].tsx": {
+        "type": "object",
+        "allOf": [{
+          "$ref":
+            "./routes/[...catchall].tsx@7d819057-b845-4046-abf6-049f6f9c1760",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./routes/[...catchall].tsx" },
+        },
+        "$id": "./routes/[...catchall].tsx",
+      },
+      "record<string, HandlerInstance>": {
+        "title": "Record",
+        "type": "object",
+        "additionalProperties": { "$ref": "#/root/handlers" },
+        "$id": "record<string, HandlerInstance>",
+      },
+      "./handlers/router.ts@RouterConfig": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "base": { "title": "Base", "type": ["string", "null"] },
+          "routes": {
+            "title": "Routes",
+            "$ref": "record<string, HandlerInstance>",
+          },
+        },
+        "required": ["routes"],
+        "$id": "./handlers/router.ts@RouterConfig",
+      },
+      "./handlers/router.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./handlers/router.ts@RouterConfig" }],
+        "required": ["__resolveType"],
+        "properties": { "__resolveType": { "const": "./handlers/router.ts" } },
+        "$id": "./handlers/router.ts",
+      },
+      "./handlers/fresh.ts@FreshConfig": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "component": { "title": "Component", "$ref": "#/root/pages" },
+        },
+        "required": ["component"],
+        "$id": "./handlers/fresh.ts@FreshConfig",
+      },
+      "./handlers/fresh.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./handlers/fresh.ts@FreshConfig" }],
+        "required": ["__resolveType"],
+        "properties": { "__resolveType": { "const": "./handlers/fresh.ts" } },
+        "$id": "./handlers/fresh.ts",
+      },
+      "./components/LivePage.tsx@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "sections": {
+            "title": "Sections",
+            "type": "array",
+            "items": { "$ref": "#/root/sections" },
+          },
+        },
+        "required": ["sections"],
+        "$id": "./components/LivePage.tsx@Props",
+      },
+      "./pages/LivePage.tsx": {
+        "type": "object",
+        "allOf": [{ "$ref": "./components/LivePage.tsx@Props" }],
+        "required": ["__resolveType"],
+        "properties": { "__resolveType": { "const": "./pages/LivePage.tsx" } },
+        "$id": "./pages/LivePage.tsx",
+      },
+      "./sections/Head.tsx@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "title": { "title": "Title", "type": ["string", "null"] },
+          "description": { "title": "Description", "type": ["string", "null"] },
+          "url": { "title": "Url", "type": ["string", "null"] },
+          "imageUrl": { "title": "Image Url", "type": ["string", "null"] },
+          "faviconUrl": { "title": "Favicon Url", "type": ["string", "null"] },
+          "styleUrls": {
+            "title": "Style Urls",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "inlineStyles": {
+            "title": "Inline Styles",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "scriptUrls": {
+            "title": "Script Urls",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "inlineScripts": {
+            "title": "Inline Scripts",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "themeColor": { "title": "Theme Color", "type": ["string", "null"] },
+        },
+        "required": [],
+        "$id": "./sections/Head.tsx@Props",
+      },
+      "./sections/Head.tsx": {
+        "type": "object",
+        "allOf": [{ "$ref": "./sections/Head.tsx@Props" }],
+        "required": ["__resolveType"],
+        "properties": { "__resolveType": { "const": "./sections/Head.tsx" } },
+        "$id": "./sections/Head.tsx",
+      },
+      "./matchers/MatchDate.ts@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "start": {
+            "title": "Start",
+            "type": ["string", "null"],
+            "format": "date-time",
+          },
+          "end": {
+            "title": "End",
+            "type": ["string", "null"],
+            "format": "date-time",
+          },
+          "session": { "title": "Session", "type": "boolean" },
+        },
+        "required": ["session"],
+        "$id": "./matchers/MatchDate.ts@Props",
+      },
+      "./matchers/MatchDate.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./matchers/MatchDate.ts@Props" }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./matchers/MatchDate.ts" },
+        },
+        "$id": "./matchers/MatchDate.ts",
+      },
+      "./matchers/MatchUserAgent.ts@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "includes": { "title": "Includes", "type": ["string", "null"] },
+          "match": { "title": "Match", "type": ["string", "null"] },
+        },
+        "required": [],
+        "$id": "./matchers/MatchUserAgent.ts@Props",
+      },
+      "./matchers/MatchUserAgent.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./matchers/MatchUserAgent.ts@Props" }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./matchers/MatchUserAgent.ts" },
+        },
+        "$id": "./matchers/MatchUserAgent.ts",
+      },
+      "./matchers/MatchSite.ts@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": { "siteId": { "title": "Site Id", "type": "number" } },
+        "required": ["siteId"],
+        "$id": "./matchers/MatchSite.ts@Props",
+      },
+      "./matchers/MatchSite.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./matchers/MatchSite.ts@Props" }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./matchers/MatchSite.ts" },
+        },
+        "$id": "./matchers/MatchSite.ts",
+      },
+      "./matchers/MatchMulti.ts@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "op": {
+            "title": "Op",
+            "type": "string",
+            "anyOf": [{ "type": "string", "const": "or" }, {
+              "type": "string",
+              "const": "and",
+            }],
+          },
+          "matchers": {
+            "title": "Matchers",
+            "type": "array",
+            "items": { "$ref": "#/root/matchers" },
+          },
+        },
+        "required": ["op", "matchers"],
+        "$id": "./matchers/MatchMulti.ts@Props",
+      },
+      "./matchers/MatchMulti.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./matchers/MatchMulti.ts@Props" }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./matchers/MatchMulti.ts" },
+        },
+        "$id": "./matchers/MatchMulti.ts",
+      },
+      "./matchers/MatchRandom.ts@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "traffic": { "title": "Traffic", "type": "number" },
+          "session": { "title": "Session", "type": "boolean" },
+        },
+        "required": ["traffic", "session"],
+        "$id": "./matchers/MatchRandom.ts@Props",
+      },
+      "./matchers/MatchRandom.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./matchers/MatchRandom.ts@Props" }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./matchers/MatchRandom.ts" },
+        },
+        "$id": "./matchers/MatchRandom.ts",
+      },
+      "./matchers/MatchEnvironment.ts@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "environment": {
+            "title": "Environment",
+            "type": "string",
+            "anyOf": [{ "type": "string", "const": "production" }, {
+              "type": "string",
+              "const": "development",
+            }],
+          },
+        },
+        "required": ["environment"],
+        "$id": "./matchers/MatchEnvironment.ts@Props",
+      },
+      "./matchers/MatchEnvironment.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./matchers/MatchEnvironment.ts@Props" }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./matchers/MatchEnvironment.ts" },
+        },
+        "$id": "./matchers/MatchEnvironment.ts",
+      },
+      "./matchers/MatchAlways.ts": {
+        "type": "object",
+        "allOf": [],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": { "const": "./matchers/MatchAlways.ts" },
+        },
+        "$id": "./matchers/MatchAlways.ts",
+      },
+      "record<string, Resolvable>": {
+        "title": "Record",
+        "type": "object",
+        "additionalProperties": { "$ref": "#/root/state" },
+        "$id": "record<string, Resolvable>",
+      },
+      "./flags/audience.ts@Audience": {
+        "type": "object",
+        "anyOf": [
+          {
+            "type": "object",
+            "allOf": [],
+            "properties": {
+              "isActive": { "title": "Is Active", "$ref": "#/root/matchers" },
+              "state": {
+                "title": "State",
+                "$ref": "record<string, Resolvable>",
+              },
+            },
+            "required": ["isActive", "state"],
+          },
+          { "$ref": "./flags/audience.ts" },
+          { "$ref": "./flags/everyone.ts" },
+        ],
+        "$id": "./flags/audience.ts@Audience",
+      },
+      "./flags/audience.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./flags/audience.ts@Audience" }],
+        "required": ["__resolveType"],
+        "properties": { "__resolveType": { "const": "./flags/audience.ts" } },
+        "$id": "./flags/audience.ts",
+      },
+      "./flags/everyone.ts@EveryoneConfig": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "state": { "title": "State", "$ref": "record<string, Resolvable>" },
+        },
+        "required": [],
+        "$id": "./flags/everyone.ts@EveryoneConfig",
+      },
+      "./flags/everyone.ts": {
+        "type": "object",
+        "allOf": [{ "$ref": "./flags/everyone.ts@EveryoneConfig" }],
+        "required": ["__resolveType"],
+        "properties": { "__resolveType": { "const": "./flags/everyone.ts" } },
+        "$id": "./flags/everyone.ts",
+      },
+    },
+    "root": {
+      "routes": { "anyOf": [{ "$ref": "./routes/[...catchall].tsx" }] },
+      "handlers": {
+        "anyOf": [{ "$ref": "./handlers/router.ts" }, {
+          "$ref": "./handlers/fresh.ts",
+        }],
+      },
+      "pages": { "anyOf": [{ "$ref": "./pages/LivePage.tsx" }] },
+      "sections": { "anyOf": [{ "$ref": "./sections/Head.tsx" }] },
+      "matchers": {
+        "anyOf": [
+          { "$ref": "./matchers/MatchDate.ts" },
+          { "$ref": "./matchers/MatchUserAgent.ts" },
+          { "$ref": "./matchers/MatchSite.ts" },
+          { "$ref": "./matchers/MatchMulti.ts" },
+          { "$ref": "./matchers/MatchRandom.ts" },
+          { "$ref": "./matchers/MatchEnvironment.ts" },
+          { "$ref": "./matchers/MatchAlways.ts" },
+        ],
+      },
+      "flags": {
+        "anyOf": [{ "$ref": "./flags/audience.ts" }, {
+          "$ref": "./flags/everyone.ts",
+        }],
+      },
+      "state": {
+        "type": "object",
+        "additionalProperties": {
+          "anyOf": [
+            { "$ref": "#/root/routes" },
+            { "$ref": "#/root/handlers" },
+            { "$ref": "#/root/pages" },
+            { "$ref": "#/root/sections" },
+            { "$ref": "#/root/matchers" },
+            { "$ref": "#/root/flags" },
+          ],
         },
       },
-      "required": ["component"],
-    },
-    "$live/blocks/route.ts@Response": {
-      "type": "object",
-      "additionalProperties": true,
-    },
-    "./components/LivePage.tsx@Props": {
-      "type": "object",
-      "properties": {
-        "sections": {
-          "title": "Sections",
-          "$ref": "#/definitions/$live/blocks/section.ts@Section",
-        },
-      },
-      "required": ["sections"],
-    },
-    "$live/blocks/page.ts@Page": {
-      "type": "object",
-      "additionalProperties": true,
-    },
-    "./sections/Head.tsx@Props": {
-      "type": "object",
-      "properties": {
-        "title": { "title": "Title", "type": ["string", "null"] },
-        "description": { "title": "Description", "type": ["string", "null"] },
-        "url": { "title": "Url", "type": ["string", "null"] },
-        "imageUrl": { "title": "Image Url", "type": ["string", "null"] },
-        "faviconUrl": { "title": "Favicon Url", "type": ["string", "null"] },
-        "styleUrls": { "title": "Style Urls", "type": "string" },
-        "inlineStyles": { "title": "Inline Styles", "type": "string" },
-        "scriptUrls": { "title": "Script Urls", "type": "string" },
-        "inlineScripts": { "title": "Inline Scripts", "type": "string" },
-        "themeColor": { "title": "Theme Color", "type": ["string", "null"] },
-      },
-      "required": [],
-    },
-    "$live/blocks/section.ts@Section": {
-      "type": "object",
-      "additionalProperties": true,
-    },
-    "$live/blocks/island.ts@Island": {
-      "type": "object",
-      "additionalProperties": true,
     },
   },
 };
 
-export default configurable(manifest, blocks);
+export default configurable(manifest);

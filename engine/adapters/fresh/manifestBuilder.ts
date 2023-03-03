@@ -1,7 +1,10 @@
 // deno-lint-ignore-file
-import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
-import { Schemeable, schemeableEqual } from "$live/engine/schema/transform.ts";
-import { union } from "$live/engine/schema/schemeable.ts";
+import {
+  schemeableToJSONSchema,
+  union,
+} from "$live/engine/schema/schemeable.ts";
+import { Schemeable } from "$live/engine/schema/transform.ts";
+import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 
 export interface DefaultImport {
   alias: string;
@@ -40,12 +43,12 @@ export interface Variable {
   identifier: string;
 }
 
-export interface JS {
+export interface JS<T extends Record<string, any> = any> {
   kind: "js";
-  raw: FunctionCall | Variable | Record<string, unknown>;
+  raw: FunctionCall | Variable | T;
 }
 const isObjRaw = (
-  v: FunctionCall | Variable | Record<string, unknown>
+  v: FunctionCall | Variable | Record<string, unknown>,
 ): v is Record<string, unknown> => {
   return (v as FunctionCall).identifier === undefined;
 };
@@ -77,7 +80,7 @@ const isObj = (v: JSONValue): v is Obj => {
 export type JSONObject = Partial<Record<string, JSONValue>>;
 
 export interface ManifestBuilder {
-  withDefinitions: (def: Record<string, unknown>) => ManifestBuilder;
+  withDefinitions: (def: Record<string, JSONSchema7>) => ManifestBuilder;
   equal: (other: ManifestBuilder) => boolean;
   data: ManifestData;
   toJSONString: () => string;
@@ -90,11 +93,12 @@ export interface ManifestBuilder {
   addExports: (...exports: Export[]) => ManifestBuilder;
   addExportDefault: (dfs: ExportDefault) => ManifestBuilder;
   addStatements: (...statements: Statement[]) => ManifestBuilder;
-  addSchemeables: (...s: Schemeable[]) => ManifestBuilder;
-  addOutputSchemeable: (s: Schemeable, ref: string) => ManifestBuilder;
   build(): string;
+  addSchemeables: (...s: Schemeable[]) => ManifestBuilder;
+  schemeableAnyOf: (id: string, ref: string) => ManifestBuilder;
 }
-
+// function type any of root if not output
+// if output gen output and add anyOf function type
 export interface ExportDefault {
   variable: Variable;
 }
@@ -116,8 +120,12 @@ export interface Assignment {
 
 export type Statement = Assignment;
 
+export interface Schemas {
+  definitions: Record<string, any>;
+  root: Record<string, any>; // JSON Schema does not work because of the incompatibility with union types
+}
 export interface ManifestData {
-  manifestDef: Record<string, unknown>;
+  schemas: Schemas;
   imports: Import[];
   manifest: JSONObject;
   exports: Export[];
@@ -131,26 +139,30 @@ const stringifyStatement = (st: Statement): string => {
 };
 
 const stringifyImport = ({ clauses, from }: Import): string => {
-  return `import ${clauses
-    .map((clause) =>
-      isDefaultClause(clause)
-        ? `* as ${clause.alias}`
-        : (clause as NamedImport).import
-        ? `{ ${(clause as NamedImport).import} ${
+  return `import ${
+    clauses
+      .map((clause) =>
+        isDefaultClause(clause)
+          ? `* as ${clause.alias}`
+          : (clause as NamedImport).import
+          ? `{ ${(clause as NamedImport).import} ${
             clause.as ? "as " + clause.as : ""
           }}`
-        : clause.as
-    )
-    .join(",")} from "${from}"`;
+          : clause.as
+      )
+      .join(",")
+  } from "${from}"`;
 };
 
 const stringifyObj = (obj: JSONObject): string => {
   return `{
-    ${Object.entries(obj)
+    ${
+    Object.entries(obj)
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
-      .join(",\n")}
+      .join(",\n")
+  }
 }
 `;
 };
@@ -173,9 +185,11 @@ const stringifyJS = (js: JS): string => {
     return JSON.stringify(js.raw);
   }
   if (isFunctionCall(js.raw)) {
-    return `${js.raw.identifier}(${js.raw.params
-      .map(stringifyJSONValue)
-      .join(",")})`;
+    return `${js.raw.identifier}(${
+      js.raw.params
+        .map(stringifyJSONValue)
+        .join(",")
+    })`;
   }
 
   return js.raw.identifier;
@@ -188,6 +202,7 @@ const stringifyExport = (exp: Export): string => {
   }
   return `export ${exp.name}`;
 };
+
 export const stringify = ({
   imports,
   manifest,
@@ -195,7 +210,7 @@ export const stringify = ({
   exports,
   exportDefault,
   schemeables,
-  manifestDef,
+  schemas,
 }: ManifestData): string => {
   manifest["routes"] ??= { kind: "obj", value: {} };
   manifest["islands"] ??= { kind: "obj", value: {} };
@@ -208,16 +223,48 @@ export const stringify = ({
     kind: "js",
     raw: { identifier: "import.meta.url" },
   };
-  const definitions = Object.values(schemeables ?? {}).reduce(
-    (def, schemeable) => {
-      const [nDef, _] = schemeableToJSONSchema(def, schemeable);
-      return nDef;
+  const [definitions, root] = Object.values(schemeables ?? {}).reduce(
+    ([def, root], schemeable) => {
+      const [nDef, sc] = schemeableToJSONSchema(def, schemeable) as [
+        Record<string, JSONSchema7 & { type: string | JSONSchema7["type"] }>,
+        unknown,
+      ];
+      const curr = schemeable.root
+        ? root[schemeable.root] ?? { anyOf: [] }
+        : undefined;
+      const nRoot = curr
+        ? {
+          ...root,
+          [schemeable.root!]: {
+            ...curr,
+            anyOf: [...(curr?.anyOf ?? []), { $ref: schemeable.id }],
+          },
+        }
+        : root;
+
+      return [nDef, nRoot];
     },
-    {}
+    [{}, {}] as [Schemas["definitions"], Schemas["root"]],
   );
-  manifest["definitions"] = {
+  const allRoots = { ...root, ...schemas.root };
+  const configState = Object.keys(allRoots).reduce(
+    (curr, key) => {
+      return { ...curr, anyOf: [...curr.anyOf, { $ref: `#/root/${key}` }] };
+    },
+    { anyOf: [] as JSONSchema7[] },
+  );
+  manifest["schemas"] = {
     kind: "js",
-    raw: { ...definitions, ...manifestDef },
+    raw: {
+      definitions: { ...definitions, ...schemas.definitions },
+      root: {
+        ...allRoots,
+        state: {
+          type: "object",
+          additionalProperties: configState,
+        },
+      },
+    },
   };
   return `// DO NOT EDIT. This file is generated by deco.
 // This file SHOULD be checked into source version control.
@@ -234,50 +281,47 @@ ${exportDefault ? `export default ${exportDefault.variable.identifier}` : ""}
 `;
 };
 
-const resolvable = (id: string, ref: string): Schemeable => {
-  return {
-    id,
-    type: "inline",
-    value: {
-      required: ["__resolveType"],
-      properties: {
-        __resolveType: {
-          type: "string",
-          enum: [ref],
-        },
-      },
-      additionalProperties: true,
-    },
-  };
-};
 export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
   return {
+    addSchemeables: (...s: Schemeable[]): ManifestBuilder => {
+      return newManifestBuilder({
+        ...initial,
+        schemeables: s.reduce((curr, n) => {
+          const schemeableID = n.id ?? crypto.randomUUID();
+          return {
+            ...curr,
+            [schemeableID]: curr[schemeableID] ?? n,
+          };
+        }, initial.schemeables ?? {}),
+      });
+    },
+    schemeableAnyOf: (id: string, ref: string): ManifestBuilder => {
+      const schemeable = initial.schemeables?.[id];
+      if (!schemeable) {
+        return newManifestBuilder(initial);
+      }
+      return newManifestBuilder({
+        ...initial,
+        schemeables: { ...initial.schemeables, [id]: union(schemeable, ref) },
+      });
+    },
     withDefinitions: (def): ManifestBuilder => {
       return newManifestBuilder({
         ...initial,
-        manifestDef: { ...initial.manifestDef, ...def },
+        schemas: { ...initial.schemas, ...def },
       });
     },
     data: initial,
-    addOutputSchemeable: (s: Schemeable, ref: string) => {
-      const id = s.id ?? crypto.randomUUID();
-      const n = newManifestBuilder(initial).addSchemeables({ ...s, id });
-      const actual = n.data.schemeables?.[id];
-      return newManifestBuilder({
-        ...initial,
-        schemeables: {
-          [id]: actual ? union(actual, resolvable(id, ref)) : s,
-        },
-      });
-    },
     equal: (other: ManifestBuilder): boolean => {
       const sameImportLength =
         other.data.imports.length === initial.imports.length;
       if (!sameImportLength) {
         return false;
       }
-      const sameSchemeablesLength =
-        other.data.schemeables?.length === initial.schemeables?.length;
+      const sameSchemeablesLength = Object.keys(initial.schemas.root).length ===
+          Object.keys(other.data.schemas.root).length &&
+        Object.keys(initial.schemas.definitions).length ===
+          Object.keys(other.data.schemas.definitions).length;
       if (!sameSchemeablesLength) {
         return false;
       }
@@ -305,31 +349,10 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         }
       }
 
-      for (let j = 0; j < (initial.schemeables?.length ?? 0); j++) {
-        const [thisSchemeable, otherSchemeable] = [
-          initial.schemeables![j],
-          other.data.schemeables![j],
-        ];
-        if (!schemeableEqual(thisSchemeable, otherSchemeable)) {
-          return false;
-        }
-      }
-      return true;
+      return JSON.stringify(initial) === JSON.stringify(other.data);
     },
     toJSONString: () => JSON.stringify(initial),
     build: () => stringify(initial),
-    addSchemeables: (...s: Schemeable[]): ManifestBuilder => {
-      return newManifestBuilder({
-        ...initial,
-        schemeables: s.reduce((curr, n) => {
-          const schemeableID = n.id ?? crypto.randomUUID();
-          return {
-            ...curr,
-            [schemeableID]: n,
-          };
-        }, initial.schemeables ?? {}),
-      });
-    },
     addExportDefault: (dfs: ExportDefault): ManifestBuilder => {
       return newManifestBuilder({ ...initial, exportDefault: dfs });
     },
@@ -373,7 +396,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           {
             ...initial.manifest,
             [key]: initial.manifest[key] ?? { kind: "obj", value: {} },
-          }
+          },
         ),
       });
     },

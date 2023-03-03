@@ -11,14 +11,14 @@ import {
 import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts";
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { error } from "$live/error.ts";
-import blocks from "$live/blocks/index.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
   if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
-    let message = `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
+    let message =
+      `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
 
     if (Deno.execPath().includes("homebrew")) {
       message +=
@@ -61,35 +61,34 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
   await Deno.writeTextFile(manifestPath, manifestStr);
   console.log(
     `%cThe manifest has been generated.`,
-    "color: blue; font-weight: bold"
+    "color: blue; font-weight: bold",
   );
 }
 
-const withImport =
-  (
-    blk: string,
-    pathBase: (imp: string) => [string, string],
-    prefix: string,
-    adapt?: string,
-    importDefault?: boolean
-  ) =>
-  (m: ManifestBuilder, imp: string, i: number) => {
-    const alias = `${prefix}${i}`;
-    const [from, key] = pathBase(imp);
-    const variable = importDefault ? `${alias}.default` : alias;
-    return m
-      .addImports({
-        from,
-        clauses: [{ alias: alias }],
-      })
-      .addValuesOnManifestKey(blk, [
-        key,
-        {
-          kind: "js",
-          raw: { identifier: adapt ? `${adapt}(${variable})` : alias },
-        },
-      ]);
-  };
+const withImport = (
+  blk: string,
+  pathBase: (imp: string) => [string, string],
+  prefix: string,
+  adapt?: string,
+  importDefault?: boolean,
+) =>
+(m: ManifestBuilder, imp: string, i: number) => {
+  const alias = `${prefix}${i}`;
+  const [from, key] = pathBase(imp);
+  const variable = importDefault ? `${alias}.default` : alias;
+  return m
+    .addImports({
+      from,
+      clauses: [{ alias: alias }],
+    })
+    .addValuesOnManifestKey(blk, [
+      key,
+      {
+        kind: "js",
+        raw: { identifier: adapt ? `${adapt}(${variable})` : alias },
+      },
+    ]);
+};
 export default async function dev(
   base: string,
   entrypoint: string,
@@ -102,7 +101,7 @@ export default async function dev(
       DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
     >;
     onListen?: () => void;
-  } = {}
+  } = {},
 ) {
   ensureMinDenoVersion();
 
@@ -119,44 +118,47 @@ export default async function dev(
       imports: [],
       manifest: {},
       exports: [],
-      manifestDef: {},
+      schemas: {
+        root: {},
+        definitions: {},
+      },
     });
   }
   let manifest = await decoManifestBuilder(dir);
   // "imports" is of format { "nameOfImport" : manifest }
-  for (const [key, importManifest] of Object.entries(imports || {})) {
-    for (const blk of blocks) {
-      const blkFns =
-        (importManifest as Record<string, ResolverMap>)[blk.type] ?? {};
-      const isRoutes = blk.type === "routes";
-      const blockKeys = Object.keys(blkFns);
-      manifest = blockKeys.reduce(
-        withImport(
-          blk.type,
-          (imp) =>
-            [
-              imp.replace(`./`, `${key}/`),
-              !isRoutes ? imp.replace(`./`, `${key}/`) : imp,
-            ] as [string, string],
-          `$${key}${blk.type}`,
-          `${blk.type}.default.adapt`,
-          !isRoutes
-        ),
-        manifest
-      );
-    }
+  // for (const [key, importManifest] of Object.entries(imports || {})) {
+  //   for (const blk of blocks) {
+  //     const blkFns =
+  //       (importManifest as Record<string, ResolverMap>)[blk.type] ?? {};
+  //     const isRoutes = blk.type === "routes";
+  //     const blockKeys = Object.keys(blkFns);
+  //     manifest = blockKeys.reduce(
+  //       withImport(
+  //         blk.type,
+  //         (imp) =>
+  //           [
+  //             imp.replace(`./`, `${key}/`),
+  //             !isRoutes ? imp.replace(`./`, `${key}/`) : imp,
+  //           ] as [string, string],
+  //         `$${key}${blk.type}`,
+  //         `${blk.type}.default.adapt`,
+  //         !isRoutes
+  //       ),
+  //       manifest
+  //     );
+  //   }
 
-    const importDef = Object.keys(importManifest.definitions ?? {}).reduce(
-      (acc: Record<string, unknown>, val) => {
-        acc[val.replace("./", `${key}/`)] = (importManifest.definitions ?? {})[
-          val
-        ];
-        return acc;
-      },
-      {}
-    );
-    manifest = manifest.withDefinitions(importDef);
-  }
+  //   const importDef = Object.keys(importManifest.definitions ?? {}).reduce(
+  //     (acc: Record<string, unknown>, val) => {
+  //       acc[val.replace("./", `${key}/`)] = (importManifest.definitions ?? {})[
+  //         val
+  //       ];
+  //       return acc;
+  //     },
+  //     {}
+  //   );
+  //   manifest = manifest.withDefinitions(importDef);
+  // }
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());
 
