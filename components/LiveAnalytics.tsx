@@ -32,11 +32,13 @@ const init = async () => {
   window.jitsu('track', 'pageview');
 
   /* Listen web-vitals */
-  const { onCLS, onFID, onLCP } = await import("https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js");
+  const { onCLS, onFID, onLCP, onFCP, onTTFB } = await import("https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js");
       
   onCLS(onWebVitalsReport);
   onFID(onWebVitalsReport);
   onLCP(onWebVitalsReport);
+  onFCP(onWebVitalsReport);
+  onTTFB(onWebVitalsReport);
 };
   /* Send exception error event to jitsu */
   window.addEventListener('error', function ({message, url, lineNo, columnNo, error}) {
