@@ -178,6 +178,7 @@
     "https://esm.sh/v104/preact-render-to-string@5.2.4/X-ZS8q/src/index.d.ts": "b1d73703252c8570fdf2952475805f5808ba3511fefbd93a3e7bd8406de7dcd0",
     "https://esm.sh/v104/preact@10.11.3/src/index.d.ts": "76842a9d103548261ee001f2aee5fa5cacc8b1b4b4032af537ed84603c8f4a31",
     "https://esm.sh/v104/preact@10.11.3/src/jsx.d.ts": "77ce5bd7324455c9f6dc85bfc3c94b733acb92cc98fdf82e4b1059c8bca7866d",
-    "https://esm.sh/v106/@types/json-schema@7.0.11/index.d.ts": "f3e604694b624fa3f83f6684185452992088f5efb2cf136b62474aa106d6f1b6"
+    "https://esm.sh/v106/@types/json-schema@7.0.11/index.d.ts": "f3e604694b624fa3f83f6684185452992088f5efb2cf136b62474aa106d6f1b6",
+    "https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js": "ad9dee8413b808274d914ca07529df11ac418271d01ed283cbba5ed5eda7ae07"
   }
 }
