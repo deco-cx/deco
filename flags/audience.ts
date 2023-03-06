@@ -1,17 +1,13 @@
-import { HandlerContext } from "$fresh/server.ts";
-import { MatcherResult } from "$live/blocks/matcher.ts";
-import { LiveConfig } from "$live/blocks/types.ts";
+import { Flag } from "$live/blocks/flag.ts";
+import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 
-// TODO Marcos V. Candeia Schema is not considering extends
 export interface Audience {
-  isActive: MatcherResult;
+  matcher: Matcher;
+  name: string;
   state: Record<string, Resolvable>;
 }
 
-export default function Audience(
-  _req: Request,
-  { state: { $live } }: HandlerContext<unknown, LiveConfig<Audience>>,
-): Audience {
-  return $live;
+export default function Audience({ matcher, state, name }: Audience): Flag {
+  return { matcher, true: state, false: {}, name };
 }

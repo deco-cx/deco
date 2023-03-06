@@ -1,6 +1,3 @@
-import { LiveConfig } from "$live/types.ts";
-import { HandlerContext } from "$fresh/server.ts";
-
 export interface Props {
   /**
    * @format date-time
@@ -13,10 +10,7 @@ export interface Props {
   session: boolean;
 }
 
-const MatchDate = (
-  _req: Request,
-  { state: { $live: props } }: HandlerContext<unknown, LiveConfig<Props>>,
-) => {
+const MatchDate = (props: Props) => {
   const now = new Date();
   const start = props.start ? now > new Date(props.start) : true;
   const end = props.end ? now < new Date(props.end) : true;

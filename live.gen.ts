@@ -51,7 +51,7 @@ const manifest = {
   "baseUrl": import.meta.url,
   "schemas": {
     "definitions": {
-      "./routes/[...catchall].tsx@7d819057-b845-4046-abf6-049f6f9c1760": {
+      "./routes/[...catchall].tsx@5ac85a04-a86d-47ac-8036-f89e37cb5719": {
         "type": "object",
         "allOf": [],
         "properties": {
@@ -59,35 +59,35 @@ const manifest = {
         },
         "required": ["component"],
         "$id":
-          "./routes/[...catchall].tsx@7d819057-b845-4046-abf6-049f6f9c1760",
+          "./routes/[...catchall].tsx@5ac85a04-a86d-47ac-8036-f89e37cb5719",
       },
       "./routes/[...catchall].tsx": {
         "type": "object",
         "allOf": [{
           "$ref":
-            "./routes/[...catchall].tsx@7d819057-b845-4046-abf6-049f6f9c1760",
+            "./routes/[...catchall].tsx@5ac85a04-a86d-47ac-8036-f89e37cb5719",
         }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./routes/[...catchall].tsx" },
+          "__resolveType": {
+            "const": "./routes/[...catchall].tsx",
+            "default": "./routes/[...catchall].tsx",
+          },
         },
         "$id": "./routes/[...catchall].tsx",
       },
-      "record<string, HandlerInstance>": {
+      "record<string, Handler>": {
         "title": "Record",
         "type": "object",
         "additionalProperties": { "$ref": "#/root/handlers" },
-        "$id": "record<string, HandlerInstance>",
+        "$id": "record<string, Handler>",
       },
       "./handlers/router.ts@RouterConfig": {
         "type": "object",
         "allOf": [],
         "properties": {
           "base": { "title": "Base", "type": ["string", "null"] },
-          "routes": {
-            "title": "Routes",
-            "$ref": "record<string, HandlerInstance>",
-          },
+          "routes": { "title": "Routes", "$ref": "record<string, Handler>" },
         },
         "required": ["routes"],
         "$id": "./handlers/router.ts@RouterConfig",
@@ -96,7 +96,12 @@ const manifest = {
         "type": "object",
         "allOf": [{ "$ref": "./handlers/router.ts@RouterConfig" }],
         "required": ["__resolveType"],
-        "properties": { "__resolveType": { "const": "./handlers/router.ts" } },
+        "properties": {
+          "__resolveType": {
+            "const": "./handlers/router.ts",
+            "default": "./handlers/router.ts",
+          },
+        },
         "$id": "./handlers/router.ts",
       },
       "./handlers/fresh.ts@FreshConfig": {
@@ -112,7 +117,12 @@ const manifest = {
         "type": "object",
         "allOf": [{ "$ref": "./handlers/fresh.ts@FreshConfig" }],
         "required": ["__resolveType"],
-        "properties": { "__resolveType": { "const": "./handlers/fresh.ts" } },
+        "properties": {
+          "__resolveType": {
+            "const": "./handlers/fresh.ts",
+            "default": "./handlers/fresh.ts",
+          },
+        },
         "$id": "./handlers/fresh.ts",
       },
       "./components/LivePage.tsx@Props": {
@@ -132,7 +142,12 @@ const manifest = {
         "type": "object",
         "allOf": [{ "$ref": "./components/LivePage.tsx@Props" }],
         "required": ["__resolveType"],
-        "properties": { "__resolveType": { "const": "./pages/LivePage.tsx" } },
+        "properties": {
+          "__resolveType": {
+            "const": "./pages/LivePage.tsx",
+            "default": "./pages/LivePage.tsx",
+          },
+        },
         "$id": "./pages/LivePage.tsx",
       },
       "./sections/Head.tsx@Props": {
@@ -173,152 +188,139 @@ const manifest = {
         "type": "object",
         "allOf": [{ "$ref": "./sections/Head.tsx@Props" }],
         "required": ["__resolveType"],
-        "properties": { "__resolveType": { "const": "./sections/Head.tsx" } },
+        "properties": {
+          "__resolveType": {
+            "const": "./sections/Head.tsx",
+            "default": "./sections/Head.tsx",
+          },
+        },
         "$id": "./sections/Head.tsx",
       },
-      "./matchers/MatchDate.ts@Props": {
-        "type": "object",
-        "allOf": [],
-        "properties": {
-          "start": {
-            "title": "Start",
-            "type": ["string", "null"],
-            "format": "date-time",
-          },
-          "end": {
-            "title": "End",
-            "type": ["string", "null"],
-            "format": "date-time",
-          },
-          "session": { "title": "Session", "type": "boolean" },
-        },
-        "required": ["session"],
-        "$id": "./matchers/MatchDate.ts@Props",
+      "./matchers/MatchDate.ts@a7247df6-cc57-4824-ae47-78025f5f4e15": {
+        "$id": "./matchers/MatchDate.ts@a7247df6-cc57-4824-ae47-78025f5f4e15",
       },
       "./matchers/MatchDate.ts": {
         "type": "object",
-        "allOf": [{ "$ref": "./matchers/MatchDate.ts@Props" }],
+        "allOf": [{
+          "$ref":
+            "./matchers/MatchDate.ts@a7247df6-cc57-4824-ae47-78025f5f4e15",
+        }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./matchers/MatchDate.ts" },
+          "__resolveType": {
+            "const": "./matchers/MatchDate.ts",
+            "default": "./matchers/MatchDate.ts",
+          },
         },
         "$id": "./matchers/MatchDate.ts",
       },
-      "./matchers/MatchUserAgent.ts@Props": {
-        "type": "object",
-        "allOf": [],
-        "properties": {
-          "includes": { "title": "Includes", "type": ["string", "null"] },
-          "match": { "title": "Match", "type": ["string", "null"] },
-        },
-        "required": [],
-        "$id": "./matchers/MatchUserAgent.ts@Props",
+      "./matchers/MatchUserAgent.ts@10bbd6af-0460-42ee-b65b-6c561ba2b674": {
+        "$id":
+          "./matchers/MatchUserAgent.ts@10bbd6af-0460-42ee-b65b-6c561ba2b674",
       },
       "./matchers/MatchUserAgent.ts": {
         "type": "object",
-        "allOf": [{ "$ref": "./matchers/MatchUserAgent.ts@Props" }],
+        "allOf": [{
+          "$ref":
+            "./matchers/MatchUserAgent.ts@10bbd6af-0460-42ee-b65b-6c561ba2b674",
+        }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./matchers/MatchUserAgent.ts" },
+          "__resolveType": {
+            "const": "./matchers/MatchUserAgent.ts",
+            "default": "./matchers/MatchUserAgent.ts",
+          },
         },
         "$id": "./matchers/MatchUserAgent.ts",
       },
-      "./matchers/MatchSite.ts@Props": {
-        "type": "object",
-        "allOf": [],
-        "properties": { "siteId": { "title": "Site Id", "type": "number" } },
-        "required": ["siteId"],
-        "$id": "./matchers/MatchSite.ts@Props",
+      "./matchers/MatchSite.ts@341b30ad-a8cc-42da-ae99-4d0e2c23ada4": {
+        "$id": "./matchers/MatchSite.ts@341b30ad-a8cc-42da-ae99-4d0e2c23ada4",
       },
       "./matchers/MatchSite.ts": {
         "type": "object",
-        "allOf": [{ "$ref": "./matchers/MatchSite.ts@Props" }],
+        "allOf": [{
+          "$ref":
+            "./matchers/MatchSite.ts@341b30ad-a8cc-42da-ae99-4d0e2c23ada4",
+        }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./matchers/MatchSite.ts" },
+          "__resolveType": {
+            "const": "./matchers/MatchSite.ts",
+            "default": "./matchers/MatchSite.ts",
+          },
         },
         "$id": "./matchers/MatchSite.ts",
       },
-      "./matchers/MatchMulti.ts@Props": {
-        "type": "object",
-        "allOf": [],
-        "properties": {
-          "op": {
-            "title": "Op",
-            "type": "string",
-            "anyOf": [{ "type": "string", "const": "or" }, {
-              "type": "string",
-              "const": "and",
-            }],
-          },
-          "matchers": {
-            "title": "Matchers",
-            "type": "array",
-            "items": { "$ref": "#/root/matchers" },
-          },
-        },
-        "required": ["op", "matchers"],
-        "$id": "./matchers/MatchMulti.ts@Props",
+      "./matchers/MatchMulti.ts@bd3353c3-cd37-4002-adc5-9ad4971ca7f3": {
+        "$id": "./matchers/MatchMulti.ts@bd3353c3-cd37-4002-adc5-9ad4971ca7f3",
       },
       "./matchers/MatchMulti.ts": {
         "type": "object",
-        "allOf": [{ "$ref": "./matchers/MatchMulti.ts@Props" }],
+        "allOf": [{
+          "$ref":
+            "./matchers/MatchMulti.ts@bd3353c3-cd37-4002-adc5-9ad4971ca7f3",
+        }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./matchers/MatchMulti.ts" },
+          "__resolveType": {
+            "const": "./matchers/MatchMulti.ts",
+            "default": "./matchers/MatchMulti.ts",
+          },
         },
         "$id": "./matchers/MatchMulti.ts",
       },
-      "./matchers/MatchRandom.ts@Props": {
-        "type": "object",
-        "allOf": [],
-        "properties": {
-          "traffic": { "title": "Traffic", "type": "number" },
-          "session": { "title": "Session", "type": "boolean" },
-        },
-        "required": ["traffic", "session"],
-        "$id": "./matchers/MatchRandom.ts@Props",
+      "./matchers/MatchRandom.ts@398d39de-455d-4ae9-9f6e-4cec2e7cf65c": {
+        "$id": "./matchers/MatchRandom.ts@398d39de-455d-4ae9-9f6e-4cec2e7cf65c",
       },
       "./matchers/MatchRandom.ts": {
         "type": "object",
-        "allOf": [{ "$ref": "./matchers/MatchRandom.ts@Props" }],
+        "allOf": [{
+          "$ref":
+            "./matchers/MatchRandom.ts@398d39de-455d-4ae9-9f6e-4cec2e7cf65c",
+        }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./matchers/MatchRandom.ts" },
+          "__resolveType": {
+            "const": "./matchers/MatchRandom.ts",
+            "default": "./matchers/MatchRandom.ts",
+          },
         },
         "$id": "./matchers/MatchRandom.ts",
       },
-      "./matchers/MatchEnvironment.ts@Props": {
-        "type": "object",
-        "allOf": [],
-        "properties": {
-          "environment": {
-            "title": "Environment",
-            "type": "string",
-            "anyOf": [{ "type": "string", "const": "production" }, {
-              "type": "string",
-              "const": "development",
-            }],
-          },
-        },
-        "required": ["environment"],
-        "$id": "./matchers/MatchEnvironment.ts@Props",
+      "./matchers/MatchEnvironment.ts@954700fe-c63d-4da8-84f2-a9754b0b0b98": {
+        "$id":
+          "./matchers/MatchEnvironment.ts@954700fe-c63d-4da8-84f2-a9754b0b0b98",
       },
       "./matchers/MatchEnvironment.ts": {
         "type": "object",
-        "allOf": [{ "$ref": "./matchers/MatchEnvironment.ts@Props" }],
+        "allOf": [{
+          "$ref":
+            "./matchers/MatchEnvironment.ts@954700fe-c63d-4da8-84f2-a9754b0b0b98",
+        }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./matchers/MatchEnvironment.ts" },
+          "__resolveType": {
+            "const": "./matchers/MatchEnvironment.ts",
+            "default": "./matchers/MatchEnvironment.ts",
+          },
         },
         "$id": "./matchers/MatchEnvironment.ts",
       },
+      "./matchers/MatchAlways.ts@d1b09849-0bbf-480e-96cd-e31dfb693bca": {
+        "$id": "./matchers/MatchAlways.ts@d1b09849-0bbf-480e-96cd-e31dfb693bca",
+      },
       "./matchers/MatchAlways.ts": {
         "type": "object",
-        "allOf": [],
+        "allOf": [{
+          "$ref":
+            "./matchers/MatchAlways.ts@d1b09849-0bbf-480e-96cd-e31dfb693bca",
+        }],
         "required": ["__resolveType"],
         "properties": {
-          "__resolveType": { "const": "./matchers/MatchAlways.ts" },
+          "__resolveType": {
+            "const": "./matchers/MatchAlways.ts",
+            "default": "./matchers/MatchAlways.ts",
+          },
         },
         "$id": "./matchers/MatchAlways.ts",
       },
@@ -330,29 +332,24 @@ const manifest = {
       },
       "./flags/audience.ts@Audience": {
         "type": "object",
-        "anyOf": [
-          {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "isActive": { "title": "Is Active", "$ref": "#/root/matchers" },
-              "state": {
-                "title": "State",
-                "$ref": "record<string, Resolvable>",
-              },
-            },
-            "required": ["isActive", "state"],
-          },
-          { "$ref": "./flags/audience.ts" },
-          { "$ref": "./flags/everyone.ts" },
-        ],
+        "allOf": [],
+        "properties": {
+          "matcher": { "title": "Matcher", "$ref": "#/root/matchers" },
+          "state": { "title": "State", "$ref": "record<string, Resolvable>" },
+        },
+        "required": ["matcher", "state"],
         "$id": "./flags/audience.ts@Audience",
       },
       "./flags/audience.ts": {
         "type": "object",
         "allOf": [{ "$ref": "./flags/audience.ts@Audience" }],
         "required": ["__resolveType"],
-        "properties": { "__resolveType": { "const": "./flags/audience.ts" } },
+        "properties": {
+          "__resolveType": {
+            "const": "./flags/audience.ts",
+            "default": "./flags/audience.ts",
+          },
+        },
         "$id": "./flags/audience.ts",
       },
       "./flags/everyone.ts@EveryoneConfig": {
@@ -368,7 +365,12 @@ const manifest = {
         "type": "object",
         "allOf": [{ "$ref": "./flags/everyone.ts@EveryoneConfig" }],
         "required": ["__resolveType"],
-        "properties": { "__resolveType": { "const": "./flags/everyone.ts" } },
+        "properties": {
+          "__resolveType": {
+            "const": "./flags/everyone.ts",
+            "default": "./flags/everyone.ts",
+          },
+        },
         "$id": "./flags/everyone.ts",
       },
     },

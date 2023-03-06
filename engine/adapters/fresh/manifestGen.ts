@@ -16,58 +16,60 @@ import { walk } from "https://deno.land/std@0.170.0/fs/walk.ts";
 import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 
-const withDefinition = (block: BlockType, blockIdx: number) =>
-(
-  blkN: number,
-  man: ManifestBuilder,
-  { inputSchema, outputSchema, functionRef }: BlockModuleRef,
-): ManifestBuilder => {
-  const ref = `${"$".repeat(blockIdx)}${blkN}`;
-  const inputSchemaId = inputSchema?.id ?? crypto.randomUUID();
-  if (inputSchema) {
-    man = man.addSchemeables({ ...inputSchema, id: inputSchemaId });
-  }
-  const hasWellKnownOutput = outputSchema && outputSchema.type !== "unknown";
-  if (hasWellKnownOutput) {
-    // TODO Add anyof com a funcao
-    const outputId = outputSchema.id ?? crypto.randomUUID();
-    man = man
-      .addSchemeables({ ...outputSchema, id: outputId })
-      .schemeableAnyOf(outputId, functionRef);
-  }
-  const functionSchema: Schemeable = {
-    root: block,
-    id: functionRef,
-    type: "inline",
-    value: {
-      type: "object",
-      allOf: inputSchema && inputSchemaId ? [{ $ref: inputSchemaId }] : [],
-      required: ["__resolveType"],
-      properties: {
-        __resolveType: {
-          const: functionRef,
+const withDefinition =
+  (block: BlockType, blockIdx: number) =>
+  (
+    blkN: number,
+    man: ManifestBuilder,
+    { inputSchema, outputSchema, functionRef }: BlockModuleRef
+  ): ManifestBuilder => {
+    const ref = `${"$".repeat(blockIdx)}${blkN}`;
+    const inputSchemaId = inputSchema?.id ?? crypto.randomUUID();
+    if (inputSchema) {
+      man = man.addSchemeables({ ...inputSchema, id: inputSchemaId });
+    }
+    const hasWellKnownOutput = outputSchema && outputSchema.type !== "unknown";
+    if (hasWellKnownOutput) {
+      // TODO Add anyof com a funcao
+      const outputId = outputSchema.id ?? crypto.randomUUID();
+      man = man
+        .addSchemeables({ ...outputSchema, id: outputId })
+        .schemeableAnyOf(outputId, functionRef);
+    }
+    const functionSchema: Schemeable = {
+      root: block,
+      id: functionRef,
+      type: "inline",
+      value: {
+        type: "object",
+        allOf: inputSchema && inputSchemaId ? [{ $ref: inputSchemaId }] : [],
+        required: ["__resolveType"],
+        properties: {
+          __resolveType: {
+            const: functionRef,
+            default: functionRef,
+          },
         },
       },
-    },
+    };
+    return man
+      .addSchemeables(functionSchema)
+      .addImports({
+        from: functionRef,
+        clauses: [{ alias: ref }],
+      })
+      .addValuesOnManifestKey(block, [
+        functionRef,
+        {
+          kind: "js",
+          raw: { identifier: ref },
+        },
+      ]);
   };
-  return man
-    .addSchemeables(functionSchema)
-    .addImports({
-      from: functionRef,
-      clauses: [{ alias: ref }],
-    })
-    .addValuesOnManifestKey(block, [
-      functionRef,
-      {
-        kind: "js",
-        raw: { identifier: ref },
-      },
-    ]);
-};
 
 const addDefinitions = async (
   blocks: Block[],
-  transformContext: TransformContext,
+  transformContext: TransformContext
 ): Promise<ManifestBuilder> => {
   const initialManifest = newManifestBuilder({
     imports: [],
@@ -80,13 +82,13 @@ const addDefinitions = async (
   });
 
   const code = Object.values(transformContext.code).map(
-    (m) => [m[1], m[2]] as [string, ASTNode[]],
+    (m) => [m[1], m[2]] as [string, ASTNode[]]
   );
 
   const blockDefinitions = await Promise.all(
     blocks.map((blk) =>
       Promise.all(code.map((c) => blk.introspect(transformContext, c[0], c[1])))
-    ),
+    )
   );
 
   return blocks
@@ -113,7 +115,7 @@ const addDefinitions = async (
 };
 
 export const decoManifestBuilder = async (
-  dir: string,
+  dir: string
 ): Promise<ManifestBuilder> => {
   const liveIgnore = join(dir, ".liveignore");
   const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
@@ -128,21 +130,19 @@ export const decoManifestBuilder = async (
   const modulePromises: Promise<ModuleAST>[] = [];
   // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
   // that way the blocks can analyze the AST before needing to fetch all modules first.
-  for await (
-    const entry of walk(dir, {
-      includeDirs: false,
-      includeFiles: true,
-      exts: ["tsx", "jsx", "ts", "js"],
-      match: blocksDirs,
-      skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
-    })
-  ) {
+  for await (const entry of walk(dir, {
+    includeDirs: false,
+    includeFiles: true,
+    exts: ["tsx", "jsx", "ts", "js"],
+    match: blocksDirs,
+    skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
+  })) {
     modulePromises.push(
       denoDoc(entry.path)
         .then(
-          (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST,
+          (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST
         )
-        .catch((_) => [dir, entry.path.substring(dir.length), []]),
+        .catch((_) => [dir, entry.path.substring(dir.length), []])
     );
   }
 
@@ -158,7 +158,7 @@ export const decoManifestBuilder = async (
         },
       };
     },
-    { base: dir, code: {} },
+    { base: dir, code: {} }
   );
 
   return addDefinitions(blocks, {
@@ -166,7 +166,7 @@ export const decoManifestBuilder = async (
     denoDoc: async (src) => {
       return (
         (transformContext.code as Record<string, ModuleAST>)[src] ??
-          ([src, src, await denoDoc(src)] as ModuleAST)
+        ([src, src, await denoDoc(src)] as ModuleAST)
       );
     },
   });

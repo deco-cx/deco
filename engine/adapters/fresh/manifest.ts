@@ -19,10 +19,10 @@ export type FreshHandler<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response,
+  Resp = Response
 > = (
   request: Request,
-  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>,
+  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>
 ) => PromiseOrValue<Resp>;
 
 export interface FreshContext<Data = any, State = any, TConfig = any>
@@ -44,7 +44,7 @@ export interface ConfigProvider {
 }
 
 const asManifest = (
-  d: DecoManifest,
+  d: DecoManifest
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
 export const configurable = (m: DecoManifest): DecoManifest => {
@@ -54,9 +54,9 @@ export const configurable = (m: DecoManifest): DecoManifest => {
       const blocks = asManifest(currMan)[blk.type] ?? {};
       const decorated: Record<string, BlockModule> = blk.decorate
         ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
-          blocks,
-          blk.decorate,
-        )
+            blocks,
+            blk.decorate
+          )
         : blocks;
 
       const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
@@ -65,19 +65,19 @@ export const configurable = (m: DecoManifest): DecoManifest => {
           return { ...prv, ["Preview@" + key]: previewFunc };
         }
         return prv;
-      }, {} as ResolverMap);
+      }, {} as ResolverMap<FreshContext>);
       const adapted = blk.adapt
         ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
-          decorated,
-          blk.adapt,
-        )
+            decorated,
+            blk.adapt
+          )
         : {}; // if block has no adapt so it's not considered a resolver.
       return [
         { ...currMan, [blk.type]: decorated },
         { ...currMap, ...adapted, ...previews },
       ];
     },
-    [m, {}] as [DecoManifest, ResolverMap],
+    [m, {}] as [DecoManifest, ResolverMap<FreshContext>]
   );
   const provider = useFileProvider("./config.json");
   const resolver = new Rezolver<FreshContext>({

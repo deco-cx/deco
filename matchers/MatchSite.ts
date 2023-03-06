@@ -1,17 +1,12 @@
-import { LiveConfig } from "$live/blocks/types.ts";
-import { HandlerContext } from "https://deno.land/x/fresh@1.1.2/server.ts";
-import { LiveState } from "../types.ts";
+import { MatchContext } from "$live/blocks/matcher.ts";
 
 export interface Props {
   siteId: number;
 }
 
-const MatchSite = (
-  _req: Request,
-  ctx: HandlerContext<unknown, LiveConfig<Props, LiveState>>,
-) => {
+const MatchSite = ({ siteId }: Props, { siteId: currSiteId }: MatchContext) => {
   return {
-    isMatch: ctx.state.site.id === ctx.state.$live.siteId,
+    isMatch: siteId === currSiteId,
     duration: "request",
   };
 };

@@ -1,6 +1,4 @@
-import { HandlerContext } from "$fresh/server.ts";
-
-const MatchAlways = (_req: Request, _ctx: HandlerContext) => {
+const MatchAlways = () => {
   return true;
 };
 
