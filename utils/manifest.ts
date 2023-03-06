@@ -19,6 +19,15 @@ import {
   propReferenceToFunctionKey,
 } from "$live/utils/page.ts";
 import { LoaderFunction } from "$live/types.ts";
+import {
+  CacheControl,
+  DEFAULT_CACHE_CONTROL,
+  formatCacheControl,
+  formatVary,
+  mergeCacheControl,
+  parseCacheControl,
+  parseVary,
+} from "./http.ts";
 
 /**
  * This function should be used only in the initial stage of the product.
@@ -159,7 +168,7 @@ export async function loadPageData<Data, State extends LiveState>(
   req: Request,
   ctx: HandlerContext<Data, State>,
   pageData: PageData,
-): Promise<PageData> {
+): Promise<{ pageData: PageData; headers: Headers; status: number }> {
   const { start, end } = ctx.state.t;
   const functionsResponse = await Promise.all(
     pruneFunctions(pageData).map(async ({ key, props, uniqueId }) => {
@@ -172,27 +181,46 @@ export async function loadPageData<Data, State extends LiveState>(
       }
 
       start(`function#${uniqueId}`);
-      // TODO: Set status and headers
-      const {
-        data,
-        headers: _headers,
-        status: _status,
-      } = await functionFn(req, ctx, props);
+      const { data, headers, status } = await functionFn(req, ctx, props);
       end(`function#${uniqueId}`);
 
       return {
         uniqueId,
         data,
+        headers,
+        status,
       };
     }),
   );
 
-  const functionsResponseMap = functionsResponse.reduce(
+  const functionsResponseByUniqueId = functionsResponse.reduce(
     (result, currentResponse) => {
       result[currentResponse.uniqueId] = currentResponse.data;
       return result;
     },
     {} as Record<string, unknown>,
+  );
+
+  const cacheControl = functionsResponse.reduce(
+    (acc, response) => {
+      const parsed = response.headers && parseCacheControl(response.headers);
+      return parsed ? mergeCacheControl(acc, parsed) : acc;
+    },
+    DEFAULT_CACHE_CONTROL,
+  );
+
+  const vary = functionsResponse.reduce(
+    (acc, response) => {
+      const parsed = response.headers && parseVary(response.headers);
+      return parsed ? [...acc, ...parsed] : acc;
+    },
+    [] as string[],
+  );
+
+  const status = functionsResponse.reduce(
+    (acc, { status: responseStatus = 200 }) =>
+      acc > responseStatus ? acc : responseStatus,
+    200,
   );
 
   const sectionsWithData = pageData.sections.map((componentData) => {
@@ -211,7 +239,7 @@ export async function loadPageData<Data, State extends LiveState>(
 
         // In the future, we'll need to be more smart here (something like Liqui)
         const functionValue =
-          functionsResponseMap[propReferenceToFunctionKey(propValue)];
+          functionsResponseByUniqueId[propReferenceToFunctionKey(propValue)];
 
         return { key: propKey, value: functionValue };
       })
@@ -220,7 +248,14 @@ export async function loadPageData<Data, State extends LiveState>(
     return { ...componentData, props: propsWithFunctionData };
   });
 
-  return { ...pageData, sections: sectionsWithData };
+  return {
+    pageData: { ...pageData, sections: sectionsWithData },
+    status,
+    headers: new Headers({
+      "cache-control": formatCacheControl(cacheControl),
+      "vary": formatVary(Array.from(new Set(vary))),
+    }),
+  };
 }
 
 const getDefinition = (path: string) => context.manifest?.sections[path];
