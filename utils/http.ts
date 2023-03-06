@@ -1,9 +1,6 @@
 export const DEFAULT_CACHE_CONTROL: CacheControl = {
-  "s-maxage": 60, // 1minute cdn cache
-  "max-age": 10, // 10s browser cache to avoid BYPASS on cloudflare: https://developers.cloudflare.com/cache/about/default-cache-behavior/#cloudflare-cache-responses
-  "stale-while-revalidate": 3600, // 1hour
-  "stale-if-error": 24 * 3600, // 1day
   public: true,
+  "max-age": 60, // 10s browser cache to avoid BYPASS on cloudflare: https://developers.cloudflare.com/cache/about/default-cache-behavior/#cloudflare-cache-responses
 };
 
 export type CacheControl = Partial<{
@@ -120,14 +117,14 @@ export const mergeCacheControl = (
   const noTransform = h1["no-transform"] || h2["no-transform"];
 
   return {
-    "max-age": maxAge,
-    "s-maxage": sMaxAge,
-    "stale-while-revalidate": staleWhileRevalidate,
-    "stale-if-error": staleIfError,
     "public": pub && !pvt,
     "private": pvt,
     "no-cache": noCache,
     "no-store": noStore,
+    "max-age": maxAge,
+    "s-maxage": sMaxAge,
+    "stale-while-revalidate": staleWhileRevalidate,
+    "stale-if-error": staleIfError,
     "must-revalidate": mustRevalidate,
     "proxy-revalidate": proxyRevalidate,
     "immutable": immutable,
