@@ -157,19 +157,32 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
         });
       }
 
-      const page = await loadPage(req, ctx, pageOptions);
+      const loaded = await loadPage(req, ctx, pageOptions);
 
-      if (!page) {
+      if (!loaded) {
         return ctx.renderNotFound();
       }
 
-      return await ctx.render({ page, flags: ctx.state.flags });
+      const response = await ctx.render({
+        page: loaded.page,
+        flags: ctx.state.flags,
+      });
+
+      for (const [key, value] of loaded.headers) {
+        value && response.headers.set(key, value);
+      }
+
+      return new Response(response.body, {
+        status: loaded.status ?? response.status,
+        headers: response.headers,
+      });
     };
 
     const response = await getResponse();
 
     if (flagsToCookie.length > 0) {
       cookies.setFlags(response.headers, flagsToCookie);
+      response.headers.append("vary", "cookie");
     }
 
     return response;

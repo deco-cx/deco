@@ -297,7 +297,11 @@ export const loadPage = async <Data = unknown>(
   const { page, params = {} } = pageWithParams;
 
   start("load-data");
-  const pageDataAfterFunctions = await loadPageData(
+  const {
+    pageData: pageDataAfterFunctions,
+    headers,
+    status,
+  } = await loadPageData(
     req,
     {
       ...ctx,
@@ -308,7 +312,12 @@ export const loadPage = async <Data = unknown>(
   end("load-data");
 
   ctx.state.page = { ...page, data: pageDataAfterFunctions };
-  return ctx.state.page;
+  
+  return {
+    page: ctx.state.page,
+    headers,
+    status,
+  };
 };
 
 const loadGlobal = ({ globalSettings }: { globalSettings: Page[] }) => {
