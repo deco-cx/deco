@@ -1,6 +1,9 @@
 export const DEFAULT_CACHE_CONTROL: CacheControl = {
+  "s-maxage": 60, // 1minute cdn cache
+  "max-age": 10, // 10s browser cache to avoid BYPASS on cloudflare: https://developers.cloudflare.com/cache/about/default-cache-behavior/#cloudflare-cache-responses
+  "stale-while-revalidate": 3600, // 1hour
+  "stale-if-error": 24 * 3600, // 1day
   public: true,
-  "max-age": 180, // 10s browser cache to avoid BYPASS on cloudflare: https://developers.cloudflare.com/cache/about/default-cache-behavior/#cloudflare-cache-responses
 };
 
 export type CacheControl = Partial<{
