@@ -34,18 +34,23 @@ const withDefinition =
       const outputId = outputSchema.id ?? crypto.randomUUID();
       man = man
         .addSchemeables({ ...outputSchema, id: outputId })
-        .schemeableAnyOf(outputId, functionRef);
+        .schemeableAnyOf(outputId, `#/definitions/${functionRef}`);
     }
     const functionSchema: Schemeable = {
       root: block,
       id: functionRef,
       type: "inline",
       value: {
+        title: functionRef,
         type: "object",
-        allOf: inputSchema && inputSchemaId ? [{ $ref: inputSchemaId }] : [],
+        allOf:
+          inputSchema && inputSchemaId
+            ? [{ $ref: `#/definitions/${inputSchemaId}` }]
+            : [],
         required: ["__resolveType"],
         properties: {
           __resolveType: {
+            type: "string",
             const: functionRef,
             default: functionRef,
           },

@@ -5,10 +5,7 @@ export interface Props {
 }
 
 const MatchSite = ({ siteId }: Props, { siteId: currSiteId }: MatchContext) => {
-  return {
-    isMatch: siteId === currSiteId,
-    duration: "request",
-  };
+  return siteId === currSiteId;
 };
 
 export default MatchSite;

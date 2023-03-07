@@ -5,6 +5,7 @@ import {
 } from "$live/engine/schema/schemeable.ts";
 import { Schemeable } from "$live/engine/schema/transform.ts";
 import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
+import { DecoManifest } from "./manifest.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -48,7 +49,7 @@ export interface JS<T extends Record<string, any> = any> {
   raw: FunctionCall | Variable | T;
 }
 const isObjRaw = (
-  v: FunctionCall | Variable | Record<string, unknown>,
+  v: FunctionCall | Variable | Record<string, unknown>
 ): v is Record<string, unknown> => {
   return (v as FunctionCall).identifier === undefined;
 };
@@ -80,7 +81,7 @@ const isObj = (v: JSONValue): v is Obj => {
 export type JSONObject = Partial<Record<string, JSONValue>>;
 
 export interface ManifestBuilder {
-  withDefinitions: (def: Record<string, JSONSchema7>) => ManifestBuilder;
+  mergeWith: (def: Record<string, DecoManifest>) => ManifestBuilder;
   equal: (other: ManifestBuilder) => boolean;
   data: ManifestData;
   toJSONString: () => string;
@@ -139,30 +140,26 @@ const stringifyStatement = (st: Statement): string => {
 };
 
 const stringifyImport = ({ clauses, from }: Import): string => {
-  return `import ${
-    clauses
-      .map((clause) =>
-        isDefaultClause(clause)
-          ? `* as ${clause.alias}`
-          : (clause as NamedImport).import
-          ? `{ ${(clause as NamedImport).import} ${
+  return `import ${clauses
+    .map((clause) =>
+      isDefaultClause(clause)
+        ? `* as ${clause.alias}`
+        : (clause as NamedImport).import
+        ? `{ ${(clause as NamedImport).import} ${
             clause.as ? "as " + clause.as : ""
           }}`
-          : clause.as
-      )
-      .join(",")
-  } from "${from}"`;
+        : clause.as
+    )
+    .join(",")} from "${from}"`;
 };
 
 const stringifyObj = (obj: JSONObject): string => {
   return `{
-    ${
-    Object.entries(obj)
+    ${Object.entries(obj)
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
-      .join(",\n")
-  }
+      .join(",\n")}
 }
 `;
 };
@@ -185,11 +182,9 @@ const stringifyJS = (js: JS): string => {
     return JSON.stringify(js.raw);
   }
   if (isFunctionCall(js.raw)) {
-    return `${js.raw.identifier}(${
-      js.raw.params
-        .map(stringifyJSONValue)
-        .join(",")
-    })`;
+    return `${js.raw.identifier}(${js.raw.params
+      .map(stringifyJSONValue)
+      .join(",")})`;
   }
 
   return js.raw.identifier;
@@ -201,6 +196,64 @@ const stringifyExport = (exp: Export): string => {
     return `export const ${exp.name} = ${stringifyJS(nExp)}`;
   }
   return `export ${exp.name}`;
+};
+
+export type DeepDefinitions = {
+  [key: string]: JSONSchema7 | DeepDefinitions;
+};
+
+const mergeSchemasRoot = (
+  a: Schemas["root"],
+  b: Schemas["root"],
+  key: string = "."
+): Schemas["root"] => {
+  let mergedRoot: Schemas["root"] = {};
+  const allRootBlocks = { ...a, ...b };
+
+  for (const block of Object.keys(allRootBlocks)) {
+    const anyOfRefs = (b[block]?.anyOf ?? []) as { $ref: string }[];
+    const shouldMap = key !== ".";
+    mergedRoot[block] = {
+      title: block,
+      anyOf: [
+        ...(a[block]?.anyOf ?? []),
+        ...(shouldMap
+          ? anyOfRefs.map((ref) => ({
+              $ref: ref.$ref.replace(
+                "#/definitions/./",
+                `#/definitions/${key}/`
+              ),
+            }))
+          : anyOfRefs),
+      ],
+    };
+  }
+  return mergedRoot;
+};
+
+const mergeStates = (
+  a: JSONSchema7,
+  b: JSONSchema7,
+  key: string = "."
+): JSONSchema7 => {
+  let properties: Record<string, JSONSchema7> = {};
+  for (const [prop, value] of Object.entries(
+    (b?.properties ?? {}) as Record<string, JSONSchema7>
+  )) {
+    properties[prop] = {
+      ...value,
+      $ref: key !== "." ? value.$ref!.replace("./", `${key}/`) : value.$ref,
+    };
+  }
+  return {
+    ...a,
+    ...b,
+    required: [...(a?.required ?? []), ...(b?.required ?? [])],
+    properties: {
+      ...(a?.properties ?? {}),
+      ...properties,
+    },
+  };
 };
 
 export const stringify = ({
@@ -223,44 +276,85 @@ export const stringify = ({
     kind: "js",
     raw: { identifier: "import.meta.url" },
   };
-  const [definitions, root] = Object.values(schemeables ?? {}).reduce(
-    ([def, root], schemeable) => {
-      const [nDef, sc] = schemeableToJSONSchema(def, schemeable) as [
+  // Generate all JSONSchema definitions and also create the `root` property, pointing to the respective configuration block.
+  const [definitions, root, entrypoint] = Object.values(
+    schemeables ?? {}
+  ).reduce(
+    ([def, root, entrypoint], schemeable) => {
+      const [nDef, _] = schemeableToJSONSchema(def, schemeable) as [
         Record<string, JSONSchema7 & { type: string | JSONSchema7["type"] }>,
-        unknown,
+        unknown
       ];
       const curr = schemeable.root
         ? root[schemeable.root] ?? { anyOf: [] }
         : undefined;
+      const defRef = { $ref: `#/definitions/${schemeable.id}` };
+
+      // This is not straightforward,
+      // routes are considered entrypoints
+      // whenever you define a new configuration so its added as an entrypoint.
+      const entrypointConfig =
+        schemeable.root === "routes"
+          ? {
+              ...entrypoint,
+              required: [...(entrypoint.required ?? []), `${schemeable.id}`],
+              properties: {
+                ...entrypoint.properties,
+                [`${schemeable.id}`]: defRef,
+              },
+            }
+          : entrypoint;
+
       const nRoot = curr
         ? {
-          ...root,
-          [schemeable.root!]: {
-            ...curr,
-            anyOf: [...(curr?.anyOf ?? []), { $ref: schemeable.id }],
-          },
-        }
+            ...root,
+            [schemeable.root!]: {
+              ...curr,
+              anyOf: [...(curr?.anyOf ?? []), defRef],
+            },
+          }
         : root;
 
-      return [nDef, nRoot];
+      return [nDef, nRoot, entrypointConfig];
     },
-    [{}, {}] as [Schemas["definitions"], Schemas["root"]],
+    [{}, {}, {}] as [Schemas["definitions"], Schemas["root"], JSONSchema7]
   );
-  const allRoots = { ...root, ...schemas.root };
-  const configState = Object.keys(allRoots).reduce(
+
+  // React json schema form does not support $id property to refer the inner json schema.
+  // Meaning that our components cannot be addressed using its path, because a path `/` is considered as a level of json schema indentation.
+  // so you cannot have `./loaders/loader.ts` you should have three levels {".": { "loaders": {"loader.ts":{}}}}, so this function split the id and create the multi-level json schema
+  const defNormalized: DeepDefinitions = {};
+  for (const key of Object.keys(definitions)) {
+    const parts = key.split("/");
+    let curr: DeepDefinitions = defNormalized;
+    for (const part of parts.slice(0, parts.length - 1)) {
+      curr[part] ??= {};
+      curr = curr[part] as DeepDefinitions;
+    }
+    curr[parts[parts.length - 1]] = definitions[key];
+  }
+
+  const { state, ...exceptState } = schemas.root;
+  // merge roots to merge imports and self generated json schema.
+  let mergedRoots = mergeSchemasRoot(root, exceptState);
+  const configState = Object.keys(mergedRoots).reduce(
     (curr, key) => {
       return { ...curr, anyOf: [...curr.anyOf, { $ref: `#/root/${key}` }] };
     },
-    { anyOf: [] as JSONSchema7[] },
+    { anyOf: [] as JSONSchema7[] }
   );
+  // merge states
+  const entrypointState = mergeStates(state, entrypoint);
+
   manifest["schemas"] = {
     kind: "js",
     raw: {
-      definitions: { ...definitions, ...schemas.definitions },
+      definitions: { ...defNormalized, ...schemas.definitions },
       root: {
-        ...allRoots,
+        ...mergedRoots,
         state: {
           type: "object",
+          ...entrypointState,
           additionalProperties: configState,
         },
       },
@@ -305,10 +399,62 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         schemeables: { ...initial.schemeables, [id]: union(schemeable, ref) },
       });
     },
-    withDefinitions: (def): ManifestBuilder => {
+    mergeWith: (def: Record<string, DecoManifest>): ManifestBuilder => {
+      let innerBuilder = newManifestBuilder(initial);
+      let mergedRoots: Schemas["root"] = {};
+      let mergedDefinitions: Schemas["definitions"] = {};
+      for (const [key, manifest] of Object.entries(def)) {
+        const {
+          routes: _doNotMergeRoutes,
+          config: _ignoreConfig,
+          baseUrl: _ignoreBaseUrl,
+          schemas: {
+            root: { state, ...root },
+            definitions: { ".": self },
+          },
+          ...blocks
+        } = manifest;
+
+        mergedRoots = mergeSchemasRoot(mergedRoots, root, key);
+        mergedRoots["state"] = mergeStates(mergedRoots["state"], state, key);
+        // TODO Improve generation performance here @author Marcos V. Candeia
+        mergedDefinitions[key] = JSON.parse(
+          JSON.stringify(self).replaceAll(
+            "#/definitions/./",
+            `#/definitions/${key}/`
+          )
+        );
+
+        let blockN = 0;
+        for (const [block, value] of Object.entries(blocks)) {
+          blockN++;
+          let blockC = 0;
+          for (const path of Object.keys(value)) {
+            const ref = `${key}${"$".repeat(blockN)}${blockC}`;
+            blockC++;
+            const functionRef = path.replace("./", `${key}/`);
+            innerBuilder = innerBuilder
+              .addImports({
+                from: functionRef,
+                clauses: [{ alias: ref }],
+              })
+              .addValuesOnManifestKey(block, [
+                functionRef,
+                {
+                  kind: "js",
+                  raw: { identifier: ref },
+                },
+              ]);
+          }
+        }
+      }
+      const data = innerBuilder.data;
       return newManifestBuilder({
-        ...initial,
-        schemas: { ...initial.schemas, ...def },
+        ...data,
+        schemas: {
+          definitions: { ...data.schemas.definitions, ...mergedDefinitions },
+          root: { ...data.schemas.root, ...mergedRoots },
+        },
       });
     },
     data: initial,
@@ -318,7 +464,8 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
       if (!sameImportLength) {
         return false;
       }
-      const sameSchemeablesLength = Object.keys(initial.schemas.root).length ===
+      const sameSchemeablesLength =
+        Object.keys(initial.schemas.root).length ===
           Object.keys(other.data.schemas.root).length &&
         Object.keys(initial.schemas.definitions).length ===
           Object.keys(other.data.schemas.definitions).length;
@@ -348,7 +495,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           }
         }
       }
-
+      // TODO Fix me @author Marcos V. Candeia this is slow
       return JSON.stringify(initial) === JSON.stringify(other.data);
     },
     toJSONString: () => JSON.stringify(initial),
@@ -396,7 +543,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           {
             ...initial.manifest,
             [key]: initial.manifest[key] ?? { kind: "obj", value: {} },
-          },
+          }
         ),
       });
     },

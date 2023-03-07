@@ -19,7 +19,7 @@ export const union = (s: Schemeable, ref: string): Schemeable => {
 };
 const schemeableToJSONSchemaFunc = (
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable,
+  schemeable: Schemeable
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const type = schemeable.type;
   switch (type) {
@@ -43,7 +43,6 @@ const schemeableToJSONSchemaFunc = (
             ndef,
             {
               ...currSchema,
-              type: currSchema.type ?? sc.type,
               anyOf: [...currSchema.anyOf!, sc],
             },
           ];
@@ -51,10 +50,9 @@ const schemeableToJSONSchemaFunc = (
         [
           def,
           {
-            type: undefined,
             anyOf: [],
           },
-        ] as [Record<string, JSONSchema7>, JSONSchema7],
+        ] as [Record<string, JSONSchema7>, JSONSchema7]
       );
     }
     case "object": {
@@ -63,12 +61,12 @@ const schemeableToJSONSchemaFunc = (
           const [nDef, sc] = schemeableToJSONSchema(def, schemeable);
           return [nDef, [...exts, sc]];
         },
-        [def, [] as JSONSchema7[]],
+        [def, [] as JSONSchema7[]]
       );
       const [nDef, properties] = Object.entries(schemeable.value).reduce(
         (
           [currDef, properties],
-          [property, { schemeable, title, jsDocSchema }],
+          [property, { schemeable, title, jsDocSchema }]
         ) => {
           const [nDef, sc] = schemeableToJSONSchema(currDef, schemeable);
           return [
@@ -76,7 +74,7 @@ const schemeableToJSONSchemaFunc = (
             { ...properties, [property]: { title, ...sc, ...jsDocSchema } },
           ];
         },
-        [currDef, {}],
+        [currDef, {}]
       );
       return [
         nDef,
@@ -85,7 +83,7 @@ const schemeableToJSONSchemaFunc = (
           allOf,
           properties,
           required: schemeable.required,
-          title: schemeable.title,
+          title: schemeable.title ?? schemeable.id,
         },
       ];
     }
@@ -94,7 +92,9 @@ const schemeableToJSONSchemaFunc = (
       return [
         nDef,
         {
-          title: "Record",
+          title: schemeable.value.id
+            ? `Record of ${schemeable.value.id}`
+            : "Unknown record",
           type: "object",
           additionalProperties: properties,
         },
@@ -105,13 +105,14 @@ const schemeableToJSONSchemaFunc = (
       return [def, {}];
   }
 };
+
 export const schemeableToJSONSchema = (
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable,
+  schemeable: Schemeable
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const schemeableId = schemeable.id;
   if (schemeableId && def[schemeableId]) {
-    return [def, { $ref: schemeableId }];
+    return [def, { $ref: `#/definitions/${schemeableId}` }];
   }
   const [nSchema, curr] = schemeableToJSONSchemaFunc(def, schemeable);
 
@@ -121,7 +122,7 @@ export const schemeableToJSONSchema = (
         ...nSchema,
         [schemeableId]: nSchema[schemeableId] ?? { ...curr, $id: schemeableId },
       },
-      { $ref: schemeableId },
+      { $ref: `#/definitions/${schemeableId}` },
     ];
   }
   return [nSchema, curr];

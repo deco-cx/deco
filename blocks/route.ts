@@ -1,31 +1,53 @@
 // deno-lint-ignore-file no-explicit-any
 import { Handler, HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
+import { MiddlewareRoute, RouteModule } from "$fresh/src/server/types.ts";
 import { ComponentFunc, LiveRouteConfig } from "$live/blocks/types.ts";
-import { Block } from "$live/engine/block.ts";
-import { context as liveContext } from "$live/live.ts";
 import { FreshContext } from "$live/engine/adapters/fresh/manifest.ts";
-import { BlockModuleRef } from "$live/engine/block.ts";
+import { Block, BlockModuleRef } from "$live/engine/block.ts";
 import { Rezolver } from "$live/engine/core/mod.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { ASTNode, Param, TsType } from "$live/engine/schema/ast.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
+import { context as liveContext } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
+import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 
 type HandlerLike = Handler<any, any> | Handlers<any, any>;
 type ConfigurableRoute = {
   handler?: HandlerLike;
-  config: LiveRouteConfig & { liveKey: string };
+  config: LiveRouteConfig;
+};
+
+const hasAnyMethod = (obj: Record<string, any>): boolean => {
+  for (const method in METHODS) {
+    if (obj[method]) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const isConfigurableRoute = (
-  v: DecoManifest["routes"][string] | ConfigurableRoute,
+  v: DecoManifest["routes"][string] | ConfigurableRoute
 ): v is ConfigurableRoute => {
-  return (v as ConfigurableRoute)?.config?.liveKey !== undefined;
+  const handler = (v as RouteModule).handler;
+  const defaultIsFunc = typeof (v as RouteModule).default === "function";
+  const handlerIsFunc = typeof handler === "function";
+
+  const handlerIsFuncMap =
+    handler !== undefined &&
+    typeof handler === "object" &&
+    hasAnyMethod(handler);
+
+  return (
+    (handlerIsFunc || defaultIsFunc || handlerIsFuncMap) &&
+    !Array.isArray((v as MiddlewareRoute).handler)
+  );
 };
 const mapHandlers = (
   key: string,
   rz: Rezolver<FreshContext>,
-  handlers: Handler<any, any> | Handlers<any, any> | undefined,
+  handlers: Handler<any, any> | Handlers<any, any> | undefined
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
@@ -42,10 +64,11 @@ const mapHandlers = (
     });
   }
   return async function (request: Request, context: HandlerContext) {
-    const $live = (await rz.resolve(key, {
-      context,
-      request,
-    })) ?? {};
+    const $live =
+      (await rz.resolve(key, {
+        context,
+        request,
+      })) ?? {};
 
     if (typeof handlers === "function") {
       return handlers(request, {
@@ -60,11 +83,11 @@ const mapHandlers = (
 export type Route<TProps = unknown> = ComponentFunc<PageProps<TProps>>;
 const blockType = "routes";
 const routeBlock: Block<Route, Response> = {
-  decorate: (route) => {
+  decorate: (route, key) => {
     if (isConfigurableRoute(route)) {
       const configurableRoute = route;
       const handl = configurableRoute.handler;
-      const liveKey = configurableRoute.config?.liveKey;
+      const liveKey = configurableRoute.config?.liveKey ?? key;
       return {
         ...route,
         handler: mapHandlers(liveKey, liveContext.configResolver!, handl),
@@ -82,7 +105,7 @@ const routeBlock: Block<Route, Response> = {
     };
 
     const handlerNode = ast.find(
-      (node) => node.name === "handler" && node.declarationKind === "export",
+      (node) => node.name === "handler" && node.declarationKind === "export"
     );
     const liveConfigImport = ast.find((node) => {
       return node.kind === "import" && node.importDef.imported === "LiveConfig";
@@ -90,7 +113,7 @@ const routeBlock: Block<Route, Response> = {
     if (handlerNode && liveConfigImport) {
       const configSchemeable = schemeableFromHandleNode(
         handlerNode,
-        liveConfigImport.name,
+        liveConfigImport.name
       );
       if (configSchemeable) {
         return {
@@ -98,7 +121,7 @@ const routeBlock: Block<Route, Response> = {
           inputSchema: await tsTypeToSchemeable(
             transformationContext,
             configSchemeable,
-            [path, ast],
+            [path, ast]
           ),
         };
       }
@@ -145,7 +168,7 @@ const routeBlock: Block<Route, Response> = {
         inputSchema: await tsTypeToSchemeable(
           transformationContext,
           typeParams[0],
-          [path, ast],
+          [path, ast]
         ),
       };
     }
@@ -156,7 +179,7 @@ const routeBlock: Block<Route, Response> = {
 
 function schemeableFromHandleNode(
   handlerNode: ASTNode,
-  liveImportAs: string,
+  liveImportAs: string
 ): TsType | null {
   let contextParam: Param | null = null;
   if (handlerNode.kind === "function") {

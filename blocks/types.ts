@@ -10,17 +10,17 @@ export type InstanceOf<
   _Schema extends `#/root/${TBlock["type"]}` = `#/root/${TBlock["type"]}`,
   TBlockSerializable = TBlock extends Block<any, infer Serializable>
     ? Serializable
-    : never,
+    : never
 > = TBlockSerializable;
 
 export type ComponentFunc<
   TProps = any,
-  TReturn extends JSX.Element = JSX.Element,
+  TReturn extends JSX.Element = JSX.Element
 > = (props: TProps) => TReturn;
 
 export interface PreactComponent<
   TReturn extends JSX.Element = JSX.Element,
-  TProps = any,
+  TProps = any
 > {
   Component: ComponentFunc<TProps, TReturn>;
   props: TProps;

@@ -13,11 +13,7 @@ const MatchUserAgent = (
   const regexMatch = match ? new RegExp(match).test(ua) : true;
   const includesFound = includes ? ua.includes(includes) : true;
 
-  return {
-    // If both match and includes are provided, both must be true.
-    isMatch: regexMatch && includesFound,
-    duration: "request",
-  };
+  return regexMatch && includesFound;
 };
 
 export default MatchUserAgent;

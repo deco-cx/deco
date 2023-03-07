@@ -5,11 +5,9 @@ export interface Props {
 const MatchEnvironment = ({ environment }: Props) => {
   const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID") || "";
 
-  return {
-    isMatch:
-      environment === "production" ? deploymentId !== "" : deploymentId === "",
-    duration: "request",
-  };
+  return environment === "production"
+    ? deploymentId !== ""
+    : deploymentId === "";
 };
 
 export default MatchEnvironment;
