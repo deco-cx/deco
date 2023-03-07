@@ -122,9 +122,9 @@ const manifest = {
             "type": "object",
             "allOf": [],
             "properties": {
-              "component": { "title": "Component", "$ref": "#/root/pages" },
+              "page": { "title": "Page", "$ref": "#/root/pages" },
             },
-            "required": ["component"],
+            "required": ["page"],
             "title": "./handlers/fresh.ts@FreshConfig",
             "$id": "./handlers/fresh.ts@FreshConfig",
           },

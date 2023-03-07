@@ -72,6 +72,35 @@ const withDefinition =
       ]);
   };
 
+const addCatchAllRoute = (man: ManifestBuilder): ManifestBuilder => {
+  const routesObj = man.data.manifest["routes"];
+  if (
+    routesObj?.kind === "obj" &&
+    routesObj.value["./routes/[...catchall].tsx"]
+  ) {
+    console.warn(
+      `%cwarn%c: the live entrypoint ./routes/[...catchall].tsx was overwritten.`,
+      "color: yellow; font-weight: bold",
+      ""
+    );
+
+    return man;
+  }
+  const catchallroute = "routes/[...catchall].tsx";
+  const ref = "$live_catchall";
+  return man
+    .addImports({
+      from: `$live/${catchallroute}`,
+      clauses: [{ alias: ref }],
+    })
+    .addValuesOnManifestKey("routes", [
+      `./routes/[...catchall].tsx`,
+      {
+        kind: "js",
+        raw: { identifier: ref },
+      },
+    ]);
+};
 const addDefinitions = async (
   blocks: Block[],
   transformContext: TransformContext
@@ -174,5 +203,5 @@ export const decoManifestBuilder = async (
         ([src, src, await denoDoc(src)] as ModuleAST)
       );
     },
-  });
+  }).then(addCatchAllRoute);
 };

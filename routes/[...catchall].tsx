@@ -5,9 +5,9 @@ import { LiveConfig, LiveRouteConfig } from "$live/blocks/types.ts";
 
 export default function Render({
   data: {
-    component: { Component, props },
+    page: { Component, props },
   },
-}: PageProps<{ component: PageInstance }>) {
+}: PageProps<{ page: PageInstance }>) {
   return <Component {...props}></Component>;
 }
 export interface EntrypointConfig {
