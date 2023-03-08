@@ -4,8 +4,9 @@
 
 import config from "./deno.json" assert { type: "json" };
 import * as $$0 from "./routes/[...catchall].tsx";
-import * as $$$$0 from "./handlers/router.ts";
-import * as $$$$1 from "./handlers/fresh.ts";
+import * as $$$$0 from "./handlers/routesSelection.ts";
+import * as $$$$1 from "./handlers/router.ts";
+import * as $$$$2 from "./handlers/fresh.ts";
 import * as $$$$$0 from "./pages/LivePage.tsx";
 import * as $$$$$$0 from "./sections/Head.tsx";
 import * as $$$$$$$0 from "./matchers/MatchDate.ts";
@@ -24,8 +25,9 @@ const manifest = {
     "./routes/[...catchall].tsx": $$0,
   },
   "handlers": {
-    "./handlers/router.ts": $$$$0,
-    "./handlers/fresh.ts": $$$$1,
+    "./handlers/routesSelection.ts": $$$$0,
+    "./handlers/router.ts": $$$$1,
+    "./handlers/fresh.ts": $$$$2,
   },
   "pages": {
     "./pages/LivePage.tsx": $$$$$0,
@@ -81,13 +83,38 @@ const manifest = {
             "$id": "./routes/[...catchall].tsx",
           },
         },
-        "record<string, Handler>": {
-          "title": "Unknown record",
-          "type": "object",
-          "additionalProperties": { "$ref": "#/root/handlers" },
-          "$id": "./record<string, Handler>",
-        },
         "handlers": {
+          "routesSelection.ts@SelectionConfig": {
+            "type": "object",
+            "allOf": [],
+            "properties": {
+              "flags": {
+                "title": "Flags",
+                "type": "array",
+                "items": { "$ref": "#/root/flags" },
+              },
+            },
+            "required": ["flags"],
+            "title": "./handlers/routesSelection.ts@SelectionConfig",
+            "$id": "./handlers/routesSelection.ts@SelectionConfig",
+          },
+          "routesSelection.ts": {
+            "title": "./handlers/routesSelection.ts",
+            "type": "object",
+            "allOf": [{
+              "$ref":
+                "#/definitions/./handlers/routesSelection.ts@SelectionConfig",
+            }],
+            "required": ["__resolveType"],
+            "properties": {
+              "__resolveType": {
+                "type": "string",
+                "const": "./handlers/routesSelection.ts",
+                "default": "./handlers/routesSelection.ts",
+              },
+            },
+            "$id": "./handlers/routesSelection.ts",
+          },
           "router.ts@RouterConfig": {
             "type": "object",
             "allOf": [],
@@ -95,7 +122,7 @@ const manifest = {
               "base": { "title": "Base", "type": ["string", "null"] },
               "routes": {
                 "title": "Routes",
-                "$ref": "#/definitions/./record<string, Handler>",
+                "$ref": "#/definitions/./record<string, Resolvable>",
               },
             },
             "required": ["routes"],
@@ -144,6 +171,12 @@ const manifest = {
             },
             "$id": "./handlers/fresh.ts",
           },
+        },
+        "record<string, Resolvable>": {
+          "title": "Unknown record",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/root/handlers" },
+          "$id": "./record<string, Resolvable>",
         },
         "components": {
           "LivePage.tsx@Props": {
@@ -438,11 +471,11 @@ const manifest = {
             "$id": "./matchers/MatchAlways.ts",
           },
         },
-        "record<string, Resolvable>": {
+        "record<string, string>": {
           "title": "Unknown record",
           "type": "object",
-          "additionalProperties": { "$ref": "#/root/state" },
-          "$id": "./record<string, Resolvable>",
+          "additionalProperties": { "type": "string" },
+          "$id": "./record<string, string>",
         },
         "flags": {
           "audience.ts@Audience": {
@@ -451,12 +484,23 @@ const manifest = {
             "properties": {
               "matcher": { "title": "Matcher", "$ref": "#/root/matchers" },
               "name": { "title": "Name", "type": "string" },
-              "state": {
-                "title": "State",
-                "$ref": "#/definitions/./record<string, Resolvable>",
+              "true": {
+                "type": "object",
+                "allOf": [],
+                "properties": {
+                  "routes": {
+                    "title": "Routes",
+                    "$ref": "#/definitions/./record<string, Resolvable>",
+                  },
+                  "overrides": {
+                    "title": "Overrides",
+                    "$ref": "#/definitions/./record<string, string>",
+                  },
+                },
+                "required": ["routes"],
               },
             },
-            "required": ["matcher", "name", "state"],
+            "required": ["matcher", "name", "true"],
             "title": "./flags/audience.ts@Audience",
             "$id": "./flags/audience.ts@Audience",
           },
@@ -478,9 +522,13 @@ const manifest = {
             "type": "object",
             "allOf": [],
             "properties": {
-              "state": {
-                "title": "State",
+              "routes": {
+                "title": "Routes",
                 "$ref": "#/definitions/./record<string, Resolvable>",
+              },
+              "overrides": {
+                "title": "Overrides",
+                "$ref": "#/definitions/./record<string, string>",
               },
             },
             "required": [],
@@ -513,9 +561,9 @@ const manifest = {
       },
       "handlers": {
         "title": "handlers",
-        "anyOf": [{ "$ref": "#/definitions/./handlers/router.ts" }, {
-          "$ref": "#/definitions/./handlers/fresh.ts",
-        }],
+        "anyOf": [{ "$ref": "#/definitions/./handlers/routesSelection.ts" }, {
+          "$ref": "#/definitions/./handlers/router.ts",
+        }, { "$ref": "#/definitions/./handlers/fresh.ts" }],
       },
       "pages": {
         "title": "pages",

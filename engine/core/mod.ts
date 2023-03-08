@@ -27,12 +27,17 @@ export class Rezolver<TContext extends BaseContext = BaseContext> {
   };
 
   public resolve = <T = any>(
-    type: string,
+    typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
-    configs?: Record<string, Resolvable>,
+    overrides?: Record<string, string>
   ): PromiseOrValue<T> => {
     const { resolvers: res, getResolvable: useConfigs } = this.config;
-    const getResolvable = configs ? (key: string) => configs[key] : useConfigs;
+    const getResolvable = overrides
+      ? <V>(key: string): Resolvable<V> => {
+          const rerouted = overrides[key] ?? key;
+          return useConfigs(rerouted);
+        }
+      : useConfigs;
     const resolvers = {
       ...res,
       ...this.resolvers,
@@ -51,15 +56,18 @@ export class Rezolver<TContext extends BaseContext = BaseContext> {
     function _resolve<T>(data: Resolvable<T>): Promise<T> {
       return resolve(resolvers, data, getResolvable, ctx);
     }
-    const resolvable = this.getResolvable(type);
+    const resolvable =
+      typeof typeOrResolvable === "string"
+        ? getResolvable<T>(typeOrResolvable)
+        : typeOrResolvable;
     if (resolvable === undefined) {
       return undefined as T;
     }
     return resolve<T, TContext>(
       resolvers,
-      this.getResolvable(type),
-      this.getResolvable,
-      ctx as TContext,
+      resolvable,
+      getResolvable,
+      ctx as TContext
     );
   };
 }
