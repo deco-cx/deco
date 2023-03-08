@@ -4,7 +4,7 @@ import blocks from "$live/blocks/index.ts";
 import defaultResolvers from "$live/engine/adapters/fresh/defaults.ts";
 import { useFileProvider } from "$live/engine/adapters/fresh/fileProvider.ts";
 import { BlockModule } from "$live/engine/block.ts";
-import { Rezolver } from "$live/engine/core/mod.ts";
+import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
   Resolver,
@@ -80,7 +80,7 @@ export const configurable = (m: DecoManifest): DecoManifest => {
     [m, {}] as [DecoManifest, ResolverMap<FreshContext>]
   );
   const provider = useFileProvider("./config.json");
-  const resolver = new Rezolver<FreshContext>({
+  const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers },
     getResolvable: provider.get.bind(provider),
   });

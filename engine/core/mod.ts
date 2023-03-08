@@ -6,15 +6,15 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
-export interface RezolverConfig<TContext extends BaseContext = BaseContext> {
+export interface ResolverConfigs<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
   getResolvable: <V>(t: string) => Resolvable<V>;
 }
 
-export class Rezolver<TContext extends BaseContext = BaseContext> {
+export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   protected getResolvable: <T>(type: string) => Resolvable<T>;
   protected resolvers: ResolverMap<TContext>;
-  constructor(protected config: RezolverConfig<TContext>) {
+  constructor(protected config: ResolverConfigs<TContext>) {
     this.resolvers = {};
     this.getResolvable = this.config.getResolvable.bind(this.config);
   }

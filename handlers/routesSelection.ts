@@ -9,7 +9,7 @@ import { Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
 
 export interface SelectionConfig {
-  flags: Flag[];
+  flags: Flag[]; // TODO it should be possible to specify a Flag<T> instead. author Marcos V. Candeia
 }
 
 interface AudienceFlag {
@@ -23,6 +23,7 @@ const isAudience = (f: Flag | AudienceFlag): f is AudienceFlag => {
     (f as AudienceFlag).true?.overrides !== undefined
   );
 };
+
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, ctx: HandlerContext): Promise<Response> => {

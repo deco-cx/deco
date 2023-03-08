@@ -4,7 +4,7 @@ import { MiddlewareRoute, RouteModule } from "$fresh/src/server/types.ts";
 import { ComponentFunc, LiveRouteConfig } from "$live/blocks/types.ts";
 import { FreshContext } from "$live/engine/adapters/fresh/manifest.ts";
 import { Block, BlockModuleRef } from "$live/engine/block.ts";
-import { Rezolver } from "$live/engine/core/mod.ts";
+import { ConfigResolver } from "$live/engine/core/mod.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { ASTNode, Param, TsType } from "$live/engine/schema/ast.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
@@ -46,7 +46,7 @@ const isConfigurableRoute = (
 };
 const mapHandlers = (
   key: string,
-  rz: Rezolver<FreshContext>,
+  rz: ConfigResolver<FreshContext>,
   handlers: Handler<any, any> | Handlers<any, any> | undefined
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {

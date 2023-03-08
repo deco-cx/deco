@@ -24,7 +24,7 @@ import { workbenchHandler } from "$live/utils/workbench.ts";
 import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import { FreshContext } from "$live/engine/adapters/fresh/manifest.ts";
 import { Block } from "$live/engine/block.ts";
-import { Rezolver } from "$live/engine/core/mod.ts";
+import { ConfigResolver } from "$live/engine/core/mod.ts";
 
 // The global live context
 export type LiveContext = {
@@ -34,7 +34,7 @@ export type LiveContext = {
   site: string;
   siteId: number;
   loginUrl?: string;
-  configResolver?: Rezolver<FreshContext>;
+  configResolver?: ConfigResolver<FreshContext>;
   blocks?: Block[];
 };
 

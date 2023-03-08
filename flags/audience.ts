@@ -6,10 +6,8 @@ import { Handler } from "$live/blocks/handler.ts";
 export interface Audience {
   matcher: Matcher;
   name: string;
-  true: {
-    routes: Record<string, Resolvable<Handler>>;
-    overrides?: Record<string, string>;
-  };
+  routes: Record<string, Resolvable<Handler>>;
+  overrides?: Record<string, string>;
 }
 
 export default function Audience({
