@@ -65,23 +65,6 @@ const manifest = {
             "title": "./routes/[...catchall].tsx@EntrypointConfig",
             "$id": "./routes/[...catchall].tsx@EntrypointConfig",
           },
-          "[...catchall].tsx": {
-            "title": "./routes/[...catchall].tsx",
-            "type": "object",
-            "allOf": [{
-              "$ref":
-                "#/definitions/./routes/[...catchall].tsx@EntrypointConfig",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "const": "./routes/[...catchall].tsx",
-                "default": "./routes/[...catchall].tsx",
-              },
-            },
-            "$id": "./routes/[...catchall].tsx",
-          },
         },
         "handlers": {
           "routesSelection.ts@SelectionConfig": {
@@ -109,7 +92,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./handlers/routesSelection.ts",
                 "default": "./handlers/routesSelection.ts",
               },
             },
@@ -139,7 +121,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./handlers/router.ts",
                 "default": "./handlers/router.ts",
               },
             },
@@ -165,7 +146,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./handlers/fresh.ts",
                 "default": "./handlers/fresh.ts",
               },
             },
@@ -178,34 +158,21 @@ const manifest = {
           "additionalProperties": { "$ref": "#/root/handlers" },
           "$id": "./record<string, Resolvable>",
         },
-        "components": {
-          "LivePage.tsx@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "sections": {
-                "title": "Sections",
-                "type": "array",
-                "items": { "$ref": "#/root/sections" },
-              },
-            },
-            "required": ["sections"],
-            "title": "./components/LivePage.tsx@Props",
-            "$id": "./components/LivePage.tsx@Props",
-          },
-        },
         "pages": {
+          "LivePage.tsx@3d172d36-f063-4823-8e3e-503834f91bd7": {
+            "$id": "./pages/LivePage.tsx@3d172d36-f063-4823-8e3e-503834f91bd7",
+          },
           "LivePage.tsx": {
             "title": "./pages/LivePage.tsx",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./components/LivePage.tsx@Props",
+              "$ref":
+                "#/definitions/./pages/LivePage.tsx@3d172d36-f063-4823-8e3e-503834f91bd7",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./pages/LivePage.tsx",
                 "default": "./pages/LivePage.tsx",
               },
             },
@@ -265,7 +232,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./sections/Head.tsx",
                 "default": "./sections/Head.tsx",
               },
             },
@@ -302,7 +268,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./matchers/MatchDate.ts",
                 "default": "./matchers/MatchDate.ts",
               },
             },
@@ -329,7 +294,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./matchers/MatchUserAgent.ts",
                 "default": "./matchers/MatchUserAgent.ts",
               },
             },
@@ -355,7 +319,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./matchers/MatchSite.ts",
                 "default": "./matchers/MatchSite.ts",
               },
             },
@@ -392,7 +355,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./matchers/MatchMulti.ts",
                 "default": "./matchers/MatchMulti.ts",
               },
             },
@@ -418,7 +380,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./matchers/MatchRandom.ts",
                 "default": "./matchers/MatchRandom.ts",
               },
             },
@@ -450,7 +411,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./matchers/MatchEnvironment.ts",
                 "default": "./matchers/MatchEnvironment.ts",
               },
             },
@@ -464,7 +424,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./matchers/MatchAlways.ts",
                 "default": "./matchers/MatchAlways.ts",
               },
             },
@@ -484,23 +443,16 @@ const manifest = {
             "properties": {
               "matcher": { "title": "Matcher", "$ref": "#/root/matchers" },
               "name": { "title": "Name", "type": "string" },
-              "true": {
-                "type": "object",
-                "allOf": [],
-                "properties": {
-                  "routes": {
-                    "title": "Routes",
-                    "$ref": "#/definitions/./record<string, Resolvable>",
-                  },
-                  "overrides": {
-                    "title": "Overrides",
-                    "$ref": "#/definitions/./record<string, string>",
-                  },
-                },
-                "required": ["routes"],
+              "routes": {
+                "title": "Routes",
+                "$ref": "#/definitions/./record<string, Resolvable>",
+              },
+              "overrides": {
+                "title": "Overrides",
+                "$ref": "#/definitions/./record<string, string>",
               },
             },
-            "required": ["matcher", "name", "true"],
+            "required": ["matcher", "name", "routes"],
             "title": "./flags/audience.ts@Audience",
             "$id": "./flags/audience.ts@Audience",
           },
@@ -512,7 +464,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./flags/audience.ts",
                 "default": "./flags/audience.ts",
               },
             },
@@ -545,7 +496,6 @@ const manifest = {
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "const": "./flags/everyone.ts",
                 "default": "./flags/everyone.ts",
               },
             },
@@ -557,7 +507,9 @@ const manifest = {
     "root": {
       "routes": {
         "title": "routes",
-        "anyOf": [{ "$ref": "#/definitions/./routes/[...catchall].tsx" }],
+        "anyOf": [{
+          "$ref": "#/definitions/./routes/[...catchall].tsx@EntrypointConfig",
+        }],
       },
       "handlers": {
         "title": "handlers",
@@ -596,7 +548,17 @@ const manifest = {
         "required": ["./routes/[...catchall].tsx"],
         "properties": {
           "./routes/[...catchall].tsx": {
-            "$ref": "#/definitions/./routes/[...catchall].tsx",
+            "$ref": "#/definitions/./routes/[...catchall].tsx@EntrypointConfig",
+            "allOf": [{
+              "type": "object",
+              "properties": {
+                "__resolveType": {
+                  "type": "string",
+                  "const": "resolve",
+                  "default": "resolve",
+                },
+              },
+            }],
           },
         },
         "additionalProperties": {

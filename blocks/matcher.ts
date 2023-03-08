@@ -14,12 +14,6 @@ type MatchFunc<TConfig = unknown> = (
   config: TConfig
 ) => (ctx: MatchContext) => boolean;
 
-const isMatchFuncNoPartial = <TConfig = unknown>(
-  f: MatchFunc<TConfig> | ((c: TConfig, ctx: MatchContext) => boolean)
-): f is (c: TConfig, ctx: MatchContext) => boolean => {
-  return f.arguments.length >= 2;
-};
-
 const matcherBlock: Block<MatchFunc> = {
   type: "matchers",
   defaultPreview: async (matcher, { request }) => {
@@ -42,11 +36,16 @@ const matcherBlock: Block<MatchFunc> = {
       default: (config: TConfig) => (ctx: MatchContext) => boolean;
     }) =>
     ($live: TConfig) => {
-      if (isMatchFuncNoPartial(func)) {
-        return (ctx) => func($live, ctx);
-      }
-      const matcher = func($live);
-      return typeof matcher !== "function" ? () => matcher : matcher;
+      return (ctx: MatchContext) => {
+        const fMatcher = func as unknown as
+          | ((c: TConfig, ctx: MatchContext) => boolean)
+          | MatchFunc;
+        const matcherFuncOrValue = fMatcher($live, ctx);
+        if (typeof matcherFuncOrValue === "function") {
+          return matcherFuncOrValue(ctx);
+        }
+        return matcherFuncOrValue;
+      };
     },
 };
 

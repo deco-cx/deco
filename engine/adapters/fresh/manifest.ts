@@ -66,6 +66,7 @@ export const configurable = (m: DecoManifest): DecoManifest => {
         }
         return prv;
       }, {} as ResolverMap<FreshContext>);
+
       const adapted = blk.adapt
         ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
             decorated,

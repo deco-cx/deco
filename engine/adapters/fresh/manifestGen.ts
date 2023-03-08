@@ -26,39 +26,45 @@ const withDefinition =
     const ref = `${"$".repeat(blockIdx)}${blkN}`;
     const inputSchemaId = inputSchema?.id ?? crypto.randomUUID();
     if (inputSchema) {
-      man = man.addSchemeables({ ...inputSchema, id: inputSchemaId });
+      man = man.addSchemeables({
+        ...inputSchema,
+        id: inputSchemaId,
+        root: block === "routes" ? block : undefined, // FIXME @author Marcos V. Candeia, the route block should be addressed using its configuration
+      });
     }
     const hasWellKnownOutput = outputSchema && outputSchema.type !== "unknown";
     if (hasWellKnownOutput) {
-      // TODO Add anyof com a funcao
       const outputId = outputSchema.id ?? crypto.randomUUID();
       man = man
         .addSchemeables({ ...outputSchema, id: outputId })
         .schemeableAnyOf(outputId, `#/definitions/${functionRef}`);
     }
-    const functionSchema: Schemeable = {
-      root: block,
-      id: functionRef,
-      type: "inline",
-      value: {
-        title: functionRef,
-        type: "object",
-        allOf:
-          inputSchema && inputSchemaId
-            ? [{ $ref: `#/definitions/${inputSchemaId}` }]
-            : [],
-        required: ["__resolveType"],
-        properties: {
-          __resolveType: {
-            type: "string",
-            const: functionRef,
-            default: functionRef,
+    // TODO @author Marcos V. Candeia arbitrarily chosen, this is not straightforward
+    // routes cannot be recreated, so we don't need to expose them as a block.
+    if (block !== "routes") {
+      const functionSchema: Schemeable = {
+        root: block,
+        id: functionRef,
+        type: "inline",
+        value: {
+          title: functionRef,
+          type: "object",
+          allOf:
+            inputSchema && inputSchemaId
+              ? [{ $ref: `#/definitions/${inputSchemaId}` }]
+              : [],
+          required: ["__resolveType"],
+          properties: {
+            __resolveType: {
+              type: "string",
+              default: functionRef,
+            },
           },
         },
-      },
-    };
+      };
+      man = man.addSchemeables(functionSchema);
+    }
     return man
-      .addSchemeables(functionSchema)
       .addImports({
         from: functionRef,
         clauses: [{ alias: ref }],

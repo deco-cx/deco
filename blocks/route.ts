@@ -2,9 +2,7 @@
 import { Handler, HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import { MiddlewareRoute, RouteModule } from "$fresh/src/server/types.ts";
 import { ComponentFunc, LiveRouteConfig } from "$live/blocks/types.ts";
-import { FreshContext } from "$live/engine/adapters/fresh/manifest.ts";
 import { Block, BlockModuleRef } from "$live/engine/block.ts";
-import { ConfigResolver } from "$live/engine/core/mod.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { ASTNode, Param, TsType } from "$live/engine/schema/ast.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
@@ -46,26 +44,31 @@ const isConfigurableRoute = (
 };
 const mapHandlers = (
   key: string,
-  rz: ConfigResolver<FreshContext>,
   handlers: Handler<any, any> | Handlers<any, any> | undefined
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
       return async function (request: Request, context: HandlerContext) {
-        const $live = await rz.resolve(key, {
+        const resolver = liveContext.configResolver!;
+        const $live = await resolver.resolve(key, {
           context,
           request,
         });
         return val!(request, {
           ...context,
-          state: { ...context.state, $live, resolve: rz.resolve.bind(rz) },
+          state: {
+            ...context.state,
+            $live,
+            resolve: resolver.resolve.bind(resolver),
+          },
         });
       };
     });
   }
   return async function (request: Request, context: HandlerContext) {
+    const resolver = liveContext.configResolver!;
     const $live =
-      (await rz.resolve(key, {
+      (await resolver.resolve(key, {
         context,
         request,
       })) ?? {};
@@ -73,7 +76,11 @@ const mapHandlers = (
     if (typeof handlers === "function") {
       return handlers(request, {
         ...context,
-        state: { ...context.state, $live, resolve: rz.resolve.bind(rz) },
+        state: {
+          ...context.state,
+          $live,
+          resolve: resolver.resolve.bind(resolver),
+        },
       });
     }
     return context.render($live);
@@ -90,7 +97,7 @@ const routeBlock: Block<Route, Response> = {
       const liveKey = configurableRoute.config?.liveKey ?? key;
       return {
         ...route,
-        handler: mapHandlers(liveKey, liveContext.configResolver!, handl),
+        handler: mapHandlers(liveKey, handl),
       };
     }
     return route;
@@ -151,7 +158,7 @@ const routeBlock: Block<Route, Response> = {
         pagePropsParam = defaultExport.functionDef.params[0];
       }
 
-      if (pagePropsParam === null || pagePropsParam.kind !== "object") {
+      if (pagePropsParam === null || pagePropsParam.kind !== "identifier") {
         return routeMod;
       }
       const pagePropsTsType = pagePropsParam.tsType;

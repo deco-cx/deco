@@ -240,10 +240,15 @@ const mergeStates = (
   for (const [prop, value] of Object.entries(
     (b?.properties ?? {}) as Record<string, JSONSchema7>
   )) {
-    properties[prop] = {
-      ...value,
-      $ref: key !== "." ? value.$ref!.replace("./", `${key}/`) : value.$ref,
-    };
+    const ref = value.$ref;
+    if (ref && key !== ".") {
+      properties[prop] = {
+        ...value,
+        $ref: ref.replace("./", `${key}/`),
+      };
+    } else {
+      properties[prop] = value;
+    }
   }
   return {
     ...a,
@@ -254,6 +259,11 @@ const mergeStates = (
       ...properties,
     },
   };
+};
+
+const fileNameOf = (id: string): string => {
+  const [fileName] = id.split("@");
+  return fileName;
 };
 
 export const stringify = ({
@@ -290,6 +300,7 @@ export const stringify = ({
         : undefined;
       const defRef = { $ref: `#/definitions/${schemeable.id}` };
 
+      const entrypointFile = fileNameOf(schemeable.id!);
       // This is not straightforward,
       // routes are considered entrypoints
       // whenever you define a new configuration so its added as an entrypoint.
@@ -297,10 +308,10 @@ export const stringify = ({
         schemeable.root === "routes"
           ? {
               ...entrypoint,
-              required: [...(entrypoint.required ?? []), `${schemeable.id}`],
+              required: [...(entrypoint.required ?? []), entrypointFile],
               properties: {
                 ...entrypoint.properties,
-                [`${schemeable.id}`]: defRef,
+                [entrypointFile]: defRef,
               },
             }
           : entrypoint;
@@ -419,10 +430,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         mergedRoots["state"] = mergeStates(mergedRoots["state"], state, key);
         // TODO Improve generation performance here @author Marcos V. Candeia
         mergedDefinitions[key] = JSON.parse(
-          JSON.stringify(self).replaceAll(
-            "#/definitions/./",
-            `#/definitions/${key}/`
-          )
+          JSON.stringify(self).replaceAll("./", `${key}/`)
         );
 
         let blockN = 0;

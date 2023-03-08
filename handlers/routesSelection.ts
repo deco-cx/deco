@@ -14,7 +14,7 @@ export interface SelectionConfig {
 
 interface AudienceFlag {
   matcher: Matcher;
-  true: Pick<Audience, "routes" | "overrides">;
+  true: Resolvable<Pick<Audience, "routes" | "overrides">>;
 }
 
 const isAudience = (f: Flag | AudienceFlag): f is AudienceFlag => {
@@ -61,6 +61,6 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     }
     const builtRoutes = Object.fromEntries(await Promise.all(routerPromises));
     const server = router(builtRoutes);
-    return server(req, ctx);
+    return await server(req, ctx);
   };
 }

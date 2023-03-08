@@ -1,1 +1,1 @@
-export * from "$live/components/LivePage.tsx";
+export { default } from "$live/components/LivePage.tsx";

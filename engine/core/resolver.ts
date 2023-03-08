@@ -18,7 +18,7 @@ export type ResolvableObj<T> = {
 export type Resolvable<T = any> = T & { __resolveType: string };
 
 const resolveTypeOf = <T>(
-  resolvable: T | Resolvable<T>,
+  resolvable: T | Resolvable<T>
 ): [Omit<T, "__resolveType">, ((p: unknown) => string) | undefined] => {
   if (isResolvable(resolvable)) {
     const { __resolveType, ...rest } = resolvable;
@@ -35,7 +35,7 @@ const isResolvable = <T>(v: T | Resolvable<T>): v is Resolvable<T> => {
 };
 
 const isResolvableObj = <T>(
-  v: T | Resolvable<T> | ResolvableObj<T>,
+  v: T | Resolvable<T> | ResolvableObj<T>
 ): v is ResolvableObj<T> => {
   return !isResolvable(v) && typeof v === "object";
 };
@@ -43,19 +43,19 @@ const isResolvableObj = <T>(
 export type AsyncResolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = (parent: TParent, context: TContext) => Promise<Resolvable<T> | T>;
 
 export type SyncResolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = (parent: TParent, context: TContext) => Resolvable<T> | T;
 
 export type Resolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = AsyncResolver<T, TParent, TContext> | SyncResolver<T, TParent, TContext>;
 
 export type ResolverMap<TContext extends BaseContext = BaseContext> = Record<
@@ -66,8 +66,8 @@ export type ResolverMap<TContext extends BaseContext = BaseContext> = Record<
 async function object<T>(
   obj: ResolvableObj<T> | T,
   resolve: <K extends keyof T>(
-    resolvable: Resolvable<T[K]>,
-  ) => PromiseOrValue<T[K]>,
+    resolvable: Resolvable<T[K]>
+  ) => PromiseOrValue<T[K]>
 ): Promise<T> {
   if (obj instanceof Date) {
     return obj;
@@ -91,7 +91,7 @@ const nativeResolverByType: Record<
   string,
   <T>(
     obj: T | ResolvableObj<T>,
-    resolve: <K>(resolvable: Resolvable<K>) => PromiseOrValue<K>,
+    resolve: <K>(resolvable: Resolvable<K>) => PromiseOrValue<K>
   ) => PromiseOrValue<T>
 > = {
   object,
@@ -106,7 +106,7 @@ export const resolve = async <T, TContext extends BaseContext = BaseContext>(
   resolverMap: ResolverMap<TContext>,
   resolvable: Resolvable<T>,
   getResolvable: <T>(type: string) => Resolvable<T> | undefined,
-  context: TContext,
+  context: TContext
 ): Promise<T> => {
   const resolverFunc = <K>(data: Resolvable<K>) =>
     resolve(resolverMap, data, getResolvable, context);
@@ -127,7 +127,7 @@ export const resolve = async <T, TContext extends BaseContext = BaseContext>(
       resolverMap,
       await resolver(resolved, context),
       getResolvable,
-      context,
+      context
     ) as T;
   }
   const resolvableRef = getResolvable(resolverType);
@@ -138,6 +138,6 @@ export const resolve = async <T, TContext extends BaseContext = BaseContext>(
     resolverMap,
     resolvableRef as Resolvable<T>,
     getResolvable,
-    context,
+    context
   );
 };
