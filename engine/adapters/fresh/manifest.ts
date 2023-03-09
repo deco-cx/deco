@@ -2,7 +2,7 @@
 import { HandlerContext, Manifest } from "$fresh/server.ts";
 import blocks from "$live/blocks/index.ts";
 import defaultResolvers from "$live/engine/adapters/fresh/defaults.ts";
-import { useFileProvider } from "$live/engine/adapters/fresh/fileProvider.ts";
+import { useDataProvider } from "$live/engine/adapters/fresh/providers.ts";
 import { BlockModule } from "$live/engine/block.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
@@ -14,7 +14,7 @@ import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
 import { Schemas } from "./manifestBuilder.ts";
 import { LiveConfig } from "$live/blocks/types.ts";
-
+import data from "./data.ts";
 export type FreshHandler<
   TConfig = any,
   TData = any,
@@ -80,7 +80,7 @@ export const configurable = (m: DecoManifest): DecoManifest => {
     },
     [m, {}] as [DecoManifest, ResolverMap<FreshContext>]
   );
-  const provider = useFileProvider("./config.json");
+  const provider = useDataProvider(data);
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers },
     getResolvable: provider.get.bind(provider),
