@@ -1,12 +1,12 @@
 import { Flag } from "$live/blocks/flag.ts";
 import { Handler } from "$live/blocks/handler.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
+import { isAwaitable } from "$live/engine/core/utils.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { context } from "$live/live.ts";
 import { HandlerContext } from "https://deno.land/x/fresh@1.1.2/server.ts";
 import { router } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { MatchContext, Matcher } from "../blocks/matcher.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
-import { isAwaitable } from "$live/engine/core/utils.ts";
 
 export interface SelectionConfig {
   flags: Flag[]; // TODO it should be possible to specify a Flag<T> instead. author Marcos V. Candeia
@@ -24,6 +24,18 @@ const isAudience = (f: Flag | AudienceFlag): f is AudienceFlag => {
   );
 };
 
+const rankRoute = (pattern: string) =>
+  pattern
+    .split("/")
+    .reduce(
+      (acc, routePart) =>
+        routePart.endsWith("*")
+          ? acc
+          : routePart.startsWith(":")
+          ? acc + 1
+          : acc + 2,
+      0
+    );
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, ctx: HandlerContext): Promise<Response> => {
@@ -59,7 +71,11 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
         routerPromises.push(Promise.resolve([route, resolvedOrPromise]));
       }
     }
-    const builtRoutes = Object.fromEntries(await Promise.all(routerPromises));
+    const builtRoutes = Object.fromEntries(
+      (await Promise.all(routerPromises)).sort(([routeString]) =>
+        rankRoute(routeString)
+      )
+    );
     const server = router(builtRoutes);
     return await server(req, ctx);
   };

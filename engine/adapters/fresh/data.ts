@@ -32349,6 +32349,12 @@ export default {
               },
               __resolveType: "$live/handlers/fresh.ts",
             },
+            "/": {
+                page: {
+                  __resolveType: "3520",
+                },
+                __resolveType: "$live/handlers/fresh.ts",
+              },
             "/*": {
               page: {
                 __resolveType: "3178",
@@ -32358,12 +32364,6 @@ export default {
             "/s": {
               page: {
                 __resolveType: "3179",
-              },
-              __resolveType: "$live/handlers/fresh.ts",
-            },
-            "/": {
-              page: {
-                __resolveType: "3520",
               },
               __resolveType: "$live/handlers/fresh.ts",
             },
