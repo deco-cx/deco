@@ -8,10 +8,10 @@ export interface Props {
 
 export default function LivePage({ sections }: Props) {
   const renderSection = (
-    { Component: Section, props }: Props["sections"][0],
+    { Component: Section, props, key }: Props["sections"][0],
   ) => {
     return (
-      <section>
+      <section data-manifest-key={key}>
         <Section {...props} />
       </section>
     );

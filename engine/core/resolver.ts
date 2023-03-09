@@ -8,6 +8,7 @@ import {
 
 export type ResolveFunc<T = any> = (data: Resolvable<T>) => Promise<T>;
 export interface BaseContext {
+  key: string;
   resolveId: string;
   resolve: ResolveFunc;
 }
@@ -108,8 +109,9 @@ export const resolve = async <T, TContext extends BaseContext = BaseContext>(
   getResolvable: <T>(type: string) => Resolvable<T> | undefined,
   context: TContext
 ): Promise<T> => {
+  const ctx = { ...context, resolver: resolvable?.__resolveType };
   const resolverFunc = <K>(data: Resolvable<K>) =>
-    resolve(resolverMap, data, getResolvable, context);
+    resolve(resolverMap, data, getResolvable, ctx);
 
   const [resolvableObj, type] = resolveTypeOf(resolvable);
   const tpResolver = nativeResolverByType[typeof resolvableObj];
@@ -125,9 +127,9 @@ export const resolve = async <T, TContext extends BaseContext = BaseContext>(
   if (resolver !== undefined) {
     return resolve(
       resolverMap,
-      await resolver(resolved, context),
+      await resolver(resolved, ctx),
       getResolvable,
-      context
+      ctx
     ) as T;
   }
   const resolvableRef = getResolvable(resolverType);
@@ -138,6 +140,6 @@ export const resolve = async <T, TContext extends BaseContext = BaseContext>(
     resolverMap,
     resolvableRef as Resolvable<T>,
     getResolvable,
-    context
+    ctx
   );
 };

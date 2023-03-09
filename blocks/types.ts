@@ -24,6 +24,7 @@ export interface PreactComponent<
 > {
   Component: ComponentFunc<TProps, TReturn>;
   props: TProps;
+  key?: string;
 }
 
 export type LiveConfig<TConfig = any, TState = unknown> = TState & {

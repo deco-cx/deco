@@ -207,10 +207,14 @@ export const fromFreshLikeHandler =
   };
 
 export const fromComponentFunc =
-  <TProps = any>({ default: Component }: { default: ComponentFunc<TProps> }) =>
+  <TProps = any>(
+    { default: Component }: { default: ComponentFunc<TProps> },
+    key: string
+  ) =>
   (props: TProps) => ({
     Component,
     props,
+    key,
   });
 
 export const instrospectComponentFunc =
@@ -252,7 +256,10 @@ export const newHandlerLikeBlock = <R = any, K extends string = string>(
 ): Block<FreshHandler<any, any, any, any>, R, K> => ({
   type,
   defaultPreview: (result) => {
-    return { Component: JsonViewer, props: { body: JSON.stringify(result) } };
+    return {
+      Component: JsonViewer,
+      props: { body: JSON.stringify(result) },
+    };
   },
   introspect: fromFreshLikeHandler(`./${type}`),
   adapt: configAsState,

@@ -48,6 +48,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     const baseCtx: BaseContext = {
       resolve: _resolve,
       resolveId: crypto.randomUUID(),
+      key: "",
     };
     const ctx = {
       ...context,
