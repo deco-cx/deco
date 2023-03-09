@@ -259,7 +259,7 @@ const findSchemeableFromNode = async (
           type: "unknown",
         };
       }
-      return findSchemeableFromNode(transformContext, node, root);
+      return findSchemeableFromNode(transformContext, node, newRoots);
     }
   }
   return {
@@ -328,7 +328,6 @@ const tsTypeToSchemeableRec = async (
   optional?: boolean
 ): Promise<Schemeable> => {
   const kind = node.kind;
-
   switch (kind) {
     case "array": {
       const typeSchemeable = await tsTypeToSchemeableRec(

@@ -4,7 +4,7 @@ import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 export interface Props {
   sections: Section[];
 }
-// FIXME MISSING UniqueID and Data-manifest-key
+// FIXME MISSING UniqueID
 
 export default function LivePage({ sections }: Props) {
   const renderSection = (
