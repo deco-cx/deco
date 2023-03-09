@@ -417,6 +417,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
       for (const [key, manifest] of Object.entries(def)) {
         const {
           routes: _doNotMergeRoutes,
+          islands: _doNotMergeIslands,
           config: _ignoreConfig,
           baseUrl: _ignoreBaseUrl,
           schemas: {
@@ -437,8 +438,11 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         for (const [block, value] of Object.entries(blocks)) {
           blockN++;
           let blockC = 0;
-          for (const path of Object.keys(value)) {
-            const ref = `${key}${"$".repeat(blockN)}${blockC}`;
+          for (const path of Object.keys(value ?? {})) {
+            const ref = `${key
+              .replaceAll("-", "")
+              .replaceAll("/", "")
+              .replaceAll(" ", "")}${"$".repeat(blockN)}${blockC}`;
             blockC++;
             const functionRef = path.replace("./", `${key}/`);
             innerBuilder = innerBuilder

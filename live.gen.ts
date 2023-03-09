@@ -55,15 +55,15 @@ const manifest = {
     "definitions": {
       ".": {
         "routes": {
-          "[...catchall].tsx@EntrypointConfig": {
+          "[...catchall].tsx@Entrypoint": {
             "type": "object",
             "allOf": [],
             "properties": {
               "handler": { "title": "Handler", "$ref": "#/root/handlers" },
             },
             "required": ["handler"],
-            "title": "./routes/[...catchall].tsx@EntrypointConfig",
-            "$id": "./routes/[...catchall].tsx@EntrypointConfig",
+            "title": "./routes/[...catchall].tsx@Entrypoint",
+            "$id": "./routes/[...catchall].tsx@Entrypoint",
           },
         },
         "handlers": {
@@ -159,16 +159,24 @@ const manifest = {
           "$id": "./record<string, Resolvable>",
         },
         "pages": {
-          "LivePage.tsx@3d172d36-f063-4823-8e3e-503834f91bd7": {
-            "$id": "./pages/LivePage.tsx@3d172d36-f063-4823-8e3e-503834f91bd7",
+          "LivePage.tsx@Props": {
+            "type": "object",
+            "allOf": [],
+            "properties": {
+              "sections": {
+                "title": "Sections",
+                "type": "array",
+                "items": { "$ref": "#/root/sections" },
+              },
+            },
+            "required": ["sections"],
+            "title": "./pages/LivePage.tsx@Props",
+            "$id": "./pages/LivePage.tsx@Props",
           },
           "LivePage.tsx": {
             "title": "./pages/LivePage.tsx",
             "type": "object",
-            "allOf": [{
-              "$ref":
-                "#/definitions/./pages/LivePage.tsx@3d172d36-f063-4823-8e3e-503834f91bd7",
-            }],
+            "allOf": [{ "$ref": "#/definitions/./pages/LivePage.tsx@Props" }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
@@ -508,7 +516,7 @@ const manifest = {
       "routes": {
         "title": "routes",
         "anyOf": [{
-          "$ref": "#/definitions/./routes/[...catchall].tsx@EntrypointConfig",
+          "$ref": "#/definitions/./routes/[...catchall].tsx@Entrypoint",
         }],
       },
       "handlers": {
@@ -548,17 +556,7 @@ const manifest = {
         "required": ["./routes/[...catchall].tsx"],
         "properties": {
           "./routes/[...catchall].tsx": {
-            "$ref": "#/definitions/./routes/[...catchall].tsx@EntrypointConfig",
-            "allOf": [{
-              "type": "object",
-              "properties": {
-                "__resolveType": {
-                  "type": "string",
-                  "const": "resolve",
-                  "default": "resolve",
-                },
-              },
-            }],
+            "$ref": "#/definitions/./routes/[...catchall].tsx@Entrypoint",
           },
         },
         "additionalProperties": {

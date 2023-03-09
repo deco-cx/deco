@@ -324,7 +324,7 @@ export const loadPage = async <Data = unknown>(
   return ctx.state.page;
 };
 
-const loadGlobal = ({ globalSettings }: { globalSettings: Page[] }) => {
+export const loadGlobal = ({ globalSettings }: { globalSettings: Page[] }) => {
   // https://regex101.com/r/zSyTir/1
   const stripGlobalKey = (key: string) => {
     return key.replace(/(.*)\/(\w*)\.global\.tsx$/, "$2");

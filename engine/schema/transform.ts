@@ -223,11 +223,13 @@ const findSchemeableFromNode = async (
           tsTypeToSchemeableRec(transformContext, tp, root)
         )
       );
+      const fileName = rootNode.location.filename.startsWith("file://")
+        ? fromFileUrl(rootNode.location.filename)
+        : rootNode.location.filename;
       return {
-        id: `${fromFileUrl(rootNode.location.filename).replaceAll(
-          transformContext.base,
-          "."
-        )}@${rootNode.name}`,
+        id: `${fileName.replaceAll(transformContext.base, ".")}@${
+          rootNode.name
+        }`,
         extends: allOf,
         type: "object",
         ...(await typeDefToSchemeable(
@@ -245,9 +247,10 @@ const findSchemeableFromNode = async (
       );
     }
     case "import": {
-      const newRoots = (
-        await transformContext.denoDoc(fromFileUrl(rootNode.importDef.src))
-      )[2];
+      const fileName = rootNode.importDef.src.startsWith("file://")
+        ? fromFileUrl(rootNode.importDef.src)
+        : rootNode.importDef.src;
+      const newRoots = (await transformContext.denoDoc(fileName))[2];
       const node = newRoots.find((n) => {
         return n.name === rootNode.importDef.imported;
       });
