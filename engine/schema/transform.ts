@@ -9,6 +9,7 @@ export interface TransformContext {
   base: string;
   code: Record<string, ModuleAST>;
   denoDoc: (src: string) => Promise<ModuleAST>;
+  withKey: (key: string) => string;
 }
 
 export const inlineOrSchemeable = async (
@@ -165,7 +166,7 @@ const schemeableWellKnownType = async (
     case "Array": {
       if (ref.typeParams === null || (ref?.typeParams?.length ?? 0) < 1) {
         return {
-          id: "./unknown[]",
+          id: transformContext.withKey("unknown[]"),
           type: "array",
           value: {
             type: "unknown",
@@ -179,7 +180,7 @@ const schemeableWellKnownType = async (
       );
 
       return {
-        id: `${typeSchemeable.id}[]`,
+        id: transformContext.withKey(`${typeSchemeable.id}[]`),
         type: "array",
         value: typeSchemeable,
       };
@@ -198,9 +199,9 @@ const schemeableWellKnownType = async (
       );
 
       return {
-        id: `./record<string, ${
-          recordSchemeable.id ?? ref.typeParams[1].repr
-        }>`,
+        id: transformContext.withKey(
+          `record<string, ${recordSchemeable.id ?? ref.typeParams[1].repr}>`
+        ),
         type: "record",
         value: recordSchemeable,
       };
@@ -227,9 +228,9 @@ const findSchemeableFromNode = async (
         ? fromFileUrl(rootNode.location.filename)
         : rootNode.location.filename;
       return {
-        id: `${fileName.replaceAll(transformContext.base, ".")}@${
-          rootNode.name
-        }`,
+        id: transformContext.withKey(
+          `${fileName.replaceAll(transformContext.base, ".")}@${rootNode.name}`
+        ),
         extends: allOf,
         type: "object",
         ...(await typeDefToSchemeable(
@@ -317,7 +318,9 @@ export const tsTypeToSchemeable = async (
   );
   return {
     ...schemeable,
-    id: schemeable.id ?? `${root[0]}@${crypto.randomUUID()}`,
+    id: transformContext.withKey(
+      schemeable.id ?? `${root[0]}@${crypto.randomUUID()}`
+    ),
   };
 };
 
@@ -337,7 +340,9 @@ const tsTypeToSchemeableRec = async (
       );
 
       return {
-        id: typeSchemeable.id ? `${typeSchemeable.id}[]` : undefined,
+        id: typeSchemeable.id
+          ? transformContext.withKey(`${typeSchemeable.id}[]`)
+          : undefined,
         type: "array",
         value: typeSchemeable,
       };
@@ -401,7 +406,7 @@ const tsTypeToSchemeableRec = async (
       const unionTypeId =
         ids.length !== node.union.length ? undefined : ids.join("|");
       return {
-        id: unionTypeId,
+        id: transformContext.withKey(unionTypeId ?? "unknown"),
         value: values,
         type: "union",
       };

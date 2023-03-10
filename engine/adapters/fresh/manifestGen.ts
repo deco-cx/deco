@@ -15,14 +15,16 @@ import { denoDoc } from "$live/engine/schema/utils.ts";
 import { walk } from "https://deno.land/std@0.170.0/fs/walk.ts";
 import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
 
 const withDefinition =
-  (block: BlockType, blockIdx: number) =>
+  (block: BlockType, blockIdx: number, withKey: (k: string) => string) =>
   (
     blkN: number,
     man: ManifestBuilder,
     { inputSchema, outputSchema, functionRef }: BlockModuleRef
   ): ManifestBuilder => {
+    const funcWithKey = withKey(functionRef);
     const ref = `${"$".repeat(blockIdx)}${blkN}`;
     const inputSchemaId = inputSchema?.id ?? crypto.randomUUID();
     if (inputSchema) {
@@ -37,17 +39,17 @@ const withDefinition =
       const outputId = outputSchema.id ?? crypto.randomUUID();
       man = man
         .addSchemeables({ ...outputSchema, id: outputId })
-        .schemeableAnyOf(outputId, `#/definitions/${functionRef}`);
+        .schemeableAnyOf(outputId, `#/definitions/${funcWithKey}`);
     }
     // TODO @author Marcos V. Candeia arbitrarily chosen, this is not straightforward
     // routes cannot be recreated, so we don't need to expose them as a block.
     if (block !== "routes") {
       const functionSchema: Schemeable = {
         root: block,
-        id: functionRef,
+        id: funcWithKey,
         type: "inline",
         value: {
-          title: functionRef,
+          title: funcWithKey,
           type: "object",
           allOf:
             inputSchema && inputSchemaId
@@ -57,7 +59,7 @@ const withDefinition =
           properties: {
             __resolveType: {
               type: "string",
-              default: functionRef,
+              default: funcWithKey,
             },
           },
         },
@@ -66,11 +68,11 @@ const withDefinition =
     }
     return man
       .addImports({
-        from: functionRef,
+        from: funcWithKey,
         clauses: [{ alias: ref }],
       })
       .addValuesOnManifestKey(block, [
-        functionRef,
+        block !== "routes" && block !== "islands" ? funcWithKey : functionRef,
         {
           kind: "js",
           raw: { identifier: ref },
@@ -134,7 +136,7 @@ const addDefinitions = async (
   return blocks
     .reduce((manz, blk, i) => {
       const blkAlias = blk.type;
-      const useDef = withDefinition(blkAlias, i + 1);
+      const useDef = withDefinition(blkAlias, i + 1, transformContext.withKey);
       let totalBlks = 0;
       return blockDefinitions[i].reduce((nMan, def) => {
         if (!def) {
@@ -155,7 +157,8 @@ const addDefinitions = async (
 };
 
 export const decoManifestBuilder = async (
-  dir: string
+  dir: string,
+  uniqueKey: string
 ): Promise<ManifestBuilder> => {
   const liveIgnore = join(dir, ".liveignore");
   const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
@@ -203,6 +206,27 @@ export const decoManifestBuilder = async (
 
   return addDefinitions(blocks, {
     ...transformContext,
+    withKey: (id: string): string => {
+      if (id.includes("marcoscandeia")) {
+        console.log(id, transformContext.base);
+      }
+      if (id.startsWith("https://denopkg.com")) {
+        const [url] = id.split("@");
+        return url.substring("https://denopkg.com".length + 1);
+      }
+      if (id.startsWith(uniqueKey)) {
+        return id;
+      }
+      if (id.startsWith("file://")) {
+        return `${uniqueKey}/${fromFileUrl(id)
+          .replaceAll(transformContext.base, ".")
+          .substring(2)}`;
+      }
+      if (id.startsWith("./")) {
+        return `${uniqueKey}/${id.substring(2)}`;
+      }
+      return `${uniqueKey}/${id}`;
+    },
     denoDoc: async (src) => {
       return (
         (transformContext.code as Record<string, ModuleAST>)[src] ??

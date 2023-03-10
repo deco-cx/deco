@@ -68,11 +68,12 @@ export default async function dev(
   base: string,
   entrypoint: string,
   {
-    imports = {},
+    namespace = "$UNKNOWN",
+    imports = [],
     onListen,
   }: {
-    imports?: Record<
-      string,
+    namespace?: string;
+    imports?: Array<
       DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
     >;
     onListen?: () => void;
@@ -99,7 +100,7 @@ export default async function dev(
       },
     });
   }
-  let manifest = await decoManifestBuilder(dir);
+  let manifest = await decoManifestBuilder(dir, namespace);
   manifest = manifest.mergeWith(imports);
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());
@@ -144,6 +145,6 @@ export async function format(content: string) {
 // Generate live own manifest data so that other sites can import native functions and sections.
 if (import.meta.main) {
   const dir = Deno.cwd();
-  const newManifestData = await decoManifestBuilder(dir);
+  const newManifestData = await decoManifestBuilder(dir, "$live");
   await generate(dir, newManifestData);
 }

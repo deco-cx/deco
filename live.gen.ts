@@ -3,21 +3,21 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import config from "./deno.json" assert { type: "json" };
-import * as $$0 from "./routes/[...catchall].tsx";
-import * as $$$$0 from "./handlers/routesSelection.ts";
-import * as $$$$1 from "./handlers/router.ts";
-import * as $$$$2 from "./handlers/fresh.ts";
-import * as $$$$$0 from "./pages/LivePage.tsx";
-import * as $$$$$$0 from "./sections/Head.tsx";
-import * as $$$$$$$0 from "./matchers/MatchDate.ts";
-import * as $$$$$$$1 from "./matchers/MatchUserAgent.ts";
-import * as $$$$$$$2 from "./matchers/MatchSite.ts";
-import * as $$$$$$$3 from "./matchers/MatchMulti.ts";
-import * as $$$$$$$4 from "./matchers/MatchRandom.ts";
-import * as $$$$$$$5 from "./matchers/MatchEnvironment.ts";
-import * as $$$$$$$6 from "./matchers/MatchAlways.ts";
-import * as $$$$$$$$0 from "./flags/audience.ts";
-import * as $$$$$$$$1 from "./flags/everyone.ts";
+import * as $$0 from "$live/routes/[...catchall].tsx";
+import * as $$$$0 from "$live/handlers/routesSelection.ts";
+import * as $$$$1 from "$live/handlers/router.ts";
+import * as $$$$2 from "$live/handlers/fresh.ts";
+import * as $$$$$0 from "$live/pages/LivePage.tsx";
+import * as $$$$$$0 from "$live/sections/Head.tsx";
+import * as $$$$$$$0 from "$live/matchers/MatchDate.ts";
+import * as $$$$$$$1 from "$live/matchers/MatchUserAgent.ts";
+import * as $$$$$$$2 from "$live/matchers/MatchSite.ts";
+import * as $$$$$$$3 from "$live/matchers/MatchMulti.ts";
+import * as $$$$$$$4 from "$live/matchers/MatchRandom.ts";
+import * as $$$$$$$5 from "$live/matchers/MatchEnvironment.ts";
+import * as $$$$$$$6 from "$live/matchers/MatchAlways.ts";
+import * as $$$$$$$$0 from "$live/flags/audience.ts";
+import * as $$$$$$$$1 from "$live/flags/everyone.ts";
 import { configurable } from "$live/engine/adapters/fresh/manifest.ts";
 
 const manifest = {
@@ -25,35 +25,35 @@ const manifest = {
     "./routes/[...catchall].tsx": $$0,
   },
   "handlers": {
-    "./handlers/routesSelection.ts": $$$$0,
-    "./handlers/router.ts": $$$$1,
-    "./handlers/fresh.ts": $$$$2,
+    "$live/handlers/routesSelection.ts": $$$$0,
+    "$live/handlers/router.ts": $$$$1,
+    "$live/handlers/fresh.ts": $$$$2,
   },
   "pages": {
-    "./pages/LivePage.tsx": $$$$$0,
+    "$live/pages/LivePage.tsx": $$$$$0,
   },
   "sections": {
-    "./sections/Head.tsx": $$$$$$0,
+    "$live/sections/Head.tsx": $$$$$$0,
   },
   "matchers": {
-    "./matchers/MatchDate.ts": $$$$$$$0,
-    "./matchers/MatchUserAgent.ts": $$$$$$$1,
-    "./matchers/MatchSite.ts": $$$$$$$2,
-    "./matchers/MatchMulti.ts": $$$$$$$3,
-    "./matchers/MatchRandom.ts": $$$$$$$4,
-    "./matchers/MatchEnvironment.ts": $$$$$$$5,
-    "./matchers/MatchAlways.ts": $$$$$$$6,
+    "$live/matchers/MatchDate.ts": $$$$$$$0,
+    "$live/matchers/MatchUserAgent.ts": $$$$$$$1,
+    "$live/matchers/MatchSite.ts": $$$$$$$2,
+    "$live/matchers/MatchMulti.ts": $$$$$$$3,
+    "$live/matchers/MatchRandom.ts": $$$$$$$4,
+    "$live/matchers/MatchEnvironment.ts": $$$$$$$5,
+    "$live/matchers/MatchAlways.ts": $$$$$$$6,
   },
   "flags": {
-    "./flags/audience.ts": $$$$$$$$0,
-    "./flags/everyone.ts": $$$$$$$$1,
+    "$live/flags/audience.ts": $$$$$$$$0,
+    "$live/flags/everyone.ts": $$$$$$$$1,
   },
   "islands": {},
   "config": config,
   "baseUrl": import.meta.url,
   "schemas": {
     "definitions": {
-      ".": {
+      "$live": {
         "routes": {
           "[...catchall].tsx@Entrypoint": {
             "type": "object",
@@ -62,8 +62,8 @@ const manifest = {
               "handler": { "title": "Handler", "$ref": "#/root/handlers" },
             },
             "required": ["handler"],
-            "title": "./routes/[...catchall].tsx@Entrypoint",
-            "$id": "./routes/[...catchall].tsx@Entrypoint",
+            "title": "$live/routes/[...catchall].tsx@Entrypoint",
+            "$id": "$live/routes/[...catchall].tsx@Entrypoint",
           },
         },
         "handlers": {
@@ -78,24 +78,24 @@ const manifest = {
               },
             },
             "required": ["flags"],
-            "title": "./handlers/routesSelection.ts@SelectionConfig",
-            "$id": "./handlers/routesSelection.ts@SelectionConfig",
+            "title": "$live/handlers/routesSelection.ts@SelectionConfig",
+            "$id": "$live/handlers/routesSelection.ts@SelectionConfig",
           },
           "routesSelection.ts": {
-            "title": "./handlers/routesSelection.ts",
+            "title": "$live/handlers/routesSelection.ts",
             "type": "object",
             "allOf": [{
               "$ref":
-                "#/definitions/./handlers/routesSelection.ts@SelectionConfig",
+                "#/definitions/$live/handlers/routesSelection.ts@SelectionConfig",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./handlers/routesSelection.ts",
+                "default": "$live/handlers/routesSelection.ts",
               },
             },
-            "$id": "./handlers/routesSelection.ts",
+            "$id": "$live/handlers/routesSelection.ts",
           },
           "router.ts@RouterConfig": {
             "type": "object",
@@ -104,27 +104,27 @@ const manifest = {
               "base": { "title": "Base", "type": ["string", "null"] },
               "routes": {
                 "title": "Routes",
-                "$ref": "#/definitions/./record<string, Resolvable>",
+                "$ref": "#/definitions/$live/record<string, Resolvable>",
               },
             },
             "required": ["routes"],
-            "title": "./handlers/router.ts@RouterConfig",
-            "$id": "./handlers/router.ts@RouterConfig",
+            "title": "$live/handlers/router.ts@RouterConfig",
+            "$id": "$live/handlers/router.ts@RouterConfig",
           },
           "router.ts": {
-            "title": "./handlers/router.ts",
+            "title": "$live/handlers/router.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./handlers/router.ts@RouterConfig",
+              "$ref": "#/definitions/$live/handlers/router.ts@RouterConfig",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./handlers/router.ts",
+                "default": "$live/handlers/router.ts",
               },
             },
-            "$id": "./handlers/router.ts",
+            "$id": "$live/handlers/router.ts",
           },
           "fresh.ts@FreshConfig": {
             "type": "object",
@@ -133,30 +133,30 @@ const manifest = {
               "page": { "title": "Page", "$ref": "#/root/pages" },
             },
             "required": ["page"],
-            "title": "./handlers/fresh.ts@FreshConfig",
-            "$id": "./handlers/fresh.ts@FreshConfig",
+            "title": "$live/handlers/fresh.ts@FreshConfig",
+            "$id": "$live/handlers/fresh.ts@FreshConfig",
           },
           "fresh.ts": {
-            "title": "./handlers/fresh.ts",
+            "title": "$live/handlers/fresh.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./handlers/fresh.ts@FreshConfig",
+              "$ref": "#/definitions/$live/handlers/fresh.ts@FreshConfig",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./handlers/fresh.ts",
+                "default": "$live/handlers/fresh.ts",
               },
             },
-            "$id": "./handlers/fresh.ts",
+            "$id": "$live/handlers/fresh.ts",
           },
         },
         "record<string, Resolvable>": {
           "title": "Unknown record",
           "type": "object",
           "additionalProperties": { "$ref": "#/root/handlers" },
-          "$id": "./record<string, Resolvable>",
+          "$id": "$live/record<string, Resolvable>",
         },
         "pages": {
           "LivePage.tsx@Props": {
@@ -170,21 +170,23 @@ const manifest = {
               },
             },
             "required": ["sections"],
-            "title": "./pages/LivePage.tsx@Props",
-            "$id": "./pages/LivePage.tsx@Props",
+            "title": "$live/pages/LivePage.tsx@Props",
+            "$id": "$live/pages/LivePage.tsx@Props",
           },
           "LivePage.tsx": {
-            "title": "./pages/LivePage.tsx",
+            "title": "$live/pages/LivePage.tsx",
             "type": "object",
-            "allOf": [{ "$ref": "#/definitions/./pages/LivePage.tsx@Props" }],
+            "allOf": [{
+              "$ref": "#/definitions/$live/pages/LivePage.tsx@Props",
+            }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./pages/LivePage.tsx",
+                "default": "$live/pages/LivePage.tsx",
               },
             },
-            "$id": "./pages/LivePage.tsx",
+            "$id": "$live/pages/LivePage.tsx",
           },
         },
         "sections": {
@@ -229,21 +231,23 @@ const manifest = {
               },
             },
             "required": [],
-            "title": "./sections/Head.tsx@Props",
-            "$id": "./sections/Head.tsx@Props",
+            "title": "$live/sections/Head.tsx@Props",
+            "$id": "$live/sections/Head.tsx@Props",
           },
           "Head.tsx": {
-            "title": "./sections/Head.tsx",
+            "title": "$live/sections/Head.tsx",
             "type": "object",
-            "allOf": [{ "$ref": "#/definitions/./sections/Head.tsx@Props" }],
+            "allOf": [{
+              "$ref": "#/definitions/$live/sections/Head.tsx@Props",
+            }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./sections/Head.tsx",
+                "default": "$live/sections/Head.tsx",
               },
             },
-            "$id": "./sections/Head.tsx",
+            "$id": "$live/sections/Head.tsx",
           },
         },
         "matchers": {
@@ -263,23 +267,23 @@ const manifest = {
               },
             },
             "required": [],
-            "title": "./matchers/MatchDate.ts@Props",
-            "$id": "./matchers/MatchDate.ts@Props",
+            "title": "$live/matchers/MatchDate.ts@Props",
+            "$id": "$live/matchers/MatchDate.ts@Props",
           },
           "MatchDate.ts": {
-            "title": "./matchers/MatchDate.ts",
+            "title": "$live/matchers/MatchDate.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./matchers/MatchDate.ts@Props",
+              "$ref": "#/definitions/$live/matchers/MatchDate.ts@Props",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./matchers/MatchDate.ts",
+                "default": "$live/matchers/MatchDate.ts",
               },
             },
-            "$id": "./matchers/MatchDate.ts",
+            "$id": "$live/matchers/MatchDate.ts",
           },
           "MatchUserAgent.ts@Props": {
             "type": "object",
@@ -289,23 +293,23 @@ const manifest = {
               "match": { "title": "Match", "type": ["string", "null"] },
             },
             "required": [],
-            "title": "./matchers/MatchUserAgent.ts@Props",
-            "$id": "./matchers/MatchUserAgent.ts@Props",
+            "title": "$live/matchers/MatchUserAgent.ts@Props",
+            "$id": "$live/matchers/MatchUserAgent.ts@Props",
           },
           "MatchUserAgent.ts": {
-            "title": "./matchers/MatchUserAgent.ts",
+            "title": "$live/matchers/MatchUserAgent.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./matchers/MatchUserAgent.ts@Props",
+              "$ref": "#/definitions/$live/matchers/MatchUserAgent.ts@Props",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./matchers/MatchUserAgent.ts",
+                "default": "$live/matchers/MatchUserAgent.ts",
               },
             },
-            "$id": "./matchers/MatchUserAgent.ts",
+            "$id": "$live/matchers/MatchUserAgent.ts",
           },
           "MatchSite.ts@Props": {
             "type": "object",
@@ -314,35 +318,29 @@ const manifest = {
               "siteId": { "title": "Site Id", "type": "number" },
             },
             "required": ["siteId"],
-            "title": "./matchers/MatchSite.ts@Props",
-            "$id": "./matchers/MatchSite.ts@Props",
+            "title": "$live/matchers/MatchSite.ts@Props",
+            "$id": "$live/matchers/MatchSite.ts@Props",
           },
           "MatchSite.ts": {
-            "title": "./matchers/MatchSite.ts",
+            "title": "$live/matchers/MatchSite.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./matchers/MatchSite.ts@Props",
+              "$ref": "#/definitions/$live/matchers/MatchSite.ts@Props",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./matchers/MatchSite.ts",
+                "default": "$live/matchers/MatchSite.ts",
               },
             },
-            "$id": "./matchers/MatchSite.ts",
+            "$id": "$live/matchers/MatchSite.ts",
           },
           "MatchMulti.ts@Props": {
             "type": "object",
             "allOf": [],
             "properties": {
-              "op": {
-                "title": "Op",
-                "anyOf": [{ "type": "string", "const": "or" }, {
-                  "type": "string",
-                  "const": "and",
-                }],
-              },
+              "op": { "title": "Op", "$ref": "#/definitions/$live/unknown" },
               "matchers": {
                 "title": "Matchers",
                 "type": "array",
@@ -350,23 +348,23 @@ const manifest = {
               },
             },
             "required": ["op", "matchers"],
-            "title": "./matchers/MatchMulti.ts@Props",
-            "$id": "./matchers/MatchMulti.ts@Props",
+            "title": "$live/matchers/MatchMulti.ts@Props",
+            "$id": "$live/matchers/MatchMulti.ts@Props",
           },
           "MatchMulti.ts": {
-            "title": "./matchers/MatchMulti.ts",
+            "title": "$live/matchers/MatchMulti.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./matchers/MatchMulti.ts@Props",
+              "$ref": "#/definitions/$live/matchers/MatchMulti.ts@Props",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./matchers/MatchMulti.ts",
+                "default": "$live/matchers/MatchMulti.ts",
               },
             },
-            "$id": "./matchers/MatchMulti.ts",
+            "$id": "$live/matchers/MatchMulti.ts",
           },
           "MatchRandom.ts@Props": {
             "type": "object",
@@ -375,23 +373,23 @@ const manifest = {
               "traffic": { "title": "Traffic", "type": "number" },
             },
             "required": ["traffic"],
-            "title": "./matchers/MatchRandom.ts@Props",
-            "$id": "./matchers/MatchRandom.ts@Props",
+            "title": "$live/matchers/MatchRandom.ts@Props",
+            "$id": "$live/matchers/MatchRandom.ts@Props",
           },
           "MatchRandom.ts": {
-            "title": "./matchers/MatchRandom.ts",
+            "title": "$live/matchers/MatchRandom.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./matchers/MatchRandom.ts@Props",
+              "$ref": "#/definitions/$live/matchers/MatchRandom.ts@Props",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./matchers/MatchRandom.ts",
+                "default": "$live/matchers/MatchRandom.ts",
               },
             },
-            "$id": "./matchers/MatchRandom.ts",
+            "$id": "$live/matchers/MatchRandom.ts",
           },
           "MatchEnvironment.ts@Props": {
             "type": "object",
@@ -399,50 +397,54 @@ const manifest = {
             "properties": {
               "environment": {
                 "title": "Environment",
-                "anyOf": [{ "type": "string", "const": "production" }, {
-                  "type": "string",
-                  "const": "development",
-                }],
+                "$ref": "#/definitions/$live/unknown",
               },
             },
             "required": ["environment"],
-            "title": "./matchers/MatchEnvironment.ts@Props",
-            "$id": "./matchers/MatchEnvironment.ts@Props",
+            "title": "$live/matchers/MatchEnvironment.ts@Props",
+            "$id": "$live/matchers/MatchEnvironment.ts@Props",
           },
           "MatchEnvironment.ts": {
-            "title": "./matchers/MatchEnvironment.ts",
+            "title": "$live/matchers/MatchEnvironment.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./matchers/MatchEnvironment.ts@Props",
+              "$ref": "#/definitions/$live/matchers/MatchEnvironment.ts@Props",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./matchers/MatchEnvironment.ts",
+                "default": "$live/matchers/MatchEnvironment.ts",
               },
             },
-            "$id": "./matchers/MatchEnvironment.ts",
+            "$id": "$live/matchers/MatchEnvironment.ts",
           },
           "MatchAlways.ts": {
-            "title": "./matchers/MatchAlways.ts",
+            "title": "$live/matchers/MatchAlways.ts",
             "type": "object",
             "allOf": [],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./matchers/MatchAlways.ts",
+                "default": "$live/matchers/MatchAlways.ts",
               },
             },
-            "$id": "./matchers/MatchAlways.ts",
+            "$id": "$live/matchers/MatchAlways.ts",
           },
+        },
+        "unknown": {
+          "anyOf": [{ "type": "string", "const": "or" }, {
+            "type": "string",
+            "const": "and",
+          }],
+          "$id": "$live/unknown",
         },
         "record<string, string>": {
           "title": "Unknown record",
           "type": "object",
           "additionalProperties": { "type": "string" },
-          "$id": "./record<string, string>",
+          "$id": "$live/record<string, string>",
         },
         "flags": {
           "audience.ts@Audience": {
@@ -453,29 +455,31 @@ const manifest = {
               "name": { "title": "Name", "type": "string" },
               "routes": {
                 "title": "Routes",
-                "$ref": "#/definitions/./record<string, Resolvable>",
+                "$ref": "#/definitions/$live/record<string, Resolvable>",
               },
               "overrides": {
                 "title": "Overrides",
-                "$ref": "#/definitions/./record<string, string>",
+                "$ref": "#/definitions/$live/record<string, string>",
               },
             },
             "required": ["matcher", "name", "routes"],
-            "title": "./flags/audience.ts@Audience",
-            "$id": "./flags/audience.ts@Audience",
+            "title": "$live/flags/audience.ts@Audience",
+            "$id": "$live/flags/audience.ts@Audience",
           },
           "audience.ts": {
-            "title": "./flags/audience.ts",
+            "title": "$live/flags/audience.ts",
             "type": "object",
-            "allOf": [{ "$ref": "#/definitions/./flags/audience.ts@Audience" }],
+            "allOf": [{
+              "$ref": "#/definitions/$live/flags/audience.ts@Audience",
+            }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./flags/audience.ts",
+                "default": "$live/flags/audience.ts",
               },
             },
-            "$id": "./flags/audience.ts",
+            "$id": "$live/flags/audience.ts",
           },
           "everyone.ts@EveryoneConfig": {
             "type": "object",
@@ -483,31 +487,31 @@ const manifest = {
             "properties": {
               "routes": {
                 "title": "Routes",
-                "$ref": "#/definitions/./record<string, Resolvable>",
+                "$ref": "#/definitions/$live/record<string, Resolvable>",
               },
               "overrides": {
                 "title": "Overrides",
-                "$ref": "#/definitions/./record<string, string>",
+                "$ref": "#/definitions/$live/record<string, string>",
               },
             },
             "required": [],
-            "title": "./flags/everyone.ts@EveryoneConfig",
-            "$id": "./flags/everyone.ts@EveryoneConfig",
+            "title": "$live/flags/everyone.ts@EveryoneConfig",
+            "$id": "$live/flags/everyone.ts@EveryoneConfig",
           },
           "everyone.ts": {
-            "title": "./flags/everyone.ts",
+            "title": "$live/flags/everyone.ts",
             "type": "object",
             "allOf": [{
-              "$ref": "#/definitions/./flags/everyone.ts@EveryoneConfig",
+              "$ref": "#/definitions/$live/flags/everyone.ts@EveryoneConfig",
             }],
             "required": ["__resolveType"],
             "properties": {
               "__resolveType": {
                 "type": "string",
-                "default": "./flags/everyone.ts",
+                "default": "$live/flags/everyone.ts",
               },
             },
-            "$id": "./flags/everyone.ts",
+            "$id": "$live/flags/everyone.ts",
           },
         },
       },
@@ -516,47 +520,49 @@ const manifest = {
       "routes": {
         "title": "routes",
         "anyOf": [{
-          "$ref": "#/definitions/./routes/[...catchall].tsx@Entrypoint",
+          "$ref": "#/definitions/$live/routes/[...catchall].tsx@Entrypoint",
         }],
       },
       "handlers": {
         "title": "handlers",
-        "anyOf": [{ "$ref": "#/definitions/./handlers/routesSelection.ts" }, {
-          "$ref": "#/definitions/./handlers/router.ts",
-        }, { "$ref": "#/definitions/./handlers/fresh.ts" }],
+        "anyOf": [
+          { "$ref": "#/definitions/$live/handlers/routesSelection.ts" },
+          { "$ref": "#/definitions/$live/handlers/router.ts" },
+          { "$ref": "#/definitions/$live/handlers/fresh.ts" },
+        ],
       },
       "pages": {
         "title": "pages",
-        "anyOf": [{ "$ref": "#/definitions/./pages/LivePage.tsx" }],
+        "anyOf": [{ "$ref": "#/definitions/$live/pages/LivePage.tsx" }],
       },
       "sections": {
         "title": "sections",
-        "anyOf": [{ "$ref": "#/definitions/./sections/Head.tsx" }],
+        "anyOf": [{ "$ref": "#/definitions/$live/sections/Head.tsx" }],
       },
       "matchers": {
         "title": "matchers",
         "anyOf": [
-          { "$ref": "#/definitions/./matchers/MatchDate.ts" },
-          { "$ref": "#/definitions/./matchers/MatchUserAgent.ts" },
-          { "$ref": "#/definitions/./matchers/MatchSite.ts" },
-          { "$ref": "#/definitions/./matchers/MatchMulti.ts" },
-          { "$ref": "#/definitions/./matchers/MatchRandom.ts" },
-          { "$ref": "#/definitions/./matchers/MatchEnvironment.ts" },
-          { "$ref": "#/definitions/./matchers/MatchAlways.ts" },
+          { "$ref": "#/definitions/$live/matchers/MatchDate.ts" },
+          { "$ref": "#/definitions/$live/matchers/MatchUserAgent.ts" },
+          { "$ref": "#/definitions/$live/matchers/MatchSite.ts" },
+          { "$ref": "#/definitions/$live/matchers/MatchMulti.ts" },
+          { "$ref": "#/definitions/$live/matchers/MatchRandom.ts" },
+          { "$ref": "#/definitions/$live/matchers/MatchEnvironment.ts" },
+          { "$ref": "#/definitions/$live/matchers/MatchAlways.ts" },
         ],
       },
       "flags": {
         "title": "flags",
-        "anyOf": [{ "$ref": "#/definitions/./flags/audience.ts" }, {
-          "$ref": "#/definitions/./flags/everyone.ts",
+        "anyOf": [{ "$ref": "#/definitions/$live/flags/audience.ts" }, {
+          "$ref": "#/definitions/$live/flags/everyone.ts",
         }],
       },
       "state": {
         "type": "object",
-        "required": ["./routes/[...catchall].tsx"],
+        "required": ["$live/routes/[...catchall].tsx"],
         "properties": {
-          "./routes/[...catchall].tsx": {
-            "$ref": "#/definitions/./routes/[...catchall].tsx@Entrypoint",
+          "$live/routes/[...catchall].tsx": {
+            "$ref": "#/definitions/$live/routes/[...catchall].tsx@Entrypoint",
           },
         },
         "additionalProperties": {

@@ -6,6 +6,7 @@ import {
 import { Schemeable } from "$live/engine/schema/transform.ts";
 import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 import { DecoManifest } from "./manifest.ts";
+import { deepMerge } from "std/collections/mod.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -81,7 +82,7 @@ const isObj = (v: JSONValue): v is Obj => {
 export type JSONObject = Partial<Record<string, JSONValue>>;
 
 export interface ManifestBuilder {
-  mergeWith: (def: Record<string, DecoManifest>) => ManifestBuilder;
+  mergeWith: (def: DecoManifest[]) => ManifestBuilder;
   equal: (other: ManifestBuilder) => boolean;
   data: ManifestData;
   toJSONString: () => string;
@@ -204,59 +205,29 @@ export type DeepDefinitions = {
 
 const mergeSchemasRoot = (
   a: Schemas["root"],
-  b: Schemas["root"],
-  key: string = "."
+  b: Schemas["root"]
 ): Schemas["root"] => {
   let mergedRoot: Schemas["root"] = {};
   const allRootBlocks = { ...a, ...b };
 
   for (const block of Object.keys(allRootBlocks)) {
     const anyOfRefs = (b[block]?.anyOf ?? []) as { $ref: string }[];
-    const shouldMap = key !== ".";
     mergedRoot[block] = {
       title: block,
-      anyOf: [
-        ...(a[block]?.anyOf ?? []),
-        ...(shouldMap
-          ? anyOfRefs.map((ref) => ({
-              $ref: ref.$ref.replace(
-                "#/definitions/./",
-                `#/definitions/${key}/`
-              ),
-            }))
-          : anyOfRefs),
-      ],
+      anyOf: [...(a[block]?.anyOf ?? []), ...anyOfRefs],
     };
   }
   return mergedRoot;
 };
 
-const mergeStates = (
-  a: JSONSchema7,
-  b: JSONSchema7,
-  key: string = "."
-): JSONSchema7 => {
-  let properties: Record<string, JSONSchema7> = {};
-  for (const [prop, value] of Object.entries(
-    (b?.properties ?? {}) as Record<string, JSONSchema7>
-  )) {
-    const ref = value.$ref;
-    if (ref && key !== ".") {
-      properties[prop] = {
-        ...value,
-        $ref: ref.replace("./", `${key}/`),
-      };
-    } else {
-      properties[prop] = value;
-    }
-  }
+const mergeStates = (a: JSONSchema7, b: JSONSchema7): JSONSchema7 => {
   return {
     ...a,
     ...b,
     required: [...(a?.required ?? []), ...(b?.required ?? [])],
     properties: {
       ...(a?.properties ?? {}),
-      ...properties,
+      ...(b?.properties ?? {}),
     },
   };
 };
@@ -360,7 +331,9 @@ export const stringify = ({
   manifest["schemas"] = {
     kind: "js",
     raw: {
-      definitions: { ...defNormalized, ...schemas.definitions },
+      definitions: deepMerge(defNormalized, schemas.definitions, {
+        arrays: "merge",
+      }),
       root: {
         ...mergedRoots,
         state: {
@@ -410,11 +383,13 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         schemeables: { ...initial.schemeables, [id]: union(schemeable, ref) },
       });
     },
-    mergeWith: (def: Record<string, DecoManifest>): ManifestBuilder => {
+    mergeWith: (def: DecoManifest[]): ManifestBuilder => {
       let innerBuilder = newManifestBuilder(initial);
       let mergedRoots: Schemas["root"] = {};
       let mergedDefinitions: Schemas["definitions"] = {};
-      for (const [key, manifest] of Object.entries(def)) {
+      let manI = 0;
+      for (const manifest of def) {
+        manI++;
         const {
           routes: _doNotMergeRoutes,
           islands: _doNotMergeIslands,
@@ -422,36 +397,32 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           baseUrl: _ignoreBaseUrl,
           schemas: {
             root: { state, ...root },
-            definitions: { ".": self },
+            definitions,
           },
           ...blocks
         } = manifest;
 
-        mergedRoots = mergeSchemasRoot(mergedRoots, root, key);
-        mergedRoots["state"] = mergeStates(mergedRoots["state"], state, key);
+        mergedRoots = mergeSchemasRoot(mergedRoots, root);
+        mergedRoots["state"] = mergeStates(mergedRoots["state"], state);
         // TODO Improve generation performance here @author Marcos V. Candeia
-        mergedDefinitions[key] = JSON.parse(
-          JSON.stringify(self).replaceAll("./", `${key}/`)
-        );
+        mergedDefinitions = deepMerge(mergedDefinitions, definitions, {
+          arrays: "merge",
+        });
 
         let blockN = 0;
         for (const [block, value] of Object.entries(blocks)) {
           blockN++;
           let blockC = 0;
           for (const path of Object.keys(value ?? {})) {
-            const ref = `${key
-              .replaceAll("-", "")
-              .replaceAll("/", "")
-              .replaceAll(" ", "")}${"$".repeat(blockN)}${blockC}`;
+            const ref = `i${manI}${"$".repeat(blockN)}${blockC}`;
             blockC++;
-            const functionRef = path.replace("./", `${key}/`);
             innerBuilder = innerBuilder
               .addImports({
-                from: functionRef,
+                from: path,
                 clauses: [{ alias: ref }],
               })
               .addValuesOnManifestKey(block, [
-                functionRef,
+                path,
                 {
                   kind: "js",
                   raw: { identifier: ref },
