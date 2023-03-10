@@ -1,4 +1,5 @@
 import { ConfigProvider } from "$live/engine/adapters/fresh/manifest.ts";
+import { Resolvable } from "../../core/resolver.ts";
 
 export const useFileProvider = (file: string): ConfigProvider => {
   return {
@@ -9,10 +10,12 @@ export const useFileProvider = (file: string): ConfigProvider => {
   };
 };
 
-export const useDataProvider = (data: Record<string, any>): ConfigProvider => {
+export const useDataProvider = (
+  data: Record<string, Resolvable>
+): ConfigProvider => {
   return {
     get: <T>(id: string) => {
-      return data[id] as T;
+      return data[id] as Resolvable<T>;
     },
   };
 };
