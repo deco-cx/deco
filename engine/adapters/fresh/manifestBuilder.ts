@@ -7,6 +7,7 @@ import { Schemeable } from "$live/engine/schema/transform.ts";
 import { JSONSchema7 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 import { DecoManifest } from "./manifest.ts";
 import { deepMerge } from "std/collections/mod.ts";
+import { deepMergeDefinitions } from "./merge.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -337,9 +338,7 @@ export const stringify = ({
   manifest["schemas"] = {
     kind: "js",
     raw: {
-      definitions: deepMerge(defNormalized, schemas.definitions, {
-        arrays: "replace",
-      }),
+      definitions: deepMergeDefinitions(defNormalized, schemas.definitions),
       root: {
         ...mergedRoots,
         state: {
@@ -411,9 +410,10 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         mergedRoots = mergeSchemasRoot(mergedRoots, root);
         mergedRoots["state"] = mergeStates(mergedRoots["state"], state);
         // TODO Improve generation performance here @author Marcos V. Candeia
-        mergedDefinitions = deepMerge(mergedDefinitions, definitions, {
-          arrays: "replace",
-        });
+        mergedDefinitions = deepMergeDefinitions(
+          mergedDefinitions,
+          definitions
+        );
 
         let blockN = 0;
         for (const [block, value] of Object.entries(blocks)) {
