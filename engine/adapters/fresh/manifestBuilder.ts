@@ -332,7 +332,7 @@ export const stringify = ({
     kind: "js",
     raw: {
       definitions: deepMerge(defNormalized, schemas.definitions, {
-        arrays: "merge",
+        arrays: "replace",
       }),
       root: {
         ...mergedRoots,
@@ -406,7 +406,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         mergedRoots["state"] = mergeStates(mergedRoots["state"], state);
         // TODO Improve generation performance here @author Marcos V. Candeia
         mergedDefinitions = deepMerge(mergedDefinitions, definitions, {
-          arrays: "merge",
+          arrays: "replace",
         });
 
         let blockN = 0;
