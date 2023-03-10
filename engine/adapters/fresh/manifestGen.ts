@@ -207,8 +207,11 @@ export const decoManifestBuilder = async (
   return addDefinitions(blocks, {
     ...transformContext,
     withKey: (id: string): string => {
-      if (id.includes("marcoscandeia")) {
-        console.log(id, transformContext.base);
+      if (id.startsWith("https://raw.githubusercontent.com")) {
+        const [org, repo, _, ...rest] = id
+          .substring("https://raw.githubusercontent.com".length + 1)
+          .split("/");
+        return `${org}/${repo}/${rest.join("/")}`;
       }
       if (id.startsWith("https://denopkg.com")) {
         const [url] = id.split("@");
