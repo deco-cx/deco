@@ -26,14 +26,13 @@ const hasAnyMethod = (obj: Record<string, any>): boolean => {
 };
 
 const isConfigurableRoute = (
-  v: DecoManifest["routes"][string] | ConfigurableRoute
+  v: DecoManifest["routes"][string] | ConfigurableRoute,
 ): v is ConfigurableRoute => {
   const handler = (v as RouteModule).handler;
   const defaultIsFunc = typeof (v as RouteModule).default === "function";
   const handlerIsFunc = typeof handler === "function";
 
-  const handlerIsFuncMap =
-    handler !== undefined &&
+  const handlerIsFuncMap = handler !== undefined &&
     typeof handler === "object" &&
     hasAnyMethod(handler);
 
@@ -44,7 +43,7 @@ const isConfigurableRoute = (
 };
 const mapHandlers = (
   key: string,
-  handlers: Handler<any, any> | Handlers<any, any> | undefined
+  handlers: Handler<any, any> | Handlers<any, any> | undefined,
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
@@ -67,11 +66,10 @@ const mapHandlers = (
   }
   return async function (request: Request, context: HandlerContext) {
     const resolver = liveContext.configResolver!;
-    const $live =
-      (await resolver.resolve(key, {
-        context,
-        request,
-      })) ?? {};
+    const $live = (await resolver.resolve(key, {
+      context,
+      request,
+    })) ?? {};
 
     if (typeof handlers === "function") {
       return handlers(request, {
@@ -112,7 +110,7 @@ const routeBlock: Block<Route, Response> = {
     };
 
     const handlerNode = ast.find(
-      (node) => node.name === "handler" && node.declarationKind === "export"
+      (node) => node.name === "handler" && node.declarationKind === "export",
     );
     const liveConfigImport = ast.find((node) => {
       return node.kind === "import" && node.importDef.imported === "LiveConfig";
@@ -120,7 +118,7 @@ const routeBlock: Block<Route, Response> = {
     if (handlerNode && liveConfigImport) {
       const configSchemeable = schemeableFromHandleNode(
         handlerNode,
-        liveConfigImport.name
+        liveConfigImport.name,
       );
       if (configSchemeable) {
         return {
@@ -128,7 +126,7 @@ const routeBlock: Block<Route, Response> = {
           inputSchema: await tsTypeToSchemeable(
             transformationContext,
             configSchemeable,
-            [path, ast]
+            [path, ast],
           ),
         };
       }
@@ -175,7 +173,7 @@ const routeBlock: Block<Route, Response> = {
         inputSchema: await tsTypeToSchemeable(
           transformationContext,
           typeParams[0],
-          [path, ast]
+          [path, ast],
         ),
       };
     }
@@ -186,7 +184,7 @@ const routeBlock: Block<Route, Response> = {
 
 function schemeableFromHandleNode(
   handlerNode: ASTNode,
-  liveImportAs: string
+  liveImportAs: string,
 ): TsType | null {
   let contextParam: Param | null = null;
   if (handlerNode.kind === "function") {

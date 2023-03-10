@@ -7,7 +7,7 @@ export interface Props {
 
 const MatchUserAgent = (
   { includes, match }: Props,
-  { request }: MatchContext
+  { request }: MatchContext,
 ) => {
   const ua = request.headers.get("user-agent") || "";
   const regexMatch = match ? new RegExp(match).test(ua) : true;

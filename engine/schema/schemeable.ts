@@ -19,7 +19,7 @@ export const union = (s: Schemeable, ref: string): Schemeable => {
 };
 const schemeableToJSONSchemaFunc = (
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable
+  schemeable: Schemeable,
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const type = schemeable.type;
   switch (type) {
@@ -52,7 +52,7 @@ const schemeableToJSONSchemaFunc = (
           {
             anyOf: [],
           },
-        ] as [Record<string, JSONSchema7>, JSONSchema7]
+        ] as [Record<string, JSONSchema7>, JSONSchema7],
       );
     }
     case "object": {
@@ -61,12 +61,12 @@ const schemeableToJSONSchemaFunc = (
           const [nDef, sc] = schemeableToJSONSchema(def, schemeable);
           return [nDef, [...exts, sc]];
         },
-        [def, [] as JSONSchema7[]]
+        [def, [] as JSONSchema7[]],
       );
       const [nDef, properties] = Object.entries(schemeable.value).reduce(
         (
           [currDef, properties],
-          [property, { schemeable, title, jsDocSchema }]
+          [property, { schemeable, title, jsDocSchema }],
         ) => {
           const [nDef, sc] = schemeableToJSONSchema(currDef, schemeable);
           return [
@@ -74,7 +74,7 @@ const schemeableToJSONSchemaFunc = (
             { ...properties, [property]: { title, ...sc, ...jsDocSchema } },
           ];
         },
-        [currDef, {}]
+        [currDef, {}],
       );
       return [
         nDef,
@@ -108,7 +108,7 @@ const schemeableToJSONSchemaFunc = (
 
 export const schemeableToJSONSchema = (
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable
+  schemeable: Schemeable,
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const schemeableId = schemeable.id;
   if (schemeableId && def[schemeableId]) {

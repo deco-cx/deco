@@ -83,17 +83,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -113,32 +116,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -302,17 +311,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -323,32 +335,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -555,17 +573,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -576,32 +597,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -739,17 +766,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -760,32 +790,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -902,17 +938,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -923,32 +962,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -1065,17 +1110,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -1086,32 +1134,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -1324,17 +1378,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -1345,32 +1402,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -1487,17 +1550,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -1508,32 +1574,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -1650,17 +1722,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -1671,32 +1746,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -1818,17 +1899,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -1839,32 +1923,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -1981,17 +2071,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -2002,32 +2095,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -2126,17 +2225,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -2161,32 +2263,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -2351,17 +2459,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -2372,32 +2483,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -2456,7 +2573,8 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e2568dc7-4da7-4055-9f47-f1ecd17f9ed4",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e2568dc7-4da7-4055-9f47-f1ecd17f9ed4",
             alt: "teste",
             href: "/",
           },
@@ -2538,17 +2656,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -2559,32 +2680,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -2697,17 +2824,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -2718,32 +2848,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -2851,17 +2987,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -2886,32 +3025,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -3024,17 +3169,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -3045,32 +3193,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -3169,17 +3323,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -3204,32 +3361,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -3342,17 +3505,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -3363,32 +3529,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -3501,17 +3673,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -3522,32 +3697,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -3702,17 +3883,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -3737,32 +3921,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -3875,17 +4065,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -3896,32 +4089,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -4034,17 +4233,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -4055,32 +4257,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -4125,7 +4333,8 @@ export default {
   "1219": {
     sections: [
       {
-        html: '<h1><strong class="ql-size-huge">QuillText</strong></h1><p><br></p><p>teste</p><p><br></p><p><strong>teste</strong></p>',
+        html:
+          '<h1><strong class="ql-size-huge">QuillText</strong></h1><p><br></p><p>teste</p><p><br></p><p><strong>teste</strong></p>',
         __resolveType: "./sections/QuillText.tsx",
       },
     ],
@@ -4188,17 +4397,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -4223,32 +4435,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -4347,17 +4565,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -4382,32 +4603,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -4520,17 +4747,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -4541,32 +4771,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -4809,17 +5045,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -4830,32 +5069,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -4968,17 +5213,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -4989,32 +5237,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -5127,17 +5381,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -5148,32 +5405,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -5445,17 +5708,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -5466,32 +5732,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -5594,17 +5866,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -5629,32 +5904,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -5753,17 +6034,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -5788,32 +6072,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -5882,17 +6172,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -5947,32 +6240,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -6175,17 +6474,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -6210,32 +6512,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -6334,17 +6642,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -6369,32 +6680,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -6507,17 +6824,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -6528,32 +6848,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -6666,17 +6992,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -6687,32 +7016,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -6811,17 +7146,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -6832,32 +7170,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -7022,17 +7366,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -7043,32 +7390,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -7233,17 +7586,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -7254,32 +7610,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -7392,17 +7754,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -7413,32 +7778,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -7551,17 +7922,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -7572,32 +7946,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -7762,17 +8142,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -7783,32 +8166,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -7921,17 +8310,20 @@ export default {
         },
         banners: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/4ce86078-58a5-4393-9722-83120ec0262d",
             href: "/search?trade-policy=1&marca=cantao",
             alt: "Cantao",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/f1e2453b-ffdc-4259-aeac-ae55a486b439",
             href: "/search?trade-policy=1&marca=lucidez",
             alt: "Lucidez",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/2c7e95ed-b4ae-4ce4-a035-0e679e7a38ba",
             href: "/search?trade-policy=1&marca=loja-3",
             alt: "Loja 3",
           },
@@ -7942,32 +8334,38 @@ export default {
       {
         images: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/1/7cd20237-59c7-4dbf-9fd9-c9542f8e5355",
             href: "/search?ft=cantao",
             alt: "maria-filo",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/51aee3c4-4d8b-40c6-a007-830c740b7848_22_banner_secundario_fabula_desk.jpg",
             alt: "Banner 1",
             href: "/search?ft=fabula",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/4833a162-85cb-4b45-a84e-fbda8600b350_03_banner_secundario_animale_desk.jpg",
             alt: "Banner 2",
             href: "/search?ft=animale",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/b4179201-e34f-458d-b4f4-2e95e4471fd5_27_banner_secundario_categorias_blusas_desk.jpg",
             alt: "Banner 3",
             href: "/search?ft=blusa",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/8a02ef4a-9663-4aee-a11f-d04252e6fa1c_27_banner_secundario_categorias_cal%C3%A7as_desk.jpg",
             alt: "Banner 4",
             href: "/search?ft=calca",
           },
           {
-            src: "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
+            src:
+              "https://images.prismic.io/offpremium-web/135dba6b-bb08-4d66-a315-f28cdaf6fb5a_27_banner_secundario_categorias_vestidos_desk.jpg",
             alt: "Banner 5",
             href: "/search?ft=vestido",
           },
@@ -9173,23 +9571,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -9300,23 +9702,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -9444,23 +9850,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -9571,23 +9981,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -9698,23 +10112,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -9808,23 +10226,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -9952,23 +10374,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -10079,23 +10505,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -10206,23 +10636,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -10359,23 +10793,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -10608,23 +11046,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -10647,23 +11089,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -10766,23 +11212,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -10885,23 +11335,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11004,23 +11458,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11133,23 +11591,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11242,23 +11704,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11361,23 +11827,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11480,23 +11950,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11599,23 +12073,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11802,23 +12280,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11935,23 +12417,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -11975,27 +12461,32 @@ export default {
       {
         highlights: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/c0b7d969-681e-4c4b-8e7e-dde2ef6bc8ee",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/c0b7d969-681e-4c4b-8e7e-dde2ef6bc8ee",
             alt: "closet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/fb9f56f9-4528-4f33-907e-15fbcfe824fd",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/fb9f56f9-4528-4f33-907e-15fbcfe824fd",
             href: "/138?map=productClusterIds",
             alt: "casual",
             label: "Casual",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/824c4050-af37-4d4c-abd6-647ecdc882c9",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/824c4050-af37-4d4c-abd6-647ecdc882c9",
             alt: "winter",
             href: "/137?map=productClusterIds",
             label: "Inverno",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/4aaa20f3-3df2-4d99-9a13-9f53d4e98588",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/4aaa20f3-3df2-4d99-9a13-9f53d4e98588",
             alt: "swetter",
-            href: "/masculino/sueter?initialMap=c&initialQuery=masculino&map=category-1,category-3",
+            href:
+              "/masculino/sueter?initialMap=c&initialQuery=masculino&map=category-1,category-3",
             label: "Sueters",
           },
         ],
@@ -12097,23 +12588,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -12216,23 +12711,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -12365,23 +12864,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -12492,23 +12995,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -12532,10 +13039,12 @@ export default {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -12544,7 +13053,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -12672,23 +13182,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -12799,23 +13313,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -12839,16 +13357,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -12857,7 +13378,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -12973,23 +13495,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -13003,16 +13529,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -13021,7 +13550,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -13127,23 +13657,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -13173,16 +13707,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -13191,7 +13728,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -13300,23 +13838,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -13346,16 +13888,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -13364,7 +13909,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -13473,23 +14019,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -13519,16 +14069,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -13537,7 +14090,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -13646,23 +14200,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -13692,16 +14250,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -13710,7 +14271,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -13819,23 +14381,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -13846,23 +14412,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -13892,16 +14462,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -13910,7 +14483,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -14032,23 +14606,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -14075,16 +14653,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -14093,7 +14674,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -14215,23 +14797,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -14261,16 +14847,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -14279,7 +14868,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -14398,23 +14988,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -14434,16 +15028,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -14452,7 +15049,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -14561,23 +15159,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -14620,16 +15222,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Vestidos longos",
             label: null,
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/9a425de7-a106-43af-affb-882249af97aa",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/9a425de7-a106-43af-affb-882249af97aa",
           },
           {
             alt: "Vestidos midis",
             href: "/138?map=productClusterIds",
             label: null,
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/ce98631a-558b-4e94-a425-682df3fd49aa",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/ce98631a-558b-4e94-a425-682df3fd49aa",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/ddc21eb9-cf4d-4bda-9bc4-71a309f03764",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/ddc21eb9-cf4d-4bda-9bc4-71a309f03764",
             alt: "Vestidos curtos",
             href: "/139?map=productClusterIds",
             label: null,
@@ -14638,10 +15243,12 @@ export default {
             alt: "Saias",
             href: "/137?map=productClusterIds",
             label: null,
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/59200ec7-f0e2-413a-b2d4-52e6701d8ce6",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/59200ec7-f0e2-413a-b2d4-52e6701d8ce6",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/20ecd33e-dba8-4415-8b82-72bd548d259f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/20ecd33e-dba8-4415-8b82-72bd548d259f",
             alt: "Blusas",
             label: null,
             href: "/",
@@ -14774,23 +15381,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -14810,16 +15421,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -14828,7 +15442,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -14888,23 +15503,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -14964,16 +15583,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -14982,7 +15604,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -15085,23 +15708,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -15121,16 +15748,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -15139,7 +15769,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -15250,23 +15881,27 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description:
               "Aplicado direto na sacola, não acumula com outras promoções.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo durante o fechamento da sua compra.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Nossa newsletter",
             description:
               "Recompensas e promoções especiais apenas para usuários cadastrados.",
@@ -15295,16 +15930,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -15313,7 +15951,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -15422,22 +16061,26 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
           },
@@ -15466,16 +16109,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -15484,7 +16130,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -15614,16 +16261,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -15632,13 +16282,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -15647,25 +16299,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -15757,22 +16413,26 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
           },
@@ -15800,16 +16460,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -15818,7 +16481,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -15937,22 +16601,26 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
           },
@@ -15971,16 +16639,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -15989,7 +16660,8 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
         ],
         title: "Esta bombando!",
@@ -16348,16 +17020,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -16366,13 +17041,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -16381,25 +17058,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -16617,16 +17298,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -16635,13 +17319,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -16650,25 +17336,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -16786,16 +17476,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -16804,13 +17497,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -16819,25 +17514,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -16966,16 +17665,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -16984,13 +17686,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -16999,25 +17703,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -17146,16 +17854,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -17164,13 +17875,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -17179,25 +17892,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -17320,31 +18037,36 @@ export default {
         title: "categorias",
         highlights: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
             href: "/138?map=productClusterIds",
             alt: "Casual",
             label: "Casual",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             href: "/139?map=productClusterIds",
             alt: "Outlet",
             label: "Outlet",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
             href: "/137?map=productClusterIds",
             alt: "inverno",
             label: "Inverno",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
             href: "/feminino/roupas/saias",
             alt: "Saias",
             label: "Saias",
@@ -17356,25 +18078,29 @@ export default {
         features: [
           {
             description: "Consulte o prazo no fechamento.",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             icon: "Truck",
           },
           {
             description: "Aplicado direto na sacola.",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             icon: "Discount",
           },
           {
             description: "Faça login e preencha o forumário.",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             icon: "Return",
           },
           {
             description: "Sem juros em todos os produtos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             icon: "CreditCard",
           },
@@ -17502,16 +18228,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -17520,13 +18249,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -17535,25 +18266,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -17682,16 +18417,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -17700,13 +18438,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -17715,25 +18455,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -17862,16 +18606,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -17880,13 +18627,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -17895,25 +18644,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -18056,16 +18809,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -18074,13 +18830,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -18089,25 +18847,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -18236,16 +18998,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -18254,13 +19019,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -18269,25 +19036,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -18416,16 +19187,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -18434,13 +19208,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -18449,25 +19225,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -18596,16 +19376,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -18614,13 +19397,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -18629,25 +19414,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -18767,16 +19556,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -18785,13 +19577,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -18800,25 +19594,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -19065,16 +19863,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -19083,13 +19884,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -19098,25 +19901,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -19265,16 +20072,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -19283,13 +20093,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -19298,25 +20110,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -19424,25 +20240,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -19465,16 +20285,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -19483,13 +20306,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -19607,16 +20432,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -19625,13 +20453,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -19640,25 +20470,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -19778,16 +20612,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -19796,13 +20633,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -19811,25 +20650,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -19949,16 +20792,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -19967,13 +20813,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -19982,25 +20830,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -20100,16 +20952,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -20118,13 +20973,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -20133,25 +20990,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -20271,16 +21132,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -20289,13 +21153,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "categorias",
@@ -20304,25 +21170,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -20442,16 +21312,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -20460,13 +21333,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "Categorias",
@@ -20475,25 +21350,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -20568,7 +21447,8 @@ export default {
             label: "Feminino",
             href: "/feminino",
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             children: [
@@ -20781,16 +21661,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -20799,13 +21682,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "Categorias",
@@ -20814,25 +21699,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -20952,16 +21841,19 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Jaquetas",
             label: "Jaquetas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/651ff544-3869-41b2-b4b3-d2f51299bcb1",
           },
           {
             alt: "Casual",
             href: "/138?map=productClusterIds",
             label: "Casual",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/f12a8836-01e1-491b-a14d-4c1d96eb96cb",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/044597e4-c48a-4868-9b91-bcb4cb526273",
             alt: "Outlet",
             href: "/139?map=productClusterIds",
             label: "Outlet",
@@ -20970,13 +21862,15 @@ export default {
             alt: "inverno",
             href: "/137?map=productClusterIds",
             label: "Inverno",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0e251868-f18c-4d04-93af-8a9369d2b30d",
           },
           {
             alt: "Saias",
             href: "/feminino/roupas/saias",
             label: "Saias",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a0d34956-8bc9-406b-834b-06e9a2f14e9b",
           },
         ],
         title: "Categorias",
@@ -20985,25 +21879,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -21217,7 +22115,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -21293,11 +22192,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -21305,10 +22206,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -21317,13 +22220,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -21332,25 +22237,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -21564,7 +22473,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -21640,11 +22550,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -21652,10 +22564,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -21664,13 +22578,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -21679,25 +22595,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -21918,7 +22838,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -22002,11 +22923,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -22014,10 +22937,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -22026,13 +22951,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -22041,25 +22968,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -22276,7 +23207,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -22360,11 +23292,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -22372,10 +23306,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -22384,13 +23320,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -22399,25 +23337,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -22634,7 +23576,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -22718,11 +23661,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -22730,10 +23675,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -22742,13 +23689,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -22757,25 +23706,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -22992,7 +23945,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -23076,11 +24030,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -23088,10 +24044,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -23100,13 +24058,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -23115,25 +24075,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -23350,7 +24314,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -23441,11 +24406,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -23453,10 +24420,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -23465,13 +24434,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -23480,25 +24451,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -23715,7 +24690,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -23791,11 +24767,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -23803,10 +24781,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -23815,13 +24795,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -23830,25 +24812,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -24065,7 +25051,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -24141,11 +25128,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -24153,10 +25142,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -24165,7 +25156,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
         ],
         title: "Categorias",
@@ -24174,25 +25166,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -24409,7 +25405,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -24485,11 +25482,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -24497,10 +25496,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -24509,13 +25510,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -24524,25 +25527,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -24765,7 +25772,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -24835,11 +25843,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/22109157-d400-49b3-adce-3eadda2e0a93",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0b339a4b-4656-42f2-9701-b73dca443267",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -24847,10 +25857,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/6cc3dd11-53df-4905-907b-b559c3edf36a",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/92dee95a-e5b1-4f76-9416-6def5ba5aa51",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -24859,13 +25871,15 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/46735275-33fc-4448-8a62-bea725f59e8f",
           },
           {
             alt: "Shorts",
             href: "/feminino/roupas/saias",
             label: "Shorts",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/b45223b3-2c3f-49ee-a51e-21946d1b9525",
           },
         ],
         title: "Categorias",
@@ -24874,25 +25888,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -25115,7 +26133,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -25185,11 +26204,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -25197,10 +26218,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -25209,7 +26232,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -25218,25 +26242,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -25460,7 +26488,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -25530,11 +26559,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -25542,10 +26573,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -25554,7 +26587,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -25563,25 +26597,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -25805,7 +26843,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -25875,11 +26914,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -25887,10 +26928,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -25899,7 +26942,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -25908,25 +26952,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -26150,7 +27198,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -26228,11 +27277,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -26240,10 +27291,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -26252,7 +27305,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -26261,25 +27315,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -26497,7 +27555,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -26581,11 +27640,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -26593,10 +27654,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -26605,7 +27668,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -26614,25 +27678,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -26856,7 +27924,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -26934,11 +28003,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -26946,10 +28017,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -26958,7 +28031,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -26967,25 +28041,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -27209,7 +28287,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -27287,11 +28366,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -27299,10 +28380,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -27311,7 +28394,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -27320,25 +28404,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -27562,7 +28650,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -27632,11 +28721,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -27644,10 +28735,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -27656,7 +28749,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -27665,25 +28759,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -27920,7 +29018,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -27990,11 +29089,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -28002,10 +29103,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -28014,7 +29117,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -28023,25 +29127,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -28265,7 +29373,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -28335,11 +29444,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -28347,10 +29458,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -28359,7 +29472,8 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
         ],
         title: "Categorias",
@@ -28390,25 +29504,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -28632,7 +29750,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -28702,11 +29821,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -28714,10 +29835,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -28726,10 +29849,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -28741,25 +29866,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -28977,7 +30106,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -29053,11 +30183,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -29065,10 +30197,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -29077,10 +30211,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -29092,25 +30228,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -29334,7 +30474,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/0a89a521-fff9-4d89-a1e0-1017935dc276",
               alt: "feminino",
             },
             label: "Feminino",
@@ -29404,11 +30545,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -29416,10 +30559,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -29428,10 +30573,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -29443,25 +30590,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -29663,7 +30814,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/ee8b1f85-c6a9-4070-8d66-43f8f77ec89f",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/ee8b1f85-c6a9-4070-8d66-43f8f77ec89f",
               alt: "feminino",
             },
             label: "Feminino",
@@ -29779,7 +30931,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
             },
             label: "Masculino",
             href: "/masculino",
@@ -29894,7 +31047,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
             },
             label: "Sale",
             href: "/sale",
@@ -29963,11 +31117,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -29975,10 +31131,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -29987,10 +31145,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -30002,25 +31162,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -30222,7 +31386,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
               alt: "feminino",
             },
             label: "Feminino",
@@ -30338,7 +31503,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
             },
             label: "Masculino",
             href: "/masculino",
@@ -30453,7 +31619,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
             },
             label: "Sale",
             href: "/sale",
@@ -30522,11 +31689,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -30534,10 +31703,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -30546,10 +31717,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -30561,25 +31734,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -30781,7 +31958,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
               alt: "feminino",
             },
             label: "Feminino",
@@ -30897,7 +32075,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
             },
             label: "Masculino",
             href: "/masculino",
@@ -31012,7 +32191,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
             },
             label: "Sale",
             href: "/sale",
@@ -31119,11 +32299,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -31131,10 +32313,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -31143,10 +32327,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -31158,25 +32344,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -31387,7 +32577,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
               alt: "feminino",
             },
             label: "Feminino",
@@ -31503,7 +32694,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
             },
             label: "Masculino",
             href: "/masculino",
@@ -31618,7 +32810,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
             },
             label: "Sale",
             href: "/sale",
@@ -31678,11 +32871,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -31690,10 +32885,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -31702,10 +32899,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -31717,25 +32916,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -31937,7 +33140,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/7c98f2b5-d637-431e-8fb1-b3c45177ec2f",
               alt: "feminino",
             },
             label: "Feminino",
@@ -32053,7 +33257,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/d312cae4-e514-42d7-a5f3-871447715487",
             },
             label: "Masculino",
             href: "/masculino",
@@ -32168,7 +33373,8 @@ export default {
               },
             ],
             image: {
-              src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
+              src:
+                "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/5a57b3e2-340a-4503-aeb4-50c88574dc7e",
             },
             label: "Sale",
             href: "/sale",
@@ -32237,11 +33443,13 @@ export default {
             href: "/feminino/jaquetas",
             alt: "Mochilas",
             label: "Mochilas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/47a9dd26-35c9-4285-89bf-ce0cac165f5f",
           },
           {
             alt: "Bolsas",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3b119afd-0b8a-444e-b2af-d87c785bb67c",
             href: "/feminino",
             label: "Bolsas",
           },
@@ -32249,10 +33457,12 @@ export default {
             alt: "Sapatos",
             href: "/138?map=productClusterIds",
             label: "Sapatos",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/33755494-9104-410e-9e48-256aef7fc113",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/2d507523-6f5a-4bb5-98d5-d9c944b35845",
             alt: "Jaquetas",
             href: "/139?map=productClusterIds",
             label: "Jaquetas",
@@ -32261,10 +33471,12 @@ export default {
             alt: "Calças",
             href: "/137?map=productClusterIds",
             label: "Calças",
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/907b5510-d4a0-4d75-b2bf-c0c9e9b0ba68",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/40eb7c93-59a7-4963-9917-32508c56e4cc",
             href: "/137?map=productClusterIds",
             alt: "Shorts",
             label: "Shorts",
@@ -32276,25 +33488,29 @@ export default {
       {
         features: [
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/3d151623-448a-49dd-a147-647ed25e6c27",
             title: "Entrega em todo Brasil",
             description: "Consulte o prazo no fechamento.",
             icon: "Truck",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/e7327d8e-7c0e-49eb-8b12-81d0797ad9c0",
             title: "15% na primeira compra",
             description: "Aplicado direto na sacola.",
             icon: "Discount",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/bc67eee5-ea1d-44b0-883c-60e48976c00d",
             title: "Devolução grátis",
             description: "Faça login e preencha o forumário.",
             icon: "Return",
           },
           {
-            src: "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
+            src:
+              "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/239/a4432b63-9fd6-4d44-9030-9918e53f4aef",
             title: "Parcelamento em 12x",
             description: "Sem juros em todos os produtos",
             icon: "CreditCard",
@@ -32350,11 +33566,11 @@ export default {
               __resolveType: "$live/handlers/fresh.ts",
             },
             "/": {
-                page: {
-                  __resolveType: "3520",
-                },
-                __resolveType: "$live/handlers/fresh.ts",
+              page: {
+                __resolveType: "3520",
               },
+              __resolveType: "$live/handlers/fresh.ts",
+            },
             "/*": {
               page: {
                 __resolveType: "3178",

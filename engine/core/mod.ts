@@ -29,14 +29,14 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   public resolve = <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
-    overrides?: Record<string, string>
+    overrides?: Record<string, string>,
   ): PromiseOrValue<T> => {
     const { resolvers: res, getResolvable: useConfigs } = this.config;
     const getResolvable = overrides
       ? <V>(key: string): Resolvable<V> => {
-          const rerouted = overrides[key] ?? key;
-          return useConfigs(rerouted);
-        }
+        const rerouted = overrides[key] ?? key;
+        return useConfigs(rerouted);
+      }
       : useConfigs;
     const resolvers = {
       ...res,
@@ -57,10 +57,9 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     function _resolve<T>(data: Resolvable<T>): Promise<T> {
       return resolve(resolvers, data, getResolvable, ctx);
     }
-    const resolvable =
-      typeof typeOrResolvable === "string"
-        ? getResolvable<T>(typeOrResolvable)
-        : typeOrResolvable;
+    const resolvable = typeof typeOrResolvable === "string"
+      ? getResolvable<T>(typeOrResolvable)
+      : typeOrResolvable;
     if (resolvable === undefined) {
       return undefined as T;
     }
@@ -68,7 +67,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       resolvers,
       resolvable,
       getResolvable,
-      ctx as TContext
+      ctx as TContext,
     );
   };
 }

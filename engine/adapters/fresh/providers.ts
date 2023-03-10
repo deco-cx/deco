@@ -11,7 +11,7 @@ export const useFileProvider = (file: string): ConfigProvider => {
 };
 
 export const useDataProvider = (
-  data: Record<string, Resolvable>
+  data: Record<string, Resolvable>,
 ): ConfigProvider => {
   return {
     get: <T>(id: string) => {

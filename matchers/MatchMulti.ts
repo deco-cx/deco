@@ -5,12 +5,10 @@ export interface Props {
   matchers: Matcher[];
 }
 
-const MatchMulti =
-  ({ op, matchers }: Props) =>
-  (ctx: MatchContext) => {
-    return op === "or"
-      ? matchers.some((matcher) => matcher(ctx))
-      : matchers.every((matcher) => matcher(ctx));
-  };
+const MatchMulti = ({ op, matchers }: Props) => (ctx: MatchContext) => {
+  return op === "or"
+    ? matchers.some((matcher) => matcher(ctx))
+    : matchers.every((matcher) => matcher(ctx));
+};
 
 export default MatchMulti;

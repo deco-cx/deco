@@ -34,7 +34,7 @@ const rankRoute = (pattern: string) =>
           : routePart.startsWith(":")
           ? acc + 1
           : acc + 2,
-      0
+      0,
     );
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
@@ -48,22 +48,22 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
       ([routes, overrides], audience) => {
         return audience.matcher(matchCtx)
           ? [
-              { ...routes, ...audience.true.routes },
-              { ...overrides, ...audience.true.overrides },
-            ]
+            { ...routes, ...audience.true.routes },
+            { ...overrides, ...audience.true.overrides },
+          ]
           : [routes, overrides];
       },
-      [{}, {}] as [Record<string, Resolvable<Handler>>, Record<string, string>]
+      [{}, {}] as [Record<string, Resolvable<Handler>>, Record<string, string>],
     );
     const resolve = context.configResolver!.resolve.bind(
-      context.configResolver!
+      context.configResolver!,
     );
     const routerPromises: Promise<[string, Handler]>[] = [];
     for (const [route, handler] of Object.entries(routes)) {
       const resolvedOrPromise = resolve<Handler>(
         handler,
         { context: ctx, request: req },
-        overrides
+        overrides,
       );
       if (isAwaitable(resolvedOrPromise)) {
         routerPromises.push(resolvedOrPromise.then((r) => [route, r]));
@@ -74,7 +74,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     const builtRoutes = Object.fromEntries(
       (await Promise.all(routerPromises)).sort(([routeString]) =>
         rankRoute(routeString)
-      )
+      ),
     );
     const server = router(builtRoutes);
     return await server(req, ctx);
