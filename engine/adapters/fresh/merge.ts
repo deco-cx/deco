@@ -2,6 +2,37 @@
 import { Schemas } from "$live/engine/adapters/fresh/manifestBuilder.ts";
 import { JSONSchema7 } from "json-schema";
 
+export const mergeJSONSchemas = (
+  defObj: JSONSchema7,
+  defOtherObj: JSONSchema7
+) => {
+  const anyOf: JSONSchema7[] = [];
+  if (defObj.anyOf && defObj.anyOf.length > 0) {
+    anyOf.push(...(defObj.anyOf as JSONSchema7[]));
+  } else {
+    anyOf.push(defObj);
+  }
+
+  if (defOtherObj.anyOf && defOtherObj.anyOf.length > 0) {
+    anyOf.push(...(defOtherObj.anyOf as JSONSchema7[]));
+  } else {
+    anyOf.push(defOtherObj);
+  }
+
+  const alreadyAdded: Record<string, boolean> = {};
+
+  return {
+    anyOf: anyOf.filter((ref) => {
+      if (!ref.$id) {
+        return true;
+      }
+      const added = alreadyAdded[ref.$id];
+      alreadyAdded[ref.$id] = true;
+      return !added;
+    }),
+    $id: defObj.$id ?? defOtherObj.$id,
+  };
+};
 const isJSONSchema = <T>(s: T | JSONSchema7): s is JSONSchema7 => {
   return (
     (s as JSONSchema7)?.type !== undefined ||
@@ -12,15 +43,13 @@ const isJSONSchema = <T>(s: T | JSONSchema7): s is JSONSchema7 => {
 };
 export const deepMergeDefinitions = (
   def: Schemas["definitions"],
-  defOther: Schemas["definitions"],
+  defOther: Schemas["definitions"]
 ): Schemas["definitions"] => {
   const newObj: Record<string, any> = {};
-  for (
-    const key of new Set([
-      ...Object.keys(def ?? {}),
-      ...Object.keys(defOther ?? {}),
-    ])
-  ) {
+  for (const key of new Set([
+    ...Object.keys(def ?? {}),
+    ...Object.keys(defOther ?? {}),
+  ])) {
     if (!def[key]) {
       newObj[key] = defOther[key];
     } else if (!defOther[key]) {
@@ -29,20 +58,7 @@ export const deepMergeDefinitions = (
       const defObj = def[key];
       const defOtherObj = defOther[key];
       if (isJSONSchema(defObj) && isJSONSchema(defOtherObj)) {
-        const anyOf = [];
-        if (defObj.anyOf && defObj.anyOf.length > 0) {
-          anyOf.push(...defObj.anyOf);
-        } else {
-          anyOf.push(defObj);
-        }
-
-        if (defOtherObj.anyOf && defOtherObj.anyOf.length > 0) {
-          anyOf.push(...defOtherObj.anyOf);
-        } else {
-          anyOf.push(defOtherObj);
-        }
-
-        newObj[key] = { ...anyOf, $id: defObj.$id ?? defOtherObj.$id };
+        newObj[key] = mergeJSONSchemas(defObj, defOtherObj);
       } else if (
         typeof defObj === "object" &&
         typeof defOtherObj === "object"
@@ -50,7 +66,7 @@ export const deepMergeDefinitions = (
         newObj[key] = deepMergeDefinitions(defObj, defOtherObj);
       } else {
         console.warn(
-          `could not merge ${key} because its types diverges, defaulting to target.`,
+          `could not merge ${key} because its types diverges, defaulting to target.`
         );
         newObj[key] = defOtherObj;
       }

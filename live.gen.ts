@@ -104,7 +104,7 @@ const manifest = {
               "base": { "title": "Base", "type": ["string", "null"] },
               "routes": {
                 "title": "Routes",
-                "$ref": "#/definitions/$live/record<string, Resolvable>",
+                "$ref": "#/definitions/record<string, Resolvable>",
               },
             },
             "required": ["routes"],
@@ -151,12 +151,6 @@ const manifest = {
             },
             "$id": "$live/handlers/fresh.ts",
           },
-        },
-        "record<string, Resolvable>": {
-          "title": "Unknown record",
-          "type": "object",
-          "additionalProperties": { "$ref": "#/root/handlers" },
-          "$id": "$live/record<string, Resolvable>",
         },
         "pages": {
           "LivePage.tsx@Props": {
@@ -340,7 +334,7 @@ const manifest = {
             "type": "object",
             "allOf": [],
             "properties": {
-              "op": { "title": "Op", "$ref": "#/definitions/$live/unknown" },
+              "op": { "title": "Op", "$ref": "#/definitions/unknown" },
               "matchers": {
                 "title": "Matchers",
                 "type": "array",
@@ -397,7 +391,7 @@ const manifest = {
             "properties": {
               "environment": {
                 "title": "Environment",
-                "$ref": "#/definitions/$live/unknown",
+                "$ref": "#/definitions/unknown",
               },
             },
             "required": ["environment"],
@@ -433,19 +427,6 @@ const manifest = {
             "$id": "$live/matchers/MatchAlways.ts",
           },
         },
-        "unknown": {
-          "anyOf": [{ "type": "string", "const": "or" }, {
-            "type": "string",
-            "const": "and",
-          }],
-          "$id": "$live/unknown",
-        },
-        "record<string, string>": {
-          "title": "Unknown record",
-          "type": "object",
-          "additionalProperties": { "type": "string" },
-          "$id": "$live/record<string, string>",
-        },
         "flags": {
           "audience.ts@Audience": {
             "type": "object",
@@ -455,11 +436,11 @@ const manifest = {
               "name": { "title": "Name", "type": "string" },
               "routes": {
                 "title": "Routes",
-                "$ref": "#/definitions/$live/record<string, Resolvable>",
+                "$ref": "#/definitions/record<string, Resolvable>",
               },
               "overrides": {
                 "title": "Overrides",
-                "$ref": "#/definitions/$live/record<string, string>",
+                "$ref": "#/definitions/record<string, string>",
               },
             },
             "required": ["matcher", "name", "routes"],
@@ -487,11 +468,11 @@ const manifest = {
             "properties": {
               "routes": {
                 "title": "Routes",
-                "$ref": "#/definitions/$live/record<string, Resolvable>",
+                "$ref": "#/definitions/record<string, Resolvable>",
               },
               "overrides": {
                 "title": "Overrides",
-                "$ref": "#/definitions/$live/record<string, string>",
+                "$ref": "#/definitions/record<string, string>",
               },
             },
             "required": [],
@@ -514,6 +495,25 @@ const manifest = {
             "$id": "$live/flags/everyone.ts",
           },
         },
+      },
+      "record<string, Resolvable>": {
+        "title": "Unknown record",
+        "type": "object",
+        "additionalProperties": { "$ref": "#/root/handlers" },
+        "$id": "record<string, Resolvable>",
+      },
+      "unknown": {
+        "anyOf": [{ "type": "string", "const": "or" }, {
+          "type": "string",
+          "const": "and",
+        }],
+        "$id": "unknown",
+      },
+      "record<string, string>": {
+        "title": "Unknown record",
+        "type": "object",
+        "additionalProperties": { "type": "string" },
+        "$id": "record<string, string>",
       },
     },
     "root": {
