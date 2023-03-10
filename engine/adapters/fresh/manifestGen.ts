@@ -209,8 +209,11 @@ export const decoManifestBuilder = async (
     withKey: (id: string): string => {
       if (id.startsWith("https://raw.githubusercontent.com/")) {
         const [org, repo, _, ...rest] = id
-          .substring("https://raw.githubusercontent.com/".length + 1)
+          .substring("https://raw.githubusercontent.com".length + 1)
           .split("/");
+        if (org === "deco-cx" && repo === "live") {
+          return `$live/${rest.join("/")}`;
+        }
         return `${org}/${repo}/${rest.join("/")}`;
       }
       if (id.startsWith("https://denopkg.com")) {

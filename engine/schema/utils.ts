@@ -281,12 +281,12 @@ export const fnDefinitionRoot = async (
   if (!fn) {
     return [undefined, currRoot];
   }
-  const importedFrom = fromFileUrl(node.location.filename).replace(
-    ctx.base,
-    "."
-  );
+  const fileName = node.location.filename;
+  const importedFrom = fileName.startsWith("file://")
+    ? fromFileUrl(fileName).replace(ctx.base, ".")
+    : fileName;
   if (importedFrom !== currRoot[0]) {
-    return [fn, [importedFrom, await denoDoc(node.location.filename)]];
+    return [fn, [importedFrom, await denoDoc(fileName)]];
   }
   return [fn, currRoot];
 };
