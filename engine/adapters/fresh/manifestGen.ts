@@ -208,7 +208,6 @@ export const decoManifestBuilder = async (
     ...transformContext,
     withKey: (id: string): string => {
       if (id.startsWith("https://raw.githubusercontent.com")) {
-        console.log(id);
         const [org, repo, _, ...rest] = id
           .substring("https://raw.githubusercontent.com".length + 1)
           .split("/");
