@@ -211,10 +211,16 @@ const mergeSchemasRoot = (
   const allRootBlocks = { ...a, ...b };
 
   for (const block of Object.keys(allRootBlocks)) {
-    const anyOfRefs = (b[block]?.anyOf ?? []) as { $ref: string }[];
+    const duplicated: Record<string, boolean> = {};
     mergedRoot[block] = {
       title: block,
-      anyOf: [...(a[block]?.anyOf ?? []), ...anyOfRefs],
+      anyOf: [...(a[block]?.anyOf ?? []), ...(b[block]?.anyOf ?? [])].filter(
+        (ref) => {
+          const has = duplicated[ref.$ref];
+          duplicated[ref.$ref] = true;
+          return !has;
+        }
+      ),
     };
   }
   return mergedRoot;
