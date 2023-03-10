@@ -22,7 +22,7 @@ const withDefinition =
   (
     blkN: number,
     man: ManifestBuilder,
-    { inputSchema, outputSchema, functionRef }: BlockModuleRef,
+    { inputSchema, outputSchema, functionRef }: BlockModuleRef
   ): ManifestBuilder => {
     const funcWithKey = withKey(functionRef);
     const ref = `${"$".repeat(blockIdx)}${blkN}`;
@@ -51,9 +51,10 @@ const withDefinition =
         value: {
           title: funcWithKey,
           type: "object",
-          allOf: inputSchema && inputSchemaId
-            ? [{ $ref: `#/definitions/${inputSchemaId}` }]
-            : [],
+          allOf:
+            inputSchema && inputSchemaId
+              ? [{ $ref: `#/definitions/${inputSchemaId}` }]
+              : [],
           required: ["__resolveType"],
           properties: {
             __resolveType: {
@@ -88,7 +89,7 @@ const addCatchAllRoute = (man: ManifestBuilder): ManifestBuilder => {
     console.warn(
       `%cwarn%c: the live entrypoint ./routes/[...catchall].tsx was overwritten.`,
       "color: yellow; font-weight: bold",
-      "",
+      ""
     );
 
     return man;
@@ -110,10 +111,10 @@ const addCatchAllRoute = (man: ManifestBuilder): ManifestBuilder => {
 };
 const addDefinitions = async (
   blocks: Block[],
-  transformContext: TransformContext,
+  transformContext: TransformContext
 ): Promise<ManifestBuilder> => {
   const initialManifest = newManifestBuilder({
-    imports: [],
+    imports: {},
     exports: [],
     manifest: {},
     schemas: {
@@ -123,13 +124,13 @@ const addDefinitions = async (
   });
 
   const code = Object.values(transformContext.code).map(
-    (m) => [m[1], m[2]] as [string, ASTNode[]],
+    (m) => [m[1], m[2]] as [string, ASTNode[]]
   );
 
   const blockDefinitions = await Promise.all(
     blocks.map((blk) =>
       Promise.all(code.map((c) => blk.introspect(transformContext, c[0], c[1])))
-    ),
+    )
   );
 
   return blocks
@@ -157,7 +158,7 @@ const addDefinitions = async (
 
 export const decoManifestBuilder = async (
   dir: string,
-  uniqueKey: string,
+  uniqueKey: string
 ): Promise<ManifestBuilder> => {
   const liveIgnore = join(dir, ".liveignore");
   const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
@@ -172,21 +173,19 @@ export const decoManifestBuilder = async (
   const modulePromises: Promise<ModuleAST>[] = [];
   // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
   // that way the blocks can analyze the AST before needing to fetch all modules first.
-  for await (
-    const entry of walk(dir, {
-      includeDirs: false,
-      includeFiles: true,
-      exts: ["tsx", "jsx", "ts", "js"],
-      match: blocksDirs,
-      skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
-    })
-  ) {
+  for await (const entry of walk(dir, {
+    includeDirs: false,
+    includeFiles: true,
+    exts: ["tsx", "jsx", "ts", "js"],
+    match: blocksDirs,
+    skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
+  })) {
     modulePromises.push(
       denoDoc(entry.path)
         .then(
-          (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST,
+          (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST
         )
-        .catch((_) => [dir, entry.path.substring(dir.length), []]),
+        .catch((_) => [dir, entry.path.substring(dir.length), []])
     );
   }
 
@@ -202,7 +201,7 @@ export const decoManifestBuilder = async (
         },
       };
     },
-    { base: dir, code: {} },
+    { base: dir, code: {} }
   );
 
   return addDefinitions(blocks, {
@@ -225,11 +224,9 @@ export const decoManifestBuilder = async (
         return id;
       }
       if (id.startsWith("file://")) {
-        return `${uniqueKey}/${
-          fromFileUrl(id)
-            .replaceAll(transformContext.base, ".")
-            .substring(2)
-        }`;
+        return `${uniqueKey}/${fromFileUrl(id)
+          .replaceAll(transformContext.base, ".")
+          .substring(2)}`;
       }
       if (id.startsWith("./")) {
         return `${uniqueKey}/${id.substring(2)}`;
@@ -239,7 +236,7 @@ export const decoManifestBuilder = async (
     denoDoc: async (src) => {
       return (
         (transformContext.code as Record<string, ModuleAST>)[src] ??
-          ([src, src, await denoDoc(src)] as ModuleAST)
+        ([src, src, await denoDoc(src)] as ModuleAST)
       );
     },
   }).then(addCatchAllRoute);

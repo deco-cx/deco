@@ -32,10 +32,6 @@ const isDefaultClause = (v: ImportClause): v is DefaultImport => {
   return (v as DefaultImport).alias !== undefined;
 };
 
-export interface Import {
-  clauses: ImportClause[];
-  from: string;
-}
 export interface FunctionCall {
   identifier: string;
   params: JSONValue[];
@@ -50,7 +46,7 @@ export interface JS<T extends Record<string, any> = any> {
   raw: FunctionCall | Variable | T;
 }
 const isObjRaw = (
-  v: FunctionCall | Variable | Record<string, unknown>,
+  v: FunctionCall | Variable | Record<string, unknown>
 ): v is Record<string, unknown> => {
   return (v as FunctionCall).identifier === undefined;
 };
@@ -80,7 +76,10 @@ const isObj = (v: JSONValue): v is Obj => {
 };
 
 export type JSONObject = Partial<Record<string, JSONValue>>;
-
+export interface Import {
+  from: string;
+  clauses: ImportClause[];
+}
 export interface ManifestBuilder {
   mergeWith: (def: DecoManifest[]) => ManifestBuilder;
   equal: (other: ManifestBuilder) => boolean;
@@ -128,7 +127,7 @@ export interface Schemas {
 }
 export interface ManifestData {
   schemas: Schemas;
-  imports: Import[];
+  imports: Record<string, ImportClause[]>;
   manifest: JSONObject;
   exports: Export[];
   statements?: Statement[];
@@ -140,31 +139,27 @@ const stringifyStatement = (st: Statement): string => {
   return `${st.variable} = ${stringifyJS({ kind: "js", raw: st.assign })}`;
 };
 
-const stringifyImport = ({ clauses, from }: Import): string => {
-  return `import ${
-    clauses
-      .map((clause) =>
-        isDefaultClause(clause)
-          ? `* as ${clause.alias}`
-          : (clause as NamedImport).import
-          ? `{ ${(clause as NamedImport).import} ${
+const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
+  return `import ${clauses
+    .map((clause) =>
+      isDefaultClause(clause)
+        ? `* as ${clause.alias}`
+        : (clause as NamedImport).import
+        ? `{ ${(clause as NamedImport).import} ${
             clause.as ? "as " + clause.as : ""
           }}`
-          : clause.as
-      )
-      .join(",")
-  } from "${from}"`;
+        : clause.as
+    )
+    .join(",")} from "${from}"`;
 };
 
 const stringifyObj = (obj: JSONObject): string => {
   return `{
-    ${
-    Object.entries(obj)
+    ${Object.entries(obj)
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
-      .join(",\n")
-  }
+      .join(",\n")}
 }
 `;
 };
@@ -187,11 +182,9 @@ const stringifyJS = (js: JS): string => {
     return JSON.stringify(js.raw);
   }
   if (isFunctionCall(js.raw)) {
-    return `${js.raw.identifier}(${
-      js.raw.params
-        .map(stringifyJSONValue)
-        .join(",")
-    })`;
+    return `${js.raw.identifier}(${js.raw.params
+      .map(stringifyJSONValue)
+      .join(",")})`;
   }
 
   return js.raw.identifier;
@@ -211,7 +204,7 @@ export type DeepDefinitions = {
 
 const mergeSchemasRoot = (
   a: Schemas["root"],
-  b: Schemas["root"],
+  b: Schemas["root"]
 ): Schemas["root"] => {
   let mergedRoot: Schemas["root"] = {};
   const allRootBlocks = { ...a, ...b };
@@ -225,7 +218,7 @@ const mergeSchemasRoot = (
           const has = duplicated[ref.$ref];
           duplicated[ref.$ref] = true;
           return !has;
-        },
+        }
       ),
     };
   }
@@ -271,12 +264,12 @@ export const stringify = ({
   };
   // Generate all JSONSchema definitions and also create the `root` property, pointing to the respective configuration block.
   const [definitions, root, entrypoint] = Object.values(
-    schemeables ?? {},
+    schemeables ?? {}
   ).reduce(
     ([def, root, entrypoint], schemeable) => {
       const [nDef, _] = schemeableToJSONSchema(def, schemeable) as [
         Record<string, JSONSchema7 & { type: string | JSONSchema7["type"] }>,
-        unknown,
+        unknown
       ];
       const curr = schemeable.root
         ? root[schemeable.root] ?? { anyOf: [] }
@@ -287,30 +280,31 @@ export const stringify = ({
       // This is not straightforward,
       // routes are considered entrypoints
       // whenever you define a new configuration so its added as an entrypoint.
-      const entrypointConfig = schemeable.root === "routes"
-        ? {
-          ...entrypoint,
-          required: [...(entrypoint.required ?? []), entrypointFile],
-          properties: {
-            ...entrypoint.properties,
-            [entrypointFile]: defRef,
-          },
-        }
-        : entrypoint;
+      const entrypointConfig =
+        schemeable.root === "routes"
+          ? {
+              ...entrypoint,
+              required: [...(entrypoint.required ?? []), entrypointFile],
+              properties: {
+                ...entrypoint.properties,
+                [entrypointFile]: defRef,
+              },
+            }
+          : entrypoint;
 
       const nRoot = curr
         ? {
-          ...root,
-          [schemeable.root!]: {
-            ...curr,
-            anyOf: [...(curr?.anyOf ?? []), defRef],
-          },
-        }
+            ...root,
+            [schemeable.root!]: {
+              ...curr,
+              anyOf: [...(curr?.anyOf ?? []), defRef],
+            },
+          }
         : root;
 
       return [nDef, nRoot, entrypointConfig];
     },
-    [{}, {}, {}] as [Schemas["definitions"], Schemas["root"], JSONSchema7],
+    [{}, {}, {}] as [Schemas["definitions"], Schemas["root"], JSONSchema7]
   );
 
   // React json schema form does not support $id property to refer the inner json schema.
@@ -334,7 +328,7 @@ export const stringify = ({
     (curr, key) => {
       return { ...curr, anyOf: [...curr.anyOf, { $ref: `#/root/${key}` }] };
     },
-    { anyOf: [] as JSONSchema7[] },
+    { anyOf: [] as JSONSchema7[] }
   );
   // merge states
   const entrypointState = mergeStates(state, entrypoint);
@@ -358,7 +352,7 @@ export const stringify = ({
 // This file is automatically updated during development when running \`dev.ts\`.
 
 import config from "./deno.json" assert { type: "json" };
-${imports.map(stringifyImport).join("\n")}
+${Object.entries(imports).map(stringifyImport).join("\n")}
 
 const manifest = ${stringifyObj(manifest)}
 
@@ -416,7 +410,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         // TODO Improve generation performance here @author Marcos V. Candeia
         mergedDefinitions = deepMergeDefinitions(
           mergedDefinitions,
-          definitions,
+          definitions
         );
 
         let blockN = 0;
@@ -457,30 +451,30 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
       if (!sameImportLength) {
         return false;
       }
-      const sameSchemeablesLength = Object.keys(initial.schemas.root).length ===
+      const sameSchemeablesLength =
+        Object.keys(initial.schemas.root).length ===
           Object.keys(other.data.schemas.root).length &&
         Object.keys(initial.schemas.definitions).length ===
           Object.keys(other.data.schemas.definitions).length;
       if (!sameSchemeablesLength) {
         return false;
       }
-      for (let i = 0; i < initial.imports.length; i++) {
-        const [importThis, importOther] = [
-          initial.imports[i],
-          other.data.imports[i],
-        ];
-        if (importThis.from !== importOther.from) {
+      const importsFrom = Object.keys(initial.imports);
+      const otherImportsFrom = Object.keys(other.data.imports);
+      for (let i = 0; i < importsFrom.length; i++) {
+        if (importsFrom[i] !== otherImportsFrom[i]) {
           return false;
         }
-        if (importThis.clauses.length !== importOther.clauses.length) {
+        const [importThis, importOther] = [
+          initial.imports[importsFrom[i]],
+          other.data.imports[otherImportsFrom[i]],
+        ];
+        if (importThis.length !== importOther.length) {
           return false;
         }
 
-        for (let k = 0; k < importThis.clauses.length; k++) {
-          const [clauseThis, clauseOther] = [
-            importThis.clauses[k],
-            importOther.clauses[k],
-          ];
+        for (let k = 0; k < importThis.length; k++) {
+          const [clauseThis, clauseOther] = [importThis[k], importOther[k]];
 
           if (!equalClause(clauseThis, clauseOther)) {
             return false;
@@ -496,9 +490,25 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
       return newManifestBuilder({ ...initial, exportDefault: dfs });
     },
     addImports: (...imports: Import[]): ManifestBuilder => {
+      const currImports = initial.imports;
+      for (const importStr of imports) {
+        currImports[importStr.from] ??= [];
+        currImports[importStr.from] = [
+          ...currImports[importStr.from],
+          ...importStr.clauses,
+        ];
+        // if import defaults so only one import is allowed
+        const defaultClause =
+          currImports[importStr.from].filter(isDefaultClause);
+        if (defaultClause.length > 0) {
+          currImports[importStr.from] = [
+            defaultClause[defaultClause.length - 1],
+          ];
+        }
+      }
       return newManifestBuilder({
         ...initial,
-        imports: [...initial.imports, ...imports],
+        imports: currImports,
       });
     },
     addStatements: (...statements: Statement[]): ManifestBuilder => {
@@ -535,7 +545,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           {
             ...initial.manifest,
             [key]: initial.manifest[key] ?? { kind: "obj", value: {} },
-          },
+          }
         ),
       });
     },

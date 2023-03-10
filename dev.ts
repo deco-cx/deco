@@ -92,7 +92,7 @@ export default async function dev(
     currentManifest = newManifestBuilder(JSON.parse(prevManifest));
   } else {
     currentManifest = newManifestBuilder({
-      imports: [],
+      imports: {},
       manifest: {},
       exports: [],
       schemas: {
