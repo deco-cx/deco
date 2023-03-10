@@ -414,7 +414,7 @@ const tsTypeToSchemeableRec = async (
       const unionTypeId =
         ids.length !== node.union.length ? undefined : ids.join("|");
       return {
-        id: transformContext.withKey(unionTypeId ?? "unknown"),
+        id: unionTypeId ? transformContext.withKey(unionTypeId) : undefined,
         value: values,
         type: "union",
       };

@@ -334,7 +334,13 @@ const manifest = {
             "type": "object",
             "allOf": [],
             "properties": {
-              "op": { "title": "Op", "$ref": "#/definitions/unknown" },
+              "op": {
+                "title": "Op",
+                "anyOf": [{ "type": "string", "const": "or" }, {
+                  "type": "string",
+                  "const": "and",
+                }],
+              },
               "matchers": {
                 "title": "Matchers",
                 "type": "array",
@@ -391,7 +397,10 @@ const manifest = {
             "properties": {
               "environment": {
                 "title": "Environment",
-                "$ref": "#/definitions/unknown",
+                "anyOf": [{ "type": "string", "const": "production" }, {
+                  "type": "string",
+                  "const": "development",
+                }],
               },
             },
             "required": ["environment"],
@@ -501,13 +510,6 @@ const manifest = {
         "type": "object",
         "additionalProperties": { "$ref": "#/root/handlers" },
         "$id": "record<string, Resolvable>",
-      },
-      "unknown": {
-        "anyOf": [{ "type": "string", "const": "or" }, {
-          "type": "string",
-          "const": "and",
-        }],
-        "$id": "unknown",
       },
       "record<string, string>": {
         "title": "Unknown record",
