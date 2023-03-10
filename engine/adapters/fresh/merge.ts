@@ -4,7 +4,7 @@ import { JSONSchema7 } from "json-schema";
 
 export const mergeJSONSchemas = (
   defObj: JSONSchema7,
-  defOtherObj: JSONSchema7
+  defOtherObj: JSONSchema7,
 ) => {
   const anyOf: JSONSchema7[] = [];
   if (defObj.anyOf && defObj.anyOf.length > 0) {
@@ -43,13 +43,15 @@ const isJSONSchema = <T>(s: T | JSONSchema7): s is JSONSchema7 => {
 };
 export const deepMergeDefinitions = (
   def: Schemas["definitions"],
-  defOther: Schemas["definitions"]
+  defOther: Schemas["definitions"],
 ): Schemas["definitions"] => {
   const newObj: Record<string, any> = {};
-  for (const key of new Set([
-    ...Object.keys(def ?? {}),
-    ...Object.keys(defOther ?? {}),
-  ])) {
+  for (
+    const key of new Set([
+      ...Object.keys(def ?? {}),
+      ...Object.keys(defOther ?? {}),
+    ])
+  ) {
     if (!def[key]) {
       newObj[key] = defOther[key];
     } else if (!defOther[key]) {
@@ -66,7 +68,7 @@ export const deepMergeDefinitions = (
         newObj[key] = deepMergeDefinitions(defObj, defOtherObj);
       } else {
         console.warn(
-          `could not merge ${key} because its types diverges, defaulting to target.`
+          `could not merge ${key} because its types diverges, defaulting to target.`,
         );
         newObj[key] = defOtherObj;
       }
