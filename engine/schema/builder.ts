@@ -304,6 +304,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
             type: "object",
             required: [],
             properties: {},
+            ...(root["state"] ?? {}), // should we include only catchall?
             additionalProperties: configState,
           },
         ] as [Schemas["definitions"], JSONSchema7]

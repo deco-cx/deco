@@ -12,6 +12,7 @@ import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts"
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { error } from "$live/error.ts";
 import { newSchemaBuilder } from "./engine/schema/builder.ts";
+import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 
@@ -65,11 +66,20 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
   );
 }
 
+const namespaceFromGit = async (): Promise<string | undefined> => {
+  const lns = await $`git remote show origin -n`.lines();
+  if (lns.length < 1) {
+    return undefined;
+  }
+  const fetchUrlLine = lns[1];
+  const [_ignoreFetchUrl, _ignoreGitUrl, namespace] = fetchUrlLine.split(":");
+  return namespace.trimEnd();
+};
 export default async function dev(
   base: string,
   entrypoint: string,
   {
-    namespace = "$UNKNOWN",
+    namespace = undefined,
     imports = [],
     onListen,
   }: {
@@ -80,6 +90,7 @@ export default async function dev(
     onListen?: () => void;
   } = {}
 ) {
+  const ns = namespace ?? (await namespaceFromGit()) ?? base;
   ensureMinDenoVersion();
 
   entrypoint = new URL(entrypoint, base).href;
@@ -92,7 +103,7 @@ export default async function dev(
     currentManifest = newManifestBuilder(JSON.parse(prevManifest));
   } else {
     currentManifest = newManifestBuilder({
-      key: namespace,
+      namespace: ns,
       base: dir,
       imports: {},
       manifest: {},
@@ -107,7 +118,7 @@ export default async function dev(
       }),
     });
   }
-  let manifest = await decoManifestBuilder(dir, namespace);
+  let manifest = await decoManifestBuilder(dir, ns);
   manifest = manifest.mergeWith(imports);
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());

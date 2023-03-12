@@ -83,7 +83,7 @@ const addDefinitions = async (
   transformContext: TransformContext
 ): Promise<ManifestBuilder> => {
   const initialManifest = newManifestBuilder({
-    key: transformContext.key,
+    namespace: transformContext.key,
     base: transformContext.base,
     imports: {},
     exports: [],
