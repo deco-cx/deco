@@ -10,7 +10,6 @@ import {
   ModuleAST,
 } from "$live/engine/block.ts";
 import { ASTNode } from "$live/engine/schema/ast.ts";
-import { newSchemaBuilder } from "$live/engine/schema/builder.ts";
 import { TransformContext } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { walk } from "https://deno.land/std@0.170.0/fs/walk.ts";
@@ -88,14 +87,14 @@ const addDefinitions = async (
     imports: {},
     exports: [],
     manifest: {},
-    schemaBuilder: newSchemaBuilder({
+    schemaData: {
       blockModules: [],
       entrypoints: [],
       schema: {
         definitions: {},
         root: {},
       },
-    }),
+    },
   });
 
   const code = Object.values(transformContext.code).map(

@@ -49,12 +49,13 @@ const resolverRefToSchemeable = ({
     },
   };
 };
-interface SchemaData {
+export interface SchemaData {
   schema: Schemas;
   blockModules: BlockModule[];
   entrypoints: EntrypointModule[];
 }
 export interface SchemaBuilder {
+  data: SchemaData;
   build(base: string, key: string): Schemas;
   mergeWith(other: Schemas): SchemaBuilder;
   withBlockSchema(blockSchema: BlockModule | EntrypointModule): SchemaBuilder;
@@ -127,6 +128,7 @@ const isEntrypoint = (
 };
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
   return {
+    data: initial,
     mergeWith({ root, definitions }: Schemas): SchemaBuilder {
       const newRoot = mergeSchemasRoot(initial.schema["root"], root);
       const newRootState = mergeStates(

@@ -11,7 +11,6 @@ import {
 import { decoManifestBuilder } from "$live/engine/adapters/fresh/manifestGen.ts";
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { error } from "$live/error.ts";
-import { newSchemaBuilder } from "./engine/schema/builder.ts";
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
@@ -99,6 +98,7 @@ export default async function dev(
 
   let currentManifest: ManifestBuilder;
   const prevManifest = Deno.env.get("LIVE_DEV_PREVIOUS_MANIFEST");
+  console.log(prevManifest);
   if (prevManifest) {
     currentManifest = newManifestBuilder(JSON.parse(prevManifest));
   } else {
@@ -108,14 +108,14 @@ export default async function dev(
       imports: {},
       manifest: {},
       exports: [],
-      schemaBuilder: newSchemaBuilder({
+      schemaData: {
         blockModules: [],
         entrypoints: [],
         schema: {
           definitions: {},
           root: {},
         },
-      }),
+      },
     });
   }
   let manifest = await decoManifestBuilder(dir, ns);
