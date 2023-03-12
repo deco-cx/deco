@@ -1,39 +1,21 @@
 import { Schemeable } from "$live/engine/schema/transform.ts";
 import { JSONSchema7 } from "json-schema";
-
-const rmId = (sch: Schemeable): Schemeable => {
-  if (sch.type === "object") {
-    return { ...sch, id: undefined };
-  }
-  if (sch.type === "array") {
-    return { ...sch, value: { ...sch.value, id: undefined }, id: undefined };
-  }
-  return sch;
-};
-export const union = (s: Schemeable, ref: string): Schemeable => {
-  const woId = rmId(s);
-  return {
-    ...s,
-    type: "union",
-    value: [
-      ...(woId.type === "union" ? woId.value : [woId]),
-      {
-        type: "inline",
-        value: {
-          $ref: ref,
-        },
-      },
-    ],
-  };
-};
+export interface TransformContext {
+  key: string;
+}
 const schemeableToJSONSchemaFunc = (
+  genId: (s: Schemeable) => string | undefined,
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable,
+  schemeable: Schemeable
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const type = schemeable.type;
   switch (type) {
     case "array": {
-      const [nDef, items] = schemeableToJSONSchema(def, schemeable.value);
+      const [nDef, items] = schemeableToJSONSchema(
+        genId,
+        def,
+        schemeable.value
+      );
       return [
         nDef,
         {
@@ -47,7 +29,7 @@ const schemeableToJSONSchemaFunc = (
     case "union": {
       return schemeable.value.reduce(
         ([currDef, currSchema], curr) => {
-          const [ndef, sc] = schemeableToJSONSchema(currDef, curr);
+          const [ndef, sc] = schemeableToJSONSchema(genId, currDef, curr);
           return [
             ndef,
             {
@@ -61,29 +43,32 @@ const schemeableToJSONSchemaFunc = (
           {
             anyOf: [],
           },
-        ] as [Record<string, JSONSchema7>, JSONSchema7],
+        ] as [Record<string, JSONSchema7>, JSONSchema7]
       );
     }
     case "object": {
       const [currDef, allOf] = (schemeable.extends ?? []).reduce(
         ([def, exts], schemeable) => {
-          const [nDef, sc] = schemeableToJSONSchema(def, schemeable);
+          if (schemeable.type === "unknown") {
+            return [def, exts];
+          }
+          const [nDef, sc] = schemeableToJSONSchema(genId, def, schemeable);
           return [nDef, [...exts, sc]];
         },
-        [def, [] as JSONSchema7[]],
+        [def, [] as JSONSchema7[]]
       );
       const [nDef, properties] = Object.entries(schemeable.value).reduce(
         (
           [currDef, properties],
-          [property, { schemeable, title, jsDocSchema }],
+          [property, { schemeable, title, jsDocSchema }]
         ) => {
-          const [nDef, sc] = schemeableToJSONSchema(currDef, schemeable);
+          const [nDef, sc] = schemeableToJSONSchema(genId, currDef, schemeable);
           return [
             nDef,
             { ...properties, [property]: { title, ...sc, ...jsDocSchema } },
           ];
         },
-        [currDef, {}],
+        [currDef, {}]
       );
       return [
         nDef,
@@ -97,7 +82,11 @@ const schemeableToJSONSchemaFunc = (
       ];
     }
     case "record": {
-      const [nDef, properties] = schemeableToJSONSchema(def, schemeable.value);
+      const [nDef, properties] = schemeableToJSONSchema(
+        genId,
+        def,
+        schemeable.value
+      );
       return [
         nDef,
         {
@@ -115,47 +104,27 @@ const schemeableToJSONSchemaFunc = (
   }
 };
 
-const hasTypeEquivalence = (s: JSONSchema7, sc: Schemeable): boolean => {
-  const isMany = s.anyOf !== undefined && s.anyOf.length > 0;
-  switch (sc.type) {
-    case "array": {
-      return s.type === "array" || isMany;
-    }
-    case "inline": {
-      return s.type === sc.value.type || isMany;
-    }
-    case "record": {
-      return (s.type === "object" && !!s.additionalProperties) || isMany;
-    }
-    case "union": {
-      return isMany && s.anyOf!.length >= sc.value.length;
-    }
-    case "object": {
-      return s.type === "object" || isMany;
-    }
-    default:
-      return true;
-  }
-};
 export const schemeableToJSONSchema = (
+  genId: (s: Schemeable) => string | undefined,
   def: Record<string, JSONSchema7>,
-  schemeable: Schemeable,
+  ischemeable: Schemeable
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
-  const schemeableId = schemeable.id;
-  if (
-    schemeableId &&
-    def[schemeableId] &&
-    hasTypeEquivalence(def[schemeableId], schemeable)
-  ) {
+  const schemeableId = ischemeable.id ?? genId(ischemeable);
+  const schemeable = { ...ischemeable, id: schemeableId };
+  if (schemeableId && def[schemeableId]) {
     return [def, { $ref: `#/definitions/${schemeableId}` }];
   }
-  const [nSchema, curr] = schemeableToJSONSchemaFunc(def, schemeable);
+  const [nSchema, curr] = schemeableToJSONSchemaFunc(genId, def, schemeable);
 
   if (schemeableId) {
     return [
       {
         ...nSchema,
-        [schemeableId]: { ...curr, $id: schemeableId },
+        [schemeableId]: {
+          ...curr,
+          $id: schemeable.friendlyId ?? schemeableId,
+          title: schemeable.friendlyId ?? curr?.title,
+        },
       },
       { $ref: `#/definitions/${schemeableId}` },
     ];

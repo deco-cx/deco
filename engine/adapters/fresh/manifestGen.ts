@@ -10,69 +10,38 @@ import {
   ModuleAST,
 } from "$live/engine/block.ts";
 import { ASTNode } from "$live/engine/schema/ast.ts";
-import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
+import { newSchemaBuilder } from "$live/engine/schema/builder.ts";
+import { TransformContext } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { walk } from "https://deno.land/std@0.170.0/fs/walk.ts";
 import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
 
 const withDefinition =
-  (block: BlockType, blockIdx: number, withKey: (k: string) => string) =>
+  (block: BlockType, blockIdx: number, key: string) =>
   (
     blkN: number,
     man: ManifestBuilder,
     { inputSchema, outputSchema, functionRef }: BlockModuleRef
   ): ManifestBuilder => {
-    const funcWithKey = withKey(functionRef);
+    const functionKey =
+      block === "routes" || block === "islands"
+        ? functionRef
+        : `${key}${functionRef.substring(1)}`;
     const ref = `${"$".repeat(blockIdx)}${blkN}`;
-    const inputSchemaId = inputSchema?.id ?? crypto.randomUUID();
-    if (inputSchema) {
-      man = man.addSchemeables({
-        ...inputSchema,
-        id: inputSchemaId,
-        root: block === "routes" ? block : undefined, // FIXME @author Marcos V. Candeia, the route block should be addressed using its configuration
-      });
-    }
-    const hasWellKnownOutput = outputSchema && outputSchema.type !== "unknown";
-    if (hasWellKnownOutput) {
-      const outputId = outputSchema.id ?? crypto.randomUUID();
-      man = man
-        .addSchemeables({ ...outputSchema, id: outputId })
-        .schemeableAnyOf(outputId, `#/definitions/${funcWithKey}`);
-    }
-    // TODO @author Marcos V. Candeia arbitrarily chosen, this is not straightforward
-    // routes cannot be recreated, so we don't need to expose them as a block.
-    if (block !== "routes") {
-      const functionSchema: Schemeable = {
-        root: block,
-        id: funcWithKey,
-        type: "inline",
-        value: {
-          title: funcWithKey,
-          type: "object",
-          allOf:
-            inputSchema && inputSchemaId
-              ? [{ $ref: `#/definitions/${inputSchemaId}` }]
-              : [],
-          required: ["__resolveType"],
-          properties: {
-            __resolveType: {
-              type: "string",
-              default: funcWithKey,
-            },
-          },
-        },
-      };
-      man = man.addSchemeables(functionSchema);
-    }
     return man
+      .withBlockSchema({
+        inputSchema,
+        outputSchema,
+        functionKey,
+        blockType: block,
+      })
       .addImports({
-        from: funcWithKey,
+        from: functionKey,
         clauses: [{ alias: ref }],
       })
       .addValuesOnManifestKey(block, [
-        block !== "routes" && block !== "islands" ? funcWithKey : functionRef,
+        functionKey,
         {
           kind: "js",
           raw: { identifier: ref },
@@ -114,13 +83,19 @@ const addDefinitions = async (
   transformContext: TransformContext
 ): Promise<ManifestBuilder> => {
   const initialManifest = newManifestBuilder({
+    key: transformContext.key,
+    base: transformContext.base,
     imports: {},
     exports: [],
     manifest: {},
-    schemas: {
-      definitions: {},
-      root: {},
-    },
+    schemaBuilder: newSchemaBuilder({
+      blockModules: [],
+      entrypoints: [],
+      schema: {
+        definitions: {},
+        root: {},
+      },
+    }),
   });
 
   const code = Object.values(transformContext.code).map(
@@ -136,7 +111,7 @@ const addDefinitions = async (
   return blocks
     .reduce((manz, blk, i) => {
       const blkAlias = blk.type;
-      const useDef = withDefinition(blkAlias, i + 1, transformContext.withKey);
+      const useDef = withDefinition(blkAlias, i + 1, transformContext.key);
       let totalBlks = 0;
       return blockDefinitions[i].reduce((nMan, def) => {
         if (!def) {
@@ -201,43 +176,8 @@ export const decoManifestBuilder = async (
         },
       };
     },
-    { base: dir, code: {} }
+    { base: dir, code: {}, key: uniqueKey }
   );
 
-  return addDefinitions(blocks, {
-    ...transformContext,
-    withKey: (id: string): string => {
-      if (id.startsWith("https://raw.githubusercontent.com/")) {
-        const [org, repo, _, ...rest] = id
-          .substring("https://raw.githubusercontent.com".length + 1)
-          .split("/");
-        if (org === "deco-cx" && repo === "live") {
-          return `$live/${rest.join("/")}`;
-        }
-        return `${org}/${repo}/${rest.join("/")}`;
-      }
-      if (id.startsWith("https://denopkg.com")) {
-        const [url] = id.split("@");
-        return url.substring("https://denopkg.com".length + 1);
-      }
-      if (id.startsWith(uniqueKey)) {
-        return id;
-      }
-      if (id.startsWith("file://")) {
-        return `${uniqueKey}/${fromFileUrl(id)
-          .replaceAll(transformContext.base, ".")
-          .substring(2)}`;
-      }
-      if (id.startsWith("./")) {
-        return `${uniqueKey}/${id.substring(2)}`;
-      }
-      return id;
-    },
-    denoDoc: async (src) => {
-      return (
-        (transformContext.code as Record<string, ModuleAST>)[src] ??
-        ([src, src, await denoDoc(src)] as ModuleAST)
-      );
-    },
-  }).then(addCatchAllRoute);
+  return addDefinitions(blocks, transformContext).then(addCatchAllRoute);
 };

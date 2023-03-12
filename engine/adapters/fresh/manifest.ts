@@ -19,10 +19,10 @@ export type FreshHandler<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response,
+  Resp = Response
 > = (
   request: Request,
-  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>,
+  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>
 ) => PromiseOrValue<Resp>;
 
 export interface FreshContext<Data = any, State = any, TConfig = any>
@@ -44,19 +44,19 @@ export interface ConfigProvider {
 }
 
 const asManifest = (
-  d: DecoManifest,
+  d: DecoManifest
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
-export const configurable = (m: DecoManifest): DecoManifest => {
+export const configurable = <T extends DecoManifest>(m: T): T => {
   context.blocks = blocks;
   const [newManifest, resolvers] = (context.blocks ?? []).reduce(
     ([currMan, currMap], blk) => {
       const blocks = asManifest(currMan)[blk.type] ?? {};
       const decorated: Record<string, BlockModule> = blk.decorate
         ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
-          blocks,
-          blk.decorate,
-        )
+            blocks,
+            blk.decorate
+          )
         : blocks;
 
       const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
@@ -69,16 +69,16 @@ export const configurable = (m: DecoManifest): DecoManifest => {
 
       const adapted = blk.adapt
         ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
-          decorated,
-          blk.adapt,
-        )
+            decorated,
+            blk.adapt
+          )
         : {}; // if block has no adapt so it's not considered a resolver.
       return [
         { ...currMan, [blk.type]: decorated },
         { ...currMap, ...adapted, ...previews },
       ];
     },
-    [m, {}] as [DecoManifest, ResolverMap<FreshContext>],
+    [m, {}] as [DecoManifest, ResolverMap<FreshContext>]
   );
   const provider = useDataProvider(data);
   const resolver = new ConfigResolver<FreshContext>({
@@ -89,5 +89,5 @@ export const configurable = (m: DecoManifest): DecoManifest => {
   context.configResolver = resolver;
   context.manifest = newManifest;
 
-  return context.manifest;
+  return context.manifest as T;
 };

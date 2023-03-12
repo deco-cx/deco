@@ -3,7 +3,7 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import config from "./deno.json" assert { type: "json" };
-import * as $$0 from "$live/routes/[...catchall].tsx";
+import * as $$0 from "./routes/[...catchall].tsx";
 import * as $$$$0 from "$live/handlers/routesSelection.ts";
 import * as $$$$1 from "$live/handlers/router.ts";
 import * as $$$$2 from "$live/handlers/fresh.ts";
@@ -53,523 +53,496 @@ const manifest = {
   "baseUrl": import.meta.url,
   "schemas": {
     "definitions": {
-      "$live": {
-        "routes": {
-          "[...catchall].tsx@Entrypoint": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "handler": { "title": "Handler", "$ref": "#/root/handlers" },
-            },
-            "required": ["handler"],
-            "title": "$live/routes/[...catchall].tsx@Entrypoint",
-            "$id": "$live/routes/[...catchall].tsx@Entrypoint",
-          },
-        },
-        "handlers": {
-          "routesSelection.ts@SelectionConfig": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "flags": {
-                "title": "Flags",
-                "type": "array",
-                "items": { "$ref": "#/root/flags" },
-              },
-            },
-            "required": ["flags"],
-            "title": "$live/handlers/routesSelection.ts@SelectionConfig",
-            "$id": "$live/handlers/routesSelection.ts@SelectionConfig",
-          },
-          "routesSelection.ts": {
-            "title": "$live/handlers/routesSelection.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref":
-                "#/definitions/$live/handlers/routesSelection.ts@SelectionConfig",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/handlers/routesSelection.ts",
-              },
-            },
-            "$id": "$live/handlers/routesSelection.ts",
-          },
-          "router.ts@RouterConfig": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "base": { "title": "Base", "type": ["string", "null"] },
-              "routes": {
-                "title": "Routes",
-                "$ref": "#/definitions/record<string, Resolvable>",
-              },
-            },
-            "required": ["routes"],
-            "title": "$live/handlers/router.ts@RouterConfig",
-            "$id": "$live/handlers/router.ts@RouterConfig",
-          },
-          "router.ts": {
-            "title": "$live/handlers/router.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/handlers/router.ts@RouterConfig",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/handlers/router.ts",
-              },
-            },
-            "$id": "$live/handlers/router.ts",
-          },
-          "fresh.ts@FreshConfig": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "page": { "title": "Page", "$ref": "#/root/pages" },
-            },
-            "required": ["page"],
-            "title": "$live/handlers/fresh.ts@FreshConfig",
-            "$id": "$live/handlers/fresh.ts@FreshConfig",
-          },
-          "fresh.ts": {
-            "title": "$live/handlers/fresh.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/handlers/fresh.ts@FreshConfig",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/handlers/fresh.ts",
-              },
-            },
-            "$id": "$live/handlers/fresh.ts",
-          },
-        },
-        "pages": {
-          "LivePage.tsx@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "sections": {
-                "title": "Sections",
-                "type": "array",
-                "items": { "$ref": "#/root/sections" },
-              },
-            },
-            "required": ["sections"],
-            "title": "$live/pages/LivePage.tsx@Props",
-            "$id": "$live/pages/LivePage.tsx@Props",
-          },
-          "LivePage.tsx": {
-            "title": "$live/pages/LivePage.tsx",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/pages/LivePage.tsx@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/pages/LivePage.tsx",
-              },
-            },
-            "$id": "$live/pages/LivePage.tsx",
-          },
-        },
-        "sections": {
-          "Head.tsx@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "title": { "title": "Title", "type": ["string", "null"] },
-              "description": {
-                "title": "Description",
-                "type": ["string", "null"],
-              },
-              "url": { "title": "Url", "type": ["string", "null"] },
-              "imageUrl": { "title": "Image Url", "type": ["string", "null"] },
-              "faviconUrl": {
-                "title": "Favicon Url",
-                "type": ["string", "null"],
-              },
-              "styleUrls": {
-                "title": "Style Urls",
-                "type": "array",
-                "items": { "type": "string" },
-              },
-              "inlineStyles": {
-                "title": "Inline Styles",
-                "type": "array",
-                "items": { "type": "string" },
-              },
-              "scriptUrls": {
-                "title": "Script Urls",
-                "type": "array",
-                "items": { "type": "string" },
-              },
-              "inlineScripts": {
-                "title": "Inline Scripts",
-                "type": "array",
-                "items": { "type": "string" },
-              },
-              "themeColor": {
-                "title": "Theme Color",
-                "type": ["string", "null"],
-              },
-            },
-            "required": [],
-            "title": "$live/sections/Head.tsx@Props",
-            "$id": "$live/sections/Head.tsx@Props",
-          },
-          "Head.tsx": {
-            "title": "$live/sections/Head.tsx",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/sections/Head.tsx@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/sections/Head.tsx",
-              },
-            },
-            "$id": "$live/sections/Head.tsx",
-          },
-        },
-        "matchers": {
-          "MatchDate.ts@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "start": {
-                "title": "Start",
-                "type": ["string", "null"],
-                "format": "date-time",
-              },
-              "end": {
-                "title": "End",
-                "type": ["string", "null"],
-                "format": "date-time",
-              },
-            },
-            "required": [],
-            "title": "$live/matchers/MatchDate.ts@Props",
-            "$id": "$live/matchers/MatchDate.ts@Props",
-          },
-          "MatchDate.ts": {
-            "title": "$live/matchers/MatchDate.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/matchers/MatchDate.ts@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/matchers/MatchDate.ts",
-              },
-            },
-            "$id": "$live/matchers/MatchDate.ts",
-          },
-          "MatchUserAgent.ts@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "includes": { "title": "Includes", "type": ["string", "null"] },
-              "match": { "title": "Match", "type": ["string", "null"] },
-            },
-            "required": [],
-            "title": "$live/matchers/MatchUserAgent.ts@Props",
-            "$id": "$live/matchers/MatchUserAgent.ts@Props",
-          },
-          "MatchUserAgent.ts": {
-            "title": "$live/matchers/MatchUserAgent.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/matchers/MatchUserAgent.ts@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/matchers/MatchUserAgent.ts",
-              },
-            },
-            "$id": "$live/matchers/MatchUserAgent.ts",
-          },
-          "MatchSite.ts@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "siteId": { "title": "Site Id", "type": "number" },
-            },
-            "required": ["siteId"],
-            "title": "$live/matchers/MatchSite.ts@Props",
-            "$id": "$live/matchers/MatchSite.ts@Props",
-          },
-          "MatchSite.ts": {
-            "title": "$live/matchers/MatchSite.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/matchers/MatchSite.ts@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/matchers/MatchSite.ts",
-              },
-            },
-            "$id": "$live/matchers/MatchSite.ts",
-          },
-          "MatchMulti.ts@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "op": {
-                "title": "Op",
-                "anyOf": [{ "type": "string", "const": "or" }, {
-                  "type": "string",
-                  "const": "and",
-                }],
-              },
-              "matchers": {
-                "title": "Matchers",
-                "type": "array",
-                "items": { "$ref": "#/root/matchers" },
-              },
-            },
-            "required": ["op", "matchers"],
-            "title": "$live/matchers/MatchMulti.ts@Props",
-            "$id": "$live/matchers/MatchMulti.ts@Props",
-          },
-          "MatchMulti.ts": {
-            "title": "$live/matchers/MatchMulti.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/matchers/MatchMulti.ts@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/matchers/MatchMulti.ts",
-              },
-            },
-            "$id": "$live/matchers/MatchMulti.ts",
-          },
-          "MatchRandom.ts@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "traffic": { "title": "Traffic", "type": "number" },
-            },
-            "required": ["traffic"],
-            "title": "$live/matchers/MatchRandom.ts@Props",
-            "$id": "$live/matchers/MatchRandom.ts@Props",
-          },
-          "MatchRandom.ts": {
-            "title": "$live/matchers/MatchRandom.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/matchers/MatchRandom.ts@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/matchers/MatchRandom.ts",
-              },
-            },
-            "$id": "$live/matchers/MatchRandom.ts",
-          },
-          "MatchEnvironment.ts@Props": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "environment": {
-                "title": "Environment",
-                "anyOf": [{ "type": "string", "const": "production" }, {
-                  "type": "string",
-                  "const": "development",
-                }],
-              },
-            },
-            "required": ["environment"],
-            "title": "$live/matchers/MatchEnvironment.ts@Props",
-            "$id": "$live/matchers/MatchEnvironment.ts@Props",
-          },
-          "MatchEnvironment.ts": {
-            "title": "$live/matchers/MatchEnvironment.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/matchers/MatchEnvironment.ts@Props",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/matchers/MatchEnvironment.ts",
-              },
-            },
-            "$id": "$live/matchers/MatchEnvironment.ts",
-          },
-          "MatchAlways.ts": {
-            "title": "$live/matchers/MatchAlways.ts",
-            "type": "object",
-            "allOf": [],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/matchers/MatchAlways.ts",
-              },
-            },
-            "$id": "$live/matchers/MatchAlways.ts",
-          },
-        },
-        "flags": {
-          "audience.ts@Audience": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "matcher": { "title": "Matcher", "$ref": "#/root/matchers" },
-              "name": { "title": "Name", "type": "string" },
-              "routes": {
-                "title": "Routes",
-                "$ref": "#/definitions/record<string, Resolvable>",
-              },
-              "overrides": {
-                "title": "Overrides",
-                "$ref": "#/definitions/record<string, string>",
-              },
-            },
-            "required": ["matcher", "name", "routes"],
-            "title": "$live/flags/audience.ts@Audience",
-            "$id": "$live/flags/audience.ts@Audience",
-          },
-          "audience.ts": {
-            "title": "$live/flags/audience.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/flags/audience.ts@Audience",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/flags/audience.ts",
-              },
-            },
-            "$id": "$live/flags/audience.ts",
-          },
-          "everyone.ts@EveryoneConfig": {
-            "type": "object",
-            "allOf": [],
-            "properties": {
-              "routes": {
-                "title": "Routes",
-                "$ref": "#/definitions/record<string, Resolvable>",
-              },
-              "overrides": {
-                "title": "Overrides",
-                "$ref": "#/definitions/record<string, string>",
-              },
-            },
-            "required": [],
-            "title": "$live/flags/everyone.ts@EveryoneConfig",
-            "$id": "$live/flags/everyone.ts@EveryoneConfig",
-          },
-          "everyone.ts": {
-            "title": "$live/flags/everyone.ts",
-            "type": "object",
-            "allOf": [{
-              "$ref": "#/definitions/$live/flags/everyone.ts@EveryoneConfig",
-            }],
-            "required": ["__resolveType"],
-            "properties": {
-              "__resolveType": {
-                "type": "string",
-                "default": "$live/flags/everyone.ts",
-              },
-            },
-            "$id": "$live/flags/everyone.ts",
-          },
-        },
-      },
-      "record<string, Resolvable>": {
-        "title": "Unknown record",
+      "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
         "type": "object",
-        "additionalProperties": { "$ref": "#/root/handlers" },
-        "$id": "record<string, Resolvable>",
+        "allOf": [],
+        "properties": {
+          "flags": {
+            "title": "Flags",
+            "type": "array",
+            "items": { "$ref": "#/root/flags" },
+          },
+        },
+        "required": ["flags"],
+        "title": "$live/handlers/routesSelection.ts@SelectionConfig",
+        "$id": "$live/handlers/routesSelection.ts@SelectionConfig",
       },
-      "record<string, string>": {
-        "title": "Unknown record",
+      "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
         "type": "object",
-        "additionalProperties": { "type": "string" },
-        "$id": "record<string, string>",
+        "allOf": [],
+        "properties": {
+          "base": { "title": "Base", "type": ["string", "null"] },
+          "routes": {
+            "title": "Unknown record",
+            "type": "object",
+            "additionalProperties": { "$ref": "#/root/handlers" },
+          },
+        },
+        "required": ["routes"],
+        "title": "$live/handlers/router.ts@RouterConfig",
+        "$id": "$live/handlers/router.ts@RouterConfig",
+      },
+      "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig": {
+        "type": "object",
+        "allOf": [],
+        "properties": { "page": { "title": "Page", "$ref": "#/root/pages" } },
+        "required": ["page"],
+        "title": "$live/handlers/fresh.ts@FreshConfig",
+        "$id": "$live/handlers/fresh.ts@FreshConfig",
+      },
+      "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "sections": {
+            "title": "Sections",
+            "type": "array",
+            "items": { "$ref": "#/root/sections" },
+          },
+        },
+        "required": ["sections"],
+        "title": "$live/pages/LivePage.tsx@Props",
+        "$id": "$live/pages/LivePage.tsx@Props",
+      },
+      "JGxpdmUvc2VjdGlvbnMvSGVhZC50c3g=@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "title": { "title": "Title", "type": ["string", "null"] },
+          "description": { "title": "Description", "type": ["string", "null"] },
+          "url": { "title": "Url", "type": ["string", "null"] },
+          "imageUrl": { "title": "Image Url", "type": ["string", "null"] },
+          "faviconUrl": { "title": "Favicon Url", "type": ["string", "null"] },
+          "styleUrls": {
+            "title": "Style Urls",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "inlineStyles": {
+            "title": "Inline Styles",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "scriptUrls": {
+            "title": "Script Urls",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "inlineScripts": {
+            "title": "Inline Scripts",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "themeColor": { "title": "Theme Color", "type": ["string", "null"] },
+        },
+        "required": [],
+        "title": "$live/sections/Head.tsx@Props",
+        "$id": "$live/sections/Head.tsx@Props",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "start": {
+            "title": "Start",
+            "type": ["string", "null"],
+            "format": "date-time",
+          },
+          "end": {
+            "title": "End",
+            "type": ["string", "null"],
+            "format": "date-time",
+          },
+        },
+        "required": [],
+        "title": "$live/matchers/MatchDate.ts@Props",
+        "$id": "$live/matchers/MatchDate.ts@Props",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "includes": { "title": "Includes", "type": ["string", "null"] },
+          "match": { "title": "Match", "type": ["string", "null"] },
+        },
+        "required": [],
+        "title": "$live/matchers/MatchUserAgent.ts@Props",
+        "$id": "$live/matchers/MatchUserAgent.ts@Props",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": { "siteId": { "title": "Site Id", "type": "number" } },
+        "required": ["siteId"],
+        "title": "$live/matchers/MatchSite.ts@Props",
+        "$id": "$live/matchers/MatchSite.ts@Props",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "op": {
+            "title": "Op",
+            "anyOf": [{ "type": "string", "const": "or" }, {
+              "type": "string",
+              "const": "and",
+            }],
+          },
+          "matchers": {
+            "title": "Matchers",
+            "type": "array",
+            "items": { "$ref": "#/root/matchers" },
+          },
+        },
+        "required": ["op", "matchers"],
+        "title": "$live/matchers/MatchMulti.ts@Props",
+        "$id": "$live/matchers/MatchMulti.ts@Props",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": { "traffic": { "title": "Traffic", "type": "number" } },
+        "required": ["traffic"],
+        "title": "$live/matchers/MatchRandom.ts@Props",
+        "$id": "$live/matchers/MatchRandom.ts@Props",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "environment": {
+            "title": "Environment",
+            "anyOf": [{ "type": "string", "const": "production" }, {
+              "type": "string",
+              "const": "development",
+            }],
+          },
+        },
+        "required": ["environment"],
+        "title": "$live/matchers/MatchEnvironment.ts@Props",
+        "$id": "$live/matchers/MatchEnvironment.ts@Props",
+      },
+      "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "matcher": { "title": "Matcher", "$ref": "#/root/matchers" },
+          "name": { "title": "Name", "type": "string" },
+          "routes": {
+            "title": "Unknown record",
+            "type": "object",
+            "additionalProperties": { "$ref": "#/root/handlers" },
+          },
+          "overrides": {
+            "title": "Unknown record",
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+          },
+        },
+        "required": ["matcher", "name", "routes"],
+        "title": "$live/flags/audience.ts@Audience",
+        "$id": "$live/flags/audience.ts@Audience",
+      },
+      "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "routes": {
+            "title": "Unknown record",
+            "type": "object",
+            "additionalProperties": { "$ref": "#/root/handlers" },
+          },
+          "overrides": {
+            "title": "Unknown record",
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+          },
+        },
+        "required": [],
+        "title": "$live/flags/everyone.ts@EveryoneConfig",
+        "$id": "$live/flags/everyone.ts@EveryoneConfig",
+      },
+      "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz": {
+        "title": "$live/handlers/routesSelection.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref":
+            "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/handlers/routesSelection.ts",
+          },
+        },
+        "$id": "$live/handlers/routesSelection.ts",
+      },
+      "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz": {
+        "title": "$live/handlers/router.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/handlers/router.ts",
+          },
+        },
+        "$id": "$live/handlers/router.ts",
+      },
+      "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=": {
+        "title": "$live/handlers/fresh.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/handlers/fresh.ts",
+          },
+        },
+        "$id": "$live/handlers/fresh.ts",
+      },
+      "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4": {
+        "title": "$live/pages/LivePage.tsx",
+        "type": "object",
+        "allOf": [{
+          "$ref": "#/definitions/JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/pages/LivePage.tsx",
+          },
+        },
+        "$id": "$live/pages/LivePage.tsx",
+      },
+      "JGxpdmUvc2VjdGlvbnMvSGVhZC50c3g=": {
+        "title": "$live/sections/Head.tsx",
+        "type": "object",
+        "allOf": [{
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvSGVhZC50c3g=@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/sections/Head.tsx",
+          },
+        },
+        "$id": "$live/sections/Head.tsx",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz": {
+        "title": "$live/matchers/MatchDate.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/matchers/MatchDate.ts",
+          },
+        },
+        "$id": "$live/matchers/MatchDate.ts",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=": {
+        "title": "$live/matchers/MatchUserAgent.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref":
+            "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/matchers/MatchUserAgent.ts",
+          },
+        },
+        "$id": "$live/matchers/MatchUserAgent.ts",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz": {
+        "title": "$live/matchers/MatchSite.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/matchers/MatchSite.ts",
+          },
+        },
+        "$id": "$live/matchers/MatchSite.ts",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==": {
+        "title": "$live/matchers/MatchMulti.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref":
+            "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/matchers/MatchMulti.ts",
+          },
+        },
+        "$id": "$live/matchers/MatchMulti.ts",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=": {
+        "title": "$live/matchers/MatchRandom.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref":
+            "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/matchers/MatchRandom.ts",
+          },
+        },
+        "$id": "$live/matchers/MatchRandom.ts",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==": {
+        "title": "$live/matchers/MatchEnvironment.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref":
+            "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/matchers/MatchEnvironment.ts",
+          },
+        },
+        "$id": "$live/matchers/MatchEnvironment.ts",
+      },
+      "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM=": {
+        "title": "$live/matchers/MatchAlways.ts",
+        "type": "object",
+        "allOf": [],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/matchers/MatchAlways.ts",
+          },
+        },
+        "$id": "$live/matchers/MatchAlways.ts",
+      },
+      "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=": {
+        "title": "$live/flags/audience.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/flags/audience.ts",
+          },
+        },
+        "$id": "$live/flags/audience.ts",
+      },
+      "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=": {
+        "title": "$live/flags/everyone.ts",
+        "type": "object",
+        "allOf": [{
+          "$ref":
+            "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig",
+        }],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "$live/flags/everyone.ts",
+          },
+        },
+        "$id": "$live/flags/everyone.ts",
+      },
+      "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "handler": { "title": "Handler", "$ref": "#/root/handlers" },
+        },
+        "required": ["handler"],
+        "title": "$live/routes/[...catchall].tsx@Entrypoint",
+        "$id": "$live/routes/[...catchall].tsx@Entrypoint",
       },
     },
     "root": {
-      "routes": {
-        "title": "routes",
-        "anyOf": [{
-          "$ref": "#/definitions/$live/routes/[...catchall].tsx@Entrypoint",
-        }],
-      },
       "handlers": {
         "title": "handlers",
         "anyOf": [
-          { "$ref": "#/definitions/$live/handlers/routesSelection.ts" },
-          { "$ref": "#/definitions/$live/handlers/router.ts" },
-          { "$ref": "#/definitions/$live/handlers/fresh.ts" },
+          {
+            "$ref":
+              "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz",
+          },
+          { "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz" },
+          { "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=" },
         ],
       },
       "pages": {
         "title": "pages",
-        "anyOf": [{ "$ref": "#/definitions/$live/pages/LivePage.tsx" }],
+        "anyOf": [{ "$ref": "#/definitions/JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4" }],
       },
       "sections": {
         "title": "sections",
-        "anyOf": [{ "$ref": "#/definitions/$live/sections/Head.tsx" }],
+        "anyOf": [{ "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvSGVhZC50c3g=" }],
       },
       "matchers": {
         "title": "matchers",
         "anyOf": [
-          { "$ref": "#/definitions/$live/matchers/MatchDate.ts" },
-          { "$ref": "#/definitions/$live/matchers/MatchUserAgent.ts" },
-          { "$ref": "#/definitions/$live/matchers/MatchSite.ts" },
-          { "$ref": "#/definitions/$live/matchers/MatchMulti.ts" },
-          { "$ref": "#/definitions/$live/matchers/MatchRandom.ts" },
-          { "$ref": "#/definitions/$live/matchers/MatchEnvironment.ts" },
-          { "$ref": "#/definitions/$live/matchers/MatchAlways.ts" },
+          { "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz" },
+          {
+            "$ref":
+              "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=",
+          },
+          { "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz" },
+          { "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==" },
+          { "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=" },
+          {
+            "$ref":
+              "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==",
+          },
+          { "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM=" },
         ],
       },
       "flags": {
         "title": "flags",
-        "anyOf": [{ "$ref": "#/definitions/$live/flags/audience.ts" }, {
-          "$ref": "#/definitions/$live/flags/everyone.ts",
-        }],
+        "anyOf": [
+          { "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=" },
+          { "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=" },
+        ],
       },
       "state": {
         "type": "object",
-        "required": ["$live/routes/[...catchall].tsx"],
+        "required": ["./routes/[...catchall].tsx"],
         "properties": {
-          "$live/routes/[...catchall].tsx": {
-            "$ref": "#/definitions/$live/routes/[...catchall].tsx@Entrypoint",
+          "./routes/[...catchall].tsx": {
+            "$ref":
+              "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint",
           },
         },
         "additionalProperties": {
           "anyOf": [
-            { "$ref": "#/root/routes" },
             { "$ref": "#/root/handlers" },
             { "$ref": "#/root/pages" },
             { "$ref": "#/root/sections" },

@@ -1,6 +1,8 @@
 {
   "version": "2",
   "remote": {
+    "https://deno.land/std@0.102.0/encoding/hex.ts": "5bc7df19af498c315cdaba69e2fce1b2aef5fc57344e8c21c08991aa8505a260",
+    "https://deno.land/std@0.102.0/hash/md5.ts": "957791b9052b40cfa211eeb755a76ad6ad12177387ba84b47c4bc8be4edd60c8",
     "https://deno.land/std@0.170.0/_util/asserts.ts": "d0844e9b62510f89ce1f9878b046f6a57bf88f208a10304aab50efcb48365272",
     "https://deno.land/std@0.170.0/_util/os.ts": "8a33345f74990e627b9dfe2de9b040004b08ea5146c7c9e8fe9a29070d193934",
     "https://deno.land/std@0.170.0/async/abortable.ts": "80b2ac399f142cc528f95a037a7d0e653296352d95c681e284533765961de409",
@@ -124,6 +126,7 @@
     "https://deno.land/x/esbuild_deno_loader@0.5.2/src/native_loader.ts": "343854a566cf510cf25144f7c09fc0c1097780a31830305142a075d12bb697ba",
     "https://deno.land/x/esbuild_deno_loader@0.5.2/src/portable_loader.ts": "35b6c526eed8c2c781a3256b23c30aa7cce69c0ef1d583c15528663287ba18a3",
     "https://deno.land/x/esbuild_deno_loader@0.5.2/src/shared.ts": "b64749cd8c0f6252a11498bd8758ef1220003e46b2c9b68e16da63fd7e92b13a",
+    "https://deno.land/x/fresh@1.1.2/runtime.ts": "b02ec1e2e32cf73a33d262b7c9dcab9468ce16cd89fd424196c71003698a4ab0",
     "https://deno.land/x/fresh@1.1.2/server.ts": "f379c9aad24471a71e58fb887fa57e5cc27ad9df035987eb260541c78df38e84",
     "https://deno.land/x/fresh@1.1.2/src/runtime/csp.ts": "9ee900e9b0b786057b1009da5976298c202d1b86d1f1e4d2510bde5f06530ac9",
     "https://deno.land/x/fresh@1.1.2/src/runtime/head.ts": "0f9932874497ab6e57ed1ba01d549e843523df4a5d36ef97460e7a43e3132fdc",
@@ -145,6 +148,9 @@
     "https://deno.land/x/inspect_vscode@0.2.0/inspector.ts": "2352646679a70c62ae63f221dae56c427d07aecc11cf550f7e84efec6d5fba44",
     "https://deno.land/x/inspect_vscode@0.2.0/mod.ts": "3905e3efef3f847b23da42031bfd53bd56af469ca484b05874a37021178b34f4",
     "https://deno.land/x/inspect_vscode@0.2.0/search.ts": "683837a8f0dc68d7ee8a1c408fd039a032d7fd966838db209b8098d069243b36",
+    "https://deno.land/x/partytown@0.2.1/Script.tsx": "fb092b2d746dfec8aa28e56ab0bbe59f09705cb992c7e61ca20889eef4612c6e",
+    "https://deno.land/x/partytown@0.2.1/integrations/Jitsu.tsx": "4e6c6a0b29b9c9d4128a5fde883b075c516ca5161181f8b7207f3cb32a9c42d1",
+    "https://deno.land/x/partytown@0.2.1/shared.ts": "650bfe1dc98199683abd91f8d31cde08c316e99a57084578fbd8f428d1085117",
     "https://deno.land/x/rutt@0.0.13/mod.ts": "af981cfb95131152bf50fc9140fc00cb3efb6563df2eded1d408361d8577df20",
     "https://esm.sh/*preact-render-to-string@5.2.4?pin=102": "c7b78a1de01e18e40faf2588abd16be0319c309adaa55d4884e28daaf0263579",
     "https://esm.sh/@supabase/supabase-js@2.2.3": "cf7d7cc4c5e2b68186a82110018aa852aad83e7d6b17e4db6a22e1bb913cf0c4",

@@ -17,7 +17,7 @@ export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
 export interface BlockModule<
   T = any,
   RLike extends ResolverLike<T> = ResolverLike<T>,
-  TSerializable = T,
+  TSerializable = T
 > {
   default: RLike;
   preview?: Resolver<PreactComponent, TSerializable, FreshContext>;
@@ -38,14 +38,14 @@ export interface Block<
     UnPromisify<ReturnType<TBlockFunc>>,
     TBlockFunc,
     TSerializable
-  >,
+  >
 > {
   defaultPreview?: Resolver<PreactComponent, TSerializable, FreshContext>;
   type: BType;
   introspect: (
     transformationContext: TransformContext,
     path: string,
-    ast: ASTNode[],
+    ast: ASTNode[]
   ) => Promise<BlockModuleRef | undefined>;
   decorate?: <
     TBlockModule extends BlockModule<
@@ -56,14 +56,14 @@ export interface Block<
       UnPromisify<ReturnType<TBlockFunc>>,
       TBlockFunc,
       TSerializable
-    >,
+    >
   >(
     blockModule: TBlockModule,
-    key: string,
+    key: string
   ) => TBlockModule;
   adapt?: <TConfig = any>(
     blockModule: TBlockModule,
-    key: string,
+    key: string
   ) => Resolver<TSerializable, TConfig, FreshContext>;
 }
 
