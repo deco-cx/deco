@@ -4,6 +4,7 @@
     "std/": "https://deno.land/std@0.170.0/",
     "$fresh/": "https://deno.land/x/fresh@1.1.2/",
     "preact-render-to-string": "https://esm.sh/*preact-render-to-string@5.2.4?pin=102",
+    "json-schema": "https://esm.sh/@types/json-schema@7.0.11?pin=102",
     "preact": "https://esm.sh/preact@10.11.3?pin=102",
     "preact/": "https://esm.sh/preact@10.11.3/",
     "https://deno.land/std@0.147.0": "https://deno.land/std@0.170.0",
