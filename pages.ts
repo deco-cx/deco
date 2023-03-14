@@ -312,7 +312,7 @@ export const loadPage = async <Data = unknown>(
   end("load-data");
 
   ctx.state.page = { ...page, data: pageDataAfterFunctions };
-  
+
   return {
     page: ctx.state.page,
     headers,

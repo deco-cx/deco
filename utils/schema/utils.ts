@@ -103,7 +103,9 @@ export const getSchemaFromLoaderExport = withErrorPath(async (path: string) => {
 });
 
 // TODO: Should we extract defaultProps from the schema here?
-export const generatePropsForSchema = (schema: JSONSchema | null | undefined) => {
+export const generatePropsForSchema = (
+  schema: JSONSchema | null | undefined,
+) => {
   if (schema?.type == null || Array.isArray(schema.type)) {
     return null;
   }

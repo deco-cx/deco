@@ -20,7 +20,6 @@ import {
 } from "$live/utils/page.ts";
 import { LoaderFunction } from "$live/types.ts";
 import {
-  CacheControl,
   DEFAULT_CACHE_CONTROL,
   formatCacheControl,
   formatVary,
@@ -201,21 +200,15 @@ export async function loadPageData<Data, State extends LiveState>(
     {} as Record<string, unknown>,
   );
 
-  const cacheControl = functionsResponse.reduce(
-    (acc, response) => {
-      const parsed = response.headers && parseCacheControl(response.headers);
-      return parsed ? mergeCacheControl(acc, parsed) : acc;
-    },
-    DEFAULT_CACHE_CONTROL,
-  );
+  const cacheControl = functionsResponse.reduce((acc, response) => {
+    const parsed = response.headers && parseCacheControl(response.headers);
+    return parsed ? mergeCacheControl(acc, parsed) : acc;
+  }, DEFAULT_CACHE_CONTROL);
 
-  const vary = functionsResponse.reduce(
-    (acc, response) => {
-      const parsed = response.headers && parseVary(response.headers);
-      return parsed ? [...acc, ...parsed] : acc;
-    },
-    [] as string[],
-  );
+  const vary = functionsResponse.reduce((acc, response) => {
+    const parsed = response.headers && parseVary(response.headers);
+    return parsed ? [...acc, ...parsed] : acc;
+  }, [] as string[]);
 
   const status = functionsResponse.reduce(
     (acc, { status: responseStatus = 200 }) =>
@@ -253,7 +246,7 @@ export async function loadPageData<Data, State extends LiveState>(
     status,
     headers: new Headers({
       "cache-control": formatCacheControl(cacheControl),
-      "vary": formatVary(Array.from(new Set(vary))),
+      vary: formatVary(Array.from(new Set(vary))),
     }),
   };
 }
