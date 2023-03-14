@@ -61,8 +61,8 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
           newFlags.push(currValue);
           flags.set(audience.name, currValue);
         }
-        const isActive = flags.get(audience.name);
-        return isActive
+        const flag = flags.get(audience.name);
+        return flag?.isMatch
           ? [
               { ...routes, ...audience.true.routes },
               { ...overrides, ...audience.true.overrides },
