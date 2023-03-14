@@ -8,7 +8,9 @@
 
 **Live.ts unlocks seamless collaboration in teams of developers and business users** who manage high-traffic, mission-critical digital experiences that need to evolve every day.
 
-**Live.ts** allows developers to create `sections` (UI components), `loaders` (data fetchers), `pages` (composed of sections and loaders), and many other types of **blocks that can be configured in a visual editor UI by anyone in the team.** This means business users can now **create and evolve** the content and configuration of their digital experience without the need for developers to deploy changes — all with complete **type-safety**. Developers focus on building these **configurable blocks**, and business users can create completely dynamic pages composed from blocks via UI.
+**Live.ts** allows developers to create `sections` (UI components), `loaders` (data fetchers), `pages` (composed of sections and loaders), and many other types of **blocks** that can then be **easily configured in a visual editor UI by anyone in the team** with realtime changes.
+
+This means business users can now **create and evolve** the content and configuration of their digital experience without the need for developers to deploy changes — all with complete **type-safety**. Developers focus on building these **configurable blocks**, and business users can create completely dynamic pages composed from blocks via UI.
 
 Besides pages, **Live.ts** also lets teams manage **flags, experiments and campaigns** with an instant, global configuration management service optimized for the edge. Using `matcher` functions, configuration changes can be applied to any specific audience. Every change is instantly available to matched users, from gradual rollout of features, to A/B testing content, to targeting specific users with personalized content.
 
