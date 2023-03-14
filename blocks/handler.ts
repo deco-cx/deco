@@ -37,4 +37,8 @@ const handlerBlock: Block<HandlerFunc> = {
 // @ts-ignore: "waiting for the engine to be completed"
 export type Handler = InstanceOf<typeof handlerBlock, "#/root/handlers">;
 
+/**
+ * (config: TConfig) => (req:Request, ctx: HandlerContext) => Promise<Response> | Response
+ * Handlers blocks returns http handlers
+ */
 export default handlerBlock;

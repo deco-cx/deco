@@ -49,4 +49,10 @@ const matcherBlock: Block<MatchFunc> = {
     },
 };
 
+/**
+ * (config:TConfig) => (matchCtx: MatchContext) => boolean
+ * (config:TConfig, matchCtx: MatchContext) => boolean
+ * (config:TConfig) => boolean
+ * Matchers are functions that takes a match context as a parameter and returns a boolean.
+ */
 export default matcherBlock;

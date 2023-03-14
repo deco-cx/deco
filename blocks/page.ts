@@ -6,4 +6,8 @@ export type PageInstance = InstanceOf<typeof page, "#/root/pages">;
 
 const page = newComponentBlock("pages");
 
+/**
+ * (props:TProps) => JSX.Element
+ * Pages are PreactComponents
+ */
 export default page;

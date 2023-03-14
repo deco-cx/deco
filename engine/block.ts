@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { ResolveFunc, Resolver } from "$live/engine/core/resolver.ts";
+import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
 import { ASTNode, TsType } from "$live/engine/schema/ast.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
@@ -127,8 +127,3 @@ export interface PreactComponent<
   props: TProps;
   key?: string;
 }
-
-export type LiveConfig<TConfig = any, TState = unknown> = TState & {
-  $live: TConfig;
-  resolve: ResolveFunc;
-};
