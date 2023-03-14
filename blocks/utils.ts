@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { HttpContext } from "$live/blocks/handler.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { JSONSchema7 } from "$live/deps.ts";
 import {
@@ -20,7 +21,8 @@ import {
   fnDefinitionRoot,
   FunctionTypeDef,
 } from "$live/engine/schema/utils.ts";
-import { FreshContext, FreshHandler } from "./handler.ts";
+import { PromiseOrValue } from "../engine/core/utils.ts";
+import { StatefulContext } from "./handler.ts";
 
 export const fnDefinitionToSchemeable = async (
   ast: [string, ASTNode[]],
@@ -114,15 +116,20 @@ export const configOnly =
     };
   };
 
+export type StatefulHandler<TConfig, TResp> = (
+  req: Request,
+  ctx: StatefulContext<TConfig>
+) => PromiseOrValue<TResp>;
+
 export const configAsState =
   <
     TConfig = any,
     TResp = any,
-    TFunc extends FreshHandler<TConfig, any, any, TResp> = any
+    TFunc extends StatefulHandler<TConfig, TResp> = any
   >(func: {
     default: TFunc;
   }) =>
-  async ($live: TConfig, ctx: FreshContext) => {
+  async ($live: TConfig, ctx: HttpContext) => {
     return await func.default(ctx.request, {
       ...ctx.context,
       state: { ...ctx.context.state, $live, resolve: ctx.resolve },
@@ -239,7 +246,7 @@ export const newComponentBlock = <K extends string>(
 
 export const newHandlerLikeBlock = <R = any, K extends string = string>(
   type: K
-): Block<FreshHandler<any, any, any, any>, R, K> => ({
+): Block<StatefulHandler<any, any>, R, K> => ({
   type,
   defaultPreview: (result) => {
     return {

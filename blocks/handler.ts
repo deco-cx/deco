@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
-import { HandlerContext } from "$fresh/server.ts";
 import { applyConfig, configOnly } from "$live/blocks/utils.ts";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 import { BaseContext, ResolveFunc } from "$live/engine/core/resolver.ts";
+import { Handler as DenoHandler } from "std/http/server.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 
 export type LiveConfig<TConfig = any, TState = unknown> = TState & {
@@ -10,23 +10,21 @@ export type LiveConfig<TConfig = any, TState = unknown> = TState & {
   resolve: ResolveFunc;
 };
 
-export type FreshHandler<
-  TConfig = any,
-  TData = any,
-  TState = any,
-  Resp = Response
-> = (
-  request: Request,
-  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>
-) => PromiseOrValue<Resp>;
+export interface StatefulContext<T> {
+  state: T;
+}
 
-export interface FreshContext<Data = any, State = any, TConfig = any>
-  extends BaseContext {
-  context: HandlerContext<Data, LiveConfig<State, TConfig>>;
+export interface HttpContext<State = any, TConfig = any> extends BaseContext {
+  context: StatefulContext<LiveConfig<State, TConfig>>;
   request: Request;
 }
 
-type HandlerFunc<TConfig = any> = (config: TConfig) => FreshHandler;
+export type HttpHandler = <State = any, TConfig = any>(
+  req: Request,
+  ctx: HttpContext<State, TConfig>
+) => PromiseOrValue<Response>;
+
+type HandlerFunc<TConfig = any> = (config: TConfig) => DenoHandler;
 
 const handlerBlock: Block<HandlerFunc> = {
   type: "handlers",
@@ -38,7 +36,7 @@ const handlerBlock: Block<HandlerFunc> = {
 export type Handler = InstanceOf<typeof handlerBlock, "#/root/handlers">;
 
 /**
- * (config: TConfig) => (req:Request, ctx: HandlerContext) => Promise<Response> | Response
+ * (config: TConfig) => (req:Request, ctx: HttpContext) => Promise<Response> | Response
  * Handlers blocks returns http handlers
  */
 export default handlerBlock;
