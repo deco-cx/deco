@@ -27,31 +27,45 @@ export interface EntrypointModule {
 
 interface ResolverRef {
   blockType: string;
-  key: string;
+  functionKey: string;
   inputSchemaIds: string[];
   outputSchemaIds: string[];
 }
 
-const resolverRefToSchemeable = ({
-  key,
+/**
+ * Used as a schema for the return value of the given function.
+ * E.g, let's say you have a function that returns a boolean, and this function is referenced by `deco-sites/std/myBooleanFunction.ts`
+ * Say this function receives a input named `BooleanFunctionProps` that takes any arbitrary data.
+ * This function takes the mentioned parameters (functionRef and inputSchema) and builds a JSONSchema that uses the input as `allOf` property ("extends")
+ * and a required property `__resolveType` pointing to the mentioned function.
+ *
+ *{
+ * type: "object"
+ * allOf: [{$ref: "#/definitions/deco-sites/std/myBooleanFunction.ts@BooleanFunctionProps"}]
+ * properties: { __resolveType: "deco-sites/std/myBooleanFunction.ts"}
+ *}
+ */
+const functionRefToschemeable = ({
+  functionKey,
   inputSchemaIds,
 }: ResolverRef): Schemeable => {
   return {
     name: "",
-    file: key,
-    friendlyId: key,
+    file: functionKey,
+    friendlyId: functionKey,
     type: "inline",
     value: {
-      title: key,
+      title: functionKey,
       type: "object",
-      allOf: inputSchemaIds
-        ? [{ $ref: `#/definitions/${inputSchemaIds}` }]
-        : [],
+      allOf:
+        inputSchemaIds.length > 0
+          ? [{ $ref: `#/definitions/${inputSchemaIds[0]}` }]
+          : [],
       required: ["__resolveType"],
       properties: {
         __resolveType: {
           type: "string",
-          default: key,
+          default: functionKey,
         },
       },
     },
@@ -113,7 +127,7 @@ const mergeSchemasRoot = (
  * fallsback to the complete file address.
  * @param base is the current directory
  * @param namespace is the current namespace
- * @returns
+ * @returns the canonical file representation. e.g deco-sites/std/types.ts
  */
 const canonicalFileWith =
   (base: string, namespace: string) =>
@@ -140,14 +154,21 @@ const canonicalFileWith =
     }
     return file;
   };
-const mergeStates = (a: JSONSchema7, b: JSONSchema7): JSONSchema7 => {
+
+/**
+ * Merge two root states that are JSONSchema7
+ * @param stateA
+ * @param stateB
+ * @returns a new merged state
+ */
+const mergeStates = (stateA: JSONSchema7, stateB: JSONSchema7): JSONSchema7 => {
   return {
-    ...a,
-    ...b,
-    required: [...(a?.required ?? []), ...(b?.required ?? [])],
+    ...stateA,
+    ...stateB,
+    required: [...(stateA?.required ?? []), ...(stateB?.required ?? [])],
     properties: {
-      ...(a?.properties ?? {}),
-      ...(b?.properties ?? {}),
+      ...(stateA?.properties ?? {}),
+      ...(stateB?.properties ?? {}),
     },
   };
 };
@@ -157,6 +178,7 @@ const isEntrypoint = (
 ): m is EntrypointModule => {
   return (m as EntrypointModule).key !== undefined;
 };
+
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
   return {
     data: initial,
@@ -204,6 +226,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       });
     },
     build(base: string, namespace: string) {
+      // Utility functions
       const canonical = canonicalFileWith(base, namespace);
       const schemeableId = (
         schemeable: Schemeable
@@ -224,6 +247,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         }
         return undefined;
       };
+      // add a new schemeable to the definitions
       const addSchemeable = (
         def: Schemas["definitions"],
         schemeable?: Schemeable
@@ -254,33 +278,38 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         }
         return [def, undefined];
       };
+      // end of utility functions
+
       // build all schemeable to JsonSchema
       // generate schemeable id based on http and file system
-      const [d, r] = initial.blockModules.reduce(
-        ([def, resolvers], mod) => {
-          const [defOut, idOut] = addSchemeable(def, mod.outputSchema);
-          const [defIn, idIn] = addSchemeable(defOut, mod.inputSchema);
-          return [
-            defIn,
-            [
-              ...resolvers,
-              {
-                blockType: mod.blockType,
-                key: mod.functionKey,
-                inputSchemaIds: idIn ?? [], // supporting only one prop input for now @author Marcos V. Candeia
-                outputSchemaIds: idOut ? idOut : [],
-              },
-            ],
-          ];
-        },
-        [initial.schema.definitions, []] as [
-          Schemas["definitions"],
-          ResolverRef[]
-        ]
-      );
-      const [def, root] = r.reduce(
+      const [definitionsWithSchemeables, functionRefs] =
+        initial.blockModules.reduce(
+          ([def, resolvers], mod) => {
+            const [defOut, idOut] = addSchemeable(def, mod.outputSchema);
+            const [defIn, idIn] = addSchemeable(defOut, mod.inputSchema);
+            return [
+              defIn,
+              [
+                ...resolvers,
+                {
+                  blockType: mod.blockType,
+                  functionKey: mod.functionKey,
+                  inputSchemaIds: idIn ?? [], // supporting only one prop input for now @author Marcos V. Candeia
+                  outputSchemaIds: idOut ? idOut : [],
+                },
+              ],
+            ];
+          },
+          [initial.schema.definitions, []] as [
+            Schemas["definitions"],
+            ResolverRef[]
+          ]
+        );
+
+      // for all function refs add the function schemeable to all schema outputs
+      const [definitionsWithFuncRefs, root] = functionRefs.reduce(
         ([currentDefinitions, currentRoot], rs) => {
-          const schemeable = resolverRefToSchemeable(rs);
+          const schemeable = functionRefToschemeable(rs);
           const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
           const funcSchema = id ? nDef[id[0]] : undefined;
           const currAnyOfs = currentRoot[rs.blockType]?.anyOf ?? [];
@@ -312,14 +341,21 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
             },
           ];
         },
-        [d, initial.schema.root] as [Schemas["definitions"], Schemas["root"]]
+        [definitionsWithSchemeables, initial.schema.root] as [
+          Schemas["definitions"],
+          Schemas["root"]
+        ]
       );
+
+      // Generate the root state config which contains all possible configurations as additional properties.
       const configState = Object.keys(root).reduce(
         (curr, key) => {
           return { ...curr, anyOf: [...curr.anyOf, { $ref: `#/root/${key}` }] };
         },
         { anyOf: [] as JSONSchema7[] }
       );
+
+      // generate the final definitions and the entrypoint config
       const [finalDefs, entrypoint] = initial.entrypoints.reduce(
         ([defs, entr], blkEntry) => {
           const [nDefs, id] = addSchemeable(defs, blkEntry.config);
@@ -338,7 +374,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           ];
         },
         [
-          def,
+          definitionsWithFuncRefs,
           {
             type: "object",
             required: [],
