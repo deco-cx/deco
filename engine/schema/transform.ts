@@ -12,7 +12,7 @@ export interface TransformContext {
 
 export const inlineOrSchemeable = async (
   ast: [string, ASTNode[]],
-  tp: TsType | JSONSchema7 | undefined
+  tp: TsType | JSONSchema7 | undefined,
 ): Promise<Schemeable | undefined> => {
   if ((tp as TsType).repr !== undefined) {
     return await tsTypeToSchemeable(tp as TsType, ast);
@@ -95,7 +95,7 @@ export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
 };
 const schemeableWellKnownType = async (
   ref: TypeRef,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
     case "Promise": {
@@ -181,7 +181,7 @@ const schemeableWellKnownType = async (
       }
       const typeSchemeable = await tsTypeToSchemeableRec(
         ref.typeParams![0],
-        root
+        root,
       );
 
       return {
@@ -199,7 +199,7 @@ const schemeableWellKnownType = async (
 
       const recordSchemeable = await tsTypeToSchemeableRec(
         ref.typeParams[1],
-        root
+        root,
       );
 
       return {
@@ -217,7 +217,7 @@ const schemeableWellKnownType = async (
 
 export const findSchemeableFromNode = async (
   rootNode: ASTNode,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Promise<Schemeable> => {
   const kind = rootNode.kind;
   switch (kind) {
@@ -225,7 +225,7 @@ export const findSchemeableFromNode = async (
       const allOf = await Promise.all(
         rootNode.interfaceDef.extends.map((tp) =>
           tsTypeToSchemeableRec(tp, root)
-        )
+        ),
       );
       return {
         name: rootNode.name,
@@ -266,7 +266,7 @@ export const findSchemeableFromNode = async (
 
 const typeDefToSchemeable = async (
   node: TypeDef,
-  root: ASTNode[]
+  root: ASTNode[],
 ): Promise<Omit<ObjectSchemeable, "id" | "type">> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
@@ -274,7 +274,7 @@ const typeDefToSchemeable = async (
       const schema = await tsTypeToSchemeableRec(
         property.tsType,
         root,
-        property.optional
+        property.optional,
       );
 
       return [
@@ -285,7 +285,7 @@ const typeDefToSchemeable = async (
           title: beautify(property.name),
         },
       ];
-    })
+    }),
   );
 
   const required = node.properties
@@ -301,7 +301,7 @@ const typeDefToSchemeable = async (
 export const tsTypeToSchemeable = async (
   node: TsType,
   root: [string, ASTNode[]],
-  optional?: boolean
+  optional?: boolean,
 ): Promise<Schemeable> => {
   const schemeable = await tsTypeToSchemeableRec(node, root[1], optional);
   return {
@@ -314,7 +314,7 @@ export const tsTypeToSchemeable = async (
 const tsTypeToSchemeableRec = async (
   node: TsType,
   root: ASTNode[],
-  optional?: boolean
+  optional?: boolean,
 ): Promise<Schemeable> => {
   const kind = node.kind;
   switch (kind) {
@@ -357,8 +357,8 @@ const tsTypeToSchemeableRec = async (
         type: "inline",
         value: type
           ? ({
-              type: optional ? [type, "null"] : type,
-            } as JSONSchema7)
+            type: optional ? [type, "null"] : type,
+          } as JSONSchema7)
           : {},
       };
     }
@@ -378,12 +378,13 @@ const tsTypeToSchemeableRec = async (
     }
     case "union": {
       const values = await Promise.all(
-        node.union.map((t) => tsTypeToSchemeableRec(t, root))
+        node.union.map((t) => tsTypeToSchemeableRec(t, root)),
       );
       const ids = values.map((tp) => tp.name).filter(notUndefined);
       ids.sort();
-      const unionTypeId =
-        ids.length !== node.union.length ? undefined : ids.join("|");
+      const unionTypeId = ids.length !== node.union.length
+        ? undefined
+        : ids.join("|");
       return {
         name: unionTypeId,
         file: values[0]?.file,

@@ -17,7 +17,7 @@ export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
 export interface BlockModule<
   T = any,
   RLike extends ResolverLike<T> = ResolverLike<T>,
-  TSerializable = T
+  TSerializable = T,
 > {
   default: RLike;
   preview?: Resolver<PreactComponent, TSerializable, any>;
@@ -38,14 +38,14 @@ export interface Block<
     UnPromisify<ReturnType<TBlockFunc>>,
     TBlockFunc,
     TSerializable
-  >
+  >,
 > {
   defaultPreview?: Resolver<PreactComponent, TSerializable, any>;
   type: BType;
   introspect: (
     transformationContext: TransformContext,
     path: string,
-    ast: ASTNode[]
+    ast: ASTNode[],
   ) => Promise<BlockModuleRef | undefined>;
   decorate?: <
     TBlockModule extends BlockModule<
@@ -56,14 +56,14 @@ export interface Block<
       UnPromisify<ReturnType<TBlockFunc>>,
       TBlockFunc,
       TSerializable
-    >
+    >,
   >(
     blockModule: TBlockModule,
-    key: string
+    key: string,
   ) => TBlockModule;
   adapt?: <TConfig = any>(
     blockModule: TBlockModule,
-    key: string
+    key: string,
   ) => Resolver<TSerializable, TConfig, any>;
 }
 
@@ -89,13 +89,10 @@ type JSONSchemaLike =
 
 export type PathOf<
   T,
-  Key extends string & keyof T = string & keyof T
-> = `${Key}${Key extends `${infer _}.ts${infer _}`
-  ? ""
-  : T[Key] extends JSONSchemaLike
-  ? ""
-  : T[Key] extends Record<string, unknown>
-  ? `/${PathOf<T[Key]>}`
+  Key extends string & keyof T = string & keyof T,
+> = `${Key}${Key extends `${infer _}.ts${infer _}` ? ""
+  : T[Key] extends JSONSchemaLike ? ""
+  : T[Key] extends Record<string, unknown> ? `/${PathOf<T[Key]>}`
   : ""}`;
 
 export type References<TManifestSchemas> = `#/${PathOf<TManifestSchemas>}`;
@@ -104,24 +101,22 @@ export type ManifestSchemas = References<typeof manifest["schemas"]>;
 
 export type InstanceOf<
   T,
-  _Schema extends T extends Block
-    ? `#/root/${T["type"]}` & ManifestSchemas
+  _Schema extends T extends Block ? `#/root/${T["type"]}` & ManifestSchemas
     : ManifestSchemas = T extends Block
-    ? `#/root/${T["type"]}` & ManifestSchemas
-    : ManifestSchemas,
-  TorBlockSerializable = T extends Block<any, infer Serializable>
-    ? Serializable
-    : T
+      ? `#/root/${T["type"]}` & ManifestSchemas
+      : ManifestSchemas,
+  TorBlockSerializable = T extends Block<any, infer Serializable> ? Serializable
+    : T,
 > = TorBlockSerializable;
 
 export type ComponentFunc<
   TProps = any,
-  TReturn extends JSX.Element = JSX.Element
+  TReturn extends JSX.Element = JSX.Element,
 > = (props: TProps) => TReturn;
 
 export interface PreactComponent<
   TReturn extends JSX.Element = JSX.Element,
-  TProps = any
+  TProps = any,
 > {
   Component: ComponentFunc<TProps, TReturn>;
   props: TProps;

@@ -39,32 +39,32 @@ const parseJSDocAttribute = (key: string, value: string) => {
 export const jsDocToSchema = (node: JSDoc) =>
   node.tags
     ? Object.fromEntries(
-        node.tags
-          .map((tag: Tag) => {
-            const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
+      node.tags
+        .map((tag: Tag) => {
+          const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
 
-            const key = match?.groups?.key;
-            const value = match?.groups?.value;
+          const key = match?.groups?.key;
+          const value = match?.groups?.value;
 
-            if (typeof key === "string" && typeof value === "string") {
-              const parsedValue = parseJSDocAttribute(key, value);
-              return [key, parsedValue] as const;
-            }
+          if (typeof key === "string" && typeof value === "string") {
+            const parsedValue = parseJSDocAttribute(key, value);
+            return [key, parsedValue] as const;
+          }
 
-            return null;
-          })
-          .filter((e): e is [string, string | number | boolean] => !!e)
-      )
+          return null;
+        })
+        .filter((e): e is [string, string | number | boolean] => !!e),
+    )
     : undefined;
 
 export const findExport = (name: string, root: ASTNode[]) => {
   const node = root.find(
-    (n) => n.name === name && n.declarationKind === "export"
+    (n) => n.name === name && n.declarationKind === "export",
   );
 
   if (!node) {
     console.error(
-      `Could not find export for ${name}. Are you exporting all necessary elements?`
+      `Could not find export for ${name}. Are you exporting all necessary elements?`,
     );
   }
 
@@ -106,7 +106,7 @@ const exec = async (cmd: string[]) => {
 
   if (!status.success) {
     throw new Error(
-      `Error while running ${cmd.join(" ")} with status ${status.code}`
+      `Error while running ${cmd.join(" ")} with status ${status.code}`,
     );
   }
 
@@ -114,8 +114,8 @@ const exec = async (cmd: string[]) => {
 };
 
 export const denoDoc = async (path: string): Promise<ASTNode[]> => {
-  const promise =
-    denoDocCache.get(path) ?? exec(["deno", "doc", "--json", path]);
+  const promise = denoDocCache.get(path) ??
+    exec(["deno", "doc", "--json", path]);
 
   denoDocCache.set(path, promise);
   const stdout = await promise;
@@ -138,7 +138,7 @@ export interface FunctionTypeDef {
 }
 
 export const isFnOrConstructor = (
-  tsType: TsType
+  tsType: TsType,
 ): tsType is TsTypeFnOrConstructor => {
   return tsType.kind === "fnOrConstructor";
 };
@@ -146,7 +146,7 @@ export const isFnOrConstructor = (
 export const fnDefinitionRoot = async (
   ctx: TransformContext,
   node: ASTNode,
-  currRoot: [string, ASTNode[]]
+  currRoot: [string, ASTNode[]],
 ): Promise<[FunctionTypeDef | undefined, [string, ASTNode[]]]> => {
   const fn = nodeToFunctionDefinition(node);
   if (!fn) {
@@ -162,7 +162,7 @@ export const fnDefinitionRoot = async (
   return [fn, currRoot];
 };
 export const nodeToFunctionDefinition = (
-  node: ASTNode
+  node: ASTNode,
 ): FunctionTypeDef | undefined => {
   if (isFunctionDef(node) && node.declarationKind === "export") {
     return {
@@ -177,7 +177,7 @@ export const nodeToFunctionDefinition = (
       return {
         name: node.name,
         params: variableTsType.fnOrConstructor.params.map(
-          ({ tsType }) => tsType
+          ({ tsType }) => tsType,
         ),
         return: variableTsType.fnOrConstructor.tsType,
       };
