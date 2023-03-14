@@ -287,7 +287,10 @@ export const tsTypeToSchema = async (
   }
 };
 
-const docToSchema = async (node: ASTNode, root: ASTNode[]): Promise<JSONSchema> => {
+const docToSchema = async (
+  node: ASTNode,
+  root: ASTNode[],
+): Promise<JSONSchema> => {
   const kind = node.kind;
 
   switch (kind) {

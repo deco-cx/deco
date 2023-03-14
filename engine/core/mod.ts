@@ -6,17 +6,27 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
-export interface ResolverConfigs<TContext extends BaseContext = BaseContext> {
+
+export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
-  getResolvable: <V>(t: string) => Resolvable<V>;
+  resolvables: Record<string, Resolvable<any>>;
 }
 
+const withOverrides = (
+  overrides: Record<string, string> | undefined,
+  resolvables: Record<string, Resolvable<any>>,
+): Record<string, Resolvable<any>> => {
+  return Object.entries(overrides ?? {}).reduce((nresolvables, [from, to]) => {
+    return { ...nresolvables, [from]: nresolvables[to] };
+  }, resolvables);
+};
+
 export class ConfigResolver<TContext extends BaseContext = BaseContext> {
-  protected getResolvable: <T>(type: string) => Resolvable<T>;
+  protected resolvables: Record<string, Resolvable<any>>;
   protected resolvers: ResolverMap<TContext>;
-  constructor(protected config: ResolverConfigs<TContext>) {
+  constructor(protected config: ResolverOptions<TContext>) {
     this.resolvers = {};
-    this.getResolvable = this.config.getResolvable.bind(this.config);
+    this.resolvables = this.config.resolvables;
   }
 
   public addResolvers = (resolvers: ResolverMap<TContext>) => {
@@ -31,13 +41,8 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     overrides?: Record<string, string>,
   ): PromiseOrValue<T> => {
-    const { resolvers: res, getResolvable: useConfigs } = this.config;
-    const getResolvable = overrides
-      ? <V>(key: string): Resolvable<V> => {
-        const rerouted = overrides[key] ?? key;
-        return useConfigs(rerouted);
-      }
-      : useConfigs;
+    const { resolvers: res, resolvables } = this.config;
+    const nresolvables = withOverrides(overrides, resolvables);
     const resolvers = {
       ...res,
       ...this.resolvers,
@@ -54,11 +59,16 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       ...context,
       ...baseCtx,
     };
-    function _resolve<T>(data: Resolvable<T>): Promise<T> {
-      return resolve(resolvers, data, getResolvable, ctx);
+    function _resolve<T>(data: Resolvable<T, TContext>): Promise<T> {
+      return resolve<T, TContext>(
+        resolvers,
+        data,
+        nresolvables,
+        ctx as TContext,
+      );
     }
     const resolvable = typeof typeOrResolvable === "string"
-      ? getResolvable<T>(typeOrResolvable)
+      ? nresolvables[typeOrResolvable]
       : typeOrResolvable;
     if (resolvable === undefined) {
       return undefined as T;
@@ -66,7 +76,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     return resolve<T, TContext>(
       resolvers,
       resolvable,
-      getResolvable,
+      nresolvables,
       ctx as TContext,
     );
   };

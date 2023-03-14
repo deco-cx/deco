@@ -5,10 +5,6 @@ export type Entries<T> = {
 
 export type UnPromisify<T> = T extends Promise<infer U> ? U : T;
 
-export type SameKeys<T> = {
-  [key in keyof T]: unknown;
-};
-
 export function isAwaitable<T>(v: T | Promise<T>): v is Promise<T> {
   return (v as Promise<T>).then !== undefined;
 }

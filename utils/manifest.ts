@@ -36,11 +36,11 @@ import {
  * this utility function selects the first one available.
  */
 export const selectDefaultFunctionsForSection = (
-  section: AvailableSection
+  section: AvailableSection,
 ): SelectDefaultFunctionReturn => {
   // TODO: Double check this logic here
-  const sectionInputSchema =
-    context?.manifest?.schemas[section.key]?.inputSchema;
+  const sectionInputSchema = context?.manifest?.schemas[section.key]
+    ?.inputSchema;
 
   if (!sectionInputSchema) {
     return {
@@ -52,7 +52,7 @@ export const selectDefaultFunctionsForSection = (
   const { availableFunctions } = generateAvailableEntitiesFromManifest();
   const functionsToChooseFrom = availableFunctionsForSection(
     section,
-    availableFunctions
+    availableFunctions,
   );
 
   const returnData = functionsToChooseFrom.reduce(
@@ -60,23 +60,25 @@ export const selectDefaultFunctionsForSection = (
       const chosenFunctionKey = availableFunctions[0].key;
       if (!chosenFunctionKey) {
         console.log(
-          `Couldn't find a function for prop ${sectionPropKey} of section ${section.key}.`
+          `Couldn't find a function for prop ${sectionPropKey} of section ${section.key}.`,
         );
         return acc;
       }
 
-      const functionInstance =
-        createFunctionInstanceFromFunctionKey(chosenFunctionKey);
+      const functionInstance = createFunctionInstanceFromFunctionKey(
+        chosenFunctionKey,
+      );
 
       acc.newFunctionsToAdd.push(functionInstance);
-      acc.sectionProps[sectionPropKey] =
-        functionUniqueIdToPropReference(chosenFunctionKey);
+      acc.sectionProps[sectionPropKey] = functionUniqueIdToPropReference(
+        chosenFunctionKey,
+      );
       return acc;
     },
     {
       sectionProps: {},
       newFunctionsToAdd: [],
-    } as SelectDefaultFunctionReturn
+    } as SelectDefaultFunctionReturn,
   );
 
   return returnData;
@@ -96,7 +98,7 @@ export function generateAvailableEntitiesFromManifest() {
         props: {},
         schema,
       } as EditorData["availableSections"][0];
-    }
+    },
   );
 
   const availableFunctions = Object.keys(context.manifest?.functions || {}).map(
@@ -113,14 +115,14 @@ export function generateAvailableEntitiesFromManifest() {
         // TODO: Centralize this logic
         outputSchema: outputSchema,
       } as EditorData["availableFunctions"][0];
-    }
+    },
   );
 
   return { availableSections, availableFunctions };
 }
 
 export const createFunctionInstanceFromFunctionKey = (
-  functionKey: string
+  functionKey: string,
 ): PageFunction => {
   // TODO: Make sure that dev.ts is adding top-level title to inputSchema
   const functionLabel =
@@ -164,7 +166,7 @@ const pruneFunctions = (data: PageData) => {
 export async function loadPageData<Data, State extends LiveState>(
   req: Request,
   ctx: HandlerContext<Data, State>,
-  pageData: PageData
+  pageData: PageData,
 ): Promise<{ pageData: PageData; headers: Headers; status: number }> {
   const { start, end } = ctx.state.t;
   const functionsResponse = await Promise.all(
@@ -187,7 +189,7 @@ export async function loadPageData<Data, State extends LiveState>(
         headers,
         status,
       };
-    })
+    }),
   );
 
   const functionsResponseByUniqueId = functionsResponse.reduce(
@@ -195,7 +197,7 @@ export async function loadPageData<Data, State extends LiveState>(
       result[currentResponse.uniqueId] = currentResponse.data;
       return result;
     },
-    {} as Record<string, unknown>
+    {} as Record<string, unknown>,
   );
 
   const cacheControl = functionsResponse.reduce((acc, response) => {
@@ -211,7 +213,7 @@ export async function loadPageData<Data, State extends LiveState>(
   const status = functionsResponse.reduce(
     (acc, { status: responseStatus = 200 }) =>
       acc > responseStatus ? acc : responseStatus,
-    200
+    200,
   );
 
   const sectionsWithData = pageData.sections.map((componentData) => {
@@ -264,7 +266,7 @@ interface SectionInstance {
  * Used to generate dev pages (/_live/Banner.tsx), adding new functions to the page if necessary
  */
 export const createSectionFromSectionKey = (
-  sectionKey: string
+  sectionKey: string,
 ): CreateSectionFromSectionKeyReturn => {
   const section: SectionInstance = {
     key: sectionKey,
@@ -273,8 +275,9 @@ export const createSectionFromSectionKey = (
     props: {},
   };
 
-  const { newFunctionsToAdd, sectionProps } =
-    selectDefaultFunctionsForSection(section);
+  const { newFunctionsToAdd, sectionProps } = selectDefaultFunctionsForSection(
+    section,
+  );
 
   section.props = sectionProps;
 
