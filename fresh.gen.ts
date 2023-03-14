@@ -105,7 +105,7 @@ const manifest: DecoManifest = {
         "type": "object",
         "properties": {
           "data": {
-            "$id": "c995d72dc372b1b50bf9f70943e37fc94e1ccac9",
+            "$id": "fe90370d99c36e53dbfa68b1b0c05276f22e4800",
           },
         },
         "additionalProperties": true,
@@ -150,7 +150,7 @@ const manifest: DecoManifest = {
         "type": "object",
         "properties": {
           "data": {
-            "$id": "c995d72dc372b1b50bf9f70943e37fc94e1ccac9",
+            "$id": "fe90370d99c36e53dbfa68b1b0c05276f22e4800",
           },
         },
         "additionalProperties": true,
@@ -182,7 +182,7 @@ const manifest: DecoManifest = {
         "type": "object",
         "properties": {
           "data": {
-            "$id": "c995d72dc372b1b50bf9f70943e37fc94e1ccac9",
+            "$id": "fe90370d99c36e53dbfa68b1b0c05276f22e4800",
           },
         },
         "additionalProperties": true,

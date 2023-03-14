@@ -9,7 +9,7 @@ import type {
   TypeAliasDefNode,
   TypeDef,
   TypeRef,
-} from "./ast.ts";
+} from "$live/engine/schema/ast.ts";
 
 const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped" });
@@ -48,9 +48,9 @@ export const getSchemaId = async (schema: JSONSchema) => {
     new TextEncoder().encode(JSON.stringify(schema)),
   );
 
-  return Array.from(new Uint8Array(hashBuffer)).map((b) =>
-    b.toString(16).padStart(2, "0")
-  ).join("");
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 };
 
 const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
@@ -97,7 +97,7 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
       const transformed = await tsTypeToSchema(param, root);
 
       return {
-        "$id": await getSchemaId(transformed),
+        $id: await getSchemaId(transformed),
         format: "live-function",
         type: "string" as const,
       };
@@ -108,12 +108,12 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
 };
 
 export const findType = (type: string, root: ASTNode[]) => {
-  const node = root.find((
-    node,
-  ): node is InterfaceDefNode | TypeAliasDefNode | ImportDefNode =>
-    node.name === type &&
-    (node.kind === "interface" || node.kind === "typeAlias" ||
-      node.kind === "import")
+  const node = root.find(
+    (node): node is InterfaceDefNode | TypeAliasDefNode | ImportDefNode =>
+      node.name === type &&
+      (node.kind === "interface" ||
+        node.kind === "typeAlias" ||
+        node.kind === "import"),
   );
 
   if (!node) {
@@ -126,8 +126,8 @@ export const findType = (type: string, root: ASTNode[]) => {
 };
 
 export const findExport = (name: string, root: ASTNode[]) => {
-  const node = root.find((n) =>
-    n.name === name && n.declarationKind === "export"
+  const node = root.find(
+    (n) => n.name === name && n.declarationKind === "export",
   );
 
   if (!node) {
@@ -200,17 +200,20 @@ const typeDefToSchema = async (
         property.optional,
       );
 
-      return [property.name, {
-        ...schema,
-        title: beautify(property.name),
-        ...jsDocSchema,
-      }] as const;
+      return [
+        property.name,
+        {
+          ...schema,
+          title: beautify(property.name),
+          ...jsDocSchema,
+        },
+      ] as const;
     }),
   );
 
-  const required = node.properties.filter((p) => !p.optional).map((p) =>
-    p.name
-  );
+  const required = node.properties
+    .filter((p) => !p.optional)
+    .map((p) => p.name);
 
   return {
     title: node.name,
@@ -248,6 +251,11 @@ export const tsTypeToSchema = async (
       throw new Error("Not Implemented");
 
     case "keyword": {
+      if (node.keyword === "unknown") {
+        return {
+          type: "object",
+        };
+      }
       return {
         type: optional ? [node.keyword, "null"] : node.keyword,
       };
@@ -302,10 +310,7 @@ const docToSchema = async (
 
     case "typeAlias": {
       const jsDocSchema = node.jsDoc && jsDocToSchema(node.jsDoc);
-      const schema = await tsTypeToSchema(
-        node.typeAliasDef.tsType,
-        root,
-      );
+      const schema = await tsTypeToSchema(node.typeAliasDef.tsType, root);
 
       return {
         ...jsDocSchema,

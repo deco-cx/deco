@@ -1,2 +1,5 @@
 export * as supabase from "https://esm.sh/@supabase/supabase-js@2.7.0";
-export * as jsonschema from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
+export type {
+  JSONSchema7,
+  JSONSchema7Type,
+} from "https://esm.sh/@types/json-schema@7.0.11?pin=102";

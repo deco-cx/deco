@@ -49,12 +49,12 @@ export interface TypeAliasDef {
 
 export interface VariableDef {
   tsType: TsType;
-  kind: string;
+  kind: TsType["kind"];
 }
 
 export interface FunctionDef {
   params: Param[];
-  returnType: null;
+  returnType: TsType;
   hasBody: boolean;
   isAsync: boolean;
   isGenerator: boolean;
@@ -75,6 +75,7 @@ export interface Prop {
 }
 
 export type TsType =
+  | TsTypeFnOrConstructor
   | TsTypeTypeRef
   | TsTypeKeyword
   | TsTypeUnion
@@ -102,7 +103,17 @@ export interface TsTypeTypeLiteral {
   kind: "typeLiteral";
   typeLiteral: TypeLiteral;
 }
+export interface FnOrConstructor {
+  constructor: boolean;
+  tsType: TsType;
+  params: Param[];
+}
 
+export interface TsTypeFnOrConstructor {
+  repr: string;
+  kind: "fnOrConstructor";
+  fnOrConstructor: FnOrConstructor;
+}
 export interface TsTypeTypeRef {
   repr: string;
   kind: "typeRef";
@@ -112,7 +123,7 @@ export interface TsTypeTypeRef {
 export interface TsTypeKeyword {
   repr: string;
   kind: "keyword";
-  keyword: "string";
+  keyword: "string" | "unknown";
 }
 
 export interface TsTypeUnion {
@@ -150,7 +161,7 @@ export interface TypeDef {
 }
 
 export interface InterfaceDef extends TypeDef {
-  extends: unknown[];
+  extends: TsType[];
   typeParams: unknown[];
 }
 
