@@ -37,23 +37,35 @@ const rankRoute = (pattern: string) =>
           : acc + 2,
       0
     );
+
+export type MatchWithCookieValue = MatchContext<{
+  isMatchFromCookie?: boolean;
+}>;
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const flags =
       cookies.getFlags(req.headers) ?? new Map<string, CookiedFlag>();
-    const matchCtx: MatchContext = {
+
+    const matchCtx: Omit<MatchWithCookieValue, "isMatchFromCookie"> = {
       siteId: context.siteId,
       request: req,
     };
 
-    // flags that isn't in the original cookie
+    // flags that isn't in the original cookie or has changed
     const newFlags: CookiedFlag[] = [];
     const [routes, overrides] = audiences.reduce(
       ([routes, overrides], audience) => {
-        if (!flags.has(audience.name)) {
+        const isMatch = audience.matcher({
+          ...matchCtx,
+          isMatchFromCookie: flags.get(audience.name)?.isMatch,
+        } as MatchWithCookieValue);
+        if (
+          !flags.has(audience.name) ||
+          flags.get(audience.name)?.isMatch !== isMatch
+        ) {
           const currValue = {
-            isMatch: audience.matcher(matchCtx),
+            isMatch,
             key: audience.name,
             value: audience.true,
             updated_at: new Date().toISOString(),
@@ -61,8 +73,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
           newFlags.push(currValue);
           flags.set(audience.name, currValue);
         }
-        const flag = flags.get(audience.name);
-        return flag?.isMatch
+        return isMatch
           ? [
               { ...routes, ...audience.true.routes },
               { ...overrides, ...audience.true.overrides },
