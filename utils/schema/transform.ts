@@ -9,7 +9,7 @@ import type {
   TypeAliasDefNode,
   TypeDef,
   TypeRef,
-} from "./ast.ts";
+} from "$live/engine/schema/ast.ts";
 
 const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped" });
@@ -21,7 +21,7 @@ const exec = async (cmd: string[]) => {
 
   if (!status.success) {
     throw new Error(
-      `Error while running ${cmd.join(" ")} with status ${status.code}`,
+      `Error while running ${cmd.join(" ")} with status ${status.code}`
     );
   }
 
@@ -33,8 +33,8 @@ const exec = async (cmd: string[]) => {
 const denoDocCache = new Map<string, Promise<string>>();
 
 export const denoDoc = async (path: string): Promise<ASTNode[]> => {
-  const promise = denoDocCache.get(path) ??
-    exec(["deno", "doc", "--json", path]);
+  const promise =
+    denoDocCache.get(path) ?? exec(["deno", "doc", "--json", path]);
 
   denoDocCache.set(path, promise);
 
@@ -45,12 +45,12 @@ export const denoDoc = async (path: string): Promise<ASTNode[]> => {
 export const getSchemaId = async (schema: JSONSchema) => {
   const hashBuffer = await crypto.subtle.digest(
     "SHA-1",
-    new TextEncoder().encode(JSON.stringify(schema)),
+    new TextEncoder().encode(JSON.stringify(schema))
   );
 
-  return Array.from(new Uint8Array(hashBuffer)).map((b) =>
-    b.toString(16).padStart(2, "0")
-  ).join("");
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 };
 
 const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
@@ -81,7 +81,8 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
 
     case "LoaderReturnType": {
       const typeDef = findType(node.typeName, root);
-      const isLiveType = typeDef?.kind === "import" &&
+      const isLiveType =
+        typeDef?.kind === "import" &&
         typeDef.importDef.src.endsWith("/types.ts");
 
       if (!isLiveType) {
@@ -97,7 +98,7 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
       const transformed = await tsTypeToSchema(param, root);
 
       return {
-        "$id": await getSchemaId(transformed),
+        $id: await getSchemaId(transformed),
         format: "live-function",
         type: "string" as const,
       };
@@ -108,17 +109,17 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
 };
 
 export const findType = (type: string, root: ASTNode[]) => {
-  const node = root.find((
-    node,
-  ): node is InterfaceDefNode | TypeAliasDefNode | ImportDefNode =>
-    node.name === type &&
-    (node.kind === "interface" || node.kind === "typeAlias" ||
-      node.kind === "import")
+  const node = root.find(
+    (node): node is InterfaceDefNode | TypeAliasDefNode | ImportDefNode =>
+      node.name === type &&
+      (node.kind === "interface" ||
+        node.kind === "typeAlias" ||
+        node.kind === "import")
   );
 
   if (!node) {
     throw new Error(
-      `Could not find type definition for ${type}. Are you exporting it?`,
+      `Could not find type definition for ${type}. Are you exporting it?`
     );
   }
 
@@ -126,13 +127,13 @@ export const findType = (type: string, root: ASTNode[]) => {
 };
 
 export const findExport = (name: string, root: ASTNode[]) => {
-  const node = root.find((n) =>
-    n.name === name && n.declarationKind === "export"
+  const node = root.find(
+    (n) => n.name === name && n.declarationKind === "export"
   );
 
   if (!node) {
     console.error(
-      `Could not find export for ${name}. Are you exporting all necessary elements?`,
+      `Could not find export for ${name}. Are you exporting all necessary elements?`
     );
   }
 
@@ -169,27 +170,27 @@ const parseJSDocAttribute = (key: string, value: string) => {
 const jsDocToSchema = (node: JSDoc) =>
   node.tags
     ? Object.fromEntries(
-      node.tags
-        .map((tag: Tag) => {
-          const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
+        node.tags
+          .map((tag: Tag) => {
+            const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
 
-          const key = match?.groups?.key;
-          const value = match?.groups?.value;
+            const key = match?.groups?.key;
+            const value = match?.groups?.value;
 
-          if (typeof key === "string" && typeof value === "string") {
-            const parsedValue = parseJSDocAttribute(key, value);
-            return [key, parsedValue] as const;
-          }
+            if (typeof key === "string" && typeof value === "string") {
+              const parsedValue = parseJSDocAttribute(key, value);
+              return [key, parsedValue] as const;
+            }
 
-          return null;
-        })
-        .filter((e): e is [string, string | number | boolean] => !!e),
-    )
+            return null;
+          })
+          .filter((e): e is [string, string | number | boolean] => !!e)
+      )
     : undefined;
 
 const typeDefToSchema = async (
   node: TypeDef,
-  root: ASTNode[],
+  root: ASTNode[]
 ): Promise<JSONSchema> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
@@ -197,20 +198,23 @@ const typeDefToSchema = async (
       const schema = await tsTypeToSchema(
         property.tsType,
         root,
-        property.optional,
+        property.optional
       );
 
-      return [property.name, {
-        ...schema,
-        title: beautify(property.name),
-        ...jsDocSchema,
-      }] as const;
-    }),
+      return [
+        property.name,
+        {
+          ...schema,
+          title: beautify(property.name),
+          ...jsDocSchema,
+        },
+      ] as const;
+    })
   );
 
-  const required = node.properties.filter((p) => !p.optional).map((p) =>
-    p.name
-  );
+  const required = node.properties
+    .filter((p) => !p.optional)
+    .map((p) => p.name);
 
   return {
     title: node.name,
@@ -223,7 +227,7 @@ const typeDefToSchema = async (
 export const tsTypeToSchema = async (
   node: TsType,
   root: ASTNode[],
-  optional?: boolean,
+  optional?: boolean
 ): Promise<JSONSchema> => {
   const kind = node.kind;
 
@@ -248,6 +252,11 @@ export const tsTypeToSchema = async (
       throw new Error("Not Implemented");
 
     case "keyword": {
+      if (node.keyword === "unknown") {
+        return {
+          type: "object",
+        };
+      }
       return {
         type: optional ? [node.keyword, "null"] : node.keyword,
       };
@@ -259,7 +268,7 @@ export const tsTypeToSchema = async (
 
     case "union": {
       const children = await Promise.all(
-        node.union.map((n) => tsTypeToSchema(n, root)),
+        node.union.map((n) => tsTypeToSchema(n, root))
       );
 
       return {
@@ -289,7 +298,7 @@ export const tsTypeToSchema = async (
 
 const docToSchema = async (
   node: ASTNode,
-  root: ASTNode[],
+  root: ASTNode[]
 ): Promise<JSONSchema> => {
   const kind = node.kind;
 
@@ -302,10 +311,7 @@ const docToSchema = async (
 
     case "typeAlias": {
       const jsDocSchema = node.jsDoc && jsDocToSchema(node.jsDoc);
-      const schema = await tsTypeToSchema(
-        node.typeAliasDef.tsType,
-        root,
-      );
+      const schema = await tsTypeToSchema(node.typeAliasDef.tsType, root);
 
       return {
         ...jsDocSchema,
