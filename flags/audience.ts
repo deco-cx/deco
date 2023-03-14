@@ -1,12 +1,11 @@
 import { Flag } from "$live/blocks/flag.ts";
-import { Matcher } from "$live/blocks/matcher.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Handler } from "$live/blocks/handler.ts";
+import { Matcher } from "$live/blocks/matcher.ts";
 
 export interface Audience {
   matcher: Matcher;
   name: string;
-  routes: Record<string, Resolvable<Handler>>;
+  routes: Record<string, Handler>;
   overrides?: Record<string, string>;
 }
 

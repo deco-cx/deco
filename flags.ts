@@ -35,7 +35,7 @@ export const cookies = {
   },
 };
 
-interface CookiedFlag {
+export interface CookiedFlag {
   key: string;
   isMatch: boolean;
   value: any;

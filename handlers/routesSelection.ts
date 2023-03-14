@@ -1,18 +1,19 @@
 import { Flag } from "$live/blocks/flag.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { MatchContext, Matcher } from "$live/blocks/matcher.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { context } from "$live/live.ts";
 import { ConnInfo } from "https://deno.land/std@0.170.0/http/server.ts";
 import { router } from "https://deno.land/x/rutt@0.0.13/mod.ts";
+import { CookiedFlag, cookies } from "../flags.ts";
 
 export interface SelectionConfig {
   flags: Flag[]; // TODO it should be possible to specify a Flag<T> instead. author Marcos V. Candeia
 }
 
 interface AudienceFlag {
+  name: string;
   matcher: Matcher;
   true: Pick<Audience, "routes" | "overrides">;
 }
@@ -39,21 +40,36 @@ const rankRoute = (pattern: string) =>
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
+    const flags =
+      cookies.getFlags(req.headers) ?? new Map<string, CookiedFlag>();
     const matchCtx: MatchContext = {
       siteId: context.siteId,
       request: req,
     };
 
+    // flags that isn't in the original cookie
+    const newFlags: CookiedFlag[] = [];
     const [routes, overrides] = audiences.reduce(
       ([routes, overrides], audience) => {
-        return audience.matcher(matchCtx)
+        if (!flags.has(audience.name)) {
+          const currValue = {
+            isMatch: audience.matcher(matchCtx),
+            key: audience.name,
+            value: audience.true,
+            updated_at: new Date().toISOString(),
+          };
+          newFlags.push(currValue);
+          flags.set(audience.name, currValue);
+        }
+        const isActive = flags.get(audience.name);
+        return isActive
           ? [
               { ...routes, ...audience.true.routes },
               { ...overrides, ...audience.true.overrides },
             ]
           : [routes, overrides];
       },
-      [{}, {}] as [Record<string, Resolvable<Handler>>, Record<string, string>]
+      [{}, {}] as [Record<string, Handler>, Record<string, string>]
     );
     const resolve = context.configResolver!.resolve.bind(
       context.configResolver!
@@ -77,6 +93,11 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
       )
     );
     const server = router(builtRoutes);
-    return await server(req, connInfo);
+    const resp = await server(req, connInfo);
+    // set cookie
+    if (newFlags.length > 0) {
+      cookies.setFlags(resp.headers, newFlags);
+    }
+    return resp;
   };
 }
