@@ -58,6 +58,26 @@ See an example below
 
 Notice that the `loader-category-homens` is referenced by the `page-homens` Resolvable.
 
+Below you can see an example of a `dangling reference`.
+
+```json
+{
+  "page-homens": {
+    "sections": [
+      {
+        "products": {
+          "__resolveType": "loader-category-homens"
+        },
+        "__resolveType": "./sections/ProductShelf.tsx"
+      }
+    ],
+    "__resolveType": "$live/pages/LivePage.tsx"
+  }
+}
+```
+
+Notice that the `loader-category-homens` was removed.
+
 ## Resolution Algorithm
 
 The resolution algorithm takes either a Resolvable<T> or the ResolvableId as a parameter (e.g `page-homens`) and the configuration state and returns the T value to the caller, following the steps below:
