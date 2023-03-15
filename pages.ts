@@ -24,9 +24,11 @@ export const isPageOptions = (x: any): x is PageOptions =>
   Array.isArray(x.selectedPageIds);
 
 export async function loadLivePage(
-  req: Request,
-  ctx: HandlerContext<any, LiveState>,
-  { selectedPageIds }: PageOptions,
+  { req, ctx, selectedPageIds, resolveGlobals = true }: {
+    req: Request;
+    ctx: HandlerContext<any, LiveState>;
+    resolveGlobals?: boolean;
+  } & PageOptions,
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
@@ -78,46 +80,48 @@ export async function loadLivePage(
   }
 
   // Now, let's resolve any global sections which may be referenced by this page
-  for (const section of pageWithParams.page.data.sections) {
-    // This section is a reference to a global section, let's find it
-    if (section.key.startsWith(sectionPathStart)) {
-      const [sectionPath] = section.key.split("@");
-      // Look for an override from a feature flag in selectedPageIds
-      let overrideGlobalSection = null;
-      let overrideGlobalLoaders = null;
-      for (const selectedPageId of selectedPageIds) {
-        const selectedGlobalSectionPage = globals.find((globalPage) =>
-          globalPage.path.startsWith(sectionPath) &&
-          globalPage.id === selectedPageId
-        );
-        if (selectedGlobalSectionPage) {
-          overrideGlobalSection = selectedGlobalSectionPage.data
-            .sections[0] as PageSection;
-          overrideGlobalLoaders = selectedGlobalSectionPage.data.functions;
-          break;
+  if (resolveGlobals) {
+    for (const section of pageWithParams.page.data.sections) {
+      // This section is a reference to a global section, let's find it
+      if (section.key.startsWith(sectionPathStart)) {
+        const [sectionPath] = section.key.split("@");
+        // Look for an override from a feature flag in selectedPageIds
+        let overrideGlobalSection = null;
+        let overrideGlobalLoaders = null;
+        for (const selectedPageId of selectedPageIds) {
+          const selectedGlobalSectionPage = globals.find((globalPage) =>
+            globalPage.path.startsWith(sectionPath) &&
+            globalPage.id === selectedPageId
+          );
+          if (selectedGlobalSectionPage) {
+            overrideGlobalSection = selectedGlobalSectionPage.data
+              .sections[0] as PageSection;
+            overrideGlobalLoaders = selectedGlobalSectionPage.data.functions;
+            break;
+          }
         }
-      }
-      // Look for a global section that matches provided section path exactly
-      let byPathGlobalSection = null;
-      let byPathGlobalLoaders = null;
-      for (const globalPage of globals) {
-        if (globalPage.path === section.key) {
-          byPathGlobalSection = globalPage.data.sections[0] as PageSection;
-          byPathGlobalLoaders = globalPage.data.functions;
-          break;
+        // Look for a global section that matches provided section path exactly
+        let byPathGlobalSection = null;
+        let byPathGlobalLoaders = null;
+        for (const globalPage of globals) {
+          if (globalPage.path === section.key) {
+            byPathGlobalSection = globalPage.data.sections[0] as PageSection;
+            byPathGlobalLoaders = globalPage.data.functions;
+            break;
+          }
         }
-      }
-      // Override this section key and props with found match
-      const globalSection = overrideGlobalSection || byPathGlobalSection;
-      const globalLoaders = overrideGlobalLoaders || byPathGlobalLoaders;
-      if (globalSection) {
-        section.key = globalSection.key;
-        section.label = globalSection.label;
-        section.props = globalSection.props;
-        pageWithParams.page.data.functions = [
-          ...(globalLoaders ?? []),
-          ...(pageWithParams.page.data.functions ?? []),
-        ];
+        // Override this section key and props with found match
+        const globalSection = overrideGlobalSection || byPathGlobalSection;
+        const globalLoaders = overrideGlobalLoaders || byPathGlobalLoaders;
+        if (globalSection) {
+          section.key = globalSection.key;
+          section.label = globalSection.label;
+          section.props = globalSection.props;
+          pageWithParams.page.data.functions = [
+            ...(globalLoaders ?? []),
+            ...(pageWithParams.page.data.functions ?? []),
+          ];
+        }
       }
     }
   }
@@ -288,7 +292,12 @@ export const generateEditorData = async <Data = unknown>(
   ctx: HandlerContext<Data, LiveState>,
   options: PageOptions,
 ): Promise<EditorData> => {
-  const pageWithParams = await loadLivePage(req, ctx, options);
+  const pageWithParams = await loadLivePage({
+    req,
+    ctx,
+    resolveGlobals: false,
+    ...options,
+  });
 
   if (!pageWithParams) {
     throw new Error("Could not find page to generate editor data");
@@ -337,7 +346,7 @@ export const loadPage = async <Data = unknown>(
   // TODO: Ensure loadLivePage only goes to DB if there is a page published with this path
   // ... This will be possible when all published pages are synced to the edge
   // ... for now, we need to go to the DB every time, even when there's no data for this page
-  const pageWithParams = await loadLivePage(req, ctx, options);
+  const pageWithParams = await loadLivePage({ req, ctx, ...options });
   end("load-page");
 
   if (!pageWithParams) {
@@ -362,7 +371,7 @@ export const loadPage = async <Data = unknown>(
   end("load-data");
 
   ctx.state.page = { ...page, data: pageDataAfterFunctions };
-  
+
   return {
     page: ctx.state.page,
     headers,
