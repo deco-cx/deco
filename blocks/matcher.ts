@@ -5,10 +5,11 @@ import { Block, InstanceOf } from "$live/engine/block.ts";
 // @ts-ignore: "waiting for the engine to be completed"
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
-export interface MatchContext {
+// deno-lint-ignore no-explicit-any
+export type MatchContext<T = any> = T & {
   siteId: number;
   request: Request;
-}
+};
 
 type MatchFunc<TConfig = unknown> = (
   config: TConfig
