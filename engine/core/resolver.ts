@@ -6,35 +6,40 @@ import {
   UnPromisify,
   waitKeys,
 } from "$live/engine/core/utils.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
+import { isAwaitable } from "$live/engine/core/utils.ts";
 
 export type ResolveFunc<T = any> = (data: Resolvable<T>) => Promise<T>;
+export interface Monitoring {
+  t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+}
 export interface BaseContext {
   key: string;
   resolveId: string;
   resolve: ResolveFunc;
+  monitoring?: Monitoring;
 }
 
 export type ResolvesTo<
   T,
   TContext extends BaseContext = BaseContext,
-  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>
 > = {
   [resolver in keyof TResolverMap]: UnPromisify<
     ReturnType<TResolverMap[resolver]>
-  > extends T ? TResolverMap[resolver]
+  > extends T
+    ? TResolverMap[resolver]
     : never;
 };
 
 export type ResolvableObj<
   T = any,
   TContext extends BaseContext = BaseContext,
-  RM extends ResolverMap<TContext> = ResolverMap<TContext>,
+  RM extends ResolverMap<TContext> = ResolverMap<TContext>
 > = {
-  [
-    key in keyof Parameters<
-      ResolvesTo<T, TContext, RM>[keyof ResolvesTo<T, TContext, RM>]
-    >[0]
-  ]: Resolvable<
+  [key in keyof Parameters<
+    ResolvesTo<T, TContext, RM>[keyof ResolvesTo<T, TContext, RM>]
+  >[0]]: Resolvable<
     Parameters<
       ResolvesTo<T, TContext, RM>[keyof ResolvesTo<T, TContext, RM>]
     >[0][key],
@@ -46,7 +51,7 @@ export type ResolvableObj<
 type ResolveTypeOf<
   T = any,
   TContext extends BaseContext = BaseContext,
-  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>
 > =
   | keyof ResolvesTo<T, TContext, TResolverMap>
   | ((arg: any) => keyof ResolvesTo<T, TContext, TResolverMap>);
@@ -58,14 +63,14 @@ export type ResolvableOf<
   ResolvableMap extends Record<
     string,
     Resolvable<any, TContext, TResolverMap>
-  > = Record<string, Resolvable<any, TContext, TResolverMap>>,
+  > = Record<string, Resolvable<any, TContext, TResolverMap>>
 > = {
-  [resolvable in keyof ResolvableMap]: ResolvableMap[resolvable] extends
-    Resolvable<
-      T,
-      TContext,
-      TResolverMap
-    > ? ResolvableMap[resolvable]
+  [resolvable in keyof ResolvableMap]: ResolvableMap[resolvable] extends Resolvable<
+    T,
+    TContext,
+    TResolverMap
+  >
+    ? ResolvableMap[resolvable]
     : never;
 };
 
@@ -76,20 +81,20 @@ export type Resolvable<
   ResolvableMap extends Record<
     string,
     Resolvable<any, TContext, TResolverMap>
-  > = Record<string, any>,
+  > = Record<string, any>
 > =
   | T
   | {
-    __resolveType: keyof ResolvableOf<
-      T,
-      TContext,
-      TResolverMap,
-      ResolvableMap
-    >;
-  }
+      __resolveType: keyof ResolvableOf<
+        T,
+        TContext,
+        TResolverMap,
+        ResolvableMap
+      >;
+    }
   | (ResolvableObj<T, TContext, TResolverMap> & {
-    __resolveType: ResolveTypeOf<T, TContext, TResolverMap>;
-  });
+      __resolveType: ResolveTypeOf<T, TContext, TResolverMap>;
+    });
 
 const resolveTypeOf = <
   T = any,
@@ -98,12 +103,12 @@ const resolveTypeOf = <
   TResolvableMap extends Record<
     string,
     Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
-  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
+  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>
 >(
-  resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>,
+  resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>
 ): [
   Omit<T, "__resolveType">,
-  ((args: any) => keyof ResolverMap | string) | undefined,
+  ((args: any) => keyof ResolverMap | string) | undefined
 ] => {
   if (isResolvable(resolvable)) {
     const { __resolveType, ...rest } = resolvable;
@@ -128,9 +133,9 @@ const isResolvable = <
   TResolvableMap extends Record<
     string,
     Resolvable<any, TContext, TResolverMap>
-  > = Record<string, any>,
+  > = Record<string, any>
 >(
-  v: T | Resolvable<T, TContext, TResolverMap, TResolvableMap>,
+  v: T | Resolvable<T, TContext, TResolverMap, TResolvableMap>
 ): v is Resolvable<T, TContext, TResolverMap, TResolvableMap> & {
   __resolveType: string;
 } => {
@@ -144,12 +149,12 @@ const isResolvableObj = <
   TResolvableMap extends Record<
     string,
     Resolvable<any, TContext, TResolverMap>
-  > = Record<string, Resolvable<any, TContext, TResolverMap>>,
+  > = Record<string, Resolvable<any, TContext, TResolverMap>>
 >(
   v:
     | T
     | Resolvable<T, TContext, TResolverMap, TResolvableMap>
-    | ResolvableObj<T, TContext, TResolverMap>,
+    | ResolvableObj<T, TContext, TResolverMap>
 ): v is ResolvableObj<T, TContext, TResolverMap> => {
   return !isResolvable(v as { __resolveType: string }) && typeof v === "object";
 };
@@ -157,22 +162,22 @@ const isResolvableObj = <
 export type AsyncResolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = (
   parent: TParent,
-  context: TContext,
+  context: TContext
 ) => Promise<Resolvable<T, TContext, any>>;
 
 export type SyncResolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = (parent: TParent, context: TContext) => Resolvable<T, TContext, any>;
 
 export type Resolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = AsyncResolver<T, TParent, TContext> | SyncResolver<T, TParent, TContext>;
 
 export type ResolverMap<TContext extends BaseContext = BaseContext> = Record<
@@ -187,15 +192,15 @@ async function object<
   TResolvableMap extends Record<
     string,
     Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
-  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
+  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>
 >(
   obj: Omit<
     Resolvable<T, TContext, TResolverMap, TResolvableMap>,
     "__resolveType"
   >,
   resolve: <K extends keyof T>(
-    resolvable: Resolvable<T[K], TContext, TResolverMap, TResolvableMap>,
-  ) => PromiseOrValue<T[K]>,
+    resolvable: Resolvable<T[K], TContext, TResolverMap, TResolvableMap>
+  ) => PromiseOrValue<T[K]>
 ): Promise<T> {
   if (obj instanceof Date) {
     return obj as T;
@@ -226,15 +231,15 @@ const nativeResolverByType: Record<
     TResolvableMap extends Record<
       string,
       Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
-    > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
+    > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>
   >(
     obj: Omit<
       Resolvable<T, TContext, TResolverMap, TResolvableMap>,
       "__resolveType"
     >,
     resolve: <K>(
-      resolvable: Resolvable<K, TContext, TResolverMap, TResolvableMap>,
-    ) => PromiseOrValue<K>,
+      resolvable: Resolvable<K, TContext, TResolverMap, TResolvableMap>
+    ) => PromiseOrValue<K>
   ) => PromiseOrValue<T>
 > = {
   object,
@@ -252,25 +257,25 @@ export const resolve = async <
   TResolvableMap extends Record<
     string,
     Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
-  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
+  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>
 >(
   resolverMap: TResolverMap,
   resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>,
   resolvables: TResolvableMap,
-  context: TContext,
+  context: TContext
 ): Promise<T> => {
   const ctx = {
     ...context,
     resolver: (resolvable as { __resolveType: string })?.__resolveType,
   };
   const resolverFunc = <K>(
-    data: Resolvable<K, TContext, TResolverMap, TResolvableMap>,
+    data: Resolvable<K, TContext, TResolverMap, TResolvableMap>
   ): PromiseOrValue<K> =>
     resolve<K, TContext, TResolverMap, TResolvableMap>(
       resolverMap,
       data,
       resolvables,
-      ctx,
+      ctx
     );
 
   const [resolvableObj, type] = resolveTypeOf(resolvable);
@@ -279,24 +284,26 @@ export const resolve = async <
     if (Array.isArray(resolvableObj)) {
       return await tpResolver<T, TContext, TResolverMap, TResolvableMap>(
         resolvableObj,
-        resolverFunc,
+        resolverFunc
       );
     }
     return resolvableObj as T;
   }
   const resolved = await tpResolver<T, TContext, TResolverMap, TResolvableMap>(
     resolvableObj,
-    resolverFunc,
+    resolverFunc
   );
   const resolverType = type(resolved);
   const resolver = resolverMap[resolverType];
   if (resolver !== undefined) {
-    return resolve(
-      resolverMap,
-      await resolver(resolved, ctx),
-      resolvables,
-      ctx,
-    );
+    let respOrPromise = resolver(resolved, ctx);
+    if (isAwaitable(respOrPromise)) {
+      const timingName = resolverType.replaceAll("/", "-");
+      context.monitoring?.t.start(timingName);
+      respOrPromise = await respOrPromise;
+      context.monitoring?.t.end(timingName);
+    }
+    return resolve(resolverMap, respOrPromise, resolvables, ctx);
   }
   const resolvableRef = resolvables[resolverType.toString()] as Resolvable<T>;
   if (resolvableRef === undefined) {
@@ -306,6 +313,6 @@ export const resolve = async <
     resolverMap,
     resolvableRef,
     resolvables,
-    ctx,
+    ctx
   );
 };

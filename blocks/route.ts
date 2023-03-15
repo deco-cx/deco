@@ -10,7 +10,7 @@ import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { ASTNode, Param, TsType } from "$live/engine/schema/ast.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
 import { context as liveContext } from "$live/live.ts";
-import { DecoManifest } from "$live/types.ts";
+import { DecoManifest, LiveState } from "$live/types.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
@@ -58,12 +58,25 @@ const mapHandlers = (
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
-      return async function (request: Request, context: HandlerContext) {
+      return async function (
+        request: Request,
+        context: HandlerContext<any, LiveState>
+      ) {
         const resolver = liveContext.configResolver!;
-        const $live = await resolver.resolve(key, {
-          context,
-          request,
-        });
+        const $live = await resolver.resolve(
+          key,
+          {
+            context,
+            request,
+          },
+          {
+            monitoring: context?.state?.t
+              ? {
+                  t: context.state.t!,
+                }
+              : undefined,
+          }
+        );
         return val!(request, {
           ...context,
           state: {
@@ -75,15 +88,29 @@ const mapHandlers = (
       };
     });
   }
-  return async function (request: Request, context: HandlerContext) {
+  return async function (
+    request: Request,
+    context: HandlerContext<any, LiveState>
+  ) {
     const resolver = liveContext.configResolver!;
     const $live = (await resolver.resolve(key, {
-      context,
-      request,
-    })) ?? {};
+      (await resolver.resolve(
+        key,
+        {
+          context,
+          request,
+        },
+        {
+          monitoring: context?.state?.t
+            ? {
+                t: context.state.t!,
+              }
+            : undefined,
+        }
+      )) ?? {};
 
     if (typeof handlers === "function") {
-      return handlers(request, {
+      return await handlers(request, {
         ...context,
         state: {
           ...context.state,
@@ -92,24 +119,27 @@ const mapHandlers = (
         },
       });
     }
-    return context.render($live);
+    return await context.render($live);
   };
 };
 
 export type Route<TProps = unknown> = ComponentFunc<PageProps<TProps>>;
 const blockType = "routes";
 const routeBlock: Block<Route, Response> = {
-  decorate: (route, key) => {
-    if (isConfigurableRoute(route)) {
-      const configurableRoute = route;
+  decorate: (routeModule, key) => {
+    if (
+      isConfigurableRoute(routeModule) &&
+      !key.includes("./routes/_middleware.ts")
+    ) {
+      const configurableRoute = routeModule;
       const handl = configurableRoute.handler;
       const liveKey = configurableRoute.config?.liveKey ?? key;
       return {
-        ...route,
+        ...routeModule,
         handler: mapHandlers(liveKey, handl),
       };
     }
-    return route;
+    return routeModule;
   },
   introspect: async (_, path, ast) => {
     if (!path.startsWith("./routes/")) {

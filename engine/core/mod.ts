@@ -6,6 +6,7 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Monitoring } from "$live/engine/core/resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
@@ -45,11 +46,11 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   public resolve = async <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
-    overrides?: Record<string, string>,
+    options?: { overrides?: Record<string, string>; monitoring?: Monitoring }
   ): Promise<T> => {
     const { resolvers: res, resolvables: rPromise } = this.config;
     const resolvables = await rPromise;
-    const nresolvables = withOverrides(overrides, resolvables);
+    const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = {
       ...res,
       ...this.resolvers,
@@ -61,6 +62,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       resolve: _resolve,
       resolveId: crypto.randomUUID(),
       key: "",
+      monitoring: options?.monitoring,
     };
     const ctx = {
       ...context,

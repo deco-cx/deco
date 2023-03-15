@@ -6,7 +6,9 @@ export interface FreshConfig {
   page: Page;
 }
 
-const isFreshCtx = (ctx: ConnInfo | HandlerContext): ctx is HandlerContext => {
+export const isFreshCtx = <TState>(
+  ctx: ConnInfo | HandlerContext<unknown, TState>
+): ctx is HandlerContext<unknown, TState> => {
   return typeof (ctx as HandlerContext).render === "function";
 };
 export default function Fresh(page: FreshConfig) {
