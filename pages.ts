@@ -30,12 +30,7 @@ export async function loadLivePage(
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
-<<<<<<< HEAD
   const blockName = url.searchParams.get("key");
-=======
-  const sectionName = url.pathname.startsWith(sectionPathStart) &&
-    url.pathname.replace(sectionPathStart, "");
->>>>>>> 7b19de7 (Initial implementation of global section reference using page with global type)
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
   let globals: Page[] = [];
 
