@@ -110,22 +110,30 @@ async (
   };
 };
 
-export type StatefulHandler<TConfig, TResp> = (
-  req: Request,
-  ctx: StatefulContext<TConfig>,
-) => PromiseOrValue<TResp>;
+export type StatefulHandler<
+  TConfig,
+  TResp,
+  TCtx extends StatefulContext<TConfig> = StatefulContext<TConfig>
+> = (req: Request, ctx: TCtx) => PromiseOrValue<TResp>;
 
-export const configAsState = <
+interface GlobalConfig {
+  __globals: any;
+}
+
+const isGlobalConfig = <T>(value: T | GlobalConfig): value is GlobalConfig => {
+  return (value as GlobalConfig)?.__globals !== undefined;
+};
+    TCtx extends StatefulContext<any> = StatefulContext<any>,
   TConfig = any,
-  TResp = any,
-  TFunc extends StatefulHandler<TConfig, TResp> = any,
+    TResp = any
 >(func: {
-  default: TFunc;
+    default: StatefulHandler<TConfig, TResp, TCtx>;
 }) =>
-async ($live: TConfig, ctx: HttpContext) => {
+  async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
+    const global = isGlobalConfig($live) ? $live.__globals : {};
   return await func.default(ctx.request, {
     ...ctx.context,
-    state: { ...ctx.context.state, $live, resolve: ctx.resolve },
+      state: { ...ctx.context.state, $live, resolve: ctx.resolve, global },
   });
 };
 
@@ -235,9 +243,12 @@ export const newComponentBlock = <K extends string>(
   introspect: instrospectComponentFunc(`./${type}`),
 });
 
-export const newHandlerLikeBlock = <R = any, K extends string = string>(
-  type: K,
-): Block<StatefulHandler<any, any>, R, K> => ({
+export const newHandlerLikeBlock = <
+  Ctx extends StatefulContext<any> = StatefulContext<any>,
+  R = any,
+  K extends string = string
+>(
+): Block<StatefulHandler<any, R, Ctx>, R, K> => ({
   type,
   defaultPreview: (result) => {
     return {

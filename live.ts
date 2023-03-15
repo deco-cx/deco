@@ -35,6 +35,7 @@ export type LiveContext = {
   loginUrl?: string;
   // deno-lint-ignore no-explicit-any
   configResolver?: ConfigResolver<any>;
+  namespace?: string;
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,

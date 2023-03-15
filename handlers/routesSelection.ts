@@ -6,7 +6,7 @@ import { Audience } from "$live/flags/audience.ts";
 import { context } from "$live/live.ts";
 import { ConnInfo } from "https://deno.land/std@0.170.0/http/server.ts";
 import { router } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-import { CookiedFlag, cookies } from "../flags.ts";
+import { CookiedFlag, cookies } from "$live/flags.ts";
 
 export interface SelectionConfig {
   flags: Flag[]; // TODO it should be possible to specify a Flag<T> instead. author Marcos V. Candeia

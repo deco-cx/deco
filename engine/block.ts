@@ -3,7 +3,7 @@ import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
 import { ASTNode, TsType } from "$live/engine/schema/ast.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
-import manifest from "$live/fresh.gen.ts";
+import manifest from "$live/live.gen.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import { JSX } from "preact";
 
@@ -25,6 +25,15 @@ export interface BlockModule<
 
 export type ResolverBlock = Block<Resolver>;
 // TODO Implementar resolver block @author marcos v. candeia
+
+export type ModuleOf<TBlock> = TBlock extends Block<
+  any,
+  any,
+  any,
+  infer TBlockModule
+>
+  ? TBlockModule
+  : never;
 
 export interface Block<
   TBlockFunc extends (...args: any[]) => any = any,

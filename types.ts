@@ -1,11 +1,15 @@
-import { createServerTimings } from "$live/utils/timings.ts";
-import type { HandlerContext } from "$fresh/server.ts";
+import type { HandlerContext, Manifest } from "$fresh/server.ts";
 import type { IslandModule } from "$fresh/src/server/types.ts";
-import type { Manifest } from "$fresh/server.ts";
-import type {
-  JSONSchema7,
-  JSONSchema7Definition,
-} from "https://esm.sh/@types/json-schema@7.0.11?pin=v110";
+import flagBlock from "$live/blocks/flag.ts";
+import handlerBlock from "$live/blocks/handler.ts";
+import loaderBlock from "$live/blocks/loader.ts";
+import matcherBlock from "$live/blocks/matcher.ts";
+import pageBlock from "$live/blocks/page.ts";
+import sectionBlock from "$live/blocks/section.ts";
+import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
+import { ModuleOf } from "$live/engine/block.ts";
+import { Schemas } from "$live/engine/schema/builder.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
 
 export interface Node {
   label: string;
@@ -17,25 +21,16 @@ export interface Node {
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
-export interface Module extends IslandModule {
-  schema?: JSONSchema;
-}
-
-export interface FunctionModule {
-  default: LoaderFunction<any, any> | MatchFunction | EffectFunction;
-}
-
 export interface DecoManifest extends Manifest {
-  islands: Record<string, Module>;
-  sections: Record<string, Module>;
-  functions: Record<string, FunctionModule>;
-  schemas: Record<
-    string,
-    {
-      inputSchema: JSONSchema | null;
-      outputSchema: JSONSchema | null;
-    }
-  >;
+  islands: Record<string, IslandModule>;
+  sections?: Record<string, ModuleOf<typeof sectionBlock>>;
+  functions?: Record<string, ModuleOf<typeof loaderBlock>>;
+  loaders?: Record<string, ModuleOf<typeof loaderBlock>>;
+  pages?: Record<string, ModuleOf<typeof pageBlock>>;
+  matchers?: Record<string, ModuleOf<typeof matcherBlock>>;
+  handlers?: Record<string, ModuleOf<typeof handlerBlock>>;
+  flags?: Record<string, ModuleOf<typeof flagBlock>>;
+  schemas: Schemas;
 }
 
 export interface Site {
@@ -143,10 +138,8 @@ export interface WithSchema {
 export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;
 // We re-add the uniqueId here to allow user to select functions that were already
 // added in the page
-export type AvailableFunction =
-  & Omit<PageFunction, "uniqueId">
-  & WithSchema
-  & { uniqueId?: string };
+export type AvailableFunction = Omit<PageFunction, "uniqueId"> &
+  WithSchema & { uniqueId?: string };
 
 export interface EditorData {
   pageName: string;
@@ -168,7 +161,7 @@ export type LiveState<T = unknown> = {
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<any, State>,
-  props: Props,
+  props: Props
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
 
 export type MatchDuration = "request" | "session";
@@ -176,13 +169,13 @@ export type MatchDuration = "request" | "session";
 export type MatchFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<Data, State>,
-  props: Props,
+  props: Props
 ) => { isMatch: boolean; duration: MatchDuration };
 
 export type EffectFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<Data, State>,
-  props: Props,
+  props: Props
 ) => Record<string, any>;
 
 export type LoaderReturnType<O = unknown> = O;

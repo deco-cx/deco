@@ -56,7 +56,7 @@ const runFlagMatchers = <D>(
   for (const match of matches) {
     const { key, props } = match;
 
-    const matchFn: MatchFunction<any, any, any> = manifest.functions[key]
+    const matchFn: MatchFunction<any, any, any> = manifest.functions![key]
       ?.default as MatchFunction;
 
     if (!matchFn) {
@@ -83,7 +83,7 @@ const runFlagEffect = <D>(
   const { data: { effect } } = flag;
 
   const effectFn: EffectFunction<any, any, any> | null = effect
-    ? manifest.functions[effect.key].default as EffectFunction
+    ? manifest.functions![effect.key].default as EffectFunction
     : null;
 
   return effectFn?.(req, ctx, effect?.props as any) ?? true;

@@ -3,7 +3,6 @@ import { applyConfig, configOnly } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 
-// @ts-ignore: "waiting for the engine to be completed"
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 // TODO Inheritance flag is not working Author Marcos V. Candeia
@@ -14,7 +13,8 @@ interface FlagObj<T = unknown> {
   false: T;
 }
 
-export type FlagFunc<TConfig = unknown> = (c: TConfig) => FlagObj;
+// deno-lint-ignore no-explicit-any
+export type FlagFunc<TConfig = any> = (c: TConfig) => FlagObj;
 
 const flagBlock: Block<FlagFunc> = {
   type: "flags",
