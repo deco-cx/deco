@@ -74,7 +74,7 @@ export interface PageData {
   functions: PageFunction[];
 }
 
-export type PageState = "archived" | "draft" | "published" | "dev";
+export type PageState = "archived" | "draft" | "published" | "dev" | "global";
 
 export interface Page {
   id: number;
