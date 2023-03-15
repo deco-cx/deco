@@ -346,7 +346,7 @@ export const loadPage = async <Data = unknown>(
   // TODO: Ensure loadLivePage only goes to DB if there is a page published with this path
   // ... This will be possible when all published pages are synced to the edge
   // ... for now, we need to go to the DB every time, even when there's no data for this page
-  const pageWithParams = await loadLivePage(req, ctx, options);
+  const pageWithParams = await loadLivePage({ req, ctx, ...options });
   end("load-page");
 
   if (!pageWithParams) {
