@@ -4,6 +4,7 @@
 
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
+import { context } from "$live/live.ts";
 
 import * as $$0 from "./routes/[...catchall].tsx";
 import * as $$$$0 from "$live/handlers/routesSelection.ts";
@@ -77,13 +78,13 @@ const manifest: DecoManifest = {
         "$ref": "#/root/handlers",
         "$id": "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
       },
-      "3453f64f-f579-4a7b-91fd-08dbb9f78ac9@Handler@record": {
+      "e7ddeb13-014a-47ac-b4a2-e9307950c289@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "3453f64f-f579-4a7b-91fd-08dbb9f78ac9@Handler@record",
+        "$id": "e7ddeb13-014a-47ac-b4a2-e9307950c289@Handler@record",
       },
       "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
         "type": "object",
@@ -93,7 +94,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/3453f64f-f579-4a7b-91fd-08dbb9f78ac9@Handler@record",
+              "#/definitions/e7ddeb13-014a-47ac-b4a2-e9307950c289@Handler@record",
           },
         },
         "required": ["routes"],
@@ -234,13 +235,13 @@ const manifest: DecoManifest = {
         "title": "$live/matchers/MatchEnvironment.ts@Props",
         "$id": "$live/matchers/MatchEnvironment.ts@Props",
       },
-      "5bda1f2e-1a15-4864-8023-c36e4cedb724@Handler@record": {
+      "dd127fbd-3e83-4a88-a4be-9729f5371e0e@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "5bda1f2e-1a15-4864-8023-c36e4cedb724@Handler@record",
+        "$id": "dd127fbd-3e83-4a88-a4be-9729f5371e0e@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
         "type": "object",
@@ -254,7 +255,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/5bda1f2e-1a15-4864-8023-c36e4cedb724@Handler@record",
+              "#/definitions/dd127fbd-3e83-4a88-a4be-9729f5371e0e@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -266,13 +267,13 @@ const manifest: DecoManifest = {
         "title": "$live/flags/audience.ts@Audience",
         "$id": "$live/flags/audience.ts@Audience",
       },
-      "6d265aa6-4d98-44b9-be2d-71aa8563b9ff@Handler@record": {
+      "22daa1fa-995e-4650-a9d3-609effe682e2@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "6d265aa6-4d98-44b9-be2d-71aa8563b9ff@Handler@record",
+        "$id": "22daa1fa-995e-4650-a9d3-609effe682e2@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
         "type": "object",
@@ -281,7 +282,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/6d265aa6-4d98-44b9-be2d-71aa8563b9ff@Handler@record",
+              "#/definitions/22daa1fa-995e-4650-a9d3-609effe682e2@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -565,5 +566,7 @@ const manifest: DecoManifest = {
     },
   },
 };
+
+context.namespace = "$live";
 
 export default configurable(manifest);

@@ -226,11 +226,13 @@ export const stringify = ({
 
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
+import { context } from "$live/live.ts"
 
 ${Object.entries(imports).map(stringifyImport).join("\n")}
 
 const manifest: DecoManifest = ${stringifyObj(manifest)}
 
+context.namespace = "${namespace}"
 ${exports.map(stringifyExport).join("\n")}
 ${statements ? statements.map(stringifyStatement).join("\n") : ""}
 ${exportDefault ? `export default ${exportDefault.variable.identifier}` : ""}
