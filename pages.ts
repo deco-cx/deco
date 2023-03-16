@@ -234,11 +234,9 @@ export const fetchPageFromSection = async (
   siteId: number
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
-  const [sectionPath, sectionName] = sectionFileName.split("@");
-  const sectionKey = `./sections/${sectionPath}`;
+
   const { section: instance, functions } = createSectionFromSectionKey(
-    sectionKey,
-    sectionName
+    sectionFileName,
   );
 
   const page = createPageForSection(sectionFileName, {
@@ -246,8 +244,8 @@ export const fetchPageFromSection = async (
     functions,
   });
 
-  if (!doesSectionExist(sectionKey)) {
-    throw new Error(`Section at ${sectionKey} Not Found`);
+  if (!doesSectionExist(sectionFileName)) {
+    throw new Error(`Section at ${sectionFileName} Not Found`);
   }
 
   const { data } = await supabase

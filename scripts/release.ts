@@ -12,6 +12,8 @@ const latestTag = response.output;
 
 console.log(`Current version is: ${latestTag}`);
 
+// TODO: Only allow releases in main branch 
+
 const patchIncrement = increment(latestTag, "patch") || "";
 const minorIncrement = increment(latestTag, "minor") || "";
 const majorIncrement = increment(latestTag, "major") || "";
