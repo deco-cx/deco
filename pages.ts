@@ -44,7 +44,7 @@ export async function loadLivePage(
       .in("state", ["published", "draft", "global"]);
 
     globals = pages?.filter((page) => page.state === "global") ??
-      pages?.filter((page) => page.state === "global") ?? [];
+      [];
     ctx.state.global = loadGlobal({ globalSettings: globals });
 
     if (blockName) {
@@ -134,14 +134,14 @@ export async function loadLivePage(
         // TODO: Remove this after we eventually migrate everything
         functions: (
           pageWithParams?.page.data.functions ??
-          (pageWithParams?.page.data as any).loaders
+            (pageWithParams?.page.data as any).loaders
         )?.map((loader) => ({
           ...loader,
           key: loader.key.replace("./loaders", "./functions"),
         })),
         sections: (
           pageWithParams?.page.data.sections ??
-          (pageWithParams?.page.data as any).components
+            (pageWithParams?.page.data as any).components
         )?.map((section) => ({
           ...section,
           key: section.key.replace("./components/", "./sections/"),
@@ -157,11 +157,9 @@ interface FetPageFromPathnameParams {
   path: string;
 }
 
-const getPageFromPathname = ({
-  pages,
-  error,
-  path,
-}: FetPageFromPathnameParams): PageWithParams[] | null => {
+const getPageFromPathname = (
+  { pages, error, path }: FetPageFromPathnameParams,
+): PageWithParams[] | null => {
   const routes = pages?.map((page) => ({
     page,
     pattern: page.path,
@@ -193,7 +191,7 @@ const getPageFromPathname = ({
  */
 export const fetchPageFromId = async (
   pageId: number,
-  pathname?: string
+  pathname?: string,
 ): Promise<PageWithParams> => {
   const { data: pages, error } = await getSupabaseClient()
     .from("pages")
@@ -228,11 +226,13 @@ export const fetchPageFromId = async (
  */
 export const fetchPageFromSection = async (
   sectionFileName: string, // Ex: ./sections/Banner.tsx#TopSellers
-  siteId: number
+  siteId: number,
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
 
-    createSectionFromSectionKey(sectionFileName);
+  const { section: instance, functions } = createSectionFromSectionKey(
+    sectionFileName,
+  );
 
   const page = createPageForSection(sectionFileName, {
     sections: [instance],
@@ -266,17 +266,15 @@ export const fetchPageFromSection = async (
  */
 export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
   const rankRoute = (pattern: string) =>
-    pattern
-      .split("/")
-      .reduce(
-        (acc, routePart) =>
-          routePart.endsWith("*")
-            ? acc
-            : routePart.startsWith(":")
-            ? acc + 1
-            : acc + 2,
-        0
-      );
+    pattern.split("/").reduce(
+      (acc, routePart) =>
+        routePart.endsWith("*")
+          ? acc
+          : routePart.startsWith(":")
+          ? acc + 1
+          : acc + 2,
+      0,
+    );
 
   routes.sort((a, b) => rankRoute(b.pattern) - rankRoute(a.pattern));
 }
@@ -290,7 +288,7 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
 export const generateEditorData = async <Data = unknown>(
   req: Request,
   ctx: HandlerContext<Data, LiveState>,
-  options: PageOptions
+  options: PageOptions,
 ): Promise<EditorData> => {
   const pageWithParams = await loadLivePage({
     req,
@@ -303,29 +301,24 @@ export const generateEditorData = async <Data = unknown>(
     throw new Error("Could not find page to generate editor data");
   }
 
-  const {
-    page,
-    page: {
-      data: { sections, functions },
-    },
-  } = pageWithParams;
+  const { page, page: { data: { sections, functions } } } = pageWithParams;
 
   const sectionsWithSchema = sections.map(
     (section): EditorData["sections"][0] => ({
       ...section,
       schema: context.manifest?.schemas[section.key]?.inputSchema || undefined,
-    })
+    }),
   );
 
-  const functionsWithSchema = functions.map(
-    (functionData): EditorData["functions"][0] => ({
-      ...functionData,
-      schema:
-        context.manifest?.schemas[functionData.key]?.inputSchema || undefined,
-      outputSchema:
-        context.manifest?.schemas[functionData.key]?.outputSchema || undefined,
-    })
-  );
+  const functionsWithSchema = functions.map((
+    functionData,
+  ): EditorData["functions"][0] => ({
+    ...functionData,
+    schema: context.manifest?.schemas[functionData.key]?.inputSchema ||
+      undefined,
+    outputSchema: context.manifest?.schemas[functionData.key]?.outputSchema ||
+      undefined,
+  }));
 
   const { availableFunctions, availableSections } =
     generateAvailableEntitiesFromManifest();
@@ -343,7 +336,7 @@ export const generateEditorData = async <Data = unknown>(
 export const loadPage = async <Data = unknown>(
   req: Request,
   ctx: HandlerContext<Data, LiveState>,
-  options: PageOptions
+  options: PageOptions,
 ) => {
   const { start, end } = ctx.state.t;
 
@@ -371,7 +364,7 @@ export const loadPage = async <Data = unknown>(
       ...ctx,
       params,
     },
-    page?.data
+    page?.data,
   );
   end("load-data");
 
@@ -390,18 +383,21 @@ const loadGlobal = ({ globalSettings }: { globalSettings: Page[] }) => {
     return key.replace(/(.*)\/(\w*)\.global\.tsx$/, "$2");
   };
 
-  const globals = globalSettings.reduce((result, page: Page) => {
-    const firstSection = page.data.sections?.[0];
+  const globals = globalSettings.reduce(
+    (result, page: Page) => {
+      const firstSection = page.data.sections?.[0];
 
-    if (!firstSection) {
+      if (!firstSection) {
+        return result;
+      }
+
+      const stripedKey = stripGlobalKey(firstSection.key);
+
+      result[stripedKey] = firstSection.props;
       return result;
-    }
-
-    const stripedKey = stripGlobalKey(firstSection.key);
-
-    result[stripedKey] = firstSection.props;
-    return result;
-  }, {} as Record<string, unknown>);
+    },
+    {} as Record<string, unknown>,
+  );
 
   return Object.freeze(globals);
 };
