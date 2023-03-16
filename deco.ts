@@ -1,8 +1,7 @@
 export const decoDomain = `https://deco.cx`;
 const decoAdminPreviewStart = "https://deco-sites-admin-";
 const decoAdminPreviewEnd = "deno.dev";
-export const decoPreviewDomainSrc =
-  `${decoAdminPreviewStart}*${decoAdminPreviewEnd}`;
+export const decoPreviewDomainSrc = `https://*.${decoAdminPreviewEnd}`;
 export const isDecoAdmin = (url: string): boolean => {
   if (url.startsWith(decoDomain)) {
     return true;
