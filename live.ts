@@ -188,7 +188,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       }
       response.headers.set(
         "Content-Security-Policy",
-        `frame-src ${decoDomain} ${decoPreviewDomainSrc}`,
+        `frame-ancestors ${decoDomain} ${decoPreviewDomainSrc}`,
       );
 
       return new Response(response.body, {
