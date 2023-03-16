@@ -1,7 +1,6 @@
 import { Head } from "$fresh/runtime.ts";
 import { inspectVSCode } from "../deps.ts";
 import type { Flags, Page, Site } from "$live/types.ts";
-import { adminUrlFor } from "../utils/admin.ts";
 
 declare global {
   interface Window {
