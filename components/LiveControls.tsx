@@ -27,6 +27,7 @@ type LiveEvent = {
   args: "activate" | "deactivate";
 };
 
+// TODO: Move inspect-vscode code to here so we don't need to do this stringification
 const domInspectorModule = `
 const DomInspectorActivators = {
   CmdE: {
