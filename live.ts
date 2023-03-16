@@ -18,10 +18,10 @@ import {
   LivePageData,
   LiveState,
 } from "$live/types.ts";
+import { adminDomain, adminUrlFor, isAdmin } from "$live/utils/admin.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
-import { decoDomain, decoPreviewDomainSrc, isDecoAdmin } from "./deco.ts";
 import { inspectVSCode } from "./deps.ts";
 
 // The global live context
@@ -161,17 +161,17 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
       const loaded = await loadPage(req, ctx, pageOptions);
       const referer = origin ?? req.headers.get("referer");
-      const isOnDecoAdmin = referer && isDecoAdmin(referer);
+      const isOnAdmin = referer && isAdmin(referer);
 
       if (
         context.isDeploy &&
         loaded?.page.public !== undefined &&
         !loaded?.page.public
       ) {
-        if (!referer || !isOnDecoAdmin) {
+        if (!referer || !isOnAdmin) {
           // redirect
           return Response.redirect(
-            `${decoDomain}/admin/${context.siteId}/pages/${loaded.page.id}?sort=asc`,
+            adminUrlFor(loaded.page.id),
           );
         }
       }
@@ -190,8 +190,8 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       }
       response.headers.set(
         "Content-Security-Policy",
-        `frame-ancestors ${decoDomain} ${
-          referer && isOnDecoAdmin ? "https://" + new URL(referer).host : ""
+        `frame-ancestors ${adminDomain} ${
+          referer && isOnAdmin ? "https://" + new URL(referer).host : ""
         }`,
       );
 
