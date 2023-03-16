@@ -55,14 +55,18 @@ const main = () => {
       return;
     }
 
-    // why?
+    // Disable going to admin while input it being typed
+    if (event.target !== document.body) {
+      return
+    }
+
     if (event.defaultPrevented) {
       return;
     }
 
     if (
       (event.ctrlKey && event.shiftKey && event.key === "E") ||
-      event.key === "Escape"
+      event.key === "."
     ) {
       event.preventDefault();
       event.stopPropagation();
