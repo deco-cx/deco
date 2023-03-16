@@ -1,18 +1,23 @@
-import { context } from "$live/live.ts";
-import { PageSection, PageWithParams } from "$live/types.ts";
-import getSupabaseClient from "./supabase.ts";
 import { HandlerContext } from "$fresh/server.ts";
-import { EditorData, LiveState, Page } from "$live/types.ts";
+import { context } from "$live/live.ts";
+import {
+  EditorData,
+  LiveState,
+  Page,
+  PageSection,
+  PageWithParams,
+} from "$live/types.ts";
 import {
   generateAvailableEntitiesFromManifest,
   loadPageData,
 } from "$live/utils/manifest.ts";
 import { createPageForSection } from "$live/utils/page.ts";
+import { supabase } from "./deps.ts";
+import getSupabaseClient from "./supabase.ts";
 import {
   createSectionFromSectionKey,
   doesSectionExist,
 } from "./utils/manifest.ts";
-import { supabase } from "./deps.ts";
 
 export interface PageOptions {
   selectedPageIds: number[];
@@ -94,7 +99,7 @@ export async function loadLivePage({
           const selectedGlobalSectionPage = globals.find(
             (globalPage) =>
               globalPage.path.startsWith(sectionPath) &&
-              globalPage.id === selectedPageId
+              globalPage.id === selectedPageId,
           );
           if (selectedGlobalSectionPage) {
             overrideGlobalSection = selectedGlobalSectionPage.data
@@ -137,14 +142,14 @@ export async function loadLivePage({
         // TODO: Remove this after we eventually migrate everything
         functions: (
           pageWithParams?.page.data.functions ??
-          (pageWithParams?.page.data as any).loaders
+            (pageWithParams?.page.data as any).loaders
         )?.map((loader) => ({
           ...loader,
           key: loader.key.replace("./loaders", "./functions"),
         })),
         sections: (
           pageWithParams?.page.data.sections ??
-          (pageWithParams?.page.data as any).components
+            (pageWithParams?.page.data as any).components
         )?.map((section) => ({
           ...section,
           key: section.key.replace("./components/", "./sections/"),
@@ -196,7 +201,7 @@ const getPageFromPathname = ({
  */
 export const fetchPageFromId = async (
   pageId: number,
-  pathname?: string
+  pathname?: string,
 ): Promise<PageWithParams> => {
   const { data: pages, error } = await getSupabaseClient()
     .from("pages")
@@ -231,7 +236,7 @@ export const fetchPageFromId = async (
  */
 export const fetchPageFromSection = async (
   sectionFileName: string, // Ex: ./sections/Banner.tsx#TopSellers
-  siteId: number
+  siteId: number,
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
 
@@ -280,7 +285,7 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
             : routePart.startsWith(":")
             ? acc + 1
             : acc + 2,
-        0
+        0,
       );
 
   routes.sort((a, b) => rankRoute(b.pattern) - rankRoute(a.pattern));
@@ -295,7 +300,7 @@ export function sortRoutes<T extends { pattern: string }>(routes: T[]) {
 export const generateEditorData = async <Data = unknown>(
   req: Request,
   ctx: HandlerContext<Data, LiveState>,
-  options: PageOptions
+  options: PageOptions,
 ): Promise<EditorData> => {
   const pageWithParams = await loadLivePage({
     req,
@@ -319,17 +324,17 @@ export const generateEditorData = async <Data = unknown>(
     (section): EditorData["sections"][0] => ({
       ...section,
       schema: context.manifest?.schemas[section.key]?.inputSchema || undefined,
-    })
+    }),
   );
 
   const functionsWithSchema = functions.map(
     (functionData): EditorData["functions"][0] => ({
       ...functionData,
-      schema:
-        context.manifest?.schemas[functionData.key]?.inputSchema || undefined,
-      outputSchema:
-        context.manifest?.schemas[functionData.key]?.outputSchema || undefined,
-    })
+      schema: context.manifest?.schemas[functionData.key]?.inputSchema ||
+        undefined,
+      outputSchema: context.manifest?.schemas[functionData.key]?.outputSchema ||
+        undefined,
+    }),
   );
 
   const { availableFunctions, availableSections } =
@@ -348,7 +353,7 @@ export const generateEditorData = async <Data = unknown>(
 export const loadPage = async <Data = unknown>(
   req: Request,
   ctx: HandlerContext<Data, LiveState>,
-  options: PageOptions
+  options: PageOptions,
 ) => {
   const { start, end } = ctx.state.t;
 
@@ -376,7 +381,7 @@ export const loadPage = async <Data = unknown>(
       ...ctx,
       params,
     },
-    page?.data
+    page?.data,
   );
   end("load-data");
 

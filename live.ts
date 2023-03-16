@@ -5,23 +5,24 @@
 /// <reference lib="dom.iterable" />
 
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
-import {
-  DecoManifest,
-  LiveOptions,
-  LivePageData,
-  LiveState,
-} from "$live/types.ts";
+import { cookies, loadFlags } from "$live/flags.ts";
 import {
   generateEditorData,
   isPageOptions,
   loadPage,
   PageOptions,
 } from "$live/pages.ts";
+import {
+  DecoManifest,
+  LiveOptions,
+  LivePageData,
+  LiveState,
+} from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
-import { cookies, loadFlags } from "$live/flags.ts";
-import { inspectVSCode } from './deps.ts'
+import { decoDomain, decoPreviewDomainSrc, isDecoAdmin } from "./deco.ts";
+import { inspectVSCode } from "./deps.ts";
 
 // The global live context
 export type LiveContext = {
@@ -45,12 +46,12 @@ export const context: LiveContext = {
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx."
+      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
     );
   }
   if (!liveOptions.siteId) {
     throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}"
+      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
     );
   }
 
@@ -64,7 +65,7 @@ export const withLive = (liveOptions: LiveOptions) => {
   context.loginUrl = liveOptions.loginUrl;
 
   console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`
+    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
@@ -112,7 +113,7 @@ export const withLive = (liveOptions: LiveOptions) => {
           url,
           pageId: ctx.state.page?.id,
           begin,
-        })
+        }),
       );
     }
 
@@ -120,19 +121,6 @@ export const withLive = (liveOptions: LiveOptions) => {
   };
 };
 
-const decoDomain = `https://deco.cx`;
-const decoAdminPreviewStart = "https://deco-sites-admin-";
-const decoAdminPreviewEnd = "deno.dev";
-const isDecoAdmin = (url: string): boolean => {
-  if (url.startsWith(decoDomain)) {
-    return true;
-  }
-  const urlObj = new URL(url);
-  return (
-    url.startsWith(decoAdminPreviewStart) &&
-    urlObj.host.endsWith(decoAdminPreviewEnd) // previews
-  );
-};
 export const live: () => Handlers<LivePageData, LiveState> = () => ({
   GET: async (req, ctx) => {
     const url = new URL(req.url);
@@ -152,7 +140,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return acc;
       },
-      { selectedPageIds: [] } as PageOptions
+      { selectedPageIds: [] } as PageOptions,
     );
 
     const origin = req.headers.get("origin");
@@ -181,8 +169,8 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
         if (!url || !isOnDecoAdmin) {
           // redirect
           return Response.redirect(
-            `${decoDomain}/admin/${context.siteId}/pages/${loaded.page.id}?sort=asc`
-          ); // temporary redirect
+            `${decoDomain}/admin/${context.siteId}/pages/${loaded.page.id}?sort=asc`,
+          );
         }
       }
 
@@ -200,7 +188,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       }
       response.headers.set(
         "Content-Security-Policy",
-        `frame-src ${decoDomain} ${decoAdminPreviewStart}*${decoAdminPreviewEnd}`
+        `frame-src ${decoDomain} ${decoPreviewDomainSrc}`,
       );
 
       return new Response(response.body, {
