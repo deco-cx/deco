@@ -34,22 +34,26 @@ export type LiveState<T, TState = unknown> = TState & {
   $live: T;
 };
 
+const previewPrefixKey = "Preview@";
 const preview: Resolver<PreactComponent> = async (
   { block, props }: { block: string; props: any },
   { resolvables, resolvers, resolve }
 ) => {
-  const pvResolver = `Preview@${block}`;
+  const pvResolver = `${previewPrefixKey}${block}`;
   const previewResolver = resolvers[pvResolver];
   if (!previewResolver) {
     const resolvable = resolvables[block];
     if (!resolvable) {
       throw new Error(`${block} preview not available`);
     }
-    const { __resolveType, ...props } = resolvable;
+    const { __resolveType, ...resolvableProps } = resolvable;
     // recursive call
     return resolve({
       __resolveType: "preview",
-      props,
+      props: {
+        ...props,
+        ...resolvableProps,
+      },
       block: __resolveType,
     });
   }
@@ -76,7 +80,7 @@ export const configurable = <T extends DecoManifest>(m: T): T => {
       const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
         const previewFunc = mod.preview ?? blk.defaultPreview;
         if (previewFunc) {
-          return { ...prv, ["Preview@" + key]: previewFunc };
+          return { ...prv, [`${previewPrefixKey}${key}`]: previewFunc };
         }
         return prv;
       }, {} as ResolverMap<FreshContext>);
