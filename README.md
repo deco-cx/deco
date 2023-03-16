@@ -1,27 +1,32 @@
-# deco.cx/live — the edge-native DXP
+# Live.ts — the open-source web framework for building evolutionary digital experiences
 
-**Live** is the **edge-native digital experience platform** for [fresh](https://fresh.deno.dev) apps.
+**What if** you could make your site editable for business users **without** having to choose, learn and integrate a new CMS for each project?
 
-**Live** allows developers to create `sections` (UI components) and `functions` (data fetchers) that can be **configured in a visual editor UI by anyone in the digital experience team.** This means business users can now **create and evolve** the content and configuration of their digital experience without the need for developers to deploy changes. Developers can add edit functions to existing routes, and business users can create completely dynamic pages composed from these building blocks via UI.
+**What if** you could have freedom and safety to evolve your site, **without** bugging developers for a new deploy every ten minutes?
 
-Besides pages, **Live** also lets teams manage **flags, experiments and campaigns** with an instant, global configuration management service optimized for the edge. Using `matcher` and `effect` functions, configuration changes can be applied to any specific audience. Every change is instantly available to matched users, from gradual rollout of features, to A/B testing content, to targeting specific users with personalized content.
+**What if** new sites started off with PageSpeed 99 — and stayed there as they evolve? 
 
-**Live** is designed to be **fast, secure and easy to use**. That's why we built it on top of extraordinary open-source technologies, including [fresh](https://fresh.deno.dev), a framework for building edge-native applications, [supabase](https://supabase.io), a managed Postgres DB and auth wrapper, and [jitsu](https://jitsu.io), a data collector. And **Live** is also **open source** and **free**, so you have **zero vendor lock-in**.
+**Live.ts unlocks seamless collaboration in teams of developers and business users** who manage high-traffic, mission-critical digital experiences that need to evolve every day.
 
-We, the creators of **Live**, offer a managed **Live** infrastructure at [deco.cx](https://deco.cx) where you can scale from zero to millions of users without worrying about infrastructure. If you like the framework, give us a try :) life is too short to deal with CDN configuration and database management.
+**Live.ts** allows developers to create `sections` (UI components), `loaders` (data fetchers), `pages` (composed of sections and loaders), and many other types of **blocks** that can then be **easily configured in a visual editor UI by anyone in the team** with realtime changes.
 
-## Creating a new Live site
+This means business users can now **create and evolve** the content and configuration of their digital experience without the need for developers to deploy changes — all with complete **type-safety**. Developers focus on building these **configurable blocks**, and business users can create completely dynamic pages composed from blocks via UI.
+
+Besides pages, **Live.ts** also lets teams manage **flags, experiments and campaigns** with an instant, global configuration management service optimized for the edge. Using `matcher` functions, configuration changes can be applied to any specific audience. Every change is instantly available to matched users, from gradual rollout of features, to A/B testing content, to targeting specific users with personalized content.
+
+**Live.ts** is designed to be **fast, secure and easy to use**. That's why we built it on top of extraordinary open-source technologies, including [fresh](https://fresh.deno.dev), a framework for building edge-native applications, [supabase](https://supabase.io), a managed Postgres DB and auth wrapper, and [jitsu](https://jitsu.io), a data collector. And **Live.ts** itself is also **open source** and **free.**
+
+We, the creators of **Live.ts**, offer a managed **Live.ts** infrastructure at [deco.cx](https://deco.cx) where you can scale from zero to millions of users without worrying about infrastructure. If you like the framework, give us a try :) life is too short to deal with CDN configuration and database management.
+
+## Creating a new Live.ts site
 
 Want to create a **Live** site from scratch?
 
-- First, fork and clone the [deco start template repo](https://github.com/deco-sites/start).
-- Then, in the project directory, run `deno task start`.
-- Finally, go to https://localhost:8080 and follow the instructions in the home page.
-- From there, you can sign up at `deco.cx` to use the online editor and deploy your site to the edge.
+Go to https://deco.cx/admin and create a new site. In a few clicks you will have a site deployed to `<mysite>.deco.site` like https://fashion.deco.site, and a GitHub repository you can freely clone, edit and deploy at https://github.com/deco-sites/fashion.
 
 ## Adding live to an existing fresh site
 
-Assuming you have a working [fresh](https://fresh.deno.dev) site, you can configure **Live** in 4 quick steps:
+Assuming you have a working [fresh](https://fresh.deno.dev) site, you can configure **Live.ts** in 4 quick steps:
 
 ### 1. Add Live to your dependencies
 
@@ -30,7 +35,7 @@ First add the `$live` import to your `import_map.json` file:
 ```json
 {
   "imports": {
-    "$live/": "https://deno.land/x/live@0.3.0/",
+    "$live/": "https://deno.land/x/live@0/",
     "(...)": "(...)"
   }
 }
@@ -60,15 +65,16 @@ import manifest from "../fresh.gen.ts";
 import { withLive } from "$live/live.ts";
 
 export const handler = withLive(manifest, {
-  site: "start",
   siteId: 8,
 });
 ```
 
+Create a site at `deco.cx/admin` to get a site id you can add here.
+
 ![CleanShot 2022-11-20 at 22 24 08](https://user-images.githubusercontent.com/1633518/202938980-5bba5561-4e72-4b39-8cc5-c296668b7015.png)
 
 
-### 4. Mount the Live handler on a catch-all route
+### 4. Mount the Live.ts handler on a catch-all route
 
 Finally, in order to allow the creation of dynamic pages in any route, mount `live` as a handler for a catch-all route. Create `routes/[...path].tsx`:
 
@@ -81,7 +87,7 @@ export default LivePage;
 
 ![CleanShot 2022-11-20 at 22 24 43](https://user-images.githubusercontent.com/1633518/202939025-a51f0342-6e37-4bf5-86db-b8772e10abe2.png)
 
-Great! **Live** is now setup. You can verify it's working by going to any route that will trigger the catch all. For example, go to https://localhost:8080/start. You should see an empty page with an "Edit in deco.cx" button. Clicking it will redirect you to the deco.cx/live editor, which opens your site in an iframe.
+Great! **Live.ts** is now setup. You can verify it's working by going to any route that will trigger the catch all. For example, go to https://localhost:8080/start. You should see an empty page with an "Edit in deco.cx" button. Clicking it will redirect you to the deco.cx/live editor, which opens your site in an iframe.
 
 Now, the fun begins! Creating `sections` allow you to create UI components that can be used in any page and can be configured in the admin UI. This allows non-developers to reuse components and compose new pages, experiment on content, etc, all without requiring any code deploy.
 
@@ -106,17 +112,7 @@ export default function Hello({ name }: Props) {
 ![CleanShot 2022-11-20 at 22 25 10](https://user-images.githubusercontent.com/1633518/202939072-f384cbd5-675b-47ae-89f9-d7d584ffc32f.png)
 
 
-Go to http://localhost:8080/start to see a page that mounts the Hello section. This page was already created, as an example.
-
-Now, when you go to any page, you should see the `Hello` section available in the `Add Component` drawer.
-Add it to a page. You should see a `name` field in the section's configuration editor.
-When you save this configuration, you'll have a draft version of the page with the `Hello` section.
-
-## Functions: creating configurable data fetchers
-
-Now, let's create a configurable `function`.
-
-// TODO
+Go to https://deco.cx/admin/{yoursite}/library to see a page that mounts the Hello section. 
 
 ## Live scripts
 
@@ -238,7 +234,7 @@ static page
 
 ## Distribution
 
-Live is deployed on https://deno.land/x/live using Git Tags.
+Live is deployed on https://deno.land/x/live using git tags.
 
 To release a new version, run the following command and follow the instructions:
 

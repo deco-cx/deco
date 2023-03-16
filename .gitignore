@@ -1,3 +1,6 @@
+# Merge generated files
+*.orig
+
 # Logs
 logs
 *.log

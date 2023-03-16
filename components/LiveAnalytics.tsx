@@ -13,7 +13,9 @@ const onWebVitalsReport = (event) => {
 
 /* Send exception error to jitsu */
 const onError = ( message, url, lineNo, columnNo, error) => {
+  if (typeof window.jitsu === 'function') {
     window.jitsu('track', 'error', {error_1type: "Exception",message, url,  lineNo, columnNo, error_stack: error.stack, error_name: error.name})
+  }
 }
 
 const init = async () => {

@@ -1,5 +1,5 @@
 import { context } from "$live/live.ts";
-import { PageWithParams } from "$live/types.ts";
+import { PageSection, PageWithParams } from "$live/types.ts";
 import getSupabaseClient from "./supabase.ts";
 import { HandlerContext } from "$fresh/server.ts";
 import { EditorData, LiveState, Page } from "$live/types.ts";
@@ -18,18 +18,23 @@ export interface PageOptions {
   selectedPageIds: number[];
 }
 
+export const sectionPathStart = "/_live/workbench/sections/";
+
 export const isPageOptions = (x: any): x is PageOptions =>
   Array.isArray(x.selectedPageIds);
 
 export async function loadLivePage(
-  req: Request,
-  ctx: HandlerContext<any, LiveState>,
-  { selectedPageIds }: PageOptions
+  { req, ctx, selectedPageIds, resolveGlobals = true }: {
+    req: Request;
+    ctx: HandlerContext<any, LiveState>;
+    resolveGlobals?: boolean;
+  } & PageOptions,
 ): Promise<PageWithParams | null> {
   const url = new URL(req.url);
   const pageIdParam = url.searchParams.get("pageId");
   const blockName = url.searchParams.get("key");
   const pageId = pageIdParam && parseInt(pageIdParam, 10);
+  let globals: Page[] = [];
 
   const pageWithParams = await (async (): Promise<PageWithParams | null> => {
     const { data: pages, error } = await getSupabaseClient()
@@ -38,9 +43,9 @@ export async function loadLivePage(
       .eq("site", context.siteId)
       .in("state", ["published", "draft", "global"]);
 
-    const globalSettings =
+    globals = pages?.filter((page) => page.state === "global") ??
       pages?.filter((page) => page.state === "global") ?? [];
-    ctx.state.global = loadGlobal({ globalSettings });
+    ctx.state.global = loadGlobal({ globalSettings: globals });
 
     if (blockName) {
       return fetchPageFromSection(blockName, context.siteId);
@@ -72,6 +77,53 @@ export async function loadLivePage(
 
   if (!pageWithParams) {
     return null;
+  }
+
+  // Now, let's resolve any global sections which may be referenced by this page
+  if (resolveGlobals) {
+    for (const section of pageWithParams.page.data.sections) {
+      // This section is a reference to a global section, let's find it
+      if (section.key.startsWith(sectionPathStart)) {
+        const [sectionPath] = section.key.split("@");
+        // Look for an override from a feature flag in selectedPageIds
+        let overrideGlobalSection = null;
+        let overrideGlobalLoaders = null;
+        for (const selectedPageId of selectedPageIds) {
+          const selectedGlobalSectionPage = globals.find((globalPage) =>
+            globalPage.path.startsWith(sectionPath) &&
+            globalPage.id === selectedPageId
+          );
+          if (selectedGlobalSectionPage) {
+            overrideGlobalSection = selectedGlobalSectionPage.data
+              .sections[0] as PageSection;
+            overrideGlobalLoaders = selectedGlobalSectionPage.data.functions;
+            break;
+          }
+        }
+        // Look for a global section that matches provided section path exactly
+        let byPathGlobalSection = null;
+        let byPathGlobalLoaders = null;
+        for (const globalPage of globals) {
+          if (globalPage.path === section.key) {
+            byPathGlobalSection = globalPage.data.sections[0] as PageSection;
+            byPathGlobalLoaders = globalPage.data.functions;
+            break;
+          }
+        }
+        // Override this section key and props with found match
+        const globalSection = overrideGlobalSection || byPathGlobalSection;
+        const globalLoaders = overrideGlobalLoaders || byPathGlobalLoaders;
+        if (globalSection) {
+          section.key = globalSection.key;
+          section.label = globalSection.label;
+          section.props = globalSection.props;
+          pageWithParams.page.data.functions = [
+            ...(globalLoaders ?? []),
+            ...(pageWithParams.page.data.functions ?? []),
+          ];
+        }
+      }
+    }
   }
 
   return {
@@ -175,11 +227,11 @@ export const fetchPageFromId = async (
  * This way we can use the page editor to edit components too
  */
 export const fetchPageFromSection = async (
-  sectionFileName: string, // Ex: ./sections/Banner.tsx
+  sectionFileName: string, // Ex: ./sections/Banner.tsx#TopSellers
   siteId: number
 ): Promise<PageWithParams> => {
   const supabase = getSupabaseClient();
-  const { section: instance, functions } =
+
     createSectionFromSectionKey(sectionFileName);
 
   const page = createPageForSection(sectionFileName, {
@@ -187,7 +239,6 @@ export const fetchPageFromSection = async (
     functions,
   });
 
-  // Handle ./sections/SectionName.tsx and $imported/section/Section.tsx
   if (!doesSectionExist(sectionFileName)) {
     throw new Error(`Section at ${sectionFileName} Not Found`);
   }
@@ -241,7 +292,12 @@ export const generateEditorData = async <Data = unknown>(
   ctx: HandlerContext<Data, LiveState>,
   options: PageOptions
 ): Promise<EditorData> => {
-  const pageWithParams = await loadLivePage(req, ctx, options);
+  const pageWithParams = await loadLivePage({
+    req,
+    ctx,
+    resolveGlobals: false,
+    ...options,
+  });
 
   if (!pageWithParams) {
     throw new Error("Could not find page to generate editor data");
@@ -295,7 +351,7 @@ export const loadPage = async <Data = unknown>(
   // TODO: Ensure loadLivePage only goes to DB if there is a page published with this path
   // ... This will be possible when all published pages are synced to the edge
   // ... for now, we need to go to the DB every time, even when there's no data for this page
-  const pageWithParams = await loadLivePage(req, ctx, options);
+  const pageWithParams = await loadLivePage({ req, ctx, ...options });
   end("load-page");
 
   if (!pageWithParams) {

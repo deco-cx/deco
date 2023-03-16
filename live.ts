@@ -5,7 +5,6 @@
 /// <reference lib="dom.iterable" />
 
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
-import { inspectHandler } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
 import {
   DecoManifest,
   LiveOptions,
@@ -22,6 +21,7 @@ import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
 import { cookies, loadFlags } from "$live/flags.ts";
+import { inspectVSCode } from './deps.ts'
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 
 // The global live context
@@ -89,7 +89,7 @@ export const withLive = (liveOptions: LiveOptions) => {
       url.pathname.startsWith(inspectPath) &&
       context.isDeploy === false
     ) {
-      return await inspectHandler(inspectPath, req);
+      return await inspectVSCode.inspectHandler(inspectPath, req);
     }
 
     if (url.pathname === workbenchPath) {
