@@ -72,10 +72,8 @@ const main = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      window.location.href = adminUrlFor(
-        window.LIVE.page.id,
-        window.LIVE.site.id,
-      );
+      window.location.href =
+        `https://deco.cx/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`;
     }
   };
 
