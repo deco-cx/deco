@@ -1,9 +1,10 @@
-import type { ComponentChildren } from "preact";
 import { PageProps } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
 import { LivePageData } from "$live/types.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveSections from "$live/components/LiveSections.tsx";
+import LiveControls from "$live/components/LiveControls.tsx";
+import type { ComponentChildren } from "preact";
 
 const EmptyPage = () => (
   <div>
@@ -20,11 +21,15 @@ export default function LivePage({
   children?: ComponentChildren;
 }) {
   const { page, flags } = data ?? {};
-  const manifest = context.manifest!;
-  const LiveControls = manifest.islands[`./islands/LiveControls.tsx`]?.default;
 
   return (
     <>
+      <LiveControls
+        site={{ id: context.siteId, name: context.site }}
+        page={page}
+        flags={flags}
+      />
+
       <LiveAnalytics {...page} flags={flags!} />
 
       {children
@@ -32,17 +37,6 @@ export default function LivePage({
         : page
         ? <LiveSections {...page.data} />
         : <EmptyPage />}
-
-      {LiveControls
-        ? (
-          <LiveControls
-            site={{ id: context.siteId, name: context.site }}
-            page={page}
-            flags={flags}
-            isProduction={context.isDeploy}
-          />
-        )
-        : null}
     </>
   );
 }
