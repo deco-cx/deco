@@ -171,7 +171,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
         if (!referer || !isOnAdmin) {
           // redirect
           return Response.redirect(
-            adminUrlFor(loaded.page.id),
+            adminUrlFor(loaded.page.id, context.siteId),
           );
         }
       }

@@ -1,5 +1,3 @@
-import { context } from "$live/live.ts";
-
 export const adminDomain = `https://deco.cx`;
 const adminPreviewUrls = "https://deco-sites-admin-";
 const adminPreviewDomain = "deno.dev";
@@ -15,8 +13,6 @@ export const isAdmin = (url: string): boolean => {
   );
 };
 
-export const adminUrlFor = (pageId: number, siteId?: number): string => {
-  return `${adminDomain}/admin/${
-    siteId ?? context.siteId
-  }/pages/${pageId}?sort=asc`;
+export const adminUrlFor = (pageId: number, siteId: number): string => {
+  return `${adminDomain}/admin/${siteId}/pages/${pageId}?sort=asc`;
 };
