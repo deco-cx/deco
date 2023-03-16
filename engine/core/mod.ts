@@ -43,6 +43,15 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     this.resolvables = resolvables;
   };
 
+  public resolverFor =
+    (
+      context: Omit<TContext, keyof BaseContext>,
+      options?: { overrides?: Record<string, string>; monitoring?: Monitoring }
+    ) =>
+    <T = any>(typeOrResolvable: string | Resolvable<T>): Promise<T> => {
+      return this.resolve(typeOrResolvable, context, options);
+    };
+
   public resolve = async <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
@@ -63,6 +72,8 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       resolveId: crypto.randomUUID(),
       key: "",
       monitoring: options?.monitoring,
+      resolvables: nresolvables,
+      resolvers,
     };
     const ctx = {
       ...context,

@@ -2,8 +2,8 @@
 import { applyConfig, configOnly } from "$live/blocks/utils.ts";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 import { BaseContext, ResolveFunc } from "$live/engine/core/resolver.ts";
-import { Handler as DenoHandler } from "std/http/server.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Handler as DenoHandler } from "std/http/server.ts";
 
 export type LiveConfig<TConfig = any, TState = unknown> = TState & {
   $live: TConfig;

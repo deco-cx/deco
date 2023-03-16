@@ -2,7 +2,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
-import { BlockModule } from "$live/engine/block.ts";
+import { BlockModule, PreactComponent } from "$live/engine/block.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
@@ -34,6 +34,30 @@ export type LiveState<T, TState = unknown> = TState & {
   $live: T;
 };
 
+const preview: Resolver<PreactComponent> = async (
+  { block, props }: { block: string; props: any },
+  { resolvables, resolvers, resolve }
+) => {
+  const pvResolver = `Preview@${block}`;
+  const previewResolver = resolvers[pvResolver];
+  if (!previewResolver) {
+    const resolvable = resolvables[block];
+    if (!resolvable) {
+      throw new Error(`${block} preview not available`);
+    }
+    const { __resolveType, ...props } = resolvable;
+    // recursive call
+    return resolve({
+      __resolveType: "preview",
+      props,
+      block: __resolveType,
+    });
+  }
+  return resolve({
+    __resolveType: pvResolver,
+    ...(await resolve({ __resolveType: block, ...props })),
+  });
+};
 const asManifest = (
   d: DecoManifest
 ): Record<string, Record<string, BlockModule>> =>
@@ -75,7 +99,7 @@ export const configurable = <T extends DecoManifest>(m: T): T => {
     context.namespace!
   );
   const resolver = new ConfigResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
+    resolvers: { ...resolvers, ...defaultResolvers, preview },
     resolvables: provider.get(),
   });
   provider.onChange(() => resolver.setResolvables(provider.get()));

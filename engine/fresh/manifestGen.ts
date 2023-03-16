@@ -48,7 +48,17 @@ const withDefinition =
       ]);
   };
 
-const addCatchAllRoute = (man: ManifestBuilder): ManifestBuilder => {
+const defaultRoutes: { from: string; ref: string }[] = [
+  {
+    from: "routes/[...catchall].tsx",
+    ref: "$live_catchall",
+  },
+  {
+    from: "routes/live/previews/[...block].tsx",
+    ref: "$live_previews",
+  },
+];
+const addDefaultRoutes = (man: ManifestBuilder): ManifestBuilder => {
   const routesObj = man.data.manifest["routes"];
   if (
     routesObj?.kind === "obj" &&
@@ -62,20 +72,20 @@ const addCatchAllRoute = (man: ManifestBuilder): ManifestBuilder => {
 
     return man;
   }
-  const catchallroute = "routes/[...catchall].tsx";
-  const ref = "$live_catchall";
-  return man
-    .addImports({
-      from: `$live/${catchallroute}`,
-      clauses: [{ alias: ref }],
-    })
-    .addValuesOnManifestKey("routes", [
-      `./routes/[...catchall].tsx`,
-      {
-        kind: "js",
-        raw: { identifier: ref },
-      },
-    ]);
+  return defaultRoutes.reduce((m, { from, ref }) => {
+    return m
+      .addImports({
+        from: `$live/${from}`,
+        clauses: [{ alias: ref }],
+      })
+      .addValuesOnManifestKey("routes", [
+        `./${from}`,
+        {
+          kind: "js",
+          raw: { identifier: ref },
+        },
+      ]);
+  }, man);
 };
 const addDefinitions = async (
   blocks: Block[],
@@ -182,5 +192,5 @@ export const decoManifestBuilder = async (
     { base: dir, code: {}, namespace }
   );
 
-  return addDefinitions(blocks, transformContext).then(addCatchAllRoute);
+  return addDefinitions(blocks, transformContext).then(addDefaultRoutes);
 };

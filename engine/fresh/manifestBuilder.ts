@@ -148,9 +148,13 @@ const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
     .join(",")} from "${from}"`;
 };
 
-const stringifyObj = (obj: JSONObject): string => {
+const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
+  const entries = Object.entries(obj);
+  const entriesOrSorted = sortKeys
+    ? entries.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+    : entries;
   return `{
-    ${Object.entries(obj)
+    ${entriesOrSorted
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
@@ -230,7 +234,7 @@ import { context } from "$live/live.ts"
 
 ${Object.entries(imports).map(stringifyImport).join("\n")}
 
-const manifest: DecoManifest = ${stringifyObj(manifest)}
+const manifest: DecoManifest = ${stringifyObj(manifest, false)}
 
 context.namespace = "${namespace}"
 ${exports.map(stringifyExport).join("\n")}

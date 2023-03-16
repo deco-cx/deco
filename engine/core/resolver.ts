@@ -18,6 +18,8 @@ export interface BaseContext {
   resolveId: string;
   resolve: ResolveFunc;
   monitoring?: Monitoring;
+  resolvables: Record<string, Resolvable<any>>;
+  resolvers: Record<string, Resolver>;
 }
 
 export type ResolvesTo<

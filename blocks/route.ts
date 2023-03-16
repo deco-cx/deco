@@ -63,26 +63,27 @@ const mapHandlers = (
         context: HandlerContext<any, LiveState>
       ) {
         const resolver = liveContext.configResolver!;
-        const $live = await resolver.resolve(
-          key,
-          {
-            context,
-            request,
-          },
-          {
-            monitoring: context?.state?.t
-              ? {
-                  t: context.state.t!,
-                }
-              : undefined,
-          }
-        );
+
+        const ctxResolver = resolver
+          .resolverFor(
+            { context, request },
+            {
+              monitoring: context?.state?.t
+                ? {
+                    t: context.state.t!,
+                  }
+                : undefined,
+            }
+          )
+          .bind(resolver);
+
+        const $live = await ctxResolver(key);
         return val!(request, {
           ...context,
           state: {
             ...context.state,
             $live,
-            resolve: resolver.resolve.bind(resolver),
+            resolve: ctxResolver,
           },
         });
       };
@@ -93,13 +94,9 @@ const mapHandlers = (
     context: HandlerContext<any, LiveState>
   ) {
     const resolver = liveContext.configResolver!;
-    const $live = (await resolver.resolve(key, {
-      (await resolver.resolve(
-        key,
-        {
-          context,
-          request,
-        },
+    const ctxResolver = resolver
+      .resolverFor(
+        { context, request },
         {
           monitoring: context?.state?.t
             ? {
@@ -107,7 +104,10 @@ const mapHandlers = (
               }
             : undefined,
         }
-      )) ?? {};
+      )
+      .bind(resolver);
+
+    const $live = (await ctxResolver(key)) ?? {};
 
     if (typeof handlers === "function") {
       return await handlers(request, {
@@ -115,7 +115,7 @@ const mapHandlers = (
         state: {
           ...context.state,
           $live,
-          resolve: resolver.resolve.bind(resolver),
+          resolve: ctxResolver,
         },
       });
     }
