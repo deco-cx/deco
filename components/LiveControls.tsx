@@ -1,11 +1,10 @@
-import { useEffect, useState } from "preact/hooks";
-import { Flags, Page, Site } from "$live/types.ts";
-import { DomInspector } from "https://deno.land/x/inspect_vscode@0.2.0/mod.ts";
-import Viewfinder from "./icons/Viewfinder.tsx";
+import { Head } from "$fresh/runtime.ts";
+import { inspectVSCode } from "../deps.ts";
+import type { Flags, Page, Site } from "$live/types.ts";
 
 declare global {
   interface Window {
-    inspectVSCode: DomInspector;
+    inspectVSCode: inspectVSCode.DomInspector;
     LIVE: {
       page: Page;
       site: Site;
@@ -16,109 +15,131 @@ declare global {
 
 interface Props {
   site: Site;
-  page: Page;
-  flags: Flags;
-  isProduction: boolean;
+  page?: Page;
+  flags?: Flags;
 }
 
-type IframeCommand = {
+type LiveEvent = {
   type: "scrollToComponent";
   args: { id: string };
+} | {
+  type: "DOMInspector";
+  args: "activate" | "deactivate";
 };
 
-export const sendCommandToIframe = ({
-  iframe,
-  command,
-  targetOrigin,
-}: {
-  iframe: HTMLIFrameElement;
-  command: IframeCommand;
-  targetOrigin: string;
-}) => {
-  iframe.contentWindow?.postMessage(command, targetOrigin);
+// TODO: Move inspect-vscode code to here so we don't need to do this stringification
+const domInspectorModule = `
+const DomInspectorActivators = {
+  CmdE: {
+    label: "Cmd+E or Ctrl+E",
+    matchEvent: (event) =>
+      (event.ctrlKey && event.key === "e") ||
+      (event.metaKey && event.key === "e"),
+  },
+  Backquote: {
+    label: "\` (backtick)",
+    matchEvent: (event) => event.code === "Backquote",
+  },
 };
+${inspectVSCode.DomInspector.toString()}
+`;
 
-export default function LiveControls(
-  { site, page, flags, isProduction }: Props,
-) {
-  const [inspectActive, setInspectActive] = useState(false);
-  const handleInspectClick = (event: MouseEvent) => {
+const main = () => {
+  // deno-lint-ignore no-explicit-any
+  const isLiveEvent = (data: any): data is LiveEvent =>
+    ["scrollToComponent", "DOMInspector"].includes(data?.type);
+
+  const onKeydown = (event: KeyboardEvent) => {
+    // in case loaded in iframe, avoid redirecting to editor while in editor
+    if (window !== window.parent) {
+      return;
+    }
+
+    // why?
     if (event.defaultPrevented) {
       return;
     }
 
-    event.stopPropagation();
-    if (window.inspectVSCode) {
-      if (window.inspectVSCode.isActive()) {
-        window.inspectVSCode.deactivate();
-        setInspectActive(false);
-      } else {
-        window.inspectVSCode.activate(() => setInspectActive(false));
-        setInspectActive(true);
-      }
-    }
-  };
-
-  const handleKeyDownFunction = function handleKeyDown(event: any) {
-    const isLoadedInIframe = window !== window.parent;
     if (
-      !isLoadedInIframe && // Avoid redirect to editor while in editor
-      event.ctrlKey && event.shiftKey && event.key === "E" &&
-      !event.defaultPrevented
+      (event.ctrlKey && event.shiftKey && event.key === "E") ||
+      event.key === "Escape"
     ) {
+      event.preventDefault();
       event.stopPropagation();
-      window.location =
-        `https://deco.cx/live/${window.LIVE.site.id}/pages/${window.LIVE.page.id}` as any;
+
+      window.location.href =
+        `https://deco.cx/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`;
     }
   };
 
-  useEffect(() => {
-    window["LIVE"] = {
-      site,
-      page,
-      flags,
-    };
+  const onMessage = (event: MessageEvent<LiveEvent>) => {
+    const { data } = event;
 
-    window.inspectVSCode = new DomInspector(document.body);
+    if (!isLiveEvent(data)) {
+      return;
+    }
 
-    document.body.addEventListener("keydown", handleKeyDownFunction);
+    switch (data.type) {
+      case "scrollToComponent": {
+        document
+          .getElementById(data.args.id)
+          ?.scrollIntoView({ behavior: "smooth" });
 
-    addEventListener("message", (event) => {
-      const isLiveEvent = event?.data?.args;
-
-      if (!isLiveEvent) {
         return;
       }
+      case "DOMInspector": {
+        const action = data.args;
 
-      const data = event.data as IframeCommand;
-
-      switch (data.type) {
-        case "scrollToComponent": {
-          const element = document.getElementById(data.args.id);
-          element?.scrollIntoView({
-            behavior: "smooth",
-          });
+        if (action === "activate" && !inspector.isActive()) {
+          inspector.activate();
+        } else if (action === "deactivate" && inspector.isActive()) {
+          inspector.deactivate();
         }
+
+        return;
       }
-    });
-  }, []);
+    }
+  };
+
+  const inspector = new DomInspector(document.body);
+
+  /** Setup global variables */
+  window.LIVE = JSON.parse(document.getElementById("__DECO_STATE")!.innerText);
+
+  /** Setup listeners */
+
+  // navigate to admin when user clicks ctrl+shift+e
+  document.body.addEventListener("keydown", onKeydown);
+
+  // focus element when inside admin
+  addEventListener("message", onMessage);
+};
+
+function LiveControls({ site, page, flags = {} }: Props) {
+  const partialPage = page && {
+    id: page.id,
+    path: page.path,
+    state: page.state,
+  };
 
   return (
-    <div class="fixed left-3 bottom-3 flex flex-row justify-center pt-4">
-      {!isProduction &&
-        (
-          <span class="relative z-0 inline-flex shadow-sm ">
-            <button
-              type="button"
-              onClick={handleInspectClick}
-              class={`${
-                inspectActive ? "bg-gray-300" : "bg-white hover:bg-gray-50 "
-              } relative inline-flex rounded-md items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 focus:z-10 focus:outline-none focus:ring-1 focus:ring-primary-green-dark focus:border-primary-green-dark`}
-            >
-              <Viewfinder className="w-6 h-6" />
-            </button>
-          </span>
-        )}
-    </div>
+    <Head>
+      <script
+        type="application/json"
+        id="__DECO_STATE"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({ page: partialPage, site, flags }),
+        }}
+      />
+      <script
+        type="module"
+        dangerouslySetInnerHTML={{
+          __html:
+            `${domInspectorModule}\nrequestIdleCallback(${main.toString()})`,
+        }}
+      />
+    </Head>
   );
 }
+
+export default LiveControls;
