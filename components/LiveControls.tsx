@@ -1,6 +1,7 @@
 import { Head } from "$fresh/runtime.ts";
 import { inspectVSCode } from "../deps.ts";
 import type { Flags, Page, Site } from "$live/types.ts";
+import { adminUrlFor } from "../utils/admin.ts";
 
 declare global {
   interface Window {
@@ -57,7 +58,7 @@ const main = () => {
 
     // Disable going to admin while input it being typed
     if (event.target !== document.body) {
-      return
+      return;
     }
 
     if (event.defaultPrevented) {
@@ -71,8 +72,10 @@ const main = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      window.location.href =
-        `https://deco.cx/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`;
+      window.location.href = adminUrlFor(
+        window.LIVE.page.id,
+        window.LIVE.site.id,
+      );
     }
   };
 
