@@ -1,10 +1,10 @@
 import { Head } from "$fresh/runtime.ts";
-import DomInspector, {} from "https://deno.land/x/inspect_vscode@0.2.0/inspector.ts";
+import { inspectVSCode } from "../deps.ts";
 import type { Flags, Page, Site } from "$live/types.ts";
 
 declare global {
   interface Window {
-    inspectVSCode: DomInspector;
+    inspectVSCode: inspectVSCode.DomInspector;
     LIVE: {
       page: Page;
       site: Site;
@@ -40,7 +40,7 @@ const DomInspectorActivators = {
     matchEvent: (event) => event.code === "Backquote",
   },
 };
-${DomInspector.toString()}
+${inspectVSCode.DomInspector.toString()}
 `;
 
 const main = () => {
