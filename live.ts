@@ -121,7 +121,7 @@ export const withLive = (liveOptions: LiveOptions) => {
 };
 
 const decoDomain = `https://deco.cx`;
-const decoAdminPreviewStart = "deco-sites-admin-";
+const decoAdminPreviewStart = "https://deco-sites-admin-";
 const decoAdminPreviewEnd = "deno.dev";
 const isDecoAdmin = (url: string): boolean => {
   if (url.startsWith(decoDomain)) {
