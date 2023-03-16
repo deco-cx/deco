@@ -158,15 +158,17 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
           },
         });
       }
+
       const loaded = await loadPage(req, ctx, pageOptions);
+      const referer = origin ?? req.headers.get("referer");
+      const isOnDecoAdmin = referer && isDecoAdmin(referer);
+
       if (
         context.isDeploy &&
         loaded?.page.public !== undefined &&
         !loaded?.page.public
       ) {
-        const url = origin ?? req.headers.get("referer");
-        const isOnDecoAdmin = url && isDecoAdmin(url);
-        if (!url || !isOnDecoAdmin) {
+        if (!referer || !isOnDecoAdmin) {
           // redirect
           return Response.redirect(
             `${decoDomain}/admin/${context.siteId}/pages/${loaded.page.id}?sort=asc`,
@@ -188,7 +190,9 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       }
       response.headers.set(
         "Content-Security-Policy",
-        `frame-ancestors ${decoDomain} ${decoPreviewDomainSrc}`,
+        `frame-ancestors ${decoDomain} ${
+          referer && isOnDecoAdmin ? "https://" + new URL(referer).host : ""
+        }`,
       );
 
       return new Response(response.body, {
