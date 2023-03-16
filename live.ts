@@ -45,12 +45,12 @@ export const context: LiveContext = {
 export const withLive = (liveOptions: LiveOptions) => {
   if (!liveOptions.site) {
     throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
+      "liveOptions.site is required. It should be the name of the site you created in deco.cx."
     );
   }
   if (!liveOptions.siteId) {
     throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
+      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}"
     );
   }
 
@@ -64,7 +64,7 @@ export const withLive = (liveOptions: LiveOptions) => {
   context.loginUrl = liveOptions.loginUrl;
 
   console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
+    `Starting live middleware: siteId=${context.siteId} site=${context.site}`
   );
 
   return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
@@ -112,7 +112,7 @@ export const withLive = (liveOptions: LiveOptions) => {
           url,
           pageId: ctx.state.page?.id,
           begin,
-        }),
+        })
       );
     }
 
@@ -120,6 +120,19 @@ export const withLive = (liveOptions: LiveOptions) => {
   };
 };
 
+const decoDomain = `https://deco.cx`;
+const decoAdminPreviewStart = "deco-sites-admin-";
+const decoAdminPreviewEnd = "deno.dev";
+const isDecoAdmin = (url: string): boolean => {
+  if (url.startsWith(decoDomain)) {
+    return true;
+  }
+  const urlObj = new URL(url);
+  return (
+    url.startsWith(decoAdminPreviewStart) &&
+    urlObj.host.endsWith(decoAdminPreviewEnd) // previews
+  );
+};
 export const live: () => Handlers<LivePageData, LiveState> = () => ({
   GET: async (req, ctx) => {
     const url = new URL(req.url);
@@ -139,9 +152,10 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return acc;
       },
-      { selectedPageIds: [] } as PageOptions,
+      { selectedPageIds: [] } as PageOptions
     );
 
+    const origin = req.headers.get("origin");
     const getResponse = async () => {
       // Allow introspection of page by editor
       if (url.searchParams.has("editorData")) {
@@ -149,15 +163,28 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return Response.json(editorData, {
           headers: {
-            "Access-Control-Allow-Origin": req.headers.get("origin") || "*",
+            "Access-Control-Allow-Origin": origin || "*",
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Allow-Methods": "GET, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, *",
           },
         });
       }
-
       const loaded = await loadPage(req, ctx, pageOptions);
+      if (
+        context.isDeploy &&
+        loaded?.page.public !== undefined &&
+        !loaded?.page.public
+      ) {
+        const url = origin ?? req.headers.get("referer");
+        const isOnDecoAdmin = url && isDecoAdmin(url);
+        if (!url || !isOnDecoAdmin) {
+          // redirect
+          return Response.redirect(
+            `${decoDomain}/admin/${context.siteId}/pages/${loaded.page.id}?sort=asc`
+          ); // temporary redirect
+        }
+      }
 
       if (!loaded) {
         return ctx.renderNotFound();
@@ -171,6 +198,10 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       for (const [key, value] of loaded.headers) {
         value && response.headers.set(key, value);
       }
+      response.headers.set(
+        "Content-Security-Policy",
+        `frame-src ${decoDomain} ${decoAdminPreviewStart}*${decoAdminPreviewEnd}`
+      );
 
       return new Response(response.body, {
         status: loaded.status ?? response.status,
