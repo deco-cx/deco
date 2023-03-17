@@ -113,7 +113,7 @@ async (
 export type StatefulHandler<
   TConfig,
   TResp,
-  TCtx extends StatefulContext<TConfig> = StatefulContext<TConfig>
+  TCtx extends StatefulContext<TConfig> = StatefulContext<TConfig>,
 > = (req: Request, ctx: TCtx) => PromiseOrValue<TResp>;
 
 interface GlobalConfig {
@@ -125,17 +125,18 @@ export const isGlobalConfig = <T>(
 ): value is GlobalConfig => {
   return (value as GlobalConfig)?.__globals !== undefined;
 };
-    TCtx extends StatefulContext<any> = StatefulContext<any>,
+export const configAsState = <
+  TCtx extends StatefulContext<any> = StatefulContext<any>,
   TConfig = any,
-    TResp = any
+  TResp = any,
 >(func: {
-    default: StatefulHandler<TConfig, TResp, TCtx>;
+  default: StatefulHandler<TConfig, TResp, TCtx>;
 }) =>
-  async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
-    const global = isGlobalConfig($live) ? $live.__globals : {};
+async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
+  const global = isGlobalConfig($live) ? $live.__globals : {};
   return await func.default(ctx.request, {
     ...ctx.context,
-      state: { ...ctx.context.state, $live, resolve: ctx.resolve, global },
+    state: { ...ctx.context.state, $live, resolve: ctx.resolve, global },
   });
 };
 
@@ -248,8 +249,9 @@ export const newComponentBlock = <K extends string>(
 export const newHandlerLikeBlock = <
   Ctx extends StatefulContext<any> = StatefulContext<any>,
   R = any,
-  K extends string = string
+  K extends string = string,
 >(
+  type: K,
 ): Block<StatefulHandler<any, R, Ctx>, R, K> => ({
   type,
   defaultPreview: (result) => {

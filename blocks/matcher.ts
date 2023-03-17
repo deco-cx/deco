@@ -31,20 +31,20 @@ const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
     };
   },
   introspect: configOnly(`./matchers`),
-  adapt: <TConfig = unknown>({
+  adapt:
     <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>
-  ($live: TConfig) => {
-    return (ctx: MatchContext) => {
-      const fMatcher = func as unknown as
-        | ((c: TConfig, ctx: MatchContext) => boolean)
-        | MatchFunc;
-      const matcherFuncOrValue = fMatcher($live, ctx);
-      if (typeof matcherFuncOrValue === "function") {
-        return matcherFuncOrValue(ctx);
-      }
-      return matcherFuncOrValue;
-    };
-  },
+    ($live: TConfig) => {
+      return (ctx: MatchContext) => {
+        const fMatcher = func as unknown as
+          | ((c: TConfig, ctx: MatchContext) => boolean)
+          | MatchFunc;
+        const matcherFuncOrValue = fMatcher($live, ctx);
+        if (typeof matcherFuncOrValue === "function") {
+          return matcherFuncOrValue(ctx);
+        }
+        return matcherFuncOrValue;
+      };
+    },
 };
 
 /**

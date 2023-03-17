@@ -6,52 +6,52 @@ import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import { context } from "$live/live.ts";
 
-import * as $$0 from "./routes/live/previews/[...block].tsx";
-import * as $$1 from "./routes/[...catchall].tsx";
-import * as $$$$0 from "$live/handlers/routesSelection.ts";
-import * as $$$$1 from "$live/handlers/router.ts";
-import * as $$$$2 from "$live/handlers/fresh.ts";
-import * as $$$$$0 from "$live/pages/LivePage.tsx";
-import * as $$$$$$$0 from "$live/matchers/MatchDate.ts";
-import * as $$$$$$$1 from "$live/matchers/MatchUserAgent.ts";
-import * as $$$$$$$2 from "$live/matchers/MatchSite.ts";
-import * as $$$$$$$3 from "$live/matchers/MatchMulti.ts";
-import * as $$$$$$$4 from "$live/matchers/MatchRandom.ts";
-import * as $$$$$$$5 from "$live/matchers/MatchEnvironment.ts";
-import * as $$$$$$$6 from "$live/matchers/MatchAlways.ts";
-import * as $$$$$$$$0 from "$live/flags/audience.ts";
-import * as $$$$$$$$1 from "$live/flags/everyone.ts";
+import * as $$$0 from "./routes/live/previews/[...block].tsx";
+import * as $$$1 from "./routes/[...catchall].tsx";
+import * as $$$$$0 from "$live/handlers/routesSelection.ts";
+import * as $$$$$1 from "$live/handlers/router.ts";
+import * as $$$$$2 from "$live/handlers/fresh.ts";
+import * as $$$$$$0 from "$live/pages/LivePage.tsx";
+import * as $$$$$$$$0 from "$live/matchers/MatchDate.ts";
+import * as $$$$$$$$1 from "$live/matchers/MatchUserAgent.ts";
+import * as $$$$$$$$2 from "$live/matchers/MatchSite.ts";
+import * as $$$$$$$$3 from "$live/matchers/MatchMulti.ts";
+import * as $$$$$$$$4 from "$live/matchers/MatchRandom.ts";
+import * as $$$$$$$$5 from "$live/matchers/MatchEnvironment.ts";
+import * as $$$$$$$$6 from "$live/matchers/MatchAlways.ts";
+import * as $$$$$$$$$0 from "$live/flags/audience.ts";
+import * as $$$$$$$$$1 from "$live/flags/everyone.ts";
 import { configurable } from "$live/engine/fresh/manifest.ts";
 
 const manifest: DecoManifest = {
-  "baseUrl": import.meta.url,
-  "config": config,
-  "flags": {
-    "$live/flags/audience.ts": $$$$$$$$0,
-    "$live/flags/everyone.ts": $$$$$$$$1,
+  "routes": {
+    "./routes/live/previews/[...block].tsx": $$$0,
+    "./routes/[...catchall].tsx": $$$1,
   },
   "handlers": {
-    "$live/handlers/fresh.ts": $$$$2,
-    "$live/handlers/router.ts": $$$$1,
-    "$live/handlers/routesSelection.ts": $$$$0,
-  },
-  "islands": {},
-  "matchers": {
-    "$live/matchers/MatchAlways.ts": $$$$$$$6,
-    "$live/matchers/MatchDate.ts": $$$$$$$0,
-    "$live/matchers/MatchEnvironment.ts": $$$$$$$5,
-    "$live/matchers/MatchMulti.ts": $$$$$$$3,
-    "$live/matchers/MatchRandom.ts": $$$$$$$4,
-    "$live/matchers/MatchSite.ts": $$$$$$$2,
-    "$live/matchers/MatchUserAgent.ts": $$$$$$$1,
+    "$live/handlers/routesSelection.ts": $$$$$0,
+    "$live/handlers/router.ts": $$$$$1,
+    "$live/handlers/fresh.ts": $$$$$2,
   },
   "pages": {
-    "$live/pages/LivePage.tsx": $$$$$0,
+    "$live/pages/LivePage.tsx": $$$$$$0,
   },
-  "routes": {
-    "./routes/[...catchall].tsx": $$1,
-    "./routes/live/previews/[...block].tsx": $$0,
+  "matchers": {
+    "$live/matchers/MatchDate.ts": $$$$$$$$0,
+    "$live/matchers/MatchUserAgent.ts": $$$$$$$$1,
+    "$live/matchers/MatchSite.ts": $$$$$$$$2,
+    "$live/matchers/MatchMulti.ts": $$$$$$$$3,
+    "$live/matchers/MatchRandom.ts": $$$$$$$$4,
+    "$live/matchers/MatchEnvironment.ts": $$$$$$$$5,
+    "$live/matchers/MatchAlways.ts": $$$$$$$$6,
   },
+  "flags": {
+    "$live/flags/audience.ts": $$$$$$$$$0,
+    "$live/flags/everyone.ts": $$$$$$$$$1,
+  },
+  "islands": {},
+  "config": config,
+  "baseUrl": import.meta.url,
   "schemas": {
     "definitions": {
       "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
@@ -80,13 +80,13 @@ const manifest: DecoManifest = {
         "$ref": "#/root/handlers",
         "$id": "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
       },
-      "d5e04661-784e-46a4-80d1-930518dce52a@Handler@record": {
+      "361de8a7-652f-4adf-995c-292f9f498bf5@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "d5e04661-784e-46a4-80d1-930518dce52a@Handler@record",
+        "$id": "361de8a7-652f-4adf-995c-292f9f498bf5@Handler@record",
       },
       "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
         "type": "object",
@@ -96,7 +96,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/d5e04661-784e-46a4-80d1-930518dce52a@Handler@record",
+              "#/definitions/361de8a7-652f-4adf-995c-292f9f498bf5@Handler@record",
           },
         },
         "required": ["routes"],
@@ -237,13 +237,13 @@ const manifest: DecoManifest = {
         "title": "$live/matchers/MatchEnvironment.ts@Props",
         "$id": "$live/matchers/MatchEnvironment.ts@Props",
       },
-      "f918d3e1-fb93-4647-8dca-451c9902f597@Handler@record": {
+      "026f101d-1b1e-41e5-931e-78720e991013@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "f918d3e1-fb93-4647-8dca-451c9902f597@Handler@record",
+        "$id": "026f101d-1b1e-41e5-931e-78720e991013@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
         "type": "object",
@@ -257,7 +257,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/f918d3e1-fb93-4647-8dca-451c9902f597@Handler@record",
+              "#/definitions/026f101d-1b1e-41e5-931e-78720e991013@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -269,13 +269,13 @@ const manifest: DecoManifest = {
         "title": "$live/flags/audience.ts@Audience",
         "$id": "$live/flags/audience.ts@Audience",
       },
-      "051fb75d-d346-4c32-805b-45cd8ce5190e@Handler@record": {
+      "60fa66bc-7427-467c-9da2-cc6d1224c5f8@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "051fb75d-d346-4c32-805b-45cd8ce5190e@Handler@record",
+        "$id": "60fa66bc-7427-467c-9da2-cc6d1224c5f8@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
         "type": "object",
@@ -284,7 +284,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/051fb75d-d346-4c32-805b-45cd8ce5190e@Handler@record",
+              "#/definitions/60fa66bc-7427-467c-9da2-cc6d1224c5f8@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -495,12 +495,12 @@ const manifest: DecoManifest = {
         },
         "$id": "$live/flags/everyone.ts",
       },
-      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@5095b45b-4758-4a42-9eae-b3ba64d45d62":
+      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@eda36fa6-f92f-4ca2-96dc-ef6245bcad22":
         {
           "$id":
-            "$live/routes/live/previews/[...block].tsx@5095b45b-4758-4a42-9eae-b3ba64d45d62",
+            "$live/routes/live/previews/[...block].tsx@eda36fa6-f92f-4ca2-96dc-ef6245bcad22",
           "title":
-            "$live/routes/live/previews/[...block].tsx@5095b45b-4758-4a42-9eae-b3ba64d45d62",
+            "$live/routes/live/previews/[...block].tsx@eda36fa6-f92f-4ca2-96dc-ef6245bcad22",
         },
       "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
         "type": "object",
@@ -566,7 +566,7 @@ const manifest: DecoManifest = {
         "properties": {
           "./routes/live/previews/[...block].tsx": {
             "$ref":
-              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@5095b45b-4758-4a42-9eae-b3ba64d45d62",
+              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@eda36fa6-f92f-4ca2-96dc-ef6245bcad22",
           },
           "./routes/[...catchall].tsx": {
             "$ref":
