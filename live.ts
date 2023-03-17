@@ -188,7 +188,8 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       for (const [key, value] of loaded.headers) {
         value && response.headers.set(key, value);
       }
-      const localhost = "127.0.0.1 localhost http://localhost http://127.0.0.1";
+      const localhost =
+        "127.0.0.1:* localhost:* http://localhost:* http://127.0.0.1:*";
       response.headers.set(
         "Content-Security-Policy",
         `frame-ancestors ${localhost} ${adminDomain} ${
