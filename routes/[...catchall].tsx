@@ -28,6 +28,7 @@ export const handler = async (
       status: 412, // precondition failed
     });
   }
+
   return await handler(req, ctx);
 };
 

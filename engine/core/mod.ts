@@ -6,10 +6,11 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Monitoring } from "$live/engine/core/resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
-  resolvables: Record<string, Resolvable<any>>;
+  resolvables: PromiseOrValue<Record<string, Resolvable<any>>>;
 }
 
 const withOverrides = (
@@ -22,7 +23,7 @@ const withOverrides = (
 };
 
 export class ConfigResolver<TContext extends BaseContext = BaseContext> {
-  protected resolvables: Record<string, Resolvable<any>>;
+  protected resolvables: PromiseOrValue<Record<string, Resolvable<any>>>;
   protected resolvers: ResolverMap<TContext>;
   constructor(protected config: ResolverOptions<TContext>) {
     this.resolvers = {};
@@ -36,17 +37,29 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     };
   };
 
-  public setResolvables = (resolvables: Record<string, Resolvable<any>>) => {
+  public setResolvables = (
+    resolvables: PromiseOrValue<Record<string, Resolvable<any>>>
+  ) => {
     this.resolvables = resolvables;
   };
 
-  public resolve = <T = any>(
+  public resolverFor =
+    (
+      context: Omit<TContext, keyof BaseContext>,
+      options?: { overrides?: Record<string, string>; monitoring?: Monitoring }
+    ) =>
+    <T = any>(typeOrResolvable: string | Resolvable<T>): Promise<T> => {
+      return this.resolve(typeOrResolvable, context, options);
+    };
+
+  public resolve = async <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
-    overrides?: Record<string, string>,
-  ): PromiseOrValue<T> => {
-    const { resolvers: res, resolvables } = this.config;
-    const nresolvables = withOverrides(overrides, resolvables);
+    options?: { overrides?: Record<string, string>; monitoring?: Monitoring }
+  ): Promise<T> => {
+    const { resolvers: res, resolvables: rPromise } = this.config;
+    const resolvables = await rPromise;
+    const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = {
       ...res,
       ...this.resolvers,
@@ -58,6 +71,9 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       resolve: _resolve,
       resolveId: crypto.randomUUID(),
       key: "",
+      monitoring: options?.monitoring,
+      resolvables: nresolvables,
+      resolvers,
     };
     const ctx = {
       ...context,

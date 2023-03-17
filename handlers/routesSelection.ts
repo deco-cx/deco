@@ -2,11 +2,13 @@ import { Flag } from "$live/blocks/flag.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { MatchContext, Matcher } from "$live/blocks/matcher.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
+import { CookiedFlag, cookies } from "$live/flags.ts";
 import { Audience } from "$live/flags/audience.ts";
+import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
+import { LiveState } from "$live/types.ts";
 import { ConnInfo } from "https://deno.land/std@0.170.0/http/server.ts";
 import { router } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-import { CookiedFlag, cookies } from "../flags.ts";
 
 export interface SelectionConfig {
   flags: Flag[]; // TODO it should be possible to specify a Flag<T> instead. author Marcos V. Candeia
@@ -44,6 +46,7 @@ export type MatchWithCookieValue = MatchContext<{
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
+    const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
     // Read flags from cookie or start an empty map.
     const flags = cookies.getFlags(req.headers) ??
       new Map<string, CookiedFlag>();
@@ -105,7 +108,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
       const resolvedOrPromise = resolve<Handler>(
         handler,
         { context: connInfo, request: req },
-        overrides,
+        { overrides, monitoring: t ? { t } : undefined }
       );
       if (isAwaitable(resolvedOrPromise)) {
         routerPromises.push(resolvedOrPromise.then((r) => [route, r]));

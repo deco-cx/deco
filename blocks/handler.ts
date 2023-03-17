@@ -2,8 +2,8 @@
 import { applyConfig, configOnly } from "$live/blocks/utils.ts";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 import { BaseContext, ResolveFunc } from "$live/engine/core/resolver.ts";
-import { Handler as DenoHandler } from "std/http/server.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Handler as DenoHandler } from "std/http/server.ts";
 
 export type LiveConfig<TConfig = any, TState = unknown> = TState & {
   $live: TConfig;
@@ -14,8 +14,14 @@ export interface StatefulContext<T> {
   state: T;
 }
 
-export interface HttpContext<State = any, TConfig = any> extends BaseContext {
-  context: StatefulContext<LiveConfig<State, TConfig>>;
+export interface HttpContext<
+  State = any,
+  TConfig = any,
+  TCtx extends StatefulContext<any> = StatefulContext<
+    LiveConfig<State, TConfig>
+  >
+> extends BaseContext {
+  context: TCtx;
   request: Request;
 }
 
@@ -32,7 +38,6 @@ const handlerBlock: Block<HandlerFunc> = {
   adapt: applyConfig,
 };
 
-// @ts-ignore: "waiting for the engine to be completed"
 export type Handler = InstanceOf<typeof handlerBlock, "#/root/handlers">;
 
 /**

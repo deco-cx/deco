@@ -123,7 +123,7 @@ export interface TsTypeTypeRef {
 export interface TsTypeKeyword {
   repr: string;
   kind: "keyword";
-  keyword: "string" | "unknown";
+  keyword: "string" | "unknown" | "null" | "undefined";
 }
 
 export interface TsTypeUnion {

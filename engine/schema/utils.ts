@@ -182,6 +182,20 @@ export const nodeToFunctionDefinition = (
         return: variableTsType.fnOrConstructor.tsType,
       };
     }
+    if (
+      variableTsType.kind === "typeRef" &&
+      variableTsType.typeRef.typeName === "LoaderFunction"
+    ) {
+      const params = variableTsType.typeRef.typeParams;
+      if (!params || params.length < 2) {
+        return undefined;
+      }
+      return {
+        name: node.name,
+        params: [params[0]],
+        return: params[1],
+      };
+    }
   }
   return undefined;
 };

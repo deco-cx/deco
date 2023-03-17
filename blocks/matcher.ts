@@ -2,7 +2,6 @@ import { configOnly } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 
-// @ts-ignore: "waiting for the engine to be completed"
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
 // deno-lint-ignore no-explicit-any
@@ -11,11 +10,13 @@ export type MatchContext<T = any> = T & {
   request: Request;
 };
 
-type MatchFunc<TConfig = unknown> = (
-  config: TConfig,
-) => (ctx: MatchContext) => boolean;
+// deno-lint-ignore no-explicit-any
+type MatchFunc<TConfig = any> =
+  | ((config: TConfig) => (ctx: MatchContext) => boolean)
+  | ((config: TConfig) => boolean)
+  | ((config: TConfig, ctx: MatchContext) => boolean);
 
-const matcherBlock: Block<MatchFunc> = {
+const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
   type: "matchers",
   defaultPreview: async (matcher, { request }) => {
     const ctx = await request.json();
@@ -30,23 +31,20 @@ const matcherBlock: Block<MatchFunc> = {
     };
   },
   introspect: configOnly(`./matchers`),
-  adapt: <TConfig = unknown>({
-    default: func,
-  }: {
-    default: (config: TConfig) => (ctx: MatchContext) => boolean;
-  }) =>
-  ($live: TConfig) => {
-    return (ctx: MatchContext) => {
-      const fMatcher = func as unknown as
-        | ((c: TConfig, ctx: MatchContext) => boolean)
-        | MatchFunc;
-      const matcherFuncOrValue = fMatcher($live, ctx);
-      if (typeof matcherFuncOrValue === "function") {
-        return matcherFuncOrValue(ctx);
-      }
-      return matcherFuncOrValue;
-    };
-  },
+  adapt:
+    <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>
+    ($live: TConfig) => {
+      return (ctx: MatchContext) => {
+        const fMatcher = func as unknown as
+          | ((c: TConfig, ctx: MatchContext) => boolean)
+          | MatchFunc;
+        const matcherFuncOrValue = fMatcher($live, ctx);
+        if (typeof matcherFuncOrValue === "function") {
+          return matcherFuncOrValue(ctx);
+        }
+        return matcherFuncOrValue;
+      };
+    },
 };
 
 /**
