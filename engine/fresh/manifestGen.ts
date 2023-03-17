@@ -59,27 +59,28 @@ const defaultRoutes: { from: string; ref: string }[] = [
   },
 ];
 const addDefaultRoutes = (man: ManifestBuilder): ManifestBuilder => {
-  const routesObj = man.data.manifest["routes"];
-  if (
-    routesObj?.kind === "obj" &&
-    routesObj.value["./routes/[...catchall].tsx"]
-  ) {
-    console.warn(
-      `%cwarn%c: the live entrypoint ./routes/[...catchall].tsx was overwritten.`,
-      "color: yellow; font-weight: bold",
-      "",
-    );
-
-    return man;
-  }
   return defaultRoutes.reduce((m, { from, ref }) => {
+    const routesObj = m.data.manifest["routes"];
+    const routeKey = `./${from}`;
+    if (
+      routesObj?.kind === "obj" &&
+      routesObj.value[routeKey]
+    ) {
+      console.warn(
+        `%cwarn%c: the live route ${routeKey} was overwritten.`,
+        "color: yellow; font-weight: bold",
+        "",
+      );
+
+      return m;
+    }
     return m
       .addImports({
         from: `$live/${from}`,
         clauses: [{ alias: ref }],
       })
       .addValuesOnManifestKey("routes", [
-        `./${from}`,
+        routeKey,
         {
           kind: "js",
           raw: { identifier: ref },

@@ -80,13 +80,13 @@ const manifest: DecoManifest = {
         "$ref": "#/root/handlers",
         "$id": "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
       },
-      "4767e088-ac3b-43d5-a51b-d527ba955a20@Handler@record": {
+      "4e89f0bf-d60a-4d4c-aefe-5f3b79624a08@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "4767e088-ac3b-43d5-a51b-d527ba955a20@Handler@record",
+        "$id": "4e89f0bf-d60a-4d4c-aefe-5f3b79624a08@Handler@record",
       },
       "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
         "type": "object",
@@ -96,7 +96,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/4767e088-ac3b-43d5-a51b-d527ba955a20@Handler@record",
+              "#/definitions/4e89f0bf-d60a-4d4c-aefe-5f3b79624a08@Handler@record",
           },
         },
         "required": ["routes"],
@@ -237,13 +237,13 @@ const manifest: DecoManifest = {
         "title": "$live/matchers/MatchEnvironment.ts@Props",
         "$id": "$live/matchers/MatchEnvironment.ts@Props",
       },
-      "c18218ea-2bda-46b7-a7fc-1f2f194101e0@Handler@record": {
+      "2f433d99-1b4f-47c9-a830-dbd2136ead18@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "c18218ea-2bda-46b7-a7fc-1f2f194101e0@Handler@record",
+        "$id": "2f433d99-1b4f-47c9-a830-dbd2136ead18@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
         "type": "object",
@@ -257,7 +257,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/c18218ea-2bda-46b7-a7fc-1f2f194101e0@Handler@record",
+              "#/definitions/2f433d99-1b4f-47c9-a830-dbd2136ead18@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -269,13 +269,13 @@ const manifest: DecoManifest = {
         "title": "$live/flags/audience.ts@Audience",
         "$id": "$live/flags/audience.ts@Audience",
       },
-      "3bb7aeea-a71f-4d3a-8638-6600890cc6a7@Handler@record": {
+      "59239740-2417-4fae-8cb0-4fbacbeaadd6@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "3bb7aeea-a71f-4d3a-8638-6600890cc6a7@Handler@record",
+        "$id": "59239740-2417-4fae-8cb0-4fbacbeaadd6@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
         "type": "object",
@@ -284,7 +284,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/3bb7aeea-a71f-4d3a-8638-6600890cc6a7@Handler@record",
+              "#/definitions/59239740-2417-4fae-8cb0-4fbacbeaadd6@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -495,12 +495,12 @@ const manifest: DecoManifest = {
         },
         "$id": "$live/flags/everyone.ts",
       },
-      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@37ae3f78-cca1-4e79-8415-a61847ccb2a2":
+      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb":
         {
           "$id":
-            "$live/routes/live/previews/[...block].tsx@37ae3f78-cca1-4e79-8415-a61847ccb2a2",
+            "$live/routes/live/previews/[...block].tsx@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb",
           "title":
-            "$live/routes/live/previews/[...block].tsx@37ae3f78-cca1-4e79-8415-a61847ccb2a2",
+            "$live/routes/live/previews/[...block].tsx@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb",
         },
       "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
         "type": "object",
@@ -566,7 +566,7 @@ const manifest: DecoManifest = {
         "properties": {
           "./routes/live/previews/[...block].tsx": {
             "$ref":
-              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@37ae3f78-cca1-4e79-8415-a61847ccb2a2",
+              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb",
           },
           "./routes/[...catchall].tsx": {
             "$ref":
