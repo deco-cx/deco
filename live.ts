@@ -5,23 +5,24 @@
 /// <reference lib="dom.iterable" />
 
 import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
-import {
-  DecoManifest,
-  LiveOptions,
-  LivePageData,
-  LiveState,
-} from "$live/types.ts";
+import { cookies, loadFlags } from "$live/flags.ts";
 import {
   generateEditorData,
   isPageOptions,
   loadPage,
   PageOptions,
 } from "$live/pages.ts";
+import {
+  DecoManifest,
+  LiveOptions,
+  LivePageData,
+  LiveState,
+} from "$live/types.ts";
+import { adminDomain, adminUrlFor, isAdmin } from "$live/utils/admin.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
-import { cookies, loadFlags } from "$live/flags.ts";
-import { inspectVSCode } from './deps.ts'
+import { inspectVSCode } from "./deps.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 
 // The global live context
@@ -145,6 +146,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       { selectedPageIds: [] } as PageOptions
     );
 
+    const origin = req.headers.get("origin");
     const getResponse = async () => {
       // Allow introspection of page by editor
       if (url.searchParams.has("editorData")) {
@@ -152,7 +154,7 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
 
         return Response.json(editorData, {
           headers: {
-            "Access-Control-Allow-Origin": req.headers.get("origin") || "*",
+            "Access-Control-Allow-Origin": origin || "*",
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Allow-Methods": "GET, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, *",
@@ -161,6 +163,21 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       }
 
       const loaded = await loadPage(req, ctx, pageOptions);
+      const referer = origin ?? req.headers.get("referer");
+      const isOnAdmin = referer && isAdmin(referer);
+
+      if (
+        context.isDeploy &&
+        loaded?.page.public !== undefined &&
+        !loaded?.page.public
+      ) {
+        if (!referer || !isOnAdmin) {
+          // redirect
+          return Response.redirect(
+            adminUrlFor(loaded.page.id, context.siteId),
+          );
+        }
+      }
 
       if (!loaded) {
         return ctx.renderNotFound();
@@ -174,6 +191,13 @@ export const live: () => Handlers<LivePageData, LiveState> = () => ({
       for (const [key, value] of loaded.headers) {
         value && response.headers.set(key, value);
       }
+      const localhost = "127.0.0.1 localhost http://localhost http://127.0.0.1";
+      response.headers.set(
+        "Content-Security-Policy",
+        `frame-ancestors ${localhost} ${adminDomain} ${
+          referer && isOnAdmin ? "https://" + new URL(referer).host : ""
+        }`,
+      );
 
       return new Response(response.body, {
         status: loaded.status ?? response.status,

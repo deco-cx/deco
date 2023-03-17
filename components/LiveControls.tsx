@@ -57,7 +57,7 @@ const main = () => {
 
     // Disable going to admin while input it being typed
     if (event.target !== document.body) {
-      return
+      return;
     }
 
     if (event.defaultPrevented) {
