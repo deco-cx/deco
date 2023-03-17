@@ -120,7 +120,9 @@ interface GlobalConfig {
   __globals: any;
 }
 
-const isGlobalConfig = <T>(value: T | GlobalConfig): value is GlobalConfig => {
+export const isGlobalConfig = <T>(
+  value: T | GlobalConfig,
+): value is GlobalConfig => {
   return (value as GlobalConfig)?.__globals !== undefined;
 };
     TCtx extends StatefulContext<any> = StatefulContext<any>,

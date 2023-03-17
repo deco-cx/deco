@@ -10,6 +10,7 @@ import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import functionBlock from "$live/blocks/functions.ts";
 
 export interface Node {
   label: string;
@@ -24,7 +25,7 @@ export type JSONSchemaDefinition = JSONSchema7Definition;
 export interface DecoManifest extends Manifest {
   islands: Record<string, IslandModule>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
-  functions?: Record<string, ModuleOf<typeof loaderBlock>>;
+  functions?: Record<string, ModuleOf<typeof functionBlock>>;
   loaders?: Record<string, ModuleOf<typeof loaderBlock>>;
   pages?: Record<string, ModuleOf<typeof pageBlock>>;
   matchers?: Record<string, ModuleOf<typeof matcherBlock>>;
