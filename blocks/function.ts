@@ -18,7 +18,7 @@ const functionBlock: Block<Function> = {
   defaultPreview: (result) => {
     return {
       Component: JsonViewer,
-      props: { body: JSON.stringify(result) },
+      props: { body: JSON.stringify(result, null, 2) },
     };
   },
   adapt: <

@@ -12,9 +12,9 @@ import {
 import { ASTNode } from "$live/engine/schema/ast.ts";
 import { TransformContext } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
-import { walk } from "std/fs/walk.ts";
 import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { walk } from "std/fs/walk.ts";
 
 const withDefinition =
   (block: BlockType, blockIdx: number, namespace: string) =>
@@ -47,27 +47,35 @@ const withDefinition =
       ]);
   };
 
-const defaultRoutes: { from: string; ref: string }[] = [
+const defaultRoutes: {
+  key: string;
+  ref: string;
+  block: string;
+  from: string;
+}[] = [
   {
-    from: "routes/live/previews/[...block].tsx",
+    block: "routes",
+    from: "$live/routes/live/previews/[...block].tsx",
+    key: "./routes/live/previews/[...block].tsx",
     ref: "$live_previews",
   },
   // DO NOT CHANGE THE ORDER CATCHALL SHOULD BE THE LAST
   {
-    from: "routes/[...catchall].tsx",
+    block: "routes",
+    from: "$live/routes/[...catchall].tsx",
+    key: "./routes/[...catchall].tsx",
     ref: "$live_catchall",
   },
 ];
-const addDefaultRoutes = (man: ManifestBuilder): ManifestBuilder => {
-  return defaultRoutes.reduce((m, { from, ref }) => {
-    const routesObj = m.data.manifest["routes"];
-    const routeKey = `./${from}`;
+const addDefaultBlocks = (man: ManifestBuilder): ManifestBuilder => {
+  return defaultRoutes.reduce((m, { key, ref, block, from }) => {
+    const blockObj = m.data.manifest[block];
     if (
-      routesObj?.kind === "obj" &&
-      routesObj.value[routeKey]
+      blockObj?.kind === "obj" &&
+      blockObj.value[key]
     ) {
       console.warn(
-        `%cwarn%c: the live route ${routeKey} was overwritten.`,
+        `%cwarn%c: the live ${block} ${key} was overwritten.`,
         "color: yellow; font-weight: bold",
         "",
       );
@@ -76,11 +84,11 @@ const addDefaultRoutes = (man: ManifestBuilder): ManifestBuilder => {
     }
     return m
       .addImports({
-        from: `$live/${from}`,
+        from,
         clauses: [{ alias: ref }],
       })
-      .addValuesOnManifestKey("routes", [
-        routeKey,
+      .addValuesOnManifestKey(block, [
+        key,
         {
           kind: "js",
           raw: { identifier: ref },
@@ -195,5 +203,5 @@ export const decoManifestBuilder = async (
     { base: dir, code: {}, namespace },
   );
 
-  return addDefinitions(blocks, transformContext).then(addDefaultRoutes);
+  return addDefinitions(blocks, transformContext).then(addDefaultBlocks);
 };

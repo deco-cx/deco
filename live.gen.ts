@@ -22,6 +22,7 @@ import * as $$$$$$$$6 from "$live/matchers/MatchAlways.ts";
 import * as $$$$$$$$$0 from "$live/flags/audience.ts";
 import * as $$$$$$$$$1 from "$live/flags/everyone.ts";
 import { configurable } from "$live/engine/fresh/manifest.ts";
+import * as $live_json_viewer from "$live/blocks/utils.tsx";
 
 const manifest: DecoManifest = {
   "routes": {
@@ -49,7 +50,9 @@ const manifest: DecoManifest = {
     "$live/flags/audience.ts": $$$$$$$$$0,
     "$live/flags/everyone.ts": $$$$$$$$$1,
   },
-  "islands": {},
+  "islands": {
+    "./islands/live_jsonviewer.tsx": $live_json_viewer,
+  },
   "config": config,
   "baseUrl": import.meta.url,
   "schemas": {
@@ -80,13 +83,13 @@ const manifest: DecoManifest = {
         "$ref": "#/root/handlers",
         "$id": "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
       },
-      "4e89f0bf-d60a-4d4c-aefe-5f3b79624a08@Handler@record": {
+      "1e8479e1-75fd-44f4-919c-33fd5b3944f4@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "4e89f0bf-d60a-4d4c-aefe-5f3b79624a08@Handler@record",
+        "$id": "1e8479e1-75fd-44f4-919c-33fd5b3944f4@Handler@record",
       },
       "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
         "type": "object",
@@ -96,7 +99,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/4e89f0bf-d60a-4d4c-aefe-5f3b79624a08@Handler@record",
+              "#/definitions/1e8479e1-75fd-44f4-919c-33fd5b3944f4@Handler@record",
           },
         },
         "required": ["routes"],
@@ -237,13 +240,13 @@ const manifest: DecoManifest = {
         "title": "$live/matchers/MatchEnvironment.ts@Props",
         "$id": "$live/matchers/MatchEnvironment.ts@Props",
       },
-      "2f433d99-1b4f-47c9-a830-dbd2136ead18@Handler@record": {
+      "f46d0ef4-842d-4911-95a1-ee0b31ab9648@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "2f433d99-1b4f-47c9-a830-dbd2136ead18@Handler@record",
+        "$id": "f46d0ef4-842d-4911-95a1-ee0b31ab9648@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
         "type": "object",
@@ -257,7 +260,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/2f433d99-1b4f-47c9-a830-dbd2136ead18@Handler@record",
+              "#/definitions/f46d0ef4-842d-4911-95a1-ee0b31ab9648@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -269,13 +272,13 @@ const manifest: DecoManifest = {
         "title": "$live/flags/audience.ts@Audience",
         "$id": "$live/flags/audience.ts@Audience",
       },
-      "59239740-2417-4fae-8cb0-4fbacbeaadd6@Handler@record": {
+      "d0cc2965-9fd3-4eaf-ad2e-ffec48990a39@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "59239740-2417-4fae-8cb0-4fbacbeaadd6@Handler@record",
+        "$id": "d0cc2965-9fd3-4eaf-ad2e-ffec48990a39@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
         "type": "object",
@@ -284,7 +287,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/59239740-2417-4fae-8cb0-4fbacbeaadd6@Handler@record",
+              "#/definitions/d0cc2965-9fd3-4eaf-ad2e-ffec48990a39@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -495,12 +498,12 @@ const manifest: DecoManifest = {
         },
         "$id": "$live/flags/everyone.ts",
       },
-      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb":
+      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@666148e8-c1b7-40f5-9694-13715e47f2b9":
         {
           "$id":
-            "$live/routes/live/previews/[...block].tsx@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb",
+            "$live/routes/live/previews/[...block].tsx@666148e8-c1b7-40f5-9694-13715e47f2b9",
           "title":
-            "$live/routes/live/previews/[...block].tsx@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb",
+            "$live/routes/live/previews/[...block].tsx@666148e8-c1b7-40f5-9694-13715e47f2b9",
         },
       "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
         "type": "object",
@@ -566,7 +569,7 @@ const manifest: DecoManifest = {
         "properties": {
           "./routes/live/previews/[...block].tsx": {
             "$ref":
-              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@f46aba4f-92d6-4ec0-95b4-2d8a304ab2eb",
+              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@666148e8-c1b7-40f5-9694-13715e47f2b9",
           },
           "./routes/[...catchall].tsx": {
             "$ref":

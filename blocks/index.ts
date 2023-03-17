@@ -6,7 +6,7 @@ import matcherBlock from "$live/blocks/matcher.ts";
 import pageBlock from "$live/blocks/page.ts";
 import routeBlock from "$live/blocks/route.ts";
 import sectionBlock from "$live/blocks/section.ts";
-import functionBlock from "$live/blocks/functions.ts";
+import functionBlock from "$live/blocks/function.ts";
 
 export default [
   functionBlock, // legacy

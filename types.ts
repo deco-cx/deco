@@ -1,6 +1,7 @@
 import type { HandlerContext, Manifest } from "$fresh/server.ts";
 import type { IslandModule } from "$fresh/src/server/types.ts";
 import flagBlock from "$live/blocks/flag.ts";
+import functionBlock from "$live/blocks/function.ts";
 import handlerBlock from "$live/blocks/handler.ts";
 import loaderBlock from "$live/blocks/loader.ts";
 import matcherBlock from "$live/blocks/matcher.ts";
@@ -10,7 +11,6 @@ import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import functionBlock from "$live/blocks/functions.ts";
 
 export interface Node {
   label: string;
@@ -139,8 +139,10 @@ export interface WithSchema {
 export type AvailableSection = Omit<PageSection, "uniqueId"> & WithSchema;
 // We re-add the uniqueId here to allow user to select functions that were already
 // added in the page
-export type AvailableFunction = Omit<PageFunction, "uniqueId"> &
-  WithSchema & { uniqueId?: string };
+export type AvailableFunction =
+  & Omit<PageFunction, "uniqueId">
+  & WithSchema
+  & { uniqueId?: string };
 
 export interface EditorData {
   pageName: string;
@@ -162,7 +164,7 @@ export type LiveState<T = unknown> = {
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<any, State>,
-  props: Props
+  props: Props,
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
 
 export type MatchDuration = "request" | "session";
@@ -170,13 +172,13 @@ export type MatchDuration = "request" | "session";
 export type MatchFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<Data, State>,
-  props: Props
+  props: Props,
 ) => { isMatch: boolean; duration: MatchDuration };
 
 export type EffectFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: HandlerContext<Data, State>,
-  props: Props
+  props: Props,
 ) => Record<string, any>;
 
 export type LoaderReturnType<O = unknown> = O;
