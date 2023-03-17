@@ -21,7 +21,7 @@ export interface HttpContext<State = any, TConfig = any> extends BaseContext {
 
 export type HttpHandler = <State = any, TConfig = any>(
   req: Request,
-  ctx: HttpContext<State, TConfig>
+  ctx: HttpContext<State, TConfig>,
 ) => PromiseOrValue<Response>;
 
 type HandlerFunc<TConfig = any> = (config: TConfig) => DenoHandler;

@@ -35,7 +35,7 @@ const rankRoute = (pattern: string) =>
           : routePart.startsWith(":")
           ? acc + 1
           : acc + 2,
-      0
+      0,
     );
 
 export type MatchWithCookieValue = MatchContext<{
@@ -45,8 +45,8 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     // Read flags from cookie or start an empty map.
-    const flags =
-      cookies.getFlags(req.headers) ?? new Map<string, CookiedFlag>();
+    const flags = cookies.getFlags(req.headers) ??
+      new Map<string, CookiedFlag>();
 
     // create the base match context.
     const matchCtx: Omit<MatchWithCookieValue, "isMatchFromCookie"> = {
@@ -89,23 +89,23 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
         }
         return isMatch
           ? [
-              { ...routes, ...audience.true.routes },
-              { ...overrides, ...audience.true.overrides },
-            ]
+            { ...routes, ...audience.true.routes },
+            { ...overrides, ...audience.true.overrides },
+          ]
           : [routes, overrides];
       },
-      [{}, {}] as [Record<string, Handler>, Record<string, string>]
+      [{}, {}] as [Record<string, Handler>, Record<string, string>],
     );
     // compose the routes together
     const resolve = context.configResolver!.resolve.bind(
-      context.configResolver!
+      context.configResolver!,
     );
     const routerPromises: Promise<[string, Handler]>[] = [];
     for (const [route, handler] of Object.entries(routes)) {
       const resolvedOrPromise = resolve<Handler>(
         handler,
         { context: connInfo, request: req },
-        overrides
+        overrides,
       );
       if (isAwaitable(resolvedOrPromise)) {
         routerPromises.push(resolvedOrPromise.then((r) => [route, r]));
@@ -117,7 +117,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     const builtRoutes = Object.fromEntries(
       (await Promise.all(routerPromises)).sort(([routeString]) =>
         rankRoute(routeString)
-      )
+      ),
     );
     const server = router(builtRoutes);
 

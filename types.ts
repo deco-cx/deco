@@ -83,7 +83,7 @@ export interface Page {
   path: string;
   state: PageState;
   site?: Site;
-  public?: boolean
+  public?: boolean;
 }
 
 export interface LivePageData {

@@ -12,7 +12,7 @@ export type MatchContext<T = any> = T & {
 };
 
 type MatchFunc<TConfig = unknown> = (
-  config: TConfig
+  config: TConfig,
 ) => (ctx: MatchContext) => boolean;
 
 const matcherBlock: Block<MatchFunc> = {
@@ -30,24 +30,23 @@ const matcherBlock: Block<MatchFunc> = {
     };
   },
   introspect: configOnly(`./matchers`),
-  adapt:
-    <TConfig = unknown>({
-      default: func,
-    }: {
-      default: (config: TConfig) => (ctx: MatchContext) => boolean;
-    }) =>
-    ($live: TConfig) => {
-      return (ctx: MatchContext) => {
-        const fMatcher = func as unknown as
-          | ((c: TConfig, ctx: MatchContext) => boolean)
-          | MatchFunc;
-        const matcherFuncOrValue = fMatcher($live, ctx);
-        if (typeof matcherFuncOrValue === "function") {
-          return matcherFuncOrValue(ctx);
-        }
-        return matcherFuncOrValue;
-      };
-    },
+  adapt: <TConfig = unknown>({
+    default: func,
+  }: {
+    default: (config: TConfig) => (ctx: MatchContext) => boolean;
+  }) =>
+  ($live: TConfig) => {
+    return (ctx: MatchContext) => {
+      const fMatcher = func as unknown as
+        | ((c: TConfig, ctx: MatchContext) => boolean)
+        | MatchFunc;
+      const matcherFuncOrValue = fMatcher($live, ctx);
+      if (typeof matcherFuncOrValue === "function") {
+        return matcherFuncOrValue(ctx);
+      }
+      return matcherFuncOrValue;
+    };
+  },
 };
 
 /**

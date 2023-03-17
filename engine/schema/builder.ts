@@ -39,11 +39,11 @@ interface ResolverRef {
  * This function takes the mentioned parameters (functionRef and inputSchema) and builds a JSONSchema that uses the input as `allOf` property ("extends")
  * and a required property `__resolveType` pointing to the mentioned function.
  *
- *{
+ * {
  * type: "object"
  * allOf: [{$ref: "#/definitions/deco-sites/std/myBooleanFunction.ts@BooleanFunctionProps"}]
  * properties: { __resolveType: "deco-sites/std/myBooleanFunction.ts"}
- *}
+ * }
  */
 const functionRefToschemeable = ({
   functionKey,
@@ -57,10 +57,9 @@ const functionRefToschemeable = ({
     value: {
       title: functionKey,
       type: "object",
-      allOf:
-        inputSchemaIds.length > 0
-          ? [{ $ref: `#/definitions/${inputSchemaIds[0]}` }]
-          : [],
+      allOf: inputSchemaIds.length > 0
+        ? [{ $ref: `#/definitions/${inputSchemaIds[0]}` }]
+        : [],
       required: ["__resolveType"],
       properties: {
         __resolveType: {
@@ -100,7 +99,7 @@ export interface SchemaBuilder {
 }
 const mergeSchemasRoot = (
   a: Schemas["root"],
-  b: Schemas["root"]
+  b: Schemas["root"],
 ): Schemas["root"] => {
   const mergedRoot: Schemas["root"] = {};
   const allRootBlocks = { ...a, ...b };
@@ -115,7 +114,7 @@ const mergeSchemasRoot = (
           const has = duplicated[$ref!];
           duplicated[$ref] = true;
           return !has;
-        }
+        },
       ),
     };
   }
@@ -130,8 +129,7 @@ const mergeSchemasRoot = (
  * @returns the canonical file representation. e.g deco-sites/std/types.ts
  */
 const canonicalFileWith =
-  (base: string, namespace: string) =>
-  (file: string): string => {
+  (base: string, namespace: string) => (file: string): string => {
     if (file.startsWith("https://denopkg.com")) {
       const [url] = file.split("@");
       return url.substring("https://denopkg.com".length + 1);
@@ -174,7 +172,7 @@ const mergeStates = (stateA: JSONSchema7, stateB: JSONSchema7): JSONSchema7 => {
 };
 
 const isEntrypoint = (
-  m: BlockModule | EntrypointModule
+  m: BlockModule | EntrypointModule,
 ): m is EntrypointModule => {
   return (m as EntrypointModule).key !== undefined;
 };
@@ -186,11 +184,11 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const newRoot = mergeSchemasRoot(initial.schema["root"], root);
       const newRootState = mergeStates(
         initial.schema["root"]["state"],
-        root.state
+        root.state,
       );
       const newDefinitions = deepMergeDefinitions(
         initial.schema["definitions"],
-        definitions
+        definitions,
       );
       return newSchemaBuilder({
         ...initial,
@@ -229,7 +227,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       // Utility functions
       const canonical = canonicalFileWith(base, namespace);
       const schemeableId = (
-        schemeable: Schemeable
+        schemeable: Schemeable,
       ): [string, string | undefined] => {
         const file = schemeable.file ? canonical(schemeable.file) : undefined;
         if (schemeable.id) {
@@ -250,7 +248,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       // add a new schemeable to the definitions
       const addSchemeable = (
         def: Schemas["definitions"],
-        schemeable?: Schemeable
+        schemeable?: Schemeable,
       ): [Schemas["definitions"], string[] | undefined] => {
         if (schemeable) {
           const [id, file] = schemeableId(schemeable);
@@ -282,8 +280,8 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
 
       // build all schemeable to JsonSchema
       // generate schemeable id based on http and file system
-      const [definitionsWithSchemeables, functionRefs] =
-        initial.blockModules.reduce(
+      const [definitionsWithSchemeables, functionRefs] = initial.blockModules
+        .reduce(
           ([def, resolvers], mod) => {
             const [defOut, idOut] = addSchemeable(def, mod.outputSchema);
             const [defIn, idIn] = addSchemeable(defOut, mod.inputSchema);
@@ -302,8 +300,8 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           },
           [initial.schema.definitions, []] as [
             Schemas["definitions"],
-            ResolverRef[]
-          ]
+            ResolverRef[],
+          ],
         );
 
       // for all function refs add the function schemeable to all schema outputs
@@ -324,11 +322,11 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
                 ...innerDefinitions,
                 [innerRoot]: mergeJSONSchemas(
                   outSchema as JSONSchema7,
-                  funcSchema!
+                  funcSchema!,
                 ),
               };
             },
-            nDef
+            nDef,
           );
           return [
             newDef,
@@ -343,8 +341,8 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         },
         [definitionsWithSchemeables, initial.schema.root] as [
           Schemas["definitions"],
-          Schemas["root"]
-        ]
+          Schemas["root"],
+        ],
       );
 
       // Generate the root state config which contains all possible configurations as additional properties.
@@ -352,7 +350,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         (curr, key) => {
           return { ...curr, anyOf: [...curr.anyOf, { $ref: `#/root/${key}` }] };
         },
-        { anyOf: [] as JSONSchema7[] }
+        { anyOf: [] as JSONSchema7[] },
       );
 
       // generate the final definitions and the entrypoint config
@@ -382,7 +380,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
             ...(root["state"] ?? {}), // should we include only catchall?
             additionalProperties: configState,
           },
-        ] as [Schemas["definitions"], JSONSchema7]
+        ] as [Schemas["definitions"], JSONSchema7],
       );
       return { definitions: finalDefs, root: { ...root, state: entrypoint } };
     },

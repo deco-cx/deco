@@ -5,7 +5,7 @@ export interface Props {
 
 const MatchRandom = (
   { traffic }: Props,
-  { isMatchFromCookie }: MatchWithCookieValue
+  { isMatchFromCookie }: MatchWithCookieValue,
 ) => {
   return isMatchFromCookie || Math.random() < traffic;
 };

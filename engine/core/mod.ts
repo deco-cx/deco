@@ -14,7 +14,7 @@ export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
 
 const withOverrides = (
   overrides: Record<string, string> | undefined,
-  resolvables: Record<string, Resolvable<any>>
+  resolvables: Record<string, Resolvable<any>>,
 ): Record<string, Resolvable<any>> => {
   return Object.entries(overrides ?? {}).reduce((nresolvables, [from, to]) => {
     return { ...nresolvables, [from]: nresolvables[to] };
@@ -43,7 +43,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   public resolve = <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
-    overrides?: Record<string, string>
+    overrides?: Record<string, string>,
   ): PromiseOrValue<T> => {
     const { resolvers: res, resolvables } = this.config;
     const nresolvables = withOverrides(overrides, resolvables);
@@ -68,13 +68,12 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
         resolvers,
         data,
         nresolvables,
-        ctx as TContext
+        ctx as TContext,
       );
     }
-    const resolvable =
-      typeof typeOrResolvable === "string"
-        ? nresolvables[typeOrResolvable]
-        : typeOrResolvable;
+    const resolvable = typeof typeOrResolvable === "string"
+      ? nresolvables[typeOrResolvable]
+      : typeOrResolvable;
     if (resolvable === undefined) {
       return undefined as T;
     }
@@ -82,7 +81,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       resolvers,
       resolvable,
       nresolvables,
-      ctx as TContext
+      ctx as TContext,
     );
   };
 }

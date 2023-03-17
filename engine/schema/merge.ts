@@ -2,7 +2,7 @@ import { JSONSchema7 } from "$live/deps.ts";
 
 export const mergeJSONSchemas = (
   defObj: JSONSchema7,
-  defOtherObj: JSONSchema7
+  defOtherObj: JSONSchema7,
 ) => {
   const bothNonUndefined = defObj && defOtherObj;
   if (!bothNonUndefined) {
@@ -46,13 +46,15 @@ const isJSONSchema = <T>(s: T | JSONSchema7): s is JSONSchema7 => {
 };
 export const deepMergeDefinitions = (
   def: Record<string, JSONSchema7>,
-  defOther: Record<string, JSONSchema7>
+  defOther: Record<string, JSONSchema7>,
 ): Record<string, JSONSchema7> => {
   const newObj: Record<string, JSONSchema7> = {};
-  for (const key of new Set([
-    ...Object.keys(def ?? {}),
-    ...Object.keys(defOther ?? {}),
-  ])) {
+  for (
+    const key of new Set([
+      ...Object.keys(def ?? {}),
+      ...Object.keys(defOther ?? {}),
+    ])
+  ) {
     if (!def[key]) {
       newObj[key] = defOther[key];
     } else if (!defOther[key]) {
@@ -68,11 +70,11 @@ export const deepMergeDefinitions = (
       ) {
         newObj[key] = deepMergeDefinitions(
           defObj as Record<string, JSONSchema7>,
-          defOtherObj as Record<string, JSONSchema7>
+          defOtherObj as Record<string, JSONSchema7>,
         );
       } else {
         console.warn(
-          `could not merge ${key} because its types diverges, defaulting to target.`
+          `could not merge ${key} because its types diverges, defaulting to target.`,
         );
         newObj[key] = defOtherObj;
       }
