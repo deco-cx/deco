@@ -45,7 +45,7 @@ export interface JS<T extends Record<string, any> = any> {
   raw: FunctionCall | Variable | T;
 }
 const isObjRaw = (
-  v: FunctionCall | Variable | Record<string, unknown>
+  v: FunctionCall | Variable | Record<string, unknown>,
 ): v is Record<string, unknown> => {
   return (v as FunctionCall).identifier === undefined;
 };
@@ -135,17 +135,19 @@ const stringifyStatement = (st: Statement): string => {
 };
 
 const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
-  return `import ${clauses
-    .map((clause) =>
-      isDefaultClause(clause)
-        ? `* as ${clause.alias}`
-        : (clause as NamedImport).import
-        ? `{ ${(clause as NamedImport).import} ${
+  return `import ${
+    clauses
+      .map((clause) =>
+        isDefaultClause(clause)
+          ? `* as ${clause.alias}`
+          : (clause as NamedImport).import
+          ? `{ ${(clause as NamedImport).import} ${
             clause.as ? "as " + clause.as : ""
           }}`
-        : clause.as
-    )
-    .join(",")} from "${from}"`;
+          : clause.as
+      )
+      .join(",")
+  } from "${from}"`;
 };
 
 const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
@@ -154,11 +156,13 @@ const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
     ? entries.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
     : entries;
   return `{
-    ${entriesOrSorted
+    ${
+    entriesOrSorted
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
-      .join(",\n")}
+      .join(",\n")
+  }
 }
 `;
 };
@@ -181,9 +185,11 @@ const stringifyJS = (js: JS): string => {
     return JSON.stringify(js.raw);
   }
   if (isFunctionCall(js.raw)) {
-    return `${js.raw.identifier}(${js.raw.params
-      .map(stringifyJSONValue)
-      .join(",")})`;
+    return `${js.raw.identifier}(${
+      js.raw.params
+        .map(stringifyJSONValue)
+        .join(",")
+    })`;
   }
 
   return js.raw.identifier;
@@ -234,7 +240,7 @@ import { context } from "$live/live.ts"
 
 ${Object.entries(imports).map(stringifyImport).join("\n")}
 
-const manifest: DecoManifest = ${stringifyObj(manifest, false)}
+const manifest: DecoManifest = ${stringifyObj(manifest)}
 
 context.namespace = "${namespace}"
 ${exports.map(stringifyExport).join("\n")}
@@ -246,7 +252,7 @@ ${exportDefault ? `export default ${exportDefault.variable.identifier}` : ""}
 export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
   return {
     withBlockSchema: (
-      schema: BlockModule | EntrypointModule
+      schema: BlockModule | EntrypointModule,
     ): ManifestBuilder => {
       return newManifestBuilder({
         ...initial,
@@ -354,8 +360,9 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           ...importStr.clauses,
         ];
         // if import defaults so only one import is allowed
-        const defaultClause =
-          currImports[importStr.from].filter(isDefaultClause);
+        const defaultClause = currImports[importStr.from].filter(
+          isDefaultClause,
+        );
         if (defaultClause.length > 0) {
           currImports[importStr.from] = [
             defaultClause[defaultClause.length - 1],
@@ -401,7 +408,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           {
             ...initial.manifest,
             [key]: initial.manifest[key] ?? { kind: "obj", value: {} },
-          }
+          },
         ),
       });
     },

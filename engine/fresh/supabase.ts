@@ -3,8 +3,8 @@ import { Resolvable } from "$live/engine/core/resolver.ts";
 import {
   Page,
   PageData,
-  PageSection as Section,
   PageFunction as Function,
+  PageSection as Section,
 } from "$live/types.ts";
 import { ConfigProvider } from "$live/engine/fresh/provider.ts";
 import getSupabaseClient from "$live/supabase.ts";
@@ -24,11 +24,7 @@ const sectionToPageSection =
         const func = functionsIndexed[value as string];
         newProps[key] = {
           ...func.props,
-          __globals: {
-            __resolveType: globalsKey,
-          },
           __resolveType: func.key
-            .replaceAll("functions", "loaders")
             .replace("./", `${ns}/`),
         };
       } else {
@@ -38,7 +34,6 @@ const sectionToPageSection =
     return {
       ...newProps,
       __resolveType: key
-        .replaceAll("functions", "loaders")
         .replace("./", `${ns}/`),
     };
   };
@@ -79,46 +74,57 @@ interface CatchAllConfigs {
   __resolveType: "resolve";
 }
 
-const isGlobal = (p: Page): boolean => {
+const isGlobalConfig = (p: Page): boolean => {
   return (
-    p.data?.sections.length === 1 && p.data.sections[0].key.includes("global")
+    p.data?.sections.length === 1 &&
+    (p.data.sections[0].key.includes("global.tsx"))
   );
 };
 const pageToConfig =
   (namespace: string) =>
   (c: Record<string, Resolvable>, p: Page): Record<string, Resolvable> => {
-    if (isGlobal(p)) {
-      const globalSection = p.data.sections[0];
-      const byDashSplit = globalSection.key.split("/");
-      const [name] = byDashSplit[byDashSplit.length - 1].split(".");
-      return {
-        ...c,
-        [globalsKey]: {
-          ...(c[globalsKey] ?? {}),
-          [name]: globalSection.props,
-        },
-      };
+    if (p.state === "global" && p.data?.sections.length === 1) {
+      const fstSection = p.data.sections[0];
+      if (fstSection.key.includes("global.tsx")) {
+        const globalSection = p.data.sections[0];
+        const byDashSplit = globalSection.key.split("/");
+        const [name] = byDashSplit[byDashSplit.length - 1].split(".");
+        return {
+          ...c,
+          [globalsKey]: {
+            ...(c[globalsKey] ?? {}),
+            [name]: globalSection.props,
+          },
+        };
+      }
+      if (p.path.includes("Global")) {
+        return {
+          ...c,
+          [p.path]: {
+            ...(dataToSections(p.data, namespace)[0]),
+          },
+        };
+      }
     }
     const pageEntry = {
       sections: dataToSections(p.data, namespace),
       __resolveType: "$live/pages/LivePage.tsx",
     };
     const catchall = c[catchAllConfig] as CatchAllConfigs;
-    const everyone =
-      p.state === "published"
-        ? {
-            ...catchall.handler.flags[0],
-            routes: {
-              ...catchall.handler.flags[0].routes,
-              [p.path]: {
-                page: {
-                  __resolveType: `${p.id}`,
-                },
-                __resolveType: "$live/handlers/fresh.ts",
-              },
+    const everyone = p.state === "published"
+      ? {
+        ...catchall.handler.flags[0],
+        routes: {
+          ...catchall.handler.flags[0].routes,
+          [p.path]: {
+            page: {
+              __resolveType: `${p.id}`,
             },
-          }
-        : catchall.handler.flags[0];
+            __resolveType: "$live/handlers/fresh.ts",
+          },
+        },
+      }
+      : catchall.handler.flags[0];
     return {
       ...c,
       [p.id]: pageEntry,
@@ -153,7 +159,7 @@ const baseEntrypoint = {
 } as Record<string, Resolvable>;
 export const newSupabaseProviderLegacy = (
   siteId: number,
-  namespace: string
+  namespace: string,
 ): ConfigProvider => {
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
@@ -168,9 +174,9 @@ export const newSupabaseProviderLegacy = (
     resolve: (
       value:
         | Record<string, Resolvable<any>>
-        | PromiseLike<Record<string, Resolvable<any>>>
+        | PromiseLike<Record<string, Resolvable<any>>>,
     ) => void,
-    reject: (reason: unknown) => void
+    reject: (reason: unknown) => void,
   ) => {
     if (remainingRetries === 0) {
       reject(lastError); // TODO @author Marcos V. Candeia should we panic? and exit? Deno.exit(1)
@@ -206,7 +212,7 @@ export const newSupabaseProviderLegacy = (
         return;
       }
       currResolvables = Promise.resolve(
-        data.reduce(pageToConfig(namespace), baseEntrypoint)
+        data.reduce(pageToConfig(namespace), baseEntrypoint),
       );
       currCb();
       singleFlight = false;

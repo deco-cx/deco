@@ -21,12 +21,11 @@ const withDefinition =
   (
     blkN: number,
     man: ManifestBuilder,
-    { inputSchema, outputSchema, functionRef }: BlockModuleRef
+    { inputSchema, outputSchema, functionRef }: BlockModuleRef,
   ): ManifestBuilder => {
-    const functionKey =
-      block === "routes" || block === "islands" // islands and blocks are unique
-        ? functionRef
-        : `${namespace}${functionRef.substring(1)}`;
+    const functionKey = block === "routes" || block === "islands" // islands and blocks are unique
+      ? functionRef
+      : `${namespace}${functionRef.substring(1)}`;
     const ref = `${"$".repeat(blockIdx)}${blkN}`;
     return man
       .withBlockSchema({
@@ -50,12 +49,13 @@ const withDefinition =
 
 const defaultRoutes: { from: string; ref: string }[] = [
   {
-    from: "routes/[...catchall].tsx",
-    ref: "$live_catchall",
-  },
-  {
     from: "routes/live/previews/[...block].tsx",
     ref: "$live_previews",
+  },
+  // DO NOT CHANGE THE ORDER CATCHALL SHOULD BE THE LAST
+  {
+    from: "routes/[...catchall].tsx",
+    ref: "$live_catchall",
   },
 ];
 const addDefaultRoutes = (man: ManifestBuilder): ManifestBuilder => {
@@ -67,7 +67,7 @@ const addDefaultRoutes = (man: ManifestBuilder): ManifestBuilder => {
     console.warn(
       `%cwarn%c: the live entrypoint ./routes/[...catchall].tsx was overwritten.`,
       "color: yellow; font-weight: bold",
-      ""
+      "",
     );
 
     return man;
@@ -89,7 +89,7 @@ const addDefaultRoutes = (man: ManifestBuilder): ManifestBuilder => {
 };
 const addDefinitions = async (
   blocks: Block[],
-  transformContext: TransformContext
+  transformContext: TransformContext,
 ): Promise<ManifestBuilder> => {
   const initialManifest = newManifestBuilder({
     namespace: transformContext.namespace,
@@ -108,13 +108,13 @@ const addDefinitions = async (
   });
 
   const code = Object.values(transformContext.code).map(
-    (m) => [m[1], m[2]] as [string, ASTNode[]]
+    (m) => [m[1], m[2]] as [string, ASTNode[]],
   );
 
   const blockDefinitions = await Promise.all(
     blocks.map((blk) =>
       Promise.all(code.map((c) => blk.introspect(transformContext, c[0], c[1])))
-    )
+    ),
   );
 
   return blocks
@@ -123,7 +123,7 @@ const addDefinitions = async (
       const useDef = withDefinition(
         blkAlias,
         i + 1,
-        transformContext.namespace
+        transformContext.namespace,
       );
       let totalBlks = 0;
       return blockDefinitions[i].reduce((nMan, def) => {
@@ -146,7 +146,7 @@ const addDefinitions = async (
 
 export const decoManifestBuilder = async (
   dir: string,
-  namespace: string
+  namespace: string,
 ): Promise<ManifestBuilder> => {
   const liveIgnore = join(dir, ".liveignore");
   const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
@@ -161,19 +161,21 @@ export const decoManifestBuilder = async (
   const modulePromises: Promise<ModuleAST>[] = [];
   // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
   // that way the blocks can analyze the AST before needing to fetch all modules first.
-  for await (const entry of walk(dir, {
-    includeDirs: false,
-    includeFiles: true,
-    exts: ["tsx", "jsx", "ts", "js"],
-    match: blocksDirs,
-    skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
-  })) {
+  for await (
+    const entry of walk(dir, {
+      includeDirs: false,
+      includeFiles: true,
+      exts: ["tsx", "jsx", "ts", "js"],
+      match: blocksDirs,
+      skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
+    })
+  ) {
     modulePromises.push(
       denoDoc(entry.path)
         .then(
-          (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST
+          (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST,
         )
-        .catch((_) => [dir, entry.path.substring(dir.length), []])
+        .catch((_) => [dir, entry.path.substring(dir.length), []]),
     );
   }
 
@@ -189,7 +191,7 @@ export const decoManifestBuilder = async (
         },
       };
     },
-    { base: dir, code: {}, namespace }
+    { base: dir, code: {}, namespace },
   );
 
   return addDefinitions(blocks, transformContext).then(addDefaultRoutes);

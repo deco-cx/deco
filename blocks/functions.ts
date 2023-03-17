@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/server.ts";
 import { HttpContext } from "$live/blocks/handler.ts";
-import { isGlobalConfig } from "$live/blocks/utils.ts";
 import { Block } from "$live/engine/block.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
 import { findExport, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
 import { LoaderFunction } from "$live/types.ts";
+import JsonViewer from "$live/blocks/utils.tsx";
 
 export type Function<TProps = any, TState = any> = LoaderFunction<
   TProps,
@@ -15,6 +15,12 @@ export type Function<TProps = any, TState = any> = LoaderFunction<
 
 const functionBlock: Block<Function> = {
   type: "functions",
+  defaultPreview: (result) => {
+    return {
+      Component: JsonViewer,
+      props: { body: JSON.stringify(result) },
+    };
+  },
   adapt: <
     TConfig = any,
     TState = any,
@@ -25,12 +31,16 @@ const functionBlock: Block<Function> = {
     $live: TConfig,
     ctx: HttpContext<any, any, HandlerContext<any, TState>>,
   ) => {
-    const global = isGlobalConfig($live) ? $live.__globals : {};
     const { data } = await func.default(
       ctx.request,
       {
         ...ctx.context,
-        state: { ...ctx.context.state, $live, resolve: ctx.resolve, global },
+        state: {
+          ...ctx.context.state,
+          $live,
+          resolve: ctx.resolve,
+          global: await ctx.resolve("globals"),
+        },
       },
       $live,
     );

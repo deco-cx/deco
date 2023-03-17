@@ -1,5 +1,4 @@
 import { Flag } from "$live/blocks/flag.ts";
-import { Handler } from "$live/blocks/handler.ts";
 import { MatchContext, Matcher } from "$live/blocks/matcher.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
 import { CookiedFlag, cookies } from "$live/flags.ts";
@@ -7,8 +6,7 @@ import { Audience } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
 import { LiveState } from "$live/types.ts";
-import { ConnInfo } from "https://deno.land/std@0.170.0/http/server.ts";
-import { router } from "https://deno.land/x/rutt@0.0.13/mod.ts";
+import { ConnInfo, Handler } from "std/http/server.ts";
 
 export interface SelectionConfig {
   flags: Flag[]; // TODO it should be possible to specify a Flag<T> instead. author Marcos V. Candeia
@@ -40,6 +38,27 @@ const rankRoute = (pattern: string) =>
       0,
     );
 
+const router = (routes: [string, Handler][]): Handler => {
+  return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
+    for (const [routePath, handler] of routes) {
+      const pattern = new URLPattern({ pathname: routePath });
+      const res = pattern.exec(req.url);
+      const groups = res?.pathname.groups ?? {};
+
+      if (res !== null) {
+        return await handler(
+          req,
+          { ...connInfo, params: groups } as ConnInfo & {
+            params: Record<string, string>;
+          },
+        );
+      }
+    }
+    return new Response(null, {
+      status: 404,
+    });
+  };
+};
 export type MatchWithCookieValue = MatchContext<{
   isMatchFromCookie?: boolean;
 }>;
@@ -108,7 +127,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
       const resolvedOrPromise = resolve<Handler>(
         handler,
         { context: connInfo, request: req },
-        { overrides, monitoring: t ? { t } : undefined }
+        { overrides, monitoring: t ? { t } : undefined },
       );
       if (isAwaitable(resolvedOrPromise)) {
         routerPromises.push(resolvedOrPromise.then((r) => [route, r]));
@@ -117,11 +136,11 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
       }
     }
     // build the router from entries
-    const builtRoutes = Object.fromEntries(
-      (await Promise.all(routerPromises)).sort(([routeString]) =>
-        rankRoute(routeString)
-      ),
-    );
+    const builtRoutes = (await Promise.all(routerPromises)).sort((
+      [routeStringA],
+      [routeStringB],
+    ) => rankRoute(routeStringB) - rankRoute(routeStringA));
+
     const server = router(builtRoutes);
 
     // call the target handler
