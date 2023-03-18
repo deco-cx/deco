@@ -94,7 +94,7 @@ export const beautify = (propName: string) => {
 };
 const denoDocCache = new Map<string, Promise<string>>();
 
-const exec = async (cmd: string[]) => {
+export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
 
   const [stdout, status] = await Promise.all([

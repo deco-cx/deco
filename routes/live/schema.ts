@@ -14,7 +14,22 @@ export const handler = async (_: Request, __: HandlerContext) => {
   const entries = [];
 
   for await (const entry of listBlocks(dir)) {
-    entries.push(entry);
+    const p = Deno.run({
+      cmd: ["deno", "doc", "--json", entry.path],
+      stdout: "piped",
+      stderr: "piped",
+      stdin: "null",
+    });
+    try {
+      entries.push({ path: entry.path });
+      const s = await p.status();
+      entries.push(s);
+      entries.push(await p.output());
+    } catch (err) {
+      entries.push({ err });
+    } finally {
+      p.close();
+    }
   }
 
   return Response.json(
