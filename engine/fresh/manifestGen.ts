@@ -14,7 +14,7 @@ import { TransformContext } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { walk } from "std/fs/walk.ts";
+import { walk, WalkEntry } from "std/fs/walk.ts";
 
 const withDefinition =
   (block: BlockType, blockIdx: number, namespace: string) =>
@@ -159,21 +159,17 @@ const addDefinitions = async (
     });
 };
 
-export const decoManifestBuilder = async (
-  dir: string,
-  namespace: string,
-): Promise<ManifestBuilder> => {
+export async function* listBlocks(dir: string): AsyncGenerator<WalkEntry> {
   const liveIgnore = join(dir, ".liveignore");
   const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
   const blocksDirs = blocks.map((blk) =>
-    globToRegExp(join("**", blk.type, "**"), { globstar: true })
+    globToRegExp(join(dir, blk.type, "*"))
   );
 
   const ignoreGlobs = !st.isFile
     ? []
     : await Deno.readTextFile(liveIgnore).then((txt) => txt.split("\n"));
 
-  const modulePromises: Promise<ModuleAST>[] = [];
   // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
   // that way the blocks can analyze the AST before needing to fetch all modules first.
   for await (
@@ -184,6 +180,19 @@ export const decoManifestBuilder = async (
       match: blocksDirs,
       skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
     })
+  ) {
+    yield entry;
+  }
+}
+export const decoManifestBuilder = async (
+  dir: string,
+  namespace: string,
+): Promise<ManifestBuilder> => {
+  const modulePromises: Promise<ModuleAST>[] = [];
+  // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
+  // that way the blocks can analyze the AST before needing to fetch all modules first.
+  for await (
+    const entry of listBlocks(dir)
   ) {
     modulePromises.push(
       denoDoc(entry.path)
