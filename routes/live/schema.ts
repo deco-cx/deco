@@ -10,5 +10,6 @@ export const handler = async (_: Request, __: HandlerContext) => {
 
   return Response.json(
     schemas.build(dir, context.namespace!),
+    { headers: { "x-cwd": dir, "x-namespace": context.namespace! } },
   );
 };
