@@ -7,17 +7,9 @@ import {
   PageSection,
   PageWithParams,
 } from "$live/types.ts";
-import {
-  generateAvailableEntitiesFromManifest,
-  loadPageData,
-} from "$live/utils/manifest.ts";
-import { createPageForSection } from "$live/utils/page.ts";
+import { loadPageData } from "$live/utils/manifest.ts";
 import { supabase } from "./deps.ts";
 import getSupabaseClient from "./supabase.ts";
-import {
-  createSectionFromSectionKey,
-  doesSectionExist,
-} from "./utils/manifest.ts";
 
 export interface PageOptions {
   selectedPageIds: number[];
@@ -223,48 +215,6 @@ export const fetchPageFromId = async (
     page: matchPage as Page,
     params,
   };
-};
-
-/**
- * Fetches a page containing this component.
- *
- * This is used for creating the canvas. It retrieves
- * or generates a fake page from the database at
- * /_live/sections/<componentName.tsx>
- *
- * This way we can use the page editor to edit components too
- */
-export const fetchPageFromSection = async (
-  sectionFileName: string, // Ex: ./sections/Banner.tsx#TopSellers
-  siteId: number,
-): Promise<PageWithParams> => {
-  const supabase = getSupabaseClient();
-
-  const { section: instance, functions } = createSectionFromSectionKey(
-    sectionFileName,
-  );
-
-  const page = createPageForSection(sectionFileName, {
-    sections: [instance],
-    functions,
-  });
-
-  if (!doesSectionExist(sectionFileName)) {
-    throw new Error(`Section at ${sectionFileName} Not Found`);
-  }
-
-  const { data } = await supabase
-    .from("pages")
-    .select("id, name, data, path, state")
-    .match({ path: page.path, site: siteId });
-
-  const match = data?.[0];
-
-  if (match) {
-    return { page: match };
-  }
-
-  return { page };
 };
 
 /**

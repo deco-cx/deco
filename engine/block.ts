@@ -1,9 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
-import { ASTNode, TsType } from "$live/engine/schema/ast.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
 import manifest from "$live/live.gen.ts";
+import {
+  DocNode,
+  TsTypeDef,
+} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import { JSX } from "preact";
 
@@ -53,7 +56,7 @@ export interface Block<
   introspect: (
     transformationContext: TransformContext,
     path: string,
-    ast: ASTNode[],
+    ast: DocNode[],
   ) => Promise<BlockModuleRef | undefined>;
   decorate?: <
     TBlockModule extends BlockModule<
@@ -75,14 +78,14 @@ export interface Block<
   ) => Resolver<TSerializable, TConfig, any>;
 }
 
-export type ModuleAST = [string, string, ASTNode[]];
+export type ModuleAST = [string, string, DocNode[]];
 
 export type Definitions = Record<string, JSONSchema7>;
 
 export interface FunctionBlockDefinition {
   name: string;
-  input: TsType | undefined | JSONSchema7;
-  output: TsType | JSONSchema7;
+  input: TsTypeDef | undefined | JSONSchema7;
+  output: TsTypeDef | JSONSchema7;
 }
 
 export type BlockType = string;

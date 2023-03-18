@@ -1,24 +1,14 @@
-import { generatePropsForSchema } from "./schema/utils.ts";
 import { HandlerContext } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
 
-import type {
-  AvailableSection,
-  EditorData,
-  LiveState,
-  PageData,
-  PageFunction,
-} from "$live/types.ts";
+import type { LiveState, PageData, PageFunction } from "$live/types.ts";
 
+import { LoaderFunction } from "$live/types.ts";
 import {
   appendHash,
-  availableFunctionsForSection,
-  filenameFromPath,
-  functionUniqueIdToPropReference,
   isFunctionProp,
   propReferenceToFunctionKey,
 } from "$live/utils/page.ts";
-import { LoaderFunction } from "$live/types.ts";
 import {
   DEFAULT_CACHE_CONTROL,
   formatCacheControl,
@@ -27,99 +17,6 @@ import {
   parseCacheControl,
   parseVary,
 } from "./http.ts";
-
-/**
- * This function should be used only in the initial stage of the product.
- *
- * Since we don't yet have an UI to select which function a sections should bind
- * itself to (for each one of the props that might require this),
- * this utility function selects the first one available.
- */
-export const selectDefaultFunctionsForSection = (
-  section: AvailableSection,
-): SelectDefaultFunctionReturn => {
-  // TODO: Double check this logic here
-  const sectionInputSchema = context?.manifest?.schemas[section.key]
-    ?.inputSchema;
-
-  if (!sectionInputSchema) {
-    return {
-      sectionProps: {},
-      newFunctionsToAdd: [],
-    };
-  }
-
-  const { availableFunctions } = generateAvailableEntitiesFromManifest();
-  const functionsToChooseFrom = availableFunctionsForSection(
-    section,
-    availableFunctions,
-  );
-
-  const returnData = functionsToChooseFrom.reduce(
-    (acc, { availableFunctions, sectionPropKey }) => {
-      const chosenFunctionKey = availableFunctions[0].key;
-      if (!chosenFunctionKey) {
-        console.log(
-          `Couldn't find a function for prop ${sectionPropKey} of section ${section.key}.`,
-        );
-        return acc;
-      }
-
-      const functionInstance = createFunctionInstanceFromFunctionKey(
-        chosenFunctionKey,
-      );
-
-      acc.newFunctionsToAdd.push(functionInstance);
-      acc.sectionProps[sectionPropKey] = functionUniqueIdToPropReference(
-        chosenFunctionKey,
-      );
-      return acc;
-    },
-    {
-      sectionProps: {},
-      newFunctionsToAdd: [],
-    } as SelectDefaultFunctionReturn,
-  );
-
-  return returnData;
-};
-
-export function generateAvailableEntitiesFromManifest() {
-  const availableSections = Object.keys(context.manifest?.sections || {}).map(
-    (componentKey) => {
-      const schema = context.manifest?.schemas[componentKey]?.inputSchema;
-      const label = filenameFromPath(componentKey);
-
-      // TODO: Should we extract defaultProps from the schema here?
-
-      return {
-        key: componentKey,
-        label,
-        props: {},
-        schema,
-      } as EditorData["availableSections"][0];
-    },
-  );
-
-  const availableFunctions = Object.keys(context.manifest?.functions || {}).map(
-    (functionKey) => {
-      const { inputSchema, outputSchema } =
-        context.manifest?.schemas[functionKey] || {};
-      const label = filenameFromPath(functionKey);
-
-      return {
-        key: functionKey,
-        label,
-        props: generatePropsForSchema(inputSchema),
-        schema: inputSchema,
-        // TODO: Centralize this logic
-        outputSchema: outputSchema,
-      } as EditorData["availableFunctions"][0];
-    },
-  );
-
-  return { availableSections, availableFunctions };
-}
 
 export const createFunctionInstanceFromFunctionKey = (
   functionKey: string,
@@ -261,39 +158,3 @@ interface SectionInstance {
   uniqueId: string;
   props: Record<string, unknown>;
 }
-
-/**
- * Used to generate dev pages (/_live/Banner.tsx), adding new functions to the page if necessary
- */
-export const createSectionFromSectionKey = (
-  sectionKey: string,
-  sectionName?: string,
-): CreateSectionFromSectionKeyReturn => {
-  const section: SectionInstance = {
-    key: sectionKey,
-    label: sectionKey + sectionName ? ` (${sectionName})` : "",
-    uniqueId: sectionKey,
-    props: {},
-  };
-
-  const { newFunctionsToAdd, sectionProps } = selectDefaultFunctionsForSection(
-    section,
-  );
-
-  section.props = sectionProps;
-
-  return {
-    section,
-    functions: newFunctionsToAdd,
-  };
-};
-
-type SelectDefaultFunctionReturn = {
-  sectionProps: Record<string, unknown>;
-  newFunctionsToAdd: Array<PageFunction>;
-};
-
-type CreateSectionFromSectionKeyReturn = {
-  section: SectionInstance;
-  functions: PageFunction[];
-};

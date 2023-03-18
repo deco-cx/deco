@@ -9,12 +9,12 @@ import {
   ManifestBuilder,
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
-import { ASTNode } from "$live/engine/schema/ast.ts";
 import { TransformContext } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { walk, WalkEntry } from "std/fs/walk.ts";
+import { DocNode } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 
 const withDefinition =
   (block: BlockType, blockIdx: number, namespace: string) =>
@@ -123,7 +123,7 @@ const addDefinitions = async (
   });
 
   const code = Object.values(transformContext.code).map(
-    (m) => [m[1], m[2]] as [string, ASTNode[]],
+    (m) => [m[1], m[2]] as [string, DocNode[]],
   );
 
   const blockDefinitions = await Promise.all(
@@ -195,7 +195,7 @@ export const decoManifestBuilder = async (
     const entry of listBlocks(dir)
   ) {
     modulePromises.push(
-      denoDoc(entry.path)
+      denoDoc(`file://${entry.path}`)
         .then(
           (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST,
         )

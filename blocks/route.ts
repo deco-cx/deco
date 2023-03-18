@@ -7,10 +7,14 @@ import {
 } from "$fresh/src/server/types.ts";
 import { Block, BlockModuleRef, ComponentFunc } from "$live/engine/block.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
-import { ASTNode, Param, TsType } from "$live/engine/schema/ast.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
 import { context as liveContext } from "$live/live.ts";
 import { DecoManifest, LiveState } from "$live/types.ts";
+import {
+  DocNode,
+  ParamDef,
+  TsTypeDef,
+} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
@@ -60,7 +64,7 @@ const mapHandlers = (
     return mapObjKeys(handlers, (val) => {
       return async function (
         request: Request,
-        context: HandlerContext<any, LiveState>
+        context: HandlerContext<any, LiveState>,
       ) {
         const resolver = liveContext.configResolver!;
 
@@ -70,10 +74,10 @@ const mapHandlers = (
             {
               monitoring: context?.state?.t
                 ? {
-                    t: context.state.t!,
-                  }
+                  t: context.state.t!,
+                }
                 : undefined,
-            }
+            },
           )
           .bind(resolver);
 
@@ -91,7 +95,7 @@ const mapHandlers = (
   }
   return async function (
     request: Request,
-    context: HandlerContext<any, LiveState>
+    context: HandlerContext<any, LiveState>,
   ) {
     const resolver = liveContext.configResolver!;
     const ctxResolver = resolver
@@ -100,10 +104,10 @@ const mapHandlers = (
         {
           monitoring: context?.state?.t
             ? {
-                t: context.state.t!,
-              }
+              t: context.state.t!,
+            }
             : undefined,
-        }
+        },
       )
       .bind(resolver);
 
@@ -172,10 +176,10 @@ const routeBlock: Block<Route, Response> = {
       if (!defaultExport) {
         return routeMod;
       }
-      let pagePropsParam: Param | null = null;
+      let pagePropsParam: ParamDef | null = null;
       if (defaultExport.kind === "variable") {
         const variable = defaultExport.variableDef.tsType;
-        if (variable.kind !== "fnOrConstructor") {
+        if (variable!.kind !== "fnOrConstructor") {
           return routeMod;
         }
         const params = variable.fnOrConstructor.params;
@@ -197,7 +201,7 @@ const routeBlock: Block<Route, Response> = {
         return routeMod;
       }
       const pagePropsTsType = pagePropsParam.tsType;
-      if (pagePropsTsType.kind !== "typeRef") {
+      if (pagePropsTsType!.kind !== "typeRef") {
         return routeMod;
       }
       const typeParams = pagePropsTsType.typeRef.typeParams;
@@ -216,10 +220,10 @@ const routeBlock: Block<Route, Response> = {
 };
 
 function schemeableFromHandleNode(
-  handlerNode: ASTNode,
+  handlerNode: DocNode,
   liveImportAs: string,
-): TsType | null {
-  let contextParam: Param | null = null;
+): TsTypeDef | null {
+  let contextParam: ParamDef | null = null;
   if (handlerNode.kind === "function") {
     if (handlerNode.functionDef.params.length < 2) {
       return null;
@@ -227,7 +231,7 @@ function schemeableFromHandleNode(
     contextParam = handlerNode.functionDef.params[1];
   } else if (handlerNode.kind === "variable") {
     const variable = handlerNode.variableDef.tsType;
-    if (variable.kind !== "fnOrConstructor") {
+    if (variable!.kind !== "fnOrConstructor") {
       return null;
     }
     const params = variable.fnOrConstructor.params;
@@ -237,14 +241,16 @@ function schemeableFromHandleNode(
     contextParam = params[1];
   }
 
-  if (contextParam === null) {
+  if (contextParam === null || contextParam === undefined) {
     return null;
   }
-  if (contextParam.tsType.kind !== "typeRef") {
+  if (contextParam.tsType!.kind !== "typeRef") {
     return null;
   }
   const typeParams = contextParam.tsType.typeRef.typeParams;
-  if (typeParams === null || typeParams.length < 2) {
+  if (
+    typeParams === null || typeParams === undefined || typeParams.length < 2
+  ) {
     return null;
   }
 
@@ -252,7 +258,7 @@ function schemeableFromHandleNode(
   if (liveConfig.kind !== "typeRef" || liveConfig.repr !== liveImportAs) {
     return null;
   }
-  return liveConfig.typeRef.typeParams && liveConfig.typeRef.typeParams[0];
+  return liveConfig.typeRef.typeParams! && liveConfig.typeRef.typeParams[0]!;
 }
 
 export default routeBlock;

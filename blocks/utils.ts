@@ -9,7 +9,6 @@ import {
   FunctionBlockDefinition,
   PreactComponent,
 } from "$live/engine/block.ts";
-import { ASTNode, TsType } from "$live/engine/schema/ast.ts";
 import {
   inlineOrSchemeable,
   Schemeable,
@@ -21,12 +20,16 @@ import {
   fnDefinitionRoot,
   FunctionTypeDef,
 } from "$live/engine/schema/utils.ts";
+import {
+  DocNode,
+  TsTypeDef,
+} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { StatefulContext } from "./handler.ts";
 
 export const fnDefinitionToSchemeable = async (
-  ast: [string, ASTNode[]],
+  ast: [string, DocNode[]],
   validFn: FunctionBlockDefinition,
 ): Promise<Schemeable> => {
   const inputSchemeable = await inlineOrSchemeable(ast, validFn.input);
@@ -38,7 +41,7 @@ export const fnDefinitionToSchemeable = async (
     id: validFn.name,
     value: {
       output: {
-        title: (validFn.output as TsType).repr ??
+        title: (validFn.output as TsTypeDef).repr ??
           (validFn.output as JSONSchema7).title,
         jsDocSchema: {},
         schemeable: outputSchemeable!,
@@ -46,7 +49,7 @@ export const fnDefinitionToSchemeable = async (
       ...(inputSchemeable
         ? {
           input: {
-            title: (validFn.input as TsType).repr ??
+            title: (validFn.input as TsTypeDef).repr ??
               (validFn.input as JSONSchema7).title,
             jsDocSchema: {},
             schemeable: inputSchemeable,
@@ -84,7 +87,7 @@ export const configOnly = (requiredPath: string) =>
 async (
   transformationContext: TransformContext,
   path: string,
-  ast: ASTNode[],
+  ast: DocNode[],
 ): Promise<BlockModuleRef | undefined> => {
   if (!path.startsWith(requiredPath)) {
     return undefined;
@@ -141,7 +144,7 @@ async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
   });
 };
 
-const configTsType = (fn: FunctionTypeDef): TsType | undefined => {
+const configTsType = (fn: FunctionTypeDef): TsTypeDef | undefined => {
   if (fn.params.length !== 2) {
     return undefined;
   }
@@ -171,7 +174,7 @@ export const fromFreshLikeHandler = (requiredPath: string) =>
 async (
   transformationContext: TransformContext,
   path: string,
-  ast: ASTNode[],
+  ast: DocNode[],
 ): Promise<BlockModuleRef | undefined> => {
   if (!path.startsWith(requiredPath)) {
     return undefined;
@@ -215,7 +218,7 @@ export const fromComponentFunc: Block["adapt"] = <TProps = any>(
 
 export const instrospectComponentFunc =
   (requiredPath: string) =>
-  async (ctx: TransformContext, path: string, ast: ASTNode[]) => {
+  async (ctx: TransformContext, path: string, ast: DocNode[]) => {
     if (!path.startsWith(requiredPath)) {
       return undefined;
     }

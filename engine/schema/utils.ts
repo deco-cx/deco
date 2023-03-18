@@ -1,13 +1,16 @@
-import {
-  ASTNode,
-  FunctionDefNode,
-  JSDoc,
-  Tag,
-  TsType,
-  TsTypeFnOrConstructor,
-} from "$live/engine/schema/ast.ts";
 import { TransformContext } from "$live/engine/schema/transform.ts";
+import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
+import {
+  DocNode,
+  DocNodeFunction,
+  JsDoc,
+  JsDocTag,
+  JsDocTagValued,
+  TsTypeDef,
+  TsTypeFnOrConstructorDef,
+} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+import { doc } from "https://deno.land/x/deno_doc@0.58.0/mod.ts";
 
 /**
  * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
@@ -36,12 +39,14 @@ const parseJSDocAttribute = (key: string, value: string) => {
   }
 };
 
-export const jsDocToSchema = (node: JSDoc) =>
+export const jsDocToSchema = (node: JsDoc) =>
   node.tags
     ? Object.fromEntries(
       node.tags
-        .map((tag: Tag) => {
-          const match = tag.value.match(/^@(?<key>[a-zA-Z]+) (?<value>.*)$/);
+        .map((tag: JsDocTag) => {
+          const match = (tag as JsDocTagValued).value.match(
+            /^@(?<key>[a-zA-Z]+) (?<value>.*)$/,
+          );
 
           const key = match?.groups?.key;
           const value = match?.groups?.value;
@@ -57,7 +62,7 @@ export const jsDocToSchema = (node: JSDoc) =>
     )
     : undefined;
 
-export const findExport = (name: string, root: ASTNode[]) => {
+export const findExport = (name: string, root: DocNode[]) => {
   const node = root.find(
     (n) => n.name === name && n.declarationKind === "export",
   );
@@ -92,7 +97,7 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-const denoDocCache = new Map<string, Promise<string>>();
+const denoDocCache = new Map<string, Promise<DocNode[]>>();
 
 export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
@@ -113,13 +118,17 @@ export const exec = async (cmd: string[]) => {
   return new TextDecoder().decode(stdout);
 };
 
-export const denoDoc = async (path: string): Promise<ASTNode[]> => {
+export const denoDoc = async (
+  path: string,
+  importMap?: string,
+): Promise<DocNode[]> => {
   const promise = denoDocCache.get(path) ??
-    exec(["deno", "doc", "--json", path]);
-
+    doc(path, {
+      importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
+    });
   denoDocCache.set(path, promise);
-  const stdout = await promise;
-  return JSON.parse(stdout);
+
+  return await promise;
 };
 
 export interface TypeRef {
@@ -127,27 +136,27 @@ export interface TypeRef {
   importUrl: string;
 }
 
-export const isFunctionDef = (node: ASTNode): node is FunctionDefNode => {
+export const isFunctionDef = (node: DocNode): node is DocNodeFunction => {
   return node.kind === "function";
 };
 
 export interface FunctionTypeDef {
   name: string;
-  params: TsType[];
-  return: TsType;
+  params: TsTypeDef[];
+  return: TsTypeDef;
 }
 
 export const isFnOrConstructor = (
-  tsType: TsType,
-): tsType is TsTypeFnOrConstructor => {
+  tsType: TsTypeDef,
+): tsType is TsTypeFnOrConstructorDef => {
   return tsType.kind === "fnOrConstructor";
 };
 
 export const fnDefinitionRoot = async (
   ctx: TransformContext,
-  node: ASTNode,
-  currRoot: [string, ASTNode[]],
-): Promise<[FunctionTypeDef | undefined, [string, ASTNode[]]]> => {
+  node: DocNode,
+  currRoot: [string, DocNode[]],
+): Promise<[FunctionTypeDef | undefined, [string, DocNode[]]]> => {
   const fn = nodeToFunctionDefinition(node);
   if (!fn) {
     return [undefined, currRoot];
@@ -162,22 +171,22 @@ export const fnDefinitionRoot = async (
   return [fn, currRoot];
 };
 export const nodeToFunctionDefinition = (
-  node: ASTNode,
+  node: DocNode,
 ): FunctionTypeDef | undefined => {
   if (isFunctionDef(node) && node.declarationKind === "export") {
     return {
       name: node.name,
-      params: node.functionDef.params.map(({ tsType }) => tsType),
-      return: node.functionDef.returnType,
+      params: node.functionDef.params.map(({ tsType }) => tsType!),
+      return: node.functionDef.returnType!,
     };
   }
   if (node.kind === "variable") {
-    const variableTsType = node.variableDef.tsType;
+    const variableTsType = node.variableDef.tsType!;
     if (isFnOrConstructor(variableTsType)) {
       return {
         name: node.name,
         params: variableTsType.fnOrConstructor.params.map(
-          ({ tsType }) => tsType,
+          ({ tsType }) => tsType!,
         ),
         return: variableTsType.fnOrConstructor.tsType,
       };

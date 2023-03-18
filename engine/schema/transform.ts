@@ -1,8 +1,15 @@
-import { notUndefined } from "$live/engine/core/utils.ts";
-import { ASTNode, TsType, TypeDef, TypeRef } from "$live/engine/schema/ast.ts";
-import { beautify, denoDoc, jsDocToSchema } from "$live/engine/schema/utils.ts";
 import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
 import { ModuleAST } from "$live/engine/block.ts";
+import { notUndefined } from "$live/engine/core/utils.ts";
+import { beautify, denoDoc, jsDocToSchema } from "$live/engine/schema/utils.ts";
+import {
+  DocNode,
+  InterfaceDef,
+  TsTypeDef,
+  TsTypeLiteralDef,
+  TsTypeRefDef,
+} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+import { JSONSchema7TypeName } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 
 export interface TransformContext {
   base: string;
@@ -11,11 +18,11 @@ export interface TransformContext {
 }
 
 export const inlineOrSchemeable = async (
-  ast: [string, ASTNode[]],
-  tp: TsType | JSONSchema7 | undefined,
+  ast: [string, DocNode[]],
+  tp: TsTypeDef | JSONSchema7 | undefined,
 ): Promise<Schemeable | undefined> => {
-  if ((tp as TsType).repr !== undefined) {
-    return await tsTypeToSchemeable(tp as TsType, ast);
+  if ((tp as TsTypeDef).repr !== undefined) {
+    return await tsTypeToSchemeable(tp as TsTypeDef, ast);
   } else if (tp !== undefined) {
     return {
       type: "inline",
@@ -94,8 +101,8 @@ export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
   return aStr === bStr;
 };
 const schemeableWellKnownType = async (
-  ref: TypeRef,
-  root: ASTNode[],
+  ref: TsTypeRefDef,
+  root: DocNode[],
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
     case "Promise": {
@@ -224,8 +231,8 @@ const schemeableWellKnownType = async (
 };
 
 export const findSchemeableFromNode = async (
-  rootNode: ASTNode,
-  root: ASTNode[],
+  rootNode: DocNode,
+  root: DocNode[],
 ): Promise<Schemeable> => {
   const kind = rootNode.kind;
   switch (kind) {
@@ -273,14 +280,16 @@ export const findSchemeableFromNode = async (
 };
 
 const typeDefToSchemeable = async (
-  node: TypeDef,
-  root: ASTNode[],
+  node: InterfaceDef | TsTypeLiteralDef,
+  root: DocNode[],
 ): Promise<Omit<ObjectSchemeable, "id" | "type">> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
-      const jsDocSchema = property.jsDoc && jsDocToSchema(property.jsDoc);
+      const jsDocSchema =
+        (property as InterfaceDef["properties"][number]).jsDoc &&
+        jsDocToSchema((property as InterfaceDef["properties"][number]).jsDoc!);
       const schema = await tsTypeToSchemeableRec(
-        property.tsType,
+        property.tsType!,
         root,
         property.optional,
       );
@@ -301,14 +310,13 @@ const typeDefToSchemeable = async (
     .map((p) => p.name);
 
   return {
-    title: node.name,
     value: Object.fromEntries(properties),
     required,
   };
 };
 export const tsTypeToSchemeable = async (
-  node: TsType,
-  root: [string, ASTNode[]],
+  node: TsTypeDef,
+  root: [string, DocNode[]],
   optional?: boolean,
 ): Promise<Schemeable> => {
   const schemeable = await tsTypeToSchemeableRec(node, root[1], optional);
@@ -320,8 +328,8 @@ export const tsTypeToSchemeable = async (
 };
 
 const tsTypeToSchemeableRec = async (
-  node: TsType,
-  root: ASTNode[],
+  node: TsTypeDef,
+  root: DocNode[],
   optional?: boolean,
 ): Promise<Schemeable> => {
   const kind = node.kind;
@@ -379,8 +387,9 @@ const tsTypeToSchemeableRec = async (
       return {
         type: "inline",
         value: {
-          type: node.literal.kind,
-          const: node.literal[node.literal.kind],
+          type: node.literal.kind as JSONSchema7TypeName, // FIXME(mcandeia) not compliant with JSONSchema
+          // deno-lint-ignore no-explicit-any
+          const: (node.literal as any)[node.literal.kind] as JSONSchema7Type,
         },
       };
     }
