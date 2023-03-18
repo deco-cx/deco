@@ -9,7 +9,7 @@ export const handler = async (_: Request, __: HandlerContext) => {
   const schemas = newSchemaBuilder(manifest.data.schemaData);
 
   return Response.json(
-    schemas.build(dir, context.namespace!),
+    { schemas: schemas.build(dir, context.namespace!), data: manifest.data },
     { headers: { "x-cwd": dir, "x-namespace": context.namespace! } },
   );
 };
