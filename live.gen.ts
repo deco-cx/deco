@@ -6,8 +6,9 @@ import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import { context } from "$live/live.ts";
 
-import * as $$$0 from "./routes/live/previews/[...block].tsx";
-import * as $$$1 from "./routes/[...catchall].tsx";
+import * as $$$0 from "./routes/live/schema.ts";
+import * as $$$1 from "./routes/live/previews/[...block].tsx";
+import * as $$$2 from "./routes/[...catchall].tsx";
 import * as $$$$$0 from "$live/handlers/routesSelection.ts";
 import * as $$$$$1 from "$live/handlers/router.ts";
 import * as $$$$$2 from "$live/handlers/fresh.ts";
@@ -22,12 +23,12 @@ import * as $$$$$$$$6 from "$live/matchers/MatchAlways.ts";
 import * as $$$$$$$$$0 from "$live/flags/audience.ts";
 import * as $$$$$$$$$1 from "$live/flags/everyone.ts";
 import { configurable } from "$live/engine/fresh/manifest.ts";
-import * as $live_json_viewer from "$live/blocks/utils.tsx";
 
 const manifest: DecoManifest = {
   "routes": {
-    "./routes/live/previews/[...block].tsx": $$$0,
-    "./routes/[...catchall].tsx": $$$1,
+    "./routes/live/schema.ts": $$$0,
+    "./routes/live/previews/[...block].tsx": $$$1,
+    "./routes/[...catchall].tsx": $$$2,
   },
   "handlers": {
     "$live/handlers/routesSelection.ts": $$$$$0,
@@ -50,9 +51,7 @@ const manifest: DecoManifest = {
     "$live/flags/audience.ts": $$$$$$$$$0,
     "$live/flags/everyone.ts": $$$$$$$$$1,
   },
-  "islands": {
-    "./islands/live_jsonviewer.tsx": $live_json_viewer,
-  },
+  "islands": {},
   "config": config,
   "baseUrl": import.meta.url,
   "schemas": {
@@ -83,13 +82,13 @@ const manifest: DecoManifest = {
         "$ref": "#/root/handlers",
         "$id": "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
       },
-      "1e8479e1-75fd-44f4-919c-33fd5b3944f4@Handler@record": {
+      "79230eab-6680-4171-9870-fde3b8d92623@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "1e8479e1-75fd-44f4-919c-33fd5b3944f4@Handler@record",
+        "$id": "79230eab-6680-4171-9870-fde3b8d92623@Handler@record",
       },
       "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
         "type": "object",
@@ -99,7 +98,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/1e8479e1-75fd-44f4-919c-33fd5b3944f4@Handler@record",
+              "#/definitions/79230eab-6680-4171-9870-fde3b8d92623@Handler@record",
           },
         },
         "required": ["routes"],
@@ -134,6 +133,21 @@ const manifest: DecoManifest = {
         },
         "$id": "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
       },
+      "JGxpdmUvZW5naW5lL2Jsb2NrLnRz@ComponentMetadata": {
+        "type": "object",
+        "allOf": [],
+        "properties": {
+          "resolveChain": {
+            "title": "Resolve Chain",
+            "type": "array",
+            "items": { "type": "string" },
+          },
+          "resolver": { "title": "Resolver", "type": "string" },
+        },
+        "required": ["resolveChain", "resolver"],
+        "title": "JGxpdmUvZW5naW5lL2Jsb2NrLnRz@ComponentMetadata",
+        "$id": "JGxpdmUvZW5naW5lL2Jsb2NrLnRz@ComponentMetadata",
+      },
       "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
         "type": "object",
         "allOf": [],
@@ -142,8 +156,13 @@ const manifest: DecoManifest = {
             "title": "Sections",
             "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
           },
+          "__metadata": {
+            "title": "__metadata",
+            "$ref":
+              "#/definitions/JGxpdmUvZW5naW5lL2Jsb2NrLnRz@ComponentMetadata",
+          },
         },
-        "required": ["sections"],
+        "required": ["sections", "__metadata"],
         "title": "$live/pages/LivePage.tsx@Props",
         "$id": "$live/pages/LivePage.tsx@Props",
       },
@@ -240,13 +259,13 @@ const manifest: DecoManifest = {
         "title": "$live/matchers/MatchEnvironment.ts@Props",
         "$id": "$live/matchers/MatchEnvironment.ts@Props",
       },
-      "f46d0ef4-842d-4911-95a1-ee0b31ab9648@Handler@record": {
+      "8eb3f32c-55cb-40e0-ba3d-4ba42b76887a@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "f46d0ef4-842d-4911-95a1-ee0b31ab9648@Handler@record",
+        "$id": "8eb3f32c-55cb-40e0-ba3d-4ba42b76887a@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
         "type": "object",
@@ -260,7 +279,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/f46d0ef4-842d-4911-95a1-ee0b31ab9648@Handler@record",
+              "#/definitions/8eb3f32c-55cb-40e0-ba3d-4ba42b76887a@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -272,13 +291,13 @@ const manifest: DecoManifest = {
         "title": "$live/flags/audience.ts@Audience",
         "$id": "$live/flags/audience.ts@Audience",
       },
-      "d0cc2965-9fd3-4eaf-ad2e-ffec48990a39@Handler@record": {
+      "45022cce-7d2e-41fa-a3b2-a2eff8c5fe9e@Handler@record": {
         "title": "Unknown record",
         "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
         },
-        "$id": "d0cc2965-9fd3-4eaf-ad2e-ffec48990a39@Handler@record",
+        "$id": "45022cce-7d2e-41fa-a3b2-a2eff8c5fe9e@Handler@record",
       },
       "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
         "type": "object",
@@ -287,7 +306,7 @@ const manifest: DecoManifest = {
           "routes": {
             "title": "Routes",
             "$ref":
-              "#/definitions/d0cc2965-9fd3-4eaf-ad2e-ffec48990a39@Handler@record",
+              "#/definitions/45022cce-7d2e-41fa-a3b2-a2eff8c5fe9e@Handler@record",
           },
           "overrides": {
             "title": "Unknown record",
@@ -298,6 +317,19 @@ const manifest: DecoManifest = {
         "required": [],
         "title": "$live/flags/everyone.ts@EveryoneConfig",
         "$id": "$live/flags/everyone.ts@EveryoneConfig",
+      },
+      "JGxpdmUvcm91dGVzL2xpdmUvc2NoZW1hLnRz": {
+        "title": "./routes/live/schema.ts",
+        "type": "object",
+        "allOf": [],
+        "required": ["__resolveType"],
+        "properties": {
+          "__resolveType": {
+            "type": "string",
+            "default": "./routes/live/schema.ts",
+          },
+        },
+        "$id": "./routes/live/schema.ts",
       },
       "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz": {
         "title": "$live/handlers/routesSelection.ts",
@@ -498,12 +530,12 @@ const manifest: DecoManifest = {
         },
         "$id": "$live/flags/everyone.ts",
       },
-      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@666148e8-c1b7-40f5-9694-13715e47f2b9":
+      "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@9467e6d9-33b1-4da6-91b3-19085d19d4f0":
         {
           "$id":
-            "$live/routes/live/previews/[...block].tsx@666148e8-c1b7-40f5-9694-13715e47f2b9",
+            "$live/routes/live/previews/[...block].tsx@9467e6d9-33b1-4da6-91b3-19085d19d4f0",
           "title":
-            "$live/routes/live/previews/[...block].tsx@666148e8-c1b7-40f5-9694-13715e47f2b9",
+            "$live/routes/live/previews/[...block].tsx@9467e6d9-33b1-4da6-91b3-19085d19d4f0",
         },
       "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
         "type": "object",
@@ -520,6 +552,12 @@ const manifest: DecoManifest = {
       },
     },
     "root": {
+      "routes": {
+        "title": "routes",
+        "anyOf": [{
+          "$ref": "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvc2NoZW1hLnRz",
+        }],
+      },
       "handlers": {
         "title": "handlers",
         "anyOf": [
@@ -569,7 +607,7 @@ const manifest: DecoManifest = {
         "properties": {
           "./routes/live/previews/[...block].tsx": {
             "$ref":
-              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@666148e8-c1b7-40f5-9694-13715e47f2b9",
+              "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@9467e6d9-33b1-4da6-91b3-19085d19d4f0",
           },
           "./routes/[...catchall].tsx": {
             "$ref":
@@ -577,9 +615,13 @@ const manifest: DecoManifest = {
           },
         },
         "additionalProperties": {
-          "anyOf": [{ "$ref": "#/root/handlers" }, { "$ref": "#/root/pages" }, {
-            "$ref": "#/root/matchers",
-          }, { "$ref": "#/root/flags" }],
+          "anyOf": [
+            { "$ref": "#/root/routes" },
+            { "$ref": "#/root/handlers" },
+            { "$ref": "#/root/pages" },
+            { "$ref": "#/root/matchers" },
+            { "$ref": "#/root/flags" },
+          ],
         },
       },
     },

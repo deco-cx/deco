@@ -55,6 +55,12 @@ const defaultRoutes: {
 }[] = [
   {
     block: "routes",
+    from: "$live/routes/live/schema.ts",
+    key: "./routes/live/schema.ts",
+    ref: "$live_schema",
+  },
+  {
+    block: "routes",
     from: "$live/routes/live/previews/[...block].tsx",
     key: "./routes/live/previews/[...block].tsx",
     ref: "$live_previews",
