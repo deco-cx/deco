@@ -31,8 +31,7 @@ export type ModuleOf<TBlock> = TBlock extends Block<
   any,
   any,
   infer TBlockModule
->
-  ? TBlockModule
+> ? TBlockModule
   : never;
 
 export interface Block<
@@ -120,14 +119,19 @@ export type InstanceOf<
 
 export type ComponentFunc<
   TProps = any,
-  TReturn extends JSX.Element = JSX.Element,
+  TReturn extends JSX.Element | null = JSX.Element | null,
 > = (props: TProps) => TReturn;
 
+export interface ComponentMetadata {
+  resolveChain: string[];
+  resolver: string;
+}
+
 export interface PreactComponent<
-  TReturn extends JSX.Element = JSX.Element,
+  TReturn extends JSX.Element | null = JSX.Element | null,
   TProps = any,
 > {
   Component: ComponentFunc<TProps, TReturn>;
   props: TProps;
-  key?: string;
+  metadata?: ComponentMetadata;
 }

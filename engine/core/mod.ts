@@ -38,24 +38,23 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   };
 
   public setResolvables = (
-    resolvables: PromiseOrValue<Record<string, Resolvable<any>>>
+    resolvables: PromiseOrValue<Record<string, Resolvable<any>>>,
   ) => {
     this.resolvables = resolvables;
   };
 
-  public resolverFor =
-    (
-      context: Omit<TContext, keyof BaseContext>,
-      options?: { overrides?: Record<string, string>; monitoring?: Monitoring }
-    ) =>
-    <T = any>(typeOrResolvable: string | Resolvable<T>): Promise<T> => {
-      return this.resolve(typeOrResolvable, context, options);
-    };
+  public resolverFor = (
+    context: Omit<TContext, keyof BaseContext>,
+    options?: { overrides?: Record<string, string>; monitoring?: Monitoring },
+  ) =>
+  <T = any>(typeOrResolvable: string | Resolvable<T>): Promise<T> => {
+    return this.resolve(typeOrResolvable, context, options);
+  };
 
   public resolve = async <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
-    options?: { overrides?: Record<string, string>; monitoring?: Monitoring }
+    options?: { overrides?: Record<string, string>; monitoring?: Monitoring },
   ): Promise<T> => {
     const { resolvers: res, resolvables: rPromise } = this.config;
     const resolvables = await rPromise;
@@ -70,7 +69,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     const baseCtx: BaseContext = {
       resolve: _resolve,
       resolveId: crypto.randomUUID(),
-      key: "",
+      resolveChain: [],
       monitoring: options?.monitoring,
       resolvables: nresolvables,
       resolvers,

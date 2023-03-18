@@ -6,9 +6,10 @@ import { LiveState } from "$live/types.ts";
 
 export default function Render({
   data: {
-    page: { Component, props },
+    page: { Component, props: pr, metadata },
   },
 }: PageProps<{ page: Page }>) {
+  const props = { ...pr, __metadata: metadata };
   return <Component {...props}></Component>;
 }
 export interface Entrypoint {

@@ -21,6 +21,7 @@ import {
   fnDefinitionRoot,
   FunctionTypeDef,
 } from "$live/engine/schema/utils.ts";
+import { Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { StatefulContext } from "./handler.ts";
 
@@ -202,14 +203,14 @@ async (
   };
 };
 
-export const fromComponentFunc = <TProps = any>(
+export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   { default: Component }: { default: ComponentFunc<TProps> },
-  key: string,
-) =>
-(props: TProps) => ({
+  resolver: string,
+): Resolver =>
+(props: TProps, { resolveChain }): PreactComponent<any, TProps> => ({
   Component,
   props,
-  key,
+  metadata: { resolver, resolveChain },
 });
 
 export const instrospectComponentFunc =

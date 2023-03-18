@@ -5,9 +5,11 @@ import { Page } from "$live/blocks/page.ts";
 import { LiveState } from "$live/types.ts";
 
 export default function Render({
-  data: { Component, props, key },
+  data: { Component, props, metadata },
 }: PageProps<Page>) {
-  return <Component data-manifest-key={key} {...props}></Component>;
+  return (
+    <Component data-manifest-key={metadata?.resolver} {...props}></Component>
+  );
 }
 
 const isNumber = new RegExp("/^-?\d+\.?\d*$/");
