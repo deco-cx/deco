@@ -146,10 +146,6 @@ const routeBlock: Block<Route, Response> = {
     return routeModule;
   },
   introspect: async (_, path, ast) => {
-    if (!path.startsWith("./routes/")) {
-      return undefined;
-    }
-
     const routeMod: BlockModuleRef = {
       functionRef: path,
     };

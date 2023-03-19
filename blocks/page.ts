@@ -15,7 +15,7 @@ const page: Block<ComponentFunc, PreactComponent> = {
   type: "pages",
   defaultPreview: (comp) => comp,
   adapt: fromComponentFunc,
-  introspect: instrospectComponentFunc("./pages"),
+  introspect: instrospectComponentFunc,
 };
 
 /**

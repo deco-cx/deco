@@ -118,14 +118,27 @@ export const exec = async (cmd: string[]) => {
   return new TextDecoder().decode(stdout);
 };
 
+const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
+  return doc(path, {
+    importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
+    includeAll: true,
+  });
+};
+
+const docAsExec = async (
+  path: string,
+  _?: string,
+): Promise<DocNode[]> => {
+  return JSON.parse(await exec(["deno", "doc", "--json", path])); // FIXME(mcandeia) add --private when stable
+};
 export const denoDoc = async (
   path: string,
   importMap?: string,
 ): Promise<DocNode[]> => {
   const promise = denoDocCache.get(path) ??
-    doc(path, {
-      importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
-    });
+    (typeof Deno.run === "function"
+      ? docAsExec(path)
+      : docAsLib(path, importMap));
   denoDocCache.set(path, promise);
 
   return await promise;

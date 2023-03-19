@@ -1,53 +1,40 @@
 import blocks from "$live/blocks/index.ts";
-import {
-  Block,
-  BlockModuleRef,
-  BlockType,
-  ModuleAST,
-} from "$live/engine/block.ts";
+import { Block, BlockType } from "$live/engine/block.ts";
 import {
   ManifestBuilder,
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
-import { TransformContext } from "$live/engine/schema/transform.ts";
-import { denoDoc } from "$live/engine/schema/utils.ts";
-import { globToRegExp } from "https://deno.land/std@0.61.0/path/glob.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { walk, WalkEntry } from "std/fs/walk.ts";
-import { DocNode } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 
-const withDefinition =
-  (block: BlockType, blockIdx: number, namespace: string) =>
-  (
-    blkN: number,
-    man: ManifestBuilder,
-    { inputSchema, outputSchema, functionRef }: BlockModuleRef,
-  ): ManifestBuilder => {
-    const functionKey = block === "routes" || block === "islands" // islands and blocks are unique
-      ? functionRef
-      : `${namespace}${functionRef.substring(1)}`;
-    const ref = `${"$".repeat(blockIdx)}${blkN}`;
-    return man
-      .withBlockSchema({
-        inputSchema,
-        outputSchema,
-        functionKey,
-        blockType: block,
-      })
-      .addImports({
-        from: functionKey,
-        clauses: [{ alias: ref }],
-      })
-      .addValuesOnManifestKey(block, [
-        functionKey,
-        {
-          kind: "js",
-          raw: { identifier: ref },
-        },
-      ]);
-  };
+const withDefinition = (
+  man: ManifestBuilder,
+  namespace: string,
+  functionRef: string,
+  block: BlockType,
+  blockIdx: number,
+  blkN: number,
+): ManifestBuilder => {
+  // FIXME(mcandeia) use function key for the schema gen
+  const functionKey = block === "routes" || block === "islands" // islands and blocks are unique
+    ? functionRef
+    : `${namespace}${functionRef.substring(1)}`;
+  const ref = `${"$".repeat(blockIdx)}${blkN}`;
+  return man
+    .addImports({
+      from: functionKey,
+      clauses: [{ alias: ref }],
+    })
+    .addValuesOnManifestKey(block, [
+      functionKey,
+      {
+        kind: "js",
+        raw: { identifier: ref },
+      },
+    ]);
+};
 
-const defaultRoutes: {
+export const defaultRoutes: {
   key: string;
   ref: string;
   block: string;
@@ -102,74 +89,31 @@ const addDefaultBlocks = (man: ManifestBuilder): ManifestBuilder => {
       ]);
   }, man);
 };
-const addDefinitions = async (
-  blocks: Block[],
-  transformContext: TransformContext,
-): Promise<ManifestBuilder> => {
-  const initialManifest = newManifestBuilder({
-    namespace: transformContext.namespace,
-    base: transformContext.base,
-    imports: {},
-    exports: [],
-    manifest: {},
-    schemaData: {
-      blockModules: [],
-      entrypoints: [],
-      schema: {
-        definitions: {},
-        root: {},
-      },
-    },
-  });
 
-  const code = Object.values(transformContext.code).map(
-    (m) => [m[1], m[2]] as [string, DocNode[]],
-  );
-
-  const blockDefinitions = await Promise.all(
-    blocks.map((blk) =>
-      Promise.all(code.map((c) => blk.introspect(transformContext, c[0], c[1])))
-    ),
-  );
-
-  return blocks
-    .reduce((manz, blk, i) => {
-      const blkAlias = blk.type;
-      const useDef = withDefinition(
-        blkAlias,
-        i + 1,
-        transformContext.namespace,
-      );
-      let totalBlks = 0;
-      return blockDefinitions[i].reduce((nMan, def) => {
-        if (!def) {
-          return nMan;
-        }
-        const n = useDef(totalBlks, nMan, def);
-        totalBlks += 1;
-        return n;
-      }, manz);
-    }, initialManifest)
-    .addImports({
-      from: "$live/engine/fresh/manifest.ts",
-      clauses: [{ import: "configurable" }],
-    })
-    .addExportDefault({
-      variable: { identifier: "configurable(manifest)" },
-    });
+const exists = async (dir: string): Promise<boolean> => {
+  try {
+    await Deno.stat(dir);
+    // successful, file or directory must exist
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      // file or directory does not exist
+      return false;
+    } else {
+      // unexpected error, maybe permissions, pass it along
+      throw error;
+    }
+  }
 };
 
-export async function* listBlocks(dir: string): AsyncGenerator<WalkEntry> {
-  const liveIgnore = join(dir, ".liveignore");
-  const st = await Deno.stat(liveIgnore).catch((_) => ({ isFile: false }));
-  const blocksDirs = blocks.map((blk) =>
-    globToRegExp(join(dir, blk.type, "*"))
-  );
-
-  const ignoreGlobs = !st.isFile
-    ? []
-    : await Deno.readTextFile(liveIgnore).then((txt) => txt.split("\n"));
-
+export async function* listBlocks(
+  base: string,
+  blk: Block,
+): AsyncGenerator<WalkEntry> {
+  const dir = join(base, blk.type);
+  if (!(await exists(dir))) {
+    return;
+  }
   // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
   // that way the blocks can analyze the AST before needing to fetch all modules first.
   for await (
@@ -177,8 +121,6 @@ export async function* listBlocks(dir: string): AsyncGenerator<WalkEntry> {
       includeDirs: false,
       includeFiles: true,
       exts: ["tsx", "jsx", "ts", "js"],
-      match: blocksDirs,
-      skip: ignoreGlobs.map((glob) => globToRegExp(glob, { globstar: true })),
     })
   ) {
     yield entry;
@@ -188,35 +130,37 @@ export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
 ): Promise<ManifestBuilder> => {
-  const modulePromises: Promise<ModuleAST>[] = [];
-  // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
-  // that way the blocks can analyze the AST before needing to fetch all modules first.
-  for await (
-    const entry of listBlocks(dir)
-  ) {
-    modulePromises.push(
-      denoDoc(`file://${entry.path}`)
-        .then(
-          (doc) => [dir, entry.path.substring(dir.length), doc] as ModuleAST,
-        )
-        .catch((_) => [dir, entry.path.substring(dir.length), []]),
-    );
+  let initialManifest = newManifestBuilder({
+    namespace,
+    imports: {},
+    exports: [],
+    manifest: {},
+  });
+  let blockIdx = 1;
+  for (const blk of blocks) {
+    let totalBlocks = 0;
+    for await (
+      const entry of listBlocks(dir, blk)
+    ) {
+      initialManifest = withDefinition(
+        initialManifest,
+        namespace,
+        entry.path.replace(dir, "."),
+        blk.type,
+        blockIdx,
+        totalBlocks++,
+      );
+    }
+    blockIdx++;
   }
 
-  const modules = await Promise.all(modulePromises);
-  const transformContext = modules.reduce(
-    (ctx, module) => {
-      const ast = [module[0], `.${module[1]}`, module[2]] as ModuleAST;
-      return {
-        ...ctx,
-        code: {
-          ...ctx.code,
-          [join(ctx.base, module[1])]: ast,
-        },
-      };
-    },
-    { base: dir, code: {}, namespace },
+  return addDefaultBlocks(
+    initialManifest.addImports({
+      from: "$live/engine/fresh/manifest.ts",
+      clauses: [{ import: "configurable" }],
+    })
+      .addExportDefault({
+        variable: { identifier: "configurable(manifest)" },
+      }),
   );
-
-  return addDefinitions(blocks, transformContext).then(addDefaultBlocks);
 };

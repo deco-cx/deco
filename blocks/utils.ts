@@ -83,15 +83,11 @@ async ($live: TConfig) => {
   return typeof resp === "function" ? resp : () => resp;
 };
 
-export const configOnly = (requiredPath: string) =>
-async (
+export const configOnly = async (
   transformationContext: TransformContext,
   path: string,
   ast: DocNode[],
 ): Promise<BlockModuleRef | undefined> => {
-  if (!path.startsWith(requiredPath)) {
-    return undefined;
-  }
   const func = findExport("default", ast);
   if (!func) {
     return undefined;
@@ -216,30 +212,29 @@ export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   metadata: { resolver, resolveChain },
 });
 
-export const instrospectComponentFunc =
-  (requiredPath: string) =>
-  async (ctx: TransformContext, path: string, ast: DocNode[]) => {
-    if (!path.startsWith(requiredPath)) {
-      return undefined;
-    }
-    const func = findExport("default", ast);
-    if (!func) {
-      return undefined;
-    }
-    const [fn, root] = await fnDefinitionRoot(ctx, func, [path, ast]);
-    if (!fn) {
-      throw new Error(
-        `Default export of ${path} needs to be a const variable or a function`,
-      );
-    }
-    const inputTsType = fn.params.length > 0 ? fn.params[0] : undefined;
-    return {
-      functionRef: path,
-      inputSchema: inputTsType
-        ? await tsTypeToSchemeable(inputTsType, root)
-        : undefined,
-    };
+export const instrospectComponentFunc = async (
+  ctx: TransformContext,
+  path: string,
+  ast: DocNode[],
+) => {
+  const func = findExport("default", ast);
+  if (!func) {
+    return undefined;
+  }
+  const [fn, root] = await fnDefinitionRoot(ctx, func, [path, ast]);
+  if (!fn) {
+    throw new Error(
+      `Default export of ${path} needs to be a const variable or a function`,
+    );
+  }
+  const inputTsType = fn.params.length > 0 ? fn.params[0] : undefined;
+  return {
+    functionRef: path,
+    inputSchema: inputTsType
+      ? await tsTypeToSchemeable(inputTsType, root)
+      : undefined,
   };
+};
 
 export const newComponentBlock = <K extends string>(
   type: K,
@@ -247,7 +242,7 @@ export const newComponentBlock = <K extends string>(
   type,
   defaultPreview: (comp) => comp,
   adapt: fromComponentFunc,
-  introspect: instrospectComponentFunc(`./${type}`),
+  introspect: instrospectComponentFunc,
 });
 
 export const newHandlerLikeBlock = <

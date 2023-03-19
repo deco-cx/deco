@@ -19,7 +19,7 @@ export interface HttpContext<
   TConfig = any,
   TCtx extends StatefulContext<any> = StatefulContext<
     LiveConfig<State, TConfig>
-  >
+  >,
 > extends BaseContext {
   context: TCtx;
   request: Request;
@@ -34,7 +34,7 @@ type HandlerFunc<TConfig = any> = (config: TConfig) => DenoHandler;
 
 const handlerBlock: Block<HandlerFunc> = {
   type: "handlers",
-  introspect: configOnly("./handlers"),
+  introspect: configOnly,
   adapt: applyConfig,
 };
 

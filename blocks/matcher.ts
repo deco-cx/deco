@@ -30,7 +30,7 @@ const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
       },
     };
   },
-  introspect: configOnly(`./matchers`),
+  introspect: configOnly,
   adapt:
     <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>
     ($live: TConfig) => {

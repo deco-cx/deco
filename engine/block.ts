@@ -108,11 +108,12 @@ export type PathOf<
 
 export type References<TManifestSchemas> = `#/${PathOf<TManifestSchemas>}`;
 
-export type ManifestSchemas = References<typeof manifest["schemas"]>;
+export type ManifestSchemas = References<{}>; // fixme
 
 export type InstanceOf<
   T,
-  _Schema extends T extends Block ? `#/root/${T["type"]}` & ManifestSchemas
+  _Schema extends T extends Block
+    ? `#/root/${T["type"]}` & ManifestSchemas | string
     : ManifestSchemas = T extends Block
       ? `#/root/${T["type"]}` & ManifestSchemas
       : ManifestSchemas,

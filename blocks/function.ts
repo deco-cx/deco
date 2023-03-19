@@ -47,9 +47,6 @@ const functionBlock: Block<Function> = {
     return data;
   },
   introspect: async (ctx, path, ast) => {
-    if (!path.startsWith("./functions")) {
-      return undefined;
-    }
     const func = findExport("default", ast);
     if (!func) {
       return undefined;

@@ -1,5 +1,4 @@
 import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
-import { ModuleAST } from "$live/engine/block.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
 import { beautify, denoDoc, jsDocToSchema } from "$live/engine/schema/utils.ts";
 import {
@@ -13,7 +12,6 @@ import { JSONSchema7TypeName } from "https://esm.sh/@types/json-schema@7.0.11?pi
 
 export interface TransformContext {
   base: string;
-  code: Record<string, ModuleAST>;
   namespace: string;
 }
 

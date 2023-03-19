@@ -1,8 +1,5 @@
 import { JSONSchema7 } from "$live/deps.ts";
-import {
-  deepMergeDefinitions,
-  mergeJSONSchemas,
-} from "$live/engine/schema/merge.ts";
+import { mergeJSONSchemas } from "$live/engine/schema/merge.ts";
 import { fromFileUrl } from "std/path/mod.ts";
 import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
 import { Schemeable } from "$live/engine/schema/transform.ts";
@@ -88,38 +85,11 @@ export interface SchemaBuilder {
    */
   build(base: string, namespace: string): Schemas;
   /**
-   * Merge with other schema (provided to a third-party manifest)
-   */
-  mergeWith(other: Schemas): SchemaBuilder;
-  /**
    * Add a new block schema to the schema.
    * @param blockSchema is the refernece to the configuration input and the blockfunction output
    */
   withBlockSchema(blockSchema: BlockModule | EntrypointModule): SchemaBuilder;
 }
-const mergeSchemasRoot = (
-  a: Schemas["root"],
-  b: Schemas["root"],
-): Schemas["root"] => {
-  const mergedRoot: Schemas["root"] = {};
-  const allRootBlocks = { ...a, ...b };
-
-  for (const block of Object.keys(allRootBlocks)) {
-    const duplicated: Record<string, boolean> = {};
-    mergedRoot[block] = {
-      title: block,
-      anyOf: [...(a[block]?.anyOf ?? []), ...(b[block]?.anyOf ?? [])].filter(
-        (ref) => {
-          const $ref = (ref as JSONSchema7).$ref!;
-          const has = duplicated[$ref!];
-          duplicated[$ref] = true;
-          return !has;
-        },
-      ),
-    };
-  }
-  return mergedRoot;
-};
 
 /**
  * Best effort function. Trying to guess the organization/repository of a given file.
@@ -153,24 +123,6 @@ const canonicalFileWith =
     return file;
   };
 
-/**
- * Merge two root states that are JSONSchema7
- * @param stateA
- * @param stateB
- * @returns a new merged state
- */
-const mergeStates = (stateA: JSONSchema7, stateB: JSONSchema7): JSONSchema7 => {
-  return {
-    ...stateA,
-    ...stateB,
-    required: [...(stateA?.required ?? []), ...(stateB?.required ?? [])],
-    properties: {
-      ...(stateA?.properties ?? {}),
-      ...(stateB?.properties ?? {}),
-    },
-  };
-};
-
 const isEntrypoint = (
   m: BlockModule | EntrypointModule,
 ): m is EntrypointModule => {
@@ -180,24 +132,6 @@ const isEntrypoint = (
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
   return {
     data: initial,
-    mergeWith({ root, definitions }: Schemas): SchemaBuilder {
-      const newRoot = mergeSchemasRoot(initial.schema["root"], root);
-      const newRootState = mergeStates(
-        initial.schema["root"]["state"],
-        root.state,
-      );
-      const newDefinitions = deepMergeDefinitions(
-        initial.schema["definitions"],
-        definitions,
-      );
-      return newSchemaBuilder({
-        ...initial,
-        schema: {
-          root: { ...newRoot, state: newRootState },
-          definitions: newDefinitions,
-        },
-      });
-    },
     withBlockSchema(schema: BlockModule | EntrypointModule): SchemaBuilder {
       if (isEntrypoint(schema)) {
         return newSchemaBuilder({

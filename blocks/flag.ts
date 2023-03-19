@@ -23,7 +23,7 @@ const flagBlock: Block<FlagFunc> = {
     const resp = flag.matcher(matchCtx) ? flag.true : flag.false;
     return { Component: JsonViewer, props: { body: JSON.stringify(resp) } };
   },
-  introspect: configOnly("./flags"),
+  introspect: configOnly,
   adapt: applyConfig,
 };
 
