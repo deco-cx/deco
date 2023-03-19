@@ -97,6 +97,9 @@ const wellKnownLiveRoutes: Record<string, [string, string, string]> =
     return { ...idx, [key]: ["$live", import.meta.resolve(from), key] };
   }, {});
 
+const getSchema = (): Promise<Schemas> => {
+  return schemasPromise ??= loadSchemas().catch(getSchema);
+};
 export const handler = async (_: Request, __: HandlerContext) => {
   schemasPromise ??= loadSchemas();
   return Response.json(

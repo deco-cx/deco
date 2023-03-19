@@ -1,14 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
+import { supabase } from "$live/deps.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
+import { ConfigProvider } from "$live/engine/fresh/provider.ts";
+import getSupabaseClient from "$live/supabase.ts";
 import {
   Page,
   PageData,
   PageFunction as Function,
   PageSection as Section,
 } from "$live/types.ts";
-import { ConfigProvider } from "$live/engine/fresh/provider.ts";
-import getSupabaseClient from "$live/supabase.ts";
-import { supabase } from "$live/deps.ts";
 
 interface PageSection extends Record<string, any> {
   __resolveType: string;
@@ -74,12 +74,6 @@ interface CatchAllConfigs {
   __resolveType: "resolve";
 }
 
-const isGlobalConfig = (p: Page): boolean => {
-  return (
-    p.data?.sections.length === 1 &&
-    (p.data.sections[0].key.includes("global.tsx"))
-  );
-};
 const pageToConfig =
   (namespace: string) =>
   (c: Record<string, Resolvable>, p: Page): Record<string, Resolvable> => {

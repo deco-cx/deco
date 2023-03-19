@@ -121,7 +121,6 @@ export const exec = async (cmd: string[]) => {
 const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
   return doc(path, {
     importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
-    includeAll: true,
   });
 };
 
