@@ -18,10 +18,10 @@ export type FreshHandler<
   TConfig = any,
   TData = any,
   TState = any,
-  Resp = Response
+  Resp = Response,
 > = (
   request: Request,
-  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>
+  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>,
 ) => PromiseOrValue<Resp>;
 
 export interface FreshContext<Data = any, State = any, TConfig = any>
@@ -37,7 +37,7 @@ export type LiveState<T, TState = unknown> = TState & {
 const previewPrefixKey = "Preview@";
 const preview: Resolver<PreactComponent> = async (
   { block, props }: { block: string; props: any },
-  { resolvables, resolvers, resolve }
+  { resolvables, resolvers, resolve },
 ) => {
   const pvResolver = `${previewPrefixKey}${block}`;
   const previewResolver = resolvers[pvResolver];
@@ -63,18 +63,18 @@ const preview: Resolver<PreactComponent> = async (
   });
 };
 const asManifest = (
-  d: DecoManifest
+  d: DecoManifest,
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
-export const configurable = <T extends DecoManifest>(m: T): T => {
+export const $live = <T extends DecoManifest>(m: T): T => {
   const [newManifest, resolvers] = (blocks ?? []).reduce(
     ([currMan, currMap], blk) => {
       const blocks = asManifest(currMan)[blk.type] ?? {};
       const decorated: Record<string, BlockModule> = blk.decorate
         ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
-            blocks,
-            blk.decorate
-          )
+          blocks,
+          blk.decorate,
+        )
         : blocks;
 
       const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
@@ -87,20 +87,20 @@ export const configurable = <T extends DecoManifest>(m: T): T => {
 
       const adapted = blk.adapt
         ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
-            decorated,
-            blk.adapt
-          )
+          decorated,
+          blk.adapt,
+        )
         : {}; // if block has no adapt so it's not considered a resolver.
       return [
         { ...currMan, [blk.type]: decorated },
         { ...currMap, ...adapted, ...previews },
       ];
     },
-    [m, {}] as [DecoManifest, ResolverMap<FreshContext>]
+    [m, {}] as [DecoManifest, ResolverMap<FreshContext>],
   );
   const provider = newSupabaseProviderLegacy(
     context.siteId,
-    context.namespace!
+    context.namespace!,
   );
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },

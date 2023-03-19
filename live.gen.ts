@@ -22,7 +22,7 @@ import * as $$$$$$$$5 from "$live/matchers/MatchEnvironment.ts";
 import * as $$$$$$$$6 from "$live/matchers/MatchAlways.ts";
 import * as $$$$$$$$$0 from "$live/flags/audience.ts";
 import * as $$$$$$$$$1 from "$live/flags/everyone.ts";
-import { configurable } from "$live/engine/fresh/manifest.ts";
+import { $live } from "$live/engine/fresh/manifest.ts";
 
 const manifest: DecoManifest = {
   "routes": {
@@ -58,4 +58,4 @@ const manifest: DecoManifest = {
 
 context.namespace = "$live";
 
-export default configurable(manifest);
+export default $live(manifest);

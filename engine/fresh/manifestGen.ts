@@ -157,10 +157,10 @@ export const decoManifestBuilder = async (
   return addDefaultBlocks(
     initialManifest.addImports({
       from: "$live/engine/fresh/manifest.ts",
-      clauses: [{ import: "configurable" }],
+      clauses: [{ import: "$live" }],
     })
       .addExportDefault({
-        variable: { identifier: "configurable(manifest)" },
+        variable: { identifier: "$live(manifest)" },
       }),
   );
 };
