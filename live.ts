@@ -4,22 +4,9 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { Handlers, MiddlewareHandlerContext } from "$fresh/server.ts";
+import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
-import { cookies, loadFlags } from "$live/flags.ts";
-import {
-  generateEditorData,
-  isPageOptions,
-  loadPage,
-  PageOptions,
-} from "$live/pages.ts";
-import {
-  DecoManifest,
-  LiveOptions,
-  LivePageData,
-  LiveState,
-} from "$live/types.ts";
-import { adminDomain, adminUrlFor, isAdmin } from "$live/utils/admin.ts";
+import { DecoManifest, LiveOptions, LiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { workbenchHandler } from "$live/utils/workbench.ts";
@@ -125,95 +112,5 @@ export const withLive = (liveOptions: LiveOptions) => {
   };
 };
 
-export const live: () => Handlers<LivePageData, LiveState> = () => ({
-  GET: async (req, ctx) => {
-    const url = new URL(req.url);
-
-    const { activeFlags, flagsToCookie } = await loadFlags(req, ctx);
-
-    ctx.state.flags = activeFlags;
-
-    const pageOptions = Object.values(ctx.state.flags).reduce(
-      (acc: PageOptions, curr) => {
-        if (isPageOptions(curr)) {
-          acc.selectedPageIds = [
-            ...acc.selectedPageIds,
-            ...curr.selectedPageIds,
-          ];
-        }
-
-        return acc;
-      },
-      { selectedPageIds: [] } as PageOptions,
-    );
-
-    const origin = req.headers.get("origin");
-    const getResponse = async () => {
-      // Allow introspection of page by editor
-      if (url.searchParams.has("editorData")) {
-        const editorData = await generateEditorData(req, ctx, pageOptions);
-
-        return Response.json(editorData, {
-          headers: {
-            "Access-Control-Allow-Origin": origin || "*",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Methods": "GET, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, *",
-          },
-        });
-      }
-
-      const loaded = await loadPage(req, ctx, pageOptions);
-      const referer = origin ?? req.headers.get("referer");
-      const isOnAdmin = referer && isAdmin(referer);
-
-      if (
-        context.isDeploy &&
-        loaded?.page.public !== undefined &&
-        !loaded?.page.public
-      ) {
-        if (!referer || !isOnAdmin) {
-          // redirect
-          return Response.redirect(
-            adminUrlFor(loaded.page.id, context.siteId),
-          );
-        }
-      }
-
-      if (!loaded) {
-        return ctx.renderNotFound();
-      }
-
-      const response = await ctx.render({
-        page: loaded.page,
-        flags: ctx.state.flags,
-      });
-
-      for (const [key, value] of loaded.headers) {
-        value && response.headers.set(key, value);
-      }
-      const localhost =
-        "127.0.0.1:* localhost:* http://localhost:* http://127.0.0.1:*";
-      response.headers.set(
-        "Content-Security-Policy",
-        `frame-ancestors ${localhost} ${adminDomain} ${
-          referer && isOnAdmin ? "https://" + new URL(referer).host : ""
-        }`,
-      );
-
-      return new Response(response.body, {
-        status: loaded.status ?? response.status,
-        headers: response.headers,
-      });
-    };
-
-    const response = await getResponse();
-
-    if (flagsToCookie.length > 0) {
-      cookies.setFlags(response.headers, flagsToCookie);
-      response.headers.append("vary", "cookie");
-    }
-
-    return response;
-  },
-});
+// TODO (mcandeia) add CORS to read schema/live data
+// TODO (mcandeia) add admin redirect and CSP headers

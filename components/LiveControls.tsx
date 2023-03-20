@@ -107,6 +107,7 @@ const main = () => {
     }
   };
 
+  //@ts-ignore: "DomInspector not available"
   const inspector = new DomInspector(document.body);
 
   /** Setup global variables */

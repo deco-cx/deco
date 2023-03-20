@@ -2,7 +2,6 @@
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
-import manifest from "$live/live.gen.ts";
 import {
   DocNode,
   TsTypeDef,
@@ -108,6 +107,7 @@ export type PathOf<
 
 export type References<TManifestSchemas> = `#/${PathOf<TManifestSchemas>}`;
 
+// deno-lint-ignore ban-types
 export type ManifestSchemas = References<{}>; // fixme
 
 export type InstanceOf<

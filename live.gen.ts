@@ -6,50 +6,50 @@ import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import { context } from "$live/live.ts";
 
-import * as $$$0 from "./routes/live/schema.ts";
-import * as $$$1 from "./routes/live/previews/[...block].tsx";
-import * as $$$2 from "./routes/[...catchall].tsx";
-import * as $$$$$0 from "$live/handlers/routesSelection.ts";
-import * as $$$$$1 from "$live/handlers/router.ts";
-import * as $$$$$2 from "$live/handlers/fresh.ts";
-import * as $$$$$$0 from "$live/pages/LivePage.tsx";
-import * as $$$$$$$$0 from "$live/matchers/MatchDate.ts";
-import * as $$$$$$$$1 from "$live/matchers/MatchUserAgent.ts";
-import * as $$$$$$$$2 from "$live/matchers/MatchSite.ts";
-import * as $$$$$$$$3 from "$live/matchers/MatchMulti.ts";
-import * as $$$$$$$$4 from "$live/matchers/MatchRandom.ts";
-import * as $$$$$$$$5 from "$live/matchers/MatchEnvironment.ts";
-import * as $$$$$$$$6 from "$live/matchers/MatchAlways.ts";
-import * as $$$$$$$$$0 from "$live/flags/audience.ts";
-import * as $$$$$$$$$1 from "$live/flags/everyone.ts";
+import * as $$$$0 from "./routes/live/schema.ts";
+import * as $$$$1 from "./routes/live/previews/[...block].tsx";
+import * as $$$$2 from "./routes/[...catchall].tsx";
+import * as $$$$$$0 from "$live/handlers/routesSelection.ts";
+import * as $$$$$$1 from "$live/handlers/router.ts";
+import * as $$$$$$2 from "$live/handlers/fresh.ts";
+import * as $$$$$$$0 from "$live/pages/LivePage.tsx";
+import * as $$$$$$$$$0 from "$live/matchers/MatchDate.ts";
+import * as $$$$$$$$$1 from "$live/matchers/MatchUserAgent.ts";
+import * as $$$$$$$$$2 from "$live/matchers/MatchSite.ts";
+import * as $$$$$$$$$3 from "$live/matchers/MatchMulti.ts";
+import * as $$$$$$$$$4 from "$live/matchers/MatchRandom.ts";
+import * as $$$$$$$$$5 from "$live/matchers/MatchEnvironment.ts";
+import * as $$$$$$$$$6 from "$live/matchers/MatchAlways.ts";
+import * as $$$$$$$$$$0 from "$live/flags/audience.ts";
+import * as $$$$$$$$$$1 from "$live/flags/everyone.ts";
 import { $live } from "$live/engine/fresh/manifest.ts";
 
 const manifest: DecoManifest = {
   "routes": {
-    "./routes/live/schema.ts": $$$0,
-    "./routes/live/previews/[...block].tsx": $$$1,
-    "./routes/[...catchall].tsx": $$$2,
+    "./routes/live/schema.ts": $$$$0,
+    "./routes/live/previews/[...block].tsx": $$$$1,
+    "./routes/[...catchall].tsx": $$$$2,
   },
   "handlers": {
-    "$live/handlers/routesSelection.ts": $$$$$0,
-    "$live/handlers/router.ts": $$$$$1,
-    "$live/handlers/fresh.ts": $$$$$2,
+    "$live/handlers/routesSelection.ts": $$$$$$0,
+    "$live/handlers/router.ts": $$$$$$1,
+    "$live/handlers/fresh.ts": $$$$$$2,
   },
   "pages": {
-    "$live/pages/LivePage.tsx": $$$$$$0,
+    "$live/pages/LivePage.tsx": $$$$$$$0,
   },
   "matchers": {
-    "$live/matchers/MatchDate.ts": $$$$$$$$0,
-    "$live/matchers/MatchUserAgent.ts": $$$$$$$$1,
-    "$live/matchers/MatchSite.ts": $$$$$$$$2,
-    "$live/matchers/MatchMulti.ts": $$$$$$$$3,
-    "$live/matchers/MatchRandom.ts": $$$$$$$$4,
-    "$live/matchers/MatchEnvironment.ts": $$$$$$$$5,
-    "$live/matchers/MatchAlways.ts": $$$$$$$$6,
+    "$live/matchers/MatchDate.ts": $$$$$$$$$0,
+    "$live/matchers/MatchUserAgent.ts": $$$$$$$$$1,
+    "$live/matchers/MatchSite.ts": $$$$$$$$$2,
+    "$live/matchers/MatchMulti.ts": $$$$$$$$$3,
+    "$live/matchers/MatchRandom.ts": $$$$$$$$$4,
+    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$5,
+    "$live/matchers/MatchAlways.ts": $$$$$$$$$6,
   },
   "flags": {
-    "$live/flags/audience.ts": $$$$$$$$$0,
-    "$live/flags/everyone.ts": $$$$$$$$$1,
+    "$live/flags/audience.ts": $$$$$$$$$$0,
+    "$live/flags/everyone.ts": $$$$$$$$$$1,
   },
   "islands": {},
   "config": config,

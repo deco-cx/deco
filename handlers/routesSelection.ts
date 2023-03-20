@@ -149,6 +149,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     // set cookie for the flags that has changed.
     if (flagsThatShouldBeCookied.length > 0) {
       cookies.setFlags(resp.headers, flagsThatShouldBeCookied);
+      resp.headers.append("vary", "cookie");
     }
     return resp;
   };

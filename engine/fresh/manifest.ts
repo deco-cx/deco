@@ -14,6 +14,7 @@ import defaultResolvers from "$live/engine/fresh/defaults.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 import { newSupabaseProviderLegacy } from "$live/engine/fresh/supabase.ts";
+
 export type FreshHandler<
   TConfig = any,
   TData = any,

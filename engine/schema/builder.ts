@@ -101,8 +101,10 @@ export interface SchemaBuilder {
 const canonicalFileWith =
   (base: string, namespace: string) => (file: string): string => {
     if (file.startsWith("https://denopkg.com")) {
-      const [url] = file.split("@");
-      return url.substring("https://denopkg.com".length + 1);
+      const [url, versionAndFile] = file.split("@");
+      const [_ignoreVersion, ...files] = versionAndFile.split("/");
+      return url.substring("https://denopkg.com".length + 1) + "/" +
+        files.join("/");
     }
     if (file.startsWith("file://")) {
       const withoutFile = fromFileUrl(file);
