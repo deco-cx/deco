@@ -200,7 +200,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               const [id, file] = schemeableId(s);
               ids.push(id);
               return {
-                friendlyId: `${file}@${s.name}`,
+                friendlyId: file && s.name ? `${file}@${s.name}` : undefined,
                 ...s,
                 id,
               };
