@@ -38,8 +38,9 @@ const main = (
     if (isLocalhost) {
       console.info(
         `[Performance]:`,
-        name,
-        typeof value === "number" ? value.toFixed(2) : value.length,
+        `%c${name}`,
+        'font',
+        typeof value === "number" ? value.toFixed(2) : `${value.length}, islands: ${value.join(', ')}`,
         rating,
       );
     }
@@ -131,7 +132,7 @@ type Props = Partial<Page> & { flags?: Flags };
  * We don't send Jitsu events on localhost by default, so
  * turn this flag on if you want to test the event sending code.
  */
-const IS_TESTING_JITSU = true;
+const IS_TESTING_JITSU = false;
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
