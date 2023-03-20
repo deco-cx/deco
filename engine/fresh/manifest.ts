@@ -15,6 +15,8 @@ import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 import { newSupabaseProviderLegacy } from "$live/engine/fresh/supabase.ts";
 
+const ENV_SITE_NAME = "DECO_SITE_NAME";
+
 export type FreshHandler<
   TConfig = any,
   TData = any,
@@ -33,6 +35,15 @@ export interface FreshContext<Data = any, State = any, TConfig = any>
 
 export type LiveState<T, TState = unknown> = TState & {
   $live: T;
+};
+
+const siteName = (): string => {
+  const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
+  if (siteNameFromEnv) {
+    return siteNameFromEnv;
+  }
+  const [_, siteName] = context.namespace!.split("/"); // deco-sites/std best effort
+  return siteName;
 };
 
 const previewPrefixKey = "Preview@";
@@ -99,6 +110,8 @@ export const $live = <T extends DecoManifest>(m: T): T => {
     },
     [m, {}] as [DecoManifest, ResolverMap<FreshContext>],
   );
+  context.site = siteName();
+  console.log(`live started for site=${context.site} siteId=${context.siteId}`);
   const provider = newSupabaseProviderLegacy(
     context.siteId,
     context.namespace!,

@@ -113,6 +113,7 @@ export interface Assignment {
 export type Statement = Assignment;
 
 export interface ManifestData {
+  siteId?: number;
   namespace: string;
   imports: Record<string, ImportClause[]>;
   manifest: JSONObject;
@@ -200,6 +201,7 @@ export const stringify = ({
   statements,
   exports,
   exportDefault,
+  siteId,
   namespace,
 }: ManifestData): string => {
   manifest["routes"] ??= { kind: "obj", value: {} };
@@ -226,6 +228,7 @@ ${Object.entries(imports).map(stringifyImport).join("\n")}
 const manifest: DecoManifest = ${stringifyObj(manifest)}
 
 context.namespace = "${namespace}"
+${siteId ? `context.siteId = ${siteId}` : ""}
 ${exports.map(stringifyExport).join("\n")}
 ${statements ? statements.map(stringifyStatement).join("\n") : ""}
 ${exportDefault ? `export default ${exportDefault.variable.identifier}` : ""}

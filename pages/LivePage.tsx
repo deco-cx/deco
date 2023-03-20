@@ -24,7 +24,9 @@ export default function LivePage({ sections, __metadata }: Props) {
     <>
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
-        page={{ id: __metadata.resolveChain[0] }}
+        page={{
+          id: __metadata?.resolveChain ? __metadata.resolveChain[0] : "",
+        }}
       />
       <LiveAnalytics />
       <>{sections?.map(renderSection)}</>

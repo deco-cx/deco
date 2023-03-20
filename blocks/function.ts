@@ -26,11 +26,12 @@ const functionBlock: Block<Function> = {
     TState = any,
   >(func: {
     default: Function<TConfig, TState>;
-  }) =>
+  }, key: string) =>
   async (
     $live: TConfig,
     ctx: HttpContext<any, any, HandlerContext<any, TState>>,
   ) => {
+    const global = await ctx.resolve({ __resolveType: "globals" });
     const { data } = await func.default(
       ctx.request,
       {
@@ -39,7 +40,7 @@ const functionBlock: Block<Function> = {
           ...ctx.context.state,
           $live,
           resolve: ctx.resolve,
-          global: await ctx.resolve("globals"),
+          global,
         },
       },
       $live,

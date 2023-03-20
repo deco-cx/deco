@@ -151,14 +151,17 @@ const baseEntrypoint = {
     },
   },
 } as Record<string, Resolvable>;
+
 export const newSupabaseProviderLegacy = (
   siteId: number,
   namespace: string,
 ): ConfigProvider => {
+  const supabaseClient = getSupabaseClient();
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
+
   const fetchSitePages = async () => {
-    return await getSupabaseClient()
+    return await supabaseClient
       .from("pages")
       .select("id, name, data, path, state")
       .eq("site", siteId);

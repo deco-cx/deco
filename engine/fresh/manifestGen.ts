@@ -42,6 +42,18 @@ export const defaultRoutes: {
 }[] = [
   {
     block: "routes",
+    from: "$live/routes/_middleware.ts",
+    key: "./routes/_middleware.ts",
+    ref: "$live_middleware",
+  },
+  {
+    block: "routes",
+    from: "$live/routes/live/inspect.ts",
+    key: "./routes/live/inspect.ts",
+    ref: "$live_inspect",
+  },
+  {
+    block: "routes",
     from: "$live/routes/live/schema.ts",
     key: "./routes/live/schema.ts",
     ref: "$live_schema",
@@ -129,8 +141,10 @@ export async function* listBlocks(
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
+  siteId?: undefined,
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
+    siteId,
     namespace,
     imports: {},
     exports: [],

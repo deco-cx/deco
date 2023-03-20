@@ -6,9 +6,11 @@ import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import { context } from "$live/live.ts";
 
-import * as $$$$0 from "./routes/live/schema.ts";
-import * as $$$$1 from "./routes/live/previews/[...block].tsx";
-import * as $$$$2 from "./routes/[...catchall].tsx";
+import * as $$$$0 from "./routes/_middleware.ts";
+import * as $$$$1 from "./routes/live/schema.ts";
+import * as $$$$2 from "./routes/live/inspect.ts";
+import * as $$$$3 from "./routes/live/previews/[...block].tsx";
+import * as $$$$4 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "$live/handlers/routesSelection.ts";
 import * as $$$$$$1 from "$live/handlers/router.ts";
 import * as $$$$$$2 from "$live/handlers/fresh.ts";
@@ -26,9 +28,11 @@ import { $live } from "$live/engine/fresh/manifest.ts";
 
 const manifest: DecoManifest = {
   "routes": {
-    "./routes/live/schema.ts": $$$$0,
-    "./routes/live/previews/[...block].tsx": $$$$1,
-    "./routes/[...catchall].tsx": $$$$2,
+    "./routes/_middleware.ts": $$$$0,
+    "./routes/live/schema.ts": $$$$1,
+    "./routes/live/inspect.ts": $$$$2,
+    "./routes/live/previews/[...block].tsx": $$$$3,
+    "./routes/[...catchall].tsx": $$$$4,
   },
   "handlers": {
     "$live/handlers/routesSelection.ts": $$$$$$0,

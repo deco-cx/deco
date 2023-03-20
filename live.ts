@@ -4,13 +4,8 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
-import { DecoManifest, LiveOptions, LiveState } from "$live/types.ts";
-import { formatLog } from "$live/utils/log.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
-import { workbenchHandler } from "$live/utils/workbench.ts";
-import { inspectVSCode } from "./deps.ts";
+import { DecoManifest } from "$live/types.ts";
 
 // The global live context
 export type LiveContext = {
@@ -32,84 +27,6 @@ export const context: LiveContext = {
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
   siteId: 0,
-};
-
-export const withLive = (liveOptions: LiveOptions) => {
-  if (!liveOptions.site) {
-    throw new Error(
-      "liveOptions.site is required. It should be the name of the site you created in deco.cx.",
-    );
-  }
-  if (!liveOptions.siteId) {
-    throw new Error(
-      "liveOptions.siteId is required. You can get it from the site URL: https://deco.cx/live/{siteId}",
-    );
-  }
-
-  // Enable InspectVSCode library
-  const inspectPath = liveOptions.inspectPath || "/_live/inspect";
-  // Enable Workbench
-  const workbenchPath = liveOptions.workbenchPath || "/_live/workbench";
-
-  context.site = liveOptions.site;
-  context.siteId = liveOptions.siteId;
-  context.loginUrl = liveOptions.loginUrl;
-
-  console.log(
-    `Starting live middleware: siteId=${context.siteId} site=${context.site}`,
-  );
-
-  return async (req: Request, ctx: MiddlewareHandlerContext<LiveState>) => {
-    ctx.state.site = {
-      id: context.siteId,
-      name: context.site,
-    };
-
-    const begin = performance.now();
-    const url = new URL(req.url);
-
-    const { start, end, printTimings } = createServerTimings();
-    ctx.state.t = { start, end };
-
-    // TODO: Find a better way to embedded these routes on project routes.
-    // Follow up here: https://github.com/denoland/fresh/issues/516
-    if (
-      req.method === "POST" &&
-      url.pathname.startsWith(inspectPath) &&
-      context.isDeploy === false
-    ) {
-      return await inspectVSCode.inspectHandler(inspectPath, req);
-    }
-
-    if (url.pathname === workbenchPath) {
-      return workbenchHandler();
-    }
-
-    // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-    const initialResponse = await ctx.next();
-
-    const newHeaders = new Headers(initialResponse.headers);
-    newHeaders.set("Server-Timing", printTimings());
-
-    const newResponse = new Response(initialResponse.body, {
-      status: initialResponse.status,
-      headers: newHeaders,
-    });
-
-    // TODO: print these on debug mode when there's debug mode.
-    if (!url.pathname.startsWith("/_frsh")) {
-      console.info(
-        formatLog({
-          status: initialResponse.status,
-          url,
-          pageId: ctx.state.page?.id,
-          begin,
-        }),
-      );
-    }
-
-    return newResponse;
-  };
 };
 
 // TODO (mcandeia) add CORS to read schema/live data

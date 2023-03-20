@@ -9,6 +9,7 @@ import {
 } from "$live/engine/schema/builder.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
+import { liveNs } from "$live/dev.ts";
 
 const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -94,15 +95,24 @@ const wellKnownLiveRoutes: Record<string, [string, string, string]> =
   defaultRoutes.map(
     (route) => [route.key, route.from],
   ).reduce((idx, [key, from]) => {
-    return { ...idx, [key]: ["$live", import.meta.resolve(from), key] };
+    return { ...idx, [key]: [liveNs, import.meta.resolve(from), key] };
   }, {});
 
 const getSchema = (): Promise<Schemas> => {
   return schemasPromise ??= loadSchemas().catch(getSchema);
 };
-export const handler = async (_: Request, __: HandlerContext) => {
+export const handler = async (req: Request, __: HandlerContext) => {
   schemasPromise ??= loadSchemas();
+
   return Response.json(
     await schemasPromise,
+    {
+      headers: {
+        "Access-Control-Allow-Origin": req.headers.get("origin") || "*",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, *",
+      },
+    },
   );
 };
