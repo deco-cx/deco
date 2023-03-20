@@ -36,7 +36,7 @@ const main = (
     }
 
     if (isLocalhost) {
-      console.debug(
+      console.info(
         `[Performance]:`,
         name,
         typeof value === "number" ? value.toFixed(2) : value.length,
