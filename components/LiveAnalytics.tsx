@@ -20,11 +20,25 @@ const main = (
   const islands: string[] = [];
   const loadingErrors: string[] = [];
 
+  // More info at:
+  // https://stackoverflow.com/questions/9808307/how-to-get-the-number-of-dom-elements-used-in-a-web-page
+  const getTotalDOMSize = (element: Element | ShadowRoot = document.body) => {
+    let count = 0;
+    let child = element.firstElementChild;
+    while (child) {
+      count += getTotalDOMSize(child);
+      if (child.shadowRoot) count += getTotalDOMSize(child.shadowRoot);
+      child = child.nextElementSibling;
+      count++;
+    }
+    return count;
+  };
+
   /**
    * Send report to admin and console.debug
    */
   const reportPerformance = (
-    type: "web-vitals" | "islands",
+    type: "web-vitals" | "islands" | "dom-size",
     name: string,
     value: number | string[],
     rating = "",
@@ -38,9 +52,10 @@ const main = (
     if (isLocalhost) {
       console.info(
         `[Performance]:`,
-        `%c${name}`,
-        'font',
-        typeof value === "number" ? value.toFixed(2) : `${value.length}, islands: ${value.join(', ')}`,
+        name,
+        typeof value === "number"
+          ? value.toFixed(2)
+          : `${value.length}: ${value.join(", ")}`,
         rating,
       );
     }
@@ -71,6 +86,7 @@ const main = (
     });
 
   requestIdleCallback(async () => {
+    reportPerformance("dom-size", "dom-size", getTotalDOMSize());
     reportPerformance("islands", "Islands", islands);
 
     /* Listen web-vitals */
