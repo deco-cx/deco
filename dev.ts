@@ -67,7 +67,8 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
     return undefined;
   }
   const fetchUrlLine = lns[1];
-  const [_ignoreFetchUrl, _ignoreGitUrl, namespace] = fetchUrlLine.split(":");
+  const [_ignoreFetchUrl, _ignoreGitUrl, nsAndGit] = fetchUrlLine.split(":");
+  const [namespace] = nsAndGit.split(".");
   return namespace.trimEnd();
 };
 export default async function dev(

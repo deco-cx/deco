@@ -1,5 +1,6 @@
 import { Flag } from "$live/blocks/flag.ts";
 import { MatchContext, Matcher } from "$live/blocks/matcher.ts";
+import { Monitoring, Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
 import { CookiedFlag, cookies } from "$live/flags.ts";
 import { Audience } from "$live/flags/audience.ts";
@@ -38,7 +39,10 @@ const rankRoute = (pattern: string) =>
       0,
     );
 
-const router = (routes: [string, Handler][]): Handler => {
+const router = (
+  routes: [string, Resolvable<Handler>][],
+  configs: { overrides: Record<string, string>; monitoring?: Monitoring },
+): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     for (const [routePath, handler] of routes) {
       const pattern = new URLPattern({ pathname: routePath });
@@ -46,11 +50,22 @@ const router = (routes: [string, Handler][]): Handler => {
       const groups = res?.pathname.groups ?? {};
 
       if (res !== null) {
-        return await handler(
+        const ctx = { ...connInfo, params: groups } as ConnInfo & {
+          params: Record<string, string>;
+        };
+        const resolvedOrPromise = context.configResolver!.resolve<Handler>(
+          handler,
+          { context: ctx, request: req },
+          configs,
+        );
+
+        const hand = isAwaitable(resolvedOrPromise)
+          ? await resolvedOrPromise
+          : resolvedOrPromise;
+
+        return await hand(
           req,
-          { ...connInfo, params: groups } as ConnInfo & {
-            params: Record<string, string>;
-          },
+          ctx,
         );
       }
     }
@@ -116,32 +131,18 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
           ]
           : [routes, overrides];
       },
-      [{}, {}] as [Record<string, Handler>, Record<string, string>],
+      [{}, {}] as [Record<string, Resolvable<Handler>>, Record<string, string>],
     );
-    // compose the routes together
-    const resolve = context.configResolver!.resolve.bind(
-      context.configResolver!,
-    );
-    const routerPromises: Promise<[string, Handler]>[] = [];
-    for (const [route, handler] of Object.entries(routes)) {
-      const resolvedOrPromise = resolve<Handler>(
-        handler,
-        { context: connInfo, request: req },
-        { overrides, monitoring: t ? { t } : undefined },
-      );
-      if (isAwaitable(resolvedOrPromise)) {
-        routerPromises.push(resolvedOrPromise.then((r) => [route, r]));
-      } else {
-        routerPromises.push(Promise.resolve([route, resolvedOrPromise]));
-      }
-    }
     // build the router from entries
-    const builtRoutes = (await Promise.all(routerPromises)).sort((
+    const builtRoutes = Object.entries(routes).sort((
       [routeStringA],
       [routeStringB],
     ) => rankRoute(routeStringB) - rankRoute(routeStringA));
 
-    const server = router(builtRoutes);
+    const server = router(builtRoutes, {
+      overrides,
+      monitoring: t ? { t } : undefined,
+    });
 
     // call the target handler
     const resp = await server(req, connInfo);

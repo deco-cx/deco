@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/server.ts";
 import { HttpContext } from "$live/blocks/handler.ts";
+import JsonViewer from "$live/blocks/utils.tsx";
 import { Block } from "$live/engine/block.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
 import { findExport, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
 import { LoaderFunction } from "$live/types.ts";
-import JsonViewer from "$live/blocks/utils.tsx";
 
 export type Function<TProps = any, TState = any> = LoaderFunction<
   TProps,
@@ -26,7 +26,7 @@ const functionBlock: Block<Function> = {
     TState = any,
   >(func: {
     default: Function<TConfig, TState>;
-  }, key: string) =>
+  }) =>
   async (
     $live: TConfig,
     ctx: HttpContext<any, any, HandlerContext<any, TState>>,

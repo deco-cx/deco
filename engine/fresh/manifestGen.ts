@@ -141,7 +141,7 @@ export async function* listBlocks(
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
-  siteId?: undefined,
+  siteId?: number,
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
     siteId,
