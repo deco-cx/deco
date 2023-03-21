@@ -1,12 +1,12 @@
 import { Resolvable } from "$live/engine/core/resolver.ts";
 
-export interface ConfigProvider {
+export interface ConfigStore {
   onChange(cb: () => void): void;
   // deno-lint-ignore no-explicit-any
   get(): Promise<Record<string, Resolvable<any>>>;
 }
 
-export const compose = (...providers: ConfigProvider[]): ConfigProvider => {
+export const compose = (...providers: ConfigStore[]): ConfigStore => {
   return providers.reduce((providers, current) => {
     return {
       onChange: (cb) => {

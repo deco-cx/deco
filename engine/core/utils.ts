@@ -1,3 +1,5 @@
+import { Lock } from "https://deno.land/x/async@v1.2.0/mod.ts";
+
 export type PromiseOrValue<T> = Promise<T> | T;
 export type Entries<T> = {
   [K in keyof T]: [K, T[K]];
@@ -47,4 +49,36 @@ export const notUndefined = <T>(v: T | undefined | Awaited<T>): v is T => {
 
 export const isPrimitive = <T>(v: T): boolean => {
   return !Array.isArray(v) && typeof v !== "object" && typeof v !== "function";
+};
+
+interface SingleFlight<T> {
+  do: (key: string, f: () => Promise<T>) => Promise<T>;
+}
+
+export const singleFlight = <T>(): SingleFlight<T> => {
+  const mu = new Lock();
+  const active: Record<string, Promise<T>> = {};
+  return {
+    do: async (key: string, f: () => Promise<T>) => {
+      let promise = active[key];
+      if (promise !== undefined) {
+        return promise;
+      }
+      await mu.acquire();
+      promise = active[key];
+      if (promise !== undefined) {
+        mu.release();
+        return promise;
+      }
+
+      promise = f();
+      active[key] = promise.finally(async () => {
+        await mu.acquire();
+        delete active[key];
+        mu.release();
+      });
+      mu.release();
+      return promise;
+    },
+  };
 };

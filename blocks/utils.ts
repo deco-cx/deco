@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { HttpContext } from "$live/blocks/handler.ts";
-import JsonViewer from "$live/blocks/utils.tsx";
+import { HttpContext, StatefulContext } from "$live/blocks/handler.ts";
 import { JSONSchema7 } from "$live/deps.ts";
 import {
   Block,
@@ -9,6 +8,9 @@ import {
   FunctionBlockDefinition,
   PreactComponent,
 } from "$live/engine/block.ts";
+import { Resolver } from "$live/engine/core/resolver.ts";
+import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
+import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
 import {
   inlineOrSchemeable,
   Schemeable,
@@ -24,10 +26,11 @@ import {
   DocNode,
   TsTypeDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
-import { Resolver } from "../engine/core/resolver.ts";
-import { PromiseOrValue } from "../engine/core/utils.ts";
-import { StatefulContext } from "./handler.ts";
 
+export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
+  args: TConfig,
+  ctx: TCtx,
+) => string;
 export const fnDefinitionToSchemeable = async (
   ast: [string, DocNode[]],
   validFn: FunctionBlockDefinition,
@@ -166,15 +169,11 @@ const configTsType = (fn: FunctionTypeDef): TsTypeDef | undefined => {
   return liveConfig.typeRef.typeParams[0];
 };
 
-export const fromFreshLikeHandler = (requiredPath: string) =>
-async (
+export const fromFreshLikeHandler = async (
   transformationContext: TransformContext,
   path: string,
   ast: DocNode[],
 ): Promise<BlockModuleRef | undefined> => {
-  if (!path.startsWith(requiredPath)) {
-    return undefined;
-  }
   const func = findExport("default", ast);
   if (!func) {
     return undefined;
@@ -245,20 +244,20 @@ export const newComponentBlock = <K extends string>(
   introspect: instrospectComponentFunc,
 });
 
-export const newHandlerLikeBlock = <
-  Ctx extends StatefulContext<any> = StatefulContext<any>,
-  R = any,
-  K extends string = string,
->(
-  type: K,
-): Block<StatefulHandler<any, R, Ctx>, R, K> => ({
-  type,
-  defaultPreview: (result) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(result) },
-    };
-  },
-  introspect: fromFreshLikeHandler(`./${type}`),
-  adapt: configAsState,
-});
+export const newSingleFlightGroup = <
+  TConfig = any,
+  TContext extends ResolverMiddlewareContext<any> = ResolverMiddlewareContext<
+    any
+  >,
+>(singleFlightKeyFunc?: SingleFlightKeyFunc<TConfig, TContext>) => {
+  const flights = singleFlight();
+  return (c: TConfig, ctx: TContext) => {
+    if (!singleFlightKeyFunc) {
+      return ctx.next!();
+    }
+    return flights.do(
+      `${singleFlightKeyFunc(c, ctx)}`,
+      () => ctx.next!(),
+    );
+  };
+};

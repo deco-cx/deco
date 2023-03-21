@@ -1,8 +1,51 @@
 // deno-lint-ignore-file no-explicit-any
-import { HandlerContext } from "$fresh/server.ts";
-import { newHandlerLikeBlock } from "$live/blocks/utils.ts";
+import {
+  HttpContext,
+  LiveConfig,
+  StatefulContext,
+} from "$live/blocks/handler.ts";
+import {
+  fromFreshLikeHandler,
+  newSingleFlightGroup,
+  SingleFlightKeyFunc,
+  StatefulHandler,
+} from "$live/blocks/utils.ts";
+import JsonViewer from "$live/blocks/utils.tsx";
+import { BlockForModule, BlockModule } from "$live/engine/block.ts";
 
-const loaderBlock = newHandlerLikeBlock<HandlerContext<any, any>>("loaders");
+export interface LoaderModule<
+  TConfig = any,
+  Ctx extends StatefulContext<LiveConfig<any, TConfig>> = StatefulContext<
+    LiveConfig<any, TConfig>
+  >,
+> extends BlockModule<any, StatefulHandler<any, any, Ctx>> {
+  singleFlightKey?: SingleFlightKeyFunc<TConfig, HttpContext>;
+}
+
+const loaderBlock: BlockForModule<LoaderModule> = {
+  type: "loaders",
+  introspect: fromFreshLikeHandler,
+  defaultPreview: (result) => {
+    return {
+      Component: JsonViewer,
+      props: { body: JSON.stringify(result, null, 2) },
+    };
+  },
+  adapt: <
+    TCtx extends StatefulContext<any> = StatefulContext<any>,
+    TConfig = any,
+  >(
+    { default: loader, singleFlightKey }: LoaderModule<TConfig, TCtx>,
+  ) => [
+    newSingleFlightGroup(singleFlightKey),
+    async function ($live: TConfig, ctx: HttpContext<any, any, TCtx>) {
+      return await loader(ctx.request, {
+        ...ctx.context,
+        state: { ...ctx.context.state, $live, resolve: ctx.resolve },
+      });
+    },
+  ],
+};
 
 /**
  * <TResponse>(req:Request, ctx: HandlerContext<any, LiveConfig<TConfig>>) => Promise<TResponse> | TResponse

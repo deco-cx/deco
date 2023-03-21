@@ -4,20 +4,23 @@ import {
   Resolver,
 } from "$live/engine/core/resolver.ts";
 
+export interface ResolverMiddlewareContext<T> extends BaseContext {
+  next?(): Promise<T>;
+}
 export type ResolverMiddleware<
   T,
-  TParent,
-  TContext extends BaseContext & { next?(): Promise<T> },
+  TParent = unknown,
+  TContext extends ResolverMiddlewareContext<T> = ResolverMiddlewareContext<T>,
 > = Resolver<T, TParent, TContext>;
 
 export const compose = <
   T,
   TParent,
-  TContext extends BaseContext & { next?(): Promise<T> },
+  TContext extends ResolverMiddlewareContext<T>,
 >(
-  last: Resolver<T, TParent, TContext>,
-  ...middleware: ResolverMiddleware<T, TParent, TContext>[]
+  ...middlewares: ResolverMiddleware<T, TParent, TContext>[]
 ): Resolver<T, TParent, TContext> => {
+  const last = middlewares[middlewares.length - 1];
   return async function (p: TParent, ctx: TContext) {
     // last called middleware #
     let index = -1;
@@ -30,8 +33,8 @@ export const compose = <
         return Promise.reject(new Error("next() called multiple times"));
       }
       index = i;
-      const resolver = middleware[i];
-      if (i === middleware.length) {
+      const resolver = middlewares[i];
+      if (i === middlewares.length) {
         return await last(p, ctx);
       }
       return await resolver(p, {

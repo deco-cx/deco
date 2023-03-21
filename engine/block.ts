@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
+import { ResolverMiddleware } from "$live/engine/middleware.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
 import {
   DocNode,
@@ -34,6 +35,13 @@ export type ModuleOf<TBlock> = TBlock extends Block<
   any,
   infer TBlockModule
 > ? TBlockModule
+  : never;
+
+export type BlockForModule<
+  TBlockModule extends BlockModule,
+  BType extends BlockType = BlockType,
+> = TBlockModule extends BlockModule<infer _, infer TFunc, infer TSerializable>
+  ? Block<TFunc, TSerializable, BType, TBlockModule>
   : never;
 
 export interface Block<
@@ -74,7 +82,11 @@ export interface Block<
   adapt?: <TConfig = any>(
     blockModule: TBlockModule,
     key: string,
-  ) => Resolver<TSerializable, TConfig, any>;
+  ) => Resolver<TSerializable, TConfig, any> | ResolverMiddleware<
+    TSerializable,
+    TConfig,
+    any
+  >[];
 }
 
 export type ModuleAST = [string, string, DocNode[]];

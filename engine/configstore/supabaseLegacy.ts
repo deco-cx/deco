@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { ConfigProvider } from "$live/engine/fresh/provider.ts";
+import { ConfigStore } from "$live/engine/configstore/provider.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import {
   Page,
@@ -74,6 +74,14 @@ interface CatchAllConfigs {
   __resolveType: "resolve";
 }
 
+const sectionToAccount: Record<string, string> = {
+  "deco-sites/std/sections/configVTEX.global.tsx":
+    "deco-sites/std/accounts/vtex.ts",
+  "deco-sites/std/sections/configOCC.global.tsx":
+    "deco-sites/std/accounts/occ.ts",
+  "deco-sites/std/sections/configShopify.global.tsx":
+    "deco-sites/std/accounts/shopify.ts",
+};
 const pageToConfig =
   (namespace: string) =>
   (c: Record<string, Resolvable>, p: Page): Record<string, Resolvable> => {
@@ -83,8 +91,17 @@ const pageToConfig =
         const globalSection = p.data.sections[0];
         const byDashSplit = globalSection.key.split("/");
         const [name] = byDashSplit[byDashSplit.length - 1].split(".");
+        const wellKnownSection = sectionToAccount[fstSection.key];
         return {
           ...c,
+          ...wellKnownSection
+            ? {
+              [name]: {
+                ...globalSection.props,
+                __resolveType: wellKnownSection,
+              },
+            }
+            : {},
           [globalsKey]: {
             ...(c[globalsKey] ?? {}),
             [name]: globalSection.props,
@@ -155,7 +172,7 @@ const baseEntrypoint = {
 export const newSupabaseProviderLegacy = (
   siteId: number,
   namespace: string,
-): ConfigProvider => {
+): ConfigStore => {
   const supabaseClient = getSupabaseClient();
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;

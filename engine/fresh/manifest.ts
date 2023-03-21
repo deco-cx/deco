@@ -3,6 +3,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
 import { BlockModule, PreactComponent } from "$live/engine/block.ts";
+import { newSupabaseProviderLegacy } from "$live/engine/configstore/supabaseLegacy.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
@@ -11,9 +12,9 @@ import {
 } from "$live/engine/core/resolver.ts";
 import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
 import defaultResolvers from "$live/engine/fresh/defaults.ts";
+import { compose } from "$live/engine/middleware.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { newSupabaseProviderLegacy } from "$live/engine/fresh/supabase.ts";
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
 
@@ -101,7 +102,10 @@ export const $live = <T extends DecoManifest>(m: T): T => {
       const adapted = blk.adapt
         ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
           decorated,
-          blk.adapt,
+          (mod, key) => {
+            const resolver = blk.adapt!(mod, key);
+            return Array.isArray(resolver) ? compose(...resolver) : resolver;
+          },
         )
         : {}; // if block has no adapt so it's not considered a resolver.
       return [

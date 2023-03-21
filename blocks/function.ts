@@ -1,8 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/server.ts";
 import { HttpContext } from "$live/blocks/handler.ts";
+import {
+  newSingleFlightGroup,
+  SingleFlightKeyFunc,
+} from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
-import { Block } from "$live/engine/block.ts";
+import { BlockForModule, BlockModule } from "$live/engine/block.ts";
 import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
 import { findExport, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
 import { LoaderFunction } from "$live/types.ts";
@@ -13,7 +17,14 @@ export type Function<TProps = any, TState = any> = LoaderFunction<
   TState
 >;
 
-const functionBlock: Block<Function> = {
+export interface FunctionModule<
+  TConfig = any,
+  TState = any,
+> extends BlockModule<any, Function<TConfig, TState>> {
+  singleFlightKey?: SingleFlightKeyFunc<TConfig, HttpContext>;
+}
+
+const functionBlock: BlockForModule<FunctionModule> = {
   type: "functions",
   defaultPreview: (result) => {
     return {
@@ -24,29 +35,31 @@ const functionBlock: Block<Function> = {
   adapt: <
     TConfig = any,
     TState = any,
-  >(func: {
-    default: Function<TConfig, TState>;
-  }) =>
-  async (
-    $live: TConfig,
-    ctx: HttpContext<any, any, HandlerContext<any, TState>>,
-  ) => {
-    const global = await ctx.resolve({ __resolveType: "globals" });
-    const { data } = await func.default(
-      ctx.request,
-      {
-        ...ctx.context,
-        state: {
-          ...ctx.context.state,
-          $live,
-          resolve: ctx.resolve,
-          global,
+  >(
+    { default: func, singleFlightKey }: FunctionModule<TConfig, TState>,
+  ) => [
+    newSingleFlightGroup(singleFlightKey),
+    async (
+      $live: TConfig,
+      ctx: HttpContext<any, any, HandlerContext<any, TState>>,
+    ) => {
+      const global = await ctx.resolve({ __resolveType: "globals" });
+      const { data } = await func(
+        ctx.request,
+        {
+          ...ctx.context,
+          state: {
+            ...ctx.context.state,
+            $live,
+            resolve: ctx.resolve,
+            global,
+          },
         },
-      },
-      $live,
-    );
-    return data;
-  },
+        $live,
+      );
+      return data;
+    },
+  ],
   introspect: async (ctx, path, ast) => {
     const func = findExport("default", ast);
     if (!func) {
