@@ -48,7 +48,7 @@ const loadSchemas = async (): Promise<Schemas> => {
             : [
               namespaceOf(block.type, blockModuleKey),
               import.meta.resolve(blockModuleKey),
-              import.meta.resolve(blockModuleKey),
+              blockModuleKey,
             ]);
 
       const docPromise = denoDoc(blockPath);
