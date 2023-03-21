@@ -4,7 +4,6 @@ import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
 import { Schemeable } from "$live/engine/schema/transform.ts";
 import { fromFileUrl } from "std/path/mod.ts";
 
-
 export interface Schemas {
   definitions: Record<string, JSONSchema7>;
   root: Record<string, JSONSchema7>;
@@ -30,6 +29,16 @@ interface ResolverRef {
   outputSchemaIds: string[];
 }
 
+const resolvableReferenceSchema: JSONSchema7 = {
+  $id: "resolvable",
+  title: "Select from saved",
+  required: ["__resolveType"],
+  properties: {
+    __resolveType: {
+      type: "string",
+    },
+  },
+};
 /**
  * Used as a schema for the return value of the given function.
  * E.g, let's say you have a function that returns a boolean, and this function is referenced by `deco-sites/std/myBooleanFunction.ts`
@@ -247,7 +256,8 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           const schemeable = functionRefToschemeable(rs);
           const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
           const funcSchema = id ? nDef[id[0]] : undefined;
-          const currAnyOfs = currentRoot[rs.blockType]?.anyOf ?? [];
+          const currAnyOfs = currentRoot[rs.blockType]?.anyOf ??
+            [resolvableReferenceSchema];
 
           const newDef = rs.outputSchemaIds.reduce(
             (innerDefinitions, innerRoot) => {
@@ -258,6 +268,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               return {
                 ...innerDefinitions,
                 [innerRoot]: mergeJSONSchemas(
+                  resolvableReferenceSchema,
                   outSchema as JSONSchema7,
                   funcSchema!,
                 ),

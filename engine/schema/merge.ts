@@ -1,6 +1,6 @@
 import { JSONSchema7 } from "$live/deps.ts";
 
-export const mergeJSONSchemas = (
+const merge = (
   defObj: JSONSchema7,
   defOtherObj: JSONSchema7,
 ) => {
@@ -35,4 +35,10 @@ export const mergeJSONSchemas = (
     }),
     $id: defObj.$id ?? defOtherObj.$id,
   };
+};
+
+export const mergeJSONSchemas = (
+  ...schemas: JSONSchema7[]
+): JSONSchema7 => {
+  return schemas.reduce((obj, otherObj) => merge(obj, otherObj));
 };

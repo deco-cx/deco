@@ -2,16 +2,13 @@ import { applyConfig, configOnly } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 
-const brand = Symbol();
+// deno-lint-ignore no-empty-interface
+export interface Account {}
 
-export interface AccountObj {
-  [brand]: never;
-}
-
-export type Account = InstanceOf<typeof accountBlock, "#/root/account">;
+export type Accounts = InstanceOf<typeof accountBlock, "#/root/accounts">;
 
 // deno-lint-ignore no-explicit-any
-export type AccountFunc<TConfig = any> = (c: TConfig) => AccountObj;
+export type AccountFunc<TConfig = any> = (c: TConfig) => Account;
 
 const accountBlock: Block<AccountFunc> = {
   type: "accounts",

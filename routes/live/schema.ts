@@ -103,6 +103,7 @@ const getSchema = (): Promise<Schemas> => {
 };
 export const handler = async (req: Request, __: HandlerContext) => {
   schemasPromise ??= loadSchemas();
+  schemasPromise.then();
 
   return Response.json(
     await schemasPromise,
