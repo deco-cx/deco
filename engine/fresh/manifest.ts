@@ -78,6 +78,7 @@ const asManifest = (
   d: DecoManifest,
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
+
 export const $live = <T extends DecoManifest>(m: T): T => {
   const [newManifest, resolvers] = (blocks ?? []).reduce(
     ([currMan, currMap], blk) => {

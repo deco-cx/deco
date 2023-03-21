@@ -169,12 +169,9 @@ export const decoManifestBuilder = async (
   }
 
   return addDefaultBlocks(
-    initialManifest.addImports({
-      from: "$live/engine/fresh/manifest.ts",
-      clauses: [{ import: "$live" }],
-    })
+    initialManifest
       .addExportDefault({
-        variable: { identifier: "$live(manifest)" },
+        variable: { identifier: "manifest" },
       }),
   );
 };
