@@ -243,7 +243,7 @@ export const findSchemeableFromNode = async (
       return {
         name: rootNode.name,
         file: rootNode.location.filename,
-        extends: allOf,
+        extends: allOf && allOf.length > 0 ? allOf : undefined,
         type: "object",
         ...(await typeDefToSchemeable(rootNode.interfaceDef, root)),
       };

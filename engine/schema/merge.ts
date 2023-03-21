@@ -26,14 +26,13 @@ const merge = (
 
   return {
     anyOf: anyOf.filter((ref) => {
-      if (!ref.$id) {
+      if (!ref.$ref) {
         return true;
       }
-      const added = alreadyAdded[ref.$id];
-      alreadyAdded[ref.$id] = true;
+      const added = alreadyAdded[ref.$ref];
+      alreadyAdded[ref.$ref] = true;
       return !added;
     }),
-    $id: defObj.$id ?? defOtherObj.$id,
   };
 };
 

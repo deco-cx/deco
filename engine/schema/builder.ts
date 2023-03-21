@@ -29,10 +29,15 @@ interface ResolverRef {
   outputSchemaIds: string[];
 }
 
+const resolvableRef = {
+  $ref: "#/definitions/Resolvable",
+};
+
 const resolvableReferenceSchema: JSONSchema7 = {
-  $id: "resolvable",
+  $id: "Resolvable",
   title: "Select from saved",
   required: ["__resolveType"],
+  additionalProperties: false,
   properties: {
     __resolveType: {
       type: "string",
@@ -66,7 +71,7 @@ const functionRefToschemeable = ({
       type: "object",
       allOf: inputSchemaIds.length > 0
         ? [{ $ref: `#/definitions/${inputSchemaIds[0]}` }]
-        : [],
+        : undefined,
       required: ["__resolveType"],
       properties: {
         __resolveType: {
@@ -244,7 +249,10 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               ],
             ];
           },
-          [initial.schema.definitions, []] as [
+          [{
+            ...initial.schema.definitions,
+            [resolvableReferenceSchema.$id!]: resolvableReferenceSchema,
+          }, []] as [
             Schemas["definitions"],
             ResolverRef[],
           ],
@@ -257,7 +265,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
           const funcSchema = id ? nDef[id[0]] : undefined;
           const currAnyOfs = currentRoot[rs.blockType]?.anyOf ??
-            [resolvableReferenceSchema];
+            [resolvableRef];
 
           const newDef = rs.outputSchemaIds.reduce(
             (innerDefinitions, innerRoot) => {
@@ -268,7 +276,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               return {
                 ...innerDefinitions,
                 [innerRoot]: mergeJSONSchemas(
-                  resolvableReferenceSchema,
+                  resolvableRef,
                   outSchema as JSONSchema7,
                   funcSchema!,
                 ),

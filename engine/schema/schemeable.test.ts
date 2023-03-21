@@ -67,9 +67,8 @@ Deno.test("Simple type generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       name: {
@@ -125,9 +124,8 @@ Deno.test("Simple interface generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       name: {
@@ -193,9 +191,8 @@ Deno.test("Non required fields generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       maybeName: {
@@ -264,9 +261,8 @@ Deno.test("Union types generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       name: {
@@ -332,9 +328,8 @@ Deno.test("Array fields generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       array: {
@@ -410,9 +405,8 @@ Deno.test("Type reference generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       ref: {
@@ -493,9 +487,8 @@ Deno.test("JSDoc tags injection", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       email: {
@@ -626,9 +619,8 @@ Deno.test("Wellknown in types generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: [],
+    allOf: undefined,
     title: rands[0],
-    $id: rands[0],
     type: "object",
     properties: {
       array: {

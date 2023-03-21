@@ -74,7 +74,7 @@ const schemeableToJSONSchemaFunc = (
         nDef,
         {
           type: "object",
-          allOf,
+          allOf: allOf && allOf.length > 0 ? allOf : undefined,
           properties,
           required: schemeable.required,
           title: schemeable.title ?? schemeable.id,
@@ -122,7 +122,6 @@ export const schemeableToJSONSchema = (
         ...nSchema,
         [schemeableId]: {
           ...curr,
-          $id: schemeable.friendlyId ?? schemeableId,
           title: schemeable.friendlyId ?? curr?.title,
         },
       },
