@@ -111,7 +111,6 @@ export const $live = <T extends DecoManifest>(m: T): T => {
     [m, {}] as [DecoManifest, ResolverMap<FreshContext>],
   );
   context.site = siteName();
-  console.log(`live started for site=${context.site} siteId=${context.siteId}`);
   const provider = newSupabaseProviderLegacy(
     context.siteId,
     context.namespace!,

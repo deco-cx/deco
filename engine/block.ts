@@ -128,7 +128,7 @@ export type ComponentFunc<
 
 export interface ComponentMetadata {
   resolveChain: string[];
-  resolver: string;
+  component: string;
 }
 
 export interface PreactComponent<

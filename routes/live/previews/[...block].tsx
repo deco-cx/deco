@@ -8,7 +8,7 @@ export default function Render({
   data: { Component, props, metadata },
 }: PageProps<Page>) {
   return (
-    <Component data-manifest-key={metadata?.resolver} {...props}></Component>
+    <Component data-manifest-key={metadata?.component} {...props}></Component>
   );
 }
 
