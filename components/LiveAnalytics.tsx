@@ -17,7 +17,6 @@ const main = (
     active_flags: string;
   },
 ) => {
-  const islands: string[] = [];
   const loadingErrors: string[] = [];
 
   // More info at:
@@ -38,33 +37,13 @@ const main = (
    * Send report to admin and console.debug
    */
   const reportPerformance = (
-    type: "web-vitals" | "islands" | "dom-size",
-    name: string,
-    value: number | string[],
-    rating = "",
-  ) => {
-    const isLocalhost = location?.origin.includes("localhost");
-
-    if (top !== window) {
-      top?.postMessage({ type, args: { name, rating, value } }, "*");
-    }
-
-    if (isLocalhost) {
-      console.info(
-        `[Performance]:`,
-        name,
-        typeof value === "number"
-          ? value.toFixed(2)
-          : `${value.length}: ${value.join(", ")}`,
-        rating,
-      );
-    }
-  };
+    type: "web-vitals" | "resource" | "dom-elements" | "navigation",
+    args: unknown,
+  ) => top !== window && top?.postMessage({ type, args }, "*");
 
   const onWebVitalsReport = (event: unknown) => {
     window.jitsu?.("track", "web-vitals", event);
-
-    reportPerformance("web-vitals", event.name, event.value, event.rating);
+    reportPerformance("web-vitals", JSON.stringify(event));
   };
 
   /* Send exception error to jitsu */
@@ -86,8 +65,23 @@ const main = (
     });
 
   requestIdleCallback(async () => {
-    reportPerformance("dom-size", "dom-size", getTotalDOMSize());
-    reportPerformance("islands", "Islands", islands);
+    reportPerformance("dom-elements", getTotalDOMSize());
+
+    if (typeof PerformanceObserver !== "undefined" && top !== window) {
+      // Report main html timings
+      reportPerformance(
+        "navigation",
+        JSON.stringify(performance.getEntriesByType("navigation")[0].toJSON()),
+      );
+
+      // Report secondary resources timings
+      new PerformanceObserver((perf) =>
+        perf.getEntries().forEach((entry) =>
+          reportPerformance("resource", JSON.stringify(entry.toJSON()))
+        )
+      )
+        .observe({ type: "resource", buffered: true });
+    }
 
     /* Listen web-vitals */
     const webVitals = await import(
@@ -110,24 +104,16 @@ const main = (
     );
 
     /* Add these trackers to all analytics sent to our server */
-    window.jitsu("set", { ...userData, page_islands: islands.join(",") });
+    window.jitsu("set", userData);
     /* Send page-view event */
     window.jitsu("track", "pageview");
   });
-
-  const isIsland = (src: string) =>
-    /(.*)\/_frsh\/js\/(.*)\/island-(.*)\.js$/g.test(src);
 
   const scripts = document.querySelectorAll("script");
 
   // Track script errors
   scripts.forEach((script) => {
     script.addEventListener("error", () => loadingErrors.push(script.src));
-
-    if (isIsland(script.src)) {
-      const [_, islandName] = script.src.split("island-");
-      islands.push(islandName.replace(".js", ""));
-    }
   });
 
   /* Send exception error event to jitsu */
