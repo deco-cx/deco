@@ -119,15 +119,6 @@ export type StatefulHandler<
   TCtx extends StatefulContext<TConfig> = StatefulContext<TConfig>,
 > = (req: Request, ctx: TCtx) => PromiseOrValue<TResp>;
 
-interface GlobalConfig {
-  __globals: any;
-}
-
-export const isGlobalConfig = <T>(
-  value: T | GlobalConfig,
-): value is GlobalConfig => {
-  return (value as GlobalConfig)?.__globals !== undefined;
-};
 export const configAsState = <
   TCtx extends StatefulContext<any> = StatefulContext<any>,
   TConfig = any,
@@ -136,10 +127,9 @@ export const configAsState = <
   default: StatefulHandler<TConfig, TResp, TCtx>;
 }) =>
 async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
-  const global = isGlobalConfig($live) ? $live.__globals : {};
   return await func.default(ctx.request, {
     ...ctx.context,
-    state: { ...ctx.context.state, $live, resolve: ctx.resolve, global },
+    state: { ...ctx.context.state, $live, resolve: ctx.resolve },
   });
 };
 
