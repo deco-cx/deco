@@ -352,6 +352,7 @@
     "https://esm.sh/v111/node.ns.d.ts": "0fb081f0cd2150931bd54baa04f31466abd9ca701fd9060d07931402cf8367ba",
     "https://esm.sh/v111/react-json-view@1.21.3/X-ZS8q/deno/react-json-view.js": "93b60cd6e865b3f5a46b546bf57a86928f9a5fb0055efaeaeb302db31c60dea8",
     "https://esm.sh/v111/react-json-view@1.21.3/deno/react-json-view.js": "4985daf2fc7de615b6b4f89a058ae54b12adf7671ae2eed05d78922578aceab1",
-    "https://esm.sh/v111/websocket@1.0.34/deno/websocket.js": "96ccf86a285d4ec17aaf925325a4cecc7e035c0e5917ff0c4523c8f6641d13a4"
+    "https://esm.sh/v111/websocket@1.0.34/deno/websocket.js": "96ccf86a285d4ec17aaf925325a4cecc7e035c0e5917ff0c4523c8f6641d13a4",
+    "https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js": "ad9dee8413b808274d914ca07529df11ac418271d01ed283cbba5ed5eda7ae07"
   }
 }
