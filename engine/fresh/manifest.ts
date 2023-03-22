@@ -186,7 +186,9 @@ export const $live = <T extends DecoManifest>(m: T): T => {
       ? buildDanglingRecover(recovers)
       : undefined,
   });
-  provider.onChange(() => resolver.setResolvables(provider.get()));
+  provider.onChange(() => {
+    context.configResolver!.setResolvables(provider.get());
+  });
   // should be set first
   context.configResolver = resolver;
   context.manifest = newManifest;

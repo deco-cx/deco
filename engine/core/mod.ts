@@ -33,10 +33,10 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   protected resolvables: PromiseOrValue<Record<string, Resolvable<any>>>;
   protected resolvers: ResolverMap<TContext>;
   protected danglingRecover?: Resolver;
-  constructor(protected config: ResolverOptions<TContext>) {
-    this.resolvers = {};
-    this.resolvables = this.config.resolvables;
-    this.danglingRecover = this.config.danglingRecover;
+  constructor(config: ResolverOptions<TContext>) {
+    this.resolvers = config.resolvers;
+    this.resolvables = config.resolvables;
+    this.danglingRecover = config.danglingRecover;
   }
 
   public addResolvers = (resolvers: ResolverMap<TContext>) => {
@@ -65,11 +65,9 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const { resolvers: res, resolvables: rPromise } = this.config;
-    const resolvables = await rPromise;
+    const resolvables = await this.resolvables;
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = {
-      ...res,
       ...this.resolvers,
       resolve: function _resolve(obj: any, { resolve }: BaseContext) {
         return resolve(obj);
