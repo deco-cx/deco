@@ -2,6 +2,8 @@ type Timing = { start: number; end?: number };
 
 type TimingKey = string;
 
+const slugify = (key: string) => key.replace(/\//g, ".");
+
 export function createServerTimings() {
   const timings: Record<string, Timing> = {};
 
@@ -17,7 +19,7 @@ export function createServerTimings() {
     return Object.entries(timings)
       .map(([key, timing]) => {
         const duration = (timing.end! - timing.start).toFixed(0);
-        return `${key};dur=${duration}`;
+        return `${slugify(key)};dur=${duration}`;
       })
       .join(", ");
   };

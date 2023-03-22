@@ -4,7 +4,6 @@ import type { Flags, Page, Site } from "$live/types.ts";
 
 declare global {
   interface Window {
-    inspectVSCode: inspectVSCode.DomInspector;
     LIVE: {
       page: Page;
       site: Site;
