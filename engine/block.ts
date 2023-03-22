@@ -58,6 +58,9 @@ export interface Block<
     TSerializable
   >,
 > {
+  defaultDanglingRecover?: Resolver<TSerializable> | ResolverMiddleware<
+    TSerializable
+  >[];
   defaultPreview?: Resolver<PreactComponent, TSerializable, any>;
   type: BType;
   introspect: (

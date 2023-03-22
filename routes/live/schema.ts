@@ -10,6 +10,7 @@ import {
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
 import { liveNs } from "$live/dev.ts";
+import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
 
 const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -34,7 +35,10 @@ const loadSchemas = async (): Promise<Schemas> => {
   for (const block of blocks) {
     for (
       const blockModuleKey of Object.keys(
-        manifestBlocks[block.type as keyof typeof manifestBlocks] ?? {},
+        withoutLocalModules(
+          block.type,
+          manifestBlocks[block.type as keyof typeof manifestBlocks] ?? {},
+        ),
       )
     ) {
       const [namespace, blockPath, blockKey] =

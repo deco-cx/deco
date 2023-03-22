@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { DecoManifest } from "$live/types.ts";
+import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -252,10 +253,16 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         } = manifest;
 
         let blockN = 0;
-        for (const [block, value] of Object.entries(blocks)) {
+        for (
+          const [block, value] of Object.entries(blocks)
+        ) {
           blockN++;
           let blockC = 0;
-          for (const path of Object.keys(value ?? {})) {
+          for (
+            const path of Object.keys(
+              withoutLocalModules(block, value ?? {}),
+            )
+          ) {
             const ref = `i${manI}${"$".repeat(blockN)}${blockC}`;
             blockC++;
             innerBuilder = innerBuilder

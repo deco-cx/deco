@@ -1,5 +1,6 @@
 import blocks from "$live/blocks/index.ts";
 import { Block, BlockType } from "$live/engine/block.ts";
+import { shouldBeLocal } from "$live/engine/fresh/manifest.ts";
 import {
   ManifestBuilder,
   newManifestBuilder,
@@ -15,10 +16,10 @@ const withDefinition = (
   blockIdx: number,
   blkN: number,
 ): ManifestBuilder => {
-  // FIXME(mcandeia) use function key for the schema gen
-  const functionKey = block === "routes" || block === "islands" // islands and blocks are unique
+  const functionKey = shouldBeLocal(block, functionRef)
     ? functionRef
-    : `${namespace}${functionRef.substring(1)}`;
+    : `${namespace}${functionRef.substring(1)}`; // add namespace to the functionRef
+
   const ref = `${"$".repeat(blockIdx)}${blkN}`;
   return man
     .addImports({

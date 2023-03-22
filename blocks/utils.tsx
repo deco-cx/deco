@@ -52,3 +52,13 @@ export default function JsonViewer(p: Props) {
     </>
   );
 }
+
+export interface StubSectionProps {
+  component: string;
+}
+
+export function StubSection({ component }: StubSectionProps) {
+  return (
+    <div>Oops! the reference for the component {component} is dangling</div>
+  );
+}

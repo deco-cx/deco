@@ -237,8 +237,12 @@ export const instrospectComponentFunc = async (
 
 export const newComponentBlock = <K extends string>(
   type: K,
+  defaultDanglingRecover?: Resolver<PreactComponent> | Resolver<
+    PreactComponent
+  >[],
 ): Block<ComponentFunc, PreactComponent, K> => ({
   type,
+  defaultDanglingRecover,
   defaultPreview: (comp) => comp,
   adapt: fromComponentFunc,
   introspect: instrospectComponentFunc,

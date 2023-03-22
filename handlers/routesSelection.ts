@@ -1,6 +1,7 @@
 import { Flag } from "$live/blocks/flag.ts";
 import { MatchContext, Matcher } from "$live/blocks/matcher.ts";
-import { Monitoring, Resolvable } from "$live/engine/core/resolver.ts";
+import { ResolveOptions } from "$live/engine/core/mod.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
 import { CookiedFlag, cookies } from "$live/flags.ts";
 import { Audience } from "$live/flags/audience.ts";
@@ -41,7 +42,7 @@ const rankRoute = (pattern: string) =>
 
 const router = (
   routes: [string, Resolvable<Handler>][],
-  configs: { overrides: Record<string, string>; monitoring?: Monitoring },
+  configs: ResolveOptions,
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     for (const [routePath, handler] of routes) {

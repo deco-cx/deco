@@ -1,16 +1,23 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   BaseContext,
+  Monitoring,
   Resolvable,
   resolve,
+  Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
-import { Monitoring } from "$live/engine/core/resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
   resolvables: PromiseOrValue<Record<string, Resolvable<any>>>;
+  danglingRecover?: Resolver;
+}
+
+export interface ResolveOptions {
+  overrides?: Record<string, string>;
+  monitoring?: Monitoring;
 }
 
 const withOverrides = (
@@ -25,9 +32,11 @@ const withOverrides = (
 export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   protected resolvables: PromiseOrValue<Record<string, Resolvable<any>>>;
   protected resolvers: ResolverMap<TContext>;
+  protected danglingRecover?: Resolver;
   constructor(protected config: ResolverOptions<TContext>) {
     this.resolvers = {};
     this.resolvables = this.config.resolvables;
+    this.danglingRecover = this.config.danglingRecover;
   }
 
   public addResolvers = (resolvers: ResolverMap<TContext>) => {
@@ -45,7 +54,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
 
   public resolverFor = (
     context: Omit<TContext, keyof BaseContext>,
-    options?: { overrides?: Record<string, string>; monitoring?: Monitoring },
+    options?: ResolveOptions,
   ) =>
   <T = any>(typeOrResolvable: string | Resolvable<T>): Promise<T> => {
     return this.resolve(typeOrResolvable, context, options);
@@ -54,7 +63,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   public resolve = async <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     context: Omit<TContext, keyof BaseContext>,
-    options?: { overrides?: Record<string, string>; monitoring?: Monitoring },
+    options?: ResolveOptions,
   ): Promise<T> => {
     const { resolvers: res, resolvables: rPromise } = this.config;
     const resolvables = await rPromise;
@@ -67,12 +76,13 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       },
     };
     const baseCtx: BaseContext = {
+      danglingRecover: this.danglingRecover,
       resolve: _resolve,
       resolveId: crypto.randomUUID(),
       resolveChain: [],
-      monitoring: options?.monitoring,
       resolvables: nresolvables,
       resolvers,
+      monitoring: options?.monitoring,
     };
     const ctx = {
       ...context,

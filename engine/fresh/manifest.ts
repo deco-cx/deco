@@ -7,6 +7,7 @@ import { newSupabaseProviderLegacy } from "$live/engine/configstore/supabaseLega
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
+  DanglingReference,
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
@@ -36,6 +37,23 @@ export interface FreshContext<Data = any, State = any, TConfig = any>
 
 export type LiveState<T, TState = unknown> = TState & {
   $live: T;
+};
+
+interface DanglingRecover {
+  recoverable: (type: string) => boolean;
+  recover: Resolver;
+}
+
+const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
+  return (parent, ctx) => {
+    const curr = ctx.resolveChain[ctx.resolveChain.length - 1];
+    for (const { recoverable, recover } of recovers) {
+      if (recoverable(curr)) {
+        return recover(parent, ctx);
+      }
+    }
+    throw new DanglingReference(curr);
+  };
 };
 
 const siteName = (): string => {
@@ -80,9 +98,37 @@ const asManifest = (
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
 
+const danglingModuleTS = "__dangling.ts";
+const danglingModuleTSX = "__dangling.tsx";
+const wellKnownLocalModules = [
+  danglingModuleTS,
+  danglingModuleTSX,
+];
+
+export const wellKnownLocalMappings: Record<string, string> = {
+  [danglingModuleTS]: danglingModuleTS,
+  [danglingModuleTSX]: danglingModuleTSX,
+};
+
+const localRef = (blkType: string, ref: string) => `./${blkType}/${ref}`;
+export const shouldBeLocal = (block: string, ref: string): boolean => {
+  return block === "routes" || block === "islands" || // islands and routes are always local
+    wellKnownLocalModules.some((localModule) => localRef(block, localModule) === ref);
+};
+
+export const withoutLocalModules = (
+  block: string,
+  r: Record<string, any>,
+): Record<string, any> => {
+  for (const moduleName of wellKnownLocalModules) {
+    delete r[localRef(block, moduleName)];
+  }
+  return r;
+};
+
 export const $live = <T extends DecoManifest>(m: T): T => {
-  const [newManifest, resolvers] = (blocks ?? []).reduce(
-    ([currMan, currMap], blk) => {
+  const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
+    ([currMan, currMap, recovers], blk) => {
       const blocks = asManifest(currMan)[blk.type] ?? {};
       const decorated: Record<string, BlockModule> = blk.decorate
         ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
@@ -111,9 +157,21 @@ export const $live = <T extends DecoManifest>(m: T): T => {
       return [
         { ...currMan, [blk.type]: decorated },
         { ...currMap, ...adapted, ...previews },
+        blk.defaultDanglingRecover
+          ? [...recovers, {
+            recoverable: (type: string) => {
+              const splitted = type.split("/");
+              // check if there's any segment on the same name of the block
+              return splitted.some((segment) => segment === blk.type); //FIXME (mcandeia) this is not a straightforward solution
+            },
+            recover: adapted[localRef(blk.type, danglingModuleTS)] ??
+              adapted[localRef(blk.type, danglingModuleTSX)] ??
+              blk.defaultDanglingRecover,
+          } as DanglingRecover]
+          : recovers,
       ];
     },
-    [m, {}] as [DecoManifest, ResolverMap<FreshContext>],
+    [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();
   const provider = newSupabaseProviderLegacy(
@@ -123,6 +181,9 @@ export const $live = <T extends DecoManifest>(m: T): T => {
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },
     resolvables: provider.get(),
+    danglingRecover: recovers.length > 0
+      ? buildDanglingRecover(recovers)
+      : undefined,
   });
   provider.onChange(() => resolver.setResolvables(provider.get()));
   // should be set first

@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import {
+  isAwaitable,
   mapObjKeys,
   PromiseOrValue,
   Promisified,
@@ -7,8 +8,14 @@ import {
   waitKeys,
 } from "$live/engine/core/utils.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { isAwaitable } from "$live/engine/core/utils.ts";
 
+export class DanglingReference extends Error {
+  public resolverType: string;
+  constructor(resolverType: string) {
+    super(`Dangling reference of: ${resolverType}`);
+    this.resolverType = resolverType;
+  }
+}
 export type ResolveFunc<T = any> = (data: Resolvable<T>) => Promise<T>;
 export interface Monitoring {
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
@@ -20,6 +27,7 @@ export interface BaseContext {
   monitoring?: Monitoring;
   resolvables: Record<string, Resolvable<any>>;
   resolvers: Record<string, Resolver>;
+  danglingRecover?: Resolver;
 }
 
 export type ResolvesTo<
@@ -310,7 +318,10 @@ export const resolve = async <
   }
   const resolvableRef = resolvables[resolverType.toString()] as Resolvable<T>;
   if (resolvableRef === undefined) {
-    throw new Error("Dangling reference of: " + resolverType.toString());
+    if (!ctx.danglingRecover) {
+      throw new DanglingReference(resolverType.toString());
+    }
+    return ctx.danglingRecover(resolved, ctx);
   }
   return resolve<T, TContext, TResolverMap, TResolvableMap>(
     resolverMap,
