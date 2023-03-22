@@ -3,7 +3,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
 import { BlockModule, PreactComponent } from "$live/engine/block.ts";
-import { newSupabaseProviderLegacy } from "$live/engine/configstore/supabaseLegacy.ts";
+import { newSupabase } from "$live/engine/configstore/supabase.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
@@ -113,7 +113,9 @@ export const wellKnownLocalMappings: Record<string, string> = {
 const localRef = (blkType: string, ref: string) => `./${blkType}/${ref}`;
 export const shouldBeLocal = (block: string, ref: string): boolean => {
   return block === "routes" || block === "islands" || // islands and routes are always local
-    wellKnownLocalModules.some((localModule) => localRef(block, localModule) === ref);
+    wellKnownLocalModules.some((localModule) =>
+      localRef(block, localModule) === ref
+    );
 };
 
 export const withoutLocalModules = (
@@ -174,9 +176,8 @@ export const $live = <T extends DecoManifest>(m: T): T => {
     [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();
-  const provider = newSupabaseProviderLegacy(
+  const provider = newSupabase(
     context.siteId,
-    context.namespace!,
   );
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },

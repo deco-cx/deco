@@ -146,6 +146,12 @@ export interface ComponentMetadata {
   component: string;
 }
 
+export interface PageContext {
+  metadata?: ComponentMetadata | undefined;
+  params: Record<string, string>;
+  url: URL;
+}
+
 export interface PreactComponent<
   TReturn extends JSX.Element | null = JSX.Element | null,
   TProps = any,

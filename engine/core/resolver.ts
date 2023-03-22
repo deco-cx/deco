@@ -309,7 +309,7 @@ export const resolve = async <
   if (resolver !== undefined) {
     let respOrPromise = resolver(resolved, ctx);
     if (isAwaitable(respOrPromise)) {
-      const timingName = resolverType.replaceAll("/", "-");
+      const timingName = resolverType.replaceAll("/", ".");
       ctx.monitoring?.t.start(timingName);
       respOrPromise = await respOrPromise;
       ctx.monitoring?.t.end(timingName);

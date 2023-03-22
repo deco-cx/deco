@@ -3,18 +3,21 @@ import { supabase } from "$live/deps.ts";
 import { ConfigStore } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import getSupabaseClient from "$live/supabase.ts";
+import { context } from "$live/live.ts";
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 const sleepBetweenRetriesMS = 100;
-const refetchIntervalMS = 2_000;
+const refetchIntervalMSDeploy = 5_000;
+const refetchInternalMSLocal = 2_000;
 
-export const newSupabase = (site: string): ConfigStore => {
+export const newSupabase = (site: number): ConfigStore => {
   const fetchConfigs = () => {
-    return getSupabaseClient().from("configs").select("published").eq(
-      "id",
+    return getSupabaseClient().from("configs").select("config").eq(
+      "site",
       site,
-    );
+    ).single();
   };
 
   let remainingRetries = 5;
@@ -40,7 +43,7 @@ export const newSupabase = (site: string): ConfigStore => {
       await tryResolveFirstLoad(resolve, reject);
       return;
     }
-    resolve(data);
+    resolve(data.config);
   };
 
   let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
@@ -62,11 +65,11 @@ export const newSupabase = (site: string): ConfigStore => {
         return;
       }
       currResolvables = Promise.resolve(
-        data,
+        data.config,
       );
       currCb();
       singleFlight = false;
-    }, refetchIntervalMS);
+    }, context.isDeploy ? refetchIntervalMSDeploy : refetchInternalMSLocal);
   });
 
   return {

@@ -1,5 +1,3 @@
-import { Lock } from "https://deno.land/x/async@v1.2.0/mod.ts";
-
 export type PromiseOrValue<T> = Promise<T> | T;
 export type Entries<T> = {
   [K in keyof T]: [K, T[K]];
@@ -56,29 +54,15 @@ interface SingleFlight<T> {
 }
 
 export const singleFlight = <T>(): SingleFlight<T> => {
-  const mu = new Lock();
   const active: Record<string, Promise<T>> = {};
   return {
-    do: async (key: string, f: () => Promise<T>) => {
-      let promise = active[key];
+    do: (key: string, f: () => Promise<T>) => {
+      const promise = active[key];
       if (promise !== undefined) {
         return promise;
       }
-      await mu.acquire();
-      promise = active[key];
-      if (promise !== undefined) {
-        mu.release();
-        return promise;
-      }
-
-      promise = f();
-      active[key] = promise.finally(async () => {
-        await mu.acquire();
-        delete active[key];
-        mu.release();
-      });
-      mu.release();
-      return promise;
+      active[key] = f().finally(() => delete active[key]);
+      return active[key];
     },
   };
 };

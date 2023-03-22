@@ -2,14 +2,14 @@ import { Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
 import { context } from "$live/live.ts";
-import { usePageMetadata } from "$live/routes/[...catchall].tsx";
+import { usePageContext } from "$live/routes/[...catchall].tsx";
 
 export interface Props {
   sections: Section[];
 }
 
 export default function LivePage({ sections }: Props) {
-  const metadata = usePageMetadata();
+  const metadata = usePageContext()?.metadata;
   const renderSection = (
     { Component: Section, props, metadata }: Props["sections"][0],
   ) => {

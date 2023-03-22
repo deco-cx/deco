@@ -2,30 +2,32 @@ import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Handler, LiveConfig } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
 import { LiveRouteConfig } from "$live/blocks/route.ts";
-import { ComponentMetadata } from "$live/engine/block.ts";
+import { PageContext } from "$live/engine/block.ts";
 import { LiveState } from "$live/types.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 
-const ctx = createContext<ComponentMetadata | undefined>(undefined);
+const ctx = createContext<PageContext | undefined>(undefined);
 
-export const usePageMetadata = () => {
-  const metadata = useContext(ctx);
-  if (metadata === undefined) {
+export const usePageContext = () => {
+  const pageCtx = useContext(ctx);
+  if (pageCtx === undefined) {
     console.warn(
       "page metadata requested but not available, are you using inside an island ?",
     );
   }
-  return metadata;
+  return pageCtx;
 };
 
 export default function Render({
+  params,
+  url,
   data: {
     page: { Component, props, metadata },
   },
 }: PageProps<{ page: Page }>) {
   return (
-    <ctx.Provider value={metadata}>
+    <ctx.Provider value={{ metadata, params, url }}>
       <Component {...props}></Component>
     </ctx.Provider>
   );
