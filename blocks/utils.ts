@@ -208,7 +208,11 @@ export const fromComponentFunc: Block["adapt"] = <TProps = any>(
 (props: TProps, { resolveChain }): PreactComponent<any, TProps> => ({
   Component,
   props,
-  metadata: { component: resolver, resolveChain },
+  metadata: {
+    component: resolver,
+    resolveChain,
+    id: resolveChain.length > 0 ? resolveChain[0] : undefined,
+  },
 });
 
 export const instrospectComponentFunc = async (

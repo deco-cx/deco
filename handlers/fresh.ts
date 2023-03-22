@@ -1,13 +1,13 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
-import { ConnInfo } from "https://deno.land/std@0.170.0/http/server.ts";
+import { ConnInfo } from "std/http/server.ts";
 
 export interface FreshConfig {
   page: Page;
 }
 
 export const isFreshCtx = <TState>(
-  ctx: ConnInfo | HandlerContext<unknown, TState>
+  ctx: ConnInfo | HandlerContext<unknown, TState>,
 ): ctx is HandlerContext<unknown, TState> => {
   return typeof (ctx as HandlerContext).render === "function";
 };

@@ -6,6 +6,7 @@ import { PageContext } from "$live/engine/block.ts";
 import { LiveState } from "$live/types.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
+import { setCSPHeaders } from "$live/utils/http.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
@@ -50,7 +51,10 @@ export const handler = async (
     });
   }
 
-  return await handler(req, ctx);
+  return setCSPHeaders(
+    req,
+    await handler(req, ctx),
+  );
 };
 
 export const config: LiveRouteConfig = {

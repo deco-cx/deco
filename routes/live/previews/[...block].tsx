@@ -50,6 +50,7 @@ export const handler = async (
   const props = req.method === "POST"
     ? await req.json()
     : propsFromUrl(url) ?? {};
+
   return await ctx.render(
     await resolve({
       __resolveType: "preview",

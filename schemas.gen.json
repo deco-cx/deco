@@ -38,7 +38,7 @@
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
       "$ref": "#/root/handlers"
     },
-    "18faa8e9-968e-4f07-ab43-d6e77d91413e@Handler@record": {
+    "996286ed-8297-4748-95c9-2dfd02fc903a@Handler@record": {
       "title": "Unknown record",
       "type": "object",
       "additionalProperties": {
@@ -57,7 +57,7 @@
         },
         "routes": {
           "title": "Routes",
-          "$ref": "#/definitions/18faa8e9-968e-4f07-ab43-d6e77d91413e@Handler@record"
+          "$ref": "#/definitions/996286ed-8297-4748-95c9-2dfd02fc903a@Handler@record"
         }
       },
       "required": [
@@ -67,6 +67,19 @@
     },
     "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
       "$ref": "#/root/pages"
+    },
+    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "title": "Page",
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
+        }
+      },
+      "required": [
+        "page"
+      ],
+      "title": "$live/handlers/devPage.ts@DevConfig"
     },
     "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig": {
       "type": "object",
@@ -231,7 +244,7 @@
       ],
       "title": "$live/matchers/MatchEnvironment.ts@Props"
     },
-    "d197627d-1e31-4f2d-8648-09be7cfb2e32@Handler@record": {
+    "491368c7-594c-4599-9df5-7f1ae5c7c27a@Handler@record": {
       "title": "Unknown record",
       "type": "object",
       "additionalProperties": {
@@ -251,7 +264,7 @@
         },
         "routes": {
           "title": "Routes",
-          "$ref": "#/definitions/d197627d-1e31-4f2d-8648-09be7cfb2e32@Handler@record"
+          "$ref": "#/definitions/491368c7-594c-4599-9df5-7f1ae5c7c27a@Handler@record"
         },
         "overrides": {
           "title": "Unknown record",
@@ -268,7 +281,7 @@
       ],
       "title": "$live/flags/audience.ts@Audience"
     },
-    "1acec055-7689-4675-9fb5-6d1570747af1@Handler@record": {
+    "fefc6c45-c6d5-4afb-971f-a75ee0452022@Handler@record": {
       "title": "Unknown record",
       "type": "object",
       "additionalProperties": {
@@ -280,7 +293,7 @@
       "properties": {
         "routes": {
           "title": "Routes",
-          "$ref": "#/definitions/1acec055-7689-4675-9fb5-6d1570747af1@Handler@record"
+          "$ref": "#/definitions/fefc6c45-c6d5-4afb-971f-a75ee0452022@Handler@record"
         },
         "overrides": {
           "title": "Unknown record",
@@ -332,6 +345,27 @@
             "$live/handlers/router.ts"
           ],
           "default": "$live/handlers/router.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==": {
+      "title": "$live/handlers/devPage.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/devPage.ts"
+          ],
+          "default": "$live/handlers/devPage.ts"
         }
       }
     },
@@ -561,8 +595,8 @@
         }
       }
     },
-    "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@af5e83e9-21ff-437a-9808-969bae69a617": {
-      "title": "$live/routes/live/previews/[...block].tsx@af5e83e9-21ff-437a-9808-969bae69a617"
+    "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@ef522160-15a6-4f6b-8ed5-20f79a584640": {
+      "title": "$live/routes/live/previews/[...block].tsx@ef522160-15a6-4f6b-8ed5-20f79a584640"
     },
     "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
       "type": "object",
@@ -590,6 +624,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw=="
         },
         {
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM="
@@ -658,7 +695,7 @@
       ],
       "properties": {
         "./routes/live/previews/[...block].tsx": {
-          "$ref": "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@af5e83e9-21ff-437a-9808-969bae69a617"
+          "$ref": "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@ef522160-15a6-4f6b-8ed5-20f79a584640"
         },
         "./routes/[...catchall].tsx": {
           "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"

@@ -13,7 +13,8 @@ import * as $$$$3 from "./routes/live/previews/[...block].tsx";
 import * as $$$$4 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "$live/handlers/routesSelection.ts";
 import * as $$$$$$1 from "$live/handlers/router.ts";
-import * as $$$$$$2 from "$live/handlers/fresh.ts";
+import * as $$$$$$2 from "$live/handlers/devPage.ts";
+import * as $$$$$$3 from "$live/handlers/fresh.ts";
 import * as $$$$$$$0 from "$live/pages/LivePage.tsx";
 import * as $$$$$$$$$0 from "$live/matchers/MatchDate.ts";
 import * as $$$$$$$$$1 from "$live/matchers/MatchUserAgent.ts";
@@ -36,7 +37,8 @@ const manifest: DecoManifest = {
   "handlers": {
     "$live/handlers/routesSelection.ts": $$$$$$0,
     "$live/handlers/router.ts": $$$$$$1,
-    "$live/handlers/fresh.ts": $$$$$$2,
+    "$live/handlers/devPage.ts": $$$$$$2,
+    "$live/handlers/fresh.ts": $$$$$$3,
   },
   "pages": {
     "$live/pages/LivePage.tsx": $$$$$$$0,

@@ -131,7 +131,9 @@ const pageToConfig =
             page: {
               __resolveType: `${p.id}`,
             },
-            __resolveType: "$live/handlers/fresh.ts",
+            __resolveType: p.public
+              ? "$live/handlers/fresh.ts"
+              : "$live/handlers/devPage.ts",
           },
         },
       }
