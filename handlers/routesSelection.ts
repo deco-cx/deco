@@ -7,7 +7,8 @@ import { CookiedFlag, cookies } from "$live/flags.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
-import { LiveState } from "$live/types.ts";
+import MatchAlways from "$live/matchers/MatchAlways.ts";
+import { LiveState, Page } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
 export interface SelectionConfig {
@@ -51,6 +52,7 @@ const router = (
       const groups = res?.pathname.groups ?? {};
 
       if (res !== null) {
+        console.log(routePath, groups);
         const ctx = { ...connInfo, params: groups } as ConnInfo & {
           params: Record<string, string>;
         };
@@ -75,13 +77,55 @@ const router = (
     });
   };
 };
+
 export type MatchWithCookieValue = MatchContext<{
   isMatchFromCookie?: boolean;
 }>;
+
+// when used ?pageId=x&pathTemplate=y it forces a page to be used
+const forcePageAudience = (
+  req: Request,
+  configs: ResolveOptions,
+): AudienceFlag | undefined => {
+  const reqUrl = new URL(req.url);
+  const pageId = reqUrl.searchParams.get("pageId");
+  if (!pageId) {
+    return undefined;
+  }
+  const pageTemplate = reqUrl.searchParams.get("pathTemplate") ?? "/";
+  return {
+    name: `force_${pageId}`,
+    matcher: MatchAlways,
+    true: {
+      routes: {
+        [pageTemplate]: async (req: Request, ctx: ConnInfo) => {
+          if (!isFreshCtx(ctx)) {
+            return Response.error();
+          }
+          const resolvedOrPromise = context.configResolver!.resolve<Page>(
+            pageId,
+            { context: ctx, request: req },
+            configs,
+          );
+
+          const page = isAwaitable(resolvedOrPromise)
+            ? await resolvedOrPromise
+            : resolvedOrPromise;
+
+          if (!page) {
+            return new Response(null, { status: 404 });
+          }
+          return ctx.render({ page });
+        },
+      },
+    },
+  };
+};
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
+
     // Read flags from cookie or start an empty map.
     const flags = cookies.getFlags(req.headers) ??
       new Map<string, CookiedFlag>();
@@ -96,44 +140,51 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     const flagsThatShouldBeCookied: CookiedFlag[] = [];
 
     // reduce audiences building the routes and the overrides.
-    const [routes, overrides] = audiences.reduce(
-      ([routes, overrides], audience) => {
-        // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
-        const isMatch = audience.matcher({
-          ...matchCtx,
-          isMatchFromCookie: flags.get(audience.name)?.isMatch,
-        } as MatchWithCookieValue);
+    const pageAudience = forcePageAudience(req, {
+      monitoring: t ? { t } : undefined,
+    });
+    const [routes, overrides] = (pageAudience ? [pageAudience] : audiences)
+      .reduce(
+        ([routes, overrides], audience) => {
+          // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
+          const isMatch = audience.matcher({
+            ...matchCtx,
+            isMatchFromCookie: flags.get(audience.name)?.isMatch,
+          } as MatchWithCookieValue);
 
-        // if the flag doesn't exists (e.g. new audience being used) or the `isMatch` value has changed so add as a `newFlags`
-        // TODO should we track when the flag VALUE changed?
-        // this code has a bug that when the isMatch doesn't change but the flag value does so the cookie will kept the old value.
-        // I will not fix this for now because this shouldn't be a issue in the long run and requires deep equals between objects which could be more expansive than just assume that the value is equal.
-        // as it is in 99% of the cases.
-        if (
-          !flags.has(audience.name) ||
-          flags.get(audience.name)?.isMatch !== isMatch
-        ) {
-          // create the flag value
-          const flagValue = {
-            isMatch,
-            key: audience.name,
-            value: audience.true,
-            updated_at: new Date().toISOString(),
-          };
-          // set as flag that should be cookied
-          flagsThatShouldBeCookied.push(flagValue);
-          // set in the current map just in case (duplicated audiences?)
-          flags.set(audience.name, flagValue);
-        }
-        return isMatch
-          ? [
-            { ...routes, ...audience.true.routes },
-            { ...overrides, ...audience.true.overrides },
-          ]
-          : [routes, overrides];
-      },
-      [{}, {}] as [Record<string, Resolvable<Handler>>, Record<string, string>],
-    );
+          // if the flag doesn't exists (e.g. new audience being used) or the `isMatch` value has changed so add as a `newFlags`
+          // TODO should we track when the flag VALUE changed?
+          // this code has a bug that when the isMatch doesn't change but the flag value does so the cookie will kept the old value.
+          // I will not fix this for now because this shouldn't be a issue in the long run and requires deep equals between objects which could be more expansive than just assume that the value is equal.
+          // as it is in 99% of the cases.
+          if (
+            !flags.has(audience.name) ||
+            flags.get(audience.name)?.isMatch !== isMatch
+          ) {
+            // create the flag value
+            const flagValue = {
+              isMatch,
+              key: audience.name,
+              value: audience.true,
+              updated_at: new Date().toISOString(),
+            };
+            // set as flag that should be cookied
+            flagsThatShouldBeCookied.push(flagValue);
+            // set in the current map just in case (duplicated audiences?)
+            flags.set(audience.name, flagValue);
+          }
+          return isMatch
+            ? [
+              { ...routes, ...audience.true.routes },
+              { ...overrides, ...audience.true.overrides },
+            ]
+            : [routes, overrides];
+        },
+        [{}, {}] as [
+          Record<string, Resolvable<Handler>>,
+          Record<string, string>,
+        ],
+      );
     // build the router from entries
     const builtRoutes = Object.entries(routes).sort((
       [routeStringA],
