@@ -76,6 +76,7 @@ const functionRefToschemeable = ({
       properties: {
         __resolveType: {
           type: "string",
+          enum: [functionKey],
           default: functionKey,
         },
       },

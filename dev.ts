@@ -9,9 +9,10 @@ import {
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
-import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
-import { DecoManifest } from "$live/types.ts";
 import { context } from "$live/live.ts";
+import { DecoManifest } from "$live/types.ts";
+import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
+import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 
@@ -31,6 +32,19 @@ export function ensureMinDenoVersion() {
     console.error(message);
   }
 }
+
+const genSchemas = async (manifestPath: string, directory: string) => {
+  await Deno.writeTextFile(
+    join(directory, "./schemas.gen.json"),
+    JSON.stringify(
+      await genSchemasFromManifest(
+        await import(manifestPath).then((mod) => mod.default),
+      ),
+      null,
+      2,
+    ),
+  );
+};
 
 export async function generate(directory: string, manifest: ManifestBuilder) {
   const proc = Deno.run({
@@ -55,6 +69,8 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
   const manifestPath = join(directory, "./live.gen.ts");
 
   await Deno.writeTextFile(manifestPath, manifestStr);
+
+  genSchemas(manifestPath, directory);
   console.log(
     `%cThe manifest has been generated.`,
     "color: blue; font-weight: bold",
