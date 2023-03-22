@@ -65,22 +65,26 @@ const main = (
     });
 
   requestIdleCallback(async () => {
-    reportPerformance("dom-elements", getTotalDOMSize());
+    if (top !== window) {
+      reportPerformance("dom-elements", getTotalDOMSize());
 
-    if (typeof PerformanceObserver !== "undefined" && top !== window) {
-      // Report main html timings
-      reportPerformance(
-        "navigation",
-        JSON.stringify(performance.getEntriesByType("navigation")[0].toJSON()),
-      );
+      if (typeof PerformanceObserver !== "undefined") {
+        // Report main html timings
+        reportPerformance(
+          "navigation",
+          JSON.stringify(
+            performance.getEntriesByType("navigation")[0].toJSON(),
+          ),
+        );
 
-      // Report secondary resources timings
-      new PerformanceObserver((perf) =>
-        perf.getEntries().forEach((entry) =>
-          reportPerformance("resource", JSON.stringify(entry.toJSON()))
+        // Report secondary resources timings
+        new PerformanceObserver((perf) =>
+          perf.getEntries().forEach((entry) =>
+            reportPerformance("resource", JSON.stringify(entry.toJSON()))
+          )
         )
-      )
-        .observe({ type: "resource", buffered: true });
+          .observe({ type: "resource", buffered: true });
+      }
     }
 
     /* Listen web-vitals */
