@@ -8,7 +8,6 @@ interface Page {
 
 declare global {
   interface Window {
-    inspectVSCode: inspectVSCode.DomInspector;
     LIVE: {
       page: Page;
       site: Site;
