@@ -92,7 +92,7 @@ const forcePageAudience = (
   if (!pageId) {
     return undefined;
   }
-  const pageTemplate = reqUrl.searchParams.get("pathTemplate") ?? "/";
+  const pageTemplate = reqUrl.searchParams.get("pathTemplate") ?? "/*";
   return {
     name: `force_${pageId}`,
     matcher: MatchAlways,
