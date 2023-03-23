@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: "Setup deno"
+    steps:
+      - uses: actions/checkout@v3
+      - name: cache deno installation and deno.land dependencies
+        uses: actions/cache@v2
+        with:
+          key: ${{ runner.os }}-deno-${{ hashFiles('**/*') }}
+          restore-keys: ${{ runner.os }}-deno-
+          path: |
+            /home/runner/.deno
+            /home/runner/.cache/deno/deps/https/deno.land
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Build Deno Module
+        run: deno run -A --lock=deno.lock --lock-write --reload mod.ts
+      - name: fetch any uncached dependencies
+        run: |
+          deno cache --lock=deno.lock --lock-write --reload=file: ./mod.ts
+      - run: |
+          deno test --lock=deno.lock --lock-write -A .
+      - name: check lint
+        continue-on-error: true
+        run: |
+          deno --unstable lint
+      - name: check formatting
+        continue-on-error: true
+        run: |
+          deno fmt --check
