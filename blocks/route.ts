@@ -145,6 +145,17 @@ const routeBlock: Block<Route, Response> = {
     }
     return routeModule;
   },
+  // introspect: introspectWith([{
+  //   handler: {
+  //     1: {
+  //       "state": "$live",
+  //     },
+  //   },
+  // }, {
+  //   default: {
+  //     0: "data",
+  //   },
+  // }], true),
   introspect: async (_, path, ast) => {
     const routeMod: BlockModuleRef = {
       functionRef: path,

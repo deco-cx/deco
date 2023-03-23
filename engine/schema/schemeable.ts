@@ -1,8 +1,5 @@
 import { Schemeable } from "$live/engine/schema/transform.ts";
 import { JSONSchema7 } from "$live/deps.ts";
-export interface TransformContext {
-  key: string;
-}
 const schemeableToJSONSchemaFunc = (
   genId: (s: Schemeable) => string | undefined,
   def: Record<string, JSONSchema7>,

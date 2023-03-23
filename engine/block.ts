@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
+import { FunctionNodeAddr } from "$live/engine/introspect.ts";
 import { ResolverMiddleware } from "$live/engine/middleware.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
 import {
@@ -25,6 +26,12 @@ export interface BlockModule<
   default: RLike;
   preview?: Resolver<PreactComponent, TSerializable, any>;
 }
+
+export type IntrospectFunc = (
+  ctx: TransformContext,
+  path: string,
+  ast: DocNode[],
+) => Promise<BlockModuleRef | undefined>;
 
 export type ResolverBlock = Block<Resolver>;
 // TODO Implementar resolver block @author marcos v. candeia
@@ -63,11 +70,7 @@ export interface Block<
   >[];
   defaultPreview?: Resolver<PreactComponent, TSerializable, any>;
   type: BType;
-  introspect: (
-    transformationContext: TransformContext,
-    path: string,
-    ast: DocNode[],
-  ) => Promise<BlockModuleRef | undefined>;
+  introspect: FunctionNodeAddr | FunctionNodeAddr[] | IntrospectFunc;
   decorate?: <
     TBlockModule extends BlockModule<
       UnPromisify<ReturnType<TBlockFunc>>,

@@ -7,9 +7,8 @@ import {
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { BlockForModule, BlockModule } from "$live/engine/block.ts";
-import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
-import { findExport, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
 import { LoaderFunction } from "$live/types.ts";
+import { introspectWith } from "$live/engine/introspect.ts";
 
 export type Function<TProps = any, TState = any> = LoaderFunction<
   TProps,
@@ -60,31 +59,7 @@ const functionBlock: BlockForModule<FunctionModule> = {
       return data;
     },
   ],
-  introspect: async (ctx, path, ast) => {
-    const func = findExport("default", ast);
-    if (!func) {
-      return undefined;
-    }
-    const [fn, root] = await fnDefinitionRoot(ctx, func, [
-      path,
-      ast,
-    ]);
-    if (!fn) {
-      throw new Error(
-        `Default export of ${path} needs to be a const variable or a function`,
-      );
-    }
-
-    const conf = fn.params[0];
-    return {
-      functionRef: path,
-      inputSchema: conf.kind === "keyword" && (conf.keyword === "null" ||
-          conf.keyword == "undefined")
-        ? undefined
-        : await tsTypeToSchemeable(conf, root),
-      outputSchema: await tsTypeToSchemeable(fn.return, root),
-    };
-  },
+  introspect: introspectWith({ default: 0 }),
 };
 
 /**

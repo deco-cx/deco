@@ -1,67 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext, StatefulContext } from "$live/blocks/handler.ts";
-import { JSONSchema7 } from "$live/deps.ts";
-import {
-  Block,
-  BlockModuleRef,
-  ComponentFunc,
-  FunctionBlockDefinition,
-  PreactComponent,
-} from "$live/engine/block.ts";
+import { Block, ComponentFunc, PreactComponent } from "$live/engine/block.ts";
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
+import { introspectWith } from "$live/engine/introspect.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
-import {
-  inlineOrSchemeable,
-  Schemeable,
-  TransformContext,
-  tsTypeToSchemeable,
-} from "$live/engine/schema/transform.ts";
-import {
-  findExport,
-  fnDefinitionRoot,
-  FunctionTypeDef,
-} from "$live/engine/schema/utils.ts";
-import {
-  DocNode,
-  TsTypeDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
   ctx: TCtx,
 ) => string;
-export const fnDefinitionToSchemeable = async (
-  ast: [string, DocNode[]],
-  validFn: FunctionBlockDefinition,
-): Promise<Schemeable> => {
-  const inputSchemeable = await inlineOrSchemeable(ast, validFn.input);
-  const outputSchemeable = await inlineOrSchemeable(ast, validFn.output);
-  return {
-    required: ["input", "output"],
-    title: validFn.name,
-    type: "object",
-    id: validFn.name,
-    value: {
-      output: {
-        title: (validFn.output as TsTypeDef).repr ??
-          (validFn.output as JSONSchema7).title,
-        jsDocSchema: {},
-        schemeable: outputSchemeable!,
-      },
-      ...(inputSchemeable
-        ? {
-          input: {
-            title: (validFn.input as TsTypeDef).repr ??
-              (validFn.input as JSONSchema7).title,
-            jsDocSchema: {},
-            schemeable: inputSchemeable,
-          },
-        }
-        : {}),
-    },
-  };
-};
 
 export const applyConfig = <
   TConfig = any,
@@ -86,33 +34,6 @@ async ($live: TConfig) => {
   return typeof resp === "function" ? resp : () => resp;
 };
 
-export const configOnly = async (
-  transformationContext: TransformContext,
-  path: string,
-  ast: DocNode[],
-): Promise<BlockModuleRef | undefined> => {
-  const func = findExport("default", ast);
-  if (!func) {
-    return undefined;
-  }
-  const [fn, root] = await fnDefinitionRoot(transformationContext, func, [
-    path,
-    ast,
-  ]);
-  if (!fn) {
-    throw new Error(
-      `Default export of ${path} needs to be a const variable or a function`,
-    );
-  }
-
-  return {
-    functionRef: path,
-    inputSchema: fn.params.length > 0 && fn.params[0]
-      ? await tsTypeToSchemeable(fn.params[0], root)
-      : undefined,
-  };
-};
-
 export type StatefulHandler<
   TConfig,
   TResp,
@@ -133,63 +54,13 @@ async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
   });
 };
 
-const configTsType = (fn: FunctionTypeDef): TsTypeDef | undefined => {
-  if (fn.params.length !== 2) {
-    return undefined;
-  }
-  const ctx = fn.params[1];
-  if (ctx.kind !== "typeRef" || !ctx.typeRef.typeParams) {
-    return undefined;
-  }
-  if (ctx.typeRef.typeParams.length < 2) {
-    return undefined;
-  }
-  const liveConfig = ctx.typeRef.typeParams[1];
-  if (liveConfig.kind !== "typeRef") {
-    return undefined;
-  }
-
-  if (
-    !liveConfig.typeRef.typeParams ||
-    liveConfig.typeRef.typeParams.length === 0
-  ) {
-    return undefined;
-  }
-
-  return liveConfig.typeRef.typeParams[0];
-};
-
-export const fromFreshLikeHandler = async (
-  transformationContext: TransformContext,
-  path: string,
-  ast: DocNode[],
-): Promise<BlockModuleRef | undefined> => {
-  const func = findExport("default", ast);
-  if (!func) {
-    return undefined;
-  }
-  const [fn, root] = await fnDefinitionRoot(transformationContext, func, [
-    path,
-    ast,
-  ]);
-  if (!fn) {
-    throw new Error(
-      `Default export of ${path} needs to be a const variable or a function`,
-    );
-  }
-
-  const configType = configTsType(fn);
-
-  return {
-    functionRef: path,
-    inputSchema: configType
-      ? await tsTypeToSchemeable(configType, root)
-      : undefined,
-    outputSchema: fn.return
-      ? await tsTypeToSchemeable(fn.return, root)
-      : undefined,
-  };
-};
+export const fromFreshLikeHandler = introspectWith({
+  default: {
+    1: {
+      "state": "$live",
+    },
+  },
+});
 
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   { default: Component }: { default: ComponentFunc<TProps> },
@@ -205,30 +76,6 @@ export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   },
 });
 
-export const instrospectComponentFunc = async (
-  ctx: TransformContext,
-  path: string,
-  ast: DocNode[],
-) => {
-  const func = findExport("default", ast);
-  if (!func) {
-    return undefined;
-  }
-  const [fn, root] = await fnDefinitionRoot(ctx, func, [path, ast]);
-  if (!fn) {
-    throw new Error(
-      `Default export of ${path} needs to be a const variable or a function`,
-    );
-  }
-  const inputTsType = fn.params.length > 0 ? fn.params[0] : undefined;
-  return {
-    functionRef: path,
-    inputSchema: inputTsType
-      ? await tsTypeToSchemeable(inputTsType, root)
-      : undefined,
-  };
-};
-
 export const newComponentBlock = <K extends string>(
   type: K,
   defaultDanglingRecover?: Resolver<PreactComponent> | Resolver<
@@ -239,7 +86,9 @@ export const newComponentBlock = <K extends string>(
   defaultDanglingRecover,
   defaultPreview: (comp) => comp,
   adapt: fromComponentFunc,
-  introspect: instrospectComponentFunc,
+  introspect: introspectWith({
+    default: 0,
+  }, true),
 });
 
 export const newSingleFlightGroup = <

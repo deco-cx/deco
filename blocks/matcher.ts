@@ -1,6 +1,6 @@
-import { configOnly } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
+import { introspectWith } from "$live/engine/introspect.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -30,7 +30,9 @@ const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
       },
     };
   },
-  introspect: configOnly,
+  introspect: introspectWith({
+    default: 0,
+  }, true),
   adapt:
     <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>
     ($live: TConfig) => {

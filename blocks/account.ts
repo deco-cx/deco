@@ -1,6 +1,7 @@
-import { applyConfig, configOnly } from "$live/blocks/utils.ts";
+import { applyConfig } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
+import { introspectWith } from "$live/engine/introspect.ts";
 
 // deno-lint-ignore no-empty-interface
 export interface Account {}
@@ -18,7 +19,9 @@ const accountBlock: Block<AccountFunc> = {
       props: { body: JSON.stringify(account, null, 2) },
     };
   },
-  introspect: configOnly,
+  introspect: introspectWith({
+    default: 0,
+  }, true),
   adapt: applyConfig,
 };
 

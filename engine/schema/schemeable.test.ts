@@ -41,7 +41,6 @@ Deno.test("Simple type generation", async () => {
   }
 
   assertEquals(transformed, {
-    title: undefined,
     file: filePath,
     name: "SimpleType",
     type: "object",
@@ -97,10 +96,9 @@ Deno.test("Simple interface generation", async () => {
     fail("SimpleInterface should exists");
   }
   assertEquals(transformed, {
-    extends: [],
+    extends: undefined,
     file: filePath,
     name: "SimpleInterface",
-    title: undefined,
     type: "object",
     value: {
       name: {
@@ -154,10 +152,9 @@ Deno.test("Non required fields generation", async () => {
     fail("NonRequiredFields should exists");
   }
   assertEquals(transformed, {
-    extends: [],
+    extends: undefined,
     file: filePath,
     name: "NonRequiredFields",
-    title: undefined,
     type: "object",
     value: {
       name: {
@@ -231,8 +228,7 @@ Deno.test("Union types generation", async () => {
   }
 
   assertEquals(transformed, {
-    title: undefined,
-    extends: [],
+    extends: undefined,
     file: filePath,
     name: "UnionTypes",
     type: "object",
@@ -301,8 +297,7 @@ Deno.test("Array fields generation", async () => {
     fail("ArrayFields should exists");
   }
   assertEquals(transformed, {
-    title: undefined,
-    extends: [],
+    extends: undefined,
     file: filePath,
     name: "ArrayFields",
     type: "object",
@@ -366,8 +361,7 @@ Deno.test("Type reference generation", async () => {
   }
 
   assertEquals(transformed, {
-    title: undefined,
-    extends: [],
+    extends: undefined,
     file: filePath,
     name: "InterfaceWithTypeRef",
     type: "object",
@@ -376,10 +370,9 @@ Deno.test("Type reference generation", async () => {
         jsDocSchema: undefined,
         title: "Ref",
         schemeable: {
-          extends: [],
+          extends: undefined,
           file: filePath,
           name: "SimpleInterface",
-          title: undefined,
           type: "object",
           value: {
             name: {
@@ -424,11 +417,10 @@ Deno.test("Type reference generation", async () => {
   assertSpyCall(genId, 1, {
     args: [
       {
-        extends: [],
+        extends: undefined,
         file: filePath,
         name: "SimpleInterface",
         required: ["name"],
-        title: undefined,
         type: "object",
         value: {
           name: {
@@ -456,9 +448,8 @@ Deno.test("JSDoc tags injection", async () => {
     fail("WithTags should exists");
   }
   assertEquals(transformed, {
-    title: undefined,
     type: "object",
-    extends: [],
+    extends: undefined,
     file: filePath,
     name: "WithTags",
     value: {
@@ -538,7 +529,6 @@ Deno.test("Type alias generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     title: undefined,
-    $id: rands[0],
     type: "string",
   });
 
@@ -559,7 +549,7 @@ Deno.test("Wellknown in types generation", async () => {
   assertEquals(transformed, {
     name: "WellKnown",
     file: filePath,
-    extends: [],
+    extends: undefined,
     type: "object",
     value: {
       array: {
@@ -601,7 +591,6 @@ Deno.test("Wellknown in types generation", async () => {
         title: "Preact Component",
       },
     },
-    title: undefined,
     required: [
       "array",
       "record",

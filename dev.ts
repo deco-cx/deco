@@ -9,10 +9,10 @@ import {
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
+import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
-import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 
@@ -33,12 +33,18 @@ export function ensureMinDenoVersion() {
   }
 }
 
-const genSchemas = async (manifestPath: string, directory: string) => {
+const genSchemas = async (
+  base: string,
+  manifest: string,
+  directory: string,
+) => {
+  manifest = new URL(manifest, base).href;
+
   await Deno.writeTextFile(
     join(directory, "./schemas.gen.json"),
     JSON.stringify(
       await genSchemasFromManifest(
-        await import(manifestPath).then((mod) => mod.default),
+        await import(manifest).then((mod) => mod.default),
       ),
       null,
       2,
@@ -46,7 +52,11 @@ const genSchemas = async (manifestPath: string, directory: string) => {
   );
 };
 
-export async function generate(directory: string, manifest: ManifestBuilder) {
+export async function generate(
+  directory: string,
+  base: string,
+  manifest: ManifestBuilder,
+) {
   const proc = Deno.run({
     cmd: [Deno.execPath(), "fmt", "-"],
     stdin: "piped",
@@ -66,11 +76,12 @@ export async function generate(directory: string, manifest: ManifestBuilder) {
 
   const manifestStr = new TextDecoder().decode(out);
 
-  const manifestPath = join(directory, "./live.gen.ts");
+  const manifestFile = "./live.gen.ts";
+  const manifestPath = join(directory, manifestFile);
 
   await Deno.writeTextFile(manifestPath, manifestStr);
 
-  genSchemas(manifestPath, directory);
+  genSchemas(base, manifestFile, directory);
   console.log(
     `%cThe manifest has been generated.`,
     "color: blue; font-weight: bold",
@@ -132,7 +143,7 @@ export default async function dev(
 
   const manifestChanged = !currentManifest.equal(manifest);
 
-  if (manifestChanged) await generate(dir, manifest);
+  if (manifestChanged) await generate(dir, base, manifest);
 
   const shouldSetupGithooks = os.platform() !== "windows";
 
@@ -170,7 +181,8 @@ export async function format(content: string) {
 // Generate live own manifest data so that other sites can import native functions and sections.
 export const liveNs = "$live";
 if (import.meta.main) {
+  const base = import.meta.url;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
-  await generate(dir, newManifestData);
+  await generate(dir, base, newManifestData);
 }

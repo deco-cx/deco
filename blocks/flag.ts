@@ -1,7 +1,8 @@
 import { Matcher } from "$live/blocks/matcher.ts";
-import { applyConfig, configOnly } from "$live/blocks/utils.ts";
+import { applyConfig } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
+import { introspectWith } from "$live/engine/introspect.ts";
 
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
@@ -23,7 +24,9 @@ const flagBlock: Block<FlagFunc> = {
     const resp = flag.matcher(matchCtx) ? flag.true : flag.false;
     return { Component: JsonViewer, props: { body: JSON.stringify(resp) } };
   },
-  introspect: configOnly,
+  introspect: introspectWith({
+    default: 0,
+  }, true),
   adapt: applyConfig,
 };
 

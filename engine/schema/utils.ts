@@ -182,6 +182,7 @@ export const fnDefinitionRoot = async (
   }
   return [fn, currRoot];
 };
+
 export const nodeToFunctionDefinition = (
   node: DocNode,
 ): FunctionTypeDef | undefined => {
