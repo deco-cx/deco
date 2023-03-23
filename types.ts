@@ -127,6 +127,7 @@ export interface Flag<T = unknown> {
   key: string;
   value?: T;
   updated_at: string;
+  description?: string;
 }
 
 export interface Flags {
