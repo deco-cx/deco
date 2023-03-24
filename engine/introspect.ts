@@ -10,7 +10,7 @@ import {
   inlineOrSchemeable,
   Schemeable,
   TransformContext,
-  tsTypeToSchemeableOrUndefined
+  tsTypeToSchemeable
 } from "$live/engine/schema/transform.ts";
 import { denoDoc, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
 import {
@@ -217,7 +217,7 @@ export const introspectAddr = async <
   const baseBlockRef = {
     functionRef: path,
     outputSchema: includeReturn && fn.return
-      ? await tsTypeToSchemeableOrUndefined(fn.return, root)
+      ? await tsTypeToSchemeable(fn.return, root)
       : undefined,
   };
   const addrVal = addr[funcName];
@@ -226,7 +226,7 @@ export const introspectAddr = async <
       ...baseBlockRef,
       inputSchema: +addrVal >= fn.params.length
         ? undefined
-        : await tsTypeToSchemeableOrUndefined(fn.params[+addrVal], root),
+        : await tsTypeToSchemeable(fn.params[+addrVal], root),
     };
   }
   if (!addrVal) {
@@ -248,7 +248,7 @@ export const introspectAddr = async <
   if (!configType) {
     return baseBlockRef;
   }
-  const inputSchema = await tsTypeToSchemeableOrUndefined(configType, newRoot);
+  const inputSchema = await tsTypeToSchemeable(configType, newRoot);
   return {
     ...baseBlockRef,
     inputSchema,

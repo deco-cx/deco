@@ -43,6 +43,12 @@ export const defaultRoutes: {
 }[] = [
   {
     block: "routes",
+    from: "$live/routes/live/editorData.ts",
+    key: "./routes/live/editorData.ts",
+    ref: "$live_editorData",
+  },
+  {
+    block: "routes",
     from: "$live/routes/_middleware.ts",
     key: "./routes/_middleware.ts",
     ref: "$live_middleware",

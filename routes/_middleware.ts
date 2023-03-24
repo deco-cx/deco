@@ -1,5 +1,6 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
+import { handler as editorDataHandler } from "$live/routes/live/editorData.ts";
 import { LiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
@@ -15,6 +16,12 @@ export const handler = async (
 
   const begin = performance.now();
   const url = new URL(req.url);
+  if (
+    url.searchParams.get("editorData") !== null &&
+    url.searchParams.get("pageId") !== null
+  ) {
+    return editorDataHandler(req);
+  }
 
   const { start, end, printTimings } = createServerTimings();
   ctx.state.t = { start, end };

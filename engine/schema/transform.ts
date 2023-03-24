@@ -313,21 +313,6 @@ const typeDefToSchemeable = async (
   };
 };
 
-export const tsTypeToSchemeableOrUndefined = async (
-  node: TsTypeDef,
-  root: [string, DocNode[]],
-  optional?: boolean,
-): Promise<Schemeable | undefined> => {
-  if (
-    node.kind === "keyword" &&
-    (node.keyword === "null" ||
-      node.keyword == "undefined")
-  ) {
-    return undefined;
-  }
-  return await tsTypeToSchemeable(node, root, optional);
-};
-
 export const tsTypeToSchemeable = async (
   node: TsTypeDef,
   root: [string, DocNode[]],
