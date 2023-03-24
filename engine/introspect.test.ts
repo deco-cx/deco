@@ -1,8 +1,8 @@
+import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Handler, LiveConfig } from "$live/blocks/handler.ts";
+import { RouteMod } from "$live/blocks/route.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
-import { LiveState } from "$live/types.ts";
-import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { dirname } from "std/path/mod.ts";
 import { assertEquals } from "std/testing/asserts.ts";
 
@@ -13,8 +13,10 @@ export function funcTest(first: Props) {
   return first;
 }
 Deno.test("from params", async () => {
-  const getConfigTsType = introspectWith({
-    funcTest: 0,
+  const getConfigTsType = introspectWith<
+    { funcTest: typeof funcTest; default: typeof funcTest }
+  >({
+    funcTest: "0",
   });
   const configRef = await getConfigTsType(
     {
@@ -36,10 +38,10 @@ export function funcTest2(first: Props2) {
 }
 
 Deno.test("from param prop", async () => {
-  const getConfigTsType = introspectWith({
-    funcTest2: {
-      0: "test",
-    },
+  const getConfigTsType = introspectWith<
+    { funcTest2: typeof funcTest2; default: typeof funcTest2 }
+  >({
+    funcTest2: ["0", "test"],
   });
   const configRef = await getConfigTsType(
     {
@@ -65,10 +67,10 @@ export function funcTest3(first: Props3<string>) {
 }
 
 Deno.test("generics param", async () => {
-  const getConfigTsType = introspectWith({
-    funcTest3: {
-      0: "test",
-    },
+  const getConfigTsType = introspectWith<
+    { funcTest3: typeof funcTest3; default: typeof funcTest3 }
+  >({
+    funcTest3: ["0", "test"],
   });
   const configRef = await getConfigTsType(
     {
@@ -93,19 +95,17 @@ export const handler = (
   _: Request,
   __: HandlerContext<
     unknown,
-    LiveConfig<Entrypoint, LiveState>
+    LiveConfig<Entrypoint, unknown>
   >,
 ) => {
   return Response.error();
 };
 
 Deno.test("real test param", async () => {
-  const getConfigTsType = introspectWith({
-    handler: {
-      1: {
-        "state": "$live",
-      },
-    },
+  const getConfigTsType = introspectWith<
+    RouteMod
+  >({
+    handler: ["1", "state.$live"],
   });
   const configRef = await getConfigTsType(
     {
@@ -128,16 +128,12 @@ export function Page(_: PageProps<PageConfig>) {
 }
 
 Deno.test("first available", async () => {
-  const getConfigTsType = introspectWith([{
-    Page: {
-      0: "data",
-    },
+  const getConfigTsType = introspectWith<
+    { Page: typeof Page; handler: typeof handler; default: typeof funcTest }
+  >([{
+    Page: ["0", "data"],
   }, {
-    handler: {
-      1: {
-        "state": "$live",
-      },
-    },
+    handler: ["1", "state.$live"],
   }]);
   const configRef = await getConfigTsType(
     {

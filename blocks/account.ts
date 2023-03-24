@@ -13,7 +13,7 @@ export type AccountFunc<TConfig = any> = (c: TConfig) => Account;
 const accountBlock: Block<AccountFunc> = {
   type: "accounts",
   introspect: {
-    default: 0,
+    default: "0",
   },
   adapt: applyConfig,
   defaultPreview: (account) => {

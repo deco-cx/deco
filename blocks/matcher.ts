@@ -18,7 +18,7 @@ type MatchFunc<TConfig = any> =
 const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
   type: "matchers",
   introspect: {
-    default: 0,
+    default: "0",
   },
   adapt:
     <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>

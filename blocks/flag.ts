@@ -20,7 +20,7 @@ export type FlagFunc<TConfig = any> = (c: TConfig) => FlagObj;
 const flagBlock: Block<FlagFunc> = {
   type: "flags",
   introspect: {
-    default: 0,
+    default: "0",
   },
   adapt: applyConfig,
   defaultPreview: async (flag, { request }) => {

@@ -24,12 +24,8 @@ export interface LoaderModule<
 
 const loaderBlock: BlockForModule<LoaderModule> = {
   type: "loaders",
-  introspect: introspectWith({
-    default: {
-      1: {
-        "state": "$live",
-      },
-    },
+  introspect: introspectWith<LoaderModule<any, StatefulContext<LiveConfig>>>({
+    "default": ["1", "state.$live"],
   }, true),
   adapt: <
     TCtx extends StatefulContext<any> = StatefulContext<any>,

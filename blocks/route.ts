@@ -153,13 +153,9 @@ const routeBlock: BlockForModule<RouteMod> = {
     return routeModule;
   },
   introspect: [{
-    handler: {
-      1: ["state", "$live"],
-    },
+    handler: ["1", "state.$live"],
   }, {
-    default: {
-      0: ["data"],
-    },
+    default: ["0", "data"],
   }],
   type: blockType,
 };

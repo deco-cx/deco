@@ -75,7 +75,7 @@ export const newComponentBlock = <K extends string>(
 ): Block<ComponentFunc, PreactComponent, K> => ({
   type,
   introspect: {
-    default: 0,
+    default: "0",
   },
   defaultDanglingRecover,
   defaultPreview: (comp) => comp,

@@ -1,33 +1,26 @@
 import { JSONSchema7 } from "$live/deps.ts";
 import {
+  BlockModule,
   BlockModuleRef,
   FunctionBlockDefinition,
   IntrospectFunc,
+  IntrospectPath
 } from "$live/engine/block.ts";
 import {
   inlineOrSchemeable,
   Schemeable,
   TransformContext,
-  tsTypeToSchemeableOrUndefined,
+  tsTypeToSchemeableOrUndefined
 } from "$live/engine/schema/transform.ts";
 import { denoDoc, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
 import {
   DocNode,
   InterfaceDef,
   TsTypeDef,
-  TsTypeLiteralDef,
+  TsTypeLiteralDef
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 
-export interface TsTypeAddr {
-  [key: string]: TsTypeAddr | string;
-}
-
-export interface FunctionNodeAddr {
-  [key: string]: number | {
-    [key: number]: TsTypeAddr | string;
-  };
-}
-
+type Key = string | number | symbol;
 export const fnDefinitionToSchemeable = async (
   ast: [string, DocNode[]],
   validFn: FunctionBlockDefinition,
@@ -77,19 +70,18 @@ const resolveTsType = (
 const fromTypeLiteralOrInterface = async (
   tsType: TsTypeLiteralDef | InterfaceDef,
   root: [string, DocNode[]],
-  addr: TsTypeAddr | string,
+  [propName, ...rest]: Key[],
   contextTypes: Record<string, [TsTypeDef, [string, DocNode[]]]>,
 ): Promise<[TsTypeDef | undefined, [string, DocNode[]]]> => {
-  const propName = typeof addr === "string" ? addr : Object.keys(addr)[0];
   const propTsType = tsType.properties.find((prop) => prop.name === propName)
     ?.tsType;
 
-  if (!propTsType || typeof addr !== "object") {
+  if (!propTsType || rest.length === 0) {
     return resolveTsType(propTsType, root, contextTypes);
   }
   return await fromTsType(
     propTsType,
-    addr[Object.keys(addr)[0]],
+    rest,
     root,
     contextTypes,
   );
@@ -97,7 +89,7 @@ const fromTypeLiteralOrInterface = async (
 
 const fromNode = async (
   node: DocNode,
-  addr: TsTypeAddr | string,
+  addr: (string | number | symbol)[],
   root: [string, DocNode[]],
   contextTypes: Record<string, [TsTypeDef, [string, DocNode[]]]>,
   typeParams?: [TsTypeDef[], [string, DocNode[]]],
@@ -154,7 +146,7 @@ const fromNode = async (
 
 const fromTsType = async (
   tsType: TsTypeDef,
-  addr: TsTypeAddr | string,
+  addr: Key[],
   root: [string, DocNode[]],
   contextTypes: Record<string, [TsTypeDef, [string, DocNode[]]]>,
 ): Promise<[TsTypeDef | undefined, [string, DocNode[]]]> => {
@@ -197,18 +189,20 @@ const fromTsType = async (
   );
 };
 
-export const introspectAddr = async (
-  addr: FunctionNodeAddr,
+export const introspectAddr = async <
+  TBlockModule extends BlockModule = BlockModule,
+>(
+  addr: IntrospectPath<TBlockModule>,
   ctx: TransformContext,
   path: string,
   ast: DocNode[],
   includeReturn?: boolean,
-) => {
+): Promise<BlockModuleRef | undefined> => {
   const addrKeys = Object.keys(addr);
   if (addrKeys.length === 0) {
     return undefined;
   }
-  const funcName = addrKeys[0];
+  const funcName = addrKeys[0] as keyof IntrospectPath<TBlockModule>;
   const func = ast.find(
     (n) => n.name === funcName && n.declarationKind === "export",
   );
@@ -227,24 +221,24 @@ export const introspectAddr = async (
       : undefined,
   };
   const addrVal = addr[funcName];
-  if (typeof addrVal === "number") {
+  if (typeof addrVal === "string") {
     return {
       ...baseBlockRef,
-      inputSchema: addrVal >= fn.params.length
+      inputSchema: +addrVal >= fn.params.length
         ? undefined
-        : await tsTypeToSchemeableOrUndefined(fn.params[addrVal], root),
+        : await tsTypeToSchemeableOrUndefined(fn.params[+addrVal], root),
     };
   }
-
-  const tsTypeKeys = Object.keys(addrVal);
-  if (tsTypeKeys.length === 0) {
-    return undefined;
+  if (!addrVal) {
+    return baseBlockRef;
   }
-  const paramIdx = +tsTypeKeys[0];
+
+  const [paramIdxStr, objPath] = addrVal;
+  const paramIdx = +paramIdxStr;
   if (paramIdx >= fn.params.length) {
     return baseBlockRef;
   }
-  const typeParam = addrVal[paramIdx];
+  const typeParam = (objPath as string).split(".");
   const tsType = fn.params[paramIdx];
   const [configType, newRoot] = await fromTsType(tsType, typeParam, [
     path,
@@ -261,8 +255,11 @@ export const introspectAddr = async (
   };
 };
 
-export const introspectWith = (
-  addr: FunctionNodeAddr | FunctionNodeAddr[] | IntrospectFunc,
+export const introspectWith = <TBlockModule extends BlockModule = BlockModule>(
+  addr:
+    | IntrospectPath<TBlockModule>
+    | IntrospectPath<TBlockModule>[]
+    | IntrospectFunc,
   includeReturn?: boolean,
 ) =>
 async (

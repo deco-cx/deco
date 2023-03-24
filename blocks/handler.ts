@@ -35,7 +35,7 @@ type HandlerFunc<TConfig = any> = (config: TConfig) => DenoHandler;
 const handlerBlock: Block<HandlerFunc> = {
   type: "handlers",
   introspect: {
-    default: 0,
+    default: "0",
   },
   adapt: applyConfig,
 };

@@ -11,7 +11,7 @@ export type Page = InstanceOf<typeof page, "#/root/pages">;
 const page: Block<ComponentFunc, PreactComponent> = {
   type: "pages",
   introspect: {
-    default: 0,
+    default: "0",
   },
   adapt: fromComponentFunc,
   defaultPreview: (comp) => comp,

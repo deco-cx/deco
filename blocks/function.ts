@@ -25,7 +25,7 @@ export interface FunctionModule<
 
 const functionBlock: BlockForModule<FunctionModule> = {
   type: "functions",
-  introspect: introspectWith({ default: 0 }, true),
+  introspect: introspectWith<FunctionModule>({ default: "0" }, true),
   adapt: <
     TConfig = any,
     TState = any,
