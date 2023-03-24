@@ -19,7 +19,7 @@ import {
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 
 export interface TsTypeAddr {
-  [key: string | number]: TsTypeAddr | string;
+  [key: string]: TsTypeAddr | string;
 }
 
 export interface FunctionNodeAddr {
@@ -159,7 +159,7 @@ const fromTsType = async (
   contextTypes: Record<string, [TsTypeDef, [string, DocNode[]]]>,
 ): Promise<[TsTypeDef | undefined, [string, DocNode[]]]> => {
   if (tsType.kind === "intersection") {
-    for (const tsTypeIntersec of tsType.intersection.reverse()) {
+    for (const tsTypeIntersec of tsType.intersection.toReversed()) {
       const found = fromTsType(tsTypeIntersec, addr, root, contextTypes);
       if (found) {
         return found;
@@ -202,7 +202,7 @@ export const introspectAddr = async (
   ctx: TransformContext,
   path: string,
   ast: DocNode[],
-  ignoreReturn?: boolean,
+  includeReturn?: boolean,
 ) => {
   const addrKeys = Object.keys(addr);
   if (addrKeys.length === 0) {
@@ -220,10 +220,9 @@ export const introspectAddr = async (
     return undefined;
   }
 
-  const shouldIgnoreReturn = ignoreReturn !== undefined && ignoreReturn;
   const baseBlockRef = {
     functionRef: path,
-    outputSchema: !shouldIgnoreReturn && fn.return
+    outputSchema: includeReturn && fn.return
       ? await tsTypeToSchemeableOrUndefined(fn.return, root)
       : undefined,
   };
@@ -247,9 +246,6 @@ export const introspectAddr = async (
   }
   const typeParam = addrVal[paramIdx];
   const tsType = fn.params[paramIdx];
-  if (path.includes("catchall")) {
-    console.log(tsType, typeParam);
-  }
   const [configType, newRoot] = await fromTsType(tsType, typeParam, [
     path,
     ast,
@@ -267,7 +263,7 @@ export const introspectAddr = async (
 
 export const introspectWith = (
   addr: FunctionNodeAddr | FunctionNodeAddr[] | IntrospectFunc,
-  ignoreReturn?: boolean,
+  includeReturn?: boolean,
 ) =>
 async (
   ctx: TransformContext,
@@ -280,7 +276,7 @@ async (
   const addrs = Array.isArray(addr) ? addr : [addr];
 
   for (const nodeAddr of addrs) {
-    const found = await introspectAddr(nodeAddr, ctx, path, ast, ignoreReturn);
+    const found = await introspectAddr(nodeAddr, ctx, path, ast, includeReturn);
     if (found) {
       return found;
     }

@@ -2,7 +2,7 @@ import { Handler, LiveConfig } from "$live/blocks/handler.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { LiveState } from "$live/types.ts";
-import { HandlerContext } from "https://deno.land/x/fresh@1.1.2/server.ts";
+import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { dirname } from "std/path/mod.ts";
 import { assertEquals } from "std/testing/asserts.ts";
 
@@ -117,4 +117,36 @@ Deno.test("real test param", async () => {
   );
 
   assertEquals(configRef?.inputSchema?.name, "Entrypoint");
+});
+
+export interface PageConfig {
+  number: string;
+}
+
+export function Page(_: PageProps<PageConfig>) {
+  return Response.error();
+}
+
+Deno.test("first available", async () => {
+  const getConfigTsType = introspectWith([{
+    Page: {
+      0: "data",
+    },
+  }, {
+    handler: {
+      1: {
+        "state": "$live",
+      },
+    },
+  }]);
+  const configRef = await getConfigTsType(
+    {
+      base: dirname(import.meta.url),
+      namespace: "$live",
+    },
+    import.meta.url,
+    await denoDoc(import.meta.url),
+  );
+
+  assertEquals(configRef?.inputSchema?.name, "PageConfig");
 });

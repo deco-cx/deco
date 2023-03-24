@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
-import { FunctionNodeAddr } from "$live/engine/introspect.ts";
 import { ResolverMiddleware } from "$live/engine/middleware.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
 import {
@@ -43,6 +42,80 @@ export type ModuleOf<TBlock> = TBlock extends Block<
   infer TBlockModule
 > ? TBlockModule
   : never;
+type Cons<H, T> = T extends readonly any[]
+  ? ((h: H, ...t: T) => void) extends ((...r: infer R) => void) ? R : never
+  : never;
+
+type Prev = [
+  never,
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  ...0[],
+];
+
+type Paths<T, D extends number = 10> = [D] extends [never] ? never
+  : T extends object ? {
+      [K in keyof T]-?:
+        | [K]
+        | (Paths<T[K], Prev[D]> extends infer P
+          ? P extends [] ? never : Cons<K, P>
+          : never);
+    }[keyof T]
+  : [];
+
+type Leaves<T, D extends number = 10> = [D] extends [never] ? never
+  : T extends object
+    ? { [K in keyof T]-?: Cons<K, Leaves<T[K], Prev[D]>> }[keyof T]
+  : [];
+export type IntrospectTypeRef<
+  TypeRef,
+> = TypeRef extends Record<string, any> ? {
+    [key in keyof TypeRef]:
+      | key
+      | IntrospectTypeRef<TypeRef[key]>;
+  }
+  : never;
+
+export type IntrospectFuncParam<TMaybeFunc> = TMaybeFunc extends
+  (...args: any[]) => any ? (
+    | number
+    | Record<
+      number,
+      | Paths<Parameters<TMaybeFunc>[number]>
+      | keyof (Parameters<TMaybeFunc>[number])
+      | {
+        [pKey in keyof (Parameters<TMaybeFunc>[number])]: IntrospectTypeRef<
+          Parameters<TMaybeFunc>[number][pKey]
+        >;
+      }
+    >
+  )
+  : never;
+
+export type IntrospectPath<
+  TModule extends BlockModule = BlockModule,
+> = {
+  [key in keyof TModule]?: IntrospectFuncParam<TModule[key]>;
+};
 
 export type BlockForModule<
   TBlockModule extends BlockModule,
@@ -70,7 +143,10 @@ export interface Block<
   >[];
   defaultPreview?: Resolver<PreactComponent, TSerializable, any>;
   type: BType;
-  introspect: FunctionNodeAddr | FunctionNodeAddr[] | IntrospectFunc;
+  introspect:
+    | IntrospectPath<TBlockModule>
+    | IntrospectPath<TBlockModule>[]
+    | IntrospectFunc;
   decorate?: <
     TBlockModule extends BlockModule<
       UnPromisify<ReturnType<TBlockFunc>>,

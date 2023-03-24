@@ -52,7 +52,6 @@ const router = (
       const groups = res?.pathname.groups ?? {};
 
       if (res !== null) {
-        console.log(routePath, groups);
         const ctx = { ...connInfo, params: groups } as ConnInfo & {
           params: Record<string, string>;
         };

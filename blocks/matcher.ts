@@ -1,6 +1,5 @@
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -18,21 +17,9 @@ type MatchFunc<TConfig = any> =
 
 const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
   type: "matchers",
-  defaultPreview: async (matcher, { request }) => {
-    const ctx = await request.json();
-    return {
-      Component: JsonViewer,
-      props: {
-        body: JSON.stringify({
-          context: ctx,
-          result: matcher(ctx),
-        }),
-      },
-    };
-  },
-  introspect: introspectWith({
+  introspect: {
     default: 0,
-  }, true),
+  },
   adapt:
     <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>
     ($live: TConfig) => {
@@ -47,6 +34,18 @@ const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
         return matcherFuncOrValue;
       };
     },
+  defaultPreview: async (matcher, { request }) => {
+    const ctx = await request.json();
+    return {
+      Component: JsonViewer,
+      props: {
+        body: JSON.stringify({
+          context: ctx,
+          result: matcher(ctx),
+        }),
+      },
+    };
+  },
 };
 
 /**

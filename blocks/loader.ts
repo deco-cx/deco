@@ -5,13 +5,13 @@ import {
   StatefulContext,
 } from "$live/blocks/handler.ts";
 import {
-  fromFreshLikeHandler,
   newSingleFlightGroup,
   SingleFlightKeyFunc,
   StatefulHandler,
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { BlockForModule, BlockModule } from "$live/engine/block.ts";
+import { introspectWith } from "$live/engine/introspect.ts";
 
 export interface LoaderModule<
   TConfig = any,
@@ -24,13 +24,13 @@ export interface LoaderModule<
 
 const loaderBlock: BlockForModule<LoaderModule> = {
   type: "loaders",
-  introspect: fromFreshLikeHandler,
-  defaultPreview: (result) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(result, null, 2) },
-    };
-  },
+  introspect: introspectWith({
+    default: {
+      1: {
+        "state": "$live",
+      },
+    },
+  }, true),
   adapt: <
     TCtx extends StatefulContext<any> = StatefulContext<any>,
     TConfig = any,
@@ -45,6 +45,12 @@ const loaderBlock: BlockForModule<LoaderModule> = {
       });
     },
   ],
+  defaultPreview: (result) => {
+    return {
+      Component: JsonViewer,
+      props: { body: JSON.stringify(result, null, 2) },
+    };
+  },
 };
 
 /**

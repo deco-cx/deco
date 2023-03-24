@@ -3,7 +3,6 @@ import { HttpContext, StatefulContext } from "$live/blocks/handler.ts";
 import { Block, ComponentFunc, PreactComponent } from "$live/engine/block.ts";
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
@@ -54,14 +53,6 @@ async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
   });
 };
 
-export const fromFreshLikeHandler = introspectWith({
-  default: {
-    1: {
-      "state": "$live",
-    },
-  },
-});
-
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   { default: Component }: { default: ComponentFunc<TProps> },
   resolver: string,
@@ -83,12 +74,12 @@ export const newComponentBlock = <K extends string>(
   >[],
 ): Block<ComponentFunc, PreactComponent, K> => ({
   type,
+  introspect: {
+    default: 0,
+  },
   defaultDanglingRecover,
   defaultPreview: (comp) => comp,
   adapt: fromComponentFunc,
-  introspect: introspectWith({
-    default: 0,
-  }, true),
 });
 
 export const newSingleFlightGroup = <

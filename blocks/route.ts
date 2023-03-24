@@ -5,16 +5,15 @@ import {
   RouteConfig,
   RouteModule,
 } from "$fresh/src/server/types.ts";
-import { Block, BlockModuleRef, ComponentFunc } from "$live/engine/block.ts";
+import { LiveConfig } from "$live/blocks/handler.ts";
+import {
+  BlockForModule,
+  BlockModule,
+  ComponentFunc,
+} from "$live/engine/block.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
-import { tsTypeToSchemeable } from "$live/engine/schema/transform.ts";
 import { context as liveContext } from "$live/live.ts";
 import { DecoManifest, LiveState } from "$live/types.ts";
-import {
-  DocNode,
-  ParamDef,
-  TsTypeDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
@@ -126,10 +125,18 @@ const mapHandlers = (
     return await context.render($live);
   };
 };
+export type Route<TProps = any> = ComponentFunc<PageProps<TProps>>;
 
-export type Route<TProps = unknown> = ComponentFunc<PageProps<TProps>>;
+export interface RouteMod extends BlockModule {
+  handler?: (
+    request: Request,
+    context: HandlerContext<any, LiveConfig>,
+  ) => Promise<Response>;
+  default: Route;
+}
+
 const blockType = "routes";
-const routeBlock: Block<Route, Response> = {
+const routeBlock: BlockForModule<RouteMod> = {
   decorate: (routeModule, key) => {
     if (
       isConfigurableRoute(routeModule) &&
@@ -145,127 +152,16 @@ const routeBlock: Block<Route, Response> = {
     }
     return routeModule;
   },
-  // introspect: introspectWith([{
-  //   handler: {
-  //     1: {
-  //       "state": "$live",
-  //     },
-  //   },
-  // }, {
-  //   default: {
-  //     0: "data",
-  //   },
-  // }], true),
-  introspect: async (_, path, ast) => {
-    const routeMod: BlockModuleRef = {
-      functionRef: path,
-    };
-
-    const handlerNode = ast.find(
-      (node) => node.name === "handler" && node.declarationKind === "export",
-    );
-    const liveConfigImport = ast.find((node) => {
-      return node.kind === "import" && node.importDef.imported === "LiveConfig";
-    });
-    if (handlerNode && liveConfigImport) {
-      const configSchemeable = schemeableFromHandleNode(
-        handlerNode,
-        liveConfigImport.name,
-      );
-      if (configSchemeable) {
-        return {
-          ...routeMod,
-          inputSchema: await tsTypeToSchemeable(configSchemeable, [path, ast]),
-        };
-      }
-    } else {
-      const defaultExport = ast.find((node) => node.name === "default");
-      if (!defaultExport) {
-        return routeMod;
-      }
-      let pagePropsParam: ParamDef | null = null;
-      if (defaultExport.kind === "variable") {
-        const variable = defaultExport.variableDef.tsType;
-        if (variable!.kind !== "fnOrConstructor") {
-          return routeMod;
-        }
-        const params = variable.fnOrConstructor.params;
-        if ((params ?? null) === null || params.length === 0) {
-          return routeMod;
-        }
-        pagePropsParam = params[0];
-      } else if (defaultExport.kind === "function") {
-        if (
-          !defaultExport.functionDef.params ||
-          defaultExport.functionDef.params.length === 0
-        ) {
-          return routeMod;
-        }
-        pagePropsParam = defaultExport.functionDef.params[0];
-      }
-
-      if (pagePropsParam === null || pagePropsParam.kind !== "identifier") {
-        return routeMod;
-      }
-      const pagePropsTsType = pagePropsParam.tsType;
-      if (pagePropsTsType!.kind !== "typeRef") {
-        return routeMod;
-      }
-      const typeParams = pagePropsTsType.typeRef.typeParams;
-      if (!typeParams || typeParams.length === 0) {
-        return routeMod;
-      }
-
-      return {
-        ...routeMod,
-        inputSchema: await tsTypeToSchemeable(typeParams[0], [path, ast]),
-      };
-    }
-    return routeMod;
-  },
+  introspect: [{
+    handler: {
+      1: ["state", "$live"],
+    },
+  }, {
+    default: {
+      0: ["data"],
+    },
+  }],
   type: blockType,
 };
-
-function schemeableFromHandleNode(
-  handlerNode: DocNode,
-  liveImportAs: string,
-): TsTypeDef | null {
-  let contextParam: ParamDef | null = null;
-  if (handlerNode.kind === "function") {
-    if (handlerNode.functionDef.params.length < 2) {
-      return null;
-    }
-    contextParam = handlerNode.functionDef.params[1];
-  } else if (handlerNode.kind === "variable") {
-    const variable = handlerNode.variableDef.tsType;
-    if (variable!.kind !== "fnOrConstructor") {
-      return null;
-    }
-    const params = variable.fnOrConstructor.params;
-    if (params.length < 2) {
-      return null;
-    }
-    contextParam = params[1];
-  }
-
-  if (contextParam === null || contextParam === undefined) {
-    return null;
-  }
-  if (contextParam.tsType!.kind !== "typeRef") {
-    return null;
-  }
-  const typeParams = contextParam.tsType.typeRef.typeParams;
-  if (
-    typeParams === null || typeParams === undefined || typeParams.length < 2
-  ) {
-    return null;
-  }
-
-  const liveConfig = typeParams[1];
-  if (liveConfig.kind !== "typeRef" || liveConfig.repr !== liveImportAs) {
-    return null;
-  }
-  return liveConfig.typeRef.typeParams! && liveConfig.typeRef.typeParams[0]!;
-}
 
 export default routeBlock;

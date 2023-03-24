@@ -7,8 +7,8 @@ import {
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { BlockForModule, BlockModule } from "$live/engine/block.ts";
-import { LoaderFunction } from "$live/types.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
+import { LoaderFunction } from "$live/types.ts";
 
 export type Function<TProps = any, TState = any> = LoaderFunction<
   TProps,
@@ -25,12 +25,7 @@ export interface FunctionModule<
 
 const functionBlock: BlockForModule<FunctionModule> = {
   type: "functions",
-  defaultPreview: (result) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(result, null, 2) },
-    };
-  },
+  introspect: introspectWith({ default: 0 }, true),
   adapt: <
     TConfig = any,
     TState = any,
@@ -59,7 +54,12 @@ const functionBlock: BlockForModule<FunctionModule> = {
       return data;
     },
   ],
-  introspect: introspectWith({ default: 0 }),
+  defaultPreview: (result) => {
+    return {
+      Component: JsonViewer,
+      props: { body: JSON.stringify(result, null, 2) },
+    };
+  },
 };
 
 /**

@@ -2,7 +2,6 @@ import { Matcher } from "$live/blocks/matcher.ts";
 import { applyConfig } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/blocks/utils.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
@@ -12,6 +11,7 @@ interface FlagObj<T = unknown> {
   name: string;
   true: T;
   false: T;
+  // date && percentage
 }
 
 // deno-lint-ignore no-explicit-any
@@ -19,15 +19,15 @@ export type FlagFunc<TConfig = any> = (c: TConfig) => FlagObj;
 
 const flagBlock: Block<FlagFunc> = {
   type: "flags",
+  introspect: {
+    default: 0,
+  },
+  adapt: applyConfig,
   defaultPreview: async (flag, { request }) => {
     const matchCtx = await request.json();
     const resp = flag.matcher(matchCtx) ? flag.true : flag.false;
     return { Component: JsonViewer, props: { body: JSON.stringify(resp) } };
   },
-  introspect: introspectWith({
-    default: 0,
-  }, true),
-  adapt: applyConfig,
 };
 
 /**

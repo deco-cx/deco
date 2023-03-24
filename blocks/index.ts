@@ -8,6 +8,7 @@ import matcherBlock from "$live/blocks/matcher.ts";
 import pageBlock from "$live/blocks/page.ts";
 import routeBlock from "$live/blocks/route.ts";
 import sectionBlock from "$live/blocks/section.ts";
+import { Block } from "$live/engine/block.ts";
 
 export default [
   functionBlock, // legacy
@@ -20,4 +21,4 @@ export default [
   sectionBlock,
   matcherBlock,
   flagBlock,
-];
+] satisfies Block[];
