@@ -12,7 +12,7 @@ import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
+import { namespaceFromImportMap } from "$live/utils/namespace.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 
@@ -88,16 +88,6 @@ export async function generate(
   );
 }
 
-const namespaceFromGit = async (): Promise<string | undefined> => {
-  const lns = await $`git remote show origin -n`.lines();
-  if (lns.length < 1) {
-    return undefined;
-  }
-  const fetchUrlLine = lns[1];
-  const [_ignoreFetchUrl, _ignoreGitUrl, nsAndGit] = fetchUrlLine.split(":");
-  const [namespace] = nsAndGit.split(".");
-  return namespace.trimEnd();
-};
 export default async function dev(
   base: string,
   entrypoint: string,
@@ -108,20 +98,24 @@ export default async function dev(
     onListen,
   }: {
     namespace?: string;
-    imports?: Array<
-      DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
-    >;
+    imports?:
+      | Array<
+        DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+      >
+      | Record<
+        string,
+        DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+      >;
     siteId?: number;
     onListen?: () => void;
   } = {},
 ) {
-  const ns = namespace ?? (await namespaceFromGit()) ?? base;
+  const dir = dirname(fromFileUrl(base));
+  const ns = namespace ?? (await namespaceFromImportMap(dir)) ?? base;
   context.namespace = ns;
   ensureMinDenoVersion();
 
   entrypoint = new URL(entrypoint, base).href;
-
-  const dir = dirname(fromFileUrl(base));
 
   let currentManifest: ManifestBuilder;
   const prevManifest = Deno.env.get("LIVE_DEV_PREVIOUS_MANIFEST");
@@ -137,7 +131,9 @@ export default async function dev(
     });
   }
   let manifest = await decoManifestBuilder(dir, ns, siteId);
-  manifest = manifest.mergeWith(imports);
+  manifest = manifest.mergeWith(
+    typeof imports === "object" ? Object.values(imports) : imports,
+  );
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());
 
