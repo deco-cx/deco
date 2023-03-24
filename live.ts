@@ -18,6 +18,7 @@ export type LiveContext = {
   // deno-lint-ignore no-explicit-any
   configResolver?: ConfigResolver<any>;
   namespace?: string;
+  metadata: Record<string, unknown>; // used to store any information
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -27,7 +28,5 @@ export const context: LiveContext = {
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
   siteId: 0,
+  metadata: {},
 };
-
-// TODO (mcandeia) add CORS to read schema/live data
-// TODO (mcandeia) add admin redirect and CSP headers

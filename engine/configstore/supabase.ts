@@ -11,14 +11,14 @@ function sleep(ms: number) {
 const sleepBetweenRetriesMS = 100;
 const refetchIntervalMSDeploy = 5_000;
 
-const fetchConfigs = (site: number) => {
-  return getSupabaseClient().from("configs").select("config").eq(
+const fetchConfigs = (site: string) => {
+  return getSupabaseClient().from("configs").select("state").eq(
     "site",
     site,
   ).single();
 };
 
-export const newSupabaseDeploy = (site: number): ConfigStore => {
+export const newSupabaseDeploy = (site: string): ConfigStore => {
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
 
@@ -42,7 +42,7 @@ export const newSupabaseDeploy = (site: number): ConfigStore => {
       await tryResolveFirstLoad(resolve, reject);
       return;
     }
-    resolve(data.config);
+    resolve(data.state);
   };
 
   let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
@@ -62,7 +62,7 @@ export const newSupabaseDeploy = (site: number): ConfigStore => {
         return;
       }
       currResolvables = Promise.resolve(
-        data.config,
+        data.state,
       );
       singleFlight = false;
     }, refetchIntervalMSDeploy);
@@ -73,7 +73,7 @@ export const newSupabaseDeploy = (site: number): ConfigStore => {
   };
 };
 
-export const newSupabaseLocal = (site: number): ConfigStore => {
+export const newSupabaseLocal = (site: string): ConfigStore => {
   const sf = singleFlight<Record<string, Resolvable>>();
   return {
     get: async () => {
@@ -84,7 +84,7 @@ export const newSupabaseLocal = (site: number): ConfigStore => {
             if (data === null || error != null) {
               throw error;
             }
-            return data.config as Record<string, Resolvable>;
+            return data.state as Record<string, Resolvable>;
           }),
       );
     },

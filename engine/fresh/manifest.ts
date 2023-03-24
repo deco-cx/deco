@@ -137,15 +137,17 @@ export const withoutLocalModules = (
 };
 
 const getProvider = (): ConfigStore => {
-  const isLegacy = context.siteId !== 0;
+  const isLegacy = context.siteId > 0;
   if (isLegacy) {
     const provider = context.isDeploy
       ? newSupabaseProviderLegacyDeploy
       : newSupabaseProviderLegacyLocal;
     return provider(context.siteId, context.namespace!);
   }
+  // set as migrated
+  context.metadata["migrated"] = true;
   const provider = context.isDeploy ? newSupabaseDeploy : newSupabaseLocal;
-  return provider(context.siteId);
+  return provider(context.site);
 };
 export const $live = <T extends DecoManifest>(m: T): T => {
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
@@ -206,6 +208,9 @@ export const $live = <T extends DecoManifest>(m: T): T => {
   // should be set first
   context.configResolver = resolver;
   context.manifest = newManifest;
+  console.log(
+    `Starting live: siteId=${context.siteId} site=${context.site}`,
+  );
 
   return context.manifest as T;
 };

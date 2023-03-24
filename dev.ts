@@ -110,6 +110,7 @@ export default async function dev(
     onListen?: () => void;
   } = {},
 ) {
+  const site = siteId ?? -1;
   const dir = dirname(fromFileUrl(base));
   const ns = namespace ?? (await namespaceFromImportMap(dir)) ?? base;
   context.namespace = ns;
@@ -123,14 +124,14 @@ export default async function dev(
     currentManifest = newManifestBuilder(JSON.parse(prevManifest));
   } else {
     currentManifest = newManifestBuilder({
-      siteId,
+      siteId: site,
       namespace: ns,
       imports: {},
       manifest: {},
       exports: [],
     });
   }
-  let manifest = await decoManifestBuilder(dir, ns, siteId);
+  let manifest = await decoManifestBuilder(dir, ns, site);
   manifest = manifest.mergeWith(
     typeof imports === "object" ? Object.values(imports) : imports,
   );

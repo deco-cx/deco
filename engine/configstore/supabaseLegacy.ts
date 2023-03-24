@@ -8,7 +8,7 @@ import {
   Page,
   PageData,
   PageFunction as Function,
-  PageSection as Section
+  PageSection as Section,
 } from "$live/types.ts";
 
 interface PageSection extends Record<string, any> {
