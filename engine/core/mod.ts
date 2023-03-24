@@ -11,7 +11,7 @@ import { PromiseOrValue } from "$live/engine/core/utils.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
-  resolvables: PromiseOrValue<Record<string, Resolvable<any>>>;
+  getResolvables: () => PromiseOrValue<Record<string, Resolvable<any>>>;
   danglingRecover?: Resolver;
 }
 
@@ -30,12 +30,14 @@ const withOverrides = (
 };
 
 export class ConfigResolver<TContext extends BaseContext = BaseContext> {
-  protected resolvables: PromiseOrValue<Record<string, Resolvable<any>>>;
+  protected getResolvables: () => PromiseOrValue<
+    Record<string, Resolvable<any>>
+  >;
   protected resolvers: ResolverMap<TContext>;
   protected danglingRecover?: Resolver;
   constructor(config: ResolverOptions<TContext>) {
     this.resolvers = config.resolvers;
-    this.resolvables = config.resolvables;
+    this.getResolvables = config.getResolvables;
     this.danglingRecover = config.danglingRecover;
   }
 
@@ -44,12 +46,6 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       ...this.resolvers,
       ...resolvers,
     };
-  };
-
-  public setResolvables = (
-    resolvables: PromiseOrValue<Record<string, Resolvable<any>>>,
-  ) => {
-    this.resolvables = resolvables;
   };
 
   public resolverFor = (
@@ -65,7 +61,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const resolvables = await this.resolvables;
+    const resolvables = await this.getResolvables();
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = {
       ...this.resolvers,

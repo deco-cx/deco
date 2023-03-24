@@ -1,13 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
 import { ConfigStore } from "$live/engine/configstore/provider.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
+import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import {
   Page,
   PageData,
   PageFunction as Function,
-  PageSection as Section,
+  PageSection as Section
 } from "$live/types.ts";
 
 interface PageSection extends Record<string, any> {
@@ -171,20 +172,20 @@ const baseEntrypoint = {
   },
 } as Record<string, Resolvable>;
 
-export const newSupabaseProviderLegacy = (
+const fetchSitePages = async (siteId: number) => {
+  return await getSupabaseClient()
+    .from("pages")
+    .select("id, name, data, path, state")
+    .eq("site", siteId)
+    .neq("state", "archived");
+};
+
+export const newSupabaseProviderLegacyDeploy = (
   siteId: number,
   namespace: string,
 ): ConfigStore => {
-  const supabaseClient = getSupabaseClient();
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
-
-  const fetchSitePages = async () => {
-    return await supabaseClient
-      .from("pages")
-      .select("id, name, data, path, state")
-      .eq("site", siteId);
-  };
 
   const tryResolveFirstLoad = async (
     resolve: (
@@ -198,7 +199,7 @@ export const newSupabaseProviderLegacy = (
       reject(lastError); // TODO @author Marcos V. Candeia should we panic? and exit? Deno.exit(1)
       return;
     }
-    const { data, error } = await fetchSitePages();
+    const { data, error } = await fetchSitePages(siteId);
     if (error != null || data === null) {
       remainingRetries--;
       lastError = error;
@@ -213,16 +214,14 @@ export const newSupabaseProviderLegacy = (
     Record<string, Resolvable<any>>
   >(tryResolveFirstLoad);
 
-  let currCb: null | (() => void) = null;
-
   currResolvables.then(() => {
     let singleFlight = false;
     setInterval(async () => {
-      if (!currCb || singleFlight) {
+      if (singleFlight) {
         return;
       }
       singleFlight = true;
-      const { data, error } = await fetchSitePages();
+      const { data, error } = await fetchSitePages(siteId);
       if (data === null || error !== null) {
         singleFlight = false;
         return;
@@ -230,15 +229,29 @@ export const newSupabaseProviderLegacy = (
       currResolvables = Promise.resolve(
         data.reduce(pageToConfig(namespace), baseEntrypoint),
       );
-      currCb();
       singleFlight = false;
     }, refetchIntervalMS);
   });
 
   return {
     get: () => currResolvables,
-    onChange: (cb) => {
-      currCb = cb;
+  };
+};
+
+export const newSupabaseProviderLegacyLocal = (
+  siteId: number,
+  namespace: string,
+) => {
+  const sf = singleFlight<Record<string, Resolvable>>();
+  return {
+    get: async () => {
+      return await sf.do("any", async () => {
+        const { data, error } = await fetchSitePages(siteId);
+        if (data === null || error !== null) {
+          throw error;
+        }
+        return data.reduce(pageToConfig(namespace), baseEntrypoint);
+      });
     },
   };
 };

@@ -3,6 +3,15 @@ import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
 import { BlockModule, PreactComponent } from "$live/engine/block.ts";
+import { ConfigStore } from "$live/engine/configstore/provider.ts";
+import {
+  newSupabaseDeploy,
+  newSupabaseLocal,
+} from "$live/engine/configstore/supabase.ts";
+import {
+  newSupabaseProviderLegacyDeploy,
+  newSupabaseProviderLegacyLocal,
+} from "$live/engine/configstore/supabaseLegacy.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
@@ -15,7 +24,6 @@ import defaultResolvers from "$live/engine/fresh/defaults.ts";
 import { compose } from "$live/engine/middleware.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { newSupabaseProviderLegacy } from "$live/engine/configstore/supabaseLegacy.ts";
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
 
@@ -128,6 +136,17 @@ export const withoutLocalModules = (
   return r;
 };
 
+const getProvider = (): ConfigStore => {
+  const isLegacy = context.siteId !== 0;
+  if (isLegacy) {
+    const provider = context.isDeploy
+      ? newSupabaseProviderLegacyDeploy
+      : newSupabaseProviderLegacyLocal;
+    return provider(context.siteId, context.namespace!);
+  }
+  const provider = context.isDeploy ? newSupabaseDeploy : newSupabaseLocal;
+  return provider(context.siteId);
+};
 export const $live = <T extends DecoManifest>(m: T): T => {
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
     ([currMan, currMap, recovers], blk) => {
@@ -176,19 +195,13 @@ export const $live = <T extends DecoManifest>(m: T): T => {
     [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();
-  const provider = newSupabaseProviderLegacy(
-    context.siteId,
-    context.namespace!,
-  );
+  const provider = getProvider();
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },
-    resolvables: provider.get(),
+    getResolvables: provider.get.bind(provider),
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,
-  });
-  provider.onChange(() => {
-    context.configResolver!.setResolvables(provider.get());
   });
   // should be set first
   context.configResolver = resolver;
