@@ -1,13 +1,16 @@
 import { Head } from "$fresh/runtime.ts";
 import { inspectVSCode } from "../deps.ts";
-import type { Flags, Page, Site } from "$live/types.ts";
+import type { Site } from "$live/types.ts";
+
+interface Page {
+  id: string | number;
+}
 
 declare global {
   interface Window {
     LIVE: {
       page: Page;
       site: Site;
-      flags: Flags;
     };
   }
 }
@@ -15,7 +18,6 @@ declare global {
 interface Props {
   site: Site;
   page?: Page;
-  flags?: Flags;
 }
 
 type LiveEvent = {
@@ -104,6 +106,7 @@ const main = () => {
     }
   };
 
+  //@ts-ignore: "DomInspector not available"
   const inspector = new DomInspector(document.body);
 
   /** Setup global variables */
@@ -118,11 +121,9 @@ const main = () => {
   addEventListener("message", onMessage);
 };
 
-function LiveControls({ site, page, flags = {} }: Props) {
+function LiveControls({ site, page }: Props) {
   const partialPage = page && {
     id: page.id,
-    path: page.path,
-    state: page.state,
   };
 
   return (
@@ -131,7 +132,7 @@ function LiveControls({ site, page, flags = {} }: Props) {
         type="application/json"
         id="__DECO_STATE"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({ page: partialPage, site, flags }),
+          __html: JSON.stringify({ page: partialPage, site }),
         }}
       />
       <script

@@ -1,3 +1,9 @@
+# Merge generated files
+*.orig
+
+# VsCode
+.vscode
+
 # Logs
 logs
 *.log

@@ -13,6 +13,9 @@ export const isAdmin = (url: string): boolean => {
   );
 };
 
-export const adminUrlFor = (pageId: number, siteId: number): string => {
+export const adminUrlFor = (
+  pageId: string | number,
+  siteId: number,
+): string => {
   return `${adminDomain}/admin/${siteId}/pages/${pageId}?sort=asc`;
 };

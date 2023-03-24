@@ -1,11 +1,16 @@
-import { createServerTimings } from "$live/utils/timings.ts";
-import type { HandlerContext } from "$fresh/server.ts";
+import type { HandlerContext, Manifest } from "$fresh/server.ts";
 import type { IslandModule } from "$fresh/src/server/types.ts";
-import type { Manifest } from "$fresh/server.ts";
-import type {
-  JSONSchema7,
-  JSONSchema7Definition,
-} from "https://esm.sh/@types/json-schema@7.0.11?pin=v110";
+import accountBlock from "$live/blocks/account.ts";
+import flagBlock from "$live/blocks/flag.ts";
+import functionBlock from "$live/blocks/function.ts";
+import handlerBlock from "$live/blocks/handler.ts";
+import loaderBlock from "$live/blocks/loader.ts";
+import matcherBlock from "$live/blocks/matcher.ts";
+import pageBlock from "$live/blocks/page.ts";
+import sectionBlock from "$live/blocks/section.ts";
+import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
+import { ModuleOf } from "$live/engine/block.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
 
 export interface Node {
   label: string;
@@ -17,25 +22,16 @@ export interface Node {
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
-export interface Module extends IslandModule {
-  schema?: JSONSchema;
-}
-
-export interface FunctionModule {
-  default: LoaderFunction<any, any> | MatchFunction | EffectFunction;
-}
-
 export interface DecoManifest extends Manifest {
-  islands: Record<string, Module>;
-  sections: Record<string, Module>;
-  functions: Record<string, FunctionModule>;
-  schemas: Record<
-    string,
-    {
-      inputSchema: JSONSchema | null;
-      outputSchema: JSONSchema | null;
-    }
-  >;
+  islands: Record<string, IslandModule>;
+  sections?: Record<string, ModuleOf<typeof sectionBlock>>;
+  functions?: Record<string, ModuleOf<typeof functionBlock>>;
+  loaders?: Record<string, ModuleOf<typeof loaderBlock>>;
+  pages?: Record<string, ModuleOf<typeof pageBlock>>;
+  matchers?: Record<string, ModuleOf<typeof matcherBlock>>;
+  handlers?: Record<string, ModuleOf<typeof handlerBlock>>;
+  flags?: Record<string, ModuleOf<typeof flagBlock>>;
+  accounts?: Record<string, ModuleOf<typeof accountBlock>>;
 }
 
 export interface Site {
@@ -83,7 +79,7 @@ export interface Page {
   path: string;
   state: PageState;
   site?: Site;
-  public?: boolean
+  public?: boolean;
 }
 
 export interface LivePageData {
@@ -166,32 +162,12 @@ export type LiveState<T = unknown> = {
   global: T;
 };
 
+// deno-lint-ignore no-explicit-any
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
+  // deno-lint-ignore no-explicit-any
   ctx: HandlerContext<any, State>,
   props: Props,
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
-
-export type MatchDuration = "request" | "session";
-
-export type MatchFunction<
-  Props = any,
-  Data = any,
-  State = any,
-> = (
-  req: Request,
-  ctx: HandlerContext<Data, State>,
-  props: Props,
-) => { isMatch: boolean; duration: MatchDuration };
-
-export type EffectFunction<
-  Props = any,
-  Data = any,
-  State = any,
-> = (
-  req: Request,
-  ctx: HandlerContext<Data, State>,
-  props: Props,
-) => Record<string, any>;
 
 export type LoaderReturnType<O = unknown> = O;
