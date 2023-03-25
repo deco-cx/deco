@@ -140,6 +140,9 @@ export function setCSPHeaders(
   request: Request,
   response: Response,
 ): Response {
+  if (response.status >= 300) { // headers are immutable when using redirect and errors
+    return response;
+  }
   const referer = request.headers.get("origin") ??
     request.headers.get("referer");
   const isOnAdmin = referer && isAdmin(referer);

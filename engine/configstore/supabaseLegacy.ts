@@ -180,7 +180,7 @@ const baseEntrypoint = {
 const fetchSitePages = async (siteId: number) => {
   return await getSupabaseClient()
     .from("pages")
-    .select("id, name, data, path, state")
+    .select("id, name, data, path, state, public")
     .eq("site", siteId)
     .neq("state", "archived");
 };

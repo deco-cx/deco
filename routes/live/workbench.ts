@@ -1,7 +1,7 @@
-import { basename } from "std/path/mod.ts";
 import { context } from "$live/live.ts";
-import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { Node } from "$live/types.ts";
+import { resolveFilePath } from "$live/utils/filesystem.ts";
+import { basename } from "std/path/mod.ts";
 
 const mapSectionToNode = (component: string) => ({
   label: basename(component),
@@ -17,6 +17,7 @@ const isGlobalSection = (section: string) => section.endsWith(".global.tsx");
 
 const getWorkbenchTree = (): Node[] => {
   const sections = context.manifest?.sections ?? {};
+  const accounts = context?.manifest?.accounts ?? {};
 
   const tsxFileSections = Object
     .keys(sections)
@@ -26,10 +27,6 @@ const getWorkbenchTree = (): Node[] => {
     section,
   ) => !isGlobalSection(section)).map(mapSectionToNode);
 
-  const firstLevelGlobalSectionNodes: Node[] = tsxFileSections.filter(
-    isGlobalSection,
-  ).map(mapSectionToNode);
-
   return [{
     label: "sections",
     fullPath: "./sections",
@@ -37,7 +34,7 @@ const getWorkbenchTree = (): Node[] => {
   }, {
     label: "globals",
     fullPath: "./sections",
-    children: firstLevelGlobalSectionNodes,
+    children: Object.keys(accounts).map(mapSectionToNode),
   }];
 };
 

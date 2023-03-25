@@ -199,7 +199,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     const resp = await server(req, connInfo);
 
     // set cookie for the flags that has changed.
-    if (flagsThatShouldBeCookied.length > 0) {
+    if (flagsThatShouldBeCookied.length > 0 && resp.status < 300) { // errors and redirects have immutable headers
       cookies.setFlags(resp.headers, flagsThatShouldBeCookied);
       resp.headers.append("vary", "cookie");
     }
