@@ -91,6 +91,7 @@ const forcePageAudience = (
   if (!pageId) {
     return undefined;
   }
+  const pathName = reqUrl.pathname;
   const pageTemplate = reqUrl.searchParams.get("pathTemplate") ?? "/*";
   return {
     name: `force_${pageId}`,
@@ -102,7 +103,7 @@ const forcePageAudience = (
             return Response.error();
           }
           const resolvedOrPromise = context.configResolver!.resolve<Page>(
-            pageId,
+            pathName.endsWith("@Global") ? pathName : pageId, // global pages are actually global sections.
             { context: ctx, request: req },
             configs,
           );

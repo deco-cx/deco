@@ -27,7 +27,8 @@ export const handler = async (
   }
 
   if (
-    url.pathname.startsWith("/_live/workbench") && !url.searchParams.has("key")
+    url.pathname.startsWith("/_live/workbench") &&
+    !url.searchParams.has("key") && !url.searchParams.has("pageId")
   ) {
     url.pathname = "/live/workbench";
     return redirectTo(url);
