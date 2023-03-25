@@ -51,6 +51,8 @@ export const handler = async (
     ? await req.json()
     : propsFromUrl(url) ?? {};
 
+  console.log(ctx.params.block);
+
   return await ctx.render(
     await resolve({
       __resolveType: "preview",

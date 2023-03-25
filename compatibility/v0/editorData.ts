@@ -1,12 +1,75 @@
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { context } from "$live/live.ts";
 import getSupabaseClient from "$live/supabase.ts";
-import { EditorData, Page, PageWithParams } from "$live/types.ts";
+import {
+  AvailableFunction,
+  AvailableSection,
+  EditorData,
+  JSONSchemaDefinition,
+  Page,
+  PageData,
+  PageFunction,
+  PageWithParams,
+} from "$live/types.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 
-export async function loadPage({
+export const redirectTo = (url: URL) =>
+  Response.json(
+    {},
+    {
+      status: 302,
+      headers: {
+        "Location": url.toString(),
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, *",
+      },
+    },
+  );
+
+function generateAvailableEntitiesFromManifest(schemas: Schemas) {
+  const availableSections = Object.keys(context.manifest?.sections || {}).map(
+    (componentKey) => {
+      const [input] = getInputAndOutputFromKey(schemas, componentKey);
+      const label = filenameFromPath(componentKey);
+
+      // TODO: Should we extract defaultProps from the schema here?
+
+      return {
+        key: componentKey,
+        label,
+        props: {},
+        schema: input,
+      } as EditorData["availableSections"][0];
+    },
+  );
+
+  const availableFunctions = Object.keys(context.manifest?.functions || {}).map(
+    (functionKey) => {
+      const [inputSchema, outputSchema] = getInputAndOutputFromKey(
+        schemas,
+        functionKey,
+      );
+      const label = filenameFromPath(functionKey);
+
+      return {
+        key: functionKey,
+        label,
+        props: generatePropsForSchema(inputSchema),
+        schema: inputSchema,
+        // TODO: Centralize this logic
+        outputSchema: outputSchema,
+      } as EditorData["availableFunctions"][0];
+    },
+  );
+
+  return { availableSections, availableFunctions };
+}
+
+async function loadPage({
   url: { pathname },
   pageId,
 }: {
@@ -64,7 +127,7 @@ const flat = (
       (def.anyOf[0] as JSONSchema7)?.$id === "Resolvable";
     if (isFunctionReturn) {
       return {
-        "$id": ref ? btoa(ref) : "MISSING",
+        "$id": ref ? btoa(ref) : "__MISSING__",
         "format": "live-function",
         "type": "string",
         "title": def.title,
@@ -80,7 +143,17 @@ const flat = (
   }
   const props: Record<string, JSONSchema7> = {};
   for (const [propName, propValue] of Object.entries(def?.properties ?? {})) {
-    props[propName] = flat(propValue as JSONSchema7, schema, memo);
+    const flatObj = flat(propValue as JSONSchema7, schema, memo);
+    if (flatObj.anyOf && flatObj.anyOf.length > 0) {
+      const funcRef = (flatObj.anyOf as JSONSchema7[]).find((schema) =>
+        schema.format === "live-function"
+      );
+      if (funcRef) {
+        props[propName] = { ...flatObj, anyOf: undefined, ...funcRef };
+        continue;
+      }
+    }
+    props[propName] = flatObj;
   }
   const resp = {
     ...def,
@@ -150,57 +223,319 @@ const generatePropsForSchema = (
   return cases[schema.type] ?? null;
 };
 
-function generateAvailableEntitiesFromManifest(schemas: Schemas) {
-  const availableSections = Object.keys(context.manifest?.sections || {}).map(
-    (componentKey) => {
-      const [input] = getInputAndOutputFromKey(schemas, componentKey);
-      const label = filenameFromPath(componentKey);
-
-      // TODO: Should we extract defaultProps from the schema here?
-
-      return {
-        key: componentKey,
-        label,
-        props: {},
-        schema: input,
-      } as EditorData["availableSections"][0];
-    },
-  );
-
-  const availableFunctions = Object.keys(context.manifest?.functions || {}).map(
-    (functionKey) => {
-      const [inputSchema, outputSchema] = getInputAndOutputFromKey(
-        schemas,
-        functionKey,
-      );
-      const label = filenameFromPath(functionKey);
-
-      return {
-        key: functionKey,
-        label,
-        props: generatePropsForSchema(inputSchema),
-        schema: inputSchema,
-        // TODO: Centralize this logic
-        outputSchema: outputSchema,
-      } as EditorData["availableFunctions"][0];
-    },
-  );
-
-  return { availableSections, availableFunctions };
+interface SectionInstance {
+  key: string;
+  label: string;
+  uniqueId: string;
+  props: Record<string, unknown>;
 }
 
-let schemas: Promise<Schemas> | null = null;
+type CreateSectionFromSectionKeyReturn = {
+  section: SectionInstance;
+  functions: PageFunction[];
+};
+
+type SelectDefaultFunctionReturn = {
+  sectionProps: Record<string, unknown>;
+  newFunctionsToAdd: Array<PageFunction>;
+};
+type AvailableFunctionsForSection = Array<{
+  sectionPropKey: string;
+  sectionPropTitle?: string;
+  availableFunctions: AvailableFunction[];
+}>;
+
+/** Property is undefined | boolean | object, so if property[key] is === "object" and $id in property[key] */
+const propertyHasId = (
+  propDefinition: JSONSchemaDefinition | undefined,
+): propDefinition is JSONSchema7 => (
+  typeof propDefinition === "object" && "$id" in propDefinition
+);
+
+const isNotNullOrUndefined = <T extends unknown>(
+  item: T | null | undefined,
+): item is T => item !== null && item !== undefined;
+
 /**
- * Based on data from the backend and the page's manifest,
- * generates all the necessary information for the CMS
+ * Receives a section key (its path) and returns an array with every prop
+ * that needs an external type (have $id) and its candidate functions
  *
- * TODO: After we approve this, move this function elsewhere
+ * TODO: Function that takes into account current page functions and return them as options.
+ *  Used the data from the fn above
  */
+const availableFunctionsForSection = (
+  section: AvailableSection,
+  functions: AvailableFunction[],
+): AvailableFunctionsForSection => {
+  const functionsAvailableByOutputSchema$id: Record<
+    string,
+    AvailableFunction[]
+  > = functions.reduce((acc, availableFunction) => {
+    const dataAttr = availableFunction.outputSchema?.properties?.data;
+
+    if (typeof dataAttr !== "object") {
+      return acc;
+    }
+
+    const functionType$Id = dataAttr.$id; // E.g: live/std/commerce/ProductList.ts
+
+    if (!functionType$Id) {
+      return acc;
+    }
+
+    if (!acc[functionType$Id]) {
+      acc[functionType$Id] = [];
+    }
+
+    acc[functionType$Id].push(availableFunction);
+    return acc;
+  }, {} as Record<string, AvailableFunction[]>);
+
+  const sectionInputSchema = section?.schema;
+
+  if (!sectionInputSchema) {
+    return [];
+  }
+
+  const availableFunctions = Object.keys(sectionInputSchema.properties ?? {})
+    .filter((propName) =>
+      propertyHasId(sectionInputSchema.properties?.[propName])
+    )
+    .map((sectionPropKey) => {
+      const propDefinition = sectionInputSchema.properties?.[sectionPropKey];
+      if (typeof propDefinition !== "object") {
+        return null;
+      }
+
+      const sectionPropTitle = propDefinition.title;
+      const prop$id = propDefinition.$id;
+
+      const availableFunctions = prop$id
+        ? functionsAvailableByOutputSchema$id[prop$id] || []
+        : [];
+
+      return {
+        sectionPropKey,
+        sectionPropTitle,
+        availableFunctions,
+      };
+    })
+    .filter(isNotNullOrUndefined);
+
+  return availableFunctions;
+};
+
+const appendHash = (value: string) =>
+  `${value}-${crypto.randomUUID().slice(0, 4)}`;
+
+const functionUniqueIdToPropReference = (uniqueId: string) => `{${uniqueId}}`;
+
+const createFunctionInstanceFromFunctionKey = (
+  schema: Schemas,
+  functionKey: string,
+): PageFunction => {
+  // TODO: Make sure that dev.ts is adding top-level title to inputSchema
+  const [inputSchema] = getInputAndOutputFromKey(schema, functionKey);
+  const functionLabel = inputSchema?.title ?? functionKey;
+
+  const uniqueId = appendHash(functionKey);
+
+  // TODO: Get initial props from introspecting JSON Schema
+  const initialProps = {};
+
+  const functionInstance: PageFunction = {
+    key: functionKey,
+    label: functionLabel,
+    uniqueId,
+    props: initialProps,
+  };
+
+  return functionInstance;
+};
+
+/**
+ * This function should be used only in the initial stage of the product.
+ *
+ * Since we don't yet have an UI to select which function a sections should bind
+ * itself to (for each one of the props that might require this),
+ * this utility function selects the first one available.
+ */
+const selectDefaultFunctionsForSection = (
+  schemas: Schemas,
+  section: AvailableSection,
+): SelectDefaultFunctionReturn => {
+  // TODO: Double check this logic here
+  const [sectionInputSchema] = getInputAndOutputFromKey(schemas, section.key);
+
+  if (!sectionInputSchema) {
+    return {
+      sectionProps: {},
+      newFunctionsToAdd: [],
+    };
+  }
+
+  const { availableFunctions } = generateAvailableEntitiesFromManifest(schemas);
+  const functionsToChooseFrom = availableFunctionsForSection(
+    section,
+    availableFunctions,
+  );
+
+  const returnData = functionsToChooseFrom.reduce(
+    (acc, { availableFunctions, sectionPropKey }) => {
+      const chosenFunctionKey = availableFunctions[0].key;
+      if (!chosenFunctionKey) {
+        console.log(
+          `Couldn't find a function for prop ${sectionPropKey} of section ${section.key}.`,
+        );
+        return acc;
+      }
+
+      const functionInstance = createFunctionInstanceFromFunctionKey(
+        schemas,
+        chosenFunctionKey,
+      );
+
+      acc.newFunctionsToAdd.push(functionInstance);
+      acc.sectionProps[sectionPropKey] = functionUniqueIdToPropReference(
+        chosenFunctionKey,
+      );
+      return acc;
+    },
+    {
+      sectionProps: {},
+      newFunctionsToAdd: [],
+    } as SelectDefaultFunctionReturn,
+  );
+
+  return returnData;
+};
+
+/**
+ * Used to generate dev pages (/_live/Banner.tsx), adding new functions to the page if necessary
+ */
+const createSectionFromSectionKey = (
+  schemas: Schemas,
+  sectionKey: string,
+  sectionName?: string,
+): CreateSectionFromSectionKeyReturn => {
+  const section: SectionInstance = {
+    key: sectionKey,
+    label: sectionKey + sectionName ? ` (${sectionName})` : "",
+    uniqueId: sectionKey,
+    props: {},
+  };
+
+  const { newFunctionsToAdd, sectionProps } = selectDefaultFunctionsForSection(
+    schemas,
+    section,
+  );
+
+  section.props = sectionProps;
+
+  return {
+    section,
+    functions: newFunctionsToAdd,
+  };
+};
+const getSectionPath = (sectionKey: string) =>
+  `/_live/workbench/sections/${
+    sectionKey.replace(`${context.namespace}/sections/`, "")
+  }`;
+
+const createPageForSection = (
+  sectionKey: string,
+  data: PageData,
+): Page => ({
+  id: -1,
+  name: sectionKey,
+  // TODO: Use path join
+  path: getSectionPath(sectionKey),
+  data,
+  state: "dev",
+});
+
+const getDefinition = (path: string) => context.manifest?.sections?.[path];
+
+const doesSectionExist = (path: string) =>
+  Boolean(getDefinition(path.replace("./", `${context.namespace}/`)));
+
+/**
+ * Fetches a page containing this component.
+ *
+ * This is used for creating the canvas. It retrieves
+ * or generates a fake page from the database at
+ * /_live/sections/<componentName.tsx>
+ *
+ * This way we can use the page editor to edit components too
+ */
+const pageFromSectionKey = async (
+  schemas: Schemas,
+  sectionFileName: string, // Ex: ./sections/Banner.tsx#TopSellers
+): Promise<PageWithParams> => {
+  const supabase = getSupabaseClient();
+
+  const { section: instance, functions } = createSectionFromSectionKey(
+    schemas,
+    sectionFileName,
+  );
+
+  const page = createPageForSection(sectionFileName, {
+    sections: [instance],
+    functions,
+  });
+
+  if (!doesSectionExist(sectionFileName)) {
+    throw new Error(`Section at ${sectionFileName} Not Found`);
+  }
+
+  const { data } = await supabase
+    .from("pages")
+    .select("id, name, data, path, state")
+    .match({ path: page.path, site: context.siteId });
+
+  const match = data?.[0];
+
+  if (match) {
+    return { page: match };
+  }
+
+  return { page };
+};
+
+let schemas: Promise<Schemas> | null = null;
+
+export const previewByKey = async (url: URL, key: string) => {
+  schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
+    JSON.parse,
+  );
+  const schema = await schemas;
+  const pageData = await pageFromSectionKey(schema, key);
+  const sectionProps = pageData.page.data.sections[0].props;
+  const propsBase64 = btoa(JSON.stringify(sectionProps ?? {}));
+
+  url.pathname = `/live/previews/${key}`;
+  url.searchParams.append("props", propsBase64);
+  return redirectTo(url);
+};
+
 export const generateEditorData = async (
   url: URL,
-  pageId: string,
 ): Promise<EditorData> => {
-  const pageWithParams = await loadPage({ url, pageId });
+  schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
+    JSON.parse,
+  );
+  const schema = await schemas;
+
+  let pageWithParams = null;
+
+  const pageId = url.searchParams.get("pageId");
+  if (pageId !== null) {
+    pageWithParams = await loadPage({ url, pageId });
+  }
+  const blockKey = url.searchParams.get("key");
+  if (!pageWithParams && blockKey !== null) {
+    pageWithParams = await pageFromSectionKey(schema, blockKey);
+  }
 
   if (!pageWithParams) {
     throw new Error("Could not find page to generate editor data");
@@ -215,8 +550,6 @@ export const generateEditorData = async (
   schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
     JSON.parse,
   );
-
-  const schema = await schemas;
 
   const sectionsWithSchema = sections.map(
     (section): EditorData["sections"][0] => {

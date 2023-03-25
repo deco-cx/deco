@@ -1,9 +1,10 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { context } from "$live/live.ts";
-import { handler as editorDataHandler } from "$live/routes/live/editorData.ts";
 import { LiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import { redirectTo } from "$live/compatibility/v0/editorData.ts";
+import { previewByKey } from "$live/compatibility/v0/editorData.ts";
 
 export const handler = async (
   req: Request,
@@ -16,11 +17,27 @@ export const handler = async (
 
   const begin = performance.now();
   const url = new URL(req.url);
+  // FIXME (mcandeia) compatibility only.
   if (
-    url.searchParams.get("editorData") !== null &&
-    url.searchParams.get("pageId") !== null
+    url.searchParams.has("editorData") &&
+    !url.pathname.startsWith("/live/editorData")
   ) {
-    return editorDataHandler(req);
+    url.pathname = "/live/editorData";
+    return redirectTo(url);
+  }
+
+  if (
+    url.pathname.startsWith("/_live/workbench") && !url.searchParams.has("key")
+  ) {
+    url.pathname = "/live/workbench";
+    return redirectTo(url);
+  }
+
+  if (
+    !url.pathname.startsWith("/live/previews") && url.searchParams.has("key") &&
+    !url.searchParams.has("editorData")
+  ) {
+    return previewByKey(url, url.searchParams.get("key")!);
   }
 
   const { start, end, printTimings } = createServerTimings();

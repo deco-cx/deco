@@ -43,15 +43,21 @@ export const defaultRoutes: {
 }[] = [
   {
     block: "routes",
-    from: "$live/routes/live/editorData.ts",
-    key: "./routes/live/editorData.ts",
-    ref: "$live_editorData",
-  },
-  {
-    block: "routes",
     from: "$live/routes/_middleware.ts",
     key: "./routes/_middleware.ts",
     ref: "$live_middleware",
+  },
+  {
+    block: "routes",
+    from: "$live/routes/live/workbench.ts",
+    key: "./routes/live/workbench.ts",
+    ref: "$live_workbench",
+  },
+  {
+    block: "routes",
+    from: "$live/routes/live/editorData.ts",
+    key: "./routes/live/editorData.ts",
+    ref: "$live_editorData",
   },
   {
     block: "routes",
@@ -70,8 +76,7 @@ export const defaultRoutes: {
     from: "$live/routes/live/previews/[...block].tsx",
     key: "./routes/live/previews/[...block].tsx",
     ref: "$live_previews",
-  },
-  // DO NOT CHANGE THE ORDER CATCHALL SHOULD BE THE LAST
+  }, // DO NOT CHANGE THE ORDER CATCHALL SHOULD BE THE LAST
   {
     block: "routes",
     from: "$live/routes/[...catchall].tsx",
