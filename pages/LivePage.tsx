@@ -12,9 +12,13 @@ export default function LivePage({ sections }: Props) {
   const metadata = usePageContext()?.metadata;
   const renderSection = (
     { Component: Section, props, metadata }: Props["sections"][0],
+    idx: number,
   ) => {
     return (
-      <section data-manifest-key={metadata?.component}>
+      <section
+        id={`${metadata?.component}-${idx}`}
+        data-manifest-key={metadata?.component}
+      >
         <Section {...props} />
       </section>
     );
