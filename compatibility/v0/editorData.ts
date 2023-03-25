@@ -14,6 +14,7 @@ import {
 import { filenameFromPath } from "$live/utils/page.ts";
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+import { mapPage } from "$live/engine/configstore/supabaseLegacy.ts";
 
 export const redirectTo = (url: URL) =>
   Response.json(
@@ -510,7 +511,8 @@ export const previewByKey = async (url: URL, key: string) => {
   );
   const schema = await schemas;
   const pageData = await pageFromSectionKey(schema, key);
-  const sectionProps = pageData.page.data.sections[0].props;
+  const converted = mapPage(context.namespace!, pageData.page);
+  const { __resolveType: _ignore, ...sectionProps } = converted.sections[0];
   const propsBase64 = btoa(JSON.stringify(sectionProps ?? {}));
 
   url.pathname = `/live/previews/${key}`;

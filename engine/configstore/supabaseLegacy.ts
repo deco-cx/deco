@@ -83,6 +83,11 @@ const sectionToAccount: Record<string, string> = {
   "deco-sites/std/sections/configShopify.global.tsx":
     "deco-sites/std/accounts/shopify.ts",
 };
+
+export const mapPage = (namespace: string, p: Page): Resolvable => {
+  const nsToConfig = pageToConfig(namespace);
+  return nsToConfig(baseEntrypoint, p)[p.id];
+};
 const pageToConfig =
   (namespace: string) =>
   (c: Record<string, Resolvable>, p: Page): Record<string, Resolvable> => {
