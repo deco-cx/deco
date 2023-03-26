@@ -38,6 +38,18 @@ const propsFromUrl = (url: URL): Record<string, any> => {
   // frombase64
   return JSON.parse(atob(props));
 };
+
+const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
+  const pathTemplate = url.searchParams.get("pathTemplate");
+  const pathname = url.searchParams.get("path");
+  if (pathTemplate === null || pathname == null) {
+    return undefined;
+  }
+
+  const urlPattern = new URLPattern({ pathname });
+  const params = urlPattern.exec({ pathname })?.pathname.groups;
+  return params;
+};
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
@@ -51,10 +63,13 @@ export const handler = async (
     ? await req.json()
     : propsFromUrl(url) ?? {};
 
+  const block = ctx.params.block;
+
+  ctx.params = paramsFromUrl(url) ?? ctx.params;
   return await ctx.render(
     await resolve({
       __resolveType: "preview",
-      block: `${ctx.params.block}`,
+      block,
       props,
     }),
   );

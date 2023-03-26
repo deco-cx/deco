@@ -1,10 +1,22 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import {
+  getPagePathTemplate,
+  previewSection,
+  redirectTo,
+} from "$live/compatibility/v0/editorData.ts";
 import { context } from "$live/live.ts";
 import { LiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { redirectTo } from "$live/compatibility/v0/editorData.ts";
-import { previewByKey } from "$live/compatibility/v0/editorData.ts";
+
+export const previewPage = async (url: URL, pageId: string) => {
+  url.searchParams.append("path", url.pathname);
+  if (!url.searchParams.has("pathTemplate")) { // FIXM(mcandeia) compatibility mode only, once migrated pathTemplate is required because there are pages unpublished
+    url.searchParams.append("pathTemplate", await getPagePathTemplate(pageId));
+  }
+  url.pathname = `/live/previews/${pageId}`;
+  return redirectTo(url);
+};
 
 export const handler = async (
   req: Request,
@@ -35,10 +47,18 @@ export const handler = async (
   }
 
   if (
+    !url.pathname.startsWith("/live/previews") &&
+    url.searchParams.has("pageId") &&
+    !url.searchParams.has("editorData")
+  ) {
+    return previewPage(url, url.searchParams.get("pageId")!);
+  }
+
+  if (
     !url.pathname.startsWith("/live/previews") && url.searchParams.has("key") &&
     !url.searchParams.has("editorData")
   ) {
-    return previewByKey(url, url.searchParams.get("key")!);
+    return previewSection(url, url.searchParams.get("key")!);
   }
 
   const { start, end, printTimings } = createServerTimings();

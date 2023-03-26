@@ -505,7 +505,7 @@ const pageFromSectionKey = async (
 
 let schemas: Promise<Schemas> | null = null;
 
-export const previewByKey = async (url: URL, key: string) => {
+export const previewSection = async (url: URL, key: string) => {
   schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
     JSON.parse,
   );
@@ -590,4 +590,19 @@ export const generateEditorData = async (
     availableSections,
     availableFunctions: [...availableFunctions, ...functionsWithSchema],
   };
+};
+
+export const getPagePathTemplate = async (pageId: string | number) => {
+  const { data: pages, error } = await getSupabaseClient()
+    .from("pages")
+    .select("id, name, data, path, state, public")
+    .match({ id: +pageId });
+
+  const matchPage = pages?.[0];
+
+  if (error || !matchPage) {
+    throw new Error(error?.message || `Page with id ${pageId} not found`);
+  }
+
+  return matchPage.path;
 };
