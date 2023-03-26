@@ -217,6 +217,7 @@ const schemeableWellKnownType = async (
       );
 
       return {
+        file: recordSchemeable.file,
         name: recordSchemeable.name
           ? `${recordSchemeable.name}@record`
           : undefined,
@@ -324,7 +325,7 @@ export const tsTypeToSchemeable = async (
   const schemeable = await tsTypeToSchemeableRec(node, root[1], optional);
   return {
     ...schemeable,
-    name: schemeable.name ?? crypto.randomUUID(),
+    name: schemeable.name ?? node.repr,
     file: schemeable.file ?? root[0],
   };
 };

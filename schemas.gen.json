@@ -38,7 +38,7 @@
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
       "$ref": "#/root/handlers"
     },
-    "bbb2e6fa-bcb6-4191-8d64-0a0a36bfd4c3@Handler@record": {
+    "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record": {
       "title": "Unknown record",
       "type": "object",
       "additionalProperties": {
@@ -57,7 +57,7 @@
         },
         "routes": {
           "title": "Routes",
-          "$ref": "#/definitions/bbb2e6fa-bcb6-4191-8d64-0a0a36bfd4c3@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record"
         }
       },
       "required": [
@@ -257,13 +257,6 @@
       ],
       "title": "$live/matchers/MatchEnvironment.ts@Props"
     },
-    "6b10ba2d-097b-4bdc-9cc1-bb7531d09c4f@Handler@record": {
-      "title": "Unknown record",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
-      }
-    },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",
       "properties": {
@@ -277,7 +270,7 @@
         },
         "routes": {
           "title": "Routes",
-          "$ref": "#/definitions/6b10ba2d-097b-4bdc-9cc1-bb7531d09c4f@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record"
         },
         "overrides": {
           "title": "Unknown record",
@@ -294,19 +287,12 @@
       ],
       "title": "$live/flags/audience.ts@Audience"
     },
-    "0ad98582-01db-4d79-9ba2-44b2c05f9991@Handler@record": {
-      "title": "Unknown record",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
-      }
-    },
     "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
       "type": "object",
       "properties": {
         "routes": {
           "title": "Routes",
-          "$ref": "#/definitions/0ad98582-01db-4d79-9ba2-44b2c05f9991@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record"
         },
         "overrides": {
           "title": "Unknown record",
@@ -629,8 +615,8 @@
         }
       }
     },
-    "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@1ae3bad6-4017-4e3c-9569-3c09e6e7be29": {
-      "title": "$live/routes/live/previews/[...block].tsx@1ae3bad6-4017-4e3c-9569-3c09e6e7be29"
+    "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@unknown": {
+      "title": "$live/routes/live/previews/[...block].tsx@unknown"
     },
     "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
       "type": "object",
@@ -740,7 +726,7 @@
       ],
       "properties": {
         "./routes/live/previews/[...block].tsx": {
-          "$ref": "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@1ae3bad6-4017-4e3c-9569-3c09e6e7be29"
+          "$ref": "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@unknown"
         },
         "./routes/[...catchall].tsx": {
           "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
