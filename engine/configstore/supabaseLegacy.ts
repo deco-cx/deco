@@ -5,6 +5,7 @@ import { Resolvable } from "$live/engine/core/resolver.ts";
 import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import {
+  Flag,
   Page,
   PageData,
   PageFunction as Function,
@@ -16,6 +17,7 @@ interface PageSection extends Record<string, any> {
 }
 const accounts = "accounts";
 const globalSections = "globalSections";
+const everyoneAudience = "everyone";
 
 const includeNamespace = (key: string, ns: string) =>
   key.replace("./", `${ns}/`);
@@ -86,14 +88,6 @@ interface AudienceFlag {
   __resolveType: string;
 }
 
-interface CatchAllConfigs {
-  handler: {
-    flags: AudienceFlag[];
-    __resolveType: "$live/handlers/routesSelection.ts";
-  };
-  __resolveType: "resolve";
-}
-
 const sectionToAccount: Record<string, string> = {
   "deco-sites/std/sections/configVTEX.global.tsx":
     "deco-sites/std/accounts/vtex.ts",
@@ -145,6 +139,7 @@ const pageToConfig =
   (namespace: string) =>
   (c: Record<string, Resolvable>, p: Page): Record<string, Resolvable> => {
     const pageEntry = {
+      path: p.path, // only for compatibilty with flags.
       sections: dataToSections(p.data, c[globalSections], namespace),
       __resolveType: "$live/pages/LivePage.tsx",
     };
@@ -160,12 +155,12 @@ const pageToConfig =
         [globalSections]: { ...c[globalSections], [p.path]: p.id },
       };
     }
-    const catchall = c[catchAllConfig] as CatchAllConfigs;
+    const currEveryone = c[everyoneAudience];
     const everyone = p.state === "published"
       ? {
-        ...catchall.handler.flags[0],
+        ...currEveryone,
         routes: {
-          ...catchall.handler.flags[0].routes,
+          ...currEveryone.routes,
           [p.path]: {
             page: {
               __resolveType: `${p.id}`,
@@ -176,17 +171,11 @@ const pageToConfig =
           },
         },
       }
-      : catchall.handler.flags[0];
+      : currEveryone;
     return {
       ...c,
       [p.id]: pageEntry,
-      [catchAllConfig]: {
-        ...catchall,
-        handler: {
-          ...catchall.handler,
-          flags: [everyone],
-        },
-      },
+      [everyoneAudience]: everyone,
     };
   };
 
@@ -200,13 +189,16 @@ const baseEntrypoint = {
   [accounts]: {
     __resolveType: "resolve",
   },
+  [everyoneAudience]: {
+    routes: {},
+    __resolveType: "$live/flags/everyone.ts",
+  },
   [catchAllConfig]: {
     __resolveType: "resolve",
     handler: {
       flags: [
         {
-          routes: {},
-          __resolveType: "$live/flags/everyone.ts",
+          __resolveType: everyoneAudience,
         },
       ],
       __resolveType: "$live/handlers/routesSelection.ts",
@@ -222,6 +214,15 @@ const fetchSitePages = async (siteId: number) => {
     .neq("state", "archived");
 };
 
+const fetchSiteFlags = async (siteId: number) => {
+  return await getSupabaseClient().from("flags").select("key, data, name").eq(
+    "site",
+    siteId,
+  ).eq("state", "published");
+};
+
+const fetchSiteData = (siteId: number) =>
+  Promise.all([fetchSitePages(siteId), fetchSiteFlags(siteId)]);
 export const newSupabaseProviderLegacyDeploy = (
   siteId: number,
   namespace: string,
@@ -241,15 +242,19 @@ export const newSupabaseProviderLegacyDeploy = (
       reject(lastError); // TODO @author Marcos V. Candeia should we panic? and exit? Deno.exit(1)
       return;
     }
-    const { data, error } = await fetchSitePages(siteId);
-    if (error != null || data === null) {
+    const [{ data, error }, { data: dataFlags, error: errorFlags }] =
+      await fetchSiteData(siteId);
+    if (
+      error != null || data === null || dataFlags === null ||
+      errorFlags !== null
+    ) {
       remainingRetries--;
       lastError = error;
       await sleep(sleepBetweenRetriesMS);
       await tryResolveFirstLoad(resolve, reject);
       return;
     }
-    resolve(pagesToConfig(data, namespace));
+    resolve(pagesToConfig(data, dataFlags, namespace));
   };
 
   let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
@@ -263,13 +268,17 @@ export const newSupabaseProviderLegacyDeploy = (
         return;
       }
       singleFlight = true;
-      const { data, error } = await fetchSitePages(siteId);
-      if (data === null || error !== null) {
+      const [{ data, error }, { data: dataFlags, error: errorFlags }] =
+        await fetchSiteData(siteId);
+      if (
+        data === null || error !== null || dataFlags === null ||
+        errorFlags !== null
+      ) {
         singleFlight = false;
         return;
       }
       currResolvables = Promise.resolve(
-        pagesToConfig(data, namespace),
+        pagesToConfig(data, dataFlags, namespace),
       );
       singleFlight = false;
     }, refetchIntervalMS);
@@ -280,11 +289,70 @@ export const newSupabaseProviderLegacyDeploy = (
   };
 };
 
-const pagesToConfig = (p: Page[], ns: string) => {
-  return p.sort((pageA, pageB) =>
+const matchesToMatchMulti = (matches: Flag["data"]["matches"], ns: string) => ({
+  op: "or",
+  matchers: matches.map((m) => ({
+    ...m.props,
+    __resolveType: includeNamespace(m.key, ns).replace("functions", "matchers"),
+  })),
+  __resolveType: "$live/matchers/MatchMulti.ts",
+});
+
+const flagsToConfig = (
+  entrypoint: typeof baseEntrypoint,
+  flags: Pick<Flag, "key" | "data" | "name">[],
+  ns: string,
+) => {
+  return flags.reduce((curr, flag) => {
+    const catchall = curr[catchAllConfig];
+    const pageIds = flag.data.effect?.props?.pageIds;
+    const pageId = Array.isArray(pageIds) ? pageIds[0] as number : undefined;
+    if (!pageId) {
+      return curr;
+    }
+    const page = curr[pageId];
+    if (!page) {
+      return curr;
+    }
+    return {
+      ...curr,
+      [catchAllConfig]: {
+        ...catchall,
+        handler: {
+          ...catchall.handler,
+          flags: [
+            ...catchall.handler.flags,
+            {
+              __resolveType: flag.key,
+            },
+          ],
+        },
+      },
+      [flag.key]: {
+        routes: {
+          [page.path]: {
+            page: {
+              __resolveType: pageId,
+            },
+            __resolveType: "$live/handlers/fresh.ts",
+          },
+        },
+        matcher: matchesToMatchMulti(flag.data.matches, ns),
+        __resolveType: "$live/flags/audience.ts",
+      },
+    };
+  }, entrypoint);
+};
+const pagesToConfig = (
+  p: Page[],
+  flags: Pick<Flag, "key" | "data" | "name">[],
+  ns: string,
+) => {
+  const configs = p.sort((pageA, pageB) =>
     pageA.state === "global" ? -1 : pageB.state === "global" ? 1 : 0
   ) // process global first
     .reduce(pageToConfig(ns), baseEntrypoint);
+  return flagsToConfig(configs, flags, ns);
 };
 
 export const newSupabaseProviderLegacyLocal = (
@@ -295,11 +363,15 @@ export const newSupabaseProviderLegacyLocal = (
   return {
     get: async () => {
       return await sf.do("any", async () => {
-        const { data, error } = await fetchSitePages(siteId);
-        if (data === null || error !== null) {
-          throw error;
+        const [{ data, error }, { data: dataFlags, error: errorFlags }] =
+          await fetchSiteData(siteId);
+        if (
+          data === null || error !== null || dataFlags === null ||
+          errorFlags !== null
+        ) {
+          throw (error ?? errorFlags);
         }
-        return pagesToConfig(data, namespace);
+        return pagesToConfig(data, dataFlags, namespace);
       });
     },
   };
