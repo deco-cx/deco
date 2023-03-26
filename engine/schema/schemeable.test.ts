@@ -42,6 +42,7 @@ Deno.test("Simple type generation", async () => {
 
   assertEquals(transformed, {
     file: filePath,
+    jsDocSchema: undefined,
     name: "SimpleType",
     type: "object",
     value: {
@@ -98,6 +99,7 @@ Deno.test("Simple interface generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "SimpleInterface",
     type: "object",
     value: {
@@ -154,6 +156,7 @@ Deno.test("Non required fields generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "NonRequiredFields",
     type: "object",
     value: {
@@ -230,6 +233,7 @@ Deno.test("Union types generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "UnionTypes",
     type: "object",
     value: {
@@ -299,6 +303,7 @@ Deno.test("Array fields generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "ArrayFields",
     type: "object",
     value: {
@@ -363,6 +368,7 @@ Deno.test("Type reference generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "InterfaceWithTypeRef",
     type: "object",
     value: {
@@ -372,6 +378,7 @@ Deno.test("Type reference generation", async () => {
         schemeable: {
           extends: undefined,
           file: filePath,
+          jsDocSchema: undefined,
           name: "SimpleInterface",
           type: "object",
           value: {
@@ -419,6 +426,7 @@ Deno.test("Type reference generation", async () => {
       {
         extends: undefined,
         file: filePath,
+        jsDocSchema: undefined,
         name: "SimpleInterface",
         required: ["name"],
         type: "object",
@@ -451,6 +459,7 @@ Deno.test("JSDoc tags injection", async () => {
     type: "object",
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "WithTags",
     value: {
       email: {
@@ -516,6 +525,7 @@ Deno.test("Type alias generation", async () => {
   }
   assertEquals(transformed, {
     file: filePath,
+    jsDocSchema: undefined,
     name: "TypeAlias",
     type: "inline",
     value: { type: "string" },
@@ -549,6 +559,7 @@ Deno.test("Wellknown in types generation", async () => {
   assertEquals(transformed, {
     name: "WellKnown",
     file: filePath,
+    jsDocSchema: undefined,
     extends: undefined,
     type: "object",
     value: {

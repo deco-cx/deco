@@ -95,6 +95,10 @@ const sectionToAccount: Record<string, string> = {
     "deco-sites/std/accounts/occ.ts",
   "deco-sites/std/sections/configShopify.global.tsx":
     "deco-sites/std/accounts/shopify.ts",
+  "deco-sites/std/sections/configVNDA.global.tsx":
+    "deco-sites/std/accounts/vnda.ts",
+  "deco-sites/std/sections/configYourViews.global.tsx":
+    "deco-sites/std/accounts/yourViews.ts",
 };
 
 export const mapPage = (namespace: string, p: Page): Resolvable => {

@@ -83,6 +83,8 @@ export type MatchWithCookieValue = MatchContext<{
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
+    const cacheControl = req.headers.get("Cache-Control");
+    const isNoCache = cacheControl === "no-cache";
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
 
     // Read flags from cookie or start an empty map.
@@ -104,7 +106,9 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
           // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
           const isMatch = audience.matcher({
             ...matchCtx,
-            isMatchFromCookie: flags.get(audience.name)?.isMatch,
+            isMatchFromCookie: isNoCache
+              ? undefined
+              : flags.get(audience.name)?.isMatch,
           } as MatchWithCookieValue);
 
           // if the flag doesn't exists (e.g. new audience being used) or the `isMatch` value has changed so add as a `newFlags`

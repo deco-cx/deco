@@ -17,7 +17,6 @@ const isGlobalSection = (section: string) => section.endsWith(".global.tsx");
 
 const getWorkbenchTree = (): Node[] => {
   const sections = context.manifest?.sections ?? {};
-  const accounts = context?.manifest?.accounts ?? {};
 
   const tsxFileSections = Object
     .keys(sections)
@@ -27,6 +26,10 @@ const getWorkbenchTree = (): Node[] => {
     section,
   ) => !isGlobalSection(section)).map(mapSectionToNode);
 
+  const firstLevelGlobalSectionNodes: Node[] = tsxFileSections.filter(
+    isGlobalSection,
+  ).map(mapSectionToNode);
+
   return [{
     label: "sections",
     fullPath: "./sections",
@@ -34,11 +37,11 @@ const getWorkbenchTree = (): Node[] => {
   }, {
     label: "globals",
     fullPath: "./sections",
-    children: Object.keys(accounts).map(mapSectionToNode),
+    children: firstLevelGlobalSectionNodes,
   }];
 };
 
-export const handler = () => {
+export const handler = (_: Request) => {
   return new Response(JSON.stringify(getWorkbenchTree()), {
     status: 200,
     headers: {
