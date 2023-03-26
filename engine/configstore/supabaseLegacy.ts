@@ -329,6 +329,7 @@ const flagsToConfig = (
         },
       },
       [flag.key]: {
+        name: flag.key,
         routes: {
           [page.path]: {
             page: {
