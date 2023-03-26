@@ -16,7 +16,7 @@ const isLivePageProps = (
 };
 
 export default function PageInclude({ page }: Props) {
-  if (!isLivePageProps(page.props)) {
+  if (!isLivePageProps(page?.props)) {
     return null;
   }
   return <>{page.props.sections.map(renderSection)}</>;

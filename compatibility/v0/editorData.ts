@@ -123,6 +123,9 @@ const flat = (
   if (!def) {
     return def;
   }
+  if (def.allOf) {
+    def.allOf = def.allOf.map((v) => flat(v as JSONSchema7, schema, memo));
+  }
   if (def.anyOf && def.anyOf.length > 0) {
     const isFunctionReturn =
       (def.anyOf[0] as JSONSchema7)?.$id === "Resolvable";
