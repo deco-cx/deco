@@ -2,13 +2,28 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
+import LiveControls from "$live/components/LiveControls.tsx";
+import { context } from "$live/live.ts";
+import Render from "$live/routes/[...catchall].tsx";
 import { LiveState } from "$live/types.ts";
 
-export default function Render({
-  data: { Component, props, metadata },
-}: PageProps<Page>) {
+export default function Preview(props: PageProps<Page>) {
+  const renderProps = {
+    ...props,
+    data: {
+      page: props.data,
+    },
+  };
   return (
-    <Component data-manifest-key={metadata?.component} {...props}></Component>
+    <>
+      <LiveControls
+        site={{ id: context.siteId, name: context.site }}
+        page={{
+          id: props.data?.metadata?.id!,
+        }}
+      />
+      <Render {...renderProps}></Render>
+    </>
   );
 }
 

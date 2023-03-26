@@ -120,6 +120,7 @@ export const schemeableToJSONSchema = (
         [schemeableId]: {
           ...curr,
           title: schemeable.friendlyId ?? curr?.title,
+          ...ischemeable.jsDocSchema ?? {},
         },
       },
       { $ref: `#/definitions/${schemeableId}` },

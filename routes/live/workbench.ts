@@ -5,7 +5,7 @@ import { basename } from "std/path/mod.ts";
 
 const mapSectionToNode = (component: string) => ({
   label: basename(component),
-  fullPath: component,
+  fullPath: component.replace("./", `${context.namespace!}/`), // compatibility mode
   editLink: context.deploymentId === undefined // only allow vscode when developing locally
     ? `vscode://file/${resolveFilePath(component)}`
     : undefined,

@@ -47,18 +47,17 @@ export const handler = async (
   }
 
   if (
+    !url.pathname.startsWith("/live/previews") && url.searchParams.has("key") &&
+    !url.searchParams.has("editorData")
+  ) {
+    return previewSection(url, url.searchParams.get("key")!);
+  }
+  if (
     !url.pathname.startsWith("/live/previews") &&
     url.searchParams.has("pageId") &&
     !url.searchParams.has("editorData")
   ) {
     return previewPage(url, url.searchParams.get("pageId")!);
-  }
-
-  if (
-    !url.pathname.startsWith("/live/previews") && url.searchParams.has("key") &&
-    !url.searchParams.has("editorData")
-  ) {
-    return previewSection(url, url.searchParams.get("key")!);
   }
 
   const { start, end, printTimings } = createServerTimings();

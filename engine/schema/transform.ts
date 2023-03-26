@@ -31,6 +31,7 @@ export const inlineOrSchemeable = async (
 };
 
 export interface SchemeableBase {
+  jsDocSchema?: JSONSchema7;
   friendlyId?: string;
   id?: string; // generated on-demand
   name?: string;
@@ -246,6 +247,7 @@ export const findSchemeableFromNode = async (
         extends: allOf && allOf.length > 0 ? allOf : undefined,
         type: "object",
         ...(await typeDefToSchemeable(rootNode.interfaceDef, root)),
+        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
       };
     }
     case "typeAlias": {
@@ -253,6 +255,7 @@ export const findSchemeableFromNode = async (
         name: rootNode.name,
         file: rootNode.location.filename,
         ...(await tsTypeToSchemeableRec(rootNode.typeAliasDef.tsType, root)),
+        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
       };
     }
     case "import": {
