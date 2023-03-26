@@ -145,7 +145,7 @@ const flat = (
   const props: Record<string, JSONSchema7> = {};
   for (const [propName, propValue] of Object.entries(def?.properties ?? {})) {
     const flatObj = flat(propValue as JSONSchema7, schema, memo);
-    if (flatObj.anyOf && flatObj.anyOf.length > 0) {
+    if (flatObj?.anyOf && flatObj.anyOf.length > 0) {
       const funcRef = (flatObj.anyOf as JSONSchema7[]).find((schema) =>
         schema.format === "live-function"
       );

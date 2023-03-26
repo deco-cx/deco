@@ -18,6 +18,7 @@ import * as $$$$$$1 from "$live/handlers/router.ts";
 import * as $$$$$$2 from "$live/handlers/devPage.ts";
 import * as $$$$$$3 from "$live/handlers/fresh.ts";
 import * as $$$$$$$0 from "$live/pages/LivePage.tsx";
+import * as $$$$$$$$0 from "$live/sections/PageInclude.tsx";
 import * as $$$$$$$$$0 from "$live/matchers/MatchDate.ts";
 import * as $$$$$$$$$1 from "$live/matchers/MatchUserAgent.ts";
 import * as $$$$$$$$$2 from "$live/matchers/MatchSite.ts";
@@ -46,6 +47,9 @@ const manifest: DecoManifest = {
   },
   "pages": {
     "$live/pages/LivePage.tsx": $$$$$$$0,
+  },
+  "sections": {
+    "$live/sections/PageInclude.tsx": $$$$$$$$0,
   },
   "matchers": {
     "$live/matchers/MatchDate.ts": $$$$$$$$$0,
