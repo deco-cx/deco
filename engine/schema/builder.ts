@@ -180,12 +180,15 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const canonical = canonicalFileWith(base, namespace);
       const schemeableId = (
         schemeable: Schemeable,
-      ): [string, string | undefined] => {
+      ): [string | undefined, string | undefined] => {
         const file = schemeable.file ? canonical(schemeable.file) : undefined;
         if (schemeable.id) {
           return [schemeable.id, file];
         }
-        const fileHash = file ? btoa(file) : crypto.randomUUID();
+        if (!file) {
+          return [undefined, undefined];
+        }
+        const fileHash = btoa(file);
         const id = schemeable.name
           ? `${fileHash}@${schemeable.name!}`
           : fileHash;
@@ -205,15 +208,20 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         if (schemeable) {
           const [id, file] = schemeableId(schemeable);
           let currSchemeable = {
-            friendlyId: `${file}@${schemeable.name}`,
+            friendlyId: file && schemeable.name
+              ? `${file}@${schemeable.name}`
+              : undefined,
             ...schemeable,
             id,
           };
-          const ids = [id];
+          const ids = id ? [id] : [];
           if (currSchemeable.type === "union") {
             // if union generate id for each schemeable
             const unionSchemeables = currSchemeable.value.map((s) => {
               const [id, file] = schemeableId(s);
+              if (!id) {
+                return s;
+              }
               ids.push(id);
               return {
                 friendlyId: file && s.name ? `${file}@${s.name}` : undefined,
@@ -314,6 +322,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const [finalDefs, entrypoint] = initial.entrypoints.reduce(
         ([defs, entr], blkEntry) => {
           const [nDefs, id] = addSchemeable(defs, blkEntry.config);
+          if (!id || id.length === 0) {
+            return [defs, entr];
+          }
           return [
             nDefs,
             {
@@ -322,7 +333,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               properties: {
                 ...entr.properties,
                 [blkEntry.key]: {
-                  $ref: `#/definitions/${id}`,
+                  anyOf: id.map((currId) => ({
+                    $ref: `#/definitions/${currId}`,
+                  })),
                 },
               },
             },

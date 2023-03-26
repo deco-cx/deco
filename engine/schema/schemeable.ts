@@ -113,7 +113,7 @@ export const schemeableToJSONSchema = (
   }
   const [nSchema, curr] = schemeableToJSONSchemaFunc(genId, def, schemeable);
 
-  if (schemeableId) {
+  if (schemeableId && curr.type !== "null") { // null should not be created as a separated type
     return [
       {
         ...nSchema,

@@ -1,57 +1,22 @@
-import { JSONSchema7 } from "$live/deps.ts";
 import {
   BlockModule,
   BlockModuleRef,
-  FunctionBlockDefinition,
   IntrospectFunc,
-  IntrospectPath
+  IntrospectPath,
 } from "$live/engine/block.ts";
 import {
-  inlineOrSchemeable,
-  Schemeable,
   TransformContext,
-  tsTypeToSchemeable
+  tsTypeToSchemeable,
 } from "$live/engine/schema/transform.ts";
 import { denoDoc, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
 import {
   DocNode,
   InterfaceDef,
   TsTypeDef,
-  TsTypeLiteralDef
+  TsTypeLiteralDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 
 type Key = string | number | symbol;
-export const fnDefinitionToSchemeable = async (
-  ast: [string, DocNode[]],
-  validFn: FunctionBlockDefinition,
-): Promise<Schemeable> => {
-  const inputSchemeable = await inlineOrSchemeable(ast, validFn.input);
-  const outputSchemeable = await inlineOrSchemeable(ast, validFn.output);
-  return {
-    required: ["input", "output"],
-    title: validFn.name,
-    type: "object",
-    id: validFn.name,
-    value: {
-      output: {
-        title: (validFn.output as TsTypeDef).repr ??
-          (validFn.output as JSONSchema7).title,
-        jsDocSchema: {},
-        schemeable: outputSchemeable!,
-      },
-      ...(inputSchemeable
-        ? {
-          input: {
-            title: (validFn.input as TsTypeDef).repr ??
-              (validFn.input as JSONSchema7).title,
-            jsDocSchema: {},
-            schemeable: inputSchemeable,
-          },
-        }
-        : {}),
-    },
-  };
-};
 
 const resolveTsType = (
   tsType: TsTypeDef | undefined,

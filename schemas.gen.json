@@ -615,9 +615,6 @@
         }
       }
     },
-    "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@unknown": {
-      "title": "$live/routes/live/previews/[...block].tsx@unknown"
-    },
     "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
       "type": "object",
       "properties": {
@@ -721,15 +718,15 @@
     "state": {
       "type": "object",
       "required": [
-        "./routes/live/previews/[...block].tsx",
         "./routes/[...catchall].tsx"
       ],
       "properties": {
-        "./routes/live/previews/[...block].tsx": {
-          "$ref": "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@unknown"
-        },
         "./routes/[...catchall].tsx": {
-          "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+            }
+          ]
         }
       },
       "additionalProperties": {

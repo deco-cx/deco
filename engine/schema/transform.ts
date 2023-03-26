@@ -235,16 +235,20 @@ export const findSchemeableFromNode = async (
   root: DocNode[],
 ): Promise<Schemeable> => {
   const kind = rootNode.kind;
+  const currLocation = {
+    file: rootNode.location.filename,
+    name: rootNode.name,
+  };
   switch (kind) {
     case "interface": {
       const allOf = await Promise.all(
-        rootNode.interfaceDef.extends.map((tp) =>
-          tsTypeToSchemeableRec(tp, root)
-        ),
+        rootNode.interfaceDef.extends.map(async (tp) => ({
+          ...currLocation,
+          ...await tsTypeToSchemeableRec(tp, root),
+        })),
       );
       return {
-        name: rootNode.name,
-        file: rootNode.location.filename,
+        ...currLocation,
         extends: allOf && allOf.length > 0 ? allOf : undefined,
         type: "object",
         ...(await typeDefToSchemeable(rootNode.interfaceDef, root)),
@@ -253,8 +257,7 @@ export const findSchemeableFromNode = async (
     }
     case "typeAlias": {
       return {
-        name: rootNode.name,
-        file: rootNode.location.filename,
+        ...currLocation,
         ...(await tsTypeToSchemeableRec(rootNode.typeAliasDef.tsType, root)),
         jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
       };
@@ -271,12 +274,14 @@ export const findSchemeableFromNode = async (
           type: "unknown",
         };
       }
-      return findSchemeableFromNode(node, newRoots);
+      return {
+        ...currLocation,
+        ...await findSchemeableFromNode(node, newRoots),
+      };
     }
   }
   return {
-    name: rootNode.name,
-    file: rootNode.location.filename,
+    ...currLocation,
     type: "unknown",
   };
 };
@@ -325,8 +330,6 @@ export const tsTypeToSchemeable = async (
   const schemeable = await tsTypeToSchemeableRec(node, root[1], optional);
   return {
     ...schemeable,
-    name: schemeable.name ?? node.repr,
-    file: schemeable.file ?? root[0],
   };
 };
 

@@ -575,6 +575,7 @@ Deno.test("Wellknown in types generation", async () => {
       record: {
         jsDocSchema: undefined,
         schemeable: {
+          file: undefined,
           name: undefined,
           type: "record",
           value: { type: "inline", value: { type: "string" } },
