@@ -719,27 +719,6 @@
         "./routes/[...catchall].tsx"
       ],
       "properties": {
-        "state": {
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "$ref": "#/root/handlers"
-              },
-              {
-                "$ref": "#/root/pages"
-              },
-              {
-                "$ref": "#/root/sections"
-              },
-              {
-                "$ref": "#/root/matchers"
-              },
-              {
-                "$ref": "#/root/flags"
-              }
-            ]
-          }
-        },
         "./routes/[...catchall].tsx": {
           "anyOf": [
             {

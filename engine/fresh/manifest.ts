@@ -2,7 +2,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
-import { BlockModule, PreactComponent } from "$live/engine/block.ts";
+import { Block, BlockModule, PreactComponent } from "$live/engine/block.ts";
 import { ConfigStore } from "$live/engine/configstore/provider.ts";
 import {
   newSupabaseDeploy,
@@ -16,14 +16,19 @@ import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
   DanglingReference,
+  Resolvable,
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
 import defaultResolvers from "$live/engine/fresh/defaults.ts";
+import { integrityCheck } from "$live/engine/integrity.ts";
 import { compose } from "$live/engine/middleware.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
+
+import { parse } from "https://deno.land/std@0.181.0/flags/mod.ts";
+const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
 
@@ -52,6 +57,11 @@ interface DanglingRecover {
   recover: Resolver;
 }
 
+const resolverIsBlock = (blk: Block) => (resolver: string) => {
+  const splitted = resolver.split("/");
+  // check if there's any segment on the same name of the block
+  return splitted.some((segment) => segment === blk.type); //FIXME (mcandeia) this is not a straightforward solution
+};
 const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   return (parent, ctx) => {
     const curr = ctx.resolveChain[ctx.resolveChain.length - 1];
@@ -177,19 +187,16 @@ export const $live = <T extends DecoManifest>(m: T): T => {
           },
         )
         : {}; // if block has no adapt so it's not considered a resolver.
+      const recover = adapted[localRef(blk.type, danglingModuleTS)] ??
+        adapted[localRef(blk.type, danglingModuleTSX)] ??
+        blk.defaultDanglingRecover;
       return [
         { ...currMan, [blk.type]: decorated },
         { ...currMap, ...adapted, ...previews },
-        blk.defaultDanglingRecover
+        (recover as Resolver | undefined)
           ? [...recovers, {
-            recoverable: (type: string) => {
-              const splitted = type.split("/");
-              // check if there's any segment on the same name of the block
-              return splitted.some((segment) => segment === blk.type); //FIXME (mcandeia) this is not a straightforward solution
-            },
-            recover: adapted[localRef(blk.type, danglingModuleTS)] ??
-              adapted[localRef(blk.type, danglingModuleTSX)] ??
-              blk.defaultDanglingRecover,
+            recoverable: resolverIsBlock(blk),
+            recover,
           } as DanglingRecover]
           : recovers,
       ];
@@ -205,6 +212,14 @@ export const $live = <T extends DecoManifest>(m: T): T => {
       ? buildDanglingRecover(recovers)
       : undefined,
   });
+
+  if (shouldCheckIntegrity) {
+    resolver.getResolvables().then(
+      (resolvables: Record<string, Resolvable>) => {
+        integrityCheck(resolver.getResolvers(), resolvables);
+      },
+    );
+  }
   // should be set first
   context.configResolver = resolver;
   context.manifest = newManifest;
