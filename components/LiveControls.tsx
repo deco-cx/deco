@@ -70,8 +70,19 @@ const main = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      window.location.href =
-        `https://deco.cx/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`;
+      const href = new URL(
+        `/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`,
+        "https://deco.cx",
+      );
+
+      href.searchParams.set(
+        "pagePath",
+        encodeURIComponent(
+          `${window.location.pathname}${window.location.search}`,
+        ),
+      );
+
+      window.location.href = `${href}`;
     }
   };
 
