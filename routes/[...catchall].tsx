@@ -8,6 +8,7 @@ import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import { setCSPHeaders } from "$live/utils/http.ts";
 import { $live } from "../engine/fresh/manifest.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
@@ -35,10 +36,8 @@ export default function Render({
   );
 }
 
-// deno-lint-ignore no-explicit-any
-export type Bag = Record<string, any>;
 export interface Entrypoint {
-  state: Bag;
+  state: Record<string, Resolvable>;
   handler: Handler;
 }
 

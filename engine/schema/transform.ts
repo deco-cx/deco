@@ -125,7 +125,7 @@ const schemeableWellKnownType = async (
         return {
           type: "inline",
           value: {
-            $ref: "#/root/state",
+            $ref: "#/definitions/Resolvable",
           },
         };
       }
@@ -134,7 +134,7 @@ const schemeableWellKnownType = async (
         return {
           type: "inline",
           value: {
-            $ref: "#/root/state",
+            $ref: "#/definitions/Resolvable",
           },
         };
       }
@@ -373,6 +373,7 @@ const tsTypeToSchemeableRec = async (
       }
       const keywordToType: Record<string, JSONSchema7Type> = {
         undefined: "null",
+        any: "object",
       };
       const type = keywordToType[node.keyword] ?? node.keyword;
       return {

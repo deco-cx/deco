@@ -350,11 +350,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           {
             type: "object",
             required: [],
-            properties: {
-              state: {
-                additionalProperties: configState,
-              },
-            },
+            properties: {},
             ...(root["state"] ?? {}), // should we include only catchall?
             additionalProperties: configState,
           },

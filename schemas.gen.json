@@ -612,7 +612,7 @@
           "title": "Unknown record",
           "type": "object",
           "additionalProperties": {
-            "type": "any"
+            "$ref": "#/definitions/Resolvable"
           }
         },
         "handler": {

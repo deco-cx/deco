@@ -116,8 +116,18 @@ function mapGlobalToAccount(
   const byDashSplit = accountId.split("/");
   const [name] = byDashSplit[byDashSplit.length - 1].split(".");
   const wellKnownAccount = sectionToAccount[accountId];
+  const catchall = c[catchAllConfig];
   return {
     ...c,
+    [catchAllConfig]: {
+      ...catchall,
+      [state]: {
+        ...catchall[state],
+        [name]: wellKnownAccount
+          ? { __resolveType: accountId }
+          : globalSection.props,
+      },
+    },
     ...wellKnownAccount
       ? {
         [accountId]: {
@@ -126,12 +136,6 @@ function mapGlobalToAccount(
         },
       }
       : {},
-    [state]: {
-      ...(c[state] ?? {}),
-      [name]: wellKnownAccount
-        ? { __resolveType: accountId }
-        : globalSection.props,
-    },
   };
 }
 
@@ -190,17 +194,14 @@ const sleepBetweenRetriesMS = 100;
 const refetchIntervalMS = 2_000;
 const baseEntrypoint = {
   [globalSections]: {},
-  [state]: {
-    __resolveType: "resolve",
-  },
   [everyoneAudience]: {
     routes: {},
     __resolveType: "$live/flags/everyone.ts",
   },
   [catchAllConfig]: {
     __resolveType: "resolve",
-    state: {
-      __resolveType: state,
+    [state]: {
+      __resolveType: "resolve",
     },
     handler: {
       flags: [
