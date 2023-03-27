@@ -49,7 +49,6 @@
       "type": "object",
       "properties": {
         "base": {
-          "title": "Base",
           "type": [
             "string",
             "null"
@@ -133,7 +132,6 @@
       "type": "object",
       "properties": {
         "start": {
-          "title": "Start",
           "type": [
             "string",
             "null"
@@ -141,7 +139,6 @@
           "format": "date-time"
         },
         "end": {
-          "title": "End",
           "type": [
             "string",
             "null"
@@ -156,14 +153,12 @@
       "type": "object",
       "properties": {
         "includes": {
-          "title": "Includes",
           "type": [
             "string",
             "null"
           ]
         },
         "match": {
-          "title": "Match",
           "type": [
             "string",
             "null"
@@ -177,7 +172,6 @@
       "type": "object",
       "properties": {
         "siteId": {
-          "title": "Site Id",
           "type": "number"
         }
       },
@@ -199,7 +193,6 @@
       "type": "object",
       "properties": {
         "op": {
-          "title": "Op",
           "anyOf": [
             {
               "type": "string",
@@ -226,7 +219,6 @@
       "type": "object",
       "properties": {
         "traffic": {
-          "title": "Traffic",
           "type": "number"
         }
       },
@@ -239,7 +231,6 @@
       "type": "object",
       "properties": {
         "environment": {
-          "title": "Environment",
           "anyOf": [
             {
               "type": "string",
@@ -265,7 +256,6 @@
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher"
         },
         "name": {
-          "title": "Name",
           "type": "string"
         },
         "routes": {

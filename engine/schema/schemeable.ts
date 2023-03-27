@@ -1,5 +1,5 @@
-import { Schemeable } from "$live/engine/schema/transform.ts";
 import { JSONSchema7 } from "$live/deps.ts";
+import { Schemeable } from "$live/engine/schema/transform.ts";
 const schemeableToJSONSchemaFunc = (
   genId: (s: Schemeable) => string | undefined,
   def: Record<string, JSONSchema7>,
@@ -74,7 +74,7 @@ const schemeableToJSONSchemaFunc = (
           allOf: allOf && allOf.length > 0 ? allOf : undefined,
           properties,
           required: schemeable.required,
-          title: schemeable.title ?? schemeable.id,
+          title: schemeable.title ?? schemeable.name,
         },
       ];
     }
@@ -112,19 +112,20 @@ export const schemeableToJSONSchema = (
     return [def, { $ref: `#/definitions/${schemeableId}` }];
   }
   const [nSchema, curr] = schemeableToJSONSchemaFunc(genId, def, schemeable);
+  const jsonSchema = {
+    ...curr,
+    title: schemeable.friendlyId ?? curr?.title,
+    ...ischemeable.jsDocSchema ?? {},
+  };
 
   if (schemeableId && curr.type !== "null") { // null should not be created as a separated type
     return [
       {
         ...nSchema,
-        [schemeableId]: {
-          ...curr,
-          title: schemeable.friendlyId ?? curr?.title,
-          ...ischemeable.jsDocSchema ?? {},
-        },
+        [schemeableId]: jsonSchema,
       },
       { $ref: `#/definitions/${schemeableId}` },
     ];
   }
-  return [nSchema, curr];
+  return [nSchema, jsonSchema];
 };
