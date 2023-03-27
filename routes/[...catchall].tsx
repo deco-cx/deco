@@ -7,6 +7,7 @@ import { LiveState } from "$live/types.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import { setCSPHeaders } from "$live/utils/http.ts";
+import { $live } from "../engine/fresh/manifest.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
@@ -33,7 +34,11 @@ export default function Render({
     </ctx.Provider>
   );
 }
+
+// deno-lint-ignore no-explicit-any
+export type Bag = Record<string, any>;
 export interface Entrypoint {
+  state: Bag;
   handler: Handler;
 }
 
@@ -44,12 +49,17 @@ export const handler = async (
     LiveConfig<Entrypoint, LiveState>
   >,
 ) => {
-  const { state: { $live: { handler } } } = ctx;
+  const { state: { $live: { handler, state } } } = ctx;
   if (typeof handler !== "function") {
     return Response.json({ "message": "catchall not configured" }, {
       status: 412, // precondition failed
     });
   }
+  ctx.state = {
+    ...ctx.state,
+    ...(state ?? {}),
+    global: state, // compatibility mode with functions.
+  };
 
   return setCSPHeaders(
     req,

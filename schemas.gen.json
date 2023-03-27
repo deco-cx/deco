@@ -608,12 +608,20 @@
     "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
       "type": "object",
       "properties": {
+        "state": {
+          "title": "Unknown record",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any"
+          }
+        },
         "handler": {
           "title": "Handler",
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
         }
       },
       "required": [
+        "state",
         "handler"
       ],
       "title": "$live/routes/[...catchall].tsx@Entrypoint"
@@ -711,6 +719,27 @@
         "./routes/[...catchall].tsx"
       ],
       "properties": {
+        "state": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/root/handlers"
+              },
+              {
+                "$ref": "#/root/pages"
+              },
+              {
+                "$ref": "#/root/sections"
+              },
+              {
+                "$ref": "#/root/matchers"
+              },
+              {
+                "$ref": "#/root/flags"
+              }
+            ]
+          }
+        },
         "./routes/[...catchall].tsx": {
           "anyOf": [
             {

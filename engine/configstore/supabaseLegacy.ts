@@ -15,7 +15,7 @@ import {
 interface PageSection extends Record<string, any> {
   __resolveType: string;
 }
-const accounts = "accounts";
+const state = "state";
 const globalSections = "globalSections";
 const everyoneAudience = "everyone";
 
@@ -126,8 +126,8 @@ function mapGlobalToAccount(
         },
       }
       : {},
-    [accounts]: {
-      ...(c[accounts] ?? {}),
+    [state]: {
+      ...(c[state] ?? {}),
       [name]: wellKnownAccount
         ? { __resolveType: accountId }
         : globalSection.props,
@@ -190,7 +190,7 @@ const sleepBetweenRetriesMS = 100;
 const refetchIntervalMS = 2_000;
 const baseEntrypoint = {
   [globalSections]: {},
-  [accounts]: {
+  [state]: {
     __resolveType: "resolve",
   },
   [everyoneAudience]: {
@@ -199,6 +199,9 @@ const baseEntrypoint = {
   },
   [catchAllConfig]: {
     __resolveType: "resolve",
+    state: {
+      __resolveType: state,
+    },
     handler: {
       flags: [
         {

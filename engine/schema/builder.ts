@@ -224,7 +224,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               }
               ids.push(id);
               return {
-                friendlyId: file && schemeable.name ? `${file}@${schemeable.name}` : undefined,
+                friendlyId: file && schemeable.name
+                  ? `${file}@${schemeable.name}`
+                  : undefined,
                 ...schemeable,
                 id,
               };
@@ -315,7 +317,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         (curr, key) => {
           return { ...curr, anyOf: [...curr.anyOf, { $ref: `#/root/${key}` }] };
         },
-        { anyOf: [] as JSONSchema7[] },
+        {
+          anyOf: [] as JSONSchema7[],
+        },
       );
 
       // generate the final definitions and the entrypoint config
@@ -346,7 +350,11 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           {
             type: "object",
             required: [],
-            properties: {},
+            properties: {
+              state: {
+                additionalProperties: configState,
+              },
+            },
             ...(root["state"] ?? {}), // should we include only catchall?
             additionalProperties: configState,
           },
