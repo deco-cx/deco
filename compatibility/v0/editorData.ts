@@ -508,7 +508,7 @@ const pageFromSectionKey = async (
 
 let schemas: Promise<Schemas> | null = null;
 
-export const previewSection = async (url: URL, key: string) => {
+export const redirectToPreviewSection = async (url: URL, key: string) => {
   schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
     JSON.parse,
   );

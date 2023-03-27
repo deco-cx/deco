@@ -7,7 +7,10 @@ const MatchRandom = (
   { traffic }: Props,
   { isMatchFromCookie }: MatchWithCookieValue,
 ) => {
-  return isMatchFromCookie || Math.random() < traffic;
+  if (isMatchFromCookie !== undefined) {
+    return isMatchFromCookie;
+  }
+  return Math.random() < traffic;
 };
 
 export default MatchRandom;
