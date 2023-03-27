@@ -194,9 +194,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           : fileHash;
         return [id, file];
       };
-      const genId = (s: Schemeable) => {
-        if (s.name !== undefined) {
-          return schemeableId(s)[0];
+      const genId = (schemeable: Schemeable) => {
+        if (schemeable.name !== undefined) {
+          return schemeableId(schemeable)[0];
         }
         return undefined;
       };
@@ -217,15 +217,15 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           const ids = id ? [id] : [];
           if (currSchemeable.type === "union") {
             // if union generate id for each schemeable
-            const unionSchemeables = currSchemeable.value.map((s) => {
-              const [id, file] = schemeableId(s);
+            const unionSchemeables = currSchemeable.value.map((schemeable) => {
+              const [id, file] = schemeableId(schemeable);
               if (!id) {
-                return s;
+                return schemeable;
               }
               ids.push(id);
               return {
-                friendlyId: file && s.name ? `${file}@${s.name}` : undefined,
-                ...s,
+                friendlyId: file && schemeable.name ? `${file}@${schemeable.name}` : undefined,
+                ...schemeable,
                 id,
               };
             });
