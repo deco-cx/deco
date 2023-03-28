@@ -212,7 +212,8 @@ export const generateEditorData = async (
   );
   const schema = await schemas;
 
-  let page = null;
+  const allPages = await pages();
+  let page: null | Page = null;
 
   const pageId = url.searchParams.get("pageId");
   if (pageId !== null) {
@@ -224,6 +225,7 @@ export const generateEditorData = async (
 
   const { sections } = page;
 
+  const uniqueCount: Record<string, string> = {};
   const [sectionsWithSchema, functions] = sections.reduce(
     ([secs, funcs], section, i) => {
       const { __resolveType, ...props } = section;
@@ -235,21 +237,38 @@ export const generateEditorData = async (
           __resolveType: string;
         };
         if (
-          !resolveType || !resolveType.endsWith("ts") ||
-          resolveType.endsWith("tsx")
+          !resolveType
         ) {
           newProps[propKey] = propValue;
         } else {
-          const uniqueId = `${resolveType}-${
-            newFuncs.length + funcs.length
-          }` as string;
-          newProps[propKey] = `{${uniqueId}}`;
-          newFuncs.push({
-            key: resolveType,
-            label: resolveType,
-            props: funcProps,
-            uniqueId,
-          });
+          if (resolveType.endsWith("ts") || resolveType.endsWith("tsx")) {
+            const propsUniq = JSON.stringify(props);
+            uniqueCount[propsUniq] ??= String(
+              newFuncs.length +
+                funcs.length,
+            ).padEnd(4, "0");
+            const uniqueId = `${resolveType}-${
+              uniqueCount[propsUniq]
+            }` as string;
+            newProps[propKey] = `{${uniqueId}}`;
+            newFuncs.push({
+              key: resolveType,
+              label: resolveType,
+              props: funcProps,
+              uniqueId,
+            });
+          } else { // global section
+            const page = allPages[resolveType];
+            if (!page) {
+              continue;
+            }
+            return [[...secs, {
+              key: page.path,
+              label: page.name,
+              type: "global",
+              uniqueId: page.path,
+            }], funcs];
+          }
         }
       }
 
@@ -288,7 +307,6 @@ export const generateEditorData = async (
 
   const { availableFunctions, availableSections } =
     generateAvailableEntitiesFromManifest(schema);
-
   return {
     state: page.state,
     pageName: page.name,
@@ -317,6 +335,14 @@ const flagsThatContainsRoutes = [
 const livePage = "$live/pages/LivePage.tsx";
 
 async function pages() {
+  const archivedPromise = context.configStore!.archived().then(
+    (allPagesArchived) => {
+      for (const page of Object.values(allPagesArchived)) {
+        page.state = "archived";
+      }
+      return allPagesArchived;
+    },
+  );
   const pages = await context.configStore!.state();
   const flags: (Audience | EveryoneConfig)[] = Object.values(pages).filter((
     { __resolveType },
@@ -346,15 +372,9 @@ async function pages() {
       };
     }
   }
-  return newPages;
+  return { ...newPages, ...(await archivedPromise) };
 }
 
 async function pageById(pageId: string | number): Promise<Page> {
-  const publishedAndDraftPages = await pages();
-  const page = publishedAndDraftPages[pageId];
-  if (page) {
-    return page;
-  }
-  const archived = await context.configStore!.archived();
-  return { ...archived[pageId], state: "archived" };
+  return (await pages())[pageId];
 }

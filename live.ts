@@ -19,7 +19,7 @@ export type LiveContext = {
   // deno-lint-ignore no-explicit-any
   configResolver?: ConfigResolver<any>;
   namespace?: string;
-  configStore?: ConfigStore
+  configStore?: ConfigStore;
   metadata: Record<string, unknown>; // used to store any information
 };
 

@@ -25,8 +25,8 @@ export interface EntrypointModule {
 interface ResolverRef {
   blockType: string;
   functionKey: string;
-  inputSchemaIds: string[];
-  outputSchemaIds: string[];
+  inputSchemaId: string | undefined;
+  outputSchemaId: string | undefined;
 }
 
 const resolvableRef = {
@@ -59,7 +59,7 @@ const resolvableReferenceSchema: JSONSchema7 = {
  */
 const functionRefToschemeable = ({
   functionKey,
-  inputSchemaIds,
+  inputSchemaId,
 }: ResolverRef): Schemeable => {
   return {
     name: "",
@@ -69,8 +69,8 @@ const functionRefToschemeable = ({
     value: {
       title: functionKey,
       type: "object",
-      allOf: inputSchemaIds.length > 0
-        ? [{ $ref: `#/definitions/${inputSchemaIds[0]}` }]
+      allOf: inputSchemaId
+        ? [{ $ref: `#/definitions/${inputSchemaId}` }]
         : undefined,
       required: ["__resolveType"],
       properties: {
@@ -204,37 +204,18 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const addSchemeable = (
         def: Schemas["definitions"],
         schemeable?: Schemeable,
-      ): [Schemas["definitions"], string[] | undefined] => {
+      ): [Schemas["definitions"], string | undefined] => {
         if (schemeable) {
           const [id, file] = schemeableId(schemeable);
-          let currSchemeable = {
+          const currSchemeable = {
             friendlyId: file && schemeable.name
               ? `${file}@${schemeable.name}`
               : undefined,
             ...schemeable,
             id,
           };
-          const ids = id ? [id] : [];
-          if (currSchemeable.type === "union") {
-            // if union generate id for each schemeable
-            const unionSchemeables = currSchemeable.value.map((schemeable) => {
-              const [id, file] = schemeableId(schemeable);
-              if (!id) {
-                return schemeable;
-              }
-              ids.push(id);
-              return {
-                friendlyId: file && schemeable.name
-                  ? `${file}@${schemeable.name}`
-                  : undefined,
-                ...schemeable,
-                id,
-              };
-            });
-            currSchemeable = { ...currSchemeable, value: unionSchemeables };
-          }
           const [nDef] = schemeableToJSONSchema(genId, def, currSchemeable);
-          return [nDef, ids];
+          return [nDef, id];
         }
         return [def, undefined];
       };
@@ -254,8 +235,8 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
                 {
                   blockType: mod.blockType,
                   functionKey: mod.functionKey,
-                  inputSchemaIds: idIn ?? [], // supporting only one prop input for now @author Marcos V. Candeia
-                  outputSchemaIds: idOut ? idOut : [],
+                  inputSchemaId: idIn, // supporting only one prop input for now @author Marcos V. Candeia
+                  outputSchemaId: idOut,
                 },
               ],
             ];
@@ -274,29 +255,22 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         ([currentDefinitions, currentRoot], rs) => {
           const schemeable = functionRefToschemeable(rs);
           const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
-          const funcSchema = id ? nDef[id[0]] : undefined;
           const currAnyOfs = currentRoot[rs.blockType]?.anyOf ??
             [resolvableRef];
 
-          const newDef = rs.outputSchemaIds.reduce(
-            (innerDefinitions, innerRoot) => {
-              const outSchema = currentDefinitions[innerRoot];
-              if (!outSchema) {
-                return innerDefinitions;
-              }
-              return {
-                ...innerDefinitions,
-                [innerRoot]: mergeJSONSchemas(
-                  resolvableRef,
-                  outSchema as JSONSchema7,
-                  funcSchema!,
-                ),
-              };
-            },
-            nDef,
-          );
           return [
-            newDef,
+            {
+              ...nDef,
+              ...rs.outputSchemaId
+                ? {
+                  [rs.outputSchemaId]: mergeJSONSchemas(
+                    resolvableRef,
+                    nDef[rs.outputSchemaId],
+                    nDef[id!]!,
+                  ),
+                }
+                : {},
+            },
             {
               ...currentRoot,
               [rs.blockType]: {
@@ -337,9 +311,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               properties: {
                 ...entr.properties,
                 [blkEntry.key]: {
-                  anyOf: id.map((currId) => ({
-                    $ref: `#/definitions/${currId}`,
-                  })),
+                  anyOf: [{
+                    $ref: `#/definitions/${id}`,
+                  }],
                 },
               },
             },

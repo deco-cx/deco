@@ -405,10 +405,11 @@ const tsTypeToSchemeableRec = async (
         node.union.map((t) => tsTypeToSchemeableRec(t, root)),
       );
       const ids = values.map((tp) => tp.name).filter(notUndefined);
+      for (let i = 0; i < node.union.length - ids.length; i++) {
+        ids.push("null");
+      }
       ids.sort();
-      const unionTypeId = ids.length !== node.union.length
-        ? undefined
-        : ids.join("|");
+      const unionTypeId = ids.join("|");
       return {
         name: unionTypeId,
         file: values[0]?.file,
