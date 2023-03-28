@@ -1,5 +1,5 @@
 import { Resolvable, ResolverMap } from "$live/engine/core/resolver.ts";
-import chalk from "https://esm.sh/chalk";
+import { bgBrightRed, brightYellow } from "std/fmt/colors.ts";
 
 const integrityCheckRec = (
   resolvers: ResolverMap,
@@ -21,9 +21,9 @@ const integrityCheckRec = (
       __resolveType && !resolvers[__resolveType] && !resolvables[__resolveType]
     ) {
       console.warn(
-        `${chalk.yellowBright("warn")}: missing required module ${
-          chalk.bgRedBright(__resolveType)
-        }, block id: ${chalk.yellowBright(key)}.`,
+        `${brightYellow("warn")}: missing required module ${
+          bgBrightRed(__resolveType)
+        }, block id: ${brightYellow(key!)}.`,
       );
     }
     for (const [k, value] of Object.entries(rest)) {
