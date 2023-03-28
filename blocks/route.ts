@@ -128,8 +128,7 @@ const blockType = "routes";
 const routeBlock: BlockForModule<RouteMod> = {
   decorate: (routeModule, key) => {
     if (
-      isConfigurableRoute(routeModule) &&
-      !key.includes("./routes/_middleware.ts")
+      isConfigurableRoute(routeModule)
     ) {
       const configurableRoute = routeModule;
       const handl = configurableRoute.handler;

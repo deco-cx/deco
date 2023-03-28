@@ -605,7 +605,7 @@
         }
       }
     },
-    "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
+    "JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig": {
       "type": "object",
       "properties": {
         "state": {
@@ -614,14 +614,22 @@
           "additionalProperties": {
             "$ref": "#/definitions/Resolvable"
           }
-        },
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "$live/routes/_middleware.ts@MiddlewareConfig"
+    },
+    "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
+      "type": "object",
+      "properties": {
         "handler": {
           "title": "Handler",
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
         }
       },
       "required": [
-        "state",
         "handler"
       ],
       "title": "$live/routes/[...catchall].tsx@Entrypoint"
@@ -716,9 +724,17 @@
     "state": {
       "type": "object",
       "required": [
+        "./routes/_middleware.ts",
         "./routes/[...catchall].tsx"
       ],
       "properties": {
+        "./routes/_middleware.ts": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig"
+            }
+          ]
+        },
         "./routes/[...catchall].tsx": {
           "anyOf": [
             {

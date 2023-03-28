@@ -8,6 +8,8 @@ import { context } from "$live/live.ts";
 import { LiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
+import { LiveConfig } from "../blocks/handler.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -18,9 +20,13 @@ export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   return redirectTo(url);
 };
 
+export interface MiddlewareConfig {
+  state: Record<string, Resolvable>;
+}
+
 export const handler = async (
   req: Request,
-  ctx: MiddlewareHandlerContext<LiveState>,
+  ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
 ) => {
   ctx.state.site = {
     id: context.siteId,
@@ -62,6 +68,13 @@ export const handler = async (
 
   const { start, end, printTimings } = createServerTimings();
   ctx.state.t = { start, end };
+  const state = ctx.state.$live.state;
+
+  ctx.state = {
+    ...ctx.state,
+    ...(state ?? {}),
+    global: state, // compatibility mode with functions.
+  };
 
   // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
   const initialResponse = await ctx.next();

@@ -71,6 +71,7 @@ const dataToSections = (
 };
 
 const catchAllConfig = "./routes/[...catchall].tsx";
+const middlewareConfig = "./routes/_middleware.ts";
 
 interface AudienceFlag {
   name: string;
@@ -116,13 +117,13 @@ function mapGlobalToAccount(
   const byDashSplit = accountId.split("/");
   const [name] = byDashSplit[byDashSplit.length - 1].split(".");
   const wellKnownAccount = sectionToAccount[accountId];
-  const catchall = c[catchAllConfig];
+  const middleware = c[middlewareConfig];
   return {
     ...c,
-    [catchAllConfig]: {
-      ...catchall,
+    [middlewareConfig]: {
+      ...middleware,
       [state]: {
-        ...catchall[state],
+        ...middleware[state],
         [name]: wellKnownAccount
           ? { __resolveType: accountId }
           : globalSection.props,
@@ -198,11 +199,14 @@ const baseEntrypoint = {
     routes: {},
     __resolveType: "$live/flags/everyone.ts",
   },
-  [catchAllConfig]: {
+  [middlewareConfig]: {
     __resolveType: "resolve",
     [state]: {
       __resolveType: "resolve",
     },
+  },
+  [catchAllConfig]: {
+    __resolveType: "resolve",
     handler: {
       flags: [
         {

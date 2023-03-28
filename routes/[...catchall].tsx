@@ -37,7 +37,6 @@ export default function Render({
 }
 
 export interface Entrypoint {
-  state: Record<string, Resolvable>;
   handler: Handler;
 }
 
@@ -48,17 +47,12 @@ export const handler = async (
     LiveConfig<Entrypoint, LiveState>
   >,
 ) => {
-  const { state: { $live: { handler, state } } } = ctx;
+  const { state: { $live: { handler } } } = ctx;
   if (typeof handler !== "function") {
     return Response.json({ "message": "catchall not configured" }, {
       status: 412, // precondition failed
     });
   }
-  ctx.state = {
-    ...ctx.state,
-    ...(state ?? {}),
-    global: state, // compatibility mode with functions.
-  };
 
   return setCSPHeaders(
     req,

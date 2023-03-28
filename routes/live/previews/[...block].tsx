@@ -65,6 +65,7 @@ const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
   const params = urlPattern.exec({ pathname })?.pathname.groups;
   return params;
 };
+
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
