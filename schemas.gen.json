@@ -26,8 +26,8 @@
       "type": "object",
       "properties": {
         "flags": {
-          "title": "Flags",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]",
+          "title": "Flags"
         }
       },
       "required": [
@@ -52,11 +52,12 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Base"
         },
         "routes": {
-          "title": "Routes",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
+          "title": "Routes"
         }
       },
       "required": [
@@ -71,8 +72,8 @@
       "type": "object",
       "properties": {
         "page": {
-          "title": "Page",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
         }
       },
       "required": [
@@ -84,8 +85,8 @@
       "type": "object",
       "properties": {
         "page": {
-          "title": "Page",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
         }
       },
       "required": [
@@ -106,8 +107,8 @@
       "type": "object",
       "properties": {
         "sections": {
-          "title": "Sections",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Sections"
         }
       },
       "required": [
@@ -119,8 +120,8 @@
       "type": "object",
       "properties": {
         "page": {
-          "title": "Page",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
         }
       },
       "required": [
@@ -136,6 +137,7 @@
             "string",
             "null"
           ],
+          "title": "Start",
           "format": "date-time"
         },
         "end": {
@@ -143,6 +145,7 @@
             "string",
             "null"
           ],
+          "title": "End",
           "format": "date-time"
         }
       },
@@ -156,13 +159,15 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Includes"
         },
         "match": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Match"
         }
       },
       "required": [],
@@ -172,7 +177,8 @@
       "type": "object",
       "properties": {
         "siteId": {
-          "type": "number"
+          "type": "number",
+          "title": "Site Id"
         }
       },
       "required": [
@@ -202,11 +208,12 @@
               "type": "string",
               "const": "and"
             }
-          ]
+          ],
+          "title": "Op"
         },
         "matchers": {
-          "title": "Matchers",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]",
+          "title": "Matchers"
         }
       },
       "required": [
@@ -219,7 +226,8 @@
       "type": "object",
       "properties": {
         "traffic": {
-          "type": "number"
+          "type": "number",
+          "title": "Traffic"
         }
       },
       "required": [
@@ -240,7 +248,8 @@
               "type": "string",
               "const": "development"
             }
-          ]
+          ],
+          "title": "Environment"
         }
       },
       "required": [
@@ -252,18 +261,19 @@
       "type": "object",
       "properties": {
         "matcher": {
-          "title": "Matcher",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "Matcher"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "Name"
         },
         "routes": {
-          "title": "Routes",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
+          "title": "Routes"
         },
         "overrides": {
-          "title": "Unknown record",
+          "title": "Overrides",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -281,11 +291,11 @@
       "type": "object",
       "properties": {
         "routes": {
-          "title": "Routes",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
+          "title": "Routes"
         },
         "overrides": {
-          "title": "Unknown record",
+          "title": "Overrides",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -609,7 +619,7 @@
       "type": "object",
       "properties": {
         "state": {
-          "title": "Unknown record",
+          "title": "State",
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/Resolvable"
@@ -625,8 +635,8 @@
       "type": "object",
       "properties": {
         "handler": {
-          "title": "Handler",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
+          "title": "Handler"
         }
       },
       "required": [

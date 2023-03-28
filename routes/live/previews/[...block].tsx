@@ -34,13 +34,23 @@ const buildObj = (
   [keys, value]: [string[], string],
 ) => {
   const [first, ...rest] = keys;
-  partial[first] ??= {};
+  let key: string | number = first;
+  if (first.endsWith("]")) {
+    const [arrKey, idx] = first.split("[");
+    partial[arrKey] ??= [];
+    const idxNumber = +idx.substring(0, idx.length - 1);
+    rest.unshift(idxNumber.toString());
+    key = arrKey;
+  } else {
+    partial[first] ??= {};
+  }
   if (rest.length === 0) {
-    partial[first] = isNumber.test(value) ? +value : value;
+    partial[key] = isNumber.test(value) ? +value : value;
     return;
   }
-  buildObj(partial[first], [rest, value]);
+  buildObj(partial[key], [rest, value]);
 };
+
 const propsFromUrl = (url: URL): Record<string, any> => {
   const props = url.searchParams.get("props");
   if (!props) {

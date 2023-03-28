@@ -62,7 +62,14 @@ const schemeableToJSONSchemaFunc = (
           const [nDef, sc] = schemeableToJSONSchema(genId, currDef, schemeable);
           return [
             nDef,
-            { ...properties, [property]: { title, ...sc, ...jsDocSchema } },
+            {
+              ...properties,
+              [property]: {
+                ...sc,
+                ...jsDocSchema,
+                title: title ?? sc.title ?? jsDocSchema?.title,
+              },
+            },
           ];
         },
         [currDef, {}],
@@ -114,8 +121,9 @@ export const schemeableToJSONSchema = (
   const [nSchema, curr] = schemeableToJSONSchemaFunc(genId, def, schemeable);
   const jsonSchema = {
     ...curr,
-    title: schemeable.friendlyId ?? curr?.title,
     ...ischemeable.jsDocSchema ?? {},
+    title: ischemeable?.jsDocSchema?.title ?? schemeable.friendlyId ??
+      curr?.title,
   };
 
   if (schemeableId && curr.type !== "null") { // null should not be created as a separated type
