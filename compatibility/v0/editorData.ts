@@ -14,10 +14,6 @@ interface Page {
   state: PageState;
   sections: Array<{ __resolveType: string } & Props>;
 }
-interface PageWithParams {
-  page: Page;
-  params?: Record<string, string>;
-}
 export const redirectTo = (url: URL) =>
   Response.json(
     {},

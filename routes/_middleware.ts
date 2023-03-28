@@ -8,7 +8,7 @@ import { context } from "$live/live.ts";
 import { LiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { LiveConfig } from "../blocks/handler.ts";
+import { LiveConfig } from "$live/blocks/handler.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
