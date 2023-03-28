@@ -18,6 +18,13 @@ const fetchConfigs = (site: string) => {
   ).single();
 };
 
+const fetchArchivedConfigs = (site: string) => {
+  return getSupabaseClient().from("configs").select("archived").eq(
+    "site",
+    site,
+  ).single();
+};
+
 export const newSupabaseDeploy = (site: string): ConfigStore => {
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
@@ -68,17 +75,31 @@ export const newSupabaseDeploy = (site: string): ConfigStore => {
     }, refetchIntervalMSDeploy);
   });
 
+  const localSupabase = newSupabaseLocal(site);
   return {
-    get: () => currResolvables,
+    archived: localSupabase.archived.bind(localSupabase), // archived does not need to be fetched in background
+    state: () => currResolvables,
   };
 };
 
 export const newSupabaseLocal = (site: string): ConfigStore => {
   const sf = singleFlight<Record<string, Resolvable>>();
   return {
-    get: async () => {
+    archived: async () => {
       return await sf.do(
-        "any",
+        "archived",
+        async () =>
+          await fetchArchivedConfigs(site).then(({ data, error }) => {
+            if (data === null || error != null) {
+              throw error;
+            }
+            return data.archived as Record<string, Resolvable>;
+          }),
+      );
+    },
+    state: async () => {
+      return await sf.do(
+        "state",
         async () =>
           await fetchConfigs(site).then(({ data, error }) => {
             if (data === null || error != null) {
@@ -88,5 +109,44 @@ export const newSupabaseLocal = (site: string): ConfigStore => {
           }),
       );
     },
+  };
+};
+
+export const tryUseProvider = (
+  providerFunc: (site: string) => ConfigStore,
+  site: string,
+): ConfigStore => {
+  let provider: null | ConfigStore = null;
+  const sf = singleFlight();
+  const setProviderIfExists = async () => {
+    await sf.do("any", async () => {
+      if (provider === null) {
+        const supabase = getSupabaseClient();
+        const { error, count } = await supabase.from("configs").select("*", {
+          count: "exact",
+          head: true,
+        }).eq("site", site);
+        if (error !== null && count === 1) {
+          provider = providerFunc(site);
+        }
+      }
+    });
+  };
+
+  const callIfExists = (method: keyof ConfigStore) => async () => {
+    if (provider !== null) { // first try without singleflight check faster path check
+      return await provider[method]();
+    }
+    await setProviderIfExists();
+    if (provider !== null) { // try again to avoid singleflight check.
+      return await (provider as ConfigStore)[method]();
+    }
+    return {}; //empty
+  };
+
+  setProviderIfExists();
+  return {
+    archived: callIfExists("archived"),
+    state: callIfExists("state"),
   };
 };

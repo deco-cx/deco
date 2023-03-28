@@ -49,12 +49,6 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
-    from: "$live/routes/live/workbench.ts",
-    key: "./routes/live/workbench.ts",
-    ref: "$live_workbench",
-  },
-  {
-    block: "routes",
     from: "$live/routes/live/editorData.ts",
     key: "./routes/live/editorData.ts",
     ref: "$live_editorData",

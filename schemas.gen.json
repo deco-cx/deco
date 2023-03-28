@@ -106,12 +106,17 @@
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
       "type": "object",
       "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
         "sections": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
           "title": "Sections"
         }
       },
       "required": [
+        "name",
         "sections"
       ],
       "title": "$live/pages/LivePage.tsx@Props"

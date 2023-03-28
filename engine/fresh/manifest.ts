@@ -3,7 +3,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
 import { Block, BlockModule, PreactComponent } from "$live/engine/block.ts";
-import { instance } from "$live/engine/configstore/provider.ts";
+import { getComposedConfigStore } from "$live/engine/configstore/provider.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
@@ -183,13 +183,15 @@ export const $live = <T extends DecoManifest>(m: T): T => {
     [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();
-  const provider = instance(context.namespace!, context.site, context.siteId);
+  const provider = getComposedConfigStore(
+    context.namespace!,
+    context.site,
+    context.siteId,
+  );
+  context.configStore = provider;
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },
-    getResolvables: async () => {
-      const providerValue = await provider;
-      return await providerValue.get();
-    },
+    getResolvables: provider.state.bind(provider),
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,

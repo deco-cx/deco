@@ -148,6 +148,7 @@ const pageToConfig =
   (namespace: string) =>
   (c: Record<string, Resolvable>, p: Page): Record<string, Resolvable> => {
     const pageEntry = {
+      name: p.name,
       path: p.path, // only for compatibilty with flags.
       sections: dataToSections(p.data, c[globalSections], namespace),
       __resolveType: "$live/pages/LivePage.tsx",
@@ -161,7 +162,7 @@ const pageToConfig =
       return {
         ...c,
         [p.id]: pageEntry,
-        [globalSections]: { ...c[globalSections], [p.path]: p.id },
+        [globalSections]: { ...c[globalSections], [p.path]: `${p.id}` },
       };
     }
     const currEveryone = c[everyoneAudience];
@@ -226,6 +227,14 @@ const fetchSitePages = async (siteId: number) => {
     .neq("state", "archived");
 };
 
+const fetchArchivedPages = async (siteId: number) => {
+  return await getSupabaseClient()
+    .from("pages")
+    .select("id, name, data, path, state, public")
+    .eq("site", siteId)
+    .eq("state", "archived");
+};
+
 const fetchSiteFlags = async (siteId: number) => {
   return await getSupabaseClient().from("flags").select("key, data, name").eq(
     "site",
@@ -235,6 +244,7 @@ const fetchSiteFlags = async (siteId: number) => {
 
 const fetchSiteData = (siteId: number) =>
   Promise.all([fetchSitePages(siteId), fetchSiteFlags(siteId)]);
+
 export const newSupabaseProviderLegacyDeploy = (
   siteId: number,
   namespace: string,
@@ -296,8 +306,10 @@ export const newSupabaseProviderLegacyDeploy = (
     }, refetchIntervalMS);
   });
 
+  const local = newSupabaseProviderLegacyLocal(siteId, namespace);
   return {
-    get: () => currResolvables,
+    archived: local.archived.bind(local),
+    state: () => currResolvables,
   };
 };
 
@@ -345,7 +357,7 @@ const flagsToConfig = (
         routes: {
           [page.path]: {
             page: {
-              __resolveType: pageId,
+              __resolveType: `${pageId}`,
             },
             __resolveType: "$live/handlers/fresh.ts",
           },
@@ -374,8 +386,19 @@ export const newSupabaseProviderLegacyLocal = (
 ) => {
   const sf = singleFlight<Record<string, Resolvable>>();
   return {
-    get: async () => {
-      return await sf.do("any", async () => {
+    archived: async () => { // archived pages cannot be added on flags.
+      return await sf.do("archived", async () => {
+        const { data, error } = await fetchArchivedPages(siteId);
+        if (
+          data === null || error !== null
+        ) {
+          throw error;
+        }
+        return pagesToConfig(data, [], namespace);
+      });
+    },
+    state: async () => {
+      return await sf.do("state", async () => {
         const [{ data, error }, { data: dataFlags, error: errorFlags }] =
           await fetchSiteData(siteId);
         if (

@@ -2,13 +2,12 @@ import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import {
   getPagePathTemplate,
   redirectTo,
-  redirectToPreviewSection,
 } from "$live/compatibility/v0/editorData.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { LiveState } from "$live/types.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
 import { LiveConfig } from "../blocks/handler.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
@@ -44,20 +43,6 @@ export const handler = async (
     return redirectTo(url);
   }
 
-  if (
-    url.pathname.startsWith("/_live/workbench") &&
-    !url.searchParams.has("key") && !url.searchParams.has("pageId")
-  ) {
-    url.pathname = "/live/workbench";
-    return redirectTo(url);
-  }
-
-  if (
-    !url.pathname.startsWith("/live/previews") && url.searchParams.has("key") &&
-    !url.searchParams.has("editorData")
-  ) {
-    return redirectToPreviewSection(url, url.searchParams.get("key")!);
-  }
   if (
     !url.pathname.startsWith("/live/previews") &&
     url.searchParams.has("pageId") &&

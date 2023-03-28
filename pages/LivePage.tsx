@@ -5,6 +5,7 @@ import { usePageContext } from "$live/routes/[...catchall].tsx";
 import LiveControls from "../components/LiveControls.tsx";
 
 export interface Props {
+  name: string;
   sections: Section[];
 }
 

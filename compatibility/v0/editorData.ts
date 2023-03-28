@@ -1,21 +1,23 @@
 import { Schemas } from "$live/engine/schema/builder.ts";
+import { Audience } from "$live/flags/audience.ts";
+import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
-import getSupabaseClient from "$live/supabase.ts";
-import {
-  AvailableFunction,
-  AvailableSection,
-  EditorData,
-  JSONSchemaDefinition,
-  Page,
-  PageData,
-  PageFunction,
-  PageWithParams,
-} from "$live/types.ts";
+import { EditorData, PageState } from "$live/types.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
-import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import { mapPage } from "$live/engine/configstore/supabaseLegacy.ts";
+import { join } from "std/path/mod.ts";
 
+type Props = Record<string, unknown>;
+interface Page {
+  name: string;
+  path: string;
+  state: PageState;
+  sections: Array<{ __resolveType: string } & Props>;
+}
+interface PageWithParams {
+  page: Page;
+  params?: Record<string, string>;
+}
 export const redirectTo = (url: URL) =>
   Response.json(
     {},
@@ -68,33 +70,6 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
   );
 
   return { availableSections, availableFunctions };
-}
-
-async function loadPage({
-  url: { pathname },
-  pageId,
-}: {
-  pageId: string;
-  url: URL;
-}): Promise<PageWithParams | null> {
-  const { data: page, error } = await getSupabaseClient()
-    .from("pages")
-    .select(`id, name, data, path, state, public`)
-    .eq("site", context.siteId)
-    .in("state", ["published", "draft", "global"])
-    .match({ id: +pageId }).maybeSingle();
-  if (error || page === null) {
-    throw new Error(error?.message || `Page with id ${pageId} not found`);
-  }
-  const urlPattern = new URLPattern({ pathname: page.path });
-  const params = pathname
-    ? urlPattern.exec({ pathname })?.pathname.groups
-    : undefined;
-
-  return {
-    page: page as Page,
-    params,
-  };
 }
 
 const configTypeFromJSONSchema = (schema: JSONSchema7): string | undefined => {
@@ -227,301 +202,7 @@ const generatePropsForSchema = (
   return cases[schema.type] ?? null;
 };
 
-interface SectionInstance {
-  key: string;
-  label: string;
-  uniqueId: string;
-  props: Record<string, unknown>;
-}
-
-type CreateSectionFromSectionKeyReturn = {
-  section: SectionInstance;
-  functions: PageFunction[];
-};
-
-type SelectDefaultFunctionReturn = {
-  sectionProps: Record<string, unknown>;
-  newFunctionsToAdd: Array<PageFunction>;
-};
-type AvailableFunctionsForSection = Array<{
-  sectionPropKey: string;
-  sectionPropTitle?: string;
-  availableFunctions: AvailableFunction[];
-}>;
-
-/** Property is undefined | boolean | object, so if property[key] is === "object" and $id in property[key] */
-const propertyHasId = (
-  propDefinition: JSONSchemaDefinition | undefined,
-): propDefinition is JSONSchema7 => (
-  typeof propDefinition === "object" && "$id" in propDefinition
-);
-
-const isNotNullOrUndefined = <T extends unknown>(
-  item: T | null | undefined,
-): item is T => item !== null && item !== undefined;
-
-/**
- * Receives a section key (its path) and returns an array with every prop
- * that needs an external type (have $id) and its candidate functions
- *
- * TODO: Function that takes into account current page functions and return them as options.
- *  Used the data from the fn above
- */
-const availableFunctionsForSection = (
-  section: AvailableSection,
-  functions: AvailableFunction[],
-): AvailableFunctionsForSection => {
-  const functionsAvailableByOutputSchema$id: Record<
-    string,
-    AvailableFunction[]
-  > = functions.reduce((acc, availableFunction) => {
-    const dataAttr = availableFunction.outputSchema?.properties?.data;
-
-    if (typeof dataAttr !== "object") {
-      return acc;
-    }
-
-    const functionType$Id = dataAttr.$id; // E.g: live/std/commerce/ProductList.ts
-
-    if (!functionType$Id) {
-      return acc;
-    }
-
-    if (!acc[functionType$Id]) {
-      acc[functionType$Id] = [];
-    }
-
-    acc[functionType$Id].push(availableFunction);
-    return acc;
-  }, {} as Record<string, AvailableFunction[]>);
-
-  const sectionInputSchema = section?.schema;
-
-  if (!sectionInputSchema) {
-    return [];
-  }
-
-  const availableFunctions = Object.keys(sectionInputSchema.properties ?? {})
-    .filter((propName) =>
-      propertyHasId(sectionInputSchema.properties?.[propName])
-    )
-    .map((sectionPropKey) => {
-      const propDefinition = sectionInputSchema.properties?.[sectionPropKey];
-      if (typeof propDefinition !== "object") {
-        return null;
-      }
-
-      const sectionPropTitle = propDefinition.title;
-      const prop$id = propDefinition.$id;
-
-      const availableFunctions = prop$id
-        ? functionsAvailableByOutputSchema$id[prop$id] || []
-        : [];
-
-      return {
-        sectionPropKey,
-        sectionPropTitle,
-        availableFunctions,
-      };
-    })
-    .filter(isNotNullOrUndefined);
-
-  return availableFunctions;
-};
-
-const appendHash = (value: string) =>
-  `${value}-${crypto.randomUUID().slice(0, 4)}`;
-
-const functionUniqueIdToPropReference = (uniqueId: string) => `{${uniqueId}}`;
-
-const createFunctionInstanceFromFunctionKey = (
-  schema: Schemas,
-  functionKey: string,
-): PageFunction => {
-  // TODO: Make sure that dev.ts is adding top-level title to inputSchema
-  const [inputSchema] = getInputAndOutputFromKey(schema, functionKey);
-  const functionLabel = inputSchema?.title ?? functionKey;
-
-  const uniqueId = appendHash(functionKey);
-
-  // TODO: Get initial props from introspecting JSON Schema
-  const initialProps = {};
-
-  const functionInstance: PageFunction = {
-    key: functionKey,
-    label: functionLabel,
-    uniqueId,
-    props: initialProps,
-  };
-
-  return functionInstance;
-};
-
-/**
- * This function should be used only in the initial stage of the product.
- *
- * Since we don't yet have an UI to select which function a sections should bind
- * itself to (for each one of the props that might require this),
- * this utility function selects the first one available.
- */
-const selectDefaultFunctionsForSection = (
-  schemas: Schemas,
-  section: AvailableSection,
-): SelectDefaultFunctionReturn => {
-  // TODO: Double check this logic here
-  const [sectionInputSchema] = getInputAndOutputFromKey(schemas, section.key);
-
-  if (!sectionInputSchema) {
-    return {
-      sectionProps: {},
-      newFunctionsToAdd: [],
-    };
-  }
-
-  const { availableFunctions } = generateAvailableEntitiesFromManifest(schemas);
-  const functionsToChooseFrom = availableFunctionsForSection(
-    section,
-    availableFunctions,
-  );
-
-  const returnData = functionsToChooseFrom.reduce(
-    (acc, { availableFunctions, sectionPropKey }) => {
-      const chosenFunctionKey = availableFunctions[0].key;
-      if (!chosenFunctionKey) {
-        console.log(
-          `Couldn't find a function for prop ${sectionPropKey} of section ${section.key}.`,
-        );
-        return acc;
-      }
-
-      const functionInstance = createFunctionInstanceFromFunctionKey(
-        schemas,
-        chosenFunctionKey,
-      );
-
-      acc.newFunctionsToAdd.push(functionInstance);
-      acc.sectionProps[sectionPropKey] = functionUniqueIdToPropReference(
-        chosenFunctionKey,
-      );
-      return acc;
-    },
-    {
-      sectionProps: {},
-      newFunctionsToAdd: [],
-    } as SelectDefaultFunctionReturn,
-  );
-
-  return returnData;
-};
-
-/**
- * Used to generate dev pages (/_live/Banner.tsx), adding new functions to the page if necessary
- */
-const createSectionFromSectionKey = (
-  schemas: Schemas,
-  sectionKey: string,
-  sectionName?: string,
-): CreateSectionFromSectionKeyReturn => {
-  const section: SectionInstance = {
-    key: sectionKey,
-    label: sectionKey + sectionName ? ` (${sectionName})` : "",
-    uniqueId: sectionKey,
-    props: {},
-  };
-
-  const { newFunctionsToAdd, sectionProps } = selectDefaultFunctionsForSection(
-    schemas,
-    section,
-  );
-
-  section.props = sectionProps;
-
-  return {
-    section,
-    functions: newFunctionsToAdd,
-  };
-};
-const getSectionPath = (sectionKey: string) =>
-  `/_live/workbench/sections/${
-    sectionKey.replace(`${context.namespace}/sections/`, "")
-  }`;
-
-const createPageForSection = (
-  sectionKey: string,
-  data: PageData,
-): Page => ({
-  id: -1,
-  name: sectionKey,
-  // TODO: Use path join
-  path: getSectionPath(sectionKey),
-  data,
-  state: "dev",
-});
-
-const getDefinition = (path: string) => context.manifest?.sections?.[path];
-
-const doesSectionExist = (path: string) =>
-  Boolean(getDefinition(path.replace("./", `${context.namespace}/`)));
-
-/**
- * Fetches a page containing this component.
- *
- * This is used for creating the canvas. It retrieves
- * or generates a fake page from the database at
- * /_live/sections/<componentName.tsx>
- *
- * This way we can use the page editor to edit components too
- */
-const pageFromSectionKey = async (
-  schemas: Schemas,
-  sectionFileName: string, // Ex: ./sections/Banner.tsx#TopSellers
-): Promise<PageWithParams> => {
-  const supabase = getSupabaseClient();
-
-  const { section: instance, functions } = createSectionFromSectionKey(
-    schemas,
-    sectionFileName,
-  );
-
-  const page = createPageForSection(sectionFileName, {
-    sections: [instance],
-    functions,
-  });
-
-  if (!doesSectionExist(sectionFileName)) {
-    throw new Error(`Section at ${sectionFileName} Not Found`);
-  }
-
-  const { data } = await supabase
-    .from("pages")
-    .select("id, name, data, path, state")
-    .match({ path: page.path, site: context.siteId });
-
-  const match = data?.[0];
-
-  if (match) {
-    return { page: match };
-  }
-
-  return { page };
-};
-
 let schemas: Promise<Schemas> | null = null;
-
-export const redirectToPreviewSection = async (url: URL, key: string) => {
-  schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
-    JSON.parse,
-  );
-  const schema = await schemas;
-  const pageData = await pageFromSectionKey(schema, key);
-  const converted = mapPage(context.namespace!, pageData.page);
-  const { __resolveType: _ignore, ...sectionProps } = converted.sections[0];
-  const propsBase64 = btoa(JSON.stringify(sectionProps ?? {}));
-
-  url.pathname = `/live/previews/${key}`;
-  url.searchParams.append("props", propsBase64);
-  return redirectTo(url);
-};
 
 export const generateEditorData = async (
   url: URL,
@@ -531,37 +212,62 @@ export const generateEditorData = async (
   );
   const schema = await schemas;
 
-  let pageWithParams = null;
+  let page = null;
 
   const pageId = url.searchParams.get("pageId");
   if (pageId !== null) {
-    pageWithParams = await loadPage({ url, pageId });
+    page = await pageById(pageId);
   }
-  const blockKey = url.searchParams.get("key");
-  if (!pageWithParams && blockKey !== null) {
-    pageWithParams = await pageFromSectionKey(schema, blockKey);
-  }
-
-  if (!pageWithParams) {
+  if (!page) {
     throw new Error("Could not find page to generate editor data");
   }
 
-  const {
-    page,
-    page: {
-      data: { sections, functions },
-    },
-  } = pageWithParams;
+  const { sections } = page;
 
-  const sectionsWithSchema = sections.map(
-    (section): EditorData["sections"][0] => {
-      const [input] = getInputAndOutputFromKey(schema, section.key);
+  const [sectionsWithSchema, functions] = sections.reduce(
+    ([secs, funcs], section, i) => {
+      const { __resolveType, ...props } = section;
+      const [input] = getInputAndOutputFromKey(schema, __resolveType);
+      const newProps: typeof props = {};
+      const newFuncs = [];
+      for (const [propKey, propValue] of Object.entries(props)) {
+        const { __resolveType: resolveType, ...funcProps } = propValue as {
+          __resolveType: string;
+        };
+        if (
+          !resolveType || !resolveType.endsWith("ts") ||
+          resolveType.endsWith("tsx")
+        ) {
+          newProps[propKey] = propValue;
+        } else {
+          const uniqueId = `${resolveType}-${
+            newFuncs.length + funcs.length
+          }` as string;
+          newProps[propKey] = `{${uniqueId}}`;
+          newFuncs.push({
+            key: resolveType,
+            label: resolveType,
+            props: funcProps,
+            uniqueId,
+          });
+        }
+      }
 
-      return ({
-        ...section,
+      const parts = __resolveType.split("/");
+      const [label] = parts[parts.length - 1].split(".");
+      const mappedSection = {
+        key: __resolveType,
+        label,
+        uniqueId: `${__resolveType}-${i}`,
+        props: newProps,
         schema: input,
-      });
+      };
+      return [[...secs, mappedSection], [...funcs, ...newFuncs]];
     },
+    [[], []] as [
+      EditorData["sections"][0][],
+      EditorData["availableFunctions"][0][],
+    ],
   );
 
   const functionsWithSchema = functions.map(
@@ -573,6 +279,7 @@ export const generateEditorData = async (
 
       return ({
         ...functionData,
+        uniqueId: functionData.uniqueId!,
         schema: input,
         outputSchema: output,
       });
@@ -593,16 +300,61 @@ export const generateEditorData = async (
 };
 
 export const getPagePathTemplate = async (pageId: string | number) => {
-  const { data: pages, error } = await getSupabaseClient()
-    .from("pages")
-    .select("id, name, data, path, state, public")
-    .match({ id: +pageId });
+  const matchPage = await pageById(pageId);
 
-  const matchPage = pages?.[0];
-
-  if (error || !matchPage) {
-    throw new Error(error?.message || `Page with id ${pageId} not found`);
+  if (!matchPage) {
+    throw new Error(`Page with id ${pageId} not found`);
   }
 
   return matchPage.path;
 };
+
+const flagsThatContainsRoutes = [
+  "$live/flags/audience.ts",
+  "$live/flags/everyone.ts",
+];
+
+const livePage = "$live/pages/LivePage.tsx";
+
+async function pages() {
+  const pages = await context.configStore!.state();
+  const flags: (Audience | EveryoneConfig)[] = Object.values(pages).filter((
+    { __resolveType },
+  ) => flagsThatContainsRoutes.includes(__resolveType));
+  // pages that are assigned to at least one route are considered published
+  const publishedPages = flags.reduce(
+    (published, flag) => {
+      return Object.values(flag.routes ?? {}).reduce((pb, route) => {
+        const pageResolveType =
+          (route as unknown as { page: { __resolveType: string } })
+            ?.page?.__resolveType;
+        if (!pageResolveType) {
+          return pb;
+        }
+        return { ...pb, [pageResolveType]: true };
+      }, published);
+    },
+    {} as Record<string, boolean>,
+  );
+
+  const newPages: Record<string, Page> = {};
+  for (const [pageId, page] of Object.entries(pages)) {
+    if (page?.__resolveType === livePage) {
+      newPages[pageId] = {
+        ...page,
+        state: publishedPages[pageId] ? "published" : "draft",
+      };
+    }
+  }
+  return newPages;
+}
+
+async function pageById(pageId: string | number): Promise<Page> {
+  const publishedAndDraftPages = await pages();
+  const page = publishedAndDraftPages[pageId];
+  if (page) {
+    return page;
+  }
+  const archived = await context.configStore!.archived();
+  return { ...archived[pageId], state: "archived" };
+}

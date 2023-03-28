@@ -10,9 +10,8 @@ import * as $$$$0 from "./routes/_middleware.ts";
 import * as $$$$1 from "./routes/live/schema.ts";
 import * as $$$$2 from "./routes/live/editorData.ts";
 import * as $$$$3 from "./routes/live/inspect.ts";
-import * as $$$$4 from "./routes/live/workbench.ts";
-import * as $$$$5 from "./routes/live/previews/[...block].tsx";
-import * as $$$$6 from "./routes/[...catchall].tsx";
+import * as $$$$4 from "./routes/live/previews/[...block].tsx";
+import * as $$$$5 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "$live/handlers/routesSelection.ts";
 import * as $$$$$$1 from "$live/handlers/router.ts";
 import * as $$$$$$2 from "$live/handlers/devPage.ts";
@@ -35,9 +34,8 @@ const manifest: DecoManifest = {
     "./routes/live/schema.ts": $$$$1,
     "./routes/live/editorData.ts": $$$$2,
     "./routes/live/inspect.ts": $$$$3,
-    "./routes/live/workbench.ts": $$$$4,
-    "./routes/live/previews/[...block].tsx": $$$$5,
-    "./routes/[...catchall].tsx": $$$$6,
+    "./routes/live/previews/[...block].tsx": $$$$4,
+    "./routes/[...catchall].tsx": $$$$5,
   },
   "handlers": {
     "$live/handlers/routesSelection.ts": $$$$$$0,
