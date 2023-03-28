@@ -552,9 +552,6 @@ export const generateEditorData = async (
       data: { sections, functions },
     },
   } = pageWithParams;
-  schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
-    JSON.parse,
-  );
 
   const sectionsWithSchema = sections.map(
     (section): EditorData["sections"][0] => {

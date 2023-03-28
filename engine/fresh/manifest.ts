@@ -3,15 +3,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
 import { Block, BlockModule, PreactComponent } from "$live/engine/block.ts";
-import { ConfigStore } from "$live/engine/configstore/provider.ts";
-import {
-  newSupabaseDeploy,
-  newSupabaseLocal,
-} from "$live/engine/configstore/supabase.ts";
-import {
-  newSupabaseProviderLegacyDeploy,
-  newSupabaseProviderLegacyLocal,
-} from "$live/engine/configstore/supabaseLegacy.ts";
+import { instance } from "$live/engine/configstore/provider.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
@@ -146,19 +138,6 @@ export const withoutLocalModules = (
   return r;
 };
 
-const getProvider = (): ConfigStore => {
-  const isLegacy = context.siteId > 0;
-  if (isLegacy) {
-    const provider = context.isDeploy
-      ? newSupabaseProviderLegacyDeploy
-      : newSupabaseProviderLegacyLocal;
-    return provider(context.siteId, context.namespace!);
-  }
-  // set as migrated
-  context.metadata["migrated"] = true;
-  const provider = context.isDeploy ? newSupabaseDeploy : newSupabaseLocal;
-  return provider(context.site);
-};
 export const $live = <T extends DecoManifest>(m: T): T => {
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
     ([currMan, currMap, recovers], blk) => {
@@ -204,10 +183,13 @@ export const $live = <T extends DecoManifest>(m: T): T => {
     [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();
-  const provider = getProvider();
+  const provider = instance(context.namespace!, context.site, context.siteId);
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },
-    getResolvables: provider.get.bind(provider),
+    getResolvables: async () => {
+      const providerValue = await provider;
+      return await providerValue.get();
+    },
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,
