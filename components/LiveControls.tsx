@@ -97,12 +97,15 @@ const main = () => {
 
     switch (data.type) {
       case "scrollToComponent": {
-        (document
-            .getElementById(data.args.id) ?? data.args.alternateId
+        const findById = document
+          .getElementById(data.args.id);
+
+        const findByAlternateId = data.args.alternateId
           ? document
             .getElementById(data.args.alternateId)
-          : undefined)
-          ?.scrollIntoView({ behavior: "smooth" });
+          : undefined;
+
+        (findById ?? findByAlternateId)?.scrollIntoView({ behavior: "smooth" });
 
         return;
       }
