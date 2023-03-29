@@ -15,7 +15,6 @@ import { DecoManifest } from "$live/types.ts";
 import { namespaceFromImportMap } from "$live/utils/namespace.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
-
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
   if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {

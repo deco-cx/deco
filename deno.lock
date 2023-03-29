@@ -419,6 +419,7 @@
     "https://esm.sh/*preact-render-to-string@5.2.4?pin=102": "c7b78a1de01e18e40faf2588abd16be0319c309adaa55d4884e28daaf0263579",
     "https://esm.sh/@supabase/supabase-js@2.7.0": "083a4ba57208e6861f60fcb2af126569bc225280f109efb85d7b2eec2cad02a6",
     "https://esm.sh/chalk@5.2.0": "93d238c718b2d538a8ddf341e7afca5bdbcaa174a739032c0cbaa03b016ba6e9",
+    "https://esm.sh/diff@5.1.0": "eb70254c4594c64db206d8b6574b8c969222a9792b4489ff7f7dc95f745be7c3",
     "https://esm.sh/preact@10.11.3/compat": "2e5df1e369e2360f0cfdff9b667138773cd86a3bc10c2e17f8da0b1d01bb91cc",
     "https://esm.sh/preact@10.11.3/hooks": "ffe990388d4ac9aaa4840e3f713b745dd9fc578cea119ebfe158e1d4dc8e347c",
     "https://esm.sh/preact@10.11.3/jsx-runtime": "7e3c72f989c3cd8b37b526fd6b9f17dfbb8a22eab5f50d5dd55489cae154af14",
@@ -499,6 +500,7 @@
     "https://esm.sh/v111/react-json-view@1.21.3/X-ZS8q/deno/react-json-view.js": "93b60cd6e865b3f5a46b546bf57a86928f9a5fb0055efaeaeb302db31c60dea8",
     "https://esm.sh/v111/react-json-view@1.21.3/deno/react-json-view.js": "4985daf2fc7de615b6b4f89a058ae54b12adf7671ae2eed05d78922578aceab1",
     "https://esm.sh/v111/websocket@1.0.34/deno/websocket.js": "96ccf86a285d4ec17aaf925325a4cecc7e035c0e5917ff0c4523c8f6641d13a4",
+    "https://esm.sh/v113/@types/diff@5.0.3/index.d.ts": "ba63f5b1ff04b72c9974f16d0bf76cd6318573642eed8afdd044d4fc8a9aae8e",
     "https://esm.sh/v113/@types/node@16.18.12/buffer.d.ts": "7e44bbab01344b6891af133e713c4d965bc72d331ff6bb98de26f150415d9f57",
     "https://esm.sh/v113/@types/node@16.18.12/crypto.d.ts": "c2a22ca1fcb8346b556c06e68a861cbfa2a938c79d4eb861437bba09ba55b45a",
     "https://esm.sh/v113/@types/node@16.18.12/dns.d.ts": "461dea940368bc71d570dcd67cfe61086c804e5137bd0cc85b881868dd05342a",
@@ -515,6 +517,7 @@
     "https://esm.sh/v113/chalk@5.2.0/source/index.d.ts": "39e7f2d0493c35e18ad102a5f637f1df7391e2502601ef202c9471257842a189",
     "https://esm.sh/v113/chalk@5.2.0/source/vendor/ansi-styles/index.d.ts": "acfed6cc001e7f7f26d2ba42222a180ba669bb966d4dd9cb4ad5596516061b13",
     "https://esm.sh/v113/chalk@5.2.0/source/vendor/supports-color/index.d.ts": "3a4ff1fc4c9d9d8efecd95c3ee1675e6e7ce1e88d955ff43da6b6db5c82c02a4",
+    "https://esm.sh/v113/diff@5.1.0/deno/diff.mjs": "eb6e643358ea75a6dfb4da153b2d79862292fcde071152f82c362d8b51e9c817",
     "https://esm.sh/v113/node.ns.d.ts": "0fb081f0cd2150931bd54baa04f31466abd9ca701fd9060d07931402cf8367ba",
     "https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js": "ad9dee8413b808274d914ca07529df11ac418271d01ed283cbba5ed5eda7ae07"
   }
