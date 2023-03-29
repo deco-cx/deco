@@ -20,7 +20,6 @@ export type LiveContext = {
   configResolver?: ConfigResolver<any>;
   namespace?: string;
   configStore?: ConfigStore;
-  metadata: Record<string, unknown>; // used to store any information
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -30,5 +29,4 @@ export const context: LiveContext = {
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
   siteId: 0,
-  metadata: {},
 };

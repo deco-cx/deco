@@ -1,4 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { LiveConfig } from "$live/blocks/handler.ts";
 import {
   getPagePathTemplate,
   redirectTo,
@@ -6,9 +7,9 @@ import {
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { LiveState } from "$live/types.ts";
+import { defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { LiveConfig } from "$live/blocks/handler.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -64,7 +65,10 @@ export const handler = async (
   // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
   const initialResponse = await ctx.next();
 
-  const newHeaders = new Headers(initialResponse.headers);
+  const newHeaders = new Headers({
+    ...initialResponse.headers,
+    ...defaultHeaders,
+  });
   newHeaders.set("Server-Timing", printTimings());
 
   const newResponse = new Response(initialResponse.body, {

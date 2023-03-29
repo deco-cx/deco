@@ -6,6 +6,7 @@ import { EditorData, PageState } from "$live/types.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import { join } from "std/path/mod.ts";
+import { defaultHeaders } from "$live/utils/http.ts";
 
 type Props = Record<string, unknown>;
 interface Page {
@@ -20,6 +21,7 @@ export const redirectTo = (url: URL) =>
     {
       status: 302,
       headers: {
+        ...defaultHeaders,
         "Location": url.toString(),
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Credentials": "true",
