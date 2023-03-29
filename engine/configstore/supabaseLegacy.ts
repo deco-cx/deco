@@ -65,7 +65,7 @@ const dataToSections = (
     return { ...indexed, [`{${f.uniqueId}}`]: f };
   }, {} as Record<string, Function>);
 
-  return d.sections.map(
+  return (d.sections ?? []).map(
     sectionToPageSection(functionsIndexed, globalSections, ns),
   );
 };

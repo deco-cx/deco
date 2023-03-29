@@ -194,7 +194,10 @@ export const nodeToFunctionDefinition = (
     };
   }
   if (node.kind === "variable") {
-    const variableTsType = node.variableDef.tsType!;
+    const variableTsType = node.variableDef.tsType;
+    if (!variableTsType) {
+      return undefined;
+    }
     if (isFnOrConstructor(variableTsType)) {
       return {
         name: node.name,
