@@ -224,7 +224,8 @@ const fetchSitePages = async (siteId: number) => {
     .from("pages")
     .select("id, name, data, path, state, public")
     .eq("site", siteId)
-    .neq("state", "archived");
+    .neq("state", "dev");
+  // .neq("state", "archived"); FIXME(mcandeia) archived should not be used in production, but removing from here means that previews will not be available.
 };
 
 const fetchArchivedPages = async (siteId: number) => {
