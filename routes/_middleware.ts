@@ -65,11 +65,12 @@ export const handler = async (
   // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
   const initialResponse = await ctx.next();
 
-  const newHeaders = new Headers({
-    ...initialResponse.headers,
-    ...defaultHeaders,
-  });
+  const newHeaders = new Headers(initialResponse.headers);
   newHeaders.set("Server-Timing", printTimings());
+
+  for (const [headerKey, headerValue] of Object.entries(defaultHeaders)) {
+    newHeaders.set(headerKey, headerValue);
+  }
 
   const newResponse = new Response(initialResponse.body, {
     status: initialResponse.status,
