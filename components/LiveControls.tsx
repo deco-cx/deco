@@ -22,7 +22,7 @@ interface Props {
 
 type LiveEvent = {
   type: "scrollToComponent";
-  args: { id: string };
+  args: { id: string; alternateId: string };
 } | {
   type: "DOMInspector";
   args: "activate" | "deactivate";
@@ -97,9 +97,15 @@ const main = () => {
 
     switch (data.type) {
       case "scrollToComponent": {
-        document
-          .getElementById(data.args.id)
-          ?.scrollIntoView({ behavior: "smooth" });
+        const findById = document
+          .getElementById(data.args.id);
+
+        const findByAlternateId = data.args.alternateId
+          ? document
+            .getElementById(data.args.alternateId)
+          : undefined;
+
+        (findById ?? findByAlternateId)?.scrollIntoView({ behavior: "smooth" });
 
         return;
       }

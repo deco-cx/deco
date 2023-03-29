@@ -14,56 +14,7 @@
       }
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/Resolvable"
-        },
-        {
-          "$ref": "#/root/flags"
-        },
-        {
-          "title": "$live/flags/audience.ts",
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience"
-            }
-          ],
-          "required": [
-            "__resolveType"
-          ],
-          "properties": {
-            "__resolveType": {
-              "type": "string",
-              "enum": [
-                "$live/flags/audience.ts"
-              ],
-              "default": "$live/flags/audience.ts"
-            }
-          }
-        },
-        {
-          "title": "$live/flags/everyone.ts",
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig"
-            }
-          ],
-          "required": [
-            "__resolveType"
-          ],
-          "properties": {
-            "__resolveType": {
-              "type": "string",
-              "enum": [
-                "$live/flags/everyone.ts"
-              ],
-              "default": "$live/flags/everyone.ts"
-            }
-          }
-        }
-      ]
+      "$ref": "#/root/flags"
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]": {
       "type": "array",
@@ -75,8 +26,8 @@
       "type": "object",
       "properties": {
         "flags": {
-          "title": "Flags",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]",
+          "title": "Flags"
         }
       },
       "required": [
@@ -87,7 +38,7 @@
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
       "$ref": "#/root/handlers"
     },
-    "2b118596-cf02-463e-b784-948f12ac9ff1@Handler@record": {
+    "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record": {
       "title": "Unknown record",
       "type": "object",
       "additionalProperties": {
@@ -98,15 +49,15 @@
       "type": "object",
       "properties": {
         "base": {
-          "title": "Base",
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Base"
         },
         "routes": {
-          "title": "Routes",
-          "$ref": "#/definitions/2b118596-cf02-463e-b784-948f12ac9ff1@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
+          "title": "Routes"
         }
       },
       "required": [
@@ -121,8 +72,8 @@
       "type": "object",
       "properties": {
         "page": {
-          "title": "Page",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
         }
       },
       "required": [
@@ -134,8 +85,8 @@
       "type": "object",
       "properties": {
         "page": {
-          "title": "Page",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
         }
       },
       "required": [
@@ -155,33 +106,51 @@
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
       "type": "object",
       "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
         "sections": {
-          "title": "Sections",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Sections"
         }
       },
       "required": [
+        "name",
         "sections"
       ],
       "title": "$live/pages/LivePage.tsx@Props"
+    },
+    "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
+        }
+      },
+      "required": [
+        "page"
+      ],
+      "title": "$live/sections/PageInclude.tsx@Props"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props": {
       "type": "object",
       "properties": {
         "start": {
-          "title": "Start",
           "type": [
             "string",
             "null"
           ],
+          "title": "Start",
           "format": "date-time"
         },
         "end": {
-          "title": "End",
           "type": [
             "string",
             "null"
           ],
+          "title": "End",
           "format": "date-time"
         }
       },
@@ -192,18 +161,18 @@
       "type": "object",
       "properties": {
         "includes": {
-          "title": "Includes",
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Includes"
         },
         "match": {
-          "title": "Match",
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Match"
         }
       },
       "required": [],
@@ -213,8 +182,8 @@
       "type": "object",
       "properties": {
         "siteId": {
-          "title": "Site Id",
-          "type": "number"
+          "type": "number",
+          "title": "Site Id"
         }
       },
       "required": [
@@ -235,7 +204,6 @@
       "type": "object",
       "properties": {
         "op": {
-          "title": "Op",
           "anyOf": [
             {
               "type": "string",
@@ -245,11 +213,12 @@
               "type": "string",
               "const": "and"
             }
-          ]
+          ],
+          "title": "Op"
         },
         "matchers": {
-          "title": "Matchers",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]",
+          "title": "Matchers"
         }
       },
       "required": [
@@ -262,8 +231,8 @@
       "type": "object",
       "properties": {
         "traffic": {
-          "title": "Traffic",
-          "type": "number"
+          "type": "number",
+          "title": "Traffic"
         }
       },
       "required": [
@@ -275,7 +244,6 @@
       "type": "object",
       "properties": {
         "environment": {
-          "title": "Environment",
           "anyOf": [
             {
               "type": "string",
@@ -285,7 +253,8 @@
               "type": "string",
               "const": "development"
             }
-          ]
+          ],
+          "title": "Environment"
         }
       },
       "required": [
@@ -293,30 +262,23 @@
       ],
       "title": "$live/matchers/MatchEnvironment.ts@Props"
     },
-    "820bbaeb-2a64-45a9-b3e5-49e5466f670e@Handler@record": {
-      "title": "Unknown record",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
-      }
-    },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",
       "properties": {
         "matcher": {
-          "title": "Matcher",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "Matcher"
         },
         "name": {
-          "title": "Name",
-          "type": "string"
+          "type": "string",
+          "title": "Name"
         },
         "routes": {
-          "title": "Routes",
-          "$ref": "#/definitions/820bbaeb-2a64-45a9-b3e5-49e5466f670e@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
+          "title": "Routes"
         },
         "overrides": {
-          "title": "Unknown record",
+          "title": "Overrides",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -330,22 +292,15 @@
       ],
       "title": "$live/flags/audience.ts@Audience"
     },
-    "ee19a0e2-2b17-46ec-b500-06074123f31c@Handler@record": {
-      "title": "Unknown record",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
-      }
-    },
     "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
       "type": "object",
       "properties": {
         "routes": {
-          "title": "Routes",
-          "$ref": "#/definitions/ee19a0e2-2b17-46ec-b500-06074123f31c@Handler@record"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
+          "title": "Routes"
         },
         "overrides": {
-          "title": "Unknown record",
+          "title": "Overrides",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -457,6 +412,27 @@
             "$live/pages/LivePage.tsx"
           ],
           "default": "$live/pages/LivePage.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4": {
+      "title": "$live/sections/PageInclude.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/PageInclude.tsx"
+          ],
+          "default": "$live/sections/PageInclude.tsx"
         }
       }
     },
@@ -644,15 +620,28 @@
         }
       }
     },
-    "JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@3e7416e7-10d9-445b-97f0-bbe0554aaea0": {
-      "title": "$live/routes/live/previews/[...block].tsx@3e7416e7-10d9-445b-97f0-bbe0554aaea0"
+    "JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "title": "State",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Resolvable"
+          }
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "$live/routes/_middleware.ts@MiddlewareConfig"
     },
     "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
       "type": "object",
       "properties": {
         "handler": {
-          "title": "Handler",
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
+          "title": "Handler"
         }
       },
       "required": [
@@ -690,6 +679,17 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4"
+        }
+      ]
+    },
+    "sections": {
+      "title": "sections",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4"
         }
       ]
     },
@@ -739,15 +739,23 @@
     "state": {
       "type": "object",
       "required": [
-        "./routes/live/previews/[...block].tsx",
+        "./routes/_middleware.ts",
         "./routes/[...catchall].tsx"
       ],
       "properties": {
-        "./routes/live/previews/[...block].tsx": {
-          "$ref": "#/definitions/JGxpdmUvcm91dGVzL2xpdmUvcHJldmlld3MvWy4uLmJsb2NrXS50c3g=@3e7416e7-10d9-445b-97f0-bbe0554aaea0"
+        "./routes/_middleware.ts": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig"
+            }
+          ]
         },
         "./routes/[...catchall].tsx": {
-          "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+            }
+          ]
         }
       },
       "additionalProperties": {
@@ -757,6 +765,9 @@
           },
           {
             "$ref": "#/root/pages"
+          },
+          {
+            "$ref": "#/root/sections"
           },
           {
             "$ref": "#/root/matchers"

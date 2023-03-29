@@ -1,5 +1,5 @@
-import { Schemeable } from "$live/engine/schema/transform.ts";
 import { JSONSchema7 } from "$live/deps.ts";
+import { Schemeable } from "$live/engine/schema/transform.ts";
 const schemeableToJSONSchemaFunc = (
   genId: (s: Schemeable) => string | undefined,
   def: Record<string, JSONSchema7>,
@@ -62,7 +62,14 @@ const schemeableToJSONSchemaFunc = (
           const [nDef, sc] = schemeableToJSONSchema(genId, currDef, schemeable);
           return [
             nDef,
-            { ...properties, [property]: { title, ...sc, ...jsDocSchema } },
+            {
+              ...properties,
+              [property]: {
+                ...sc,
+                ...jsDocSchema,
+                title: title ?? sc.title ?? jsDocSchema?.title,
+              },
+            },
           ];
         },
         [currDef, {}],
@@ -74,7 +81,7 @@ const schemeableToJSONSchemaFunc = (
           allOf: allOf && allOf.length > 0 ? allOf : undefined,
           properties,
           required: schemeable.required,
-          title: schemeable.title ?? schemeable.id,
+          title: schemeable.title ?? schemeable.name,
         },
       ];
     }
@@ -112,18 +119,21 @@ export const schemeableToJSONSchema = (
     return [def, { $ref: `#/definitions/${schemeableId}` }];
   }
   const [nSchema, curr] = schemeableToJSONSchemaFunc(genId, def, schemeable);
+  const jsonSchema = {
+    ...curr,
+    ...ischemeable.jsDocSchema ?? {},
+    title: ischemeable?.jsDocSchema?.title ?? schemeable.friendlyId ??
+      curr?.title,
+  };
 
-  if (schemeableId) {
+  if (schemeableId && curr.type !== "null") { // null should not be created as a separated type
     return [
       {
         ...nSchema,
-        [schemeableId]: {
-          ...curr,
-          title: schemeable.friendlyId ?? curr?.title,
-        },
+        [schemeableId]: jsonSchema,
       },
       { $ref: `#/definitions/${schemeableId}` },
     ];
   }
-  return [nSchema, curr];
+  return [nSchema, jsonSchema];
 };

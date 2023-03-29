@@ -30,7 +30,7 @@ const withOverrides = (
 };
 
 export class ConfigResolver<TContext extends BaseContext = BaseContext> {
-  protected getResolvables: () => PromiseOrValue<
+  public getResolvables: () => PromiseOrValue<
     Record<string, Resolvable<any>>
   >;
   protected resolvers: ResolverMap<TContext>;
@@ -48,6 +48,15 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     };
   };
 
+  public getResolvers(): ResolverMap<BaseContext> {
+    return {
+      ...this.resolvers,
+      resolve: function _resolve(obj: any, { resolve }: BaseContext) {
+        return resolve(obj);
+      },
+    };
+  }
+
   public resolverFor = (
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
@@ -63,12 +72,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   ): Promise<T> => {
     const resolvables = await this.getResolvables();
     const nresolvables = withOverrides(options?.overrides, resolvables);
-    const resolvers = {
-      ...this.resolvers,
-      resolve: function _resolve(obj: any, { resolve }: BaseContext) {
-        return resolve(obj);
-      },
-    };
+    const resolvers = this.getResolvers();
     const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,
       resolve: _resolve,

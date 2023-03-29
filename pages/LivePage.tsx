@@ -1,24 +1,30 @@
 import { Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
-import LiveControls from "$live/components/LiveControls.tsx";
 import { context } from "$live/live.ts";
 import { usePageContext } from "$live/routes/[...catchall].tsx";
+import LiveControls from "../components/LiveControls.tsx";
 
 export interface Props {
+  name: string;
   sections: Section[];
+}
+
+export function renderSection(
+  { Component: Section, props, metadata }: Props["sections"][0],
+  idx: number,
+) {
+  return (
+    <section
+      id={`${metadata?.component}-${idx}`}
+      data-manifest-key={metadata?.component}
+    >
+      <Section {...props} />
+    </section>
+  );
 }
 
 export default function LivePage({ sections }: Props) {
   const metadata = usePageContext()?.metadata;
-  const renderSection = (
-    { Component: Section, props, metadata }: Props["sections"][0],
-  ) => {
-    return (
-      <section data-manifest-key={metadata?.component}>
-        <Section {...props} />
-      </section>
-    );
-  };
   return (
     <>
       <LiveControls

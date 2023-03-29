@@ -63,7 +63,7 @@ const mapHandlers = (
     return mapObjKeys(handlers, (val) => {
       return async function (
         request: Request,
-        context: HandlerContext<any, LiveState>,
+        context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
         const resolver = liveContext.configResolver!;
 
@@ -81,20 +81,15 @@ const mapHandlers = (
           .bind(resolver);
 
         const $live = await ctxResolver(key);
-        return val!(request, {
-          ...context,
-          state: {
-            ...context.state,
-            $live,
-            resolve: ctxResolver,
-          },
-        });
+        context.state = { ...context.state, $live, resolve: ctxResolver };
+
+        return val!(request, context);
       };
     });
   }
   return async function (
     request: Request,
-    context: HandlerContext<any, LiveState>,
+    context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
     const resolver = liveContext.configResolver!;
     const ctxResolver = resolver
@@ -113,14 +108,8 @@ const mapHandlers = (
     const $live = (await ctxResolver(key)) ?? {};
 
     if (typeof handlers === "function") {
-      return await handlers(request, {
-        ...context,
-        state: {
-          ...context.state,
-          $live,
-          resolve: ctxResolver,
-        },
-      });
+      context.state = { ...context.state, $live, resolve: ctxResolver };
+      return await handlers(request, context);
     }
     return await context.render($live);
   };
@@ -139,8 +128,7 @@ const blockType = "routes";
 const routeBlock: BlockForModule<RouteMod> = {
   decorate: (routeModule, key) => {
     if (
-      isConfigurableRoute(routeModule) &&
-      !key.includes("./routes/_middleware.ts")
+      isConfigurableRoute(routeModule)
     ) {
       const configurableRoute = routeModule;
       const handl = configurableRoute.handler;

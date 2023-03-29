@@ -1,5 +1,4 @@
 import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
-import { notUndefined } from "$live/engine/core/utils.ts";
 import { beautify, denoDoc, jsDocToSchema } from "$live/engine/schema/utils.ts";
 import {
   DocNode,
@@ -31,6 +30,7 @@ export const inlineOrSchemeable = async (
 };
 
 export interface SchemeableBase {
+  jsDocSchema?: JSONSchema7;
   friendlyId?: string;
   id?: string; // generated on-demand
   name?: string;
@@ -124,7 +124,7 @@ const schemeableWellKnownType = async (
         return {
           type: "inline",
           value: {
-            $ref: "#/root/state",
+            $ref: "#/definitions/Resolvable",
           },
         };
       }
@@ -133,7 +133,7 @@ const schemeableWellKnownType = async (
         return {
           type: "inline",
           value: {
-            $ref: "#/root/state",
+            $ref: "#/definitions/Resolvable",
           },
         };
       }
@@ -216,6 +216,7 @@ const schemeableWellKnownType = async (
       );
 
       return {
+        file: recordSchemeable.file,
         name: recordSchemeable.name
           ? `${recordSchemeable.name}@record`
           : undefined,
@@ -233,26 +234,31 @@ export const findSchemeableFromNode = async (
   root: DocNode[],
 ): Promise<Schemeable> => {
   const kind = rootNode.kind;
+  const currLocation = {
+    file: rootNode.location.filename,
+    name: rootNode.name,
+  };
   switch (kind) {
     case "interface": {
       const allOf = await Promise.all(
-        rootNode.interfaceDef.extends.map((tp) =>
-          tsTypeToSchemeableRec(tp, root)
-        ),
+        rootNode.interfaceDef.extends.map(async (tp) => ({
+          ...currLocation,
+          ...await tsTypeToSchemeableRec(tp, root),
+        })),
       );
       return {
-        name: rootNode.name,
-        file: rootNode.location.filename,
+        ...currLocation,
         extends: allOf && allOf.length > 0 ? allOf : undefined,
         type: "object",
         ...(await typeDefToSchemeable(rootNode.interfaceDef, root)),
+        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
       };
     }
     case "typeAlias": {
       return {
-        name: rootNode.name,
-        file: rootNode.location.filename,
+        ...currLocation,
         ...(await tsTypeToSchemeableRec(rootNode.typeAliasDef.tsType, root)),
+        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
       };
     }
     case "import": {
@@ -267,12 +273,14 @@ export const findSchemeableFromNode = async (
           type: "unknown",
         };
       }
-      return findSchemeableFromNode(node, newRoots);
+      return {
+        ...currLocation,
+        ...await findSchemeableFromNode(node, newRoots),
+      };
     }
   }
   return {
-    name: rootNode.name,
-    file: rootNode.location.filename,
+    ...currLocation,
     type: "unknown",
   };
 };
@@ -313,21 +321,6 @@ const typeDefToSchemeable = async (
   };
 };
 
-export const tsTypeToSchemeableOrUndefined = async (
-  node: TsTypeDef,
-  root: [string, DocNode[]],
-  optional?: boolean,
-): Promise<Schemeable | undefined> => {
-  if (
-    node.kind === "keyword" &&
-    (node.keyword === "null" ||
-      node.keyword == "undefined")
-  ) {
-    return undefined;
-  }
-  return await tsTypeToSchemeable(node, root, optional);
-};
-
 export const tsTypeToSchemeable = async (
   node: TsTypeDef,
   root: [string, DocNode[]],
@@ -336,8 +329,6 @@ export const tsTypeToSchemeable = async (
   const schemeable = await tsTypeToSchemeableRec(node, root[1], optional);
   return {
     ...schemeable,
-    name: schemeable.name ?? crypto.randomUUID(),
-    file: schemeable.file ?? root[0],
   };
 };
 
@@ -381,6 +372,7 @@ const tsTypeToSchemeableRec = async (
       }
       const keywordToType: Record<string, JSONSchema7Type> = {
         undefined: "null",
+        any: "object",
       };
       const type = keywordToType[node.keyword] ?? node.keyword;
       return {
@@ -411,11 +403,19 @@ const tsTypeToSchemeableRec = async (
       const values = await Promise.all(
         node.union.map((t) => tsTypeToSchemeableRec(t, root)),
       );
-      const ids = values.map((tp) => tp.name).filter(notUndefined);
+      const ids = [];
+      for (let i = 0; i < node.union.length; i++) {
+        const tp = values[i];
+        if (tp?.name) {
+          ids.push(tp.name);
+        } else if (tp && tp.type === "inline" && tp.value.type === "null") {
+          ids.push("null");
+        } else if (node.repr) {
+          ids.push(node.repr);
+        }
+      }
       ids.sort();
-      const unionTypeId = ids.length !== node.union.length
-        ? undefined
-        : ids.join("|");
+      const unionTypeId = ids.length === 0 ? undefined : ids.join("|");
       return {
         name: unionTypeId,
         file: values[0]?.file,

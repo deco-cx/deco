@@ -7,6 +7,8 @@ import { LiveState } from "$live/types.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import { setCSPHeaders } from "$live/utils/http.ts";
+import { $live } from "../engine/fresh/manifest.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
@@ -33,6 +35,7 @@ export default function Render({
     </ctx.Provider>
   );
 }
+
 export interface Entrypoint {
   handler: Handler;
 }

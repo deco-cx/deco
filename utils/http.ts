@@ -1,4 +1,6 @@
+import meta from "$live/meta.json" assert { type: "json" };
 import { adminDomain, isAdmin } from "$live/utils/admin.ts";
+
 export const DEFAULT_CACHE_CONTROL: CacheControl = {
   "s-maxage": 60, // 1minute cdn cache
   "max-age": 10, // 10s browser cache to avoid BYPASS on cloudflare: https://developers.cloudflare.com/cache/about/default-cache-behavior/#cloudflare-cache-responses
@@ -136,10 +138,17 @@ export const mergeCacheControl = (
   };
 };
 
+export const defaultHeaders = {
+  ["x-powered-by"]: `live.ts@${meta.version}`,
+};
+
 export function setCSPHeaders(
   request: Request,
   response: Response,
 ): Response {
+  if (response.status >= 300) { // headers are immutable when using redirect and errors
+    return response;
+  }
   const referer = request.headers.get("origin") ??
     request.headers.get("referer");
   const isOnAdmin = referer && isAdmin(referer);

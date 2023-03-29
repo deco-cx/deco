@@ -42,6 +42,7 @@ Deno.test("Simple type generation", async () => {
 
   assertEquals(transformed, {
     file: filePath,
+    jsDocSchema: undefined,
     name: "SimpleType",
     type: "object",
     value: {
@@ -67,7 +68,7 @@ Deno.test("Simple type generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
+    title: "SimpleType",
     type: "object",
     properties: {
       name: {
@@ -98,6 +99,7 @@ Deno.test("Simple interface generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "SimpleInterface",
     type: "object",
     value: {
@@ -123,7 +125,7 @@ Deno.test("Simple interface generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
+    title: "SimpleInterface",
     type: "object",
     properties: {
       name: {
@@ -154,6 +156,7 @@ Deno.test("Non required fields generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "NonRequiredFields",
     type: "object",
     value: {
@@ -189,8 +192,8 @@ Deno.test("Non required fields generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
     type: "object",
+    title: "NonRequiredFields",
     properties: {
       maybeName: {
         title: "Maybe Name",
@@ -230,6 +233,7 @@ Deno.test("Union types generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "UnionTypes",
     type: "object",
     value: {
@@ -258,7 +262,7 @@ Deno.test("Union types generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
+    title: "UnionTypes",
     type: "object",
     properties: {
       name: {
@@ -299,6 +303,7 @@ Deno.test("Array fields generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "ArrayFields",
     type: "object",
     value: {
@@ -324,7 +329,7 @@ Deno.test("Array fields generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
+    title: "ArrayFields",
     type: "object",
     properties: {
       array: {
@@ -363,6 +368,7 @@ Deno.test("Type reference generation", async () => {
   assertEquals(transformed, {
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "InterfaceWithTypeRef",
     type: "object",
     value: {
@@ -372,6 +378,7 @@ Deno.test("Type reference generation", async () => {
         schemeable: {
           extends: undefined,
           file: filePath,
+          jsDocSchema: undefined,
           name: "SimpleInterface",
           type: "object",
           value: {
@@ -399,7 +406,7 @@ Deno.test("Type reference generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
+    title: "InterfaceWithTypeRef",
     type: "object",
     properties: {
       ref: {
@@ -419,6 +426,7 @@ Deno.test("Type reference generation", async () => {
       {
         extends: undefined,
         file: filePath,
+        jsDocSchema: undefined,
         name: "SimpleInterface",
         required: ["name"],
         type: "object",
@@ -451,6 +459,7 @@ Deno.test("JSDoc tags injection", async () => {
     type: "object",
     extends: undefined,
     file: filePath,
+    jsDocSchema: undefined,
     name: "WithTags",
     value: {
       email: {
@@ -479,14 +488,14 @@ Deno.test("JSDoc tags injection", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
+    title: "WithTags",
     type: "object",
     properties: {
       email: {
         $ref: `#/definitions/${rands[1]}`,
         description: "add your email",
         format: "email",
-        title: "email",
+        title: "Email",
       },
     },
     required: ["email"],
@@ -516,6 +525,7 @@ Deno.test("Type alias generation", async () => {
   }
   assertEquals(transformed, {
     file: filePath,
+    jsDocSchema: undefined,
     name: "TypeAlias",
     type: "inline",
     value: { type: "string" },
@@ -549,6 +559,7 @@ Deno.test("Wellknown in types generation", async () => {
   assertEquals(transformed, {
     name: "WellKnown",
     file: filePath,
+    jsDocSchema: undefined,
     extends: undefined,
     type: "object",
     value: {
@@ -564,6 +575,7 @@ Deno.test("Wellknown in types generation", async () => {
       record: {
         jsDocSchema: undefined,
         schemeable: {
+          file: undefined,
           name: undefined,
           type: "record",
           value: { type: "inline", value: { type: "string" } },
@@ -582,7 +594,7 @@ Deno.test("Wellknown in types generation", async () => {
       },
       resolvable: {
         jsDocSchema: undefined,
-        schemeable: { type: "inline", value: { $ref: "#/root/state" } },
+        schemeable: { type: "inline", value: { $ref: "#/definitions/Resolvable" } },
         title: "Resolvable",
       },
       preactComponent: {
@@ -609,7 +621,7 @@ Deno.test("Wellknown in types generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
-    title: rands[0],
+    title: "WellKnown",
     type: "object",
     properties: {
       array: {
@@ -625,14 +637,15 @@ Deno.test("Wellknown in types generation", async () => {
         type: "string",
       },
       record: {
-        title: "Unknown record",
+        title: "Record",
         type: "object",
         additionalProperties: {
+          title: undefined,
           type: "string",
         },
       },
       resolvable: {
-        $ref: "#/root/state",
+        $ref: "#/definitions/Resolvable",
         title: "Resolvable",
       },
       section: {

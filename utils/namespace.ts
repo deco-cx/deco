@@ -1,4 +1,4 @@
-import { join } from "std/path/mod.ts";
+import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 
 const namespaceFromGit = async (): Promise<string | undefined> => {

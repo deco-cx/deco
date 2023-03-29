@@ -7,8 +7,7 @@ import { CookiedFlag, cookies } from "$live/flags.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
-import MatchAlways from "$live/matchers/MatchAlways.ts";
-import { LiveState, Page } from "$live/types.ts";
+import { LiveState } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
 export interface SelectionConfig {
@@ -61,9 +60,11 @@ const router = (
           configs,
         );
 
+        configs.monitoring?.t.start("resolve");
         const hand = isAwaitable(resolvedOrPromise)
           ? await resolvedOrPromise
           : resolvedOrPromise;
+        configs.monitoring?.t.end("resolve");
 
         return await hand(
           req,
@@ -81,48 +82,11 @@ export type MatchWithCookieValue = MatchContext<{
   isMatchFromCookie?: boolean;
 }>;
 
-// when used ?pageId=x&pathTemplate=y it forces a page to be used
-const forcePageAudience = (
-  req: Request,
-  configs: ResolveOptions,
-): AudienceFlag | undefined => {
-  const reqUrl = new URL(req.url);
-  const pageId = reqUrl.searchParams.get("pageId");
-  if (!pageId) {
-    return undefined;
-  }
-  const pageTemplate = reqUrl.searchParams.get("pathTemplate") ?? "/*";
-  return {
-    name: `force_${pageId}`,
-    matcher: MatchAlways,
-    true: {
-      routes: {
-        [pageTemplate]: async (req: Request, ctx: ConnInfo) => {
-          if (!isFreshCtx(ctx)) {
-            return Response.error();
-          }
-          const resolvedOrPromise = context.configResolver!.resolve<Page>(
-            pageId,
-            { context: ctx, request: req },
-            configs,
-          );
-
-          const page = isAwaitable(resolvedOrPromise)
-            ? await resolvedOrPromise
-            : resolvedOrPromise;
-
-          if (!page) {
-            return new Response(null, { status: 404 });
-          }
-          return ctx.render({ page });
-        },
-      },
-    },
-  };
-};
 export default function RoutesSelection({ flags }: SelectionConfig): Handler {
   const audiences = flags.filter(isAudience) as AudienceFlag[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
+    const cacheControl = req.headers.get("Cache-Control");
+    const isNoCache = cacheControl === "no-cache";
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
 
     // Read flags from cookie or start an empty map.
@@ -138,17 +102,15 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     // track flags that aren't on the original cookie or changed its `isMatch` property.
     const flagsThatShouldBeCookied: CookiedFlag[] = [];
 
-    // reduce audiences building the routes and the overrides.
-    const pageAudience = forcePageAudience(req, {
-      monitoring: t ? { t } : undefined,
-    });
-    const [routes, overrides] = (pageAudience ? [pageAudience] : audiences)
+    const [routes, overrides] = audiences
       .reduce(
         ([routes, overrides], audience) => {
           // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
           const isMatch = audience.matcher({
             ...matchCtx,
-            isMatchFromCookie: flags.get(audience.name)?.isMatch,
+            isMatchFromCookie: isNoCache
+              ? undefined
+              : flags.get(audience.name)?.isMatch,
           } as MatchWithCookieValue);
 
           // if the flag doesn't exists (e.g. new audience being used) or the `isMatch` value has changed so add as a `newFlags`
@@ -199,7 +161,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     const resp = await server(req, connInfo);
 
     // set cookie for the flags that has changed.
-    if (flagsThatShouldBeCookied.length > 0) {
+    if (flagsThatShouldBeCookied.length > 0 && resp.status < 300) { // errors and redirects have immutable headers
       cookies.setFlags(resp.headers, flagsThatShouldBeCookied);
       resp.headers.append("vary", "cookie");
     }

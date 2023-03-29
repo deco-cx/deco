@@ -1,4 +1,5 @@
 import blocks from "$live/blocks/index.ts";
+import { ModuleOf } from "$live/engine/block.ts";
 import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
 import { defaultRoutes } from "$live/engine/fresh/manifestGen.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
@@ -57,7 +58,9 @@ export const genSchemasFromManifest = async (
 
       const docPromise = denoDoc(blockPath);
       modulesPromises.push(docPromise.then(async (doc) => {
-        const introspectFunc = introspectWith(block.introspect);
+        const introspectFunc = introspectWith<ModuleOf<typeof block>>(
+          block.introspect,
+        );
         const ref = await introspectFunc(
           {
             base: dir,

@@ -37,7 +37,6 @@ const functionBlock: BlockForModule<FunctionModule> = {
       $live: TConfig,
       ctx: HttpContext<any, any, HandlerContext<any, TState>>,
     ) => {
-      const global = await ctx.resolve({ __resolveType: "globals" });
       const { data } = await func(
         ctx.request,
         {
@@ -46,7 +45,6 @@ const functionBlock: BlockForModule<FunctionModule> = {
             ...ctx.context.state,
             $live,
             resolve: ctx.resolve,
-            global,
           },
         },
         $live,

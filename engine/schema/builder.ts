@@ -25,8 +25,8 @@ export interface EntrypointModule {
 interface ResolverRef {
   blockType: string;
   functionKey: string;
-  inputSchemaIds: string[];
-  outputSchemaIds: string[];
+  inputSchemaId: string | undefined;
+  outputSchemaId: string | undefined;
 }
 
 const resolvableRef = {
@@ -59,7 +59,7 @@ const resolvableReferenceSchema: JSONSchema7 = {
  */
 const functionRefToschemeable = ({
   functionKey,
-  inputSchemaIds,
+  inputSchemaId,
 }: ResolverRef): Schemeable => {
   return {
     name: "",
@@ -69,8 +69,8 @@ const functionRefToschemeable = ({
     value: {
       title: functionKey,
       type: "object",
-      allOf: inputSchemaIds.length > 0
-        ? [{ $ref: `#/definitions/${inputSchemaIds[0]}` }]
+      allOf: inputSchemaId
+        ? [{ $ref: `#/definitions/${inputSchemaId}` }]
         : undefined,
       required: ["__resolveType"],
       properties: {
@@ -180,20 +180,23 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const canonical = canonicalFileWith(base, namespace);
       const schemeableId = (
         schemeable: Schemeable,
-      ): [string, string | undefined] => {
+      ): [string | undefined, string | undefined] => {
         const file = schemeable.file ? canonical(schemeable.file) : undefined;
         if (schemeable.id) {
           return [schemeable.id, file];
         }
-        const fileHash = file ? btoa(file) : crypto.randomUUID();
+        if (!file) {
+          return [undefined, undefined];
+        }
+        const fileHash = btoa(file);
         const id = schemeable.name
           ? `${fileHash}@${schemeable.name!}`
           : fileHash;
         return [id, file];
       };
-      const genId = (s: Schemeable) => {
-        if (s.name !== undefined) {
-          return schemeableId(s)[0];
+      const genId = (schemeable: Schemeable) => {
+        if (schemeable.name !== undefined) {
+          return schemeableId(schemeable)[0];
         }
         return undefined;
       };
@@ -201,30 +204,18 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const addSchemeable = (
         def: Schemas["definitions"],
         schemeable?: Schemeable,
-      ): [Schemas["definitions"], string[] | undefined] => {
+      ): [Schemas["definitions"], string | undefined] => {
         if (schemeable) {
           const [id, file] = schemeableId(schemeable);
-          let currSchemeable = {
-            friendlyId: `${file}@${schemeable.name}`,
+          const currSchemeable = {
+            friendlyId: file && schemeable.name
+              ? `${file}@${schemeable.name}`
+              : undefined,
             ...schemeable,
             id,
           };
-          const ids = [id];
-          if (currSchemeable.type === "union") {
-            // if union generate id for each schemeable
-            const unionSchemeables = currSchemeable.value.map((s) => {
-              const [id, file] = schemeableId(s);
-              ids.push(id);
-              return {
-                friendlyId: file && s.name ? `${file}@${s.name}` : undefined,
-                ...s,
-                id,
-              };
-            });
-            currSchemeable = { ...currSchemeable, value: unionSchemeables };
-          }
           const [nDef] = schemeableToJSONSchema(genId, def, currSchemeable);
-          return [nDef, ids];
+          return [nDef, id];
         }
         return [def, undefined];
       };
@@ -244,8 +235,8 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
                 {
                   blockType: mod.blockType,
                   functionKey: mod.functionKey,
-                  inputSchemaIds: idIn ?? [], // supporting only one prop input for now @author Marcos V. Candeia
-                  outputSchemaIds: idOut ? idOut : [],
+                  inputSchemaId: idIn, // supporting only one prop input for now @author Marcos V. Candeia
+                  outputSchemaId: idOut,
                 },
               ],
             ];
@@ -264,29 +255,22 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         ([currentDefinitions, currentRoot], rs) => {
           const schemeable = functionRefToschemeable(rs);
           const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
-          const funcSchema = id ? nDef[id[0]] : undefined;
           const currAnyOfs = currentRoot[rs.blockType]?.anyOf ??
             [resolvableRef];
 
-          const newDef = rs.outputSchemaIds.reduce(
-            (innerDefinitions, innerRoot) => {
-              const outSchema = currentDefinitions[innerRoot];
-              if (!outSchema) {
-                return innerDefinitions;
-              }
-              return {
-                ...innerDefinitions,
-                [innerRoot]: mergeJSONSchemas(
-                  resolvableRef,
-                  outSchema as JSONSchema7,
-                  funcSchema!,
-                ),
-              };
-            },
-            nDef,
-          );
           return [
-            newDef,
+            {
+              ...nDef,
+              ...rs.outputSchemaId
+                ? {
+                  [rs.outputSchemaId]: mergeJSONSchemas(
+                    resolvableRef,
+                    nDef[rs.outputSchemaId],
+                    nDef[id!]!,
+                  ),
+                }
+                : {},
+            },
             {
               ...currentRoot,
               [rs.blockType]: {
@@ -307,13 +291,18 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         (curr, key) => {
           return { ...curr, anyOf: [...curr.anyOf, { $ref: `#/root/${key}` }] };
         },
-        { anyOf: [] as JSONSchema7[] },
+        {
+          anyOf: [] as JSONSchema7[],
+        },
       );
 
       // generate the final definitions and the entrypoint config
       const [finalDefs, entrypoint] = initial.entrypoints.reduce(
         ([defs, entr], blkEntry) => {
           const [nDefs, id] = addSchemeable(defs, blkEntry.config);
+          if (!id || id.length === 0) {
+            return [defs, entr];
+          }
           return [
             nDefs,
             {
@@ -322,7 +311,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               properties: {
                 ...entr.properties,
                 [blkEntry.key]: {
-                  $ref: `#/definitions/${id}`,
+                  anyOf: [{
+                    $ref: `#/definitions/${id}`,
+                  }],
                 },
               },
             },

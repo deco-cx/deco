@@ -6,6 +6,7 @@
 
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import { DecoManifest } from "$live/types.ts";
+import { ConfigStore } from "./engine/configstore/provider.ts";
 
 // The global live context
 export type LiveContext = {
@@ -18,6 +19,7 @@ export type LiveContext = {
   // deno-lint-ignore no-explicit-any
   configResolver?: ConfigResolver<any>;
   namespace?: string;
+  configStore?: ConfigStore;
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -28,6 +30,3 @@ export const context: LiveContext = {
   site: "",
   siteId: 0,
 };
-
-// TODO (mcandeia) add CORS to read schema/live data
-// TODO (mcandeia) add admin redirect and CSP headers

@@ -49,6 +49,12 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
+    from: "$live/routes/live/editorData.ts",
+    key: "./routes/live/editorData.ts",
+    ref: "$live_editorData",
+  },
+  {
+    block: "routes",
     from: "$live/routes/live/inspect.ts",
     key: "./routes/live/inspect.ts",
     ref: "$live_inspect",
@@ -64,8 +70,7 @@ export const defaultRoutes: {
     from: "$live/routes/live/previews/[...block].tsx",
     key: "./routes/live/previews/[...block].tsx",
     ref: "$live_previews",
-  },
-  // DO NOT CHANGE THE ORDER CATCHALL SHOULD BE THE LAST
+  }, // DO NOT CHANGE THE ORDER CATCHALL SHOULD BE THE LAST
   {
     block: "routes",
     from: "$live/routes/[...catchall].tsx",

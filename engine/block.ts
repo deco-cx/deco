@@ -158,7 +158,7 @@ export type PathOf<
 export type References<TManifestSchemas> = `#/${PathOf<TManifestSchemas>}`;
 
 // deno-lint-ignore ban-types
-export type ManifestSchemas = References<{}>; // fixme
+export type ManifestSchemas = References<{}>; // FIXME (mcandeia) this was used when the schema is part of the code as a module
 
 export type InstanceOf<
   T,

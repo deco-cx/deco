@@ -11,14 +11,21 @@ function sleep(ms: number) {
 const sleepBetweenRetriesMS = 100;
 const refetchIntervalMSDeploy = 5_000;
 
-const fetchConfigs = (site: number) => {
-  return getSupabaseClient().from("configs").select("config").eq(
+const fetchConfigs = (site: string) => {
+  return getSupabaseClient().from("configs").select("state").eq(
     "site",
     site,
   ).single();
 };
 
-export const newSupabaseDeploy = (site: number): ConfigStore => {
+const fetchArchivedConfigs = (site: string) => {
+  return getSupabaseClient().from("configs").select("archived").eq(
+    "site",
+    site,
+  ).single();
+};
+
+export const newSupabaseDeploy = (site: string): ConfigStore => {
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
 
@@ -42,7 +49,7 @@ export const newSupabaseDeploy = (site: number): ConfigStore => {
       await tryResolveFirstLoad(resolve, reject);
       return;
     }
-    resolve(data.config);
+    resolve(data.state);
   };
 
   let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
@@ -62,31 +69,89 @@ export const newSupabaseDeploy = (site: number): ConfigStore => {
         return;
       }
       currResolvables = Promise.resolve(
-        data.config,
+        data.state,
       );
       singleFlight = false;
     }, refetchIntervalMSDeploy);
   });
 
+  const localSupabase = newSupabaseLocal(site);
   return {
-    get: () => currResolvables,
+    archived: localSupabase.archived.bind(localSupabase), // archived does not need to be fetched in background
+    state: () => currResolvables,
   };
 };
 
-export const newSupabaseLocal = (site: number): ConfigStore => {
+export const newSupabaseLocal = (site: string): ConfigStore => {
   const sf = singleFlight<Record<string, Resolvable>>();
   return {
-    get: async () => {
+    archived: async () => {
       return await sf.do(
-        "any",
+        "archived",
+        async () =>
+          await fetchArchivedConfigs(site).then(({ data, error }) => {
+            if (data === null || error != null) {
+              throw error;
+            }
+            return data.archived as Record<string, Resolvable>;
+          }),
+      );
+    },
+    state: async () => {
+      return await sf.do(
+        "state",
         async () =>
           await fetchConfigs(site).then(({ data, error }) => {
             if (data === null || error != null) {
               throw error;
             }
-            return data.config as Record<string, Resolvable>;
+            return data.state as Record<string, Resolvable>;
           }),
       );
     },
+  };
+};
+
+export const tryUseProvider = (
+  providerFunc: (site: string) => ConfigStore,
+  site: string,
+): ConfigStore => {
+  let provider: null | ConfigStore = null;
+  const sf = singleFlight();
+  const setProviderIfExists = async () => {
+    await sf.do("any", async () => {
+      if (provider === null) {
+        const supabase = getSupabaseClient();
+        const { error, count } = await supabase.from("configs").select("*", {
+          count: "exact",
+          head: true,
+        }).eq("site", site);
+        if (error !== null && count === 1) {
+          provider = providerFunc(site);
+        }
+      }
+    });
+  };
+
+  const callIfExists = async (method: keyof ConfigStore) => {
+    if (provider !== null) { // first try without singleflight check faster path check
+      return await provider[method]();
+    }
+    setProviderIfExists();
+    return {}; //empty
+  };
+
+  let setIfExistsCall = setProviderIfExists();
+  return {
+    archived: () =>
+      setIfExistsCall.then(() => callIfExists("archived")).catch((_) => {
+        setIfExistsCall = setProviderIfExists();
+        return {};
+      }),
+    state: () =>
+      setIfExistsCall.then(() => callIfExists("state")).catch((_) => {
+        setIfExistsCall = setProviderIfExists();
+        return {};
+      }),
   };
 };
