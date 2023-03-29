@@ -1,5 +1,4 @@
 import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
-import { notUndefined } from "$live/engine/core/utils.ts";
 import { beautify, denoDoc, jsDocToSchema } from "$live/engine/schema/utils.ts";
 import {
   DocNode,
@@ -404,12 +403,19 @@ const tsTypeToSchemeableRec = async (
       const values = await Promise.all(
         node.union.map((t) => tsTypeToSchemeableRec(t, root)),
       );
-      const ids = values.map((tp) => tp.name).filter(notUndefined);
-      for (let i = 0; i < node.union.length - ids.length; i++) {
-        ids.push("null");
+      const ids = [];
+      for (let i = 0; i < node.union.length; i++) {
+        const tp = values[i];
+        if (tp?.name) {
+          ids.push(tp.name);
+        } else if (tp && tp.type === "inline" && tp.value.type === "null") {
+          ids.push("null");
+        } else if (node.repr) {
+          ids.push(node.repr);
+        }
       }
       ids.sort();
-      const unionTypeId = ids.join("|");
+      const unionTypeId = ids.length === 0 ? undefined : ids.join("|");
       return {
         name: unionTypeId,
         file: values[0]?.file,

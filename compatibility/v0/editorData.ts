@@ -230,6 +230,10 @@ export const generateEditorData = async (
       const [input] = getInputAndOutputFromKey(schema, __resolveType);
       const newProps: typeof props = {};
       const newFuncs = [];
+
+      // map from __resolveType format to editor section format.
+      // e.g __resolveType: deco-sites/std/functions/vtexProductListingPage.ts => {deco-sites/std/functions/vtexProductListingPage.ts}
+      // and extract to the functions array in the root object.
       for (const [propKey, propValue] of Object.entries(props)) {
         const { __resolveType: resolveType, ...funcProps } = propValue as {
           __resolveType: string;
@@ -271,7 +275,7 @@ export const generateEditorData = async (
       }
 
       const parts = __resolveType.split("/");
-      const [label] = parts[parts.length - 1].split(".");
+      const [label] = parts[parts.length - 1].split("."); // the name of the file
       const mappedSection = {
         key: __resolveType,
         label,
