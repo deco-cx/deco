@@ -1,10 +1,14 @@
+import {
+  brightGreen,
+  brightRed,
+  brightYellow,
+  gray,
+} from "https://deno.land/std@0.170.0/fmt/colors.ts";
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
-import meta from "$live/meta.json" assert { type: "json" };
-import deno from "$live/deno.json" assert { type: "json" };
 import { diffLines } from "https://esm.sh/diff@5.1.0";
-import { brightGreen, brightRed, gray } from "std/fmt/colors.ts";
-import { brightYellow } from "https://deno.land/std@0.177.0/fmt/colors.ts";
-import { namespaceFromImportMap } from "$live/utils/namespace.ts";
+import deno from "../deno.json" assert { type: "json" };
+import meta from "../meta.json" assert { type: "json" };
+import { namespaceFromImportMap } from "../utils/namespace.ts";
 
 const exists = async (dir: string): Promise<boolean> => {
   try {
@@ -167,20 +171,20 @@ const removeRoutesAndFreshGenTs = (): Delete[] => {
 const v1: UpgradeOption = {
   isEligible: async () => !(await exists(join(Deno.cwd(), "live.gen.ts"))),
   apply: async () => {
-    const [importMapPatch, devTsImports] = await Promise.all([
-      updateImportMap(
-        meta.version,
-        "1.0.0-rc.0",
-      ),
-      updateDevTsImports(),
-      addMainTsLiveEntrypoint(),
-      removeRoutesAndFreshGenTs(),
-    ]);
+    const [importMapPatch, devTsImports, mainTsLiveEntrypoint] = await Promise
+      .all([
+        updateImportMap(
+          meta.version,
+          "1.0.0-rc.0",
+        ),
+        updateDevTsImports(),
+        addMainTsLiveEntrypoint(),
+      ]);
     return [
       ...removeRoutesAndFreshGenTs(),
       importMapPatch,
       devTsImports,
-      await addMainTsLiveEntrypoint(),
+      mainTsLiveEntrypoint,
     ];
   },
 };
