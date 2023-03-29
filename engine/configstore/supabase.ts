@@ -133,20 +133,25 @@ export const tryUseProvider = (
     });
   };
 
-  const callIfExists = (method: keyof ConfigStore) => async () => {
+  const callIfExists = async (method: keyof ConfigStore) => {
     if (provider !== null) { // first try without singleflight check faster path check
       return await provider[method]();
     }
-    await setProviderIfExists();
-    if (provider !== null) { // try again to avoid singleflight check.
-      return await (provider as ConfigStore)[method]();
-    }
+    setProviderIfExists();
     return {}; //empty
   };
 
-  setProviderIfExists();
+  let setIfExistsCall = setProviderIfExists();
   return {
-    archived: callIfExists("archived"),
-    state: callIfExists("state"),
+    archived: () =>
+      setIfExistsCall.then(() => callIfExists("archived")).catch((_) => {
+        setIfExistsCall = setProviderIfExists();
+        return {};
+      }),
+    state: () =>
+      setIfExistsCall.then(() => callIfExists("state")).catch((_) => {
+        setIfExistsCall = setProviderIfExists();
+        return {};
+      }),
   };
 };
