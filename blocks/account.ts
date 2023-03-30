@@ -1,5 +1,5 @@
 import { applyConfig } from "$live/blocks/utils.ts";
-import JsonViewer from "$live/blocks/utils.tsx";
+import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 
 // deno-lint-ignore no-empty-interface

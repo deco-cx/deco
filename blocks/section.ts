@@ -1,5 +1,5 @@
 import { newComponentBlock } from "$live/blocks/utils.ts";
-import { StubSection } from "$live/blocks/utils.tsx";
+import StubSection from "$live/components/StubSection.tsx";
 import { InstanceOf } from "$live/engine/block.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;

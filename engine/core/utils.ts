@@ -41,8 +41,10 @@ export const waitKeys = async <T>(p: Promisified<T>): Promise<T> => {
   }, {} as T);
 };
 
-export const notUndefined = <T>(v: T | undefined | Awaited<T>): v is T => {
-  return v !== undefined;
+export const notUndefined = <T>(
+  v: T | undefined | null | Awaited<T>,
+): v is T => {
+  return v !== undefined && v !== null;
 };
 
 export const isPrimitive = <T>(v: T): boolean => {

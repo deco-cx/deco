@@ -3,10 +3,10 @@ import { Audience } from "$live/flags/audience.ts";
 import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
 import { EditorData, PageState } from "$live/types.ts";
+import { defaultHeaders } from "$live/utils/http.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import { join } from "std/path/mod.ts";
-import { defaultHeaders } from "$live/utils/http.ts";
+import { getCurrent } from "$live/engine/schema/reader.ts";
 
 type Props = Record<string, unknown>;
 interface Page {
@@ -200,15 +200,10 @@ const generatePropsForSchema = (
   return cases[schema.type] ?? null;
 };
 
-let schemas: Promise<Schemas> | null = null;
-
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
-  schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
-    JSON.parse,
-  );
-  const schema = await schemas;
+  const schema = await getCurrent();
 
   const allPages = await pages();
   let page: null | Page = null;

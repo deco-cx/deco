@@ -1,6 +1,6 @@
 import { Matcher } from "$live/blocks/matcher.ts";
 import { applyConfig } from "$live/blocks/utils.ts";
-import JsonViewer from "$live/blocks/utils.tsx";
+import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
 
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;

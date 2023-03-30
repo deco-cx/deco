@@ -3,6 +3,7 @@ import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import { context } from "$live/live.ts";
 import { usePageContext } from "$live/routes/[...catchall].tsx";
 import LiveControls from "../components/LiveControls.tsx";
+import { notUndefined } from "$live/engine/core/utils.ts";
 
 export interface Props {
   name: string;
@@ -34,7 +35,7 @@ export default function LivePage({ sections }: Props) {
         }}
       />
       <LiveAnalytics />
-      <>{sections?.map(renderSection)}</>
+      <>{(sections ?? []).filter(notUndefined).map(renderSection)}</>
     </>
   );
 }
