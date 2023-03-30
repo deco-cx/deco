@@ -1,27 +1,4 @@
-function syntaxHighlight(json: string) {
-  json = json.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
-    />/g,
-    "&gt;",
-  );
-  return json.replace(
-    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
-    function (match) {
-      let cls = "number";
-      if (/^"/.test(match)) {
-        if (/:$/.test(match)) {
-          cls = "key";
-        } else {
-          cls = "string";
-        }
-      } else if (/true|false/.test(match)) {
-        cls = "boolean";
-      } else if (/null/.test(match)) {
-        cls = "null";
-      }
-      return '<span class="' + cls + '">' + match + "</span>";
-    },
-  );
-}
+import { Head } from "$fresh/runtime.ts";
 
 export interface Props {
   body: string;
@@ -30,25 +7,30 @@ export interface Props {
 export default function JsonViewer(p: Props) {
   return (
     <>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
-.string { color: green; }
-.number { color: darkorange; }
-.boolean { color: blue; }
-.null { color: magenta; }
-.key { color: red; }
-`,
-        }}
-      >
-      </style>
-      <script
-        dangerouslySetInnerHTML={{
-          __html:
-            `const myfunc = ${syntaxHighlight.toString()}; document.body.appendChild(document.createElement('pre')).innerHTML = myfunc(JSON.stringify(${p.body}, null, 4))`,
-        }}
-      >
-      </script>
+      <Head>
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js">
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.js">
+        </script>
+        <link
+          id="viewer"
+          href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.css"
+          type="text/css"
+          rel="stylesheet"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              `document.querySelector('#viewer').onload = () => {
+                const a = ${p.body};
+                console.log(a);
+                jQuery('#json-renderer').JSONView(a)
+              }`,
+          }}
+        >
+        </script>
+      </Head>
+      <pre id="json-renderer"></pre>
     </>
   );
 }
