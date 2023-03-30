@@ -4,8 +4,9 @@ import { getCurrent } from "$live/engine/schema/reader.ts";
 import { context } from "$live/live.ts";
 import meta from "$live/meta.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
+import { namespaceOf } from "$live/engine/schema/gen.ts";
 
-type BlockMap = Record<string, { $ref: string }>;
+type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
   blocks: Record<string, BlockMap>;
 }
@@ -26,11 +27,15 @@ const toManifestBlocks = (decoManifest: DecoManifest): ManifestBlocks => {
     ...blocks
   } = decoManifest;
   const manBlocks: Record<string, BlockMap> = {};
-  for (const [blkKey, blkValues] of Object.entries(blocks)) {
-    for (const blkValueKey of Object.keys(blkValues)) {
-      manBlocks[blkKey] ??= {};
-      manBlocks[blkKey][blkValueKey] = {
-        $ref: `#/definitions/${btoa(blkValueKey)}`,
+  for (const [blkType, blkValues] of Object.entries(blocks)) {
+    for (const blkKey of Object.keys(blkValues)) {
+      manBlocks[blkType] ??= {};
+      manBlocks[blkType][blkKey] = {
+        $ref: `#/definitions/${btoa(blkKey)}`,
+        namespace: namespaceOf(blkType, blkKey).replace(
+          ".",
+          context.namespace!,
+        ),
       };
     }
   }
