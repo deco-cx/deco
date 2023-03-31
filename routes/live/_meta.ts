@@ -5,6 +5,7 @@ import { context } from "$live/live.ts";
 import meta from "$live/meta.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import { namespaceOf } from "$live/engine/schema/gen.ts";
+import { major } from "std/semver/mod.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -12,6 +13,7 @@ interface ManifestBlocks {
 }
 
 export interface MetaInfo {
+  major: number;
   namespace: string;
   version: string;
   schema: Schemas;
@@ -45,6 +47,7 @@ const toManifestBlocks = (decoManifest: DecoManifest): ManifestBlocks => {
 export const handler = async (req: Request, __: HandlerContext) => {
   const schema = await getCurrent();
   const info: MetaInfo = {
+    major: major(meta.version),
     version: meta.version,
     namespace: context.namespace!,
     site: context.site!,
