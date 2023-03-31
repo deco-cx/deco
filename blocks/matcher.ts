@@ -1,6 +1,4 @@
-import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
-import { context } from "$live/live.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -35,18 +33,6 @@ const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
         return matcherFuncOrValue;
       };
     },
-  defaultPreview: (matcher, { request }) => {
-    const ctx: MatchContext = { request, siteId: context.siteId };
-    return {
-      Component: JsonViewer,
-      props: {
-        body: JSON.stringify({
-          context: ctx,
-          result: matcher(ctx),
-        }),
-      },
-    };
-  },
 };
 
 /**
