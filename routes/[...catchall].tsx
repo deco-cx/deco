@@ -24,9 +24,13 @@ export default function Render({
   params,
   url,
   data: {
-    page: { Component, props, metadata },
+    page,
   },
 }: PageProps<{ page: Page }>) {
+  if (!page) {
+    return null;
+  }
+  const { Component, props, metadata } = page;
   return (
     <ctx.Provider value={{ metadata, params, url }}>
       <Component {...props}></Component>
