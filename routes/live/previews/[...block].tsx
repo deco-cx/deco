@@ -6,7 +6,7 @@ import LiveControls from "$live/components/LiveControls.tsx";
 import { context } from "$live/live.ts";
 import Render from "$live/routes/[...catchall].tsx";
 import { LiveState } from "$live/types.ts";
-import LiveAnalytics from '$live/components/LiveAnalytics.tsx';
+import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 
 export default function Preview(props: PageProps<Page>) {
   const renderProps = {
@@ -95,11 +95,15 @@ export const handler = async (
   const block = ctx.params.block;
 
   ctx.params = paramsFromUrl(url) ?? ctx.params;
+  ctx.state?.t.start("load-data");
+  const page = await resolve({
+    __resolveType: "preview",
+    block,
+    props,
+  });
+  ctx.state?.t.end("load-data");
+
   return await ctx.render(
-    await resolve({
-      __resolveType: "preview",
-      block,
-      props,
-    }),
+    page,
   );
 };
