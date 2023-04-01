@@ -44,6 +44,11 @@ export const handler = async (
     return redirectTo(url);
   }
 
+  if (url.pathname.startsWith("/_live/workbench")) {
+    url.pathname = "/live/workbench";
+    return redirectTo(url);
+  }
+
   if (
     !url.pathname.startsWith("/live/previews") &&
     url.searchParams.has("pageId") &&

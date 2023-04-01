@@ -21,7 +21,7 @@ export interface MetaInfo {
   site: string;
 }
 
-const toManifestBlocks = (decoManifest: DecoManifest): ManifestBlocks => {
+export const toManifestBlocks = (decoManifest: DecoManifest): ManifestBlocks => {
   const {
     baseUrl: _ignoreBaseUrl,
     config: _ignoreConfig,
