@@ -45,6 +45,10 @@ interface Page {
   state: PageState;
   sections: Array<{ __resolveType: string } & Props>;
 }
+
+const withoutNamespace = (key: string) =>
+  key.replace(`${context.namespace}/`, `./`);
+
 export const redirectTo = (url: URL) =>
   Response.json(
     {},
@@ -70,7 +74,7 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
       // TODO: Should we extract defaultProps from the schema here?
 
       return {
-        key: componentKey,
+        key: withoutNamespace(componentKey),
         label,
         props: {},
         schema: input,
@@ -93,7 +97,7 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
       );
 
       return {
-        key,
+        key: withoutNamespace(key),
         label,
         props: generatePropsForSchema(inputSchema),
         schema: inputSchema,
@@ -304,7 +308,7 @@ export const generateEditorData = async (
             }` as string;
             newProps[propKey] = `{${uniqueId}}`;
             newFuncs.push({
-              key: resolveType,
+              key: withoutNamespace(resolveType),
               label: resolveType,
               props: funcProps,
               uniqueId,
@@ -327,7 +331,7 @@ export const generateEditorData = async (
       const parts = __resolveType.split("/");
       const [label] = parts[parts.length - 1].split("."); // the name of the file
       const mappedSection = {
-        key: __resolveType,
+        key: withoutNamespace(__resolveType),
         label,
         uniqueId: `${__resolveType}-${i}`,
         props: newProps,
@@ -347,9 +351,11 @@ export const generateEditorData = async (
         schema,
         functionData.key,
       );
+      const key = withoutNamespace(functionData.key);
 
       return ({
         ...functionData,
+        key,
         uniqueId: functionData.uniqueId!,
         schema: input,
         outputSchema: output,

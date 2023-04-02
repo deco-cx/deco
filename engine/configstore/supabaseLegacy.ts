@@ -315,7 +315,7 @@ export const newSupabaseProviderLegacyDeploy = (
 };
 
 const matchesToMatchMulti = (matches: Flag["data"]["matches"], ns: string) => ({
-  op: "or",
+  op: "and",
   matchers: matches.map((m) => ({
     ...m.props,
     __resolveType: includeNamespace(m.key, ns).replace("functions", "matchers"),
