@@ -42,6 +42,9 @@ export const getComposedConfigStore = (
   siteId: number,
 ): ConfigStore => {
   const configsTable = context.isDeploy ? newSupabaseDeploy : newSupabaseLocal;
+  if (siteId <= 0) { // new sites does not have siteId
+    return configsTable(site);
+  }
   const pagesTable = context.isDeploy
     ? newSupabaseProviderLegacyDeploy
     : newSupabaseProviderLegacyLocal;
