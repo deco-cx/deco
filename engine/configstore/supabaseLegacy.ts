@@ -193,7 +193,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 const sleepBetweenRetriesMS = 100;
-const refetchIntervalMS = 2_000;
+const refetchIntervalMS = 5_000;
 const baseEntrypoint = {
   [globalSections]: {},
   [everyoneAudience]: {
