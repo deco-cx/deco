@@ -60,7 +60,6 @@ export const handler = async (
   const { start, end, printTimings } = createServerTimings();
   ctx.state.t = { start, end };
   const state = ctx.state.$live.state;
-
   ctx.state = {
     ...ctx.state,
     ...(state ?? {}),

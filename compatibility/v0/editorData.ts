@@ -4,11 +4,40 @@ import { getCurrent } from "$live/engine/schema/reader.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
-import { AvailableSection, EditorData, PageState } from "$live/types.ts";
+import {
+  AvailableFunction,
+  AvailableSection,
+  EditorData,
+  PageState,
+} from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
-import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+import {
+  JSONSchema7,
+  JSONSchema7TypeName,
+} from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 
+const mockEffectSelectPage: AvailableFunction = {
+  "key": "$live/functions/EffectSelectPage.ts",
+  "label": "$live/functions/EffectSelectPage.ts",
+  "props": {},
+  "schema": {
+    "title": " Effect Select Page",
+    "type": "object" as JSONSchema7TypeName,
+    "properties": {
+      "pageIds": {
+        "type": "array",
+        "items": {
+          "type": "number",
+        },
+        "title": "Page Ids",
+      },
+    },
+    "required": [
+      "pageIds",
+    ],
+  },
+};
 type Props = Record<string, unknown>;
 interface Page {
   name: string;
@@ -49,16 +78,22 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
     },
   );
 
-  const availableFunctions = Object.keys(context.manifest?.functions || {}).map(
+  const availableFunctions = Object.keys({
+    ...context.manifest?.functions ?? {},
+    ...context.manifest?.matchers ?? {},
+  }).map(
     (functionKey) => {
+      const key = functionKey.replace("matchers", "functions");
       const [inputSchema, outputSchema] = getInputAndOutputFromKey(
         schemas,
         functionKey,
       );
-      const label = filenameFromPath(functionKey);
+      const label = filenameFromPath(
+        key,
+      );
 
       return {
-        key: functionKey,
+        key,
         label,
         props: generatePropsForSchema(inputSchema),
         schema: inputSchema,
@@ -68,7 +103,10 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
     },
   );
 
-  return { availableSections, availableFunctions };
+  return {
+    availableSections,
+    availableFunctions: [mockEffectSelectPage, ...availableFunctions],
+  };
 }
 
 const configTypeFromJSONSchema = (schema: JSONSchema7): string | undefined => {
@@ -222,14 +260,15 @@ export const generateEditorData = async (
   const schema = await getCurrent();
 
   const allPages = await pages();
-  let page: null | Page = null;
+  let page: Pick<Page, "sections" | "state" | "name"> = {
+    sections: [],
+    state: "published",
+    name: "Home",
+  };
 
   const pageId = url.searchParams.get("pageId");
   if (pageId !== null) {
     page = await pageById(pageId);
-  }
-  if (!page) {
-    throw new Error("Could not find page to generate editor data");
   }
 
   const { sections } = page;
@@ -321,7 +360,7 @@ export const generateEditorData = async (
   const { availableFunctions, availableSections } =
     generateAvailableEntitiesFromManifest(schema);
   return {
-    state: page.state,
+    state: page?.state,
     pageName: page.name,
     sections: sectionsWithSchema,
     functions: functionsWithSchema,

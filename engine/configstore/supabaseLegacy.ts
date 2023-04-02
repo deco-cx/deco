@@ -125,13 +125,13 @@ function mapGlobalToAccount(
       [state]: {
         ...middleware[state],
         [name]: wellKnownAccount
-          ? { __resolveType: accountId }
+          ? { __resolveType: name }
           : globalSection.props,
       },
     },
     ...wellKnownAccount
       ? {
-        [accountId]: {
+        [name]: {
           ...globalSection.props,
           __resolveType: wellKnownAccount,
         },

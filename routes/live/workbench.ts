@@ -1,4 +1,3 @@
-import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { toManifestBlocks } from "$live/routes/live/_meta.ts";
 import { Node } from "$live/types.ts";
@@ -22,15 +21,13 @@ const createDataPageFor = (component: string) =>
     },
   }));
 const mapSectionToNode =
-  (configs: Record<string, Resolvable>) => (component: string) => {
+  (stateIndexed: Record<string, string>) => (component: string) => {
     let href: string | undefined = undefined;
-    if (component.includes("global.tsx")) { // global settings
-      const pageFind = Object.entries(configs).find(([_, value]) =>
-        (value as { name: string })?.name === component
-      );
+    if (component.endsWith("global.tsx")) { // global settings
+      const pageKey = stateIndexed[component];
 
-      href = pageFind
-        ? `/admin/${context.siteId}/pages/${pageFind[0]}`
+      href = pageKey
+        ? `/admin/${context.siteId}/pages/${pageKey}`
         : `/api/${context.siteId}/pages/new?redirect=true&data=${
           createDataPageFor(component)
         }`;
@@ -53,7 +50,7 @@ const isTSXFile = (section: string) => section.endsWith(".tsx");
 export const isGlobalSection = (section: string) =>
   section.endsWith(".global.tsx");
 
-export const getWorkbenchTree = (state: Record<string, Resolvable>): Node[] => {
+export const getWorkbenchTree = (state: Record<string, string>): Node[] => {
   const { blocks: { sections: _ignore, ...rest } } = toManifestBlocks(
     context.manifest!,
   );
@@ -94,8 +91,15 @@ export const getWorkbenchTree = (state: Record<string, Resolvable>): Node[] => {
 
 export const handler = async (req: Request) => {
   const state = await context.configStore!.state();
+  const stateIndexed: Record<string, string> = {};
 
-  return new Response(JSON.stringify(getWorkbenchTree(state)), {
+  for (const [key, value] of Object.entries(state)) {
+    if ((value as { name: string })?.name?.endsWith("global.tsx")) {
+      stateIndexed[value.name] = key;
+    }
+  }
+
+  return new Response(JSON.stringify(getWorkbenchTree(stateIndexed)), {
     status: 200,
     headers: {
       "content-type": "application/json",
