@@ -22,9 +22,7 @@ export default function JsonViewer(p: Props) {
           dangerouslySetInnerHTML={{
             __html:
               `document.querySelector('#viewer').onload = () => {
-                const a = ${p.body};
-                console.log(a);
-                jQuery('#json-renderer').JSONView(a)
+                jQuery('#json-renderer').JSONView(${p.body})
               }`,
           }}
         >
