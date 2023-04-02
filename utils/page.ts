@@ -8,7 +8,7 @@
 // ./islands/Foo.tsx
 // ./components/deep/Test.tsx
 export const PAGE_ENTITY_NAME_REGEX =
-  /^(\.?\/islands|\.?\/sections|\.?\/functions)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
+  /^(\.?\/islands|\.?\/sections|\.?\/matchers|\.?\/functions)?\/([\w\/]*)\.(tsx|jsx|js|ts)/;
 
 export const BLOCKED_ISLANDS_SCHEMAS = new Set([
   "/Editor.tsx",

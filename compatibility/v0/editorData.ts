@@ -258,6 +258,11 @@ const globalSections = async (): Promise<AvailableSection[]> => {
 
   return availableSections;
 };
+const labelOf = (resolveType: string): string => {
+  const parts = resolveType.split("/");
+  const [label] = parts[parts.length - 1].split("."); // the name of the file
+  return label;
+};
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
@@ -309,7 +314,7 @@ export const generateEditorData = async (
             newProps[propKey] = `{${uniqueId}}`;
             newFuncs.push({
               key: withoutNamespace(resolveType),
-              label: resolveType,
+              label: labelOf(resolveType),
               props: funcProps,
               uniqueId,
             });
@@ -328,11 +333,9 @@ export const generateEditorData = async (
         }
       }
 
-      const parts = __resolveType.split("/");
-      const [label] = parts[parts.length - 1].split("."); // the name of the file
       const mappedSection = {
         key: withoutNamespace(__resolveType),
-        label,
+        label: labelOf(__resolveType),
         uniqueId: `${__resolveType}-${i}`,
         props: newProps,
         schema: input,
