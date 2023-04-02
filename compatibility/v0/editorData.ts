@@ -1,12 +1,13 @@
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
+import { getCurrent } from "$live/engine/schema/reader.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
-import { EditorData, PageState } from "$live/types.ts";
+import { AvailableSection, EditorData, PageState } from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import { getCurrent } from "$live/engine/schema/reader.ts";
 
 type Props = Record<string, unknown>;
 interface Page {
@@ -200,6 +201,21 @@ const generatePropsForSchema = (
   return cases[schema.type] ?? null;
 };
 
+const globalSections = async (): Promise<AvailableSection[]> => {
+  const blocks = await context.configStore!.state();
+  const availableSections: AvailableSection[] = [];
+
+  for (const [blockId, block] of Object.entries(blocks)) {
+    if (block?.__resolveType?.includes("/sections/")) { //FIXME(mcandeia) should test against #/root/sections is Section
+      availableSections.push({
+        label: `${blockId}`,
+        key: blockId,
+      });
+    }
+  }
+
+  return availableSections;
+};
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
@@ -309,7 +325,7 @@ export const generateEditorData = async (
     pageName: page.name,
     sections: sectionsWithSchema,
     functions: functionsWithSchema,
-    availableSections,
+    availableSections: [...availableSections, ...await globalSections()],
     availableFunctions: [...availableFunctions, ...functionsWithSchema],
   };
 };
@@ -333,15 +349,18 @@ const livePage = "$live/pages/LivePage.tsx";
 
 async function pages() {
   const archivedPromise = context.configStore!.archived().then(
-    (allPagesArchived) => {
-      for (const page of Object.values(allPagesArchived)) {
-        page.state = "archived";
+    (allArchivedBlocks) => {
+      const archivedPages: Record<string, Resolvable> = {};
+      for (const [blockId, block] of Object.entries(allArchivedBlocks)) {
+        if ((block as { __resolveType: string })?.__resolveType === livePage) {
+          archivedPages[blockId] = { ...block, state: "archived" };
+        }
       }
-      return allPagesArchived;
+      return archivedPages;
     },
   );
-  const pages = await context.configStore!.state();
-  const flags: (Audience | EveryoneConfig)[] = Object.values(pages).filter((
+  const blocks = await context.configStore!.state();
+  const flags: (Audience | EveryoneConfig)[] = Object.values(blocks).filter((
     { __resolveType },
   ) => flagsThatContainsRoutes.includes(__resolveType));
   // pages that are assigned to at least one route are considered published
@@ -361,7 +380,7 @@ async function pages() {
   );
 
   const newPages: Record<string, Page> = {};
-  for (const [pageId, page] of Object.entries(pages)) {
+  for (const [pageId, page] of Object.entries(blocks)) {
     if (page?.__resolveType === livePage) {
       newPages[pageId] = {
         ...page,

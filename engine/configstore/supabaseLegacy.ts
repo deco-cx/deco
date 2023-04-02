@@ -40,7 +40,7 @@ const sectionToPageSection = (
       newProps[key] = value;
     }
   }
-  if (key.includes("Global")) {
+  if (key.endsWith("Global")) {
     return {
       page: {
         __resolveType: globalSections[key],

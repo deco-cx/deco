@@ -126,7 +126,7 @@ export const tryUseProvider = (
           count: "exact",
           head: true,
         }).eq("site", site);
-        if (error !== null && count === 1) {
+        if (error === null && count === 1) {
           provider = providerFunc(site);
         }
       }
