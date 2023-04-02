@@ -1,11 +1,26 @@
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { toManifestBlocks } from "$live/routes/live/_meta.ts";
 import { Node } from "$live/types.ts";
 import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { basename } from "std/path/mod.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
 
 const capitalize = (str: string) => str[0].toUpperCase() + str.substring(1);
+const createDataPageFor = (component: string) =>
+  btoa(JSON.stringify({
+    "name": component,
+    "state": "global",
+    "path": `/_live/workbench/sections/${component}`,
+    "data": {
+      "sections": [{
+        "key": component,
+        "label": component,
+        "uniqueId": component,
+        "props": {},
+      }],
+      "functions": [],
+    },
+  }));
 const mapSectionToNode =
   (configs: Record<string, Resolvable>) => (component: string) => {
     let href: string | undefined = undefined;
@@ -16,7 +31,9 @@ const mapSectionToNode =
 
       href = pageFind
         ? `/admin/${context.siteId}/pages/${pageFind[0]}`
-        : undefined;
+        : `/api/${context.siteId}/pages/new?redirect=true&data=${
+          createDataPageFor(component)
+        }`;
     } else {
       href = `/admin/sites/${context.siteId}/blocks/previews?ref=${
         encodeURIComponent("#/definitions/" + btoa(component))
