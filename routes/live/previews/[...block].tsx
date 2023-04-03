@@ -2,11 +2,11 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
+import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
 import { context } from "$live/live.ts";
 import Render from "$live/routes/[...catchall].tsx";
 import { LiveState } from "$live/types.ts";
-import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 
 export default function Preview(props: PageProps<Page>) {
   const renderProps = {
@@ -79,7 +79,6 @@ const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
   return params;
 };
 
-const FORCE_FRESH_DATA_ON_PREVIEWS = true;
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
@@ -101,7 +100,7 @@ export const handler = async (
     __resolveType: "preview",
     block,
     props,
-  }, FORCE_FRESH_DATA_ON_PREVIEWS);
+  });
   ctx.state?.t.end("load-data");
 
   return await ctx.render(
