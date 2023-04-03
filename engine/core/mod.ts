@@ -70,7 +70,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   ): Promise<T> => {
     return this.resolve(typeOrResolvable, context, {
       ...options ?? {},
-      forceFresh,
+      forceFresh: forceFresh ?? options?.forceFresh,
     });
   };
 

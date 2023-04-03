@@ -65,12 +65,13 @@ const mapHandlers = (
         request: Request,
         context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
+        const url = new URL(request.url);
         const resolver = liveContext.configResolver!;
-
         const ctxResolver = resolver
           .resolverFor(
             { context, request },
             {
+              forceFresh: url.searchParams.has("forceFresh"),
               monitoring: context?.state?.t
                 ? {
                   t: context.state.t!,
@@ -80,7 +81,9 @@ const mapHandlers = (
           )
           .bind(resolver);
 
-        const $live = await ctxResolver(key);
+        const $live = await ctxResolver(
+          key,
+        );
         context.state = { ...context.state, $live, resolve: ctxResolver };
 
         return val!(request, context);
@@ -91,11 +94,13 @@ const mapHandlers = (
     request: Request,
     context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
+    const url = new URL(request.url);
     const resolver = liveContext.configResolver!;
     const ctxResolver = resolver
       .resolverFor(
         { context, request },
         {
+          forceFresh: url.searchParams.has("forceFresh"),
           monitoring: context?.state?.t
             ? {
               t: context.state.t!,

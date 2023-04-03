@@ -58,8 +58,8 @@ export const newSupabaseDeploy = (site: string): ConfigStore => {
 
   let singleFlight = false;
 
-  const updateInternalState = async () => {
-    if (singleFlight) {
+  const updateInternalState = async (force?: boolean) => {
+    if (singleFlight && !force) {
       return;
     }
     try {
@@ -84,7 +84,7 @@ export const newSupabaseDeploy = (site: string): ConfigStore => {
     archived: localSupabase.archived.bind(localSupabase), // archived does not need to be fetched in background
     state: async (opts?: ReadOptions) => {
       if (opts?.forceFresh) {
-        await updateInternalState();
+        await updateInternalState(true);
       }
       return await currResolvables;
     },

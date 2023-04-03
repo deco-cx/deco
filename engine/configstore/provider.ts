@@ -21,17 +21,17 @@ export interface ConfigStore {
 export const compose = (...providers: ConfigStore[]): ConfigStore => {
   return providers.reduce((providers, current) => {
     return {
-      archived: async () => {
+      archived: async (options) => {
         const [providersResolvables, currentResolvables] = await Promise.all([
-          providers.archived(),
-          current.archived(),
+          providers.archived(options),
+          current.archived(options),
         ]);
         return { ...providersResolvables, ...currentResolvables };
       },
-      state: async () => {
+      state: async (options) => {
         const [providersResolvables, currentResolvables] = await Promise.all([
-          providers.state(),
-          current.state(),
+          providers.state(options),
+          current.state(options),
         ]);
         return { ...providersResolvables, ...currentResolvables };
       },

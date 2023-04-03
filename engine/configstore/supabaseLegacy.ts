@@ -285,8 +285,8 @@ export const newSupabaseProviderLegacyDeploy = (
   >(tryResolveFirstLoad);
   let singleFlight = false;
 
-  const updateInternalState = async () => {
-    if (singleFlight) {
+  const updateInternalState = async (force?: boolean) => {
+    if (singleFlight && !force) {
       return;
     }
     try {
@@ -316,7 +316,7 @@ export const newSupabaseProviderLegacyDeploy = (
     archived: local.archived.bind(local),
     state: async (opts?: ReadOptions) => {
       if (opts?.forceFresh) {
-        await updateInternalState();
+        await updateInternalState(true);
       }
       return await currResolvables;
     },
