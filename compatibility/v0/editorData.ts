@@ -152,10 +152,14 @@ const flat = (
       (def.anyOf[0] as JSONSchema7)?.$id === "Resolvable";
     if (isFunctionReturn) {
       return {
-        "$id": ref ? btoa(ref) : "__MISSING__",
-        "format": "live-function",
-        "type": "string",
-        "title": def.title,
+        properties: {
+          returnType: {
+            const: ref ? btoa(ref) : "__MISSING__",
+          },
+        },
+        format: "live-function",
+        type: "string",
+        title: def.title,
       };
     }
     return {
