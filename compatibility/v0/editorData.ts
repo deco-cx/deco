@@ -1,3 +1,8 @@
+/**
+ * TODO (mcandeia)
+ * This file should be deleted as soon as we have all stores migrated to live major v1 and we have dropped the admin support for the v0 major.
+ */
+
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { getCurrent } from "$live/engine/schema/reader.ts";
