@@ -97,7 +97,7 @@ const schemaForTSBuiltinType = async (node: TypeRef, root: ASTNode[]) => {
       const transformed = await tsTypeToSchema(param, root);
 
       return {
-        "$id": await getSchemaId(transformed),
+        "properties": {"returnType": {"const": await getSchemaId(transformed)}},
         format: "live-function",
         type: "string" as const,
       };
