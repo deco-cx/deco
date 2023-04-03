@@ -97,7 +97,7 @@ const mapHandlers = (
     const $live = (await ctxResolver(
       key,
       middlewareKey === key && // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
-        url.searchParams.has("forceFresh"),
+        (url.searchParams.has("forceFresh") || url.searchParams.has("pageId")),
     )) ?? {};
 
     if (typeof handlers === "function") {
