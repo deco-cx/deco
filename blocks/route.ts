@@ -55,6 +55,7 @@ const isConfigurableRoute = (
     !Array.isArray((v as MiddlewareRoute).handler)
   );
 };
+const middlewareKey = "./routes/_middleware.ts";
 const mapHandlers = (
   key: string,
   handlers: Handler<any, any> | Handlers<any, any> | undefined,
@@ -65,13 +66,11 @@ const mapHandlers = (
         request: Request,
         context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
-        const url = new URL(request.url);
         const resolver = liveContext.configResolver!;
         const ctxResolver = resolver
           .resolverFor(
             { context, request },
             {
-              forceFresh: url.searchParams.has("forceFresh"),
               monitoring: context?.state?.t
                 ? {
                   t: context.state.t!,
@@ -100,7 +99,8 @@ const mapHandlers = (
       .resolverFor(
         { context, request },
         {
-          forceFresh: url.searchParams.has("forceFresh"),
+          forceFresh: middlewareKey === key && // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+            url.searchParams.has("forceFresh"),
           monitoring: context?.state?.t
             ? {
               t: context.state.t!,
