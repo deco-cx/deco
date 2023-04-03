@@ -13,6 +13,7 @@ import { createServerTimings } from "$live/utils/timings.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
+  url.searchParams.set("forceFresh", "");
   if (!url.searchParams.has("pathTemplate")) { // FIXM(mcandeia) compatibility mode only, once migrated pathTemplate is required because there are pages unpublished
     url.searchParams.append("pathTemplate", await getPagePathTemplate(pageId));
   }
@@ -41,6 +42,12 @@ export const handler = async (
     !url.pathname.startsWith("/live/editorData")
   ) {
     url.pathname = "/live/editorData";
+    url.searchParams.set("forceFresh", "");
+    return redirectTo(url);
+  }
+
+  if (url.pathname.startsWith("/_live/workbench")) {
+    url.pathname = "/live/workbench";
     return redirectTo(url);
   }
 
@@ -55,7 +62,6 @@ export const handler = async (
   const { start, end, printTimings } = createServerTimings();
   ctx.state.t = { start, end };
   const state = ctx.state.$live.state;
-
   ctx.state = {
     ...ctx.state,
     ...(state ?? {}),

@@ -11,13 +11,16 @@ import { PromiseOrValue } from "$live/engine/core/utils.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
-  getResolvables: () => PromiseOrValue<Record<string, Resolvable<any>>>;
+  getResolvables: (
+    fresh?: boolean,
+  ) => PromiseOrValue<Record<string, Resolvable<any>>>;
   danglingRecover?: Resolver;
 }
 
 export interface ResolveOptions {
   overrides?: Record<string, string>;
   monitoring?: Monitoring;
+  forceFresh?: boolean;
 }
 
 const withOverrides = (
@@ -30,7 +33,7 @@ const withOverrides = (
 };
 
 export class ConfigResolver<TContext extends BaseContext = BaseContext> {
-  public getResolvables: () => PromiseOrValue<
+  public getResolvables: (forceFresh?: boolean) => PromiseOrValue<
     Record<string, Resolvable<any>>
   >;
   protected resolvers: ResolverMap<TContext>;
@@ -61,8 +64,14 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ) =>
-  <T = any>(typeOrResolvable: string | Resolvable<T>): Promise<T> => {
-    return this.resolve(typeOrResolvable, context, options);
+  <T = any>(
+    typeOrResolvable: string | Resolvable<T>,
+    forceFresh?: boolean,
+  ): Promise<T> => {
+    return this.resolve(typeOrResolvable, context, {
+      ...options ?? {},
+      forceFresh: forceFresh ?? options?.forceFresh,
+    });
   };
 
   public resolve = async <T = any>(
@@ -70,7 +79,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const resolvables = await this.getResolvables();
+    const resolvables = await this.getResolvables(options?.forceFresh);
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();
     const baseCtx: BaseContext = {

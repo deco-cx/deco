@@ -10,25 +10,28 @@ import {
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 
+export interface ReadOptions {
+  forceFresh?: boolean;
+}
 export interface ConfigStore {
-  state(): Promise<Record<string, Resolvable>>;
-  archived(): Promise<Record<string, Resolvable>>;
+  state(options?: ReadOptions): Promise<Record<string, Resolvable>>;
+  archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
 }
 
 export const compose = (...providers: ConfigStore[]): ConfigStore => {
   return providers.reduce((providers, current) => {
     return {
-      archived: async () => {
+      archived: async (options) => {
         const [providersResolvables, currentResolvables] = await Promise.all([
-          providers.archived(),
-          current.archived(),
+          providers.archived(options),
+          current.archived(options),
         ]);
         return { ...providersResolvables, ...currentResolvables };
       },
-      state: async () => {
+      state: async (options) => {
         const [providersResolvables, currentResolvables] = await Promise.all([
-          providers.state(),
-          current.state(),
+          providers.state(options),
+          current.state(options),
         ]);
         return { ...providersResolvables, ...currentResolvables };
       },
@@ -42,6 +45,9 @@ export const getComposedConfigStore = (
   siteId: number,
 ): ConfigStore => {
   const configsTable = context.isDeploy ? newSupabaseDeploy : newSupabaseLocal;
+  if (siteId <= 0) { // new sites does not have siteId
+    return configsTable(site);
+  }
   const pagesTable = context.isDeploy
     ? newSupabaseProviderLegacyDeploy
     : newSupabaseProviderLegacyLocal;

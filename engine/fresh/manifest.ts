@@ -20,6 +20,7 @@ import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 
 import { parse } from "https://deno.land/std@0.181.0/flags/mod.ts";
+import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
@@ -85,7 +86,7 @@ const preview: Resolver<PreactComponent> = async (
   if (!previewResolver) {
     const resolvable = resolvables[block];
     if (!resolvable) {
-      throw new Error(`${block} preview not available`);
+      return { Component: PreviewNotAvailable, props: { block } };
     }
     const { __resolveType, ...resolvableProps } = resolvable;
     // recursive call
@@ -191,7 +192,9 @@ export const $live = <T extends DecoManifest>(m: T): T => {
   context.configStore = provider;
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },
-    getResolvables: provider.state.bind(provider),
+    getResolvables: (forceFresh?: boolean) => {
+      return provider.state({ forceFresh });
+    },
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,

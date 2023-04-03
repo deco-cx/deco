@@ -1,4 +1,5 @@
 import { Page } from "$live/blocks/page.ts";
+import { notUndefined } from "$live/engine/core/utils.ts";
 
 import {
   Props as LivePageProps,
@@ -19,5 +20,7 @@ export default function PageInclude({ page }: Props) {
   if (!isLivePageProps(page?.props)) {
     return null;
   }
-  return <>{page.props.sections.map(renderSection)}</>;
+  return (
+    <>{(page?.props?.sections ?? []).filter(notUndefined).map(renderSection)}</>
+  );
 }

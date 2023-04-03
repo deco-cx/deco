@@ -9,7 +9,7 @@ import {
   SingleFlightKeyFunc,
   StatefulHandler,
 } from "$live/blocks/utils.ts";
-import JsonViewer from "$live/blocks/utils.tsx";
+import JsonViewer from "$live/components/JsonViewer.tsx";
 import { BlockForModule, BlockModule } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 

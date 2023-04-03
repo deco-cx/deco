@@ -7,8 +7,6 @@ import { LiveState } from "$live/types.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import { setCSPHeaders } from "$live/utils/http.ts";
-import { $live } from "../engine/fresh/manifest.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
@@ -26,9 +24,13 @@ export default function Render({
   params,
   url,
   data: {
-    page: { Component, props, metadata },
+    page,
   },
 }: PageProps<{ page: Page }>) {
+  if (!page) {
+    return null;
+  }
+  const { Component, props, metadata } = page;
   return (
     <ctx.Provider value={{ metadata, params, url }}>
       <Component {...props}></Component>

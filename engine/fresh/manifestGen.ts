@@ -49,6 +49,12 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
+    from: "$live/routes/live/workbench.ts",
+    key: "./routes/live/workbench.ts",
+    ref: "$live_workbench",
+  },
+  {
+    block: "routes",
     from: "$live/routes/live/editorData.ts",
     key: "./routes/live/editorData.ts",
     ref: "$live_editorData",
@@ -61,9 +67,9 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
-    from: "$live/routes/live/schema.ts",
-    key: "./routes/live/schema.ts",
-    ref: "$live_schema",
+    from: "$live/routes/live/_meta.ts",
+    key: "./routes/live/_meta.ts",
+    ref: "$live_meta",
   },
   {
     block: "routes",

@@ -1,13 +1,48 @@
+/**
+ * TODO (mcandeia)
+ * This file should be deleted as soon as we have all stores migrated to live major v1 and we have dropped the admin support for the v0 major.
+ */
+
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
+import { getCurrent } from "$live/engine/schema/reader.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
-import { EditorData, PageState } from "$live/types.ts";
-import { filenameFromPath } from "$live/utils/page.ts";
-import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import { join } from "std/path/mod.ts";
+import {
+  AvailableFunction,
+  AvailableSection,
+  EditorData,
+  PageState,
+} from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
+import { filenameFromPath } from "$live/utils/page.ts";
+import {
+  JSONSchema7,
+  JSONSchema7TypeName,
+} from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 
+const mockEffectSelectPage: AvailableFunction = {
+  "key": "$live/functions/EffectSelectPage.ts",
+  "label": "$live/functions/EffectSelectPage.ts",
+  "props": {},
+  "schema": {
+    "title": " Effect Select Page",
+    "type": "object" as JSONSchema7TypeName,
+    "properties": {
+      "pageIds": {
+        "type": "array",
+        "items": {
+          "type": "number",
+        },
+        "title": "Page Ids",
+      },
+    },
+    "required": [
+      "pageIds",
+    ],
+  },
+};
 type Props = Record<string, unknown>;
 interface Page {
   name: string;
@@ -15,6 +50,10 @@ interface Page {
   state: PageState;
   sections: Array<{ __resolveType: string } & Props>;
 }
+
+const withoutNamespace = (key: string) =>
+  key.replace(`${context.namespace}/`, `./`);
+
 export const redirectTo = (url: URL) =>
   Response.json(
     {},
@@ -40,7 +79,7 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
       // TODO: Should we extract defaultProps from the schema here?
 
       return {
-        key: componentKey,
+        key: withoutNamespace(componentKey),
         label,
         props: {},
         schema: input,
@@ -48,16 +87,22 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
     },
   );
 
-  const availableFunctions = Object.keys(context.manifest?.functions || {}).map(
+  const availableFunctions = Object.keys({
+    ...context.manifest?.functions ?? {},
+    ...context.manifest?.matchers ?? {},
+  }).map(
     (functionKey) => {
+      const key = functionKey.replace("matchers", "functions");
       const [inputSchema, outputSchema] = getInputAndOutputFromKey(
         schemas,
         functionKey,
       );
-      const label = filenameFromPath(functionKey);
+      const label = filenameFromPath(
+        key,
+      );
 
       return {
-        key: functionKey,
+        key: withoutNamespace(key),
         label,
         props: generatePropsForSchema(inputSchema),
         schema: inputSchema,
@@ -67,7 +112,10 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
     },
   );
 
-  return { availableSections, availableFunctions };
+  return {
+    availableSections,
+    availableFunctions: [mockEffectSelectPage, ...availableFunctions],
+  };
 }
 
 const configTypeFromJSONSchema = (schema: JSONSchema7): string | undefined => {
@@ -104,10 +152,14 @@ const flat = (
       (def.anyOf[0] as JSONSchema7)?.$id === "Resolvable";
     if (isFunctionReturn) {
       return {
-        "$id": ref ? btoa(ref) : "__MISSING__",
-        "format": "live-function",
-        "type": "string",
-        "title": def.title,
+        properties: {
+          returnType: {
+            const: ref ? btoa(ref) : "__MISSING__",
+          },
+        },
+        format: "live-function",
+        type: "string",
+        title: def.title,
       };
     }
     return {
@@ -200,25 +252,41 @@ const generatePropsForSchema = (
   return cases[schema.type] ?? null;
 };
 
-let schemas: Promise<Schemas> | null = null;
+const globalSections = async (): Promise<AvailableSection[]> => {
+  const blocks = await context.configStore!.state();
+  const availableSections: AvailableSection[] = [];
 
+  for (const [blockId, block] of Object.entries(blocks)) {
+    if (block?.__resolveType?.includes("/sections/")) { //FIXME(mcandeia) should test against #/root/sections is Section
+      availableSections.push({
+        label: `${blockId}`,
+        key: blockId,
+      });
+    }
+  }
+
+  return availableSections;
+};
+const labelOf = (resolveType: string): string => {
+  const parts = resolveType.split("/");
+  const [label] = parts[parts.length - 1].split("."); // the name of the file
+  return label;
+};
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
-  schemas ??= Deno.readTextFile(join(Deno.cwd(), "schemas.gen.json")).then(
-    JSON.parse,
-  );
-  const schema = await schemas;
+  const schema = await getCurrent();
 
   const allPages = await pages();
-  let page: null | Page = null;
+  let page: Pick<Page, "sections" | "state" | "name"> = {
+    sections: [],
+    state: "published",
+    name: "Home",
+  };
 
   const pageId = url.searchParams.get("pageId");
   if (pageId !== null) {
     page = await pageById(pageId);
-  }
-  if (!page) {
-    throw new Error("Could not find page to generate editor data");
   }
 
   const { sections } = page;
@@ -254,8 +322,8 @@ export const generateEditorData = async (
             }` as string;
             newProps[propKey] = `{${uniqueId}}`;
             newFuncs.push({
-              key: resolveType,
-              label: resolveType,
+              key: withoutNamespace(resolveType),
+              label: labelOf(resolveType),
               props: funcProps,
               uniqueId,
             });
@@ -274,11 +342,9 @@ export const generateEditorData = async (
         }
       }
 
-      const parts = __resolveType.split("/");
-      const [label] = parts[parts.length - 1].split("."); // the name of the file
       const mappedSection = {
-        key: __resolveType,
-        label,
+        key: withoutNamespace(__resolveType),
+        label: labelOf(__resolveType),
         uniqueId: `${__resolveType}-${i}`,
         props: newProps,
         schema: input,
@@ -297,9 +363,11 @@ export const generateEditorData = async (
         schema,
         functionData.key,
       );
+      const key = withoutNamespace(functionData.key);
 
       return ({
         ...functionData,
+        key,
         uniqueId: functionData.uniqueId!,
         schema: input,
         outputSchema: output,
@@ -310,11 +378,11 @@ export const generateEditorData = async (
   const { availableFunctions, availableSections } =
     generateAvailableEntitiesFromManifest(schema);
   return {
-    state: page.state,
+    state: page?.state,
     pageName: page.name,
     sections: sectionsWithSchema,
     functions: functionsWithSchema,
-    availableSections,
+    availableSections: [...availableSections, ...await globalSections()],
     availableFunctions: [...availableFunctions, ...functionsWithSchema],
   };
 };
@@ -337,16 +405,22 @@ const flagsThatContainsRoutes = [
 const livePage = "$live/pages/LivePage.tsx";
 
 async function pages() {
-  const archivedPromise = context.configStore!.archived().then(
-    (allPagesArchived) => {
-      for (const page of Object.values(allPagesArchived)) {
-        page.state = "archived";
-      }
-      return allPagesArchived;
-    },
-  );
-  const pages = await context.configStore!.state();
-  const flags: (Audience | EveryoneConfig)[] = Object.values(pages).filter((
+  const archivedPromise = context.configStore!.archived()
+    .then(
+      (allArchivedBlocks) => {
+        const archivedPages: Record<string, Resolvable> = {};
+        for (const [blockId, block] of Object.entries(allArchivedBlocks)) {
+          if (
+            (block as { __resolveType: string })?.__resolveType === livePage
+          ) {
+            archivedPages[blockId] = { ...block, state: "archived" };
+          }
+        }
+        return archivedPages;
+      },
+    );
+  const blocks = await context.configStore!.state();
+  const flags: (Audience | EveryoneConfig)[] = Object.values(blocks).filter((
     { __resolveType },
   ) => flagsThatContainsRoutes.includes(__resolveType));
   // pages that are assigned to at least one route are considered published
@@ -366,7 +440,7 @@ async function pages() {
   );
 
   const newPages: Record<string, Page> = {};
-  for (const [pageId, page] of Object.entries(pages)) {
+  for (const [pageId, page] of Object.entries(blocks)) {
     if (page?.__resolveType === livePage) {
       newPages[pageId] = {
         ...page,

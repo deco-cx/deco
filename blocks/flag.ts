@@ -1,7 +1,8 @@
 import { Matcher } from "$live/blocks/matcher.ts";
 import { applyConfig } from "$live/blocks/utils.ts";
-import JsonViewer from "$live/blocks/utils.tsx";
+import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, InstanceOf } from "$live/engine/block.ts";
+import { context } from "$live/live.ts";
 
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
@@ -23,9 +24,9 @@ const flagBlock: Block<FlagFunc> = {
     default: "0",
   },
   adapt: applyConfig,
-  defaultPreview: async (flag, { request }) => {
-    const matchCtx = await request.json();
-    const resp = flag.matcher(matchCtx) ? flag.true : flag.false;
+  defaultPreview: (flag, { request }) => {
+    const ctx = { request, siteId: context.siteId };
+    const resp = flag.matcher(ctx) ? flag.true : flag.false;
     return { Component: JsonViewer, props: { body: JSON.stringify(resp) } };
   },
 };

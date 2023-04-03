@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
-import { ConfigStore } from "$live/engine/configstore/provider.ts";
+import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
@@ -40,7 +40,7 @@ const sectionToPageSection = (
       newProps[key] = value;
     }
   }
-  if (key.includes("Global")) {
+  if (key.endsWith("Global")) {
     return {
       page: {
         __resolveType: globalSections[key],
@@ -125,13 +125,13 @@ function mapGlobalToAccount(
       [state]: {
         ...middleware[state],
         [name]: wellKnownAccount
-          ? { __resolveType: accountId }
+          ? { __resolveType: name }
           : globalSection.props,
       },
     },
     ...wellKnownAccount
       ? {
-        [accountId]: {
+        [name]: {
           ...globalSection.props,
           __resolveType: wellKnownAccount,
         },
@@ -193,7 +193,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 const sleepBetweenRetriesMS = 100;
-const refetchIntervalMS = 2_000;
+const refetchIntervalMS = 5_000;
 const baseEntrypoint = {
   [globalSections]: {},
   [everyoneAudience]: {
@@ -283,13 +283,13 @@ export const newSupabaseProviderLegacyDeploy = (
   let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
     Record<string, Resolvable<any>>
   >(tryResolveFirstLoad);
+  let singleFlight = false;
 
-  currResolvables.then(() => {
-    let singleFlight = false;
-    setInterval(async () => {
-      if (singleFlight) {
-        return;
-      }
+  const updateInternalState = async (force?: boolean) => {
+    if (singleFlight && !force) {
+      return;
+    }
+    try {
       singleFlight = true;
       const [{ data, error }, { data: dataFlags, error: errorFlags }] =
         await fetchSiteData(siteId);
@@ -297,25 +297,34 @@ export const newSupabaseProviderLegacyDeploy = (
         data === null || error !== null || dataFlags === null ||
         errorFlags !== null
       ) {
-        singleFlight = false;
         return;
       }
       currResolvables = Promise.resolve(
         pagesToConfig(data, dataFlags, namespace),
       );
+    } finally {
       singleFlight = false;
-    }, refetchIntervalMS);
+    }
+  };
+
+  currResolvables.then(() => {
+    setInterval(updateInternalState, refetchIntervalMS);
   });
 
   const local = newSupabaseProviderLegacyLocal(siteId, namespace);
   return {
     archived: local.archived.bind(local),
-    state: () => currResolvables,
+    state: async (opts?: ReadOptions) => {
+      if (opts?.forceFresh) {
+        await updateInternalState(true);
+      }
+      return await currResolvables;
+    },
   };
 };
 
 const matchesToMatchMulti = (matches: Flag["data"]["matches"], ns: string) => ({
-  op: "or",
+  op: "and",
   matchers: matches.map((m) => ({
     ...m.props,
     __resolveType: includeNamespace(m.key, ns).replace("functions", "matchers"),

@@ -55,6 +55,7 @@ const isConfigurableRoute = (
     !Array.isArray((v as MiddlewareRoute).handler)
   );
 };
+const middlewareKey = "./routes/_middleware.ts";
 const mapHandlers = (
   key: string,
   handlers: Handler<any, any> | Handlers<any, any> | undefined,
@@ -65,23 +66,10 @@ const mapHandlers = (
         request: Request,
         context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
-        const resolver = liveContext.configResolver!;
-
-        const ctxResolver = resolver
-          .resolverFor(
-            { context, request },
-            {
-              monitoring: context?.state?.t
-                ? {
-                  t: context.state.t!,
-                }
-                : undefined,
-            },
-          )
-          .bind(resolver);
-
-        const $live = await ctxResolver(key);
-        context.state = { ...context.state, $live, resolve: ctxResolver };
+        const $live = await context.state.resolve(
+          key,
+        ); // middleware should be executed first.
+        context.state = { ...context.state, $live };
 
         return val!(request, context);
       };
@@ -91,6 +79,7 @@ const mapHandlers = (
     request: Request,
     context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
+    const url = new URL(request.url);
     const resolver = liveContext.configResolver!;
     const ctxResolver = resolver
       .resolverFor(
@@ -105,7 +94,11 @@ const mapHandlers = (
       )
       .bind(resolver);
 
-    const $live = (await ctxResolver(key)) ?? {};
+    const $live = (await ctxResolver(
+      key,
+      middlewareKey === key && // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+        url.searchParams.has("forceFresh"),
+    )) ?? {};
 
     if (typeof handlers === "function") {
       context.state = { ...context.state, $live, resolve: ctxResolver };

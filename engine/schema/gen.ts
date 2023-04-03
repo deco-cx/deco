@@ -13,7 +13,7 @@ import { denoDoc } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 
-const namespaceOf = (blkType: string, blkKey: string): string => {
+export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
 };
 

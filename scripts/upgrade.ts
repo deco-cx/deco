@@ -175,7 +175,7 @@ const v1: UpgradeOption = {
       .all([
         updateImportMap(
           meta.version,
-          "1.0.0-rc.0",
+          "1.0.0-rc.5",
         ),
         updateDevTsImports(),
         addMainTsLiveEntrypoint(),

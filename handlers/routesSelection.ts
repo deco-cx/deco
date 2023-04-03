@@ -60,11 +60,11 @@ const router = (
           configs,
         );
 
-        configs.monitoring?.t.start("resolve");
+        configs.monitoring?.t.start("load-data");
         const hand = isAwaitable(resolvedOrPromise)
           ? await resolvedOrPromise
           : resolvedOrPromise;
-        configs.monitoring?.t.end("resolve");
+        configs.monitoring?.t.end("load-data");
 
         return await hand(
           req,
