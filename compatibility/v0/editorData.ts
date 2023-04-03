@@ -253,7 +253,7 @@ const generatePropsForSchema = (
 };
 
 const globalSections = async (): Promise<AvailableSection[]> => {
-  const blocks = await context.configStore!.state();
+  const blocks = await context.configStore!.state({ forceFresh: true });
   const availableSections: AvailableSection[] = [];
 
   for (const [blockId, block] of Object.entries(blocks)) {
@@ -405,18 +405,21 @@ const flagsThatContainsRoutes = [
 const livePage = "$live/pages/LivePage.tsx";
 
 async function pages() {
-  const archivedPromise = context.configStore!.archived().then(
-    (allArchivedBlocks) => {
-      const archivedPages: Record<string, Resolvable> = {};
-      for (const [blockId, block] of Object.entries(allArchivedBlocks)) {
-        if ((block as { __resolveType: string })?.__resolveType === livePage) {
-          archivedPages[blockId] = { ...block, state: "archived" };
+  const archivedPromise = context.configStore!.archived({ forceFresh: true })
+    .then(
+      (allArchivedBlocks) => {
+        const archivedPages: Record<string, Resolvable> = {};
+        for (const [blockId, block] of Object.entries(allArchivedBlocks)) {
+          if (
+            (block as { __resolveType: string })?.__resolveType === livePage
+          ) {
+            archivedPages[blockId] = { ...block, state: "archived" };
+          }
         }
-      }
-      return archivedPages;
-    },
-  );
-  const blocks = await context.configStore!.state();
+        return archivedPages;
+      },
+    );
+  const blocks = await context.configStore!.state({ forceFresh: true });
   const flags: (Audience | EveryoneConfig)[] = Object.values(blocks).filter((
     { __resolveType },
   ) => flagsThatContainsRoutes.includes(__resolveType));

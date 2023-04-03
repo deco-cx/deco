@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
-import { ConfigStore } from "$live/engine/configstore/provider.ts";
+import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
@@ -56,29 +56,38 @@ export const newSupabaseDeploy = (site: string): ConfigStore => {
     Record<string, Resolvable<any>>
   >(tryResolveFirstLoad);
 
-  currResolvables.then(() => {
-    let singleFlight = false;
-    setInterval(async () => {
-      if (singleFlight) {
-        return;
-      }
+  let singleFlight = false;
+
+  const updateInternalState = async () => {
+    if (singleFlight) {
+      return;
+    }
+    try {
       singleFlight = true;
       const { data, error } = await fetchConfigs(site);
       if (data === null || error !== null) {
-        singleFlight = false;
         return;
       }
       currResolvables = Promise.resolve(
         data.state,
       );
+    } finally {
       singleFlight = false;
-    }, refetchIntervalMSDeploy);
+    }
+  };
+  currResolvables.then(() => {
+    setInterval(updateInternalState, refetchIntervalMSDeploy);
   });
 
   const localSupabase = newSupabaseLocal(site);
   return {
     archived: localSupabase.archived.bind(localSupabase), // archived does not need to be fetched in background
-    state: () => currResolvables,
+    state: async (opts?: ReadOptions) => {
+      if (opts?.forceFresh) {
+        await updateInternalState();
+      }
+      return await currResolvables;
+    },
   };
 };
 
@@ -133,9 +142,12 @@ export const tryUseProvider = (
     });
   };
 
-  const callIfExists = async (method: keyof ConfigStore) => {
+  const callIfExists = async (
+    method: keyof ConfigStore,
+    options?: ReadOptions,
+  ) => {
     if (provider !== null) { // first try without singleflight check faster path check
-      return await provider[method]();
+      return await provider[method](options);
     }
     setProviderIfExists();
     return {}; //empty
@@ -143,13 +155,15 @@ export const tryUseProvider = (
 
   let setIfExistsCall = setProviderIfExists();
   return {
-    archived: () =>
-      setIfExistsCall.then(() => callIfExists("archived")).catch((_) => {
-        setIfExistsCall = setProviderIfExists();
-        return {};
-      }),
-    state: () =>
-      setIfExistsCall.then(() => callIfExists("state")).catch((_) => {
+    archived: (options?: ReadOptions) =>
+      setIfExistsCall.then(() => callIfExists("archived", options)).catch(
+        (_) => {
+          setIfExistsCall = setProviderIfExists();
+          return {};
+        },
+      ),
+    state: (options?: ReadOptions) =>
+      setIfExistsCall.then(() => callIfExists("state", options)).catch((_) => {
         setIfExistsCall = setProviderIfExists();
         return {};
       }),

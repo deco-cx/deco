@@ -16,7 +16,10 @@ export class DanglingReference extends Error {
     this.resolverType = resolverType;
   }
 }
-export type ResolveFunc<T = any> = (data: Resolvable<T>) => Promise<T>;
+export type ResolveFunc<T = any> = (
+  data: Resolvable<T>,
+  forceFresh?: boolean,
+) => Promise<T>;
 export interface Monitoring {
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
 }

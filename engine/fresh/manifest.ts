@@ -192,7 +192,9 @@ export const $live = <T extends DecoManifest>(m: T): T => {
   context.configStore = provider;
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },
-    getResolvables: provider.state.bind(provider),
+    getResolvables: (forceFresh?: boolean) => {
+      return provider.state({ forceFresh });
+    },
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,

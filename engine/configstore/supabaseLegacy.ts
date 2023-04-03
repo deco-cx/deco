@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
-import { ConfigStore } from "$live/engine/configstore/provider.ts";
+import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
@@ -283,13 +283,13 @@ export const newSupabaseProviderLegacyDeploy = (
   let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
     Record<string, Resolvable<any>>
   >(tryResolveFirstLoad);
+  let singleFlight = false;
 
-  currResolvables.then(() => {
-    let singleFlight = false;
-    setInterval(async () => {
-      if (singleFlight) {
-        return;
-      }
+  const updateInternalState = async () => {
+    if (singleFlight) {
+      return;
+    }
+    try {
       singleFlight = true;
       const [{ data, error }, { data: dataFlags, error: errorFlags }] =
         await fetchSiteData(siteId);
@@ -297,20 +297,29 @@ export const newSupabaseProviderLegacyDeploy = (
         data === null || error !== null || dataFlags === null ||
         errorFlags !== null
       ) {
-        singleFlight = false;
         return;
       }
       currResolvables = Promise.resolve(
         pagesToConfig(data, dataFlags, namespace),
       );
+    } finally {
       singleFlight = false;
-    }, refetchIntervalMS);
+    }
+  };
+
+  currResolvables.then(() => {
+    setInterval(updateInternalState, refetchIntervalMS);
   });
 
   const local = newSupabaseProviderLegacyLocal(siteId, namespace);
   return {
     archived: local.archived.bind(local),
-    state: () => currResolvables,
+    state: async (opts?: ReadOptions) => {
+      if (opts?.forceFresh) {
+        await updateInternalState();
+      }
+      return await currResolvables;
+    },
   };
 };
 

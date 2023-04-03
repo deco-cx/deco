@@ -10,9 +10,12 @@ import {
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 
+export interface ReadOptions {
+  forceFresh?: boolean;
+}
 export interface ConfigStore {
-  state(): Promise<Record<string, Resolvable>>;
-  archived(): Promise<Record<string, Resolvable>>;
+  state(options?: ReadOptions): Promise<Record<string, Resolvable>>;
+  archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
 }
 
 export const compose = (...providers: ConfigStore[]): ConfigStore => {

@@ -95,7 +95,7 @@ Deno.test("resolve", async (t) => {
       bar: number;
     };
     const resolverMap = {
-      resolve: context.resolve,
+      resolve: (data: unknown) => context.resolve(data),
       testResolver: (parent: TestType): TestType => {
         return {
           ...parent,
