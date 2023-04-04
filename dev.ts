@@ -13,7 +13,7 @@ import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 import { exists } from "$live/utils/filesystem.ts";
-import { namespaceFromGit } from "$live/utils/namespace.ts";
+import { namespaceFromImportMap } from "$live/utils/namespace.ts";
 import { SiteInfo } from "./types.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
@@ -94,6 +94,10 @@ export const siteJSON = "site.json";
 const getAndUpdateNamespace = async (
   dir: string,
 ): Promise<string | undefined> => {
+  const ns = await namespaceFromImportMap(dir);
+  if (!ns) {
+    return undefined;
+  }
   const siteJSONPath = join(dir, siteJSON);
   let siteInfo: SiteInfo | null = null;
   if (await exists(siteJSONPath)) {
@@ -101,16 +105,17 @@ const getAndUpdateNamespace = async (
       JSON.parse,
     );
   } else {
-    const ns = await namespaceFromGit();
-    if (!ns) {
-      return undefined;
-    }
     siteInfo = {
       namespace: ns,
     };
-    await Deno.writeTextFile(siteJSONPath, JSON.stringify(siteInfo, null, 2));
   }
-  return siteInfo?.namespace;
+  if (siteInfo?.namespace !== ns) {
+    await Deno.writeTextFile(
+      siteJSONPath,
+      JSON.stringify({ ...siteInfo, namespace: ns }, null, 2),
+    );
+  }
+  return ns;
 };
 
 export default async function dev(
