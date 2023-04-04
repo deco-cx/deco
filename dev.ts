@@ -12,7 +12,9 @@ import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
+import { exists } from "$live/utils/filesystem.ts";
 import { namespaceFromImportMap } from "$live/utils/namespace.ts";
+import { SiteInfo } from "./types.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 export function ensureMinDenoVersion() {
@@ -87,16 +89,42 @@ export async function generate(
   );
 }
 
+export const siteJSON = "site.json";
+
+const getAndUpdateNamespace = async (
+  dir: string,
+): Promise<string | undefined> => {
+  const ns = await namespaceFromImportMap(dir);
+  if (!ns) {
+    return undefined;
+  }
+  const siteJSONPath = join(dir, siteJSON);
+  let siteInfo: SiteInfo | null = null;
+  if (await exists(siteJSONPath)) {
+    siteInfo = await Deno.readTextFile(siteJSONPath).then(
+      JSON.parse,
+    );
+  } else {
+    siteInfo = {
+      namespace: ns,
+    };
+  }
+  if (siteInfo?.namespace !== ns) {
+    await Deno.writeTextFile(
+      siteJSONPath,
+      JSON.stringify({ ...siteInfo, namespace: ns }, null, 2),
+    );
+  }
+  return ns;
+};
+
 export default async function dev(
   base: string,
   entrypoint: string,
   {
-    namespace = undefined,
     imports = [],
-    siteId = undefined,
     onListen,
   }: {
-    namespace?: string;
     imports?:
       | Array<
         DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
@@ -105,13 +133,11 @@ export default async function dev(
         string,
         DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
       >;
-    siteId?: number;
     onListen?: () => void;
   } = {},
 ) {
-  const site = siteId ?? -1;
   const dir = dirname(fromFileUrl(base));
-  const ns = namespace ?? (await namespaceFromImportMap(dir)) ?? base;
+  const ns = await getAndUpdateNamespace(dir) ?? base;
   context.namespace = ns;
   ensureMinDenoVersion();
 
@@ -123,14 +149,13 @@ export default async function dev(
     currentManifest = newManifestBuilder(JSON.parse(prevManifest));
   } else {
     currentManifest = newManifestBuilder({
-      siteId: site,
       namespace: ns,
       imports: {},
       manifest: {},
       exports: [],
     });
   }
-  let manifest = await decoManifestBuilder(dir, ns, site);
+  let manifest = await decoManifestBuilder(dir, ns);
   manifest = manifest.mergeWith(
     typeof imports === "object" ? Object.values(imports) : imports,
   );
@@ -177,6 +202,7 @@ export async function format(content: string) {
 // Generate live own manifest data so that other sites can import native functions and sections.
 export const liveNs = "$live";
 if (import.meta.main) {
+  context.namespace = liveNs;
   const base = import.meta.url;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);

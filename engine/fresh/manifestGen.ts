@@ -5,6 +5,7 @@ import {
   ManifestBuilder,
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
+import { exists } from "$live/utils/filesystem.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { walk, WalkEntry } from "std/fs/walk.ts";
 
@@ -23,7 +24,7 @@ const withDefinition = (
   const ref = `${"$".repeat(blockIdx)}${blkN}`;
   return man
     .addImports({
-      from: functionKey,
+      from: functionRef,
       clauses: [{ alias: ref }],
     })
     .addValuesOnManifestKey(block, [
@@ -114,22 +115,6 @@ const addDefaultBlocks = (man: ManifestBuilder): ManifestBuilder => {
   }, man);
 };
 
-const exists = async (dir: string): Promise<boolean> => {
-  try {
-    await Deno.stat(dir);
-    // successful, file or directory must exist
-    return true;
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      // file or directory does not exist
-      return false;
-    } else {
-      // unexpected error, maybe permissions, pass it along
-      throw error;
-    }
-  }
-};
-
 export async function* listBlocks(
   base: string,
   blk: Block,
@@ -153,10 +138,8 @@ export async function* listBlocks(
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
-  siteId?: number,
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
-    siteId,
     namespace,
     imports: {},
     exports: [],

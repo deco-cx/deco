@@ -11,6 +11,7 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
   const [namespace] = nsAndGit.split(".");
   return namespace.trimEnd();
 };
+
 export const namespaceFromImportMap = async (
   dir: string,
 ): Promise<string | undefined> => {

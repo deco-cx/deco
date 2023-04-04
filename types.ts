@@ -43,6 +43,11 @@ export interface Site {
   domains?: Array<{ domain: string; production: boolean }>;
 }
 
+export interface SiteInfo {
+  siteId?: number;
+  namespace: string;
+}
+
 export interface LiveOptions {
   site: string;
   siteId: number;
