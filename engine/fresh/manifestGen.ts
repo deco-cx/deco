@@ -5,9 +5,9 @@ import {
   ManifestBuilder,
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
+import { exists } from "$live/utils/filesystem.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { walk, WalkEntry } from "std/fs/walk.ts";
-import { exists } from "$live/utils/filesystem.ts";
 
 const withDefinition = (
   man: ManifestBuilder,

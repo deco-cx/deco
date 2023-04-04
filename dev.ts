@@ -202,6 +202,7 @@ export async function format(content: string) {
 // Generate live own manifest data so that other sites can import native functions and sections.
 export const liveNs = "$live";
 if (import.meta.main) {
+  context.namespace = liveNs;
   const base = import.meta.url;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
