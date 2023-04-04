@@ -24,7 +24,7 @@ const withDefinition = (
   const ref = `${"$".repeat(blockIdx)}${blkN}`;
   return man
     .addImports({
-      from: functionKey,
+      from: functionRef,
       clauses: [{ alias: ref }],
     })
     .addValuesOnManifestKey(block, [
