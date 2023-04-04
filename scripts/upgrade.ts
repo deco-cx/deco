@@ -52,6 +52,29 @@ class UpgradeError extends Error {
     super(err);
   }
 }
+
+const updateDevTsImports = async () => {
+  const devTs = join(Deno.cwd(), "dev.ts");
+  if (!(await exists(devTs))) {
+    throw new UpgradeError(`${devTs} not found`);
+  }
+  const devTsContent = await Deno.readTextFile(devTs);
+  const updateFreshGen = devTsContent.replaceAll(
+    "fresh.gen.ts",
+    "live.gen.ts",
+  );
+  return {
+    from: {
+      path: devTs,
+      content: devTsContent,
+    },
+    to: {
+      path: devTs,
+      content: updateFreshGen,
+    },
+  };
+};
+
 const updateImportMap = async (
   liveVersion: string,
   stdVersion: string,
@@ -171,19 +194,22 @@ const removeRoutesAndFreshGenTs = (): Delete[] => {
 const v1: UpgradeOption = {
   isEligible: async () => !(await exists(join(Deno.cwd(), "live.gen.ts"))),
   apply: async () => {
-    const [importMapPatch, siteJson, mainTsLiveEntrypoint] = await Promise
-      .all([
-        updateImportMap(
-          meta.version,
-          "1.0.0-rc.7",
-        ),
-        createSiteJson(),
-        addMainTsLiveEntrypoint(),
-      ]);
+    const [importMapPatch, siteJson, devTsImports, mainTsLiveEntrypoint] =
+      await Promise
+        .all([
+          updateImportMap(
+            meta.version,
+            "1.0.0-rc.7",
+          ),
+          createSiteJson(),
+          updateDevTsImports(),
+          addMainTsLiveEntrypoint(),
+        ]);
     return [
       ...removeRoutesAndFreshGenTs(),
       importMapPatch,
       siteJson,
+      devTsImports,
       mainTsLiveEntrypoint,
     ];
   },
