@@ -24,15 +24,21 @@ const schemeableToJSONSchemaFunc = (
     case "inline":
       return [def, schemeable.value];
     case "union": {
-      return schemeable.value.reduce(
-        ([currDef, currSchema], curr) => {
+      const [defNew, sc] = schemeable.value.reduce(
+        ([currDef, currSchema, typeIsCommon], curr) => {
           const [ndef, sc] = schemeableToJSONSchema(genId, currDef, curr);
+          const type = typeIsCommon && sc.type &&
+              (sc.type === currSchema.type || !currSchema.type)
+            ? sc.type
+            : undefined;
           return [
             ndef,
             {
               ...currSchema,
+              type: typeIsCommon ? type : undefined,
               anyOf: [...currSchema.anyOf!, sc],
             },
+            type !== undefined,
           ];
         },
         [
@@ -40,8 +46,10 @@ const schemeableToJSONSchemaFunc = (
           {
             anyOf: [],
           },
-        ] as [Record<string, JSONSchema7>, JSONSchema7],
+          true,
+        ] as [Record<string, JSONSchema7>, JSONSchema7, boolean],
       );
+      return [defNew, sc];
     }
     case "object": {
       const [currDef, allOf] = (schemeable.extends ?? []).reduce(
