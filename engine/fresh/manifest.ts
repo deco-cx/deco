@@ -21,6 +21,7 @@ import { DecoManifest } from "$live/types.ts";
 
 import { parse } from "https://deno.land/std@0.181.0/flags/mod.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
+import { SiteInfo } from "../../types.ts";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
@@ -139,7 +140,12 @@ export const withoutLocalModules = (
   return r;
 };
 
-export const $live = <T extends DecoManifest>(m: T): T => {
+export const $live = <T extends DecoManifest>(
+  m: T,
+  { siteId, namespace }: SiteInfo,
+): T => {
+  context.siteId = siteId ?? -1;
+  context.namespace = namespace;
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
     ([currMan, currMap, recovers], blk) => {
       const blocks = asManifest(currMan)[blk.type] ?? {};

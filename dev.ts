@@ -12,7 +12,9 @@ import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
+import { exists } from "$live/utils/filesystem.ts";
 import { namespaceFromImportMap } from "$live/utils/namespace.ts";
+import { SiteInfo } from "./types.ts";
 
 const MIN_DENO_VERSION = "1.25.0";
 export function ensureMinDenoVersion() {
@@ -87,16 +89,33 @@ export async function generate(
   );
 }
 
+export const siteJSON = "site.json";
+const updateNamespaceOnSiteJSON = async (dir: string, ns: string) => {
+  const siteJSONPath = join(dir, siteJSON);
+  if (!await exists(siteJSONPath)) {
+    console.warn(`${siteJSON} not present.`);
+    return;
+  }
+  const siteInfo: SiteInfo = await Deno.readTextFile(siteJSONPath).then(
+    JSON.parse,
+  );
+  if (siteInfo?.namespace === ns) {
+    return;
+  }
+
+  await Deno.writeTextFile(
+    siteJSONPath,
+    JSON.stringify({ ...siteInfo, namespace: ns }, null, 2),
+  );
+};
+
 export default async function dev(
   base: string,
   entrypoint: string,
   {
-    namespace = undefined,
     imports = [],
-    siteId = undefined,
     onListen,
   }: {
-    namespace?: string;
     imports?:
       | Array<
         DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
@@ -105,13 +124,12 @@ export default async function dev(
         string,
         DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
       >;
-    siteId?: number;
     onListen?: () => void;
   } = {},
 ) {
-  const site = siteId ?? -1;
   const dir = dirname(fromFileUrl(base));
-  const ns = namespace ?? (await namespaceFromImportMap(dir)) ?? base;
+  const ns = (await namespaceFromImportMap(dir)) ?? base;
+  await updateNamespaceOnSiteJSON(dir, ns);
   context.namespace = ns;
   ensureMinDenoVersion();
 
@@ -123,14 +141,13 @@ export default async function dev(
     currentManifest = newManifestBuilder(JSON.parse(prevManifest));
   } else {
     currentManifest = newManifestBuilder({
-      siteId: site,
       namespace: ns,
       imports: {},
       manifest: {},
       exports: [],
     });
   }
-  let manifest = await decoManifestBuilder(dir, ns, site);
+  let manifest = await decoManifestBuilder(dir, ns);
   manifest = manifest.mergeWith(
     typeof imports === "object" ? Object.values(imports) : imports,
   );

@@ -4,7 +4,6 @@
 
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
-import { context } from "$live/live.ts";
 
 import * as $$$$0 from "./routes/_middleware.ts";
 import * as $$$$1 from "./routes/live/editorData.ts";
@@ -68,7 +67,5 @@ const manifest: DecoManifest = {
   "config": config,
   "baseUrl": import.meta.url,
 };
-
-context.namespace = "$live";
 
 export default manifest;

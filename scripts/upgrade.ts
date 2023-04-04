@@ -108,31 +108,31 @@ const siteId = async (): Promise<number | undefined> => {
   return +match.groups["siteId"];
 };
 
-const updateDevTsImports = async () => {
-  const devTs = join(Deno.cwd(), "dev.ts");
-  if (!(await exists(devTs))) {
-    throw new UpgradeError(`${devTs} not found`);
+const createSiteJson = async () => {
+  const siteFromMiddleware = await siteId();
+  if (!siteFromMiddleware) {
+    console.warn("could not extract siteId from middleware.ts");
   }
-  const devTsContent = await Deno.readTextFile(devTs);
-  const updateFreshGen = devTsContent.replaceAll(
-    "fresh.gen.ts",
-    "live.gen.ts",
+  const siteJSONPath = join(Deno.cwd(), "site.json");
+  let siteJSONContent = "";
+  if ((await exists(siteJSONPath))) {
+    siteJSONContent = await Deno.readTextFile(siteJSONPath);
+  }
+  const finalContent = JSON.stringify(
+    {
+      siteId: siteFromMiddleware,
+    },
+    null,
+    2,
   );
-  const id = await siteId();
-  const finalContent = id
-    ? updateFreshGen.replace(
-      `await dev(import.meta.url, "./main.ts", {\n`,
-      `await dev(import.meta.url, "./main.ts", {\n  siteId: ${id},\n`,
-    )
-    : updateFreshGen;
 
   return {
     from: {
-      path: devTs,
-      content: devTsContent,
+      path: siteJSONPath,
+      content: siteJSONContent,
     },
     to: {
-      path: devTs,
+      path: siteJSONPath,
       content: finalContent,
     },
   };
@@ -154,8 +154,8 @@ const addMainTsLiveEntrypoint = async () => {
       path: mainTs,
       content: mainTsContent.replace(
         `import manifest from "./fresh.gen.ts";\n`,
-        `import manifest from "./live.gen.ts";\nimport { $live } from "$live/mod.ts";\n`,
-      ).replace("await start(manifest", "await start($live(manifest)"),
+        `import manifest from "./live.gen.ts";\nimport { $live } from "$live/mod.ts";\nimport site from "./site.json" assert { type: "json" };\n`,
+      ).replace("await start(manifest", "await start($live(manifest, site)"),
     },
   };
 };
@@ -171,19 +171,19 @@ const removeRoutesAndFreshGenTs = (): Delete[] => {
 const v1: UpgradeOption = {
   isEligible: async () => !(await exists(join(Deno.cwd(), "live.gen.ts"))),
   apply: async () => {
-    const [importMapPatch, devTsImports, mainTsLiveEntrypoint] = await Promise
+    const [importMapPatch, siteJson, mainTsLiveEntrypoint] = await Promise
       .all([
         updateImportMap(
           meta.version,
-          "1.0.0-rc.6",
+          "1.0.0-rc.7",
         ),
-        updateDevTsImports(),
+        createSiteJson(),
         addMainTsLiveEntrypoint(),
       ]);
     return [
       ...removeRoutesAndFreshGenTs(),
       importMapPatch,
-      devTsImports,
+      siteJson,
       mainTsLiveEntrypoint,
     ];
   },
