@@ -7,6 +7,7 @@ import {
   TsTypeDef,
   TsTypeLiteralDef,
   TsTypeRefDef,
+  TsTypeUnionDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7TypeName } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 
@@ -116,6 +117,25 @@ const schemeableWellKnownType = async (
         };
       }
       return tsTypeToSchemeableRec(ref.typeParams![0], root);
+    }
+    case "Omit": {
+      if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 2) {
+        return {
+          type: "unknown",
+        };
+      }
+      const schemeable = await tsTypeToSchemeableRec(ref.typeParams![0], root);
+      if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
+        const omitKeys = ref.typeParams![1] as TsTypeUnionDef;
+        if (omitKeys?.union) {
+          for (const value of omitKeys?.union) {
+            if (value.kind === "literal" && value.literal.kind === "string") {
+              delete (schemeable.value[value.literal.string]);
+            }
+          }
+        }
+      }
+      return schemeable;
     }
     case "LoaderReturnType": {
       if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
