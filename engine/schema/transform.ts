@@ -62,6 +62,10 @@ export interface UnionSchemeable extends SchemeableBase {
   value: Schemeable[];
 }
 
+export interface IntersectionSchemeable extends SchemeableBase {
+  type: "intersection";
+  value: Schemeable[];
+}
 export interface ArraySchemeable extends SchemeableBase {
   type: "array";
   value: Schemeable;
@@ -74,6 +78,7 @@ export interface UnknownSchemable extends SchemeableBase {
 export type Schemeable =
   | ObjectSchemeable
   | UnionSchemeable
+  | IntersectionSchemeable
   | ArraySchemeable
   | InlineSchemeable
   | RecordSchemeable
@@ -398,6 +403,30 @@ const tsTypeToSchemeableRec = async (
           // deno-lint-ignore no-explicit-any
           const: (node.literal as any)[node.literal.kind] as JSONSchema7Type,
         },
+      };
+    }
+    case "intersection": {
+      const values = await Promise.all(
+        node.intersection.map((t) => tsTypeToSchemeableRec(t, root)),
+      );
+      const ids = [];
+      for (let i = 0; i < node.intersection.length; i++) {
+        const tp = values[i];
+        if (tp?.name) {
+          ids.push(tp.name);
+        } else if (tp && tp.type === "inline" && tp.value.type === "null") {
+          ids.push("null");
+        } else if (node.repr) {
+          ids.push(node.repr);
+        }
+      }
+      ids.sort();
+      const unionTypeId = ids.length === 0 ? undefined : ids.join("&");
+      return {
+        name: unionTypeId,
+        file: values[0]?.file,
+        value: values,
+        type: "intersection",
       };
     }
     case "union": {
