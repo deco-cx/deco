@@ -118,8 +118,10 @@ const schemeableWellKnownType = async (
       }
       return tsTypeToSchemeableRec(ref.typeParams![0], root);
     }
-    case "Omit": {
-      if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 2) {
+    case "NOT_WOKRING_RECURSION_CALLS_Omit": {
+      if (
+        ref.typeParams === null || (ref.typeParams?.length ?? 0) < 2
+      ) {
         return {
           type: "unknown",
         };

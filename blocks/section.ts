@@ -27,7 +27,7 @@ export interface SectionModuleWithStaticProps<
   // deno-lint-ignore no-explicit-any
   TProps = any,
 > extends BlockModule {
-  getStaticProps: (
+  getProps: (
     req: Request,
     // deno-lint-ignore no-explicit-any
     ctx: HandlerContext<any, LiveConfig<TConfig, any>>,
@@ -35,10 +35,10 @@ export interface SectionModuleWithStaticProps<
   default: ComponentFunc<TProps>;
 }
 
-const hasStaticProps = (
+const hasProps = (
   mod: SectionModule,
 ): mod is SectionModuleWithStaticProps => {
-  return (mod as SectionModuleWithStaticProps)?.getStaticProps !== undefined;
+  return (mod as SectionModuleWithStaticProps)?.getProps !== undefined;
 };
 // deno-lint-ignore no-explicit-any
 export type SectionModule<TConfig = any, TProps = any> =
@@ -48,7 +48,7 @@ export type SectionModule<TConfig = any, TProps = any> =
 const sectionBlock: BlockForModule<SectionModule> = {
   type: "sections",
   introspect: [{
-    getStaticProps: ["1", "state.$live"],
+    getProps: ["1", "state.$live"],
   }, {
     default: "0",
   }],
@@ -59,7 +59,7 @@ const sectionBlock: BlockForModule<SectionModule> = {
   ):
     | Resolver<PreactComponent, TProps, BaseContext>
     | Resolver<PreactComponent, TConfig, HttpContext> => {
-    if (!hasStaticProps(mod)) {
+    if (!hasProps(mod)) {
       return (
         props: TProps,
         { resolveChain }: BaseContext,
@@ -82,7 +82,7 @@ const sectionBlock: BlockForModule<SectionModule> = {
       const ctx = context as HandlerContext;
       return ({
         Component: mod.default,
-        props: await mod.getStaticProps(request, {
+        props: await mod.getProps(request, {
           ...ctx,
           state: { ...ctx.state, $live: props, resolve },
         }),
