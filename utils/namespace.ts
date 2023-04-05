@@ -7,9 +7,18 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
     return undefined;
   }
   const fetchUrlLine = lns[1];
-  const [_ignoreFetchUrl, _ignoreGitUrl, nsAndGit] = fetchUrlLine.split(":");
-  const [namespace] = nsAndGit.split(".");
-  return namespace.trimEnd();
+  let regex = /.*git@github\.com:\/(.+)/;
+  if (fetchUrlLine.includes("https://")) {
+    // HTTPS
+    // Fetch URL: https://github.com/deco-sites/example
+    regex = /.*https:\/\/github\.com\/(.+)/;
+  }
+
+  const result = fetchUrlLine.match(regex);
+  if (!result || (result.length < 1)) {
+    return undefined;
+  }
+  return "/" + result[1].trimEnd();
 };
 
 export const namespaceFromImportMap = async (
