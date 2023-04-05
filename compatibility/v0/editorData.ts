@@ -305,7 +305,8 @@ export const generateEditorData = async (
       for (const [propKey, propValue] of Object.entries(props)) {
         const { __resolveType: resolveType, ...funcProps } = propValue as {
           __resolveType: string;
-        };
+        } ?? { __resolveType: null };
+
         if (
           !resolveType
         ) {
