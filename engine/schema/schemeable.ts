@@ -23,6 +23,26 @@ const schemeableToJSONSchemaFunc = (
     }
     case "inline":
       return [def, schemeable.value];
+    case "intersection": {
+      return schemeable.value.reduce(
+        ([currDef, currSchema], curr) => {
+          const [ndef, sc] = schemeableToJSONSchema(genId, currDef, curr);
+          return [
+            ndef,
+            {
+              ...currSchema,
+              allOf: [...currSchema.allOf!, sc],
+            },
+          ];
+        },
+        [
+          def,
+          {
+            allOf: [],
+          },
+        ] as [Record<string, JSONSchema7>, JSONSchema7],
+      );
+    }
     case "union": {
       const [defNew, sc] = schemeable.value.reduce(
         ([currDef, currSchema, typeIsCommon], curr) => {
