@@ -1,6 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
 import { DecoManifest } from "$live/types.ts";
+// TODO: Remove
+import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -126,6 +128,14 @@ const stringifyStatement = (st: Statement): string => {
   return `${st.variable} = ${stringifyJS({ kind: "js", raw: st.assign })}`;
 };
 
+// Temporary, should be moved elsewhere 
+const fixFilePath = (file: string) => {
+  if (os.platform() === "windows") {
+    return file.replace("\\", "/");
+  }
+  return file;
+};
+
 const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
   return `import ${
     clauses
@@ -139,7 +149,7 @@ const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
           : clause.as
       )
       .join(",")
-  } from "${from}"`;
+  } from "${fixFilePath(from)}"`;
 };
 
 const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
@@ -151,7 +161,7 @@ const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
     ${
     entriesOrSorted
       .map(([key, v]) => {
-        return `"${key}": ${stringifyJSONValue(v!)}`;
+        return `"${fixFilePath(key)}": ${stringifyJSONValue(v!)}`;
       })
       .join(",\n")
   }
@@ -159,13 +169,6 @@ const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
 `;
 };
 
-// Temporary, should be moved elsewhere 
-const fixFilePath = (file: string) => {
-  if (os.platform() === "windows") {
-    return file.replace("\\", "/");
-  }
-  return file;
-};
 
 const stringifyJSONValue = (obj: JSONValue): string => {
   if (isPrimitive(obj)) {
