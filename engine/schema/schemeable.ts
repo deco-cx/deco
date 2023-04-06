@@ -82,33 +82,39 @@ const schemeableToJSONSchemaFunc = (
         },
         [def, [] as JSONSchema7[]],
       );
-      const [nDef, properties] = Object.entries(schemeable.value).reduce(
-        (
-          [currDef, properties],
-          [property, { schemeable, title, jsDocSchema }],
-        ) => {
-          const [nDef, sc] = schemeableToJSONSchema(genId, currDef, schemeable);
-          return [
-            nDef,
-            {
-              ...properties,
-              [property]: {
-                ...sc,
-                ...jsDocSchema,
-                title: title ?? sc.title ?? jsDocSchema?.title,
+      const [nDef, properties, required] = Object.entries(schemeable.value)
+        .reduce(
+          (
+            [currDef, properties, req],
+            [property, { schemeable, title, jsDocSchema, required }],
+          ) => {
+            const [nDef, sc] = schemeableToJSONSchema(
+              genId,
+              currDef,
+              schemeable,
+            );
+            return [
+              nDef,
+              {
+                ...properties,
+                [property]: {
+                  ...sc,
+                  ...jsDocSchema,
+                  title: title ?? sc.title ?? jsDocSchema?.title,
+                },
               },
-            },
-          ];
-        },
-        [currDef, {}],
-      );
+              [...req, ...required ? [property] : []],
+            ];
+          },
+          [currDef, {}, [] as string[]],
+        );
       return [
         nDef,
         {
           type: "object",
           allOf: allOf && allOf.length > 0 ? allOf : undefined,
           properties,
-          required: schemeable.required,
+          required,
           title: schemeable.title ?? schemeable.name,
         },
       ];
