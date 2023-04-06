@@ -6,17 +6,18 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
   if (lns.length < 1) {
     return undefined;
   }
+
+  const regex = /.*[:\/](.+)\/(.+)$/;
   const fetchUrlLine = lns[0];
-  if (fetchUrlLine.startsWith("http")) { // http clone
-    const fetchUrl = new URL(fetchUrlLine);
-    return fetchUrl.pathname.substring(1).replace(".git", "").trimEnd(); // remove .git
+
+  const result = fetchUrlLine.match(regex);
+
+  if (!result || result.length < 3) {
+    // Something is strange... lets try to improve it
+    return fetchUrlLine.replace(":", "/").trimEnd();
   }
-  if (fetchUrlLine.startsWith("git")) {
-    const [_ignoreGitUrl, nsAndGit] = fetchUrlLine.split(":");
-    const [namespace] = nsAndGit.split(".");
-    return namespace.trimEnd();
-  }
-  return fetchUrlLine.replace(":", "/").trimEnd();
+
+  return `${result[1]}/${result[2]}`.trimEnd();
 };
 
 export const namespaceFromImportMap = async (
