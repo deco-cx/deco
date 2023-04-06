@@ -236,6 +236,9 @@ static page
 
 Live is deployed on https://deno.land/x/live using git tags.
 
-To release a new version, run the following command and follow the instructions:
+To release a new version, go through the following steps:
 
-```deno task release```
+1. Squash/Merge your Pull Request after approval.
+2. Get the next tag you want to release.
+3. On `main`, change the version in `meta.json`.
+4. Run `deno task release` and select the chosen version.
