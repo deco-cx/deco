@@ -80,7 +80,7 @@ const sectionBlock: Block<SectionModule> = {
       ...defaultFuncProps,
       inputSchema: defaultFuncProps.inputSchema && getProps.inputSchema
         ? {
-          file: path,
+          file: defaultFuncProps.inputSchema.file,
           name:
             `${defaultFuncProps.inputSchema.name}&${getProps.inputSchema.name}`,
           type: "intersection",
