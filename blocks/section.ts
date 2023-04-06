@@ -5,13 +5,18 @@ import StubSection from "$live/components/StubSection.tsx";
 import {
   Block,
   BlockModule,
+  BlockModuleRef,
   ComponentFunc,
   InstanceOf,
   PreactComponent,
 } from "$live/engine/block.ts";
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
+import { DocNode } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSX } from "preact";
+import { introspectAddr } from "../engine/introspect.ts";
+import { omit } from "../utils/object.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -27,13 +32,62 @@ export interface SectionModule<TConfig = any, TProps = any> extends
   ) => PromiseOrValue<TProps>;
 }
 
+const omitIfObj = (schemeable: Schemeable, omitKeys: string[]): Schemeable => {
+  if (schemeable.type !== "object" || omitKeys.length === 0) {
+    return schemeable;
+  }
+  return { ...schemeable, value: omit(schemeable.value, ...omitKeys) };
+};
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
-  introspect: [{
-    getProps: ["1", "state.$live"],
-  }, {
-    default: "0",
-  }],
+  introspect: async (
+    ctx: TransformContext,
+    path: string,
+    ast: DocNode[],
+  ): Promise<BlockModuleRef | undefined> => {
+    const [defaultFuncProps, getProps] = await Promise.all([
+      introspectAddr<SectionModule>(
+        {
+          default: "0",
+        },
+        ctx,
+        path,
+        ast,
+      ),
+      introspectAddr<SectionModule>(
+        {
+          getProps: ["1", "state.$live"],
+        },
+        ctx,
+        path,
+        ast,
+        true, // includereturn
+      ),
+    ]);
+    if (!getProps) {
+      return defaultFuncProps;
+    }
+    if (!defaultFuncProps) {
+      return undefined;
+    }
+    const returnKeys =
+      getProps.outputSchema && getProps.outputSchema.type === "object"
+        ? Object.keys(getProps.outputSchema.value)
+        : [];
+
+    return {
+      ...defaultFuncProps,
+      inputSchema: defaultFuncProps.inputSchema && getProps.inputSchema
+        ? {
+          type: "intersection",
+          value: [
+            omitIfObj(defaultFuncProps.inputSchema, returnKeys),
+            getProps.inputSchema,
+          ],
+        }
+        : defaultFuncProps.inputSchema,
+    }; //artificial schemeable
+  },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
