@@ -159,10 +159,18 @@ const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
 `;
 };
 
+// Temporary, should be moved elsewhere 
+const fixFilePath = (file: string) => {
+  if (os.platform() === "windows") {
+    return file.replace("\\", "/");
+  }
+  return file;
+};
+
 const stringifyJSONValue = (obj: JSONValue): string => {
   if (isPrimitive(obj)) {
     if (obj.type === "string") {
-      return `"${obj.value}"`;
+      return `"${fixFilePath(obj.value as string)}"`;
     }
     return `${obj.value}`;
   }
