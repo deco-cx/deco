@@ -43,6 +43,7 @@ jobs:
         id: changes
         shell: bash
         run: |
+          git status --porcelain
           if [[ $(git status --porcelain | wc -c) -eq 0 ]]; then
               echo "uncommitted changes detected"
               exit 1

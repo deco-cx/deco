@@ -29,3 +29,11 @@ export const exists = async (dir: string): Promise<boolean> => {
 export const fileSeparatorToSlash = (path: string) => {
   return path.replaceAll(sep, "/");
 };
+
+export const fromFileUrlOrNoop = (urlString: string): string => {
+  const url = new URL(urlString);
+  if (url.protocol === "file:") {
+    return fileSeparatorToSlash(urlString);
+  }
+  return urlString;
+};
