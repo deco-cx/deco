@@ -1,4 +1,4 @@
-import type { HandlerContext, Manifest } from "$fresh/server.ts";
+import type { Manifest } from "$fresh/server.ts";
 import type { IslandModule } from "$fresh/src/server/types.ts";
 import accountBlock from "$live/blocks/account.ts";
 import flagBlock from "$live/blocks/flag.ts";
@@ -167,11 +167,15 @@ export type LiveState<T = unknown> = {
   global: T;
 };
 
+export interface StatefulContext<T> {
+  state: T;
+}
+// deno-lint-ignore no-explicit-any
+export type LoaderContext<TState = any> = StatefulContext<TState>;
 // deno-lint-ignore no-explicit-any
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
-  // deno-lint-ignore no-explicit-any
-  ctx: HandlerContext<any, State>,
+  ctx: LoaderContext<State>,
   props: Props,
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
 
