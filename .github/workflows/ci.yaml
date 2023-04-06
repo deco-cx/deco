@@ -39,13 +39,14 @@ jobs:
       - run: |
           deno run --lock=deno.lock --lock-write -A dev.ts
 
-      - name: Check if there are changes
+      - name: Check if there are changes on ${{ matrix.os }}
         id: changes
-        uses: UnicornGlobal/has-changes-action@v1.0.11
-      # You can now access a variable indicating if there have been changes
-      - name: Process changes
-        if: steps.changes.outputs.changed == 1
-        run: echo "Changes exist exiting..." && exit 1
+        shell: bash
+        run: |
+          if [[ $(git status --porcelain) ]]; then
+              echo "uncommitted changes detected"
+              exit 1
+          fi
 
       - run: |
           deno test --lock=deno.lock --lock-write -A .
