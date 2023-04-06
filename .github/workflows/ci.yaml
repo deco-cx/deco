@@ -11,7 +11,10 @@ on:
       - main
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     name: "Setup deno"
     steps:
       - uses: actions/checkout@v3
@@ -31,6 +34,19 @@ jobs:
       - name: fetch any uncached dependencies
         run: |
           deno cache --lock=deno.lock --lock-write --reload=file: ./mod.ts
+
+      ## Generate updated live.gen.ts
+      - run: |
+          deno run --lock=deno.lock --lock-write -A dev.ts
+
+      - name: Check if there are changes
+        id: changes
+        uses: UnicornGlobal/has-changes-action@v1.0.11
+      # You can now access a variable indicating if there have been changes
+      - name: Process changes
+        if: steps.changes.outputs.changed == 1
+        run: echo "Changes exist exiting..." && exit 1
+
       - run: |
           deno test --lock=deno.lock --lock-write -A .
       - name: check lint
