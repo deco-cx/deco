@@ -33,7 +33,7 @@ export const fileSeparatorToSlash = (path: string) => {
 export const fromFileUrlOrNoop = (urlString: string): string => {
   const url = new URL(urlString);
   if (url.protocol === "file:") {
-    return fileSeparatorToSlash(urlString);
+    return fromFileUrl(urlString);
   }
   return urlString;
 };

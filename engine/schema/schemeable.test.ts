@@ -13,17 +13,16 @@ import {
   Schemeable,
 } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
+import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
 import {
   assertSpyCall,
   assertSpyCalls,
   spy,
 } from "https://deno.land/std@0.179.0/testing/mock.ts";
-import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { fromFileUrlOrNoop } from "$live/utils/filesystem.ts";
 
 const folder = dirname(import.meta.url);
 const file = "schemeable.test.types.ts";
-const filePath = fromFileUrlOrNoop(`file://${fromFileUrl(join(folder, file))}`);
+const filePath = fromFileUrl(join(folder, file));
 
 const getSchemeableFor = async (
   name: string,
