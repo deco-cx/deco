@@ -182,7 +182,7 @@ export const introspectAddr = async <
   const baseBlockRef = {
     functionRef: path,
     outputSchema: includeReturn && fn.return
-      ? await tsTypeToSchemeable(fn.return, root)
+      ? await tsTypeToSchemeable(func, fn.return, root)
       : undefined,
   };
   const addrVal = addr[funcName];
@@ -191,7 +191,7 @@ export const introspectAddr = async <
       ...baseBlockRef,
       inputSchema: +addrVal >= fn.params.length
         ? undefined
-        : await tsTypeToSchemeable(fn.params[+addrVal], root),
+        : await tsTypeToSchemeable(func, fn.params[+addrVal], root),
     };
   }
   if (!addrVal) {
@@ -213,7 +213,7 @@ export const introspectAddr = async <
   if (!configType) {
     return baseBlockRef;
   }
-  const inputSchema = await tsTypeToSchemeable(configType, newRoot);
+  const inputSchema = await tsTypeToSchemeable(func, configType, newRoot);
   return {
     ...baseBlockRef,
     inputSchema,

@@ -65,6 +65,10 @@ export interface ArraySchemeable extends SchemeableBase {
 export interface UnknownSchemable extends SchemeableBase {
   type: "unknown";
 }
+export interface SchemeableRef extends SchemeableBase {
+  type: "ref";
+  value: Schemeable;
+}
 
 export type Schemeable =
   | ObjectSchemeable
@@ -73,7 +77,8 @@ export type Schemeable =
   | ArraySchemeable
   | InlineSchemeable
   | RecordSchemeable
-  | UnknownSchemable;
+  | UnknownSchemable
+  | SchemeableRef;
 
 export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
   if (a.name !== b.name) {
@@ -99,7 +104,7 @@ export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
 const schemeableWellKnownType = async (
   ref: TsTypeRefDef,
   root: [string, DocNode[]],
-  seen: Record<string, [number, null | Schemeable]>,
+  seen: Map<DocNode, Schemeable>,
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
     case "Promise": {
@@ -189,7 +194,9 @@ const schemeableWellKnownType = async (
       keys.sort();
       return {
         ...schemeable,
-        name: `omit${btoa(keys.join())}${schemeable.name}`,
+        name: schemeable.name && keys.length > 0
+          ? `omit${btoa(keys.join())}${schemeable.name}`
+          : schemeable.name!,
       };
     }
     case "LoaderReturnType": {
@@ -315,71 +322,87 @@ const schemeableWellKnownType = async (
 export const findSchemeableFromNode = async (
   rootNode: DocNode,
   root: [string, DocNode[]],
-  seen: Record<string, [number, null | Schemeable]>,
+  seen: Map<DocNode, Schemeable>,
 ): Promise<Schemeable> => {
-  const kind = rootNode.kind;
   const currLocation = {
     file: fromFileUrlOrNoop(rootNode.location.filename),
     name: rootNode.name,
   };
-  switch (kind) {
-    case "interface": {
-      const allOf = await Promise.all(
-        rootNode.interfaceDef.extends.map(async (tp) => ({
-          ...currLocation,
-          ...await tsTypeToSchemeableRec(tp, root, seen),
-        })),
-      );
-      return {
-        ...currLocation,
-        extends: allOf && allOf.length > 0 ? allOf : undefined,
-        type: "object",
-        ...(await typeDefToSchemeable(rootNode.interfaceDef, root, seen)),
-        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
-      };
-    }
-    case "typeAlias": {
-      return {
-        ...currLocation,
-        ...(await tsTypeToSchemeableRec(
-          rootNode.typeAliasDef.tsType,
-          root,
-          seen,
-        )),
-        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
-      };
-    }
-    case "import": {
-      const newRoots = await denoDoc(rootNode.importDef.src);
-      const node = newRoots.find((n) => {
-        return n.name === rootNode.importDef.imported;
-      });
-      if (!node) {
+  const ref = {
+    type: "ref",
+    value: currLocation,
+  } as SchemeableRef;
+  const seenValue = seen.get(rootNode);
+  if (seenValue !== undefined) {
+    return seenValue;
+  }
+  seen.set(rootNode, ref);
+
+  const resolve = async (): Promise<Schemeable> => {
+    const kind = rootNode.kind;
+    switch (kind) {
+      case "interface": {
+        const allOf = await Promise.all(
+          rootNode.interfaceDef.extends.map(async (tp) => ({
+            ...currLocation,
+            ...await tsTypeToSchemeableRec(tp, root, seen),
+          })),
+        );
         return {
-          name: rootNode.name,
-          file: fromFileUrlOrNoop(rootNode.importDef.src),
-          type: "unknown",
+          ...currLocation,
+          extends: allOf && allOf.length > 0 ? allOf : undefined,
+          type: "object",
+          ...(await typeDefToSchemeable(rootNode.interfaceDef, root, seen)),
+          jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
         };
       }
-      return {
-        ...currLocation,
-        ...await findSchemeableFromNode(node, [
-          rootNode.importDef.src,
-          newRoots,
-        ], seen),
-      };
+      case "typeAlias": {
+        return {
+          ...currLocation,
+          ...(await tsTypeToSchemeableRec(
+            rootNode.typeAliasDef.tsType,
+            root,
+            seen,
+          )),
+          jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
+        };
+      }
+      case "import": {
+        const newRoots = await denoDoc(rootNode.importDef.src);
+        const node = newRoots.find((n) => {
+          return n.name === rootNode.importDef.imported;
+        });
+        if (!node) {
+          return {
+            name: rootNode.name,
+            file: fromFileUrlOrNoop(rootNode.importDef.src),
+            type: "unknown",
+          };
+        }
+        return {
+          ...currLocation,
+          ...await findSchemeableFromNode(node, [
+            rootNode.importDef.src,
+            newRoots,
+          ], seen),
+        };
+      }
     }
-  }
-  return {
-    ...currLocation,
-    type: "unknown",
+    return {
+      ...currLocation,
+      type: "unknown",
+    };
   };
+  const resolved = await resolve();
+  ref.value = resolved;
+  seen.delete(rootNode);
+  return resolved;
 };
 
 const typeDefToSchemeable = async (
   node: InterfaceDef | TsTypeLiteralDef,
   root: [string, DocNode[]],
-  seen: Record<string, [number, null | Schemeable]>,
+  seen: Map<DocNode, Schemeable>,
 ): Promise<Omit<ObjectSchemeable, "id" | "type">> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
@@ -410,17 +433,20 @@ const typeDefToSchemeable = async (
   };
 };
 export const tsTypeToSchemeable = async (
+  rootNode: DocNode,
   node: TsTypeDef,
   root: [string, DocNode[]],
   optional?: boolean,
 ): Promise<Schemeable> => {
-  return await tsTypeToSchemeableRec(node, root, {}, optional);
+  const seen = new Map();
+  seen.set(rootNode, true);
+  return await tsTypeToSchemeableRec(node, root, seen, optional);
 };
 
 const tsTypeToSchemeableRec = async (
   node: TsTypeDef,
   root: [string, DocNode[]],
-  seen: Record<string, [number, null | Schemeable]>,
+  seen: Map<DocNode, Schemeable>,
   optional?: boolean,
 ): Promise<Schemeable> => {
   const kind = node.kind;
@@ -440,45 +466,23 @@ const tsTypeToSchemeableRec = async (
       };
     }
     case "typeRef": {
-      const key = `${root[0]}${node.kind}${node.repr}`;
-      const seenValueResp = seen[key];
-      if (seenValueResp !== undefined) {
-        const [count, seenValue] = seenValueResp;
-        if (count === Object.keys(seen).length && seenValue === null) {
-          return {
-            type: "inline",
-            value: {
-              $ref: "#",
-            },
-          };
-        }
-        if (seenValue) {
-          return seenValue;
-        }
+      const wellknown = await schemeableWellKnownType(
+        node.typeRef,
+        root,
+        seen,
+      );
+      if (wellknown) {
+        return wellknown;
       }
-      seen[key] = [Object.keys(seen).length + 1, null];
-      const resolve = async (): Promise<Schemeable> => {
-        const wellknown = await schemeableWellKnownType(
-          node.typeRef,
-          root,
-          seen,
-        );
-        if (wellknown) {
-          return wellknown;
-        }
-        const rootNode = root[1].find((n) => {
-          return n.name === node.typeRef.typeName;
-        });
-        if (!rootNode) {
-          return {
-            type: "unknown",
-          };
-        }
-        return findSchemeableFromNode(rootNode, root, seen);
-      };
-      const resolved = await resolve();
-      seen[key] = [Object.keys(seen).length, resolved];
-      return resolved;
+      const rootNode = root[1].find((n) => {
+        return n.name === node.typeRef.typeName;
+      });
+      if (!rootNode) {
+        return {
+          type: "unknown",
+        };
+      }
+      return findSchemeableFromNode(rootNode, root, seen);
     }
     case "keyword": {
       if (node.keyword === "unknown") {
