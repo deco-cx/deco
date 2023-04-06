@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { HttpContext, StatefulContext } from "$live/blocks/handler.ts";
+import { HttpContext } from "$live/blocks/handler.ts";
 import {
   Block,
   BlockModule,
@@ -9,6 +9,7 @@ import {
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
+import { StatefulContext } from "$live/types.ts";
 import { JSX } from "preact";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (

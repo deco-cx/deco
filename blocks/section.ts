@@ -11,13 +11,13 @@ import {
   PreactComponent,
 } from "$live/engine/block.ts";
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
+import { introspectAddr } from "$live/engine/introspect.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
+import { LoaderContext } from "$live/types.ts";
+import { omit } from "$live/utils/object.ts";
 import { DocNode } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSX } from "preact";
-import { UnPromisify } from "../engine/core/utils.ts";
-import { introspectAddr } from "../engine/introspect.ts";
-import { omit } from "../utils/object.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -27,9 +27,9 @@ export interface SectionModule<TConfig = any, TProps = any> extends
     JSX.Element | null,
     PreactComponent
   > {
-  getProps?: (
+  loadData?: (
     req: Request,
-    ctx: HandlerContext<any, LiveConfig<TConfig, any>>,
+    ctx: LoaderContext<LiveConfig<TConfig, any>>,
   ) => PromiseOrValue<Partial<TProps>>;
 }
 
@@ -65,7 +65,7 @@ const sectionBlock: Block<SectionModule> = {
     path: string,
     ast: DocNode[],
   ): Promise<BlockModuleRef | undefined> => {
-    const [defaultFuncProps, getProps] = await Promise.all([
+    const [defaultFuncProps, loadData] = await Promise.all([
       introspectAddr<SectionModule>(
         {
           default: "0",
@@ -76,7 +76,7 @@ const sectionBlock: Block<SectionModule> = {
       ),
       introspectAddr<SectionModule>(
         {
-          getProps: ["1", "state.$live"],
+          loadData: ["1", "state.$live"],
         },
         ctx,
         path,
@@ -84,28 +84,28 @@ const sectionBlock: Block<SectionModule> = {
         true, // includereturn
       ),
     ]);
-    if (!getProps) {
+    if (!loadData) {
       return defaultFuncProps;
     }
     if (!defaultFuncProps) {
       return undefined;
     }
     const returnKeys =
-      getProps.outputSchema && getProps.outputSchema.type === "object"
-        ? Object.keys(getProps.outputSchema.value)
+      loadData.outputSchema && loadData.outputSchema.type === "object"
+        ? Object.keys(loadData.outputSchema.value)
         : [];
 
     return {
       ...defaultFuncProps,
-      inputSchema: defaultFuncProps.inputSchema && getProps.inputSchema
+      inputSchema: defaultFuncProps.inputSchema && loadData.inputSchema
         ? {
           file: defaultFuncProps.inputSchema.file,
           name:
-            `${defaultFuncProps.inputSchema.name}&${getProps.inputSchema.name}`,
+            `${defaultFuncProps.inputSchema.name}&${loadData.inputSchema.name}`,
           type: "intersection",
           value: [
             omitIfObj(defaultFuncProps.inputSchema, returnKeys),
-            getProps.inputSchema,
+            loadData.inputSchema,
           ],
         }
         : defaultFuncProps.inputSchema,
@@ -121,13 +121,13 @@ const sectionBlock: Block<SectionModule> = {
       & TConfig
       & Omit<
         TProps,
-        keyof UnPromisify<ReturnType<Required<SectionModule>["getProps"]>> // everything except the returned by getProps func
+        keyof UnPromisify<ReturnType<Required<SectionModule>["loadData"]>> // everything except the returned by loadData func
       >,
       HttpContext
     > => {
     const componentFunc = componentWith(resolver, mod.default);
-    const propsFunc = mod.getProps;
-    if (!propsFunc) {
+    const loadDataFunc = mod.loadData;
+    if (!loadDataFunc) {
       return (
         props: TProps,
         { resolveChain }: BaseContext,
@@ -138,12 +138,12 @@ const sectionBlock: Block<SectionModule> = {
         & TConfig
         & Omit<
           TProps,
-          keyof UnPromisify<ReturnType<Required<SectionModule>["getProps"]>>
+          keyof UnPromisify<ReturnType<Required<SectionModule>["loadData"]>>
         >,
       { resolveChain, request, context, resolve }: HttpContext,
     ): Promise<PreactComponent<any, TProps>> => {
       const ctx = context as HandlerContext;
-      const resp = await propsFunc(request, {
+      const resp = await loadDataFunc(request, {
         ...ctx,
         state: { ...ctx.state, $live: props, resolve },
       });

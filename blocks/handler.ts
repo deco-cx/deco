@@ -4,15 +4,12 @@ import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { BaseContext, ResolveFunc } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { Handler as DenoHandler } from "std/http/server.ts";
+import { StatefulContext } from "$live/types.ts";
 
 export type LiveConfig<TConfig = any, TState = unknown> = TState & {
   $live: TConfig;
   resolve: ResolveFunc;
 };
-
-export interface StatefulContext<T> {
-  state: T;
-}
 
 export interface HttpContext<
   State = any,
