@@ -5,18 +5,19 @@ import {
   ManifestBuilder,
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
-import { exists } from "$live/utils/filesystem.ts";
+import { exists, fileSeparatorToSlash } from "$live/utils/filesystem.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { walk, WalkEntry } from "std/fs/walk.ts";
 
 const withDefinition = (
   man: ManifestBuilder,
   namespace: string,
-  functionRef: string,
+  funcImportPath: string,
   block: BlockType,
   blockIdx: number,
   blkN: number,
 ): ManifestBuilder => {
+  const functionRef = fileSeparatorToSlash(funcImportPath);
   const functionKey = shouldBeLocal(block, functionRef)
     ? functionRef
     : `${namespace}${functionRef.substring(1)}`; // add namespace to the functionRef
