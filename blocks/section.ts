@@ -37,7 +37,11 @@ const omitIfObj = (schemeable: Schemeable, omitKeys: string[]): Schemeable => {
   if (schemeable.type !== "object" || omitKeys.length === 0) {
     return schemeable;
   }
-  return { ...schemeable, value: omit(schemeable.value, ...omitKeys) };
+  return {
+    ...schemeable,
+    name: `omit${schemeable.name}`,
+    value: omit(schemeable.value, ...omitKeys),
+  };
 };
 
 const componentWith = (
