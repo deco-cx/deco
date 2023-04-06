@@ -11,6 +11,11 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
     const fetchUrl = new URL(fetchUrlLine);
     return fetchUrl.pathname.substring(1).replace(".git", "").trimEnd(); // remove .git
   }
+  if (fetchUrlLine.startsWith("git")) {
+    const [_ignoreGitUrl, nsAndGit] = fetchUrlLine.split(":");
+    const [namespace] = nsAndGit.split(".");
+    return namespace.trimEnd();
+  }
   return fetchUrlLine.replace(":", "/").trimEnd();
 };
 
