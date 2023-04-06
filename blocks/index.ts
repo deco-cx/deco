@@ -21,4 +21,4 @@ export default [
   sectionBlock,
   matcherBlock,
   flagBlock,
-] satisfies Block[];
+] as Block[];

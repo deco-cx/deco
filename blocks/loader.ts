@@ -10,7 +10,7 @@ import {
   StatefulHandler,
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
-import { BlockForModule, BlockModule } from "$live/engine/block.ts";
+import { Block, BlockModule } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 
 export interface LoaderModule<
@@ -18,11 +18,11 @@ export interface LoaderModule<
   Ctx extends StatefulContext<LiveConfig<any, TConfig>> = StatefulContext<
     LiveConfig<any, TConfig>
   >,
-> extends BlockModule<any, StatefulHandler<any, any, Ctx>> {
+> extends BlockModule<StatefulHandler<any, any, Ctx>> {
   singleFlightKey?: SingleFlightKeyFunc<TConfig, HttpContext>;
 }
 
-const loaderBlock: BlockForModule<LoaderModule> = {
+const loaderBlock: Block<LoaderModule> = {
   type: "loaders",
   introspect: introspectWith<LoaderModule<any, StatefulContext<LiveConfig>>>({
     "default": ["1", "state.$live"],

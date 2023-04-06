@@ -1,4 +1,4 @@
-import { Block, InstanceOf } from "$live/engine/block.ts";
+import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -14,7 +14,13 @@ type MatchFunc<TConfig = any> =
   | ((config: TConfig) => boolean)
   | ((config: TConfig, ctx: MatchContext) => boolean);
 
-const matcherBlock: Block<MatchFunc, (ctx: MatchContext) => boolean> = {
+const matcherBlock: Block<
+  BlockModule<
+    MatchFunc,
+    boolean | ((ctx: MatchContext) => boolean),
+    (ctx: MatchContext) => boolean
+  >
+> = {
   type: "matchers",
   introspect: {
     default: "0",

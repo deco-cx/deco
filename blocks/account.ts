@@ -1,6 +1,6 @@
 import { applyConfig } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
-import { Block, InstanceOf } from "$live/engine/block.ts";
+import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 
 // deno-lint-ignore no-empty-interface
 export interface Account {}
@@ -10,7 +10,7 @@ export type Accounts = InstanceOf<typeof accountBlock, "#/root/accounts">;
 // deno-lint-ignore no-explicit-any
 export type AccountFunc<TConfig = any> = (c: TConfig) => Account;
 
-const accountBlock: Block<AccountFunc> = {
+const accountBlock: Block<BlockModule<AccountFunc>> = {
   type: "accounts",
   introspect: {
     default: "0",
