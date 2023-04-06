@@ -168,6 +168,7 @@ export type LiveState<T = unknown> = {
 };
 
 export interface StatefulContext<T> {
+  params: Record<string, string>;
   state: T;
 }
 // deno-lint-ignore no-explicit-any
