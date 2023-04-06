@@ -15,6 +15,7 @@ import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
 import { DocNode } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSX } from "preact";
+import { UnPromisify } from "../engine/core/utils.ts";
 import { introspectAddr } from "../engine/introspect.ts";
 import { omit } from "../utils/object.ts";
 
@@ -29,7 +30,7 @@ export interface SectionModule<TConfig = any, TProps = any> extends
   getProps?: (
     req: Request,
     ctx: HandlerContext<any, LiveConfig<TConfig, any>>,
-  ) => PromiseOrValue<TProps>;
+  ) => PromiseOrValue<Partial<TProps>>;
 }
 
 const omitIfObj = (schemeable: Schemeable, omitKeys: string[]): Schemeable => {
@@ -79,6 +80,9 @@ const sectionBlock: Block<SectionModule> = {
       ...defaultFuncProps,
       inputSchema: defaultFuncProps.inputSchema && getProps.inputSchema
         ? {
+          file: path,
+          name:
+            `${defaultFuncProps.inputSchema.name}&${getProps.inputSchema.name}`,
           type: "intersection",
           value: [
             omitIfObj(defaultFuncProps.inputSchema, returnKeys),
@@ -93,7 +97,15 @@ const sectionBlock: Block<SectionModule> = {
     resolver: string,
   ):
     | Resolver<PreactComponent, TProps, BaseContext>
-    | Resolver<PreactComponent, TConfig, HttpContext> => {
+    | Resolver<
+      PreactComponent,
+      & TConfig
+      & Omit<
+        TProps,
+        keyof UnPromisify<ReturnType<Required<SectionModule>["getProps"]>> // everything except the returned by getProps func
+      >,
+      HttpContext
+    > => {
     const propsFunc = mod.getProps;
     if (!propsFunc) {
       return (
@@ -110,16 +122,22 @@ const sectionBlock: Block<SectionModule> = {
       });
     }
     return async (
-      props: TConfig,
+      props:
+        & TConfig
+        & Omit<
+          TProps,
+          keyof UnPromisify<ReturnType<Required<SectionModule>["getProps"]>>
+        >,
       { resolveChain, request, context, resolve }: HttpContext,
     ): Promise<PreactComponent<any, TProps>> => {
       const ctx = context as HandlerContext;
+      const resp = await propsFunc(request, {
+        ...ctx,
+        state: { ...ctx.state, $live: props, resolve },
+      });
       return ({
         Component: mod.default,
-        props: await propsFunc(request, {
-          ...ctx,
-          state: { ...ctx.state, $live: props, resolve },
-        }),
+        props: { ...props, ...resp } as TProps,
         metadata: {
           component: resolver,
           resolveChain,

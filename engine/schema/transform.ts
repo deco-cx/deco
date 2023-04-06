@@ -49,9 +49,13 @@ export interface ObjectSchemeable extends SchemeableBase {
   title?: string;
   value: Record<
     string,
-    { title?: string; schemeable: Schemeable; jsDocSchema?: JSONSchema7 }
+    {
+      title?: string;
+      schemeable: Schemeable;
+      jsDocSchema?: JSONSchema7;
+      required: boolean;
+    }
   >;
-  required?: string[];
 }
 
 export interface RecordSchemeable extends SchemeableBase {
@@ -371,6 +375,7 @@ const typeDefToSchemeable = async (
       return [
         property.name,
         {
+          required: !property.optional,
           schemeable: schema,
           jsDocSchema: jsDocSchema,
           title: beautify(property.name),
@@ -379,13 +384,8 @@ const typeDefToSchemeable = async (
     }),
   );
 
-  const required = node.properties
-    .filter((p) => !p.optional)
-    .map((p) => p.name);
-
   return {
     value: Object.fromEntries(properties),
-    required,
   };
 };
 
