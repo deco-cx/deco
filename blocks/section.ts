@@ -39,7 +39,7 @@ const omitIfObj = (schemeable: Schemeable, omitKeys: string[]): Schemeable => {
   }
   return {
     ...schemeable,
-    name: `omit${schemeable.name}`,
+    name: schemeable.name ? `omit${schemeable.name}` : undefined,
     value: omit(schemeable.value, ...omitKeys),
   };
 };

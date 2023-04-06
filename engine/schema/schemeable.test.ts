@@ -32,7 +32,7 @@ const getSchemeableFor = async (
   if (!nodeTypeRef) {
     return undefined;
   }
-  return await findSchemeableFromNode(nodeTypeRef, ast);
+  return await findSchemeableFromNode(nodeTypeRef, [filePath, ast], new Map());
 };
 Deno.test("Simple type generation", async () => {
   const transformed = await getSchemeableFor("SimpleType");
