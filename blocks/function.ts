@@ -6,7 +6,7 @@ import {
   SingleFlightKeyFunc,
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
-import { BlockForModule, BlockModule } from "$live/engine/block.ts";
+import { Block, BlockModule } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { LoaderFunction } from "$live/types.ts";
 
@@ -19,11 +19,11 @@ export type Function<TProps = any, TState = any> = LoaderFunction<
 export interface FunctionModule<
   TConfig = any,
   TState = any,
-> extends BlockModule<any, Function<TConfig, TState>> {
+> extends BlockModule<Function<TConfig, TState>> {
   singleFlightKey?: SingleFlightKeyFunc<TConfig, HttpContext>;
 }
 
-const functionBlock: BlockForModule<FunctionModule> = {
+const functionBlock: Block<FunctionModule> = {
   type: "functions",
   introspect: introspectWith<FunctionModule>({ default: "0" }, true),
   adapt: <

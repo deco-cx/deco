@@ -1,7 +1,7 @@
 import { Matcher } from "$live/blocks/matcher.ts";
 import { applyConfig } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
-import { Block, InstanceOf } from "$live/engine/block.ts";
+import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { context } from "$live/live.ts";
 
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
@@ -18,7 +18,7 @@ interface FlagObj<T = unknown> {
 // deno-lint-ignore no-explicit-any
 export type FlagFunc<TConfig = any> = (c: TConfig) => FlagObj;
 
-const flagBlock: Block<FlagFunc> = {
+const flagBlock: Block<BlockModule<FlagFunc>> = {
   type: "flags",
   introspect: {
     default: "0",

@@ -1,69 +1,50 @@
-import { LiveConfig } from "$live/blocks/handler.ts";
+// deno-lint-ignore-file no-explicit-any
+import { HandlerContext } from "$fresh/server.ts";
+import { HttpContext, LiveConfig } from "$live/blocks/handler.ts";
 import StubSection from "$live/components/StubSection.tsx";
 import {
-  BlockForModule,
+  Block,
   BlockModule,
   ComponentFunc,
   InstanceOf,
   PreactComponent,
 } from "$live/engine/block.ts";
-import { Resolver } from "$live/engine/core/resolver.ts";
-import { HandlerContext } from "https://deno.land/x/fresh@1.1.4/server.ts";
-import { BaseContext } from "../engine/core/resolver.ts";
-import { HttpContext } from "./handler.ts";
+import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
+import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { JSX } from "preact";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
-export interface SectionModuleWithoutStaticProps<
-  // deno-lint-ignore no-explicit-any
-  TProps = any,
-> extends BlockModule {
-  default: ComponentFunc<TProps>;
-}
-
-export interface SectionModuleWithStaticProps<
-  // deno-lint-ignore no-explicit-any
-  TConfig = any,
-  // deno-lint-ignore no-explicit-any
-  TProps = any,
-> extends BlockModule {
-  getProps: (
+export interface SectionModule<TConfig = any, TProps = any> extends
+  BlockModule<
+    ComponentFunc<TProps>,
+    JSX.Element | null,
+    PreactComponent
+  > {
+  getProps?: (
     req: Request,
-    // deno-lint-ignore no-explicit-any
     ctx: HandlerContext<any, LiveConfig<TConfig, any>>,
-  ) => Promise<TProps>;
-  default: ComponentFunc<TProps>;
+  ) => PromiseOrValue<TProps>;
 }
 
-const hasProps = (
-  mod: SectionModule,
-): mod is SectionModuleWithStaticProps => {
-  return (mod as SectionModuleWithStaticProps)?.getProps !== undefined;
-};
-// deno-lint-ignore no-explicit-any
-export type SectionModule<TConfig = any, TProps = any> =
-  | SectionModuleWithStaticProps<TConfig, TProps>
-  | SectionModuleWithoutStaticProps<TProps>;
-
-const sectionBlock: BlockForModule<SectionModule> = {
+const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: [{
     getProps: ["1", "state.$live"],
   }, {
     default: "0",
   }],
-  // deno-lint-ignore no-explicit-any
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
   ):
     | Resolver<PreactComponent, TProps, BaseContext>
     | Resolver<PreactComponent, TConfig, HttpContext> => {
-    if (!hasProps(mod)) {
+    const propsFunc = mod.getProps;
+    if (!propsFunc) {
       return (
         props: TProps,
         { resolveChain }: BaseContext,
-        // deno-lint-ignore no-explicit-any
       ): PreactComponent<any, TProps> => ({
         Component: mod.default,
         props,
@@ -77,12 +58,11 @@ const sectionBlock: BlockForModule<SectionModule> = {
     return async (
       props: TConfig,
       { resolveChain, request, context, resolve }: HttpContext,
-      // deno-lint-ignore no-explicit-any
     ): Promise<PreactComponent<any, TProps>> => {
       const ctx = context as HandlerContext;
       return ({
         Component: mod.default,
-        props: await mod.getProps(request, {
+        props: await propsFunc(request, {
           ...ctx,
           state: { ...ctx.state, $live: props, resolve },
         }),

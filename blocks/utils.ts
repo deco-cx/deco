@@ -1,9 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext, StatefulContext } from "$live/blocks/handler.ts";
-import { Block, ComponentFunc, PreactComponent } from "$live/engine/block.ts";
+import {
+  Block,
+  BlockModule,
+  ComponentFunc,
+  PreactComponent,
+} from "$live/engine/block.ts";
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
+import { JSX } from "preact";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -80,7 +86,11 @@ export const newComponentBlock = <K extends string>(
   defaultDanglingRecover?: Resolver<PreactComponent> | Resolver<
     PreactComponent
   >[],
-): Block<ComponentFunc, PreactComponent, K> => ({
+): Block<
+  BlockModule<ComponentFunc, JSX.Element | null, PreactComponent>,
+  ComponentFunc,
+  K
+> => ({
   type,
   introspect: {
     default: "0",
