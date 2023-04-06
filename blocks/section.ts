@@ -39,6 +39,21 @@ const omitIfObj = (schemeable: Schemeable, omitKeys: string[]): Schemeable => {
   }
   return { ...schemeable, value: omit(schemeable.value, ...omitKeys) };
 };
+
+const componentWith = (
+  resolver: string,
+  componentFunc: ComponentFunc,
+) =>
+<TProps = any>(props: TProps, resolveChain: string[]) => ({
+  Component: componentFunc,
+  props,
+  metadata: {
+    component: resolver,
+    resolveChain,
+    id: resolveChain.length > 0 ? resolveChain[0] : undefined,
+  },
+});
+
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: async (
@@ -106,20 +121,13 @@ const sectionBlock: Block<SectionModule> = {
       >,
       HttpContext
     > => {
+    const componentFunc = componentWith(resolver, mod.default);
     const propsFunc = mod.getProps;
     if (!propsFunc) {
       return (
         props: TProps,
         { resolveChain }: BaseContext,
-      ): PreactComponent<any, TProps> => ({
-        Component: mod.default,
-        props,
-        metadata: {
-          component: resolver,
-          resolveChain,
-          id: resolveChain.length > 0 ? resolveChain[0] : undefined,
-        },
-      });
+      ): PreactComponent<any, TProps> => componentFunc(props, resolveChain);
     }
     return async (
       props:
@@ -135,15 +143,7 @@ const sectionBlock: Block<SectionModule> = {
         ...ctx,
         state: { ...ctx.state, $live: props, resolve },
       });
-      return ({
-        Component: mod.default,
-        props: { ...props, ...resp } as TProps,
-        metadata: {
-          component: resolver,
-          resolveChain,
-          id: resolveChain.length > 0 ? resolveChain[0] : undefined,
-        },
-      });
+      return componentFunc({ ...props, ...resp } as TProps, resolveChain);
     };
   },
   defaultDanglingRecover: (_, ctx) => {
