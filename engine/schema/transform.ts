@@ -5,6 +5,7 @@ import {
   DocNode,
   InterfaceDef,
   TsTypeDef,
+  TsTypeDefLiteral,
   TsTypeLiteralDef,
   TsTypeRefDef,
   TsTypeUnionDef,
@@ -118,6 +119,38 @@ const schemeableWellKnownType = async (
       }
       return tsTypeToSchemeableRec(ref.typeParams![0], root);
     }
+    case "Pick": {
+      if (
+        ref.typeParams === null || (ref.typeParams?.length ?? 0) < 2
+      ) {
+        return {
+          type: "unknown",
+        };
+      }
+      const schemeable = await tsTypeToSchemeableRec(ref.typeParams![0], root);
+      if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
+        const newValue: typeof schemeable["value"] = {};
+        const pickKeys = ref.typeParams![1] as TsTypeUnionDef;
+        if (pickKeys?.union) {
+          for (const value of pickKeys?.union) {
+            if (value.kind === "literal" && value.literal.kind === "string") {
+              newValue[value.literal.string] = schemeable
+                .value[value.literal.string];
+            }
+          }
+        }
+        const pickKeysAsLiteral = ref.typeParams![1] as TsTypeDefLiteral;
+        if (
+          pickKeysAsLiteral?.kind &&
+          pickKeysAsLiteral?.literal?.kind === "string"
+        ) {
+          newValue[pickKeysAsLiteral.literal.string] = schemeable
+            .value[pickKeysAsLiteral.literal.string];
+        }
+        schemeable.value = newValue;
+      }
+      return schemeable;
+    }
     case "NOT_WOKRING_RECURSION_CALLS_Omit": {
       if (
         ref.typeParams === null || (ref.typeParams?.length ?? 0) < 2
@@ -135,6 +168,13 @@ const schemeableWellKnownType = async (
               delete (schemeable.value[value.literal.string]);
             }
           }
+        }
+        const omitKeysAsLiteral = ref.typeParams![1] as TsTypeDefLiteral;
+        if (
+          omitKeysAsLiteral?.kind &&
+          omitKeysAsLiteral?.literal?.kind === "string"
+        ) {
+          delete (schemeable.value[omitKeysAsLiteral.literal.string]);
         }
       }
       return schemeable;
