@@ -1,5 +1,6 @@
 import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
 import { beautify, denoDoc, jsDocToSchema } from "$live/engine/schema/utils.ts";
+import { fromFileUrlOrNoop } from "$live/utils/filesystem.ts";
 import {
   DocNode,
   InterfaceDef,
@@ -235,7 +236,7 @@ export const findSchemeableFromNode = async (
 ): Promise<Schemeable> => {
   const kind = rootNode.kind;
   const currLocation = {
-    file: rootNode.location.filename,
+    file: fromFileUrlOrNoop(rootNode.location.filename),
     name: rootNode.name,
   };
   switch (kind) {
@@ -269,7 +270,7 @@ export const findSchemeableFromNode = async (
       if (!node) {
         return {
           name: rootNode.name,
-          file: rootNode.importDef.src,
+          file: fromFileUrlOrNoop(rootNode.importDef.src),
           type: "unknown",
         };
       }

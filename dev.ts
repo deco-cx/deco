@@ -42,7 +42,7 @@ const genSchemas = async (
   manifest = new URL(manifest, base).href;
 
   await Deno.writeTextFile(
-    join(directory, "./schemas.gen.json"),
+    join(directory, "schemas.gen.json"),
     JSON.stringify(
       await genSchemasFromManifest(
         await import(manifest).then((mod) => mod.default),

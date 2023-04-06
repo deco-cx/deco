@@ -122,12 +122,8 @@ const canonicalFileWith =
       return url.substring("https://denopkg.com".length + 1) + "/" +
         files.join("/");
     }
-    if (file.startsWith("file://")) {
-      const withoutFile = fromFileUrl(file);
-      if (withoutFile.startsWith(base)) {
-        return `${namespace}${withoutFile.replace(base, "")}`;
-      }
-      return withoutFile;
+    if (file.startsWith(base)) { // file url
+      return `${namespace}${file.replace(base, "")}`;
     }
     if (file.startsWith("./")) {
       return `${namespace}${file.replace(".", "")}`;

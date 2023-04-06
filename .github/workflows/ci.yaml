@@ -11,7 +11,10 @@ on:
       - main
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     name: "Setup deno"
     steps:
       - uses: actions/checkout@v3
@@ -31,6 +34,21 @@ jobs:
       - name: fetch any uncached dependencies
         run: |
           deno cache --lock=deno.lock --lock-write --reload=file: ./mod.ts
+
+      ## Generate updated live.gen.ts
+      - run: |
+          deno run --lock=deno.lock --lock-write -A dev.ts
+
+      - name: Check if there are changes on ${{ matrix.os }}
+        id: changes
+        shell: bash
+        run: |
+          git status --porcelain
+          if [[ $(git status --porcelain | wc -c) -eq 0 ]]; then
+              echo "uncommitted changes detected"
+              exit 1
+          fi
+
       - run: |
           deno test --lock=deno.lock --lock-write -A .
       - name: check lint
