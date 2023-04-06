@@ -19,10 +19,11 @@ import {
   spy,
 } from "https://deno.land/std@0.179.0/testing/mock.ts";
 import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { fromFileUrlOrNoop } from "$live/utils/filesystem.ts";
 
 const folder = dirname(import.meta.url);
 const file = "schemeable.test.types.ts";
-const filePath = `file://${fromFileUrl(join(folder, file))}`;
+const filePath = fromFileUrlOrNoop(`file://${fromFileUrl(join(folder, file))}`);
 
 const getSchemeableFor = async (
   name: string,
@@ -594,7 +595,10 @@ Deno.test("Wellknown in types generation", async () => {
       },
       resolvable: {
         jsDocSchema: undefined,
-        schemeable: { type: "inline", value: { $ref: "#/definitions/Resolvable" } },
+        schemeable: {
+          type: "inline",
+          value: { $ref: "#/definitions/Resolvable" },
+        },
         title: "Resolvable",
       },
       preactComponent: {
