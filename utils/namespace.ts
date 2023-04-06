@@ -18,7 +18,7 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
   if (!result || (result.length < 1)) {
     return undefined;
   }
-  return "/" + result[1].trimEnd();
+  return result[1].trimEnd();
 };
 
 export const namespaceFromImportMap = async (
