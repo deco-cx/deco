@@ -451,6 +451,48 @@ const tsTypeToSchemeableRec = async (
 ): Promise<Schemeable> => {
   const kind = node.kind;
   switch (kind) {
+    case "indexedAccess": {
+      const objSchemeable = await tsTypeToSchemeableRec(
+        node.indexedAccess.objType,
+        root,
+        seen,
+      );
+      const indexType = node.indexedAccess.indexType;
+      if (indexType.kind !== "literal") { // supporting only literal access A["b"]
+        return {
+          type: "unknown",
+        };
+      }
+      if (
+        objSchemeable.type === "object" && indexType.literal.kind === "string"
+      ) {
+        const { [indexType.literal.string]: prop } = objSchemeable.value;
+        return {
+          ...objSchemeable,
+          name: objSchemeable.name
+            ? `indexedAccess${indexType.literal.string}${objSchemeable.name}`
+            : undefined,
+          value: {
+            [indexType.literal.string]: prop,
+          },
+        };
+      }
+
+      if (
+        objSchemeable.type === "array" && indexType.literal.kind === "number"
+      ) {
+        const type = objSchemeable.value;
+        return {
+          ...type,
+          name: type.name
+            ? `indexedAccess${indexType.literal.number}${type.name}`
+            : undefined,
+        };
+      }
+      return {
+        type: "unknown",
+      };
+    }
     case "array": {
       const typeSchemeable = await tsTypeToSchemeableRec(
         node.array,
@@ -568,7 +610,6 @@ const tsTypeToSchemeableRec = async (
       };
     }
     case "fnOrConstructor":
-    case "indexedAccess":
     default:
       return {
         type: "unknown",
