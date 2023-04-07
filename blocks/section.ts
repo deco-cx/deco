@@ -41,6 +41,8 @@ const componentWith = (
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: [{
+    loader: ["1", "state.$live"],
+  }, {
     loader: "1",
   }, {
     default: "0",
