@@ -64,6 +64,7 @@ export type IntrospectPath<
 > = {
   [key in keyof TModule]?: Required<TModule>[key] extends
     (...args: any[]) => any ? IntrospectFuncParam<Required<TModule>[key]>
+    : Required<TModule>[key] extends Record<string, any> ? string | string[]
     : never;
 };
 
