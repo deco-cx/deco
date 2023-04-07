@@ -211,7 +211,7 @@ export const introspectAddr = async <
   ], {});
 
   if (!configType) {
-    return baseBlockRef;
+    return undefined;
   }
   const inputSchema = await tsTypeToSchemeable(func, configType, newRoot);
   return {

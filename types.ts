@@ -179,7 +179,7 @@ export type LiveConfig<TConfig = any, TState = any> = TState & {
 };
 
 // deno-lint-ignore no-explicit-any
-export type LoaderContext<TProps = any, TState = any> = StatefulContext<
+export type LoaderContext<TProps = any, TState = {}> = StatefulContext<
   LiveConfig<TProps, TState>
 >;
 // deno-lint-ignore no-explicit-any
