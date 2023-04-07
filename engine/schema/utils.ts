@@ -232,7 +232,7 @@ export const nodeToFunctionDefinition = (
       }
       return {
         name: node.name,
-        params: [params[0]],
+        params: [params[0], params[1]],
         return: params[1],
       };
     }
