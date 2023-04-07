@@ -221,6 +221,21 @@ export const nodeToFunctionDefinition = (
         return: params[1],
       };
     }
+
+    if (
+      variableTsType.kind === "typeRef" &&
+      variableTsType.typeRef.typeName === "PropsResolver"
+    ) {
+      const params = variableTsType.typeRef.typeParams;
+      if (!params || params.length < 2) {
+        return undefined;
+      }
+      return {
+        name: node.name,
+        params: [params[0]],
+        return: params[1],
+      };
+    }
   }
   return undefined;
 };
