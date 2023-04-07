@@ -11,7 +11,7 @@ import {
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
 import { LoaderContext } from "$live/types.ts";
 import { JSX } from "preact";
-import { PropsResolver, propsResolver } from "./propsResolver.ts";
+import { PropsLoader, propsResolver } from "./propsResolver.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -21,7 +21,7 @@ export interface SectionModule<TConfig = any, TProps = any> extends
     JSX.Element | null,
     PreactComponent
   > {
-  resolveProps?: PropsResolver<TProps, TConfig>;
+  loader?: PropsLoader<TProps, TConfig>;
 }
 
 const componentWith = (
@@ -41,7 +41,7 @@ const componentWith = (
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: [{
-    resolveProps: "1",
+    loader: "1",
   }, {
     default: "0",
   }],
@@ -56,8 +56,8 @@ const sectionBlock: Block<SectionModule> = {
       HttpContext
     > => {
     const componentFunc = componentWith(resolver, mod.default);
-    const resolveProps = mod.resolveProps;
-    if (!resolveProps) {
+    const loader = mod.loader;
+    if (!loader) {
       return (
         props: TProps,
         { resolveChain }: BaseContext,
@@ -72,7 +72,7 @@ const sectionBlock: Block<SectionModule> = {
         state: { ...context.state, $live: props, resolve },
       } as LoaderContext;
       return componentFunc(
-        await propsResolver(resolveProps, ctx, request),
+        await propsResolver(loader, ctx, request),
         resolveChain,
       );
     };

@@ -46,7 +46,7 @@ export type PropsUnion<
         Pick<TLoadProps, RequiredKeys<TLoadProps>>,
         Required<TSectionInput>
       >[key];
-    } // required keys in both are optional in the resolveProps
+    } // required keys in both are optional in the loader
     & {
       [
         key in keyof Pick<
@@ -75,7 +75,7 @@ export type ObjectResolver<TLoaderProps, TSectionInput> = {
       >[key]
     >;
 };
-export type PropsResolver<TSectionInput, TLoaderProps = unknown> =
+export type PropsLoader<TSectionInput, TLoaderProps = unknown> =
   | ObjectResolver<TLoaderProps, TSectionInput>
   | TSectionInput
   | ResolvePropFunc<TLoaderProps, TSectionInput>;
@@ -98,7 +98,7 @@ const isObjResolver = <TLoaderProps, TSectionInput>(
   return typeof obj === "object";
 };
 export const propsResolver = async <TSectionInput, TProps>(
-  resolver: PropsResolver<TSectionInput, TProps>,
+  resolver: PropsLoader<TSectionInput, TProps>,
   ctx: LoaderContext<TProps>,
   req: Request,
 ): Promise<TSectionInput> => {

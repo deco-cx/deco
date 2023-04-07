@@ -224,7 +224,7 @@ export const nodeToFunctionDefinition = (
 
     if (
       variableTsType.kind === "typeRef" &&
-      variableTsType.typeRef.typeName === "PropsResolver"
+      variableTsType.typeRef.typeName === "PropsLoader"
     ) {
       const params = variableTsType.typeRef.typeParams;
       if (!params || params.length < 2) {
