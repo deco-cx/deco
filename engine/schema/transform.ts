@@ -11,6 +11,7 @@ import {
   TsTypeUnionDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7TypeName } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
+import { crypto, toHashString } from "std/crypto/mod.ts";
 
 export interface TransformContext {
   base: string;
@@ -578,7 +579,11 @@ const tsTypeToSchemeableRec = async (
         } else if (node.repr) {
           ids.push(node.repr);
         } else {
-          ids.push(btoa(JSON.stringify(tp)));
+          const hash = await crypto.subtle.digest(
+            "MD5",
+            new TextEncoder().encode(JSON.stringify(tp)),
+          );
+          ids.push(toHashString(hash));
         }
       }
       ids.sort();
@@ -604,7 +609,11 @@ const tsTypeToSchemeableRec = async (
         } else if (node.repr) {
           ids.push(node.repr);
         } else {
-          ids.push(btoa(JSON.stringify(tp)));
+          const hash = await crypto.subtle.digest(
+            "MD5",
+            new TextEncoder().encode(JSON.stringify(tp)),
+          );
+          ids.push(toHashString(hash));
         }
       }
       ids.sort();
