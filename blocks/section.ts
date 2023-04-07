@@ -39,7 +39,9 @@ const omitIfObj = (schemeable: Schemeable, omitKeys: string[]): Schemeable => {
   }
   return {
     ...schemeable,
-    name: schemeable.name ? `omit${schemeable.name}` : undefined,
+    name: schemeable.name
+      ? `omit${btoa(omitKeys.join())}${schemeable.name}`
+      : undefined,
     value: omit(schemeable.value, ...omitKeys),
   };
 };
