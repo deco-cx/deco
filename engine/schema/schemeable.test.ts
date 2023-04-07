@@ -244,7 +244,8 @@ Deno.test("Union types generation", async () => {
         required: true,
         schemeable: {
           file: undefined,
-          name: undefined,
+          name:
+            "47fb2fe93d8a63166d8156d088239aa2|f4e2fa6a639dd0d858a2d18a5c9d2890",
           value: [
             { type: "inline", value: { type: "string" } },
             { type: "inline", value: { type: "number" } },
@@ -282,7 +283,8 @@ Deno.test("Union types generation", async () => {
     args: [
       {
         file: undefined,
-        name: undefined,
+        name:
+          "47fb2fe93d8a63166d8156d088239aa2|f4e2fa6a639dd0d858a2d18a5c9d2890",
         type: "union",
         value: [
           { type: "inline", value: { type: "string" } },
@@ -642,7 +644,6 @@ Deno.test("Wellknown in types generation", async () => {
         title: "Record",
         type: "object",
         additionalProperties: {
-          title: undefined,
           type: "string",
         },
       },
