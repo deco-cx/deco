@@ -8,7 +8,7 @@ import {
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
-import { LoaderFunction } from "$live/types.ts";
+import { LiveConfig, LoaderFunction } from "$live/types.ts";
 
 export type Function<TProps = any, TState = any> = LoaderFunction<
   TProps,
@@ -45,7 +45,7 @@ const functionBlock: Block<FunctionModule> = {
             ...ctx.context.state,
             $live,
             resolve: ctx.resolve,
-          },
+          } as LiveConfig,
         },
         $live,
       );
