@@ -451,6 +451,9 @@ const tsTypeToSchemeableRec = async (
 ): Promise<Schemeable> => {
   const kind = node.kind;
   switch (kind) {
+    case "parenthesized": {
+      return await tsTypeToSchemeableRec(node.parenthesized, root, seen);
+    }
     case "indexedAccess": {
       const objSchemeable = await tsTypeToSchemeableRec(
         node.indexedAccess.objType,
@@ -575,7 +578,7 @@ const tsTypeToSchemeableRec = async (
         } else if (node.repr) {
           ids.push(node.repr);
         } else {
-          ids.push(`${seen.size}`);
+          ids.push(btoa(JSON.stringify(tp)));
         }
       }
       ids.sort();
@@ -601,7 +604,7 @@ const tsTypeToSchemeableRec = async (
         } else if (node.repr) {
           ids.push(node.repr);
         } else {
-          ids.push(`${seen.size}`);
+          ids.push(btoa(JSON.stringify(tp)));
         }
       }
       ids.sort();
