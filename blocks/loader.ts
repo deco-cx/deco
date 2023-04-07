@@ -1,14 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
-import { HttpContext, LiveConfig } from "$live/blocks/handler.ts";
+import { HttpContext } from "$live/blocks/handler.ts";
 import {
   newSingleFlightGroup,
   SingleFlightKeyFunc,
-  StatefulHandler
+  StatefulHandler,
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
-import { LoaderContext } from "$live/types.ts";
+import { LiveConfig, LoaderContext } from "$live/types.ts";
 
 export interface LoaderModule<
   TConfig = any,

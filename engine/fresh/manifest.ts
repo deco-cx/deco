@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/server.ts";
-import { LiveConfig } from "$live/blocks/handler.ts";
 import blocks from "$live/blocks/index.ts";
 import { Block, BlockModule, PreactComponent } from "$live/engine/block.ts";
 import { getComposedConfigStore } from "$live/engine/configstore/provider.ts";
@@ -17,7 +16,7 @@ import defaultResolvers from "$live/engine/fresh/defaults.ts";
 import { integrityCheck } from "$live/engine/integrity.ts";
 import { compose } from "$live/engine/middleware.ts";
 import { context } from "$live/live.ts";
-import { DecoManifest } from "$live/types.ts";
+import { DecoManifest, LiveConfig } from "$live/types.ts";
 
 import { parse } from "https://deno.land/std@0.181.0/flags/mod.ts";
 import { usePreviewFunc } from "../../blocks/utils.ts";

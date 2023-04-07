@@ -1,8 +1,9 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
-import { Handler, LiveConfig } from "$live/blocks/handler.ts";
+import { Handler } from "$live/blocks/handler.ts";
 import { RouteMod } from "$live/blocks/route.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
+import { LiveConfig } from "$live/types.ts";
 import { dirname } from "std/path/mod.ts";
 import { assertEquals } from "std/testing/asserts.ts";
 

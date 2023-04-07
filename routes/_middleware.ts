@@ -1,12 +1,11 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { LiveConfig } from "$live/blocks/handler.ts";
 import {
   getPagePathTemplate,
   redirectTo,
 } from "$live/compatibility/v0/editorData.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
-import { LiveState } from "$live/types.ts";
+import { LiveConfig, LiveState } from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
