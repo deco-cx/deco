@@ -56,7 +56,7 @@ const resolvableReferenceSchema: JSONSchema7 = {
  * properties: { __resolveType: "deco-sites/std/myBooleanFunction.ts"}
  * }
  */
-const functionRefToschemeable = ({
+const functionRefToSchemeable = ({
   functionKey,
   inputSchemaId,
 }: ResolverRef): Schemeable => {
@@ -248,7 +248,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       // for all function refs add the function schemeable to all schema outputs
       const [definitionsWithFuncRefs, root] = functionRefs.reduce(
         ([currentDefinitions, currentRoot], rs) => {
-          const schemeable = functionRefToschemeable(rs);
+          const schemeable = functionRefToSchemeable(rs);
           const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
           const currAnyOfs = currentRoot[rs.blockType]?.anyOf ??
             [resolvableRef];

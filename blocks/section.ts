@@ -41,7 +41,7 @@ const componentWith = (
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: [{
-    resolveProps: "0",
+    resolveProps: "1",
   }, {
     default: "0",
   }],

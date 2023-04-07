@@ -1,15 +1,17 @@
 // deno-lint-ignore-file no-explicit-any
-import { Props } from "$live/components/JsonViewer.tsx";
-import { PromiseOrValue, waitKeys } from "$live/engine/core/utils.ts";
+import {
+  PromiseOrValue,
+  Promisified,
+  waitKeys,
+} from "$live/engine/core/utils.ts";
 import { LoaderContext } from "$live/types.ts";
 import {
+  Diff,
   Intersection,
   OptionalKeys,
+  Overwrite,
   RequiredKeys,
-  Subtract,
-} from "https://esm.sh/utility-types";
-import { request } from "https://esm.sh/v113/websocket@1.0.34/deno/websocket.mjs";
-import { Promisified } from "../engine/core/utils.ts";
+} from "https://esm.sh/utility-types@3.10.0";
 
 export type ResolvePropFunc<TProps = any, TReturn = any, TState = any> = (
   request: Request,
@@ -18,46 +20,45 @@ export type ResolvePropFunc<TProps = any, TReturn = any, TState = any> = (
     TState
   >,
 ) => PromiseOrValue<TReturn>;
+
 export type PropsUnion<
   TLoadProps,
   TSectionInput,
-> = TSectionInput extends Record<string, any>
-  ? Required<TSectionInput> extends Pick<TLoadProps, RequiredKeys<TLoadProps>>
-    ? 
-      & {
-        [
-          key in keyof Intersection<
-            Pick<TLoadProps, RequiredKeys<TLoadProps>>,
-            Required<Props>
-          >
-        ]?: Intersection<
-          Pick<TLoadProps, RequiredKeys<TLoadProps>>,
-          Required<Props>
-        >[key];
-      }
-      & {
-        [
-          key in keyof Pick<
-            Props,
-            OptionalKeys<Props>
-          >
-        ]?: Pick<
-          Props,
-          OptionalKeys<Props>
-        >[key];
-      }
-      & {
-        [
-          key in keyof Subtract<
-            Required<TSectionInput>,
-            Pick<TLoadProps, RequiredKeys<TLoadProps>>
-          >
-        ]: Subtract<
+> = TSectionInput extends Record<string, any> ? Overwrite<
+    {
+      [
+        key in keyof Diff<
           Required<TSectionInput>,
           Pick<TLoadProps, RequiredKeys<TLoadProps>>
-        >[key];
-      }
-  : TSectionInput
+        >
+      ]: Diff<
+        Required<TSectionInput>,
+        Pick<TLoadProps, RequiredKeys<TLoadProps>>
+      >[key];
+    }, // non-required keys in the input object that are required in the section object are required.
+    & {
+      [
+        key in keyof Intersection<
+          Pick<TLoadProps, RequiredKeys<TLoadProps>>,
+          Required<TSectionInput>
+        >
+      ]?: Intersection<
+        Pick<TLoadProps, RequiredKeys<TLoadProps>>,
+        Required<TSectionInput>
+      >[key];
+    } // required keys in both are optional in the resolveProps
+    & {
+      [
+        key in keyof Pick<
+          TSectionInput,
+          OptionalKeys<TSectionInput>
+        >
+      ]?: Pick<
+        TSectionInput,
+        OptionalKeys<TSectionInput>
+      >[key];
+    } // optional keys in the section input are always optional.
+  >
   : TSectionInput;
 
 export type ObjectResolver<TLoaderProps, TSectionInput> = {
@@ -114,7 +115,7 @@ export const propsResolver = async <TSectionInput, TProps>(
     const funcOrValue = resolver[keyAsResolverKey];
     if (isFuncResolver(funcOrValue)) {
       const result = funcOrValue(
-        request,
+        req,
         ctx,
       );
       resolved[keyAsResolvedKey] =

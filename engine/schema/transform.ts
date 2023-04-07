@@ -574,13 +574,15 @@ const tsTypeToSchemeableRec = async (
           ids.push("null");
         } else if (node.repr) {
           ids.push(node.repr);
+        } else {
+          ids.push(`${seen.size}`);
         }
       }
       ids.sort();
-      const unionTypeId = ids.length === 0 ? undefined : ids.join("&");
+      const intersectionTypeId = ids.length === 0 ? undefined : ids.join("&");
       return {
-        name: unionTypeId,
-        file: values[0]?.file,
+        name: intersectionTypeId,
+        file: values.find((v) => v.file)?.file,
         value: values,
         type: "intersection",
       };
@@ -598,13 +600,15 @@ const tsTypeToSchemeableRec = async (
           ids.push("null");
         } else if (node.repr) {
           ids.push(node.repr);
+        } else {
+          ids.push(`${seen.size}`);
         }
       }
       ids.sort();
       const unionTypeId = ids.length === 0 ? undefined : ids.join("|");
       return {
         name: unionTypeId,
-        file: values[0]?.file,
+        file: values.find((v) => v.file)?.file,
         value: values,
         type: "union",
       };
