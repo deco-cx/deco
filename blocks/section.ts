@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/server.ts";
-import { HttpContext, LiveConfig } from "$live/blocks/handler.ts";
+import { HttpContext } from "$live/blocks/handler.ts";
 import StubSection from "$live/components/StubSection.tsx";
 import {
   Block,
@@ -14,7 +14,7 @@ import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
 import { introspectAddr } from "$live/engine/introspect.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
-import { LoaderContext } from "$live/types.ts";
+import { LiveConfig, LoaderContext } from "$live/types.ts";
 import { omit } from "$live/utils/object.ts";
 import { DocNode } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSX } from "preact";

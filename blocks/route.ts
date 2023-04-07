@@ -3,16 +3,12 @@ import { Handler, HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import {
   MiddlewareRoute,
   RouteConfig,
-  RouteModule
+  RouteModule,
 } from "$fresh/src/server/types.ts";
-import { LiveConfig } from "$live/blocks/handler.ts";
-import {
-  Block, BlockModule,
-  ComponentFunc
-} from "$live/engine/block.ts";
+import { Block, BlockModule, ComponentFunc } from "$live/engine/block.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { context as liveContext } from "$live/live.ts";
-import { DecoManifest, LiveState } from "$live/types.ts";
+import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 
 export interface LiveRouteConfig extends RouteConfig {

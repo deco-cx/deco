@@ -11,6 +11,7 @@ import sectionBlock from "$live/blocks/section.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import { ResolveFunc } from "$live/engine/core/resolver.ts";
 
 export interface Node {
   label: string;
@@ -172,7 +173,15 @@ export interface StatefulContext<T> {
   state: T;
 }
 // deno-lint-ignore no-explicit-any
-export type LoaderContext<TState = any> = StatefulContext<TState>;
+export type LiveConfig<TConfig = any, TState = any> = TState & {
+  $live: TConfig;
+  resolve: ResolveFunc;
+};
+
+// deno-lint-ignore no-explicit-any
+export type LoaderContext<TProps = any, TState = any> = StatefulContext<
+  LiveConfig<TProps, TState>
+>;
 // deno-lint-ignore no-explicit-any
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,

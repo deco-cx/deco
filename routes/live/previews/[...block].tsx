@@ -1,12 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext, PageProps } from "$fresh/server.ts";
-import { LiveConfig } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
 import { context } from "$live/live.ts";
 import Render from "$live/routes/[...catchall].tsx";
-import { LiveState } from "$live/types.ts";
+import { LiveConfig, LiveState } from "$live/types.ts";
 
 export default function Preview(props: PageProps<Page>) {
   const renderProps = {
