@@ -9,8 +9,8 @@ import {
   JsDocTagValued,
   TsTypeDef,
   TsTypeFnOrConstructorDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
-import { doc } from "https://deno.land/x/deno_doc@0.58.0/mod.ts";
+} from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
+import { doc } from "https://deno.land/x/deno_doc@0.59.0/mod.ts";
 
 /**
  * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
