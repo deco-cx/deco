@@ -16,7 +16,7 @@ import { PropsLoader, propsResolver } from "./propsResolver.ts";
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
 export type SectionProps<T> = T extends PropsLoader<infer Props> ? Props
-  : never;
+  : unknown;
 
 export interface SectionModule<TConfig = any, TProps = any> extends
   BlockModule<
