@@ -541,7 +541,7 @@ Deno.test("Type alias generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    title: undefined,
+    title: "TypeAlias",
     type: "string",
   });
 

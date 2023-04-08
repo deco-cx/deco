@@ -545,7 +545,6 @@ const tsTypeToSchemeableRec = async (
         type: "inline",
         value: type
           ? ({
-            title: `Inline ${type}`,
             type: optional ? [type, "null"] : type,
           } as JSONSchema7)
           : {},
@@ -560,7 +559,6 @@ const tsTypeToSchemeableRec = async (
       return {
         type: "inline",
         value: {
-          title: `Inline ${node.literal.kind}`,
           type: node.literal.kind as JSONSchema7TypeName, // FIXME(mcandeia) not compliant with JSONSchema
           // deno-lint-ignore no-explicit-any
           const: (node.literal as any)[node.literal.kind] as JSONSchema7Type,
