@@ -1,17 +1,17 @@
 import type { Manifest } from "$fresh/server.ts";
-import type { IslandModule } from "$fresh/src/server/types.ts";
 import accountBlock from "$live/blocks/account.ts";
 import flagBlock from "$live/blocks/flag.ts";
 import functionBlock from "$live/blocks/function.ts";
 import handlerBlock from "$live/blocks/handler.ts";
+import islandBlock from "$live/blocks/island.ts";
 import loaderBlock from "$live/blocks/loader.ts";
 import matcherBlock from "$live/blocks/matcher.ts";
 import pageBlock from "$live/blocks/page.ts";
 import sectionBlock from "$live/blocks/section.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
 import { ResolveFunc } from "$live/engine/core/resolver.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
 
 export interface Node {
   label: string;
@@ -24,7 +24,7 @@ export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
-  islands: Record<string, IslandModule>;
+  islands: Record<string, ModuleOf<typeof islandBlock>>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
   functions?: Record<string, ModuleOf<typeof functionBlock>>;
   loaders?: Record<string, ModuleOf<typeof loaderBlock>>;
