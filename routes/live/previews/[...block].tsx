@@ -78,6 +78,8 @@ const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
   return params;
 };
 
+const addLocal = (block: string): string =>
+  !block.startsWith("/") ? `./${block}` : block;
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
@@ -91,7 +93,7 @@ export const handler = async (
     ? await req.json()
     : propsFromUrl(url) ?? {};
 
-  const block = ctx.params.block;
+  const block = addLocal(ctx.params.block);
 
   ctx.params = paramsFromUrl(url) ?? ctx.params;
   ctx.state?.t.start("load-data");

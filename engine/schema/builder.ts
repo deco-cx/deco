@@ -124,9 +124,6 @@ const canonicalFileWith =
     if (file.startsWith(base)) { // file url
       return `${namespace}${file.replace(base, "")}`;
     }
-    if (file.startsWith("./")) {
-      return `${namespace}${file.replace(".", "")}`;
-    }
     if (file.startsWith("http")) {
       const url = new URL(file);
       // trying to guess, best effort
