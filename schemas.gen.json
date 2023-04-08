@@ -14,13 +14,15 @@
       }
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
-      "$ref": "#/root/flags"
+      "$ref": "#/root/flags",
+      "title": "Flag"
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
-      }
+      },
+      "title": "Flag[]"
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
@@ -36,7 +38,8 @@
       "title": "$live/handlers/routesSelection.ts@SelectionConfig"
     },
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
-      "$ref": "#/root/handlers"
+      "$ref": "#/root/handlers",
+      "title": "Handler"
     },
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record": {
       "title": "Unknown record",
@@ -49,11 +52,11 @@
       "type": "object",
       "properties": {
         "base": {
+          "title": "Base",
           "type": [
             "string",
             "null"
-          ],
-          "title": "Base"
+          ]
         },
         "routes": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
@@ -66,7 +69,8 @@
       "title": "$live/handlers/router.ts@RouterConfig"
     },
     "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
-      "$ref": "#/root/pages"
+      "$ref": "#/root/pages",
+      "title": "Page"
     },
     "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
       "type": "object",
@@ -95,23 +99,40 @@
       "title": "$live/handlers/fresh.ts@FreshConfig"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
-      "$ref": "#/root/sections"
+      "$ref": "#/root/sections",
+      "title": "Section"
     },
-    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]": {
+    "JGxpdmUvYmxvY2tzL2lzbGFuZC50cw==@Island": {
+      "$ref": "#/root/islands",
+      "title": "Island"
+    },
+    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2lzbGFuZC50cw==@Island"
+        }
+      ],
+      "title": "Island|Section"
+    },
+    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section[]": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
-      }
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section"
+      },
+      "title": "Island|Section[]"
     },
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
       "type": "object",
       "properties": {
         "name": {
-          "type": "string",
-          "title": "Name"
+          "title": "Name",
+          "type": "string"
         },
         "sections": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section[]",
           "title": "Sections"
         }
       },
@@ -138,19 +159,19 @@
       "type": "object",
       "properties": {
         "start": {
+          "title": "Start",
           "type": [
             "string",
             "null"
           ],
-          "title": "Start",
           "format": "date-time"
         },
         "end": {
+          "title": "End",
           "type": [
             "string",
             "null"
           ],
-          "title": "End",
           "format": "date-time"
         }
       },
@@ -161,18 +182,18 @@
       "type": "object",
       "properties": {
         "includes": {
+          "title": "Includes",
           "type": [
             "string",
             "null"
-          ],
-          "title": "Includes"
+          ]
         },
         "match": {
+          "title": "Match",
           "type": [
             "string",
             "null"
-          ],
-          "title": "Match"
+          ]
         }
       },
       "required": [],
@@ -182,8 +203,8 @@
       "type": "object",
       "properties": {
         "siteId": {
-          "type": "number",
-          "title": "Site Id"
+          "title": "Site Id",
+          "type": "number"
         }
       },
       "required": [
@@ -192,13 +213,15 @@
       "title": "$live/matchers/MatchSite.ts@Props"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
-      "$ref": "#/root/matchers"
+      "$ref": "#/root/matchers",
+      "title": "Matcher"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher"
-      }
+      },
+      "title": "Matcher[]"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==@Props": {
       "type": "object",
@@ -206,10 +229,12 @@
         "op": {
           "anyOf": [
             {
+              "title": "Inline string",
               "type": "string",
               "const": "or"
             },
             {
+              "title": "Inline string",
               "type": "string",
               "const": "and"
             }
@@ -232,8 +257,8 @@
       "type": "object",
       "properties": {
         "traffic": {
-          "type": "number",
-          "title": "Traffic"
+          "title": "Traffic",
+          "type": "number"
         }
       },
       "required": [
@@ -247,10 +272,12 @@
         "environment": {
           "anyOf": [
             {
+              "title": "Inline string",
               "type": "string",
               "const": "production"
             },
             {
+              "title": "Inline string",
               "type": "string",
               "const": "development"
             }
@@ -272,8 +299,8 @@
           "title": "Matcher"
         },
         "name": {
-          "type": "string",
-          "title": "Name"
+          "title": "Name",
+          "type": "string"
         },
         "routes": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
@@ -283,6 +310,7 @@
           "title": "Overrides",
           "type": "object",
           "additionalProperties": {
+            "title": "Inline string",
             "type": "string"
           }
         }
@@ -305,6 +333,7 @@
           "title": "Overrides",
           "type": "object",
           "additionalProperties": {
+            "title": "Inline string",
             "type": "string"
           }
         }

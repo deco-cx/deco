@@ -1,7 +1,7 @@
 import section from "$live/blocks/section.ts";
 import { InstanceOf } from "$live/engine/block.ts";
 
-export type IslandInstance = InstanceOf<typeof island, "#/root/islands">;
+export type Island = InstanceOf<typeof island, "#/root/islands">;
 
 const island = { ...section, type: "islands" };
 
