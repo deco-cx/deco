@@ -79,7 +79,7 @@ const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
 };
 
 const addLocal = (block: string): string =>
-  !block.startsWith("/") ? `./${block}` : block;
+  block.startsWith("islands") && block.endsWith("tsx") ? `./${block}` : block;
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
