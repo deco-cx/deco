@@ -184,7 +184,7 @@ export const schemeableToJSONSchema = (
     ...curr,
     ...ischemeable.jsDocSchema ?? {},
     title: ischemeable?.jsDocSchema?.title ?? schemeable.friendlyId ??
-      curr?.title,
+      curr?.title ?? schemeable.name,
   };
 
   if (schemeableId && curr.type !== "null") { // null should not be created as a separated type
