@@ -158,6 +158,9 @@ const flat = (
   if (ref && memo[ref]) {
     return memo[ref];
   }
+  if (ref) {
+    memo[ref] = { $ref: "#" }; // recursive type by default
+  }
   if (def?.$ref) {
     def = flat(schema.definitions[keyFromRef(def.$ref)], schema, memo);
   }

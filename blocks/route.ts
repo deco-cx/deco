@@ -66,9 +66,9 @@ const mapMiddleware = (
     context.state.t = { start, end, printTimings };
     const url = new URL(request.url);
     if (
-      url.pathname.startsWith("/_frsh") ||
-      url.pathname.startsWith("~partytown") ||
-      url.searchParams.has("__frsh_c")
+      url.pathname.startsWith("/_frsh") || // fresh urls /_fresh/js/*
+      url.pathname.startsWith("~partytown") || // party town urls
+      url.searchParams.has("__frsh_c") // static assets, fresh uses ?__fresh_c=$id
     ) {
       return mid(request, context);
     }
