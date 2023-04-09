@@ -9,6 +9,7 @@ export function createServerTimings() {
 
   const start = (key: TimingKey) => {
     timings[key] = { start: performance.now() };
+    return () => end(key);
   };
 
   const end = (key: TimingKey) => {

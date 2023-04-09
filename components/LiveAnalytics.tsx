@@ -1,10 +1,11 @@
 import { context } from "$live/live.ts";
 import Script from "https://deno.land/x/partytown@0.2.1/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.2.1/integrations/Jitsu.tsx";
-import type { Flags, Page } from "$live/types.ts";
+import { Flags } from "../engine/configstore/supabaseLegacy.ts";
 
 declare global {
   interface Window {
+    // deno-lint-ignore no-explicit-any
     jitsu: (...args: any[]) => void;
   }
 }
@@ -104,7 +105,10 @@ const main = (
 
     /* Send scriptLoad event to jitsu */
     loadingErrors.forEach((e) =>
-      window.jitsu("track", "error", { error_type: "ScriptLoad", url: e.src })
+      window.jitsu("track", "error", {
+        error_type: "ScriptLoad",
+        url: (e as unknown as { src: string }).src,
+      })
     );
 
     /* Add these trackers to all analytics sent to our server */
@@ -125,14 +129,14 @@ const main = (
 };
 
 const innerHtml = (
-  { id, path, flags = {} }: Partial<Page> & { flags?: Flags },
+  { id, path, flags = {} }: Props,
 ) =>
   `(${main.toString()})({page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", active_flags: "${
     Object.keys(flags).join(",")
   }"});
 `;
 
-type Props = Partial<Page> & { flags?: Flags };
+type Props = Partial<{ id: number; path: string }> & { flags?: Flags };
 
 /**
  * We don't send Jitsu events on localhost by default, so

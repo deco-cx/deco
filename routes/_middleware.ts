@@ -8,7 +8,6 @@ import { context } from "$live/live.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -58,9 +57,7 @@ export const handler = async (
     return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
   }
 
-  const { start, end, printTimings } = createServerTimings();
-  ctx.state.t = { start, end };
-  const state = ctx.state.$live.state;
+  const state = ctx.state?.$live?.state;
   ctx.state = {
     ...ctx.state,
     ...(state ?? {}),
@@ -71,7 +68,7 @@ export const handler = async (
   const initialResponse = await ctx.next();
 
   const newHeaders = new Headers(initialResponse.headers);
-  newHeaders.set("Server-Timing", printTimings());
+  newHeaders.set("Server-Timing", ctx?.state?.t?.printTimings());
 
   for (const [headerKey, headerValue] of Object.entries(defaultHeaders)) {
     newHeaders.set(headerKey, headerValue);
@@ -88,7 +85,6 @@ export const handler = async (
       formatLog({
         status: initialResponse.status,
         url,
-        pageId: ctx.state.page?.id,
         begin,
       }),
     );
