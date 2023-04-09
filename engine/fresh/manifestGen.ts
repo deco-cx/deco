@@ -51,12 +51,6 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
-    from: "$live/routes/live/rpc/[func].ts",
-    key: "./routes/live/rpc/[func].ts",
-    ref: "$live_rpc",
-  },
-  {
-    block: "routes",
     from: "$live/routes/live/workbench.ts",
     key: "./routes/live/workbench.ts",
     ref: "$live_workbench",

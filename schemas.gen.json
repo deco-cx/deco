@@ -52,11 +52,11 @@
       "type": "object",
       "properties": {
         "base": {
-          "title": "Base",
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Base"
         },
         "routes": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
@@ -128,8 +128,8 @@
       "type": "object",
       "properties": {
         "name": {
-          "title": "Name",
-          "type": "string"
+          "type": "string",
+          "title": "Name"
         },
         "sections": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section[]",
@@ -159,20 +159,20 @@
       "type": "object",
       "properties": {
         "start": {
-          "title": "Start",
           "type": [
             "string",
             "null"
           ],
-          "format": "date-time"
+          "format": "date-time",
+          "title": "Start"
         },
         "end": {
-          "title": "End",
           "type": [
             "string",
             "null"
           ],
-          "format": "date-time"
+          "format": "date-time",
+          "title": "End"
         }
       },
       "required": [],
@@ -182,18 +182,18 @@
       "type": "object",
       "properties": {
         "includes": {
-          "title": "Includes",
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Includes"
         },
         "match": {
-          "title": "Match",
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "title": "Match"
         }
       },
       "required": [],
@@ -203,8 +203,8 @@
       "type": "object",
       "properties": {
         "siteId": {
-          "title": "Site Id",
-          "type": "number"
+          "type": "number",
+          "title": "Site Id"
         }
       },
       "required": [
@@ -229,12 +229,10 @@
         "op": {
           "anyOf": [
             {
-              "title": "Inline string",
               "type": "string",
               "const": "or"
             },
             {
-              "title": "Inline string",
               "type": "string",
               "const": "and"
             }
@@ -257,8 +255,8 @@
       "type": "object",
       "properties": {
         "traffic": {
-          "title": "Traffic",
-          "type": "number"
+          "type": "number",
+          "title": "Traffic"
         }
       },
       "required": [
@@ -272,12 +270,10 @@
         "environment": {
           "anyOf": [
             {
-              "title": "Inline string",
               "type": "string",
               "const": "production"
             },
             {
-              "title": "Inline string",
               "type": "string",
               "const": "development"
             }
@@ -299,8 +295,8 @@
           "title": "Matcher"
         },
         "name": {
-          "title": "Name",
-          "type": "string"
+          "type": "string",
+          "title": "Name"
         },
         "routes": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record",
@@ -310,7 +306,6 @@
           "title": "Overrides",
           "type": "object",
           "additionalProperties": {
-            "title": "Inline string",
             "type": "string"
           }
         }
@@ -333,7 +328,6 @@
           "title": "Overrides",
           "type": "object",
           "additionalProperties": {
-            "title": "Inline string",
             "type": "string"
           }
         }
