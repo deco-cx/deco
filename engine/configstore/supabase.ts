@@ -2,7 +2,7 @@
 import { supabase } from "$live/deps.ts";
 import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { singleFlight } from "$live/engine/core/utils.ts";
+import { singleFlight as sfFunc } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
 
 function sleep(ms: number) {
@@ -25,7 +25,10 @@ const fetchArchivedConfigs = (site: string) => {
   ).single();
 };
 
-export const newSupabaseDeploy = (site: string): ConfigStore => {
+export const newSupabase = (
+  site: string,
+  backgroundUpdate?: boolean,
+): ConfigStore => {
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
 
@@ -75,24 +78,14 @@ export const newSupabaseDeploy = (site: string): ConfigStore => {
       singleFlight = false;
     }
   };
-  currResolvables.then(() => {
-    setInterval(updateInternalState, refetchIntervalMSDeploy);
-  });
 
-  const localSupabase = newSupabaseLocal(site);
-  return {
-    archived: localSupabase.archived.bind(localSupabase), // archived does not need to be fetched in background
-    state: async (opts?: ReadOptions) => {
-      if (opts?.forceFresh) {
-        await updateInternalState(true);
-      }
-      return await currResolvables;
-    },
-  };
-};
+  if (backgroundUpdate) {
+    currResolvables.then(() => {
+      setInterval(updateInternalState, refetchIntervalMSDeploy);
+    });
+  }
+  const sf = sfFunc<Record<string, Resolvable>>();
 
-export const newSupabaseLocal = (site: string): ConfigStore => {
-  const sf = singleFlight<Record<string, Resolvable>>();
   return {
     archived: async () => {
       return await sf.do(
@@ -105,18 +98,12 @@ export const newSupabaseLocal = (site: string): ConfigStore => {
             return data.archived as Record<string, Resolvable>;
           }),
       );
-    },
-    state: async () => {
-      return await sf.do(
-        "state",
-        async () =>
-          await fetchConfigs(site).then(({ data, error }) => {
-            if (data === null || error != null) {
-              throw error;
-            }
-            return data.state as Record<string, Resolvable>;
-          }),
-      );
+    }, // archived does not need to be fetched in background
+    state: async (opts?: ReadOptions) => {
+      if (opts?.forceFresh) {
+        await updateInternalState(true);
+      }
+      return await currResolvables;
     },
   };
 };
@@ -126,7 +113,7 @@ export const tryUseProvider = (
   site: string,
 ): ConfigStore => {
   let provider: null | ConfigStore = null;
-  const sf = singleFlight();
+  const sf = sfFunc();
   const setProviderIfExists = async () => {
     await sf.do("any", async () => {
       if (provider === null) {

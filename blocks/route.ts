@@ -1,6 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { Handler, HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import {
+  MiddlewareHandler,
+  MiddlewareHandlerContext,
   MiddlewareRoute,
   RouteConfig,
   RouteModule,
@@ -9,6 +11,7 @@ import { Block, BlockModule, ComponentFunc } from "$live/engine/block.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { context as liveContext } from "$live/live.ts";
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
@@ -51,6 +54,47 @@ const isConfigurableRoute = (
   );
 };
 const middlewareKey = "./routes/_middleware.ts";
+
+const mapMiddleware = (
+  mid: MiddlewareHandler<LiveConfig<any, LiveState>>,
+): MiddlewareHandler<LiveConfig<any, LiveState>> => {
+  return async function (
+    request: Request,
+    context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
+  ) {
+    const { start, end, printTimings } = createServerTimings();
+    context.state.t = { start, end, printTimings };
+    const url = new URL(request.url);
+    if (
+      url.pathname.startsWith("/_frsh") ||
+      url.pathname.startsWith("~partytown") ||
+      url.searchParams.has("__frsh_c")
+    ) {
+      return mid(request, context);
+    }
+
+    const resolver = liveContext.configResolver!;
+    const ctxResolver = resolver
+      .resolverFor(
+        { context, request },
+        {
+          monitoring: { t: context.state.t },
+        },
+      )
+      .bind(resolver);
+
+    const endTiming = start("load-page");
+    const $live = (await ctxResolver(
+      middlewareKey,
+      !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
+        url.searchParams.has("pageId"), // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+    )) ?? {};
+
+    endTiming();
+    context.state = { ...context.state, $live, resolve: ctxResolver };
+    return await mid(request, context);
+  };
+};
 const mapHandlers = (
   key: string,
   handlers: Handler<any, any> | Handlers<any, any> | undefined,
@@ -74,29 +118,15 @@ const mapHandlers = (
     request: Request,
     context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
-    const url = new URL(request.url);
-    const resolver = liveContext.configResolver!;
-    const ctxResolver = resolver
-      .resolverFor(
-        { context, request },
-        {
-          monitoring: context?.state?.t
-            ? {
-              t: context.state.t!,
-            }
-            : undefined,
-        },
-      )
-      .bind(resolver);
-
-    const $live = (await ctxResolver(
+    const end = context.state.t.start(`resolve-${key}`);
+    const $live = (await context.state.resolve(
       key,
-      middlewareKey === key && // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
-        (url.searchParams.has("forceFresh") || url.searchParams.has("pageId")),
     )) ?? {};
 
+    end && end();
+
     if (typeof handlers === "function") {
-      context.state = { ...context.state, $live, resolve: ctxResolver };
+      context.state = { ...context.state, $live };
       return await handlers(request, context);
     }
     return await context.render($live);
@@ -118,6 +148,16 @@ const routeBlock: Block<RouteMod> = {
     if (
       isConfigurableRoute(routeModule)
     ) {
+      if (key === middlewareKey) {
+        return {
+          ...routeModule,
+          handler: mapMiddleware(
+            routeModule.handler as MiddlewareHandler<
+              LiveConfig<any, LiveState>
+            >,
+          ),
+        };
+      }
       const configurableRoute = routeModule;
       const handl = configurableRoute.handler;
       const liveKey = configurableRoute.config?.liveKey ?? key;

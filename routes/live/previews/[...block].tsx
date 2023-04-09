@@ -96,13 +96,13 @@ export const handler = async (
   const block = addLocal(ctx.params.block);
 
   ctx.params = paramsFromUrl(url) ?? ctx.params;
-  ctx.state?.t.start("load-data");
+  const end = ctx.state?.t.start("load-data");
   const page = await resolve({
     __resolveType: "preview",
     block,
     props,
   });
-  ctx.state?.t.end("load-data");
+  end && end();
 
   return await ctx.render(
     page,
