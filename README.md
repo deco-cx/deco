@@ -185,7 +185,7 @@ Then copy some HTML into your clipboard. For example:
 ```html
 <div>
   <span>Hello World</span>
-  <img src="/test.jpg" />
+  <img src="/test.jpg" >
   <!-- note the unclosed img tag, which is invalid JSX -->
 </div>
 ```
