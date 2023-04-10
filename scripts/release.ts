@@ -1,6 +1,7 @@
 import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import { increment } from "https://deno.land/std@0.167.0/semver/mod.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
+import { join } from "https://deno.land/std@0.181.0/path/mod.ts";
 
 await exec("git fetch --tags");
 
@@ -34,6 +35,35 @@ const newVersionByUser = await Select.prompt({
 const newVersion = newVersionByUser === "custom"
   ? prompt("Which version: ")
   : newVersionByUser;
+
+const metaJSONFilePath = join(Deno.cwd(), "meta.json");
+const meta: { version: string } = await Deno.readTextFile(
+  metaJSONFilePath,
+).then(
+  JSON.parse,
+);
+console.log(`Bumping meta.json`);
+
+await Deno.writeTextFile(
+  metaJSONFilePath,
+  JSON.stringify({ ...meta, version: newVersion }, null, 2),
+);
+
+const GIT_ADD_COMMAND = `git add ${metaJSONFilePath}`;
+console.log(`Running \`${GIT_ADD_COMMAND}\``);
+
+await exec(GIT_ADD_COMMAND);
+
+const GIT_COMMIT_COMMAND =
+  `git commit -m "[live.ts@${newVersion}] Bump meta.json"`;
+console.log(`Running \`${GIT_COMMIT_COMMAND}\``);
+
+await exec(GIT_COMMIT_COMMAND);
+
+const GIT_PUSH_COMMAND = `git push origin main`;
+console.log(`Running \`${GIT_PUSH_COMMAND}\``);
+
+await exec(GIT_PUSH_COMMAND);
 
 const GIT_TAG_COMMAND = `git tag ${newVersion}`;
 console.log(`Running \`${GIT_TAG_COMMAND}\``);
