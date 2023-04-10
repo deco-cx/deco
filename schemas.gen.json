@@ -102,27 +102,12 @@
       "$ref": "#/root/sections",
       "title": "Section"
     },
-    "JGxpdmUvYmxvY2tzL2lzbGFuZC50cw==@Island": {
-      "$ref": "#/root/islands",
-      "title": "Island"
-    },
-    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2lzbGFuZC50cw==@Island"
-        }
-      ],
-      "title": "Island|Section"
-    },
-    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section[]": {
+    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section"
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
       },
-      "title": "Island|Section[]"
+      "title": "Section[]"
     },
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
       "type": "object",
@@ -132,7 +117,7 @@
           "title": "Name"
         },
         "sections": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Island|Section[]",
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
           "title": "Sections"
         }
       },

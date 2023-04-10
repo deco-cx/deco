@@ -4,11 +4,10 @@ import { context } from "$live/live.ts";
 import { usePageContext } from "$live/routes/[...catchall].tsx";
 import LiveControls from "../components/LiveControls.tsx";
 import { notUndefined } from "$live/engine/core/utils.ts";
-import { Island } from "$live/blocks/island.ts";
 
 export interface Props {
   name: string;
-  sections: (Section | Island)[];
+  sections: Section[];
 }
 
 export function renderSection(
