@@ -127,7 +127,10 @@ const main = () => {
   const inspector = new DomInspector(document.body);
 
   /** Setup global variables */
-  window.LIVE = JSON.parse(document.getElementById("__DECO_STATE")!.innerText);
+  window.LIVE = {
+    ...window.LIVE,
+    ...JSON.parse(document.getElementById("__DECO_STATE")!.innerText),
+  };
 
   /** Setup listeners */
 
