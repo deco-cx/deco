@@ -4,7 +4,7 @@
 
 **What if** you could have freedom and safety to evolve your site, **without** bugging developers for a new deploy every ten minutes?
 
-**What if** new sites started off with PageSpeed 99 — and stayed there as they evolve? 
+**What if** new sites started off with PageSpeed 99 — and stayed there as they evolve?
 
 **Live.ts unlocks seamless collaboration in teams of developers and business users** who manage high-traffic, mission-critical digital experiences that need to evolve every day.
 
@@ -43,7 +43,6 @@ First add the `$live` import to your `import_map.json` file:
 
 ![CleanShot 2022-11-20 at 22 23 51](https://user-images.githubusercontent.com/1633518/202938953-172c6118-86cb-4a0e-8779-ee02ce070157.png)
 
-
 ### 2. Replace the `dev` task from fresh with Live's
 
 Now, let's replace the `dev` import in `dev.ts`. Just change `$fresh/dev.ts` to `$live/dev.ts`:
@@ -72,7 +71,6 @@ export const handler = withLive(manifest, {
 Create a site at `deco.cx/admin` to get a site id you can add here.
 
 ![CleanShot 2022-11-20 at 22 24 08](https://user-images.githubusercontent.com/1633518/202938980-5bba5561-4e72-4b39-8cc5-c296668b7015.png)
-
 
 ### 4. Mount the Live.ts handler on a catch-all route
 
@@ -111,51 +109,55 @@ export default function Hello({ name }: Props) {
 
 ![CleanShot 2022-11-20 at 22 25 10](https://user-images.githubusercontent.com/1633518/202939072-f384cbd5-675b-47ae-89f9-d7d584ffc32f.png)
 
-
-Go to https://deco.cx/admin/{yoursite}/library to see a page that mounts the Hello section. 
+Go to https://deco.cx/admin/{yoursite}/library to see a page that mounts the Hello section.
 
 ## Live scripts
 
 Live ships some utilitary scripts which you can add to your project as needed.
 
 ## Images
+
 One of the most transfered data on the internet are images. Live has first class support for uploading, storing and optimizing images.
 
 ### Uploading images
+
 To upload images, you first need a [section component](https://github.com/deco-cx/live#sections-creating-configurable-components) setup. In your section componet import our special Image type and export it as the section prop.
+
 ```tsx
 // ./sectios/MySection.tsx
 import type { Image } from "$live/std/ui/types/Image.ts";
 
 export interface Props {
-  src: Image
-  alt: string
+  src: Image;
+  alt: string;
 }
 
 export default function MySection({ src, alt }: Props) {
-  return <img  src={src} alt={alt} />
+  return <img src={src} alt={alt} />;
 }
 ```
 
-This will create the following image uploader widget on the section editor. 
+This will create the following image uploader widget on the section editor.
 <img width="331" alt="image" src="https://user-images.githubusercontent.com/1753396/203119882-0e3ce76c-d1e7-42a2-aae8-4b384dfc7169.png">
 
 After drag and dropping the target image on this widget, live will upload the image and generate a url. This url will be passed as a prop to your component. Use this prop to render the image in your section
 
 ### Optmizing images
+
 Business users may upload huge images (>500Kb) on the image uploader. It's up to the developer to make sure all images are loaded efficiently by making the images responsive, light and correctly encoded. Hopefully, live already ships all of these best practices into an `<Image />` component. To use this image component on the above example:
+
 ```tsx
 // ./sectios/MySection.tsx
 import LiveImage from "$live/std/ui/components/Image.tsx";
 import type { Image } from "$live/std/ui/types/Image.ts";
 
 export interface Props {
-  src: Image
-  alt: string
+  src: Image;
+  alt: string;
 }
 
 export default function MySection({ src, alt }: Props) {
-  return <LiveImage src={src} alt={alt} width={500} height={350} />
+  return <LiveImage src={src} alt={alt} width={500} height={350} />;
 }
 ```
 
@@ -183,7 +185,7 @@ Then copy some HTML into your clipboard. For example:
 ```html
 <div>
   <span>Hello World</span>
-  <img src="/test.jpg"> 
+  <img src="/test.jpg" />
   <!-- note the unclosed img tag, which is invalid JSX -->
 </div>
 ```
@@ -240,5 +242,6 @@ To release a new version, go through the following steps:
 
 1. Squash/Merge your Pull Request after approval.
 2. Get the next tag you want to release.
-3. On `main`, change the version in `meta.json`.
-4. Run `deno task release` and select the chosen version.
+3. Run `deno task release` and select the chosen version.
+
+> Please notice that a commit will be automatically in the name of the current user (yours) before generating the tag itself.
