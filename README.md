@@ -245,3 +245,10 @@ To release a new version, go through the following steps:
 3. Run `deno task release` and select the chosen version.
 
 > Please notice that a commit will be automatically in the name of the current user (yours) before generating the tag itself.
+
+# Thanks to all contributors!
+
+<a href="https://github.com/deco-cx/live/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=deco-cx/live" />
+</a>
+
