@@ -12,6 +12,11 @@ export type FunctionTypeOf<
   : unknown
   : unknown;
 
+/**
+ * Receives the function id as a parameter (e.g `#FUNC_ID`, the `#` will be ignored)
+ * or the function name as a parameter (e.g `deco-sites/std/functions/vtexProductList.ts`) and invoke the target function passing the provided `props` as the partial input for the function.
+ * @returns the function return.
+ */
 export const invokeFor = <TManifest extends DecoManifest>() =>
 <
   TFunc extends keyof TManifest["functions"] & string,
@@ -21,7 +26,7 @@ export const invokeFor = <TManifest extends DecoManifest>() =>
   >,
 >(
   func: TFunc | `#${string}`,
-  props: TLoaderFunc extends GenericFunction
+  props?: TLoaderFunc extends GenericFunction
     ? Partial<Parameters<TLoaderFunc>[number]>
     : unknown,
 ): TLoaderFunc extends GenericFunction

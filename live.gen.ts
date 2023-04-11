@@ -4,14 +4,14 @@
 
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
-
 import * as $$$$0 from "./routes/_middleware.ts";
-import * as $$$$1 from "./routes/live/editorData.ts";
-import * as $$$$2 from "./routes/live/inspect.ts";
-import * as $$$$3 from "./routes/live/workbench.ts";
-import * as $$$$4 from "./routes/live/previews/[...block].tsx";
-import * as $$$$5 from "./routes/live/_meta.ts";
-import * as $$$$6 from "./routes/[...catchall].tsx";
+import * as $$$$1 from "./routes/live/invoke/[...name].ts";
+import * as $$$$2 from "./routes/live/editorData.ts";
+import * as $$$$3 from "./routes/live/inspect.ts";
+import * as $$$$4 from "./routes/live/workbench.ts";
+import * as $$$$5 from "./routes/live/previews/[...block].tsx";
+import * as $$$$6 from "./routes/live/_meta.ts";
+import * as $$$$7 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "./handlers/routesSelection.ts";
 import * as $$$$$$1 from "./handlers/router.ts";
 import * as $$$$$$2 from "./handlers/devPage.ts";
@@ -28,15 +28,16 @@ import * as $$$$$$$$$6 from "./matchers/MatchAlways.ts";
 import * as $$$$$$$$$$0 from "./flags/audience.ts";
 import * as $$$$$$$$$$1 from "./flags/everyone.ts";
 
-const manifest: DecoManifest = {
+const manifest = {
   "routes": {
     "./routes/_middleware.ts": $$$$0,
-    "./routes/live/editorData.ts": $$$$1,
-    "./routes/live/inspect.ts": $$$$2,
-    "./routes/live/workbench.ts": $$$$3,
-    "./routes/live/previews/[...block].tsx": $$$$4,
-    "./routes/live/_meta.ts": $$$$5,
-    "./routes/[...catchall].tsx": $$$$6,
+    "./routes/live/invoke/[...name].ts": $$$$1,
+    "./routes/live/editorData.ts": $$$$2,
+    "./routes/live/inspect.ts": $$$$3,
+    "./routes/live/workbench.ts": $$$$4,
+    "./routes/live/previews/[...block].tsx": $$$$5,
+    "./routes/live/_meta.ts": $$$$6,
+    "./routes/[...catchall].tsx": $$$$7,
   },
   "handlers": {
     "$live/handlers/routesSelection.ts": $$$$$$0,
@@ -68,4 +69,6 @@ const manifest: DecoManifest = {
   "baseUrl": import.meta.url,
 };
 
-export default manifest;
+export type Manifest = typeof manifest;
+
+export default manifest satisfies DecoManifest;

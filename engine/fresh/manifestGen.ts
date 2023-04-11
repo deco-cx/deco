@@ -57,9 +57,9 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
-    from: "$live/routes/live/loaders/[...name].ts",
-    key: "./routes/live/loaders/[...name].ts",
-    ref: "$live_loaders",
+    from: "$live/routes/live/invoke/[...name].ts",
+    key: "./routes/live/invoke/[...name].ts",
+    ref: "$live_invoke",
   },
   {
     block: "routes",

@@ -11,9 +11,14 @@ export type LoaderTypeOf<
     req: any,
     ctx: { state: { $live: infer Props } },
   ) => Promise<{ data: infer TReturn }> ? (p: Props) => Promise<TReturn>
-  : GenericFunction
-  : GenericFunction;
+  : unknown
+  : unknown;
 
+/**
+ * Receives the loader id as a parameter (e.g `#LOADER_ID`, the `#` will be ignored)
+ * or the loader name as a parameter (e.g `deco-sites/std/loaders/vtexProductList.ts`) and invoke the target loader passing the provided `props` as the partial input for the function.
+ * @returns the loader return.
+ */
 export const invokeFor = <TManifest extends DecoManifest>() =>
 <
   TFunc extends keyof TManifest["functions"] & string,
@@ -23,7 +28,14 @@ export const invokeFor = <TManifest extends DecoManifest>() =>
   >,
 >(
   func: TFunc | `#${string}`,
-  props: Partial<Parameters<TLoaderFunc>[number]>,
-): Promise<UnPromisify<ReturnType<TLoaderFunc>>> => {
-  return genericInvoker(func, props);
+  props?: TLoaderFunc extends GenericFunction
+    ? Partial<Parameters<TLoaderFunc>[number]>
+    : unknown,
+): TLoaderFunc extends GenericFunction
+  ? Promise<UnPromisify<ReturnType<TLoaderFunc>>>
+  : unknown => {
+  const result = genericInvoker(func, props);
+  return result as TLoaderFunc extends GenericFunction
+    ? Promise<UnPromisify<ReturnType<TLoaderFunc>>>
+    : unknown;
 };
