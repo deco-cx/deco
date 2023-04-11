@@ -223,6 +223,8 @@ ${Object.entries(imports).map(stringifyImport).join("\n")}
 
 const manifest = ${stringifyObj(manifest)}
 
+export type Manifest = typeof manifest;
+
 ${exports.map(stringifyExport).join("\n")}
 ${statements ? statements.map(stringifyStatement).join("\n") : ""}
 ${
