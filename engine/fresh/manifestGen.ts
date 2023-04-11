@@ -57,6 +57,12 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
+    from: "$live/routes/live/loaders/[...name].ts",
+    key: "./routes/live/loaders/[...name].ts",
+    ref: "$live_loaders",
+  },
+  {
+    block: "routes",
     from: "$live/routes/live/editorData.ts",
     key: "./routes/live/editorData.ts",
     ref: "$live_editorData",

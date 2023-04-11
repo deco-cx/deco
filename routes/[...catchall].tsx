@@ -28,7 +28,7 @@ export default function Render({
   },
 }: PageProps<{ page: Page }>) {
   if (!page) {
-    return null;
+    return null; /// sabemos todos os loaders
   }
   const { Component, props, metadata } = page;
   return (
