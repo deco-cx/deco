@@ -9,8 +9,8 @@ export type FunctionTypeOf<
   ? TLoader extends // deno-lint-ignore no-explicit-any
   (req: any, ctx: any, props: infer Props) => Promise<{ data: infer TReturn }>
     ? (p: Props) => Promise<TReturn>
-  : GenericFunction
-  : GenericFunction;
+  : unknown
+  : unknown;
 
 export const invokeFor = <TManifest extends DecoManifest>() =>
 <
@@ -21,7 +21,14 @@ export const invokeFor = <TManifest extends DecoManifest>() =>
   >,
 >(
   func: TFunc | `#${string}`,
-  props: Partial<Parameters<TLoaderFunc>[number]>,
-): Promise<UnPromisify<ReturnType<TLoaderFunc>>> => {
-  return genericInvoker(func, props);
+  props: TLoaderFunc extends GenericFunction
+    ? Partial<Parameters<TLoaderFunc>[number]>
+    : unknown,
+): TLoaderFunc extends GenericFunction
+  ? Promise<UnPromisify<ReturnType<TLoaderFunc>>>
+  : unknown => {
+  const result = genericInvoker(func, props);
+  return result as TLoaderFunc extends GenericFunction
+    ? Promise<UnPromisify<ReturnType<TLoaderFunc>>>
+    : unknown;
 };
