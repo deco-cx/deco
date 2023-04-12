@@ -5,7 +5,7 @@
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import * as $$$$0 from "./routes/_middleware.ts";
-import * as $$$$1 from "./routes/live/invoke/[...name].ts";
+import * as $$$$1 from "./routes/live/invoke/index.ts";
 import * as $$$$2 from "./routes/live/editorData.ts";
 import * as $$$$3 from "./routes/live/inspect.ts";
 import * as $$$$4 from "./routes/live/workbench.ts";
@@ -31,7 +31,7 @@ import * as $$$$$$$$$$1 from "./flags/everyone.ts";
 const manifest = {
   "routes": {
     "./routes/_middleware.ts": $$$$0,
-    "./routes/live/invoke/[...name].ts": $$$$1,
+    "./routes/live/invoke/index.ts": $$$$1,
     "./routes/live/editorData.ts": $$$$2,
     "./routes/live/inspect.ts": $$$$3,
     "./routes/live/workbench.ts": $$$$4,

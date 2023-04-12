@@ -1,5 +1,6 @@
 import meta from "$live/meta.json" assert { type: "json" };
 import { adminDomain, isAdmin } from "$live/utils/admin.ts";
+import { buildObj } from "./object.ts";
 
 export const DEFAULT_CACHE_CONTROL: CacheControl = {
   "s-maxage": 60, // 1minute cdn cache
@@ -162,3 +163,16 @@ export function setCSPHeaders(
   );
   return response;
 }
+
+export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
+  const props = url.searchParams.get(param);
+  if (!props) {
+    const start = {};
+    for (const [key, value] of url.searchParams.entries()) {
+      buildObj(start, [key.split("."), value]);
+    }
+    return start;
+  }
+  // frombase64
+  return JSON.parse(atob(props));
+};
