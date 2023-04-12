@@ -74,6 +74,10 @@ export const handler = async (
   const newHeaders = new Headers(initialResponse.headers);
   newHeaders.set("Server-Timing", printTimings());
 
+  if (url.pathname.startsWith("/_frsh/") && [400, 404, 500].includes(initialResponse.status)) {
+    newHeaders.set("Cache-Control", "no-cache, no-store, private");
+  }
+
   for (const [headerKey, headerValue] of Object.entries(defaultHeaders)) {
     newHeaders.set(headerKey, headerValue);
   }
