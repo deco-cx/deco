@@ -1,11 +1,9 @@
 import {
-  newSupabaseDeploy,
-  newSupabaseLocal,
+  newSupabase,
   tryUseProvider,
 } from "$live/engine/configstore/supabase.ts";
 import {
-  newSupabaseProviderLegacyDeploy,
-  newSupabaseProviderLegacyLocal,
+  newSupabaseProviderLegacy,
 } from "$live/engine/configstore/supabaseLegacy.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
@@ -44,12 +42,14 @@ export const getComposedConfigStore = (
   site: string,
   siteId: number,
 ): ConfigStore => {
-  const configsTable = context.isDeploy ? newSupabaseDeploy : newSupabaseLocal;
   if (siteId <= 0) { // new sites does not have siteId
-    return configsTable(site);
+    return newSupabase(site);
   }
-  const pagesTable = context.isDeploy
-    ? newSupabaseProviderLegacyDeploy
-    : newSupabaseProviderLegacyLocal;
-  return compose(pagesTable(siteId, ns), tryUseProvider(configsTable, site));
+  return compose(
+    newSupabaseProviderLegacy(siteId, ns, context.isDeploy), // if not deploy so no background is needed
+    tryUseProvider(
+      (site: string) => newSupabase(site, context.isDeploy),
+      site,
+    ),
+  );
 };

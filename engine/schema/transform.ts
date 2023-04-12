@@ -5,30 +5,18 @@ import {
   DocNode,
   InterfaceDef,
   TsTypeDef,
+  TsTypeDefLiteral,
   TsTypeLiteralDef,
   TsTypeRefDef,
+  TsTypeUnionDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7TypeName } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
+import { crypto, toHashString } from "std/crypto/mod.ts";
 
 export interface TransformContext {
   base: string;
   namespace: string;
 }
-
-export const inlineOrSchemeable = async (
-  ast: [string, DocNode[]],
-  tp: TsTypeDef | JSONSchema7 | undefined,
-): Promise<Schemeable | undefined> => {
-  if ((tp as TsTypeDef).repr !== undefined) {
-    return await tsTypeToSchemeable(tp as TsTypeDef, ast);
-  } else if (tp !== undefined) {
-    return {
-      type: "inline",
-      value: tp as JSONSchema7,
-    };
-  }
-  return undefined;
-};
 
 export interface SchemeableBase {
   jsDocSchema?: JSONSchema7;
@@ -47,9 +35,13 @@ export interface ObjectSchemeable extends SchemeableBase {
   title?: string;
   value: Record<
     string,
-    { title?: string; schemeable: Schemeable; jsDocSchema?: JSONSchema7 }
+    {
+      title?: string;
+      schemeable: Schemeable;
+      jsDocSchema?: JSONSchema7;
+      required: boolean;
+    }
   >;
-  required?: string[];
 }
 
 export interface RecordSchemeable extends SchemeableBase {
@@ -62,6 +54,10 @@ export interface UnionSchemeable extends SchemeableBase {
   value: Schemeable[];
 }
 
+export interface IntersectionSchemeable extends SchemeableBase {
+  type: "intersection";
+  value: Schemeable[];
+}
 export interface ArraySchemeable extends SchemeableBase {
   type: "array";
   value: Schemeable;
@@ -70,14 +66,20 @@ export interface ArraySchemeable extends SchemeableBase {
 export interface UnknownSchemable extends SchemeableBase {
   type: "unknown";
 }
+export interface SchemeableRef extends SchemeableBase {
+  type: "ref";
+  value: Schemeable;
+}
 
 export type Schemeable =
   | ObjectSchemeable
   | UnionSchemeable
+  | IntersectionSchemeable
   | ArraySchemeable
   | InlineSchemeable
   | RecordSchemeable
-  | UnknownSchemable;
+  | UnknownSchemable
+  | SchemeableRef;
 
 export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
   if (a.name !== b.name) {
@@ -99,9 +101,11 @@ export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
   const bStr = JSON.stringify(b);
   return aStr === bStr;
 };
+
 const schemeableWellKnownType = async (
   ref: TsTypeRefDef,
-  root: DocNode[],
+  root: [string, DocNode[]],
+  seen: Map<DocNode, Schemeable>,
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
     case "Promise": {
@@ -110,7 +114,91 @@ const schemeableWellKnownType = async (
           type: "unknown",
         };
       }
-      return tsTypeToSchemeableRec(ref.typeParams![0], root);
+      return tsTypeToSchemeableRec(ref.typeParams![0], root, seen);
+    }
+    case "Pick": {
+      if (
+        ref.typeParams === null || (ref.typeParams?.length ?? 0) < 2
+      ) {
+        return {
+          type: "unknown",
+        };
+      }
+      const schemeable = await tsTypeToSchemeableRec(
+        ref.typeParams![0],
+        root,
+        seen,
+      );
+      const keys = [];
+      if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
+        const newValue: typeof schemeable["value"] = {};
+        const pickKeys = ref.typeParams![1] as TsTypeUnionDef;
+        if (pickKeys?.union) {
+          for (const value of pickKeys?.union) {
+            if (value.kind === "literal" && value.literal.kind === "string") {
+              newValue[value.literal.string] = schemeable
+                .value[value.literal.string];
+              keys.push(value.literal.string);
+            }
+          }
+        }
+        const pickKeysAsLiteral = ref.typeParams![1] as TsTypeDefLiteral;
+        if (
+          pickKeysAsLiteral?.kind &&
+          pickKeysAsLiteral?.literal?.kind === "string"
+        ) {
+          newValue[pickKeysAsLiteral.literal.string] = schemeable
+            .value[pickKeysAsLiteral.literal.string];
+          keys.push(pickKeysAsLiteral.literal.string);
+        }
+        schemeable.value = newValue;
+      }
+      keys.sort();
+      return {
+        ...schemeable,
+        name: `pick${btoa(keys.join())}${schemeable.name}`,
+      };
+    }
+    case "Omit": {
+      if (
+        ref.typeParams === null || (ref.typeParams?.length ?? 0) < 2
+      ) {
+        return {
+          type: "unknown",
+        };
+      }
+      const schemeable = await tsTypeToSchemeableRec(
+        ref.typeParams![0],
+        root,
+        seen,
+      );
+      const keys: string[] = [];
+      if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
+        const omitKeys = ref.typeParams![1] as TsTypeUnionDef;
+        if (omitKeys?.union) {
+          for (const value of omitKeys?.union) {
+            if (value.kind === "literal" && value.literal.kind === "string") {
+              delete (schemeable.value[value.literal.string]);
+              keys.push(value.literal.string);
+            }
+          }
+        }
+        const omitKeysAsLiteral = ref.typeParams![1] as TsTypeDefLiteral;
+        if (
+          omitKeysAsLiteral?.kind &&
+          omitKeysAsLiteral?.literal?.kind === "string"
+        ) {
+          delete (schemeable.value[omitKeysAsLiteral.literal.string]);
+          keys.push(omitKeysAsLiteral.literal.string);
+        }
+      }
+      keys.sort();
+      return {
+        ...schemeable,
+        name: schemeable.name && keys.length > 0
+          ? `omit${btoa(keys.join())}${schemeable.name}`
+          : schemeable.name!,
+      };
     }
     case "LoaderReturnType": {
       if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
@@ -118,7 +206,7 @@ const schemeableWellKnownType = async (
           type: "unknown",
         };
       }
-      return tsTypeToSchemeableRec(ref.typeParams![0], root);
+      return tsTypeToSchemeableRec(ref.typeParams![0], root, seen);
     }
     case "Resolvable": {
       if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
@@ -139,7 +227,7 @@ const schemeableWellKnownType = async (
         };
       }
 
-      return tsTypeToSchemeableRec(typeRef, root);
+      return tsTypeToSchemeableRec(typeRef, root, seen);
     }
     case "InstanceOf": {
       if ((ref.typeParams?.length ?? 0) < 2) {
@@ -181,7 +269,7 @@ const schemeableWellKnownType = async (
         };
       }
 
-      return tsTypeToSchemeableRec(typeRef, root);
+      return tsTypeToSchemeableRec(typeRef, root, seen);
     }
     case "Array": {
       if (ref.typeParams === null || (ref?.typeParams?.length ?? 0) < 1) {
@@ -196,6 +284,7 @@ const schemeableWellKnownType = async (
       const typeSchemeable = await tsTypeToSchemeableRec(
         ref.typeParams![0],
         root,
+        seen,
       );
 
       return {
@@ -214,6 +303,7 @@ const schemeableWellKnownType = async (
       const recordSchemeable = await tsTypeToSchemeableRec(
         ref.typeParams[1],
         root,
+        seen,
       );
 
       return {
@@ -232,63 +322,88 @@ const schemeableWellKnownType = async (
 
 export const findSchemeableFromNode = async (
   rootNode: DocNode,
-  root: DocNode[],
+  root: [string, DocNode[]],
+  seen: Map<DocNode, Schemeable>,
 ): Promise<Schemeable> => {
-  const kind = rootNode.kind;
   const currLocation = {
     file: fromFileUrlOrNoop(rootNode.location.filename),
     name: rootNode.name,
   };
-  switch (kind) {
-    case "interface": {
-      const allOf = await Promise.all(
-        rootNode.interfaceDef.extends.map(async (tp) => ({
-          ...currLocation,
-          ...await tsTypeToSchemeableRec(tp, root),
-        })),
-      );
-      return {
-        ...currLocation,
-        extends: allOf && allOf.length > 0 ? allOf : undefined,
-        type: "object",
-        ...(await typeDefToSchemeable(rootNode.interfaceDef, root)),
-        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
-      };
-    }
-    case "typeAlias": {
-      return {
-        ...currLocation,
-        ...(await tsTypeToSchemeableRec(rootNode.typeAliasDef.tsType, root)),
-        jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
-      };
-    }
-    case "import": {
-      const newRoots = await denoDoc(rootNode.importDef.src);
-      const node = newRoots.find((n) => {
-        return n.name === rootNode.importDef.imported;
-      });
-      if (!node) {
+  const ref = {
+    type: "ref",
+    value: currLocation,
+  } as SchemeableRef;
+  const seenValue = seen.get(rootNode);
+  if (seenValue !== undefined) {
+    return seenValue;
+  }
+  seen.set(rootNode, ref);
+
+  const resolve = async (): Promise<Schemeable> => {
+    const kind = rootNode.kind;
+    switch (kind) {
+      case "interface": {
+        const allOf = await Promise.all(
+          rootNode.interfaceDef.extends.map(async (tp) => ({
+            ...currLocation,
+            ...await tsTypeToSchemeableRec(tp, root, seen),
+          })),
+        );
         return {
-          name: rootNode.name,
-          file: fromFileUrlOrNoop(rootNode.importDef.src),
-          type: "unknown",
+          ...currLocation,
+          extends: allOf && allOf.length > 0 ? allOf : undefined,
+          type: "object",
+          ...(await typeDefToSchemeable(rootNode.interfaceDef, root, seen)),
+          jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
         };
       }
-      return {
-        ...currLocation,
-        ...await findSchemeableFromNode(node, newRoots),
-      };
+      case "typeAlias": {
+        return {
+          ...currLocation,
+          ...(await tsTypeToSchemeableRec(
+            rootNode.typeAliasDef.tsType,
+            root,
+            seen,
+          )),
+          jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
+        };
+      }
+      case "import": {
+        const newRoots = await denoDoc(rootNode.importDef.src);
+        const node = newRoots.find((n) => {
+          return n.name === rootNode.importDef.imported;
+        });
+        if (!node) {
+          return {
+            name: rootNode.name,
+            file: fromFileUrlOrNoop(rootNode.importDef.src),
+            type: "unknown",
+          };
+        }
+        return {
+          ...currLocation,
+          ...await findSchemeableFromNode(node, [
+            rootNode.importDef.src,
+            newRoots,
+          ], seen),
+        };
+      }
     }
-  }
-  return {
-    ...currLocation,
-    type: "unknown",
+    return {
+      ...currLocation,
+      type: "unknown",
+    };
   };
+  const resolved = await resolve();
+  ref.value = resolved;
+  seen.delete(rootNode);
+  return resolved;
 };
 
 const typeDefToSchemeable = async (
   node: InterfaceDef | TsTypeLiteralDef,
-  root: DocNode[],
+  root: [string, DocNode[]],
+  seen: Map<DocNode, Schemeable>,
 ): Promise<Omit<ObjectSchemeable, "id" | "type">> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
@@ -298,12 +413,14 @@ const typeDefToSchemeable = async (
       const schema = await tsTypeToSchemeableRec(
         property.tsType!,
         root,
+        seen,
         property.optional,
       );
 
       return [
         property.name,
         {
+          required: !property.optional,
           schemeable: schema,
           jsDocSchema: jsDocSchema,
           title: beautify(property.name),
@@ -312,36 +429,80 @@ const typeDefToSchemeable = async (
     }),
   );
 
-  const required = node.properties
-    .filter((p) => !p.optional)
-    .map((p) => p.name);
-
   return {
     value: Object.fromEntries(properties),
-    required,
   };
 };
-
 export const tsTypeToSchemeable = async (
+  rootNode: DocNode,
   node: TsTypeDef,
   root: [string, DocNode[]],
   optional?: boolean,
 ): Promise<Schemeable> => {
-  const schemeable = await tsTypeToSchemeableRec(node, root[1], optional);
-  return {
-    ...schemeable,
-  };
+  const seen = new Map();
+  seen.set(rootNode, true);
+  return await tsTypeToSchemeableRec(node, root, seen, optional);
 };
 
 const tsTypeToSchemeableRec = async (
   node: TsTypeDef,
-  root: DocNode[],
+  root: [string, DocNode[]],
+  seen: Map<DocNode, Schemeable>,
   optional?: boolean,
 ): Promise<Schemeable> => {
   const kind = node.kind;
   switch (kind) {
+    case "parenthesized": {
+      return await tsTypeToSchemeableRec(node.parenthesized, root, seen);
+    }
+    case "indexedAccess": {
+      const objSchemeable = await tsTypeToSchemeableRec(
+        node.indexedAccess.objType,
+        root,
+        seen,
+      );
+      const indexType = node.indexedAccess.indexType;
+      if (indexType.kind !== "literal") { // supporting only literal access A["b"]
+        return {
+          type: "unknown",
+        };
+      }
+      if (
+        objSchemeable.type === "object" && indexType.literal.kind === "string"
+      ) {
+        const { [indexType.literal.string]: prop } = objSchemeable.value;
+        return {
+          ...objSchemeable,
+          name: objSchemeable.name
+            ? `indexedAccess${indexType.literal.string}${objSchemeable.name}`
+            : undefined,
+          value: {
+            [indexType.literal.string]: prop,
+          },
+        };
+      }
+
+      if (
+        objSchemeable.type === "array" && indexType.literal.kind === "number"
+      ) {
+        const type = objSchemeable.value;
+        return {
+          ...type,
+          name: type.name
+            ? `indexedAccess${indexType.literal.number}${type.name}`
+            : undefined,
+        };
+      }
+      return {
+        type: "unknown",
+      };
+    }
     case "array": {
-      const typeSchemeable = await tsTypeToSchemeableRec(node.array, root);
+      const typeSchemeable = await tsTypeToSchemeableRec(
+        node.array,
+        root,
+        seen,
+      );
 
       return {
         name: typeSchemeable.name ? `${typeSchemeable.name}[]` : undefined,
@@ -351,11 +512,15 @@ const tsTypeToSchemeableRec = async (
       };
     }
     case "typeRef": {
-      const wellknown = await schemeableWellKnownType(node.typeRef, root);
+      const wellknown = await schemeableWellKnownType(
+        node.typeRef,
+        root,
+        seen,
+      );
       if (wellknown) {
         return wellknown;
       }
-      const rootNode = root.find((n) => {
+      const rootNode = root[1].find((n) => {
         return n.name === node.typeRef.typeName;
       });
       if (!rootNode) {
@@ -363,7 +528,7 @@ const tsTypeToSchemeableRec = async (
           type: "unknown",
         };
       }
-      return await findSchemeableFromNode(rootNode, root);
+      return findSchemeableFromNode(rootNode, root, seen);
     }
     case "keyword": {
       if (node.keyword === "unknown") {
@@ -388,7 +553,7 @@ const tsTypeToSchemeableRec = async (
     case "typeLiteral":
       return {
         type: "object",
-        ...(await typeDefToSchemeable(node.typeLiteral, root)),
+        ...(await typeDefToSchemeable(node.typeLiteral, root, seen)),
       };
     case "literal": {
       return {
@@ -400,9 +565,39 @@ const tsTypeToSchemeableRec = async (
         },
       };
     }
+    case "intersection": {
+      const values = await Promise.all(
+        node.intersection.map((t) => tsTypeToSchemeableRec(t, root, seen)),
+      );
+      const ids = [];
+      for (let i = 0; i < node.intersection.length; i++) {
+        const tp = values[i];
+        if (tp?.name) {
+          ids.push(tp.name);
+        } else if (tp && tp.type === "inline" && tp.value.type === "null") {
+          ids.push("null");
+        } else if (node.repr) {
+          ids.push(node.repr);
+        } else {
+          const hash = await crypto.subtle.digest(
+            "MD5",
+            new TextEncoder().encode(JSON.stringify(tp)),
+          );
+          ids.push(toHashString(hash));
+        }
+      }
+      ids.sort();
+      const intersectionTypeId = ids.length === 0 ? undefined : ids.join("&");
+      return {
+        name: intersectionTypeId,
+        file: values.find((v) => v.file)?.file,
+        value: values,
+        type: "intersection",
+      };
+    }
     case "union": {
       const values = await Promise.all(
-        node.union.map((t) => tsTypeToSchemeableRec(t, root)),
+        node.union.map((t) => tsTypeToSchemeableRec(t, root, seen)),
       );
       const ids = [];
       for (let i = 0; i < node.union.length; i++) {
@@ -413,19 +608,24 @@ const tsTypeToSchemeableRec = async (
           ids.push("null");
         } else if (node.repr) {
           ids.push(node.repr);
+        } else {
+          const hash = await crypto.subtle.digest(
+            "MD5",
+            new TextEncoder().encode(JSON.stringify(tp)),
+          );
+          ids.push(toHashString(hash));
         }
       }
       ids.sort();
       const unionTypeId = ids.length === 0 ? undefined : ids.join("|");
       return {
         name: unionTypeId,
-        file: values[0]?.file,
+        file: values.find((v) => v.file)?.file,
         value: values,
         type: "union",
       };
     }
     case "fnOrConstructor":
-    case "indexedAccess":
     default:
       return {
         type: "unknown",

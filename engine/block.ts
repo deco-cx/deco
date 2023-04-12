@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { Resolver } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue, UnPromisify } from "$live/engine/core/utils.ts";
+import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { ResolverMiddleware } from "$live/engine/middleware.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
 import {
@@ -18,11 +18,11 @@ export interface BlockModuleRef {
 
 export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
 export type BlockModule<
+  TDefaultExportFunc extends ResolverLike<T> = ResolverLike,
   T = any,
-  RLike extends ResolverLike<T> = ResolverLike<T>,
   TSerializable = T,
 > = {
-  default: RLike;
+  default: TDefaultExportFunc;
   preview?: Resolver<PreactComponent, TSerializable, any>;
   Preview?: ComponentFunc;
 };
@@ -33,13 +33,7 @@ export type IntrospectFunc = (
   ast: DocNode[],
 ) => Promise<BlockModuleRef | undefined>;
 
-export type ResolverBlock = Block<Resolver>;
-// TODO Implementar resolver block @author marcos v. candeia
-
 export type ModuleOf<TBlock> = TBlock extends Block<
-  any,
-  any,
-  any,
   infer TBlockModule
 > ? TBlockModule
   : never;
@@ -71,29 +65,20 @@ export type IntrospectPath<
 > = {
   [key in keyof TModule]?: Required<TModule>[key] extends
     (...args: any[]) => any ? IntrospectFuncParam<Required<TModule>[key]>
+    : Required<TModule>[key] extends Record<string, any> ? string | string[]
     : never;
 };
 
-export type BlockForModule<
-  TBlockModule extends BlockModule,
-  BType extends BlockType = BlockType,
-> = TBlockModule extends BlockModule<infer _, infer TFunc, infer TSerializable>
-  ? Block<TFunc, TSerializable, BType, TBlockModule>
-  : never;
-
 export interface Block<
-  TBlockFunc extends (...args: any[]) => any = any,
-  TSerializable = UnPromisify<ReturnType<TBlockFunc>>,
-  BType extends BlockType = BlockType,
   TBlockModule extends BlockModule<
-    UnPromisify<ReturnType<TBlockFunc>>,
-    TBlockFunc,
+    TDefaultExportFunc,
+    TProvides,
     TSerializable
-  > = BlockModule<
-    UnPromisify<ReturnType<TBlockFunc>>,
-    TBlockFunc,
-    TSerializable
-  >,
+  > = BlockModule<any>,
+  TDefaultExportFunc extends ResolverLike<TProvides> = ResolverLike,
+  BType extends BlockType = BlockType,
+  TProvides = any,
+  TSerializable = any,
 > {
   defaultDanglingRecover?: Resolver<TSerializable> | ResolverMiddleware<
     TSerializable
@@ -106,12 +91,12 @@ export interface Block<
     | IntrospectFunc;
   decorate?: <
     TBlockModule extends BlockModule<
-      UnPromisify<ReturnType<TBlockFunc>>,
-      TBlockFunc,
+      TDefaultExportFunc,
+      TProvides,
       TSerializable
     > = BlockModule<
-      UnPromisify<ReturnType<TBlockFunc>>,
-      TBlockFunc,
+      TDefaultExportFunc,
+      TProvides,
       TSerializable
     >,
   >(
@@ -127,7 +112,6 @@ export interface Block<
     any
   >[];
 }
-
 export type ModuleAST = [string, string, DocNode[]];
 
 export type Definitions = Record<string, JSONSchema7>;
@@ -168,7 +152,8 @@ export type InstanceOf<
     : ManifestSchemas = T extends Block
       ? `#/root/${T["type"]}` & ManifestSchemas
       : ManifestSchemas,
-  TorBlockSerializable = T extends Block<any, infer Serializable> ? Serializable
+  TorBlockSerializable = T extends
+    Block<any, any, any, infer T, infer Serializable> ? Serializable
     : T,
 > = TorBlockSerializable;
 

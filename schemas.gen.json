@@ -14,13 +14,15 @@
       }
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
-      "$ref": "#/root/flags"
+      "$ref": "#/root/flags",
+      "title": "Flag"
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
-      }
+      },
+      "title": "Flag[]"
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
@@ -36,7 +38,8 @@
       "title": "$live/handlers/routesSelection.ts@SelectionConfig"
     },
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
-      "$ref": "#/root/handlers"
+      "$ref": "#/root/handlers",
+      "title": "Handler"
     },
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler@record": {
       "title": "Unknown record",
@@ -66,7 +69,8 @@
       "title": "$live/handlers/router.ts@RouterConfig"
     },
     "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
-      "$ref": "#/root/pages"
+      "$ref": "#/root/pages",
+      "title": "Page"
     },
     "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
       "type": "object",
@@ -95,13 +99,15 @@
       "title": "$live/handlers/fresh.ts@FreshConfig"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
-      "$ref": "#/root/sections"
+      "$ref": "#/root/sections",
+      "title": "Section"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
-      }
+      },
+      "title": "Section[]"
     },
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
       "type": "object",
@@ -142,16 +148,16 @@
             "string",
             "null"
           ],
-          "title": "Start",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "Start"
         },
         "end": {
           "type": [
             "string",
             "null"
           ],
-          "title": "End",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "End"
         }
       },
       "required": [],
@@ -192,13 +198,15 @@
       "title": "$live/matchers/MatchSite.ts@Props"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
-      "$ref": "#/root/matchers"
+      "$ref": "#/root/matchers",
+      "title": "Matcher"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher"
-      }
+      },
+      "title": "Matcher[]"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==@Props": {
       "type": "object",

@@ -313,9 +313,9 @@ export const resolve = async <
     let respOrPromise = resolver(resolved, ctx);
     if (isAwaitable(respOrPromise)) {
       const timingName = resolverType.replaceAll("/", ".");
-      ctx.monitoring?.t.start(timingName);
+      const end = ctx.monitoring?.t.start(timingName);
       respOrPromise = await respOrPromise;
-      ctx.monitoring?.t.end(timingName);
+      end && end();
     }
     return resolve(resolverMap, respOrPromise, resolvables, ctx);
   }

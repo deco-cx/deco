@@ -1,18 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import { applyConfig } from "$live/blocks/utils.ts";
-import { Block, InstanceOf } from "$live/engine/block.ts";
-import { BaseContext, ResolveFunc } from "$live/engine/core/resolver.ts";
+import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { BaseContext } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { LiveConfig, StatefulContext } from "$live/types.ts";
 import { Handler as DenoHandler } from "std/http/server.ts";
-
-export type LiveConfig<TConfig = any, TState = unknown> = TState & {
-  $live: TConfig;
-  resolve: ResolveFunc;
-};
-
-export interface StatefulContext<T> {
-  state: T;
-}
 
 export interface HttpContext<
   State = any,
@@ -32,7 +24,7 @@ export type HttpHandler = <State = any, TConfig = any>(
 
 type HandlerFunc<TConfig = any> = (config: TConfig) => DenoHandler;
 
-const handlerBlock: Block<HandlerFunc> = {
+const handlerBlock: Block<BlockModule<HandlerFunc>> = {
   type: "handlers",
   introspect: {
     default: "0",

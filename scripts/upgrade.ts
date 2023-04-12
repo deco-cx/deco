@@ -199,7 +199,7 @@ const v1: UpgradeOption = {
         .all([
           updateImportMap(
             meta.version,
-            "1.0.0-rc.11",
+            "1.0.0-rc.12",
           ),
           createSiteJson(),
           updateDevTsImports(),

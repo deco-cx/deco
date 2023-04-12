@@ -2,17 +2,75 @@
 import { supabase } from "$live/deps.ts";
 import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { singleFlight } from "$live/engine/core/utils.ts";
+import { singleFlight as sfFunc } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
-import {
-  Flag,
-  Page,
-  PageData,
-  PageFunction as Function,
-  PageSection as Section,
-} from "$live/types.ts";
+import { JSONSchema, Site } from "$live/types.ts";
+export interface PageSection {
+  // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
+  key: string;
+  // Pretty name for the entity
+  label: string;
+  // Uniquely identifies this entity in the scope of a page (that can have multiple functions, sections)
+  uniqueId: string;
+  props?: Record<string, unknown>;
+}
 
-interface PageSection extends Record<string, any> {
+export interface PageFunction extends PageSection {
+  outputSchema?: JSONSchema;
+}
+
+export interface PageData {
+  sections: PageSection[];
+  functions: PageFunction[];
+}
+
+export type PageState = "archived" | "draft" | "published" | "dev" | "global";
+
+export interface Page {
+  id: number;
+  data: PageData;
+  name: string;
+  path: string;
+  state: PageState;
+  site?: Site;
+  public?: boolean;
+}
+
+export interface Match {
+  // Identifies the MatchFunction uniquely in the project (e.g: "./functions/MatchRandom.ts")
+  key: string;
+  props?: Record<string, unknown>;
+}
+export interface Effect {
+  // Identifies the EffectFunction uniquely in the project (e.g: "./functions/OverridePageEffect.ts")
+  key: string;
+  props?: Record<string, unknown>;
+}
+
+export interface FlagData {
+  matches: Match[];
+  effect?: Effect;
+}
+
+export type FlagState = "archived" | "draft" | "published";
+
+export interface Flag<T = unknown> {
+  id: string;
+  name: string;
+  state: FlagState;
+  data: FlagData;
+  site: number;
+  key: string;
+  value?: T;
+  updated_at: string;
+  description?: string;
+}
+
+export interface Flags {
+  [key: string]: unknown;
+}
+
+interface ResolvePageSection extends Record<string, any> {
   __resolveType: string;
 }
 const state = "state";
@@ -23,11 +81,11 @@ const includeNamespace = (key: string, ns: string) =>
   key.replace("./", `${ns}/`);
 
 const sectionToPageSection = (
-  functionsIndexed: Record<string, Function>,
+  functionsIndexed: Record<string, PageFunction>,
   globalSections: Record<string, string>,
   ns: string,
 ) =>
-({ key, props }: Section): PageSection => {
+({ key, props }: PageSection): ResolvePageSection => {
   const newProps: Record<string, any> = {};
   for (const [key, value] of Object.entries(props ?? {})) {
     if (functionsIndexed[value as string]) {
@@ -57,13 +115,13 @@ const dataToSections = (
   d: PageData,
   globalSections: Record<string, string>,
   ns: string,
-): PageSection[] => {
-  const functionsIndexed: Record<string, Function> = [
+): ResolvePageSection[] => {
+  const functionsIndexed: Record<string, PageFunction> = [
     ...(d.functions ?? []),
-    ...((d as unknown as { loaders: Function[] }).loaders ?? []),
+    ...((d as unknown as { loaders: PageFunction[] }).loaders ?? []),
   ].reduce((indexed, f) => {
     return { ...indexed, [`{${f.uniqueId}}`]: f };
-  }, {} as Record<string, Function>);
+  }, {} as Record<string, PageFunction>);
 
   return (d.sections ?? []).map(
     sectionToPageSection(functionsIndexed, globalSections, ns),
@@ -246,9 +304,10 @@ const fetchSiteFlags = async (siteId: number) => {
 const fetchSiteData = (siteId: number) =>
   Promise.all([fetchSitePages(siteId), fetchSiteFlags(siteId)]);
 
-export const newSupabaseProviderLegacyDeploy = (
+export const newSupabaseProviderLegacy = (
   siteId: number,
   namespace: string,
+  backgroundUpdate?: boolean,
 ): ConfigStore => {
   let remainingRetries = 5;
   let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
@@ -307,13 +366,25 @@ export const newSupabaseProviderLegacyDeploy = (
     }
   };
 
-  currResolvables.then(() => {
-    setInterval(updateInternalState, refetchIntervalMS);
-  });
+  if (backgroundUpdate) {
+    currResolvables.then(() => {
+      setInterval(updateInternalState, refetchIntervalMS);
+    });
+  }
 
-  const local = newSupabaseProviderLegacyLocal(siteId, namespace);
+  const sf = sfFunc<Record<string, Resolvable>>();
   return {
-    archived: local.archived.bind(local),
+    archived: async () => { // archived pages cannot be added on flags.
+      return await sf.do("archived", async () => {
+        const { data, error } = await fetchArchivedPages(siteId);
+        if (
+          data === null || error !== null
+        ) {
+          throw error;
+        }
+        return pagesToConfig(data, [], namespace);
+      });
+    },
     state: async (opts?: ReadOptions) => {
       if (opts?.forceFresh) {
         await updateInternalState(true);
@@ -388,37 +459,4 @@ const pagesToConfig = (
   ) // process global first
     .reduce(pageToConfig(ns), baseEntrypoint);
   return flagsToConfig(configs, flags, ns);
-};
-
-export const newSupabaseProviderLegacyLocal = (
-  siteId: number,
-  namespace: string,
-) => {
-  const sf = singleFlight<Record<string, Resolvable>>();
-  return {
-    archived: async () => { // archived pages cannot be added on flags.
-      return await sf.do("archived", async () => {
-        const { data, error } = await fetchArchivedPages(siteId);
-        if (
-          data === null || error !== null
-        ) {
-          throw error;
-        }
-        return pagesToConfig(data, [], namespace);
-      });
-    },
-    state: async () => {
-      return await sf.do("state", async () => {
-        const [{ data, error }, { data: dataFlags, error: errorFlags }] =
-          await fetchSiteData(siteId);
-        if (
-          data === null || error !== null || dataFlags === null ||
-          errorFlags !== null
-        ) {
-          throw (error ?? errorFlags);
-        }
-        return pagesToConfig(data, dataFlags, namespace);
-      });
-    },
-  };
 };

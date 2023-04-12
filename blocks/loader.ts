@@ -1,34 +1,31 @@
 // deno-lint-ignore-file no-explicit-any
-import {
-  HttpContext,
-  LiveConfig,
-  StatefulContext,
-} from "$live/blocks/handler.ts";
+import { HttpContext } from "$live/blocks/handler.ts";
 import {
   newSingleFlightGroup,
   SingleFlightKeyFunc,
   StatefulHandler,
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
-import { BlockForModule, BlockModule } from "$live/engine/block.ts";
+import { Block, BlockModule } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
+import { LiveConfig, LoaderContext } from "$live/types.ts";
 
 export interface LoaderModule<
   TConfig = any,
-  Ctx extends StatefulContext<LiveConfig<any, TConfig>> = StatefulContext<
+  Ctx extends LoaderContext<LiveConfig<any, TConfig>> = LoaderContext<
     LiveConfig<any, TConfig>
   >,
-> extends BlockModule<any, StatefulHandler<any, any, Ctx>> {
+> extends BlockModule<StatefulHandler<any, any, Ctx>> {
   singleFlightKey?: SingleFlightKeyFunc<TConfig, HttpContext>;
 }
 
-const loaderBlock: BlockForModule<LoaderModule> = {
+const loaderBlock: Block<LoaderModule> = {
   type: "loaders",
-  introspect: introspectWith<LoaderModule<any, StatefulContext<LiveConfig>>>({
+  introspect: introspectWith<LoaderModule<any, LoaderContext<LiveConfig>>>({
     "default": ["1", "state.$live"],
   }, true),
   adapt: <
-    TCtx extends StatefulContext<any> = StatefulContext<any>,
+    TCtx extends LoaderContext<any> = LoaderContext<any>,
     TConfig = any,
   >(
     { default: loader, singleFlightKey }: LoaderModule<TConfig, TCtx>,

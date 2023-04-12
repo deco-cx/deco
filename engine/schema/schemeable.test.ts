@@ -32,7 +32,7 @@ const getSchemeableFor = async (
   if (!nodeTypeRef) {
     return undefined;
   }
-  return await findSchemeableFromNode(nodeTypeRef, ast);
+  return await findSchemeableFromNode(nodeTypeRef, [filePath, ast], new Map());
 };
 Deno.test("Simple type generation", async () => {
   const transformed = await getSchemeableFor("SimpleType");
@@ -48,6 +48,7 @@ Deno.test("Simple type generation", async () => {
     value: {
       name: {
         title: "Name",
+        required: true,
         jsDocSchema: undefined,
         schemeable: {
           type: "inline",
@@ -57,7 +58,6 @@ Deno.test("Simple type generation", async () => {
         },
       },
     },
-    required: ["name"],
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -104,6 +104,7 @@ Deno.test("Simple interface generation", async () => {
     type: "object",
     value: {
       name: {
+        required: true,
         title: "Name",
         jsDocSchema: undefined,
         schemeable: {
@@ -114,7 +115,6 @@ Deno.test("Simple interface generation", async () => {
         },
       },
     },
-    required: ["name"],
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -161,6 +161,7 @@ Deno.test("Non required fields generation", async () => {
     type: "object",
     value: {
       name: {
+        required: true,
         jsDocSchema: undefined,
         title: "Name",
         schemeable: {
@@ -169,6 +170,7 @@ Deno.test("Non required fields generation", async () => {
         },
       },
       maybeName: {
+        required: false,
         jsDocSchema: undefined,
         title: "Maybe Name",
         schemeable: {
@@ -177,7 +179,6 @@ Deno.test("Non required fields generation", async () => {
         },
       },
     },
-    required: ["name"],
   });
 
   const rands: [string, string, undefined] = [
@@ -240,9 +241,11 @@ Deno.test("Union types generation", async () => {
       name: {
         jsDocSchema: undefined,
         title: "Name",
+        required: true,
         schemeable: {
           file: undefined,
-          name: undefined,
+          name:
+            "47fb2fe93d8a63166d8156d088239aa2|f4e2fa6a639dd0d858a2d18a5c9d2890",
           value: [
             { type: "inline", value: { type: "string" } },
             { type: "inline", value: { type: "number" } },
@@ -251,7 +254,6 @@ Deno.test("Union types generation", async () => {
         },
       },
     },
-    required: ["name"],
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -281,7 +283,8 @@ Deno.test("Union types generation", async () => {
     args: [
       {
         file: undefined,
-        name: undefined,
+        name:
+          "47fb2fe93d8a63166d8156d088239aa2|f4e2fa6a639dd0d858a2d18a5c9d2890",
         type: "union",
         value: [
           { type: "inline", value: { type: "string" } },
@@ -308,6 +311,7 @@ Deno.test("Array fields generation", async () => {
     type: "object",
     value: {
       array: {
+        required: true,
         jsDocSchema: undefined,
         title: "Array",
         schemeable: {
@@ -318,7 +322,6 @@ Deno.test("Array fields generation", async () => {
         },
       },
     },
-    required: ["array"],
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -373,6 +376,7 @@ Deno.test("Type reference generation", async () => {
     type: "object",
     value: {
       ref: {
+        required: true,
         jsDocSchema: undefined,
         title: "Ref",
         schemeable: {
@@ -383,6 +387,7 @@ Deno.test("Type reference generation", async () => {
           type: "object",
           value: {
             name: {
+              required: true,
               title: "Name",
               jsDocSchema: undefined,
               schemeable: {
@@ -391,11 +396,9 @@ Deno.test("Type reference generation", async () => {
               },
             },
           },
-          required: ["name"],
         },
       },
     },
-    required: ["ref"],
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -428,10 +431,10 @@ Deno.test("Type reference generation", async () => {
         file: filePath,
         jsDocSchema: undefined,
         name: "SimpleInterface",
-        required: ["name"],
         type: "object",
         value: {
           name: {
+            required: true,
             jsDocSchema: undefined,
             title: "Name",
             schemeable: {
@@ -463,6 +466,7 @@ Deno.test("JSDoc tags injection", async () => {
     name: "WithTags",
     value: {
       email: {
+        required: true,
         jsDocSchema: {
           description: "add your email",
           format: "email",
@@ -477,7 +481,6 @@ Deno.test("JSDoc tags injection", async () => {
         },
       },
     },
-    required: ["email"],
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -538,7 +541,7 @@ Deno.test("Type alias generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    title: undefined,
+    title: "TypeAlias",
     type: "string",
   });
 
@@ -564,6 +567,7 @@ Deno.test("Wellknown in types generation", async () => {
     type: "object",
     value: {
       array: {
+        required: true,
         jsDocSchema: undefined,
         schemeable: {
           name: undefined,
@@ -573,6 +577,7 @@ Deno.test("Wellknown in types generation", async () => {
         title: "Array",
       },
       record: {
+        required: true,
         jsDocSchema: undefined,
         schemeable: {
           file: undefined,
@@ -583,16 +588,19 @@ Deno.test("Wellknown in types generation", async () => {
         title: "Record",
       },
       section: {
+        required: true,
         jsDocSchema: undefined,
         schemeable: { type: "inline", value: { $ref: "#/root/sections" } },
         title: "Section",
       },
       promiseValue: {
+        required: true,
         jsDocSchema: undefined,
         schemeable: { type: "inline", value: { type: "string" } },
         title: "Promise Value",
       },
       resolvable: {
+        required: true,
         jsDocSchema: undefined,
         schemeable: {
           type: "inline",
@@ -601,19 +609,12 @@ Deno.test("Wellknown in types generation", async () => {
         title: "Resolvable",
       },
       preactComponent: {
+        required: true,
         jsDocSchema: undefined,
         schemeable: { type: "inline", value: { $ref: "#/root/sections" } },
         title: "Preact Component",
       },
     },
-    required: [
-      "array",
-      "record",
-      "section",
-      "promiseValue",
-      "resolvable",
-      "preactComponent",
-    ],
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -643,7 +644,6 @@ Deno.test("Wellknown in types generation", async () => {
         title: "Record",
         type: "object",
         additionalProperties: {
-          title: undefined,
           type: "string",
         },
       },
