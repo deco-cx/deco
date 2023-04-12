@@ -20,6 +20,7 @@ import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 
 import { parse } from "https://deno.land/std@0.181.0/flags/mod.ts";
+import { usePreviewFunc } from "../../blocks/utils.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 import { SiteInfo } from "../../types.ts";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
@@ -157,7 +158,8 @@ export const $live = <T extends DecoManifest>(
         : blocks;
 
       const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
-        const previewFunc = mod.preview ?? blk.defaultPreview;
+        const previewFunc = mod.preview ??
+          (mod.Preview ? usePreviewFunc(mod.Preview) : undefined);
         if (previewFunc) {
           return { ...prv, [`${previewPrefixKey}${key}`]: previewFunc };
         }

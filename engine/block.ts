@@ -17,14 +17,15 @@ export interface BlockModuleRef {
 }
 
 export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
-export interface BlockModule<
+export type BlockModule<
   T = any,
   RLike extends ResolverLike<T> = ResolverLike<T>,
   TSerializable = T,
-> {
+> = {
   default: RLike;
   preview?: Resolver<PreactComponent, TSerializable, any>;
-}
+  Preview?: ComponentFunc;
+};
 
 export type IntrospectFunc = (
   ctx: TransformContext,
