@@ -54,14 +54,19 @@ async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
 };
 
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(
-  { default: Component }: { default: ComponentFunc<TProps> },
+  { default: cFunc }: { default: ComponentFunc<TProps> },
   resolver: string,
+): Resolver => adaptComponentFunc(cFunc, resolver);
+
+export const adaptComponentFunc = <TProps = any>(
+  Component: ComponentFunc<TProps>,
+  component: string,
 ): Resolver =>
 (props: TProps, { resolveChain }): PreactComponent<any, TProps> => ({
   Component,
   props,
   metadata: {
-    component: resolver,
+    component,
     resolveChain,
     id: resolveChain.length > 0 ? resolveChain[0] : undefined,
   },
