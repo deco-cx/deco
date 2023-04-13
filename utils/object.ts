@@ -13,7 +13,36 @@ interface Data {
   products: { id: string }[];
 }
 
-export const pickPaths = <T>(obj: T, keys: DotNestedKeys<T>[]) => {};
+export const pickPath = <T>(obj: T, current: Partial<T>, keys: string[]) => {
+  const [first, ...rest] = keys as [keyof T, ...string[]];
+  if (keys.length === 1) {
+    current[first] = obj[first];
+    return;
+  }
+  const c = current as Record<keyof T, {}>;
+  if (Array.isArray(obj[first])) {
+    c[first] ??= new Array((obj[first] as Array<any>).length);
+    let idx = 0;
+    for (const value of (obj[first] as Array<any>)) {
+      const cAsArray = c[first] as Array<any>;
+      cAsArray[idx] ??= {};
+      pickPath(value, cAsArray[idx], rest);
+      idx++;
+    }
+    return;
+  }
+  c[first] ??= {};
+  pickPath(obj[first], c[first], rest);
+};
+
+export const pickPaths = <T>(obj: T, keys: DotNestedKeys<T>[]): Partial<T> => {
+  const newObj: Partial<T> = {};
+  for (const k of keys) {
+    pickPath(obj, newObj, (k as string).split("."));
+  }
+
+  return newObj;
+};
 
 const isNumber = new RegExp("/^-?\d+\.?\d*$/");
 /**

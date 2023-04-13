@@ -2,10 +2,7 @@
 import type {
   InvokeFunction,
   InvokeLoader,
-} from "$live/routes/live/invoke/index.ts";
-import {
-  ManifestFunction,
-  ManifestLoader,
+  InvokeResult,
 } from "$live/routes/live/invoke/index.ts";
 import type { DecoManifest } from "../types.ts";
 
@@ -33,33 +30,23 @@ const genericInvoke = async (payload: unknown) => {
  * or the function name as a parameter (e.g `deco-sites/std/functions/vtexProductList.ts`) and invoke the target function passing the provided `props` as the partial input for the function.
  * @returns the function return.
  */
-export const invokeFunc = <
+export const invoke = <
   TManifest extends DecoManifest,
 >() =>
 <
-  TFunc extends keyof TManifest["functions"] & string,
+  TFunc extends (keyof TManifest["functions"] & string),
+  TLoad extends (keyof TManifest["loaders"] & string),
+  TPayload extends
+    | InvokeFunction<TManifest, TFunc>
+    | InvokeLoader<TManifest, TLoad>
+    | Record<
+      string,
+      InvokeFunction<TManifest, TFunc> | InvokeLoader<TManifest, TLoad>
+    >,
 >(
-  payload: InvokeFunction<TManifest, TFunc>,
+  payload: TPayload,
 ): Promise<
-  ManifestFunction<TManifest, TFunc>["return"]
-> => {
-  return genericInvoke(payload);
-};
-
-/**
- * Receives the function id as a parameter (e.g `#FUNC_ID`, the `#` will be ignored)
- * or the function name as a parameter (e.g `deco-sites/std/functions/vtexProductList.ts`) and invoke the target function passing the provided `props` as the partial input for the function.
- * @returns the function return.
- */
-export const invokeLoader = <
-  TManifest extends DecoManifest,
->() =>
-<
-  TFunc extends keyof TManifest["loaders"] & string,
->(
-  payload: InvokeLoader<TManifest, TFunc>,
-): Promise<
-  ManifestLoader<TManifest, TFunc>["return"]
+  InvokeResult<TPayload, TManifest>
 > => {
   return genericInvoke(payload);
 };
@@ -72,12 +59,8 @@ export const withManifest = <TManifest extends DecoManifest>() => {
     /**
      * Invokes the target function using the invoke api.
      */
-    invokeFunction: invokeFunc<
+    invoke: invoke<
       TManifest
     >(),
-    /**
-     * Invokes the target loaders using its invoke api.
-     */
-    invokeLoader: invokeFunc<TManifest>(),
   };
 };
