@@ -35,6 +35,16 @@ export const pickPath = <T>(obj: T, current: Partial<T>, keys: string[]) => {
   pickPath(obj[first], c[first], rest);
 };
 
+export type PickPath<T, Path extends DotNestedKeys<T>> = Path extends keyof T
+  ? { [key in keyof T & Path]: T[Path] }
+  : Path extends `${infer first}.${infer rest}`
+    ? first extends keyof T
+      ? rest extends DotNestedKeys<T[first]>
+        ? { [k in keyof T & first]: PickPath<T[k], rest> }
+      : never
+    : never
+  : never;
+
 export const pickPaths = <T>(obj: T, keys: DotNestedKeys<T>[]): Partial<T> => {
   const newObj: Partial<T> = {};
   for (const k of keys) {

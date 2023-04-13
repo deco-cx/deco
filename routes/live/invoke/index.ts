@@ -2,10 +2,10 @@
 import { HandlerContext } from "$fresh/src/server/types.ts";
 import { LiveConfig } from "$live/blocks/handler.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
+import dfs from "$live/engine/fresh/defaults.ts";
 import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
-import dfs from "$live/engine/fresh/defaults.ts";
-import { DotNestedKeys } from "$live/utils/object.ts";
+import { DotNestedKeys, PickPath } from "$live/utils/object.ts";
 
 export type AvailableFunctions<TManifest extends DecoManifest> =
   & keyof TManifest["functions"]
@@ -42,10 +42,17 @@ export interface InvokeFunction<
   TLoader extends keyof TManifest["functions"] & string =
     & keyof TManifest["functions"]
     & string,
+  TFunc extends ManifestFunction<TManifest, TLoader> = ManifestFunction<
+    TManifest,
+    TLoader
+  >,
+  TSelector extends DotNestedKeys<
+    TFunc["return"]
+  >[] = DotNestedKeys<TFunc["return"]>[],
 > {
   key: TLoader | `#${string}`;
-  props?: Partial<ManifestFunction<TManifest, TLoader>["props"]>;
-  selector?: DotNestedKeys<ManifestFunction<TManifest, TLoader>["return"]>[];
+  props?: Partial<TFunc["props"]>;
+  select?: TSelector;
 }
 
 export interface InvokeLoader<
@@ -53,10 +60,17 @@ export interface InvokeLoader<
   TLoader extends keyof TManifest["loaders"] & string =
     & keyof TManifest["loaders"]
     & string,
+  TFunc extends ManifestLoader<TManifest, TLoader> = ManifestLoader<
+    TManifest,
+    TLoader
+  >,
+  TSelector extends DotNestedKeys<
+    TFunc["return"]
+  >[] = DotNestedKeys<TFunc["return"]>[],
 > {
   key: TLoader | `#${string}`;
-  props?: Partial<ManifestLoader<TManifest, TLoader>["props"]>;
-  selector?: DotNestedKeys<ManifestLoader<TManifest, TLoader>["return"]>[];
+  props?: Partial<TFunc["props"]>;
+  select?: TSelector;
 }
 
 export type InvokePayload<
@@ -75,16 +89,20 @@ export type InvokePayload<
 export type InvokeResult<
   TPayload,
   TManifest extends DecoManifest = DecoManifest,
-> = TPayload extends InvokeFunction<TManifest, infer TFunc>
-  ? ManifestFunction<TManifest, TFunc>["return"]
+> = TPayload extends
+  InvokeFunction<TManifest, infer TFunc, any, infer TFuncSelector>
+  ? TFuncSelector extends
+    DotNestedKeys<ManifestFunction<TManifest, TFunc>["return"]>
+    ? PickPath<ManifestFunction<TManifest, TFunc>["return"], TFuncSelector>
+  : ManifestFunction<TManifest, TFunc>["return"]
   : TPayload extends InvokeLoader<TManifest, infer TLoader>
     ? ManifestLoader<TManifest, TLoader>["return"]
   : TPayload extends Record<string, any> ? {
       [key in keyof TPayload]: TPayload[key] extends
         InvokeFunction<TManifest, infer TFunc>
         ? ManifestFunction<TManifest, TFunc>["return"]
-        : TPayload[key] extends InvokeLoader<TManifest, infer TLoader>
-          ? ManifestLoader<TManifest, TLoader>["return"]
+        : TPayload[key] extends InvokeLoader<TManifest, infer TFunc>
+          ? ManifestLoader<TManifest, TFunc>["return"]
         : unknown;
     }
   : unknown;
@@ -103,7 +121,7 @@ const payloadToResolvable = (
 ): Resolvable => {
   if (isInvokeFunc(p)) {
     return {
-      keys: p.selector,
+      keys: p.select,
       obj: {
         props: p.props,
         resolveType: sanitizer(p.key),

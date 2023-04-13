@@ -1,10 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import type {
+  AvailableFunctions,
+  AvailableLoaders,
   InvokeFunction,
   InvokeLoader,
   InvokeResult,
+  ManifestFunction,
+  ManifestLoader,
 } from "$live/routes/live/invoke/index.ts";
 import type { DecoManifest } from "../types.ts";
+import { DotNestedKeys } from "../utils/object.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
@@ -34,14 +39,23 @@ export const invoke = <
   TManifest extends DecoManifest,
 >() =>
 <
-  TFunc extends (keyof TManifest["functions"] & string),
-  TLoad extends (keyof TManifest["loaders"] & string),
+  TFunc extends AvailableFunctions<TManifest>,
+  TLoad extends AvailableLoaders<TManifest>,
+  TFuncImpl extends ManifestFunction<TManifest, TFunc>,
+  TLoadImpl extends ManifestLoader<TManifest, TLoad>,
+  TFuncSelector extends DotNestedKeys<
+    TFuncImpl["return"]
+  >[],
+  TLoaderSelector extends DotNestedKeys<
+    TLoadImpl["return"]
+  >[],
   TPayload extends
-    | InvokeFunction<TManifest, TFunc>
-    | InvokeLoader<TManifest, TLoad>
+    | InvokeFunction<TManifest, TFunc, TFuncImpl, TFuncSelector>
+    | InvokeLoader<TManifest, TLoad, TLoadImpl, TLoaderSelector>
     | Record<
       string,
-      InvokeFunction<TManifest, TFunc> | InvokeLoader<TManifest, TLoad>
+      | InvokeFunction<TManifest, TFunc, TFuncImpl, TFuncSelector>
+      | InvokeLoader<TManifest, TLoad, TLoadImpl, TLoaderSelector>
     >,
 >(
   payload: TPayload,
