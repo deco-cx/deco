@@ -9,14 +9,25 @@ export type DotNestedKeys<T> = (T extends object ? {
   }[Exclude<keyof T, symbol>]
   : "") extends infer D ? Extract<D, string> : never;
 
-interface Data {
-  products: { id: string }[];
-}
+export const pickPath = <T>(
+  obj: T,
+  current: Partial<T> | Array<any>,
+  keys: string[],
+) => {
+  if (Array.isArray(obj)) {
+    let idx = 0;
+    for (const value of obj as Array<any>) {
+      const cAsArray = current as Array<any>;
+      cAsArray[idx] ??= Array.isArray(value) ? new Array(value.length) : {};
+      pickPath(value, cAsArray[idx], keys);
+      idx++;
+    }
+    return;
+  }
 
-export const pickPath = <T>(obj: T, current: Partial<T>, keys: string[]) => {
   const [first, ...rest] = keys as [keyof T, ...string[]];
   if (keys.length === 1) {
-    current[first] = obj[first];
+    (current as Partial<T>)[first] = obj[first];
     return;
   }
   const c = current as Record<keyof T, {}>;
@@ -49,7 +60,9 @@ export const pickPaths = <T, K extends DotNestedKeys<T>>(
   obj: T,
   keys: K[],
 ): PickPath<T, K> => {
-  const newObj: Partial<T> = {};
+  const newObj: Partial<T> | Array<any> = Array.isArray(obj)
+    ? new Array(obj.length)
+    : {};
   for (const k of keys) {
     pickPath(obj, newObj as Partial<T>, (k as string).split("."));
   }
