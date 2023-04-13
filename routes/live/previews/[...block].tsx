@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
