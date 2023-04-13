@@ -129,14 +129,12 @@ const main = (
 };
 
 const innerHtml = (
-  { id, path, flags = {} }: Props,
+  { id, path, flags }: Props,
 ) =>
-  `(${main.toString()})({page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", active_flags: "${
-    Object.keys(flags).join(",")
-  }"});
+  `(${main.toString()})({page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", active_flags: "${flags}"});
 `;
 
-type Props = Partial<{ id: number; path: string }> & { flags?: Flags };
+type Props = Partial<{ id: number; path: string }> & { flags?: string };
 
 /**
  * We don't send Jitsu events on localhost by default, so

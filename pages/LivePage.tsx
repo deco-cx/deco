@@ -34,7 +34,7 @@ export default function LivePage({ sections }: Props) {
           id: metadata?.id!,
         }}
       />
-      <LiveAnalytics />
+      <LiveAnalytics  flags={metadata?.flags} path={metadata?.pagePath} />
       <>{(sections ?? []).filter(notUndefined).map(renderSection)}</>
     </>
   );

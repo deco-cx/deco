@@ -160,7 +160,7 @@ export interface ComponentMetadata {
 }
 
 export interface PageContext {
-  metadata?: ComponentMetadata | undefined;
+  metadata?: ComponentMetadata & { flags: string, pagePath: string } | undefined;
   params: Record<string, string>;
   url: URL;
 }

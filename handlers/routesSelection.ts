@@ -43,6 +43,7 @@ const rankRoute = (pattern: string) =>
 const router = (
   routes: [string, Resolvable<Handler>][],
   configs: ResolveOptions,
+  flags: Map<string, CookiedFlag>,
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     for (const [routePath, handler] of routes) {
@@ -53,6 +54,12 @@ const router = (
       if (res !== null) {
         const ctx = { ...connInfo, params: groups } as ConnInfo & {
           params: Record<string, string>;
+          state: {
+            $live: {
+              pagePath: string;
+              flags: string;
+            };
+          };
         };
         const resolvedOrPromise = context.configResolver!.resolve<Handler>(
           handler,
@@ -65,6 +72,14 @@ const router = (
           ? await resolvedOrPromise
           : resolvedOrPromise;
         end && end();
+
+        if ("state" in connInfo) {
+          if ("$live" in ctx["state"]) {
+            ctx["state"]["$live"]["pagePath"] = routePath;
+            ctx["state"]["$live"]["flags"] = Array.from(flags.keys())
+              .join(",");
+          }
+        }
 
         return await hand(
           req,
@@ -155,7 +170,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     const server = router(builtRoutes, {
       overrides,
       monitoring: t ? { t } : undefined,
-    });
+    }, flags);
 
     // call the target handler
     const resp = await server(req, connInfo);
