@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/src/server/types.ts";
-import { LiveConfig } from "$live/blocks/handler.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import dfs from "$live/engine/fresh/defaults.ts";
+import { LiveConfig } from "$live/mod.ts";
 import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
-import { DotNestedKeys } from "$live/utils/object.ts";
+import { DotNestedKeys, PickPath } from "$live/utils/object.ts";
 
 export type AvailableFunctions<TManifest extends DecoManifest> =
   & keyof TManifest["functions"]
@@ -86,23 +86,35 @@ export type InvokePayload<
       | Record<string, InvokeFunction<TManifest, TLoader>>
   : unknown;
 
+type ReturnWith<TRet, TPayload> = TPayload extends
+  { select: (infer Selector)[] }
+  ? Selector extends DotNestedKeys<TRet> ? PickPath<TRet, Selector>
+  : Partial<TRet>
+  : TRet;
+
 export type InvokeResult<
-  TPayload,
+  TPayload extends
+    | InvokeFunction<TManifest, any, any, any>
+    | InvokeLoader<TManifest, any, any, any>
+    | Record<
+      string,
+      | InvokeFunction<TManifest, any, any, any>
+      | InvokeLoader<TManifest, any, any, any>
+    >,
   TManifest extends DecoManifest = DecoManifest,
-> = TPayload extends InvokeFunction<TManifest, infer TFunc>
-  ? ManifestFunction<TManifest, TFunc>["return"]
-  : TPayload extends InvokeLoader<TManifest, infer TLoader>
-    ? ManifestLoader<TManifest, TLoader>["return"]
+> = TPayload extends InvokeFunction<TManifest, infer TFunc, any, any>
+  ? ReturnWith<ManifestFunction<TManifest, TFunc>["return"], TPayload>
+  : TPayload extends InvokeLoader<TManifest, infer TLoader, any, any>
+    ? ReturnWith<ManifestLoader<TManifest, TLoader>["return"], TPayload>
   : TPayload extends Record<string, any> ? {
       [key in keyof TPayload]: TPayload[key] extends
         InvokeFunction<TManifest, infer TFunc>
-        ? ManifestFunction<TManifest, TFunc>["return"]
+        ? ReturnWith<ManifestFunction<TManifest, TFunc>["return"], TPayload>
         : TPayload[key] extends InvokeLoader<TManifest, infer TFunc>
-          ? ManifestLoader<TManifest, TFunc>["return"]
+          ? ReturnWith<ManifestLoader<TManifest, TFunc>["return"], TPayload>
         : unknown;
     }
   : unknown;
-
 export const sanitizer = (str: string | `#${string}`) =>
   str.startsWith("#") ? str.substring(1) : str;
 

@@ -11,7 +11,7 @@ import {
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
 import { LoaderContext } from "$live/types.ts";
 import { JSX } from "preact";
-import { PropsLoader, propsResolver } from "./propsResolver.ts";
+import { PropsLoader, propsResolver } from "$live/blocks/propsLoader.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
