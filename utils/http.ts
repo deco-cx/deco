@@ -164,6 +164,14 @@ export function setCSPHeaders(
   return response;
 }
 
+/**
+ * Parses the specified @param param from querystring of the given @param url.
+ * if the parameter is specified so the payload is parsed by decoding the parameter from base64 and parsing as a Json usin JSON.parse,
+ * otherwise all query parameters are used to mount an object using the dot notation format (`a.b=10` generates { a :{ b:10 }}).
+ * @param param the parameter name
+ * @param url the url to parse
+ * @returns the parsed payload
+ */
 export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
   const props = url.searchParams.get(param);
   if (!props) {

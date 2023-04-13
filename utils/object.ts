@@ -9,7 +9,7 @@ export type DotNestedKeys<T> = (T extends object ? {
   }[Exclude<keyof T, symbol>]
   : "") extends infer D ? Extract<D, string> : never;
 
-export const pickPath = <T>(
+const pickPath = <T>(
   obj: T,
   current: Partial<T> | Array<any>,
   keys: string[],
@@ -56,15 +56,21 @@ export type PickPath<T, Path extends DotNestedKeys<T>> = Path extends keyof T
     : never
   : never;
 
+/**
+ * pick paths based on specified @param paths
+ * @param obj the object that should be picked
+ * @param paths the paths in the dot notation format e.g `a.b.c.d`, notice that for arrays the index is omitted and the key is selected for each element.
+ * @returns the modified object.
+ */
 export const pickPaths = <T, K extends DotNestedKeys<T>>(
   obj: T,
-  keys: K[],
+  paths: K[],
 ): PickPath<T, K> => {
   const newObj: Partial<T> | Array<any> = Array.isArray(obj)
     ? new Array(obj.length)
     : {};
-  for (const k of keys) {
-    pickPath(obj, newObj as Partial<T>, (k as string).split("."));
+  for (const path of paths) {
+    pickPath(obj, newObj as Partial<T>, (path as string).split("."));
   }
 
   return newObj as unknown as PickPath<T, K>;
