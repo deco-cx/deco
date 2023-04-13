@@ -158,7 +158,7 @@ export const $live = <T extends DecoManifest>(
 
       const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
         const previewFunc = mod.preview ??
-          (mod.Preview ? usePreviewFunc(mod.Preview) : undefined);
+          (mod.Preview ? usePreviewFunc(mod.Preview) : blk.defaultPreview);
         if (previewFunc) {
           return { ...prv, [`${previewPrefixKey}${key}`]: previewFunc };
         }
