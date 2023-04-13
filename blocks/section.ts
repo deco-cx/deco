@@ -11,7 +11,7 @@ import {
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
 import { LoaderContext } from "$live/types.ts";
 import { JSX } from "preact";
-import { PropsLoader, propsResolver } from "$live/blocks/propsLoader.ts";
+import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -77,7 +77,7 @@ const sectionBlock: Block<SectionModule> = {
         state: { ...context.state, $live: props, resolve },
       } as LoaderContext;
       return componentFunc(
-        await propsResolver(loader, ctx, request),
+        await propsLoader(loader, ctx, request),
         resolveChain,
       );
     };

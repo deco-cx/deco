@@ -13,7 +13,7 @@ import {
   RequiredKeys,
 } from "https://esm.sh/utility-types@3.10.0";
 
-export type ResolvePropFunc<TProps = any, TReturn = any, TState = any> = (
+export type LoaderPropFunc<TProps = any, TReturn = any, TState = any> = (
   request: Request,
   ctx: LoaderContext<
     TProps,
@@ -61,13 +61,13 @@ export type PropsUnion<
   >
   : TSectionInput;
 
-export type ObjectResolver<TLoaderProps, TSectionInput> = {
+export type ObjectLoader<TLoaderProps, TSectionInput> = {
   [key in keyof PropsUnion<TLoaderProps, TSectionInput>]:
     | PropsUnion<
       TLoaderProps,
       TSectionInput
     >[key]
-    | ResolvePropFunc<
+    | LoaderPropFunc<
       TLoaderProps,
       PropsUnion<
         TLoaderProps,
@@ -76,36 +76,36 @@ export type ObjectResolver<TLoaderProps, TSectionInput> = {
     >;
 };
 export type PropsLoader<TSectionInput, TLoaderProps = unknown> =
-  | ObjectResolver<TLoaderProps, TSectionInput>
+  | ObjectLoader<TLoaderProps, TSectionInput>
   | TSectionInput
-  | ResolvePropFunc<TLoaderProps, TSectionInput>;
+  | LoaderPropFunc<TLoaderProps, TSectionInput>;
 
-const isFuncResolver = <TLoaderProps, TSectionInput>(
+const isLoaderFunc = <TLoaderProps, TSectionInput>(
   obj:
-    | ObjectResolver<TLoaderProps, TSectionInput>
+    | ObjectLoader<TLoaderProps, TSectionInput>
     | TSectionInput
-    | ResolvePropFunc<TLoaderProps, TSectionInput>,
-): obj is ResolvePropFunc<TLoaderProps, TSectionInput> => {
+    | LoaderPropFunc<TLoaderProps, TSectionInput>,
+): obj is LoaderPropFunc<TLoaderProps, TSectionInput> => {
   return typeof obj === "function";
 };
 
-const isObjResolver = <TLoaderProps, TSectionInput>(
+const isObjLoader = <TLoaderProps, TSectionInput>(
   obj:
-    | ObjectResolver<TLoaderProps, TSectionInput>
+    | ObjectLoader<TLoaderProps, TSectionInput>
     | TSectionInput
-    | ResolvePropFunc<TLoaderProps, TSectionInput>,
-): obj is ObjectResolver<TLoaderProps, TSectionInput> => {
+    | LoaderPropFunc<TLoaderProps, TSectionInput>,
+): obj is ObjectLoader<TLoaderProps, TSectionInput> => {
   return typeof obj === "object";
 };
-export const propsResolver = async <TSectionInput, TProps>(
+export const propsLoader = async <TSectionInput, TProps>(
   resolver: PropsLoader<TSectionInput, TProps>,
   ctx: LoaderContext<TProps>,
   req: Request,
 ): Promise<TSectionInput> => {
-  if (isFuncResolver(resolver)) {
+  if (isLoaderFunc(resolver)) {
     return await resolver(req, ctx);
   }
-  if (!isObjResolver(resolver)) {
+  if (!isObjLoader(resolver)) {
     return resolver;
   }
   const resolved = {} as Promisified<TSectionInput>;
@@ -113,7 +113,7 @@ export const propsResolver = async <TSectionInput, TProps>(
     const keyAsResolvedKey = key as keyof typeof resolved;
     const keyAsResolverKey = key as keyof typeof resolver;
     const funcOrValue = resolver[keyAsResolverKey];
-    if (isFuncResolver(funcOrValue)) {
+    if (isLoaderFunc(funcOrValue)) {
       const result = funcOrValue(
         req,
         ctx,
