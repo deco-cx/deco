@@ -45,10 +45,10 @@ export const invoke = <
   TLoadImpl extends ManifestLoader<TManifest, TLoad>,
   TFuncSelector extends DotNestedKeys<
     TFuncImpl["return"]
-  >[],
+  >,
   TLoaderSelector extends DotNestedKeys<
     TLoadImpl["return"]
-  >[],
+  >,
   TPayload extends
     | InvokeFunction<TManifest, TFunc, TFuncImpl, TFuncSelector>
     | InvokeLoader<TManifest, TLoad, TLoadImpl, TLoaderSelector>

@@ -45,13 +45,16 @@ export type PickPath<T, Path extends DotNestedKeys<T>> = Path extends keyof T
     : never
   : never;
 
-export const pickPaths = <T>(obj: T, keys: DotNestedKeys<T>[]): Partial<T> => {
+export const pickPaths = <T, K extends DotNestedKeys<T>>(
+  obj: T,
+  keys: K[],
+): PickPath<T, K> => {
   const newObj: Partial<T> = {};
   for (const k of keys) {
-    pickPath(obj, newObj, (k as string).split("."));
+    pickPath(obj, newObj as Partial<T>, (k as string).split("."));
   }
 
-  return newObj;
+  return newObj as unknown as PickPath<T, K>;
 };
 
 const isNumber = new RegExp("/^-?\d+\.?\d*$/");

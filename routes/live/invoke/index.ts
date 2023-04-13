@@ -5,7 +5,7 @@ import { Resolvable } from "$live/engine/core/resolver.ts";
 import dfs from "$live/engine/fresh/defaults.ts";
 import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
-import { DotNestedKeys, PickPath } from "$live/utils/object.ts";
+import { DotNestedKeys } from "$live/utils/object.ts";
 
 export type AvailableFunctions<TManifest extends DecoManifest> =
   & keyof TManifest["functions"]
@@ -48,11 +48,11 @@ export interface InvokeFunction<
   >,
   TSelector extends DotNestedKeys<
     TFunc["return"]
-  >[] = DotNestedKeys<TFunc["return"]>[],
+  > = DotNestedKeys<TFunc["return"]>,
 > {
   key: TLoader | `#${string}`;
   props?: Partial<TFunc["props"]>;
-  select?: TSelector;
+  select?: TSelector[];
 }
 
 export interface InvokeLoader<
@@ -66,11 +66,11 @@ export interface InvokeLoader<
   >,
   TSelector extends DotNestedKeys<
     TFunc["return"]
-  >[] = DotNestedKeys<TFunc["return"]>[],
+  > = DotNestedKeys<TFunc["return"]>,
 > {
   key: TLoader | `#${string}`;
   props?: Partial<TFunc["props"]>;
-  select?: TSelector;
+  select?: TSelector[];
 }
 
 export type InvokePayload<
@@ -89,12 +89,8 @@ export type InvokePayload<
 export type InvokeResult<
   TPayload,
   TManifest extends DecoManifest = DecoManifest,
-> = TPayload extends
-  InvokeFunction<TManifest, infer TFunc, any, infer TFuncSelector>
-  ? TFuncSelector extends
-    DotNestedKeys<ManifestFunction<TManifest, TFunc>["return"]>
-    ? PickPath<ManifestFunction<TManifest, TFunc>["return"], TFuncSelector>
-  : ManifestFunction<TManifest, TFunc>["return"]
+> = TPayload extends InvokeFunction<TManifest, infer TFunc>
+  ? ManifestFunction<TManifest, TFunc>["return"]
   : TPayload extends InvokeLoader<TManifest, infer TLoader>
     ? ManifestLoader<TManifest, TLoader>["return"]
   : TPayload extends Record<string, any> ? {
