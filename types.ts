@@ -65,7 +65,7 @@ export type LoaderContext<TProps = any, TState = {}> = StatefulContext<
 // deno-lint-ignore no-explicit-any
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
-  ctx: LoaderContext<State>,
+  ctx: LoaderContext<Props, State>,
   props: Props,
 ) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
 

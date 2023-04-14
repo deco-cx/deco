@@ -1,8 +1,14 @@
 import { context } from "$live/live.ts";
 import { toManifestBlocks } from "$live/routes/live/_meta.ts";
-import { Node } from "$live/types.ts";
 import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { basename } from "std/path/mod.ts";
+
+interface Node {
+  label: string;
+  fullPath: string;
+  editLink?: string;
+  children?: Node[];
+}
 
 const capitalize = (str: string) => str[0].toUpperCase() + str.substring(1);
 const createDataPageFor = (component: string) =>
