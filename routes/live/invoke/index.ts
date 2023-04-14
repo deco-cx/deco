@@ -5,7 +5,7 @@ import dfs from "$live/engine/fresh/defaults.ts";
 import { LiveConfig } from "$live/mod.ts";
 import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
-import { DotNestedKeys, DeepPick } from "$live/utils/object.ts";
+import { DeepPick, DotNestedKeys } from "$live/utils/object.ts";
 
 export type AvailableFunctions<TManifest extends DecoManifest> =
   & keyof TManifest["functions"]
