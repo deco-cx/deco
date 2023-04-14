@@ -1,10 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
 import type {
-  InvokeFunction,
-  InvokeLoader,
+  AvailableFunctions,
+  AvailableLoaders,
+  Invoke,
   InvokeResult,
+  ManifestFunction,
+  ManifestLoader,
 } from "$live/routes/live/invoke/index.ts";
 import type { DecoManifest } from "../types.ts";
+import { DotNestedKeys } from "../utils/object.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
@@ -34,13 +38,17 @@ export const invoke = <
   TManifest extends DecoManifest,
 >() =>
 <
+  TInvocableKey extends
+    | AvailableFunctions<TManifest>
+    | AvailableLoaders<TManifest>,
+  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+    ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+    : DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>,
   TPayload extends
-    | InvokeFunction<TManifest>
-    | InvokeLoader<TManifest>
+    | Invoke<TManifest, TInvocableKey, TFuncSelector>
     | Record<
       string,
-      | InvokeFunction<TManifest>
-      | InvokeLoader<TManifest>
+      Invoke<TManifest, TInvocableKey, TFuncSelector>
     >,
 >(
   payload: TPayload,

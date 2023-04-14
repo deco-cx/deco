@@ -78,10 +78,11 @@ export type DeepPick<
     : Path extends `${infer first}.${infer rest}`
       ? first extends keyof T
         ? rest extends DotNestedKeys<T[first]>
-          ? { [k in first]: DeepPick<T[k], rest> }
+          ? { [k in first]: DeepPick<Required<T>[k], rest> }
         : Required<T>[first] extends (infer E1)[]
           ? rest extends DotNestedKeys<E1> ? {
-              [k in first]: Required<T>[k] extends any[] ? DeepPick<E1, rest>
+              [k in first]: Required<T>[k] extends any[]
+                ? DeepPick<Required<E1>, rest>
                 : never;
             }
           : never
