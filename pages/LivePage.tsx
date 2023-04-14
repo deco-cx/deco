@@ -1,7 +1,10 @@
 import { Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import { context } from "$live/live.ts";
-import { usePageContext } from "$live/routes/[...catchall].tsx";
+import {
+  usePageContext,
+  useRouterContext,
+} from "$live/routes/[...catchall].tsx";
 import LiveControls from "../components/LiveControls.tsx";
 import { notUndefined } from "$live/engine/core/utils.ts";
 
@@ -26,6 +29,7 @@ export function renderSection(
 
 export default function LivePage({ sections }: Props) {
   const metadata = usePageContext()?.metadata;
+  const routerCtx = useRouterContext();
   return (
     <>
       <LiveControls
@@ -34,7 +38,11 @@ export default function LivePage({ sections }: Props) {
           id: metadata?.id!,
         }}
       />
-      <LiveAnalytics id={parseInt(metadata?.id ?? "-1")} flags={metadata?.flags} path={metadata?.pagePath} />
+      <LiveAnalytics
+        id={parseInt(metadata?.id ?? "-1")}
+        flags={routerCtx?.flags}
+        path={routerCtx?.pagePath}
+      />
       <>{(sections ?? []).filter(notUndefined).map(renderSection)}</>
     </>
   );

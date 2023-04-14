@@ -3,12 +3,14 @@ import { Handler } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
 import { LiveRouteConfig } from "$live/blocks/route.ts";
 import { PageContext } from "$live/engine/block.ts";
-import { LiveConfig, LiveState } from "$live/types.ts";
+import { LiveConfig, LiveState, RouterContext } from "$live/types.ts";
 import { setCSPHeaders } from "$live/utils/http.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 
 const ctx = createContext<PageContext | undefined>(undefined);
+
+const routerCtx = createContext<RouterContext | undefined>(undefined);
 
 export const usePageContext = () => {
   const pageCtx = useContext(ctx);
@@ -20,21 +22,34 @@ export const usePageContext = () => {
   return pageCtx;
 };
 
+export const useRouterContext = () => {
+  const routerCtxImpl = useContext(routerCtx);
+  if (routerCtxImpl === undefined) {
+    console.warn(
+      "router context requested but not available, are you using inside an island ?",
+    );
+  }
+  return routerCtxImpl;
+};
+
 export default function Render({
   params,
   url,
   data: {
     page,
+    routerInfo
   },
-}: PageProps<{ page: Page }>) {
+}: PageProps<{ page: Page, routerInfo: RouterContext }>) {
   if (!page) {
     return null;
   }
   const { Component, props, metadata } = page;
   return (
-    <ctx.Provider value={{ metadata, params, url }}>
-      <Component {...props}></Component>
-    </ctx.Provider>
+    <routerCtx.Provider value={routerInfo}>
+      <ctx.Provider value={{ metadata, params, url }}>
+        <Component {...props}></Component>
+      </ctx.Provider>
+    </routerCtx.Provider>
   );
 }
 

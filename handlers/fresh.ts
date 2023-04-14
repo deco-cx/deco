@@ -1,6 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
 import { ConnInfo } from "std/http/server.ts";
+import { RouterContext } from "../types.ts";
 
 export interface FreshConfig {
   page: Page;
@@ -17,22 +18,8 @@ export default function Fresh(page: FreshConfig) {
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page);
     }
-
-    if ("state" in ctx) {
-      const liveState = ctx as {state: {
-        $live: {
-          pagePath: string;
-          flags: string;
-        };
-      }}
-      if ("$live" in liveState["state"]) {
-        page.page.metadata['pagePath'] = liveState["state"]["$live"]["pagePath"];
-        page.page.metadata['flags'] = liveState["state"]["$live"]["flags"];
-      }
-    }
-
-    return isFreshCtx(ctx)
-      ? ctx.render(page)
+    return isFreshCtx<{routerInfo: RouterContext}>(ctx)
+      ? ctx.render({page: page.page, routerInfo: ctx.state.routerInfo})
       : Response.json({ message: "Fresh is not being used" }, { status: 500 });
   };
 }

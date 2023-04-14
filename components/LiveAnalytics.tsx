@@ -1,7 +1,6 @@
 import { context } from "$live/live.ts";
 import Script from "https://deno.land/x/partytown@0.2.1/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.2.1/integrations/Jitsu.tsx";
-import { Flags } from "../engine/configstore/supabaseLegacy.ts";
 
 declare global {
   interface Window {

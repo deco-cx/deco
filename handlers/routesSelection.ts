@@ -7,7 +7,7 @@ import { CookiedFlag, cookies } from "$live/flags.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
-import { LiveState } from "$live/types.ts";
+import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
 export interface SelectionConfig {
@@ -55,12 +55,15 @@ const router = (
         const ctx = { ...connInfo, params: groups } as ConnInfo & {
           params: Record<string, string>;
           state: {
-            $live: {
-              pagePath: string;
-              flags: string;
-            };
+            routerInfo: RouterContext;
           };
         };
+
+        ctx.state.routerInfo = {
+          flags: Array.from(flags.keys()).join(","),
+          pagePath: routePath,
+        };
+
         const resolvedOrPromise = context.configResolver!.resolve<Handler>(
           handler,
           { context: ctx, request: req },
@@ -72,14 +75,6 @@ const router = (
           ? await resolvedOrPromise
           : resolvedOrPromise;
         end && end();
-
-        if ("state" in connInfo) {
-          if ("$live" in ctx["state"]) {
-            ctx["state"]["$live"]["pagePath"] = routePath;
-            ctx["state"]["$live"]["flags"] = Array.from(flags.keys())
-              .join(",");
-          }
-        }
 
         return await hand(
           req,
