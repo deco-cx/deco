@@ -1,13 +1,34 @@
 // deno-lint-ignore-file ban-types no-explicit-any
+import { UnionToIntersection } from "https://esm.sh/utility-types";
+
 export type DotPrefix<T extends string> = T extends "" ? "" : `.${T}`;
 
-export type DotNestedKeys<T> = (T extends object ? {
-    [K in Exclude<keyof T, symbol>]: T[K] extends Function ? never
-      : T[K] extends any[]
-        ? `${K}` | `${K}${DotPrefix<DotNestedKeys<T[K][number]>>}`
-      : (`${K}` | `${K}${DotPrefix<DotNestedKeys<T[K]>>}`);
-  }[Exclude<keyof T, symbol>]
-  : "") extends infer D ? Extract<D, string> : never;
+type DotNestedKeysTruncate<T, Count extends number, Acc extends 0[] = []> =
+  Acc["length"] extends Count ? ""
+    : (T extends object ? {
+        [K in Exclude<keyof T, symbol>]: T[K] extends Function ? never
+          : Required<T>[K] extends any[] ? 
+              | `${K}`
+              | `${K}${DotPrefix<
+                DotNestedKeysTruncate<
+                  Required<T>[K][number],
+                  Count,
+                  [0, ...Acc]
+                >
+              >}`
+          : (
+            | `${K}`
+            | `${K}${DotPrefix<
+              DotNestedKeysTruncate<T[K], Count, [0, ...Acc]>
+            >}`
+          );
+      }[Exclude<keyof T, symbol>]
+      : "") extends infer D ? Extract<D, string>
+    : never;
+
+export type DotNestedKeys<T> = NonNullable<T> extends (infer TE)[]
+  ? DotNestedKeysTruncate<TE, 6>
+  : DotNestedKeysTruncate<T, 6>;
 
 const pickPath = <T>(
   obj: T,
@@ -46,15 +67,27 @@ const pickPath = <T>(
   pickPath(obj[first], c[first], rest);
 };
 
-export type PickPath<T, Path extends DotNestedKeys<T>> = Path extends keyof T
-  ? { [key in keyof T & Path]: T[Path] }
-  : Path extends `${infer first}.${infer rest}`
-    ? first extends keyof T
-      ? rest extends DotNestedKeys<T[first]>
-        ? { [k in keyof T & first]: PickPath<T[k], rest> }
+export type PickPath<
+  T,
+  Path extends DotNestedKeys<T>,
+> = T extends null ? never : UnionToIntersection<
+  T extends (infer TE)[]
+    ? Path extends DotNestedKeys<TE> ? PickPath<TE, Path>[] : never
+    : Path extends keyof T ? { [key in Path]: T[key] }
+    : Path extends `${infer first}.${infer rest}`
+      ? first extends keyof T
+        ? rest extends DotNestedKeys<T[first]>
+          ? { [k in first]: PickPath<T[k], rest> }
+        : Required<T>[first] extends (infer E1)[]
+          ? rest extends DotNestedKeys<E1> ? {
+              [k in first]: Required<T>[k] extends any[] ? PickPath<E1, rest>
+                : never;
+            }
+          : never
+        : never
       : never
     : never
-  : never;
+>;
 
 /**
  * pick paths based on specified @param paths

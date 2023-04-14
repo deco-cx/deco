@@ -94,12 +94,12 @@ type ReturnWith<TRet, TPayload> = TPayload extends
 
 export type InvokeResult<
   TPayload extends
-    | InvokeFunction<TManifest, any, any, any>
-    | InvokeLoader<TManifest, any, any, any>
+    | InvokeFunction<TManifest>
+    | InvokeLoader<TManifest>
     | Record<
       string,
-      | InvokeFunction<TManifest, any, any, any>
-      | InvokeLoader<TManifest, any, any, any>
+      | InvokeFunction<TManifest>
+      | InvokeLoader<TManifest>
     >,
   TManifest extends DecoManifest = DecoManifest,
 > = TPayload extends InvokeFunction<TManifest, infer TFunc, any, any>
@@ -108,10 +108,15 @@ export type InvokeResult<
     ? ReturnWith<ManifestLoader<TManifest, TLoader>["return"], TPayload>
   : TPayload extends Record<string, any> ? {
       [key in keyof TPayload]: TPayload[key] extends
-        InvokeFunction<TManifest, infer TFunc>
-        ? ReturnWith<ManifestFunction<TManifest, TFunc>["return"], TPayload>
-        : TPayload[key] extends InvokeLoader<TManifest, infer TFunc>
-          ? ReturnWith<ManifestLoader<TManifest, TFunc>["return"], TPayload>
+        InvokeFunction<TManifest, infer TFunc, any, any> ? ReturnWith<
+          ManifestFunction<TManifest, TFunc>["return"],
+          TPayload[key]
+        >
+        : TPayload[key] extends InvokeLoader<TManifest, infer TLoader, any, any>
+          ? ReturnWith<
+            ManifestLoader<TManifest, TLoader>["return"],
+            TPayload[key]
+          >
         : unknown;
     }
   : unknown;
