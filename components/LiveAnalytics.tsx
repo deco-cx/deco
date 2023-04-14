@@ -1,7 +1,6 @@
 import { context } from "$live/live.ts";
 import Script from "https://deno.land/x/partytown@0.2.1/Script.tsx";
 import Jitsu from "https://deno.land/x/partytown@0.2.1/integrations/Jitsu.tsx";
-import { Flags } from "../engine/configstore/supabaseLegacy.ts";
 
 declare global {
   interface Window {
@@ -129,14 +128,12 @@ const main = (
 };
 
 const innerHtml = (
-  { id, path, flags = {} }: Props,
+  { id, path, flags }: Props,
 ) =>
-  `(${main.toString()})({page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", active_flags: "${
-    Object.keys(flags).join(",")
-  }"});
+  `(${main.toString()})({page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", active_flags: "${flags}"});
 `;
 
-type Props = Partial<{ id: number; path: string }> & { flags?: Flags };
+type Props = Partial<{ id: number; path: string }> & { flags?: string };
 
 /**
  * We don't send Jitsu events on localhost by default, so

@@ -7,7 +7,7 @@ import { CookiedFlag, cookies } from "$live/flags.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
-import { LiveState } from "$live/types.ts";
+import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
 export interface SelectionConfig {
@@ -43,6 +43,7 @@ const rankRoute = (pattern: string) =>
 const router = (
   routes: [string, Resolvable<Handler>][],
   configs: ResolveOptions,
+  flags: Map<string, CookiedFlag>,
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     for (const [routePath, handler] of routes) {
@@ -53,7 +54,16 @@ const router = (
       if (res !== null) {
         const ctx = { ...connInfo, params: groups } as ConnInfo & {
           params: Record<string, string>;
+          state: {
+            routerInfo: RouterContext;
+          };
         };
+
+        ctx.state.routerInfo = {
+          flags: Array.from(flags.keys()).join(","),
+          pagePath: routePath,
+        };
+
         const resolvedOrPromise = context.configResolver!.resolve<Handler>(
           handler,
           { context: ctx, request: req },
@@ -155,7 +165,7 @@ export default function RoutesSelection({ flags }: SelectionConfig): Handler {
     const server = router(builtRoutes, {
       overrides,
       monitoring: t ? { t } : undefined,
-    });
+    }, flags);
 
     // call the target handler
     const resp = await server(req, connInfo);
