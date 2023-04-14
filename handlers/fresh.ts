@@ -19,7 +19,7 @@ export default function Fresh(page: FreshConfig) {
       return Response.json(page);
     }
     return isFreshCtx<{routerInfo: RouterContext}>(ctx)
-      ? ctx.render({page: page.page, routerInfo: ctx.state.routerInfo})
+      ? ctx.render({...page, routerInfo: ctx.state.routerInfo})
       : Response.json({ message: "Fresh is not being used" }, { status: 500 });
   };
 }
