@@ -3,6 +3,7 @@ import { UnionToIntersection } from "https://esm.sh/utility-types";
 
 export type DotPrefix<T extends string> = T extends "" ? "" : `.${T}`;
 
+// truncate on a given Count to avoid recursive types
 type DotNestedKeysTruncate<T, Count extends number, Acc extends 0[] = []> =
   Acc["length"] extends Count ? ""
     : (T extends object ? {
@@ -67,20 +68,20 @@ const pickPath = <T>(
   pickPath(obj[first], c[first], rest);
 };
 
-export type PickPath<
+export type DeepPick<
   T,
   Path extends DotNestedKeys<T>,
 > = T extends null ? never : UnionToIntersection<
   T extends (infer TE)[]
-    ? Path extends DotNestedKeys<TE> ? PickPath<TE, Path>[] : never
+    ? Path extends DotNestedKeys<TE> ? DeepPick<TE, Path>[] : never
     : Path extends keyof T ? { [key in Path]: T[key] }
     : Path extends `${infer first}.${infer rest}`
       ? first extends keyof T
         ? rest extends DotNestedKeys<T[first]>
-          ? { [k in first]: PickPath<T[k], rest> }
+          ? { [k in first]: DeepPick<T[k], rest> }
         : Required<T>[first] extends (infer E1)[]
           ? rest extends DotNestedKeys<E1> ? {
-              [k in first]: Required<T>[k] extends any[] ? PickPath<E1, rest>
+              [k in first]: Required<T>[k] extends any[] ? DeepPick<E1, rest>
                 : never;
             }
           : never
@@ -98,7 +99,7 @@ export type PickPath<
 export const pickPaths = <T, K extends DotNestedKeys<T>>(
   obj: T,
   paths: K[],
-): PickPath<T, K> => {
+): DeepPick<T, K> => {
   const newObj: Partial<T> | Array<any> = Array.isArray(obj)
     ? new Array(obj.length)
     : {};
@@ -106,7 +107,7 @@ export const pickPaths = <T, K extends DotNestedKeys<T>>(
     pickPath(obj, newObj as Partial<T>, (path as string).split("."));
   }
 
-  return newObj as unknown as PickPath<T, K>;
+  return newObj as unknown as DeepPick<T, K>;
 };
 
 const isNumber = new RegExp("/^-?\d+\.?\d*$/");

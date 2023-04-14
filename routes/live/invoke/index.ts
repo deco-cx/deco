@@ -5,7 +5,7 @@ import dfs from "$live/engine/fresh/defaults.ts";
 import { LiveConfig } from "$live/mod.ts";
 import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
-import { DotNestedKeys, PickPath } from "$live/utils/object.ts";
+import { DotNestedKeys, DeepPick } from "$live/utils/object.ts";
 
 export type AvailableFunctions<TManifest extends DecoManifest> =
   & keyof TManifest["functions"]
@@ -88,7 +88,7 @@ export type InvokePayload<
 
 type ReturnWith<TRet, TPayload> = TPayload extends
   { select: (infer Selector)[] }
-  ? Selector extends DotNestedKeys<TRet> ? PickPath<TRet, Selector>
+  ? Selector extends DotNestedKeys<TRet> ? DeepPick<TRet, Selector>
   : Partial<TRet>
   : TRet;
 
