@@ -563,7 +563,7 @@ const tsTypeToSchemeableRec = async (
         value: {
           type: node.literal.kind as JSONSchema7TypeName, // FIXME(mcandeia) not compliant with JSONSchema
           // deno-lint-ignore no-explicit-any
-          const: (node.literal as any)[node.literal.kind] as JSONSchema7Type,
+          const: (node.literal as any)[node.literal.kind],
         },
       };
     }

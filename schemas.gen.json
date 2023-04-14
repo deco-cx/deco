@@ -13,33 +13,28 @@
         }
       }
     },
-    "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
-      "$ref": "#/root/pages",
-      "title": "Page"
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
+      "$ref": "#/root/flags",
+      "title": "Flag"
     },
     "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
-          "title": "Page"
-        }
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
       },
-      "required": [
-        "page"
-      ],
+      "title": "Flag[]"
       "title": "$live/handlers/devPage.ts@DevConfig"
     },
     "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig": {
       "type": "object",
       "properties": {
-        "page": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
-          "title": "Page"
+        "flags": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]",
+          "title": "Flags"
         }
       },
       "required": [
-        "page"
+        "flags"
       ],
       "title": "$live/handlers/fresh.ts@FreshConfig"
     },
@@ -74,29 +69,35 @@
       ],
       "title": "$live/handlers/router.ts@RouterConfig"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
-      "$ref": "#/root/flags",
-      "title": "Flag"
+    "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
+      "$ref": "#/root/pages",
+      "title": "Page"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
-      },
-      "title": "Flag[]"
-    },
-    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
+    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
       "type": "object",
       "properties": {
-        "flags": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]",
-          "title": "Flags"
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
         }
       },
       "required": [
-        "flags"
+        "page"
       ],
-      "title": "$live/handlers/routesSelection.ts@SelectionConfig"
+      "title": "$live/handlers/devPage.ts@DevConfig"
+    },
+    "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
+        }
+      },
+      "required": [
+        "page"
+      ],
+      "title": "$live/handlers/fresh.ts@FreshConfig"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
       "$ref": "#/root/sections",
@@ -116,6 +117,10 @@
           "type": "string",
           "title": "Name"
         },
+        "layout": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Layout"
+        },
         "sections": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
           "title": "Sections"
@@ -126,6 +131,113 @@
         "sections"
       ],
       "title": "$live/pages/LivePage.tsx@Props"
+    },
+    "JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=@Props": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "content"
+                },
+                {
+                  "type": "string",
+                  "const": "footer"
+                },
+                {
+                  "type": "string",
+                  "const": "header"
+                },
+                {
+                  "type": "string",
+                  "const": "analytics"
+                },
+                {
+                  "type": "string",
+                  "const": "design-system"
+                },
+                {
+                  "type": "string",
+                  "const": "SEO"
+                }
+              ],
+              "type": "string"
+            }
+          ],
+          "type": "string",
+          "title": "Name"
+        },
+        "sections": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Sections"
+        }
+      },
+      "required": [
+        "name",
+        "sections"
+      ],
+      "title": "$live/sections/UseSlot.tsx@Props"
+    },
+    "JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g=@Props": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Enforces the slot to be fulfilled.",
+          "title": "Required"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "content"
+                },
+                {
+                  "type": "string",
+                  "const": "footer"
+                },
+                {
+                  "type": "string",
+                  "const": "header"
+                },
+                {
+                  "type": "string",
+                  "const": "analytics"
+                },
+                {
+                  "type": "string",
+                  "const": "design-system"
+                },
+                {
+                  "type": "string",
+                  "const": "SEO"
+                }
+              ],
+              "type": "string"
+            }
+          ],
+          "type": "string",
+          "description": "The name of the slot.",
+          "default": "content",
+          "title": "Name"
+        }
+      },
+      "required": [],
+      "title": "$live/sections/Slot.tsx@Props"
     },
     "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props": {
       "type": "object",
@@ -141,6 +253,28 @@
       "title": "$live/sections/PageInclude.tsx@Props"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "title": "Start"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "title": "End"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchDate.ts@Props"
+    },
       "type": "object",
       "properties": {
         "start": {
@@ -252,26 +386,11 @@
       "title": "$live/matchers/MatchSite.ts@Props"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props": {
-      "type": "object",
-      "properties": {
         "includes": {
-          "type": [
-            "string",
-            "null"
-          ],
           "title": "Includes"
-        },
         "match": {
-          "type": [
-            "string",
-            "null"
-          ],
           "title": "Match"
-        }
-      },
-      "required": [],
       "title": "$live/matchers/MatchUserAgent.ts@Props"
-    },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",
       "properties": {
@@ -362,12 +481,12 @@
         }
       }
     },
-    "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz": {
-      "title": "$live/handlers/router.ts",
+    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==": {
+      "title": "$live/handlers/devPage.ts",
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig"
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig"
         }
       ],
       "required": [
@@ -377,18 +496,18 @@
         "__resolveType": {
           "type": "string",
           "enum": [
-            "$live/handlers/router.ts"
+            "$live/handlers/devPage.ts"
           ],
-          "default": "$live/handlers/router.ts"
+          "default": "$live/handlers/devPage.ts"
         }
       }
     },
-    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz": {
-      "title": "$live/handlers/routesSelection.ts",
+    "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=": {
+      "title": "$live/handlers/fresh.ts",
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig"
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig"
         }
       ],
       "required": [
@@ -398,9 +517,9 @@
         "__resolveType": {
           "type": "string",
           "enum": [
-            "$live/handlers/routesSelection.ts"
+            "$live/handlers/fresh.ts"
           ],
-          "default": "$live/handlers/routesSelection.ts"
+          "default": "$live/handlers/fresh.ts"
         }
       }
     },
@@ -422,6 +541,48 @@
             "$live/pages/LivePage.tsx"
           ],
           "default": "$live/pages/LivePage.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=": {
+      "title": "$live/sections/UseSlot.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/UseSlot.tsx"
+          ],
+          "default": "$live/sections/UseSlot.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g=": {
+      "title": "$live/sections/Slot.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/Slot.tsx"
+          ],
+          "default": "$live/sections/Slot.tsx"
         }
       }
     },
@@ -448,6 +609,25 @@
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM=": {
       "title": "$live/matchers/MatchAlways.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchDate.ts"
+          ],
+          "default": "$live/matchers/MatchDate.ts"
+        }
+      }
+    },
       "type": "object",
       "required": [
         "__resolveType"
@@ -569,25 +749,9 @@
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=": {
       "title": "$live/matchers/MatchUserAgent.ts",
-      "type": "object",
-      "allOf": [
-        {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
             "$live/matchers/MatchUserAgent.ts"
-          ],
           "default": "$live/matchers/MatchUserAgent.ts"
-        }
-      }
-    },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=": {
       "title": "$live/flags/audience.ts",
       "type": "object",
@@ -678,10 +842,10 @@
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM="
         },
         {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz"
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw=="
         },
         {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz"
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM="
         }
       ]
     },
@@ -703,6 +867,12 @@
           "$ref": "#/definitions/Resolvable"
         },
         {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g="
+        },
+        {
           "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4"
         }
       ]
@@ -715,6 +885,8 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM="
+        },
+        {
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz"
@@ -730,8 +902,6 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz"
-        },
-        {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM="
         }
       ]
@@ -754,7 +924,7 @@
       "type": "object",
       "required": [
         "./routes/_middleware.ts",
-        "./routes/[...catchall].tsx",
+        "./routes/[...catchall].tsx"
         "./routes/index.tsx"
       ],
       "properties": {
@@ -765,10 +935,9 @@
             }
           ]
         },
-        "./routes/[...catchall].tsx": {
           "anyOf": [
             {
-              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig"
             }
           ]
         },

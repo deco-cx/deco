@@ -10,10 +10,11 @@ export interface Props {
   page: Page;
 }
 
-const isLivePageProps = (
+export const isLivePageProps = (
   p: Page["props"] | LivePageProps,
 ): p is LivePageProps => {
-  return (p as LivePageProps)?.sections !== undefined;
+  return (p as LivePageProps)?.sections !== undefined ||
+    (p as LivePageProps)?.layout !== undefined;
 };
 
 export default function PageInclude({ page }: Props) {
