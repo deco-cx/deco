@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-explicit-any
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
@@ -6,6 +5,19 @@ import LiveControls from "$live/components/LiveControls.tsx";
 import { context } from "$live/live.ts";
 import Render from "$live/routes/[...catchall].tsx";
 import { LiveConfig, LiveState } from "$live/types.ts";
+import { bodyFromUrl } from "$live/utils/http.ts";
+
+const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
+  const pathTemplate = url.searchParams.get("pathTemplate");
+  const pathname = url.searchParams.get("path");
+  if (pathTemplate === null || pathname == null) {
+    return undefined;
+  }
+
+  const urlPattern = new URLPattern({ pathname });
+  const params = urlPattern.exec({ pathname })?.pathname.groups;
+  return params;
+};
 
 export default function Preview(props: PageProps<Page>) {
   const renderProps = {
@@ -29,55 +41,6 @@ export default function Preview(props: PageProps<Page>) {
   );
 }
 
-const isNumber = new RegExp("/^-?\d+\.?\d*$/");
-
-const buildObj = (
-  partial: Record<string, any>,
-  [keys, value]: [string[], string],
-) => {
-  const [first, ...rest] = keys;
-  let key: string | number = first;
-  if (first.endsWith("]")) {
-    const [arrKey, idx] = first.split("[");
-    partial[arrKey] ??= [];
-    const idxNumber = +idx.substring(0, idx.length - 1);
-    rest.unshift(idxNumber.toString());
-    key = arrKey;
-  } else {
-    partial[first] ??= {};
-  }
-  if (rest.length === 0) {
-    partial[key] = isNumber.test(value) ? +value : value;
-    return;
-  }
-  buildObj(partial[key], [rest, value]);
-};
-
-const propsFromUrl = (url: URL): Record<string, any> => {
-  const props = url.searchParams.get("props");
-  if (!props) {
-    const start = {};
-    for (const [key, value] of url.searchParams.entries()) {
-      buildObj(start, [key.split("."), value]);
-    }
-    return start;
-  }
-  // frombase64
-  return JSON.parse(atob(props));
-};
-
-const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
-  const pathTemplate = url.searchParams.get("pathTemplate");
-  const pathname = url.searchParams.get("path");
-  if (pathTemplate === null || pathname == null) {
-    return undefined;
-  }
-
-  const urlPattern = new URLPattern({ pathname });
-  const params = urlPattern.exec({ pathname })?.pathname.groups;
-  return params;
-};
-
 const addLocal = (block: string): string =>
   block.startsWith("islands") && block.endsWith("tsx") ? `./${block}` : block;
 export const handler = async (
@@ -91,7 +54,7 @@ export const handler = async (
   const url = new URL(req.url);
   const props = req.method === "POST"
     ? await req.json()
-    : propsFromUrl(url) ?? {};
+    : bodyFromUrl("props", url) ?? {};
 
   const block = addLocal(ctx.params.block);
 

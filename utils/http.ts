@@ -1,5 +1,6 @@
 import meta from "$live/meta.json" assert { type: "json" };
 import { adminDomain, isAdmin } from "$live/utils/admin.ts";
+import { buildObj } from "./object.ts";
 
 export const DEFAULT_CACHE_CONTROL: CacheControl = {
   "s-maxage": 60, // 1minute cdn cache
@@ -162,3 +163,24 @@ export function setCSPHeaders(
   );
   return response;
 }
+
+/**
+ * Parses the specified @param param from querystring of the given @param url.
+ * if the parameter is specified so the payload is parsed by decoding the parameter from base64 and parsing as a Json usin JSON.parse,
+ * otherwise all query parameters are used to mount an object using the dot notation format (`a.b=10` generates { a :{ b:10 }}).
+ * @param param the parameter name
+ * @param url the url to parse
+ * @returns the parsed payload
+ */
+export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
+  const props = url.searchParams.get(param);
+  if (!props) {
+    const start = {};
+    for (const [key, value] of url.searchParams.entries()) {
+      buildObj(start, [key.split("."), value]);
+    }
+    return start;
+  }
+  // frombase64
+  return JSON.parse(atob(props));
+};

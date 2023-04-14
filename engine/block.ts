@@ -9,6 +9,7 @@ import {
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import { JSX } from "preact";
+import { DotNestedKeys } from "../utils/object.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;
@@ -37,16 +38,6 @@ export type ModuleOf<TBlock> = TBlock extends Block<
   infer TBlockModule
 > ? TBlockModule
   : never;
-
-type DotPrefix<T extends string> = T extends "" ? "" : `.${T}`;
-
-type DotNestedKeys<T> =
-  // deno-lint-ignore ban-types
-  (T extends object ? {
-      [K in Exclude<keyof T, symbol>]:
-        (`${K}` | `${K}${DotPrefix<DotNestedKeys<T[K]>>}`);
-    }[Exclude<keyof T, symbol>]
-    : "") extends infer D ? Extract<D, string> : never;
 
 type ValidParams<
   Func extends (...args: any[]) => any,

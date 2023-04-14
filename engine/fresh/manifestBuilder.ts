@@ -219,14 +219,19 @@ export const stringify = ({
 
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
-
 ${Object.entries(imports).map(stringifyImport).join("\n")}
 
-const manifest: DecoManifest = ${stringifyObj(manifest)}
+const manifest = ${stringifyObj(manifest)}
+
+export type Manifest = typeof manifest;
 
 ${exports.map(stringifyExport).join("\n")}
 ${statements ? statements.map(stringifyStatement).join("\n") : ""}
-${exportDefault ? `export default ${exportDefault.variable.identifier}` : ""}
+${
+    exportDefault
+      ? `export default ${exportDefault.variable.identifier} satisfies DecoManifest`
+      : ""
+  }
 `;
 };
 
