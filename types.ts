@@ -2,6 +2,7 @@
 import type { Manifest } from "$fresh/server.ts";
 import accountBlock from "./blocks/account.ts";
 import actionBlock from "./blocks/action.ts";
+import extensionBlock from "$live/blocks/extension.ts";
 import appBlock, {
   AppContext,
   AppManifest,
@@ -41,6 +42,7 @@ export interface DecoManifest extends Manifest {
   name: string;
   apps?: Record<string, ModuleOf<typeof appBlock>>;
   workflows?: Record<string, ModuleOf<typeof workflowBlock>>;
+  extensions?: Record<string, ModuleOf<typeof extensionBlock>>;
   actions?: Record<string, ModuleOf<typeof actionBlock>>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
   functions?: Record<string, ModuleOf<typeof functionBlock>>;

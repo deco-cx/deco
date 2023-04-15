@@ -202,6 +202,7 @@ export const buildRuntime = <
   const recover = adapted[localRef(blk.type, danglingModuleTS)] ??
     adapted[localRef(blk.type, danglingModuleTSX)] ??
     blk.defaultDanglingRecover;
+
   return [
     { ...currMan, [blk.type]: decorated },
     { ...currMap, ...adapted, ...previews, ...invocations },

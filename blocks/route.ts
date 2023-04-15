@@ -24,6 +24,7 @@ import { InvokeFunction, payloadForFunc } from "../routes/live/invoke/index.ts";
 import { DecoManifest, LiveConfig, LiveState } from "../types.ts";
 import { formatIncomingRequest, formatOutgoingFetch } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
+import { InvocationFunc } from "../clients/withManifest.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -224,9 +225,12 @@ export const buildDecoState = (resolveKey: string | Resolvable) =>
 
     context.state.resolve = ctxResolver;
     context.state.release = liveContext.release!;
-    context.state.invoke = (key, props) =>
-      ctxResolver<Awaited<ReturnType<InvocationFunc<Manifest>>>>(
-        payloadForFunc({ key, props } as unknown as InvokeFunction<Manifest>),
+    context.state.invoke = (
+      key,
+      props,
+    ) =>
+      ctxResolver<Awaited<ReturnType<InvocationFunc<DecoManifest>>>>(
+        payloadForFunc({ key, props } as InvokeFunction<DecoManifest>),
       );
 
     const resp = await context.next();

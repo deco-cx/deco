@@ -1,5 +1,5 @@
 // deno-lint-ignore-file ban-types no-explicit-any
-import { UnionToIntersection } from "../deps.ts";
+import { DeepPartial, UnionToIntersection } from "$live/deps.ts";
 
 export type DotPrefix<T extends string> = T extends "" ? "" : `.${T}`;
 
@@ -135,6 +135,34 @@ export const buildObj = (
     return;
   }
   buildObj(partial[key], [rest, value]);
+};
+
+export const deepMergeArr = <T>(fst: T, snd: DeepPartial<T> | undefined): T => {
+  const sndAsObj = snd as T;
+  if (sndAsObj === undefined) {
+    return fst;
+  }
+  if (Array.isArray(fst) && Array.isArray(sndAsObj)) {
+    const longer = fst.length > sndAsObj.length ? fst.length : sndAsObj.length;
+    const result = new Array(fst.length);
+    for (let i = 0; i < longer; i++) {
+      result[i] = deepMergeArr(fst[i], sndAsObj[i]);
+    }
+    return result as T;
+  }
+  if (fst && typeof fst === "object") {
+    const result: T = {} as T;
+    for (const key of Object.keys({ ...fst, ...sndAsObj })) {
+      const sndValue = sndAsObj?.[key as keyof typeof sndAsObj];
+      const r = deepMergeArr(
+        fst?.[key as keyof T],
+        sndValue as DeepPartial<T[keyof T]>,
+      );
+      result[key as keyof T] = r as T[keyof T];
+    }
+    return result;
+  }
+  return sndAsObj ?? fst;
 };
 
 export const identity = <T>(value: T): T => value;

@@ -13,6 +13,9 @@ export type AccountFunc<TConfig = any> = (c: TConfig) => Account;
 const accountBlock: Block<BlockModule<AccountFunc>> = {
   type: "accounts",
   adapt: applyConfigSync,
+  defaultDanglingRecover: (props) => {
+    return props;
+  },
   defaultPreview: (account) => {
     return {
       Component: JsonViewer,

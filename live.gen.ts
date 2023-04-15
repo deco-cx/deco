@@ -50,6 +50,7 @@ import * as $$$$$$$$$$$0 from "./actions/secrets/encrypt.ts";
 import * as $$$$$$$$$$$1 from "./actions/workflows/start.ts";
 import * as $$$$$$$$$$$2 from "./actions/workflows/cancel.ts";
 import * as $$$$$$$$$$$3 from "./actions/workflows/signal.ts";
+import * as $$$$$$$$$$$$$0 from "./extensions/composite.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
 import { DecoManifest } from "$live/types.ts";
 
@@ -118,6 +119,9 @@ const manifest = {
     "$live/actions/workflows/cancel.ts": $$$$$$$$$$$2,
     "$live/actions/workflows/signal.ts": $$$$$$$$$$$3,
     "$live/actions/workflows/start.ts": $$$$$$$$$$$1,
+  },
+  "extensions": {
+    "$live/extensions/composite.ts": $$$$$$$$$$$$$0,
   },
   "name": "$live",
   "islands": {},

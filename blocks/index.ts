@@ -26,5 +26,6 @@ export default [
   flagBlock,
   actionBlock,
   workflowBlock,
+  extensionBlock,
   appBlock,
 ] as Block[];
