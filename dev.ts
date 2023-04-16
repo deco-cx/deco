@@ -207,5 +207,7 @@ if (import.meta.main) {
   context.namespace = liveNs;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
-  await generate(dir, newManifestData);
+  await generate(dir, newManifestData).then(() =>
+    genSchemas(import.meta.url, manifestFile, dir)
+  );
 }
