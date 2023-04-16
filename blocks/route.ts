@@ -3,7 +3,7 @@ import { Handler, HandlerContext, Handlers, PageProps } from "$fresh/server.ts";
 import {
   MiddlewareHandler,
   MiddlewareHandlerContext,
-  MiddlewareRoute,
+  MiddlewareModule,
   RouteConfig,
   RouteModule,
 } from "$fresh/src/server/types.ts";
@@ -49,16 +49,17 @@ const isConfigurableRoute = (
     hasAnyMethod(handler);
 
   return (
-    (handlerIsFunc || defaultIsFunc || handlerIsFuncMap) &&
-    !Array.isArray((v as MiddlewareRoute).handler)
+    handlerIsFunc || defaultIsFunc || handlerIsFuncMap
   );
 };
 const middlewareKey = "./routes/_middleware.ts";
 
 const mapMiddleware = (
-  mid: MiddlewareHandler<LiveConfig<any, LiveState>>,
-): MiddlewareHandler<LiveConfig<any, LiveState>> => {
-  return async function (
+  mid: MiddlewareHandler<LiveConfig<any, LiveState>> | MiddlewareHandler<
+    LiveConfig<any, LiveState>
+  >[],
+): MiddlewareHandler<LiveConfig<any, LiveState>>[] => {
+  return [async function (
     request: Request,
     context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
   ) {
@@ -70,7 +71,7 @@ const mapMiddleware = (
       url.pathname.startsWith("~partytown") || // party town urls
       url.searchParams.has("__frsh_c") // static assets, fresh uses ?__fresh_c=$id
     ) {
-      return mid(request, context);
+      return context.next();
     }
 
     const resolver = liveContext.configResolver!;
@@ -91,9 +92,11 @@ const mapMiddleware = (
     )) ?? {};
 
     endTiming();
-    context.state = { ...context.state, $live, resolve: ctxResolver };
-    return await mid(request, context);
-  };
+    context.state.$live = $live;
+    context.state.resolve = ctxResolver;
+
+    return context.next();
+  }, ...Array.isArray(mid) ? mid : [mid]];
 };
 const mapHandlers = (
   key: string,
@@ -108,7 +111,7 @@ const mapHandlers = (
         const $live = await context.state.resolve(
           key,
         ); // middleware should be executed first.
-        context.state = { ...context.state, $live };
+        context.state.$live = $live;
 
         return val!(request, context);
       };
@@ -126,7 +129,8 @@ const mapHandlers = (
     end && end();
 
     if (typeof handlers === "function") {
-      context.state = { ...context.state, $live };
+      context.state.$live = $live;
+
       return await handlers(request, context);
     }
     return await context.render($live);
@@ -145,19 +149,24 @@ export interface RouteMod extends BlockModule {
 const blockType = "routes";
 const routeBlock: Block<RouteMod> = {
   decorate: (routeModule, key) => {
+    if (key === middlewareKey) {
+      return {
+        ...routeModule,
+        handler: mapMiddleware(
+          (routeModule as unknown as MiddlewareModule)
+            .handler as MiddlewareHandler<
+              LiveConfig<any, LiveState>
+            >,
+        ),
+      };
+    }
+    if (key.endsWith("_middleware.ts")) {
+      return routeModule;
+    }
+
     if (
       isConfigurableRoute(routeModule)
     ) {
-      if (key === middlewareKey) {
-        return {
-          ...routeModule,
-          handler: mapMiddleware(
-            routeModule.handler as MiddlewareHandler<
-              LiveConfig<any, LiveState>
-            >,
-          ),
-        };
-      }
       const configurableRoute = routeModule;
       const handl = configurableRoute.handler;
       const liveKey = configurableRoute.config?.liveKey ?? key;

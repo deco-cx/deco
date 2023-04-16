@@ -3,7 +3,7 @@ import { toManifestBlocks } from "$live/routes/live/_meta.ts";
 import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { basename } from "std/path/mod.ts";
 
-interface Node {
+export interface Node {
   label: string;
   fullPath: string;
   editLink?: string;

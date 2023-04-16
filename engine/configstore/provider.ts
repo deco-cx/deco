@@ -1,12 +1,8 @@
-import {
-  newSupabase,
-  tryUseProvider,
-} from "$live/engine/configstore/supabase.ts";
-import {
-  newSupabaseProviderLegacy,
-} from "$live/engine/configstore/supabaseLegacy.ts";
+import { fromConfigsTable } from "$live/engine/configstore/configs.ts";
+import { fromPagesTable } from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
+import { newSupabase } from "./supabaseProvider.ts";
 
 export interface ReadOptions {
   forceFresh?: boolean;
@@ -37,19 +33,23 @@ export const compose = (...providers: ConfigStore[]): ConfigStore => {
   });
 };
 
+/**
+ * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
+ * @param ns the site namespace
+ * @param site the site name
+ * @param siteId the site Id (if exists)
+ * @returns the config store provider.
+ */
 export const getComposedConfigStore = (
   ns: string,
   site: string,
   siteId: number,
 ): ConfigStore => {
   if (siteId <= 0) { // new sites does not have siteId
-    return newSupabase(site);
+    return newSupabase(fromConfigsTable(site));
   }
   return compose(
-    newSupabaseProviderLegacy(siteId, ns, context.isDeploy), // if not deploy so no background is needed
-    tryUseProvider(
-      (site: string) => newSupabase(site, context.isDeploy),
-      site,
-    ),
+    newSupabase(fromPagesTable(siteId, ns), context.isDeploy), // if not deploy so no background is needed
+    newSupabase(fromConfigsTable(site), context.isDeploy),
   );
 };

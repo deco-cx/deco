@@ -58,11 +58,10 @@ export const handler = async (
   }
 
   const state = ctx.state?.$live?.state;
-  ctx.state = {
-    ...ctx.state,
-    ...(state ?? {}),
-    global: state, // compatibility mode with functions.
-  };
+  if (state) {
+    Object.assign(ctx.state, state);
+    ctx.state.global = state; // compatibility mode with functions.
+  }
 
   // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
   const initialResponse = await ctx.next();
