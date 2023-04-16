@@ -2,7 +2,6 @@
 import { supabase } from "$live/deps.ts";
 import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { singleFlight as sfFunc } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
 
 function sleep(ms: number) {
@@ -11,19 +10,42 @@ function sleep(ms: number) {
 const sleepBetweenRetriesMS = 100;
 const refetchIntervalMSDeploy = 5_000;
 
+const TABLE = "configs";
 const fetchConfigs = (site: string) => {
-  return getSupabaseClient().from("configs").select("state").eq(
+  return getSupabaseClient().from(TABLE).select("state, archived").eq(
     "site",
     site,
-  ).single();
+  ).maybeSingle();
 };
 
-const fetchArchivedConfigs = (site: string) => {
-  return getSupabaseClient().from("configs").select("archived").eq(
-    "site",
-    site,
-  ).single();
+// Supabase client setup
+const subscribeForConfigChanges = (
+  site: string,
+  callback: (res: CurrResolvables) => unknown,
+  subscriptionCallback: (
+    status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
+    err?: Error,
+  ) => void,
+) => {
+  return getSupabaseClient()
+    .channel("changes")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: TABLE,
+        filter: `site=eq.${site}`,
+      },
+      (payload) => callback(payload.new as CurrResolvables),
+    )
+    .subscribe(subscriptionCallback);
 };
+
+interface CurrResolvables {
+  state: Record<string, Resolvable<any>>;
+  archived: Record<string, Resolvable<any>>;
+}
 
 export const newSupabase = (
   site: string,
@@ -35,8 +57,8 @@ export const newSupabase = (
   const tryResolveFirstLoad = async (
     resolve: (
       value:
-        | Record<string, Resolvable<any>>
-        | PromiseLike<Record<string, Resolvable<any>>>,
+        | CurrResolvables
+        | PromiseLike<CurrResolvables>,
     ) => void,
     reject: (reason: unknown) => void,
   ) => {
@@ -52,11 +74,11 @@ export const newSupabase = (
       await tryResolveFirstLoad(resolve, reject);
       return;
     }
-    resolve(data.state);
+    resolve(data);
   };
 
-  let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
-    Record<string, Resolvable<any>>
+  let currResolvables: Promise<CurrResolvables> = new Promise<
+    CurrResolvables
   >(tryResolveFirstLoad);
 
   let singleFlight = false;
@@ -68,11 +90,11 @@ export const newSupabase = (
     try {
       singleFlight = true;
       const { data, error } = await fetchConfigs(site);
-      if (data === null || error !== null) {
+      if (error !== null) {
         return;
       }
       currResolvables = Promise.resolve(
-        data.state,
+        data ?? { state: {}, archived: {} },
       );
     } finally {
       singleFlight = false;
@@ -81,78 +103,32 @@ export const newSupabase = (
 
   if (backgroundUpdate) {
     currResolvables.then(() => {
-      setInterval(updateInternalState, refetchIntervalMSDeploy);
+      subscribeForConfigChanges(site, (newResolvables) => {
+        currResolvables = Promise.resolve(newResolvables);
+      }, (_status, err) => {
+        if (err) {
+          console.error(
+            "error when trying to subscribe to config changes falling back to background updates",
+          );
+          setInterval(updateInternalState, refetchIntervalMSDeploy);
+        }
+      });
     });
   }
-  const sf = sfFunc<Record<string, Resolvable>>();
-
   return {
-    archived: async () => {
-      return await sf.do(
-        "archived",
-        async () =>
-          await fetchArchivedConfigs(site).then(({ data, error }) => {
-            if (data === null || error != null) {
-              throw error;
-            }
-            return data.archived as Record<string, Resolvable>;
-          }),
-      );
+    archived: async (opts?: ReadOptions) => {
+      if (opts?.forceFresh) {
+        await updateInternalState(true);
+      }
+      const resolvables = await currResolvables;
+      return resolvables.archived;
     }, // archived does not need to be fetched in background
     state: async (opts?: ReadOptions) => {
       if (opts?.forceFresh) {
         await updateInternalState(true);
       }
-      return await currResolvables;
+      const resolvables = await currResolvables;
+      return resolvables.state;
     },
-  };
-};
-
-export const tryUseProvider = (
-  providerFunc: (site: string) => ConfigStore,
-  site: string,
-): ConfigStore => {
-  let provider: null | ConfigStore = null;
-  const sf = sfFunc();
-  const setProviderIfExists = async () => {
-    await sf.do("any", async () => {
-      if (provider === null) {
-        const supabase = getSupabaseClient();
-        const { error, count } = await supabase.from("configs").select("*", {
-          count: "exact",
-          head: true,
-        }).eq("site", site);
-        if (error === null && count === 1) {
-          provider = providerFunc(site);
-        }
-      }
-    });
-  };
-
-  const callIfExists = async (
-    method: keyof ConfigStore,
-    options?: ReadOptions,
-  ) => {
-    if (provider !== null) { // first try without singleflight check faster path check
-      return await provider[method](options);
-    }
-    setProviderIfExists();
-    return {}; //empty
-  };
-
-  let setIfExistsCall = setProviderIfExists();
-  return {
-    archived: (options?: ReadOptions) =>
-      setIfExistsCall.then(() => callIfExists("archived", options)).catch(
-        (_) => {
-          setIfExistsCall = setProviderIfExists();
-          return {};
-        },
-      ),
-    state: (options?: ReadOptions) =>
-      setIfExistsCall.then(() => callIfExists("state", options)).catch((_) => {
-        setIfExistsCall = setProviderIfExists();
-        return {};
-      }),
   };
 };

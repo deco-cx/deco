@@ -1,7 +1,4 @@
-import {
-  newSupabase,
-  tryUseProvider,
-} from "$live/engine/configstore/supabase.ts";
+import { newSupabase } from "$live/engine/configstore/supabase.ts";
 import {
   newSupabaseProviderLegacy,
 } from "$live/engine/configstore/supabaseLegacy.ts";
@@ -47,9 +44,6 @@ export const getComposedConfigStore = (
   }
   return compose(
     newSupabaseProviderLegacy(siteId, ns, context.isDeploy), // if not deploy so no background is needed
-    tryUseProvider(
-      (site: string) => newSupabase(site, context.isDeploy),
-      site,
-    ),
+    newSupabase(site, context.isDeploy),
   );
 };
