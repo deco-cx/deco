@@ -35,7 +35,7 @@ First add the `$live` import to your `import_map.json` file:
 ```json
 {
   "imports": {
-    "$live/": "https://deno.land/x/live@0/",
+    "$live/": "https://deno.land/x/live@1.0.0/",
     "(...)": "(...)"
   }
 }
@@ -55,35 +55,30 @@ await dev(import.meta.url, "./main.ts");
 
 ![CleanShot 2022-11-20 at 22 22 55](https://user-images.githubusercontent.com/1633518/202938923-066e5faa-f15f-4e6c-b17e-d9f7d670c9fb.png)
 
-### 3. Add the middleware to allow Live to intercept requests and access components
+### 3. Replace the `fresh.gen.ts` file by the `live.gen.ts` file
 
-Then create a `routes/_middleware.tsx` file and add the following code:
+Finally,
 
-```tsx
-import manifest from "../fresh.gen.ts";
-import { withLive } from "$live/live.ts";
-
-export const handler = withLive(manifest, {
-  siteId: 8,
-});
-```
-
-Create a site at `deco.cx/admin` to get a site id you can add here.
-
-![CleanShot 2022-11-20 at 22 24 08](https://user-images.githubusercontent.com/1633518/202938980-5bba5561-4e72-4b39-8cc5-c296668b7015.png)
-
-### 4. Mount the Live.ts handler on a catch-all route
-
-Finally, in order to allow the creation of dynamic pages in any route, mount `live` as a handler for a catch-all route. Create `routes/[...path].tsx`:
+1. Remove `fresh.gen.ts` file
+2. Go to `main.ts` and import from `live.gen.ts` file
 
 ```tsx
-import { live } from "$live/live.ts";
-import LivePage from "$live/components/LivePage.tsx";
-export const handler = live();
-export default LivePage;
-```
+/// <reference no-default-lib="true" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+/// <reference lib="dom.asynciterable" />
+/// <reference lib="deno.ns" />
 
-![CleanShot 2022-11-20 at 22 24 43](https://user-images.githubusercontent.com/1633518/202939025-a51f0342-6e37-4bf5-86db-b8772e10abe2.png)
+import { start } from "$fresh/server.ts";
+import manifest from "./live.gen.ts";
+import { $live } from "$live/mod.ts";
+import site from "./site.json" assert { type: "json" };
+
+import twindPlugin from "$fresh/plugins/twind.ts";
+import twindConfig from "./twind.config.ts";
+
+await start($live(manifest, site), { plugins: [twindPlugin(twindConfig)] });
+```
 
 Great! **Live.ts** is now setup. You can verify it's working by going to any route that will trigger the catch all. For example, go to https://localhost:8080/start. You should see an empty page with an "Edit in deco.cx" button. Clicking it will redirect you to the deco.cx/live editor, which opens your site in an iframe.
 
@@ -251,4 +246,3 @@ To release a new version, go through the following steps:
 <a href="https://github.com/deco-cx/live/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=deco-cx/live" />
 </a>
-
