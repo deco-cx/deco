@@ -50,8 +50,8 @@ export type LiveState<T = unknown> = {
 
 export type RouterContext = {
   flags: string;
-  pagePath: string;  
-}
+  pagePath: string;
+};
 
 export interface StatefulContext<T> {
   params: Record<string, string>;

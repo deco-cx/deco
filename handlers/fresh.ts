@@ -18,8 +18,8 @@ export default function Fresh(page: FreshConfig) {
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page);
     }
-    return isFreshCtx<{routerInfo: RouterContext}>(ctx)
-      ? ctx.render({...page, routerInfo: ctx.state.routerInfo})
+    return isFreshCtx<{ routerInfo: RouterContext }>(ctx)
+      ? ctx.render({ ...page, routerInfo: ctx.state.routerInfo })
       : Response.json({ message: "Fresh is not being used" }, { status: 500 });
   };
 }
