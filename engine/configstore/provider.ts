@@ -33,6 +33,13 @@ export const compose = (...providers: ConfigStore[]): ConfigStore => {
   });
 };
 
+/**
+ * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
+ * @param ns the site namespace
+ * @param site the site name
+ * @param siteId the site Id (if exists)
+ * @returns the config store provider.
+ */
 export const getComposedConfigStore = (
   ns: string,
   site: string,

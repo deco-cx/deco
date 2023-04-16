@@ -388,6 +388,12 @@ const pagesToConfig = (
   return flagsToConfig(configs, flags, ns);
 };
 
+/**
+ * Creates and return a supabaseConfigProvider based on `pages` table. The idea is that the pages will be fetched and then transformed into configurations.
+ * @param siteId the site Id
+ * @param namespace the site namespace.
+ * @returns the created SupabaseConfigProvider
+ */
 export const fromPagesTable = (
   siteId: number,
   namespace: string,

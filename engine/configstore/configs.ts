@@ -39,6 +39,11 @@ const subscribeForConfigChanges = (
     .subscribe(subscriptionCallback);
 };
 
+/**
+ * Create a supabase config provider based on `configs` table.
+ * @param site the site name
+ * @returns the supabaseconfigprovider.
+ */
 export const fromConfigsTable = (
   site: string,
 ): SupabaseConfigProvider => {
