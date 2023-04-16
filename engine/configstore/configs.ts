@@ -48,7 +48,14 @@ export const fromConfigsTable = (
   site: string,
 ): SupabaseConfigProvider => {
   const sf = singleFlight<{ data: CurrResolvables | null; error: unknown }>();
-  const fetcher = () => sf.do("flight", async () => await fetchConfigs(site));
+  const fetcher = () =>
+    sf.do(
+      "flight",
+      async () => {
+        const { data, error } = await fetchConfigs(site);
+        return { data: data ?? { state: {}, archived: {} }, error };
+      },
+    );
   return {
     get: fetcher,
     subscribe: subscribeForConfigChanges(site),

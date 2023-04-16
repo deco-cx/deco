@@ -39,7 +39,7 @@ export default function Render({
     page,
     routerInfo,
   },
-}: PageProps<{ page: Page; routerInfo: RouterContext }>) {
+}: PageProps<{ page: Page; routerInfo?: RouterContext }>) {
   if (!page) {
     return null;
   }

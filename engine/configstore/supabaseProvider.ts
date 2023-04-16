@@ -62,7 +62,7 @@ export const newSupabase = (
       return;
     }
     const { data, error } = await provider.get();
-    if (error != null || data === null) {
+    if (error !== null || data === null) {
       remainingRetries--;
       lastError = error;
       await sleep(sleepBetweenRetriesMS);
