@@ -14,9 +14,9 @@ import { getCurrent } from "$live/engine/schema/reader.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
+import { JSONSchema } from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
-import { JSONSchema } from "$live/types.ts";
 import {
   JSONSchema7,
   JSONSchema7TypeName,
@@ -159,7 +159,18 @@ const flat = (
     return memo[ref];
   }
   if (ref) {
-    memo[ref] = { $ref: "#" }; // recursive type by default
+    // FIXME WORKAROUND FOR RECURSIVE TYPES, ASSUMING THAT IT SHOULD BE USED AS A REFERENCE FOR A LOADER.
+    // @Author Marcos V. Candeia
+    memo[ref] = {
+      properties: {
+        returnType: {
+          const: btoa(ref),
+        },
+      },
+      format: "live-function",
+      type: "string",
+      title: def.title,
+    }; // recursive type by default
   }
   if (def?.$ref) {
     def = flat(schema.definitions[keyFromRef(def.$ref)], schema, memo);
