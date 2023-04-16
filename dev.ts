@@ -53,9 +53,10 @@ const genSchemas = async (
   );
 };
 
+const manifestFile = "./live.gen.ts";
+
 export async function generate(
   directory: string,
-  base: string,
   manifest: ManifestBuilder,
 ) {
   const proc = Deno.run({
@@ -76,13 +77,10 @@ export async function generate(
   proc.close();
 
   const manifestStr = new TextDecoder().decode(out);
-
-  const manifestFile = "./live.gen.ts";
   const manifestPath = join(directory, manifestFile);
 
   await Deno.writeTextFile(manifestPath, manifestStr);
 
-  genSchemas(base, manifestFile, directory);
   console.log(
     `%cThe manifest has been generated.`,
     "color: blue; font-weight: bold",
@@ -164,7 +162,11 @@ export default async function dev(
 
   const manifestChanged = !currentManifest.equal(manifest);
 
-  if (manifestChanged) await generate(dir, base, manifest);
+  if (manifestChanged) {
+    await generate(dir, manifest);
+  }
+
+  genSchemas(base, manifestFile, dir);
 
   const shouldSetupGithooks = os.platform() !== "windows";
 
@@ -203,8 +205,7 @@ export async function format(content: string) {
 export const liveNs = "$live";
 if (import.meta.main) {
   context.namespace = liveNs;
-  const base = import.meta.url;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
-  await generate(dir, base, newManifestData);
+  await generate(dir, newManifestData);
 }
