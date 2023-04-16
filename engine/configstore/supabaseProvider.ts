@@ -2,53 +2,30 @@
 import { supabase } from "$live/deps.ts";
 import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import getSupabaseClient from "$live/supabase.ts";
 
+export interface SupabaseConfigProvider {
+  get(): PromiseLike<{ data: CurrResolvables | null; error: any }>;
+  subscribe(
+    onChange: (arg: CurrResolvables) => void,
+    cb: (
+      status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
+      err?: Error,
+    ) => void,
+  ): void;
+}
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 const sleepBetweenRetriesMS = 100;
 const refetchIntervalMSDeploy = 5_000;
 
-const TABLE = "configs";
-const fetchConfigs = (site: string) => {
-  return getSupabaseClient().from(TABLE).select("state, archived").eq(
-    "site",
-    site,
-  ).maybeSingle();
-};
-
-// Supabase client setup
-const subscribeForConfigChanges = (
-  site: string,
-  callback: (res: CurrResolvables) => unknown,
-  subscriptionCallback: (
-    status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
-    err?: Error,
-  ) => void,
-) => {
-  return getSupabaseClient()
-    .channel("changes")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: TABLE,
-        filter: `site=eq.${site}`,
-      },
-      (payload) => callback(payload.new as CurrResolvables),
-    )
-    .subscribe(subscriptionCallback);
-};
-
-interface CurrResolvables {
+export interface CurrResolvables {
   state: Record<string, Resolvable<any>>;
   archived: Record<string, Resolvable<any>>;
 }
 
 export const newSupabase = (
-  site: string,
+  provider: SupabaseConfigProvider,
   backgroundUpdate?: boolean,
 ): ConfigStore => {
   let remainingRetries = 5;
@@ -66,7 +43,7 @@ export const newSupabase = (
       reject(lastError); // TODO @author Marcos V. Candeia should we panic? and exit? Deno.exit(1)
       return;
     }
-    const { data, error } = await fetchConfigs(site);
+    const { data, error } = await provider.get();
     if (error != null || data === null) {
       remainingRetries--;
       lastError = error;
@@ -89,7 +66,7 @@ export const newSupabase = (
     }
     try {
       singleFlight = true;
-      const { data, error } = await fetchConfigs(site);
+      const { data, error } = await provider.get();
       if (error !== null) {
         return;
       }
@@ -103,7 +80,7 @@ export const newSupabase = (
 
   if (backgroundUpdate) {
     currResolvables.then(() => {
-      subscribeForConfigChanges(site, (newResolvables) => {
+      provider.subscribe((newResolvables) => {
         currResolvables = Promise.resolve(newResolvables);
       }, (_status, err) => {
         if (err) {

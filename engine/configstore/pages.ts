@@ -1,10 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
-import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { singleFlight as sfFunc } from "$live/engine/core/utils.ts";
+import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { JSONSchema, Site } from "$live/types.ts";
+import { CurrResolvables, SupabaseConfigProvider } from "./supabaseProvider.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;
@@ -131,22 +131,6 @@ const dataToSections = (
 const catchAllConfig = "./routes/[...catchall].tsx";
 const middlewareConfig = "./routes/_middleware.ts";
 
-interface AudienceFlag {
-  name: string;
-  matcher: {
-    __resolveType: "$live/matchers/MatchAlways.ts";
-  };
-  routes: {
-    [key: string]: {
-      page: {
-        __resolveType: string;
-      };
-      __resolveType: "$live/handlers/fresh.ts";
-    };
-  };
-  __resolveType: string;
-}
-
 const sectionToAccount: Record<string, string> = {
   "deco-sites/std/sections/configVTEX.global.tsx":
     "deco-sites/std/accounts/vtex.ts",
@@ -247,11 +231,6 @@ const pageToConfig =
     };
   };
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-const sleepBetweenRetriesMS = 100;
-const refetchIntervalMS = 5_000;
 const baseEntrypoint = {
   [globalSections]: {},
   [everyoneAudience]: {
@@ -283,15 +262,6 @@ const fetchSitePages = async (siteId: number) => {
     .select("id, name, data, path, state, public")
     .eq("site", siteId)
     .neq("state", "dev");
-  // .neq("state", "archived"); FIXME(mcandeia) archived should not be used in production, but removing from here means that previews will not be available.
-};
-
-const fetchArchivedPages = async (siteId: number) => {
-  return await getSupabaseClient()
-    .from("pages")
-    .select("id, name, data, path, state, public")
-    .eq("site", siteId)
-    .eq("state", "archived");
 };
 
 const fetchSiteFlags = async (siteId: number) => {
@@ -304,94 +274,50 @@ const fetchSiteFlags = async (siteId: number) => {
 const fetchSiteData = (siteId: number) =>
   Promise.all([fetchSitePages(siteId), fetchSiteFlags(siteId)]);
 
-export const newSupabaseProviderLegacy = (
+// Supabase client setup
+const subscribeForConfigChanges = (
   siteId: number,
-  namespace: string,
-  backgroundUpdate?: boolean,
-): ConfigStore => {
-  let remainingRetries = 5;
-  let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
-
-  const tryResolveFirstLoad = async (
-    resolve: (
-      value:
-        | Record<string, Resolvable<any>>
-        | PromiseLike<Record<string, Resolvable<any>>>,
-    ) => void,
-    reject: (reason: unknown) => void,
-  ) => {
-    if (remainingRetries === 0) {
-      reject(lastError); // TODO @author Marcos V. Candeia should we panic? and exit? Deno.exit(1)
-      return;
-    }
-    const [{ data, error }, { data: dataFlags, error: errorFlags }] =
-      await fetchSiteData(siteId);
-    if (
-      error != null || data === null || dataFlags === null ||
-      errorFlags !== null
-    ) {
-      remainingRetries--;
-      lastError = error;
-      await sleep(sleepBetweenRetriesMS);
-      await tryResolveFirstLoad(resolve, reject);
-      return;
-    }
-    resolve(pagesToConfig(data, dataFlags, namespace));
-  };
-
-  let currResolvables: Promise<Record<string, Resolvable<any>>> = new Promise<
-    Record<string, Resolvable<any>>
-  >(tryResolveFirstLoad);
-  let singleFlight = false;
-
-  const updateInternalState = async (force?: boolean) => {
-    if (singleFlight && !force) {
-      return;
-    }
-    try {
-      singleFlight = true;
-      const [{ data, error }, { data: dataFlags, error: errorFlags }] =
-        await fetchSiteData(siteId);
-      if (
-        data === null || error !== null || dataFlags === null ||
-        errorFlags !== null
-      ) {
-        return;
-      }
-      currResolvables = Promise.resolve(
-        pagesToConfig(data, dataFlags, namespace),
-      );
-    } finally {
-      singleFlight = false;
-    }
-  };
-
-  if (backgroundUpdate) {
-    currResolvables.then(() => {
-      setInterval(updateInternalState, refetchIntervalMS);
-    });
-  }
-
-  const sf = sfFunc<Record<string, Resolvable>>();
-  return {
-    archived: async () => { // archived pages cannot be added on flags.
-      return await sf.do("archived", async () => {
-        const { data, error } = await fetchArchivedPages(siteId);
-        if (
-          data === null || error !== null
-        ) {
-          throw error;
-        }
-        return pagesToConfig(data, [], namespace);
-      });
-    },
-    state: async (opts?: ReadOptions) => {
-      if (opts?.forceFresh) {
-        await updateInternalState(true);
-      }
-      return await currResolvables;
-    },
-  };
+  fetcher: () => Promise<{ data: CurrResolvables | null; error: any }>,
+) =>
+(
+  callback: (res: CurrResolvables) => unknown,
+  subscriptionCallback: (
+    status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
+    err?: Error,
+  ) => void,
+) => {
+  return getSupabaseClient()
+    .channel("pages")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "pages",
+        filter: `site=eq.${siteId}`,
+      },
+      () =>
+        fetcher().then((v) => {
+          if (!v.error) {
+            callback(v.data ?? { state: {}, archived: {} });
+          }
+        }),
+    ).on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "flags",
+        filter: `site=eq.${siteId}`,
+      },
+      () =>
+        fetcher().then((v) => {
+          if (!v.error) {
+            callback(v.data ?? { state: {}, archived: {} });
+          }
+        }),
+    )
+    .subscribe(subscriptionCallback);
 };
 
 const matchesToMatchMulti = (matches: Flag["data"]["matches"], ns: string) => ({
@@ -449,6 +375,7 @@ const flagsToConfig = (
     };
   }, entrypoint);
 };
+
 const pagesToConfig = (
   p: Page[],
   flags: Pick<Flag, "key" | "data" | "name">[],
@@ -459,4 +386,37 @@ const pagesToConfig = (
   ) // process global first
     .reduce(pageToConfig(ns), baseEntrypoint);
   return flagsToConfig(configs, flags, ns);
+};
+
+export const fromPagesTable = (
+  siteId: number,
+  namespace: string,
+): SupabaseConfigProvider => {
+  const sf = singleFlight<{ data: CurrResolvables | null; error: any }>();
+  const fetcher = () =>
+    sf.do("flight", async (): Promise<
+      { data: CurrResolvables | null; error: any }
+    > => { // archived pages cannot be added on flags.
+      const [{ data, error }, { data: dataFlags, error: errorFlags }] =
+        await fetchSiteData(siteId);
+      if (
+        data === null || error !== null
+      ) {
+        return { data: data as null, error };
+      }
+      if (dataFlags === null || errorFlags !== null) {
+        return { data: dataFlags as null, error: errorFlags };
+      }
+      return {
+        data: {
+          state: pagesToConfig(data, dataFlags, namespace),
+          archived: {},
+        } as CurrResolvables,
+        error: null,
+      };
+    });
+  return {
+    get: fetcher,
+    subscribe: subscribeForConfigChanges(siteId, fetcher),
+  };
 };

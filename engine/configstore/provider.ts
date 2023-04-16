@@ -1,9 +1,8 @@
-import { newSupabase } from "$live/engine/configstore/supabase.ts";
-import {
-  newSupabaseProviderLegacy,
-} from "$live/engine/configstore/supabaseLegacy.ts";
+import { fromConfigsTable } from "$live/engine/configstore/configs.ts";
+import { fromPagesTable } from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
+import { newSupabase } from "./supabaseProvider.ts";
 
 export interface ReadOptions {
   forceFresh?: boolean;
@@ -40,10 +39,10 @@ export const getComposedConfigStore = (
   siteId: number,
 ): ConfigStore => {
   if (siteId <= 0) { // new sites does not have siteId
-    return newSupabase(site);
+    return newSupabase(fromConfigsTable(site));
   }
   return compose(
-    newSupabaseProviderLegacy(siteId, ns, context.isDeploy), // if not deploy so no background is needed
-    newSupabase(site, context.isDeploy),
+    newSupabase(fromPagesTable(siteId, ns), context.isDeploy), // if not deploy so no background is needed
+    newSupabase(fromConfigsTable(site), context.isDeploy),
   );
 };

@@ -7,7 +7,7 @@ import {
   PageFunction,
   PageSection,
   PageState,
-} from "$live/engine/configstore/supabaseLegacy.ts";
+} from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { getCurrent } from "$live/engine/schema/reader.ts";
