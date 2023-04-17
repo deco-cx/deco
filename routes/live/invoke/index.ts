@@ -109,12 +109,12 @@ export type InvokePayload<
       | Record<string, InvokeFunction<TManifest, TLoader>>
   : unknown;
 
-type ReturnWith<TRet, TPayload> = UnionToIntersection<
-  TPayload extends { select: (infer Selector)[] }
-    ? Selector extends DotNestedKeys<TRet> ? DeepPick<TRet, Selector>
-    : Partial<TRet>
-    : TRet
->;
+type ReturnWith<TRet, TPayload> = TPayload extends
+  { select: (infer Selector)[] } ? UnionToIntersection<
+    Selector extends DotNestedKeys<TRet> ? DeepPick<TRet, Selector>
+      : Partial<TRet>
+  >
+  : TRet;
 
 export type DotNestedReturn<TManifest extends DecoManifest, TInvocableKey> =
   TInvocableKey extends AvailableFunctions<TManifest>
