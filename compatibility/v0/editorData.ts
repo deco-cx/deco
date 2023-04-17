@@ -312,15 +312,18 @@ export const generateEditorData = async (
   const schema = await getCurrent();
 
   const allPages = await pages();
-  let page: Pick<Page, "sections" | "state" | "name"> = {
+  const defaultPage: Pick<Page, "sections" | "state" | "name"> = {
     sections: [],
     state: "published",
     name: "Home",
   };
 
+  let page = defaultPage;
+
   const pageId = url.searchParams.get("pageId");
   if (pageId !== null) {
     page = await pageById(pageId);
+    page ??= defaultPage;
   }
 
   const { sections } = page;
