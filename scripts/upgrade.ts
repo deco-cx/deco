@@ -10,6 +10,13 @@ import deno from "../deno.json" assert { type: "json" };
 import meta from "../meta.json" assert { type: "json" };
 import { namespaceFromImportMap } from "../utils/namespace.ts";
 
+const runtimeTS = `
+import { withManifest } from "$live/clients/withManifest.ts";
+import type { Manifest } from "./live.gen.ts";
+
+export const Runtime = withManifest<Manifest>();
+`;
+
 const exists = async (dir: string): Promise<boolean> => {
   try {
     await Deno.stat(dir);
@@ -131,6 +138,25 @@ const siteId = async (): Promise<number | undefined> => {
   return +match.groups["siteId"];
 };
 
+const createRuntimeTS = async () => {
+  const runtimeTsPath = join(Deno.cwd(), "runtime.ts");
+  let runtimeTsContent = "";
+
+  if ((await exists(runtimeTsPath))) {
+    runtimeTsContent = await Deno.readTextFile(runtimeTsPath);
+  }
+
+  return {
+    from: {
+      path: runtimeTsPath,
+      content: runtimeTsContent,
+    },
+    to: {
+      path: runtimeTsPath,
+      content: runtimeTS,
+    },
+  };
+};
 const createSiteJson = async () => {
   const siteFromMiddleware = await siteId();
   if (!siteFromMiddleware) {
@@ -194,21 +220,28 @@ const removeRoutesAndFreshGenTs = (): Delete[] => {
 const v1: UpgradeOption = {
   isEligible: async () => !(await exists(join(Deno.cwd(), "live.gen.ts"))),
   apply: async () => {
-    const [importMapPatch, siteJson, devTsImports, mainTsLiveEntrypoint] =
-      await Promise
-        .all([
-          updateImportMap(
-            meta.version,
-            "1.0.0-rc.12",
-          ),
-          createSiteJson(),
-          updateDevTsImports(),
-          addMainTsLiveEntrypoint(),
-        ]);
+    const [
+      importMapPatch,
+      siteJson,
+      runtimeTs,
+      devTsImports,
+      mainTsLiveEntrypoint,
+    ] = await Promise
+      .all([
+        updateImportMap(
+          meta.version,
+          "1.0.0-rc.12",
+        ),
+        createSiteJson(),
+        createRuntimeTS(),
+        updateDevTsImports(),
+        addMainTsLiveEntrypoint(),
+      ]);
     return [
       ...removeRoutesAndFreshGenTs(),
       importMapPatch,
       siteJson,
+      runtimeTs,
       devTsImports,
       mainTsLiveEntrypoint,
     ];
