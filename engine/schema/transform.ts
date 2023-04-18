@@ -413,7 +413,7 @@ const typeDefToSchemeable = async (
       const schema = await tsTypeToSchemeableRec(
         property.tsType!,
         root,
-        seen,
+        new Map(seen),
         property.optional,
       );
 
@@ -441,7 +441,9 @@ export const tsTypeToSchemeable = async (
 ): Promise<Schemeable> => {
   const seen = new Map();
   seen.set(rootNode, true);
-  return await tsTypeToSchemeableRec(node, root, seen, optional);
+  const resp = await tsTypeToSchemeableRec(node, root, seen, optional);
+  seen.delete(rootNode);
+  return resp;
 };
 
 const tsTypeToSchemeableRec = async (
@@ -567,7 +569,7 @@ const tsTypeToSchemeableRec = async (
     }
     case "intersection": {
       const values = await Promise.all(
-        node.intersection.map((t) => tsTypeToSchemeableRec(t, root, seen)),
+        node.intersection.map((t) => tsTypeToSchemeableRec(t, root, new Map(seen))),
       );
       const ids = [];
       for (let i = 0; i < node.intersection.length; i++) {
