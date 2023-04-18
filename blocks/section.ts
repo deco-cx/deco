@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "$live/blocks/handler.ts";
+import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
 import StubSection from "$live/components/StubSection.tsx";
 import {
   Block,
@@ -11,7 +12,8 @@ import {
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
 import { LoaderContext } from "$live/types.ts";
 import { JSX } from "preact";
-import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
+import { Empty } from "$live/components/StubSection.tsx";
+import { context } from "$live/live.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -83,6 +85,12 @@ const sectionBlock: Block<SectionModule> = {
     };
   },
   defaultDanglingRecover: (_, ctx) => {
+    if (context.isDeploy) {
+      return {
+        Component: Empty,
+        props: {},
+      };
+    }
     return {
       Component: StubSection,
       props: {
