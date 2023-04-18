@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import type { Manifest } from "$fresh/server.ts";
 import accountBlock from "$live/blocks/account.ts";
 import flagBlock from "$live/blocks/flag.ts";
@@ -57,17 +58,15 @@ export interface StatefulContext<T> {
   params: Record<string, string>;
   state: T;
 }
-// deno-lint-ignore no-explicit-any
 export type LiveConfig<TConfig = any, TState = any> = TState & {
   $live: TConfig;
   resolve: ResolveFunc;
 };
 
-// deno-lint-ignore no-explicit-any
+// deno-lint-ignore ban-types
 export type LoaderContext<TProps = any, TState = {}> = StatefulContext<
   LiveConfig<TProps, TState>
 >;
-// deno-lint-ignore no-explicit-any
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: LoaderContext<Props, State>,

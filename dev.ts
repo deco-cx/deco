@@ -16,6 +16,8 @@ import { exists } from "$live/utils/filesystem.ts";
 import { namespaceFromImportMap } from "$live/utils/namespace.ts";
 import { SiteInfo } from "./types.ts";
 
+const schemaFile = "schemas.gen.json";
+
 const MIN_DENO_VERSION = "1.25.0";
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
@@ -41,8 +43,10 @@ const genSchemas = async (
 ) => {
   manifest = new URL(manifest, base).href;
 
+  console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
+
   await Deno.writeTextFile(
-    join(directory, "schemas.gen.json"),
+    join(directory, schemaFile),
     JSON.stringify(
       await genSchemasFromManifest(
         await import(manifest).then((mod) => mod.default),
@@ -51,6 +55,8 @@ const genSchemas = async (
       2,
     ),
   );
+
+  console.log(`✔️ ready to rock and roll! Your project is live 🤘`);
 };
 
 const manifestFile = "./live.gen.ts";
@@ -80,9 +86,8 @@ export async function generate(
   const manifestPath = join(directory, manifestFile);
 
   await Deno.writeTextFile(manifestPath, manifestStr);
-
   console.log(
-    `%cThe manifest has been generated.`,
+    `%cthe manifest has been generated.`,
     "color: blue; font-weight: bold",
   );
 }
@@ -160,6 +165,11 @@ export default async function dev(
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());
 
+  const shouldSetupGithooks = os.platform() !== "windows";
+
+  if (shouldSetupGithooks) {
+    await setupGithooks();
+  }
   const manifestChanged = !currentManifest.equal(manifest);
 
   if (manifestChanged) {
@@ -167,12 +177,6 @@ export default async function dev(
   }
 
   genSchemas(base, manifestFile, dir);
-
-  const shouldSetupGithooks = os.platform() !== "windows";
-
-  if (shouldSetupGithooks) {
-    await setupGithooks();
-  }
 
   onListen?.();
 

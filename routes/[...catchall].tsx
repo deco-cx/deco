@@ -53,7 +53,13 @@ export default function Render({
   );
 }
 
+/**
+ * @description Site entrypoint, configure your audiences and routes.
+ */
 export interface Entrypoint {
+  /**
+   * @description configure how to handle requests.
+   */
   handler: Handler;
 }
 
