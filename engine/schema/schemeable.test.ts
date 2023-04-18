@@ -5,7 +5,8 @@
 /// <reference lib="dom.iterable" />
 
 import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { assertEquals, fail } from "std/testing/asserts.ts";
+import { Sha1 } from "https://deno.land/std@0.61.0/hash/sha1.ts";
+import { assertEquals, assertObjectMatch, fail } from "std/testing/asserts.ts";
 
 import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
 import {
@@ -89,6 +90,72 @@ Deno.test("Simple type generation", async () => {
   });
 
   assertSpyCalls(genId, 2);
+});
+
+Deno.test("TwoRefsProperties type generation", async () => {
+  const transformed = await getSchemeableFor("TwoRefsProperties");
+
+  if (!transformed) {
+    fail("TwoRefsProperties should exists");
+  }
+
+  assertObjectMatch(transformed, {
+    name: "TwoRefsProperties",
+    type: "object",
+    value: {
+      firstRef: {
+        required: true,
+        schemeable: {
+          name: "SimpleInterface[]",
+          type: "array",
+        },
+        title: "First Ref",
+      },
+      anotherRef: {
+        required: true,
+        schemeable: {
+          name: "SimpleInterface[]",
+          type: "array",
+        },
+        title: "Another Ref",
+      },
+    },
+  });
+
+  const createHash = (input: string) => new Sha1().update(input).hex();
+
+  /* Types:
+  object_TwoRefsProperties
+  array_SimpleInterface[]
+  object_SimpleInterface
+  inline_undefined
+  array_SimpleInterface[]
+  */
+  const genId = (schemable: Schemeable) => {
+    return createHash(schemable.type + "_" + schemable.name);
+  };
+
+  const [definitions, _] = schemeableToJSONSchema(genId, {}, transformed);
+  
+  const schemaId = createHash("object_TwoRefsProperties");
+
+  assertObjectMatch(definitions[schemaId],{
+    type: "object",
+    properties: {
+      firstRef: {
+        "$ref": "#/definitions/f95016488720b1505d4043413c2a20ab311c47c0",
+        title: "First Ref"
+      },
+      anotherRef: {
+        "$ref": "#/definitions/f95016488720b1505d4043413c2a20ab311c47c0",
+        title: "Another Ref"
+      }
+    },
+    required: [ "firstRef", "anotherRef" ],
+    title: "TwoRefsProperties"
+  });
+
+  //assertEquals(5, definitions.);
 });
 
 Deno.test("Simple interface generation", async () => {
