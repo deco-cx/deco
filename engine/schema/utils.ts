@@ -44,16 +44,23 @@ export const jsDocToSchema = (node: JsDoc) =>
     ? Object.fromEntries(
       node.tags
         .map((tag: JsDocTag) => {
-          const match = (tag as JsDocTagValued).value.match(
+          const tg = tag as JsDocTagValued;
+          const match = tg?.value?.match(
             /^@(?<key>[a-zA-Z]+) (?<value>.*)$/,
           );
+          if (tg?.value === "Block" && tg?.doc) {
+            return [tg.kind, { __resolveType: tg.doc }];
+          }
 
           const key = match?.groups?.key;
           const value = match?.groups?.value;
 
           if (typeof key === "string" && typeof value === "string") {
             const parsedValue = parseJSDocAttribute(key, value);
-            return [key, parsedValue] as const;
+            return [
+              key,
+              parsedValue,
+            ] as const;
           }
 
           return null;

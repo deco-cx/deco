@@ -16,6 +16,11 @@ import { exists } from "$live/utils/filesystem.ts";
 import { namespaceFromImportMap } from "$live/utils/namespace.ts";
 import { SiteInfo } from "./types.ts";
 
+/**
+ * The the block address type.
+ * @typedef {string} Block - the resolvable type
+ */
+
 const MIN_DENO_VERSION = "1.25.0";
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
