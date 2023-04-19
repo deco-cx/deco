@@ -13,29 +13,35 @@
         }
       }
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
-      "$ref": "#/root/flags",
-      "title": "Flag"
+    "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
+      "$ref": "#/root/pages",
+      "title": "Page"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
-      },
-      "title": "Flag[]"
-    },
-    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
+    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
       "type": "object",
       "properties": {
-        "flags": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]",
-          "title": "Flags"
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
         }
       },
       "required": [
-        "flags"
+        "page"
       ],
-      "title": "$live/handlers/routesSelection.ts@SelectionConfig"
+      "title": "$live/handlers/devPage.ts@DevConfig"
+    },
+    "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
+        }
+      },
+      "required": [
+        "page"
+      ],
+      "title": "$live/handlers/fresh.ts@FreshConfig"
     },
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
       "$ref": "#/root/handlers",
@@ -68,35 +74,29 @@
       ],
       "title": "$live/handlers/router.ts@RouterConfig"
     },
-    "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
-      "$ref": "#/root/pages",
-      "title": "Page"
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
+      "$ref": "#/root/flags",
+      "title": "Flag"
     },
-    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
+      },
+      "title": "Flag[]"
+    },
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
       "properties": {
-        "page": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
-          "title": "Page"
+        "flags": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]",
+          "title": "Flags"
         }
       },
       "required": [
-        "page"
+        "flags"
       ],
-      "title": "$live/handlers/devPage.ts@DevConfig"
-    },
-    "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig": {
-      "type": "object",
-      "properties": {
-        "page": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
-          "title": "Page"
-        }
-      },
-      "required": [
-        "page"
-      ],
-      "title": "$live/handlers/fresh.ts@FreshConfig"
+      "title": "$live/handlers/routesSelection.ts@SelectionConfig"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
       "$ref": "#/root/sections",
@@ -163,39 +163,28 @@
       "required": [],
       "title": "$live/matchers/MatchDate.ts@Props"
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props": {
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props": {
       "type": "object",
       "properties": {
-        "includes": {
-          "type": [
-            "string",
-            "null"
+        "environment": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "production"
+            },
+            {
+              "type": "string",
+              "const": "development"
+            }
           ],
-          "title": "Includes"
-        },
-        "match": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "title": "Match"
-        }
-      },
-      "required": [],
-      "title": "$live/matchers/MatchUserAgent.ts@Props"
-    },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props": {
-      "type": "object",
-      "properties": {
-        "siteId": {
-          "type": "number",
-          "title": "Site Id"
+          "type": "string",
+          "title": "Environment"
         }
       },
       "required": [
-        "siteId"
+        "environment"
       ],
-      "title": "$live/matchers/MatchSite.ts@Props"
+      "title": "$live/matchers/MatchEnvironment.ts@Props"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
       "$ref": "#/root/matchers",
@@ -249,28 +238,39 @@
       ],
       "title": "$live/matchers/MatchRandom.ts@Props"
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props": {
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props": {
       "type": "object",
       "properties": {
-        "environment": {
-          "anyOf": [
-            {
-              "type": "string",
-              "const": "production"
-            },
-            {
-              "type": "string",
-              "const": "development"
-            }
-          ],
-          "type": "string",
-          "title": "Environment"
+        "siteId": {
+          "type": "number",
+          "title": "Site Id"
         }
       },
       "required": [
-        "environment"
+        "siteId"
       ],
-      "title": "$live/matchers/MatchEnvironment.ts@Props"
+      "title": "$live/matchers/MatchSite.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props": {
+      "type": "object",
+      "properties": {
+        "includes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Includes"
+        },
+        "match": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Match"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchUserAgent.ts@Props"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",
@@ -320,48 +320,6 @@
       "required": [],
       "title": "$live/flags/everyone.ts@EveryoneConfig"
     },
-    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz": {
-      "title": "$live/handlers/routesSelection.ts",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/handlers/routesSelection.ts"
-          ],
-          "default": "$live/handlers/routesSelection.ts"
-        }
-      }
-    },
-    "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz": {
-      "title": "$live/handlers/router.ts",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/handlers/router.ts"
-          ],
-          "default": "$live/handlers/router.ts"
-        }
-      }
-    },
     "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==": {
       "title": "$live/handlers/devPage.ts",
       "type": "object",
@@ -401,6 +359,48 @@
             "$live/handlers/fresh.ts"
           ],
           "default": "$live/handlers/fresh.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz": {
+      "title": "$live/handlers/router.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/router.ts"
+          ],
+          "default": "$live/handlers/router.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz": {
+      "title": "$live/handlers/routesSelection.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/routesSelection.ts"
+          ],
+          "default": "$live/handlers/routesSelection.ts"
         }
       }
     },
@@ -446,6 +446,22 @@
         }
       }
     },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM=": {
+      "title": "$live/matchers/MatchAlways.ts",
+      "type": "object",
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchAlways.ts"
+          ],
+          "default": "$live/matchers/MatchAlways.ts"
+        }
+      }
+    },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz": {
       "title": "$live/matchers/MatchDate.ts",
       "type": "object",
@@ -467,12 +483,12 @@
         }
       }
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=": {
-      "title": "$live/matchers/MatchUserAgent.ts",
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==": {
+      "title": "$live/matchers/MatchEnvironment.ts",
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props"
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props"
         }
       ],
       "required": [
@@ -482,30 +498,9 @@
         "__resolveType": {
           "type": "string",
           "enum": [
-            "$live/matchers/MatchUserAgent.ts"
+            "$live/matchers/MatchEnvironment.ts"
           ],
-          "default": "$live/matchers/MatchUserAgent.ts"
-        }
-      }
-    },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz": {
-      "title": "$live/matchers/MatchSite.ts",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/matchers/MatchSite.ts"
-          ],
-          "default": "$live/matchers/MatchSite.ts"
+          "default": "$live/matchers/MatchEnvironment.ts"
         }
       }
     },
@@ -551,12 +546,12 @@
         }
       }
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==": {
-      "title": "$live/matchers/MatchEnvironment.ts",
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz": {
+      "title": "$live/matchers/MatchSite.ts",
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props"
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props"
         }
       ],
       "required": [
@@ -566,15 +561,20 @@
         "__resolveType": {
           "type": "string",
           "enum": [
-            "$live/matchers/MatchEnvironment.ts"
+            "$live/matchers/MatchSite.ts"
           ],
-          "default": "$live/matchers/MatchEnvironment.ts"
+          "default": "$live/matchers/MatchSite.ts"
         }
       }
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM=": {
-      "title": "$live/matchers/MatchAlways.ts",
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=": {
+      "title": "$live/matchers/MatchUserAgent.ts",
       "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props"
+        }
+      ],
       "required": [
         "__resolveType"
       ],
@@ -582,9 +582,9 @@
         "__resolveType": {
           "type": "string",
           "enum": [
-            "$live/matchers/MatchAlways.ts"
+            "$live/matchers/MatchUserAgent.ts"
           ],
-          "default": "$live/matchers/MatchAlways.ts"
+          "default": "$live/matchers/MatchUserAgent.ts"
         }
       }
     },
@@ -672,16 +672,16 @@
           "$ref": "#/definitions/Resolvable"
         },
         {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz"
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw=="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM="
         },
         {
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz"
         },
         {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw=="
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM="
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz"
         }
       ]
     },
@@ -714,13 +714,13 @@
           "$ref": "#/definitions/Resolvable"
         },
         {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM="
+        },
+        {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz"
         },
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM="
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz"
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw=="
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw=="
@@ -729,10 +729,10 @@
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM="
         },
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw=="
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz"
         },
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM="
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM="
         }
       ]
     },
@@ -754,7 +754,8 @@
       "type": "object",
       "required": [
         "./routes/_middleware.ts",
-        "./routes/[...catchall].tsx"
+        "./routes/[...catchall].tsx",
+        "./routes/index.tsx"
       ],
       "properties": {
         "./routes/_middleware.ts": {
@@ -765,6 +766,13 @@
           ]
         },
         "./routes/[...catchall].tsx": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+            }
+          ]
+        },
+        "./routes/index.tsx": {
           "anyOf": [
             {
               "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"

@@ -1,7 +1,6 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
-import { LiveRouteConfig } from "$live/blocks/route.ts";
 import { PageContext } from "$live/engine/block.ts";
 import { LiveConfig, LiveState, RouterContext } from "$live/types.ts";
 import { setCSPHeaders } from "$live/utils/http.ts";
@@ -81,8 +80,4 @@ export const handler = async (
     req,
     await handler(req, ctx),
   );
-};
-
-export const config: LiveRouteConfig = {
-  routeOverride: "/*",
 };

@@ -53,7 +53,9 @@ const isConfigurableRoute = (
   );
 };
 const middlewareKey = "./routes/_middleware.ts";
-
+const indexTsxToCatchAll: Record<string, string> = {
+  "./routes/index.tsx": "./routes/[...catchall].tsx",
+};
 const mapMiddleware = (
   mid: MiddlewareHandler<LiveConfig<any, LiveState>> | MiddlewareHandler<
     LiveConfig<any, LiveState>
@@ -109,7 +111,7 @@ const mapHandlers = (
         context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
         const $live = await context.state.resolve(
-          key,
+          indexTsxToCatchAll[key] ?? key,
         ); // middleware should be executed first.
         context.state.$live = $live;
 
@@ -123,7 +125,7 @@ const mapHandlers = (
   ) {
     const end = context.state.t.start(`resolve-${key}`);
     const $live = (await context.state.resolve(
-      key,
+      indexTsxToCatchAll[key] ?? key,
     )) ?? {};
 
     end && end();

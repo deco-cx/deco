@@ -84,7 +84,13 @@ export const defaultRoutes: {
     from: "$live/routes/live/previews/[...block].tsx",
     key: "./routes/live/previews/[...block].tsx",
     ref: "$live_previews",
-  }, // DO NOT CHANGE THE ORDER CATCHALL SHOULD BE THE LAST
+  },
+  {
+    block: "routes",
+    from: "$live/routes/[...catchall].tsx",
+    key: "./routes/index.tsx",
+    ref: "$live_catchall",
+  },
   {
     block: "routes",
     from: "$live/routes/[...catchall].tsx",

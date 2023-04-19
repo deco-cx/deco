@@ -27,23 +27,25 @@ import * as $$$$$$$$$5 from "./matchers/MatchEnvironment.ts";
 import * as $$$$$$$$$6 from "./matchers/MatchAlways.ts";
 import * as $$$$$$$$$$0 from "./flags/audience.ts";
 import * as $$$$$$$$$$1 from "./flags/everyone.ts";
+import * as $live_catchall from "$live/routes/[...catchall].tsx";
 
 const manifest = {
   "routes": {
     "./routes/_middleware.ts": $$$$0,
-    "./routes/live/invoke/index.ts": $$$$1,
+    "./routes/[...catchall].tsx": $$$$7,
+    "./routes/index.tsx": $live_catchall,
+    "./routes/live/_meta.ts": $$$$6,
     "./routes/live/editorData.ts": $$$$2,
     "./routes/live/inspect.ts": $$$$3,
-    "./routes/live/workbench.ts": $$$$4,
+    "./routes/live/invoke/index.ts": $$$$1,
     "./routes/live/previews/[...block].tsx": $$$$5,
-    "./routes/live/_meta.ts": $$$$6,
-    "./routes/[...catchall].tsx": $$$$7,
+    "./routes/live/workbench.ts": $$$$4,
   },
   "handlers": {
-    "$live/handlers/routesSelection.ts": $$$$$$0,
-    "$live/handlers/router.ts": $$$$$$1,
     "$live/handlers/devPage.ts": $$$$$$2,
     "$live/handlers/fresh.ts": $$$$$$3,
+    "$live/handlers/router.ts": $$$$$$1,
+    "$live/handlers/routesSelection.ts": $$$$$$0,
   },
   "pages": {
     "$live/pages/LivePage.tsx": $$$$$$$0,
@@ -52,13 +54,13 @@ const manifest = {
     "$live/sections/PageInclude.tsx": $$$$$$$$0,
   },
   "matchers": {
+    "$live/matchers/MatchAlways.ts": $$$$$$$$$6,
     "$live/matchers/MatchDate.ts": $$$$$$$$$0,
-    "$live/matchers/MatchUserAgent.ts": $$$$$$$$$1,
-    "$live/matchers/MatchSite.ts": $$$$$$$$$2,
+    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$5,
     "$live/matchers/MatchMulti.ts": $$$$$$$$$3,
     "$live/matchers/MatchRandom.ts": $$$$$$$$$4,
-    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$5,
-    "$live/matchers/MatchAlways.ts": $$$$$$$$$6,
+    "$live/matchers/MatchSite.ts": $$$$$$$$$2,
+    "$live/matchers/MatchUserAgent.ts": $$$$$$$$$1,
   },
   "flags": {
     "$live/flags/audience.ts": $$$$$$$$$$0,
