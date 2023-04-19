@@ -81,4 +81,3 @@ export const handler = async (
     await handler(req, ctx),
   );
 };
-

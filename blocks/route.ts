@@ -54,7 +54,7 @@ const isConfigurableRoute = (
 };
 const middlewareKey = "./routes/_middleware.ts";
 /**
- * Unfortunately fresh does not accept one route for catching all non-matched routes. 
+ * Unfortunately fresh does not accept one route for catching all non-matched routes.
  * It can be done using routeOverride (/*) but the internal fresh sort will break and this route will not be properly sorted.
  * So we're replicating the same handler for index.tsx as well, as a consequence of that, we need to manually convert the route name to [...catchall].tsx to avoid having two different configurations for each.
  */

@@ -40,7 +40,7 @@ export type TypeAlias = string;
 export type TwoRefsProperties = {
   firstRef: SimpleInterface[];
   anotherRef: SimpleInterface[];
-}
+};
 
 export interface WellKnown {
   array: Array<string>;

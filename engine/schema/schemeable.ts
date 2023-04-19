@@ -179,7 +179,7 @@ export const schemeableToJSONSchema = (
     def,
     schemeable,
     seen,
-    );
+  );
   const jsonSchema = {
     ...curr,
     ...ischemeable.jsDocSchema ?? {},

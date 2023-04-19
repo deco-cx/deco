@@ -361,9 +361,9 @@ export const findSchemeableFromNode = async (
         return {
           ...currLocation,
           ...(await tsTypeToSchemeableRec(
-          rootNode.typeAliasDef.tsType,
-          root,
-          seen,
+            rootNode.typeAliasDef.tsType,
+            root,
+            seen,
           )),
           jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
         };
@@ -383,8 +383,8 @@ export const findSchemeableFromNode = async (
         return {
           ...currLocation,
           ...await findSchemeableFromNode(node, [
-          rootNode.importDef.src,
-          newRoots,
+            rootNode.importDef.src,
+            newRoots,
           ], seen),
         };
       }
@@ -569,7 +569,9 @@ const tsTypeToSchemeableRec = async (
     }
     case "intersection": {
       const values = await Promise.all(
-        node.intersection.map((t) => tsTypeToSchemeableRec(t, root, new Map(seen))),
+        node.intersection.map((t) =>
+          tsTypeToSchemeableRec(t, root, new Map(seen))
+        ),
       );
       const ids = [];
       for (let i = 0; i < node.intersection.length; i++) {

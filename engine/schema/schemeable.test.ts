@@ -136,23 +136,23 @@ Deno.test("TwoRefsProperties type generation", async () => {
   };
 
   const [definitions, _] = schemeableToJSONSchema(genId, {}, transformed);
-  
+
   const schemaId = createHash("object_TwoRefsProperties");
 
-  assertObjectMatch(definitions[schemaId],{
+  assertObjectMatch(definitions[schemaId], {
     type: "object",
     properties: {
       firstRef: {
         "$ref": "#/definitions/f95016488720b1505d4043413c2a20ab311c47c0",
-        title: "First Ref"
+        title: "First Ref",
       },
       anotherRef: {
         "$ref": "#/definitions/f95016488720b1505d4043413c2a20ab311c47c0",
-        title: "Another Ref"
-      }
+        title: "Another Ref",
+      },
     },
-    required: [ "firstRef", "anotherRef" ],
-    title: "TwoRefsProperties"
+    required: ["firstRef", "anotherRef"],
+    title: "TwoRefsProperties",
   });
 
   //assertEquals(5, definitions.);
