@@ -1,7 +1,6 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
-import { LiveRouteConfig } from "$live/blocks/route.ts";
 import { PageContext } from "$live/engine/block.ts";
 import { LiveConfig, LiveState, RouterContext } from "$live/types.ts";
 import { setCSPHeaders } from "$live/utils/http.ts";
@@ -53,7 +52,13 @@ export default function Render({
   );
 }
 
+/**
+ * @description Site entrypoint, configure your audiences and routes.
+ */
 export interface Entrypoint {
+  /**
+   * @description configure how to handle requests.
+   */
   handler: Handler;
 }
 
@@ -77,6 +82,3 @@ export const handler = async (
   );
 };
 
-export const config: LiveRouteConfig = {
-  routeOverride: "/*",
-};

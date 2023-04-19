@@ -19,7 +19,13 @@ export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   return redirectTo(url);
 };
 
+/**
+ * @description Global configurations for ./routes/_middleware.ts route
+ */
 export interface MiddlewareConfig {
+  /**
+   * @description Configure your loaders global state.
+   */
   state: Record<string, Resolvable>;
 }
 

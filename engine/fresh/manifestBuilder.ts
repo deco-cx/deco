@@ -142,7 +142,7 @@ const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
   } from "${from}"`;
 };
 
-const stringifyObj = (obj: JSONObject, sortKeys?: boolean): string => {
+const stringifyObj = (obj: JSONObject, sortKeys = true): string => {
   const entries = Object.entries(obj);
   const entriesOrSorted = sortKeys
     ? entries.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
@@ -221,7 +221,7 @@ import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 ${Object.entries(imports).map(stringifyImport).join("\n")}
 
-const manifest = ${stringifyObj(manifest)}
+const manifest = ${stringifyObj(manifest, false)}
 
 export type Manifest = typeof manifest;
 

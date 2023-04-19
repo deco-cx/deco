@@ -318,11 +318,20 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
             required: [],
             properties: {},
             ...(root["state"] ?? {}), // should we include only catchall?
-            additionalProperties: configState,
           },
         ] as [Schemas["definitions"], JSONSchema7],
       );
-      return { definitions: finalDefs, root: { ...root, state: entrypoint } };
+      return {
+        definitions: finalDefs,
+        root: {
+          ...root,
+          entrypoint,
+          state: {
+            allOf: [{ $ref: "#/root/entrypoint" }],
+            additionalProperties: configState,
+          },
+        },
+      };
     },
   };
 };
