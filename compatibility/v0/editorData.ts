@@ -36,6 +36,7 @@ export type AvailableFunction =
 
 export interface EditorData {
   pageName: string;
+  baseSchema?: Schemas;
   sections: Array<PageSection & WithSchema>;
   functions: Array<PageFunction & WithSchema>;
   availableSections: Array<AvailableSection>;
@@ -145,89 +146,28 @@ const configTypeFromJSONSchema = (schema: JSONSchema7): string | undefined => {
   return (schema.allOf[0] as JSONSchema7).$ref;
 };
 
-const keyFromRef = (ref: string): string => {
-  return ref.split("/")[2];
-};
+const generateBaseSchema = (schema: Schemas): Schemas => {
+  const definitions: Record<string, JSONSchema> = {};
 
-const flat = (
-  def: JSONSchema7,
-  schema: Schemas,
-  memo: Record<string, JSONSchema7>,
-): JSONSchema7 => {
-  const ref = def?.$ref;
-  if (ref && memo[ref]) {
-    return memo[ref];
-  }
-  if (ref) {
-    // FIXME WORKAROUND FOR RECURSIVE TYPES, ASSUMING THAT IT SHOULD BE USED AS A REFERENCE FOR A LOADER.
-    // @Author Marcos V. Candeia
-    memo[ref] = {
-      properties: {
-        returnType: {
-          const: btoa(ref),
-        },
-      },
-      format: "live-function",
-      type: "string",
-      title: def.title,
-    }; // recursive type by default
-  }
-  if (def?.$ref) {
-    def = flat(schema.definitions[keyFromRef(def.$ref)], schema, memo);
-  }
-  if (!def) {
-    return def;
-  }
-  if (def.allOf) {
-    def.allOf = def.allOf.map((v) => flat(v as JSONSchema7, schema, memo));
-  }
-  if (def.anyOf && def.anyOf.length > 0) {
+  for (const [key, value] of Object.entries(schema.definitions)) {
     const isFunctionReturn =
-      (def.anyOf[0] as JSONSchema7)?.$id === "Resolvable";
+      (value?.anyOf?.[0] as JSONSchema7)?.$ref === "#/definitions/Resolvable";
     if (isFunctionReturn) {
-      return {
+      definitions[key] = {
         properties: {
           returnType: {
-            const: ref ? btoa(ref) : "__MISSING__",
+            const: btoa(`#/definitions/${key}`),
           },
         },
         format: "live-function",
         type: "string",
-        title: def.title,
       };
+    } else {
+      definitions[key] = value;
     }
-    return {
-      ...def,
-      anyOf: def.anyOf.map((obj) => flat(obj as JSONSchema7, schema, memo)),
-    };
   }
-  if (def.type === "array") {
-    return { ...def, items: flat(def.items as JSONSchema7, schema, memo) };
-  }
-  const props: Record<string, JSONSchema7> = {};
-  for (const [propName, propValue] of Object.entries(def?.properties ?? {})) {
-    const flatObj = flat(propValue as JSONSchema7, schema, memo);
-    if (flatObj?.anyOf && flatObj.anyOf.length > 0) {
-      const funcRef = (flatObj.anyOf as JSONSchema7[]).find((schema) =>
-        schema.format === "live-function"
-      );
-      if (funcRef) {
-        props[propName] = { ...flatObj, anyOf: undefined, ...funcRef };
-        continue;
-      }
-    }
-    props[propName] = flatObj;
-  }
-  const resp = {
-    ...def,
-    properties: Object.keys(props).length > 0 ? props : undefined,
-  };
-  if (ref) {
-    memo[ref] = resp;
-  }
-  return resp;
+  return { ...schema, definitions };
 };
-const memo = {};
 const getInputAndOutputFromKey = (
   schema: Schemas,
   key: string,
@@ -252,7 +192,7 @@ const getInputAndOutputFromKey = (
     });
   });
   return [
-    configType ? flat({ $ref: configType }, schema, memo) : undefined,
+    configType ? { $ref: configType } : undefined,
     returnedByFunc
       ? {
         "type": "object",
@@ -418,6 +358,7 @@ export const generateEditorData = async (
   return {
     state: page?.state,
     pageName: page.name,
+    baseSchema: generateBaseSchema(schema),
     sections: sectionsWithSchema,
     functions: functionsWithSchema,
     availableSections: [...availableSections, ...await globalSections()],
