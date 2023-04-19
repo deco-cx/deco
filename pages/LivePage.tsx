@@ -319,7 +319,7 @@ function PreviewIcons() {
 }
 
 interface DefaultEditorEvent {
-  action: "move" | "edit" | "duplicate" | "delete";
+  action: "move" | "edit" | "duplicate" | "delete" | "insert";
   key: string;
   index: number;
 }
@@ -330,7 +330,12 @@ interface MoveEditorEvent extends DefaultEditorEvent {
   to: number;
 }
 
-type EditorEvent = DefaultEditorEvent | MoveEditorEvent;
+interface InsertEditorEvent extends DefaultEditorEvent {
+  action: "insert";
+  at: number;
+}
+
+type EditorEvent = DefaultEditorEvent | MoveEditorEvent | InsertEditorEvent;
 
 function sendEditorEvent(args: EditorEvent) {
   // check security issues
@@ -408,65 +413,91 @@ export function Preview({ sections }: Props) {
     <>
       {(sections ?? []).filter(notUndefined).map((d, i) => {
         const controls = (
-          <div data-controllers>
-            <div>{d.metadata?.component}</div>
-            <button
-              {...useSendEditorEvent({
-                action: "delete",
-                key: d.metadata?.component ?? "",
-                index: i,
-              })}
-            >
-              <PreviewIcon id="trash" />
-            </button>
-            <button
-              {...useSendEditorEvent({
-                action: "move",
-                key: d.metadata?.component ?? "",
-                index: i,
-                from: i,
-                to: i - 1,
-              })}
-            >
-              <PreviewIcon id="chevron-up" />
-            </button>
-            <button
-              {...useSendEditorEvent({
-                action: "move",
-                key: d.metadata?.component ?? "",
-                index: i,
-                from: i,
-                to: i + 1,
-              })}
-            >
-              <PreviewIcon id="chevron-down" />
-            </button>
-            {
-              /*
+          <>
+            <div data-insert="">
+              <button
+                data-insert="prev"
+                {...useSendEditorEvent({
+                  action: "insert",
+                  key: d.metadata?.component,
+                  index: i,
+                  at: i - 1,
+                })}
+              >
+                <PreviewIcon id="plus" />
+              </button>
+              <button
+                data-insert="next"
+                {...useSendEditorEvent({
+                  action: "insert",
+                  key: d.metadata?.component,
+                  index: i,
+                  at: i + 1,
+                })}
+              >
+                <PreviewIcon id="plus" />
+              </button>
+            </div>
+            <div data-controllers="">
+              <div>{d.metadata?.component}</div>
+              <button
+                {...useSendEditorEvent({
+                  action: "delete",
+                  key: d.metadata?.component,
+                  index: i,
+                })}
+              >
+                <PreviewIcon id="trash" />
+              </button>
+              <button
+                {...useSendEditorEvent({
+                  action: "move",
+                  key: d.metadata?.component,
+                  index: i,
+                  from: i,
+                  to: i - 1,
+                })}
+              >
+                <PreviewIcon id="chevron-up" />
+              </button>
+              <button
+                {...useSendEditorEvent({
+                  action: "move",
+                  key: d.metadata?.component,
+                  index: i,
+                  from: i,
+                  to: i + 1,
+                })}
+              >
+                <PreviewIcon id="chevron-down" />
+              </button>
+              {
+                /*
 <button>
               <PreviewIcon id="components" />
             </button>
             */
-            }
-            <button
-              {...useSendEditorEvent({
-                action: "duplicate",
-                key: d.metadata?.component ?? "",
-                index: i,
-              })}
-            >
-              <PreviewIcon id="copy" />
-            </button>
-            <button
-              {...useSendEditorEvent({
-                action: "edit",
-                key: d.metadata?.component ?? "",
-                index: i,
-              })}
-            >
-              <PreviewIcon id="edit" />
-            </button>
-          </div>
+              }
+              <button
+                {...useSendEditorEvent({
+                  action: "duplicate",
+                  key: d.metadata?.component,
+                  index: i,
+                })}
+              >
+                <PreviewIcon id="copy" />
+              </button>
+              <button
+                {...useSendEditorEvent({
+                  action: "edit",
+                  key: d.metadata?.component,
+                  index: i,
+                })}
+              >
+                <PreviewIcon id="edit" />
+              </button>
+            </div>
+          </>
         );
         return (
           <>
@@ -509,7 +540,8 @@ export function Preview({ sections }: Props) {
         }
 
         section[data-manifest-key]:hover:before,
-        section[data-manifest-key]:hover div[data-controllers] {
+        section[data-manifest-key]:hover div[data-controllers],
+        section[data-manifest-key]:hover div[data-insert] {
           display: flex;
         }
 
@@ -538,19 +570,50 @@ export function Preview({ sections }: Props) {
           white-space: nowrap;
         }
 
+        section[data-manifest-key] button:focus {
+          outline-style: none;
+        }
+
         div[data-controllers] button {
           padding: 8px 12px;
           display: flex;
           align-items: center;
-          cursor: pointer;
         }
 
-        div[data-controllers] button:focus {
-          outline-style: none;
-        }
-
-        div[data-controllers] button:hover {
+        div[data-controllers] button[data-control]:hover {
           background-color: #002525;
+        }
+
+        div[data-insert] {
+          display: none;
+          width: 100%;
+        }
+
+        div[data-insert] button {
+          background: #2E6ED9;
+          padding: 4px;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.25), 0px 8px 32px rgba(0, 0, 0, 0.2);
+          border-radius: 9999px;
+
+          position:absolute;
+          z-index: 1;
+          width: 28px;
+          left: 50%;
+        }
+
+        div[data-insert] button:first-child {
+          transform: translate(-14px, -14px);
+        }
+
+        div[data-insert] button:last-child {
+          bottom: 0;
+          transform: translate(-14px, 14px);
+        }
+
+        @media screen and (max-width: 1024px) {
+          div[data-insert] button {
+            left: calc((100vw - 340px) / 2);
+          }
         }
         `,
           }}
