@@ -72,7 +72,7 @@ if (await exists(metaJSONFilePath)) {
   await exec(GIT_ADD_COMMAND);
 
   const GIT_COMMIT_COMMAND =
-    `git commit -m "[live.ts@${newVersion}] Bump meta.json"`;
+    `git commit -m "[live.ts@${newVersion}] Bump meta.json" -n`;
   console.log(`Running \`${GIT_COMMIT_COMMAND}\``);
 
   await exec(GIT_COMMIT_COMMAND);
