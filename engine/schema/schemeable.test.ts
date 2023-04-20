@@ -15,6 +15,7 @@ import {
 } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
+import { fileSeparatorToSlash } from '$live/utils/filesystem.ts';
 import {
   assertSpyCall,
   assertSpyCalls,
@@ -23,7 +24,7 @@ import {
 
 const folder = dirname(import.meta.url);
 const file = "schemeable.test.types.ts";
-const filePath = fromFileUrl(join(folder, file));
+const filePath = fileSeparatorToSlash(fromFileUrl(join(folder, file)));
 
 const getSchemeableFor = async (
   name: string,
