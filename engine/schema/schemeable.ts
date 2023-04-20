@@ -74,6 +74,7 @@ const schemeableToJSONSchemaFunc = (
           true,
         ] as [Record<string, JSONSchema7>, JSONSchema7, boolean],
       );
+
       return [defNew, sc];
     }
     case "object": {

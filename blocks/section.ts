@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "$live/blocks/handler.ts";
-import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
 import StubSection from "$live/components/StubSection.tsx";
 import {
   Block,
@@ -10,12 +9,30 @@ import {
   PreactComponent,
 } from "$live/engine/block.ts";
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
-import { LoaderContext } from "$live/types.ts";
+import { DecoManifest, LoaderContext } from "$live/types.ts";
 import { JSX } from "preact";
+import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
+import type { Manifest } from "$live/live.gen.ts";
 import { Empty } from "$live/components/StubSection.tsx";
 import { context } from "$live/live.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
+
+export const isSection = <
+  K extends keyof TManifest["sections"],
+  Sec extends TManifest["sections"][K] extends
+    { default: (props: infer Props) => JSX.Element | null } ? PreactComponent<
+      JSX.Element,
+      Props
+    >
+    : unknown,
+  TManifest extends DecoManifest = Manifest,
+>(
+  s: Sec | Section,
+  section: K,
+): s is Sec => {
+  return (s as Section)?.metadata?.component === section;
+};
 
 export type SectionProps<T> = T extends PropsLoader<infer Props> ? Props
   : unknown;

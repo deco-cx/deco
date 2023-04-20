@@ -144,8 +144,8 @@ export type InstanceOf<
       ? `#/root/${T["type"]}` & ManifestSchemas
       : ManifestSchemas,
   TorBlockSerializable = T extends
-    Block<any, any, any, infer T, infer Serializable> ? Serializable
-    : T,
+    Block<BlockModule<any, any, infer TSerializable>> ? TSerializable
+    : never,
 > = TorBlockSerializable;
 
 export type ComponentFunc<
