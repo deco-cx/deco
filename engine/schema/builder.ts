@@ -2,6 +2,7 @@ import { JSONSchema7 } from "$live/deps.ts";
 import { mergeJSONSchemas } from "$live/engine/schema/merge.ts";
 import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
 import { Schemeable } from "$live/engine/schema/transform.ts";
+import { fileSeparatorToSlash } from "$live/utils/filesystem.ts";
 
 export interface Schemas {
   definitions: Record<string, JSONSchema7>;
@@ -169,7 +170,10 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
     },
     build(base: string, namespace: string) {
       // Utility functions
-      const canonical = canonicalFileWith(base, namespace);
+      const canonical = canonicalFileWith(
+        fileSeparatorToSlash(base),
+        namespace,
+      );
       const schemeableId = (
         schemeable: Schemeable,
       ): [string | undefined, string | undefined] => {
