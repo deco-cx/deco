@@ -1,5 +1,5 @@
 import { Head } from "$fresh/runtime.ts";
-import { inspectVSCode } from "../deps.ts";
+import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
 import type { Site } from "$live/types.ts";
 
 interface Page {
@@ -124,7 +124,13 @@ const main = () => {
   };
 
   //@ts-ignore: "DomInspector not available"
-  const inspector = new DomInspector(document.body);
+  const inspector = new DomInspector(document.body, {
+    outline: "1px dashed #2fd080",
+    backgroundColor: "rgba(47, 208, 128, 0.33)",
+    backgroundBlendMode: "multiply",
+    activator: DomInspectorActivators.Backquote,
+    path: "/live/inspect",
+  });
 
   /** Setup global variables */
   window.LIVE = {

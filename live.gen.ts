@@ -5,9 +5,9 @@
 import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import * as $$$$0 from "./routes/_middleware.ts";
-import * as $$$$1 from "./routes/live/invoke/index.ts";
-import * as $$$$2 from "./routes/live/editorData.ts";
-import * as $$$$3 from "./routes/live/inspect.ts";
+import * as $$$$1 from "./routes/live/inspect/[...block].ts";
+import * as $$$$2 from "./routes/live/invoke/index.ts";
+import * as $$$$3 from "./routes/live/editorData.ts";
 import * as $$$$4 from "./routes/live/workbench.ts";
 import * as $$$$5 from "./routes/live/previews/[...block].tsx";
 import * as $$$$6 from "./routes/live/_meta.ts";
@@ -37,9 +37,9 @@ const manifest = {
     "./routes/[...catchall].tsx": $$$$7,
     "./routes/index.tsx": $live_catchall,
     "./routes/live/_meta.ts": $$$$6,
-    "./routes/live/editorData.ts": $$$$2,
-    "./routes/live/inspect.ts": $$$$3,
-    "./routes/live/invoke/index.ts": $$$$1,
+    "./routes/live/editorData.ts": $$$$3,
+    "./routes/live/inspect/[...block].ts": $$$$1,
+    "./routes/live/invoke/index.ts": $$$$2,
     "./routes/live/previews/[...block].tsx": $$$$5,
     "./routes/live/workbench.ts": $$$$4,
   },
