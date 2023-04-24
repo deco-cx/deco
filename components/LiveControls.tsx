@@ -1,7 +1,6 @@
 import { Head } from "$fresh/runtime.ts";
-import { inspectVSCode } from "../deps.ts";
+import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
 import type { Site } from "$live/types.ts";
-import { DomInspectorActivators } from "https://deno.land/x/inspect_vscode@0.2.1/inspector.ts";
 
 interface Page {
   id: string | number;

@@ -69,8 +69,8 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
-    from: "$live/routes/live/inspect.ts",
-    key: "./routes/live/inspect.ts",
+    from: "$live/routes/live/inspect/[...block].ts",
+    key: "./routes/live/inspect/[...block].ts",
     ref: "$live_inspect",
   },
   {
