@@ -1,5 +1,4 @@
-import os from "https://deno.land/x/dos@v0.11.0/mod.ts";
-import { setupGithooks } from "https://deno.land/x/githooks@0.0.3/githooks.ts";
+import { setupGithooks } from "https://deno.land/x/githooks@0.0.4/githooks.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
@@ -165,11 +164,7 @@ export default async function dev(
 
   Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());
 
-  const shouldSetupGithooks = os.platform() !== "windows";
-
-  if (shouldSetupGithooks) {
-    await setupGithooks();
-  }
+  await setupGithooks();
   const manifestChanged = !currentManifest.equal(manifest);
 
   if (manifestChanged) {
