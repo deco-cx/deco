@@ -15,6 +15,7 @@ import { PreactComponent } from "$live/engine/block.ts";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import UseSlot from "$live/sections/UseSlot.tsx";
 import { Head } from "$fresh/runtime.ts";
+import { VNode } from "preact";
 
 export interface Props {
   name: string;
@@ -22,8 +23,9 @@ export interface Props {
   sections: Section[];
 }
 export function renderSection(
-  { Component: Section, props, metadata, controls }: Props["sections"][0],
+  { Component: Section, props, metadata }: Props["sections"][0],
   idx: number,
+  controls?: VNode | false,
 ) {
   return (
     // data-manifest-key used at preview
@@ -123,6 +125,7 @@ const useSlots = (
 const renderPage = (
   { layout, sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
+  preview = false,
 ): JSX.Element => {
   const validSections = maybeSections.filter(notUndefined);
   const layoutProps = layout?.props;
@@ -135,20 +138,28 @@ const renderPage = (
       sections,
     );
 
-    const rendered = renderPage(layoutProps, useSlots);
+    const rendered = renderPage(layoutProps, useSlots, preview);
     // unmatchedSlots are `UseSlot.tsx` that did not find a corresponding `Slot.tsx` with the same name, by default they are rendered at bottom
     const unmatchedSlots = Object.values(useSlots).filter((impl) => !impl.used);
     return (
       <>
         {rendered}
-        {unmatchedSlots.map((impl, i) => renderSection(impl.useSlotSection, i))}
+        {unmatchedSlots.map((impl, i) =>
+          renderSection(
+            impl.useSlotSection,
+            i,
+            preview && <Controls {...impl.useSlotSection.metadata} index={i} />,
+          )
+        )}
       </>
     );
   }
 
   return (
     <>
-      {sections.map(renderSection)}
+      {sections.map((d, i) =>
+        renderSection(d, i, preview && <Controls {...d} index={i} />)
+      )}
     </>
   );
 };
@@ -176,6 +187,8 @@ export default function LivePage(
     </>
   );
 }
+
+// Preview site
 
 interface PreviewIconProps extends JSX.HTMLAttributes<SVGSVGElement> {
   id:
@@ -401,110 +414,114 @@ function sendEditorEvent(args: EditorEvent) {
 //     onclick: `${sendEvent}${extraOp}`,
 //   };
 // }
-//
+
 function useSendEditorEvent(args: EditorEvent) {
+  if (!args.key) return {};
+
   return {
     onclick: `sendEditorEvent(${JSON.stringify(args)});`,
   };
 }
 
-export function Preview({ sections }: Props) {
+interface ControlsProps {
+  metadata?: UseSlotSection["useSlotSection"]["metadata"];
+  index: number;
+}
+
+function Controls({ metadata, index: i }: ControlsProps) {
   return (
     <>
-      {(sections ?? []).filter(notUndefined).map((d, i) => {
-        const controls = (
-          <>
-            <div data-insert="">
-              <button
-                data-insert="prev"
-                {...useSendEditorEvent({
-                  action: "insert",
-                  key: d.metadata?.component,
-                  index: i,
-                  at: i - 1,
-                })}
-              >
-                <PreviewIcon id="plus" />
-              </button>
-              <button
-                data-insert="next"
-                {...useSendEditorEvent({
-                  action: "insert",
-                  key: d.metadata?.component,
-                  index: i,
-                  at: i + 1,
-                })}
-              >
-                <PreviewIcon id="plus" />
-              </button>
-            </div>
-            <div data-controllers="">
-              <div>{d.metadata?.component}</div>
-              <button
-                {...useSendEditorEvent({
-                  action: "delete",
-                  key: d.metadata?.component,
-                  index: i,
-                })}
-              >
-                <PreviewIcon id="trash" />
-              </button>
-              <button
-                {...useSendEditorEvent({
-                  action: "move",
-                  key: d.metadata?.component,
-                  index: i,
-                  from: i,
-                  to: i - 1,
-                })}
-              >
-                <PreviewIcon id="chevron-up" />
-              </button>
-              <button
-                {...useSendEditorEvent({
-                  action: "move",
-                  key: d.metadata?.component,
-                  index: i,
-                  from: i,
-                  to: i + 1,
-                })}
-              >
-                <PreviewIcon id="chevron-down" />
-              </button>
-              {
-                /*
+      <div data-insert="">
+        <button
+          data-insert="prev"
+          {...useSendEditorEvent({
+            action: "insert",
+            key: metadata?.component ?? "",
+            index: i,
+            at: i - 1,
+          })}
+        >
+          <PreviewIcon id="plus" />
+        </button>
+        <button
+          data-insert="next"
+          {...useSendEditorEvent({
+            action: "insert",
+            key: metadata?.component ?? "",
+            index: i,
+            at: i + 1,
+          })}
+        >
+          <PreviewIcon id="plus" />
+        </button>
+      </div>
+      <div data-controllers="">
+        <div>{metadata?.component}</div>
+        <button
+          {...useSendEditorEvent({
+            action: "delete",
+            key: metadata?.component ?? "",
+            index: i,
+          })}
+        >
+          <PreviewIcon id="trash" />
+        </button>
+        <button
+          {...useSendEditorEvent({
+            action: "move",
+            key: metadata?.component ?? "",
+            index: i,
+            from: i,
+            to: i - 1,
+          })}
+        >
+          <PreviewIcon id="chevron-up" />
+        </button>
+        <button
+          {...useSendEditorEvent({
+            action: "move",
+            key: metadata?.component ?? "",
+            index: i,
+            from: i,
+            to: i + 1,
+          })}
+        >
+          <PreviewIcon id="chevron-down" />
+        </button>
+        {
+          /*
 <button>
               <PreviewIcon id="components" />
             </button>
             */
-              }
-              <button
-                {...useSendEditorEvent({
-                  action: "duplicate",
-                  key: d.metadata?.component,
-                  index: i,
-                })}
-              >
-                <PreviewIcon id="copy" />
-              </button>
-              <button
-                {...useSendEditorEvent({
-                  action: "edit",
-                  key: d.metadata?.component,
-                  index: i,
-                })}
-              >
-                <PreviewIcon id="edit" />
-              </button>
-            </div>
-          </>
-        );
-        return (
-          <>
-            {renderSection({ ...d, controls }, i)}
-          </>
-        );
-      })}
+        }
+        <button
+          {...useSendEditorEvent({
+            action: "duplicate",
+            key: metadata?.component ?? "",
+            index: i,
+          })}
+        >
+          <PreviewIcon id="copy" />
+        </button>
+        <button
+          {...useSendEditorEvent({
+            action: "edit",
+            key: metadata?.component ?? "",
+            index: i,
+          })}
+        >
+          <PreviewIcon id="edit" />
+        </button>
+      </div>
+    </>
+  );
+}
+
+export function Preview(props: Props) {
+  return (
+    <>
+      {renderPage(props, {}, true)}
 
       {/* Don't ship it to production */}
       {
