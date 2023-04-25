@@ -29,7 +29,7 @@ type ConfigurableRoute = {
 };
 
 const hasAnyMethod = (obj: Record<string, any>): boolean => {
-  for (const method in METHODS) {
+  for (const method of METHODS) {
     if (obj[method]) {
       return true;
     }
