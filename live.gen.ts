@@ -29,7 +29,6 @@ import * as $$$$$$$$$5 from "./matchers/MatchEnvironment.ts";
 import * as $$$$$$$$$6 from "./matchers/MatchAlways.ts";
 import * as $$$$$$$$$$0 from "./flags/audience.ts";
 import * as $$$$$$$$$$1 from "./flags/everyone.ts";
-import * as $$$$$$$$$$$0 from "./actions/myAction.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
 
 const manifest = {
@@ -70,9 +69,6 @@ const manifest = {
   "flags": {
     "$live/flags/audience.ts": $$$$$$$$$$0,
     "$live/flags/everyone.ts": $$$$$$$$$$1,
-  },
-  "actions": {
-    "$live/actions/myAction.ts": $$$$$$$$$$$0,
   },
   "islands": {},
   "config": config,
