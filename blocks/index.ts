@@ -1,4 +1,5 @@
 import accountBlock from "$live/blocks/account.ts";
+import actionBlock from "$live/blocks/action.ts";
 import flagBlock from "$live/blocks/flag.ts";
 import functionBlock from "$live/blocks/function.ts";
 import handlerBlock from "$live/blocks/handler.ts";
@@ -21,4 +22,5 @@ export default [
   sectionBlock,
   matcherBlock,
   flagBlock,
+  actionBlock,
 ] as Block[];

@@ -20,7 +20,7 @@ export interface BlockModuleRef {
 export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
 export type BlockModule<
   TDefaultExportFunc extends ResolverLike<T> = ResolverLike,
-  T = any,
+  T = TDefaultExportFunc extends ResolverLike<infer TValue> ? TValue : any,
   TSerializable = T,
 > = {
   default: TDefaultExportFunc;
@@ -143,10 +143,8 @@ export type InstanceOf<
     : ManifestSchemas = T extends Block
       ? `#/root/${T["type"]}` & ManifestSchemas
       : ManifestSchemas,
-  TorBlockSerializable = T extends
-    Block<BlockModule<any, any, infer TSerializable>> ? TSerializable
-    : never,
-> = TorBlockSerializable;
+> = T extends Block<BlockModule<any, any, infer TSerializable>> ? TSerializable
+  : T;
 
 export type ComponentFunc<
   TProps = any,
