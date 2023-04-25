@@ -22,10 +22,20 @@ export interface Props {
   layout?: Page;
   sections: Section[];
 }
+
+export function renderSection(
+  props: Props["sections"][0],
+  idx: number,
+): JSX.Element;
+export function renderSection(
+  props: Props["sections"][0],
+  idx: number,
+  controls: VNode | false,
+): JSX.Element;
 export function renderSection(
   { Component: Section, props, metadata }: Props["sections"][0],
   idx: number,
-  controls?: VNode | false,
+  controls: VNode | false = false,
 ) {
   return (
     // data-manifest-key used at preview
@@ -419,7 +429,7 @@ function useSendEditorEvent(args: EditorEvent) {
   if (!args.key) return {};
 
   return {
-    onclick: `sendEditorEvent(${JSON.stringify(args)});`,
+    onclick: `window.LIVE.sendEditorEvent(${JSON.stringify(args)});`,
   };
 }
 
@@ -640,7 +650,10 @@ export function Preview(props: Props) {
       <PreviewIcons />
       <script
         dangerouslySetInnerHTML={{
-          __html: `window.sendEditorEvent = ${sendEditorEvent.toString()};`,
+          __html: `window.LIVE = {
+            ...window.LIVE,
+            sendEditorEvent: ${sendEditorEvent.toString()}
+          };`,
         }}
       />
     </>
