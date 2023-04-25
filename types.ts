@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import type { Manifest } from "$fresh/server.ts";
 import accountBlock from "$live/blocks/account.ts";
+import actionBlock from "$live/blocks/action.ts";
 import flagBlock from "$live/blocks/flag.ts";
 import functionBlock from "$live/blocks/function.ts";
 import handlerBlock from "$live/blocks/handler.ts";
@@ -19,6 +20,7 @@ export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
   islands: Record<string, ModuleOf<typeof islandBlock>>;
+  actions?: Record<string, ModuleOf<typeof actionBlock>>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
   functions?: Record<string, ModuleOf<typeof functionBlock>>;
   loaders?: Record<string, ModuleOf<typeof loaderBlock>>;
@@ -62,6 +64,11 @@ export type LiveConfig<TConfig = any, TState = any> = TState & {
   $live: TConfig;
   resolve: ResolveFunc;
 };
+
+// deno-lint-ignore ban-types
+export type ActionContext<TProps = any, TState = {}> = StatefulContext<
+  LiveConfig<TProps, TState>
+>;
 
 // deno-lint-ignore ban-types
 export type LoaderContext<TProps = any, TState = {}> = StatefulContext<

@@ -14,7 +14,7 @@ const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
     return undefined;
   }
 
-  const urlPattern = new URLPattern({ pathname });
+  const urlPattern = new URLPattern({ pathname: pathTemplate });
   const params = urlPattern.exec({ pathname })?.pathname.groups;
   return params;
 };
@@ -58,13 +58,16 @@ export const handler = async (
 
   const block = addLocal(ctx.params.block);
 
-  ctx.params = paramsFromUrl(url) ?? ctx.params;
   const end = ctx.state?.t.start("load-data");
-  const page = await resolve({
-    __resolveType: "preview",
-    block,
-    props,
-  });
+  const page = await resolve(
+    {
+      __resolveType: "preview",
+      block,
+      props,
+    },
+    false,
+    { context: { ...ctx, params: paramsFromUrl(url) ?? ctx.params } },
+  );
   end && end();
 
   return await ctx.render(

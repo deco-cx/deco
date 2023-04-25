@@ -67,8 +67,9 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
   <T = any>(
     typeOrResolvable: string | Resolvable<T>,
     forceFresh?: boolean,
+    partialCtx: Partial<Omit<TContext, keyof BaseContext>> = {},
   ): Promise<T> => {
-    return this.resolve(typeOrResolvable, context, {
+    return this.resolve(typeOrResolvable, { ...context, ...partialCtx }, {
       ...options ?? {},
       forceFresh: forceFresh ?? options?.forceFresh,
     });

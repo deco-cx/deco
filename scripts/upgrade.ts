@@ -296,7 +296,6 @@ if (import.meta.main) {
             promises.push(Deno.stdout.write(enc.encode(color(part.value))));
           });
           await Promise.all(promises);
-          console.log();
         }
       }
       const shouldProceed = confirm("Do you want to proceed?");
