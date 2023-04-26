@@ -15,7 +15,7 @@ import { Audience } from "$live/flags/audience.ts";
 import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
 import { JSONSchema } from "$live/types.ts";
-import { allowCors, defaultHeaders } from "$live/utils/http.ts";
+import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { filenameFromPath } from "$live/utils/page.ts";
 import {
   JSONSchema7,
@@ -83,7 +83,7 @@ export const redirectTo = (url: URL) =>
       headers: {
         ...defaultHeaders,
         "Location": url.toString(),
-        ...allowCors,
+        ...allowCorsFor(),
       },
     },
   );

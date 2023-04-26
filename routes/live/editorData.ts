@@ -1,5 +1,5 @@
 import { generateEditorData } from "$live/compatibility/v0/editorData.ts";
-import { allowCors } from "$live/utils/http.ts";
+import { allowCorsFor } from "$live/utils/http.ts";
 
 export const handler = async (req: Request) => {
   const url = new URL(req.url);
@@ -9,7 +9,7 @@ export const handler = async (req: Request) => {
       url,
     ),
     {
-      headers: allowCors,
+      headers: allowCorsFor(req),
     },
   );
 };

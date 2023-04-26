@@ -2,7 +2,7 @@ import { context } from "$live/live.ts";
 import { toManifestBlocks } from "$live/routes/live/_meta.ts";
 import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { basename } from "std/path/mod.ts";
-import { allowCors } from "$live/utils/http.ts";
+import { allowCorsFor } from "$live/utils/http.ts";
 
 export interface Node {
   label: string;
@@ -96,7 +96,7 @@ export const getWorkbenchTree = (state: Record<string, string>): Node[] => {
   }, ...nodes];
 };
 
-export const handler = async (_req: Request) => {
+export const handler = async (req: Request) => {
   const state = await context.configStore!.state();
   const stateIndexed: Record<string, string> = {};
 
@@ -110,7 +110,7 @@ export const handler = async (_req: Request) => {
     status: 200,
     headers: {
       "content-type": "application/json",
-      ...allowCors,
+      ...allowCorsFor(req),
     },
   });
 };
