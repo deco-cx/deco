@@ -182,5 +182,5 @@ export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
     return start;
   }
   // frombase64
-  return JSON.parse(atob(props));
+  return JSON.parse(decodeURIComponent(atob(props)));
 };
