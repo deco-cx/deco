@@ -184,3 +184,10 @@ export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
   // frombase64
   return JSON.parse(decodeURIComponent(atob(props)));
 };
+
+export const allowCors: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, *",
+};
