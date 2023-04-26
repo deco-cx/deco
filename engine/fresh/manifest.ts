@@ -110,8 +110,8 @@ const asManifest = (
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
 
-const danglingModuleTS = "__dangling.ts";
-const danglingModuleTSX = "__dangling.tsx";
+const danglingModuleTS = "_dangling.ts";
+const danglingModuleTSX = "_dangling.tsx";
 const wellKnownLocalModules = [
   danglingModuleTS,
   danglingModuleTSX,
