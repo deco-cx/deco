@@ -52,6 +52,9 @@ const functionBlock: Block<FunctionModule> = {
       return data;
     },
   ],
+  defaultDanglingRecover: () => {
+    return { data: null };
+  },
   defaultPreview: (result) => {
     return {
       Component: JsonViewer,
