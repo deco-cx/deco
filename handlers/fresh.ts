@@ -1,7 +1,8 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
+import { RouterContext } from "$live/types.ts";
+import { allowCors } from "$live/utils/http.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { RouterContext } from "../types.ts";
 
 export interface FreshConfig {
   page: Page;
@@ -16,7 +17,7 @@ export default function Fresh(page: FreshConfig) {
   return (req: Request, ctx: ConnInfo) => {
     const url = new URL(req.url);
     if (url.searchParams.get("asJson") !== null) {
-      return Response.json(page);
+      return Response.json(page, { headers: allowCors });
     }
     return isFreshCtx<{ routerInfo: RouterContext }>(ctx)
       ? ctx.render({ ...page, routerInfo: ctx.state.routerInfo })

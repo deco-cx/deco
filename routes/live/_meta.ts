@@ -6,6 +6,7 @@ import meta from "$live/meta.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import { namespaceOf } from "$live/engine/schema/gen.ts";
 import { major } from "std/semver/mod.ts";
+import { allowCors } from "../../utils/http.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -46,7 +47,7 @@ export const toManifestBlocks = (
   return { blocks: manBlocks };
 };
 
-export const handler = async (req: Request, __: HandlerContext) => {
+export const handler = async (_req: Request, __: HandlerContext) => {
   const schema = await getCurrent();
   const info: MetaInfo = {
     major: major(meta.version),
@@ -61,10 +62,7 @@ export const handler = async (req: Request, __: HandlerContext) => {
     {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": req.headers.get("origin") || "*",
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, *",
+        ...allowCors,
       },
     },
   );
