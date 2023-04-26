@@ -466,7 +466,7 @@ function Controls({ metadata, index: i }: ControlsProps) {
         </button>
       </div>
       <div data-controllers="">
-        <div>{metadata?.component}</div>
+        <div title={metadata?.component}>{metadata?.component}</div>
         <button
           {...useSendEditorEvent({
             action: "delete",
