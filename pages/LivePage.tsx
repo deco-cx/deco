@@ -448,7 +448,7 @@ function Controls({ metadata, index: i }: ControlsProps) {
             action: "insert",
             key: metadata?.component ?? "",
             index: i,
-            at: i - 1,
+            at: i,
           })}
         >
           <PreviewIcon id="plus" />
