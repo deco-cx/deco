@@ -1,31 +1,17 @@
-import { Flag } from "$live/blocks/flag.ts";
-import { MatchContext, Matcher } from "$live/blocks/matcher.ts";
+import { MatchContext } from "$live/blocks/matcher.ts";
 import { ResolveOptions } from "$live/engine/core/mod.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
 import { CookiedFlag, cookies } from "$live/flags.ts";
-import { Audience } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
 import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
+import { BlockInstance } from "../engine/block.ts";
 
 export interface SelectionConfig {
-  flags: Flag[]; // TODO it should be possible to specify a Flag<T> instead. author Marcos V. Candeia
+  audiences: BlockInstance<"$live/flags/audience.ts">[];
 }
-
-interface AudienceFlag {
-  name: string;
-  matcher: Matcher;
-  true: Pick<Audience, "routes" | "overrides">;
-}
-
-const isAudience = (f: Flag | AudienceFlag): f is AudienceFlag => {
-  return (
-    (f as AudienceFlag).true?.routes !== undefined ||
-    (f as AudienceFlag).true?.overrides !== undefined
-  );
-};
 
 const rankRoute = (pattern: string) =>
   pattern
@@ -92,8 +78,9 @@ export type MatchWithCookieValue = MatchContext<{
   isMatchFromCookie?: boolean;
 }>;
 
-export default function RoutesSelection({ flags }: SelectionConfig): Handler {
-  const audiences = flags.filter(isAudience) as AudienceFlag[];
+export default function RoutesSelection(
+  { audiences }: SelectionConfig,
+): Handler {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const cacheControl = req.headers.get("Cache-Control");
     const isNoCache = cacheControl === "no-cache";

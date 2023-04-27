@@ -229,6 +229,25 @@ const schemeableWellKnownType = async (
 
       return tsTypeToSchemeableRec(typeRef, root, seen);
     }
+    case "BlockInstance": {
+      if ((ref.typeParams?.length ?? 0) < 1) {
+        return undefined;
+      }
+      const configName = ref.typeParams![0];
+      if (configName.kind !== "literal") {
+        return undefined;
+      }
+      const literal = configName.literal;
+      if (literal.kind !== "string") {
+        return undefined;
+      }
+      return {
+        type: "inline",
+        value: {
+          $ref: `#/definitions/${btoa(literal.string)}`,
+        },
+      };
+    }
     case "InstanceOf": {
       if ((ref.typeParams?.length ?? 0) < 2) {
         return undefined;

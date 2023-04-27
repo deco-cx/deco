@@ -1,4 +1,4 @@
-import { Flag } from "$live/blocks/flag.ts";
+import { FlagObj } from "$live/blocks/flag.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
@@ -15,6 +15,11 @@ export default function Audience({
   routes,
   name,
   overrides,
-}: Audience): Flag {
-  return { matcher, true: { routes, overrides }, false: {}, name };
+}: Audience): FlagObj<Pick<Audience, "routes" | "overrides">> {
+  return {
+    matcher,
+    true: { routes, overrides },
+    false: { routes: {}, overrides: {} },
+    name,
+  };
 }
