@@ -39,22 +39,18 @@ async ($live: TConfig) => {
 };
 
 // deno-lint-ignore no-empty-interface
-export interface FnContext<> {
+export interface FnContext {
 }
 export type FnProps<
   TProps = any,
   TResp = any,
-  // deno-lint-ignore ban-types
-  TState = {},
-  TCtx extends FnContext = FnContext,
-> = (props: TProps, ctx: TCtx) => PromiseOrValue<TResp>;
+> = (props: TProps, ctx: FnContext) => PromiseOrValue<TResp>;
 
 export const applyProps = <
-  TCtx extends FnContext = FnContext,
   TProps = any,
   TResp = any,
 >(func: {
-  default: FnProps<TProps, TResp, TCtx>;
+  default: FnProps<TProps, TResp>;
 }) =>
 async ($live: TProps) => {
   return await func.default($live, {});

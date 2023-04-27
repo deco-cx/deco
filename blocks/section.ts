@@ -9,7 +9,7 @@ import {
   PreactComponent,
 } from "$live/engine/block.ts";
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
-import { DecoManifest, LoaderContext } from "$live/types.ts";
+import { DecoManifest, FunctionContext } from "$live/types.ts";
 import { JSX } from "preact";
 import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
 import type { Manifest } from "$live/live.gen.ts";
@@ -94,7 +94,7 @@ const sectionBlock: Block<SectionModule> = {
       const ctx = {
         ...context,
         state: { ...context.state, $live: props, resolve },
-      } as LoaderContext;
+      } as FunctionContext;
       return componentFunc(
         await propsLoader(loader, ctx, request),
         resolveChain,

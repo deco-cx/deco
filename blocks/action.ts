@@ -1,30 +1,25 @@
 // deno-lint-ignore-file no-explicit-any
-import { FnProps, applyProps } from "$live/blocks/utils.ts";
+import { applyProps, FnProps } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { ActionContext, LiveConfig } from "$live/types.ts";
 
 export type Action = InstanceOf<typeof actionBlock, "#/root/actions">;
 
 export type ActionModule<
-  TConfig = any,
-  Ctx extends ActionContext<LiveConfig<any, TConfig>> = ActionContext<
-    LiveConfig<any, TConfig>
-  >,
-> = BlockModule<FnProps<any, any, Ctx>>;
+  TProps = any,
+> = BlockModule<FnProps<TProps>>;
 
 const actionBlock: Block<ActionModule> = {
   type: "actions",
   introspect: {
-    "default": ["1", "state.$live"],
+    "default": "0",
   },
   adapt: <
-    TCtx extends ActionContext<any> = ActionContext<any>,
-    TConfig = any,
+    TProps = any,
   >(
-    mod: ActionModule<TConfig, TCtx>,
+    mod: ActionModule<TProps>,
   ) => [
-   applyProps(mod),
+    applyProps(mod),
   ],
   defaultPreview: (result) => {
     return {

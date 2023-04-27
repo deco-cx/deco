@@ -14,7 +14,8 @@ import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { ResolveFunc } from "$live/engine/core/resolver.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { PromiseOrValue } from "./engine/core/utils.ts";
+import { FnContext } from "$live/blocks/utils.ts";
+import { PromiseOrValue } from "$live/engine/core/utils.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
@@ -66,18 +67,16 @@ export type LiveConfig<TConfig = any, TState = any> = TState & {
   resolve: ResolveFunc;
 };
 
+export type ActionContext = FnContext;
+
 // deno-lint-ignore ban-types
-export type ActionContext<TProps = any, TState = {}> = StatefulContext<
+export type FunctionContext<TProps = any, TState = {}> = StatefulContext<
   LiveConfig<TProps, TState>
 >;
 
-// deno-lint-ignore ban-types
-export type LoaderContext<TProps = any, TState = {}> = StatefulContext<
-  LiveConfig<TProps, TState>
->;
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
-  ctx: LoaderContext<Props, State>,
+  ctx: FunctionContext<Props, State>,
   props: Props,
 ) => PromiseOrValue<
   { data: Data } & Partial<Pick<Response, "status" | "headers">>
