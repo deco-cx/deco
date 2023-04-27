@@ -10,7 +10,10 @@ import { ConnInfo, Handler } from "std/http/server.ts";
 import { BlockInstance } from "../engine/block.ts";
 
 export interface SelectionConfig {
-  audiences: BlockInstance<"$live/flags/audience.ts">[];
+  audiences: (
+    | BlockInstance<"$live/flags/audience.ts">
+    | BlockInstance<"$live/flags/everyone.ts">
+  )[];
 }
 
 const rankRoute = (pattern: string) =>
@@ -99,6 +102,7 @@ export default function RoutesSelection(
     // track flags that aren't on the original cookie or changed its `isMatch` property.
     const flagsThatShouldBeCookied: CookiedFlag[] = [];
 
+    // everyone should come first in the list given that we override the everyone value with the upcoming flags.
     const [routes, overrides] = audiences
       .reduce(
         ([routes, overrides], audience) => {

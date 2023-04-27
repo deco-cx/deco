@@ -80,7 +80,14 @@
         "audiences": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
+            "anyOf": [
+              {
+                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
+              },
+              {
+                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
+              }
+            ]
           },
           "title": "Audiences"
         }

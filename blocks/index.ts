@@ -23,4 +23,4 @@ export default [
   matcherBlock,
   flagBlock,
   actionBlock,
-] satisfies Block[];
+] as Block[];
