@@ -108,6 +108,33 @@ const schemeableWellKnownType = async (
   seen: Map<DocNode, Schemeable>,
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
+    case "Partial": {
+      if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
+        return {
+          type: "unknown",
+        };
+      }
+      const schemeable = await tsTypeToSchemeableRec(
+        ref.typeParams![0],
+        root,
+        seen,
+      );
+      if (schemeable.type !== "object") { // TODO(mcandeia) support arrays, unions and intersections
+        return {
+          type: "unknown",
+        };
+      }
+
+      const newProperties: ObjectSchemeable["value"] = {};
+      for (const [key, value] of Object.entries(schemeable.value)) {
+        newProperties[key] = { ...value, required: false };
+      }
+      return {
+        ...schemeable,
+        value: newProperties,
+        name: schemeable.name ? `partial${schemeable.name}` : undefined,
+      };
+    }
     case "Promise": {
       if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
         return {
