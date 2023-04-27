@@ -74,27 +74,26 @@
       ],
       "title": "$live/handlers/router.ts@RouterConfig"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
-      "$ref": "#/root/flags",
-      "title": "Flag"
-    },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
-      },
-      "title": "Flag[]"
-    },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
       "properties": {
-        "flags": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag[]",
-          "title": "Flags"
+        "audiences": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
+              },
+              {
+                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
+              }
+            ]
+          },
+          "title": "Audiences"
         }
       },
       "required": [
-        "flags"
+        "audiences"
       ],
       "title": "$live/handlers/routesSelection.ts@SelectionConfig"
     },

@@ -7,7 +7,7 @@ import { context } from "$live/live.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 // TODO Inheritance flag is not working Author Marcos V. Candeia
-interface FlagObj<T = unknown> {
+export interface FlagObj<T = unknown> {
   matcher: Matcher;
   name: string;
   true: T;

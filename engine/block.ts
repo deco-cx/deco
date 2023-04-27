@@ -9,7 +9,9 @@ import {
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import { JSX } from "preact";
-import { DotNestedKeys } from "../utils/object.ts";
+import { DotNestedKeys } from "$live/utils/object.ts";
+import type { Manifest } from "$live/live.gen.ts";
+import { DecoManifest } from "$live/types.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;
@@ -145,6 +147,33 @@ export type InstanceOf<
       : ManifestSchemas,
 > = T extends Block<BlockModule<any, any, infer TSerializable>> ? TSerializable
   : T;
+
+export type BlockTypes<TManifest extends DecoManifest = Manifest> = keyof Omit<
+  TManifest,
+  "config" | "baseUrl"
+>;
+
+export type BlockKeys<TManifest extends DecoManifest = Manifest> = {
+  [key in keyof Pick<TManifest, BlockTypes<TManifest>>]: keyof Pick<
+    TManifest,
+    BlockTypes<TManifest>
+  >[key];
+}[keyof Pick<TManifest, BlockTypes<TManifest>>];
+
+// TODO each block should be specialized on how to get its serialized version.
+export type BlockInstance<
+  key extends BlockKeys<TManifest>,
+  TManifest extends DecoManifest = Manifest,
+> = key extends `${string}/${infer block}/${string}`
+  ? block extends BlockTypes<TManifest>
+    ? TManifest[block][key] extends
+      { default: (...args: infer Props) => PromiseOrValue<infer TReturn> }
+      ? TReturn extends (JSX.Element | null)
+        ? PreactComponent<JSX.Element | null, Props[0]>
+      : TReturn
+    : unknown
+  : unknown
+  : unknown;
 
 export type ComponentFunc<
   TProps = any,

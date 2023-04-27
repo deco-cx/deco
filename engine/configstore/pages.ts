@@ -246,7 +246,7 @@ const baseEntrypoint = {
   [catchAllConfig]: {
     __resolveType: "resolve",
     handler: {
-      flags: [
+      audiences: [
         {
           __resolveType: everyoneAudience,
         },
@@ -351,8 +351,8 @@ const flagsToConfig = (
         ...catchall,
         handler: {
           ...catchall.handler,
-          flags: [
-            ...catchall.handler.flags,
+          audiences: [
+            ...catchall.handler.audiences,
             {
               __resolveType: flag.key,
             },
