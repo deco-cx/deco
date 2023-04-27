@@ -14,7 +14,6 @@ import { JSX } from "preact/jsx-runtime";
 import { PreactComponent } from "$live/engine/block.ts";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import UseSlot from "$live/sections/UseSlot.tsx";
-import { VNode } from "preact";
 import LivePagePreview, {
   SectionControls,
 } from "$live/components/LivePagePreview.tsx";
@@ -25,31 +24,25 @@ export interface Props {
   sections: Section[];
 }
 
-export function renderSection(
-  props: Props["sections"][0],
-  idx: number,
-): JSX.Element;
-export function renderSection(
-  props: Props["sections"][0],
-  idx: number,
-  controls: VNode | false,
-): JSX.Element;
-export function renderSection(
-  { Component: Section, props, metadata }: Props["sections"][0],
-  idx: number,
-  controls: VNode | false = false,
-) {
-  return (
-    // data-manifest-key used at preview
-    <section
-      id={`${metadata?.component}-${idx}`}
-      data-manifest-key={metadata?.component}
-    >
-      {controls}
-      <Section {...props} />
-    </section>
-  );
+function renderSectionFor(preview?: boolean) {
+  const Controls = preview ? SectionControls : () => null;
+  return function _renderSection(
+    { Component: Section, props, metadata }: Props["sections"][0],
+    idx: number,
+  ) {
+    return (
+      <section
+        id={`${metadata?.component}-${idx}`}
+        data-manifest-key={metadata?.component}
+      >
+        <Controls metadata={metadata} index={idx} />
+        <Section {...props} />
+      </section>
+    );
+  };
 }
+
+export const renderSection = renderSectionFor();
 
 interface UseSlotSection {
   useSlotSection: PreactComponent<JSX.Element, UseSlotProps>;
@@ -144,6 +137,7 @@ const renderPage = (
   const sections = Object.keys(useSlotsFromChild).length > 0
     ? validSections.map(useSlots(useSlotsFromChild))
     : validSections;
+  const _renderSection = renderSectionFor(preview);
 
   if (layoutProps && isLivePageProps(layoutProps)) {
     const useSlots = indexedBySlotName(
@@ -156,14 +150,8 @@ const renderPage = (
     return (
       <>
         {rendered}
-        {unmatchedSlots.map((impl, i) =>
-          renderSection(
-            impl.useSlotSection,
-            i,
-            preview && (
-              <SectionControls {...impl.useSlotSection.metadata} index={i} />
-            ),
-          )
+        {unmatchedSlots.map((impl, idx) =>
+          _renderSection(impl.useSlotSection, idx)
         )}
       </>
     );
@@ -171,9 +159,7 @@ const renderPage = (
 
   return (
     <>
-      {sections.map((d, i) =>
-        renderSection(d, i, preview && <SectionControls {...d} index={i} />)
-      )}
+      {sections.map(_renderSection)}
     </>
   );
 };

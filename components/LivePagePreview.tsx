@@ -7,7 +7,6 @@ interface PreviewIconProps extends JSX.HTMLAttributes<SVGSVGElement> {
     | "trash"
     | "chevron-up"
     | "chevron-down"
-    | "components"
     | "copy"
     | "edit"
     | "plus";
@@ -71,24 +70,6 @@ function PreviewIcons() {
       >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
         <polyline points="6 9 12 15 18 9" />
-      </symbol>
-      <symbol
-        id="components"
-        xmlns="http://www.w3.org/2000/svg"
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="#ffffff"
-        fill="none"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M3 12l3 3l3 -3l-3 -3z" />
-        <path d="M15 12l3 3l3 -3l-3 -3z" />
-        <path d="M9 6l3 3l3 -3l-3 -3z" />
-        <path d="M9 18l3 3l3 -3l-3 -3z" />
       </symbol>
       <symbol
         id="copy"
@@ -168,67 +149,6 @@ function sendEditorEvent(args: EditorEvent) {
     top?.postMessage({ type: "edit", ...args }, "*");
 }
 
-function _deleteSection(args: DefaultEditorEvent) {
-  const section = document.querySelector(
-    `section[id="${args.key}-${args.index}"]`,
-  );
-
-  section?.parentNode?.removeChild(section);
-}
-
-function _moveSection(args: MoveEditorEvent) {
-  const section = document.querySelector(
-    `section[id="${args.key}-${args.index}"]`,
-  );
-
-  if (!section) return;
-
-  if (args.from < args.to && section.nextSibling) {
-    // move down;
-    section?.parentNode?.insertBefore(section.nextSibling, section);
-  } else if (args.from > args.to && section.previousSibling) {
-    // move up
-    section.parentNode?.insertBefore(section, section.previousSibling);
-  }
-  section.scrollIntoView({ behavior: "smooth" });
-}
-
-function duplicateSection(args: EditorEvent) {
-  const section = document.querySelector(
-    `section[id="${args.key}-${args.index}"]`,
-  );
-
-  if (!section) return;
-
-  const newSection = section.cloneNode(true);
-  (newSection as HTMLElement).id = `${
-    (newSection as HTMLElement).dataset.manifestKey
-  }-${args.index + 1}`;
-  section?.parentNode?.insertBefore(newSection, section.nextSibling);
-}
-
-function _useSendEditorEvent(_args: EditorEvent) {
-  const args = { ..._args };
-  const sendEvent = `sendEditorEvent(${JSON.stringify(args)});`;
-  let extraOp = "";
-
-  if (args.action === "delete") {
-    extraOp = `deleteSection(${JSON.stringify(args)});`;
-  }
-
-  if (args.action === "move") {
-    extraOp = `moveSection(${JSON.stringify(args)})`;
-  }
-
-  if (args.action === "duplicate") {
-    extraOp = `duplicateSection(${JSON.stringify(args)})`;
-  }
-
-  return {
-    onclick: `${sendEvent}${extraOp}`,
-  };
-}
-
 function useSendEditorEvent(args: EditorEvent) {
   if (!args.key) return {};
 
@@ -302,13 +222,6 @@ export function SectionControls({ metadata, index: i }: ControlsProps) {
         >
           <PreviewIcon id="chevron-down" />
         </button>
-        {
-          /*
-            <button>
-              <PreviewIcon id="components" />
-            </button>
-            */
-        }
         <button
           {...useSendEditorEvent({
             action: "duplicate",
@@ -335,18 +248,6 @@ export function SectionControls({ metadata, index: i }: ControlsProps) {
 export default function LivePagePreview() {
   return (
     <>
-      {
-        /*
-        section[data-manifest-key]:hover {
-          position: relative;
-          outline-style: solid;
-          outline-color: #2E6ED9;
-          outline-width: 2px;
-          margin-left: 2px;
-          margin-right: 2px;
-        }
-      */
-      }
       <Head>
         <style
           id="_live_css"
