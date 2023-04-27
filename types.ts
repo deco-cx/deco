@@ -14,6 +14,7 @@ import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { ResolveFunc } from "$live/engine/core/resolver.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import { PromiseOrValue } from "./engine/core/utils.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
@@ -78,6 +79,8 @@ export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
   ctx: LoaderContext<Props, State>,
   props: Props,
-) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
+) => PromiseOrValue<
+  { data: Data } & Partial<Pick<Response, "status" | "headers">>
+>;
 
 export type LoaderReturnType<O = unknown> = O;
