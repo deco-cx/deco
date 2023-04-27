@@ -106,7 +106,9 @@ export type Invoke<
     ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableActions<TManifest>
       ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-    : DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>,
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never,
 > = TInvocableKey extends AvailableFunctions<TManifest> ? InvokeFunction<
     TManifest,
     TInvocableKey,
@@ -119,12 +121,13 @@ export type Invoke<
       ManifestAction<TManifest, TInvocableKey>,
       TFuncSelector
     >
-  : InvokeLoader<
-    TManifest,
-    TInvocableKey,
-    ManifestLoader<TManifest, TInvocableKey>,
-    TFuncSelector
-  >;
+  : TInvocableKey extends AvailableLoaders<TManifest> ? InvokeLoader<
+      TManifest,
+      TInvocableKey,
+      ManifestLoader<TManifest, TInvocableKey>,
+      TFuncSelector
+    >
+  : never;
 
 export interface InvokeLoader<
   TManifest extends DecoManifest = DecoManifest,

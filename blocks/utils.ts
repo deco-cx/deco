@@ -9,6 +9,7 @@ import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
 import { JSX } from "preact";
+import { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -38,9 +39,11 @@ async ($live: TConfig) => {
   return typeof resp === "function" ? resp : () => resp;
 };
 
-// deno-lint-ignore no-empty-interface
-export interface FnContext {
-}
+// deno-lint-ignore ban-types
+export type FnContext<TState = {}> = TState & {
+  reqUrl: string;
+};
+
 export type FnProps<
   TProps = any,
   TResp = any,
@@ -52,8 +55,11 @@ export const applyProps = <
 >(func: {
   default: FnProps<TProps, TResp>;
 }) =>
-async ($live: TProps) => {
-  return await func.default($live, {});
+async ($live: TProps, ctx: HttpContext<{ global: any }>) => { // by default use global state
+  return await func.default(
+    $live,
+    { ...ctx?.context?.state?.global ?? {}, reqUrl: ctx.request.url },
+  );
 };
 
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(

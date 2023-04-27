@@ -9,8 +9,8 @@ import type {
   ManifestFunction,
   ManifestLoader,
 } from "$live/routes/live/invoke/index.ts";
-import type { DecoManifest } from "../types.ts";
 import { DotNestedKeys } from "$live/utils/object.ts";
+import type { DecoManifest } from "../types.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
@@ -48,7 +48,9 @@ export const invoke = <
     ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableActions<TManifest>
       ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-    : DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>,
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never,
   TPayload extends
     | Invoke<TManifest, TInvocableKey, TFuncSelector>
     | Record<
