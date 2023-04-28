@@ -6,7 +6,8 @@ export type Entries<T> = {
 export type UnPromisify<T> = T extends Promise<infer U> ? U : T;
 
 export function isAwaitable<T>(v: T | Promise<T>): v is Promise<T> {
-  return (v as Promise<T>).then !== undefined;
+  return (v as Promise<T>)?.then !== undefined &&
+    (v as Promise<T>)?.then !== null;
 }
 
 export const mapObjKeys = <T, R>(
