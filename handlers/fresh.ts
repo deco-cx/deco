@@ -19,8 +19,13 @@ export default function Fresh(page: FreshConfig) {
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page, { headers: allowCorsFor(req) });
     }
+    if (url.searchParams.has("warmup")) {
+      return new Response(null, { status: 200 });
+    }
     return isFreshCtx<{ routerInfo: RouterContext }>(ctx)
       ? ctx.render({ ...page, routerInfo: ctx.state.routerInfo })
-      : Response.json({ message: "Fresh is not being used" }, { status: 500 });
+      : Response.json({ message: "Fresh is not being used" }, {
+        status: 500,
+      });
   };
 }
