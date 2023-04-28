@@ -19,12 +19,14 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
   return fetchUrlLine.replace(":", "/").trimEnd();
 };
 
+const sanitize = (str: string | undefined) =>
+  str?.endsWith("/") ? str : `${str}/`;
 export const namespaceFromImportMap = async (
   dir: string,
 ): Promise<string | undefined> => {
   try {
     // get from git or undefined if not available
-    let namespace = `${await namespaceFromGit()}/`;
+    let namespace = sanitize(await namespaceFromGit());
     try {
       // try find import map file.
       const denoJSON = JSON.parse(
