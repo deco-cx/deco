@@ -7,7 +7,9 @@ import Render from "$live/routes/[...catchall].tsx";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
 
-const paramsFromUrl = (url: URL): Record<string, string> | undefined => {
+const paramsFromUrl = (
+  url: URL,
+): Record<string, string | undefined> | undefined => {
   const pathTemplate = url.searchParams.get("pathTemplate");
   const pathname = url.searchParams.get("path");
   if (pathTemplate === null || pathname == null) {
