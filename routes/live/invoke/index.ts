@@ -8,7 +8,6 @@ import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
 import { DeepPick, DotNestedKeys } from "$live/utils/object.ts";
 import { UnionToIntersection } from "https://esm.sh/utility-types@3.10.0";
-import { ActionContext, LoaderContext } from "$live/types.ts";
 
 export type AvailableFunctions<TManifest extends DecoManifest> =
   & keyof TManifest["functions"]
@@ -40,8 +39,8 @@ export type ManifestLoader<
   TLoader extends AvailableLoaders<TManifest>,
 > = TManifest["loaders"][TLoader] extends { default: infer TLoader }
   ? TLoader extends (
-    req: any,
-    ctx: LoaderContext<infer Props>,
+    props: infer Props,
+    _ctx: any,
   ) => PromiseOrValue<infer TReturn> ? { props: Props; return: TReturn }
   : never
   : never;
@@ -51,8 +50,8 @@ export type ManifestAction<
   TAction extends AvailableActions<TManifest>,
 > = TManifest["actions"][TAction] extends { default: infer TAction }
   ? TAction extends (
-    req: any,
-    ctx: ActionContext<infer Props>,
+    props: infer Props,
+    _ctx: any,
   ) => PromiseOrValue<infer TReturn> ? { props: Props; return: TReturn }
   : never
   : never;
@@ -107,7 +106,9 @@ export type Invoke<
     ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableActions<TManifest>
       ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-    : DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>,
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never,
 > = TInvocableKey extends AvailableFunctions<TManifest> ? InvokeFunction<
     TManifest,
     TInvocableKey,
@@ -120,12 +121,13 @@ export type Invoke<
       ManifestAction<TManifest, TInvocableKey>,
       TFuncSelector
     >
-  : InvokeLoader<
-    TManifest,
-    TInvocableKey,
-    ManifestLoader<TManifest, TInvocableKey>,
-    TFuncSelector
-  >;
+  : TInvocableKey extends AvailableLoaders<TManifest> ? InvokeLoader<
+      TManifest,
+      TInvocableKey,
+      ManifestLoader<TManifest, TInvocableKey>,
+      TFuncSelector
+    >
+  : never;
 
 export interface InvokeLoader<
   TManifest extends DecoManifest = DecoManifest,

@@ -4,7 +4,7 @@ import {
   Promisified,
   waitKeys,
 } from "$live/engine/core/utils.ts";
-import { LoaderContext } from "$live/types.ts";
+import { FunctionContext } from "$live/types.ts";
 import {
   Diff,
   Intersection,
@@ -15,7 +15,7 @@ import {
 
 export type LoaderPropFunc<TProps = any, TReturn = any, TState = any> = (
   request: Request,
-  ctx: LoaderContext<
+  ctx: FunctionContext<
     TProps,
     TState
   >,
@@ -99,7 +99,7 @@ const isObjLoader = <TLoaderProps, TSectionInput>(
 };
 export const propsLoader = async <TSectionInput, TProps>(
   resolver: PropsLoader<TSectionInput, TProps>,
-  ctx: LoaderContext<TProps>,
+  ctx: FunctionContext<TProps>,
   req: Request,
 ): Promise<TSectionInput> => {
   if (isLoaderFunc(resolver)) {

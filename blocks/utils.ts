@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { HttpContext } from "$live/blocks/handler.ts";
 import {
   Block,
   BlockModule,
@@ -9,8 +8,8 @@ import {
 import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
-import { StatefulContext } from "$live/types.ts";
 import { JSX } from "preact";
+import { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -40,24 +39,27 @@ async ($live: TConfig) => {
   return typeof resp === "function" ? resp : () => resp;
 };
 
-export type StatefulHandler<
-  TConfig,
-  TResp,
-  TCtx extends StatefulContext<TConfig> = StatefulContext<TConfig>,
-> = (req: Request, ctx: TCtx) => PromiseOrValue<TResp>;
+// deno-lint-ignore ban-types
+export type FnContext<TState = {}> = TState & {
+  reqUrl: string;
+};
 
-export const configAsState = <
-  TCtx extends StatefulContext<any> = StatefulContext<any>,
-  TConfig = any,
+export type FnProps<
+  TProps = any,
+  TResp = any,
+> = (props: TProps, ctx: FnContext) => PromiseOrValue<TResp>;
+
+export const applyProps = <
+  TProps = any,
   TResp = any,
 >(func: {
-  default: StatefulHandler<TConfig, TResp, TCtx>;
+  default: FnProps<TProps, TResp>;
 }) =>
-async ($live: TConfig, ctx: HttpContext<any, any, TCtx>) => {
-  return await func.default(ctx.request, {
-    ...ctx.context,
-    state: { ...ctx.context.state, $live, resolve: ctx.resolve },
-  });
+async ($live: TProps, ctx: HttpContext<{ global: any }>) => { // by default use global state
+  return await func.default(
+    $live,
+    { ...ctx?.context?.state?.global ?? {}, reqUrl: ctx.request.url },
+  );
 };
 
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(

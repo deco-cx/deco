@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any ban-types
 import type { Manifest } from "$fresh/server.ts";
 import accountBlock from "$live/blocks/account.ts";
 import actionBlock from "$live/blocks/action.ts";
@@ -10,9 +10,11 @@ import loaderBlock from "$live/blocks/loader.ts";
 import matcherBlock from "$live/blocks/matcher.ts";
 import pageBlock from "$live/blocks/page.ts";
 import sectionBlock from "$live/blocks/section.ts";
+import { FnContext } from "$live/blocks/utils.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { ResolveFunc } from "$live/engine/core/resolver.ts";
+import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 
 export type JSONSchema = JSONSchema7;
@@ -65,19 +67,19 @@ export type LiveConfig<TConfig = any, TState = any> = TState & {
   resolve: ResolveFunc;
 };
 
-// deno-lint-ignore ban-types
-export type ActionContext<TProps = any, TState = {}> = StatefulContext<
+export type ActionContext<TState = {}> = FnContext<TState>;
+export type LoaderContext<TState = {}> = FnContext<TState>;
+
+export type FunctionContext<TProps = any, TState = {}> = StatefulContext<
   LiveConfig<TProps, TState>
 >;
 
-// deno-lint-ignore ban-types
-export type LoaderContext<TProps = any, TState = {}> = StatefulContext<
-  LiveConfig<TProps, TState>
->;
 export type LoaderFunction<Props = any, Data = any, State = any> = (
   req: Request,
-  ctx: LoaderContext<Props, State>,
+  ctx: FunctionContext<Props, State>,
   props: Props,
-) => Promise<{ data: Data } & Partial<Pick<Response, "status" | "headers">>>;
+) => PromiseOrValue<
+  { data: Data } & Partial<Pick<Response, "status" | "headers">>
+>;
 
 export type LoaderReturnType<O = unknown> = O;
