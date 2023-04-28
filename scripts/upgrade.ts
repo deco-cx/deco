@@ -230,7 +230,7 @@ const v1: UpgradeOption = {
       .all([
         updateImportMap(
           meta.version,
-          "1.0.0-rc.19",
+          "1.0.0-rc.22",
         ),
         createSiteJson(),
         createRuntimeTS(),
