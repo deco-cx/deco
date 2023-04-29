@@ -261,7 +261,7 @@ const fetchSitePages = async (siteId: number) => {
     .from("pages")
     .select("id, name, data, path, state, public")
     .eq("site", siteId)
-    .eq("state", "published");
+    .neq("state", "dev");
 };
 
 const fetchSiteFlags = async (siteId: number) => {
@@ -403,13 +403,8 @@ export const fromPagesTable = (
     sf.do("flight", async (): Promise<
       { data: CurrResolvables | null; error: any }
     > => { // archived pages cannot be added on flags.
-      console.log("fetching site data");
       const [{ data, error }, { data: dataFlags, error: errorFlags }] =
         await fetchSiteData(siteId);
-      console.log(
-        "site data size",
-        data !== null ? JSON.stringify(data).length * 2 : "NULL",
-      );
       if (
         data === null || error !== null
       ) {

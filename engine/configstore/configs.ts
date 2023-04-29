@@ -52,12 +52,7 @@ export const fromConfigsTable = (
     sf.do(
       "flight",
       async () => {
-        console.log("fetching configs");
         const { data, error } = await fetchConfigs(site);
-        console.log(
-          "configs size",
-          data === null ? "NULL" : JSON.stringify(data).length * 2,
-        );
         return { data: data ?? { state: {}, archived: {} }, error };
       },
     );

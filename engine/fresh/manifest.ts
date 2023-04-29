@@ -200,13 +200,7 @@ export const $live = <T extends DecoManifest>(
   const resolver = new ConfigResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers, preview },
     getResolvables: (forceFresh?: boolean) => {
-      const state = provider.state({ forceFresh });
-      console.log("fetching state...");
-      state.then((s) => {
-        console.log("fetch state completed");
-        console.log("state size in bytes is:", JSON.stringify(s).length * 2);
-      });
-      return state;
+      return provider.state({ forceFresh });
     },
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
