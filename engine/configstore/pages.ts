@@ -160,26 +160,20 @@ function mapGlobalToAccount(
   const [name] = byDashSplit[byDashSplit.length - 1].split(".");
   const wellKnownAccount = sectionToAccount[accountId];
   const middleware = c[middlewareConfig];
-  return {
-    ...c,
-    [middlewareConfig]: {
-      ...middleware,
-      [state]: {
-        ...middleware[state],
-        [name]: wellKnownAccount
-          ? { __resolveType: name }
-          : globalSection.props,
-      },
+  if (wellKnownAccount) {
+    c[name] = {
+      ...globalSection.props,
+      __resolveType: wellKnownAccount,
+    };
+  }
+  c[middlewareConfig] = {
+    ...middleware,
+    [state]: {
+      ...middleware[state],
+      [name]: wellKnownAccount ? { __resolveType: name } : globalSection.props,
     },
-    ...wellKnownAccount
-      ? {
-        [name]: {
-          ...globalSection.props,
-          __resolveType: wellKnownAccount,
-        },
-      }
-      : {},
   };
+  return c;
 }
 
 const isAccount = (page: Page): boolean =>
@@ -195,17 +189,16 @@ const pageToConfig =
       sections: dataToSections(p.data, c[globalSections], namespace),
       __resolveType: "$live/pages/LivePage.tsx",
     };
+    c[p.id] = pageEntry;
     if (
       isGlobal(p)
     ) {
       if (isAccount(p)) {
-        return { ...mapGlobalToAccount(p, namespace, c), [p.id]: pageEntry };
+        mapGlobalToAccount(p, namespace, c);
+        return c;
       }
-      return {
-        ...c,
-        [p.id]: pageEntry,
-        [globalSections]: { ...c[globalSections], [p.path]: `${p.id}` },
-      };
+      c[globalSections] = { ...c[globalSections], [p.path]: `${p.id}` };
+      return c;
     }
     const currEveryone = c[everyoneAudience];
     const everyone = p.state === "published"
@@ -224,11 +217,8 @@ const pageToConfig =
         },
       }
       : currEveryone;
-    return {
-      ...c,
-      [p.id]: pageEntry,
-      [everyoneAudience]: everyone,
-    };
+    c[everyoneAudience] = everyone;
+    return c;
   };
 
 const baseEntrypoint = {
@@ -261,7 +251,7 @@ const fetchSitePages = async (siteId: number) => {
     .from("pages")
     .select("id, name, data, path, state, public")
     .eq("site", siteId)
-    .neq("state", "dev");
+    .in("state", ["published", "draft"]);
 };
 
 const fetchSiteFlags = async (siteId: number) => {
