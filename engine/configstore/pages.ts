@@ -75,7 +75,7 @@ interface ResolvePageSection extends Record<string, any> {
 }
 const state = "state";
 const globalSections = "globalSections";
-const everyoneAudience = "everyone";
+const everyoneAudience = "audience-everyone";
 
 const includeNamespace = (key: string, ns: string) =>
   key.replace("./", `${ns}/`);

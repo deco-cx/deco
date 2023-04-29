@@ -26,19 +26,15 @@ export const loadersWarmUpPlugin = (): Plugin => {
     render(ctx) {
       links = {};
       ctx.render();
-      const resolver = context.configResolver!.resolverFor({
-        context: {},
-        request: new Request("http://localhost:8000"),
-      });
+      const resolver = context.configResolver!.resolverFor({});
       resolver<{ handler: Handler }>("./routes/[...catchall].tsx").then(
         async ({ handler: h }) => {
           for (const href of Object.keys(links)) {
             const req = new Request(`http://localhost:8000${href}?warmup`);
-            const s = await h(
+            await h(
               req,
               { state: { global: {} } } as ConnInfo & { state: unknown },
             );
-            console.log(s);
           }
         },
       );
