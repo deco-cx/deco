@@ -261,7 +261,7 @@ const fetchSitePages = async (siteId: number) => {
     .from("pages")
     .select("id, name, data, path, state, public")
     .eq("site", siteId)
-    .neq("state", "dev");
+    .eq("state", "published");
 };
 
 const fetchSiteFlags = async (siteId: number) => {
