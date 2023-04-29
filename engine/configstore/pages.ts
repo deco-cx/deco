@@ -246,12 +246,16 @@ const baseEntrypoint = {
   },
 } as Record<string, Resolvable>;
 
-const fetchSitePages = async (siteId: number) => {
+const defaultStates = ["published", "draft"];
+const fetchSitePages = async (siteId: number, includeArchived = false) => {
   return await getSupabaseClient()
     .from("pages")
     .select("id, name, data, path, state, public")
     .eq("site", siteId)
-    .in("state", ["published", "draft"]);
+    .in(
+      "state",
+      includeArchived ? [...defaultStates, "archived"] : defaultStates,
+    );
 };
 
 const fetchSiteFlags = async (siteId: number) => {
@@ -261,8 +265,11 @@ const fetchSiteFlags = async (siteId: number) => {
   ).eq("state", "published");
 };
 
-const fetchSiteData = (siteId: number) =>
-  Promise.all([fetchSitePages(siteId), fetchSiteFlags(siteId)]);
+const fetchSiteData = (siteId: number, includeArchived = false) =>
+  Promise.all([
+    fetchSitePages(siteId, includeArchived),
+    fetchSiteFlags(siteId),
+  ]);
 
 // Supabase client setup
 const subscribeForConfigChanges = (
@@ -335,34 +342,32 @@ const flagsToConfig = (
     if (!page) {
       return curr;
     }
-    return {
-      ...curr,
-      [catchAllConfig]: {
-        ...catchall,
-        handler: {
-          ...catchall.handler,
-          audiences: [
-            ...catchall.handler.audiences,
-            {
-              __resolveType: flag.key,
-            },
-          ],
-        },
-      },
-      [flag.key]: {
-        name: flag.key,
-        routes: {
-          [page.path]: {
-            page: {
-              __resolveType: `${pageId}`,
-            },
-            __resolveType: "$live/handlers/fresh.ts",
+    curr[catchAllConfig] = {
+      ...catchall,
+      handler: {
+        ...catchall.handler,
+        audiences: [
+          ...catchall.handler.audiences,
+          {
+            __resolveType: flag.key,
           },
-        },
-        matcher: matchesToMatchMulti(flag.data.matches, ns),
-        __resolveType: "$live/flags/audience.ts",
+        ],
       },
     };
+    curr[flag.key] = {
+      name: flag.key,
+      routes: {
+        [page.path]: {
+          page: {
+            __resolveType: `${pageId}`,
+          },
+          __resolveType: "$live/handlers/fresh.ts",
+        },
+      },
+      matcher: matchesToMatchMulti(flag.data.matches, ns),
+      __resolveType: "$live/flags/audience.ts",
+    };
+    return curr;
   }, entrypoint);
 };
 
@@ -389,12 +394,12 @@ export const fromPagesTable = (
   namespace: string,
 ): SupabaseConfigProvider => {
   const sf = singleFlight<{ data: CurrResolvables | null; error: any }>();
-  const fetcher = () =>
+  const fetcher = (includeArchived = false) =>
     sf.do("flight", async (): Promise<
       { data: CurrResolvables | null; error: any }
-    > => { // archived pages cannot be added on flags.
+    > => {
       const [{ data, error }, { data: dataFlags, error: errorFlags }] =
-        await fetchSiteData(siteId);
+        await fetchSiteData(siteId, includeArchived);
       if (
         data === null || error !== null
       ) {
