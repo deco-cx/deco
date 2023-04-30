@@ -23,7 +23,11 @@ export const handler = async (
       (url.searchParams.getAll("select") ?? []) as InvokeFunction["select"],
   };
 
-  return Response.json(
-    await resolve(payloadForFunc(invokeFunc)),
-  );
+  const resp = await resolve(payloadForFunc(invokeFunc));
+  if (resp instanceof Object) {
+    return Response.json(
+      resp,
+    );
+  }
+  return new Response(null, { status: 200 });
 };

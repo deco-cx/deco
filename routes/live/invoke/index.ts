@@ -245,7 +245,11 @@ export const handler = async (
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url));
 
-  return Response.json(
-    await resolve(payloadToResolvable(data)),
-  );
+  const resp = await resolve(payloadToResolvable(data));
+  if (resp instanceof Object) {
+    return Response.json(
+      resp,
+    );
+  }
+  return new Response(null, { status: 200 });
 };
