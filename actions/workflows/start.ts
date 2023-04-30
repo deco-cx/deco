@@ -7,20 +7,22 @@ export interface Props {
   args?: any[];
 }
 
-const [service, serviceUrl] = context.isDeploy
-  ? [
-    Deno.env.get("LIVE_WORKFLOW_REGISTRY") ??
-      `deco-sites.${context.site}-${context.deploymentId}`,
-    Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ??
-      "https://durable-workers.fly.dev",
-  ]
-  : [
-    "local.",
-    Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ?? "http:/localhost:8001",
-  ];
+const getServices = () =>
+  context.isDeploy
+    ? [
+      Deno.env.get("LIVE_WORKFLOW_REGISTRY") ??
+        `deco-sites.${context.site}-${context.deploymentId}`,
+      Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ??
+        "https://durable-workers.fly.dev",
+    ]
+    : [
+      "local.",
+      Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ?? "http:/localhost:8001",
+    ];
 export default async function startWorkflow(
   { workflow, props, args }: Props,
 ): Promise<WorkflowExecution> {
+  const [service, serviceUrl] = getServices();
   const payload = {
     alias: `${service}/live/invoke/$live/actions/workflows/run.ts`,
     input: args,
