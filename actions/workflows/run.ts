@@ -1,5 +1,4 @@
-import { RunRequest, workflowRemoteRunner } from "$durable/handler.ts";
-import { Command } from "$durable/runtime/core/commands.ts";
+import { Command, RunRequest, workflowRemoteRunner } from "$live/deps.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
 export interface Props extends RunRequest {
   metadata: {

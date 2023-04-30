@@ -1,4 +1,4 @@
-import { workflowHTTPHandler } from "$durable/mod.ts";
+import { workflowHTTPHandler } from "$live/deps.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
 export interface Config {
   workflow: Workflow;

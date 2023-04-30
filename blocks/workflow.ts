@@ -3,7 +3,7 @@ import {
   InvokeHttpEndpointCommand,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
-} from "$durable/mod.ts";
+} from "$live/deps.ts";
 import { applyConfig } from "$live/blocks/utils.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { context } from "$live/live.ts";

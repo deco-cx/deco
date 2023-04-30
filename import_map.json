@@ -1,7 +1,6 @@
 {
   "imports": {
     "$live/": "./",
-    "$durable/": "../durable/",
     "https://deno.land/std@0.147.0": "https://deno.land/std@0.181.0",
     "https://deno.land/std@0.150.0": "https://deno.land/std@0.181.0",
     "https://deno.land/std@0.152.0": "https://deno.land/std@0.181.0",

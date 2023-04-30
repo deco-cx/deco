@@ -7,5 +7,5 @@ export { $live } from "$live/engine/fresh/manifest.ts";
 export * from "$live/types.ts";
 export type { Workflow } from "$live/blocks/workflow.ts";
 export { WorkflowContext } from "$live/blocks/workflow.ts";
-export type { WorkflowGen } from "$durable/runtime/core/workflow.ts";
+export type { WorkflowGen } from "./deps.ts";
 export { stylesPlugin };
