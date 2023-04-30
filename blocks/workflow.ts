@@ -20,6 +20,10 @@ import {
 import { DecoManifest } from "../types.ts";
 import { DotNestedKeys } from "../utils/object.ts";
 
+const myUrl = () =>
+  context.isDeploy
+    ? `https://deco-sites-${context.site}-${context.deploymentId}.deno.dev/live/invoke`
+    : "http://localhost:8000/live/invoke";
 export class WorkflowContext<TManifest extends DecoManifest = Manifest>
   extends DurableWorkflowContext {
   constructor(executionId: string) {
@@ -47,9 +51,7 @@ export class WorkflowContext<TManifest extends DecoManifest = Manifest>
   >(body: TPayload): InvokeHttpEndpointCommand<TPayload> {
     return {
       name: "invoke_http_endpoint",
-      url: context.isDeploy
-        ? `https://deco-sites-${context.site}-${context.deploymentId}.deno.dev/live/invoke`
-        : "http://localhost:8000/live/invoke", // FIXME define the actual port
+      url: myUrl(), // FIXME define the actual port
       method: "POST",
       body,
       headers: {
@@ -65,10 +67,18 @@ export type WorkflowFn<TConfig = any> = (
   c: TConfig,
 ) => DurableWorkflow<any, any, WorkflowContext>;
 
+// const workflowServer = "http://localhost:8001";
 const workflowBlock: Block<BlockModule<WorkflowFn>> = {
   type: "workflows",
   introspect: {
     default: "0",
+  },
+  defaultInvoke: ({ props, block }) => {
+    console.log(block);
+    return {
+      ...props,
+      __resolveType: block,
+    };
   },
   adapt: applyConfig,
 };

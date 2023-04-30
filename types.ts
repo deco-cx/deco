@@ -11,6 +11,7 @@ import matcherBlock from "$live/blocks/matcher.ts";
 import pageBlock from "$live/blocks/page.ts";
 import sectionBlock from "$live/blocks/section.ts";
 import { FnContext } from "$live/blocks/utils.ts";
+import workflowBlock from "$live/blocks/workflow.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { ResolveFunc } from "$live/engine/core/resolver.ts";
@@ -22,6 +23,7 @@ export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
   islands: Record<string, ModuleOf<typeof islandBlock>>;
+  workflows?: Record<string, ModuleOf<typeof workflowBlock>>;
   actions?: Record<string, ModuleOf<typeof actionBlock>>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
   functions?: Record<string, ModuleOf<typeof functionBlock>>;

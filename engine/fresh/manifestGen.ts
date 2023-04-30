@@ -63,6 +63,12 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
+    from: "$live/routes/live/invoke/[...key].ts",
+    key: "./routes/live/invoke/[...key].ts",
+    ref: "$live_invoke_key",
+  },
+  {
+    block: "routes",
     from: "$live/routes/live/editorData.ts",
     key: "./routes/live/editorData.ts",
     ref: "$live_editorData",
@@ -98,7 +104,7 @@ export const defaultRoutes: {
     ref: "$live_catchall",
   },
 ];
-const addDefaultBlocks = (man: ManifestBuilder): ManifestBuilder => {
+const defaultLiveRoutes = (man: ManifestBuilder): ManifestBuilder => {
   return defaultRoutes.reduce((m, { key, ref, block, from }) => {
     const blockObj = m.data.manifest[block];
     if (
@@ -176,7 +182,7 @@ export const decoManifestBuilder = async (
     blockIdx++;
   }
 
-  return addDefaultBlocks(
+  return defaultLiveRoutes(
     initialManifest
       .addExportDefault({
         variable: { identifier: "manifest" },
