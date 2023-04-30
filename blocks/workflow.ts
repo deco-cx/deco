@@ -26,8 +26,8 @@ const myUrl = () =>
     : "http://localhost:8000/live/invoke";
 export class WorkflowContext<TManifest extends DecoManifest = Manifest>
   extends DurableWorkflowContext {
-  constructor(executionId: string) {
-    super(executionId);
+  constructor(executionId: string, metadata?: unknown) {
+    super(executionId, metadata);
   }
 
   public invoke<
@@ -67,18 +67,10 @@ export type WorkflowFn<TConfig = any> = (
   c: TConfig,
 ) => DurableWorkflow<any, any, WorkflowContext>;
 
-// const workflowServer = "http://localhost:8001";
 const workflowBlock: Block<BlockModule<WorkflowFn>> = {
   type: "workflows",
   introspect: {
     default: "0",
-  },
-  defaultInvoke: ({ props, block }) => {
-    console.log(block);
-    return {
-      ...props,
-      __resolveType: block,
-    };
   },
   adapt: applyConfig,
 };

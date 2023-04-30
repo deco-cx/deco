@@ -11,12 +11,16 @@ const defaultService = "http:/localhost:8001";
 export default async function startWorkflow(
   { workflow, service, props, args }: Props,
 ): Promise<WorkflowExecution> {
-    /// TODO criar um /live/invoke/...path pra funcionar tambem passar a key na URL
   const payload = {
-    alias: `local./live/invoke/actions/workflows/run.ts?${workflow}?props=${
-      btoa(encodeURIComponent(JSON.stringify(props)))
-    }`,
+    alias: "local./live/invoke/$live/actions/workflows/run.ts",
     input: args,
+    metadata: {
+      workflow: {
+        ...props,
+        __resolveType: workflow,
+      },
+      __resolveType: "resolve"
+    },
   };
   const resp = await fetch(`${service ?? defaultService}/executions`, {
     method: "POST",
