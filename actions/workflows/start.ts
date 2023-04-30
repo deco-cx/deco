@@ -11,7 +11,7 @@ const getServices = () =>
   context.isDeploy
     ? [
       Deno.env.get("LIVE_WORKFLOW_REGISTRY") ??
-        `deco-sites.${context.site}-${context.deploymentId}`,
+        `deco-sites.${context.site}-${context.deploymentId}@`,
       Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ??
         "https://durable-workers.fly.dev",
     ]

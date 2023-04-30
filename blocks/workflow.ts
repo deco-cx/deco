@@ -77,6 +77,6 @@ const workflowBlock: Block<BlockModule<WorkflowFn>> = {
 
 /**
  * <TConfig>(config:TConfig) => Workflow
- * The account block is used to configure platforms using settings
+ * The workflow block.
  */
 export default workflowBlock;
