@@ -1,6 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
-import { WorkflowExecution } from "$live/deps.ts";
-import { context } from "$live/live.ts";
+import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import {
+  toExecution,
+  WorkflowExecution,
+} from "$live/commons/workflows/types.ts";
+
 export interface Props<
   TWorkflow extends `${string}/workflows/${string}` =
     `${string}/workflows/${string}`,
@@ -11,22 +15,10 @@ export interface Props<
   args?: any[];
 }
 
-export const wkserviceInfo = () =>
-  context.isDeploy
-    ? [
-      Deno.env.get("LIVE_WORKFLOW_REGISTRY") ??
-        `deco-sites.${context.site}-${context.deploymentId}@`,
-      Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ??
-        "https://durable-workers.fly.dev",
-    ]
-    : [
-      "local.",
-      Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ?? "http:/localhost:8001",
-    ];
 export default async function startWorkflow(
   { workflow, props, args, id }: Props,
 ): Promise<WorkflowExecution> {
-  const [service, serviceUrl] = wkserviceInfo();
+  const [service, serviceUrl] = workflowServiceInfo();
   const payload = {
     alias: `${service}/live/invoke/$live/actions/workflows/run.ts`,
     id,
@@ -44,7 +36,7 @@ export default async function startWorkflow(
     body: JSON.stringify(payload),
   });
   if (resp.ok) {
-    return resp.json();
+    return toExecution(await resp.json());
   }
   throw new Error(`${resp.status}, ${JSON.stringify(payload)}`);
 }

@@ -1,4 +1,4 @@
-import { wkserviceInfo } from "./start.ts";
+import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
 
 export interface Props {
   executionId: string;
@@ -8,7 +8,7 @@ export interface Props {
 export default async function cancelWorkflow(
   { reason, executionId }: Props,
 ): Promise<void> {
-  const [_, serviceUrl] = wkserviceInfo();
+  const [_, serviceUrl] = workflowServiceInfo();
   const resp = await fetch(
     `${serviceUrl}/executions/${executionId}`,
     {

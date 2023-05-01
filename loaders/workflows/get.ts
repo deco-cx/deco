@@ -1,5 +1,8 @@
-import { wkserviceInfo } from "$live/actions/workflows/start.ts";
-import { WorkflowExecution } from "$live/deps.ts";
+import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import {
+  toExecution,
+  WorkflowExecution,
+} from "$live/commons/workflows/types.ts";
 export interface Props {
   id: string;
 }
@@ -7,11 +10,11 @@ export interface Props {
 export default async function getExecutions(
   { id }: Props,
 ): Promise<WorkflowExecution> {
-  const [_, svcUrl] = wkserviceInfo();
+  const [_, svcUrl] = workflowServiceInfo();
 
   const resp = await fetch(`${svcUrl}/executions/${id}`);
   if (resp.ok) {
-    return resp.json();
+    return toExecution(await resp.json());
   }
   throw new Error(`${resp.status}`);
 }
