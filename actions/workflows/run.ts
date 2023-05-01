@@ -6,6 +6,9 @@ export interface Props extends RunRequest {
   };
 }
 
+/**
+ * @description Proceed the workflow execution based on the current state of the workflow.
+ */
 export default function runWorkflow(
   { metadata: { workflow }, ...runReq }: Props,
 ): Command {

@@ -7,7 +7,10 @@ export interface Props {
   id: string;
 }
 
-export default async function getExecutions(
+/**
+ * @description Read the workflow execution information.
+ */
+export default async function getExecution(
   { id }: Props,
 ): Promise<WorkflowExecution> {
   const [_, svcUrl] = workflowServiceInfo();

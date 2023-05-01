@@ -5,16 +5,16 @@ import {
   WorkflowExecution,
 } from "$live/commons/workflows/types.ts";
 
-export interface Props<
-  TWorkflow extends `${string}/workflows/${string}` =
-    `${string}/workflows/${string}`,
-> {
-  workflow: TWorkflow;
+export interface Props {
+  workflow: string;
   id?: string;
   props?: any;
   args?: any[];
 }
 
+/**
+ * @description Start the workflow execution with the given props and args. You can set the id of the workflow as you wish.
+ */
 export default async function startWorkflow(
   { workflow, props, args, id }: Props,
 ): Promise<WorkflowExecution> {

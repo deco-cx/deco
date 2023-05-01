@@ -7,6 +7,10 @@ export interface Props {
 }
 
 const DEFAULT_PAGE_SIZE = 10;
+
+/**
+ * @description Get the workflow execution events.
+ */
 export default async function getExecutionEvents(
   { id, page, pageSize }: Props,
 ): Promise<WorkflowExecution> {

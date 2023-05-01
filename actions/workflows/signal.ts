@@ -6,6 +6,9 @@ export interface Props {
   payload?: unknown;
 }
 
+/**
+ * @description Sends a signal to the workflow using the specified payload.
+ */
 export default async function signalWorkflow(
   { signal, payload, executionId }: Props,
 ): Promise<void> {
