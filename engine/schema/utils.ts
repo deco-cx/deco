@@ -134,13 +134,17 @@ export const denoDoc = async (
   path: string,
   importMap?: string,
 ): Promise<DocNode[]> => {
-  const promise = denoDocCache.get(path) ??
-    (typeof Deno.run === "function"
-      ? docAsExec(path)
-      : docAsLib(path, importMap));
-  denoDocCache.set(path, promise);
-
-  return await promise;
+  try {
+    const promise = denoDocCache.get(path) ??
+      (typeof Deno.run === "function"
+        ? docAsExec(path)
+        : docAsLib(path, importMap));
+    denoDocCache.set(path, promise);
+    return await promise;
+  } catch (err) {
+    console.warn("deno doc error, ignoring", err);
+    return [];
+  }
 };
 
 export interface TypeRef {
