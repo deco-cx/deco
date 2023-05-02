@@ -21,9 +21,11 @@ export type ResolveFunc<T = any, TContext extends BaseContext = BaseContext> = (
   forceFresh?: boolean,
   partialCtx?: Partial<Omit<TContext, keyof BaseContext>>,
 ) => Promise<T>;
+
 export interface Monitoring {
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
 }
+
 export interface BaseContext {
   resolveChain: string[];
   resolveId: string;
