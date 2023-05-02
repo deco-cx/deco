@@ -197,7 +197,8 @@ const pageToConfig =
         mapGlobalToAccount(p, namespace, c);
         return c;
       }
-      c[globalSections] = { ...c[globalSections], [p.path]: `${p.id}` };
+      c[globalSections] ??= {};
+      c[globalSections][p.path] = `${p.id}`;
       return c;
     }
     const currEveryone = c[everyoneAudience];
@@ -246,7 +247,7 @@ const baseEntrypoint = {
   },
 } as Record<string, Resolvable>;
 
-const defaultStates = ["published", "draft"];
+const defaultStates = ["published", "draft", "global"];
 const fetchSitePages = async (siteId: number, includeArchived = false) => {
   return await getSupabaseClient()
     .from("pages")
