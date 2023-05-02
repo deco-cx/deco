@@ -3,7 +3,8 @@ import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
 export interface Props {
   signal: string;
   executionId: string;
-  payload?: unknown;
+  // deno-lint-ignore no-explicit-any
+  payload?: any;
 }
 
 /**
@@ -17,7 +18,7 @@ export default async function signalWorkflow(
     `${serviceUrl}/executions/${executionId}/signals/${signal}`,
     {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: payload ? JSON.stringify(payload) : undefined,
     },
   );
   if (!resp.ok) {

@@ -36,8 +36,8 @@ export default {
       return resolve({
         __resolveType: "preview",
         props: {
-          ...props,
           ...resolvableProps,
+          ...props,
         },
         block: __resolveType,
       });

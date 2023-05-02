@@ -1,22 +1,32 @@
 // deno-lint-ignore-file no-explicit-any
 import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import { Workflow } from "$live/blocks/workflow.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import {
   toExecution,
   WorkflowExecution,
 } from "$live/commons/workflows/types.ts";
 
+export interface WorkflowRef {
+  key: string;
+  props: any;
+}
 export interface Props {
-  workflow: string;
+  workflow: WorkflowRef | {
+    ref: Workflow;
+  };
   id?: string;
-  props?: any;
   args?: any[];
 }
 
+const isWorkflowRef = (ref: Props["workflow"]): ref is WorkflowRef =>
+  (ref as WorkflowRef)?.key !== undefined &&
+  (ref as Resolvable)?.__resolveType === undefined;
 /**
  * @description Start the workflow execution with the given props and args. You can set the id of the workflow as you wish.
  */
 export default async function startWorkflow(
-  { workflow, props, args, id }: Props,
+  { workflow, args, id }: Props,
 ): Promise<WorkflowExecution> {
   const [service, serviceUrl] = workflowServiceInfo();
   const payload = {
@@ -24,10 +34,12 @@ export default async function startWorkflow(
     id,
     input: args,
     metadata: {
-      workflow: {
-        ...props,
-        __resolveType: workflow,
-      },
+      workflow: isWorkflowRef(workflow)
+        ? {
+          ...workflow?.props,
+          __resolveType: workflow.key,
+        }
+        : workflow.ref,
       __resolveType: "resolve",
     },
   };
