@@ -40,14 +40,12 @@ async ($live: TConfig) => {
 };
 
 // deno-lint-ignore ban-types
-export type FnContext<TState = {}> = TState & {
-  reqUrl: string;
-};
+export type FnContext<TState = {}> = TState & {};
 
 export type FnProps<
   TProps = any,
   TResp = any,
-> = (props: TProps, ctx: FnContext) => PromiseOrValue<TResp>;
+> = (props: TProps, request: Request, ctx: FnContext) => PromiseOrValue<TResp>;
 
 export const applyProps = <
   TProps = any,
@@ -58,7 +56,8 @@ export const applyProps = <
 async ($live: TProps, ctx: HttpContext<{ global: any }>) => { // by default use global state
   return await func.default(
     $live,
-    { ...ctx?.context?.state?.global ?? {}, reqUrl: ctx.request.url },
+    ctx.request,
+    ctx?.context?.state?.global ?? {},
   );
 };
 
