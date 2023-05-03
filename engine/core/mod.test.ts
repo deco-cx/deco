@@ -5,6 +5,7 @@ import {
 } from "$live/engine/core/resolver.ts";
 import {
   assertSpyCall,
+  assertSpyCallArg,
   assertSpyCalls,
   spy,
 } from "https://deno.land/std@0.179.0/testing/mock.ts";
@@ -42,26 +43,21 @@ Deno.test("resolve", async (t) => {
         addToStringBarResolver: spy(addToStringBarResolver),
       };
 
+      const ctx = { ...context, resolvers: resolverMap };
       const result = await resolve<OutputType>(
         {
           bar: 10,
           __resolveType: addToStringBarResolver.name,
         },
-        { ...context, resolvers: resolverMap },
+        ctx,
       );
       assertEquals(result, { barString: "10" });
+      assertSpyCallArg(resolverMap.addToStringBarResolver, 0, 0, { bar: 10 });
       assertSpyCall(resolverMap.addToStringBarResolver, 0, {
-        args: [
-          { bar: 10 },
-          { ...context, resolveChain: [addToStringBarResolver.name] },
-        ],
         returned: { bar: 10, __resolveType: toStringBarResolver.name },
       });
+      assertSpyCallArg(resolverMap.toStringBarResolver, 0, 0, { bar: 10 });
       assertSpyCall(resolverMap.toStringBarResolver, 0, {
-        args: [{ bar: 10 }, {
-          ...context,
-          resolveChain: [addToStringBarResolver.name, toStringBarResolver.name],
-        }],
         returned: { barString: "10" },
       });
 

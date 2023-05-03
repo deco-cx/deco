@@ -267,11 +267,14 @@ const nativeResolverByType: Record<
   undefined: identity,
 };
 
-const withResolverChain = <T extends BaseContext = BaseContext>(
+export const withResolveChain = <T extends BaseContext = BaseContext>(
   ctx: T,
-  resolverType: string,
+  ...resolverType: string[]
 ): T => {
-  const newCtx = { ...ctx, resolveChain: [...ctx.resolveChain, resolverType] };
+  const newCtx = {
+    ...ctx,
+    resolveChain: [...ctx.resolveChain, ...resolverType],
+  };
   return {
     ...newCtx,
     resolve: function (
@@ -316,7 +319,7 @@ export const resolve = async <
     resolverFunc,
   );
   const resolverType = type(resolved);
-  const ctx = withResolverChain(context, resolverType);
+  const ctx = withResolveChain(context, resolverType);
   const resolver = resolverMap[resolverType];
   if (resolver !== undefined) {
     let end: (() => void) | undefined = undefined;

@@ -77,7 +77,6 @@ const siteName = (): string => {
   return siteName;
 };
 
-// preview => pageId =>
 const previewPrefixKey = "Preview@";
 const preview: Resolver<PreactComponent> = async (
   { block, props }: { block: string; props: any },
