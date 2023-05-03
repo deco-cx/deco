@@ -94,8 +94,8 @@ const preview: Resolver<PreactComponent> = async (
     return resolve({
       __resolveType: "preview",
       props: {
-        ...props,
         ...resolvableProps,
+        ...props,
       },
       block: __resolveType,
     });
