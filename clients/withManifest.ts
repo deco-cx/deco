@@ -64,9 +64,33 @@ export const invoke = <
     TPayload,
     TManifest
   >
-> => {
-  return genericInvoke(payload);
-};
+> => genericInvoke(payload);
+
+export const create = <
+  TManifest extends DecoManifest,
+>() =>
+<
+  TInvocableKey extends
+    | AvailableFunctions<TManifest>
+    | AvailableLoaders<TManifest>
+    | AvailableActions<TManifest>,
+  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+    ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableActions<TManifest>
+      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never,
+  TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
+>(key: TInvocableKey) =>
+(
+  props: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+): Promise<
+  InvokeResult<
+    TPayload,
+    TManifest
+  >
+> => genericInvoke({ key, props });
 
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.
@@ -76,8 +100,14 @@ export const withManifest = <TManifest extends DecoManifest>() => {
     /**
      * Invokes the target function using the invoke api.
      */
-    invoke: invoke<
-      TManifest
-    >(),
+    invoke: invoke<TManifest>(),
+    /**
+     * Creates an invoker function. Usage:
+     * 
+     * const myAction = create('path/to/action');
+     * ...
+     * const result = await myAction(props);
+     */
+    create: create<TManifest>(),
   };
 };
