@@ -14,25 +14,35 @@ import { JSX } from "preact/jsx-runtime";
 import { PreactComponent } from "$live/engine/block.ts";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import UseSlot from "$live/sections/UseSlot.tsx";
+import LivePageEditor, {
+  BlockControls,
+} from "$live/components/LivePageEditor.tsx";
 
 export interface Props {
   name: string;
   layout?: Page;
   sections: Section[];
 }
-export function renderSection(
-  { Component: Section, props, metadata }: Props["sections"][0],
-  idx: number,
-) {
-  return (
-    <section
-      id={`${metadata?.component}-${idx}`}
-      data-manifest-key={metadata?.component}
-    >
-      <Section {...props} />
-    </section>
-  );
+
+function renderSectionFor(preview?: boolean) {
+  const Controls = preview ? BlockControls : () => null;
+  return function _renderSection(
+    { Component: Section, props, metadata }: Props["sections"][0],
+    idx: number,
+  ) {
+    return (
+      <section
+        id={`${metadata?.component}-${idx}`}
+        data-manifest-key={metadata?.component}
+      >
+        <Controls metadata={metadata} index={idx} />
+        <Section {...props} />
+      </section>
+    );
+  };
 }
+
+export const renderSection = renderSectionFor();
 
 interface UseSlotSection {
   useSlotSection: PreactComponent<JSX.Element, UseSlotProps>;
@@ -120,32 +130,36 @@ const useSlots = (
 const renderPage = (
   { layout, sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
+  preview = false,
 ): JSX.Element => {
   const validSections = maybeSections.filter(notUndefined);
   const layoutProps = layout?.props;
   const sections = Object.keys(useSlotsFromChild).length > 0
     ? validSections.map(useSlots(useSlotsFromChild))
     : validSections;
+  const _renderSection = renderSectionFor(preview);
 
   if (layoutProps && isLivePageProps(layoutProps)) {
     const useSlots = indexedBySlotName(
       sections,
     );
 
-    const rendered = renderPage(layoutProps, useSlots);
+    const rendered = renderPage(layoutProps, useSlots, preview);
     // unmatchedSlots are `UseSlot.tsx` that did not find a corresponding `Slot.tsx` with the same name, by default they are rendered at bottom
     const unmatchedSlots = Object.values(useSlots).filter((impl) => !impl.used);
     return (
       <>
         {rendered}
-        {unmatchedSlots.map((impl, i) => renderSection(impl.useSlotSection, i))}
+        {unmatchedSlots.map((impl, idx) =>
+          _renderSection(impl.useSlotSection, idx)
+        )}
       </>
     );
   }
 
   return (
     <>
-      {sections.map(renderSection)}
+      {sections.map(_renderSection)}
     </>
   );
 };
@@ -170,6 +184,15 @@ export default function LivePage(
         path={routerCtx?.pagePath}
       />
       {renderPage(props)}
+    </>
+  );
+}
+
+export function Preview(props: Props) {
+  return (
+    <>
+      {renderPage(props, {}, true)}
+      <LivePageEditor />
     </>
   );
 }
