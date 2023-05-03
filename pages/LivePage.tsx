@@ -14,9 +14,9 @@ import { JSX } from "preact/jsx-runtime";
 import { PreactComponent } from "$live/engine/block.ts";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import UseSlot from "$live/sections/UseSlot.tsx";
-import LivePagePreview, {
-  SectionControls,
-} from "$live/components/LivePagePreview.tsx";
+import LivePageEditor, {
+  BlockControls,
+} from "$live/components/LivePageEditor.tsx";
 
 export interface Props {
   name: string;
@@ -25,7 +25,7 @@ export interface Props {
 }
 
 function renderSectionFor(preview?: boolean) {
-  const Controls = preview ? SectionControls : () => null;
+  const Controls = preview ? BlockControls : () => null;
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
     idx: number,
@@ -192,7 +192,7 @@ export function Preview(props: Props) {
   return (
     <>
       {renderPage(props, {}, true)}
-      <LivePagePreview />
+      <LivePageEditor />
     </>
   );
 }

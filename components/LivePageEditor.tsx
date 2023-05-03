@@ -157,12 +157,12 @@ function useSendEditorEvent(args: EditorEvent) {
   };
 }
 
-interface ControlsProps {
+interface BlockControlsProps {
   metadata?: PreactComponent["metadata"];
   index: number;
 }
 
-export function SectionControls({ metadata, index: i }: ControlsProps) {
+export function BlockControls({ metadata, index: i }: BlockControlsProps) {
   return (
     <>
       <div data-insert="">
@@ -245,7 +245,7 @@ export function SectionControls({ metadata, index: i }: ControlsProps) {
   );
 }
 
-export default function LivePagePreview() {
+export default function LivePageEditor() {
   return (
     <>
       <Head>
