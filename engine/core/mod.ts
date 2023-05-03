@@ -96,11 +96,11 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       ...context,
       ...baseCtx,
     };
-    function _resolve<T>(data: Resolvable<T, TContext>): Promise<T> {
+    function _resolve<T>(
+      data: Resolvable<T, TContext>,
+    ): Promise<T> {
       return resolve<T, TContext>(
-        resolvers,
         data,
-        nresolvables,
         ctx as TContext,
       );
     }
@@ -111,9 +111,7 @@ export class ConfigResolver<TContext extends BaseContext = BaseContext> {
       return undefined as T;
     }
     return resolve<T, TContext>(
-      resolvers,
       resolvable,
-      nresolvables,
       ctx as TContext,
     );
   };

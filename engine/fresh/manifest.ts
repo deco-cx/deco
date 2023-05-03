@@ -77,6 +77,7 @@ const siteName = (): string => {
   return siteName;
 };
 
+// preview => pageId =>
 const previewPrefixKey = "Preview@";
 const preview: Resolver<PreactComponent> = async (
   { block, props }: { block: string; props: any },
@@ -90,14 +91,13 @@ const preview: Resolver<PreactComponent> = async (
       return { Component: PreviewNotAvailable, props: { block } };
     }
     const { __resolveType, ...resolvableProps } = resolvable;
-    // recursive call
     return resolve({
-      __resolveType: "preview",
-      props: {
+      __resolveType: `${previewPrefixKey}${__resolveType}`,
+      ...(await resolve({
+        __resolveType: __resolveType,
         ...resolvableProps,
         ...props,
-      },
-      block: __resolveType,
+      })),
     });
   }
   return resolve({

@@ -43,13 +43,11 @@ Deno.test("resolve", async (t) => {
       };
 
       const result = await resolve<OutputType>(
-        resolverMap,
         {
           bar: 10,
           __resolveType: addToStringBarResolver.name,
         },
-        {},
-        context,
+        { ...context, resolvers: resolverMap },
       );
       assertEquals(result, { barString: "10" });
       assertSpyCall(resolverMap.addToStringBarResolver, 0, {
@@ -77,11 +75,9 @@ Deno.test("resolve", async (t) => {
       await assertRejects(
         () =>
           resolve(
-            {},
             {
               __resolveType: "not_found_resolver",
             },
-            {},
             context,
           ),
         "Dangling reference of: not_found_resolver",
@@ -104,7 +100,6 @@ Deno.test("resolve", async (t) => {
       },
     };
     const result = await resolve<{ values: TestType[] }>(
-      resolverMap,
       {
         values: [
           {
@@ -120,8 +115,7 @@ Deno.test("resolve", async (t) => {
         ],
         __resolveType: "resolve",
       },
-      {},
-      context,
+      { ...context, resolvers: resolverMap },
     );
     assertEquals(result, {
       values: [
@@ -145,14 +139,12 @@ Deno.test("resolve", async (t) => {
       },
     };
     const result = await resolve<TestType>(
-      resolverMap,
       {
         foo: "hello",
         bar: 1,
         __resolveType: "testResolver",
       },
-      {},
-      context,
+      { ...context, resolvers: resolverMap },
     );
     assertEquals(result, { foo: "hello", bar: 2 });
   });
@@ -191,16 +183,12 @@ Deno.test("resolve", async (t) => {
 
     const result = await resolve<
       TestType,
-      BaseContext,
-      typeof resolverMap,
-      typeof resolvableMap
+      BaseContext
     >(
-      resolverMap,
       {
         __resolveType: "key",
       },
-      resolvableMap,
-      context,
+      { ...context, resolvers: resolverMap, resolvables: resolvableMap },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
   });
@@ -228,22 +216,14 @@ Deno.test("resolve", async (t) => {
     };
     const result = await resolve<
       TestType,
-      BaseContext,
-      typeof resolverMap,
-      {
-        key: undefined;
-      }
+      BaseContext
     >(
-      resolverMap,
       {
         foo: "hello",
         bar: 10,
         __resolveType: "testResolver",
       },
-      {
-        key: undefined,
-      },
-      context,
+      { ...context, resolvers: resolverMap },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
   });
