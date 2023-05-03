@@ -326,11 +326,11 @@ export const resolve = async <
         const original = respOrPromise;
         respOrPromise = async (...args: any[]) => {
           const resp = await original(...args);
-          end && end();
+          end?.();
           return resp;
         };
-      } else if (end) {
-        end();
+      } else {
+        end?.();
       }
     }
     return resolve(resolverMap, respOrPromise, resolvables, ctx);
