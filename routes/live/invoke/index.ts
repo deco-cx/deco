@@ -40,6 +40,7 @@ export type ManifestLoader<
 > = TManifest["loaders"][TLoader] extends { default: infer TLoader }
   ? TLoader extends (
     props: infer Props,
+    req: Request,
     _ctx: any,
   ) => PromiseOrValue<infer TReturn> ? { props: Props; return: TReturn }
   : never
@@ -51,6 +52,7 @@ export type ManifestAction<
 > = TManifest["actions"][TAction] extends { default: infer TAction }
   ? TAction extends (
     props: infer Props,
+    req: Request,
     _ctx: any,
   ) => PromiseOrValue<infer TReturn> ? { props: Props; return: TReturn }
   : never
