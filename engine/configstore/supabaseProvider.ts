@@ -7,7 +7,9 @@ export interface SupabaseConfigProvider {
   /**
    * @returns the current state of the configurations.
    */
-  get(): PromiseLike<{ data: CurrResolvables | null; error: any }>;
+  get(
+    includeArchived: boolean,
+  ): PromiseLike<{ data: CurrResolvables | null; error: any }>;
   /**
    * When called, receives the `onChange` function that will be called when the configuration has changed,
    * and the `cb` function that will be called when the subscription state change. The cb function can be used to determine if it should fallsback to background updates or not.
@@ -61,7 +63,7 @@ export const newSupabase = (
       reject(lastError); // TODO @author Marcos V. Candeia should we panic? and exit? Deno.exit(1)
       return;
     }
-    const { data, error } = await provider.get();
+    const { data, error } = await provider.get(false);
     if (error !== null || data === null) {
       remainingRetries--;
       lastError = error;
@@ -85,7 +87,7 @@ export const newSupabase = (
     }
     try {
       singleFlight = true;
-      const { data, error } = await provider.get();
+      const { data, error } = await provider.get(force === true); // if it is forced so we should include archived
       if (error !== null) {
         return;
       }
