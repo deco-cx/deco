@@ -24,7 +24,7 @@ export interface Props {
   sections: Section[];
 }
 
-function renderSectionFor(editMode?: boolean) {
+export function renderSectionFor(editMode?: boolean) {
   const Controls = editMode ? BlockControls : () => null;
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
@@ -36,7 +36,7 @@ function renderSectionFor(editMode?: boolean) {
         data-manifest-key={metadata?.component}
       >
         <Controls metadata={metadata} index={idx} />
-        <Section {...props} />
+        <Section preview={editMode} {...props} />
       </section>
     );
   };

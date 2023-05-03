@@ -253,7 +253,7 @@ export default function LivePageEditor() {
           id="_live_css"
           dangerouslySetInnerHTML={{
             __html: `
-            section[data-manifest-key]:before {
+            section[data-manifest-key]:not(:has(section[data-manifest-key])):before {
               content: '';
               display: none;
               position: absolute;
@@ -264,13 +264,13 @@ export default function LivePageEditor() {
               border-color: #2E6ED9;
             }
 
-        section[data-manifest-key]:hover {
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover {
           position: relative;
         }
 
-        section[data-manifest-key]:hover:before,
-        section[data-manifest-key]:hover div[data-controllers],
-        section[data-manifest-key]:hover div[data-insert] {
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover:before,
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-controllers],
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-insert] {
           display: flex;
         }
 
