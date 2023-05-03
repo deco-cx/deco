@@ -67,6 +67,7 @@ export type LiveConfig<TConfig = any, TState = any> = TState & {
   resolve: ResolveFunc;
 };
 
+export type { FnContext } from "$live/blocks/utils.ts";
 export type ActionContext<TState = {}> = FnContext<TState>;
 export type LoaderContext<TState = {}> = FnContext<TState>;
 
