@@ -313,12 +313,25 @@ export const resolve = async <
   };
   const resolver = resolverMap[resolverType];
   if (resolver !== undefined) {
+    let end: (() => void) | undefined = undefined;
     let respOrPromise = resolver(resolved, ctx);
     if (isAwaitable(respOrPromise)) {
       const timingName = resolverType.replaceAll("/", ".");
-      const end = ctx.monitoring?.t.start(timingName);
+      end = ctx.monitoring?.t.start(timingName);
       respOrPromise = await respOrPromise;
-      end && end();
+
+      // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+      // in order to achieve the correct result we should wrap the inner function with the timings function.
+      if (typeof respOrPromise === "function") {
+        const original = respOrPromise;
+        respOrPromise = async (...args: any[]) => {
+          const resp = await original(...args);
+          end && end();
+          return resp;
+        };
+      } else if (end) {
+        end();
+      }
     }
     return resolve(resolverMap, respOrPromise, resolvables, ctx);
   }
