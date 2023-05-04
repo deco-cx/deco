@@ -1,6 +1,7 @@
-import { JSX } from "preact";
+import { ComponentChildren, createContext, JSX } from "preact";
 import { Head } from "$fresh/runtime.ts";
 import { PreactComponent } from "$live/engine/block.ts";
+import { useContext } from "preact/hooks";
 
 interface PreviewIconProps extends JSX.HTMLAttributes<SVGSVGElement> {
   id:
@@ -127,7 +128,10 @@ function PreviewIcons() {
 interface DefaultEditorEvent {
   action: "move" | "edit" | "duplicate" | "delete" | "insert";
   key: string;
+  // TODO: Bump this version
+  /* @deprecated since version @1.0.x */
   index: number;
+  path: string[];
 }
 
 interface MoveEditorEvent extends DefaultEditorEvent {
@@ -157,12 +161,9 @@ function useSendEditorEvent(args: EditorEvent) {
   };
 }
 
-interface BlockControlsProps {
-  metadata?: PreactComponent["metadata"];
-  index: number;
-}
+export function BlockControls() {
+  const { metadata, index: i, path } = useEditorContext();
 
-export function BlockControls({ metadata, index: i }: BlockControlsProps) {
   return (
     <>
       <div data-insert="">
@@ -173,6 +174,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             key: metadata?.component ?? "",
             index: i,
             at: i,
+            path,
           })}
         >
           <PreviewIcon id="plus" />
@@ -184,6 +186,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             key: metadata?.component ?? "",
             index: i,
             at: i + 1,
+            path,
           })}
         >
           <PreviewIcon id="plus" />
@@ -196,6 +199,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             action: "delete",
             key: metadata?.component ?? "",
             index: i,
+            path,
           })}
         >
           <PreviewIcon id="trash" />
@@ -207,6 +211,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             index: i,
             from: i,
             to: i - 1,
+            path,
           })}
         >
           <PreviewIcon id="chevron-up" />
@@ -218,6 +223,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             index: i,
             from: i,
             to: i + 1,
+            path,
           })}
         >
           <PreviewIcon id="chevron-down" />
@@ -227,6 +233,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             action: "duplicate",
             key: metadata?.component ?? "",
             index: i,
+            path,
           })}
         >
           <PreviewIcon id="copy" />
@@ -236,6 +243,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             action: "edit",
             key: metadata?.component ?? "",
             index: i,
+            path,
           })}
         >
           <PreviewIcon id="edit" />
@@ -361,3 +369,76 @@ export default function LivePageEditor() {
     </>
   );
 }
+
+interface EditorContextProps {
+  metadata: PreactComponent["metadata"];
+  index: number;
+  path: string[];
+}
+
+const EditorContext = createContext<
+  EditorContextProps | undefined
+>(undefined);
+
+const useEditorContext = () => {
+  const ctx = useContext(EditorContext);
+  if (ctx === undefined) {
+    throw new Error("Something went wrong rendering EditMode");
+  }
+
+  return ctx;
+};
+
+const useInternalEditorContext = () => useContext(EditorContext);
+
+export function EditorContextProvider(
+  { metadata, index, children }: Omit<EditorContextProps, "path"> & {
+    children: ComponentChildren;
+  },
+) {
+  const editorCtx = useInternalEditorContext();
+  const currentPath = generatePathFromResolveChain(
+    metadata!.resolveChain,
+    index,
+  );
+  const path = [...(editorCtx?.path || []), ...currentPath];
+
+  return (
+    <EditorContext.Provider
+      value={{ metadata, index, path }}
+    >
+      {children}
+    </EditorContext.Provider>
+  );
+}
+
+const LIVE_PAGE_RESOLVE_TYPE = "$live/pages/LivePage.tsx";
+const USE_SLOT_RESOLVE_TYPE = "$live/sections/UseSlot.tsx";
+const generatePathFromResolveChain = (
+  resolveChain: string[],
+  index: number,
+) => {
+  const nextToLast = resolveChain[resolveChain.length - 2];
+  // Section Inside Page Layout
+  if (
+    nextToLast === LIVE_PAGE_RESOLVE_TYPE && resolveChain.length >= 3 &&
+    resolveChain[resolveChain.length - 3] === LIVE_PAGE_RESOLVE_TYPE
+  ) {
+    return ["layout", "sections", index.toString()];
+  }
+
+  // Section Inside Page Section
+  if (
+    nextToLast === LIVE_PAGE_RESOLVE_TYPE && resolveChain.length >= 3 &&
+    resolveChain[resolveChain.length - 3] !== LIVE_PAGE_RESOLVE_TYPE
+  ) {
+    return ["sections", index.toString()];
+  }
+
+  // Sections inside use slot
+  if (nextToLast === USE_SLOT_RESOLVE_TYPE) {
+    return ["sections", index.toString()];
+  }
+
+  return [index.toString()];
+};

@@ -5,6 +5,7 @@ import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
 import LivePageEditor, {
   BlockControls,
+  EditorContextProvider,
 } from "$live/components/LivePageEditor.tsx";
 import { PreactComponent } from "$live/engine/block.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
@@ -16,7 +17,7 @@ import {
 import { isLivePageProps } from "$live/sections/PageInclude.tsx";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
-import { JSX } from "preact/jsx-runtime";
+import { ComponentChildren, JSX } from "preact";
 
 export interface Props {
   name: string;
@@ -24,8 +25,14 @@ export interface Props {
   sections: Section[];
 }
 
+const IdentityComponent = ({ children }: { children: ComponentChildren }) => (
+  <>{children}</>
+);
+
 export function renderSectionFor(editMode?: boolean) {
   const Controls = editMode ? BlockControls : () => null;
+  const EditContext = editMode ? EditorContextProvider : IdentityComponent;
+
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
     idx: number,
@@ -35,8 +42,10 @@ export function renderSectionFor(editMode?: boolean) {
         id={`${metadata?.component}-${idx}`}
         data-manifest-key={metadata?.component}
       >
-        <Controls metadata={metadata} index={idx} />
-        <Section editMode={editMode} {...props} />
+        <EditContext metadata={metadata} index={props.__previewIndex ?? idx}>
+          <Controls />
+          <Section editMode={editMode} {...props} />
+        </EditContext>
       </section>
     );
   };
@@ -63,8 +72,9 @@ function indexedBySlotName(
   const indexed: Record<string, UseSlotSection> = {};
   const contentSections: Section[] = [];
 
-  for (const section of sections) {
+  sections.forEach((section, index) => {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
+      (section.props as any).__previewIndex = index;
       indexed[section.props.name] = {
         useSection: section,
         used: false,
@@ -72,7 +82,8 @@ function indexedBySlotName(
     } else {
       contentSections.push(section);
     } // others are considered content
-  }
+  });
+
   if (contentSections.length > 0 && !indexed[CONTENT_SLOT_NAME]) {
     indexed[CONTENT_SLOT_NAME] = {
       used: false,

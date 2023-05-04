@@ -6,12 +6,11 @@ import { WellKnownSlots } from "$live/sections/Slot.tsx";
 export interface Props {
   name: string | WellKnownSlots;
   sections: Section[];
-  editMode?: boolean;
 }
 
-export default function UseSlot({ sections, editMode }: Props) {
+export default function UseSlot({ sections, ...rest }: Props) {
   // TODO: Check performance impact here
-  const renderSection = renderSectionFor(editMode);
+  const renderSection = renderSectionFor((rest as any).editMode);
 
   return (
     <>

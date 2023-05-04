@@ -8,7 +8,6 @@ import {
 
 export interface Props {
   page: Page;
-  editMode?: boolean;
 }
 
 export const isLivePageProps = (
@@ -18,12 +17,12 @@ export const isLivePageProps = (
     (p as LivePageProps)?.layout !== undefined;
 };
 
-export default function PageInclude({ page, editMode }: Props) {
+export default function PageInclude({ page, ...rest }: Props) {
   if (!isLivePageProps(page?.props)) {
     return null;
   }
 
-  const renderSection = renderSectionFor(editMode);
+  const renderSection = renderSectionFor((rest as any).editMode);
 
   return (
     <>{(page?.props?.sections ?? []).filter(notUndefined).map(renderSection)}</>
