@@ -74,12 +74,17 @@ function indexedBySlotName(
 
   sections.forEach((section, index) => {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
+      // This is used to maintain the real position during editMode
+      // TODO: check maybe can use metadata
       (section.props as any).__previewIndex = index;
       indexed[section.props.name] = {
         useSection: section,
         used: false,
       };
     } else {
+      // This is used to maintain the real position during editMode
+      // TODO: check maybe can use metadata
+      section.props.__previewIndex = index;
       contentSections.push(section);
     } // others are considered content
   });
@@ -155,6 +160,7 @@ const renderPage = (
     const unmatchedSections = unmatchedSlots.flatMap((impl) =>
       Array.isArray(impl.useSection) ? impl.useSection : [impl.useSection]
     );
+
     return (
       <>
         {rendered}
