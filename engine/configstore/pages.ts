@@ -222,7 +222,7 @@ const pageToConfig =
     return c;
   };
 
-const baseEntrypoint = {
+const baseEntrypoint = Object.freeze({
   [globalSections]: {},
   [everyoneAudience]: {
     routes: {},
@@ -245,7 +245,7 @@ const baseEntrypoint = {
       __resolveType: "$live/handlers/routesSelection.ts",
     },
   },
-} as Record<string, Resolvable>;
+}) as Record<string, Resolvable>;
 
 const defaultStates = ["published", "draft", "global"];
 const fetchSitePages = async (siteId: number, includeArchived = false) => {
