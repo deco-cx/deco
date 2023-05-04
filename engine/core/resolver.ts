@@ -294,14 +294,6 @@ export const resolve = async <
   resolvable: Resolvable<T, TContext>,
   context: TContext,
 ): Promise<T> => {
-  const resolverFunc = <K>(
-    data: Resolvable<K, TContext>,
-  ): PromiseOrValue<K> =>
-    resolve<K, TContext>(
-      data,
-      context,
-    );
-
   const { resolvers: resolverMap, resolvables } = context;
   const [resolvableObj, type] = resolveTypeOf(resolvable);
   const tpResolver = nativeResolverByType[typeof resolvableObj];
@@ -309,14 +301,18 @@ export const resolve = async <
     if (Array.isArray(resolvableObj)) {
       return await tpResolver<T, TContext>(
         resolvableObj,
-        resolverFunc,
+        (data) => resolve(data, context),
       );
     }
     return resolvableObj as T;
   }
   const resolved = await tpResolver<T, TContext>(
     resolvableObj,
-    resolverFunc,
+    (data) =>
+      resolve(
+        data,
+        typeof type === "string" ? withResolveChain(context, type) : context,
+      ),
   );
   const resolverType = type(resolved);
   const ctx = withResolveChain(context, resolverType);
