@@ -146,7 +146,7 @@ const sectionToAccount: Record<string, string> = {
 
 export const mapPage = (namespace: string, p: Page): Resolvable => {
   const nsToConfig = pageToConfig(namespace);
-  return nsToConfig(baseEntrypoint, p)[p.id];
+  return nsToConfig(structuredClone(baseEntrypoint), p)[p.id];
 };
 
 function mapGlobalToAccount(
@@ -380,7 +380,7 @@ const pagesToConfig = (
   const configs = p.sort((pageA, pageB) =>
     pageA.state === "global" ? -1 : pageB.state === "global" ? 1 : 0
   ) // process global first
-    .reduce(pageToConfig(ns), {...baseEntrypoint});
+    .reduce(pageToConfig(ns), structuredClone(baseEntrypoint));
   return flagsToConfig(configs, flags, ns);
 };
 
