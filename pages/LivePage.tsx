@@ -49,6 +49,7 @@ interface UseSlotSection {
   used: boolean;
 }
 
+const USE_SLOT_SECTION_KEY = "$live/sections/UseSlot.tsx" as const;
 /**
  * Builds a map which the key is the name of the slot and the value is the slot component itself.
  * For those sections that aren't used inside a slot it is considered the default `content slot`.
@@ -62,7 +63,7 @@ function indexedBySlotName(
   const contentSections: Section[] = [];
 
   for (const section of sections) {
-    if (isSection(section, "$live/sections/UseSlot.tsx")) {
+    if (isSection(section, USE_SLOT_SECTION_KEY)) {
       indexed[section.props.name] = {
         useSlotSection: section,
         used: false,
@@ -76,8 +77,8 @@ function indexedBySlotName(
       used: false,
       useSlotSection: {
         metadata: {
-          component: "$live/sections/UseSlot.tsx",
-          resolveChain: [],
+          component: USE_SLOT_SECTION_KEY,
+          resolveChain: [USE_SLOT_SECTION_KEY],
         },
         Component: UseSlot,
         props: {

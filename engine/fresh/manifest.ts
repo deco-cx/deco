@@ -90,14 +90,13 @@ const preview: Resolver<PreactComponent> = async (
       return { Component: PreviewNotAvailable, props: { block } };
     }
     const { __resolveType, ...resolvableProps } = resolvable;
-    // recursive call
     return resolve({
-      __resolveType: "preview",
-      props: {
+      __resolveType: `${previewPrefixKey}${__resolveType}`,
+      ...(await resolve({
+        __resolveType: __resolveType,
         ...resolvableProps,
         ...props,
-      },
-      block: __resolveType,
+      })),
     });
   }
   return resolve({
