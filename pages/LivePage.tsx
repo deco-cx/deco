@@ -36,7 +36,7 @@ export function renderSectionFor(editMode?: boolean) {
         data-manifest-key={metadata?.component}
       >
         <Controls metadata={metadata} index={idx} />
-        <Section preview={editMode} {...props} />
+        <Section editMode={editMode} {...props} />
       </section>
     );
   };
