@@ -380,7 +380,7 @@ const pagesToConfig = (
   const configs = p.sort((pageA, pageB) =>
     pageA.state === "global" ? -1 : pageB.state === "global" ? 1 : 0
   ) // process global first
-    .reduce(pageToConfig(ns), baseEntrypoint);
+    .reduce(pageToConfig(ns), {...baseEntrypoint});
   return flagsToConfig(configs, flags, ns);
 };
 
