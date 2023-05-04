@@ -2,6 +2,10 @@ import { Page } from "$live/blocks/page.ts";
 import { isSection, Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
+import LivePageEditor, {
+  BlockControls,
+} from "$live/components/LivePageEditor.tsx";
+import { PreactComponent } from "$live/engine/block.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
 import {
@@ -9,14 +13,9 @@ import {
   useRouterContext,
 } from "$live/routes/[...catchall].tsx";
 import { isLivePageProps } from "$live/sections/PageInclude.tsx";
+import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
 import { JSX } from "preact/jsx-runtime";
-import { PreactComponent } from "$live/engine/block.ts";
-import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
-import UseSlot from "$live/sections/UseSlot.tsx";
-import LivePageEditor, {
-  BlockControls,
-} from "$live/components/LivePageEditor.tsx";
 
 export interface Props {
   name: string;
@@ -24,8 +23,8 @@ export interface Props {
   sections: Section[];
 }
 
-function renderSectionFor(preview?: boolean) {
-  const Controls = preview ? BlockControls : () => null;
+function renderSectionFor(editMode?: boolean) {
+  const Controls = editMode ? BlockControls : () => null;
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
     idx: number,
@@ -45,7 +44,8 @@ function renderSectionFor(preview?: boolean) {
 export const renderSection = renderSectionFor();
 
 interface UseSlotSection {
-  useSlotSection: PreactComponent<JSX.Element, UseSlotProps>;
+  // useSection can be either a `UseSlotSection` or a `Section[]` that is outside a slot.
+  useSection: PreactComponent<JSX.Element, UseSlotProps> | Section[];
   used: boolean;
 }
 
@@ -65,27 +65,17 @@ function indexedBySlotName(
   for (const section of sections) {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
       indexed[section.props.name] = {
-        useSlotSection: section,
+        useSection: section,
         used: false,
       };
     } else {
       contentSections.push(section);
     } // others are considered content
   }
-  if (contentSections.length > 0) {
+  if (contentSections.length > 0 && !indexed[CONTENT_SLOT_NAME]) {
     indexed[CONTENT_SLOT_NAME] = {
       used: false,
-      useSlotSection: {
-        metadata: {
-          component: USE_SLOT_SECTION_KEY,
-          resolveChain: [USE_SLOT_SECTION_KEY],
-        },
-        Component: UseSlot,
-        props: {
-          name: CONTENT_SLOT_NAME,
-          sections: contentSections,
-        },
-      },
+      useSection: contentSections,
     };
   }
 
@@ -100,15 +90,17 @@ function indexedBySlotName(
 const useSlots = (
   impls: Record<string, UseSlotSection>,
 ) =>
-(sec: Section): Section => {
+(sec: Section): Section[] => {
   if (isSection(sec, "$live/sections/Slot.tsx")) {
     const impl = impls[sec.props.name ?? CONTENT_SLOT_NAME];
     if (impl && !impl.used) {
       impl.used = true;
-      return impl.useSlotSection;
+      return Array.isArray(impl.useSection)
+        ? impl.useSection
+        : [impl.useSection]; // allow content sections to be rendered at current page level.
     }
   }
-  return sec;
+  return [sec];
 };
 
 /**
@@ -131,29 +123,30 @@ const useSlots = (
 const renderPage = (
   { layout, sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
-  preview = false,
+  editMode = false,
 ): JSX.Element => {
   const validSections = maybeSections.filter(notUndefined);
   const layoutProps = layout?.props;
   const sections = Object.keys(useSlotsFromChild).length > 0
-    ? validSections.map(useSlots(useSlotsFromChild))
+    ? validSections.flatMap(useSlots(useSlotsFromChild))
     : validSections;
-  const _renderSection = renderSectionFor(preview);
+  const _renderSection = renderSectionFor(editMode);
 
   if (layoutProps && isLivePageProps(layoutProps)) {
     const useSlots = indexedBySlotName(
       sections,
     );
 
-    const rendered = renderPage(layoutProps, useSlots, preview);
+    const rendered = renderPage(layoutProps, useSlots, editMode);
     // unmatchedSlots are `UseSlot.tsx` that did not find a corresponding `Slot.tsx` with the same name, by default they are rendered at bottom
     const unmatchedSlots = Object.values(useSlots).filter((impl) => !impl.used);
+    const unmatchedSections = unmatchedSlots.flatMap((impl) =>
+      Array.isArray(impl.useSection) ? impl.useSection : [impl.useSection]
+    );
     return (
       <>
         {rendered}
-        {unmatchedSlots.map((impl, idx) =>
-          _renderSection(impl.useSlotSection, idx)
-        )}
+        {unmatchedSections.map(_renderSection)}
       </>
     );
   }
@@ -190,10 +183,13 @@ export default function LivePage(
 }
 
 export function Preview(props: Props) {
+  const pageCtx = usePageContext();
+  const editMode = pageCtx?.url.searchParams.has("editMode") ?? false;
+
   return (
     <>
-      {renderPage(props, {}, true)}
-      <LivePageEditor />
+      {renderPage(props, {}, editMode)}
+      {editMode && <LivePageEditor />}
     </>
   );
 }
