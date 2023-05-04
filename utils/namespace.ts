@@ -2,11 +2,11 @@ import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import { siteJSON } from "../dev.ts";
 import { exists } from "./filesystem.ts";
 
-const sanitize = (str: string | undefined) =>
+const sanitizer = (str: string | undefined) =>
   str?.endsWith("/") ? str : `${str}/`;
 
 export const updateImportMap = async (dir: string, ns: string) => {
-  const namespace = sanitize(ns);
+  const namespace = sanitizer(ns);
   try {
     // try find import map file.
     const denoJSON = JSON.parse(

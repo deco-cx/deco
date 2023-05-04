@@ -5,10 +5,35 @@ import {
   gray,
 } from "https://deno.land/std@0.170.0/fmt/colors.ts";
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
+import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 import { diffLines } from "https://esm.sh/diff@5.1.0";
 import deno from "../deno.json" assert { type: "json" };
 import meta from "../meta.json" assert { type: "json" };
-import { namespaceFromImportMap } from "../utils/namespace.ts";
+
+const withSlashAtEnd = (str: string | undefined) =>
+  str?.endsWith("/") ? str : `${str}/`;
+
+const withoutSlashAtEnd = (str: string | undefined) =>
+  str?.endsWith("/") ? str.substring(0, str.length - 1) : str;
+
+const namespaceFromGit = async (): Promise<string | undefined> => {
+  const lns = await $`git config --get remote.origin.url`.lines();
+  if (lns.length < 1) {
+    return undefined;
+  }
+  const fetchUrlLine = lns[0];
+  if (fetchUrlLine.startsWith("http")) { // http clone
+    const fetchUrl = new URL(fetchUrlLine);
+    return fetchUrl.pathname.substring(1).replace(".git", "").trimEnd(); // remove .git
+  }
+  if (fetchUrlLine.startsWith("git")) {
+    const [_ignoreGitUrl, nsAndGit] = fetchUrlLine.split(":");
+    const [namespace] = nsAndGit.split(".");
+    return namespace.trimEnd();
+  }
+  return fetchUrlLine.replace(":", "/").trimEnd();
+};
+const ns = await namespaceFromGit().then(withSlashAtEnd);
 
 const runtimeTS = `
 import { withManifest } from "$live/clients/withManifest.ts";
@@ -101,6 +126,7 @@ const updateImportMap = async (
   const { imports, ...rest }: { imports: Record<string, string> } = JSON.parse(
     importMapStr,
   );
+
   return {
     from: {
       path: importMapPath,
@@ -113,6 +139,7 @@ const updateImportMap = async (
           ...rest,
           imports: {
             ...imports,
+            [ns]: "./",
             "$live/": `https://denopkg.com/deco-cx/live@${liveVersion}/`,
             "deco-sites/std/":
               `https://denopkg.com/deco-sites/std@${stdVersion}/`,
@@ -170,6 +197,7 @@ const createSiteJson = async () => {
   const finalContent = JSON.stringify(
     {
       siteId: siteFromMiddleware,
+      namespace: withoutSlashAtEnd(ns),
     },
     null,
     2,
@@ -301,9 +329,13 @@ if (import.meta.main) {
       const shouldProceed = confirm("Do you want to proceed?");
       if (shouldProceed) {
         await Promise.all(patches.map(applyPatch));
-        await namespaceFromImportMap(Deno.cwd());
-        const p = Deno.run({ cmd: ["deno", "task", "start"] });
-        await p.status();
+        const denoTaskStart = new Deno.Command(Deno.execPath(), {
+          args: ["task", "start"],
+          stdout: "inherit",
+        });
+        const childProcess = denoTaskStart.spawn();
+        await childProcess.status;
+        childProcess.unref();
       }
     } else {
       console.log("everything is up to date!");

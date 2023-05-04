@@ -63,24 +63,25 @@ export async function generate(
   directory: string,
   manifest: ManifestBuilder,
 ) {
-  const proc = Deno.run({
-    cmd: [Deno.execPath(), "fmt", "-"],
+  const fmt = new Deno.Command(Deno.execPath(), {
+    args: ["fmt", "-"],
     stdin: "piped",
     stdout: "piped",
     stderr: "null",
   });
+  const proc = fmt.spawn();
   const raw = new ReadableStream({
     start(controller) {
       controller.enqueue(new TextEncoder().encode(manifest.build()));
       controller.close();
     },
   });
-  await raw.pipeTo(proc.stdin.writable);
+  await raw.pipeTo(proc.stdin);
   const out = await proc.output();
-  await proc.status();
-  proc.close();
+  await proc.status;
+  proc.unref();
 
-  const manifestStr = new TextDecoder().decode(out);
+  const manifestStr = new TextDecoder().decode(out.stdout);
   const manifestPath = join(directory, manifestFile);
 
   await Deno.writeTextFile(manifestPath, manifestStr);
@@ -162,12 +163,14 @@ export default async function dev(
 }
 
 export async function format(content: string) {
-  const proc = Deno.run({
-    cmd: [Deno.execPath(), "fmt", "-"],
+  const fmt = new Deno.Command(Deno.execPath(), {
+    args: ["fmt", "-"],
     stdin: "piped",
     stdout: "piped",
     stderr: "null",
   });
+
+  const proc = fmt.spawn();
 
   const raw = new ReadableStream({
     start(controller) {
@@ -175,12 +178,13 @@ export async function format(content: string) {
       controller.close();
     },
   });
-  await raw.pipeTo(proc.stdin.writable);
-  const out = await proc.output();
-  await proc.status();
-  proc.close();
 
-  return new TextDecoder().decode(out);
+  await raw.pipeTo(proc.stdin);
+  const out = await proc.output();
+  await proc.status;
+  proc.kill();
+
+  return new TextDecoder().decode(out.stdout);
 }
 
 // Generate live own manifest data so that other sites can import native functions and sections.
