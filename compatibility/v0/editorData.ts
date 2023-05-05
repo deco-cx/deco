@@ -108,6 +108,7 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
   const availableFunctions = Object.keys({
     ...context.manifest?.functions ?? {},
     ...context.manifest?.matchers ?? {},
+    ...context.manifest?.loaders ?? {},
   }).map(
     (functionKey) => {
       const key = functionKey.replace("matchers", "functions");
