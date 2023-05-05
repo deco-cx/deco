@@ -1,17 +1,14 @@
-import { Command, RunRequest, workflowRemoteRunner } from "$live/deps.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
-export interface Props extends RunRequest {
-  metadata: {
-    workflow: Workflow;
-  };
-}
+import { Arg, Command, RunRequest, workflowRemoteRunner } from "$live/deps.ts";
 
+export type Props = RunRequest<Arg, { workflow: Workflow }>;
 /**
  * @description Proceed the workflow execution based on the current state of the workflow.
  */
 export default function runWorkflow(
-  { metadata: { workflow }, ...runReq }: Props,
+  props: Props,
 ): Command {
+  const { metadata: { workflow } } = props;
   const handler = workflowRemoteRunner(workflow, WorkflowContext);
-  return handler(runReq);
+  return handler(props);
 }
