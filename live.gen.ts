@@ -15,18 +15,20 @@ import * as $$$$7 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "./handlers/routesSelection.ts";
 import * as $$$$$$1 from "./handlers/router.ts";
 import * as $$$$$$2 from "./handlers/devPage.ts";
-import * as $$$$$$3 from "./handlers/fresh.ts";
+import * as $$$$$$3 from "./handlers/proxy.ts";
+import * as $$$$$$4 from "./handlers/fresh.ts";
 import * as $$$$$$$0 from "./pages/LivePage.tsx";
 import * as $$$$$$$$0 from "./sections/UseSlot.tsx";
 import * as $$$$$$$$1 from "./sections/Slot.tsx";
 import * as $$$$$$$$2 from "./sections/PageInclude.tsx";
 import * as $$$$$$$$$0 from "./matchers/MatchDate.ts";
-import * as $$$$$$$$$1 from "./matchers/MatchUserAgent.ts";
-import * as $$$$$$$$$2 from "./matchers/MatchSite.ts";
-import * as $$$$$$$$$3 from "./matchers/MatchMulti.ts";
-import * as $$$$$$$$$4 from "./matchers/MatchRandom.ts";
-import * as $$$$$$$$$5 from "./matchers/MatchEnvironment.ts";
-import * as $$$$$$$$$6 from "./matchers/MatchAlways.ts";
+import * as $$$$$$$$$1 from "./matchers/MatchOrigin.ts";
+import * as $$$$$$$$$2 from "./matchers/MatchUserAgent.ts";
+import * as $$$$$$$$$3 from "./matchers/MatchSite.ts";
+import * as $$$$$$$$$4 from "./matchers/MatchMulti.ts";
+import * as $$$$$$$$$5 from "./matchers/MatchRandom.ts";
+import * as $$$$$$$$$6 from "./matchers/MatchEnvironment.ts";
+import * as $$$$$$$$$7 from "./matchers/MatchAlways.ts";
 import * as $$$$$$$$$$0 from "./flags/audience.ts";
 import * as $$$$$$$$$$1 from "./flags/everyone.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
@@ -45,7 +47,8 @@ const manifest = {
   },
   "handlers": {
     "$live/handlers/devPage.ts": $$$$$$2,
-    "$live/handlers/fresh.ts": $$$$$$3,
+    "$live/handlers/fresh.ts": $$$$$$4,
+    "$live/handlers/proxy.ts": $$$$$$3,
     "$live/handlers/router.ts": $$$$$$1,
     "$live/handlers/routesSelection.ts": $$$$$$0,
   },
@@ -58,13 +61,14 @@ const manifest = {
     "$live/sections/UseSlot.tsx": $$$$$$$$0,
   },
   "matchers": {
-    "$live/matchers/MatchAlways.ts": $$$$$$$$$6,
+    "$live/matchers/MatchAlways.ts": $$$$$$$$$7,
     "$live/matchers/MatchDate.ts": $$$$$$$$$0,
-    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$5,
-    "$live/matchers/MatchMulti.ts": $$$$$$$$$3,
-    "$live/matchers/MatchRandom.ts": $$$$$$$$$4,
-    "$live/matchers/MatchSite.ts": $$$$$$$$$2,
-    "$live/matchers/MatchUserAgent.ts": $$$$$$$$$1,
+    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$6,
+    "$live/matchers/MatchMulti.ts": $$$$$$$$$4,
+    "$live/matchers/MatchOrigin.ts": $$$$$$$$$1,
+    "$live/matchers/MatchRandom.ts": $$$$$$$$$5,
+    "$live/matchers/MatchSite.ts": $$$$$$$$$3,
+    "$live/matchers/MatchUserAgent.ts": $$$$$$$$$2,
   },
   "flags": {
     "$live/flags/audience.ts": $$$$$$$$$$0,
