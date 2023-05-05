@@ -55,6 +55,6 @@ export interface Props {
   url: string;
 }
 
-export function Proxy({ url }: Props) {
+export default function Proxy({ url }: Props) {
   return proxyTo(url);
 }
