@@ -2,8 +2,8 @@ import { fromConfigsTable } from "$live/engine/configstore/configs.ts";
 import { fromPagesTable } from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
-import { newSupabase } from "./supabaseProvider.ts";
 import { newFsProvider } from "./fs.ts";
+import { newSupabase } from "./supabaseProvider.ts";
 
 export interface ReadOptions {
   forceFresh?: boolean;
@@ -46,14 +46,15 @@ export const getComposedConfigStore = (
   site: string,
   siteId: number,
 ): ConfigStore => {
+  const providers = [];
   if (Deno.env.has("USE_LOCAL_STORAGE")) {
-    return newFsProvider();
+    providers.push(newFsProvider());
   }
-  if (siteId <= 0) { // new sites does not have siteId
-    return newSupabase(fromConfigsTable(site));
+  if (siteId > 0) {
+    providers.push(newSupabase(fromPagesTable(siteId, ns), context.isDeploy)); // if not deploy so no background is needed
   }
   return compose(
-    newSupabase(fromPagesTable(siteId, ns), context.isDeploy), // if not deploy so no background is needed
-    newSupabase(fromConfigsTable(site), context.isDeploy),
+    ...providers,
+    newSupabase(fromConfigsTable(site), context.isDeploy), // if not deploy so no background is needed
   );
 };
