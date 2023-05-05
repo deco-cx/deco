@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
 import { applyConfigSync } from "$live/blocks/utils.ts";
 import {
+  InvokeHttpEndpointCommand,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
-  InvokeHttpEndpointCommand,
 } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { context } from "$live/live.ts";
