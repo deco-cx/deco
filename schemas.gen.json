@@ -25,6 +25,7 @@
               "$live/matchers/MatchDate.ts",
               "$live/matchers/MatchEnvironment.ts",
               "$live/matchers/MatchMulti.ts",
+              "$live/matchers/MatchOrigin.ts",
               "$live/matchers/MatchRandom.ts",
               "$live/matchers/MatchSite.ts",
               "$live/matchers/MatchUserAgent.ts",
@@ -378,6 +379,27 @@
         "matchers"
       ],
       "title": "$live/matchers/MatchMulti.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM=@Props": {
+      "type": "object",
+      "properties": {
+        "includes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Includes"
+        },
+        "match": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Match"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchOrigin.ts@Props"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props": {
       "type": "object",
@@ -742,6 +764,27 @@
         }
       }
     },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM=": {
+      "title": "$live/matchers/MatchOrigin.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchOrigin.ts"
+          ],
+          "default": "$live/matchers/MatchOrigin.ts"
+        }
+      }
+    },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=": {
       "title": "$live/matchers/MatchRandom.ts",
       "type": "object",
@@ -950,6 +993,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw=="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM="
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM="

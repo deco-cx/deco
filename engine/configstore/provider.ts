@@ -47,14 +47,18 @@ export const getComposedConfigStore = (
   siteId: number,
 ): ConfigStore => {
   const providers = [];
-  if (Deno.env.has("USE_LOCAL_STORAGE")) {
-    providers.push(newFsProvider());
-  }
+
   if (siteId > 0) {
     providers.push(newSupabase(fromPagesTable(siteId, ns), context.isDeploy)); // if not deploy so no background is needed
   }
+
+  providers.push(newSupabase(fromConfigsTable(site), context.isDeploy)); // if not deploy so no background is needed
+
+  if (Deno.env.has("USE_LOCAL_STORAGE")) {
+    providers.push(newFsProvider());
+  }
+
   return compose(
     ...providers,
-    newSupabase(fromConfigsTable(site), context.isDeploy), // if not deploy so no background is needed
   );
 };
