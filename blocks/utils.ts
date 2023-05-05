@@ -40,7 +40,9 @@ async ($live: TConfig) => {
 };
 
 // deno-lint-ignore ban-types
-export type FnContext<TState = {}> = TState & { response: Response };
+export type FnContext<TState = {}> = TState & {
+  response: { headers: Headers };
+};
 
 export type FnProps<
   TProps = any,
@@ -53,7 +55,10 @@ export const applyProps = <
 >(func: {
   default: FnProps<TProps, TResp>;
 }) =>
-async ($live: TProps, ctx: HttpContext<{ global: any, response: Response }>) => { // by default use global state
+async (
+  $live: TProps,
+  ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+) => { // by default use global state
   return await func.default(
     $live,
     ctx.request,

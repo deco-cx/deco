@@ -63,7 +63,7 @@ export const handler = async (
     return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
   }
 
-  const response = new Response(null, { headers: new Headers(defaultHeaders) });
+  const response = { headers: new Headers(defaultHeaders) };
   const state = ctx.state?.$live?.state;
   if (state) {
     state.response = response;
