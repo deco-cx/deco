@@ -17,6 +17,7 @@ export interface BlockModuleRef {
   inputSchema?: Schemeable;
   outputSchema?: Schemeable;
   functionRef: ImportString;
+  functionJSDoc?: JSONSchema7;
 }
 
 export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;

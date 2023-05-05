@@ -84,6 +84,7 @@ export const genSchemasFromManifest = async (
             functionKey: ref.functionRef,
             inputSchema: ref.inputSchema,
             outputSchema: ref.outputSchema,
+            functionJSDoc: ref.functionJSDoc,
           };
         }
         return undefined;

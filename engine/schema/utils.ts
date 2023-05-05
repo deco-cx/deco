@@ -6,6 +6,7 @@ import {
   DocNodeFunction,
   JsDoc,
   JsDocTag,
+  JsDocTagUnsupported,
   JsDocTagValued,
   TsTypeDef,
   TsTypeFnOrConstructorDef,
@@ -44,7 +45,11 @@ export const jsDocToSchema = (node: JsDoc) =>
     ? Object.fromEntries(
       node.tags
         .map((tag: JsDocTag) => {
-          const match = (tag as JsDocTagValued).value.match(
+          if (tag.kind === "deprecated") {
+            return ["deprecated", true] as const;
+          }
+
+          const match = (tag as JsDocTagValued).value?.match(
             /^@(?<key>[a-zA-Z]+) (?<value>.*)$/,
           );
 

@@ -63,8 +63,10 @@ export const handler = async (
     return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
   }
 
+  const response = { headers: new Headers(defaultHeaders) };
   const state = ctx.state?.$live?.state;
   if (state) {
+    state.response = response;
     Object.assign(ctx.state, state);
     ctx.state.global = state; // compatibility mode with functions.
   }
@@ -73,6 +75,7 @@ export const handler = async (
   const initialResponse = await ctx.next();
 
   const newHeaders = new Headers(initialResponse.headers);
+  response.headers.forEach((value, key) => newHeaders.append(key, value));
   newHeaders.set("Server-Timing", ctx?.state?.t?.printTimings());
 
   if (
@@ -80,10 +83,6 @@ export const handler = async (
     [400, 404, 500].includes(initialResponse.status)
   ) {
     newHeaders.set("Cache-Control", "no-cache, no-store, private");
-  }
-
-  for (const [headerKey, headerValue] of Object.entries(defaultHeaders)) {
-    newHeaders.set(headerKey, headerValue);
   }
 
   const newResponse = new Response(initialResponse.body, {
