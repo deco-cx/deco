@@ -1,4 +1,4 @@
-import { applyConfig } from "$live/blocks/utils.ts";
+import { applyConfigSync } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 
@@ -15,7 +15,7 @@ const accountBlock: Block<BlockModule<AccountFunc>> = {
   introspect: {
     default: "0",
   },
-  adapt: applyConfig,
+  adapt: applyConfigSync,
   defaultPreview: (account) => {
     return {
       Component: JsonViewer,

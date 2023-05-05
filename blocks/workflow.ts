@@ -1,10 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
+import { applyConfigSync } from "$live/blocks/utils.ts";
 import {
-  InvokeHttpEndpointCommand,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
+  InvokeHttpEndpointCommand,
 } from "$live/deps.ts";
-import { applyConfig } from "$live/blocks/utils.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { context } from "$live/live.ts";
 import { Manifest } from "../live.gen.ts";
@@ -72,7 +72,7 @@ const workflowBlock: Block<BlockModule<WorkflowFn>> = {
   introspect: {
     default: "0",
   },
-  adapt: applyConfig,
+  adapt: applyConfigSync,
 };
 
 /**
