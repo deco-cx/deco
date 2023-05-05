@@ -14,6 +14,7 @@
             "enum": [
               "$live/handlers/devPage.ts",
               "$live/handlers/fresh.ts",
+              "$live/handlers/proxy.ts",
               "$live/handlers/router.ts",
               "$live/handlers/routesSelection.ts",
               "$live/pages/LivePage.tsx",
@@ -63,6 +64,28 @@
         "page"
       ],
       "title": "$live/handlers/fresh.ts@FreshConfig"
+    },
+    "JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Props": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "the proxy url.",
+          "title": "Url"
+        },
+        "basePath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "the base path of the url.",
+          "title": "Base Path"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "$live/handlers/proxy.ts@Props"
     },
     "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
       "$ref": "#/root/handlers",
@@ -493,6 +516,27 @@
         }
       }
     },
+    "JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=": {
+      "title": "$live/handlers/proxy.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/proxy.ts"
+          ],
+          "default": "$live/handlers/proxy.ts"
+        }
+      }
+    },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz": {
       "title": "$live/handlers/router.ts",
       "type": "object",
@@ -849,6 +893,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcHJveHkudHM="
         },
         {
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz"
