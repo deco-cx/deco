@@ -35,7 +35,7 @@ const resolvableRef = {
   $ref: "#/definitions/Resolvable",
 };
 
-const resolvableReferenceSchema: JSONSchema7 = {
+const resolvableReferenceSchema = {
   $id: "Resolvable",
   title: "Select from saved",
   required: ["__resolveType"],
@@ -45,6 +45,31 @@ const resolvableReferenceSchema: JSONSchema7 = {
       type: "string",
     },
   },
+} satisfies JSONSchema7;
+
+const withNotResolveType = (
+  resolveType: string,
+  rs: JSONSchema7,
+): JSONSchema7 => {
+  const currResolveType = rs?.properties?.__resolveType as
+    | JSONSchema7
+    | undefined;
+  const notEnum = currResolveType?.not as JSONSchema7 | undefined;
+  const newProperties = {
+    __resolveType: {
+      type: "string",
+      not: {
+        enum: [
+          ...(notEnum?.enum) ?? [],
+          resolveType,
+        ],
+      },
+    },
+  };
+  return {
+    ...rs,
+    properties: newProperties as JSONSchema7["properties"],
+  };
 };
 /**
  * Used as a schema for the return value of the given function.
@@ -262,6 +287,10 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           return [
             {
               ...nDef,
+              [resolvableReferenceSchema.$id!]: withNotResolveType(
+                rs.functionKey,
+                nDef[resolvableReferenceSchema.$id!],
+              ),
               ...rs.outputSchemaId
                 ? {
                   [rs.outputSchemaId]: mergeJSONSchemas(
