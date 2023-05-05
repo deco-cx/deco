@@ -15,7 +15,8 @@ import * as $$$$7 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "./handlers/routesSelection.ts";
 import * as $$$$$$1 from "./handlers/router.ts";
 import * as $$$$$$2 from "./handlers/devPage.ts";
-import * as $$$$$$3 from "./handlers/fresh.ts";
+import * as $$$$$$3 from "./handlers/proxy.ts";
+import * as $$$$$$4 from "./handlers/fresh.ts";
 import * as $$$$$$$0 from "./pages/LivePage.tsx";
 import * as $$$$$$$$0 from "./sections/UseSlot.tsx";
 import * as $$$$$$$$1 from "./sections/Slot.tsx";
@@ -45,7 +46,8 @@ const manifest = {
   },
   "handlers": {
     "$live/handlers/devPage.ts": $$$$$$2,
-    "$live/handlers/fresh.ts": $$$$$$3,
+    "$live/handlers/fresh.ts": $$$$$$4,
+    "$live/handlers/proxy.ts": $$$$$$3,
     "$live/handlers/router.ts": $$$$$$1,
     "$live/handlers/routesSelection.ts": $$$$$$0,
   },

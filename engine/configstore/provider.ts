@@ -3,6 +3,7 @@ import { fromPagesTable } from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { newSupabase } from "./supabaseProvider.ts";
+import { newFsProvider } from "./fs.ts";
 
 export interface ReadOptions {
   forceFresh?: boolean;
@@ -45,6 +46,9 @@ export const getComposedConfigStore = (
   site: string,
   siteId: number,
 ): ConfigStore => {
+  if (Deno.env.has("USE_LOCAL_STORAGE")) {
+    return newFsProvider();
+  }
   if (siteId <= 0) { // new sites does not have siteId
     return newSupabase(fromConfigsTable(site));
   }
