@@ -2,6 +2,7 @@ import { fromConfigsTable } from "$live/engine/configstore/configs.ts";
 import { fromPagesTable } from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
+import { newFsProvider } from "./fs.ts";
 import { newSupabase } from "./supabaseProvider.ts";
 
 export interface ReadOptions {
