@@ -7,9 +7,9 @@ const sample = {
   "audience-everyone": {
     overrides: {},
     routes: {
-      "/google": {
-        to: "https://www.google.com",
-        __resolveType: "$live/handlers/redirect.ts",
+      "/*": {
+        url: "https://www.google.com",
+        __resolveType: "$live/handlers/proxy.ts",
       },
     },
     __resolveType: "$live/flags/everyone.ts",
