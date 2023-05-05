@@ -9,7 +9,28 @@
       "additionalProperties": false,
       "properties": {
         "__resolveType": {
-          "type": "string"
+          "type": "string",
+          "not": {
+            "enum": [
+              "$live/handlers/devPage.ts",
+              "$live/handlers/fresh.ts",
+              "$live/handlers/router.ts",
+              "$live/handlers/routesSelection.ts",
+              "$live/pages/LivePage.tsx",
+              "$live/sections/PageInclude.tsx",
+              "$live/sections/Slot.tsx",
+              "$live/sections/UseSlot.tsx",
+              "$live/matchers/MatchAlways.ts",
+              "$live/matchers/MatchDate.ts",
+              "$live/matchers/MatchEnvironment.ts",
+              "$live/matchers/MatchMulti.ts",
+              "$live/matchers/MatchRandom.ts",
+              "$live/matchers/MatchSite.ts",
+              "$live/matchers/MatchUserAgent.ts",
+              "$live/flags/audience.ts",
+              "$live/flags/everyone.ts"
+            ]
+          }
         }
       }
     },
