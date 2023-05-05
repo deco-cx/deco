@@ -14,6 +14,7 @@ export interface BlockModule {
   functionKey: string; // this key should contain the module namespace
   inputSchema?: Schemeable;
   outputSchema?: Schemeable;
+  functionJSDoc?: JSONSchema7;
 }
 
 // FIXME it should have a better way to handle it @author Marcos V. Candeia
@@ -27,6 +28,7 @@ interface ResolverRef {
   functionKey: string;
   inputSchemaId: string | undefined;
   outputSchemaId: string | undefined;
+  functionJSDoc?: JSONSchema7;
 }
 
 const resolvableRef = {
@@ -60,14 +62,16 @@ const resolvableReferenceSchema: JSONSchema7 = {
 const functionRefToSchemeable = ({
   functionKey,
   inputSchemaId,
+  functionJSDoc,
 }: ResolverRef): Schemeable => {
   return {
     name: "",
     file: functionKey,
-    friendlyId: functionKey,
+    friendlyId: functionJSDoc?.title || functionKey,
     type: "inline",
     value: {
       title: functionKey,
+      ...functionJSDoc,
       type: "object",
       allOf: inputSchemaId
         ? [{ $ref: `#/definitions/${inputSchemaId}` }]
@@ -231,6 +235,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
                 {
                   blockType: mod.blockType,
                   functionKey: mod.functionKey,
+                  functionJSDoc: mod.functionJSDoc,
                   inputSchemaId: idIn, // supporting only one prop input for now @author Marcos V. Candeia
                   outputSchemaId: idOut,
                 },

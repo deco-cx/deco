@@ -15,6 +15,7 @@ import {
   TsTypeDef,
   TsTypeLiteralDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+import { jsDocToSchema } from "$live/engine/schema/utils.ts";
 
 type Key = string | number | symbol;
 
@@ -180,6 +181,7 @@ export const introspectAddr = async <
   }
 
   const baseBlockRef = {
+    functionJSDoc: func.jsDoc && jsDocToSchema(func.jsDoc),
     functionRef: path,
     outputSchema: includeReturn && fn.return
       ? await tsTypeToSchemeable(func, fn.return, root)
