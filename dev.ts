@@ -17,7 +17,7 @@ import { SiteInfo } from "./types.ts";
 
 const schemaFile = "schemas.gen.json";
 
-const MIN_DENO_VERSION = "1.25.0";
+const MIN_DENO_VERSION = "1.32.2";
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
   if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
