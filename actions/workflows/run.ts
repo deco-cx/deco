@@ -24,7 +24,6 @@ export default async function runWorkflow(
   props: Props,
   req: Request,
 ): Promise<Command> {
-  console.log(await getOrFetchPublicKey());
   verifySignature(req, await getOrFetchPublicKey());
   const { metadata: { workflow } } = props;
   const handler = workflowRemoteRunner(workflow, WorkflowContext);
