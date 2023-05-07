@@ -1,10 +1,9 @@
-export * from "https://denopkg.com/hayd/deno-udd@master/mod.ts";
-import { join } from "https://deno.land/std@0.181.0/path/mod.ts";
 import {
   lookup,
   REGISTRIES,
-} from "https://denopkg.com/hayd/deno-udd@master/registry.ts";
+} from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { brightYellow } from "std/fmt/colors.ts";
+import { join } from "std/path/mod.ts";
 
 const packagesThatShouldBeChecked = ["$live/", "deco-sites/std/"];
 const getImportMap = async (dir: string): Promise<
@@ -21,7 +20,11 @@ const getImportMap = async (dir: string): Promise<
   ];
 };
 
+const ANSWERED = "LIVE_UPDATE_ANSWERED";
 export const checkUpdates = async (dir?: string) => {
+  if (Deno.env.has(ANSWERED)) { // once per `deno task start`
+    return;
+  }
   const [importMap, importMapPath] = await getImportMap(dir ?? Deno.cwd());
   const updates: Record<string, string> = {};
   for (const pkg of packagesThatShouldBeChecked) {
@@ -47,6 +50,7 @@ export const checkUpdates = async (dir?: string) => {
         updates[pkg] = url.at(latestVersion).url;
       }
     }
+    Deno.env.set("LIVE_UPDATE_ANSWERED", "true");
   }
 
   if (Object.keys(updates).length > 0) {

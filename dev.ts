@@ -140,7 +140,9 @@ export default async function dev(
   } = {},
 ) {
   const dir = dirname(fromFileUrl(base));
-  await checkUpdates(dir);
+  await checkUpdates(dir).catch((err) =>
+    console.log("error when checking updates", err)
+  );
   const ns = await getAndUpdateNamespace(dir) ?? base;
   context.namespace = ns;
   ensureMinDenoVersion();
