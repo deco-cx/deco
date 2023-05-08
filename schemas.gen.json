@@ -24,8 +24,8 @@
               "$live/matchers/MatchAlways.ts",
               "$live/matchers/MatchDate.ts",
               "$live/matchers/MatchEnvironment.ts",
+              "$live/matchers/MatchHost.ts",
               "$live/matchers/MatchMulti.ts",
-              "$live/matchers/MatchOrigin.ts",
               "$live/matchers/MatchRandom.ts",
               "$live/matchers/MatchSite.ts",
               "$live/matchers/MatchUserAgent.ts",
@@ -341,6 +341,27 @@
       ],
       "title": "$live/matchers/MatchEnvironment.ts@Props"
     },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz@Props": {
+      "type": "object",
+      "properties": {
+        "includes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Includes"
+        },
+        "match": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Match"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchHost.ts@Props"
+    },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
       "$ref": "#/root/matchers",
       "title": "Matcher"
@@ -379,27 +400,6 @@
         "matchers"
       ],
       "title": "$live/matchers/MatchMulti.ts@Props"
-    },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM=@Props": {
-      "type": "object",
-      "properties": {
-        "includes": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "title": "Includes"
-        },
-        "match": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "title": "Match"
-        }
-      },
-      "required": [],
-      "title": "$live/matchers/MatchOrigin.ts@Props"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props": {
       "type": "object",
@@ -743,6 +743,27 @@
         }
       }
     },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz": {
+      "title": "$live/matchers/MatchHost.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchHost.ts"
+          ],
+          "default": "$live/matchers/MatchHost.ts"
+        }
+      }
+    },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==": {
       "title": "$live/matchers/MatchMulti.ts",
       "type": "object",
@@ -761,27 +782,6 @@
             "$live/matchers/MatchMulti.ts"
           ],
           "default": "$live/matchers/MatchMulti.ts"
-        }
-      }
-    },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM=": {
-      "title": "$live/matchers/MatchOrigin.ts",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM=@Props"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/matchers/MatchOrigin.ts"
-          ],
-          "default": "$live/matchers/MatchOrigin.ts"
         }
       }
     },
@@ -992,10 +992,10 @@
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw=="
         },
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw=="
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz"
         },
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hPcmlnaW4udHM="
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw=="
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM="
