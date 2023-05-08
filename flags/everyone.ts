@@ -1,16 +1,15 @@
-import { Handler } from "$live/blocks/handler.ts";
-import Audience from "$live/flags/audience.ts";
+import Audience, { Override, Route } from "$live/flags/audience.ts";
 import MatchAlways from "$live/matchers/MatchAlways.ts";
 
 export interface EveryoneConfig {
-  routes?: Record<string, Handler>;
-  overrides?: Record<string, string>;
+  routes?: Route[];
+  overrides?: Override[];
 }
 
 export default function Everyone({ routes, overrides }: EveryoneConfig) {
   return Audience({
     matcher: MatchAlways,
-    routes: routes ?? {},
+    routes: routes ?? [],
     overrides,
     name: "Everyone",
   });

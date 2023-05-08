@@ -8,6 +8,7 @@ import { context } from "$live/live.ts";
 import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 import { BlockInstance } from "../engine/block.ts";
+import { Override, Route } from "../flags/audience.ts";
 
 export interface SelectionConfig {
   audiences: (
@@ -29,13 +30,13 @@ const rankRoute = (pattern: string) =>
       0,
     );
 
-const router = (
-  routes: [string, Resolvable<Handler>][],
-  configs: ResolveOptions,
-  flags: Map<string, CookiedFlag>,
+export const router = (
+  routes: Route[],
+  configs?: ResolveOptions,
+  flags?: Map<string, CookiedFlag>,
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
-    for (const [routePath, handler] of routes) {
+    for (const { pathTemplate: routePath, handler } of routes) {
       const pattern = new URLPattern({ pathname: routePath });
       const res = pattern.exec(req.url);
       const groups = res?.pathname.groups ?? {};
@@ -49,7 +50,7 @@ const router = (
         };
 
         ctx.state.routerInfo = {
-          flags: Array.from(flags.keys()).join(","),
+          flags: flags ? Array.from(flags.keys()).join(",") : "",
           pagePath: routePath,
         };
 
@@ -59,7 +60,7 @@ const router = (
           configs,
         );
 
-        const end = configs.monitoring?.t.start("load-data");
+        const end = configs?.monitoring?.t.start("load-data");
         const hand = isAwaitable(resolvedOrPromise)
           ? await resolvedOrPromise
           : resolvedOrPromise;
@@ -81,6 +82,22 @@ export type MatchWithCookieValue = MatchContext<{
   isMatchFromCookie?: boolean;
 }>;
 
+export const toRouteMap = (
+  routes?: Route[],
+): Record<string, Resolvable<Handler>> => {
+  const routeMap: Record<string, Resolvable<Handler>> = {};
+  (routes ?? []).forEach(({ pathTemplate, handler }) => {
+    routeMap[pathTemplate] = handler;
+  });
+  return routeMap;
+};
+const toOverrides = (overrides?: Override[]): Record<string, string> => {
+  const overrideMap: Record<string, string> = {};
+  (overrides ?? []).forEach(({ insteadOf, use }) => {
+    overrideMap[insteadOf] = use;
+  });
+  return overrideMap;
+};
 export default function RoutesSelection(
   { audiences }: SelectionConfig,
 ): Handler {
@@ -137,8 +154,8 @@ export default function RoutesSelection(
           }
           return isMatch
             ? [
-              { ...routes, ...audience.true.routes },
-              { ...overrides, ...audience.true.overrides },
+              { ...routes, ...toRouteMap(audience.true.routes) },
+              { ...overrides, ...toOverrides(audience.true.overrides) },
             ]
             : [routes, overrides];
         },
@@ -153,10 +170,17 @@ export default function RoutesSelection(
       [routeStringB],
     ) => rankRoute(routeStringB) - rankRoute(routeStringA));
 
-    const server = router(builtRoutes, {
-      overrides,
-      monitoring: t ? { t } : undefined,
-    }, flags);
+    const server = router(
+      builtRoutes.map((route) => ({
+        pathTemplate: route[0],
+        handler: route[1],
+      })),
+      {
+        overrides,
+        monitoring: t ? { t } : undefined,
+      },
+      flags,
+    );
 
     // call the target handler
     const resp = await server(req, connInfo);

@@ -205,17 +205,20 @@ const pageToConfig =
     const everyone = p.state === "published"
       ? {
         ...currEveryone,
-        routes: {
+        routes: [
           ...currEveryone.routes,
-          [p.path]: {
-            page: {
-              __resolveType: `${p.id}`,
+          {
+            pathTemplate: p.path,
+            handler: {
+              page: {
+                __resolveType: `${p.id}`,
+              },
+              __resolveType: p.public
+                ? "$live/handlers/fresh.ts"
+                : "$live/handlers/devPage.ts",
             },
-            __resolveType: p.public
-              ? "$live/handlers/fresh.ts"
-              : "$live/handlers/devPage.ts",
           },
-        },
+        ],
       }
       : currEveryone;
     c[everyoneAudience] = everyone;
@@ -225,7 +228,7 @@ const pageToConfig =
 const baseEntrypoint = Object.freeze({
   [globalSections]: {},
   [everyoneAudience]: {
-    routes: {},
+    routes: [],
     __resolveType: "$live/flags/everyone.ts",
   },
   [middlewareConfig]: {
@@ -357,14 +360,17 @@ const flagsToConfig = (
     };
     curr[flag.key] = {
       name: flag.key,
-      routes: {
-        [page.path]: {
-          page: {
-            __resolveType: `${pageId}`,
+      routes: [
+        {
+          pathTemplate: page.path,
+          handler: {
+            page: {
+              __resolveType: `${pageId}`,
+            },
+            __resolveType: "$live/handlers/fresh.ts",
           },
-          __resolveType: "$live/handlers/fresh.ts",
         },
-      },
+      ],
       matcher: matchesToMatchMulti(flag.data.matches, ns),
       __resolveType: "$live/flags/audience.ts",
     };

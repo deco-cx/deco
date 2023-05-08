@@ -3,11 +3,19 @@ import { Handler } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 
+export interface Route {
+  pathTemplate: string;
+  handler: Resolvable<Handler>;
+}
+export interface Override {
+  use: string;
+  insteadOf: string;
+}
 export interface Audience {
   matcher: Matcher;
   name: string;
-  routes: Record<string, Resolvable<Handler>>;
-  overrides?: Record<string, string>;
+  routes?: Route[];
+  overrides?: Override[];
 }
 
 export default function Audience({
@@ -19,7 +27,7 @@ export default function Audience({
   return {
     matcher,
     true: { routes, overrides },
-    false: { routes: {}, overrides: {} },
+    false: { routes: [], overrides: [] },
     name,
   };
 }

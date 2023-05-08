@@ -1,9 +1,9 @@
 import { Handler } from "$live/blocks/handler.ts";
-import { router } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-
+import { Route } from "../flags/audience.ts";
+import { router } from "./routesSelection.ts";
 export interface RouterConfig {
   base?: string;
-  routes: Record<string, Handler>;
+  routes: Route[];
 }
 
 export default function Router({
@@ -13,15 +13,15 @@ export default function Router({
   let routes = entrypoints;
 
   if (base) {
-    routes = {};
-    for (const [entrypoint, handler] of Object.entries(entrypoints)) {
-      routes = {
+    routes = [];
+    for (const route of routes) {
+      const { pathTemplate: entrypoint, handler } = route;
+      routes = [
         ...routes,
-        [`${base}${entrypoint}`]: handler,
-      };
+        { pathTemplate: `${base}${entrypoint}`, handler },
+      ];
     }
   }
 
-  const serve = router(routes);
-  return serve;
+  return router(routes);
 }
