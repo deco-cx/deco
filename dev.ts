@@ -14,6 +14,7 @@ import { DecoManifest } from "$live/types.ts";
 import { exists } from "$live/utils/filesystem.ts";
 import { namespaceFromImportMap } from "$live/utils/namespace.ts";
 import { SiteInfo } from "./types.ts";
+import { checkUpdates } from "./utils/update.ts";
 
 const schemaFile = "schemas.gen.json";
 
@@ -139,6 +140,9 @@ export default async function dev(
   } = {},
 ) {
   const dir = dirname(fromFileUrl(base));
+  await checkUpdates(dir).catch((err) =>
+    console.log("error when checking updates", err)
+  );
   const ns = await getAndUpdateNamespace(dir) ?? base;
   context.namespace = ns;
   ensureMinDenoVersion();
