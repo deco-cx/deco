@@ -8,6 +8,10 @@ export interface DevConfig {
   page: Page;
 }
 
+/**
+ * @title Private Fresh Page
+ * @description Useful for pages under development.
+ */
 export default function DevPage(devConfig: DevConfig) {
   const freshHandler = Fresh(devConfig);
   return (req: Request, ctx: ConnInfo) => {

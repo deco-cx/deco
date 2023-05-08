@@ -6,6 +6,10 @@ export interface EveryoneConfig {
   overrides?: Override[];
 }
 
+/**
+ * @title Audience Everyone
+ * @description Always match regardless of the current user
+ */
 export default function Everyone({ routes, overrides }: EveryoneConfig) {
   return Audience({
     matcher: MatchAlways,

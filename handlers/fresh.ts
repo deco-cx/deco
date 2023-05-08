@@ -13,6 +13,11 @@ export const isFreshCtx = <TState>(
 ): ctx is HandlerContext<unknown, TState> => {
   return typeof (ctx as HandlerContext).render === "function";
 };
+
+/**
+ * @title Fresh Page
+ * @description Renders a fresh page.
+ */
 export default function Fresh(page: FreshConfig) {
   return (req: Request, ctx: ConnInfo) => {
     const url = new URL(req.url);

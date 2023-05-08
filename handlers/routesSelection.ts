@@ -98,6 +98,11 @@ const toOverrides = (overrides?: Override[]): Record<string, string> => {
   });
   return overrideMap;
 };
+
+/**
+ * @title Routes Selection
+ * @description Select routes based on the target audience.
+ */
 export default function RoutesSelection(
   { audiences }: SelectionConfig,
 ): Handler {

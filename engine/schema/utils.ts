@@ -10,7 +10,7 @@ import {
   TsTypeDef,
   TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import { doc } from "https://deno.land/x/deno_doc@0.59.0/mod.ts";
+import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 
 /**
  * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
@@ -132,7 +132,7 @@ const docAsExec = async (
   path: string,
   _?: string,
 ): Promise<DocNode[]> => {
-  return JSON.parse(await exec(["deno", "doc", "--json", path])); // FIXME(mcandeia) add --private when stable
+  return JSON.parse(await exec([Deno.execPath(), "doc", "--json", path])); // FIXME(mcandeia) add --private when stable
 };
 export const denoDoc = async (
   path: string,

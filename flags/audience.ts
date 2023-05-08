@@ -18,6 +18,10 @@ export interface Audience {
   overrides?: Override[];
 }
 
+/**
+ * @title Audience
+ * @description Select routes based on the matched audience.
+ */
 export default function Audience({
   matcher,
   routes,
