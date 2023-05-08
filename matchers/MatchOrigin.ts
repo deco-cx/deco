@@ -10,6 +10,7 @@ const MatchOrigin = (
   { request }: MatchContext,
 ) => {
   const origin = request.headers.get("origin") || "";
+  console.log("ORIGIN", origin);
   const regexMatch = match ? new RegExp(match).test(origin) : true;
   const includesFound = includes ? origin.includes(includes) : true;
 
