@@ -10,8 +10,8 @@ import { ConnInfo, Handler } from "std/http/server.ts";
 import { BlockInstance } from "../engine/block.ts";
 
 export interface RenderContext {
-  routerInfo: RouterContext;
-  warmUpContext: WarmUpLoadersContext;
+  routerInfo?: RouterContext;
+  warmUpContext?: WarmUpLoadersContext;
 }
 
 export interface SelectionConfig {

@@ -103,7 +103,7 @@ export const withManifest = <TManifest extends DecoManifest>() => {
     invoke: invoke<TManifest>(),
     /**
      * Creates an invoker function. Usage:
-     * 
+     *
      * const myAction = create('path/to/action');
      * ...
      * const result = await myAction(props);
