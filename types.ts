@@ -53,10 +53,16 @@ export type LiveState<T = unknown> = {
   global: T;
 };
 
+export type WarmUpLoadersContext = {
+  servePath:
+    | ((pathname: string, warmUpOnly?: boolean) => Promise<Response>)
+    | null;
+  warmUpOnly: boolean;
+};
+
 export type RouterContext = {
   flags: string;
   pagePath: string;
-  servePath: ((pathname: string) => Promise<Response>) | null;
 };
 
 export interface StatefulContext<T> {

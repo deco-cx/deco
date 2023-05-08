@@ -2,14 +2,24 @@ import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { Page } from "$live/blocks/page.ts";
 import { PageContext } from "$live/engine/block.ts";
-import { LiveConfig, LiveState, RouterContext } from "$live/types.ts";
+import { RenderContext } from "$live/handlers/routesSelection.ts";
+import {
+  LiveConfig,
+  LiveState,
+  RouterContext,
+  WarmUpLoadersContext,
+} from "$live/types.ts";
 import { setCSPHeaders } from "$live/utils/http.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
-export const routerCtx = createContext<RouterContext | undefined>(undefined);
+const routerCtx = createContext<RouterContext | undefined>(undefined);
+
+export const warmUpCtx = createContext<WarmUpLoadersContext | undefined>(
+  undefined,
+);
 
 export const usePageContext = () => {
   const pageCtx = useContext(ctx);
@@ -37,18 +47,21 @@ export default function Render({
   data: {
     page,
     routerInfo,
+    warmUpContext,
   },
-}: PageProps<{ page: Page; routerInfo?: RouterContext }>) {
+}: PageProps<{ page: Page } & RenderContext>) {
   if (!page) {
     return null;
   }
   const { Component, props, metadata } = page;
   return (
-    <routerCtx.Provider value={routerInfo}>
-      <ctx.Provider value={{ metadata, params, url }}>
-        <Component {...props}></Component>
-      </ctx.Provider>
-    </routerCtx.Provider>
+    <warmUpCtx.Provider value={warmUpContext}>
+      <routerCtx.Provider value={routerInfo}>
+        <ctx.Provider value={{ metadata, params, url }}>
+          <Component {...props}></Component>
+        </ctx.Provider>
+      </routerCtx.Provider>
+    </warmUpCtx.Provider>
   );
 }
 

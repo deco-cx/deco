@@ -1,8 +1,8 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
-import { RouterContext } from "$live/types.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
 import { ConnInfo } from "std/http/server.ts";
+import { RenderContext } from "./routesSelection.ts";
 
 export interface FreshConfig {
   page: Page;
@@ -19,13 +19,22 @@ export default function Fresh(page: FreshConfig) {
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page, { headers: allowCorsFor(req) });
     }
-    if (url.searchParams.has("warmup")) {
-      return new Response(null, { status: 200 });
-    }
-    return isFreshCtx<{ routerInfo: RouterContext }>(ctx)
-      ? ctx.render({ ...page, routerInfo: ctx.state.routerInfo })
-      : Response.json({ message: "Fresh is not being used" }, {
-        status: 500,
+    const isFresh = isFreshCtx<
+      RenderContext
+    >(ctx);
+
+    if (isFresh) {
+      if (ctx?.state?.warmUpContext?.warmUpOnly) {
+        return new Response(null, { status: 200 });
+      }
+      return ctx.render({
+        ...page,
+        routerInfo: ctx.state.routerInfo,
+        warmUpContext: ctx.state.warmUpContext,
       });
+    }
+    return Response.json({ message: "Fresh is not being used" }, {
+      status: 500,
+    });
   };
 }

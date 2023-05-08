@@ -1,8 +1,8 @@
 import { Plugin } from "$fresh/server.ts";
 import { options } from "preact";
 import { singleFlight } from "../engine/core/utils.ts";
-import { routerCtx } from "../routes/[...catchall].tsx";
-import { RouterContext } from "../types.ts";
+import { warmUpCtx } from "../routes/[...catchall].tsx";
+import { WarmUpLoadersContext } from "../types.ts";
 
 // Store previous hook
 const oldHook = options.vnode;
@@ -11,11 +11,13 @@ const sf = singleFlight();
 export const loadersWarmUpPlugin = (): Plugin => {
   // Set our own options hook
   let links: Record<string, boolean> = {};
-  let servePath: ((url: string) => Promise<Response>) | null = null;
+  let servePath:
+    | ((url: string, warmUpOnly?: boolean) => Promise<Response>)
+    | null = null;
 
   options.vnode = (vnode) => {
-    if (vnode.type === routerCtx.Provider) {
-      servePath = (vnode.props as { value?: RouterContext })
+    if (vnode.type === warmUpCtx.Provider) {
+      servePath = (vnode.props as { value?: WarmUpLoadersContext })
         ?.value?.servePath ?? null;
     }
     const href = (vnode?.props as { href?: string })?.href;
@@ -36,7 +38,7 @@ export const loadersWarmUpPlugin = (): Plugin => {
       ctx.render();
       if (servePath) {
         for (const link of Object.keys(links)) {
-          sf.do(link, () => servePath!(link));
+          sf.do(link, () => servePath!(link, true));
         }
       }
 

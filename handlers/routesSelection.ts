@@ -5,9 +5,14 @@ import { isAwaitable } from "$live/engine/core/utils.ts";
 import { CookiedFlag, cookies } from "$live/flags.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
-import { LiveState, RouterContext } from "$live/types.ts";
+import { LiveState, RouterContext, WarmUpLoadersContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 import { BlockInstance } from "../engine/block.ts";
+
+export interface RenderContext {
+  routerInfo: RouterContext;
+  warmUpContext: WarmUpLoadersContext;
+}
 
 export interface SelectionConfig {
   audiences: (
@@ -37,7 +42,7 @@ const servePath = (
   connInfo: ConnInfo,
   reqUrl: URL,
 ) =>
-async (pathname: string) => {
+async (pathname: string, warmUpOnly = false) => {
   for (const [routePath, handler] of routes) {
     const pattern = new URLPattern({ pathname: routePath });
     const res = pattern.exec(pathname, reqUrl.origin);
@@ -46,20 +51,31 @@ async (pathname: string) => {
     if (res !== null) {
       const ctx = { ...connInfo, params: groups } as ConnInfo & {
         params: Record<string, string>;
-        state: {
-          routerInfo: RouterContext;
-        };
+        state: RenderContext;
       };
 
-      if (ctx?.state?.routerInfo === undefined) { // not warm up state
-        ctx.state.routerInfo = {
-          flags: Array.from(flags.keys()).join(","),
-          pagePath: routePath,
-          servePath: servePath(routes, configs, flags, req, connInfo, reqUrl),
-        };
-      } else {
-        ctx.state.routerInfo.servePath = null;
-      }
+      ctx.state.routerInfo = {
+        flags: Array.from(flags.keys()).join(","),
+        pagePath: routePath,
+      };
+
+      ctx.state.warmUpContext = {
+        servePath: servePath(
+          routes,
+          { ...configs, monitoring: undefined, forceFresh: false },
+          flags,
+          req,
+          {
+            ...ctx,
+            state: {
+              ...ctx.state,
+              t: undefined, // do not measure timings
+            },
+          } as ConnInfo,
+          reqUrl,
+        ),
+        warmUpOnly,
+      };
 
       const resolvedOrPromise = context.configResolver!.resolve<Handler>(
         handler,
