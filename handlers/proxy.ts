@@ -11,6 +11,7 @@ const HOP_BY_HOP = [
   "Proxy-Authenticate",
 ];
 
+const sanitize = (str: string) => str.startsWith("/") ? str : `/${str}`;
 const proxyTo =
   (proxyUrl: string, basePath?: string): Handler => async (req, _ctx) => {
     const url = new URL(req.url);
@@ -20,7 +21,7 @@ const proxyTo =
       : url.pathname;
 
     const to = new URL(
-      `${proxyUrl}/${path}?${qs}`,
+      `${proxyUrl}${sanitize(path)}?${qs}`,
     );
 
     const headers = new Headers(req.headers);
