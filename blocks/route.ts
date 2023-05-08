@@ -115,7 +115,7 @@ const mapHandlers = (
         request: Request,
         context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
-        const $live = await context.state.resolve(
+        const $live = await context?.state?.resolve?.(
           indexTsxToCatchAll[key] ?? key,
         ); // middleware should be executed first.
         context.state.$live = $live;
@@ -128,12 +128,12 @@ const mapHandlers = (
     request: Request,
     context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
-    const end = context.state.t.start(`resolve-${key}`);
-    const $live = (await context.state.resolve(
+    const end = context?.state?.t.start(`resolve-${key}`);
+    const $live = (await context?.state?.resolve?.(
       indexTsxToCatchAll[key] ?? key,
     )) ?? {};
 
-    end && end();
+    end?.();
 
     if (typeof handlers === "function") {
       context.state.$live = $live;
