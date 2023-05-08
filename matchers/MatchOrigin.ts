@@ -9,6 +9,7 @@ const MatchOrigin = (
   { includes, match }: Props,
   { request }: MatchContext,
 ) => {
+  console.log("HOST", request.headers.get("host"));
   const origin = request.headers.get("origin") || "";
   console.log("ORIGIN", origin);
   const regexMatch = match ? new RegExp(match).test(origin) : true;
