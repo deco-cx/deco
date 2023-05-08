@@ -237,6 +237,7 @@
     "https://deno.land/x/rutt@0.0.14/mod.ts": "5027b8e8b12acca48b396a25aee74ad7ee94a25c24cda75571d7839cbd41113c",
     "https://deno.land/x/which@0.2.1/mod.ts": "2e076cb85aea9798662b355fb613d27eebcc78dfc8934ece4ae932f6303f6ca8",
     "https://deno.land/x/xhr@0.3.0/mod.ts": "094aacd627fd9635cd942053bf8032b5223b909858fa9dc8ffa583752ff63b20",
+    "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts": "fd8e1b05f14cb988fee7a72a51e68131a920f7d4b72f949d9b86794b3c699671",
     "https://denopkg.com/hayd/deno-udd@master/deps.ts": "f93ed3ae998b2f48aac94666efea3d1d61b05f4d6698a0828b462097e10f3f32",
     "https://denopkg.com/hayd/deno-udd@master/mod.ts": "00824646a9766acb4b9689201e5b81b969ac822b7cfad5316fe3922a04582edb",
     "https://denopkg.com/hayd/deno-udd@master/progress.ts": "bb8eb122f5ac32efc073e05e2c13cceea61458b0e49ac05bddc3a49124dc39e3",

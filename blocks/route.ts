@@ -73,13 +73,9 @@ const mapMiddleware = (
     const { start, end, printTimings } = createServerTimings();
     context.state.t = { start, end, printTimings };
     const url = new URL(request.url);
-    if (
-      url.pathname.startsWith("/_frsh") || // fresh urls /_fresh/js/*
+    const isInternalOrStatic = url.pathname.startsWith("/_frsh") || // fresh urls /_fresh/js/*
       url.pathname.startsWith("~partytown") || // party town urls
-      url.searchParams.has("__frsh_c") // static assets, fresh uses ?__fresh_c=$id
-    ) {
-      return context.next();
-    }
+      url.searchParams.has("__frsh_c"); // static assets, fresh uses ?__fresh_c=$id
 
     const resolver = liveContext.configResolver!;
     const ctxResolver = resolver
@@ -94,8 +90,10 @@ const mapMiddleware = (
     const endTiming = start("load-page");
     const $live = (await ctxResolver(
       middlewareKey,
-      !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
-        url.searchParams.has("pageId"), // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+      !isInternalOrStatic && (
+        !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
+        url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+      ),
     )) ?? {};
 
     endTiming();
