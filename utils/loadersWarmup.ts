@@ -1,16 +1,23 @@
 import { Plugin } from "$fresh/server.ts";
-import { context } from "$live/live.ts";
 import { options } from "preact";
-import { ConnInfo } from "std/http/server.ts";
-import { Handler } from "../blocks/handler.ts";
+import { singleFlight } from "../engine/core/utils.ts";
+import { routerCtx } from "../routes/[...catchall].tsx";
+import { RouterContext } from "../types.ts";
 
 // Store previous hook
 const oldHook = options.vnode;
+const sf = singleFlight();
 
 export const loadersWarmUpPlugin = (): Plugin => {
   // Set our own options hook
   let links: Record<string, boolean> = {};
+  let servePath: ((url: string) => Promise<Response>) | null = null;
+
   options.vnode = (vnode) => {
+    if (vnode.type === routerCtx.Provider) {
+      servePath = (vnode.props as { value?: RouterContext })
+        ?.value?.servePath ?? null;
+    }
     const href = (vnode?.props as { href?: string })?.href;
     if (vnode.type === "a" && href && href.startsWith("/")) {
       links[href] = true;
@@ -25,19 +32,13 @@ export const loadersWarmUpPlugin = (): Plugin => {
     name: "loadersWarmUp",
     render(ctx) {
       links = {};
+      servePath = null as (typeof servePath);
       ctx.render();
-      const resolver = context.configResolver!.resolverFor({});
-      resolver<{ handler: Handler }>("./routes/[...catchall].tsx").then(
-        async ({ handler: h }) => {
-          for (const href of Object.keys(links)) {
-            const req = new Request(`http://localhost:8000${href}?warmup`);
-            await h(
-              req,
-              { state: { global: {} } } as ConnInfo & { state: unknown },
-            );
-          }
-        },
-      );
+      if (servePath) {
+        for (const link of Object.keys(links)) {
+          sf.do(link, () => servePath!(link));
+        }
+      }
 
       return {};
     },

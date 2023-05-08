@@ -9,7 +9,7 @@ import { useContext } from "preact/hooks";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
-const routerCtx = createContext<RouterContext | undefined>(undefined);
+export const routerCtx = createContext<RouterContext | undefined>(undefined);
 
 export const usePageContext = () => {
   const pageCtx = useContext(ctx);

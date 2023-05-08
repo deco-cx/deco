@@ -56,6 +56,7 @@ export type LiveState<T = unknown> = {
 export type RouterContext = {
   flags: string;
   pagePath: string;
+  servePath: ((pathname: string) => Promise<Response>) | null;
 };
 
 export interface StatefulContext<T> {

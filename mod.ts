@@ -6,3 +6,4 @@ export { default as dev } from "$live/dev.ts";
 export { $live } from "$live/engine/fresh/manifest.ts";
 export * from "$live/types.ts";
 export { stylesPlugin };
+export { loadersWarmUpPlugin } from "$live/utils/loadersWarmup.ts";
