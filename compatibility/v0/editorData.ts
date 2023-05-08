@@ -21,6 +21,7 @@ import {
   JSONSchema7,
   JSONSchema7TypeName,
 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+import { uniqBy } from "../../utils/unique.ts";
 
 export interface WithSchema {
   schema?: JSONSchema;
@@ -239,6 +240,7 @@ const globalSections = async (): Promise<AvailableSection[]> => {
 
   return availableSections;
 };
+
 const labelOf = (resolveType: string): string => {
   const parts = resolveType.split("/");
   const [label] = parts[parts.length - 1].split("."); // the name of the file
@@ -325,7 +327,10 @@ export const generateEditorData = async (
         props: newProps,
         schema: input,
       };
-      return [[...secs, mappedSection], [...funcs, ...newFuncs]];
+      return [
+        [...secs, mappedSection],
+        uniqBy([...funcs, ...newFuncs], "uniqueId"),
+      ];
     },
     [[], []] as [
       EditorData["sections"][0][],
