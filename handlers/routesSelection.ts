@@ -5,9 +5,14 @@ import { isAwaitable } from "$live/engine/core/utils.ts";
 import { CookiedFlag, cookies } from "$live/flags.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
-import { LiveState, RouterContext } from "$live/types.ts";
+import { LiveState, RouterContext, WarmUpLoadersContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 import { BlockInstance } from "../engine/block.ts";
+
+export interface RenderContext {
+  routerInfo?: RouterContext;
+  warmUpContext?: WarmUpLoadersContext;
+}
 
 export interface SelectionConfig {
   audiences: (
@@ -29,51 +34,80 @@ const rankRoute = (pattern: string) =>
       0,
     );
 
+const servePath = (
+  routes: [string, Resolvable<Handler>][],
+  configs: ResolveOptions,
+  flags: Map<string, CookiedFlag>,
+  req: Request,
+  connInfo: ConnInfo,
+  reqUrl: URL,
+) =>
+async (pathname: string, warmUpOnly = false) => {
+  for (const [routePath, handler] of routes) {
+    const pattern = new URLPattern({ pathname: routePath });
+    const res = pattern.exec(pathname, reqUrl.origin);
+    const groups = res?.pathname.groups ?? {};
+
+    if (res !== null) {
+      const ctx = { ...connInfo, params: groups } as ConnInfo & {
+        params: Record<string, string>;
+        state: RenderContext;
+      };
+
+      ctx.state.routerInfo = {
+        flags: Array.from(flags.keys()).join(","),
+        pagePath: routePath,
+      };
+
+      ctx.state.warmUpContext = {
+        servePath: servePath(
+          routes,
+          { ...configs, monitoring: undefined, forceFresh: false },
+          flags,
+          req,
+          {
+            ...ctx,
+            state: {
+              ...ctx.state,
+              t: undefined, // do not measure timings
+            },
+          } as ConnInfo,
+          reqUrl,
+        ),
+        warmUpOnly,
+      };
+
+      const resolvedOrPromise = context.configResolver!.resolve<Handler>(
+        handler,
+        { context: ctx, request: req },
+        configs,
+      );
+
+      const end = configs.monitoring?.t.start("load-data");
+      const hand = isAwaitable(resolvedOrPromise)
+        ? await resolvedOrPromise
+        : resolvedOrPromise;
+      end && end();
+
+      return await hand(
+        req,
+        ctx,
+      );
+    }
+  }
+  return new Response(null, {
+    status: 404,
+  });
+};
 const router = (
   routes: [string, Resolvable<Handler>][],
   configs: ResolveOptions,
   flags: Map<string, CookiedFlag>,
 ): Handler => {
-  return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
-    for (const [routePath, handler] of routes) {
-      const pattern = new URLPattern({ pathname: routePath });
-      const res = pattern.exec(req.url);
-      const groups = res?.pathname.groups ?? {};
-
-      if (res !== null) {
-        const ctx = { ...connInfo, params: groups } as ConnInfo & {
-          params: Record<string, string>;
-          state: {
-            routerInfo: RouterContext;
-          };
-        };
-
-        ctx.state.routerInfo = {
-          flags: Array.from(flags.keys()).join(","),
-          pagePath: routePath,
-        };
-
-        const resolvedOrPromise = context.configResolver!.resolve<Handler>(
-          handler,
-          { context: ctx, request: req },
-          configs,
-        );
-
-        const end = configs.monitoring?.t.start("load-data");
-        const hand = isAwaitable(resolvedOrPromise)
-          ? await resolvedOrPromise
-          : resolvedOrPromise;
-        end && end();
-
-        return await hand(
-          req,
-          ctx,
-        );
-      }
-    }
-    return new Response(null, {
-      status: 404,
-    });
+  return (req: Request, connInfo: ConnInfo): Promise<Response> => {
+    const url = new URL(req.url);
+    const serve = servePath(routes, configs, flags, req, connInfo, url);
+    return serve(url.pathname);
   };
 };
 
