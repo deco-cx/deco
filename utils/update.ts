@@ -4,6 +4,7 @@ import {
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { brightYellow } from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
+import { printDiff } from "../scripts/changelog.ts";
 
 const packagesThatShouldBeChecked = ["$live/", "deco-sites/std/"];
 const getImportMap = async (dir: string): Promise<
@@ -21,6 +22,11 @@ const getImportMap = async (dir: string): Promise<
 };
 
 const ANSWERED = "LIVE_UPDATE_ANSWERED";
+
+const tryReadChangelogMD = (url: string): Promise<string> => {
+  return fetch(`${url}/CHANGELOG.md`).then((r) => r.text());
+};
+
 export const checkUpdates = async (dir?: string) => {
   if (Deno.env.has(ANSWERED)) { // once per `deno task start`
     return;
@@ -40,6 +46,12 @@ export const checkUpdates = async (dir?: string) => {
     const currentVersion = url.version();
     const latestVersion = versions[0];
     if (currentVersion !== latestVersion) {
+      const changelogMD = await tryReadChangelogMD(importUrl).catch(() =>
+        undefined
+      );
+      if (changelogMD) {
+        printDiff(currentVersion, changelogMD);
+      }
       console.log(
         brightYellow(
           `Update available for ${pkg} ${currentVersion} -> ${latestVersion}.`,
