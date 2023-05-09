@@ -53,7 +53,9 @@ export const printDiff = (ver: string, changelogStr: string) => {
         if (change[1].length > 0) {
           console.log(`# ${capitalize(change[0])}`);
           for (const ch of change[1]) {
-            console.log(colorByChange[change[0]](` - ${ch.title}`));
+            console.log(
+              (colorByChange[change[0]] ?? brightGreen)(` - ${ch.title}`),
+            );
           }
           console.log();
         }
