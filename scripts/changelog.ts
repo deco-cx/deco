@@ -38,6 +38,9 @@ const colorByChange: Record<string, (str: string) => string> = {
 };
 const capitalize = (str: string) => str[0].toUpperCase() + str.substring(1);
 
+/**
+ * Prints the difference between the @param ver and the latest version.
+ */
 export const printDiff = (ver: string, changelogStr: string) => {
   const chlog = parser(changelogStr);
   chlog.sortReleases();
