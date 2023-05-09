@@ -13,6 +13,7 @@
     "$fresh/": "https://deno.land/x/fresh@1.1.4/",
     "preact-render-to-string": "https://esm.sh/*preact-render-to-string@5.2.4?pin=102",
     "preact/": "https://esm.sh/preact@10.11.3/",
-    "preact": "https://esm.sh/preact@10.11.3?pin=102"
+    "preact": "https://esm.sh/preact@10.11.3?pin=102",
+    "partytown/": "https://deno.land/x/partytown@0.2.1/"
   }
 }

@@ -1,6 +1,6 @@
 import { context } from "$live/live.ts";
-import Script from "https://deno.land/x/partytown@0.2.1/Script.tsx";
-import Jitsu from "https://deno.land/x/partytown@0.2.1/integrations/Jitsu.tsx";
+import Script from "partytown/Script.tsx";
+import Jitsu from "partytown/integrations/Jitsu.tsx";
 
 declare global {
   interface Window {
@@ -139,7 +139,7 @@ type Props = Partial<{ id: number; path: string }> & { flags?: string };
  * We don't send Jitsu events on localhost by default, so
  * turn this flag on if you want to test the event sending code.
  */
-const IS_TESTING_JITSU = false;
+const IS_TESTING_JITSU = true;
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
