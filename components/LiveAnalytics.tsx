@@ -2,13 +2,6 @@ import { context } from "$live/live.ts";
 import Script from "partytown/Script.tsx";
 import Jitsu from "partytown/integrations/Jitsu.tsx";
 
-declare global {
-  interface Window {
-    // deno-lint-ignore no-explicit-any
-    jitsu: (...args: any[]) => void;
-  }
-}
-
 const main = (
   userData: {
     page_id: string;
