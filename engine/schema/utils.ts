@@ -6,7 +6,6 @@ import {
   DocNodeFunction,
   JsDoc,
   JsDocTag,
-  JsDocTagUnsupported,
   JsDocTagValued,
   TsTypeDef,
   TsTypeFnOrConstructorDef,
