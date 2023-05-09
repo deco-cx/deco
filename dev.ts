@@ -11,9 +11,7 @@ import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { exists } from "$live/utils/filesystem.ts";
-import { namespaceFromImportMap } from "$live/utils/namespace.ts";
-import { SiteInfo } from "./types.ts";
+import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
 
 const schemaFile = "schemas.gen.json";
@@ -65,24 +63,25 @@ export async function generate(
   directory: string,
   manifest: ManifestBuilder,
 ) {
-  const proc = Deno.run({
-    cmd: [Deno.execPath(), "fmt", "-"],
+  const fmt = new Deno.Command(Deno.execPath(), {
+    args: ["fmt", "-"],
     stdin: "piped",
     stdout: "piped",
     stderr: "null",
   });
+  const proc = fmt.spawn();
   const raw = new ReadableStream({
     start(controller) {
       controller.enqueue(new TextEncoder().encode(manifest.build()));
       controller.close();
     },
   });
-  await raw.pipeTo(proc.stdin.writable);
+  await raw.pipeTo(proc.stdin);
   const out = await proc.output();
-  await proc.status();
-  proc.close();
+  await proc.status;
+  proc.unref();
 
-  const manifestStr = new TextDecoder().decode(out);
+  const manifestStr = new TextDecoder().decode(out.stdout);
   const manifestPath = join(directory, manifestFile);
 
   await Deno.writeTextFile(manifestPath, manifestStr);
@@ -97,27 +96,8 @@ export const siteJSON = "site.json";
 const getAndUpdateNamespace = async (
   dir: string,
 ): Promise<string | undefined> => {
-  const ns = await namespaceFromImportMap(dir);
-  if (!ns) {
-    return undefined;
-  }
-  const siteJSONPath = join(dir, siteJSON);
-  let siteInfo: SiteInfo | null = null;
-  if (await exists(siteJSONPath)) {
-    siteInfo = await Deno.readTextFile(siteJSONPath).then(
-      JSON.parse,
-    );
-  } else {
-    siteInfo = {
-      namespace: ns,
-    };
-  }
-  if (siteInfo?.namespace !== ns) {
-    await Deno.writeTextFile(
-      siteJSONPath,
-      JSON.stringify({ ...siteInfo, namespace: ns }, null, 2),
-    );
-  }
+  const ns = await namespaceFromSiteJson(dir);
+  ns && await updateImportMap(dir, ns);
   return ns;
 };
 
@@ -183,12 +163,14 @@ export default async function dev(
 }
 
 export async function format(content: string) {
-  const proc = Deno.run({
-    cmd: [Deno.execPath(), "fmt", "-"],
+  const fmt = new Deno.Command(Deno.execPath(), {
+    args: ["fmt", "-"],
     stdin: "piped",
     stdout: "piped",
     stderr: "null",
   });
+
+  const proc = fmt.spawn();
 
   const raw = new ReadableStream({
     start(controller) {
@@ -196,12 +178,12 @@ export async function format(content: string) {
       controller.close();
     },
   });
-  await raw.pipeTo(proc.stdin.writable);
-  const out = await proc.output();
-  await proc.status();
-  proc.close();
 
-  return new TextDecoder().decode(out);
+  await raw.pipeTo(proc.stdin);
+  const out = await proc.output();
+  await proc.status;
+
+  return new TextDecoder().decode(out.stdout);
 }
 
 // Generate live own manifest data so that other sites can import native functions and sections.
