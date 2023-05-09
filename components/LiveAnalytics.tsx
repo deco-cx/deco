@@ -139,7 +139,7 @@ type Props = Partial<{ id: number; path: string }> & { flags?: string };
  * We don't send Jitsu events on localhost by default, so
  * turn this flag on if you want to test the event sending code.
  */
-const IS_TESTING_JITSU = true;
+const IS_TESTING_JITSU = false;
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
   return (
