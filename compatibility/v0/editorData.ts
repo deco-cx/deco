@@ -268,9 +268,8 @@ export const generateEditorData = async (
 
   const { sections } = page;
 
-  const uniqueCount: Record<string, string> = {};
   const [sectionsWithSchema, functions] = sections.reduce(
-    ([secs, funcs], section, i) => {
+    ([secs, funcs], section, idx) => {
       const { __resolveType, ...props } = section;
       const [input] = getInputAndOutputFromKey(schema, __resolveType);
       const newProps: typeof props = {};
@@ -279,6 +278,7 @@ export const generateEditorData = async (
       // map from __resolveType format to editor section format.
       // e.g __resolveType: deco-sites/std/functions/vtexProductListingPage.ts => {deco-sites/std/functions/vtexProductListingPage.ts}
       // and extract to the functions array in the root object.
+      let totalLoaders = 0;
       for (const [propKey, propValue] of Object.entries(props)) {
         const { __resolveType: resolveType, ...funcProps } = propValue as {
           __resolveType: string;
@@ -290,14 +290,7 @@ export const generateEditorData = async (
           newProps[propKey] = propValue;
         } else {
           if (resolveType.endsWith("ts") || resolveType.endsWith("tsx")) {
-            const propsUniq = JSON.stringify(props);
-            uniqueCount[propsUniq] ??= String(
-              newFuncs.length +
-                funcs.length,
-            ).padEnd(4, "0");
-            const uniqueId = `${resolveType}-${
-              uniqueCount[propsUniq]
-            }` as string;
+            const uniqueId = `${resolveType}-${idx}${totalLoaders++}`;
             newProps[propKey] = `{${uniqueId}}`;
             newFuncs.push({
               key: withoutNamespace(resolveType),
@@ -323,7 +316,7 @@ export const generateEditorData = async (
       const mappedSection = {
         key: withoutNamespace(__resolveType),
         label: labelOf(__resolveType),
-        uniqueId: `${__resolveType}-${i}`,
+        uniqueId: `${__resolveType}-${idx}`,
         props: newProps,
         schema: input,
       };
