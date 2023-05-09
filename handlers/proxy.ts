@@ -68,6 +68,10 @@ export interface Props {
   basePath?: string;
 }
 
+/**
+ * @title Proxy Handler
+ * @description Proxies request to the target url.
+ */
 export default function Proxy({ url, basePath }: Props) {
   return proxyTo(url, basePath);
 }
