@@ -1,13 +1,6 @@
 import { context } from "$live/live.ts";
-import Script from "https://deno.land/x/partytown@0.2.1/Script.tsx";
-import Jitsu from "https://deno.land/x/partytown@0.2.1/integrations/Jitsu.tsx";
-
-declare global {
-  interface Window {
-    // deno-lint-ignore no-explicit-any
-    jitsu: (...args: any[]) => void;
-  }
-}
+import Script from "partytown/Script.tsx";
+import Jitsu from "partytown/integrations/Jitsu.tsx";
 
 const main = (
   userData: {
