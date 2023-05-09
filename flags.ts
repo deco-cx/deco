@@ -2,7 +2,17 @@ import { getCookies, setCookie } from "std/http/mod.ts";
 
 const DECO_COOKIE = "dcxf_";
 
+const flagName = (flagKey: string) => `${DECO_COOKIE}${flagKey}`;
 export const cookies = {
+  pruneFlags: (headers: Headers, flags: Map<string, CookiedFlag>) => {
+    for (const flag of flags.values()) {
+      setCookie(headers, {
+        name: flagName(flag.key),
+        value: "",
+        expires: new Date("Thu, 01 Jan 1970 00:00:00 UTC"),
+      });
+    }
+  },
   getFlags: (headers: Headers) => {
     const cookies = getCookies(headers);
     const flags: CookiedFlag[] | undefined = Object.keys(cookies)
@@ -20,9 +30,12 @@ export const cookies = {
 
     return flagSet;
   },
-  setFlags: (headers: Headers, flags: CookiedFlag[]) => {
+  setFlags: (
+    headers: Headers,
+    flags: CookiedFlag[],
+  ) => {
     for (const flag of flags) {
-      const name = `${DECO_COOKIE}${flag.key}`;
+      const name = flagName(flag.key);
       const value = btoa(JSON.stringify(flag));
 
       setCookie(headers, { name, value });
