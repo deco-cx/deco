@@ -182,7 +182,6 @@ export async function format(content: string) {
   await raw.pipeTo(proc.stdin);
   const out = await proc.output();
   await proc.status;
-  proc.kill();
 
   return new TextDecoder().decode(out.stdout);
 }
