@@ -123,6 +123,7 @@ export default function RoutesSelection(
 
     // track flags that aren't on the original cookie or changed its `isMatch` property.
     const flagsThatShouldBeCookied: CookiedFlag[] = [];
+    const cookiesThatShouldBeDeleted = new Map(flags); // initially all cookies should be deleted.
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
     const [routes, overrides] = audiences
@@ -135,6 +136,8 @@ export default function RoutesSelection(
               ? undefined
               : flags.get(audience.name)?.isMatch,
           } as MatchWithCookieValue);
+          // if the audience exists so it should not be deleted
+          cookiesThatShouldBeDeleted.delete(audience.name);
 
           // if the flag doesn't exists (e.g. new audience being used) or the `isMatch` value has changed so add as a `newFlags`
           // TODO should we track when the flag VALUE changed?
@@ -193,6 +196,7 @@ export default function RoutesSelection(
     // set cookie for the flags that has changed.
     if (flagsThatShouldBeCookied.length > 0 && resp.status < 300) { // errors and redirects have immutable headers
       cookies.setFlags(resp.headers, flagsThatShouldBeCookied);
+      cookies.pruneFlags(resp.headers, cookiesThatShouldBeDeleted);
       resp.headers.append("vary", "cookie");
     }
     return resp;
