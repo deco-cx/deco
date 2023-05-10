@@ -96,7 +96,7 @@ if (
 }
 
 if (shouldCommit) {
-  const GIT_COMMIT_COMMAND = `git commit -m "Release v${newVersion}]" -n`;
+  const GIT_COMMIT_COMMAND = `git commit -m "Release [${newVersion}]" -n`;
   console.log(`Running \`${GIT_COMMIT_COMMAND}\``);
 
   await exec(GIT_COMMIT_COMMAND);

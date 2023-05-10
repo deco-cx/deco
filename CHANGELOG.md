@@ -8,6 +8,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Release message now correctly prints the new version.
+
 ## 1.0.24 - 2023-05-10
+
 ### Added
+
 - The dev.ts auto-update script now shows up the changelog summary on terminal.
