@@ -24,7 +24,7 @@ const getImportMap = async (dir: string): Promise<
 const ANSWERED = "LIVE_UPDATE_ANSWERED";
 
 const tryReadChangelogMD = (url: string): Promise<string> => {
-  return fetch(`${url}/CHANGELOG.md`).then((r) => r.text());
+  return fetch(`${url}CHANGELOG.md`).then((r) => r.text());
 };
 
 export const checkUpdates = async (dir?: string) => {
@@ -38,7 +38,10 @@ export const checkUpdates = async (dir?: string) => {
     if (!importUrl) {
       continue;
     }
-    const url = lookup(importUrl, REGISTRIES);
+    const url = lookup(
+      importUrl,
+      REGISTRIES,
+    );
     if (!url) {
       continue;
     }
@@ -46,10 +49,12 @@ export const checkUpdates = async (dir?: string) => {
     const currentVersion = url.version();
     const latestVersion = versions[0];
     if (currentVersion !== latestVersion) {
-      const changelogMD = await tryReadChangelogMD(importUrl).catch(() =>
-        undefined
-      );
+      const latestUrl = url.at(latestVersion).url;
+      const changelogMD = await tryReadChangelogMD(
+        latestUrl,
+      ).catch(() => undefined);
       if (changelogMD) {
+        console.log(); // breakline
         printDiff(currentVersion, changelogMD);
       }
       console.log(
@@ -59,7 +64,7 @@ export const checkUpdates = async (dir?: string) => {
       );
       const shouldProceed = confirm("would you like to update?");
       if (shouldProceed) {
-        updates[pkg] = url.at(latestVersion).url;
+        updates[pkg] = latestUrl;
       }
     }
     Deno.env.set("LIVE_UPDATE_ANSWERED", "true");
