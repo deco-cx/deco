@@ -72,6 +72,18 @@ function belowTheFold() {
     );
 
     element.innerHTML = `${head}${withoutBody}`;
+    element.querySelectorAll("script").forEach((oldScriptEl) => {
+      const newScriptEl = document.createElement("script");
+
+      Array.from(oldScriptEl.attributes).forEach((attr) => {
+        newScriptEl.setAttribute(attr.name, attr.value);
+      });
+
+      const scriptText = document.createTextNode(oldScriptEl.innerHTML);
+      newScriptEl.appendChild(scriptText);
+
+      oldScriptEl!.parentNode!.replaceChild(newScriptEl, oldScriptEl);
+    });
   };
   addEventListener("scroll", eventListener);
 }
@@ -206,7 +218,7 @@ const renderPage = (
 
   const url = usePageContext()!.url;
 
-  const sectionsToRender = fold ?? 5 ?? sections.length - 1;
+  const sectionsToRender = fold ?? 1 ?? sections.length - 1;
   if (url.searchParams.has("belowTheFold")) {
     const belowTheFoldSections = sections.slice(
       sectionsToRender,
