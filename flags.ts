@@ -46,7 +46,5 @@ export const cookies = {
 export interface CookiedFlag {
   key: string;
   isMatch: boolean;
-  // deno-lint-ignore no-explicit-any
-  value: any;
   updated_at: string;
 }

@@ -152,7 +152,6 @@ export default function RoutesSelection(
             const flagValue = {
               isMatch,
               key: audience.name,
-              value: audience.true,
               updated_at: new Date().toISOString(),
             };
             // set as flag that should be cookied

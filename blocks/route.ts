@@ -126,12 +126,9 @@ const mapHandlers = (
     request: Request,
     context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
-    const end = context?.state?.t.start(`resolve-${key}`);
     const $live = (await context?.state?.resolve?.(
       indexTsxToCatchAll[key] ?? key,
     )) ?? {};
-
-    end?.();
 
     if (typeof handlers === "function") {
       context.state.$live = $live;
