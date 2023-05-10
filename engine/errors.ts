@@ -11,6 +11,6 @@ export class HttpError extends Error {
  * Stop any config resolution and throw an exception that should be returned to the main handler.
  * @param resp
  */
-export const shortcuirt = (resp: Response) => {
+export const shortcircuit = (resp: Response) => {
   throw new HttpError(resp);
 };
