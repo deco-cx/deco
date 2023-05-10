@@ -1,4 +1,5 @@
 import { isSection, Section } from "../blocks/section.ts";
+import { ComponentChildren } from "preact";
 
 export type WellKnownSlots =
   | "content"
@@ -27,10 +28,14 @@ export const isContentSlot = (s: Section): boolean => {
 };
 
 export default function Slot(p: Props) {
-  if (p?.required) {
-    return ShowSlot(p);
+  const children = (p as { children: ComponentChildren })?.children;
+  if (!children) {
+    return p?.required
+      ? ShowSlot(p)
+      : null;
   }
-  return null;
+
+  return <>{children}</>;
 }
 
 function ShowSlot(p: Props) {

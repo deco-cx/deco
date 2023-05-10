@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Page } from "$live/blocks/page.ts";
 import { isSection, Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
@@ -5,16 +6,15 @@ import LiveControls from "$live/components/LiveControls.tsx";
 import LivePageEditor, {
   BlockControls,
 } from "$live/components/LivePageEditor.tsx";
-import { PreactComponent } from "$live/engine/block.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
 import {
   usePageContext,
   useRouterContext,
 } from "$live/routes/[...catchall].tsx";
-import { isLivePageProps } from "$live/sections/PageInclude.tsx";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
+import { ComponentChildren, toChildArray, VNode } from "preact";
 import { JSX } from "preact/jsx-runtime";
 
 export interface Props {
@@ -45,41 +45,8 @@ export const renderSection = renderSectionFor();
 
 interface UseSlotSection {
   // useSection can be either a `UseSlotSection` or a `Section[]` that is outside a slot.
-  useSection: PreactComponent<JSX.Element, UseSlotProps> | Section[];
+  useSection: (VNode<any> | string | number)[];
   used: boolean;
-}
-
-const USE_SLOT_SECTION_KEY = "$live/sections/UseSlot.tsx" as const;
-/**
- * Builds a map which the key is the name of the slot and the value is the slot component itself.
- * For those sections that aren't used inside a slot it is considered the default `content slot`.
- * @param sections the sections
- * @returns the implementation map.
- */
-function indexedBySlotName(
-  sections: Section[],
-) {
-  const indexed: Record<string, UseSlotSection> = {};
-  const contentSections: Section[] = [];
-
-  for (const section of sections) {
-    if (isSection(section, USE_SLOT_SECTION_KEY)) {
-      indexed[section.props.name] = {
-        useSection: section,
-        used: false,
-      };
-    } else {
-      contentSections.push(section);
-    } // others are considered content
-  }
-  if (contentSections.length > 0 && !indexed[CONTENT_SLOT_NAME]) {
-    indexed[CONTENT_SLOT_NAME] = {
-      used: false,
-      useSection: contentSections,
-    };
-  }
-
-  return indexed;
 }
 
 /**
@@ -90,18 +57,47 @@ function indexedBySlotName(
 const useSlots = (
   impls: Record<string, UseSlotSection>,
 ) =>
-(sec: Section): Section[] => {
+(sec: Section): Section => {
   if (isSection(sec, "$live/sections/Slot.tsx")) {
     const impl = impls[sec.props.name ?? CONTENT_SLOT_NAME];
     if (impl && !impl.used) {
       impl.used = true;
-      return Array.isArray(impl.useSection)
-        ? impl.useSection
-        : [impl.useSection]; // allow content sections to be rendered at current page level.
+      return { ...sec, props: { ...sec.props, children: impl.useSection } }; // allow content sections to be rendered at current page level.
     }
   }
-  return [sec];
+  return sec;
 };
+
+const isUseSlot = (child: ComponentChildren): child is VNode<UseSlotProps> => {
+  console.log(child);
+  return (child as VNode<UseSlotProps>)?.type === "UseSlot";
+};
+
+function indexedBySlotName(
+  children: (VNode<any> | string | number)[],
+) {
+  const indexed: Record<string, UseSlotSection> = {};
+  const orphanNodes: (VNode<any> | string | number)[] = [];
+
+  for (const child of children) {
+    if (isUseSlot(child)) {
+      indexed[child.props.name] = {
+        useSection: [child],
+        used: false,
+      };
+    } else {
+      orphanNodes.push(child);
+    } // others are considered content
+  }
+  if (orphanNodes.length > 0 && !indexed[CONTENT_SLOT_NAME]) {
+    indexed[CONTENT_SLOT_NAME] = {
+      used: false,
+      useSection: orphanNodes,
+    };
+  }
+
+  return indexed;
+}
 
 /**
  * Recursively builds a page based on its inheritance hierarchy.
@@ -117,50 +113,44 @@ const useSlots = (
  * The algorithm is very similar to how we use `Abstract` classes in other languages. So a inherit page is a kind of a class that can have `abstract` methods named `slots`.
  * The child pages can inherit from those classes and implement these methods. The only difference is that we do not fail on an invalid override.
  * @param props the page props
- * @param useSlotsFromChild the indexed implementation of child pages
+ * @param children the children components
  * @returns the rendered page
  */
-const renderPage = (
-  { layout, sections: maybeSections }: Props,
-  useSlotsFromChild: Record<string, UseSlotSection> = {},
-  editMode = false,
-): JSX.Element => {
-  const validSections = maybeSections.filter(notUndefined);
-  const layoutProps = layout?.props;
-  const sections = Object.keys(useSlotsFromChild).length > 0
-    ? validSections.flatMap(useSlots(useSlotsFromChild))
+function Page(
+  { layout, sections: _sections, children: _children, editMode }: Props & {
+    children?: ComponentChildren;
+    editMode?: boolean;
+  },
+) {
+  const children = _children ? toChildArray(_children) : [];
+  // 1. Creates a map [slotName] => child
+  const indexedChildren = indexedBySlotName(children);
+  // 2. filter undefined sections
+  const validSections = _sections.filter(notUndefined);
+  // 3. sections.map switch an slot to its implementation on `UseSlot.tsx`
+  const sections = Object.keys(indexedChildren).length > 0
+    ? validSections.flatMap(useSlots(indexedChildren))
     : validSections;
+
+  const unmatchedSlots = Object.values(indexedChildren).filter((impl) =>
+    !impl.used
+  );
+
+  const unmatchedSections = unmatchedSlots.flatMap((impl) => impl.useSection);
+
   const _renderSection = renderSectionFor(editMode);
+  if (layout) {
+    const { Component: Layout, props } = layout;
 
-  if (layoutProps && isLivePageProps(layoutProps)) {
-    const useSlots = indexedBySlotName(
-      sections,
-    );
-
-    const rendered = renderPage(layoutProps, useSlots, editMode);
-    // unmatchedSlots are `UseSlot.tsx` that did not find a corresponding `Slot.tsx` with the same name, by default they are rendered at bottom
-    const unmatchedSlots = Object.values(useSlots).filter((impl) => !impl.used);
-    const unmatchedSections = unmatchedSlots.flatMap((impl) =>
-      Array.isArray(impl.useSection) ? impl.useSection : [impl.useSection]
-    );
     return (
       <>
-        {rendered}
-        {unmatchedSections.map(_renderSection)}
+        <Layout {...props}>
+          {sections.map(_renderSection)}
+        </Layout>
+        {unmatchedSections}
       </>
     );
   }
-
-  return (
-    <>
-      {sections.map(_renderSection)}
-    </>
-  );
-};
-
-export default function LivePage(
-  props: Props,
-): JSX.Element {
   const metadata = usePageContext()?.metadata;
   const routerCtx = useRouterContext();
 
@@ -177,9 +167,15 @@ export default function LivePage(
         flags={routerCtx?.flags}
         path={routerCtx?.pagePath}
       />
-      {renderPage(props)}
+      {sections.map(_renderSection)}
     </>
   );
+}
+
+export default function LivePage(
+  props: Props,
+): JSX.Element {
+  return <Page {...props} />;
 }
 
 export function Preview(props: Props) {
@@ -188,7 +184,7 @@ export function Preview(props: Props) {
 
   return (
     <>
-      {renderPage(props, {}, editMode)}
+      <Page {...props} editMode={editMode}></Page>
       {editMode && <LivePageEditor />}
     </>
   );
