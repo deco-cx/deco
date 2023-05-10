@@ -8,6 +8,7 @@ import { context } from "$live/live.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
+import { HttpError } from "../engine/errors.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -72,7 +73,15 @@ export const handler = async (
   }
 
   // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-  const initialResponse = await ctx.next();
+  let initialResponse: Response | null = null;
+  try {
+    initialResponse = await ctx.next();
+  } catch (e) {
+    if (e instanceof HttpError) {
+      initialResponse = e.resp;
+    }
+    throw e;
+  }
 
   const newHeaders = new Headers(initialResponse.headers);
   response.headers.forEach((value, key) => newHeaders.append(key, value));

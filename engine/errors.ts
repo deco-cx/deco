@@ -6,3 +6,11 @@ export class HttpError extends Error {
     super(`http error ${resp.status}`);
   }
 }
+
+/**
+ * Stop any config resolution and throw an exception that should be returned to the main handler.
+ * @param resp
+ */
+export const shortcuirt = (resp: Response) => {
+  throw new HttpError(resp);
+};

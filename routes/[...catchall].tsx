@@ -77,15 +77,8 @@ export const handler = async (
     });
   }
 
-  try {
-    return setCSPHeaders(
-      req,
-      await handler(req, ctx),
-    );
-  } catch (e) {
-    if (e instanceof HttpError) {
-      return e.resp;
-    }
-    throw e;
-  }
+  return setCSPHeaders(
+    req,
+    await handler(req, ctx),
+  );
 };
