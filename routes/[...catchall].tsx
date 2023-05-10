@@ -6,6 +6,7 @@ import { LiveConfig, LiveState, RouterContext } from "$live/types.ts";
 import { setCSPHeaders } from "$live/utils/http.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
+import { HttpError } from "../engine/errors.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
@@ -76,8 +77,15 @@ export const handler = async (
     });
   }
 
-  return setCSPHeaders(
-    req,
-    await handler(req, ctx),
-  );
+  try {
+    return setCSPHeaders(
+      req,
+      await handler(req, ctx),
+    );
+  } catch (e) {
+    if (e instanceof HttpError) {
+      return e.resp;
+    }
+    throw e;
+  }
 };
