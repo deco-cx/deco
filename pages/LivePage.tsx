@@ -49,6 +49,10 @@ function belowTheFold() {
 
     const freshState = document.getElementById("__FRSH_STATE");
     freshState?.remove();
+    const freshTwind = document.getElementById("__FRSH_TWIND");
+    if (freshTwind) {
+      freshTwind.id = "__FRSH_TWIND_2";
+    }
 
     const headElement = "<head>";
     const headInit = html.indexOf(headElement);
