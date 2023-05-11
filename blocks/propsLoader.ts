@@ -64,7 +64,7 @@ export type ObjectLoader<TLoaderProps, TSectionInput> = {
       >[key]
     >;
 };
-export type PropsLoader<TSectionInput, TLoaderProps = unknown> =
+export type PropsLoader<TLoaderProps = unknown, TSectionInput = unknown> =
   | ObjectLoader<TLoaderProps, TSectionInput>
   | TSectionInput
   | FnProps<TLoaderProps, TSectionInput>;
@@ -87,7 +87,7 @@ const isObjLoader = <TLoaderProps, TSectionInput>(
   return typeof obj === "object";
 };
 export const propsLoader = async <TSectionInput, TProps>(
-  resolver: PropsLoader<TSectionInput, TProps>,
+  resolver: PropsLoader<TProps, TSectionInput>,
   props: TProps,
   req: Request,
   ctx: FnContext<any>,

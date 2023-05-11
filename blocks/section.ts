@@ -34,7 +34,7 @@ export const isSection = <
   return (s as Section)?.metadata?.component === section;
 };
 
-export type SectionProps<T> = T extends PropsLoader<infer Props, any> ? Props
+export type SectionProps<T> = T extends PropsLoader<any, infer Props> ? Props
   : unknown;
 
 export interface SectionModule<TConfig = any, TProps = any> extends
@@ -43,7 +43,7 @@ export interface SectionModule<TConfig = any, TProps = any> extends
     JSX.Element | null,
     PreactComponent
   > {
-  loader?: PropsLoader<TProps, TConfig>;
+  loader?: PropsLoader<TConfig, TProps>;
 }
 
 const componentWith = (
@@ -64,8 +64,6 @@ const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: [{
     loader: "0",
-  }, {
-    loader: "1",
   }, {
     default: "0",
   }],
