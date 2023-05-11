@@ -265,7 +265,7 @@ export default function LivePageEditor() {
               content: '';
               display: none;
               position: absolute;
-              z-index: 1;
+              z-index: 9999;
               inset: 0;
 
               border: 2px solid;
@@ -286,7 +286,7 @@ export default function LivePageEditor() {
           display: none;
           position: absolute;
           right: 0;
-          z-index: 1;
+          z-index: 9999;
           
           background-color: #0A1F1F;
           color: #FFFFFF;
@@ -333,7 +333,7 @@ export default function LivePageEditor() {
           border-radius: 9999px;
 
           position:absolute;
-          z-index: 1;
+          z-index: 9999;
           width: 28px;
           left: 50%;
         }
@@ -413,30 +413,62 @@ export function EditorContextProvider(
 }
 
 const LIVE_PAGE_RESOLVE_TYPE = "$live/pages/LivePage.tsx";
+const PAGE_INCLUDE_RESOLVE_TYPE = "$live/sections/PageInclude.tsx";
 const USE_SLOT_RESOLVE_TYPE = "$live/sections/UseSlot.tsx";
+
+const isOutsideBlock = (resolve: string) =>
+  !resolve.endsWith(".tsx") && !resolve.endsWith("ts");
+const isLivePage = (resolve: string) => resolve === LIVE_PAGE_RESOLVE_TYPE;
+const isPageInclude = (resolve: string) =>
+  resolve === PAGE_INCLUDE_RESOLVE_TYPE;
+const isUseSlot = (resolve: string) => resolve === USE_SLOT_RESOLVE_TYPE;
+
 const generatePathFromResolveChain = (
   resolveChain: string[],
   index: number,
 ) => {
   const nextToLast = resolveChain[resolveChain.length - 2];
-  // Section Inside Page Layout
+
+  // section inside page layout
   if (
-    nextToLast === LIVE_PAGE_RESOLVE_TYPE && resolveChain.length >= 3 &&
-    resolveChain[resolveChain.length - 3] === LIVE_PAGE_RESOLVE_TYPE
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 3 &&
+    isLivePage(resolveChain[resolveChain.length - 3])
   ) {
     return ["layout", "sections", index.toString()];
   }
 
-  // Section Inside Page Section
+  // section inside page include inside layout
   if (
-    nextToLast === LIVE_PAGE_RESOLVE_TYPE && resolveChain.length >= 3 &&
-    resolveChain[resolveChain.length - 3] !== LIVE_PAGE_RESOLVE_TYPE
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 3 &&
+    isOutsideBlock(resolveChain[resolveChain.length - 3]) &&
+    resolveChain.length >= 4 &&
+    isPageInclude(resolveChain[resolveChain.length - 4])
+  ) {
+    return [];
+  }
+
+  // page include inside layout
+  if (
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 4 &&
+    isOutsideBlock(resolveChain[resolveChain.length - 3])
+  ) {
+    return ["layout", "sections", index.toString()];
+  }
+
+  // section inside page Section
+  if (
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 3 &&
+    !isLivePage(resolveChain[resolveChain.length - 3])
   ) {
     return ["sections", index.toString()];
   }
 
-  // Sections inside use slot
-  if (nextToLast === USE_SLOT_RESOLVE_TYPE) {
+  // sections inside use slot
+  if (isUseSlot(nextToLast)) {
     return ["sections", index.toString()];
   }
 
