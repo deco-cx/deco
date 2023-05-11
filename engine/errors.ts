@@ -14,3 +14,17 @@ export class HttpError extends Error {
 export const shortcircuit = (resp: Response) => {
   throw new HttpError(resp);
 };
+
+/**
+ * Redirect using the specified @param url.
+ */
+export const redirect = (url: string | URL, status?: number) => {
+  shortcircuit(Response.redirect(url, status));
+};
+
+/**
+ * Returns not found error.
+ */
+export const notFound = () => {
+  shortcircuit(new Response(null, { status: 404 }));
+};
