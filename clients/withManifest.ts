@@ -14,12 +14,17 @@ import type { DecoManifest } from "../types.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
+const JSON_CONTENT_TYPE = "application/json";
+const invokeReqBase = {
+  headers: {
+    "accept": JSON_CONTENT_TYPE,
+    "content-type": JSON_CONTENT_TYPE,
+  },
+  method: "POST",
+};
 const invokeKey = async (key: string, props: unknown) => {
   const response = await fetch(`/live/invoke/${key}`, {
-    headers: {
-      "accept": "application/json",
-    },
-    method: "POST",
+    ...invokeReqBase,
     body: JSON.stringify(props),
   });
 
@@ -32,10 +37,7 @@ const invokeKey = async (key: string, props: unknown) => {
 };
 const batchInvoke = async (payload: unknown) => {
   const response = await fetch(`/live/invoke`, {
-    headers: {
-      "accept": "application/json",
-    },
-    method: "POST",
+    ...invokeReqBase,
     body: JSON.stringify(payload),
   });
 
