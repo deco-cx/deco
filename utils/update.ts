@@ -27,6 +27,9 @@ const getImportMap = async (dir: string): Promise<
 
 const ANSWERED = "LIVE_UPDATE_ANSWERED";
 
+/**
+ * Used to storage update answers by the user
+ */
 const answerOf = (dir: string, pkg: string) => {
   const key = `live_update_answers_${dir}_${pkg}`;
   const answer = {
@@ -69,7 +72,7 @@ export const checkUpdates = async (_dir?: string) => {
     const showUpdateNotice = () => {
       console.log(
         brightYellow(
-          `Update available for ${pkg} ${currentVersion} -> ${latestVersion}.`,
+          `update available for ${pkg} ${currentVersion} -> ${latestVersion}.`,
         ),
       );
       return false;
