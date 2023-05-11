@@ -34,7 +34,7 @@ export const isSection = <
   return (s as Section)?.metadata?.component === section;
 };
 
-export type SectionProps<T> = T extends PropsLoader<infer Props> ? Props
+export type SectionProps<T> = T extends PropsLoader<infer Props, any> ? Props
   : unknown;
 
 export interface SectionModule<TConfig = any, TProps = any> extends
@@ -63,7 +63,7 @@ const componentWith = (
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: [{
-    loader: ["1", "state.$live"],
+    loader: "0",
   }, {
     loader: "1",
   }, {
@@ -96,7 +96,10 @@ const sectionBlock: Block<SectionModule> = {
         state: { ...context.state, $live: props, resolve },
       } as FunctionContext;
       return componentFunc(
-        await propsLoader(loader, ctx, request),
+        await propsLoader(loader, ctx.state.$live, request, {
+          ...context?.state?.global,
+          response: context.state.response,
+        }),
         resolveChain,
       );
     };
