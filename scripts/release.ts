@@ -1,11 +1,7 @@
 import { join } from "https://deno.land/std@0.181.0/path/mod.ts";
-import {
-  increment,
-  prerelease,
-} from "https://deno.land/std@0.181.0/semver/mod.ts";
+import { increment } from "https://deno.land/std@0.181.0/semver/mod.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
 import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
-import { CHANGELOG_FILE_PATH, releaseVer } from "./changelog.ts";
 
 await exec("git fetch --tags");
 
@@ -72,23 +68,6 @@ if (await exists(metaJSONFilePath)) {
   );
 
   const GIT_ADD_COMMAND = `git add ${metaJSONFilePath}`;
-  console.log(`Running \`${GIT_ADD_COMMAND}\``);
-
-  await exec(GIT_ADD_COMMAND);
-  shouldCommit = true;
-}
-
-const isPrerelease = newVersion && prerelease(newVersion) !== null;
-
-if (
-  await exists(CHANGELOG_FILE_PATH) && newVersion &&
-  (!isPrerelease ||
-    confirm("would you like to bump the CHANGELOG.md ?")) // do not bump by defaultchangelog when it is a prerelease version
-) {
-  console.log("Bumping CHANGELOG.md");
-  await releaseVer(newVersion);
-
-  const GIT_ADD_COMMAND = `git add ${CHANGELOG_FILE_PATH}`;
   console.log(`Running \`${GIT_ADD_COMMAND}\``);
 
   await exec(GIT_ADD_COMMAND);
