@@ -9,6 +9,9 @@ changelog:
     - title: Exciting New Features 🎉
       labels:
         - enhancement
+    - title: Preview features 🍪
+      labels:
+        - preview-feature
     - title: Bugs fixed 🐛
       labels:
         - bug

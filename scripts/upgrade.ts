@@ -264,6 +264,7 @@ const v1: UpgradeOption = {
         createRuntimeTS(),
         updateDevTsImports(),
         addMainTsLiveEntrypoint(),
+
       ]);
     return [
       ...removeRoutesAndFreshGenTs(),

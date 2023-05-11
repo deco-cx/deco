@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/server.ts";
 import blocks from "$live/blocks/index.ts";
-import { Block, BlockModule, PreactComponent } from "$live/engine/block.ts";
+import { Block, BlockModule } from "$live/engine/block.ts";
 import { getComposedConfigStore } from "$live/engine/configstore/provider.ts";
 import { ConfigResolver } from "$live/engine/core/mod.ts";
 import {
@@ -12,7 +12,10 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
-import defaultResolvers from "$live/engine/fresh/defaults.ts";
+import defaultResolvers, {
+  INVOKE_PREFIX_KEY,
+  PREVIEW_PREFIX_KEY,
+} from "$live/engine/fresh/defaults.ts";
 import { integrityCheck } from "$live/engine/integrity.ts";
 import { compose } from "$live/engine/middleware.ts";
 import { context } from "$live/live.ts";
@@ -20,7 +23,6 @@ import { DecoManifest, LiveConfig } from "$live/types.ts";
 
 import { parse } from "https://deno.land/std@0.181.0/flags/mod.ts";
 import { usePreviewFunc } from "../../blocks/utils.ts";
-import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 import { SiteInfo } from "../../types.ts";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
@@ -77,33 +79,6 @@ const siteName = (): string => {
   return siteName;
 };
 
-const previewPrefixKey = "Preview@";
-const preview: Resolver<PreactComponent> = async (
-  { block, props }: { block: string; props: any },
-  { resolvables, resolvers, resolve },
-) => {
-  const pvResolver = `${previewPrefixKey}${block}`;
-  const previewResolver = resolvers[pvResolver];
-  if (!previewResolver) {
-    const resolvable = resolvables[block];
-    if (!resolvable) {
-      return { Component: PreviewNotAvailable, props: { block } };
-    }
-    const { __resolveType, ...resolvableProps } = resolvable;
-    return resolve({
-      __resolveType: `${previewPrefixKey}${__resolveType}`,
-      ...(await resolve({
-        __resolveType: __resolveType,
-        ...resolvableProps,
-        ...props,
-      })),
-    });
-  }
-  return resolve({
-    __resolveType: pvResolver,
-    ...(await resolve({ __resolveType: block, ...props })),
-  });
-};
 const asManifest = (
   d: DecoManifest,
 ): Record<string, Record<string, BlockModule>> =>
@@ -159,10 +134,21 @@ export const $live = <T extends DecoManifest>(
         const previewFunc = mod.preview ??
           (mod.Preview ? usePreviewFunc(mod.Preview) : blk.defaultPreview);
         if (previewFunc) {
-          return { ...prv, [`${previewPrefixKey}${key}`]: previewFunc };
+          return { ...prv, [`${PREVIEW_PREFIX_KEY}${key}`]: previewFunc };
         }
         return prv;
       }, {} as ResolverMap<FreshContext>);
+
+      const invocations = Object.entries(decorated).reduce(
+        (invk, [key, mod]) => {
+          const invokeFunc = mod.invoke ?? blk.defaultInvoke;
+          if (invokeFunc) {
+            return { ...invk, [`${INVOKE_PREFIX_KEY}${key}`]: invokeFunc };
+          }
+          return invk;
+        },
+        {} as ResolverMap<FreshContext>,
+      );
 
       const adapted = blk.adapt
         ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
@@ -178,7 +164,7 @@ export const $live = <T extends DecoManifest>(
         blk.defaultDanglingRecover;
       return [
         { ...currMan, [blk.type]: decorated },
-        { ...currMap, ...adapted, ...previews },
+        { ...currMap, ...adapted, ...previews, ...invocations },
         (recover as Resolver | undefined)
           ? [...recovers, {
             recoverable: resolverIsBlock(blk),
@@ -197,7 +183,7 @@ export const $live = <T extends DecoManifest>(
   );
   context.configStore = provider;
   const resolver = new ConfigResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers, preview },
+    resolvers: { ...resolvers, ...defaultResolvers },
     getResolvables: (forceFresh?: boolean) => {
       return provider.state({ forceFresh });
     },

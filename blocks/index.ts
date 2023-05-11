@@ -9,6 +9,7 @@ import matcherBlock from "$live/blocks/matcher.ts";
 import pageBlock from "$live/blocks/page.ts";
 import routeBlock from "$live/blocks/route.ts";
 import sectionBlock from "$live/blocks/section.ts";
+import workflowBlock from "$live/blocks/workflow.ts";
 import { Block } from "$live/engine/block.ts";
 
 export default [
@@ -23,4 +24,5 @@ export default [
   matcherBlock,
   flagBlock,
   actionBlock,
+  workflowBlock,
 ] as Block[];

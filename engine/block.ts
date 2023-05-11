@@ -3,15 +3,16 @@ import { Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { ResolverMiddleware } from "$live/engine/middleware.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
+import type { Manifest } from "$live/live.gen.ts";
+import { DecoManifest } from "$live/types.ts";
+import { DotNestedKeys } from "$live/utils/object.ts";
 import {
   DocNode,
   TsTypeDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import { JSX } from "preact";
-import { DotNestedKeys } from "$live/utils/object.ts";
-import type { Manifest } from "$live/live.gen.ts";
-import { DecoManifest } from "$live/types.ts";
+import { BlockInvocation } from "./fresh/defaults.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;
@@ -27,6 +28,7 @@ export type BlockModule<
   TSerializable = T,
 > = {
   default: TDefaultExportFunc;
+  invoke?: Resolver<TSerializable, BlockInvocation, any>;
   preview?: Resolver<PreactComponent, TSerializable, any>;
   Preview?: ComponentFunc;
 };
@@ -78,6 +80,7 @@ export interface Block<
     TSerializable
   >[];
   defaultPreview?: Resolver<PreactComponent, TSerializable, any>;
+  defaultInvoke?: Resolver<TSerializable, BlockInvocation, any>;
   type: BType;
   introspect:
     | IntrospectPath<TBlockModule>

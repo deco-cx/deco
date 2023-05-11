@@ -8,7 +8,7 @@ const _client = new Octokit();
 /**
  * Prints the difference since the @param ver and the latest version.
  */
-export const printDiff = async (ver: string, ownerRepo: string) => {
+export const printDiff = async (ver: semver.SemVer, ownerRepo: string) => {
   const [owner, repo] = ownerRepo.split("/");
   const { data } = await _client.request(
     "GET /repos/{owner}/{repo}/releases",

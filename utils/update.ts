@@ -1,3 +1,4 @@
+import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
@@ -77,7 +78,9 @@ export const checkUpdates = async (_dir?: string) => {
       );
       return false;
     };
+    const currSemVer = semver.parse(currentVersion);
     if (
+      currSemVer &&
       currentVersion !== latestVersion &&
       (answers.shouldAsk(latestVersion) || showUpdateNotice())
     ) {
@@ -85,7 +88,7 @@ export const checkUpdates = async (_dir?: string) => {
       const repo = packagesThatShouldBeChecked[pkg];
       if (repo) {
         console.log(); // breakline
-        await printDiff(currentVersion, repo);
+        await printDiff(currSemVer, repo);
       }
       showUpdateNotice();
       const shouldProceed = confirm("would you like to update?");
