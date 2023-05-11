@@ -14,7 +14,23 @@ import type { DecoManifest } from "../types.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
-const genericInvoke = async (payload: unknown) => {
+const invokeKey = async (key: string, props: unknown) => {
+  const response = await fetch(`/live/invoke/${key}`, {
+    headers: {
+      "accept": "application/json",
+    },
+    method: "POST",
+    body: JSON.stringify(props),
+  });
+
+  if (response.ok) {
+    return response.json();
+  }
+
+  console.error(props, response);
+  throw new Error(`${response.status}, ${JSON.stringify(props)}`);
+};
+const batchInvoke = async (payload: unknown) => {
   const response = await fetch(`/live/invoke`, {
     headers: {
       "accept": "application/json",
@@ -64,7 +80,7 @@ export const invoke = <
     TPayload,
     TManifest
   >
-> => genericInvoke(payload);
+> => batchInvoke(payload);
 
 export const create = <
   TManifest extends DecoManifest,
@@ -90,7 +106,7 @@ export const create = <
     TPayload,
     TManifest
   >
-> => genericInvoke({ key, props });
+> => invokeKey(key, props);
 
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.
