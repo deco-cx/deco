@@ -14,12 +14,30 @@ import type { DecoManifest } from "../types.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
-const genericInvoke = async (payload: unknown) => {
+const JSON_CONTENT_TYPE = "application/json";
+const invokeReqBase = {
+  headers: {
+    "accept": JSON_CONTENT_TYPE,
+    "content-type": JSON_CONTENT_TYPE,
+  },
+  method: "POST",
+};
+const invokeKey = async (key: string, props?: unknown) => {
+  const response = await fetch(`/live/invoke/${key}`, {
+    ...invokeReqBase,
+    body: JSON.stringify(props ?? {}),
+  });
+
+  if (response.ok) {
+    return response.json();
+  }
+
+  console.error(props, response);
+  throw new Error(`${response.status}, ${JSON.stringify(props)}`);
+};
+const batchInvoke = async (payload: unknown) => {
   const response = await fetch(`/live/invoke`, {
-    headers: {
-      "accept": "application/json",
-    },
-    method: "POST",
+    ...invokeReqBase,
     body: JSON.stringify(payload),
   });
 
@@ -64,7 +82,7 @@ export const invoke = <
     TPayload,
     TManifest
   >
-> => genericInvoke(payload);
+> => batchInvoke(payload);
 
 export const create = <
   TManifest extends DecoManifest,
@@ -84,13 +102,13 @@ export const create = <
   TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
 >(key: TInvocableKey) =>
 (
-  props: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+  props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
 ): Promise<
   InvokeResult<
     TPayload,
     TManifest
   >
-> => genericInvoke({ key, props });
+> => invokeKey(key, props);
 
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.
