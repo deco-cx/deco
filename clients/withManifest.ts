@@ -22,10 +22,10 @@ const invokeReqBase = {
   },
   method: "POST",
 };
-const invokeKey = async (key: string, props: unknown) => {
+const invokeKey = async (key: string, props?: unknown) => {
   const response = await fetch(`/live/invoke/${key}`, {
     ...invokeReqBase,
-    body: JSON.stringify(props),
+    body: JSON.stringify(props ?? {}),
   });
 
   if (response.ok) {
@@ -102,7 +102,7 @@ export const create = <
   TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
 >(key: TInvocableKey) =>
 (
-  props: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+  props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
 ): Promise<
   InvokeResult<
     TPayload,
