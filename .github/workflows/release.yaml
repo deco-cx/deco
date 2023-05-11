@@ -9,6 +9,8 @@ on: # yamllint disable-line rule:truthy
 
 jobs:
   release:
+    permissions:
+      packages: write
     name: "Release"
 
     runs-on: "ubuntu-latest"
