@@ -115,5 +115,5 @@ export const propsLoader = async <TSectionInput, TProps>(
   }
 
   const awaited = await waitKeys(resolved);
-  return { ...ctx.state.$live, ...awaited };
+  return { ...props, ...awaited };
 };
