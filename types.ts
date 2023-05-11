@@ -70,6 +70,8 @@ export type LiveConfig<TConfig = any, TState = any> = TState & {
 };
 
 export type { FnContext } from "$live/blocks/utils.ts";
+export type { PropsLoader } from "$live/blocks/propsLoader.ts";
+export type { SectionProps } from "$live/blocks/section.ts";
 export type ActionContext<TState = {}> = FnContext<TState>;
 export type LoaderContext<TState = {}> = FnContext<TState>;
 
