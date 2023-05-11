@@ -1,0 +1,41 @@
+# https://docs.github.com/en/actions
+
+name: "Release"
+
+on: # yamllint disable-line rule:truthy
+  push:
+    tags:
+      - "**"
+
+jobs:
+  release:
+    name: "Release"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Determine tag"
+        run: 'echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV'
+
+      - name: "Create release"
+        uses: "actions/github-script@v6"
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            const tag = process.env.RELEASE_TAG;
+            try {
+              const response = await github.rest.repos.createRelease({
+                draft: false,
+                generate_release_notes: true,
+                name: `Release ${tag}`,
+                owner: context.repo.owner,
+                prerelease: tag.includes("rc-") || tag.includes("preview") || tag.includes("beta") || tag.includes("alpha"),
+                repo: context.repo.repo,
+                tag_name: tag,
+              });
+
+              core.exportVariable('RELEASE_ID', response.data.id);
+              core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
+            } catch (error) {
+              core.setFailed(error.message);
+            }
