@@ -218,7 +218,7 @@ const renderPage = (
 
   const url = usePageContext()!.url;
 
-  const sectionsToRender = fold ?? 1 ?? sections.length - 1;
+  const sectionsToRender = fold ?? 4 ?? sections.length - 1;
   if (url.searchParams.has("belowTheFold")) {
     const belowTheFoldSections = sections.slice(
       sectionsToRender,
