@@ -7,3 +7,4 @@ export type { Workflow } from "$live/blocks/workflow.ts";
 export { WorkflowContext } from "$live/blocks/workflow.ts";
 export type { WorkflowGen } from "./deps.ts";
 export { stylesPlugin };
+export { notFound, redirect } from "$live/engine/errors.ts";
