@@ -20,8 +20,73 @@ import { JSX } from "preact/jsx-runtime";
 
 export interface Props {
   name: string;
+  fold?: number;
   layout?: Page;
   sections: Section[];
+}
+
+function belowTheFold() {
+  const element = document.getElementById("LIVE_BELOW_THE_FOLD");
+  if (!element) {
+    return;
+  }
+  let reached = false;
+  const eventListener = async () => {
+    if (reached) {
+      return;
+    }
+    const rect = element.getBoundingClientRect();
+    const isInViewPort = rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <=
+        (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+    if (!isInViewPort) {
+      return;
+    }
+    reached = true;
+    const html = await fetch("/?belowTheFold").then((r) => r.text());
+    removeEventListener("scroll", eventListener);
+
+    const freshState = document.getElementById("__FRSH_STATE");
+    freshState?.remove();
+    const freshTwind = document.getElementById("__FRSH_TWIND");
+    if (freshTwind) {
+      freshTwind.id = "__FRSH_TWIND_2";
+    }
+
+    const headElement = "<head>";
+    const headInit = html.indexOf(headElement);
+    const head = html.substring(
+      headInit + headElement.length,
+      html.indexOf(
+        "</head>",
+      ),
+    );
+
+    const bodyLenght = "<body>";
+    const findBody = html.indexOf("<body>");
+
+    const withoutBody = html.substring(
+      findBody + bodyLenght.length,
+      html.indexOf("</body>"),
+    );
+
+    element.innerHTML = `${head}${withoutBody}`;
+    element.querySelectorAll("script").forEach((oldScriptEl) => {
+      const newScriptEl = document.createElement("script");
+
+      Array.from(oldScriptEl.attributes).forEach((attr) => {
+        newScriptEl.setAttribute(attr.name, attr.value);
+      });
+
+      const scriptText = document.createTextNode(oldScriptEl.innerHTML);
+      newScriptEl.appendChild(scriptText);
+
+      oldScriptEl!.parentNode!.replaceChild(newScriptEl, oldScriptEl);
+    });
+  };
+  addEventListener("scroll", eventListener);
 }
 
 function renderSectionFor(editMode?: boolean) {
@@ -122,7 +187,7 @@ const useSlots = (
  * @returns the rendered page
  */
 const renderPage = (
-  { layout, sections: maybeSections }: Props,
+  { layout, sections: maybeSections, fold }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode = false,
 ): JSX.Element => {
@@ -152,9 +217,41 @@ const renderPage = (
     );
   }
 
+  const url = usePageContext()!.url;
+
+  const sectionsToRender = fold ?? 4 ?? sections.length - 1;
+  if (url.searchParams.has("belowTheFold")) {
+    const belowTheFoldSections = sections.slice(
+      sectionsToRender,
+      sections.length - 1,
+    );
+    return (
+      <>
+        {belowTheFoldSections.map(_renderSection)}
+      </>
+    );
+  }
+
+  const aboveTheFold = sections.slice(0, sectionsToRender);
+  const footer = sections[sections.length - 1];
+  const foldSection = {
+    Component: () => <div id="LIVE_BELOW_THE_FOLD"></div>,
+    props: {},
+    metadata: {
+      resolveChain: ["below-the-fold"],
+      id: "below-the-fold",
+      component: "below-the-fold",
+    },
+  };
+
   return (
     <>
-      {sections.map(_renderSection)}
+      {[...aboveTheFold, foldSection, footer].map(_renderSection)}
+
+      <script
+        dangerouslySetInnerHTML={{ __html: `(${belowTheFold.toString()})()` }}
+      >
+      </script>
     </>
   );
 };
