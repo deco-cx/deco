@@ -1,4 +1,5 @@
 import { Page } from "$live/blocks/page.ts";
+import { Head } from "$fresh/runtime.ts";
 import { isSection, Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
@@ -188,6 +189,9 @@ export function Preview(props: Props) {
 
   return (
     <>
+      <Head>
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
       {renderPage(props, {}, editMode)}
       {editMode && <LivePageEditor />}
     </>
