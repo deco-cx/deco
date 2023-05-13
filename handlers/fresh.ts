@@ -19,13 +19,16 @@ export const isFreshCtx = <TState>(
  * @description Renders a fresh page.
  */
 export default function Fresh(page: FreshConfig) {
-  return (req: Request, ctx: ConnInfo) => {
+  return async (req: Request, ctx: ConnInfo) => {
     const url = new URL(req.url);
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page, { headers: allowCorsFor(req) });
     }
-    return isFreshCtx<{ routerInfo: RouterContext }>(ctx)
-      ? ctx.render({ ...page, routerInfo: ctx.state.routerInfo })
-      : Response.json({ message: "Fresh is not being used" }, { status: 500 });
+    if (isFreshCtx<{ routerInfo: RouterContext }>(ctx)) {
+      return await ctx.render({ ...page, routerInfo: ctx.state.routerInfo });
+    }
+    return Response.json({ message: "Fresh is not being used" }, {
+      status: 500,
+    });
   };
 }

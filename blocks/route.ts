@@ -13,6 +13,7 @@ import { context as liveContext } from "$live/live.ts";
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
+import { HttpError } from "$live/engine/errors.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -28,8 +29,31 @@ type ConfigurableRoute = {
   config: LiveRouteConfig;
 };
 
+/**
+ * Wraps any route with an error handler that catches http-errors and returns the response accordingly.
+ * Additionally logs the exception when running in a deployment.
+ *
+ * Ideally, this should be placed inside the `_middleware.ts` but fresh handles exceptions and wraps it into a 500-response before being catched by the middleware.
+ * See more at: https://github.com/denoland/fresh/issues/586
+ */
+const withErrorHandler = (
+  routePath: string,
+  handler: Handler<any, any>,
+): Handler<any, any> => {
+  return async (req: Request, ctx: HandlerContext<any>) => {
+    try {
+      return await handler(req, ctx);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return err.resp;
+      }
+      console.error("an error has occurred", routePath, err);
+      throw err;
+    }
+  };
+};
 const hasAnyMethod = (obj: Record<string, any>): boolean => {
-  for (const method in METHODS) {
+  for (const method of METHODS) {
     if (obj[method]) {
       return true;
     }
@@ -109,7 +133,7 @@ const mapHandlers = (
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
-      return async function (
+      return withErrorHandler(key, async function (
         request: Request,
         context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
@@ -119,10 +143,10 @@ const mapHandlers = (
         context.state.$live = $live;
 
         return val!(request, context);
-      };
+      });
     });
   }
-  return async function (
+  return withErrorHandler(key, async function (
     request: Request,
     context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
@@ -136,7 +160,7 @@ const mapHandlers = (
       return await handlers(request, context);
     }
     return await context.render($live);
-  };
+  });
 };
 export type Route<TProps = any> = ComponentFunc<PageProps<TProps>>;
 
