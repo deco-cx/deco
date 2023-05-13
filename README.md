@@ -234,6 +234,11 @@ Now browse:
 `http://localhost:8080/` for a dynamic page `http://localhost:8080/test` for a
 static page
 
+## Local debugging
+
+Run the site with `USE_LOCAL_STORAGE=true deno task start` and notice `.config.json`
+ file where config will be used.
+
 ## Distribution
 
 Live is deployed on https://deno.land/x/live using git tags.
