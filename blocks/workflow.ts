@@ -6,8 +6,8 @@ import {
   WorkflowContext as DurableWorkflowContext,
 } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { Manifest } from "$live/live.gen.ts";
 import { context } from "$live/live.ts";
-import { Manifest } from "../live.gen.ts";
 import {
   AvailableActions,
   AvailableFunctions,
@@ -16,9 +16,9 @@ import {
   ManifestAction,
   ManifestFunction,
   ManifestLoader,
-} from "../routes/live/invoke/index.ts";
-import { DecoManifest } from "../types.ts";
-import { DotNestedKeys } from "../utils/object.ts";
+} from "$live/routes/live/invoke/index.ts";
+import { DecoManifest } from "$live/types.ts";
+import { DotNestedKeys } from "$live/utils/object.ts";
 
 const myUrl = () =>
   context.isDeploy
