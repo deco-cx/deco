@@ -6,7 +6,6 @@ import { LiveConfig, LiveState, RouterContext } from "$live/types.ts";
 import { setCSPHeaders } from "$live/utils/http.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
-import { HttpError } from "../engine/errors.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 
