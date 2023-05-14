@@ -24,10 +24,6 @@ export const handler = async (
   };
 
   const resp = await resolve(payloadForFunc(invokeFunc));
-  if (resp instanceof Object) {
-    return Response.json(
-      resp,
-    );
-  }
-  return new Response(null, { status: 200 });
+
+  return Response.json(resp);
 };
