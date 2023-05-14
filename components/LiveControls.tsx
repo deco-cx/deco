@@ -1,6 +1,9 @@
 import { Head } from "$fresh/runtime.ts";
 import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
 import type { Site } from "$live/types.ts";
+import { context } from "$live/live.ts";
+
+const IS_LOCALHOST = context.deploymentId === undefined;
 
 interface Page {
   id: string | number;
@@ -29,7 +32,10 @@ type LiveEvent = {
 };
 
 // TODO: Move inspect-vscode code to here so we don't need to do this stringification
-const domInspectorModule = `
+// Only add dom inspector if running in localhost, i.e. deploymentId === undefined
+const domInspectorModule = IS_LOCALHOST
+  ? `
+window.ACTIVATE_INSPECTOR = true;
 const DomInspectorActivators = {
   CmdE: {
     label: "Cmd+E or Ctrl+E",
@@ -42,8 +48,8 @@ const DomInspectorActivators = {
     matchEvent: (event) => event.code === "Backquote",
   },
 };
-${inspectVSCode.DomInspector.toString()}
-`;
+${inspectVSCode.DomInspector.toString()}`
+  : "";
 
 const main = () => {
   // deno-lint-ignore no-explicit-any
@@ -123,14 +129,16 @@ const main = () => {
     }
   };
 
-  //@ts-ignore: "DomInspector not available"
-  const inspector = new DomInspector(document.body, {
-    outline: "1px dashed #2fd080",
-    backgroundColor: "rgba(47, 208, 128, 0.33)",
-    backgroundBlendMode: "multiply",
-    activator: DomInspectorActivators.Backquote,
-    path: "/live/inspect",
-  });
+  //@ts-ignore: "window.ACTIVATE_INSPECTOR not available"
+  const inspector = window.ACTIVATE_INSPECTOR &&
+    //@ts-ignore: "DomInspector not available"
+    new DomInspector(document.body, {
+      outline: "1px dashed #2fd080",
+      backgroundColor: "rgba(47, 208, 128, 0.33)",
+      backgroundBlendMode: "multiply",
+      activator: DomInspectorActivators.Backquote,
+      path: "/live/inspect",
+    });
 
   /** Setup global variables */
   window.LIVE = {
