@@ -125,6 +125,9 @@ export default async function dev(
     onListen?: () => void;
   } = {},
 ) {
+
+  const start = performance.now()
+
   const dir = dirname(fromFileUrl(base));
   await checkUpdates(dir).catch((err) =>
     console.log("error when checking updates", err)
@@ -164,6 +167,9 @@ export default async function dev(
   genSchemas(base, manifestFile, dir);
 
   onListen?.();
+
+  const duration = performance.now() - start
+  console.log('starting live took', duration, 'ms')
 
   await import(entrypoint);
 }
