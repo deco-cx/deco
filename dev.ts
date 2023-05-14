@@ -40,6 +40,7 @@ const genSchemas = async (
   directory: string,
 ) => {
   manifest = new URL(manifest, base).href;
+  const start = performance.now();
 
   console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
 
@@ -54,7 +55,12 @@ const genSchemas = async (
     ),
   );
 
-  console.log(`✔️ ready to rock and roll! Your project is live 🤘`);
+  const duration = performance.now() - start;
+  console.log(
+    `✔️ ready to rock and roll! Your project is live 🤘 ${
+      duration.toFixed(0)
+    }ms`,
+  );
 };
 
 const manifestFile = "./live.gen.ts";
