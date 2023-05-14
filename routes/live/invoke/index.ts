@@ -43,7 +43,7 @@ export type ManifestLoader<
   ? TManifest["loaders"][TLoader] extends { default: infer TLoader }
     ? TLoader extends (
       props: infer Props,
-    req: Request,
+      req: Request,
       _ctx: any,
     ) => PromiseOrValue<infer TReturn> ? { props: Props; return: TReturn }
     : never
@@ -57,7 +57,7 @@ export type ManifestAction<
   ? TManifest["actions"][TAction] extends { default: infer TAction }
     ? TAction extends (
       props: infer Props,
-    req: Request,
+      req: Request,
       _ctx: any,
     ) => PromiseOrValue<infer TReturn> ? { props: Props; return: TReturn }
     : never
@@ -246,10 +246,10 @@ export const handler = async (
     : bodyFromUrl("body", new URL(req.url));
 
   const resp = await resolve(payloadToResolvable(data));
-  if (resp instanceof Object) {
-    return Response.json(
-      resp,
-    );
+
+  if (resp === undefined) {
+    return new Response(null, { status: 204 });
   }
-  return new Response(null, { status: 200 });
+
+  return Response.json(resp);
 };

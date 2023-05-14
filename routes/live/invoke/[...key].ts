@@ -24,10 +24,10 @@ export const handler = async (
   };
 
   const resp = await resolve(payloadForFunc(invokeFunc));
-  if (resp instanceof Object) {
-    return Response.json(
-      resp,
-    );
+
+  if (resp === undefined) {
+    return new Response(null, { status: 204 });
   }
-  return new Response(null, { status: 200 });
+
+  return Response.json(resp);
 };
