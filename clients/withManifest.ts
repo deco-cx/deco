@@ -14,40 +14,42 @@ import type { DecoManifest } from "../types.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
-const JSON_CONTENT_TYPE = "application/json";
-const invokeReqBase = {
-  headers: {
-    "accept": JSON_CONTENT_TYPE,
-    "content-type": JSON_CONTENT_TYPE,
-  },
-  method: "POST",
+const fetchJSON = async (
+  input: URL | RequestInfo,
+  init?: RequestInit | undefined,
+) => {
+  const headers = new Headers(init?.headers);
+
+  headers.set("accept", "application/json");
+  headers.set("content-type", "application/json");
+
+  const response = await fetch(input, {
+    method: "POST",
+    ...init,
+    headers,
+  });
+
+  if (response.status === 204) {
+    return;
+  }
+
+  if (response.ok) {
+    return response.json();
+  }
+
+  console.error(init?.body, response);
+  throw new Error(`${response.status}, ${init?.body}`);
 };
-const invokeKey = async (key: string, props?: unknown) => {
-  const response = await fetch(`/live/invoke/${key}`, {
-    ...invokeReqBase,
+
+const invokeKey = (key: string, props?: unknown) =>
+  fetchJSON(`/live/invoke/${key}`, {
     body: JSON.stringify(props ?? {}),
   });
 
-  if (response.ok) {
-    return response.json();
-  }
-
-  console.error(props, response);
-  throw new Error(`${response.status}, ${JSON.stringify(props)}`);
-};
-const batchInvoke = async (payload: unknown) => {
-  const response = await fetch(`/live/invoke`, {
-    ...invokeReqBase,
+const batchInvoke = (payload: unknown) =>
+  fetchJSON(`/live/invoke`, {
     body: JSON.stringify(payload),
   });
-
-  if (response.ok) {
-    return response.json();
-  }
-
-  console.error(payload, response);
-  throw new Error(`${response.status}, ${JSON.stringify(payload)}`);
-};
 
 /**
  * Receives the function id as a parameter (e.g `#FUNC_ID`, the `#` will be ignored)

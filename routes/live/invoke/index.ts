@@ -247,5 +247,9 @@ export const handler = async (
 
   const resp = await resolve(payloadToResolvable(data));
 
+  if (resp === undefined) {
+    return new Response(null, { status: 204 });
+  }
+
   return Response.json(resp);
 };
