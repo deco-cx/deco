@@ -3,6 +3,7 @@ import { Head } from "$fresh/runtime.ts";
 import { isSection, Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
+import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import LivePageEditor, {
   BlockControls,
 } from "$live/components/LivePageEditor.tsx";
@@ -167,6 +168,7 @@ export default function LivePage(
 
   return (
     <>
+      <LivePolyfills />
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
         page={{
