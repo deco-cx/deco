@@ -50,13 +50,8 @@ const DomInspectorActivators = {
 ${inspectVSCode.DomInspector.toString()}`
   : "";
 
-const main = () => {
-  // Polyfill for Safari
-  const onIdle = typeof requestIdleCallback !== "undefined"
-    ? requestIdleCallback
-    : (cb: TimerHandler) => setTimeout(cb, 0);
-
-  onIdle(() => {
+const main = () =>
+  requestIdleCallback(() => {
     // deno-lint-ignore no-explicit-any
     const isLiveEvent = (data: any): data is LiveEvent =>
       ["scrollToComponent", "DOMInspector"].includes(data?.type);
@@ -161,7 +156,6 @@ const main = () => {
     // focus element when inside admin
     addEventListener("message", onMessage);
   });
-};
 
 function LiveControls({ site, page }: Props) {
   const partialPage = page && {

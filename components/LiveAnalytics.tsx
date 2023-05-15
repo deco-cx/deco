@@ -12,11 +12,6 @@ const main = (
 ) => {
   const loadingErrors: string[] = [];
 
-  // Polyfill for Safari
-  const onIdle = typeof requestIdleCallback !== "undefined"
-    ? requestIdleCallback
-    : (cb: TimerHandler) => setTimeout(cb, 0);
-
   // More info at:
   // https://stackoverflow.com/questions/9808307/how-to-get-the-number-of-dom-elements-used-in-a-web-page
   const getTotalDOMSize = (element: Element | ShadowRoot = document.body) => {
@@ -62,7 +57,7 @@ const main = (
       error_name: error.name,
     });
 
-  onIdle(async () => {
+  requestIdleCallback(async () => {
     if (top !== window) {
       reportPerformance("dom-elements", getTotalDOMSize());
 

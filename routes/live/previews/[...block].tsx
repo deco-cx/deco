@@ -2,6 +2,7 @@ import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
+import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import { context } from "$live/live.ts";
 import Render from "$live/routes/[...catchall].tsx";
 import { LiveConfig, LiveState } from "$live/types.ts";
@@ -30,6 +31,7 @@ export default function Preview(props: PageProps<Page>) {
   };
   return (
     <>
+      <LivePolyfills />
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
         page={{
