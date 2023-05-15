@@ -22,6 +22,7 @@ export default function PageInclude({ page, ...rest }: Props) {
     return null;
   }
 
+  // TODO: get render section from page context.
   const renderSection = renderSectionFor((rest as any).editMode);
 
   return (

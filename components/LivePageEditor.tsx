@@ -128,8 +128,7 @@ function PreviewIcons() {
 interface DefaultEditorEvent {
   action: "move" | "edit" | "duplicate" | "delete" | "insert";
   key: string;
-  // TODO: Bump this version
-  /* @deprecated since version @1.0.x */
+  /* @deprecated since version @1.3.5 */
   index: number;
   path: string[];
 }

@@ -37,6 +37,7 @@ export function renderSectionFor(editMode?: boolean) {
     { Component: Section, props, metadata }: Props["sections"][0],
     idx: number,
   ) {
+    // TODO: Remove editMode at Section Props and pass via context
     return (
       <section
         id={`${metadata?.component}-${idx}`}
@@ -75,7 +76,6 @@ function indexedBySlotName(
   sections.forEach((section, index) => {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
       // This is used to maintain the real position during editMode
-      // TODO: check maybe can use metadata
       (section.props as any).__previewIndex = index;
       indexed[section.props.name] = {
         useSection: section,
@@ -83,7 +83,6 @@ function indexedBySlotName(
       };
     } else {
       // This is used to maintain the real position during editMode
-      // TODO: check maybe can use metadata
       section.props.__previewIndex = index;
       contentSections.push(section);
     } // others are considered content

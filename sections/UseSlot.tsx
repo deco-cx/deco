@@ -9,7 +9,7 @@ export interface Props {
 }
 
 export default function UseSlot({ sections, ...rest }: Props) {
-  // TODO: Check performance impact here
+  // TODO: get render section from page context.
   const renderSection = renderSectionFor((rest as any).editMode);
 
   return (
