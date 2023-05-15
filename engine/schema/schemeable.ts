@@ -97,8 +97,12 @@ const schemeableToJSONSchemaFunc = (
         .reduce(
           (
             [currDef, properties, req],
-            [property, { schemeable, title, jsDocSchema, required }],
+            [property, val],
           ) => {
+            if (!val) {
+              return [currDef, properties, req];
+            }
+            const { schemeable, title, jsDocSchema, required } = val;
             const [nDef, sc] = schemeableToJSONSchema(
               genId,
               currDef,
