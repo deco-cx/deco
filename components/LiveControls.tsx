@@ -50,7 +50,7 @@ const DomInspectorActivators = {
 ${inspectVSCode.DomInspector.toString()}`
   : "";
 
-const main = () =>
+const main = () => {
   requestIdleCallback(() => {
     // deno-lint-ignore no-explicit-any
     const isLiveEvent = (data: any): data is LiveEvent =>
@@ -156,6 +156,7 @@ const main = () =>
     // focus element when inside admin
     addEventListener("message", onMessage);
   });
+};
 
 function LiveControls({ site, page }: Props) {
   const partialPage = page && {
