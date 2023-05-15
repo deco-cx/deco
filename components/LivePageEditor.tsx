@@ -1,6 +1,7 @@
-import { JSX } from "preact";
+import { ComponentChildren, createContext, JSX } from "preact";
 import { Head } from "$fresh/runtime.ts";
 import { PreactComponent } from "$live/engine/block.ts";
+import { useContext } from "preact/hooks";
 
 interface PreviewIconProps extends JSX.HTMLAttributes<SVGSVGElement> {
   id:
@@ -127,7 +128,9 @@ function PreviewIcons() {
 interface DefaultEditorEvent {
   action: "move" | "edit" | "duplicate" | "delete" | "insert";
   key: string;
+  /* @deprecated since version @1.3.5 */
   index: number;
+  path: string[];
 }
 
 interface MoveEditorEvent extends DefaultEditorEvent {
@@ -157,12 +160,9 @@ function useSendEditorEvent(args: EditorEvent) {
   };
 }
 
-interface BlockControlsProps {
-  metadata?: PreactComponent["metadata"];
-  index: number;
-}
+export function BlockControls() {
+  const { metadata, index: i, path } = useEditorContext();
 
-export function BlockControls({ metadata, index: i }: BlockControlsProps) {
   return (
     <>
       <div data-insert="">
@@ -173,6 +173,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             key: metadata?.component ?? "",
             index: i,
             at: i,
+            path,
           })}
         >
           <PreviewIcon id="plus" />
@@ -184,6 +185,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             key: metadata?.component ?? "",
             index: i,
             at: i + 1,
+            path,
           })}
         >
           <PreviewIcon id="plus" />
@@ -196,6 +198,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             action: "delete",
             key: metadata?.component ?? "",
             index: i,
+            path,
           })}
         >
           <PreviewIcon id="trash" />
@@ -207,6 +210,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             index: i,
             from: i,
             to: i - 1,
+            path,
           })}
         >
           <PreviewIcon id="chevron-up" />
@@ -218,6 +222,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             index: i,
             from: i,
             to: i + 1,
+            path,
           })}
         >
           <PreviewIcon id="chevron-down" />
@@ -227,6 +232,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             action: "duplicate",
             key: metadata?.component ?? "",
             index: i,
+            path,
           })}
         >
           <PreviewIcon id="copy" />
@@ -236,6 +242,7 @@ export function BlockControls({ metadata, index: i }: BlockControlsProps) {
             action: "edit",
             key: metadata?.component ?? "",
             index: i,
+            path,
           })}
         >
           <PreviewIcon id="edit" />
@@ -253,24 +260,24 @@ export default function LivePageEditor() {
           id="_live_css"
           dangerouslySetInnerHTML={{
             __html: `
-            section[data-manifest-key]:before {
+            section[data-manifest-key]:not(:has(section[data-manifest-key])):before {
               content: '';
               display: none;
               position: absolute;
-              z-index: 1;
+              z-index: 9999;
               inset: 0;
 
               border: 2px solid;
               border-color: #2E6ED9;
             }
 
-        section[data-manifest-key]:hover {
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover {
           position: relative;
         }
 
-        section[data-manifest-key]:hover:before,
-        section[data-manifest-key]:hover div[data-controllers],
-        section[data-manifest-key]:hover div[data-insert] {
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover:before,
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-controllers],
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-insert] {
           display: flex;
         }
 
@@ -278,7 +285,7 @@ export default function LivePageEditor() {
           display: none;
           position: absolute;
           right: 0;
-          z-index: 1;
+          z-index: 9999;
           
           background-color: #0A1F1F;
           color: #FFFFFF;
@@ -325,7 +332,7 @@ export default function LivePageEditor() {
           border-radius: 9999px;
 
           position:absolute;
-          z-index: 1;
+          z-index: 9999;
           width: 28px;
           left: 50%;
         }
@@ -361,3 +368,108 @@ export default function LivePageEditor() {
     </>
   );
 }
+
+interface EditorContextProps {
+  metadata: PreactComponent["metadata"];
+  index: number;
+  path: string[];
+}
+
+const EditorContext = createContext<
+  EditorContextProps | undefined
+>(undefined);
+
+const useEditorContext = () => {
+  const ctx = useContext(EditorContext);
+  if (ctx === undefined) {
+    throw new Error("Something went wrong rendering EditMode");
+  }
+
+  return ctx;
+};
+
+const useInternalEditorContext = () => useContext(EditorContext);
+
+export function EditorContextProvider(
+  { metadata, index, children }: Omit<EditorContextProps, "path"> & {
+    children: ComponentChildren;
+  },
+) {
+  const editorCtx = useInternalEditorContext();
+  const currentPath = generatePathFromResolveChain(
+    metadata!.resolveChain,
+    index,
+  );
+  const path = [...(editorCtx?.path || []), ...currentPath];
+
+  return (
+    <EditorContext.Provider
+      value={{ metadata, index, path }}
+    >
+      {children}
+    </EditorContext.Provider>
+  );
+}
+
+const LIVE_PAGE_RESOLVE_TYPE = "$live/pages/LivePage.tsx";
+const PAGE_INCLUDE_RESOLVE_TYPE = "$live/sections/PageInclude.tsx";
+const USE_SLOT_RESOLVE_TYPE = "$live/sections/UseSlot.tsx";
+
+const isOutsideBlock = (resolve: string) =>
+  !resolve.endsWith(".tsx") && !resolve.endsWith("ts");
+const isLivePage = (resolve: string) => resolve === LIVE_PAGE_RESOLVE_TYPE;
+const isPageInclude = (resolve: string) =>
+  resolve === PAGE_INCLUDE_RESOLVE_TYPE;
+const isUseSlot = (resolve: string) => resolve === USE_SLOT_RESOLVE_TYPE;
+
+const generatePathFromResolveChain = (
+  resolveChain: string[],
+  index: number,
+) => {
+  const nextToLast = resolveChain[resolveChain.length - 2];
+
+  // section inside page layout
+  if (
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 3 &&
+    isLivePage(resolveChain[resolveChain.length - 3])
+  ) {
+    return ["layout", "sections", index.toString()];
+  }
+
+  // section inside page include inside layout
+  if (
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 3 &&
+    isOutsideBlock(resolveChain[resolveChain.length - 3]) &&
+    resolveChain.length >= 4 &&
+    isPageInclude(resolveChain[resolveChain.length - 4])
+  ) {
+    return [];
+  }
+
+  // page include inside layout
+  if (
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 4 &&
+    isOutsideBlock(resolveChain[resolveChain.length - 3])
+  ) {
+    return ["layout", "sections", index.toString()];
+  }
+
+  // section inside page Section
+  if (
+    isLivePage(nextToLast) &&
+    resolveChain.length >= 3 &&
+    !isLivePage(resolveChain[resolveChain.length - 3])
+  ) {
+    return ["sections", index.toString()];
+  }
+
+  // sections inside use slot
+  if (isUseSlot(nextToLast)) {
+    return ["sections", index.toString()];
+  }
+
+  return [index.toString()];
+};

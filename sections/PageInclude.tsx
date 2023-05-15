@@ -3,7 +3,7 @@ import { notUndefined } from "$live/engine/core/utils.ts";
 
 import {
   Props as LivePageProps,
-  renderSection,
+  renderSectionFor,
 } from "$live/pages/LivePage.tsx";
 
 export interface Props {
@@ -17,10 +17,14 @@ export const isLivePageProps = (
     (p as LivePageProps)?.layout !== undefined;
 };
 
-export default function PageInclude({ page }: Props) {
+export default function PageInclude({ page, ...rest }: Props) {
   if (!isLivePageProps(page?.props)) {
     return null;
   }
+
+  // TODO: get render section from page context.
+  const renderSection = renderSectionFor((rest as any).editMode);
+
   return (
     <>{(page?.props?.sections ?? []).filter(notUndefined).map(renderSection)}</>
   );

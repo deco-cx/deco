@@ -6,6 +6,7 @@ import LiveControls from "$live/components/LiveControls.tsx";
 import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import LivePageEditor, {
   BlockControls,
+  EditorContextProvider,
 } from "$live/components/LivePageEditor.tsx";
 import { PreactComponent } from "$live/engine/block.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
@@ -17,7 +18,7 @@ import {
 import { isLivePageProps } from "$live/sections/PageInclude.tsx";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
-import { JSX } from "preact/jsx-runtime";
+import { ComponentChildren, JSX } from "preact";
 
 export interface Props {
   name: string;
@@ -25,19 +26,28 @@ export interface Props {
   sections: Section[];
 }
 
-function renderSectionFor(editMode?: boolean) {
+const IdentityComponent = ({ children }: { children: ComponentChildren }) => (
+  <>{children}</>
+);
+
+export function renderSectionFor(editMode?: boolean) {
   const Controls = editMode ? BlockControls : () => null;
+  const EditContext = editMode ? EditorContextProvider : IdentityComponent;
+
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
     idx: number,
   ) {
+    // TODO: Remove editMode at Section Props and pass via context
     return (
       <section
         id={`${metadata?.component}-${idx}`}
         data-manifest-key={metadata?.component}
       >
-        <Controls metadata={metadata} index={idx} />
-        <Section {...props} />
+        <EditContext metadata={metadata} index={props.__previewIndex ?? idx}>
+          <Controls />
+          <Section editMode={editMode} {...props} />
+        </EditContext>
       </section>
     );
   };
@@ -64,16 +74,21 @@ function indexedBySlotName(
   const indexed: Record<string, UseSlotSection> = {};
   const contentSections: Section[] = [];
 
-  for (const section of sections) {
+  sections.forEach((section, index) => {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
+      // This is used to maintain the real position during editMode
+      (section.props as any).__previewIndex = index;
       indexed[section.props.name] = {
         useSection: section,
         used: false,
       };
     } else {
+      // This is used to maintain the real position during editMode
+      section.props.__previewIndex = index;
       contentSections.push(section);
     } // others are considered content
-  }
+  });
+
   if (contentSections.length > 0 && !indexed[CONTENT_SLOT_NAME]) {
     indexed[CONTENT_SLOT_NAME] = {
       used: false,
@@ -145,6 +160,7 @@ const renderPage = (
     const unmatchedSections = unmatchedSlots.flatMap((impl) =>
       Array.isArray(impl.useSection) ? impl.useSection : [impl.useSection]
     );
+
     return (
       <>
         {rendered}

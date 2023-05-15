@@ -69,9 +69,7 @@ type ResolveTypeOf<
   T = any,
   TContext extends BaseContext = BaseContext,
   TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
-> =
-  | keyof ResolvesTo<T, TContext, TResolverMap>
-  | ((arg: any) => keyof ResolvesTo<T, TContext, TResolverMap>);
+> = keyof ResolvesTo<T, TContext, TResolverMap>;
 
 export type ResolvableOf<
   T,
@@ -125,19 +123,13 @@ const resolveTypeOf = <
   resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>,
 ): [
   Omit<T, "__resolveType">,
-  ((args: any) => keyof ResolverMap | string) | undefined,
+  string | undefined,
 ] => {
   if (isResolvable(resolvable)) {
     const { __resolveType, ...rest } = resolvable;
-    if (typeof __resolveType === "function") {
-      return [
-        rest as Omit<T, "__resolveType">,
-        __resolveType as (args: any) => keyof ResolverMap,
-      ];
-    }
     return [
       rest as Omit<T, "__resolveType">,
-      (() => __resolveType!) as (args: any) => keyof ResolverMap,
+      __resolveType,
     ];
   }
   return [resolvable as Omit<T, "__resolveType">, undefined];
@@ -287,6 +279,7 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
     },
   };
 };
+
 export const resolve = async <
   T,
   TContext extends BaseContext = BaseContext,
@@ -294,38 +287,41 @@ export const resolve = async <
   resolvable: Resolvable<T, TContext>,
   context: TContext,
 ): Promise<T> => {
-  const resolverFunc = <K>(
-    data: Resolvable<K, TContext>,
-  ): PromiseOrValue<K> =>
-    resolve<K, TContext>(
-      data,
-      context,
-    );
-
   const { resolvers: resolverMap, resolvables } = context;
-  const [resolvableObj, type] = resolveTypeOf(resolvable);
-  const tpResolver = nativeResolverByType[typeof resolvableObj];
-  if (type === undefined) {
+
+  // get the __resolveType from the resolvable
+  const [resolvableObj, resolveType] = resolveTypeOf(resolvable);
+
+  // define the type resolver based on the object type
+  const typeResolver = nativeResolverByType[typeof resolvableObj];
+
+  // if the resolveType is not defined we should use the typeresolver
+  if (resolveType === undefined) {
+    // since array is also an object so we should check it strictly instead
     if (Array.isArray(resolvableObj)) {
-      return await tpResolver<T, TContext>(
+      return await typeResolver<T, TContext>(
         resolvableObj,
-        resolverFunc,
+        (data) => resolve(data, context),
       );
     }
     return resolvableObj as T;
   }
-  const resolved = await tpResolver<T, TContext>(
+
+  const ctx = withResolveChain(context, resolveType);
+  const resolved = await typeResolver<T, TContext>(
     resolvableObj,
-    resolverFunc,
+    (data) =>
+      resolve(
+        data,
+        ctx,
+      ),
   );
-  const resolverType = type(resolved);
-  const ctx = withResolveChain(context, resolverType);
-  const resolver = resolverMap[resolverType];
+  const resolver = resolverMap[resolveType];
   if (resolver !== undefined) {
     let end: (() => void) | undefined = undefined;
     let respOrPromise = resolver(resolved, ctx);
     if (isAwaitable(respOrPromise)) {
-      const timingName = resolverType.replaceAll("/", ".");
+      const timingName = resolveType.replaceAll("/", ".");
       end = ctx.monitoring?.t.start(timingName);
       respOrPromise = await respOrPromise;
 
@@ -344,10 +340,10 @@ export const resolve = async <
     }
     return resolve(respOrPromise, ctx);
   }
-  const resolvableRef = resolvables[resolverType.toString()] as Resolvable<T>;
+  const resolvableRef = resolvables[resolveType] as Resolvable<T>;
   if (resolvableRef === undefined) {
     if (!ctx.danglingRecover) {
-      throw new DanglingReference(resolverType.toString());
+      throw new DanglingReference(resolveType);
     }
     return ctx.danglingRecover(resolved, ctx);
   }
