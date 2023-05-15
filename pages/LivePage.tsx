@@ -142,7 +142,7 @@ const renderPage = (
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode = false,
 ): JSX.Element => {
-  const validSections = maybeSections.filter(notUndefined);
+  const validSections = maybeSections?.filter(notUndefined) ?? [];
   const layoutProps = layout?.props;
   const sections = Object.keys(useSlotsFromChild).length > 0
     ? validSections.flatMap(useSlots(useSlotsFromChild))
