@@ -174,7 +174,8 @@ function LiveControls({ site, page }: Props) {
       <script
         type="module"
         dangerouslySetInnerHTML={{
-          __html: `${domInspectorModule}\n${main.toString()}`,
+          __html:
+            `${domInspectorModule}\nrequestIdleCallback(${main.toString()})`,
         }}
       />
     </Head>
