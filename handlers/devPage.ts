@@ -17,18 +17,19 @@ export default function DevPage(devConfig: DevConfig) {
   return (req: Request, ctx: ConnInfo) => {
     const referer = req.headers.get("origin") ?? req.headers.get("referer");
     const isOnAdmin = referer && isAdmin(referer);
-    const pageId = devConfig.page.metadata?.id;
+    const pageParent = devConfig.page.metadata
+      ?.resolveChain[devConfig.page.metadata?.resolveChain.length - 2];
 
     if (
       context.isDeploy
     ) {
       if (!referer || !isOnAdmin) {
-        if (!pageId) {
+        if (!pageParent) {
           return Response.error();
         }
         // redirect
         return Response.redirect(
-          adminUrlFor(+pageId, context.siteId),
+          adminUrlFor(pageParent, context.siteId),
         );
       }
     }

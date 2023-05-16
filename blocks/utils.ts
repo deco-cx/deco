@@ -77,19 +77,26 @@ async (
   );
 };
 
+export const componentWith = <TProps = any>(
+  resolver: string,
+  componentFunc: ComponentFunc,
+) =>
+(
+  props: TProps,
+  { resolveChain }: { resolveChain: string[] },
+) => ({
+  Component: componentFunc,
+  props,
+  metadata: {
+    component: resolver,
+    resolveChain,
+  },
+});
+
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   { default: Component }: { default: ComponentFunc<TProps> },
   component: string,
-): Resolver =>
-(props: TProps, { resolveChain }): PreactComponent<any, TProps> => ({
-  Component,
-  props,
-  metadata: {
-    component,
-    resolveChain,
-    id: resolveChain.length > 0 ? resolveChain[0] : undefined,
-  },
-});
+): Resolver => componentWith<TProps>(component, Component);
 
 export const usePreviewFunc = <TProps = any>(
   Component: ComponentFunc<TProps>,

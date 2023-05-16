@@ -15,6 +15,7 @@ import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
 import type { Manifest } from "$live/live.gen.ts";
 import { Empty } from "$live/components/StubSection.tsx";
 import { context } from "$live/live.ts";
+import { componentWith } from "./utils.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -46,20 +47,6 @@ export interface SectionModule<TConfig = any, TProps = any> extends
   loader?: PropsLoader<TConfig, TProps>;
 }
 
-const componentWith = (
-  resolver: string,
-  componentFunc: ComponentFunc,
-) =>
-<TProps = any>(props: TProps, resolveChain: string[]) => ({
-  Component: componentFunc,
-  props,
-  metadata: {
-    component: resolver,
-    resolveChain,
-    id: resolveChain.length > 0 ? resolveChain[0] : undefined,
-  },
-});
-
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
   introspect: [{
@@ -83,7 +70,7 @@ const sectionBlock: Block<SectionModule> = {
       return (
         props: TProps,
         { resolveChain }: BaseContext,
-      ): PreactComponent<any, TProps> => componentFunc(props, resolveChain);
+      ): PreactComponent<any, TProps> => componentFunc(props, { resolveChain });
     }
     return async (
       props: TConfig,
@@ -98,7 +85,7 @@ const sectionBlock: Block<SectionModule> = {
           ...context?.state?.global,
           response: context.state.response,
         }),
-        resolveChain,
+        { resolveChain },
       );
     };
   },
