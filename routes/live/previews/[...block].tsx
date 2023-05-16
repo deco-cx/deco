@@ -29,13 +29,16 @@ export default function Preview(props: PageProps<Page>) {
       page: props.data,
     },
   };
+  const { data } = props;
+  const pageParent =
+    data.metadata?.resolveChain[data.metadata?.resolveChain.length - 2];
   return (
     <>
       <LivePolyfills />
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
         page={{
-          id: props.data?.metadata?.id!,
+          id: pageParent || "-1",
         }}
       />
       <LiveAnalytics />
