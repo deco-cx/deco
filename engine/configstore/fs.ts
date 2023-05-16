@@ -5,13 +5,14 @@ import { ConfigStore } from "./provider.ts";
 
 const sample = {
   "audience-everyone": {
-    overrides: {},
-    routes: {
-      "/*": {
+    overrides: [],
+    routes: [{
+      pathTemplate: "/*",
+      handler: {
         url: "https://www.google.com",
         __resolveType: "$live/handlers/proxy.ts",
       },
-    },
+    }],
     __resolveType: "$live/flags/everyone.ts",
   },
   "./routes/[...catchall].tsx": {
