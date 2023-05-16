@@ -181,6 +181,7 @@ export default function LivePage(
 ): JSX.Element {
   const metadata = usePageContext()?.metadata;
   const routerCtx = useRouterContext();
+  const pageParent = metadata?.resolveChain[metadata?.resolveChain.length - 2];
 
   return (
     <>
@@ -188,11 +189,11 @@ export default function LivePage(
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
         page={{
-          id: metadata?.id!,
+          id: pageParent!,
         }}
       />
       <LiveAnalytics
-        id={parseInt(metadata?.id ?? "-1")}
+        id={parseInt(pageParent || "-1")}
         flags={routerCtx?.flags}
         path={routerCtx?.pagePath}
       />

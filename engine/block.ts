@@ -185,7 +185,6 @@ export type ComponentFunc<
 > = (props: TProps) => TReturn;
 
 export interface ComponentMetadata {
-  id?: string;
   resolveChain: string[];
   component: string;
 }
