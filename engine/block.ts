@@ -187,6 +187,12 @@ export type ComponentFunc<
 export interface ComponentMetadata {
   resolveChain: string[];
   component: string;
+  /**
+   * This property is used to reference child position, during LivePage edit mode.
+   *
+   * Ex.: Sections inside UseSlot has indexes different from the Slot itself. In this case, UseSlot adds this `real` childIndex.
+   */
+  childIndex?: number;
 }
 
 export interface PageContext {

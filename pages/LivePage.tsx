@@ -45,7 +45,7 @@ export function renderSectionFor(editMode?: boolean) {
         id={`${metadata?.component}-${idx}`}
         data-manifest-key={metadata?.component}
       >
-        <EditContext metadata={metadata} index={props.__previewIndex ?? idx}>
+        <EditContext metadata={metadata} index={metadata?.childIndex ?? idx}>
           <Controls />
           <Section {...props} />
         </EditContext>
@@ -78,14 +78,18 @@ function indexedBySlotName(
   sections.forEach((section, index) => {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
       // This is used to maintain the real position during editMode
-      (section.props as any).__previewIndex = index;
+      if (section.metadata) {
+        section.metadata.childIndex = index;
+      }
       indexed[section.props.name] = {
         useSection: section,
         used: false,
       };
     } else {
       // This is used to maintain the real position during editMode
-      section.props.__previewIndex = index;
+      if (section.metadata) {
+        section.metadata.childIndex = index;
+      }
       contentSections.push(section);
     } // others are considered content
   });
