@@ -8,7 +8,7 @@ type DotNestedKeysTruncate<T, Count extends number, Acc extends 0[] = []> =
   Acc["length"] extends Count ? ""
     : (T extends object ? {
         [K in Exclude<keyof T, symbol>]: T[K] extends Function ? never
-          : Required<T>[K] extends any[] ? 
+          : Required<T>[K] extends any[] ?
               | `${K}`
               | `${K}${DotPrefix<
                 DotNestedKeysTruncate<
