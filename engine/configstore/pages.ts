@@ -238,15 +238,12 @@ const baseEntrypoint = Object.freeze({
     },
   },
   [catchAllConfig]: {
-    __resolveType: "resolve",
-    handler: {
-      audiences: [
-        {
-          __resolveType: everyoneAudience,
-        },
-      ],
-      __resolveType: "$live/handlers/routesSelection.ts",
-    },
+    audiences: [
+      {
+        __resolveType: everyoneAudience,
+      },
+    ],
+    __resolveType: "$live/handlers/routesSelection.ts",
   },
 }) as Record<string, Resolvable>;
 
@@ -348,15 +345,12 @@ const flagsToConfig = (
     }
     curr[catchAllConfig] = {
       ...catchall,
-      handler: {
-        ...catchall.handler,
-        audiences: [
-          ...catchall.handler.audiences,
-          {
-            __resolveType: flag.key,
-          },
-        ],
-      },
+      audiences: [
+        ...catchall.audiences,
+        {
+          __resolveType: flag.key,
+        },
+      ],
     };
     curr[flag.key] = {
       name: flag.key,
