@@ -284,7 +284,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           const currAnyOf = currentRoot[rs.blockType]?.anyOf;
           const currAnyOfs = currAnyOf ??
             [resolvableRef];
-            currAnyOfs.length === 0 && currAnyOfs.push(resolvableRef)
+          currAnyOfs.length === 0 && currAnyOfs.push(resolvableRef);
 
           return [
             {

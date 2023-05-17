@@ -9,3 +9,7 @@ export const getCurrent = (): Promise<Schemas> => {
       JSON.parse,
     );
 };
+
+export const reset = () => {
+  schemas = null;
+};
