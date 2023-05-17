@@ -281,8 +281,10 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         ([currentDefinitions, currentRoot], rs) => {
           const schemeable = functionRefToSchemeable(rs);
           const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
-          const currAnyOfs = currentRoot[rs.blockType]?.anyOf ??
+          const currAnyOf = currentRoot[rs.blockType]?.anyOf;
+          const currAnyOfs = currAnyOf ??
             [resolvableRef];
+            currAnyOfs.length === 0 && currAnyOfs.push(resolvableRef)
 
           return [
             {
