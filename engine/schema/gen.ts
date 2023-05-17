@@ -12,6 +12,7 @@ import {
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
+import { JSONSchema7 } from "../../deps.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -24,8 +25,18 @@ export const genSchemasFromManifest = async (
     manifest;
   const dir = Deno.cwd();
 
+  const rootWithBlocks: Record<string, JSONSchema7> = blocks.reduce(
+    (root, blk) => {
+      root[blk.type] = {
+        title: blk.type,
+        anyOf: [],
+      };
+      return root;
+    },
+    {} as Record<string, JSONSchema7>,
+  );
   const schemaBuilder = newSchemaBuilder({
-    schema: { root: {}, definitions: {} },
+    schema: { root: rootWithBlocks, definitions: {} },
     blockModules: [],
     entrypoints: [],
   });

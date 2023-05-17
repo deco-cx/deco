@@ -13,6 +13,7 @@ import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
+import { reset as resetSchema } from "./engine/schema/reader.ts";
 
 const schemaFile = "schemas.gen.json";
 
@@ -54,6 +55,7 @@ const genSchemas = async (
     ),
   );
 
+  resetSchema(); // in case of schema was read before being generated.
   console.log(`✔️ ready to rock and roll! Your project is live 🤘`);
 };
 

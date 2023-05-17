@@ -1500,6 +1500,14 @@
     }
   },
   "root": {
+    "functions": {
+      "title": "functions",
+      "anyOf": []
+    },
+    "accounts": {
+      "title": "accounts",
+      "anyOf": []
+    },
     "loaders": {
       "title": "loaders",
       "anyOf": [
@@ -1513,6 +1521,14 @@
           "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZ2V0LnRz"
         }
       ]
+    },
+    "routes": {
+      "title": "routes",
+      "anyOf": []
+    },
+    "islands": {
+      "title": "islands",
+      "anyOf": []
     },
     "handlers": {
       "title": "handlers",
@@ -1637,6 +1653,10 @@
         }
       ]
     },
+    "workflows": {
+      "title": "workflows",
+      "anyOf": []
+    },
     "entrypoint": {
       "type": "object",
       "required": [
@@ -1677,7 +1697,19 @@
       "additionalProperties": {
         "anyOf": [
           {
+            "$ref": "#/root/functions"
+          },
+          {
+            "$ref": "#/root/accounts"
+          },
+          {
             "$ref": "#/root/loaders"
+          },
+          {
+            "$ref": "#/root/routes"
+          },
+          {
+            "$ref": "#/root/islands"
           },
           {
             "$ref": "#/root/handlers"
@@ -1696,6 +1728,9 @@
           },
           {
             "$ref": "#/root/actions"
+          },
+          {
+            "$ref": "#/root/workflows"
           }
         ]
       }
