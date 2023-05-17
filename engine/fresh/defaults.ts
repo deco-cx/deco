@@ -32,8 +32,15 @@ export default {
         return { Component: PreviewNotAvailable, props: { block } };
       }
       const { __resolveType, ...resolvableProps } = resolvable;
+      const resolvablePvResolverKey = `${PREVIEW_PREFIX_KEY}${__resolveType}`;
+      if (!resolvers[resolvablePvResolverKey]) {
+        return {
+          Component: PreviewNotAvailable,
+          props: { block: __resolveType },
+        };
+      }
       return resolve({
-        __resolveType: `${PREVIEW_PREFIX_KEY}${__resolveType}`,
+        __resolveType: resolvablePvResolverKey,
         ...(await resolve({
           __resolveType: __resolveType,
           ...resolvableProps,
