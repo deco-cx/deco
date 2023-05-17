@@ -75,7 +75,7 @@ export const handler = async (
     false,
     { context: { ...ctx, params: paramsFromUrl(url) ?? ctx.params } },
   );
-  end && end();
+  end?.();
 
   return await ctx.render(
     page,

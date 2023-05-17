@@ -76,7 +76,8 @@ export const handler = async (
 
   const newHeaders = new Headers(initialResponse.headers);
   response.headers.forEach((value, key) => newHeaders.append(key, value));
-  newHeaders.set("Server-Timing", ctx?.state?.t?.printTimings());
+  const printTimings = ctx?.state?.t?.printTimings;
+  printTimings && newHeaders.set("Server-Timing", printTimings());
 
   if (
     url.pathname.startsWith("/_frsh/") &&

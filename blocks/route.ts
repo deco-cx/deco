@@ -9,11 +9,12 @@ import {
 } from "$fresh/src/server/types.ts";
 import { Block, BlockModule, ComponentFunc } from "$live/engine/block.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
+import { HttpError } from "$live/engine/errors.ts";
 import { context as liveContext } from "$live/live.ts";
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-import { HttpError } from "$live/engine/errors.ts";
+import { getCookies, setCookie } from "std/http/mod.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -85,6 +86,52 @@ const middlewareKey = "./routes/_middleware.ts";
 const indexTsxToCatchAll: Record<string, string> = {
   "./routes/index.tsx": "./routes/[...catchall].tsx",
 };
+const addHours = function (date: Date, h: number) {
+  date.setTime(date.getTime() + (h * 60 * 60 * 1000));
+  return date;
+};
+
+const DEBUG_COOKIE = "__dcxf_debug";
+const DEBUG_ENABLED = "enabled";
+
+type DebugAction = "enable" | "disable" | "none";
+const debug = {
+  none: (_resp: Response) => {},
+  enable: (resp: Response) => {
+    setCookie(resp.headers, {
+      name: DEBUG_COOKIE,
+      value: DEBUG_ENABLED,
+      expires: addHours(new Date(), 1),
+    });
+  },
+  disable: (resp: Response) => {
+    setCookie(resp.headers, {
+      name: DEBUG_COOKIE,
+      value: "",
+      expires: new Date("Thu, 01 Jan 1970 00:00:00 UTC"),
+    });
+  },
+  fromRequest: (
+    request: Request,
+  ): { action: DebugAction; enabled: boolean } => {
+    const url = new URL(request.url);
+    const debugFromCookies = getCookies(request.headers)[DEBUG_COOKIE];
+    const debugFromQS = url.searchParams.get(DEBUG_COOKIE);
+    const hasDebugFromQS = debugFromQS !== null;
+    const isLivePreview = url.pathname.includes("/live/previews/");
+    const enabled = ((debugFromQS ?? debugFromCookies) === DEBUG_ENABLED) ||
+      isLivePreview;
+
+    // querystring forces a setcookie using the querystring value
+    return {
+      action: hasDebugFromQS || isLivePreview
+        ? (enabled ? "enable" : "disable")
+        : "none",
+      enabled,
+    };
+  },
+};
+
 const mapMiddleware = (
   mid: MiddlewareHandler<LiveConfig<any, LiveState>> | MiddlewareHandler<
     LiveConfig<any, LiveState>
@@ -94,8 +141,11 @@ const mapMiddleware = (
     request: Request,
     context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
   ) {
-    const { start, end, printTimings } = createServerTimings();
-    context.state.t = { start, end, printTimings };
+    const { enabled, action } = debug.fromRequest(request);
+    if (enabled) {
+      const { start, end, printTimings } = createServerTimings();
+      context.state.t = { start, end, printTimings };
+    }
     const url = new URL(request.url);
     const isInternalOrStatic = url.pathname.startsWith("/_frsh") || // fresh urls /_fresh/js/*
       url.pathname.startsWith("~partytown") || // party town urls
@@ -111,7 +161,7 @@ const mapMiddleware = (
       )
       .bind(resolver);
 
-    const endTiming = start("load-page");
+    const endTiming = context?.state?.t?.start("load-page");
     const $live = (await ctxResolver(
       middlewareKey,
       !isInternalOrStatic && (
@@ -120,11 +170,14 @@ const mapMiddleware = (
       ),
     )) ?? {};
 
-    endTiming();
+    endTiming?.();
     context.state.$live = $live;
     context.state.resolve = ctxResolver;
 
-    return context.next();
+    const resp = await context.next();
+    // enable or disable debugging
+    debug[action](resp);
+    return resp;
   }, ...Array.isArray(mid) ? mid : [mid]];
 };
 const mapHandlers = (

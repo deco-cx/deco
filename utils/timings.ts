@@ -6,9 +6,14 @@ const slugify = (key: string) => key.replace(/\//g, ".");
 
 export function createServerTimings() {
   const timings: Record<string, Timing> = {};
+  const unique: Record<string, number> = {};
 
-  const start = (key: TimingKey) => {
+  const start = (_key: TimingKey) => {
+    unique[_key] ??= 0;
+    const count = unique[_key];
+    const key = count === 0 ? _key : `${_key}-${count}`;
     timings[key] = { start: performance.now() };
+    unique[_key]++;
     return () => end(key);
   };
 

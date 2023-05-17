@@ -322,7 +322,7 @@ export const resolve = async <
     let respOrPromise = resolver(resolved, ctx);
     if (isAwaitable(respOrPromise)) {
       const timingName = resolveType.replaceAll("/", ".");
-      end = ctx.monitoring?.t.start(timingName);
+      end = ctx.monitoring?.t?.start(timingName);
       respOrPromise = await respOrPromise;
 
       // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
