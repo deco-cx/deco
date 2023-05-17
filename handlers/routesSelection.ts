@@ -64,7 +64,7 @@ export const router = (
         const hand = isAwaitable(resolvedOrPromise)
           ? await resolvedOrPromise
           : resolvedOrPromise;
-        end && end();
+        end?.();
 
         return await hand(
           req,
