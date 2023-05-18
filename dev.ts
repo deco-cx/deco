@@ -8,16 +8,11 @@ import {
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
-import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { reset as resetSchema } from "./engine/schema/reader.ts";
+import { genSchemas } from "./engine/schema/reader.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
-
-const schemaFile = "schemas.gen.json";
-
-type Arg = readonly unknown[];
 
 /**
  * Ensures that the target function runs only once per `deno task start`, in other words the watcher will not trigger the function again.
@@ -52,30 +47,6 @@ export function ensureMinDenoVersion() {
     console.error(message);
   }
 }
-
-const genSchemas = async (
-  base: string,
-  manifest: string,
-  directory: string,
-) => {
-  manifest = new URL(manifest, base).href;
-
-  console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
-
-  await Deno.writeTextFile(
-    join(directory, schemaFile),
-    JSON.stringify(
-      await genSchemasFromManifest(
-        await import(manifest).then((mod) => mod.default),
-      ),
-      null,
-      2,
-    ),
-  );
-
-  resetSchema(); // in case of schema was read before being generated.
-  console.log(`✔️ ready to rock and roll! Your project is live 🤘`);
-};
 
 const manifestFile = "./live.gen.ts";
 
@@ -172,8 +143,6 @@ export default async function dev(
     await generate(dir, manifest);
   }
 
-  genSchemas(base, manifestFile, dir);
-
   onListen?.();
 
   await import(entrypoint);
@@ -209,7 +178,5 @@ if (import.meta.main) {
   context.namespace = liveNs;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
-  await generate(dir, newManifestData).then(() =>
-    genSchemas(import.meta.url, manifestFile, dir)
-  );
+  await generate(dir, newManifestData).then(() => genSchemas());
 }

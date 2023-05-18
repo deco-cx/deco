@@ -11,6 +11,9 @@ import {
   TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
+import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
+
+const limit = pLimit(5);
 
 /**
  * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
@@ -132,8 +135,11 @@ const docAsExec = async (
   path: string,
   _?: string,
 ): Promise<DocNode[]> => {
-  return JSON.parse(await exec([Deno.execPath(), "doc", "--json", path])); // FIXME(mcandeia) add --private when stable
+  return await limit(async () =>
+    JSON.parse(await exec([Deno.execPath(), "doc", "--json", path]))
+  ); // FIXME(mcandeia) add --private when stable
 };
+
 export const denoDoc = async (
   path: string,
   importMap?: string,

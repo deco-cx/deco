@@ -1,12 +1,12 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
+import { namespaceOf } from "$live/engine/schema/gen.ts";
 import { getCurrent } from "$live/engine/schema/reader.ts";
 import { context } from "$live/live.ts";
 import meta from "$live/meta.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
-import { namespaceOf } from "$live/engine/schema/gen.ts";
-import { major } from "std/semver/mod.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
+import { major } from "std/semver/mod.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
