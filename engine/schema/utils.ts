@@ -1,5 +1,6 @@
 import { TransformContext } from "$live/engine/schema/transform.ts";
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
+import { toFileUrl } from "https://deno.land/std@0.181.0/path/mod.ts";
 import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
 import {
   DocNode,
@@ -147,9 +148,13 @@ export const denoDoc = async (
   try {
     const isLocal = path.startsWith("file");
     const suffix = isLocal
-      ? await Deno.stat(fromFileUrl(path)).then((s) =>
-        s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at all.
+      ? await Deno.stat(
+        Deno.build.os === "windows"
+          ? toFileUrl(fromFileUrl(path)).toString()
+          : fromFileUrl(path),
       )
+        .then((s) => s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at all.
+        )
       : "";
     const key = `${path}-${suffix}`;
     const current = localStorage.getItem(key);
