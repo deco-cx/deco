@@ -26,8 +26,6 @@ const getImportMap = async (dir: string): Promise<
   ];
 };
 
-const ANSWERED = "LIVE_UPDATE_ANSWERED";
-
 /**
  * Used to storage update answers by the user
  */
@@ -46,10 +44,8 @@ const answerOf = (dir: string, pkg: string) => {
     },
   };
 };
-export const checkUpdates = async (_dir?: string) => {
-  if (Deno.env.has(ANSWERED)) { // once per `deno task start`
-    return;
-  }
+
+export async function checkUpdates(_dir?: string) {
   const dir = _dir ?? Deno.cwd();
   const [importMap, importMapPath] = await getImportMap(dir ?? Deno.cwd());
   const updates: Record<string, string> = {};
@@ -113,4 +109,4 @@ export const checkUpdates = async (_dir?: string) => {
       ),
     );
   }
-};
+}

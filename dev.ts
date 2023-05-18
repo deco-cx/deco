@@ -11,11 +11,29 @@ import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
+import { reset as resetSchema } from "./engine/schema/reader.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
-import { reset as resetSchema } from "./engine/schema/reader.ts";
 
 const schemaFile = "schemas.gen.json";
+
+type Arg = readonly unknown[];
+
+/**
+ * Ensures that the target function runs only once per `deno task start`, in other words the watcher will not trigger the function again.
+ */
+const oncePerRun = (
+  f: () => Promise<void>,
+) => {
+  const key = `LIVE_RUN_${f.name}`;
+  if (Deno.env.has(key)) {
+    return;
+  }
+
+  f().finally(() => {
+    Deno.env.set(key, "true");
+  });
+};
 
 const MIN_DENO_VERSION = "1.32.2";
 export function ensureMinDenoVersion() {
@@ -99,7 +117,9 @@ const getAndUpdateNamespace = async (
   dir: string,
 ): Promise<string | undefined> => {
   const ns = await namespaceFromSiteJson(dir);
-  ns && await updateImportMap(dir, ns);
+  ns && oncePerRun(async function importMapUpdate() {
+    await updateImportMap(dir, ns);
+  });
   return ns;
 };
 
@@ -122,35 +142,30 @@ export default async function dev(
   } = {},
 ) {
   const dir = dirname(fromFileUrl(base));
-  await checkUpdates(dir).catch((err) =>
-    console.log("error when checking updates", err)
-  );
+  oncePerRun(async function check() {
+    await checkUpdates(dir).catch((err) =>
+      console.log("error when checking updates", err)
+    );
+  });
   const ns = await getAndUpdateNamespace(dir) ?? base;
   context.namespace = ns;
   ensureMinDenoVersion();
 
   entrypoint = new URL(entrypoint, base).href;
 
-  let currentManifest: ManifestBuilder;
-  const prevManifest = Deno.env.get("LIVE_DEV_PREVIOUS_MANIFEST");
-  if (prevManifest) {
-    currentManifest = newManifestBuilder(JSON.parse(prevManifest));
-  } else {
-    currentManifest = newManifestBuilder({
-      namespace: ns,
-      imports: {},
-      manifest: {},
-      exports: [],
-    });
-  }
+  const currentManifest: ManifestBuilder = newManifestBuilder({
+    namespace: ns,
+    imports: {},
+    manifest: {},
+    exports: [],
+  });
+
   let manifest = await decoManifestBuilder(dir, ns);
   manifest = manifest.mergeWith(
     typeof imports === "object" ? Object.values(imports) : imports,
   );
 
-  Deno.env.set("LIVE_DEV_PREVIOUS_MANIFEST", manifest.toJSONString());
-
-  await setupGithooks();
+  oncePerRun(setupGithooks);
   const manifestChanged = !currentManifest.equal(manifest);
 
   if (manifestChanged) {
