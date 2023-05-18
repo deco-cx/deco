@@ -28,7 +28,7 @@ export interface InterfaceWithTypeRef {
 
 export interface WithTags {
   /**
-   * @title email
+   * @title Email
    * @description add your email
    * @format email
    */

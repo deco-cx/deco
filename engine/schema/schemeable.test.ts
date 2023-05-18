@@ -538,7 +538,7 @@ Deno.test("JSDoc tags injection", async () => {
         jsDocSchema: {
           description: "add your email",
           format: "email",
-          title: "email",
+          title: "Email",
         },
         title: "Email",
         schemeable: {
