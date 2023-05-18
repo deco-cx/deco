@@ -1482,21 +1482,6 @@
       ],
       "title": "$live/routes/_middleware.ts@MiddlewareConfig",
       "description": "Global configurations for ./routes/_middleware.ts route"
-    },
-    "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
-      "type": "object",
-      "properties": {
-        "handler": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
-          "description": "configure how to handle requests.",
-          "title": "Handler"
-        }
-      },
-      "required": [
-        "handler"
-      ],
-      "title": "$live/routes/[...catchall].tsx@Entrypoint",
-      "description": "Site entrypoint, configure your audiences and routes."
     }
   },
   "root": {
@@ -1675,14 +1660,14 @@
         "./routes/[...catchall].tsx": {
           "anyOf": [
             {
-              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
             }
           ]
         },
         "./routes/index.tsx": {
           "anyOf": [
             {
-              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
             }
           ]
         }

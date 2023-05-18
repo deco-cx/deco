@@ -52,24 +52,14 @@ export default function Render({
   );
 }
 
-/**
- * @description Site entrypoint, configure your audiences and routes.
- */
-export interface Entrypoint {
-  /**
-   * @description configure how to handle requests.
-   */
-  handler: Handler;
-}
-
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
     unknown,
-    LiveConfig<Entrypoint, LiveState>
+    LiveConfig<Handler, LiveState>
   >,
 ) => {
-  const { state: { $live: { handler } } } = ctx;
+  const { state: { $live: handler } } = ctx;
   if (typeof handler !== "function") {
     return Response.json({ "message": "catchall not configured" }, {
       status: 412, // precondition failed
