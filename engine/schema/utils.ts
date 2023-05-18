@@ -145,6 +145,7 @@ export const denoDoc = async (
 ): Promise<DocNode[]> => {
   try {
     const isLocal = path.startsWith("file");
+    console.log(path);
     const suffix = isLocal
       ? await Deno.stat(new URL(path)).then((s) =>
         s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at
