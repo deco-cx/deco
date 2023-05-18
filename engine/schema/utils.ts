@@ -1,6 +1,5 @@
 import { TransformContext } from "$live/engine/schema/transform.ts";
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
-import { toFileUrl } from "https://deno.land/std@0.181.0/path/mod.ts";
 import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
 import {
   DocNode,
@@ -13,6 +12,7 @@ import {
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
+import { randomInt } from "https://raw.githubusercontent.com/alextes/vegas/main/mod.ts";
 
 const limit = pLimit(5);
 
@@ -148,13 +148,9 @@ export const denoDoc = async (
   try {
     const isLocal = path.startsWith("file");
     const suffix = isLocal
-      ? await Deno.stat(
-        Deno.build.os === "windows"
-          ? toFileUrl(fromFileUrl(path)).toString()
-          : fromFileUrl(path),
+      ? await Deno.stat(new URL(path)).then((s) =>
+        s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at
       )
-        .then((s) => s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at all.
-        )
       : "";
     const key = `${path}-${suffix}`;
     const current = localStorage.getItem(key);

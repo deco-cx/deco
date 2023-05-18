@@ -9,9 +9,1494 @@
       "additionalProperties": false,
       "properties": {
         "__resolveType": {
-          "type": "string"
+          "type": "string",
+          "not": {
+            "enum": [
+              "$live/loaders/workflows/events.ts",
+              "$live/loaders/workflows/get.ts",
+              "$live/handlers/devPage.ts",
+              "$live/handlers/fresh.ts",
+              "$live/handlers/proxy.ts",
+              "$live/handlers/redirect.ts",
+              "$live/handlers/router.ts",
+              "$live/handlers/routesSelection.ts",
+              "$live/handlers/workflowRunner.ts",
+              "$live/pages/LivePage.tsx",
+              "$live/sections/PageInclude.tsx",
+              "$live/sections/Slot.tsx",
+              "$live/sections/UseSlot.tsx",
+              "$live/matchers/MatchAlways.ts",
+              "$live/matchers/MatchDate.ts",
+              "$live/matchers/MatchEnvironment.ts",
+              "$live/matchers/MatchHost.ts",
+              "$live/matchers/MatchMulti.ts",
+              "$live/matchers/MatchRandom.ts",
+              "$live/matchers/MatchSite.ts",
+              "$live/matchers/MatchUserAgent.ts",
+              "$live/flags/audience.ts",
+              "$live/flags/everyone.ts",
+              "$live/actions/workflows/cancel.ts",
+              "$live/actions/workflows/run.ts",
+              "$live/actions/workflows/signal.ts",
+              "$live/actions/workflows/start.ts"
+            ]
+          }
         }
       }
+    },
+    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@WorkflowExecution": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "title": "Id"
+            },
+            "alias": {
+              "type": "string",
+              "title": "Alias"
+            },
+            "completedAt": {
+              "title": "Completed At"
+            },
+            "status": {
+              "title": "Status"
+            },
+            "metadata": {
+              "title": "Metadata"
+            },
+            "input": {
+              "title": "Input"
+            },
+            "output": {
+              "title": "Output"
+            }
+          },
+          "required": [
+            "id",
+            "alias",
+            "status"
+          ],
+          "title": "deco-cx/durable/backends/backend.ts@WorkflowExecution"
+        },
+        {
+          "title": "$live/loaders/workflows/events.ts",
+          "description": "Get the workflow execution events.",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz@Props"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/loaders/workflows/events.ts"
+              ],
+              "default": "$live/loaders/workflows/events.ts"
+            }
+          }
+        }
+      ]
+    },
+    "JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz@Props": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Id"
+        },
+        "page": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "title": "Page"
+        },
+        "pageSize": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "title": "Page Size"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "$live/loaders/workflows/events.ts@Props"
+    },
+    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessstatusWorkflowExecution": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "title": "Status"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "indexedAccessstatusWorkflowExecution"
+    },
+    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessinputWorkflowExecution": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "title": "Input"
+        }
+      },
+      "required": [],
+      "title": "indexedAccessinputWorkflowExecution"
+    },
+    "JGxpdmUvY29tbW9ucy93b3JrZmxvd3MvdHlwZXMudHM=@WorkflowExecution": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "completedAt": {
+              "title": "Completed At"
+            },
+            "id": {
+              "type": "string",
+              "title": "Id"
+            },
+            "status": {
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessstatusWorkflowExecution",
+              "title": "Status"
+            },
+            "workflow": {
+              "type": "string",
+              "title": "Workflow"
+            },
+            "input": {
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessinputWorkflowExecution",
+              "title": "Input"
+            },
+            "output": {
+              "title": "Output"
+            },
+            "props": {
+              "title": "Props"
+            }
+          },
+          "required": [
+            "id",
+            "status",
+            "workflow"
+          ],
+          "title": "$live/commons/workflows/types.ts@WorkflowExecution"
+        },
+        {
+          "title": "$live/loaders/workflows/get.ts",
+          "description": "Read the workflow execution information.",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZ2V0LnRz@Props"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/loaders/workflows/get.ts"
+              ],
+              "default": "$live/loaders/workflows/get.ts"
+            }
+          }
+        }
+      ]
+    },
+    "JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZ2V0LnRz@Props": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Id"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "$live/loaders/workflows/get.ts@Props"
+    },
+    "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
+      "$ref": "#/root/pages",
+      "title": "Page"
+    },
+    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
+        }
+      },
+      "required": [
+        "page"
+      ],
+      "title": "$live/handlers/devPage.ts@DevConfig"
+    },
+    "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
+        }
+      },
+      "required": [
+        "page"
+      ],
+      "title": "$live/handlers/fresh.ts@FreshConfig"
+    },
+    "JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Props": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "the proxy url.",
+          "title": "Url"
+        },
+        "basePath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "the base path of the url.",
+          "title": "Base Path"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "$live/handlers/proxy.ts@Props"
+    },
+    "JGxpdmUvaGFuZGxlcnMvcmVkaXJlY3QudHM=@RedirectConfig": {
+      "type": "object",
+      "properties": {
+        "to": {
+          "type": "string",
+          "title": "To"
+        }
+      },
+      "required": [
+        "to"
+      ],
+      "title": "$live/handlers/redirect.ts@RedirectConfig"
+    },
+    "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
+      "$ref": "#/root/handlers",
+      "title": "Handler"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route": {
+      "type": "object",
+      "properties": {
+        "pathTemplate": {
+          "type": "string",
+          "title": "Path Template"
+        },
+        "handler": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
+          "title": "Handler"
+        }
+      },
+      "required": [
+        "pathTemplate",
+        "handler"
+      ],
+      "title": "Route"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
+      },
+      "title": "Route[]"
+    },
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Base"
+        },
+        "routes": {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
+          "title": "Routes"
+        }
+      },
+      "required": [
+        "routes"
+      ],
+      "title": "$live/handlers/router.ts@RouterConfig"
+    },
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
+      "type": "object",
+      "properties": {
+        "audiences": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
+              },
+              {
+                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
+              }
+            ]
+          },
+          "title": "Audiences"
+        }
+      },
+      "required": [
+        "audiences"
+      ],
+      "title": "$live/handlers/routesSelection.ts@SelectionConfig"
+    },
+    "JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@Workflow": {
+      "$ref": "#/root/workflows",
+      "title": "Workflow"
+    },
+    "JGxpdmUvaGFuZGxlcnMvd29ya2Zsb3dSdW5uZXIudHM=@Config": {
+      "type": "object",
+      "properties": {
+        "workflow": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@Workflow",
+          "title": "Workflow"
+        }
+      },
+      "required": [
+        "workflow"
+      ],
+      "title": "$live/handlers/workflowRunner.ts@Config"
+    },
+    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
+      "$ref": "#/root/sections",
+      "title": "Section"
+    },
+    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
+      },
+      "title": "Section[]"
+    },
+    "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "layout": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Layout"
+        },
+        "sections": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Sections"
+        }
+      },
+      "required": [
+        "name",
+        "sections"
+      ],
+      "title": "$live/pages/LivePage.tsx@Props"
+    },
+    "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
+          "title": "Page"
+        }
+      },
+      "required": [
+        "page"
+      ],
+      "title": "$live/sections/PageInclude.tsx@Props"
+    },
+    "JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g=@Props": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Enforces the slot to be fulfilled.",
+          "title": "Required"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "content"
+                },
+                {
+                  "type": "string",
+                  "const": "footer"
+                },
+                {
+                  "type": "string",
+                  "const": "header"
+                },
+                {
+                  "type": "string",
+                  "const": "analytics"
+                },
+                {
+                  "type": "string",
+                  "const": "design-system"
+                },
+                {
+                  "type": "string",
+                  "const": "SEO"
+                }
+              ],
+              "type": "string"
+            }
+          ],
+          "type": "string",
+          "description": "The name of the slot.",
+          "default": "content",
+          "title": "Name"
+        }
+      },
+      "required": [],
+      "title": "$live/sections/Slot.tsx@Props"
+    },
+    "JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=@Props": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "content"
+                },
+                {
+                  "type": "string",
+                  "const": "footer"
+                },
+                {
+                  "type": "string",
+                  "const": "header"
+                },
+                {
+                  "type": "string",
+                  "const": "analytics"
+                },
+                {
+                  "type": "string",
+                  "const": "design-system"
+                },
+                {
+                  "type": "string",
+                  "const": "SEO"
+                }
+              ],
+              "type": "string"
+            }
+          ],
+          "type": "string",
+          "title": "Name"
+        },
+        "sections": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Sections"
+        }
+      },
+      "required": [
+        "name",
+        "sections"
+      ],
+      "title": "$live/sections/UseSlot.tsx@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "title": "Start"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "title": "End"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchDate.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props": {
+      "type": "object",
+      "properties": {
+        "environment": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "production"
+            },
+            {
+              "type": "string",
+              "const": "development"
+            }
+          ],
+          "type": "string",
+          "title": "Environment"
+        }
+      },
+      "required": [
+        "environment"
+      ],
+      "title": "$live/matchers/MatchEnvironment.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz@Props": {
+      "type": "object",
+      "properties": {
+        "includes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Includes"
+        },
+        "match": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Match"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchHost.ts@Props"
+    },
+    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
+      "$ref": "#/root/matchers",
+      "title": "Matcher"
+    },
+    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher"
+      },
+      "title": "Matcher[]"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==@Props": {
+      "type": "object",
+      "properties": {
+        "op": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "or"
+            },
+            {
+              "type": "string",
+              "const": "and"
+            }
+          ],
+          "type": "string",
+          "title": "Op"
+        },
+        "matchers": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]",
+          "title": "Matchers"
+        }
+      },
+      "required": [
+        "op",
+        "matchers"
+      ],
+      "title": "$live/matchers/MatchMulti.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props": {
+      "type": "object",
+      "properties": {
+        "traffic": {
+          "type": "number",
+          "title": "Traffic"
+        }
+      },
+      "required": [
+        "traffic"
+      ],
+      "title": "$live/matchers/MatchRandom.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props": {
+      "type": "object",
+      "properties": {
+        "siteId": {
+          "type": "number",
+          "title": "Site Id"
+        }
+      },
+      "required": [
+        "siteId"
+      ],
+      "title": "$live/matchers/MatchSite.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props": {
+      "type": "object",
+      "properties": {
+        "includes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Includes"
+        },
+        "match": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Match"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchUserAgent.ts@Props"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
+      "type": "object",
+      "properties": {
+        "use": {
+          "type": "string",
+          "title": "Use"
+        },
+        "insteadOf": {
+          "type": "string",
+          "title": "Instead Of"
+        }
+      },
+      "required": [
+        "use",
+        "insteadOf"
+      ],
+      "title": "Override"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override"
+      },
+      "title": "Override[]"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
+      "type": "object",
+      "properties": {
+        "matcher": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "Matcher"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "routes": {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
+          "title": "Routes"
+        },
+        "overrides": {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
+          "title": "Overrides"
+        }
+      },
+      "required": [
+        "matcher",
+        "name"
+      ],
+      "title": "$live/flags/audience.ts@Audience"
+    },
+    "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
+      "type": "object",
+      "properties": {
+        "routes": {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
+          "title": "Routes"
+        },
+        "overrides": {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
+          "title": "Overrides"
+        }
+      },
+      "required": [],
+      "title": "$live/flags/everyone.ts@EveryoneConfig"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz@Props": {
+      "type": "object",
+      "properties": {
+        "executionId": {
+          "type": "string",
+          "title": "Execution Id"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "executionId"
+      ],
+      "title": "$live/actions/workflows/cancel.ts@Props"
+    },
+    "ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "title": "Results"
+        },
+        "executionId": {
+          "type": "string",
+          "title": "Execution Id"
+        },
+        "metadata": {
+          "title": "Metadata"
+        }
+      },
+      "required": [
+        "results",
+        "executionId",
+        "metadata"
+      ],
+      "title": "deco-cx/durable/handler.ts@RunRequest"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz@Props": {
+      "type": "object",
+      "properties": {
+        "signal": {
+          "type": "string",
+          "title": "Signal"
+        },
+        "executionId": {
+          "type": "string",
+          "title": "Execution Id"
+        },
+        "payload": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "title": "Payload"
+        }
+      },
+      "required": [
+        "signal",
+        "executionId"
+      ],
+      "title": "$live/actions/workflows/signal.ts@Props"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "Key"
+        },
+        "props": {
+          "type": "object",
+          "title": "Props"
+        }
+      },
+      "required": [
+        "key",
+        "props"
+      ],
+      "title": "WorkflowRef"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@Workflow",
+              "title": "Ref"
+            }
+          },
+          "required": [
+            "ref"
+          ]
+        }
+      ],
+      "title": "96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props": {
+      "type": "object",
+      "properties": {
+        "workflow": {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef",
+          "title": "Workflow"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Id"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "title": "Args"
+        }
+      },
+      "required": [
+        "workflow"
+      ],
+      "title": "$live/actions/workflows/start.ts@Props"
+    },
+    "JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz": {
+      "title": "$live/loaders/workflows/events.ts",
+      "description": "Get the workflow execution events.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/loaders/workflows/events.ts"
+          ],
+          "default": "$live/loaders/workflows/events.ts"
+        }
+      }
+    },
+    "JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZ2V0LnRz": {
+      "title": "$live/loaders/workflows/get.ts",
+      "description": "Read the workflow execution information.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZ2V0LnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/loaders/workflows/get.ts"
+          ],
+          "default": "$live/loaders/workflows/get.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==": {
+      "title": "Private Fresh Page",
+      "description": "Useful for pages under development.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/devPage.ts"
+          ],
+          "default": "$live/handlers/devPage.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=": {
+      "title": "Fresh Page",
+      "description": "Renders a fresh page.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM=@FreshConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/fresh.ts"
+          ],
+          "default": "$live/handlers/fresh.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=": {
+      "title": "Proxy Handler",
+      "description": "Proxies request to the target url.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/proxy.ts"
+          ],
+          "default": "$live/handlers/proxy.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvcmVkaXJlY3QudHM=": {
+      "title": "$live/handlers/redirect.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcmVkaXJlY3QudHM=@RedirectConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/redirect.ts"
+          ],
+          "default": "$live/handlers/redirect.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz": {
+      "title": "$live/handlers/router.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/router.ts"
+          ],
+          "default": "$live/handlers/router.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz": {
+      "title": "Routes Selection",
+      "description": "Select routes based on the target audience.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/routesSelection.ts"
+          ],
+          "default": "$live/handlers/routesSelection.ts"
+        }
+      }
+    },
+    "JGxpdmUvaGFuZGxlcnMvd29ya2Zsb3dSdW5uZXIudHM=": {
+      "title": "$live/handlers/workflowRunner.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvd29ya2Zsb3dSdW5uZXIudHM=@Config"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/handlers/workflowRunner.ts"
+          ],
+          "default": "$live/handlers/workflowRunner.ts"
+        }
+      }
+    },
+    "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4": {
+      "title": "$live/pages/LivePage.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/pages/LivePage.tsx"
+          ],
+          "default": "$live/pages/LivePage.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4": {
+      "title": "$live/sections/PageInclude.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/PageInclude.tsx"
+          ],
+          "default": "$live/sections/PageInclude.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g=": {
+      "title": "$live/sections/Slot.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/Slot.tsx"
+          ],
+          "default": "$live/sections/Slot.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=": {
+      "title": "$live/sections/UseSlot.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/UseSlot.tsx"
+          ],
+          "default": "$live/sections/UseSlot.tsx"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM=": {
+      "title": "$live/matchers/MatchAlways.ts",
+      "type": "object",
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchAlways.ts"
+          ],
+          "default": "$live/matchers/MatchAlways.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz": {
+      "title": "$live/matchers/MatchDate.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchDate.ts"
+          ],
+          "default": "$live/matchers/MatchDate.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==": {
+      "title": "$live/matchers/MatchEnvironment.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchEnvironment.ts"
+          ],
+          "default": "$live/matchers/MatchEnvironment.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz": {
+      "title": "$live/matchers/MatchHost.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchHost.ts"
+          ],
+          "default": "$live/matchers/MatchHost.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==": {
+      "title": "$live/matchers/MatchMulti.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchMulti.ts"
+          ],
+          "default": "$live/matchers/MatchMulti.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=": {
+      "title": "$live/matchers/MatchRandom.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchRandom.ts"
+          ],
+          "default": "$live/matchers/MatchRandom.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz": {
+      "title": "$live/matchers/MatchSite.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchSite.ts"
+          ],
+          "default": "$live/matchers/MatchSite.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=": {
+      "title": "$live/matchers/MatchUserAgent.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchUserAgent.ts"
+          ],
+          "default": "$live/matchers/MatchUserAgent.ts"
+        }
+      }
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=": {
+      "title": "Audience",
+      "description": "Select routes based on the matched audience.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/flags/audience.ts"
+          ],
+          "default": "$live/flags/audience.ts"
+        }
+      }
+    },
+    "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=": {
+      "title": "Audience Everyone",
+      "description": "Always match regardless of the current user",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/flags/everyone.ts"
+          ],
+          "default": "$live/flags/everyone.ts"
+        }
+      }
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz": {
+      "title": "$live/actions/workflows/cancel.ts",
+      "description": "Cancels the workflow execution, you can, optionally, add a reason of the cancellation.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/actions/workflows/cancel.ts"
+          ],
+          "default": "$live/actions/workflows/cancel.ts"
+        }
+      }
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvcnVuLnRz": {
+      "title": "$live/actions/workflows/run.ts",
+      "description": "Proceed the workflow execution based on the current state of the workflow.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/actions/workflows/run.ts"
+          ],
+          "default": "$live/actions/workflows/run.ts"
+        }
+      }
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz": {
+      "title": "$live/actions/workflows/signal.ts",
+      "description": "Sends a signal to the workflow using the specified payload.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/actions/workflows/signal.ts"
+          ],
+          "default": "$live/actions/workflows/signal.ts"
+        }
+      }
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=": {
+      "title": "$live/actions/workflows/start.ts",
+      "description": "Start the workflow execution with the given props and args. You can set the id of the workflow as you wish.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/actions/workflows/start.ts"
+          ],
+          "default": "$live/actions/workflows/start.ts"
+        }
+      }
+    },
+    "JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "title": "State",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Resolvable"
+          },
+          "description": "Configure your loaders global state."
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "$live/routes/_middleware.ts@MiddlewareConfig",
+      "description": "Global configurations for ./routes/_middleware.ts route"
+    },
+    "JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint": {
+      "type": "object",
+      "properties": {
+        "handler": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
+          "description": "configure how to handle requests.",
+          "title": "Handler"
+        }
+      },
+      "required": [
+        "handler"
+      ],
+      "title": "$live/routes/[...catchall].tsx@Entrypoint",
+      "description": "Site entrypoint, configure your audiences and routes."
     }
   },
   "root": {
@@ -25,7 +1510,17 @@
     },
     "loaders": {
       "title": "loaders",
-      "anyOf": []
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZ2V0LnRz"
+        }
+      ]
     },
     "routes": {
       "title": "routes",
@@ -37,27 +1532,126 @@
     },
     "handlers": {
       "title": "handlers",
-      "anyOf": []
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw=="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvZnJlc2gudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcHJveHkudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcmVkaXJlY3QudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvd29ya2Zsb3dSdW5uZXIudHM="
+        }
+      ]
     },
     "pages": {
       "title": "pages",
-      "anyOf": []
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4"
+        }
+      ]
     },
     "sections": {
       "title": "sections",
-      "anyOf": []
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvU2xvdC50c3g="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g="
+        }
+      ]
     },
     "matchers": {
       "title": "matchers",
-      "anyOf": []
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw=="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw=="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM="
+        }
+      ]
     },
     "flags": {
       "title": "flags",
-      "anyOf": []
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
+        }
+      ]
     },
     "actions": {
       "title": "actions",
-      "anyOf": []
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvcnVuLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM="
+        }
+      ]
     },
     "workflows": {
       "title": "workflows",
@@ -65,10 +1659,34 @@
     },
     "entrypoint": {
       "type": "object",
-      "required": [],
-      "properties": {}
+      "required": [
+        "./routes/_middleware.ts",
               "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
               "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler"
+      ],
+      "properties": {
+        "./routes/_middleware.ts": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig"
+            }
+          ]
+        },
+        "./routes/[...catchall].tsx": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+            }
+          ]
+        },
+        "./routes/index.tsx": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvcm91dGVzL1suLi5jYXRjaGFsbF0udHN4@Entrypoint"
+            }
+          ]
+        }
+      }
     },
     "state": {
       "allOf": [
