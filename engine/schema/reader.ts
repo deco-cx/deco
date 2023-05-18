@@ -24,7 +24,10 @@ export const genSchemas = async () => {
 
   console.log(
     `✔️ ready to rock and roll! Your project is live 🤘 - took: ${
-      performance.now() - start
+      Math.ceil(
+        performance
+          .now() - start,
+      )
     }ms`,
   );
   return schema;
