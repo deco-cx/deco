@@ -116,7 +116,7 @@ const schemeableToJSONSchemaFunc = (
                 [property]: {
                   ...sc,
                   ...jsDocSchema,
-                  title: title ?? sc.title ?? jsDocSchema?.title,
+                  title: jsDocSchema?.title ?? title ?? sc.title,
                 },
               },
               [...req, ...required ? [property] : []],
