@@ -1,5 +1,5 @@
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.4/githooks.ts";
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
 import { ResolverMap } from "$live/engine/core/resolver.ts";
@@ -131,7 +131,8 @@ export default async function dev(
   await generate(dir, manifest);
 
   (async () => {
-    context.manifest = (await import(join(dir, manifestFile))).default;
+    context.manifest =
+      (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
     await genSchemas();
     reset();
   })();
@@ -172,7 +173,8 @@ if (import.meta.main) {
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
   await generate(dir, newManifestData).then(async () => {
-    context.manifest = (await import(join(dir, manifestFile))).default;
+    context.manifest =
+      (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
     await genSchemas();
   });
 }
