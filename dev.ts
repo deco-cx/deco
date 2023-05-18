@@ -131,8 +131,7 @@ export default async function dev(
   await generate(dir, manifest);
 
   (async () => {
-    context.manifest =
-      (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
+    await setManifest(dir);
     await genSchemas();
     reset();
   })();
@@ -173,8 +172,12 @@ if (import.meta.main) {
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
   await generate(dir, newManifestData).then(async () => {
-    context.manifest =
-      (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
+    await setManifest(dir);
     await genSchemas();
   });
+}
+
+async function setManifest(dir: string) {
+  context.manifest =
+    (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
 }
