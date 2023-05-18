@@ -12,6 +12,7 @@ import {
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
+import { randomInt } from "https://raw.githubusercontent.com/alextes/vegas/main/mod.ts";
 
 const limit = pLimit(5);
 
@@ -104,7 +105,7 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-const denoDocCache = new Map<string, Promise<DocNode[]>>();
+const denoDocLocalCache = new Map<string, Promise<DocNode[]>>();
 
 export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
@@ -145,11 +146,25 @@ export const denoDoc = async (
   importMap?: string,
 ): Promise<DocNode[]> => {
   try {
-    const promise = denoDocCache.get(path) ??
+    const isLocal = path.startsWith("file");
+    const suffix = isLocal
+      ? await Deno.stat(fromFileUrl(path)).then((s) =>
+        s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at all.
+      )
+      : "";
+    const key = `${path}-${suffix}`;
+    const current = localStorage.getItem(key);
+    if (current) {
+      return JSON.parse(current);
+    }
+    const promise = denoDocLocalCache.get(path) ??
       (typeof Deno.run === "function"
         ? docAsExec(path)
         : docAsLib(path, importMap));
-    denoDocCache.set(path, promise);
+    promise.then((doc) => {
+      localStorage.setItem(key, JSON.stringify(doc));
+    });
+    denoDocLocalCache.set(path, promise);
     return await promise;
   } catch (err) {
     console.warn("deno doc error, ignoring", err);

@@ -3,14 +3,11 @@ import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
 import { ResolverMap } from "$live/engine/core/resolver.ts";
-import {
-  ManifestBuilder,
-  newManifestBuilder,
-} from "$live/engine/fresh/manifestBuilder.ts";
+import { ManifestBuilder } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { genSchemas } from "./engine/schema/reader.ts";
+import { genSchemas, reset } from "./engine/schema/reader.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
 
@@ -124,24 +121,20 @@ export default async function dev(
 
   entrypoint = new URL(entrypoint, base).href;
 
-  const currentManifest: ManifestBuilder = newManifestBuilder({
-    namespace: ns,
-    imports: {},
-    manifest: {},
-    exports: [],
-  });
-
   let manifest = await decoManifestBuilder(dir, ns);
   manifest = manifest.mergeWith(
     typeof imports === "object" ? Object.values(imports) : imports,
   );
 
   oncePerRun(setupGithooks);
-  const manifestChanged = !currentManifest.equal(manifest);
 
-  if (manifestChanged) {
-    await generate(dir, manifest);
-  }
+  await generate(dir, manifest);
+
+  (async () => {
+    context.manifest = (await import(join(dir, manifestFile))).default;
+    await genSchemas();
+    reset();
+  })();
 
   onListen?.();
 
@@ -178,5 +171,8 @@ if (import.meta.main) {
   context.namespace = liveNs;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
-  await generate(dir, newManifestData).then(() => genSchemas());
+  await generate(dir, newManifestData).then(async () => {
+    context.manifest = (await import(join(dir, manifestFile))).default;
+    await genSchemas();
+  });
 }

@@ -13,7 +13,7 @@ export const genSchemas = async () => {
     context.manifest!,
   );
 
-  Deno.writeTextFile(
+  await Deno.writeTextFile(
     join(Deno.cwd(), schemaFile),
     JSON.stringify(
       schema,
@@ -36,4 +36,8 @@ const getSchema = async (): Promise<Schemas> => {
 
 export const getCurrent = (): Promise<Schemas> => {
   return schemas ??= context.isDeploy ? getSchema() : genSchemas();
+};
+
+export const reset = () => {
+  schemas = null;
 };
