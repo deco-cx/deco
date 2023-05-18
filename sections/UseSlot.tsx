@@ -1,6 +1,6 @@
 import { Section } from "$live/blocks/section.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
-import { renderSectionFor } from "$live/pages/LivePage.tsx";
+import { useLivePageContext } from "$live/pages/LivePage.tsx";
 import { WellKnownSlots } from "$live/sections/Slot.tsx";
 
 export interface Props {
@@ -8,9 +8,8 @@ export interface Props {
   sections: Section[];
 }
 
-export default function UseSlot({ sections, ...rest }: Props) {
-  // TODO: get render section from page context.
-  const renderSection = renderSectionFor((rest as any).editMode);
+export default function UseSlot({ sections }: Props) {
+  const { renderSection } = useLivePageContext();
 
   return (
     <>

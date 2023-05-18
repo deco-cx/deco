@@ -18,7 +18,8 @@ import {
 import { isLivePageProps } from "$live/sections/PageInclude.tsx";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
-import { ComponentChildren, JSX } from "preact";
+import { ComponentChildren, createContext, JSX } from "preact";
+import { useContext } from "preact/hooks";
 
 export interface Props {
   name: string;
@@ -44,9 +45,9 @@ export function renderSectionFor(editMode?: boolean) {
         id={`${metadata?.component}-${idx}`}
         data-manifest-key={metadata?.component}
       >
-        <EditContext metadata={metadata} index={props.__previewIndex ?? idx}>
+        <EditContext metadata={metadata} index={metadata?.childIndex ?? idx}>
           <Controls />
-          <Section editMode={editMode} {...props} />
+          <Section {...props} />
         </EditContext>
       </section>
     );
@@ -77,14 +78,18 @@ function indexedBySlotName(
   sections.forEach((section, index) => {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
       // This is used to maintain the real position during editMode
-      (section.props as any).__previewIndex = index;
+      if (section.metadata) {
+        section.metadata.childIndex = index;
+      }
       indexed[section.props.name] = {
         useSection: section,
         used: false,
       };
     } else {
       // This is used to maintain the real position during editMode
-      section.props.__previewIndex = index;
+      if (section.metadata) {
+        section.metadata.childIndex = index;
+      }
       contentSections.push(section);
     } // others are considered content
   });
@@ -176,6 +181,14 @@ const renderPage = (
   );
 };
 
+interface LivePageContext {
+  renderSection: ReturnType<typeof renderSectionFor>;
+}
+const LivePageContext = createContext<LivePageContext>({
+  renderSection: renderSectionFor(),
+});
+export const useLivePageContext = () => useContext(LivePageContext);
+
 export default function LivePage(
   props: Props,
 ): JSX.Element {
@@ -207,12 +220,14 @@ export function Preview(props: Props) {
   const editMode = pageCtx?.url.searchParams.has("editMode") ?? false;
 
   return (
-    <>
+    <LivePageContext.Provider
+      value={{ renderSection: renderSectionFor(editMode) }}
+    >
       <Head>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       {renderPage(props, {}, editMode)}
       {editMode && <LivePageEditor />}
-    </>
+    </LivePageContext.Provider>
   );
 }
