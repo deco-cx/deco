@@ -1,6 +1,4 @@
 import { TransformContext } from "$live/engine/schema/transform.ts";
-import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
-import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
 import {
   DocNode,
   DocNodeFunction,
@@ -12,7 +10,7 @@ import {
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
-import { randomInt } from "https://raw.githubusercontent.com/alextes/vegas/main/mod.ts";
+import { fromFileUrl, join } from "std/path/mod.ts";
 
 const limit = pLimit(5);
 
