@@ -14,7 +14,8 @@ export interface Override {
 export interface Audience {
   matcher: Matcher;
   /**
-   * @title Add a meaningful short word for the audience name.
+   * @title The audience name (will be used on cookies).
+   * @description Add a meaningful short word for the audience name.
    * @maxLength 22
    * @minLength 3
    * @pattern ^[A-Za-z0-9_]+$
