@@ -48,6 +48,20 @@ const proxyTo =
         setCookie(responseHeaders, { ...cookie, domain: url.hostname });
       }
     }
+    if (response.status >= 300 && response.status < 400) { // redirect change location header
+      const location = responseHeaders.get("location");
+      if (location) {
+        responseHeaders.set(
+          "location",
+          location.replace(
+            proxyUrl,
+            `${url.protocol}://${url.host}${
+              url.port === "443" || url.port === "80" ? "" : `:${url.port}`
+            }`,
+          ),
+        );
+      }
+    }
 
     return new Response(response.body, {
       status: response.status,
