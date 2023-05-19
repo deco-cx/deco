@@ -66,11 +66,11 @@ export const applyProps = <
 >(func: {
   default: FnProps<TProps, TResp>;
 }) =>
-async (
+(
   $live: TProps,
   ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
 ) => { // by default use global state
-  return await func.default(
+  return func.default(
     $live,
     ctx.request,
     { ...ctx?.context?.state?.global, response: ctx.context.state.response },

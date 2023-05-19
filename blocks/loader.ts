@@ -25,10 +25,13 @@ const loaderBlock: Block<LoaderModule> = {
     TProps = any,
   >(
     { singleFlightKey, ...mod }: LoaderModule<TProps>,
-  ) => [
-    newSingleFlightGroup(singleFlightKey),
-    applyProps(mod),
-  ],
+  ) =>
+    singleFlightKey
+      ? [
+        newSingleFlightGroup(singleFlightKey),
+        applyProps(mod),
+      ]
+      : applyProps(mod),
   defaultPreview: (result) => {
     return {
       Component: JsonViewer,
