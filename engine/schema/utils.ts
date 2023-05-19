@@ -1,6 +1,4 @@
 import { TransformContext } from "$live/engine/schema/transform.ts";
-import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
-import { fromFileUrl } from "https://deno.land/std@0.61.0/path/mod.ts";
 import {
   DocNode,
   DocNodeFunction,
@@ -11,6 +9,10 @@ import {
   TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
+import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
+import { fromFileUrl, join } from "std/path/mod.ts";
+
+const limit = pLimit(5);
 
 /**
  * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
@@ -101,7 +103,7 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-const denoDocCache = new Map<string, Promise<DocNode[]>>();
+const denoDocLocalCache = new Map<string, Promise<DocNode[]>>();
 
 export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
@@ -132,18 +134,35 @@ const docAsExec = async (
   path: string,
   _?: string,
 ): Promise<DocNode[]> => {
-  return JSON.parse(await exec([Deno.execPath(), "doc", "--json", path])); // FIXME(mcandeia) add --private when stable
+  return await limit(async () =>
+    JSON.parse(await exec([Deno.execPath(), "doc", "--json", path]))
+  ); // FIXME(mcandeia) add --private when stable
 };
+
 export const denoDoc = async (
   path: string,
   importMap?: string,
 ): Promise<DocNode[]> => {
   try {
-    const promise = denoDocCache.get(path) ??
+    const isLocal = path.startsWith("file");
+    const suffix = isLocal
+      ? await Deno.stat(new URL(path)).then((s) =>
+        s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at
+      )
+      : "";
+    const key = `${path}-${suffix}`;
+    const current = localStorage.getItem(key);
+    if (current) {
+      return JSON.parse(current);
+    }
+    const promise = denoDocLocalCache.get(path) ??
       (typeof Deno.run === "function"
         ? docAsExec(path)
         : docAsLib(path, importMap));
-    denoDocCache.set(path, promise);
+    promise.then((doc) => {
+      localStorage.setItem(key, JSON.stringify(doc));
+    });
+    denoDocLocalCache.set(path, promise);
     return await promise;
   } catch (err) {
     console.warn("deno doc error, ignoring", err);
