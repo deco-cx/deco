@@ -728,7 +728,10 @@
         },
         "name": {
           "type": "string",
-          "title": "Name"
+          "title": "Add a meaningful short word for the audience name.",
+          "maxLength": 22,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_]+$"
         },
         "routes": {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",

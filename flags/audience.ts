@@ -13,6 +13,12 @@ export interface Override {
 }
 export interface Audience {
   matcher: Matcher;
+  /**
+   * @title Add a meaningful short word for the audience name.
+   * @maxLength 22
+   * @minLength 3
+   * @pattern ^[A-Za-z0-9_]+$
+   */
   name: string;
   routes?: Route[];
   overrides?: Override[];
