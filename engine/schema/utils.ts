@@ -139,28 +139,38 @@ const docAsExec = async (
   ); // FIXME(mcandeia) add --private when stable
 };
 
+interface DocCache {
+  docNodes: DocNode[];
+  lastModified: number;
+}
+
 export const denoDoc = async (
   path: string,
   importMap?: string,
 ): Promise<DocNode[]> => {
   try {
     const isLocal = path.startsWith("file");
-    const suffix = isLocal
+    const lastModified = isLocal
       ? await Deno.stat(new URL(path)).then((s) =>
         s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at
       )
-      : "";
-    const key = `${path}-${suffix}`;
-    const current = localStorage.getItem(key);
+      : 0; // remote http modules can be cached forever;
+    const current = localStorage.getItem(path);
     if (current) {
-      return JSON.parse(current);
+      const parsed: DocCache = JSON.parse(current);
+      if (parsed.lastModified === lastModified) {
+        return parsed.docNodes;
+      }
     }
     const promise = denoDocLocalCache.get(path) ??
       (typeof Deno.run === "function"
         ? docAsExec(path)
         : docAsLib(path, importMap));
     promise.then((doc) => {
-      localStorage.setItem(key, JSON.stringify(doc));
+      localStorage.setItem(
+        path,
+        JSON.stringify({ docNodes: doc, lastModified }),
+      );
     });
     denoDocLocalCache.set(path, promise);
     return await promise;
