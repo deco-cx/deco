@@ -101,8 +101,12 @@ export const handler = async (req: Request) => {
   const stateIndexed: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(state)) {
-    if ((value as { name: string })?.name?.endsWith("global.tsx")) {
-      stateIndexed[value.name] = key;
+    try {
+      if ((value as { name: string })?.name?.endsWith("global.tsx")) {
+        stateIndexed[value.name] = key;
+      }
+    } catch {
+      // console.error({ key, value });
     }
   }
 
