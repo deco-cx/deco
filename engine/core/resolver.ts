@@ -226,7 +226,10 @@ async function object<
     Promisified<ResolvableObj<T>>
   >(obj, resolve);
 
-  return (await waitKeys(promisifedKeys)) as T;
+  const r = (await waitKeys(promisifedKeys)) as T;
+  console.log("BEFORE", Object.keys(obj));
+  console.log("AFTER", Object.keys(r));
+  return r;
 }
 
 const identity = <V>(k: Omit<Resolvable<V, any, any, any>, "__resolveType">) =>
@@ -304,7 +307,17 @@ export const resolve = async <
         (data) => resolve(data, context),
       );
     }
-    return resolvableObj as T;
+    if (typeResolver === undefined) {
+      console.log("HERHE", resolvableObj);
+    }
+    return await typeResolver<T, TContext>(
+      resolvableObj,
+      (data) =>
+        resolve(
+          data,
+          context,
+        ),
+    ) as T;
   }
 
   const ctx = withResolveChain(context, resolveType);
@@ -338,7 +351,8 @@ export const resolve = async <
         end?.();
       }
     }
-    return resolve(respOrPromise, ctx);
+    const rsType = await respOrPromise;
+    return rsType.__resolveType ? resolve(rsType, ctx) : rsType;
   }
   const resolvableRef = resolvables[resolveType] as Resolvable<T>;
   if (resolvableRef === undefined) {

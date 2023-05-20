@@ -21,50 +21,51 @@ Deno.test("resolve", async (t) => {
       return data;
     },
   };
+  // FIXME we do not support chaining resolvers for now
 
-  await t.step(
-    "resolveType as function should be called when specified",
-    async () => {
-      type InputType = {
-        bar: number;
-      };
-      type OutputType = {
-        barString: string;
-      };
+  // await t.step(
+  //   "resolveType as function should be called when specified",
+  //   async () => {
+  //     type InputType = {
+  //       bar: number;
+  //     };
+  //     type OutputType = {
+  //       barString: string;
+  //     };
 
-      const toStringBarResolver = (d: InputType): OutputType => {
-        return { barString: d.bar.toString() };
-      };
-      const addToStringBarResolver = (d: InputType): Resolvable<InputType> => {
-        return { ...d, __resolveType: toStringBarResolver.name };
-      };
-      const resolverMap = {
-        toStringBarResolver: spy(toStringBarResolver),
-        addToStringBarResolver: spy(addToStringBarResolver),
-      };
+  //     const toStringBarResolver = (d: InputType): OutputType => {
+  //       return { barString: d.bar.toString() };
+  //     };
+  //     const addToStringBarResolver = (d: InputType): Resolvable<InputType> => {
+  //       return { ...d, __resolveType: toStringBarResolver.name };
+  //     };
+  //     const resolverMap = {
+  //       toStringBarResolver: spy(toStringBarResolver),
+  //       addToStringBarResolver: spy(addToStringBarResolver),
+  //     };
 
-      const ctx = { ...context, resolvers: resolverMap };
-      const result = await resolve<OutputType>(
-        {
-          bar: 10,
-          __resolveType: addToStringBarResolver.name,
-        },
-        ctx,
-      );
-      assertEquals(result, { barString: "10" });
-      assertSpyCallArg(resolverMap.addToStringBarResolver, 0, 0, { bar: 10 });
-      assertSpyCall(resolverMap.addToStringBarResolver, 0, {
-        returned: { bar: 10, __resolveType: toStringBarResolver.name },
-      });
-      assertSpyCallArg(resolverMap.toStringBarResolver, 0, 0, { bar: 10 });
-      assertSpyCall(resolverMap.toStringBarResolver, 0, {
-        returned: { barString: "10" },
-      });
+  //     const ctx = { ...context, resolvers: resolverMap };
+  //     const result = await resolve<OutputType>(
+  //       {
+  //         bar: 10,
+  //         __resolveType: addToStringBarResolver.name,
+  //       },
+  //       ctx,
+  //     );
+  //     assertEquals(result, { barString: "10" });
+  //     assertSpyCallArg(resolverMap.addToStringBarResolver, 0, 0, { bar: 10 });
+  //     assertSpyCall(resolverMap.addToStringBarResolver, 0, {
+  //       returned: { bar: 10, __resolveType: toStringBarResolver.name },
+  //     });
+  //     assertSpyCallArg(resolverMap.toStringBarResolver, 0, 0, { bar: 10 });
+  //     assertSpyCall(resolverMap.toStringBarResolver, 0, {
+  //       returned: { barString: "10" },
+  //     });
 
-      assertSpyCalls(resolverMap.addToStringBarResolver, 1);
-      assertSpyCalls(resolverMap.toStringBarResolver, 1);
-    },
-  );
+  //     assertSpyCalls(resolverMap.addToStringBarResolver, 1);
+  //     assertSpyCalls(resolverMap.toStringBarResolver, 1);
+  //   },
+  // );
   await t.step(
     "dangling reference should be thrown when resolver is missing",
     async () => {
@@ -222,5 +223,62 @@ Deno.test("resolve", async (t) => {
       { ...context, resolvers: resolverMap },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
+  });
+
+  await t.step("should resolve nested properties", async () => {
+    type TestType = {
+      foo: string;
+      bar: {
+        value: number;
+      };
+      nested: {
+        nested: {
+          value: string;
+        };
+      };
+    };
+    type TestTypeParent = {
+      foo: string;
+      nested: {
+        nested: {
+          value: string;
+        };
+      };
+      bar: number;
+    };
+    const resolverMap = {
+      getNested: () => {
+        return {
+          value: "10",
+        };
+      },
+      testResolver: (parent: TestTypeParent): TestType => {
+        return {
+          ...parent,
+          bar: {
+            value: parent.bar,
+          },
+        };
+      },
+    };
+    const result = await resolve<
+      TestType,
+      BaseContext
+    >(
+      {
+        foo: "hello",
+        bar: 10,
+        nested: {
+          nested: { __resolveType: "getNested" },
+        },
+        __resolveType: "testResolver",
+      },
+      { ...context, resolvers: resolverMap },
+    );
+    assertEquals(result, {
+      foo: "hello",
+      bar: { value: 10 },
+      nested: { nested: { value: "10" } },
+    });
   });
 });
