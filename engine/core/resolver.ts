@@ -226,10 +226,7 @@ async function object<
     Promisified<ResolvableObj<T>>
   >(obj, resolve);
 
-  const r = (await waitKeys(promisifedKeys)) as T;
-  console.log("BEFORE", Object.keys(obj));
-  console.log("AFTER", Object.keys(r));
-  return r;
+  return (await waitKeys(promisifedKeys)) as T;
 }
 
 const identity = <V>(k: Omit<Resolvable<V, any, any, any>, "__resolveType">) =>
@@ -283,12 +280,14 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
   };
 };
 
+const MAX_DEPTH_RESOLVE = 3;
 export const resolve = async <
   T,
   TContext extends BaseContext = BaseContext,
 >(
   resolvable: Resolvable<T, TContext>,
   context: TContext,
+  depth?: number,
 ): Promise<T> => {
   const { resolvers: resolverMap, resolvables } = context;
 
@@ -298,37 +297,26 @@ export const resolve = async <
   // define the type resolver based on the object type
   const typeResolver = nativeResolverByType[typeof resolvableObj];
 
-  // if the resolveType is not defined we should use the typeresolver
-  if (resolveType === undefined) {
-    // since array is also an object so we should check it strictly instead
-    if (Array.isArray(resolvableObj)) {
-      return await typeResolver<T, TContext>(
-        resolvableObj,
-        (data) => resolve(data, context),
-      );
-    }
-    if (typeResolver === undefined) {
-      console.log("HERHE", resolvableObj);
-    }
-    return await typeResolver<T, TContext>(
-      resolvableObj,
-      (data) =>
-        resolve(
-          data,
-          context,
-        ),
-    ) as T;
+  const hasResolvable = resolveType !== undefined;
+  const ctx = hasResolvable ? withResolveChain(context, resolveType) : context;
+  if ((depth ?? 0) >= MAX_DEPTH_RESOLVE && !hasResolvable) {
+    return resolvableObj as T;
   }
-
-  const ctx = withResolveChain(context, resolveType);
   const resolved = await typeResolver<T, TContext>(
     resolvableObj,
     (data) =>
       resolve(
         data,
         ctx,
+        (depth ?? 0) + 1,
       ),
-  );
+  ) as T;
+
+  // if the resolveType is not defined we should use the typeresolver
+  if (!hasResolvable) {
+    return resolved;
+  }
+
   const resolver = resolverMap[resolveType];
   if (resolver !== undefined) {
     let end: (() => void) | undefined = undefined;
@@ -352,7 +340,7 @@ export const resolve = async <
       }
     }
     const rsType = await respOrPromise;
-    return rsType.__resolveType ? resolve(rsType, ctx) : rsType;
+    return rsType?.__resolveType ? resolve(rsType, ctx) : rsType;
   }
   const resolvableRef = resolvables[resolveType] as Resolvable<T>;
   if (resolvableRef === undefined) {
