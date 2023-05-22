@@ -21,6 +21,7 @@ Deno.test("resolve", async (t) => {
       return data;
     },
   };
+  // FIXME we do not support chaining resolvers for now
 
   await t.step(
     "resolveType as function should be called when specified",
@@ -222,5 +223,62 @@ Deno.test("resolve", async (t) => {
       { ...context, resolvers: resolverMap },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
+  });
+
+  await t.step("should resolve nested properties", async () => {
+    type TestType = {
+      foo: string;
+      bar: {
+        value: number;
+      };
+      nested: {
+        nested: {
+          value: string;
+        };
+      };
+    };
+    type TestTypeParent = {
+      foo: string;
+      nested: {
+        nested: {
+          value: string;
+        };
+      };
+      bar: number;
+    };
+    const resolverMap = {
+      getNested: () => {
+        return {
+          value: "10",
+        };
+      },
+      testResolver: (parent: TestTypeParent): TestType => {
+        return {
+          ...parent,
+          bar: {
+            value: parent.bar,
+          },
+        };
+      },
+    };
+    const result = await resolve<
+      TestType,
+      BaseContext
+    >(
+      {
+        foo: "hello",
+        bar: 10,
+        nested: {
+          nested: { __resolveType: "getNested" },
+        },
+        __resolveType: "testResolver",
+      },
+      { ...context, resolvers: resolverMap },
+    );
+    assertEquals(result, {
+      foo: "hello",
+      bar: { value: 10 },
+      nested: { nested: { value: "10" } },
+    });
   });
 });
