@@ -287,7 +287,7 @@ export const resolve = async <
 >(
   resolvable: Resolvable<T, TContext>,
   context: TContext,
-  depth?: number,
+  depth = 0,
 ): Promise<T> => {
   const { resolvers: resolverMap, resolvables } = context;
 
@@ -299,7 +299,7 @@ export const resolve = async <
 
   const hasResolvable = resolveType !== undefined;
   const ctx = hasResolvable ? withResolveChain(context, resolveType) : context;
-  if ((depth ?? 0) >= MAX_DEPTH_RESOLVE && !hasResolvable) {
+  if (depth >= MAX_DEPTH_RESOLVE && !hasResolvable) {
     return resolvableObj as T;
   }
   const resolved = await typeResolver<T, TContext>(
@@ -308,7 +308,7 @@ export const resolve = async <
       resolve(
         data,
         ctx,
-        (depth ?? 0) + 1,
+        depth + 1,
       ),
   ) as T;
 
