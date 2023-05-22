@@ -280,7 +280,7 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
   };
 };
 
-const MAX_DEPTH_RESOLVE = 2;
+const MAX_DEPTH_RESOLVE = 3;
 export const resolve = async <
   T,
   TContext extends BaseContext = BaseContext,

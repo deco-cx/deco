@@ -210,12 +210,14 @@ const pageToConfig =
           {
             pathTemplate: p.path,
             handler: {
-              page: {
-                __resolveType: `${p.id}`,
+              value: {
+                page: {
+                  __resolveType: `${p.id}`,
+                },
+                __resolveType: p.public
+                  ? "$live/handlers/fresh.ts"
+                  : "$live/handlers/devPage.ts",
               },
-              __resolveType: p.public
-                ? "$live/handlers/fresh.ts"
-                : "$live/handlers/devPage.ts",
             },
           },
         ],
@@ -358,10 +360,12 @@ const flagsToConfig = (
         {
           pathTemplate: page.path,
           handler: {
-            page: {
-              __resolveType: `${pageId}`,
+            value: {
+              page: {
+                __resolveType: `${pageId}`,
+              },
+              __resolveType: "$live/handlers/fresh.ts",
             },
-            __resolveType: "$live/handlers/fresh.ts",
           },
         },
       ],
