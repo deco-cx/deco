@@ -4,6 +4,7 @@ import { Resolvable } from "$live/engine/core/resolver.ts";
 import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { JSONSchema, Site } from "$live/types.ts";
+import { ENTRYPOINT } from "./constants.ts";
 import { CurrResolvables, SupabaseConfigProvider } from "./supabaseProvider.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
@@ -128,7 +129,6 @@ const dataToSections = (
   );
 };
 
-const catchAllConfig = "./routes/[...catchall].tsx";
 const middlewareConfig = "./routes/_middleware.ts";
 
 const sectionToAccount: Record<string, string> = {
@@ -239,7 +239,7 @@ const baseEntrypoint = Object.freeze({
       __resolveType: "resolve",
     },
   },
-  [catchAllConfig]: {
+  [ENTRYPOINT]: {
     audiences: [
       {
         __resolveType: everyoneAudience,
@@ -335,7 +335,7 @@ const flagsToConfig = (
   ns: string,
 ) => {
   return flags.reduce((curr, flag) => {
-    const catchall = curr[catchAllConfig];
+    const catchall = curr[ENTRYPOINT];
     const pageIds = flag.data.effect?.props?.pageIds;
     const pageId = Array.isArray(pageIds) ? pageIds[0] as number : undefined;
     if (!pageId) {
@@ -345,7 +345,7 @@ const flagsToConfig = (
     if (!page) {
       return curr;
     }
-    curr[catchAllConfig] = {
+    curr[ENTRYPOINT] = {
       ...catchall,
       audiences: [
         ...catchall.audiences,

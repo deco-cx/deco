@@ -2,6 +2,8 @@ import { fromConfigsTable } from "$live/engine/configstore/configs.ts";
 import { fromPagesTable } from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
+import { SelectionConfig } from "../../handlers/routesSelection.ts";
+import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
 import { newSupabase } from "./supabaseProvider.ts";
 
@@ -13,6 +15,30 @@ export interface ConfigStore {
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
 }
 
+interface RoutesSelection extends SelectionConfig {
+  __resolveType: "$live/handlers/routesSelection.ts";
+}
+const isSelectionConfig = (
+  config: unknown | RoutesSelection,
+): config is RoutesSelection => {
+  return (config as RoutesSelection)?.audiences?.length !== undefined &&
+    (config as RoutesSelection)?.__resolveType ===
+      "$live/handlers/routesSelection.ts";
+};
+
+const mergeEntrypoints = (
+  config: unknown,
+  other: unknown,
+): unknown => {
+  if (isSelectionConfig(config) && isSelectionConfig(other)) {
+    return {
+      audiences: [...config.audiences, ...other.audiences],
+      __resolveType: config?.__resolveType ?? other?.__resolveType,
+    };
+  }
+  return other ?? config;
+};
+
 export const compose = (...providers: ConfigStore[]): ConfigStore => {
   return providers.reduce((providers, current) => {
     return {
@@ -21,14 +47,28 @@ export const compose = (...providers: ConfigStore[]): ConfigStore => {
           providers.archived(options),
           current.archived(options),
         ]);
-        return { ...providersResolvables, ...currentResolvables };
+        return {
+          ...providersResolvables,
+          ...currentResolvables,
+          [ENTRYPOINT]: mergeEntrypoints(
+            providersResolvables[ENTRYPOINT],
+            currentResolvables[ENTRYPOINT],
+          ),
+        };
       },
       state: async (options) => {
         const [providersResolvables, currentResolvables] = await Promise.all([
           providers.state(options),
           current.state(options),
         ]);
-        return { ...providersResolvables, ...currentResolvables };
+        return {
+          ...providersResolvables,
+          ...currentResolvables,
+          [ENTRYPOINT]: mergeEntrypoints(
+            providersResolvables[ENTRYPOINT],
+            currentResolvables[ENTRYPOINT],
+          ),
+        };
       },
     };
   });
