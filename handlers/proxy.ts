@@ -53,12 +53,7 @@ const proxyTo =
       if (location) {
         responseHeaders.set(
           "location",
-          location.replace(
-            proxyUrl,
-            `${url.protocol}://${url.host}${
-              url.port === "443" || url.port === "80" ? "" : `:${url.port}`
-            }`,
-          ),
+          location.replace(proxyUrl, url.origin),
         );
       }
     }
