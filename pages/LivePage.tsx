@@ -1,14 +1,14 @@
-import { Page } from "$live/blocks/page.ts";
 import { Head } from "$fresh/runtime.ts";
+import { Page } from "$live/blocks/page.ts";
 import { isSection, Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
-import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import LivePageShowcase from "../components/LivePageShowcase.tsx";
 import LivePageEditor, {
   BlockControls,
   EditorContextProvider,
 } from "$live/components/LivePageEditor.tsx";
+import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import { PreactComponent } from "$live/engine/block.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";

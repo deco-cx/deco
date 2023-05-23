@@ -69,7 +69,9 @@ const sectionBlock: Block<SectionModule> = {
       return (
         props: TProps,
         { resolveChain }: BaseContext,
-      ): PreactComponent<any, TProps> => componentFunc(props, { resolveChain });
+      ): PreactComponent<any, TProps> => {
+        return componentFunc(props, { resolveChain });
+      };
     }
     return async (
       props: TConfig,
