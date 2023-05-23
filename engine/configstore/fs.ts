@@ -1,6 +1,7 @@
 import { join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { singleFlight } from "../core/utils.ts";
+import { ENTRYPOINT } from "./constants.ts";
 import { ConfigStore } from "./provider.ts";
 
 const sample = {
@@ -15,16 +16,13 @@ const sample = {
     }],
     __resolveType: "$live/flags/everyone.ts",
   },
-  "./routes/[...catchall].tsx": {
-    handler: {
-      audiences: [
-        {
-          __resolveType: "audience-everyone",
-        },
-      ],
-      __resolveType: "$live/handlers/routesSelection.ts",
-    },
-    __resolveType: "resolve",
+  [ENTRYPOINT]: {
+    audiences: [
+      {
+        __resolveType: "audience-everyone",
+      },
+    ],
+    __resolveType: "$live/handlers/routesSelection.ts",
   },
 };
 export const newFsProvider = (
