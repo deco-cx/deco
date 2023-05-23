@@ -143,7 +143,30 @@ interface DocCache {
   docNodes: DocNode[];
   lastModified: number;
 }
-
+/**
+ * Determines whether an error is a QuotaExceededError.
+ *
+ * Browsers love throwing slightly different variations of QuotaExceededError
+ * (this is especially true for old browsers/versions), so we need to check
+ * different fields and values to ensure we cover every edge-case.
+ *
+ * @param err - The error to check
+ * @return Is the error a QuotaExceededError?
+ */
+function isQuotaExceededError(err: unknown): boolean {
+  return (
+    err instanceof DOMException &&
+    // everything except Firefox
+    (err.code === 22 ||
+      // Firefox
+      err.code === 1014 ||
+      // test name field too, because code might not be present
+      // everything except Firefox
+      err.name === "QuotaExceededError" ||
+      // Firefox
+      err.name === "NS_ERROR_DOM_QUOTA_REACHED")
+  );
+}
 export const denoDoc = async (
   path: string,
   importMap?: string,
@@ -167,10 +190,16 @@ export const denoDoc = async (
         ? docAsExec(path)
         : docAsLib(path, importMap));
     promise.then((doc) => {
-      localStorage.setItem(
-        path,
-        JSON.stringify({ docNodes: doc, lastModified }),
-      );
+      try {
+        localStorage.setItem(
+          path,
+          JSON.stringify({ docNodes: doc, lastModified }),
+        );
+      } catch (err) {
+        if (isQuotaExceededError(err)) {
+          localStorage.clear();
+        }
+      }
     });
     denoDocLocalCache.set(path, promise);
     return await promise;
