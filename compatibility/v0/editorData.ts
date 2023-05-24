@@ -168,13 +168,18 @@ const generateBaseSchema = (schema: Schemas): Schemas => {
   return { ...schema, definitions };
 };
 const getInputAndOutputFromKey = (
-  schema: Schemas,
-  key: string,
+  schema: Schemas, // all schemas
+  key: string, // ./functions/vtexProductListingPage.ts
 ): [JSONSchema7 | undefined, JSONSchema7 | undefined] => {
+  // replace ./functions/vtexProductListingPage.ts to `deco-sites/fashion/functions/vtexProductListingPage.ts
   const sanitized = key.replace("./", `${context.namespace!}/`);
+  // definition ID => { allOf: [{$ref: props}], properties: { __resolveType: {}}}
   const definitionKey = btoa(sanitized);
+  // get the definition id
   const inputDefinition = schema.definitions[definitionKey];
+  // props $ref
   const configType = configTypeFromJSONSchema(inputDefinition ?? {});
+  // returns the type that the loader returns.
   const returnedByFunc = Object.entries(schema.definitions).find(([_, obj]) => {
     const anyOf = obj.anyOf as JSONSchema7[];
     if (!anyOf || anyOf.length === 0) {
