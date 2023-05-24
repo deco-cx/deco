@@ -209,6 +209,7 @@ async function object<
   >,
   resolve: <K extends keyof T>(
     resolvable: Resolvable<T[K], TContext, TResolverMap, TResolvableMap>,
+    prop: string | number | symbol,
   ) => PromiseOrValue<T[K]>,
 ): Promise<T> {
   if (obj instanceof Date) {
@@ -248,6 +249,7 @@ const nativeResolverByType: Record<
     >,
     resolve: <K>(
       resolvable: Resolvable<K, TContext, TResolverMap, TResolvableMap>,
+      prop: string | number | symbol,
     ) => PromiseOrValue<K>,
   ) => PromiseOrValue<T>
 > = {
@@ -267,17 +269,7 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
     ...ctx,
     resolveChain: [...ctx.resolveChain, ...resolverType],
   };
-  return {
-    ...newCtx,
-    resolve: function (
-      data: Resolvable<T, T>,
-    ): Promise<T> {
-      return resolve<T, T>(
-        data,
-        newCtx as T,
-      );
-    },
-  };
+  return newCtx;
 };
 
 export const ALREADY_RESOLVED = "resolved";
@@ -337,10 +329,11 @@ export const resolve = async <
   const ctx = withResolveChain(context, resolveType);
   const resolved = await typeResolver<T, TContext>(
     resolvableObj,
-    (data) =>
+    (data, prop: string | number | symbol) =>
       resolve(
         data,
-        ctx,
+        withResolveChain(ctx, `${prop.toString()}`),
+        hasResolvable ? 1 : depth + 1,
       ),
   );
   const resolver = resolverMap[resolveType];

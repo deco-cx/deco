@@ -49,6 +49,7 @@ export function renderSectionFor(mode?: Mode) {
     idx: number,
   ) {
     // TODO: Remove editMode at Section Props and pass via context
+    console.log(metadata?.resolveChain);
     return (
       <section
         id={`${metadata?.component}-${idx}`}
@@ -184,6 +185,12 @@ const renderPage = (
       </>
     );
   }
+
+  sections.forEach((sec) => {
+    if (!sec?.metadata) {
+      console.log("SECS", sec, sections);
+    }
+  });
 
   return (
     <>

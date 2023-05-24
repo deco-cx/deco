@@ -12,6 +12,7 @@ export interface BlockInvocation<TProps = any> {
   block: string;
   props: TProps;
 }
+
 export default {
   selectKeys: function selectKeys<T>(
     { obj, keys }: { obj: T; keys: DotNestedKeys<T>[] },
@@ -49,6 +50,7 @@ export default {
         })),
       });
     }
+    console.log("BLOCK", block);
     return resolve({
       __resolveType: pvResolver,
       ...(await resolve({ __resolveType: block, ...props })),
