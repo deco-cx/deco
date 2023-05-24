@@ -55,7 +55,7 @@ export const router = (
         };
 
         const resolvedOrPromise = context.configResolver!.resolve<Handler>(
-          handler,
+          handler.value,
           { context: ctx, request: req },
           configs,
         );
@@ -86,7 +86,7 @@ export const toRouteMap = (
   routes?: Route[],
 ): Record<string, Resolvable<Handler>> => {
   const routeMap: Record<string, Resolvable<Handler>> = {};
-  (routes ?? []).forEach(({ pathTemplate, handler }) => {
+  (routes ?? []).forEach(({ pathTemplate, handler: { value: handler } }) => {
     routeMap[pathTemplate] = handler;
   });
   return routeMap;
@@ -180,7 +180,7 @@ export default function RoutesSelection(
     const server = router(
       builtRoutes.map((route) => ({
         pathTemplate: route[0],
-        handler: route[1],
+        handler: { value: route[1] },
       })),
       {
         overrides,
