@@ -18,7 +18,7 @@ export type LiveContext = {
   loginUrl?: string;
   base?: string;
   // deno-lint-ignore no-explicit-any
-  configResolver?: ReleaseResolver<any>;
+  releaseResolver?: ReleaseResolver<any>;
   namespace?: string;
   release?: Release;
 };

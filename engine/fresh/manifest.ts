@@ -200,7 +200,7 @@ export const $live = <T extends DecoManifest>(
     );
   }
   // should be set first
-  context.configResolver = resolver;
+  context.releaseResolver = resolver;
   context.manifest = newManifest;
   console.log(
     `Starting live: siteId=${context.siteId} site=${context.site}`,

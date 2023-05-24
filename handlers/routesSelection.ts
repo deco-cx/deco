@@ -54,7 +54,7 @@ export const router = (
           pagePath: routePath,
         };
 
-        const resolvedOrPromise = context.configResolver!.resolve<Handler>(
+        const resolvedOrPromise = context.releaseResolver!.resolve<Handler>(
           handler.value,
           { context: ctx, request: req },
           configs,
