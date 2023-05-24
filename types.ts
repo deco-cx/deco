@@ -16,6 +16,7 @@ import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
 import { ResolveFunc } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Release } from "$live/engine/releases/provider.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 
 export type JSONSchema = JSONSchema7;
@@ -64,14 +65,16 @@ export interface StatefulContext<T> {
   params: Record<string, string>;
   state: T;
 }
-export type LiveConfig<TConfig = any, TState = any> = TState & {
+
+export type LiveConfig<TConfig = any, TState = {}> = TState & {
   $live: TConfig;
   resolve: ResolveFunc;
+  release: Release;
 };
 
-export type { FnContext } from "$live/blocks/utils.ts";
 export type { PropsLoader } from "$live/blocks/propsLoader.ts";
 export type { SectionProps } from "$live/blocks/section.ts";
+export type { FnContext } from "$live/blocks/utils.ts";
 export type ActionContext<TState = {}> = FnContext<TState>;
 export type LoaderContext<TState = {}> = FnContext<TState>;
 

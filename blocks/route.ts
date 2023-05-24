@@ -173,6 +173,7 @@ const mapMiddleware = (
     endTiming?.();
     context.state.$live = $live;
     context.state.resolve = ctxResolver;
+    context.state.release = liveContext.release!;
 
     const resp = await context.next();
     // enable or disable debugging

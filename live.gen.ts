@@ -13,8 +13,9 @@ import * as $$$$3 from "./routes/live/invoke/index.ts";
 import * as $$$$4 from "./routes/live/editorData.ts";
 import * as $$$$5 from "./routes/live/workbench.ts";
 import * as $$$$6 from "./routes/live/previews/[...block].tsx";
-import * as $$$$7 from "./routes/live/_meta.ts";
-import * as $$$$8 from "./routes/[...catchall].tsx";
+import * as $$$$7 from "./routes/live/release.ts";
+import * as $$$$8 from "./routes/live/_meta.ts";
+import * as $$$$9 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "./handlers/routesSelection.ts";
 import * as $$$$$$1 from "./handlers/router.ts";
 import * as $$$$$$2 from "./handlers/devPage.ts";
@@ -49,14 +50,15 @@ const manifest = {
   },
   "routes": {
     "./routes/_middleware.ts": $$$$0,
-    "./routes/[...catchall].tsx": $$$$8,
+    "./routes/[...catchall].tsx": $$$$9,
     "./routes/index.tsx": $live_catchall,
-    "./routes/live/_meta.ts": $$$$7,
+    "./routes/live/_meta.ts": $$$$8,
     "./routes/live/editorData.ts": $$$$4,
     "./routes/live/inspect/[...block].ts": $$$$1,
     "./routes/live/invoke/[...key].ts": $$$$2,
     "./routes/live/invoke/index.ts": $$$$3,
     "./routes/live/previews/[...block].tsx": $$$$6,
+    "./routes/live/release.ts": $$$$7,
     "./routes/live/workbench.ts": $$$$5,
   },
   "handlers": {

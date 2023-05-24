@@ -32,7 +32,7 @@ const withOverrides = (
   }, resolvables);
 };
 
-export class ConfigResolver<TContext extends BaseContext = BaseContext> {
+export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   public getResolvables: (forceFresh?: boolean) => PromiseOrValue<
     Record<string, Resolvable<any>>
   >;

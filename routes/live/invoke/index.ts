@@ -155,13 +155,13 @@ export type InvokePayload<
       | AvailableLoaders<TManifest>
       | AvailableFunctions<TManifest>
       | AvailableActions<TManifest>,
-> = TFunc extends AvailableLoaders<TManifest> ? 
+> = TFunc extends AvailableLoaders<TManifest> ?
     | InvokeLoader<TManifest, TFunc>
     | Record<string, InvokeLoader<TManifest, TFunc>>
-  : TFunc extends AvailableActions<TManifest> ? 
+  : TFunc extends AvailableActions<TManifest> ?
       | InvokeAction<TManifest, TFunc>
       | Record<string, InvokeAction<TManifest, TFunc>>
-  : TFunc extends AvailableFunctions<TManifest> ? 
+  : TFunc extends AvailableFunctions<TManifest> ?
       | InvokeFunction<TManifest, TFunc>
       | Record<string, InvokeFunction<TManifest, TFunc>>
   : unknown;

@@ -2,8 +2,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import blocks from "$live/blocks/index.ts";
 import { Block, BlockModule } from "$live/engine/block.ts";
-import { getComposedConfigStore } from "$live/engine/configstore/provider.ts";
-import { ConfigResolver } from "$live/engine/core/mod.ts";
+import { ReleaseResolver } from "$live/engine/core/mod.ts";
 import {
   BaseContext,
   DanglingReference,
@@ -18,6 +17,7 @@ import defaultResolvers, {
 } from "$live/engine/fresh/defaults.ts";
 import { integrityCheck } from "$live/engine/integrity.ts";
 import { compose } from "$live/engine/middleware.ts";
+import { getComposedConfigStore } from "$live/engine/releases/provider.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest, LiveConfig } from "$live/types.ts";
 
@@ -181,8 +181,8 @@ export const $live = <T extends DecoManifest>(
     context.site,
     context.siteId,
   );
-  context.configStore = provider;
-  const resolver = new ConfigResolver<FreshContext>({
+  context.release = provider;
+  const resolver = new ReleaseResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers },
     getResolvables: (forceFresh?: boolean) => {
       return provider.state({ forceFresh });

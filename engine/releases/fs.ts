@@ -2,7 +2,7 @@ import { join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { singleFlight } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import { ConfigStore } from "./provider.ts";
+import { Release } from "./provider.ts";
 
 const sample = {
   "audience-everyone": {
@@ -26,8 +26,8 @@ const sample = {
   },
 };
 export const newFsProvider = (
-  path = ".configs.json",
-): ConfigStore => {
+  path = ".release.json",
+): Release => {
   // deno-lint-ignore no-explicit-any
   const sf = singleFlight<Record<string, any>>();
   const fullPath = join(Deno.cwd(), path);

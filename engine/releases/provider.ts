@@ -1,6 +1,6 @@
-import { fromConfigsTable } from "$live/engine/configstore/configs.ts";
-import { fromPagesTable } from "$live/engine/configstore/pages.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
+import { fromPagesTable } from "$live/engine/releases/pages.ts";
+import { fromConfigsTable } from "$live/engine/releases/release.ts";
 import { context } from "$live/live.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
 import { ENTRYPOINT } from "./constants.ts";
@@ -10,7 +10,7 @@ import { newSupabase } from "./supabaseProvider.ts";
 export interface ReadOptions {
   forceFresh?: boolean;
 }
-export interface ConfigStore {
+export interface Release {
   state(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
 }
@@ -39,7 +39,7 @@ const mergeEntrypoints = (
   return other ?? config;
 };
 
-export const compose = (...providers: ConfigStore[]): ConfigStore => {
+export const compose = (...providers: Release[]): Release => {
   return providers.reduce((providers, current) => {
     return {
       archived: async (options) => {
@@ -85,7 +85,7 @@ export const getComposedConfigStore = (
   ns: string,
   site: string,
   siteId: number,
-): ConfigStore => {
+): Release => {
   const providers = [];
 
   if (siteId > 0) {
