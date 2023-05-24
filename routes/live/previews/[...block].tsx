@@ -71,7 +71,7 @@ export const handler = async (
     {
       __resolveType: "preview",
       block,
-      props,
+      value: await resolve({ __resolveType: block, ...props }),
     },
     false,
     {

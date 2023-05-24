@@ -13,6 +13,11 @@ export interface BlockInvocation<TProps = any> {
   props: TProps;
 }
 
+export interface BlockPreview {
+  block: string;
+  value: any;
+}
+
 export default {
   selectKeys: function selectKeys<T>(
     { obj, keys }: { obj: T; keys: DotNestedKeys<T>[] },
@@ -22,8 +27,8 @@ export default {
     }
     return obj;
   },
-  preview: async (
-    { block, props }: BlockInvocation,
+  preview: (
+    { block, value }: BlockPreview,
     { resolvables, resolvers, resolve },
   ) => {
     const pvResolver = `${PREVIEW_PREFIX_KEY}${block}`;
@@ -33,7 +38,7 @@ export default {
       if (!resolvable) {
         return { Component: PreviewNotAvailable, props: { block } };
       }
-      const { __resolveType, ...resolvableProps } = resolvable;
+      const { __resolveType } = resolvable;
       const resolvablePvResolverKey = `${PREVIEW_PREFIX_KEY}${__resolveType}`;
       if (!resolvers[resolvablePvResolverKey]) {
         return {
@@ -43,17 +48,12 @@ export default {
       }
       return resolve({
         __resolveType: resolvablePvResolverKey,
-        ...(await resolve({
-          __resolveType: __resolveType,
-          ...resolvableProps,
-          ...props,
-        })),
+        ...value,
       });
     }
-    console.log("BLOCK", block);
     return resolve({
       __resolveType: pvResolver,
-      ...(await resolve({ __resolveType: block, ...props })),
+      ...value,
     });
   },
   invoke: function invoke(
