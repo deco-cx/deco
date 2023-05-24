@@ -5,7 +5,10 @@ import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
 import { JSONSchema, Site } from "$live/types.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import { CurrResolvables, SupabaseConfigProvider } from "./supabaseProvider.ts";
+import {
+  CurrResolvables,
+  SupabaseReleaseProvider,
+} from "./supabaseProvider.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;
@@ -397,7 +400,7 @@ const pagesToConfig = (
 export const fromPagesTable = (
   siteId: number,
   namespace: string,
-): SupabaseConfigProvider => {
+): SupabaseReleaseProvider => {
   const sf = singleFlight<{ data: CurrResolvables | null; error: any }>();
   const fetcher = (includeArchived = false) =>
     sf.do("flight", async (): Promise<

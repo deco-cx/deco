@@ -1,17 +1,17 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
-import { ConfigStore, ReadOptions } from "$live/engine/configstore/provider.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
+import { ReadOptions, Release } from "$live/engine/releases/provider.ts";
 
-export interface SupabaseConfigProvider {
+export interface SupabaseReleaseProvider {
   /**
-   * @returns the current state of the configurations.
+   * @returns the current state of the release.
    */
   get(
     includeArchived: boolean,
   ): PromiseLike<{ data: CurrResolvables | null; error: any }>;
   /**
-   * When called, receives the `onChange` function that will be called when the configuration has changed,
+   * When called, receives the `onChange` function that will be called when the release has changed,
    * and the `cb` function that will be called when the subscription state change. The cb function can be used to determine if it should fallsback to background updates or not.
    * @param onChange
    * @param cb
@@ -35,15 +35,15 @@ export interface CurrResolvables {
   archived: Record<string, Resolvable<any>>;
 }
 /**
- * Receives a provider backed by supabase and creates a ConfigStore instance.
+ * Receives a provider backed by supabase and creates a Releases instance.
  * @param provider the supabase provider.
  * @param backgroundUpdate if background updates should be performed.
  * @returns
  */
 export const newSupabase = (
-  provider: SupabaseConfigProvider,
+  provider: SupabaseReleaseProvider,
   backgroundUpdate?: boolean,
-): ConfigStore => {
+): Release => {
   // the first load retry attempts
   let remainingRetries = 5;
   // the last error based on the retries
@@ -109,7 +109,7 @@ export const newSupabase = (
       }, (_status, err) => {
         if (err) {
           console.error(
-            "error when trying to subscribe to config changes falling back to background updates",
+            "error when trying to subscribe to release changes falling back to background updates",
           );
           setInterval(updateInternalState, refetchIntervalMSDeploy);
         }
@@ -128,7 +128,7 @@ export const newSupabase = (
       return resolvables.archived;
     },
     /**
-     * @returns The current state of the configuration.
+     * @returns The current state of the release.
      */
     state: async (opts?: ReadOptions) => {
       if (opts?.forceFresh) {

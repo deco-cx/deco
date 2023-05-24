@@ -3,12 +3,12 @@
  * This file should be deleted as soon as we have all stores migrated to live major v1 and we have dropped the admin support for the v0 major.
  */
 
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import {
   PageFunction,
   PageSection,
   PageState,
-} from "$live/engine/configstore/pages.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
+} from "$live/engine/releases/pages.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { getCurrent } from "$live/engine/schema/reader.ts";
 import { Audience } from "$live/flags/audience.ts";
@@ -226,7 +226,7 @@ const generatePropsForSchema = (
 };
 
 const globalSections = async (): Promise<AvailableSection[]> => {
-  const blocks = await context.configStore!.state();
+  const blocks = await context.release!.state();
   const availableSections: AvailableSection[] = [];
 
   for (const [blockId, block] of Object.entries(blocks)) {
@@ -380,7 +380,7 @@ const flagsThatContainsRoutes = [
 const livePage = "$live/pages/LivePage.tsx";
 
 async function pages() {
-  const archivedPromise = context.configStore!.archived()
+  const archivedPromise = context.release!.archived()
     .then(
       (allArchivedBlocks) => {
         const archivedPages: Record<string, Resolvable> = {};
@@ -394,7 +394,7 @@ async function pages() {
         return archivedPages;
       },
     );
-  const blocks = await context.configStore!.state();
+  const blocks = await context.release!.state();
   const flags: (Audience | EveryoneConfig)[] = Object.values(blocks).filter((
     { __resolveType },
   ) => flagsThatContainsRoutes.includes(__resolveType));

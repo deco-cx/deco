@@ -151,7 +151,7 @@ const mapMiddleware = (
       url.pathname.startsWith("~partytown") || // party town urls
       url.searchParams.has("__frsh_c"); // static assets, fresh uses ?__fresh_c=$id
 
-    const resolver = liveContext.configResolver!;
+    const resolver = liveContext.releaseResolver!;
     const ctxResolver = resolver
       .resolverFor(
         { context, request },
@@ -173,6 +173,7 @@ const mapMiddleware = (
     endTiming?.();
     context.state.$live = $live;
     context.state.resolve = ctxResolver;
+    context.state.release = liveContext.release!;
 
     const resp = await context.next();
     // enable or disable debugging

@@ -81,6 +81,12 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
+    from: "$live/routes/live/release.ts",
+    key: "./routes/live/release.ts",
+    ref: "$live_release",
+  },
+  {
+    block: "routes",
     from: "$live/routes/live/_meta.ts",
     key: "./routes/live/_meta.ts",
     ref: "$live_meta",

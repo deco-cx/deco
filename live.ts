@@ -4,9 +4,9 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { ConfigResolver } from "$live/engine/core/mod.ts";
+import { ReleaseResolver } from "$live/engine/core/mod.ts";
 import { DecoManifest } from "$live/types.ts";
-import { ConfigStore } from "./engine/configstore/provider.ts";
+import { Release } from "./engine/releases/provider.ts";
 
 // The global live context
 export type LiveContext = {
@@ -18,9 +18,9 @@ export type LiveContext = {
   loginUrl?: string;
   base?: string;
   // deno-lint-ignore no-explicit-any
-  configResolver?: ConfigResolver<any>;
+  releaseResolver?: ReleaseResolver<any>;
   namespace?: string;
-  configStore?: ConfigStore;
+  release?: Release;
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,

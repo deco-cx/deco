@@ -45,7 +45,7 @@ const functionBlock: Block<FunctionModule> = {
             ...ctx.context.state,
             $live,
             resolve: ctx.resolve,
-          } as LiveConfig,
+          } as LiveConfig<any, any>,
         },
         $live,
       );

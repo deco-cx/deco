@@ -97,7 +97,7 @@ export const getWorkbenchTree = (state: Record<string, string>): Node[] => {
 };
 
 export const handler = async (req: Request) => {
-  const state = await context.configStore!.state();
+  const state = await context.release!.state();
   const stateIndexed: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(state)) {

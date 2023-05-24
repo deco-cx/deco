@@ -1,10 +1,13 @@
 import { supabase } from "$live/deps.ts";
 import { singleFlight } from "$live/engine/core/utils.ts";
 import getSupabaseClient from "$live/supabase.ts";
-import { CurrResolvables, SupabaseConfigProvider } from "./supabaseProvider.ts";
+import {
+  CurrResolvables,
+  SupabaseReleaseProvider,
+} from "./supabaseProvider.ts";
 
 const TABLE = "configs";
-const fetchConfigs = (
+const fetchRelease = (
   site: string,
 ): PromiseLike<{ data: CurrResolvables | null; error: unknown }> => {
   return getSupabaseClient().from(TABLE).select("state, archived").eq(
@@ -14,7 +17,7 @@ const fetchConfigs = (
 };
 
 // Supabase client setup
-const subscribeForConfigChanges = (
+const subscribeForReleaseChanges = (
   site: string,
 ) =>
 (
@@ -40,24 +43,24 @@ const subscribeForConfigChanges = (
 };
 
 /**
- * Create a supabase config provider based on `configs` table.
+ * Create a supabase release provider based on `configs` table.
  * @param site the site name
- * @returns the supabaseconfigprovider.
+ * @returns the supabaseReleaseProvider.
  */
 export const fromConfigsTable = (
   site: string,
-): SupabaseConfigProvider => {
+): SupabaseReleaseProvider => {
   const sf = singleFlight<{ data: CurrResolvables | null; error: unknown }>();
   const fetcher = () =>
     sf.do(
       "flight",
       async () => {
-        const { data, error } = await fetchConfigs(site);
+        const { data, error } = await fetchRelease(site);
         return { data: data ?? { state: {}, archived: {} }, error };
       },
     );
   return {
     get: fetcher,
-    subscribe: subscribeForConfigChanges(site),
+    subscribe: subscribeForReleaseChanges(site),
   };
 };
