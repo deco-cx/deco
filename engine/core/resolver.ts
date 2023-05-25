@@ -349,8 +349,7 @@ export const resolve = async <
         end?.();
       }
     }
-    const result = await respOrPromise;
-    return result?.__resolveType ? resolve(result, ctx) : result;
+    return respOrPromise;
   }
   const resolvableRef = resolvables[resolveType] as Resolvable<T>;
   if (resolvableRef === undefined) {
