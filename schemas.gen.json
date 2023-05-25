@@ -27,6 +27,7 @@
               "$live/sections/UseSlot.tsx",
               "$live/matchers/MatchAlways.ts",
               "$live/matchers/MatchDate.ts",
+              "$live/matchers/MatchDevice.ts",
               "$live/matchers/MatchEnvironment.ts",
               "$live/matchers/MatchHost.ts",
               "$live/matchers/MatchMulti.ts",
@@ -572,6 +573,36 @@
       },
       "required": [],
       "title": "$live/matchers/MatchDate.ts@Props"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "mobile"
+              },
+              {
+                "type": "string",
+                "const": "tablet"
+              },
+              {
+                "type": "string",
+                "const": "desktop"
+              }
+            ],
+            "type": "string"
+          },
+          "title": "Devices"
+        }
+      },
+      "required": [
+        "devices"
+      ],
+      "title": "$live/matchers/MatchDevice.ts@Props"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props": {
       "type": "object",
@@ -1220,6 +1251,28 @@
         }
       }
     },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=": {
+      "title": "Device Matcher",
+      "description": "Matches the user based on the used device, options are: mobile, desktop or tablet.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchDevice.ts"
+          ],
+          "default": "$live/matchers/MatchDevice.ts"
+        }
+      }
+    },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==": {
       "title": "$live/matchers/MatchEnvironment.ts",
       "type": "object",
@@ -1596,6 +1649,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM="
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw=="
