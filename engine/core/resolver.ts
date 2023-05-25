@@ -280,6 +280,13 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
   };
 };
 
+export const STOP_RESOLVE = "resolved";
+
+export interface Resolved<T> {
+  data: T;
+  __resolveType: "resolved";
+}
+
 export const resolve = async <
   T,
   TContext extends BaseContext = BaseContext,
@@ -291,6 +298,10 @@ export const resolve = async <
 
   // get the __resolveType from the resolvable
   const [resolvableObj, resolveType] = resolveTypeOf(resolvable);
+
+  if (resolveType === STOP_RESOLVE) {
+    return resolvableObj as T;
+  }
 
   // define the type resolver based on the object type
   const typeResolver = nativeResolverByType[typeof resolvableObj];
@@ -338,7 +349,8 @@ export const resolve = async <
         end?.();
       }
     }
-    return resolve(respOrPromise, ctx);
+    const result = await respOrPromise;
+    return result?.__resolveType ? resolve(result, ctx) : result;
   }
   const resolvableRef = resolvables[resolveType] as Resolvable<T>;
   if (resolvableRef === undefined) {
