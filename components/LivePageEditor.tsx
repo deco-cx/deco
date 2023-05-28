@@ -399,27 +399,36 @@ export default function LivePageEditor() {
         }
 
         div.library-block {
-          zoom: 0.5;
+          zoom: 0.75;
           margin: 10px;
-          border: 1px solid darkgray;
+          border: 3px solid transparent;
           border-radius: 15px;
           background: white;
+        }
+
+        div.library-block:hover {
+          border: 3px solid #2FD180;
+        }
+
+        div.library-block-deny-pointer-overlay {
           pointer-events: none;
+          padding: 10px;
         }
 
         dialog#library {
-          display: none;
-          width: 80vw;
-          height: 100vh;
+          display: flex;
           flex-direction: column;
-          top: 0;
           z-index: 99999;
           background: white;
           background-color: rgb(255 255 255 / 80%);
-          position: absolute;
           transition: all 0.3s ease-in-out;
-          overflow: scroll;
-          margin-left:0;
+          max-height: 100vh;
+          margin: 0 0 auto 0;
+          overscroll-behavior: contain;
+        }
+
+        dialog#library::backdrop {
+          background: rgba(0, 20, 20, 0.5);
         }
         `,
           }}
@@ -449,9 +458,9 @@ export default function LivePageEditor() {
 }
 
 const showLibrary = async (show: boolean) => {
-  const library = document.getElementById("library");
+  const library = document.getElementById("library") as HTMLDialogElement;
   if (library) {
-    library.style.display = show ? "flex" : "none";
+    library.showModal();
     const blocks = [
       "/live/previews/mais-vendidos?asRaw",
       "/live/previews/myShelf?asRaw",
@@ -461,7 +470,11 @@ const showLibrary = async (show: boolean) => {
       blocks.map((block) => fetch(block).then((res) => res.text())),
     );
     library.innerHTML = htmls.map((html) =>
-      `<div class="library-block">${html}</div>`
+      `<div class="library-block">
+        <div class="library-block-deny-pointer-overlay">
+          ${html}
+        </div>
+      </div>`
     )
       .join("");
   }
