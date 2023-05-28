@@ -1039,7 +1039,7 @@
       ],
       "title": "WorkflowRef"
     },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef": {
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef|ad9496d3a3c4efaf0c0891d0c6d676fa": {
       "anyOf": [
         {
           "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef"
@@ -1057,13 +1057,13 @@
           ]
         }
       ],
-      "title": "96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef"
+      "title": "WorkflowRef|ad9496d3a3c4efaf0c0891d0c6d676fa"
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props": {
       "type": "object",
       "properties": {
         "workflow": {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef",
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef|ad9496d3a3c4efaf0c0891d0c6d676fa",
           "title": "Workflow"
         },
         "id": {

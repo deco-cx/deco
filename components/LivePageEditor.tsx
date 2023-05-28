@@ -397,6 +397,30 @@ export default function LivePageEditor() {
           bottom: 0;
           transform: translate(-14px, 14px);
         }
+
+        div.library-block {
+          zoom: 0.5;
+          margin: 10px;
+          border: 1px solid darkgray;
+          border-radius: 15px;
+          background: white;
+          pointer-events: none;
+        }
+
+        dialog#library {
+          display: none;
+          width: 80vw;
+          height: 100vh;
+          flex-direction: column;
+          top: 0;
+          z-index: 99999;
+          background: white;
+          background-color: rgb(255 255 255 / 80%);
+          position: absolute;
+          transition: all 0.3s ease-in-out;
+          overflow: scroll;
+          margin-left:0;
+        }
         `,
           }}
         />
@@ -411,9 +435,37 @@ export default function LivePageEditor() {
           };`,
         }}
       />
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            `window.showLibrary = ${showLibrary.toString()}; setTimeout( () => window.showLibrary(true), 2000);`,
+        }}
+      >
+      </script>
+      <dialog id="library">
+      </dialog>
     </>
   );
 }
+
+const showLibrary = async (show: boolean) => {
+  const library = document.getElementById("library");
+  if (library) {
+    library.style.display = show ? "flex" : "none";
+    const blocks = [
+      "/live/previews/mais-vendidos?asRaw",
+      "/live/previews/myShelf?asRaw",
+      "/live/previews/Teste%20Muri?asRaw",
+    ];
+    const htmls = await Promise.all(
+      blocks.map((block) => fetch(block).then((res) => res.text())),
+    );
+    library.innerHTML = htmls.map((html) =>
+      `<div class="library-block">${html}</div>`
+    )
+      .join("");
+  }
+};
 
 interface EditorContextProps {
   metadata: PreactComponent["metadata"];

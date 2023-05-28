@@ -8,6 +8,7 @@ import { context } from "$live/live.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -78,6 +79,7 @@ export const handler = async (
   response.headers.forEach((value, key) => newHeaders.append(key, value));
   const printTimings = ctx?.state?.t?.printTimings;
   printTimings && newHeaders.set("Server-Timing", printTimings());
+  let bodyReadable: ReadableStream | string | null = initialResponse.body;
 
   if (
     url.pathname.startsWith("/_frsh/") &&
@@ -86,7 +88,19 @@ export const handler = async (
     newHeaders.set("Cache-Control", "no-cache, no-store, private");
   }
 
-  const newResponse = new Response(initialResponse.body, {
+  if (
+    url.searchParams.has("asRaw") &&
+    newHeaders.get("content-type")?.includes("text/html")
+  ) {
+    const html = await initialResponse.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const firstChild = doc?.querySelector("body")?.firstElementChild;
+    firstChild?.querySelector("script")?.remove();
+    bodyReadable = firstChild?.outerHTML ?? null;
+  }
+
+  const newResponse = new Response(bodyReadable, {
     status: initialResponse.status,
     headers: newHeaders,
   });
