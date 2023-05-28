@@ -408,6 +408,7 @@ export default function LivePageEditor() {
 
         div.library-block:hover {
           border: 3px solid #2FD180;
+          cursor: pointer;
         }
 
         div.library-block-deny-pointer-overlay {
