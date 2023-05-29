@@ -280,6 +280,20 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
   };
 };
 
+export const ALREADY_RESOLVED = "resolved";
+
+export interface Resolved<T> {
+  data: T;
+  __resolveType: "resolved";
+}
+
+const isResolved = <T>(
+  resolvable: Resolvable<T> | Resolved<T>,
+): resolvable is Resolved<T> => {
+  return (isResolvable(resolvable)) &&
+    resolvable.__resolveType === ALREADY_RESOLVED;
+};
+
 export const resolve = async <
   T,
   TContext extends BaseContext = BaseContext,
@@ -287,6 +301,9 @@ export const resolve = async <
   resolvable: Resolvable<T, TContext>,
   context: TContext,
 ): Promise<T> => {
+  if (isResolved(resolvable)) {
+    return resolvable.data;
+  }
   const { resolvers: resolverMap, resolvables } = context;
 
   // get the __resolveType from the resolvable

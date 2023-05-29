@@ -5,7 +5,7 @@ import {
   ComponentFunc,
   PreactComponent,
 } from "$live/engine/block.ts";
-import { Resolver } from "$live/engine/core/resolver.ts";
+import { ResolveFunc, Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
 import { JSX } from "preact";
@@ -53,12 +53,18 @@ async ($live: TConfig) => {
 // deno-lint-ignore ban-types
 export type FnContext<TState = {}> = TState & {
   response: { headers: Headers };
+  get: ResolveFunc;
 };
 
 export type FnProps<
   TProps = any,
   TResp = any,
-> = (props: TProps, request: Request, ctx: FnContext) => PromiseOrValue<TResp>;
+  TState = any,
+> = (
+  props: TProps,
+  request: Request,
+  ctx: FnContext<TState>,
+) => PromiseOrValue<TResp>;
 
 export const applyProps = <
   TProps = any,
@@ -73,7 +79,11 @@ export const applyProps = <
   return func.default(
     $live,
     ctx.request,
-    { ...ctx?.context?.state?.global, response: ctx.context.state.response },
+    {
+      ...ctx?.context?.state?.global,
+      get: ctx.resolve,
+      response: ctx.context.state.response,
+    },
   );
 };
 
