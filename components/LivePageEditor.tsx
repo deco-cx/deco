@@ -192,7 +192,9 @@ export function BlockControls() {
         </button>
       </div>
       <div data-controllers="">
-        <div title={metadata?.component}>{metadata?.component}</div>
+        <div title={metadata?.component}>
+          {beautifyComponentName(metadata?.component)}
+        </div>
         <button
           {...useSendEditorEvent({
             action: "delete",
@@ -284,14 +286,15 @@ export default function LivePageEditor() {
         div[data-controllers] {
           display: none;
           position: absolute;
-          right: 0;
+          right: 18px;
+          top: 18px;
           z-index: 9999;
           
           background-color: #0A1F1F;
           color: #FFFFFF;
 
           height: 36px;
-          border-bottom-left-radius: 4px;
+          border-radius: 4px;
         }
 
         div[data-controllers] > div {
@@ -299,7 +302,7 @@ export default function LivePageEditor() {
           font-weight: 600;
           font-size: 15px;
           padding: 8px 16px;
-          max-width: 120px;
+          max-width: 160px;
 
           overflow: hidden;
           text-overflow: ellipsis;
@@ -344,12 +347,6 @@ export default function LivePageEditor() {
         div[data-insert] button:last-child {
           bottom: 0;
           transform: translate(-14px, 14px);
-        }
-
-        @media screen and (max-width: 1024px) {
-          div[data-insert] button {
-            left: calc((100vw - 340px) / 2);
-          }
         }
         `,
           }}
@@ -473,3 +470,8 @@ const generatePathFromResolveChain = (
 
   return [index.toString()];
 };
+
+const beautifyComponentName = (path?: string) =>
+  path?.split("/")
+    ?.pop()
+    ?.split(".")[0];
