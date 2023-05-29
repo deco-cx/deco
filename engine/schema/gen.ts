@@ -90,11 +90,13 @@ export const genSchemasFromManifest = async (
             }
             return undefined;
           }
+          const ignoreGen = (ref?.functionJSDoc as { ignore_gen: string })
+            ?.["ignore_gen"] === "true";
           return {
             blockType: block.type,
             functionKey: ref.functionRef,
-            inputSchema: ref.inputSchema,
-            outputSchema: ref.outputSchema,
+            inputSchema: ignoreGen ? undefined : ref.inputSchema,
+            outputSchema: ignoreGen ? undefined : ref.outputSchema,
             functionJSDoc: ref.functionJSDoc,
           };
         }
