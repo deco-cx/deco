@@ -31,12 +31,12 @@ interface ResolverRef {
   functionJSDoc?: JSONSchema7;
 }
 
+const ResolvableId = "Resolvable";
 const resolvableRef = {
-  $ref: "#/definitions/Resolvable",
+  $ref: `#/definitions/${ResolvableId}`,
 };
 
 const resolvableReferenceSchema = {
-  $id: "Resolvable",
   title: "Select from saved",
   required: ["__resolveType"],
   additionalProperties: false,
@@ -269,7 +269,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           },
           [{
             ...initial.schema.definitions,
-            [resolvableReferenceSchema.$id!]: resolvableReferenceSchema,
+            [ResolvableId]: resolvableReferenceSchema,
           }, []] as [
             Schemas["definitions"],
             ResolverRef[],
@@ -289,9 +289,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           return [
             {
               ...nDef,
-              [resolvableReferenceSchema.$id!]: withNotResolveType(
+              [ResolvableId]: withNotResolveType(
                 rs.functionKey,
-                nDef[resolvableReferenceSchema.$id!],
+                nDef[ResolvableId],
               ),
               ...rs.outputSchemaId
                 ? {
