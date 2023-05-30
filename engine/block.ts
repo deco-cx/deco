@@ -166,18 +166,46 @@ export type BlockKeys<TManifest extends DecoManifest = Manifest> = {
 
 // TODO each block should be specialized on how to get its serialized version.
 export type BlockInstance<
-  key extends BlockKeys<TManifest>,
+  key extends BlockKeys<TManifest> & string,
   TManifest extends DecoManifest = Manifest,
-> = key extends `${string}/${infer block}/${string}`
-  ? block extends BlockTypes<TManifest>
-    ? TManifest[block][key] extends
-      { default: (...args: infer Props) => PromiseOrValue<infer TReturn> }
-      ? TReturn extends (JSX.Element | null)
-        ? PreactComponent<JSX.Element | null, Props[0]>
-      : TReturn
-    : unknown
+  block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
+> = block extends BlockTypes<TManifest>
+  ? TManifest[block][key] extends
+    { default: (...args: infer Props) => PromiseOrValue<infer TReturn> }
+    ? TReturn extends (JSX.Element | null)
+      ? PreactComponent<JSX.Element | null, Props[0]>
+    : TReturn
   : unknown
   : unknown;
+
+export type BlockFromKey<
+  TKey extends string,
+  TManifest extends DecoManifest = Manifest,
+> = TKey extends `${string}/${infer block}/${infer rest}`
+  ? block extends BlockTypes<TManifest> ? block
+  : BlockFromKey<`${block}/${rest}`, TManifest>
+  : never;
+
+export type ResolvableOf<
+  key extends BlockKeys<TManifest> & string,
+  block extends BlockFromKey<key, TManifest>,
+  TManifest extends DecoManifest = Manifest,
+> = block extends BlockTypes<TManifest>
+  ? TManifest[block][key] extends { default: (...args: infer Props) => any }
+    ? Props[0] & { __resolveType: key }
+  : { __resolveType: string }
+  : { __resolveType: string };
+
+export const isResolvableOf = <
+  key extends BlockKeys<TManifest> & string,
+  block extends BlockFromKey<key, TManifest>,
+  TManifest extends DecoManifest = Manifest,
+>(
+  key: key,
+  v: ResolvableOf<key, block, TManifest> | unknown,
+): v is ResolvableOf<key, block, TManifest> => {
+  return (v as ResolvableOf<key, block, TManifest>)?.__resolveType === key;
+};
 
 export type ComponentFunc<
   TProps = any,

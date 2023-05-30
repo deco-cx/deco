@@ -28,3 +28,15 @@ export const redirect = (url: string | URL, status?: number) => {
 export const notFound = () => {
   shortcircuit(new Response(null, { status: 404 }));
 };
+
+/**
+ * Returns a bad request error
+ */
+export const badRequest = (err: { message: string; code?: string }) => {
+  shortcircuit(
+    new Response(JSON.stringify(err), {
+      status: 400,
+      headers: { "content-type": "application/json" },
+    }),
+  );
+};
