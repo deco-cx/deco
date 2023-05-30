@@ -30,7 +30,7 @@ function PreviewIcons() {
         height="20"
         viewBox="0 0 24 24"
         stroke-width="1.5"
-        stroke="#ffffff"
+        stroke="currentColor"
         fill="none"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -49,7 +49,7 @@ function PreviewIcons() {
         height="20"
         viewBox="0 0 24 24"
         stroke-width="1.5"
-        stroke="#ffffff"
+        stroke="currentColor"
         fill="none"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -64,7 +64,7 @@ function PreviewIcons() {
         height="20"
         viewBox="0 0 24 24"
         stroke-width="1.5"
-        stroke="#ffffff"
+        stroke="currentColor"
         fill="none"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -79,7 +79,7 @@ function PreviewIcons() {
         height="20"
         viewBox="0 0 24 24"
         stroke-width="1.5"
-        stroke="#ffffff"
+        stroke="currentColor"
         fill="none"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -95,7 +95,7 @@ function PreviewIcons() {
         height="20"
         viewBox="0 0 24 24"
         stroke-width="1.5"
-        stroke="#ffffff"
+        stroke="currentColor"
         fill="none"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -112,7 +112,7 @@ function PreviewIcons() {
         height="20"
         viewBox="0 0 24 24"
         stroke-width="1.5"
-        stroke="#ffffff"
+        stroke="currentColor"
         fill="none"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -205,6 +205,8 @@ export function BlockControls() {
           {beautifyComponentName(metadata?.component)}
         </div>
         <button
+          data-delete
+          data-tooltip="Delete"
           {...useSendEditorEvent({
             action: "delete",
             key: metadata?.component ?? "",
@@ -215,6 +217,7 @@ export function BlockControls() {
           <PreviewIcon id="trash" />
         </button>
         <button
+          data-tooltip="Move up"
           {...useSendEditorEvent({
             action: "move",
             key: metadata?.component ?? "",
@@ -227,6 +230,7 @@ export function BlockControls() {
           <PreviewIcon id="chevron-up" />
         </button>
         <button
+          data-tooltip="Move down"
           {...useSendEditorEvent({
             action: "move",
             key: metadata?.component ?? "",
@@ -239,6 +243,7 @@ export function BlockControls() {
           <PreviewIcon id="chevron-down" />
         </button>
         <button
+          data-tooltip="Duplicate"
           {...useSendEditorEvent({
             action: "duplicate",
             key: metadata?.component ?? "",
@@ -283,7 +288,7 @@ export default function LivePageEditor() {
           position: absolute;
           z-index: 9999;
         }
-        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block; cursor: pointer;}
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block; cursor: pointer; color: white;}
 
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover:before,
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-controllers],
@@ -303,7 +308,6 @@ export default function LivePageEditor() {
 
           height: 36px;
           border-radius: 4px;
-          overflow: hidden;
         }
 
         div[data-controllers] > div {
@@ -327,10 +331,27 @@ export default function LivePageEditor() {
           display: flex;
           align-items: center;
         }
-
         div[data-controllers] button:hover {
-          background-color: #002525;
+          background-color: #f8f9f514;
         }
+        div[data-controllers] button[data-delete]:hover {
+          color: #D98470;
+        }
+        div[data-controllers] button:hover:before {
+          content: attr(data-tooltip);
+          color: white;
+          background-color: #161616;
+          padding: 4px 8px;
+          font-weight: 400;
+          font-size: 13px;
+          line-height: 20px;
+          white-space: nowrap;
+          border-radius: 4px;
+          
+          position: absolute;
+          top: 40px;
+          transform: translateX(-35%);
+      }
 
         div[data-insert] {
           display: none;
