@@ -303,6 +303,7 @@ export default function LivePageEditor() {
 
           height: 36px;
           border-radius: 4px;
+          overflow: hidden;
         }
 
         div[data-controllers] > div {
@@ -327,7 +328,7 @@ export default function LivePageEditor() {
           align-items: center;
         }
 
-        div[data-controllers] button[data-control]:hover {
+        div[data-controllers] button:hover {
           background-color: #002525;
         }
 
