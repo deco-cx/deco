@@ -42,45 +42,67 @@ const createUrlPatternFromHref = (href: string) => {
 };
 
 export const router = (
-  routes: Route[],
+  _routes: Route[],
   configs?: ResolveOptions,
   flags?: Map<string, CookiedFlag>,
 ): Handler => {
+  const [routes, hrefRoutes] = _routes.reduce(
+    ([currentRoutes, currentLiteralRoutes], route) => {
+      if (route.isPattern) {
+        currentLiteralRoutes[route.pathTemplate] = route.handler;
+      } else {
+        currentRoutes.push(route);
+      }
+      return [currentRoutes, currentLiteralRoutes];
+    },
+    [[], {}] as [Route[], Record<string, Route["handler"]>],
+  );
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
+    const href = new URL(req.url).href;
+    const route = async (
+      handler: { value: Resolvable<Handler> },
+      routePath: string,
+      groups?: Record<string, string | undefined>,
+    ) => {
+      const ctx = { ...connInfo, params: (groups ?? {}) } as ConnInfo & {
+        params: Record<string, string>;
+        state: {
+          routerInfo: RouterContext;
+        };
+      };
+
+      ctx.state.routerInfo = {
+        flags: flags ? Array.from(flags.keys()).join(",") : "",
+        pagePath: routePath,
+      };
+
+      const resolvedOrPromise = context.releaseResolver!.resolve<Handler>(
+        handler.value,
+        { context: ctx, request: req },
+        configs,
+      );
+
+      const end = configs?.monitoring?.t.start("load-data");
+      const hand = isAwaitable(resolvedOrPromise)
+        ? await resolvedOrPromise
+        : resolvedOrPromise;
+      end?.();
+
+      return await hand(
+        req,
+        ctx,
+      );
+    };
+    if (hrefRoutes[href]) {
+      return route(hrefRoutes[href], href);
+    }
     for (const { pathTemplate: routePath, handler } of routes) {
       const pattern = createUrlPatternFromHref(routePath);
       const res = pattern.exec(req.url);
       const groups = res?.pathname.groups ?? {};
 
       if (res !== null) {
-        const ctx = { ...connInfo, params: groups } as ConnInfo & {
-          params: Record<string, string>;
-          state: {
-            routerInfo: RouterContext;
-          };
-        };
-
-        ctx.state.routerInfo = {
-          flags: flags ? Array.from(flags.keys()).join(",") : "",
-          pagePath: routePath,
-        };
-
-        const resolvedOrPromise = context.releaseResolver!.resolve<Handler>(
-          handler.value,
-          { context: ctx, request: req },
-          configs,
-        );
-
-        const end = configs?.monitoring?.t.start("load-data");
-        const hand = isAwaitable(resolvedOrPromise)
-          ? await resolvedOrPromise
-          : resolvedOrPromise;
-        end?.();
-
-        return await hand(
-          req,
-          ctx,
-        );
+        return await route(handler, routePath, groups);
       }
     }
 
