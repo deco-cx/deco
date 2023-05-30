@@ -171,10 +171,13 @@ function mapGlobalToAccount(
   }
   c[middlewareConfig] = {
     ...middleware,
-    [state]: {
+    [state]: [
       ...middleware[state],
-      [name]: wellKnownAccount ? { __resolveType: name } : globalSection.props,
-    },
+      {
+        key: name,
+        value: wellKnownAccount ? { __resolveType: name } : globalSection.props,
+      },
+    ],
   };
   return c;
 }
@@ -237,10 +240,8 @@ const baseEntrypoint = Object.freeze({
     __resolveType: "$live/flags/everyone.ts",
   },
   [middlewareConfig]: {
-    __resolveType: "resolve",
-    [state]: {
-      __resolveType: "resolve",
-    },
+    __resolveType: "$live/loaders/state.ts",
+    [state]: [],
   },
   [ENTRYPOINT]: {
     audiences: [
@@ -411,7 +412,7 @@ const pagesToConfig = (
   flags: Pick<Flag, "key" | "data" | "name">[],
   ns: string,
 ) => {
-  const configs = p.sort((pageA, pageB) =>
+  const { [globalSections]: _, ...configs } = p.sort((pageA, pageB) =>
     pageA.state === "global" ? -1 : pageB.state === "global" ? 1 : 0
   ) // process global first
     .reduce(pageToConfig(ns), structuredClone(baseEntrypoint));
