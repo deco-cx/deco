@@ -193,8 +193,19 @@ export type ResolvableOf<
 > = block extends BlockTypes<TManifest>
   ? TManifest[block][key] extends { default: (...args: infer Props) => any }
     ? Props[0] & { __resolveType: key }
-  : { __resolveType: key; [key: string]: any }
-  : { __resolveType: key; [key: string]: any };
+  : { __resolveType: string }
+  : { __resolveType: string };
+
+export const isResolvableOf = <
+  key extends BlockKeys<TManifest> & string,
+  block extends BlockFromKey<key, TManifest>,
+  TManifest extends DecoManifest = Manifest,
+>(
+  key: key,
+  v: ResolvableOf<key, block, TManifest> | unknown,
+): v is ResolvableOf<key, block, TManifest> => {
+  return (v as ResolvableOf<key, block, TManifest>)?.__resolveType === key;
+};
 
 export type ComponentFunc<
   TProps = any,

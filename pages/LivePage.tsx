@@ -23,6 +23,7 @@ import { useContext } from "preact/hooks";
 
 export interface Props {
   name: string;
+  path?: string;
   layout?: Page;
   sections: Section[];
 }
