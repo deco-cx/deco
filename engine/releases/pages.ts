@@ -252,16 +252,32 @@ const baseEntrypoint = Object.freeze({
   },
 }) as Record<string, Resolvable>;
 
-const defaultStates = ["published", "draft", "global"];
-const fetchSitePages = async (siteId: number, includeArchived = false) => {
-  return await getSupabaseClient()
+const defaultStates = ["published", "global"];
+const fetchSitePages = async (
+  siteId: number,
+  draftPages: (string | number)[],
+  includeArchived = false,
+) => {
+  const query = getSupabaseClient()
     .from("pages")
     .select("id, name, data, path, state, public")
-    .eq("site", siteId)
-    .in(
-      "state",
-      includeArchived ? [...defaultStates, "archived"] : defaultStates,
+    .eq("site", siteId);
+
+  if (draftPages.length > 0) {
+    query.or(
+      `state.in.(${
+        (includeArchived
+          ? [...defaultStates, "draft", "archived"]
+          : defaultStates).join(",")
+      }),id.in.(${draftPages.join(",")})`,
     );
+  } else {
+    query.in(
+      "state",
+      includeArchived ? [...defaultStates, "draft", "archived"] : defaultStates,
+    );
+  }
+  return await query;
 };
 
 const fetchSiteFlags = async (siteId: number) => {
@@ -271,11 +287,22 @@ const fetchSiteFlags = async (siteId: number) => {
   ).eq("state", "published");
 };
 
-const fetchSiteData = (siteId: number, includeArchived = false) =>
-  Promise.all([
-    fetchSitePages(siteId, includeArchived),
-    fetchSiteFlags(siteId),
-  ]);
+const fetchSiteData = async (
+  siteId: number,
+  includeArchived = false,
+): Promise<
+  [
+    Awaited<ReturnType<typeof fetchSitePages>>,
+    Awaited<ReturnType<typeof fetchSiteFlags>>,
+  ]
+> => {
+  const flags = await fetchSiteFlags(siteId);
+  const flagData = flags.data ?? [];
+  const pages: (string | number)[] = flagData.flatMap((flag) =>
+    flag.data.effect?.props?.pageIds ?? []
+  );
+  return [await fetchSitePages(siteId, pages, includeArchived), flags];
+};
 
 // Supabase client setup
 const subscribeForConfigChanges = (
