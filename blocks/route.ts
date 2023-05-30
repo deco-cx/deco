@@ -94,6 +94,8 @@ const addHours = function (date: Date, h: number) {
 const DEBUG_COOKIE = "__dcxf_debug";
 const DEBUG_ENABLED = "enabled";
 
+const DEBUG_QS = "__d";
+
 type DebugAction = "enable" | "disable" | "none";
 const debug = {
   none: (_resp: Response) => {},
@@ -116,7 +118,8 @@ const debug = {
   ): { action: DebugAction; enabled: boolean } => {
     const url = new URL(request.url);
     const debugFromCookies = getCookies(request.headers)[DEBUG_COOKIE];
-    const debugFromQS = url.searchParams.get(DEBUG_COOKIE);
+    const debugFromQS = url.searchParams.get(DEBUG_QS) && DEBUG_ENABLED ||
+      url.searchParams.get(DEBUG_COOKIE);
     const hasDebugFromQS = debugFromQS !== null;
     const isLivePreview = url.pathname.includes("/live/previews/");
     const enabled = ((debugFromQS ?? debugFromCookies) === DEBUG_ENABLED) ||
