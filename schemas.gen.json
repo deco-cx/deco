@@ -11,6 +11,7 @@
           "type": "string",
           "not": {
             "enum": [
+              "$live/loaders/state.ts",
               "$live/loaders/workflows/events.ts",
               "$live/loaders/workflows/get.ts",
               "$live/handlers/devPage.ts",
@@ -43,6 +44,91 @@
           }
         }
       }
+    },
+    "JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "title": "State",
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/Resolvable"
+              },
+              "description": "Configure your loaders global state."
+            }
+          },
+          "required": [
+            "state"
+          ],
+          "title": "$live/routes/_middleware.ts@MiddlewareConfig",
+          "description": "Global configurations for ./routes/_middleware.ts route"
+        },
+        {
+          "title": "Shared application State Loader.",
+          "description": "Set the application state using resolvables.",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@Props"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/loaders/state.ts"
+              ],
+              "default": "$live/loaders/state.ts"
+            }
+          }
+        }
+      ]
+    },
+    "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@StateProp": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "Key"
+        },
+        "value": {
+          "$ref": "#/definitions/Resolvable",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "title": "StateProp"
+    },
+    "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@StateProp[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@StateProp"
+      },
+      "title": "StateProp[]"
+    },
+    "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@Props": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@StateProp[]",
+          "title": "State"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "$live/loaders/state.ts@Props"
     },
     "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@WorkflowExecution": {
       "anyOf": [
@@ -428,6 +514,13 @@
         "name": {
           "type": "string",
           "title": "Name"
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Path"
         },
         "layout": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
@@ -901,7 +994,7 @@
       ],
       "title": "WorkflowRef"
     },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@1908eaf7241cf30ab44834ed6547dd2c|WorkflowRef": {
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef": {
       "anyOf": [
         {
           "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef"
@@ -919,13 +1012,13 @@
           ]
         }
       ],
-      "title": "1908eaf7241cf30ab44834ed6547dd2c|WorkflowRef"
+      "title": "96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef"
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props": {
       "type": "object",
       "properties": {
         "workflow": {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@1908eaf7241cf30ab44834ed6547dd2c|WorkflowRef",
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef",
           "title": "Workflow"
         },
         "id": {
@@ -947,6 +1040,28 @@
         "workflow"
       ],
       "title": "$live/actions/workflows/start.ts@Props"
+    },
+    "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==": {
+      "title": "Shared application State Loader.",
+      "description": "Set the application state using resolvables.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/loaders/state.ts"
+          ],
+          "default": "$live/loaders/state.ts"
+        }
+      }
     },
     "JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz": {
       "title": "$live/loaders/workflows/events.ts",
@@ -1543,24 +1658,6 @@
           "default": "$live/actions/workflows/start.ts"
         }
       }
-    },
-    "JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig": {
-      "type": "object",
-      "properties": {
-        "state": {
-          "title": "State",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/Resolvable"
-          },
-          "description": "Configure your loaders global state."
-        }
-      },
-      "required": [
-        "state"
-      ],
-      "title": "$live/routes/_middleware.ts@MiddlewareConfig",
-      "description": "Global configurations for ./routes/_middleware.ts route"
     }
   },
   "root": {
@@ -1577,6 +1674,9 @@
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9zdGF0ZS50cw=="
         },
         {
           "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz"
