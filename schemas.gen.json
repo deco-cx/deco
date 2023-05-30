@@ -11,6 +11,7 @@
           "type": "string",
           "not": {
             "enum": [
+              "$live/loaders/redirects.ts",
               "$live/loaders/workflows/events.ts",
               "$live/loaders/workflows/get.ts",
               "$live/handlers/devPage.ts",
@@ -43,6 +44,116 @@
           }
         }
       }
+    },
+    "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
+      "$ref": "#/root/handlers",
+      "title": "Handler"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route": {
+      "type": "object",
+      "properties": {
+        "pathTemplate": {
+          "type": "string",
+          "title": "Path Template"
+        },
+        "handler": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
+              "title": "Value"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "title": "Handler"
+        }
+      },
+      "required": [
+        "pathTemplate",
+        "handler"
+      ],
+      "title": "Route"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
+          },
+          "title": "$live/flags/audience.ts@Route[]"
+        },
+        {
+          "title": "$live/loaders/redirects.ts",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9yZWRpcmVjdHMudHM=@pickcmVkaXJlY3RzRedirects"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/loaders/redirects.ts"
+              ],
+              "default": "$live/loaders/redirects.ts"
+            }
+          }
+        }
+      ]
+    },
+    "JGxpdmUvbG9hZGVycy9yZWRpcmVjdHMudHM=@pickcmVkaXJlY3RzRedirects": {
+      "type": "object",
+      "properties": {
+        "redirects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "title": "From"
+              },
+              "to": {
+                "type": "string",
+                "title": "To"
+              },
+              "type": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "temporary"
+                  },
+                  {
+                    "type": "string",
+                    "const": "permanent"
+                  }
+                ],
+                "type": "string",
+                "title": "Type"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          },
+          "title": "Redirects"
+        }
+      },
+      "required": [
+        "redirects"
+      ],
+      "title": "$live/loaders/redirects.ts@pickcmVkaXJlY3RzRedirects"
     },
     "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@WorkflowExecution": {
       "anyOf": [
@@ -312,44 +423,6 @@
         "to"
       ],
       "title": "$live/handlers/redirect.ts@RedirectConfig"
-    },
-    "JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler": {
-      "$ref": "#/root/handlers",
-      "title": "Handler"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route": {
-      "type": "object",
-      "properties": {
-        "pathTemplate": {
-          "type": "string",
-          "title": "Path Template"
-        },
-        "handler": {
-          "type": "object",
-          "properties": {
-            "value": {
-              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2hhbmRsZXIudHM=@Handler",
-              "title": "Value"
-            }
-          },
-          "required": [
-            "value"
-          ],
-          "title": "Handler"
-        }
-      },
-      "required": [
-        "pathTemplate",
-        "handler"
-      ],
-      "title": "Route"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
-      },
-      "title": "Route[]"
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
       "type": "object",
@@ -947,6 +1020,27 @@
         "workflow"
       ],
       "title": "$live/actions/workflows/start.ts@Props"
+    },
+    "JGxpdmUvbG9hZGVycy9yZWRpcmVjdHMudHM=": {
+      "title": "$live/loaders/redirects.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9yZWRpcmVjdHMudHM=@pickcmVkaXJlY3RzRedirects"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/loaders/redirects.ts"
+          ],
+          "default": "$live/loaders/redirects.ts"
+        }
+      }
     },
     "JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz": {
       "title": "$live/loaders/workflows/events.ts",
@@ -1577,6 +1671,9 @@
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9yZWRpcmVjdHMudHM="
         },
         {
           "$ref": "#/definitions/JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz"
