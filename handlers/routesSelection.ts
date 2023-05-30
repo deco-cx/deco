@@ -48,7 +48,8 @@ export const router = (
   flags?: Map<string, CookiedFlag>,
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
-    const href = new URL(req.url).href;
+    const url = new URL(req.url);
+    const href = `${url.pathname}${url.search || ""}`;
     const route = async (
       handler: Resolvable<Handler>,
       routePath: string,
@@ -83,7 +84,7 @@ export const router = (
         ctx,
       );
     };
-    if (hrefRoutes[href]) {
+    if (href && hrefRoutes[href]) {
       return route(hrefRoutes[href], href);
     }
     for (const { pathTemplate: routePath, handler } of routes) {
