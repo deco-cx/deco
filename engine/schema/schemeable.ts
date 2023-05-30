@@ -158,9 +158,6 @@ const schemeableToJSONSchemaFunc = (
       return [def, {}];
   }
 };
-interface JSONSchema7Ref {
-  value: JSONSchema7;
-}
 export const schemeableToJSONSchema = (
   genId: (s: Schemeable) => string | undefined,
   def: Record<string, JSONSchema7>,
