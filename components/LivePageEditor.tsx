@@ -283,7 +283,7 @@ export default function LivePageEditor() {
           position: absolute;
           z-index: 9999;
         }
-        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block; }
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block; cursor: pointer;}
 
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover:before,
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-controllers],
