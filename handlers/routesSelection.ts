@@ -30,6 +30,17 @@ const rankRoute = (pattern: string) =>
       0,
     );
 
+/**
+ * Since `routePath` is used, for example, by redirects, it can have strings
+ * such as "/cachorros?PS=12".
+ */
+const createUrlPatternFromHref = (href: string) => {
+  const [pathname, searchRaw] = href.split("?");
+  const search = searchRaw ? `?${searchRaw}` : undefined;
+
+  return new URLPattern({ pathname, search });
+};
+
 export const router = (
   routes: Route[],
   configs?: ResolveOptions,
@@ -37,7 +48,7 @@ export const router = (
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     for (const { pathTemplate: routePath, handler } of routes) {
-      const pattern = new URLPattern({ pathname: routePath });
+      const pattern = createUrlPatternFromHref(routePath);
       const res = pattern.exec(req.url);
       const groups = res?.pathname.groups ?? {};
 
@@ -72,6 +83,7 @@ export const router = (
         );
       }
     }
+
     return new Response(null, {
       status: 404,
     });
