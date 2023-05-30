@@ -4,6 +4,11 @@ export interface RedirectConfig {
 
 export default function Redirect({ to }: RedirectConfig) {
   return () => {
-    return Response.redirect(to);
+    return new Response(null, {
+      status: 307,
+      headers: {
+        location: to,
+      },
+    });
   };
 }

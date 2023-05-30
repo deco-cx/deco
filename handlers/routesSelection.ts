@@ -79,6 +79,7 @@ export const router = (
         );
       }
     }
+
     return new Response(null, {
       status: 404,
     });
