@@ -146,7 +146,8 @@ interface InsertEditorEvent extends DefaultEditorEvent {
 
 type EditorEvent = DefaultEditorEvent | MoveEditorEvent | InsertEditorEvent;
 
-function sendEditorEvent(args: EditorEvent) {
+function sendEditorEvent(e: Event, args: EditorEvent) {
+  e.stopPropagation();
   // TODO: check security issues
   window !== top &&
     top?.postMessage({ type: "edit", ...args }, "*");
@@ -156,7 +157,7 @@ function useSendEditorEvent(args: EditorEvent) {
   if (!args.key) return {};
 
   return {
-    onclick: `window.LIVE.sendEditorEvent(${JSON.stringify(args)});`,
+    onclick: `window.LIVE.sendEditorEvent(event, ${JSON.stringify(args)});`,
   };
 }
 
@@ -164,7 +165,15 @@ export function BlockControls() {
   const { metadata, index: i, path } = useEditorContext();
 
   return (
-    <>
+    <div
+      data-section-wrapper
+      {...useSendEditorEvent({
+        action: "edit",
+        key: metadata?.component ?? "",
+        index: i,
+        path,
+      })}
+    >
       <div data-insert="">
         <button
           data-insert="prev"
@@ -192,7 +201,9 @@ export function BlockControls() {
         </button>
       </div>
       <div data-controllers="">
-        <div title={metadata?.component}>{metadata?.component}</div>
+        <div title={metadata?.component}>
+          {beautifyComponentName(metadata?.component)}
+        </div>
         <button
           {...useSendEditorEvent({
             action: "delete",
@@ -237,18 +248,8 @@ export function BlockControls() {
         >
           <PreviewIcon id="copy" />
         </button>
-        <button
-          {...useSendEditorEvent({
-            action: "edit",
-            key: metadata?.component ?? "",
-            index: i,
-            path,
-          })}
-        >
-          <PreviewIcon id="edit" />
-        </button>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -275,6 +276,15 @@ export default function LivePageEditor() {
           position: relative;
         }
 
+        div[data-section-wrapper] {
+          display: none;
+          background: rgba(46, 110, 217, 0.2);
+          inset: 0;
+          position: absolute;
+          z-index: 9999;
+        }
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block; }
+
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover:before,
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-controllers],
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-insert] {
@@ -284,14 +294,15 @@ export default function LivePageEditor() {
         div[data-controllers] {
           display: none;
           position: absolute;
-          right: 0;
+          right: 18px;
+          top: 18px;
           z-index: 9999;
           
           background-color: #0A1F1F;
           color: #FFFFFF;
 
           height: 36px;
-          border-bottom-left-radius: 4px;
+          border-radius: 4px;
         }
 
         div[data-controllers] > div {
@@ -299,7 +310,7 @@ export default function LivePageEditor() {
           font-weight: 600;
           font-size: 15px;
           padding: 8px 16px;
-          max-width: 120px;
+          max-width: 160px;
 
           overflow: hidden;
           text-overflow: ellipsis;
@@ -344,12 +355,6 @@ export default function LivePageEditor() {
         div[data-insert] button:last-child {
           bottom: 0;
           transform: translate(-14px, 14px);
-        }
-
-        @media screen and (max-width: 1024px) {
-          div[data-insert] button {
-            left: calc((100vw - 340px) / 2);
-          }
         }
         `,
           }}
@@ -473,3 +478,8 @@ const generatePathFromResolveChain = (
 
   return [index.toString()];
 };
+
+const beautifyComponentName = (path?: string) =>
+  path?.split("/")
+    ?.pop()
+    ?.split(".")[0];
