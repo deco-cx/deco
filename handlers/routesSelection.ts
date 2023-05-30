@@ -36,7 +36,7 @@ const rankRoute = (pattern: string) =>
  */
 const createUrlPatternFromHref = (href: string) => {
   const [pathname, searchRaw] = href.split("?");
-  const search = searchRaw ? `?${searchRaw}` : undefined;
+  const search = searchRaw ? `?${encodeURIComponent(searchRaw)}` : undefined;
 
   return new URLPattern({ pathname, search });
 };

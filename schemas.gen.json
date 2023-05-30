@@ -429,6 +429,13 @@
           "type": "string",
           "title": "Name"
         },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Path"
+        },
         "layout": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
           "title": "Layout"
