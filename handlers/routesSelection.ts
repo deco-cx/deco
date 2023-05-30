@@ -43,7 +43,7 @@ const createUrlPatternFromHref = (href: string) => {
 
 export const router = (
   routes: Route[],
-  hrefRoutes: Record<string, Resolvable<Handler>>,
+  hrefRoutes: Record<string, Resolvable<Handler>> = {},
   configs?: ResolveOptions,
   flags?: Map<string, CookiedFlag>,
 ): Handler => {
