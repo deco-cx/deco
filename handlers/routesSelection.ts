@@ -42,25 +42,15 @@ const createUrlPatternFromHref = (href: string) => {
 };
 
 export const router = (
-  _routes: Route[],
+  routes: Route[],
+  hrefRoutes: Record<string, Resolvable<Handler>>,
   configs?: ResolveOptions,
   flags?: Map<string, CookiedFlag>,
 ): Handler => {
-  const [routes, hrefRoutes] = _routes.reduce(
-    ([currentRoutes, currentHrefRoutes], route) => {
-      if (route.isHref) {
-        currentHrefRoutes[route.pathTemplate] = route.handler;
-      } else {
-        currentRoutes.push(route);
-      }
-      return [currentRoutes, currentHrefRoutes];
-    },
-    [[], {}] as [Route[], Record<string, Route["handler"]>],
-  );
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const href = new URL(req.url).href;
     const route = async (
-      handler: { value: Resolvable<Handler> },
+      handler: Resolvable<Handler>,
       routePath: string,
       groups?: Record<string, string | undefined>,
     ) => {
@@ -77,7 +67,7 @@ export const router = (
       };
 
       const resolvedOrPromise = context.releaseResolver!.resolve<Handler>(
-        handler.value,
+        handler,
         { context: ctx, request: req },
         configs,
       );
@@ -102,7 +92,7 @@ export const router = (
       const groups = res?.pathname.groups ?? {};
 
       if (res !== null) {
-        return await route(handler, routePath, groups);
+        return await route(handler.value, routePath, groups);
       }
     }
 
@@ -118,12 +108,21 @@ export type MatchWithCookieValue = MatchContext<{
 
 export const toRouteMap = (
   routes?: Route[],
-): Record<string, Resolvable<Handler>> => {
+): [
+  Record<string, Resolvable<Handler>>,
+  Record<string, Resolvable<Handler>>,
+] => {
   const routeMap: Record<string, Resolvable<Handler>> = {};
-  (routes ?? []).forEach(({ pathTemplate, handler: { value: handler } }) => {
-    routeMap[pathTemplate] = handler;
-  });
-  return routeMap;
+  const hrefRoutes: Record<string, Resolvable<Handler>> = {};
+  (routes ?? [])
+    .forEach(({ pathTemplate, isHref, handler: { value: handler } }) => {
+      if (isHref) {
+        hrefRoutes[pathTemplate] = handler;
+      } else {
+        routeMap[pathTemplate] = handler;
+      }
+    });
+  return [routeMap, hrefRoutes];
 };
 const toOverrides = (overrides?: Override[]): Record<string, string> => {
   const overrideMap: Record<string, string> = {};
@@ -160,9 +159,9 @@ export default function RoutesSelection(
     const cookiesThatShouldBeDeleted = new Map(flags); // initially all cookies should be deleted.
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
-    const [routes, overrides] = audiences
+    const [routes, overrides, hrefRoutes] = audiences
       .reduce(
-        ([routes, overrides], audience) => {
+        ([routes, overrides, hrefRoutes], audience) => {
           // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
           const isMatch = audience.matcher({
             ...matchCtx,
@@ -193,18 +192,22 @@ export default function RoutesSelection(
             // set in the current map just in case (duplicated audiences?)
             flags.set(audience.name, flagValue);
           }
+          const [newRoutes, newHrefRoutes] = toRouteMap(audience.true.routes);
           return isMatch
             ? [
-              { ...routes, ...toRouteMap(audience.true.routes) },
+              { ...routes, ...newRoutes },
               { ...overrides, ...toOverrides(audience.true.overrides) },
+              { ...hrefRoutes, ...newHrefRoutes },
             ]
-            : [routes, overrides];
+            : [routes, overrides, hrefRoutes];
         },
-        [{}, {}] as [
+        [{}, {}, {}] as [
           Record<string, Resolvable<Handler>>,
           Record<string, string>,
+          Record<string, Resolvable<Handler>>,
         ],
       );
+
     // build the router from entries
     const builtRoutes = Object.entries(routes).sort((
       [routeStringA],
@@ -216,6 +219,7 @@ export default function RoutesSelection(
         pathTemplate: route[0],
         handler: { value: route[1] },
       })),
+      hrefRoutes,
       {
         overrides,
         monitoring: t ? { t } : undefined,
