@@ -410,6 +410,14 @@
           "type": "string",
           "title": "Path Template"
         },
+        "isHref": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "if true so the path will be checked agaisnt the coming from request instead of using urlpattern.",
+          "title": "Is Href"
+        },
         "handler": {
           "type": "object",
           "properties": {

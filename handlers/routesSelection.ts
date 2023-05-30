@@ -47,13 +47,13 @@ export const router = (
   flags?: Map<string, CookiedFlag>,
 ): Handler => {
   const [routes, hrefRoutes] = _routes.reduce(
-    ([currentRoutes, currentLiteralRoutes], route) => {
-      if (route.isPattern) {
-        currentLiteralRoutes[route.pathTemplate] = route.handler;
+    ([currentRoutes, currentHrefRoutes], route) => {
+      if (route.isHref) {
+        currentHrefRoutes[route.pathTemplate] = route.handler;
       } else {
         currentRoutes.push(route);
       }
-      return [currentRoutes, currentLiteralRoutes];
+      return [currentRoutes, currentHrefRoutes];
     },
     [[], {}] as [Route[], Record<string, Route["handler"]>],
   );

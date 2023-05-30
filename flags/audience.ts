@@ -8,7 +8,7 @@ export interface Route {
   /**
    * @description if true so the path will be checked agaisnt the coming from request instead of using urlpattern.
    */
-  isPattern?: boolean;
+  isHref?: boolean;
   // FIXME this should be placed at nested level 3 of the object to avoid being resolved before the routeSelection is executed.
   handler: { value: Resolvable<Handler> };
 }
