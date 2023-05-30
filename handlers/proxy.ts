@@ -43,10 +43,8 @@ const proxyTo =
     responseHeaders.delete("set-cookie");
 
     // Setting cookies on GET requests prevent cache from cdns, slowing down the app
-    if (req.method !== "GET") {
-      for (const cookie of cookies) {
-        setCookie(responseHeaders, { ...cookie, domain: url.hostname });
-      }
+    for (const cookie of cookies) {
+      setCookie(responseHeaders, { ...cookie, domain: url.hostname });
     }
     if (response.status >= 300 && response.status < 400) { // redirect change location header
       const location = responseHeaders.get("location");
