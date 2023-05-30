@@ -30,6 +30,10 @@ const rankRoute = (pattern: string) =>
       0,
     );
 
+/**
+ * Since `routePath` is used, for example, by redirects, it can have strings
+ * such as "/cachorros?PS=12".
+ */
 const createUrlPatternFromHref = (href: string) => {
   const [pathname, searchRaw] = href.split("?");
   const search = searchRaw ? `?${searchRaw}` : undefined;
