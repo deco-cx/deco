@@ -266,19 +266,8 @@ export default function LivePageEditor() {
           id="_live_css"
           dangerouslySetInnerHTML={{
             __html: `
-            section[data-manifest-key]:not(:has(section[data-manifest-key])):before {
-              content: '';
-              display: none;
-              position: absolute;
-              z-index: 9999;
-              inset: 0;
-
-              border: 2px solid;
-              border-color: #2E6ED9;
-            }
-
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover {
-          position: relative;
+           position: relative;
         }
 
         div[data-section-wrapper] {
@@ -286,13 +275,16 @@ export default function LivePageEditor() {
           background: rgba(46, 110, 217, 0.2);
           inset: 0;
           position: absolute;
-          z-index: 9999;
-        }
-        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block; cursor: pointer; color: white;}
+          z-index: 999;
 
-        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover:before,
-        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-controllers],
-        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-insert] {
+          border: 2px solid;
+          border-color: #2E6ED9;
+          cursor: pointer; color: white;
+        }
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block;}
+
+        /* controllers */
+        div[data-section-wrapper]:hover div[data-controllers] {
           display: flex;
         }
 
@@ -301,7 +293,7 @@ export default function LivePageEditor() {
           position: absolute;
           right: 18px;
           top: 18px;
-          z-index: 9999;
+          z-index: 999;
           
           background-color: #0A1F1F;
           color: #FFFFFF;
@@ -322,7 +314,8 @@ export default function LivePageEditor() {
           white-space: nowrap;
         }
 
-        section[data-manifest-key] button:focus {
+        /* controllers buttons */
+        div[data-section-wrapper] button:focus {
           outline-style: none;
         }
 
@@ -337,10 +330,20 @@ export default function LivePageEditor() {
         div[data-controllers] button[data-delete]:hover {
           color: #D98470;
         }
-        div[data-controllers] button:hover:before {
+
+        /* controller buttons tooltip */
+        div[data-controllers] button[data-tooltip]:hover {
+          position: relative;
+          --tooltip-tail: 6px;
+          --tooltip-offset: calc(100% + 4px + var(--tooltip-tail));
+          --tooltip-tail-offset: calc(100% + 4px - var(--tooltip-tail));
+          --tooltip-bg-color: #161616;
+          --tooltip-color: #ffffff;
+        }
+        div[data-controllers] button[data-tooltip]:hover:before {
           content: attr(data-tooltip);
-          color: white;
-          background-color: #161616;
+          color: var(--tooltip-color);
+          background-color: var(--tooltip-bg-color);
           padding: 4px 8px;
           font-weight: 400;
           font-size: 13px;
@@ -349,10 +352,26 @@ export default function LivePageEditor() {
           border-radius: 4px;
           
           position: absolute;
-          top: 40px;
-          transform: translateX(-35%);
-      }
+          top: var(--tooltip-offset);
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        div[data-controllers] button:hover:after {
+          content: " ";
+          border-width: var(--tooltip-tail);
+          border-style: solid;
+          border-color: transparent transparent var(--tooltip-bg-color) transparent;
+          
+          position: absolute;
+          top: var(--tooltip-tail-offset);
+          left: 50%;
+          transform: translateX(-50%);
+        }
 
+        /* insert buttons */
+        div[data-section-wrapper]:hover div[data-insert] {
+          display: flex;
+        }
         div[data-insert] {
           display: none;
           width: 100%;
@@ -365,7 +384,7 @@ export default function LivePageEditor() {
           border-radius: 9999px;
 
           position:absolute;
-          z-index: 9999;
+          z-index: 999;
           width: 28px;
           left: 50%;
         }
