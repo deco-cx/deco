@@ -146,7 +146,8 @@ interface InsertEditorEvent extends DefaultEditorEvent {
 
 type EditorEvent = DefaultEditorEvent | MoveEditorEvent | InsertEditorEvent;
 
-function sendEditorEvent(args: EditorEvent) {
+function sendEditorEvent(e: Event, args: EditorEvent) {
+  e.stopPropagation();
   // TODO: check security issues
   window !== top &&
     top?.postMessage({ type: "edit", ...args }, "*");
@@ -156,7 +157,7 @@ function useSendEditorEvent(args: EditorEvent) {
   if (!args.key) return {};
 
   return {
-    onclick: `window.LIVE.sendEditorEvent(${JSON.stringify(args)});`,
+    onclick: `window.LIVE.sendEditorEvent(event, ${JSON.stringify(args)});`,
   };
 }
 
@@ -164,7 +165,15 @@ export function BlockControls() {
   const { metadata, index: i, path } = useEditorContext();
 
   return (
-    <>
+    <div
+      data-section-wrapper
+      {...useSendEditorEvent({
+        action: "edit",
+        key: metadata?.component ?? "",
+        index: i,
+        path,
+      })}
+    >
       <div data-insert="">
         <button
           data-insert="prev"
@@ -239,18 +248,8 @@ export function BlockControls() {
         >
           <PreviewIcon id="copy" />
         </button>
-        <button
-          {...useSendEditorEvent({
-            action: "edit",
-            key: metadata?.component ?? "",
-            index: i,
-            path,
-          })}
-        >
-          <PreviewIcon id="edit" />
-        </button>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -276,6 +275,15 @@ export default function LivePageEditor() {
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover {
           position: relative;
         }
+
+        div[data-section-wrapper] {
+          display: none;
+          background: rgba(46, 110, 217, 0.2);
+          inset: 0;
+          position: absolute;
+          z-index: 9999;
+        }
+        section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-section-wrapper] { display: block; }
 
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover:before,
         section[data-manifest-key]:not(:has(section[data-manifest-key])):hover div[data-controllers],
