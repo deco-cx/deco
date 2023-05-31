@@ -77,6 +77,7 @@ export type FnProps<
 
 export const fnContextFromHttpContext = (ctx: HttpContext): FnContext => {
   return {
+    ...ctx?.context?.state?.global,
     get: ctx.resolve,
     response: ctx.context.state.response,
     invoke: (key, props) => {
@@ -102,11 +103,10 @@ export const applyProps = <
   $live: TProps,
   ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
 ) => { // by default use global state
-  const fnContext: FnContext = fnContextFromHttpContext(ctx);
   return func.default(
     $live,
     ctx.request,
-    { ...ctx?.context?.state?.global, ...fnContext },
+    fnContextFromHttpContext(ctx),
   );
 };
 
