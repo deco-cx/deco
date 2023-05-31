@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "$live/blocks/handler.ts";
-import StubSection from "$live/components/StubSection.tsx";
+import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
+import StubSection, { Empty } from "$live/components/StubSection.tsx";
 import {
   Block,
   BlockModule,
@@ -9,13 +10,11 @@ import {
   PreactComponent,
 } from "$live/engine/block.ts";
 import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
+import type { Manifest } from "$live/live.gen.ts";
+import { context } from "$live/live.ts";
 import { DecoManifest, FunctionContext } from "$live/types.ts";
 import { JSX } from "preact";
-import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
-import type { Manifest } from "$live/live.gen.ts";
-import { Empty } from "$live/components/StubSection.tsx";
-import { context } from "$live/live.ts";
-import { componentWith } from "./utils.ts";
+import { componentWith, fnContextFromHttpContext } from "./utils.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -74,17 +73,20 @@ const sectionBlock: Block<SectionModule> = {
     }
     return async (
       props: TConfig,
-      { resolveChain, request, context, resolve }: HttpContext,
+      httpCtx: HttpContext,
     ): Promise<PreactComponent<any, TProps>> => {
+      const { resolveChain, request, context, resolve } = httpCtx;
       const ctx = {
         ...context,
         state: { ...context.state, $live: props, resolve },
       } as FunctionContext;
       return componentFunc(
-        await propsLoader(loader, ctx.state.$live, request, {
-          ...context?.state?.global,
-          response: context.state.response,
-        }),
+        await propsLoader(
+          loader,
+          ctx.state.$live,
+          request,
+          fnContextFromHttpContext(httpCtx),
+        ),
         { resolveChain },
       );
     };

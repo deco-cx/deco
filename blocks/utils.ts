@@ -75,17 +75,8 @@ export type FnProps<
   ctx: FnContext<TState>,
 ) => PromiseOrValue<TResp>;
 
-export const applyProps = <
-  TProps = any,
-  TResp = any,
->(func: {
-  default: FnProps<TProps, TResp>;
-}) =>
-(
-  $live: TProps,
-  ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
-) => { // by default use global state
-  const fnContext: FnContext = {
+export const fnContextFromHttpContext = (ctx: HttpContext): FnContext => {
+  return {
     get: ctx.resolve,
     response: ctx.context.state.response,
     invoke: (key, props) => {
@@ -100,6 +91,18 @@ export const applyProps = <
       });
     },
   };
+};
+export const applyProps = <
+  TProps = any,
+  TResp = any,
+>(func: {
+  default: FnProps<TProps, TResp>;
+}) =>
+(
+  $live: TProps,
+  ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+) => { // by default use global state
+  const fnContext: FnContext = fnContextFromHttpContext(ctx);
   return func.default(
     $live,
     ctx.request,
