@@ -92,6 +92,51 @@
         }
       ]
     },
+    "JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@Loader": {
+      "$ref": "#/root/loaders",
+      "title": "Loader"
+    },
+    "JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Account": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "title": "Account"
+    },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
+      "$ref": "#/root/flags",
+      "title": "Flag"
+    },
+    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
+      "$ref": "#/root/sections",
+      "title": "Section"
+    },
+    "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
+      "$ref": "#/root/pages",
+      "title": "Page"
+    },
+    "JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@4dc8c2f895a6513848bc8f3f1319d3f2|Account|Flag|Loader|Page|Section": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@Loader"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Account"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
+        }
+      ],
+      "title": "4dc8c2f895a6513848bc8f3f1319d3f2|Account|Flag|Loader|Page|Section"
+    },
     "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@StateProp": {
       "type": "object",
       "properties": {
@@ -100,7 +145,7 @@
           "title": "Key"
         },
         "value": {
-          "$ref": "#/definitions/Resolvable",
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@4dc8c2f895a6513848bc8f3f1319d3f2|Account|Flag|Loader|Page|Section",
           "title": "Value"
         }
       },
@@ -320,10 +365,6 @@
       ],
       "title": "$live/loaders/workflows/get.ts@Props"
     },
-    "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
-      "$ref": "#/root/pages",
-      "title": "Page"
-    },
     "JGxpdmUvaGFuZGxlcnMvZGV2UGFnZS50cw==@DevConfig": {
       "type": "object",
       "properties": {
@@ -504,10 +545,6 @@
         "workflow"
       ],
       "title": "$live/handlers/workflowRunner.ts@Config"
-    },
-    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
-      "$ref": "#/root/sections",
-      "title": "Section"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]": {
       "type": "array",
