@@ -7,8 +7,13 @@ import {
 } from "$live/engine/block.ts";
 import { ResolveFunc, Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
+import dfs from "$live/engine/fresh/defaults.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
 import { JSX } from "preact";
+import type { InvocationFunc } from "../clients/withManifest.ts";
+import type { Manifest } from "../live.gen.ts";
+import { sanitizer } from "../routes/live/invoke/index.ts";
+import { DecoManifest } from "../types.ts";
 import { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
@@ -50,10 +55,14 @@ async ($live: TConfig) => {
   return typeof resp === "function" ? resp : () => resp;
 };
 
-// deno-lint-ignore ban-types
-export type FnContext<TState = {}> = TState & {
+export type FnContext<
+  // deno-lint-ignore ban-types
+  TState = {},
+  TManifest extends DecoManifest = Manifest,
+> = TState & {
   response: { headers: Headers };
   get: ResolveFunc;
+  invoke: InvocationFunc<TManifest>;
 };
 
 export type FnProps<
@@ -76,14 +85,25 @@ export const applyProps = <
   $live: TProps,
   ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
 ) => { // by default use global state
+  const fnContext: FnContext = {
+    get: ctx.resolve,
+    response: ctx.context.state.response,
+    invoke: (key, props) => {
+      return ctx.resolve({
+        keys: [],
+        obj: {
+          props,
+          block: sanitizer(key),
+          __resolveType: dfs["invoke"].name,
+        },
+        __resolveType: dfs["selectKeys"].name,
+      });
+    },
+  };
   return func.default(
     $live,
     ctx.request,
-    {
-      ...ctx?.context?.state?.global,
-      get: ctx.resolve,
-      response: ctx.context.state.response,
-    },
+    { ...ctx?.context?.state?.global, ...fnContext },
   );
 };
 
