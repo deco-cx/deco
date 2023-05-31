@@ -282,6 +282,16 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
 
 export const ALREADY_RESOLVED = "resolved";
 
+/**
+ * wraps an arbitrary data as a resolved object skiping the config resolution algorithm.
+ */
+export const asResolved = <T>(data: T): T => {
+  return {
+    data,
+    __resolveType: ALREADY_RESOLVED,
+  } as T; // trust me;
+};
+
 export interface Resolved<T> {
   data: T;
   __resolveType: "resolved";
