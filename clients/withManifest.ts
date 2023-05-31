@@ -51,6 +51,28 @@ const batchInvoke = (payload: unknown) =>
     body: JSON.stringify(payload),
   });
 
+export type InvocationFunc<TManifest extends DecoManifest> = <
+  TInvocableKey extends
+    | AvailableFunctions<TManifest>
+    | AvailableLoaders<TManifest>
+    | AvailableActions<TManifest>,
+  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+    ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableActions<TManifest>
+      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never,
+  TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
+>(
+  key: TInvocableKey,
+  props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+) => Promise<
+  InvokeResult<
+    TPayload,
+    TManifest
+  >
+>;
 /**
  * Receives the function id as a parameter (e.g `#FUNC_ID`, the `#` will be ignored)
  * or the function name as a parameter (e.g `deco-sites/std/functions/vtexProductList.ts`) and invoke the target function passing the provided `props` as the partial input for the function.

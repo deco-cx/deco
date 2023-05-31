@@ -18,6 +18,7 @@ import { ResolveFunc } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { Release } from "$live/engine/releases/provider.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import type { Manifest as LiveManifest } from "./live.gen.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
@@ -75,8 +76,14 @@ export type LiveConfig<TConfig = any, TState = {}> = TState & {
 export type { PropsLoader } from "$live/blocks/propsLoader.ts";
 export type { SectionProps } from "$live/blocks/section.ts";
 export type { FnContext } from "$live/blocks/utils.ts";
-export type ActionContext<TState = {}> = FnContext<TState>;
-export type LoaderContext<TState = {}> = FnContext<TState>;
+export type ActionContext<
+  TState = {},
+  TManifest extends DecoManifest = LiveManifest,
+> = FnContext<TState, TManifest>;
+export type LoaderContext<
+  TState = {},
+  TManifest extends DecoManifest = LiveManifest,
+> = FnContext<TState, TManifest>;
 
 export type FunctionContext<TProps = any, TState = {}> = StatefulContext<
   LiveConfig<TProps, TState>
