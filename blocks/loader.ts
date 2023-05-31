@@ -6,9 +6,11 @@ import {
   SingleFlightKeyFunc,
 } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
-import { Block, BlockModule } from "$live/engine/block.ts";
+import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { applyProps } from "./utils.ts";
+
+export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
 export interface LoaderModule<
   TProps = any,
