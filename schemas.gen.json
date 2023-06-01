@@ -2,6 +2,7 @@
   "definitions": {
     "Resolvable": {
       "title": "Select from saved",
+      "type": "object",
       "required": [
         "__resolveType"
       ],
@@ -100,7 +101,8 @@
       "type": "object",
       "properties": {},
       "required": [],
-      "title": "Account"
+      "title": "Account",
+      "additionalProperties": false
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
       "$ref": "#/root/flags",
@@ -285,7 +287,8 @@
         }
       },
       "required": [],
-      "title": "indexedAccessinputWorkflowExecution"
+      "title": "indexedAccessinputWorkflowExecution",
+      "additionalProperties": false
     },
     "JGxpdmUvY29tbW9ucy93b3JrZmxvd3MvdHlwZXMudHM=@WorkflowExecution": {
       "anyOf": [
@@ -648,7 +651,8 @@
         }
       },
       "required": [],
-      "title": "$live/sections/Slot.tsx@Props"
+      "title": "$live/sections/Slot.tsx@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=@Props": {
       "type": "object",
@@ -723,7 +727,8 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchDate.ts@Props"
+      "title": "$live/matchers/MatchDate.ts@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props": {
       "type": "object",
@@ -797,7 +802,8 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchHost.ts@Props"
+      "title": "$live/matchers/MatchHost.ts@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
       "$ref": "#/root/matchers",
@@ -883,7 +889,8 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchUserAgent.ts@Props"
+      "title": "$live/matchers/MatchUserAgent.ts@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
       "type": "object",
@@ -953,7 +960,8 @@
         }
       },
       "required": [],
-      "title": "$live/flags/everyone.ts@EveryoneConfig"
+      "title": "$live/flags/everyone.ts@EveryoneConfig",
+      "additionalProperties": false
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz@Props": {
       "type": "object",

@@ -38,6 +38,7 @@ const resolvableRef = {
 
 const resolvableReferenceSchema = {
   title: "Select from saved",
+  type: "object",
   required: ["__resolveType"],
   additionalProperties: false,
   properties: {

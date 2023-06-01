@@ -13,6 +13,7 @@ export interface ReadOptions {
 export interface Release {
   state(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
+  revision(): Promise<string>;
 }
 
 interface RoutesSelection extends SelectionConfig {
@@ -55,6 +56,12 @@ export const compose = (...providers: Release[]): Release => {
             currentResolvables[ENTRYPOINT],
           ),
         };
+      },
+      revision: () => {
+        return Promise.all([
+          providers.revision(),
+          current.revision(),
+        ]).then((revisions) => revisions.join());
       },
       state: async (options) => {
         const [providersResolvables, currentResolvables] = await Promise.all([
