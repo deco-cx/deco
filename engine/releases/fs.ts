@@ -42,5 +42,13 @@ export const newFsProvider = (
   return {
     state: () => sf.do("load", load),
     archived: () => sf.do("load", load),
+    revision: () =>
+      sf.do("load", load).then(async (resp) => {
+        const encoded = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(JSON.stringify(resp)),
+        );
+        return Buffer.from(encoded).toString("hex");
+      }),
   };
 };

@@ -130,6 +130,7 @@ const schemeableToJSONSchemaFunc = (
           type: "object",
           allOf: allOf && allOf.length > 0 ? allOf : undefined,
           properties,
+          additionalProperties: required.length > 0,
           required,
           title: schemeable.title ?? schemeable.name,
         },

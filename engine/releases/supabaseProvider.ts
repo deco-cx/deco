@@ -34,6 +34,8 @@ export interface CurrResolvables {
   state: Record<string, Resolvable<any>>;
   archived: Record<string, Resolvable<any>>;
 }
+
+let currentRevision = "unknown";
 /**
  * Receives a provider backed by supabase and creates a Releases instance.
  * @param provider the supabase provider.
@@ -94,6 +96,7 @@ export const newSupabase = (
       currResolvables = Promise.resolve(
         data ?? { state: {}, archived: {} },
       );
+      currentRevision = Date.now().toString();
     } finally {
       singleFlight = false;
     }
@@ -106,6 +109,7 @@ export const newSupabase = (
     currResolvables.then(() => {
       provider.subscribe((newResolvables) => {
         currResolvables = Promise.resolve(newResolvables);
+        currentRevision = Date.now().toString();
       }, (_status, err) => {
         if (err) {
           console.error(
@@ -127,6 +131,7 @@ export const newSupabase = (
       const resolvables = await currResolvables;
       return resolvables.archived;
     },
+    revision: () => Promise.resolve(currentRevision),
     /**
      * @returns The current state of the release.
      */
