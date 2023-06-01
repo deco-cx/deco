@@ -84,36 +84,23 @@ export const handler = async (
   const release = { ..._release };
   validator ??= new Ajv({ strictSchema: false, strict: false }).addSchema({
     ...schema,
-    definitions: {
-      ...schema.definitions,
-      Resolvable: {
-        additionalProperties: false,
-        type: "object",
-        required: ["__NEVER__VALID"],
-        properties: {
-          __NEVER__VALID: {
-            type: "string",
-          },
-        },
-      },
-    },
     $id: "defs.json",
   });
 
-  const buildSchema = () => {
-    const newRoot: Record<string, JSONSchema7> = {};
-    const { loaders: _, functions: __, ...root } = schema.root;
-    for (const [ref, val] of Object.entries(root)) {
-      newRoot[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
-      const compiled = validator!.compile({
+  const buildSchemaWithResolvables = () => {
+    const root: Record<string, JSONSchema7> = {};
+    const { loaders: _, functions: __, ...currentRoot } = schema.root;
+    for (const [ref, val] of Object.entries(currentRoot)) {
+      root[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
+      const validate = validator!.compile({
         $ref: `defs.json#/root/${ref}`,
         $id: "",
       });
       for (const [key, obj] of Object.entries(release)) {
         if (
-          compiled(obj)
+          validate(obj)
         ) {
-          newRoot[ref].anyOf!.push(
+          root[ref].anyOf!.push(
             resolvable(
               (obj as { __resolveType: string })?.__resolveType ?? "UNKNOWN",
               key,
@@ -124,13 +111,13 @@ export const handler = async (
       }
     }
 
-    const newDefinitions: Record<string, JSONSchema7> = {};
+    const definitions: Record<string, JSONSchema7> = {};
     for (const [ref, val] of Object.entries(schema.definitions)) {
       const anyOf = val.anyOf;
-      newDefinitions[ref] = val;
+      definitions[ref] = val;
       const first = anyOf && (anyOf[0] as JSONSchema7).$ref;
       if (first === "#/definitions/Resolvable") {
-        newDefinitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
+        definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
         const compiled = validator!.compile({
           $ref: `defs.json#/definitions/${ref}`,
           $id: "",
@@ -139,7 +126,7 @@ export const handler = async (
           if (
             compiled(obj)
           ) {
-            newDefinitions[ref].anyOf?.push(resolvable(
+            definitions[ref].anyOf?.push(resolvable(
               (obj as { __resolveType: string })?.__resolveType ??
                 "UNKNOWN",
               key,
@@ -148,9 +135,9 @@ export const handler = async (
         }
       }
     }
-    return { definitions: newDefinitions, root: newRoot };
+    return { definitions, root };
   };
-  mschema ??= buildSchema();
+  mschema ??= buildSchemaWithResolvables();
 
   const info: MetaInfo = {
     major: major(meta.version),
