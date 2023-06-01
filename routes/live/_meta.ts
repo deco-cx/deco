@@ -147,6 +147,7 @@ export const handler = async (
     manifest: toManifestBlocks(context.manifest!),
     schema: mschema,
   };
+
   return new Response(
     JSON.stringify(info),
     {

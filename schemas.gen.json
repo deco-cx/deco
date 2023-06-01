@@ -63,7 +63,6 @@
               "description": "Configure your loaders global state."
             }
           },
-          "additionalProperties": true,
           "required": [
             "state"
           ],
@@ -101,9 +100,9 @@
     "JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Account": {
       "type": "object",
       "properties": {},
-      "additionalProperties": false,
       "required": [],
-      "title": "Account"
+      "title": "Account",
+      "additionalProperties": false
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
       "$ref": "#/root/flags",
@@ -152,7 +151,6 @@
           "title": "Value"
         }
       },
-      "additionalProperties": true,
       "required": [
         "key",
         "value"
@@ -174,7 +172,6 @@
           "title": "State"
         }
       },
-      "additionalProperties": true,
       "required": [
         "state"
       ],
@@ -212,7 +209,6 @@
               "title": "Output"
             }
           },
-          "additionalProperties": true,
           "required": [
             "id",
             "alias",
@@ -266,7 +262,6 @@
           "title": "Page Size"
         }
       },
-      "additionalProperties": true,
       "required": [
         "id"
       ],
@@ -279,7 +274,6 @@
           "title": "Status"
         }
       },
-      "additionalProperties": true,
       "required": [
         "status"
       ],
@@ -292,9 +286,9 @@
           "title": "Input"
         }
       },
-      "additionalProperties": false,
       "required": [],
-      "title": "indexedAccessinputWorkflowExecution"
+      "title": "indexedAccessinputWorkflowExecution",
+      "additionalProperties": false
     },
     "JGxpdmUvY29tbW9ucy93b3JrZmxvd3MvdHlwZXMudHM=@WorkflowExecution": {
       "anyOf": [
@@ -330,7 +324,6 @@
               "title": "Props"
             }
           },
-          "additionalProperties": true,
           "required": [
             "id",
             "status",
@@ -370,7 +363,6 @@
           "title": "Id"
         }
       },
-      "additionalProperties": true,
       "required": [
         "id"
       ],
@@ -384,7 +376,6 @@
           "title": "Page"
         }
       },
-      "additionalProperties": true,
       "required": [
         "page"
       ],
@@ -398,7 +389,6 @@
           "title": "Page"
         }
       },
-      "additionalProperties": true,
       "required": [
         "page"
       ],
@@ -421,7 +411,6 @@
           "title": "Base Path"
         }
       },
-      "additionalProperties": true,
       "required": [
         "url"
       ],
@@ -449,7 +438,6 @@
           "title": "Type"
         }
       },
-      "additionalProperties": true,
       "required": [
         "to"
       ],
@@ -482,14 +470,12 @@
               "title": "Value"
             }
           },
-          "additionalProperties": true,
           "required": [
             "value"
           ],
           "title": "Handler"
         }
       },
-      "additionalProperties": true,
       "required": [
         "pathTemplate",
         "handler"
@@ -518,7 +504,6 @@
           "title": "Routes"
         }
       },
-      "additionalProperties": true,
       "required": [
         "routes"
       ],
@@ -542,7 +527,6 @@
           "title": "Audiences"
         }
       },
-      "additionalProperties": true,
       "required": [
         "audiences"
       ],
@@ -560,7 +544,6 @@
           "title": "Workflow"
         }
       },
-      "additionalProperties": true,
       "required": [
         "workflow"
       ],
@@ -596,7 +579,6 @@
           "title": "Sections"
         }
       },
-      "additionalProperties": true,
       "required": [
         "name",
         "sections"
@@ -611,7 +593,6 @@
           "title": "Page"
         }
       },
-      "additionalProperties": true,
       "required": [
         "page"
       ],
@@ -669,9 +650,9 @@
           "title": "Name"
         }
       },
-      "additionalProperties": false,
       "required": [],
-      "title": "$live/sections/Slot.tsx@Props"
+      "title": "$live/sections/Slot.tsx@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=@Props": {
       "type": "object",
@@ -719,7 +700,6 @@
           "title": "Sections"
         }
       },
-      "additionalProperties": true,
       "required": [
         "name",
         "sections"
@@ -746,9 +726,9 @@
           "title": "End"
         }
       },
-      "additionalProperties": false,
       "required": [],
-      "title": "$live/matchers/MatchDate.ts@Props"
+      "title": "$live/matchers/MatchDate.ts@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props": {
       "type": "object",
@@ -775,7 +755,6 @@
           "title": "Devices"
         }
       },
-      "additionalProperties": true,
       "required": [
         "devices"
       ],
@@ -799,7 +778,6 @@
           "title": "Environment"
         }
       },
-      "additionalProperties": true,
       "required": [
         "environment"
       ],
@@ -823,9 +801,9 @@
           "title": "Match"
         }
       },
-      "additionalProperties": false,
       "required": [],
-      "title": "$live/matchers/MatchHost.ts@Props"
+      "title": "$live/matchers/MatchHost.ts@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
       "$ref": "#/root/matchers",
@@ -860,7 +838,6 @@
           "title": "Matchers"
         }
       },
-      "additionalProperties": true,
       "required": [
         "op",
         "matchers"
@@ -875,7 +852,6 @@
           "title": "Traffic"
         }
       },
-      "additionalProperties": true,
       "required": [
         "traffic"
       ],
@@ -889,7 +865,6 @@
           "title": "Site Id"
         }
       },
-      "additionalProperties": true,
       "required": [
         "siteId"
       ],
@@ -913,9 +888,9 @@
           "title": "Match"
         }
       },
-      "additionalProperties": false,
       "required": [],
-      "title": "$live/matchers/MatchUserAgent.ts@Props"
+      "title": "$live/matchers/MatchUserAgent.ts@Props",
+      "additionalProperties": false
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
       "type": "object",
@@ -929,7 +904,6 @@
           "title": "Instead Of"
         }
       },
-      "additionalProperties": true,
       "required": [
         "use",
         "insteadOf"
@@ -967,7 +941,6 @@
           "title": "Overrides"
         }
       },
-      "additionalProperties": true,
       "required": [
         "matcher",
         "name"
@@ -986,9 +959,9 @@
           "title": "Overrides"
         }
       },
-      "additionalProperties": false,
       "required": [],
-      "title": "$live/flags/everyone.ts@EveryoneConfig"
+      "title": "$live/flags/everyone.ts@EveryoneConfig",
+      "additionalProperties": false
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz@Props": {
       "type": "object",
@@ -1005,7 +978,6 @@
           "title": "Reason"
         }
       },
-      "additionalProperties": true,
       "required": [
         "executionId"
       ],
@@ -1025,7 +997,6 @@
           "title": "Metadata"
         }
       },
-      "additionalProperties": true,
       "required": [
         "results",
         "executionId",
@@ -1052,7 +1023,6 @@
           "title": "Payload"
         }
       },
-      "additionalProperties": true,
       "required": [
         "signal",
         "executionId"
@@ -1071,7 +1041,6 @@
           "title": "Props"
         }
       },
-      "additionalProperties": true,
       "required": [
         "key",
         "props"
@@ -1091,7 +1060,6 @@
               "title": "Ref"
             }
           },
-          "additionalProperties": true,
           "required": [
             "ref"
           ]
@@ -1121,7 +1089,6 @@
           "title": "Args"
         }
       },
-      "additionalProperties": true,
       "required": [
         "workflow"
       ],
