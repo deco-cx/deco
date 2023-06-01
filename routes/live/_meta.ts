@@ -54,7 +54,7 @@ export const toManifestBlocks = (
 
 const resolvable = (ref: string, id: string): JSONSchema7 => {
   return {
-    title: `${ref}@${id}`,
+    title: `#${ref}@${id}`,
     type: "object",
     required: ["__resolveType"],
     properties: {
@@ -75,7 +75,7 @@ export const handler = (
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
 ) => {
   return sf.do("schema", async () => {
-    const end = ctx.state.t?.start("fetch-release")
+    const end = ctx.state.t?.start("fetch-release");
     const [schema, _release, revision] = await Promise.all([
       getCurrent(),
       ctx.state.release.state({ forceFresh: false }),
@@ -87,7 +87,12 @@ export const handler = (
       latestRevision = revision;
     }
     const release = { ..._release };
-    validator ??= new Ajv({ strictSchema: false, strict: false }).addSchema({
+    validator ??= new Ajv({
+      strictSchema: false,
+      strict: false,
+      verbose: false,
+      logger: false,
+    }).addSchema({
       ...schema,
       $id: "defs.json",
     });
