@@ -118,7 +118,7 @@ const debug = {
   ): { action: DebugAction; enabled: boolean } => {
     const url = new URL(request.url);
     const debugFromCookies = getCookies(request.headers)[DEBUG_COOKIE];
-    const debugFromQS = url.searchParams.get(DEBUG_QS) && DEBUG_ENABLED ||
+    const debugFromQS = url.searchParams.has(DEBUG_QS) && DEBUG_ENABLED ||
       url.searchParams.get(DEBUG_COOKIE);
     const hasDebugFromQS = debugFromQS !== null;
     const isLivePreview = url.pathname.includes("/live/previews/");
@@ -152,7 +152,8 @@ const mapMiddleware = (
     const url = new URL(request.url);
     const isInternalOrStatic = url.pathname.startsWith("/_frsh") || // fresh urls /_fresh/js/*
       url.pathname.startsWith("~partytown") || // party town urls
-      url.searchParams.has("__frsh_c"); // static assets, fresh uses ?__fresh_c=$id
+      url.searchParams.has("__frsh_c") || // static assets, fresh uses ?__fresh_c=$id
+      url.pathname.startsWith("/live/_meta"); // live-meta
 
     const resolver = liveContext.releaseResolver!;
     const ctxResolver = resolver
