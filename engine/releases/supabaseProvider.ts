@@ -93,10 +93,11 @@ export const newSupabase = (
       if (error !== null) {
         return;
       }
+      const resolvables = data ?? { state: {}, archived: {} };
       currResolvables = Promise.resolve(
-        data ?? { state: {}, archived: {} },
+        resolvables,
       );
-      currentRevision = Date.now().toString();
+      currentRevision = JSON.stringify(resolvables);
     } finally {
       singleFlight = false;
     }
