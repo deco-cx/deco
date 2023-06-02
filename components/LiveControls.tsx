@@ -78,8 +78,12 @@ const main = () =>
         event.preventDefault();
         event.stopPropagation();
 
+        const pathname = window.LIVE.site.id > 0
+          ? `/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`
+          : `/admin/sites/${window.LIVE.site.name}/blocks/${window.LIVE.page.id}`;
+
         const href = new URL(
-          `/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`,
+          pathname,
           "https://deco.cx",
         );
 
@@ -89,7 +93,6 @@ const main = () =>
             `${window.location.pathname}${window.location.search}`,
           ),
         );
-
         window.location.href = `${href}`;
       }
     };

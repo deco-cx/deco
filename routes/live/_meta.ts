@@ -98,8 +98,8 @@ export const handler = (
     const release = { ..._release };
 
     const buildSchemaWithResolvables = () => {
-      const root: Record<string, JSONSchema7> = {};
-      const { loaders: _, functions: __, ...currentRoot } = schema.root;
+      const { loaders, functions, ...currentRoot } = schema.root;
+      const root: Record<string, JSONSchema7> = { loaders, functions };
       for (const [ref, val] of Object.entries(currentRoot)) {
         root[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
         for (const [key, obj] of Object.entries(release)) {
