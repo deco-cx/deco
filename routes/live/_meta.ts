@@ -1,6 +1,6 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { JSONSchema7 } from "$live/deps.ts";
-import { singleFlight } from "$live/engine/core/utils.ts";
+import { notUndefined, singleFlight } from "$live/engine/core/utils.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { namespaceOf } from "$live/engine/schema/gen.ts";
 import { getCurrent } from "$live/engine/schema/reader.ts";
@@ -8,10 +8,7 @@ import { context } from "$live/live.ts";
 import meta from "$live/meta.json" assert { type: "json" };
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
-import Ajv from "https://esm.sh/ajv@8.12.0";
 import { major } from "std/semver/mod.ts";
-
-let validator: Ajv | null = null;
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -69,6 +66,18 @@ const resolvable = (ref: string, id: string): JSONSchema7 => {
 
 let mschema: Schemas | null = null;
 let latestRevision: string | null = null;
+const getResolveType = (schema: unknown): string | undefined => {
+  const asJsonSchema = schema as JSONSchema7;
+  if (
+    asJsonSchema?.required && asJsonSchema?.required.length === 1 &&
+    asJsonSchema?.properties?.["__resolveType"]
+  ) {
+    return (asJsonSchema?.properties?.["__resolveType"] as
+      | JSONSchema7
+      | undefined)?.default as string;
+  }
+  return undefined;
+};
 const sf = singleFlight<Response>();
 export const handler = (
   req: Request,
@@ -87,32 +96,21 @@ export const handler = (
       latestRevision = revision;
     }
     const release = { ..._release };
-    validator ??= new Ajv({
-      strictSchema: false,
-      strict: false,
-      verbose: false,
-      logger: false,
-    }).addSchema({
-      ...schema,
-      $id: "defs.json",
-    });
 
     const buildSchemaWithResolvables = () => {
       const root: Record<string, JSONSchema7> = {};
       const { loaders: _, functions: __, ...currentRoot } = schema.root;
       for (const [ref, val] of Object.entries(currentRoot)) {
         root[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
-        const validate = validator!.compile({
-          $ref: `defs.json#/root/${ref}`,
-          $id: "",
-        });
         for (const [key, obj] of Object.entries(release)) {
+          const resolveType = (obj as { __resolveType: string })?.__resolveType;
           if (
-            validate(obj)
+            resolveType &&
+            resolveType.includes(`/${ref}/`)
           ) {
             root[ref].anyOf!.push(
               resolvable(
-                (obj as { __resolveType: string })?.__resolveType ?? "UNKNOWN",
+                resolveType,
                 key,
               ),
             );
@@ -128,13 +126,19 @@ export const handler = (
         const first = anyOf && (anyOf[0] as JSONSchema7).$ref;
         if (first === "#/definitions/Resolvable") {
           definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
-          const compiled = validator!.compile({
-            $ref: `defs.json#/definitions/${ref}`,
-            $id: "",
-          });
+          const availableFunctions = (anyOf?.map((func) =>
+            getResolveType(func)
+          ) ?? []).filter(notUndefined).reduce((acc, f) => {
+            acc[f] = true;
+            return acc;
+          }, {} as Record<string, boolean>);
           for (const [key, obj] of Object.entries(release)) {
+            const resolveType = (obj as { __resolveType: string })
+              ?.__resolveType;
+
             if (
-              compiled(obj)
+              resolveType &&
+              availableFunctions[resolveType]
             ) {
               definitions[ref].anyOf?.push(resolvable(
                 (obj as { __resolveType: string })?.__resolveType ??
