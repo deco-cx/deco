@@ -23,6 +23,7 @@ const MatchDevice = (
   { devices }: Props,
   { request }: MatchContext,
 ) => {
+  const url = new URL(request.url);
   const ua: string | null = request.headers.get("user-agent") || "";
   // use cf hint at first and then fallback to user-agent parser.
   const cfDeviceHint: string | null = request.headers.get("cf-device-type") ||
@@ -30,6 +31,7 @@ const MatchDevice = (
 
   const device = cfDeviceHint ||
     (ua && new UAParser(ua).getDevice().type) ||
+    url.searchParams.get("deviceHint") ||
     "desktop"; // console, mobile, tablet, smarttv, wearable, embedded
 
   const normalizedDevice = ideviceToDevice[device] ?? "desktop";
