@@ -10,16 +10,16 @@ import { bodyFromUrl } from "$live/utils/http.ts";
 
 const paramsFromUrl = (
   url: URL,
-): Record<string, string | undefined> | undefined => {
+): [Record<string, string | undefined> | undefined, string | null] => {
   const pathTemplate = url.searchParams.get("pathTemplate");
   const pathname = url.searchParams.get("path");
   if (pathTemplate === null || pathname == null) {
-    return undefined;
+    return [undefined, null];
   }
 
   const urlPattern = new URLPattern({ pathname: pathTemplate });
   const params = urlPattern.exec({ pathname })?.pathname.groups;
-  return params;
+  return [params, pathname];
 };
 
 export default function Preview(props: PageProps<Page>) {
@@ -66,6 +66,12 @@ export const handler = async (
   const block = addLocal(ctx.params.block);
 
   const end = ctx.state?.t.start("load-data");
+  const [params, pathname] = paramsFromUrl(url);
+  const newUrl = new URL(req.url);
+  if (pathname) {
+    newUrl.pathname = pathname;
+  }
+  const newReq = new Request(newUrl, req);
   const page = await resolve(
     {
       __resolveType: "preview",
@@ -73,7 +79,10 @@ export const handler = async (
       props,
     },
     false,
-    { context: { ...ctx, params: paramsFromUrl(url) ?? ctx.params } },
+    {
+      context: { ...ctx, params: params ?? ctx.params },
+      request: newReq,
+    },
   );
   end?.();
 
