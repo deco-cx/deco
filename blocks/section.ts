@@ -92,17 +92,23 @@ const sectionBlock: Block<SectionModule> = {
     };
   },
   defaultDanglingRecover: (_, ctx) => {
+    const metadata = {
+      resolveChain: ctx.resolveChain,
+      component: ctx.resolveChain[ctx.resolveChain.length - 1],
+    };
     if (context.isDeploy) {
       return {
         Component: Empty,
         props: {},
+        metadata,
       };
     }
     return {
       Component: StubSection,
       props: {
-        component: ctx.resolveChain[ctx.resolveChain.length - 1],
+        component: metadata.component,
       },
+      metadata,
     };
   },
   defaultPreview: (comp) => comp,
