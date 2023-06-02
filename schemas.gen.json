@@ -101,8 +101,7 @@
       "type": "object",
       "properties": {},
       "required": [],
-      "title": "Account",
-      "additionalProperties": false
+      "title": "Account"
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
       "$ref": "#/root/flags",
@@ -287,8 +286,7 @@
         }
       },
       "required": [],
-      "title": "indexedAccessinputWorkflowExecution",
-      "additionalProperties": false
+      "title": "indexedAccessinputWorkflowExecution"
     },
     "JGxpdmUvY29tbW9ucy93b3JrZmxvd3MvdHlwZXMudHM=@WorkflowExecution": {
       "anyOf": [
@@ -509,21 +507,32 @@
       ],
       "title": "$live/handlers/router.ts@RouterConfig"
     },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
+        }
+      ],
+      "title": "15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag"
+    },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag"
+      },
+      "title": "15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]"
+    },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
       "properties": {
         "audiences": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
-              },
-              {
-                "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
-              }
-            ]
-          },
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]",
           "title": "Audiences"
         }
       },
@@ -651,8 +660,7 @@
         }
       },
       "required": [],
-      "title": "$live/sections/Slot.tsx@Props",
-      "additionalProperties": false
+      "title": "$live/sections/Slot.tsx@Props"
     },
     "JGxpdmUvc2VjdGlvbnMvVXNlU2xvdC50c3g=@Props": {
       "type": "object",
@@ -727,8 +735,7 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchDate.ts@Props",
-      "additionalProperties": false
+      "title": "$live/matchers/MatchDate.ts@Props"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props": {
       "type": "object",
@@ -802,8 +809,7 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchHost.ts@Props",
-      "additionalProperties": false
+      "title": "$live/matchers/MatchHost.ts@Props"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
       "$ref": "#/root/matchers",
@@ -889,8 +895,7 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchUserAgent.ts@Props",
-      "additionalProperties": false
+      "title": "$live/matchers/MatchUserAgent.ts@Props"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
       "type": "object",
@@ -960,8 +965,7 @@
         }
       },
       "required": [],
-      "title": "$live/flags/everyone.ts@EveryoneConfig",
-      "additionalProperties": false
+      "title": "$live/flags/everyone.ts@EveryoneConfig"
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz@Props": {
       "type": "object",

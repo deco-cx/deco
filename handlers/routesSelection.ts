@@ -7,11 +7,13 @@ import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
 import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
-import { BlockInstance } from "../engine/block.ts";
-import { Override, Route } from "../flags/audience.ts";
+import { BlockInstance } from "$live/engine/block.ts";
+import { Override, Route } from "$live/flags/audience.ts";
+import { Flag } from "$live/blocks/flag.ts";
 
 export interface SelectionConfig {
   audiences: (
+    | Resolvable<Flag>
     | BlockInstance<"$live/flags/audience.ts">
     | BlockInstance<"$live/flags/everyone.ts">
   )[];
@@ -138,8 +140,12 @@ const toOverrides = (overrides?: Override[]): Record<string, string> => {
  * @description Select routes based on the target audience.
  */
 export default function RoutesSelection(
-  { audiences }: SelectionConfig,
+  { audiences: _audiences }: SelectionConfig,
 ): Handler {
+  const audiences = _audiences as (
+    | BlockInstance<"$live/flags/audience.ts">
+    | BlockInstance<"$live/flags/everyone.ts">
+  )[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const cacheControl = req.headers.get("Cache-Control");
     const isNoCache = cacheControl === "no-cache";
