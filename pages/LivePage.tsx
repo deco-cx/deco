@@ -36,8 +36,9 @@ const IdentityComponent = ({ children }: { children: ComponentChildren }) => (
 );
 
 export function renderSectionFor(mode?: Mode) {
-  const Controls = mode === "edit" ? BlockControls : () => null;
-  const EditContext = mode === "edit"
+  const isEditMode = mode === "edit"
+  const Controls = isEditMode ? BlockControls : () => null;
+  const EditContext = isEditMode
     ? EditorContextProvider
     : IdentityComponent;
 
