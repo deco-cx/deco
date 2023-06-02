@@ -4,6 +4,7 @@ import { isSection, Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
 import LivePolyfills from "$live/components/LivePolyfills.tsx";
+import LivePageShowcase from "../components/LivePageShowcase.tsx";
 import LivePageEditor, {
   BlockControls,
   EditorContextProvider,
@@ -28,13 +29,18 @@ export interface Props {
   sections: Section[];
 }
 
+type Mode = "default" | "edit" | "showcase";
+
 const IdentityComponent = ({ children }: { children: ComponentChildren }) => (
   <>{children}</>
 );
 
-export function renderSectionFor(editMode?: boolean) {
-  const Controls = editMode ? BlockControls : () => null;
-  const EditContext = editMode ? EditorContextProvider : IdentityComponent;
+export function renderSectionFor(mode?: Mode) {
+  const isEditMode = mode === "edit"
+  const Controls = isEditMode ? BlockControls : () => null;
+  const EditContext = isEditMode
+    ? EditorContextProvider
+    : IdentityComponent;
 
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
@@ -146,7 +152,7 @@ const useSlots = (
 const renderPage = (
   { layout, sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
-  editMode = false,
+  editMode: Mode = "default",
 ): JSX.Element => {
   const validSections = maybeSections?.filter(notUndefined) ?? [];
   const layoutProps = layout?.props;
@@ -216,19 +222,29 @@ export default function LivePage(
   );
 }
 
+const getMode = (params?: URLSearchParams): "edit" | "showcase" | "default" => {
+  const mode = params?.get("mode");
+  if (mode === "edit" || mode === "showcase") {
+    return mode;
+  }
+
+  return "default";
+};
+
 export function Preview(props: Props) {
   const pageCtx = usePageContext();
-  const editMode = pageCtx?.url.searchParams.has("editMode") ?? false;
+  const mode = getMode(pageCtx?.url.searchParams);
 
   return (
     <LivePageContext.Provider
-      value={{ renderSection: renderSectionFor(editMode) }}
+      value={{ renderSection: renderSectionFor(mode) }}
     >
       <Head>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      {renderPage(props, {}, editMode)}
-      {editMode && <LivePageEditor />}
+      {renderPage(props, {}, mode)}
+      {mode === "edit" && <LivePageEditor />}
+      {mode === "showcase" && <LivePageShowcase />}
     </LivePageContext.Provider>
   );
 }
