@@ -36,7 +36,12 @@ const schemeableToJSONSchemaFunc = (
             ndef,
             {
               ...currSchema,
-              allOf: [...currSchema.allOf!, sc],
+              allOf: [...currSchema.allOf!, sc].map((schema) => {
+                if (typeof schema === "object") {
+                  return { ...schema, additionalProperties: undefined }
+                }
+                return schema;
+              }),
             },
           ];
         },
@@ -131,7 +136,7 @@ const schemeableToJSONSchemaFunc = (
         required,
         title: schemeable.title ?? schemeable.name,
       };
-      if (required.length === 0) {
+      if (required.length === 0 && allOf.length === 0) {
         obj.additionalProperties = false;
       }
       return [
