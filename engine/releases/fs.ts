@@ -1,4 +1,5 @@
 import { join } from "std/path/mod.ts";
+import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { singleFlight } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
@@ -44,11 +45,7 @@ export const newFsProvider = (
     archived: () => sf.do("load", load),
     revision: () =>
       sf.do("load", load).then(async (resp) => {
-        const encoded = await crypto.subtle.digest(
-          "SHA-256",
-          new TextEncoder().encode(JSON.stringify(resp)),
-        );
-        return Buffer.from(encoded).toString("hex");
+        return await stringToHexSha256(JSON.stringify(resp));
       }),
   };
 };
