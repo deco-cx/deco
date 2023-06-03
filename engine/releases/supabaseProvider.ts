@@ -2,7 +2,7 @@
 import { supabase } from "$live/deps.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { ReadOptions, Release } from "$live/engine/releases/provider.ts";
-
+import { stringToHexSha256 } from "$live/utils/encoding.ts";
 export interface SupabaseReleaseProvider {
   /**
    * @returns the current state of the release.
@@ -97,7 +97,7 @@ export const newSupabase = (
       currResolvables = Promise.resolve(
         resolvables,
       );
-      currentRevision = JSON.stringify(resolvables);
+      currentRevision = await stringToHexSha256(JSON.stringify(resolvables));
     } finally {
       singleFlight = false;
     }

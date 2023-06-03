@@ -1,5 +1,6 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { JSONSchema7 } from "$live/deps.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { notUndefined, singleFlight } from "$live/engine/core/utils.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { namespaceOf } from "$live/engine/schema/gen.ts";
@@ -78,6 +79,64 @@ const getResolveType = (schema: unknown): string | undefined => {
   }
   return undefined;
 };
+const buildSchemaWithResolvables = (
+  schema: Schemas,
+  release: Record<string, Resolvable>,
+) => {
+  const { loaders, functions, ...currentRoot } = schema.root;
+  const root: Record<string, JSONSchema7> = { loaders, functions };
+  for (const [ref, val] of Object.entries(currentRoot)) {
+    root[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
+    for (const [key, obj] of Object.entries(release)) {
+      const resolveType = (obj as { __resolveType: string })?.__resolveType;
+      if (
+        resolveType &&
+        resolveType.includes(`/${ref}/`)
+      ) {
+        root[ref].anyOf!.push(
+          resolvable(
+            resolveType,
+            key,
+          ),
+        );
+        delete release[key];
+      }
+    }
+  }
+
+  const definitions: Record<string, JSONSchema7> = {};
+  for (const [ref, val] of Object.entries(schema.definitions)) {
+    const anyOf = val.anyOf;
+    definitions[ref] = val;
+    const first = anyOf && (anyOf[0] as JSONSchema7).$ref;
+    if (first === "#/definitions/Resolvable") {
+      definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
+      const availableFunctions = (anyOf?.map((func) =>
+        getResolveType(func)
+      ) ?? []).filter(notUndefined).reduce((acc, f) => {
+        acc[f] = true;
+        return acc;
+      }, {} as Record<string, boolean>);
+      for (const [key, obj] of Object.entries(release)) {
+        const resolveType = (obj as { __resolveType: string })
+          ?.__resolveType;
+
+        if (
+          resolveType &&
+          availableFunctions[resolveType]
+        ) {
+          definitions[ref].anyOf?.push(resolvable(
+            (obj as { __resolveType: string })?.__resolveType ??
+              "UNKNOWN",
+            key,
+          ));
+        }
+      }
+    }
+  }
+  return { definitions, root };
+};
+
 const sf = singleFlight<Response>();
 export const handler = (
   req: Request,
@@ -85,75 +144,21 @@ export const handler = (
 ) => {
   return sf.do("schema", async () => {
     const end = ctx.state.t?.start("fetch-release");
-    const [schema, _release, revision] = await Promise.all([
+    const [schema, revision] = await Promise.all([
       getCurrent(),
-      ctx.state.release.state({ forceFresh: false }),
       ctx.state.release.revision(),
     ]);
     end?.();
-    if (revision !== latestRevision) {
-      mschema = null;
+
+    if (revision !== latestRevision || mschema === null) {
+      const endBuildSchema = ctx.state?.t?.start("build-resolvables");
+      mschema = buildSchemaWithResolvables(
+        schema,
+        { ...await ctx.state.release.state({ forceFresh: false }) },
+      );
       latestRevision = revision;
+      endBuildSchema?.();
     }
-    const release = { ..._release };
-
-    const buildSchemaWithResolvables = () => {
-      const { loaders, functions, ...currentRoot } = schema.root;
-      const root: Record<string, JSONSchema7> = { loaders, functions };
-      for (const [ref, val] of Object.entries(currentRoot)) {
-        root[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
-        for (const [key, obj] of Object.entries(release)) {
-          const resolveType = (obj as { __resolveType: string })?.__resolveType;
-          if (
-            resolveType &&
-            resolveType.includes(`/${ref}/`)
-          ) {
-            root[ref].anyOf!.push(
-              resolvable(
-                resolveType,
-                key,
-              ),
-            );
-            delete release[key];
-          }
-        }
-      }
-
-      const definitions: Record<string, JSONSchema7> = {};
-      for (const [ref, val] of Object.entries(schema.definitions)) {
-        const anyOf = val.anyOf;
-        definitions[ref] = val;
-        const first = anyOf && (anyOf[0] as JSONSchema7).$ref;
-        if (first === "#/definitions/Resolvable") {
-          definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
-          const availableFunctions = (anyOf?.map((func) =>
-            getResolveType(func)
-          ) ?? []).filter(notUndefined).reduce((acc, f) => {
-            acc[f] = true;
-            return acc;
-          }, {} as Record<string, boolean>);
-          for (const [key, obj] of Object.entries(release)) {
-            const resolveType = (obj as { __resolveType: string })
-              ?.__resolveType;
-
-            if (
-              resolveType &&
-              availableFunctions[resolveType]
-            ) {
-              definitions[ref].anyOf?.push(resolvable(
-                (obj as { __resolveType: string })?.__resolveType ??
-                  "UNKNOWN",
-                key,
-              ));
-            }
-          }
-        }
-      }
-      return { definitions, root };
-    };
-    const endBuildSchema = ctx.state?.t?.start("build-resolvables");
-    mschema ??= buildSchemaWithResolvables();
-    endBuildSchema?.();
 
     const info: MetaInfo = {
       major: major(meta.version),
