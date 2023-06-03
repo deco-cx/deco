@@ -33,20 +33,8 @@ async (req, _ctx) => {
   const headers = new Headers(req.headers);
   HOP_BY_HOP.forEach((h) => headers.delete(h));
   headers.set("origin", to.origin);
-
-  console.log({ usingHost: hostToUse ?? to.host });
-  const isTesting = true;
-
-  headers.set("host", isTesting ? (hostToUse ?? to.host) : to.host);
-  // headers.set("x-forwarded-host", url.host);
-
-  console.log({
-    to,
-    headers,
-    // redirect: "manual",
-    method: req.method,
-    body: req.body,
-  });
+  headers.set("host", hostToUse ?? to.host);
+  headers.set("x-forwarded-host", url.host);
 
   const response = await fetch(to, {
     headers,
