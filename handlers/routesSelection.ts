@@ -11,12 +11,16 @@ import { BlockInstance } from "$live/engine/block.ts";
 import { Override, Route } from "$live/flags/audience.ts";
 import { Flag } from "$live/blocks/flag.ts";
 
+/**
+ * @title Audiences
+ */
+export type Audiences =
+  | Resolvable<Flag>
+  | BlockInstance<"$live/flags/audience.ts">
+  | BlockInstance<"$live/flags/everyone.ts">;
+
 export interface SelectionConfig {
-  audiences: (
-    | Resolvable<Flag>
-    | BlockInstance<"$live/flags/audience.ts">
-    | BlockInstance<"$live/flags/everyone.ts">
-  )[];
+  audiences: Audiences[];
 }
 
 const rankRoute = (pattern: string) =>
