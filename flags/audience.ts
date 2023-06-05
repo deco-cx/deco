@@ -2,6 +2,8 @@ import { FlagObj } from "$live/blocks/flag.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
+import { FreshContext } from "../engine/fresh/manifest.ts";
+import { metabasePreview } from "./metabase.tsx";
 
 export interface Route {
   pathTemplate: string;
@@ -46,4 +48,10 @@ export default function Audience({
     false: { routes: [], overrides: [] },
     name,
   };
+}
+
+export const preview = (_, ctx: FreshContext) => {
+  const url = new URL(ctx.request.url);
+  const metabaseUrl = url.searchParams.get("metabase");
+  return metabaseUrl ? metabasePreview(metabaseUrl) : "No preview available";
 }
