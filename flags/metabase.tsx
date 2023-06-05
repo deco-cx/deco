@@ -12,4 +12,8 @@ export const metabasePreview = (iframeSrc: string): PreactComponent => ({
     />
   ),
   props: {},
+  metadata: {
+    resolveChain: [],
+    component: "",
+  }
 });
