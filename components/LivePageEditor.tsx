@@ -517,6 +517,14 @@ const generatePathFromResolveChain = (
     return ["sections", index.toString()];
   }
 
+  // Selected section from outside block [preview, livepage, blockid, section]
+  if (
+    isOutsideBlock(nextToLast) && resolveChain.length >= 3 &&
+    isLivePage(resolveChain[resolveChain.length - 3])
+  ) {
+    return ["sections", index.toString()];
+  }
+
   return [index.toString()];
 };
 
