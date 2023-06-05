@@ -24,7 +24,7 @@ export interface Audience {
    * @title The audience name (will be used on cookies).
    * @description Add a meaningful short word for the audience name.
    * @minLength 3
-   * @pattern ^[A-Za-z0-9_]+$
+   * @pattern ^[A-Za-z0-9_-]+$
    */
   name: string;
   routes?: Route[];
