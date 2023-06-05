@@ -15,7 +15,7 @@ body>section {
   border: 1px solid hsl(180, 5%, 70%);
   border-radius: 4px;
   cursor: pointer;
-  max-height: 500px;
+  max-height: 900px;
   overflow: hidden;
   background-color: white;
 }
@@ -51,11 +51,13 @@ const snippet = () => {
       const label = segments[segments.length - 1];
       const description = segments.slice(0, segments.length - 1);
 
+      console.log('aqui', section)
+
       const div = document.createElement("div");
       div.innerHTML = `
           <div style="width: 100%; padding: 16px;">
             <h2 style="font-size: 20px; font-weight: 700">${label}</h2>
-            <p style="font-size: 15px;">${description.join("/")}</p>
+            <p style="font-size: 15px; display: none;">${description.join("/")}</p>
           </div>
         `;
 
