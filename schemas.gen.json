@@ -527,7 +527,7 @@
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
         }
       ],
-      "title": "Audiences Flag"
+      "title": "Audiences"
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]": {
       "type": "array",
@@ -1059,7 +1059,7 @@
       ],
       "title": "WorkflowRef"
     },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@1908eaf7241cf30ab44834ed6547dd2c|WorkflowRef": {
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef": {
       "anyOf": [
         {
           "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef"
@@ -1077,13 +1077,13 @@
           ]
         }
       ],
-      "title": "1908eaf7241cf30ab44834ed6547dd2c|WorkflowRef"
+      "title": "96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef"
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props": {
       "type": "object",
       "properties": {
         "workflow": {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@1908eaf7241cf30ab44834ed6547dd2c|WorkflowRef",
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef",
           "title": "Workflow"
         },
         "id": {

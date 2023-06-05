@@ -2,8 +2,8 @@ import { FlagObj } from "$live/blocks/flag.ts";
 import { Handler } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { FreshContext } from "../engine/fresh/manifest.ts";
-import { metabasePreview } from "./metabase.tsx";
+import JsonViewer from "../components/JsonViewer.tsx";
+import { metabasePreview } from "../utils/metabase.tsx";
 
 export interface Route {
   pathTemplate: string;
@@ -50,8 +50,11 @@ export default function Audience({
   };
 }
 
-export const preview = (_: never, ctx: FreshContext) => {
+export const preview = (result: unknown, ctx: { request: Request }) => {
   const url = new URL(ctx.request.url);
   const metabaseUrl = url.searchParams.get("metabase");
-  return metabaseUrl ? metabasePreview(metabaseUrl): undefined;
-}
+  return metabaseUrl ? metabasePreview(metabaseUrl) : {
+    Component: JsonViewer,
+    props: { body: JSON.stringify(result, null, 2) },
+  };
+};
