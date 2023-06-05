@@ -51,8 +51,6 @@ const snippet = () => {
       const label = segments[segments.length - 1];
       const description = segments.slice(0, segments.length - 1);
 
-      console.log('aqui', section)
-
       const div = document.createElement("div");
       div.innerHTML = `
           <div style="width: 100%; padding: 16px;">
