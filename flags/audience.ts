@@ -50,8 +50,8 @@ export default function Audience({
   };
 }
 
-export const preview = (_, ctx: FreshContext) => {
+export const preview = (_: never, ctx: FreshContext) => {
   const url = new URL(ctx.request.url);
   const metabaseUrl = url.searchParams.get("metabase");
-  return metabaseUrl ? metabasePreview(metabaseUrl) : "No preview available";
+  return metabaseUrl ? metabasePreview(metabaseUrl): undefined;
 }
