@@ -69,7 +69,11 @@ export const router = (
       };
 
       ctx.state.routerInfo = {
-        flags: flags ? Array.from(flags.keys()).join(",") : "",
+        flags: flags
+          ? Array.from(flags).map((
+            [k, v],
+          ) => (k + "=" + (v.isMatch ? "1" : "0"))).join(",")
+          : "",
         pagePath: routePath,
       };
 
