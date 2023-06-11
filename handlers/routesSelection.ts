@@ -171,6 +171,7 @@ export default function RoutesSelection(
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
     const [routes, overrides, hrefRoutes] = audiences
+      .filter(Boolean)
       .reduce(
         ([routes, overrides, hrefRoutes], audience) => {
           // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
