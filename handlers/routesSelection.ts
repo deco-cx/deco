@@ -171,6 +171,7 @@ export default function RoutesSelection(
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
     const [routes, overrides, hrefRoutes] = audiences
+      // We should tackle this problem elsewhere
       .filter(Boolean)
       .reduce(
         ([routes, overrides, hrefRoutes], audience) => {
