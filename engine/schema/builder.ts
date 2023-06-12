@@ -152,6 +152,12 @@ const canonicalFileWith =
       return url.substring("https://denopkg.com".length + 1) + "/" +
         files.join("/");
     }
+    if (file.startsWith("https://cdn.jsdelivr.net/gh")) {
+      const [url, versionAndFile] = file.split("@");
+      const [_ignoreVersion, ...files] = versionAndFile.split("/");
+      return url.substring("https://cdn.jsdelivr.net/gh".length + 1) + "/" +
+        files.join("/");
+    }
     if (file.startsWith(base)) { // file url
       return `${namespace}${file.replace(base, "")}`;
     }

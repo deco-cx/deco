@@ -140,9 +140,9 @@ const updateImportMap = async (
           imports: {
             ...imports,
             [ns]: "./",
-            "$live/": `https://denopkg.com/deco-cx/live@${liveVersion}/`,
+            "$live/": `https://cdn.jsdelivr.net/gh/deco-cx/live@${liveVersion}/`,
             "deco-sites/std/":
-              `https://denopkg.com/deco-sites/std@${stdVersion}/`,
+              `https://cdn.jsdelivr.net/gh/deco-sites/std@${stdVersion}/`,
           },
         },
         null,
