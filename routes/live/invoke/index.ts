@@ -3,12 +3,12 @@ import { HandlerContext } from "$fresh/src/server/types.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import dfs from "$live/engine/fresh/defaults.ts";
+import type { Manifest } from "$live/live.gen.ts";
 import { LiveConfig } from "$live/mod.ts";
 import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
 import { DeepPick, DotNestedKeys } from "$live/utils/object.ts";
 import { UnionToIntersection } from "https://esm.sh/utility-types@3.10.0";
-
 export type AvailableFunctions<TManifest extends DecoManifest> =
   & keyof TManifest["functions"]
   & string;
@@ -206,7 +206,9 @@ const isInvokeFunc = (
   return (p as InvokeFunction).key !== undefined;
 };
 
-export const payloadForFunc = (func: InvokeFunction) => ({
+export const payloadForFunc = (
+  func: InvokeFunction<Manifest>,
+) => ({
   keys: func.select,
   obj: {
     props: func.props,
