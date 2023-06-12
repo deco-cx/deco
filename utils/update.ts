@@ -2,7 +2,7 @@ import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
-} from "https://cdn.jsdelivr.net/gh/hayd/deno-udd@0.8.2/registry.ts";
+} from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { brightYellow } from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
 import { printDiff } from "../scripts/changelog.ts";
