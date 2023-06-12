@@ -587,10 +587,6 @@
           ],
           "title": "Path"
         },
-        "layout": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page",
-          "title": "Layout"
-        },
         "sections": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
           "title": "Sections"

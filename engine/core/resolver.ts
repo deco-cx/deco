@@ -297,7 +297,7 @@ export interface Resolved<T> {
   __resolveType: "resolved";
 }
 
-const isResolved = <T>(
+export const isResolved = <T>(
   resolvable: Resolvable<T> | Resolved<T>,
 ): resolvable is Resolved<T> => {
   return (isResolvable(resolvable)) &&
