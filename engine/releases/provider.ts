@@ -95,6 +95,10 @@ export const getComposedConfigStore = (
 ): Release => {
   const providers = [];
 
+  if (Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
+    return newFsProvider();
+  }
+
   if (siteId > 0) {
     providers.push(newSupabase(fromPagesTable(siteId, ns), context.isDeploy)); // if not deploy so no background is needed
   }
