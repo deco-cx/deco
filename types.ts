@@ -71,7 +71,7 @@ export interface StatefulContext<T> {
 export type LiveConfig<
   TConfig = any,
   TState = {},
-  TManifest extends DecoManifest = LiveManifest,
+  TManifest extends DecoManifest = DecoManifest,
 > =
   & TState
   & {
