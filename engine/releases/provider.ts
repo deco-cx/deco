@@ -72,8 +72,8 @@ export const compose = (...providers: Release[]): Release => {
           ...providersResolvables,
           ...currentResolvables,
           [ENTRYPOINT]: mergeEntrypoints(
-            providersResolvables[ENTRYPOINT],
-            currentResolvables[ENTRYPOINT],
+            (providersResolvables ?? {})[ENTRYPOINT],
+            (currentResolvables ?? {})[ENTRYPOINT],
           ),
         };
       },
