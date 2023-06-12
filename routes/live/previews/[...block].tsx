@@ -50,6 +50,26 @@ export default function Preview(props: PageProps<Page>) {
 
 const addLocal = (block: string): string =>
   block.startsWith("islands") && block.endsWith("tsx") ? `./${block}` : block;
+
+const getPropsFromRequest = async (req: Request) => {
+  const url = new URL(req.url);
+  if (req.method === "POST") {
+    const reader = req.body?.getReader();
+    reader?.releaseLock();
+    const data = (req.headers.get("content-type") ===
+        "application/x-www-form-urlencoded"
+      ? JSON.parse(
+        (await req.clone().formData()).get("props")?.toString() || "{}",
+      )
+      : (await req.json())) ?? {};
+    reader?.releaseLock();
+
+    return data;
+  }
+
+  return bodyFromUrl("props", url) ?? {};
+};
+
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
@@ -59,10 +79,7 @@ export const handler = async (
 ) => {
   const { state: { resolve } } = ctx;
   const url = new URL(req.url);
-  const props = req.method === "POST"
-    ? await req.json()
-    : bodyFromUrl("props", url) ?? {};
-
+  const props = await getPropsFromRequest(req);
   const block = addLocal(ctx.params.block);
 
   const end = ctx.state?.t.start("load-data");
