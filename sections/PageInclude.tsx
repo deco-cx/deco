@@ -13,8 +13,9 @@ export interface Props {
 export const isLivePageProps = (
   p: Page["props"] | LivePageProps,
 ): p is LivePageProps => {
-  return (p as LivePageProps)?.sections !== undefined ||
-    (p as LivePageProps)?.layout !== undefined;
+  return (p as LivePageProps)?.sections !== undefined;
+  // TODO: Uncomment when bring back layout
+  // (p as LivePageProps)?.layout !== undefined;
 };
 
 export default function PageInclude({ page }: Props) {
