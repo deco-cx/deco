@@ -12,17 +12,19 @@ export default function JsonViewer(p: Props) {
         </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.js">
         </script>
-        <link
-          id="viewer"
-          href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.css"
-          type="text/css"
-          rel="stylesheet"
-        />
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.querySelector('#viewer').onload = () => {
-                jQuery('#json-renderer').JSONView(${p.body})
-              }`,
+            __html: `
+            const viewerTag = document.createElement('link');
+            viewerTag.id = "viewer";
+            viewerTag.href = "https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.css";
+            viewerTag.type = "text/css";
+            viewerTag.rel = "stylesheet";
+
+            viewerTag.onload = () => {
+              jQuery('#json-renderer').JSONView(${p.body})
+            }
+            document.head.append(viewerTag);`,
           }}
         >
         </script>
