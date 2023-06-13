@@ -35,6 +35,7 @@ export default function Preview(props: PageProps<Page>) {
   const { data } = props;
   const pageParent =
     data.metadata?.resolveChain[data.metadata?.resolveChain.length - 2];
+
   return (
     <>
       <LivePolyfills />

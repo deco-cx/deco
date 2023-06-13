@@ -29,6 +29,9 @@ type LiveEvent = {
 } | {
   type: "DOMInspector";
   args: "activate" | "deactivate";
+} | {
+  type: "editor-src";
+  args: { url: string };
 };
 
 // TODO: Move inspect-vscode code to here so we don't need to do this stringification
@@ -54,7 +57,7 @@ const main = () =>
   requestIdleCallback(() => {
     // deno-lint-ignore no-explicit-any
     const isLiveEvent = (data: any): data is LiveEvent =>
-      ["scrollToComponent", "DOMInspector"].includes(data?.type);
+      ["scrollToComponent", "DOMInspector", "editor-src"].includes(data?.type);
 
     const onKeydown = (event: KeyboardEvent) => {
       // in case loaded in iframe, avoid redirecting to editor while in editor
@@ -97,6 +100,50 @@ const main = () =>
       }
     };
 
+    let queue = Promise.resolve();
+    let abort = () => {};
+
+    const enqueue = (url: string) => {
+      abort();
+
+      const controller = new AbortController();
+
+      queue = queue.then(async () => {
+        try {
+          const node = document.createElement("div");
+          node.classList.add("editor-loading");
+          document.body.appendChild(node);
+
+          const signal = controller.signal;
+          const response = await fetch(url, { signal });
+          const html = await response.text();
+
+          signal.throwIfAborted();
+
+          /**
+           * 🦄 Here be unicorns!
+           *
+           * Since this script is inside all previews, the regex matches itself.
+           * To circunvent this issue, this script is loaded inside the head
+           * and removes the head before matching the body.
+           */
+          const regexpHead = /(?<head>(<head(.|\n)*<\/head>))/;
+          const htmlNoHead = html.replace(
+            regexpHead.exec(html)?.groups?.head ?? "",
+            "",
+          );
+          const regexpBody = /(?<body>(<body(.|\n)*<\/body>))/;
+          const body = regexpBody.exec(htmlNoHead)?.groups?.body ?? "";
+
+          document.body.innerHTML = body;
+        } catch (error) {
+          console.warn(error);
+        }
+      });
+
+      abort = () => controller.abort();
+    };
+
     const onMessage = (event: MessageEvent<LiveEvent>) => {
       const { data } = event;
 
@@ -128,6 +175,13 @@ const main = () =>
           } else if (action === "deactivate" && inspector.isActive()) {
             inspector.deactivate();
           }
+
+          return;
+        }
+        case "editor-src": {
+          const { url } = data.args;
+
+          if (url) enqueue(url);
 
           return;
         }

@@ -146,19 +146,23 @@ interface InsertEditorEvent extends DefaultEditorEvent {
 
 type EditorEvent = DefaultEditorEvent | MoveEditorEvent | InsertEditorEvent;
 
-function sendEditorEvent(e: Event, args: EditorEvent) {
-  e.stopPropagation();
-  // TODO: check security issues
-  window !== top &&
-    top?.postMessage({ type: "edit", ...args }, "*");
-}
+function editorController() {
+  document.body?.querySelectorAll("[data-event]").forEach((node) => {
+    node.addEventListener("click", (e) => {
+      e.stopPropagation();
 
-function useSendEditorEvent(args: EditorEvent) {
-  if (!args.key) return {};
+      const event = (node as HTMLElement).dataset.event;
 
-  return {
-    onclick: `window.LIVE.sendEditorEvent(event, ${JSON.stringify(args)});`,
-  };
+      if (!event) return;
+
+      if (window === top) {
+        window.alert("Press `.` to enter edit mode");
+      } else {
+        const e = JSON.parse(event) as EditorEvent;
+        top?.postMessage({ type: "edit", ...e }, "*");
+      }
+    });
+  });
 }
 
 export function BlockControls() {
@@ -167,7 +171,7 @@ export function BlockControls() {
   return (
     <div
       data-section-wrapper
-      {...useSendEditorEvent({
+      data-event={JSON.stringify({
         action: "edit",
         key: metadata?.component ?? "",
         index: i,
@@ -177,7 +181,7 @@ export function BlockControls() {
       <div data-insert="">
         <button
           data-insert="prev"
-          {...useSendEditorEvent({
+          data-event={JSON.stringify({
             action: "insert",
             key: metadata?.component ?? "",
             index: i,
@@ -189,7 +193,7 @@ export function BlockControls() {
         </button>
         <button
           data-insert="next"
-          {...useSendEditorEvent({
+          data-event={JSON.stringify({
             action: "insert",
             key: metadata?.component ?? "",
             index: i,
@@ -207,7 +211,7 @@ export function BlockControls() {
         <button
           data-delete
           data-tooltip="Delete"
-          {...useSendEditorEvent({
+          data-event={JSON.stringify({
             action: "delete",
             key: metadata?.component ?? "",
             index: i,
@@ -218,7 +222,7 @@ export function BlockControls() {
         </button>
         <button
           data-tooltip="Move up"
-          {...useSendEditorEvent({
+          data-event={JSON.stringify({
             action: "move",
             key: metadata?.component ?? "",
             index: i,
@@ -231,7 +235,7 @@ export function BlockControls() {
         </button>
         <button
           data-tooltip="Move down"
-          {...useSendEditorEvent({
+          data-event={JSON.stringify({
             action: "move",
             key: metadata?.component ?? "",
             index: i,
@@ -244,7 +248,7 @@ export function BlockControls() {
         </button>
         <button
           data-tooltip="Duplicate"
-          {...useSendEditorEvent({
+          data-event={JSON.stringify({
             action: "duplicate",
             key: metadata?.component ?? "",
             index: i,
@@ -400,17 +404,12 @@ export default function LivePageEditor() {
         `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{ __html: `(${editorController})()` }}
+        />
       </Head>
 
       <PreviewIcons />
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.LIVE = {
-            ...window.LIVE,
-            sendEditorEvent: ${sendEditorEvent.toString()}
-          };`,
-        }}
-      />
     </>
   );
 }
@@ -427,8 +426,9 @@ const EditorContext = createContext<
 
 const useEditorContext = () => {
   const ctx = useContext(EditorContext);
+
   if (ctx === undefined) {
-    throw new Error("Something went wrong rendering EditMode");
+    throw new Error("Context Provider not found on rendering tree");
   }
 
   return ctx;
