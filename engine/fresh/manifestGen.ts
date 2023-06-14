@@ -95,7 +95,13 @@ export const defaultRoutes: {
     block: "routes",
     from: "$live/routes/live/previews/[...block].tsx",
     key: "./routes/live/previews/[...block].tsx",
-    ref: "$live_previews",
+    ref: "$live_previews_block",
+  },
+  {
+    block: "routes",
+    from: "$live/routes/live/previews/index.tsx",
+    key: "./routes/live/previews/index.tsx",
+    ref: "$live_previews_index",
   },
   {
     block: "routes",

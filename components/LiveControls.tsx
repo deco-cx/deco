@@ -30,7 +30,7 @@ type LiveEvent = {
   type: "DOMInspector";
   args: "activate" | "deactivate";
 } | {
-  type: "editor-src";
+  type: "editor::rerender";
   args: { url: string };
 };
 
@@ -53,166 +53,212 @@ const DomInspectorActivators = {
 ${inspectVSCode.DomInspector.toString()}`
   : "";
 
-const main = () =>
-  requestIdleCallback(() => {
-    // deno-lint-ignore no-explicit-any
-    const isLiveEvent = (data: any): data is LiveEvent =>
-      ["scrollToComponent", "DOMInspector", "editor-src"].includes(data?.type);
+const main = () => {
+  const styleSheet = `
+  html {
+    height: 100%;
+  }
+  
+  body {
+    height: 100%;
+  }
+  
+  .live-controls-loading {
+    z-index: 999999;
+    pointer-events: none;
+    display: inline-block;
+    aspect-ratio: 1/1;
+    width: 2.5rem;
+    color: #2fd180;
+    background-color: currentColor;
+    -webkit-mask-size: 100%;
+    mask-size: 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNDQnIGhlaWdodD0nNDQnIHZpZXdCb3g9JzAgMCA0NCA0NCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyBzdHJva2U9JyNmZmYnPjxnIGZpbGw9J25vbmUnIGZpbGwtcnVsZT0nZXZlbm9kZCcgc3Ryb2tlLXdpZHRoPScyJz48Y2lyY2xlIGN4PScyMicgY3k9JzIyJyByPScxJz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdyJyBiZWdpbj0nMHMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAyMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMTY1LCAwLjg0LCAwLjQ0LCAxJyByZXBlYXRDb3VudD0naW5kZWZpbml0ZScgLz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdzdHJva2Utb3BhY2l0eScgYmVnaW49JzBzJyBkdXI9JzEuOHMnIHZhbHVlcz0nMTsgMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMywgMC42MSwgMC4zNTUsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjwvY2lyY2xlPjxjaXJjbGUgY3g9JzIyJyBjeT0nMjInIHI9JzEnPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3InIGJlZ2luPSctMC45cycgZHVyPScxLjhzJyB2YWx1ZXM9JzE7IDIwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4xNjUsIDAuODQsIDAuNDQsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3N0cm9rZS1vcGFjaXR5JyBiZWdpbj0nLTAuOXMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4zLCAwLjYxLCAwLjM1NSwgMScgcmVwZWF0Q291bnQ9J2luZGVmaW5pdGUnIC8+PC9jaXJjbGU+PC9nPjwvc3ZnPg==);
+    mask-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNDQnIGhlaWdodD0nNDQnIHZpZXdCb3g9JzAgMCA0NCA0NCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyBzdHJva2U9JyNmZmYnPjxnIGZpbGw9J25vbmUnIGZpbGwtcnVsZT0nZXZlbm9kZCcgc3Ryb2tlLXdpZHRoPScyJz48Y2lyY2xlIGN4PScyMicgY3k9JzIyJyByPScxJz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdyJyBiZWdpbj0nMHMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAyMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMTY1LCAwLjg0LCAwLjQ0LCAxJyByZXBlYXRDb3VudD0naW5kZWZpbml0ZScgLz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdzdHJva2Utb3BhY2l0eScgYmVnaW49JzBzJyBkdXI9JzEuOHMnIHZhbHVlcz0nMTsgMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMywgMC42MSwgMC4zNTUsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjwvY2lyY2xlPjxjaXJjbGUgY3g9JzIyJyBjeT0nMjInIHI9JzEnPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3InIGJlZ2luPSctMC45cycgZHVyPScxLjhzJyB2YWx1ZXM9JzE7IDIwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4xNjUsIDAuODQsIDAuNDQsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3N0cm9rZS1vcGFjaXR5JyBiZWdpbj0nLTAuOXMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4zLCAwLjYxLCAwLjM1NSwgMScgcmVwZWF0Q291bnQ9J2luZGVmaW5pdGUnIC8+PC9jaXJjbGU+PC9nPjwvc3ZnPg==)
+  }
+  
+  .live-controls-loading-uptop {
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+  
+  .live-controls-loading-center {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+  }
+  `;
 
-    const onKeydown = (event: KeyboardEvent) => {
-      // in case loaded in iframe, avoid redirecting to editor while in editor
-      if (window !== window.parent) {
-        return;
-      }
+  // deno-lint-ignore no-explicit-any
+  const isLiveEvent = (data: any): data is LiveEvent =>
+    ["scrollToComponent", "DOMInspector", "editor::rerender"].includes(data?.type);
 
-      // Disable going to admin while input it being typed
-      if (event.target !== document.body) {
-        return;
-      }
+  const onKeydown = (event: KeyboardEvent) => {
+    // in case loaded in iframe, avoid redirecting to editor while in editor
+    if (window !== window.parent) {
+      return;
+    }
 
-      if (event.defaultPrevented) {
-        return;
-      }
+    // Disable going to admin while input it being typed
+    if (event.target !== document.body) {
+      return;
+    }
 
-      if (
-        (event.ctrlKey && event.shiftKey && event.key === "E") ||
-        event.key === "."
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
+    if (event.defaultPrevented) {
+      return;
+    }
 
-        const pathname = window.LIVE.site.id > 0
-          ? `/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`
-          : `/admin/sites/${window.LIVE.site.name}/blocks/${window.LIVE.page.id}`;
+    if (
+      (event.ctrlKey && event.shiftKey && event.key === "E") ||
+      event.key === "."
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
 
-        const href = new URL(
-          pathname,
-          "https://deco.cx",
-        );
+      const pathname = window.LIVE.site.id > 0
+        ? `/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`
+        : `/admin/sites/${window.LIVE.site.name}/blocks/${window.LIVE.page.id}`;
 
-        href.searchParams.set(
-          "pagePath",
-          encodeURIComponent(
-            `${window.location.pathname}${window.location.search}`,
-          ),
-        );
-        window.location.href = `${href}`;
-      }
-    };
+      const href = new URL(
+        pathname,
+        "https://deco.cx",
+      );
 
-    let queue = Promise.resolve();
-    let abort = () => {};
+      href.searchParams.set(
+        "pagePath",
+        encodeURIComponent(
+          `${window.location.pathname}${window.location.search}`,
+        ),
+      );
+      window.location.href = `${href}`;
+    }
+  };
 
-    const enqueue = (url: string) => {
-      abort();
+  let queue = Promise.resolve();
+  let abort = () => {};
 
-      const controller = new AbortController();
+  const enqueue = (url: string) => {
+    abort();
 
-      queue = queue.then(async () => {
-        try {
-          const node = document.createElement("div");
-          node.classList.add("editor-loading");
-          document.body.appendChild(node);
+    const controller = new AbortController();
 
-          const signal = controller.signal;
-          const response = await fetch(url, { signal });
-          const html = await response.text();
+    queue = queue.then(async () => {
+      try {
+        const style = document.createElement("style");
+        style.innerHTML = styleSheet;
+        document.body.appendChild(style);
+        const div = document.createElement("div");
+        div.classList.add("live-controls-loading");
+        div.classList.add("live-controls-loading-uptop");
+        document.body.appendChild(div);
 
-          signal.throwIfAborted();
+        const signal = controller.signal;
+        const html = await fetch(url, { signal }).then((res) => res.text());
+        // await new Promise(resolve => setTimeout(resolve, 1e3 * 2))
 
-          /**
-           * 🦄 Here be unicorns!
-           *
-           * Since this script is inside all previews, the regex matches itself.
-           * To circunvent this issue, this script is loaded inside the head
-           * and removes the head before matching the body.
-           */
-          const regexpHead = /(?<head>(<head(.|\n)*<\/head>))/;
-          const htmlNoHead = html.replace(
-            regexpHead.exec(html)?.groups?.head ?? "",
-            "",
-          );
-          const regexpBody = /(?<body>(<body(.|\n)*<\/body>))/;
-          const body = regexpBody.exec(htmlNoHead)?.groups?.body ?? "";
+        signal.throwIfAborted();
 
-          document.body.innerHTML = body;
-        } catch (error) {
-          console.warn(error);
-        }
-      });
+        document.documentElement.innerHTML = html;
 
-      abort = () => controller.abort();
-    };
+        // Source: https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
+        document.querySelectorAll("script").forEach((oldScriptEl) => {
+          const newScriptEl = document.createElement("script");
 
-    const onMessage = (event: MessageEvent<LiveEvent>) => {
-      const { data } = event;
-
-      if (!isLiveEvent(data)) {
-        return;
-      }
-
-      switch (data.type) {
-        case "scrollToComponent": {
-          const findById = document
-            .getElementById(data.args.id);
-
-          const findByAlternateId = data.args.alternateId
-            ? document
-              .getElementById(data.args.alternateId)
-            : undefined;
-
-          (findById ?? findByAlternateId)?.scrollIntoView({
-            behavior: "smooth",
+          Array.from(oldScriptEl.attributes).forEach((attr) => {
+            newScriptEl.setAttribute(attr.name, attr.value);
           });
 
+          const scriptText = document.createTextNode(oldScriptEl.innerHTML);
+          newScriptEl.appendChild(scriptText);
+
+          oldScriptEl.parentNode?.replaceChild(newScriptEl, oldScriptEl);
+        });
+      } catch (error) {
+        if (error === "Newer changes detected") {
           return;
         }
-        case "DOMInspector": {
-          const action = data.args;
 
-          if (action === "activate" && !inspector.isActive()) {
-            inspector.activate();
-          } else if (action === "deactivate" && inspector.isActive()) {
-            inspector.deactivate();
-          }
-
-          return;
-        }
-        case "editor-src": {
-          const { url } = data.args;
-
-          if (url) enqueue(url);
-
-          return;
-        }
+        console.error(error);
       }
-    };
+    });
 
+    abort = () => controller.abort("Newer changes detected");
+  };
+
+  const onMessage = (event: MessageEvent<LiveEvent>) => {
+    const { data } = event;
+
+    if (!isLiveEvent(data)) {
+      return;
+    }
+
+    switch (data.type) {
+      case "scrollToComponent": {
+        const findById = document
+          .getElementById(data.args.id);
+
+        const findByAlternateId = data.args.alternateId
+          ? document
+            .getElementById(data.args.alternateId)
+          : undefined;
+
+        (findById ?? findByAlternateId)?.scrollIntoView({
+          behavior: "smooth",
+        });
+
+        return;
+      }
+      case "DOMInspector": {
+        const action = data.args;
+
+        if (action === "activate" && !inspector.isActive()) {
+          inspector.activate();
+        } else if (action === "deactivate" && inspector.isActive()) {
+          inspector.deactivate();
+        }
+
+        return;
+      }
+      case "editor::rerender": {
+        const { url } = data.args;
+
+        if (url) enqueue(url);
+
+        return;
+      }
+    }
+  };
+
+  //@ts-ignore: "DomInspector not available"
+  const inspector = typeof DomInspector !== "undefined" &&
     //@ts-ignore: "DomInspector not available"
-    const inspector = typeof DomInspector !== "undefined" &&
-      //@ts-ignore: "DomInspector not available"
-      new DomInspector(document.body, {
-        outline: "1px dashed #2fd080",
-        backgroundColor: "rgba(47, 208, 128, 0.33)",
-        backgroundBlendMode: "multiply",
-        activator: DomInspectorActivators.Backquote,
-        path: "/live/inspect",
-      });
+    new DomInspector(document.body, {
+      outline: "1px dashed #2fd080",
+      backgroundColor: "rgba(47, 208, 128, 0.33)",
+      backgroundBlendMode: "multiply",
+      activator: DomInspectorActivators.Backquote,
+      path: "/live/inspect",
+    });
 
-    /** Setup global variables */
-    window.LIVE = {
-      ...window.LIVE,
-      ...JSON.parse(document.getElementById("__DECO_STATE")!.innerText),
-    };
+  /** Setup global variables */
+  window.LIVE = {
+    ...window.LIVE,
+    ...JSON.parse(document.getElementById("__DECO_STATE")!.innerText),
+  };
 
-    /** Setup listeners */
+  /** Setup listeners */
 
-    // navigate to admin when user clicks ctrl+shift+e
-    document.body.addEventListener("keydown", onKeydown);
+  // navigate to admin when user clicks ctrl+shift+e
+  document.body.addEventListener("keydown", onKeydown);
 
-    // focus element when inside admin
-    addEventListener("message", onMessage);
-  });
+  // focus element when inside admin
+  addEventListener("message", onMessage);
+};
 
 function LiveControls({ site, page }: Props) {
   const partialPage = page && {
@@ -220,22 +266,23 @@ function LiveControls({ site, page }: Props) {
   };
 
   return (
-    <Head>
-      <script
-        type="application/json"
-        id="__DECO_STATE"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({ page: partialPage, site }),
-        }}
-      />
-      <script
-        type="module"
-        dangerouslySetInnerHTML={{
-          __html:
-            `${domInspectorModule}\nrequestIdleCallback(${main.toString()})`,
-        }}
-      />
-    </Head>
+    <>
+      <Head>
+        <script
+          type="application/json"
+          id="__DECO_STATE"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({ page: partialPage, site }),
+          }}
+        />
+        <script
+          type="module"
+          dangerouslySetInnerHTML={{
+            __html: `${domInspectorModule}\n(${main})()`,
+          }}
+        />
+      </Head>
+    </>
   );
 }
 

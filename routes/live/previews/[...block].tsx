@@ -32,19 +32,9 @@ export default function Preview(props: PageProps<Page>) {
       page: props.data,
     },
   };
-  const { data } = props;
-  const pageParent =
-    data.metadata?.resolveChain[data.metadata?.resolveChain.length - 2];
 
   return (
     <>
-      <LivePolyfills />
-      <LiveControls
-        site={{ id: context.siteId, name: context.site }}
-        page={{
-          id: pageParent || "-1",
-        }}
-      />
       <LiveAnalytics />
 
       <Render {...renderProps}></Render>
@@ -103,7 +93,5 @@ export const handler = async (
   );
   end?.();
 
-  return await ctx.render(
-    page,
-  );
+  return await ctx.render(page);
 };
