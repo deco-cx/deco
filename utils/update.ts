@@ -1,11 +1,8 @@
-import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
-import { brightYellow } from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
-import { printDiff } from "../scripts/changelog.ts";
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK = /(\$live)|(deco-sites\/.*\/$)/;
@@ -34,7 +31,7 @@ export async function update() {
 
   console.info("Looking up latest versions");
 
-  const newImportMap = Object.keys(importMap.imports ?? {}).reduce(
+  const newImportMap = await Object.keys(importMap.imports ?? {}).reduce(
     async (importMapPromise, pkg) => {
       const importMap = await importMapPromise;
 
@@ -50,7 +47,7 @@ export async function update() {
 
       if (currentVersion !== latestVersion) {
         console.info(
-          `Enqueueing upgrade ${pkg} ${currentVersion} -> ${latestVersion}.`,
+          `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
         );
 
         upgradeFound = true;
@@ -99,10 +96,10 @@ export async function checkUpdates(_dir?: string) {
 
   if (shouldWarn) {
     console.log(
-      `%c 🐁 Live updates available! %c To upgrade, run:`,
+      `%c 🐁 Live updates available! %c To update, run:`,
       "background-color: #2FD080; color: white; font-weight: bold",
       "",
     );
-    console.log(`deno run -A $live/scripts/update.ts`);
+    console.log(`deno eval 'import \"$live/scripts/update.ts\"'`);
   }
 }
