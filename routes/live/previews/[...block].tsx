@@ -47,17 +47,11 @@ const addLocal = (block: string): string =>
 
 const getPropsFromRequest = async (req: Request) => {
   const url = new URL(req.url);
-  if (req.method === "POST") {
-    const data = (req.headers.get(CONTENT_TYPE) === APPLICATION_FORM_URLENCODED
-      ? JSON.parse(
-        (await req.clone().formData()).get("props")?.toString() || "{}",
-      )
-      : (await req.json())) ?? {};
+  const data = req.method === "POST"
+    ? await req.clone().json()
+    : bodyFromUrl("props", url);
 
-    return data;
-  }
-
-  return bodyFromUrl("props", url) ?? {};
+  return data ?? {};
 };
 
 export const handler = async (

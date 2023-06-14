@@ -31,7 +31,7 @@ type LiveEvent = {
   args: "activate" | "deactivate";
 } | {
   type: "editor::rerender";
-  args: { url: string };
+  args: { url: string; props: string };
 };
 
 // TODO: Move inspect-vscode code to here so we don't need to do this stringification
@@ -96,7 +96,9 @@ const main = () => {
 
   // deno-lint-ignore no-explicit-any
   const isLiveEvent = (data: any): data is LiveEvent =>
-    ["scrollToComponent", "DOMInspector", "editor::rerender"].includes(data?.type);
+    ["scrollToComponent", "DOMInspector", "editor::rerender"].includes(
+      data?.type,
+    );
 
   const onKeydown = (event: KeyboardEvent) => {
     // in case loaded in iframe, avoid redirecting to editor while in editor
@@ -142,7 +144,7 @@ const main = () => {
   let queue = Promise.resolve();
   let abort = () => {};
 
-  const enqueue = (url: string) => {
+  const enqueue = (url: string, props: string) => {
     abort();
 
     const controller = new AbortController();
@@ -158,8 +160,11 @@ const main = () => {
         document.body.appendChild(div);
 
         const signal = controller.signal;
-        const html = await fetch(url, { signal }).then((res) => res.text());
-        // await new Promise(resolve => setTimeout(resolve, 1e3 * 2))
+        const html = await fetch(url, {
+          method: "POST",
+          body: props,
+          signal,
+        }).then((res) => res.text());
 
         signal.throwIfAborted();
 
@@ -225,9 +230,9 @@ const main = () => {
         return;
       }
       case "editor::rerender": {
-        const { url } = data.args;
+        const { url, props } = data.args;
 
-        if (url) enqueue(url);
+        if (url && props) enqueue(url, props);
 
         return;
       }
