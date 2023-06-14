@@ -96,7 +96,7 @@ export async function checkUpdates(_dir?: string) {
 
   if (shouldWarn) {
     console.log(
-      `%c 🐁 Live updates available! %c To update, run:`,
+      `%c 🐁 Updates available from deco.cx! %c To update, run:`,
       "background-color: #2FD080; color: white; font-weight: bold",
       "",
     );
