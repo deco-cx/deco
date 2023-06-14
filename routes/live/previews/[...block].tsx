@@ -8,6 +8,9 @@ import Render from "$live/routes/[...catchall].tsx";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
 
+const CONTENT_TYPE = "content-type";
+const APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded";
+
 const paramsFromUrl = (
   url: URL,
 ): [Record<string, string | undefined> | undefined, string | null] => {
@@ -54,15 +57,11 @@ const addLocal = (block: string): string =>
 const getPropsFromRequest = async (req: Request) => {
   const url = new URL(req.url);
   if (req.method === "POST") {
-    const reader = req.body?.getReader();
-    reader?.releaseLock();
-    const data = (req.headers.get("content-type") ===
-        "application/x-www-form-urlencoded"
+    const data = (req.headers.get(CONTENT_TYPE) === APPLICATION_FORM_URLENCODED
       ? JSON.parse(
         (await req.clone().formData()).get("props")?.toString() || "{}",
       )
       : (await req.json())) ?? {};
-    reader?.releaseLock();
 
     return data;
   }
