@@ -32,18 +32,9 @@ export default function Preview(props: PageProps<Page>) {
       page: props.data,
     },
   };
-  const { data } = props;
-  const pageParent =
-    data.metadata?.resolveChain[data.metadata?.resolveChain.length - 2];
+
   return (
     <>
-      <LivePolyfills />
-      <LiveControls
-        site={{ id: context.siteId, name: context.site }}
-        page={{
-          id: pageParent || "-1",
-        }}
-      />
       <LiveAnalytics />
 
       <Render {...renderProps}></Render>
@@ -56,17 +47,11 @@ const addLocal = (block: string): string =>
 
 const getPropsFromRequest = async (req: Request) => {
   const url = new URL(req.url);
-  if (req.method === "POST") {
-    const data = (req.headers.get(CONTENT_TYPE) === APPLICATION_FORM_URLENCODED
-      ? JSON.parse(
-        (await req.clone().formData()).get("props")?.toString() || "{}",
-      )
-      : (await req.json())) ?? {};
+  const data = req.method === "POST"
+    ? await req.clone().json()
+    : bodyFromUrl("props", url);
 
-    return data;
-  }
-
-  return bodyFromUrl("props", url) ?? {};
+  return data ?? {};
 };
 
 export const handler = async (
@@ -102,7 +87,5 @@ export const handler = async (
   );
   end?.();
 
-  return await ctx.render(
-    page,
-  );
+  return await ctx.render(page);
 };

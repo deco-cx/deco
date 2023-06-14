@@ -4,32 +4,51 @@ export interface Props {
   body: string;
 }
 
+const snippet = (json: string) => {
+  const node = ([
+    ["script", { src: "https://code.jquery.com/jquery-3.6.4.min.js" }],
+    ["script", {
+      src:
+        "https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.js",
+    }],
+    ["link", {
+      href:
+        "https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.css",
+      type: "text/css",
+      rel: "stylesheet",
+    }],
+  ] as const).reduce((node: HTMLElement | null, [element, attributes]) => {
+    const n = document.createElement(element);
+    Object.entries(attributes).forEach(([key, value]) =>
+      n.setAttribute(key, value)
+    );
+
+    if (node) {
+      node.addEventListener("load", () => document.head.appendChild(n));
+    } else {
+      // first element of reduce
+      document.head.appendChild(n);
+    }
+
+    return n;
+  }, null);
+
+  node?.addEventListener(
+    "load",
+    () => (window as any).jQuery("#json-renderer").JSONView(json),
+  );
+};
+
 export default function JsonViewer(p: Props) {
   return (
     <>
       <Head>
-        <script src="https://code.jquery.com/jquery-3.6.4.min.js">
-        </script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.js">
-        </script>
         <script
-          dangerouslySetInnerHTML={{
-            __html: `
-            const viewerTag = document.createElement('link');
-            viewerTag.id = "viewer";
-            viewerTag.href = "https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.css";
-            viewerTag.type = "text/css";
-            viewerTag.rel = "stylesheet";
-
-            viewerTag.onload = () => {
-              jQuery('#json-renderer').JSONView(${p.body})
-            }
-            document.head.append(viewerTag);`,
-          }}
-        >
-        </script>
+          type="module"
+          dangerouslySetInnerHTML={{ __html: `(${snippet})(${p.body});` }}
+        />
       </Head>
-      <pre id="json-renderer"></pre>
+      <pre id="json-renderer">{p.body}</pre>
     </>
   );
 }
