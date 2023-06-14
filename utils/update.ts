@@ -1,19 +1,18 @@
-import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
-import { brightYellow } from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
-import { printDiff } from "../scripts/changelog.ts";
 
 // map of `packageAlias` to `packageRepo`
-const packagesThatShouldBeChecked: Record<string, string> = {
-  "$live/": "deco-cx/live/",
-  "deco-sites/std/": "deco-sites/std/",
-};
+const PACKAGES_TO_CHECK = /(\$live)|(deco-sites\/.*\/$)/;
+
+interface ImportMap {
+  imports: Record<string, string>;
+}
+
 const getImportMap = async (dir: string): Promise<
-  [{ imports: Record<string, string> }, string]
+  [ImportMap, string]
 > => {
   const denoJSON = await Deno.readTextFile(join(dir, "deno.json")).then(
     JSON.parse,
@@ -26,87 +25,81 @@ const getImportMap = async (dir: string): Promise<
   ];
 };
 
-/**
- * Used to storage update answers by the user
- */
-const answerOf = (dir: string, pkg: string) => {
-  const key = `live_update_answers_${dir}_${pkg}`;
-  const answer = {
-    set: (ver: string) => localStorage.setItem(key, ver),
-    get: () => localStorage.getItem(key),
-  };
-  return {
-    ...answer,
-    shouldAsk: (ver: string) => {
-      const should = answer.get() !== ver;
-      should && answer.set(ver); // if answered so we should clean the current answer
-      return should;
-    },
-  };
-};
+export async function update() {
+  let upgradeFound = false;
+  const [importMap, importMapPath] = await getImportMap(Deno.cwd());
 
-export async function checkUpdates(_dir?: string) {
-  const dir = _dir ?? Deno.cwd();
-  const [importMap, importMapPath] = await getImportMap(dir ?? Deno.cwd());
-  const updates: Record<string, string> = {};
-  for (const pkg of Object.keys(packagesThatShouldBeChecked)) {
-    const importUrl = importMap.imports[pkg];
-    if (!importUrl) {
-      continue;
-    }
-    const url = lookup(
-      importUrl,
-      REGISTRIES,
-    );
-    if (!url) {
-      continue;
-    }
-    const answers = answerOf(dir, pkg);
+  console.info("Looking up latest versions");
+
+  const newImportMap = await Object.keys(importMap.imports ?? {}).reduce(
+    async (importMapPromise, pkg) => {
+      const importMap = await importMapPromise;
+
+      if (!PACKAGES_TO_CHECK.test(pkg)) return importMap;
+
+      const url = lookup(importMap.imports[pkg], REGISTRIES);
+
+      if (!url) return importMap;
+
+      const versions = await url.all();
+      const currentVersion = url.version();
+      const latestVersion = versions[0];
+
+      if (currentVersion !== latestVersion) {
+        console.info(
+          `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
+        );
+
+        upgradeFound = true;
+        importMap.imports[pkg] = url.at(latestVersion).url;
+      }
+
+      return importMap;
+    },
+    Promise.resolve(Object.assign({ imports: {} }, importMap)),
+  );
+
+  if (!upgradeFound) {
+    console.info("Local website depends on the most recent releases of Live!");
+    return;
+  }
+
+  await Deno.writeTextFile(
+    importMapPath,
+    JSON.stringify(newImportMap, null, 2),
+  );
+  console.info("Upgraded successfully");
+}
+
+const hasUpdates = async (importMap: ImportMap) => {
+  for (const pkg of Object.keys(importMap.imports ?? {})) {
+    if (!PACKAGES_TO_CHECK.test(pkg)) continue;
+
+    const url = lookup(importMap.imports[pkg], REGISTRIES);
+
+    if (!url) continue;
+
     const versions = await url.all();
     const currentVersion = url.version();
     const latestVersion = versions[0];
 
-    const showUpdateNotice = () => {
-      console.log(
-        brightYellow(
-          `update available for ${pkg} ${currentVersion} -> ${latestVersion}.`,
-        ),
-      );
-      return false;
-    };
-    const currSemVer = semver.parse(currentVersion);
-    if (
-      currSemVer &&
-      currentVersion !== latestVersion &&
-      (answers.shouldAsk(latestVersion) || showUpdateNotice())
-    ) {
-      const latestUrl = url.at(latestVersion).url;
-      const repo = packagesThatShouldBeChecked[pkg];
-      if (repo) {
-        console.log(); // breakline
-        await printDiff(currSemVer, repo);
-      }
-      showUpdateNotice();
-      const shouldProceed = confirm("would you like to update?");
-      if (shouldProceed) {
-        updates[pkg] = latestUrl;
-      }
-    }
-    Deno.env.set("LIVE_UPDATE_ANSWERED", "true");
+    if (currentVersion !== latestVersion) return true;
   }
 
-  if (Object.keys(updates).length > 0) {
-    console.log("updating packages...");
-    await Deno.writeTextFile(
-      importMapPath,
-      JSON.stringify(
-        {
-          ...importMap,
-          imports: { ...importMap?.imports ?? {}, ...updates },
-        },
-        null,
-        2,
-      ),
+  return false;
+};
+
+export async function checkUpdates(_dir?: string) {
+  const [importMap] = await getImportMap(_dir ?? Deno.cwd());
+
+  const shouldWarn = await hasUpdates(importMap);
+
+  if (shouldWarn) {
+    console.log(
+      `%c 🐁 Updates available from deco.cx! %c To update, run:`,
+      "background-color: #2FD080; color: #003232; font-weight: bold",
+      "",
     );
+    console.log(`deno eval 'import \"$live/scripts/update.ts\"'`);
   }
 }
