@@ -16,7 +16,7 @@ export class DanglingReference extends Error {
     this.resolverType = resolverType;
   }
 }
-export type ResolveFunc<T = any, TContext extends BaseContext = BaseContext> = (
+export type ResolveFunc = <T = any, TContext extends BaseContext = BaseContext>(
   data: Resolvable<T>,
   forceFresh?: boolean,
   partialCtx?: Partial<Omit<TContext, keyof BaseContext>>,
@@ -297,7 +297,7 @@ export interface Resolved<T> {
   __resolveType: "resolved";
 }
 
-const isResolved = <T>(
+export const isResolved = <T>(
   resolvable: Resolvable<T> | Resolved<T>,
 ): resolvable is Resolved<T> => {
   return (isResolvable(resolvable)) &&

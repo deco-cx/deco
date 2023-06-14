@@ -7,10 +7,16 @@ import {
   RouteConfig,
   RouteModule,
 } from "$fresh/src/server/types.ts";
+import { InvocationFunc } from "$live/clients/withManifest.ts";
 import { Block, BlockModule, ComponentFunc } from "$live/engine/block.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { HttpError } from "$live/engine/errors.ts";
+import type { Manifest } from "$live/live.gen.ts";
 import { context as liveContext } from "$live/live.ts";
+import {
+  InvokeFunction,
+  payloadForFunc,
+} from "$live/routes/live/invoke/index.ts";
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
@@ -178,6 +184,10 @@ const mapMiddleware = (
     context.state.$live = $live;
     context.state.resolve = ctxResolver;
     context.state.release = liveContext.release!;
+    context.state.invoke = (key, props) =>
+      ctxResolver<ReturnType<InvocationFunc<Manifest>>>(
+        payloadForFunc({ key, props } as unknown as InvokeFunction<Manifest>),
+      );
 
     const resp = await context.next();
     // enable or disable debugging

@@ -7,9 +7,10 @@ import { LiveConfig, StatefulContext } from "$live/types.ts";
 import { Handler as DenoHandler } from "std/http/server.ts";
 
 export interface HttpContext<
-  State = any,
+  // deno-lint-ignore ban-types
+  State = {},
   TConfig = any,
-  TCtx extends StatefulContext<any> = StatefulContext<
+  TCtx extends StatefulContext<LiveConfig<State, TConfig>> = StatefulContext<
     LiveConfig<State, TConfig>
   >,
 > extends BaseContext {
