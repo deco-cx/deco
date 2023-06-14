@@ -1,15 +1,9 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
-import LiveControls from "$live/components/LiveControls.tsx";
-import LivePolyfills from "$live/components/LivePolyfills.tsx";
-import { context } from "$live/live.ts";
 import Render from "$live/routes/[...catchall].tsx";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
-
-const CONTENT_TYPE = "content-type";
-const APPLICATION_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
 const paramsFromUrl = (
   url: URL,
