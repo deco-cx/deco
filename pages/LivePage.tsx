@@ -25,7 +25,8 @@ import { useContext } from "preact/hooks";
 export interface Props {
   name: string;
   path?: string;
-  layout?: Page;
+  // TODO: Bring it back as soon as possible;
+  // layout?: Page;
   sections: Section[];
 }
 
@@ -36,11 +37,9 @@ const IdentityComponent = ({ children }: { children: ComponentChildren }) => (
 );
 
 export function renderSectionFor(mode?: Mode) {
-  const isEditMode = mode === "edit"
+  const isEditMode = mode === "edit";
   const Controls = isEditMode ? BlockControls : () => null;
-  const EditContext = isEditMode
-    ? EditorContextProvider
-    : IdentityComponent;
+  const EditContext = isEditMode ? EditorContextProvider : IdentityComponent;
 
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
@@ -150,12 +149,14 @@ const useSlots = (
  * @returns the rendered page
  */
 const renderPage = (
-  { layout, sections: maybeSections }: Props,
+  { sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode: Mode = "default",
 ): JSX.Element => {
   const validSections = maybeSections?.filter(notUndefined) ?? [];
-  const layoutProps = layout?.props;
+  // TODO: Uncomment when bring bag layout props
+  // const layoutProps = layout?.props;
+  const layoutProps = undefined;
   const sections = Object.keys(useSlotsFromChild).length > 0
     ? validSections.flatMap(useSlots(useSlotsFromChild))
     : validSections;
