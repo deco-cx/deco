@@ -16,9 +16,11 @@ const fetchRelease = (
   ).maybeSingle();
 };
 
+type Fetcher = () => ReturnType<typeof fetchRelease>;
 // Supabase client setup
 const subscribeForReleaseChanges = (
   site: string,
+  fetcher: Fetcher,
 ) =>
 (
   callback: (res: CurrResolvables) => unknown,
@@ -37,7 +39,22 @@ const subscribeForReleaseChanges = (
         table: TABLE,
         filter: `site=eq.${site}`,
       },
-      (payload) => callback(payload.new as CurrResolvables),
+      (payload) => {
+        const newPayload = payload.new as CurrResolvables;
+        if (newPayload.state === undefined) {
+          console.warn("state is too big, fetching from supabase");
+          fetcher().then((resp) => {
+            const { data, error } = resp;
+            if (error || !data) {
+              console.error("error when fetching config", error);
+              return;
+            }
+            callback(data);
+          });
+        } else {
+          callback(newPayload);
+        }
+      },
     )
     .subscribe(subscriptionCallback);
 };
