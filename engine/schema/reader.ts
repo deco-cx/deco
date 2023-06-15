@@ -13,15 +13,6 @@ export const genSchemas = async () => {
     context.manifest!,
   );
 
-  await Deno.writeTextFile(
-    join(Deno.cwd(), schemaFile),
-    JSON.stringify(
-      schema,
-      null,
-      2,
-    ),
-  );
-
   console.log(
     `✔️ ready to rock and roll! Your project is live 🤘 - took: ${
       Math.ceil(
@@ -38,7 +29,7 @@ const getSchema = async (): Promise<Schemas> => {
 };
 
 export const getCurrent = (): Promise<Schemas> => {
-  return schemas ??= context.isDeploy ? getSchema() : genSchemas();
+  return schemas ??= genSchemas();
 };
 
 export const reset = () => {
