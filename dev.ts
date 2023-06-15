@@ -132,8 +132,8 @@ export default async function dev(
 
   (async () => {
     await setManifest(dir);
-    await genSchemas();
-    reset();
+    //await genSchemas();
+    //reset();
   })();
 
   onListen?.();
