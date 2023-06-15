@@ -8,9 +8,8 @@ import {
   TsTypeDef,
   TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
-import { fromFileUrl, join } from "std/path/mod.ts";
+import { fromFileUrl } from "std/path/mod.ts";
 
 const limit = pLimit(5);
 
@@ -122,12 +121,6 @@ export const exec = async (cmd: string[]) => {
   return new TextDecoder().decode(stdout);
 };
 
-const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
-  return doc(path, {
-    importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
-  });
-};
-
 const docAsExec = async (
   path: string,
   _?: string,
@@ -167,7 +160,6 @@ function isQuotaExceededError(err: unknown): boolean {
 }
 export const denoDoc = async (
   path: string,
-  importMap?: string,
 ): Promise<DocNode[]> => {
   try {
     const isLocal = path.startsWith("file");
