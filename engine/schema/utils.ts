@@ -106,14 +106,17 @@ export const beautify = (propName: string) => {
 const denoDocLocalCache = new Map<string, Promise<DocNode[]>>();
 
 export const exec = async (cmd: string[]) => {
-  const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
+  const [command, ...args] = cmd;
+  const denoCommand = new Deno.Command(command, {
+    args,
+    stdin: "piped",
+    stdout: "piped",
+    stderr: "null",
+  });
 
-  const [stdout, status] = await Promise.all([
-    process.output(),
-    process.status(),
-  ]);
-  process.close();
-  process.stderr.close();
+  const process = denoCommand.spawn();
+  const status = await process.status;
+  const stdout = await process.output();
 
   if (!status.success) {
     throw new Error(
@@ -121,7 +124,7 @@ export const exec = async (cmd: string[]) => {
     );
   }
 
-  return new TextDecoder().decode(stdout);
+  return new TextDecoder().decode(stdout.stdout);
 };
 
 const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
@@ -186,9 +189,7 @@ export const denoDoc = async (
       }
     }
     const promise = denoDocLocalCache.get(path) ??
-      (typeof Deno.run === "function"
-        ? docAsExec(path)
-        : docAsLib(path, importMap));
+      docAsExec(path);
     promise.then((doc) => {
       try {
         localStorage.setItem(
