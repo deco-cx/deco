@@ -16,6 +16,7 @@ const fetchRelease = (
   ).maybeSingle();
 };
 
+const JITTER_TIME_MS = 2000;
 type Fetcher = () => ReturnType<typeof fetchRelease>;
 // Supabase client setup
 const subscribeForReleaseChanges = (
@@ -43,23 +44,27 @@ const subscribeForReleaseChanges = (
         const newPayload = payload.new as CurrResolvables;
         if (newPayload?.state === undefined) {
           console.warn("state is too big, fetching from supabase");
-          fetcher().then(async (resp) => {
-            const { data, error } = resp;
-            if (error || !data) {
-              console.error("error when fetching config", error, "retrying");
-              const { data: secondTryData, error: secondTryError } =
-                await fetcher();
+          // we have added a jitter of 2s to prevent too many requests being issued at same time.
+          const jitter = Math.floor(JITTER_TIME_MS * Math.random());
+          setTimeout(() => {
+            fetcher().then(async (resp) => {
+              const { data, error } = resp;
+              if (error || !data) {
+                console.error("error when fetching config", error, "retrying");
+                const { data: secondTryData, error: secondTryError } =
+                  await fetcher();
 
-              if (secondTryError || !secondTryData) {
-                console.error("error when fetching config", error);
+                if (secondTryError || !secondTryData) {
+                  console.error("error when fetching config", error);
+                  return;
+                }
+
+                callback(secondTryData);
                 return;
               }
-
-              callback(secondTryData);
-              return;
-            }
-            callback(data);
-          });
+              callback(data);
+            });
+          }, jitter);
         } else {
           callback(newPayload);
         }
