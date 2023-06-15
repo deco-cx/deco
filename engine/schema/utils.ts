@@ -110,7 +110,13 @@ export const exec = async (cmd: string[]) => {
     args,
   });
 
-  const { code, stdout } = await denoCommand.output();
+  const { code, stdout, stderr } = await denoCommand.output();
+  if (stderr.length > 0) {
+    console.error(
+      "error when running denodoc",
+      new TextDecoder().decode(stdout),
+    );
+  }
 
   if (code !== 0) {
     throw new Error(
