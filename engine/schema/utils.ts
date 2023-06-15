@@ -109,9 +109,6 @@ export const exec = async (cmd: string[]) => {
   const [command, ...args] = cmd;
   const denoCommand = new Deno.Command(command, {
     args,
-    stdin: "piped",
-    stdout: "piped",
-    stderr: "null",
   });
 
   const { code, stdout } = await denoCommand.output();
