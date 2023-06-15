@@ -8,9 +8,8 @@ import {
   TsTypeDef,
   TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
-import { fromFileUrl, join } from "std/path/mod.ts";
+import { fromFileUrl } from "std/path/mod.ts";
 
 const limit = pLimit(5);
 
@@ -106,28 +105,20 @@ export const beautify = (propName: string) => {
 const denoDocLocalCache = new Map<string, Promise<DocNode[]>>();
 
 export const exec = async (cmd: string[]) => {
-  const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
+  const [command, ...args] = cmd;
+  const denoCommand = new Deno.Command(command, {
+    args,
+  });
 
-  const [stdout, status] = await Promise.all([
-    process.output(),
-    process.status(),
-  ]);
-  process.close();
-  process.stderr.close();
+  const { code, stdout } = await denoCommand.output();
 
-  if (!status.success) {
+  if (code !== 0) {
     throw new Error(
-      `Error while running ${cmd.join(" ")} with status ${status.code}`,
+      `Error while running ${cmd.join(" ")} with status ${code}`,
     );
   }
 
   return new TextDecoder().decode(stdout);
-};
-
-const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
-  return doc(path, {
-    importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
-  });
 };
 
 const docAsExec = async (
@@ -169,7 +160,6 @@ function isQuotaExceededError(err: unknown): boolean {
 }
 export const denoDoc = async (
   path: string,
-  importMap?: string,
 ): Promise<DocNode[]> => {
   try {
     const isLocal = path.startsWith("file");
@@ -186,9 +176,7 @@ export const denoDoc = async (
       }
     }
     const promise = denoDocLocalCache.get(path) ??
-      (typeof Deno.run === "function"
-        ? docAsExec(path)
-        : docAsLib(path, importMap));
+      docAsExec(path);
     promise.then((doc) => {
       try {
         localStorage.setItem(
