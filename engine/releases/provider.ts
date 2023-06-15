@@ -92,10 +92,11 @@ export const getComposedConfigStore = (
   ns: string,
   site: string,
   siteId: number,
+  localStorageOnly = false,
 ): Release => {
   const providers = [];
 
-  if (Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
+  if (Deno.env.has("USE_LOCAL_STORAGE_ONLY") || localStorageOnly) {
     return newFsProvider();
   }
 

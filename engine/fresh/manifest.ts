@@ -117,6 +117,7 @@ export const withoutLocalModules = (
 export const $live = <T extends DecoManifest>(
   m: T,
   { siteId, namespace }: SiteInfo,
+  useLocalStorageOnly = false,
 ): T => {
   context.siteId = siteId ?? -1;
   context.namespace = namespace;
@@ -180,6 +181,7 @@ export const $live = <T extends DecoManifest>(
     context.namespace!,
     context.site,
     context.siteId,
+    useLocalStorageOnly,
   );
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
