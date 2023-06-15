@@ -109,12 +109,14 @@ export const newSupabase = (
     // TODO should we try to connect again after a while?! @author Marcos V. Candeia
     currResolvables.then(() => {
       provider.subscribe((newResolvables) => {
+        console.debug("realtime update received", newResolvables);
         currResolvables = Promise.resolve(newResolvables);
         currentRevision = Date.now().toString();
       }, (_status, err) => {
         if (err) {
           console.error(
             "error when trying to subscribe to release changes falling back to background updates",
+            err,
           );
           setInterval(updateInternalState, refetchIntervalMSDeploy);
         }
