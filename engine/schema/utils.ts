@@ -114,17 +114,15 @@ export const exec = async (cmd: string[]) => {
     stderr: "null",
   });
 
-  const process = denoCommand.spawn();
-  const status = await process.status;
-  const stdout = await process.output();
+  const { code, stdout } = await denoCommand.output();
 
-  if (!status.success) {
+  if (code !== 0) {
     throw new Error(
-      `Error while running ${cmd.join(" ")} with status ${status.code}`,
+      `Error while running ${cmd.join(" ")} with status ${code}`,
     );
   }
 
-  return new TextDecoder().decode(stdout.stdout);
+  return new TextDecoder().decode(stdout);
 };
 
 const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
