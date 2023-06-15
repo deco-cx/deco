@@ -41,12 +41,21 @@ const subscribeForReleaseChanges = (
       },
       (payload) => {
         const newPayload = payload.new as CurrResolvables;
-        if (newPayload.state === undefined) {
+        if (newPayload?.state === undefined) {
           console.warn("state is too big, fetching from supabase");
-          fetcher().then((resp) => {
+          fetcher().then(async (resp) => {
             const { data, error } = resp;
             if (error || !data) {
-              console.error("error when fetching config", error);
+              console.error("error when fetching config", error, "retrying");
+              const { data: secondTryData, error: secondTryError } =
+                await fetcher();
+
+              if (secondTryError || !secondTryData) {
+                console.error("error when fetching config", error);
+                return;
+              }
+
+              callback(secondTryData);
               return;
             }
             callback(data);
@@ -78,6 +87,6 @@ export const fromConfigsTable = (
     );
   return {
     get: fetcher,
-    subscribe: subscribeForReleaseChanges(site),
+    subscribe: subscribeForReleaseChanges(site, fetcher),
   };
 };
