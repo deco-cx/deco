@@ -7,6 +7,7 @@ import { ManifestBuilder } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
+import { genSchemas, reset } from "./engine/schema/reader.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
 
@@ -129,6 +130,12 @@ export default async function dev(
 
   await generate(dir, manifest);
 
+  (async () => {
+    await setManifest(dir);
+    await genSchemas();
+    reset();
+  })();
+
   onListen?.();
 
   await import(entrypoint);
@@ -166,6 +173,7 @@ if (import.meta.main) {
   const newManifestData = await decoManifestBuilder(dir, liveNs);
   await generate(dir, newManifestData).then(async () => {
     await setManifest(dir);
+    await genSchemas();
   });
 }
 
