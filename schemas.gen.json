@@ -154,7 +154,8 @@
         "key",
         "value"
       ],
-      "title": "StateProp"
+      "title": "StateProp",
+      "titleBy": "key"
     },
     "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@StateProp[]": {
       "type": "array",
@@ -486,7 +487,8 @@
         "pathTemplate",
         "handler"
       ],
-      "title": "Route"
+      "title": "Route",
+      "titleBy": "pathTemplate"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]": {
       "type": "array",
@@ -596,7 +598,8 @@
         "name",
         "sections"
       ],
-      "title": "$live/pages/LivePage.tsx@Props"
+      "title": "$live/pages/LivePage.tsx@Props",
+      "titleBy": "name"
     },
     "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props": {
       "type": "object",
@@ -953,7 +956,8 @@
         "matcher",
         "name"
       ],
-      "title": "$live/flags/audience.ts@Audience"
+      "title": "$live/flags/audience.ts@Audience",
+      "titleBy": "name"
     },
     "JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig": {
       "type": "object",
@@ -1054,7 +1058,7 @@
       ],
       "title": "WorkflowRef"
     },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef|e7284f5ed325b926c40a933db46332a1": {
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef": {
       "anyOf": [
         {
           "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef"
@@ -1072,13 +1076,13 @@
           ]
         }
       ],
-      "title": "WorkflowRef|e7284f5ed325b926c40a933db46332a1"
+      "title": "96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef"
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props": {
       "type": "object",
       "properties": {
         "workflow": {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef|e7284f5ed325b926c40a933db46332a1",
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef",
           "title": "Workflow"
         },
         "id": {

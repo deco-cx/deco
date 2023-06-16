@@ -22,6 +22,9 @@ import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
 import { ComponentChildren, createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
 
+/**
+ * @titleBy name
+ */
 export interface Props {
   name: string;
   path?: string;

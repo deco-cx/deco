@@ -7,6 +7,9 @@ import { Resolvable } from "../engine/core/resolver.ts";
 import { LoaderContext } from "../mod.ts";
 import { MiddlewareConfig } from "../routes/_middleware.ts";
 
+/**
+ * @titleBy key
+ */
 export interface StateProp {
   key: string;
   value:

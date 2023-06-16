@@ -5,6 +5,9 @@ import { Resolvable } from "$live/engine/core/resolver.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { metabasePreview } from "../utils/metabase.tsx";
 
+/**
+ * @titleBy pathTemplate
+ */
 export interface Route {
   pathTemplate: string;
   /**
@@ -18,6 +21,9 @@ export interface Override {
   use: string;
   insteadOf: string;
 }
+/**
+ * @titleBy name
+ */
 export interface Audience {
   matcher: Matcher;
   /**
