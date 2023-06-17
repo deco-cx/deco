@@ -42,19 +42,20 @@ export class WorkflowContext<TManifest extends DecoManifest = Manifest>
       : TInvocableKey extends AvailableLoaders<TManifest>
         ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
       : never,
-    TPayload extends
-      | Invoke<TManifest, TInvocableKey, TFuncSelector>
-      | Record<
-        string,
-        Invoke<TManifest, TInvocableKey, TFuncSelector>
-      >,
-  >(body: TPayload): InvokeHttpEndpointCommand<TPayload> {
+  >(
+    key: TInvocableKey,
+    props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+    headers?: Record<string, string>,
+  ): InvokeHttpEndpointCommand<
+    Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]
+  > {
     return {
       name: "invoke_http_endpoint",
-      url: myUrl(), // FIXME define the actual port
+      url: `${myUrl()}/${key}`, // FIXME define the actual port
       method: "POST",
-      body,
+      body: props,
       headers: {
+        ...(headers ?? {}),
         "accept": "application/json",
       },
     };
