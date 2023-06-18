@@ -1,6 +1,6 @@
 # deco — deno composable web framework by [deco.cx](https://www.deco.cx/en/dev)
 
-You know what every business needs? A **fast, reliable website** that empowers its brand. You know what every website needs? A **powerful visual editor and configuration panel** that empowers business people to create and evolve their digital experiences without the need for developers to deploy changes.
+Every business needs a **fast, reliable website** that empowers its brand. Every website needs a **powerful visual editor and configuration panel** that empowers business people to create and evolve their digital experiences without the need for developers to deploy changes.
 
 **deco** is a new type of web framework for building dynamic, high-performance, edge-native web applications **that can be controlled via a powerful, visual admin UI.** 
 
