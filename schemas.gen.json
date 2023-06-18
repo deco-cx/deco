@@ -1043,7 +1043,7 @@
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowProps": {
       "title": "WorkflowProps"
     },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@AnyWorkflow": {
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@CommonProps": {
       "type": "object",
       "properties": {
         "id": {
@@ -1053,11 +1053,26 @@
           ],
           "title": "Id"
         },
+        "metadata": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "title": "Metadata"
+        }
+      },
+      "required": [],
+      "title": "CommonProps"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@AnyWorkflow": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@CommonProps"
+        }
+      ],
+      "properties": {
         "args": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          },
           "title": "Args"
         },
         "workflow": {
