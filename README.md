@@ -2,9 +2,9 @@
 
 Every business needs a **fast, reliable website** that empowers its brand. Every website needs a **powerful visual editor and configuration panel** that empowers business people to create and evolve their digital experiences without the need for developers to deploy changes.
 
-**deco** is a new type of web framework for building dynamic, high-performance, edge-native web applications **that can be controlled via a powerful, visual admin UI.** 
+Delivering great frontend on robust infrastructure is just one part of the problem. The harder part is empowering business users to have freedom to create and evolve. And that's what **deco** is all about. 
 
-Delivering great frontend on robust infrastructure is just one part of the problem. The other part is empowering business users. And that's what **deco** is all about. It's the framework that builds the admin UI for your web app, automatically, as you build your web app.
+**deco** is a new type of web framework that builds the admin UI for your web app, automatically, as you build it. It allows developers to create high-performance, edge-native web applications **that can be controlled via a powerful, visual admin UI with no extra effort.** 
 
 In **deco**, developers define **Blocks**. They are built on top of [Deno](https://deno.land) to provide reusable, configurable "packaged capabilities" that can be composed together to create and deploy powerful web applications in minutes.
 
