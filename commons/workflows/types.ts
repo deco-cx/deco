@@ -1,8 +1,8 @@
-import { WorkflowExecution as DurableExecution } from "$live/deps.ts";
+import { Metadata, WorkflowExecution as DurableExecution } from "$live/deps.ts";
 export type Arg = readonly unknown[];
 
 // deno-lint-ignore no-explicit-any
-export interface WorkflowMetadata<TProps = any> {
+export interface WorkflowMetadata<TProps = any> extends Metadata {
   workflow: {
     __resolveType: string;
   } & TProps;

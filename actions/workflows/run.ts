@@ -4,13 +4,14 @@ import {
   Command,
   fetchPublicKey,
   InvalidSignatureError,
+  Metadata,
   RunRequest,
   verifySignature,
   workflowRemoteRunner,
 } from "$live/deps.ts";
 import { workflowServiceInfo } from "../../commons/workflows/serviceInfo.ts";
 
-export type Props = RunRequest<Arg, { workflow: Workflow }>;
+export type Props = RunRequest<Arg, { workflow: Workflow } & Metadata>;
 
 let key: Promise<JsonWebKey> | null = null;
 

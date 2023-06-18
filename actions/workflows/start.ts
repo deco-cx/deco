@@ -1,5 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { Workflow, WorkflowFn } from "$live/blocks/workflow.ts";
+import {
+  Workflow,
+  WorkflowFn,
+  WorkflowMetadata,
+} from "$live/blocks/workflow.ts";
 import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
 import {
   toExecution,
@@ -9,9 +13,11 @@ import { BlockFromKey, BlockFunc, BlockKeys } from "$live/engine/block.ts";
 import { Manifest } from "$live/live.gen.ts";
 import { DecoManifest } from "$live/types.ts";
 
-export interface CommonProps {
+export interface CommonProps<
+  TMetadata extends WorkflowMetadata = WorkflowMetadata,
+> {
   id?: string;
-  metadata?: any;
+  metadata?: TMetadata;
 }
 export interface AnyWorkflow extends CommonProps {
   args?: readonly any[];

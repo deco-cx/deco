@@ -1054,10 +1054,6 @@
           "title": "Id"
         },
         "metadata": {
-          "type": [
-            "object",
-            "null"
-          ],
           "title": "Metadata"
         }
       },

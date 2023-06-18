@@ -15,5 +15,5 @@ export const metabasePreview = (iframeSrc: string): PreactComponent => ({
   metadata: {
     resolveChain: [],
     component: "",
-  }
+  },
 });
