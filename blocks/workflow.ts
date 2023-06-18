@@ -2,9 +2,9 @@
 import { applyConfigSync } from "$live/blocks/utils.ts";
 import {
   Arg,
-  InvokeHttpEndpointCommand,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
+  InvokeHttpEndpointCommand,
 } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { Manifest } from "$live/live.gen.ts";
@@ -25,9 +25,11 @@ const myUrl = () =>
   context.isDeploy
     ? `https://deco-sites-${context.site}-${context.deploymentId}.deno.dev/live/invoke`
     : "http://localhost:8000/live/invoke";
-export class WorkflowContext<TManifest extends DecoManifest = Manifest>
-  extends DurableWorkflowContext {
-  constructor(executionId: string, metadata?: unknown) {
+export class WorkflowContext<
+  TManifest extends DecoManifest = Manifest,
+  TMetadata = unknown,
+> extends DurableWorkflowContext {
+  constructor(executionId: string, metadata?: TMetadata) {
     super(executionId, metadata);
   }
 
@@ -69,9 +71,11 @@ export type WorkflowFn<
   TConfig = any,
   TArgs extends Arg = any,
   TResp = any,
+  TMetadata = any,
+  TManifest extends DecoManifest = Manifest,
 > = (
   c: TConfig,
-) => DurableWorkflow<TArgs, TResp, WorkflowContext>;
+) => DurableWorkflow<TArgs, TResp, WorkflowContext<TManifest, TMetadata>>;
 
 const workflowBlock: Block<BlockModule<WorkflowFn>> = {
   type: "workflows",

@@ -9,9 +9,12 @@ import { BlockFromKey, BlockFunc, BlockKeys } from "$live/engine/block.ts";
 import { Manifest } from "$live/live.gen.ts";
 import { DecoManifest } from "$live/types.ts";
 
-export interface AnyWorkflow {
+export interface CommonProps {
   id?: string;
-  args?: any[];
+  metadata?: any;
+}
+export interface AnyWorkflow extends CommonProps {
+  args?: readonly any[];
   workflow: {
     data: Workflow;
     __resolveType: "resolved";
@@ -25,14 +28,10 @@ export type WorkflowProps<
 > = key extends BlockKeys<TManifest> & `${string}/workflows/${string}`
   ? BlockFunc<key, TManifest, block> extends
     WorkflowFn<infer TProps, infer TArgs>
-    ? TArgs["length"] extends 0 ? { id?: string; key: key; props: TProps }
-    : { id?: string; args: TArgs; key: key; props: TProps }
+    ? TArgs["length"] extends 0 ? { key: key; props: TProps } & CommonProps
+    : { args: TArgs; key: key; props: TProps } & CommonProps
   : AnyWorkflow
   : AnyWorkflow;
-
-export interface Props {
-  id?: string;
-}
 
 const fromWorkflowProps = <
   key extends string = string,
@@ -69,6 +68,7 @@ export default async function startWorkflow<
     input: args,
     metadata: {
       workflow: fromWorkflowProps(props),
+      ...(props?.metadata ?? {}),
       __resolveType: "resolve",
     },
   };

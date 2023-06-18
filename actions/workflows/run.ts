@@ -3,6 +3,7 @@ import {
   Arg,
   Command,
   fetchPublicKey,
+  InvalidSignatureError,
   RunRequest,
   verifySignature,
   workflowRemoteRunner,
@@ -20,15 +21,30 @@ const getOrFetchPublicKey = (): Promise<JsonWebKey> => {
 
 const verifyWithCurrentKeyOrRefetch = async (req: Request) => {
   try {
-    verifySignature(req, await getOrFetchPublicKey());
+    await verifySignature(req, getOrFetchPublicKey());
   } catch (err) {
+    if (!(err instanceof InvalidSignatureError)) {
+      throw err;
+    }
     console.log(
       "error when validating signature",
       err,
       "retrying with a new key",
     );
     key = null;
-    verifySignature(req, await getOrFetchPublicKey());
+    await verifySignature(req, getOrFetchPublicKey());
+  }
+};
+
+/**
+ * Check if the request comes from durable and its signature is valid.
+ */
+export const isValidRequestFromDurable = async (req: Request) => {
+  try {
+    await verifyWithCurrentKeyOrRefetch(req);
+    return true;
+  } catch {
+    return false;
   }
 };
 /**
