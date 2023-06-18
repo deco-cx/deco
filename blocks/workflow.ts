@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { applyConfigSync } from "$live/blocks/utils.ts";
 import {
+  Arg,
   InvokeHttpEndpointCommand,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
@@ -64,9 +65,13 @@ export class WorkflowContext<TManifest extends DecoManifest = Manifest>
 
 export type Workflow = InstanceOf<typeof workflowBlock, "#/root/workflows">;
 
-export type WorkflowFn<TConfig = any> = (
+export type WorkflowFn<
+  TConfig = any,
+  TArgs extends Arg = any,
+  TResp = any,
+> = (
   c: TConfig,
-) => DurableWorkflow<any, any, WorkflowContext>;
+) => DurableWorkflow<TArgs, TResp, WorkflowContext>;
 
 const workflowBlock: Block<BlockModule<WorkflowFn>> = {
   type: "workflows",

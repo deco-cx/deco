@@ -169,12 +169,21 @@ export type BlockInstance<
   key extends BlockKeys<TManifest> & string,
   TManifest extends DecoManifest = Manifest,
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
+> = BlockFunc<key, TManifest, block> extends
+  (...args: infer Props) => PromiseOrValue<infer TReturn>
+  ? TReturn extends (JSX.Element | null)
+    ? PreactComponent<JSX.Element | null, Props[0]>
+  : TReturn
+  : unknown;
+
+export type BlockFunc<
+  key extends BlockKeys<TManifest> & string,
+  TManifest extends DecoManifest = Manifest,
+  block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 > = block extends BlockTypes<TManifest>
   ? TManifest[block][key] extends
-    { default: (...args: infer Props) => PromiseOrValue<infer TReturn> }
-    ? TReturn extends (JSX.Element | null)
-      ? PreactComponent<JSX.Element | null, Props[0]>
-    : TReturn
+    { default: (...args: any) => PromiseOrValue<any> }
+    ? TManifest[block][key]["default"]
   : unknown
   : unknown;
 

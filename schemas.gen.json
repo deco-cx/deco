@@ -1040,51 +1040,12 @@
       ],
       "title": "$live/actions/workflows/signal.ts@Props"
     },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef": {
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowProps": {
+      "title": "WorkflowProps"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@AnyWorkflow": {
       "type": "object",
       "properties": {
-        "key": {
-          "type": "string",
-          "title": "Key"
-        },
-        "props": {
-          "type": "object",
-          "title": "Props"
-        }
-      },
-      "required": [
-        "key",
-        "props"
-      ],
-      "title": "WorkflowRef"
-    },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowRef"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "ref": {
-              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@Workflow",
-              "title": "Ref"
-            }
-          },
-          "required": [
-            "ref"
-          ]
-        }
-      ],
-      "title": "96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef"
-    },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props": {
-      "type": "object",
-      "properties": {
-        "workflow": {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@96610c30a6b533ec1d0c0cf2c4561a20|WorkflowRef",
-          "title": "Workflow"
-        },
         "id": {
           "type": [
             "string",
@@ -1098,12 +1059,42 @@
             "type": "object"
           },
           "title": "Args"
+        },
+        "workflow": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@Workflow",
+              "title": "Data"
+            },
+            "__resolveType": {
+              "type": "string",
+              "const": "resolved",
+              "title": "__resolve Type"
+            }
+          },
+          "required": [
+            "data",
+            "__resolveType"
+          ],
+          "title": "Workflow"
         }
       },
       "required": [
         "workflow"
       ],
-      "title": "$live/actions/workflows/start.ts@Props"
+      "title": "AnyWorkflow"
+    },
+    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@AnyWorkflow|WorkflowProps": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowProps"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@AnyWorkflow"
+        }
+      ],
+      "title": "$live/actions/workflows/start.ts@AnyWorkflow|WorkflowProps"
     },
     "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==": {
       "title": "Shared application State Loader.",
@@ -1707,7 +1698,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@Props"
+          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@AnyWorkflow|WorkflowProps"
         }
       ],
       "required": [

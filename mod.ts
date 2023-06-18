@@ -5,6 +5,7 @@ export { withManifest } from "$live/clients/withManifest.ts";
 export { default as dev } from "$live/dev.ts";
 export { badRequest, notFound, redirect } from "$live/engine/errors.ts";
 export { asResolved } from "$live/engine/core/resolver.ts";
+export type { Resolved } from "$live/engine/core/resolver.ts";
 export { $live } from "$live/engine/fresh/manifest.ts";
 export * from "$live/types.ts";
 export type { WorkflowGen } from "./deps.ts";
