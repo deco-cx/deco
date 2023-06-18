@@ -10,7 +10,7 @@ In **deco**, developers define **Blocks**. They are built on top of [Deno](https
 
 The **deco admin UI** itself is based on blocks, and can be extended and customized to fit your needs. This allows developers to compose their custom, bespoke digital experience admin UIs to serve their business users needs exactly. **With deco, you get everything you need, and nothing you don't.**
 
-Get started with **deco** today, and build your next web app with the power of Deno and the ease of a visual admin UI. Create and deploy a site at https://deco.cx for free! 
+Get started with **deco** today, and build your next web app with the power of Deno composable building blocks and the ease of a visual admin UI. Create and deploy a site at https://deco.cx for free! 
 
 ## Documentation
 
