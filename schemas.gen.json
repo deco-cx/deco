@@ -721,7 +721,22 @@
       ],
       "title": "$live/sections/UseSlot.tsx@Props"
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props": {
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps": {
+      "type": "object",
+      "properties": {
+        "cron": {
+          "type": "string",
+          "format": "cron",
+          "title": "Cron"
+        }
+      },
+      "required": [
+        "cron"
+      ],
+      "title": "CronProps",
+      "titleBy": "cron"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@DateProps": {
       "type": "object",
       "properties": {
         "start": {
@@ -742,7 +757,19 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchDate.ts@Props"
+      "title": "DateProps",
+      "titleBy": "start"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps|DateProps": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@DateProps"
+        }
+      ],
+      "title": "$live/matchers/MatchDate.ts@CronProps|DateProps"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props": {
       "type": "object",
@@ -1425,11 +1452,11 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz": {
-      "title": "$live/matchers/MatchDate.ts",
+      "title": "Match Date.",
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props"
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps|DateProps"
         }
       ],
       "required": [
