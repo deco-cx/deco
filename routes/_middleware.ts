@@ -78,7 +78,7 @@ export const handler = async (
     url.pathname.startsWith("/live/previews") &&
     url.searchParams.has("mode") && url.searchParams.get("mode") == "showcase"
   ) {
-    Object.entries(allowCorsFor(req)).map(([x, y]) => {newHeaders.set(x, y)})
+    Object.entries(allowCorsFor(req)).map(([name, value]) => {newHeaders.set(name, value)})
   }
   response.headers.forEach((value, key) => newHeaders.append(key, value));
   const printTimings = ctx?.state?.t?.printTimings;
