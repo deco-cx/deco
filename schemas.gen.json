@@ -27,6 +27,7 @@
               "$live/sections/Slot.tsx",
               "$live/sections/UseSlot.tsx",
               "$live/matchers/MatchAlways.ts",
+              "$live/matchers/MatchCron.ts",
               "$live/matchers/MatchDate.ts",
               "$live/matchers/MatchDevice.ts",
               "$live/matchers/MatchEnvironment.ts",
@@ -721,22 +722,23 @@
       ],
       "title": "$live/sections/UseSlot.tsx@Props"
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps": {
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hDcm9uLnRz@CronProps": {
       "type": "object",
       "properties": {
         "cron": {
           "type": "string",
           "format": "cron",
+          "pattern": "(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(ns|us|µs|ms|s|m|h))+)|((((\\d+,)+\\d+|(\\d+(\\/|-)\\d+)|\\d+|\\*) ?){5,7})",
           "title": "Cron"
         }
       },
       "required": [
         "cron"
       ],
-      "title": "CronProps",
+      "title": "$live/matchers/MatchCron.ts@CronProps",
       "titleBy": "cron"
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@DateProps": {
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props": {
       "type": "object",
       "properties": {
         "start": {
@@ -757,19 +759,8 @@
         }
       },
       "required": [],
-      "title": "DateProps",
+      "title": "$live/matchers/MatchDate.ts@Props",
       "titleBy": "start"
-    },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps|DateProps": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@DateProps"
-        }
-      ],
-      "title": "$live/matchers/MatchDate.ts@CronProps|DateProps"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props": {
       "type": "object",
@@ -1451,12 +1442,33 @@
         }
       }
     },
-    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz": {
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hDcm9uLnRz": {
       "title": "Match Date.",
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@CronProps|DateProps"
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hDcm9uLnRz@CronProps"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchCron.ts"
+          ],
+          "default": "$live/matchers/MatchCron.ts"
+        }
+      }
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz": {
+      "title": "$live/matchers/MatchDate.ts",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz@Props"
         }
       ],
       "required": [
@@ -1852,6 +1864,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hDcm9uLnRz"
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz"

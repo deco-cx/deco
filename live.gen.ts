@@ -33,11 +33,12 @@ import * as $$$$$$$$$0 from "./matchers/MatchDate.ts";
 import * as $$$$$$$$$1 from "./matchers/MatchUserAgent.ts";
 import * as $$$$$$$$$2 from "./matchers/MatchSite.ts";
 import * as $$$$$$$$$3 from "./matchers/MatchHost.ts";
-import * as $$$$$$$$$4 from "./matchers/MatchMulti.ts";
-import * as $$$$$$$$$5 from "./matchers/MatchRandom.ts";
-import * as $$$$$$$$$6 from "./matchers/MatchDevice.ts";
-import * as $$$$$$$$$7 from "./matchers/MatchEnvironment.ts";
-import * as $$$$$$$$$8 from "./matchers/MatchAlways.ts";
+import * as $$$$$$$$$4 from "./matchers/MatchCron.ts";
+import * as $$$$$$$$$5 from "./matchers/MatchMulti.ts";
+import * as $$$$$$$$$6 from "./matchers/MatchRandom.ts";
+import * as $$$$$$$$$7 from "./matchers/MatchDevice.ts";
+import * as $$$$$$$$$8 from "./matchers/MatchEnvironment.ts";
+import * as $$$$$$$$$9 from "./matchers/MatchAlways.ts";
 import * as $$$$$$$$$$0 from "./flags/audience.ts";
 import * as $$$$$$$$$$1 from "./flags/everyone.ts";
 import * as $$$$$$$$$$$0 from "./actions/workflows/start.ts";
@@ -84,13 +85,14 @@ const manifest = {
     "$live/sections/UseSlot.tsx": $$$$$$$$0,
   },
   "matchers": {
-    "$live/matchers/MatchAlways.ts": $$$$$$$$$8,
+    "$live/matchers/MatchAlways.ts": $$$$$$$$$9,
+    "$live/matchers/MatchCron.ts": $$$$$$$$$4,
     "$live/matchers/MatchDate.ts": $$$$$$$$$0,
-    "$live/matchers/MatchDevice.ts": $$$$$$$$$6,
-    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$7,
+    "$live/matchers/MatchDevice.ts": $$$$$$$$$7,
+    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$8,
     "$live/matchers/MatchHost.ts": $$$$$$$$$3,
-    "$live/matchers/MatchMulti.ts": $$$$$$$$$4,
-    "$live/matchers/MatchRandom.ts": $$$$$$$$$5,
+    "$live/matchers/MatchMulti.ts": $$$$$$$$$5,
+    "$live/matchers/MatchRandom.ts": $$$$$$$$$6,
     "$live/matchers/MatchSite.ts": $$$$$$$$$2,
     "$live/matchers/MatchUserAgent.ts": $$$$$$$$$1,
   },
