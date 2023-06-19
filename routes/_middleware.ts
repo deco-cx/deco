@@ -6,7 +6,7 @@ import {
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
-import { defaultHeaders } from "$live/utils/http.ts";
+import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
@@ -73,8 +73,13 @@ export const handler = async (
 
   // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
   const initialResponse = await ctx.next();
-
   const newHeaders = new Headers(initialResponse.headers);
+  if (
+    url.pathname.startsWith("/live/previews") &&
+    url.searchParams.has("mode") && url.searchParams.get("mode") == "showcase"
+  ) {
+    Object.entries(allowCorsFor(req)).map(([x, y]) => {newHeaders.set(x, y)})
+  }
   response.headers.forEach((value, key) => newHeaders.append(key, value));
   const printTimings = ctx?.state?.t?.printTimings;
   printTimings && newHeaders.set("Server-Timing", printTimings());
