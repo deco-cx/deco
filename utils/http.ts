@@ -182,7 +182,7 @@ export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
     return start;
   }
   // frombase64
-  return JSON.parse(atob(decodeURIComponent(props)));
+  return JSON.parse(decodeURIComponent(atob(props)));
 };
 
 export const allowCorsFor = (req?: Request): Record<string, string> => ({
