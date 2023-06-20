@@ -23,6 +23,7 @@
               "$live/handlers/routesSelection.ts",
               "$live/handlers/workflowRunner.ts",
               "$live/pages/LivePage.tsx",
+              "$live/sections/Conditional.tsx",
               "$live/sections/PageInclude.tsx",
               "$live/sections/Slot.tsx",
               "$live/sections/UseSlot.tsx",
@@ -435,11 +436,13 @@
           "anyOf": [
             {
               "type": "string",
-              "const": "permanent"
+              "const": "permanent",
+              "default": "permanent"
             },
             {
               "type": "string",
-              "const": "temporary"
+              "const": "temporary",
+              "default": "temporary"
             }
           ],
           "type": "string",
@@ -602,6 +605,44 @@
       "title": "$live/pages/LivePage.tsx@Props",
       "titleBy": "name"
     },
+    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
+      "$ref": "#/root/matchers",
+      "title": "Matcher"
+    },
+    "JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4@Props": {
+      "type": "object",
+      "properties": {
+        "matcher": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "Matcher"
+        },
+        "section": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section",
+              "title": "Data"
+            },
+            "__resolveType": {
+              "type": "string",
+              "const": "resolved",
+              "default": "resolved",
+              "title": "__resolve Type"
+            }
+          },
+          "required": [
+            "data",
+            "__resolveType"
+          ],
+          "title": "Section"
+        }
+      },
+      "required": [
+        "matcher",
+        "section"
+      ],
+      "title": "$live/sections/Conditional.tsx@Props"
+    },
     "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props": {
       "type": "object",
       "properties": {
@@ -635,27 +676,33 @@
               "anyOf": [
                 {
                   "type": "string",
-                  "const": "content"
+                  "const": "content",
+                  "default": "content"
                 },
                 {
                   "type": "string",
-                  "const": "footer"
+                  "const": "footer",
+                  "default": "footer"
                 },
                 {
                   "type": "string",
-                  "const": "header"
+                  "const": "header",
+                  "default": "header"
                 },
                 {
                   "type": "string",
-                  "const": "analytics"
+                  "const": "analytics",
+                  "default": "analytics"
                 },
                 {
                   "type": "string",
-                  "const": "design-system"
+                  "const": "design-system",
+                  "default": "design-system"
                 },
                 {
                   "type": "string",
-                  "const": "SEO"
+                  "const": "SEO",
+                  "default": "SEO"
                 }
               ],
               "type": "string"
@@ -682,27 +729,33 @@
               "anyOf": [
                 {
                   "type": "string",
-                  "const": "content"
+                  "const": "content",
+                  "default": "content"
                 },
                 {
                   "type": "string",
-                  "const": "footer"
+                  "const": "footer",
+                  "default": "footer"
                 },
                 {
                   "type": "string",
-                  "const": "header"
+                  "const": "header",
+                  "default": "header"
                 },
                 {
                   "type": "string",
-                  "const": "analytics"
+                  "const": "analytics",
+                  "default": "analytics"
                 },
                 {
                   "type": "string",
-                  "const": "design-system"
+                  "const": "design-system",
+                  "default": "design-system"
                 },
                 {
                   "type": "string",
-                  "const": "SEO"
+                  "const": "SEO",
+                  "default": "SEO"
                 }
               ],
               "type": "string"
@@ -728,7 +781,7 @@
         "cron": {
           "type": "string",
           "format": "cron",
-          "pattern": "(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(ns|us|µs|ms|s|m|h))+)|((((\\d+,)+\\d+|(\\d+(\\/|-)\\d+)|\\d+|\\*) ?){5,7})",
+          "pattern": "^(?:(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-7](?:\\/|-)[0-7])?))))))$",
           "title": "Cron"
         }
       },
@@ -771,15 +824,18 @@
             "anyOf": [
               {
                 "type": "string",
-                "const": "mobile"
+                "const": "mobile",
+                "default": "mobile"
               },
               {
                 "type": "string",
-                "const": "tablet"
+                "const": "tablet",
+                "default": "tablet"
               },
               {
                 "type": "string",
-                "const": "desktop"
+                "const": "desktop",
+                "default": "desktop"
               }
             ],
             "type": "string"
@@ -799,11 +855,13 @@
           "anyOf": [
             {
               "type": "string",
-              "const": "production"
+              "const": "production",
+              "default": "production"
             },
             {
               "type": "string",
-              "const": "development"
+              "const": "development",
+              "default": "development"
             }
           ],
           "type": "string",
@@ -836,10 +894,6 @@
       "required": [],
       "title": "$live/matchers/MatchHost.ts@Props"
     },
-    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
-      "$ref": "#/root/matchers",
-      "title": "Matcher"
-    },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]": {
       "type": "array",
       "items": {
@@ -854,11 +908,13 @@
           "anyOf": [
             {
               "type": "string",
-              "const": "or"
+              "const": "or",
+              "default": "or"
             },
             {
               "type": "string",
-              "const": "and"
+              "const": "and",
+              "default": "and"
             }
           ],
           "type": "string",
@@ -1099,6 +1155,7 @@
             "__resolveType": {
               "type": "string",
               "const": "resolved",
+              "default": "resolved",
               "title": "__resolve Type"
             }
           },
@@ -1363,6 +1420,27 @@
         }
       }
     },
+    "JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4": {
+      "title": "$live/sections/Conditional.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/Conditional.tsx"
+          ],
+          "default": "$live/sections/Conditional.tsx"
+        }
+      }
+    },
     "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4": {
       "title": "$live/sections/PageInclude.tsx",
       "type": "object",
@@ -1443,7 +1521,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hDcm9uLnRz": {
-      "title": "Match Date.",
+      "title": "$live/matchers/MatchCron.ts",
       "type": "object",
       "allOf": [
         {
@@ -1844,6 +1922,9 @@
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4"
         },
         {
           "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4"

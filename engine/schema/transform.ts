@@ -604,12 +604,14 @@ const tsTypeToSchemeableRec = async (
         ...(await typeDefToSchemeable(node.typeLiteral, root, seen)),
       };
     case "literal": {
+      // deno-lint-ignore no-explicit-any
+      const value = (node.literal as any)[node.literal.kind];
       return {
         type: "inline",
         value: {
           type: node.literal.kind as JSONSchema7TypeName, // FIXME(mcandeia) not compliant with JSONSchema
-          // deno-lint-ignore no-explicit-any
-          const: (node.literal as any)[node.literal.kind],
+          const: value,
+          default: value,
         },
       };
     }

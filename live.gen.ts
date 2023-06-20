@@ -29,6 +29,7 @@ import * as $$$$$$$0 from "./pages/LivePage.tsx";
 import * as $$$$$$$$0 from "./sections/UseSlot.tsx";
 import * as $$$$$$$$1 from "./sections/Slot.tsx";
 import * as $$$$$$$$2 from "./sections/PageInclude.tsx";
+import * as $$$$$$$$3 from "./sections/Conditional.tsx";
 import * as $$$$$$$$$0 from "./matchers/MatchDate.ts";
 import * as $$$$$$$$$1 from "./matchers/MatchUserAgent.ts";
 import * as $$$$$$$$$2 from "./matchers/MatchSite.ts";
@@ -80,6 +81,7 @@ const manifest = {
     "$live/pages/LivePage.tsx": $$$$$$$0,
   },
   "sections": {
+    "$live/sections/Conditional.tsx": $$$$$$$$3,
     "$live/sections/PageInclude.tsx": $$$$$$$$2,
     "$live/sections/Slot.tsx": $$$$$$$$1,
     "$live/sections/UseSlot.tsx": $$$$$$$$0,

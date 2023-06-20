@@ -6,7 +6,7 @@ import Cron from "https://deno.land/x/croner@6.0.3/dist/croner.js";
 export interface CronProps {
   /**
    * @format cron
-   * @pattern (@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5,7})
+   * @pattern ^(?:(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-7](?:\/|-)[0-7])?))))))$
    */
   cron: string;
 }
@@ -30,10 +30,7 @@ function nowWithMinutePrecision() {
   return date;
 }
 
-/**
- * @title Match Date.
- */
-const MatchDate = (props: CronProps) => {
+const MatchCron = (props: CronProps) => {
   const minutePrecision = nowWithMinutePrecision(); // cron jobs has only minutes precision
 
   const cron = new Cron(props.cron);
@@ -41,4 +38,4 @@ const MatchDate = (props: CronProps) => {
     ?.getTime() === minutePrecision.getTime();
 };
 
-export default MatchDate;
+export default MatchCron;
