@@ -318,7 +318,13 @@ export const resolve = async <
   const typeResolver = nativeResolverByType[typeof resolvableObj];
 
   const hasResolvable = resolveType !== undefined;
-  const ctx = hasResolvable ? withResolveChain(context, resolveType) : context;
+  const isResolver = resolverMap[resolveType!] !== undefined;
+  const ctx = hasResolvable
+    ? withResolveChain(
+      context,
+      `${isResolver ? "resolver" : "resolvable"}@${resolveType}`,
+    )
+    : context;
   if (
     depth >= MAX_DEPTH_RESOLVE && !hasResolvable
   ) {
@@ -329,7 +335,12 @@ export const resolve = async <
     (data, prop: string | number | symbol) =>
       resolve(
         data,
-        withResolveChain(ctx, `${prop.toString()}`),
+        withResolveChain(
+          ctx,
+          typeof prop === "number"
+            ? `prop@idx:${prop.toString()}`
+            : `prop@${prop.toString()}`,
+        ),
         hasResolvable ? 1 : depth + 1,
       ),
   ) as T;
