@@ -7,7 +7,6 @@ import { DecoManifest } from "$live/types.ts";
 import * as $$$0 from "./loaders/state.ts";
 import * as $$$1 from "./loaders/workflows/get.ts";
 import * as $$$2 from "./loaders/workflows/events.ts";
-import * as $$$3 from "./loaders/maybe.ts";
 import * as $$$$0 from "./routes/_middleware.ts";
 import * as $$$$1 from "./routes/live/inspect/[...block].ts";
 import * as $$$$2 from "./routes/live/invoke/[...key].ts";
@@ -29,7 +28,9 @@ import * as $$$$$$6 from "./handlers/workflowRunner.ts";
 import * as $$$$$$$0 from "./pages/LivePage.tsx";
 import * as $$$$$$$$0 from "./sections/UseSlot.tsx";
 import * as $$$$$$$$1 from "./sections/Slot.tsx";
-import * as $$$$$$$$2 from "./sections/PageInclude.tsx";
+import * as $$$$$$$$2 from "./sections/EmptySection.tsx";
+import * as $$$$$$$$3 from "./sections/PageInclude.tsx";
+import * as $$$$$$$$4 from "./sections/Conditional_Beta.tsx";
 import * as $$$$$$$$$0 from "./matchers/MatchDate.ts";
 import * as $$$$$$$$$1 from "./matchers/MatchUserAgent.ts";
 import * as $$$$$$$$$2 from "./matchers/MatchSite.ts";
@@ -50,7 +51,6 @@ import * as $live_catchall from "$live/routes/[...catchall].tsx";
 
 const manifest = {
   "loaders": {
-    "$live/loaders/maybe.ts": $$$3,
     "$live/loaders/state.ts": $$$0,
     "$live/loaders/workflows/events.ts": $$$2,
     "$live/loaders/workflows/get.ts": $$$1,
@@ -82,7 +82,9 @@ const manifest = {
     "$live/pages/LivePage.tsx": $$$$$$$0,
   },
   "sections": {
-    "$live/sections/PageInclude.tsx": $$$$$$$$2,
+    "$live/sections/Conditional_Beta.tsx": $$$$$$$$4,
+    "$live/sections/EmptySection.tsx": $$$$$$$$2,
+    "$live/sections/PageInclude.tsx": $$$$$$$$3,
     "$live/sections/Slot.tsx": $$$$$$$$1,
     "$live/sections/UseSlot.tsx": $$$$$$$$0,
   },

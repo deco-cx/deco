@@ -93,7 +93,9 @@ const schemeableToJSONSchemaFunc = (
         },
         [def, [] as JSONSchema7[]],
       );
-      const [nDef, properties, required] = Object.entries(schemeable.value)
+      const [nDef, properties, required] = Object.entries(
+        schemeable.value,
+      )
         .reduce(
           (
             [currDef, properties, req],
@@ -109,6 +111,7 @@ const schemeableToJSONSchemaFunc = (
               schemeable,
               seen,
             );
+
             return [
               nDef,
               {
@@ -122,8 +125,13 @@ const schemeableToJSONSchemaFunc = (
               [...req, ...required ? [property] : []],
             ];
           },
-          [currDef, {}, [] as string[]],
+          [
+            currDef,
+            {},
+            [] as string[],
+          ],
         );
+
       const obj: JSONSchema7 = {
         type: "object",
         allOf: allOf && allOf.length > 0 ? allOf : undefined,

@@ -12,7 +12,6 @@
           "type": "string",
           "not": {
             "enum": [
-              "$live/loaders/maybe.ts",
               "$live/loaders/state.ts",
               "$live/loaders/workflows/events.ts",
               "$live/loaders/workflows/get.ts",
@@ -24,6 +23,8 @@
               "$live/handlers/routesSelection.ts",
               "$live/handlers/workflowRunner.ts",
               "$live/pages/LivePage.tsx",
+              "$live/sections/Conditional_Beta.tsx",
+              "$live/sections/EmptySection.tsx",
               "$live/sections/PageInclude.tsx",
               "$live/sections/Slot.tsx",
               "$live/sections/UseSlot.tsx",
@@ -47,47 +48,6 @@
           }
         }
       }
-    },
-    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
-      "$ref": "#/root/matchers",
-      "title": "Matcher"
-    },
-    "JGxpdmUvbG9hZGVycy9tYXliZS50cw==@ResolvedBlock": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "title": "Data"
-        },
-        "__resolveType": {
-          "type": "string",
-          "const": "resolved",
-          "default": "resolved",
-          "title": "__resolve Type"
-        }
-      },
-      "required": [
-        "data",
-        "__resolveType"
-      ],
-      "title": "ResolvedBlock"
-    },
-    "JGxpdmUvbG9hZGVycy9tYXliZS50cw==@Props": {
-      "type": "object",
-      "properties": {
-        "rule": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
-          "title": "Rule"
-        },
-        "block": {
-          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9tYXliZS50cw==@ResolvedBlock",
-          "title": "Block"
-        }
-      },
-      "required": [
-        "rule",
-        "block"
-      ],
-      "title": "$live/loaders/maybe.ts@Props"
     },
     "JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig": {
       "anyOf": [
@@ -220,6 +180,15 @@
       ],
       "title": "$live/loaders/state.ts@Props"
     },
+    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "title": "Metadata"
+    },
+    "ZGVjby1jeC9kdXJhYmxlL3R5cGVzLnRz@Arg": {
+      "title": "Arg"
+    },
     "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@WorkflowExecution": {
       "anyOf": [
         {
@@ -243,9 +212,11 @@
               "title": "Status"
             },
             "metadata": {
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata",
               "title": "Metadata"
             },
             "input": {
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3R5cGVzLnRz@Arg",
               "title": "Input"
             },
             "output": {
@@ -322,10 +293,14 @@
       ],
       "title": "indexedAccessstatusWorkflowExecution"
     },
+    "JGxpdmUvY29tbW9ucy93b3JrZmxvd3MvdHlwZXMudHM=@Arg": {
+      "title": "Arg"
+    },
     "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessinputWorkflowExecution": {
       "type": "object",
       "properties": {
         "input": {
+          "$ref": "#/definitions/JGxpdmUvY29tbW9ucy93b3JrZmxvd3MvdHlwZXMudHM=@Arg",
           "title": "Input"
         }
       },
@@ -645,6 +620,53 @@
       ],
       "title": "$live/pages/LivePage.tsx@Props",
       "titleBy": "name"
+    },
+    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
+      "$ref": "#/root/matchers",
+      "title": "Matcher"
+    },
+    "JGxpdmUvdXRpbHMvY29uZGl0aW9uYWxzLnRz@Rule": {
+      "type": "object",
+      "properties": {
+        "if": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "If"
+        },
+        "then": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Then"
+        }
+      },
+      "required": [
+        "if",
+        "then"
+      ],
+      "title": "Rule"
+    },
+    "JGxpdmUvdXRpbHMvY29uZGl0aW9uYWxzLnRz@Rule[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvdXRpbHMvY29uZGl0aW9uYWxzLnRz@Rule"
+      },
+      "title": "Rule[]"
+    },
+    "JGxpdmUvdXRpbHMvY29uZGl0aW9uYWxzLnRz@Props": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "$ref": "#/definitions/JGxpdmUvdXRpbHMvY29uZGl0aW9uYWxzLnRz@Rule[]",
+          "title": "Rules"
+        },
+        "else": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Else"
+        }
+      },
+      "required": [
+        "rules",
+        "else"
+      ],
+      "title": "$live/utils/conditionals.ts@Props"
     },
     "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props": {
       "type": "object",
@@ -1071,6 +1093,26 @@
       ],
       "title": "$live/actions/workflows/cancel.ts@Props"
     },
+    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@44f65465fb0911f638beefa48df6162d&Metadata": {
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "workflow": {
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@Workflow",
+              "title": "Workflow"
+            }
+          },
+          "required": [
+            "workflow"
+          ]
+        },
+        {
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata"
+        }
+      ],
+      "title": "44f65465fb0911f638beefa48df6162d&Metadata"
+    },
     "ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest": {
       "type": "object",
       "properties": {
@@ -1082,6 +1124,7 @@
           "title": "Execution Id"
         },
         "metadata": {
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@44f65465fb0911f638beefa48df6162d&Metadata",
           "title": "Metadata"
         }
       },
@@ -1120,6 +1163,25 @@
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowProps": {
       "title": "WorkflowProps"
     },
+    "JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@WorkflowMetadata": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata"
+        }
+      ],
+      "properties": {
+        "defaultInvokeHeaders": {
+          "title": "Default Invoke Headers",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [],
+      "title": "WorkflowMetadata"
+    },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@CommonProps": {
       "type": "object",
       "properties": {
@@ -1131,6 +1193,7 @@
           "title": "Id"
         },
         "metadata": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@WorkflowMetadata",
           "title": "Metadata"
         }
       },
@@ -1184,27 +1247,6 @@
         }
       ],
       "title": "$live/actions/workflows/start.ts@AnyWorkflow|WorkflowProps"
-    },
-    "JGxpdmUvbG9hZGVycy9tYXliZS50cw==": {
-      "title": "Conditional Block Loader",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9tYXliZS50cw==@Props"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/loaders/maybe.ts"
-          ],
-          "default": "$live/loaders/maybe.ts"
-        }
-      }
     },
     "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==": {
       "title": "Shared application State Loader.",
@@ -1441,6 +1483,43 @@
             "$live/pages/LivePage.tsx"
           ],
           "default": "$live/pages/LivePage.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWxfQmV0YS50c3g=": {
+      "title": "$live/sections/Conditional_Beta.tsx",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvdXRpbHMvY29uZGl0aW9uYWxzLnRz@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/Conditional_Beta.tsx"
+          ],
+          "default": "$live/sections/Conditional_Beta.tsx"
+        }
+      }
+    },
+    "JGxpdmUvc2VjdGlvbnMvRW1wdHlTZWN0aW9uLnRzeA==": {
+      "title": "$live/sections/EmptySection.tsx",
+      "type": "object",
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/sections/EmptySection.tsx"
+          ],
+          "default": "$live/sections/EmptySection.tsx"
         }
       }
     },
@@ -1862,9 +1941,6 @@
           "$ref": "#/definitions/Resolvable"
         },
         {
-          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9tYXliZS50cw=="
-        },
-        {
           "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9zdGF0ZS50cw=="
         },
         {
@@ -1928,6 +2004,12 @@
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWxfQmV0YS50c3g="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvRW1wdHlTZWN0aW9uLnRzeA=="
         },
         {
           "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4"
