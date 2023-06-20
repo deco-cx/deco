@@ -568,6 +568,9 @@ const tsTypeToSchemeableRec = async (
       if (wellknown) {
         return wellknown;
       }
+      if (node.typeRef.typeParams && node.typeRef.typeParams.length > 0) {
+        console.log(node.typeRef);
+      }
       const rootNode = root[1].find((n) => {
         return n.name === node.typeRef.typeName;
       });

@@ -12,6 +12,7 @@
           "type": "string",
           "not": {
             "enum": [
+              "$live/loaders/maybe.ts",
               "$live/loaders/state.ts",
               "$live/loaders/workflows/events.ts",
               "$live/loaders/workflows/get.ts",
@@ -23,7 +24,6 @@
               "$live/handlers/routesSelection.ts",
               "$live/handlers/workflowRunner.ts",
               "$live/pages/LivePage.tsx",
-              "$live/sections/Conditional.tsx",
               "$live/sections/PageInclude.tsx",
               "$live/sections/Slot.tsx",
               "$live/sections/UseSlot.tsx",
@@ -47,6 +47,47 @@
           }
         }
       }
+    },
+    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
+      "$ref": "#/root/matchers",
+      "title": "Matcher"
+    },
+    "JGxpdmUvbG9hZGVycy9tYXliZS50cw==@ResolvedBlock": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "title": "Data"
+        },
+        "__resolveType": {
+          "type": "string",
+          "const": "resolved",
+          "default": "resolved",
+          "title": "__resolve Type"
+        }
+      },
+      "required": [
+        "data",
+        "__resolveType"
+      ],
+      "title": "ResolvedBlock"
+    },
+    "JGxpdmUvbG9hZGVycy9tYXliZS50cw==@Props": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "Rule"
+        },
+        "block": {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9tYXliZS50cw==@ResolvedBlock",
+          "title": "Block"
+        }
+      },
+      "required": [
+        "rule",
+        "block"
+      ],
+      "title": "$live/loaders/maybe.ts@Props"
     },
     "JGxpdmUvcm91dGVzL19taWRkbGV3YXJlLnRz@MiddlewareConfig": {
       "anyOf": [
@@ -605,44 +646,6 @@
       "title": "$live/pages/LivePage.tsx@Props",
       "titleBy": "name"
     },
-    "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
-      "$ref": "#/root/matchers",
-      "title": "Matcher"
-    },
-    "JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4@Props": {
-      "type": "object",
-      "properties": {
-        "matcher": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
-          "title": "Matcher"
-        },
-        "section": {
-          "type": "object",
-          "properties": {
-            "data": {
-              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section",
-              "title": "Data"
-            },
-            "__resolveType": {
-              "type": "string",
-              "const": "resolved",
-              "default": "resolved",
-              "title": "__resolve Type"
-            }
-          },
-          "required": [
-            "data",
-            "__resolveType"
-          ],
-          "title": "Section"
-        }
-      },
-      "required": [
-        "matcher",
-        "section"
-      ],
-      "title": "$live/sections/Conditional.tsx@Props"
-    },
     "JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4@Props": {
       "type": "object",
       "properties": {
@@ -1182,6 +1185,27 @@
       ],
       "title": "$live/actions/workflows/start.ts@AnyWorkflow|WorkflowProps"
     },
+    "JGxpdmUvbG9hZGVycy9tYXliZS50cw==": {
+      "title": "Conditional Block Loader",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9tYXliZS50cw==@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/loaders/maybe.ts"
+          ],
+          "default": "$live/loaders/maybe.ts"
+        }
+      }
+    },
     "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==": {
       "title": "Shared application State Loader.",
       "description": "Set the application state using resolvables.",
@@ -1417,27 +1441,6 @@
             "$live/pages/LivePage.tsx"
           ],
           "default": "$live/pages/LivePage.tsx"
-        }
-      }
-    },
-    "JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4": {
-      "title": "$live/sections/Conditional.tsx",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4@Props"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/sections/Conditional.tsx"
-          ],
-          "default": "$live/sections/Conditional.tsx"
         }
       }
     },
@@ -1859,6 +1862,9 @@
           "$ref": "#/definitions/Resolvable"
         },
         {
+          "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9tYXliZS50cw=="
+        },
+        {
           "$ref": "#/definitions/JGxpdmUvbG9hZGVycy9zdGF0ZS50cw=="
         },
         {
@@ -1922,9 +1928,6 @@
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvQ29uZGl0aW9uYWwudHN4"
         },
         {
           "$ref": "#/definitions/JGxpdmUvc2VjdGlvbnMvUGFnZUluY2x1ZGUudHN4"
