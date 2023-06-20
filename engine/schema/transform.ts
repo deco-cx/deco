@@ -108,6 +108,8 @@ const schemeableWellKnownType = async (
   ref: TsTypeRefDef,
   root: [string, DocNode[]],
   seen: Map<DocNode, Schemeable>,
+  typeParams?: TsTypeParamDef[],
+  typeParamsImpl?: Schemeable[],
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
     case "Partial": {
@@ -120,6 +122,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
       if (schemeable.type !== "object") { // TODO(mcandeia) support arrays, unions and intersections
         return {
@@ -143,7 +148,14 @@ const schemeableWellKnownType = async (
           type: "unknown",
         };
       }
-      return tsTypeToSchemeableRec(ref.typeParams![0], root, seen);
+      return tsTypeToSchemeableRec(
+        ref.typeParams![0],
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "Pick": {
       if (
@@ -157,6 +169,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
       const keys = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
@@ -200,6 +215,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
       const keys: string[] = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
@@ -235,7 +253,14 @@ const schemeableWellKnownType = async (
           type: "unknown",
         };
       }
-      return tsTypeToSchemeableRec(ref.typeParams![0], root, seen);
+      return tsTypeToSchemeableRec(
+        ref.typeParams![0],
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "Resolvable": {
       if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
@@ -256,7 +281,14 @@ const schemeableWellKnownType = async (
         };
       }
 
-      return tsTypeToSchemeableRec(typeRef, root, seen);
+      return tsTypeToSchemeableRec(
+        typeRef,
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "BlockInstance": {
       if ((ref.typeParams?.length ?? 0) < 1) {
@@ -317,7 +349,14 @@ const schemeableWellKnownType = async (
         };
       }
 
-      return tsTypeToSchemeableRec(typeRef, root, seen);
+      return tsTypeToSchemeableRec(
+        typeRef,
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "Array": {
       if (ref.typeParams === null || (ref?.typeParams?.length ?? 0) < 1) {
@@ -333,6 +372,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
 
       return {
@@ -352,6 +394,9 @@ const schemeableWellKnownType = async (
         ref.typeParams[1],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
 
       return {
@@ -601,6 +646,8 @@ const tsTypeToSchemeableRec = async (
         node.typeRef,
         root,
         seen,
+        typeParams,
+        typeParamsImpl,
       );
       if (wellknown) {
         return wellknown;
@@ -630,7 +677,10 @@ const tsTypeToSchemeableRec = async (
           const [genType, idx] = typeParamsMap[node.typeRef.typeName];
           const fromTypeParams = (typeParamsImpl ?? [])[idx];
           if (fromTypeParams) {
-            return { ...fromTypeParams, anchor };
+            return {
+              ...fromTypeParams,
+              anchor,
+            };
           }
           if (genType) {
             const typeSchemeable = await tsTypeToSchemeableRec(
@@ -641,7 +691,10 @@ const tsTypeToSchemeableRec = async (
               typeParams,
               typeParamsImpl,
             );
-            return { ...typeSchemeable, anchor };
+            return {
+              ...typeSchemeable,
+              anchor,
+            };
           }
           const anyDoc = root[1]?.[0];
           return {
@@ -657,23 +710,34 @@ const tsTypeToSchemeableRec = async (
           type: "unknown",
         };
       }
-      return findSchemeableFromNode(
+
+      const implementations = await Promise.all(
+        (node.typeRef.typeParams ?? []).map((impl) =>
+          tsTypeToSchemeableRec(
+            impl,
+            root,
+            seen,
+            optional,
+            typeParams,
+            typeParamsImpl,
+          )
+        ),
+      );
+      const withName = (implementations ?? []).map((impl) => impl.name).filter(
+        Boolean,
+      ).join("+");
+      const resp = await findSchemeableFromNode(
         rootNode,
         root,
         seen,
-        await Promise.all(
-          (node.typeRef.typeParams ?? []).map((impl) =>
-            tsTypeToSchemeableRec(
-              impl,
-              root,
-              seen,
-              optional,
-              typeParams,
-              typeParamsImpl,
-            )
-          ),
-        ),
+        implementations,
       );
+      return {
+        ...resp,
+        name: resp.name && withName.length > 0
+          ? `${resp.name}+${withName}`
+          : resp.name,
+      };
     }
     case "keyword": {
       if (node.keyword === "unknown") {
