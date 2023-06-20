@@ -37,5 +37,5 @@ export default async function Conditionals<TValue>(
       return await get<TValue>(then as TValue);
     }
   }
-  return otherwise;
+  return get<TValue>(otherwise);
 }

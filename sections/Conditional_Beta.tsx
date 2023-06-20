@@ -1,5 +1,6 @@
 import { Section } from "$live/blocks/section.ts";
 import { LoaderContext } from "$live/types.ts";
+import { renderSection } from "$live/pages/LivePage.tsx";
 import withConditions, {
   Props as ConditionalProps,
 } from "$live/utils/conditionals.ts";
@@ -19,9 +20,9 @@ export default function ConditionalSection(
   }
   return (
     <>
-      {sections.map(({ Component, props }) => <Component {...props} />)}
+      {sections.map(renderSection)}
     </>
-  ); // should this be 0?
+  );
 }
 
 export const loader = async (
