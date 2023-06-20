@@ -32,6 +32,9 @@ type LiveEvent = {
 } | {
   type: "editor::rerender";
   args: { url: string; props: string };
+} | {
+  type: "editor::focus";
+  args: { index: number };
 };
 
 // TODO: Move inspect-vscode code to here so we don't need to do this stringification
@@ -96,9 +99,12 @@ const main = () => {
 
   // deno-lint-ignore no-explicit-any
   const isLiveEvent = (data: any): data is LiveEvent =>
-    ["scrollToComponent", "DOMInspector", "editor::rerender"].includes(
-      data?.type,
-    );
+    [
+      "scrollToComponent",
+      "DOMInspector",
+      "editor::rerender",
+      "editor::focus",
+    ].includes(data?.type);
 
   const onKeydown = (event: KeyboardEvent) => {
     // in case loaded in iframe, avoid redirecting to editor while in editor
@@ -141,15 +147,30 @@ const main = () => {
     }
   };
 
-  let queue = Promise.resolve();
-  let abort = () => {};
+  let focusElementIndex = 0;
+
+  /** Focuses last changed section */
+  const focusLastUsedSection = () =>
+    document.querySelectorAll("body>section").item(focusElementIndex)
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+
+  const queue = {
+    promise: Promise.resolve(),
+    size: 0,
+    abort: () => {},
+  };
 
   const enqueue = (url: string, props: string) => {
-    abort();
+    queue.abort();
 
     const controller = new AbortController();
+    queue.size++;
 
-    queue = queue.then(async () => {
+    queue.promise = queue.promise.then(async () => {
       try {
         const style = document.createElement("style");
         style.innerHTML = styleSheet;
@@ -183,16 +204,21 @@ const main = () => {
 
           oldScriptEl.parentNode?.replaceChild(newScriptEl, oldScriptEl);
         });
+
+        // auto focus the last used section
+        focusLastUsedSection();
       } catch (error) {
         if (error === "Newer changes detected") {
           return;
         }
 
         console.error(error);
+      } finally {
+        queue.size--;
       }
     });
 
-    abort = () => controller.abort("Newer changes detected");
+    queue.abort = () => controller.abort("Newer changes detected");
   };
 
   const onMessage = (event: MessageEvent<LiveEvent>) => {
@@ -233,6 +259,17 @@ const main = () => {
         const { url, props } = data.args;
 
         if (url && props) enqueue(url, props);
+
+        return;
+      }
+      case "editor::focus": {
+        focusElementIndex = data.args.index;
+
+        // We are not fetching a new page. Focus the section.
+        // Otherwise, just wait for the autofocus to work
+        if (queue.size === 0) {
+          focusLastUsedSection();
+        }
 
         return;
       }
