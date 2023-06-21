@@ -218,17 +218,15 @@ export const pageIdFromMetadata = (
 
   const { resolveChain, component } = metadata;
   const pageResolverIndex =
-    (resolveChain.findIndex((x) =>
-      x.type === "resolver" && x.value === component
+    (resolveChain.findIndex((chain) =>
+      chain.type === "resolver" && chain.value === component
     )) || PAGE_NOT_FOUND;
-  const pageParent = pageResolverIndex > -1
-    ? resolveChain[pageResolverIndex + 1]
-    : null;
-  const pageId = typeof pageParent?.value === "number"
-    ? pageParent.value
-    : PAGE_NOT_FOUND;
 
-  return pageId;
+  const pageParent = pageResolverIndex > 0
+    ? resolveChain[pageResolverIndex - 1]
+    : null;
+
+  return pageParent?.value ?? PAGE_NOT_FOUND;
 };
 
 const getMode = (params?: URLSearchParams): "edit" | "showcase" | "default" => {
