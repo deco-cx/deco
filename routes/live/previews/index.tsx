@@ -3,20 +3,18 @@ import { Page } from "$live/blocks/page.ts";
 import LiveControls from "$live/components/LiveControls.tsx";
 import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import { context } from "$live/live.ts";
+import { pageIdFromMetadata } from "$live/pages/LivePage.tsx";
 
 function Preview(props: PageProps<Page>) {
   const { data } = props;
-  const pageParent =
-    data?.metadata?.resolveChain[data.metadata?.resolveChain.length - 2];
+  const pageId = pageIdFromMetadata(data?.metadata);
 
   return (
     <>
       <LivePolyfills />
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
-        page={{
-          id: pageParent || "-1",
-        }}
+        page={{ id: pageId }}
       />
     </>
   );

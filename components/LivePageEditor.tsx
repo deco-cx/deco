@@ -1,7 +1,6 @@
-import { ComponentChildren, createContext, JSX } from "preact";
 import { Head } from "$fresh/runtime.ts";
 import { PreactComponent } from "$live/engine/block.ts";
-import { useContext } from "preact/hooks";
+import { JSX } from "preact";
 
 interface PreviewIconProps extends JSX.HTMLAttributes<SVGSVGElement> {
   id:
@@ -165,8 +164,16 @@ function editorController() {
   });
 }
 
-export function BlockControls() {
-  const { metadata, index: i, path } = useEditorContext();
+export function BlockControls(
+  { metadata }: { metadata: PreactComponent["metadata"] },
+) {
+  const path = metadata?.resolveChain
+    .filter((field) => field.type === "prop")
+    .map((field) => field.value);
+
+  path?.splice(0, 1); // first is always preview props.
+
+  const index = Number(path?.at(-1) || 0);
 
   return (
     <div
@@ -174,7 +181,7 @@ export function BlockControls() {
       data-event={JSON.stringify({
         action: "edit",
         key: metadata?.component ?? "",
-        index: i,
+        index,
         path,
       })}
     >
@@ -184,8 +191,8 @@ export function BlockControls() {
           data-event={JSON.stringify({
             action: "insert",
             key: metadata?.component ?? "",
-            index: i,
-            at: i,
+            index,
+            at: index,
             path,
           })}
         >
@@ -196,8 +203,8 @@ export function BlockControls() {
           data-event={JSON.stringify({
             action: "insert",
             key: metadata?.component ?? "",
-            index: i,
-            at: i + 1,
+            index,
+            at: index + 1,
             path,
           })}
         >
@@ -214,7 +221,7 @@ export function BlockControls() {
           data-event={JSON.stringify({
             action: "delete",
             key: metadata?.component ?? "",
-            index: i,
+            index,
             path,
           })}
         >
@@ -225,9 +232,9 @@ export function BlockControls() {
           data-event={JSON.stringify({
             action: "move",
             key: metadata?.component ?? "",
-            index: i,
-            from: i,
-            to: i - 1,
+            index,
+            from: index,
+            to: index - 1,
             path,
           })}
         >
@@ -238,9 +245,9 @@ export function BlockControls() {
           data-event={JSON.stringify({
             action: "move",
             key: metadata?.component ?? "",
-            index: i,
-            from: i,
-            to: i + 1,
+            index,
+            from: index,
+            to: index + 1,
             path,
           })}
         >
@@ -251,7 +258,7 @@ export function BlockControls() {
           data-event={JSON.stringify({
             action: "duplicate",
             key: metadata?.component ?? "",
-            index: i,
+            index,
             path,
           })}
         >
@@ -413,120 +420,6 @@ export default function LivePageEditor() {
     </>
   );
 }
-
-interface EditorContextProps {
-  metadata: PreactComponent["metadata"];
-  index: number;
-  path: string[];
-}
-
-const EditorContext = createContext<
-  EditorContextProps | undefined
->(undefined);
-
-const useEditorContext = () => {
-  const ctx = useContext(EditorContext);
-
-  if (ctx === undefined) {
-    throw new Error("Context Provider not found on rendering tree");
-  }
-
-  return ctx;
-};
-
-const useInternalEditorContext = () => useContext(EditorContext);
-
-export function EditorContextProvider(
-  { metadata, index, children }: Omit<EditorContextProps, "path"> & {
-    children: ComponentChildren;
-  },
-) {
-  const editorCtx = useInternalEditorContext();
-  const currentPath = generatePathFromResolveChain(
-    metadata!.resolveChain,
-    index,
-  );
-  const path = [...(editorCtx?.path || []), ...currentPath];
-
-  return (
-    <EditorContext.Provider
-      value={{ metadata, index, path }}
-    >
-      {children}
-    </EditorContext.Provider>
-  );
-}
-
-const LIVE_PAGE_RESOLVE_TYPE = "$live/pages/LivePage.tsx";
-const PAGE_INCLUDE_RESOLVE_TYPE = "$live/sections/PageInclude.tsx";
-const USE_SLOT_RESOLVE_TYPE = "$live/sections/UseSlot.tsx";
-
-const isOutsideBlock = (resolve: string) =>
-  !resolve.endsWith(".tsx") && !resolve.endsWith("ts");
-const isLivePage = (resolve: string) => resolve === LIVE_PAGE_RESOLVE_TYPE;
-const isPageInclude = (resolve: string) =>
-  resolve === PAGE_INCLUDE_RESOLVE_TYPE;
-const isUseSlot = (resolve: string) => resolve === USE_SLOT_RESOLVE_TYPE;
-
-const generatePathFromResolveChain = (
-  resolveChain: string[],
-  index: number,
-) => {
-  const nextToLast = resolveChain[resolveChain.length - 2];
-
-  // section inside page layout
-  if (
-    isLivePage(nextToLast) &&
-    resolveChain.length >= 3 &&
-    isLivePage(resolveChain[resolveChain.length - 3])
-  ) {
-    return ["layout", "sections", index.toString()];
-  }
-
-  // section inside page include inside layout
-  if (
-    isLivePage(nextToLast) &&
-    resolveChain.length >= 3 &&
-    isOutsideBlock(resolveChain[resolveChain.length - 3]) &&
-    resolveChain.length >= 4 &&
-    isPageInclude(resolveChain[resolveChain.length - 4])
-  ) {
-    return [];
-  }
-
-  // page include inside layout
-  if (
-    isLivePage(nextToLast) &&
-    resolveChain.length >= 4 &&
-    isOutsideBlock(resolveChain[resolveChain.length - 3])
-  ) {
-    return ["layout", "sections", index.toString()];
-  }
-
-  // section inside page Section
-  if (
-    isLivePage(nextToLast) &&
-    resolveChain.length >= 3 &&
-    !isLivePage(resolveChain[resolveChain.length - 3])
-  ) {
-    return ["sections", index.toString()];
-  }
-
-  // sections inside use slot
-  if (isUseSlot(nextToLast)) {
-    return ["sections", index.toString()];
-  }
-
-  // Selected section from outside block [preview, livepage, blockid, section]
-  if (
-    isOutsideBlock(nextToLast) && resolveChain.length >= 3 &&
-    isLivePage(resolveChain[resolveChain.length - 3])
-  ) {
-    return ["sections", index.toString()];
-  }
-
-  return [index.toString()];
-};
 
 const beautifyComponentName = (path?: string) =>
   path?.split("/")

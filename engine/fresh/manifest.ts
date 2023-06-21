@@ -60,7 +60,12 @@ const resolverIsBlock = (blk: Block) => (resolver: string) => {
 };
 const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   return (parent, ctx) => {
-    const curr = ctx.resolveChain[ctx.resolveChain.length - 1];
+    const curr = ctx.resolveChain.findLast((r) => r.type === "resolver")?.value;
+
+    if (typeof curr !== "string") {
+      throw new Error("Resolver not found");
+    }
+
     for (const { recoverable, recover } of recovers) {
       if (recoverable(curr)) {
         return recover(parent, ctx);

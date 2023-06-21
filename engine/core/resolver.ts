@@ -27,7 +27,7 @@ export interface Monitoring {
 }
 
 export interface BaseContext {
-  resolveChain: string[];
+  resolveChain: FieldResolver[];
   resolveId: string;
   resolve: ResolveFunc;
   monitoring?: Monitoring;
@@ -35,6 +35,26 @@ export interface BaseContext {
   resolvers: Record<string, Resolver>;
   danglingRecover?: Resolver;
 }
+
+export interface PropFieldResolver {
+  value: string | number;
+  type: "prop";
+}
+
+export interface ResolvableFieldResolver {
+  value: string;
+  type: "resolvable";
+}
+
+export interface ResolverFieldResolver {
+  value: string;
+  type: "resolver";
+}
+
+export type FieldResolver =
+  | PropFieldResolver
+  | ResolvableFieldResolver
+  | ResolverFieldResolver;
 
 export type ResolvesTo<
   T,
@@ -209,6 +229,7 @@ async function object<
   >,
   resolve: <K extends keyof T>(
     resolvable: Resolvable<T[K], TContext, TResolverMap, TResolvableMap>,
+    prop: string | number | symbol,
   ) => PromiseOrValue<T[K]>,
 ): Promise<T> {
   if (obj instanceof Date) {
@@ -248,6 +269,7 @@ const nativeResolverByType: Record<
     >,
     resolve: <K>(
       resolvable: Resolvable<K, TContext, TResolverMap, TResolvableMap>,
+      prop: string | number | symbol,
     ) => PromiseOrValue<K>,
   ) => PromiseOrValue<T>
 > = {
@@ -261,23 +283,13 @@ const nativeResolverByType: Record<
 
 export const withResolveChain = <T extends BaseContext = BaseContext>(
   ctx: T,
-  ...resolverType: string[]
+  ...resolverType: FieldResolver[]
 ): T => {
   const newCtx = {
     ...ctx,
     resolveChain: [...ctx.resolveChain, ...resolverType],
   };
-  return {
-    ...newCtx,
-    resolve: function (
-      data: Resolvable<T, T>,
-    ): Promise<T> {
-      return resolve<T, T>(
-        data,
-        newCtx as T,
-      );
-    },
-  };
+  return newCtx;
 };
 
 export const ALREADY_RESOLVED = "resolved";
@@ -304,12 +316,15 @@ export const isResolved = <T>(
     resolvable.__resolveType === ALREADY_RESOLVED;
 };
 
+const MAX_DEPTH_RESOLVE = 3;
+
 export const resolve = async <
   T,
   TContext extends BaseContext = BaseContext,
 >(
   resolvable: Resolvable<T, TContext>,
   context: TContext,
+  depth = 0,
 ): Promise<T> => {
   if (isResolved(resolvable)) {
     return resolvable.data;
@@ -322,27 +337,39 @@ export const resolve = async <
   // define the type resolver based on the object type
   const typeResolver = nativeResolverByType[typeof resolvableObj];
 
-  // if the resolveType is not defined we should use the typeresolver
-  if (resolveType === undefined) {
-    // since array is also an object so we should check it strictly instead
-    if (Array.isArray(resolvableObj)) {
-      return await typeResolver<T, TContext>(
-        resolvableObj,
-        (data) => resolve(data, context),
-      );
-    }
+  const hasResolvable = resolveType !== undefined;
+  const isResolver = resolverMap[resolveType!] !== undefined;
+  const ctx = hasResolvable
+    ? withResolveChain(
+      context,
+      { type: isResolver ? "resolver" : "resolvable", value: resolveType },
+    )
+    : context;
+  if (
+    depth >= MAX_DEPTH_RESOLVE && !hasResolvable
+  ) {
     return resolvableObj as T;
   }
-
-  const ctx = withResolveChain(context, resolveType);
   const resolved = await typeResolver<T, TContext>(
     resolvableObj,
-    (data) =>
+    (data, prop: string | number | symbol) =>
       resolve(
         data,
-        ctx,
+        withResolveChain(
+          ctx,
+          {
+            type: "prop",
+            value: typeof prop === "number" ? prop : prop.toString(),
+          },
+        ),
+        hasResolvable ? 1 : depth + 1,
       ),
-  );
+  ) as T;
+
+  // if the resolveType is not defined we should use the typeresolver
+  if (!hasResolvable) {
+    return resolved;
+  }
   const resolver = resolverMap[resolveType];
   if (resolver !== undefined) {
     let end: (() => void) | undefined = undefined;

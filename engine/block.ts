@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Resolver } from "$live/engine/core/resolver.ts";
+import { FieldResolver, Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { ResolverMiddleware } from "$live/engine/middleware.ts";
 import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
@@ -222,14 +222,8 @@ export type ComponentFunc<
 > = (props: TProps) => TReturn;
 
 export interface ComponentMetadata {
-  resolveChain: string[];
+  resolveChain: FieldResolver[];
   component: string;
-  /**
-   * This property is used to reference child position, during LivePage edit mode.
-   *
-   * Ex.: Sections inside UseSlot has indexes different from the Slot itself. In this case, UseSlot adds this `real` childIndex.
-   */
-  childIndex?: number;
 }
 
 export interface PageContext {

@@ -5,7 +5,11 @@ import {
   ComponentFunc,
   PreactComponent,
 } from "$live/engine/block.ts";
-import { ResolveFunc, Resolver } from "$live/engine/core/resolver.ts";
+import {
+  FieldResolver,
+  ResolveFunc,
+  Resolver,
+} from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
 import { JSX } from "preact";
@@ -104,7 +108,7 @@ export const componentWith = <TProps = any>(
 ) =>
 (
   props: TProps,
-  { resolveChain }: { resolveChain: string[] },
+  { resolveChain }: { resolveChain: FieldResolver[] },
 ) => ({
   Component: componentFunc,
   props,
