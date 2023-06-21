@@ -5,6 +5,9 @@ export interface Props {
   matchers: Matcher[];
 }
 
+/**
+ * @title OR & AND Matcher
+ */
 const MatchMulti = ({ op, matchers }: Props) => (ctx: MatchContext) => {
   return op === "or"
     ? matchers.some((matcher) => matcher(ctx))

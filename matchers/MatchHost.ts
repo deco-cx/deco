@@ -5,6 +5,9 @@ export interface Props {
   match?: string;
 }
 
+/**
+ * @title Host Matcher
+ */
 const MatchHost = (
   { includes, match }: Props,
   { request }: MatchContext,

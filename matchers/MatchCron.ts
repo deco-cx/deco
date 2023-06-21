@@ -6,6 +6,7 @@ import Cron from "https://deno.land/x/croner@6.0.3/dist/croner.js";
 export interface CronProps {
   /**
    * @format cron
+   * @example * 0-23 * * WED (At every minute past every hour from 0 through 23 on Wednesday.)
    * @pattern ^(?:(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-5]?[0-9](?:(?:\/|-)[0-5]?[0-9])?|\*|[SMTWF][a-z]{2})(?:(?:\s+|\t+)(?:[0-7](?:\/|-)[0-7])?))))))$
    */
   cron: string;
@@ -30,7 +31,14 @@ function nowWithMinutePrecision() {
   return date;
 }
 
+/**
+ * @title Con Matcher
+ * @description Use cron at minute precision to calculate if it is active
+ */
 const MatchCron = (props: CronProps) => {
+  if (!props?.cron) {
+    return false;
+  }
   const minutePrecision = nowWithMinutePrecision(); // cron jobs has only minutes precision
 
   const cron = new Cron(props.cron);

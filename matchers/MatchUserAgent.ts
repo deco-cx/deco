@@ -5,6 +5,9 @@ export interface Props {
   match?: string;
 }
 
+/**
+ * @title User Agent Matcher
+ */
 const MatchUserAgent = (
   { includes, match }: Props,
   { request }: MatchContext,
