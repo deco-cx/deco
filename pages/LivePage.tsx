@@ -40,10 +40,6 @@ export function renderSectionFor(mode?: Mode) {
     { Component: Section, props, metadata }: Props["sections"][0],
     idx: number,
   ) {
-    // TODO: Remove editMode at Section Props and pass via context
-
-    console.log({ metadata });
-
     return (
       <section
         id={`${metadata?.component}-${idx}`}
@@ -77,21 +73,13 @@ function indexedBySlotName(
   const indexed: Record<string, UseSlotSection> = {};
   const contentSections: Section[] = [];
 
-  sections.forEach((section, index) => {
+  sections.forEach((section) => {
     if (isSection(section, USE_SLOT_SECTION_KEY)) {
-      // This is used to maintain the real position during editMode
-      if (section.metadata) {
-        section.metadata.childIndex = index;
-      }
       indexed[section.props.name] = {
         useSection: section,
         used: false,
       };
     } else {
-      // This is used to maintain the real position during editMode
-      if (section.metadata) {
-        section.metadata.childIndex = index;
-      }
       contentSections.push(section);
     } // others are considered content
   });
@@ -220,22 +208,25 @@ export default function LivePage(
   );
 }
 
+const PAGE_NOT_FOUND = -1;
 export const pageIdFromMetadata = (
   metadata: ComponentMetadata | undefined,
 ) => {
   if (!metadata) {
-    return -1;
+    return PAGE_NOT_FOUND;
   }
 
   const { resolveChain, component } = metadata;
-  const resolverIndex =
+  const pageResolverIndex =
     (resolveChain.findIndex((x) =>
       x.type === "resolver" && x.value === component
-    )) || -1;
-  const pageParent = resolverIndex > -1
-    ? resolveChain[resolverIndex + 1]
+    )) || PAGE_NOT_FOUND;
+  const pageParent = pageResolverIndex > -1
+    ? resolveChain[pageResolverIndex + 1]
     : null;
-  const pageId = typeof pageParent?.value === "number" ? pageParent.value : -1;
+  const pageId = typeof pageParent?.value === "number"
+    ? pageParent.value
+    : PAGE_NOT_FOUND;
 
   return pageId;
 };

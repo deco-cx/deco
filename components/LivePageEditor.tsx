@@ -1,6 +1,6 @@
-import { JSX } from "preact";
 import { Head } from "$fresh/runtime.ts";
 import { PreactComponent } from "$live/engine/block.ts";
+import { JSX } from "preact";
 
 interface PreviewIconProps extends JSX.HTMLAttributes<SVGSVGElement> {
   id:
@@ -168,8 +168,10 @@ export function BlockControls(
   { metadata }: { metadata: PreactComponent["metadata"] },
 ) {
   const path = metadata?.resolveChain
-    .filter((r) => r.type === "prop")
-    .map((r) => r.value);
+    .filter((field) => field.type === "prop")
+    .map((field) => field.value);
+
+  path?.splice(0, 1); // first is always preview props.
 
   const index = Number(path?.at(-1) || 0);
 

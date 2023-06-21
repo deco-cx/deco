@@ -9,7 +9,7 @@ export const handler = async (
     unknown,
     LiveConfig<unknown, LiveState>
   >,
-) => {
+): Promise<Response> => {
   const props = req.method === "POST"
     ? await req.json()
     : bodyFromUrl("props", new URL(req.url));

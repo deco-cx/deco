@@ -96,7 +96,8 @@ const sectionBlock: Block<SectionModule> = {
   defaultDanglingRecover: (_, ctx) => {
     const metadata = {
       resolveChain: ctx.resolveChain,
-      component: ctx.resolveChain[ctx.resolveChain.length - 1],
+      component: ctx.resolveChain.findLast((chain) => chain.type === "resolver")
+        ?.value?.toString(),
     };
     if (context.isDeploy) {
       return {
