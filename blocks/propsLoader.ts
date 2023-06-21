@@ -14,39 +14,42 @@ export type PropsUnion<
   TLoadProps,
   TSectionInput,
 > = TSectionInput extends Record<string, any> ? Overwrite<
-    {
-      [
-        key in keyof Diff<
+    TSectionInput,
+    Overwrite<
+      {
+        [
+          key in keyof Diff<
+            Required<TSectionInput>,
+            Pick<TLoadProps, RequiredKeys<TLoadProps>>
+          >
+        ]: Diff<
           Required<TSectionInput>,
           Pick<TLoadProps, RequiredKeys<TLoadProps>>
-        >
-      ]: Diff<
-        Required<TSectionInput>,
-        Pick<TLoadProps, RequiredKeys<TLoadProps>>
-      >[key];
-    }, // non-required keys in the input object that are required in the section object are required.
-    & {
-      [
-        key in keyof Intersection<
+        >[key];
+      }, // non-required keys in the input object that are required in the section object are required.
+      & {
+        [
+          key in keyof Intersection<
+            Pick<TLoadProps, RequiredKeys<TLoadProps>>,
+            Required<TSectionInput>
+          >
+        ]?: Intersection<
           Pick<TLoadProps, RequiredKeys<TLoadProps>>,
           Required<TSectionInput>
-        >
-      ]?: Intersection<
-        Pick<TLoadProps, RequiredKeys<TLoadProps>>,
-        Required<TSectionInput>
-      >[key];
-    } // required keys in both are optional in the loader
-    & {
-      [
-        key in keyof Pick<
+        >[key];
+      } // required keys in both are optional in the loader
+      & {
+        [
+          key in keyof Pick<
+            TSectionInput,
+            OptionalKeys<TSectionInput>
+          >
+        ]?: Pick<
           TSectionInput,
           OptionalKeys<TSectionInput>
-        >
-      ]?: Pick<
-        TSectionInput,
-        OptionalKeys<TSectionInput>
-      >[key];
-    } // optional keys in the section input are always optional.
+        >[key];
+      } // optional keys in the section input are always optional.
+    >
   >
   : TSectionInput;
 
