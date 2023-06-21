@@ -641,7 +641,7 @@
         "if",
         "then"
       ],
-      "title": "Rule+Section[]"
+      "title": "Rule"
     },
     "JGxpdmUvdXRpbHMvY29uZGl0aW9uYWxzLnRz@Rule+Section[][]": {
       "type": "array",
@@ -659,7 +659,8 @@
         },
         "else": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
-          "title": "Else"
+          "title": "Otherwise",
+          "description": "Used in case of none of the previous values are used."
         }
       },
       "required": [
