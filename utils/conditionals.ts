@@ -40,12 +40,10 @@ export default async function Conditionals<TValue>(
   { get }: LoaderContext,
 ): Promise<TValue> {
   for (
-    const { if: _rule, then: _then } of rules
+    const { if: rule, then } of rules
   ) {
-    const thenPromise = get(_then);
-    const rule = await get(_rule);
     if (rule && typeof rule === "function" && rule({ request: req })) {
-      return await thenPromise;
+      return then;
     }
   }
   return get<TValue>(otherwise);
