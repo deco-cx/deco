@@ -27,7 +27,7 @@ export interface Monitoring {
 }
 
 export interface BaseContext {
-  resolveChain: string[];
+  resolveChain: FieldResolver[];
   resolveId: string;
   resolve: ResolveFunc;
   monitoring?: Monitoring;
@@ -35,6 +35,26 @@ export interface BaseContext {
   resolvers: Record<string, Resolver>;
   danglingRecover?: Resolver;
 }
+
+export interface PropFieldResolver {
+  value: string | number;
+  type: "prop";
+}
+
+export interface ResolvableFieldResolver {
+  value: string;
+  type: "resolvable";
+}
+
+export interface ResolverFieldResolver {
+  value: string;
+  type: "resolver";
+}
+
+export type FieldResolver =
+  | PropFieldResolver
+  | ResolvableFieldResolver
+  | ResolverFieldResolver;
 
 export type ResolvesTo<
   T,
@@ -263,7 +283,7 @@ const nativeResolverByType: Record<
 
 export const withResolveChain = <T extends BaseContext = BaseContext>(
   ctx: T,
-  ...resolverType: string[]
+  ...resolverType: FieldResolver[]
 ): T => {
   const newCtx = {
     ...ctx,
@@ -322,7 +342,7 @@ export const resolve = async <
   const ctx = hasResolvable
     ? withResolveChain(
       context,
-      `${isResolver ? "resolver" : "resolvable"}@${resolveType}`,
+      { type: isResolver ? "resolver" : "resolvable", value: resolveType },
     )
     : context;
   if (
@@ -337,9 +357,10 @@ export const resolve = async <
         data,
         withResolveChain(
           ctx,
-          typeof prop === "number"
-            ? `prop@idx:${prop.toString()}`
-            : `prop@${prop.toString()}`,
+          {
+            type: "prop",
+            value: typeof prop === "number" ? prop : prop.toString(),
+          },
         ),
         hasResolvable ? 1 : depth + 1,
       ),

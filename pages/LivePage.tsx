@@ -6,10 +6,9 @@ import LiveControls from "$live/components/LiveControls.tsx";
 import LivePageShowcase from "../components/LivePageShowcase.tsx";
 import LivePageEditor, {
   BlockControls,
-  EditorContextProvider,
 } from "$live/components/LivePageEditor.tsx";
 import LivePolyfills from "$live/components/LivePolyfills.tsx";
-import { PreactComponent } from "$live/engine/block.ts";
+import { ComponentMetadata, PreactComponent } from "$live/engine/block.ts";
 import { notUndefined } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
 import {
@@ -21,6 +20,7 @@ import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
 import { ComponentChildren, createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
+import { FieldResolver } from "../engine/core/resolver.ts";
 
 /**
  * @titleBy name
@@ -35,14 +35,9 @@ export interface Props {
 
 type Mode = "default" | "edit" | "showcase";
 
-const IdentityComponent = ({ children }: { children: ComponentChildren }) => (
-  <>{children}</>
-);
-
 export function renderSectionFor(mode?: Mode) {
   const isEditMode = mode === "edit";
   const Controls = isEditMode ? BlockControls : () => null;
-  const EditContext = isEditMode ? EditorContextProvider : IdentityComponent;
 
   return function _renderSection(
     { Component: Section, props, metadata }: Props["sections"][0],
@@ -54,10 +49,8 @@ export function renderSectionFor(mode?: Mode) {
         id={`${metadata?.component}-${idx}`}
         data-manifest-key={metadata?.component}
       >
-        <EditContext metadata={metadata} index={metadata?.childIndex ?? idx}>
-          <Controls />
-          <Section {...props} />
-        </EditContext>
+        <Controls metadata={metadata} />
+        <Section {...props} />
       </section>
     );
   };
@@ -205,19 +198,17 @@ export default function LivePage(
 ): JSX.Element {
   const metadata = usePageContext()?.metadata;
   const routerCtx = useRouterContext();
-  const pageParent = metadata?.resolveChain[metadata?.resolveChain.length - 2];
+  const pageId = pageIdFromMetadata(metadata);
 
   return (
     <>
       <LivePolyfills />
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
-        page={{
-          id: pageParent!,
-        }}
+        page={{ id: pageId }}
       />
       <LiveAnalytics
-        id={parseInt(pageParent || "-1")}
+        id={pageId}
         flags={routerCtx?.flags}
         path={routerCtx?.pagePath}
       />
@@ -225,6 +216,26 @@ export default function LivePage(
     </>
   );
 }
+
+export const pageIdFromMetadata = (
+  metadata: ComponentMetadata | undefined,
+) => {
+  if (!metadata) {
+    return -1;
+  }
+
+  const { resolveChain, component } = metadata;
+  const resolverIndex =
+    (resolveChain.findIndex((x) =>
+      x.type === "resolver" && x.value === component
+    )) || -1;
+  const pageParent = resolverIndex > -1
+    ? resolveChain[resolverIndex + 1]
+    : null;
+  const pageId = typeof pageParent?.value === "number" ? pageParent.value : -1;
+
+  return pageId;
+};
 
 const getMode = (params?: URLSearchParams): "edit" | "showcase" | "default" => {
   const mode = params?.get("mode");
