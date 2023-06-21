@@ -807,7 +807,7 @@
         "cron": {
           "type": "string",
           "format": "cron",
-          "pattern": "^(?:(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-5]?[0-9](?:(?:\\/|-)[0-5]?[0-9])?|\\*|[SMTWF][a-z]{2})(?:(?:\\s+|\\t+)(?:[0-7](?:\\/|-)[0-7])?))))))$",
+          "pattern": "^(?:(?:(?:\\*|(?:\\d+(?:-\\d+)?(?:,\\d+(?:-\\d+)?)*)|[A-Z]+)(?:\\/\\d+)?)(?:\\s+|$)){5}$",
           "title": "Cron"
         }
       },
@@ -1094,7 +1094,7 @@
       ],
       "title": "$live/actions/workflows/cancel.ts@Props"
     },
-    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@44f65465fb0911f638beefa48df6162d&Metadata": {
+    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata&e859bd03699c10011ddce6708a032c20": {
       "allOf": [
         {
           "type": "object",
@@ -1112,9 +1112,9 @@
           "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata"
         }
       ],
-      "title": "44f65465fb0911f638beefa48df6162d&Metadata"
+      "title": "Metadata&e859bd03699c10011ddce6708a032c20"
     },
-    "ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest+Arg+44f65465fb0911f638beefa48df6162d&Metadata": {
+    "ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest+Arg+Metadata&e859bd03699c10011ddce6708a032c20": {
       "type": "object",
       "properties": {
         "results": {
@@ -1125,7 +1125,7 @@
           "title": "Execution Id"
         },
         "metadata": {
-          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@44f65465fb0911f638beefa48df6162d&Metadata",
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata&e859bd03699c10011ddce6708a032c20",
           "title": "Metadata"
         }
       },
@@ -1134,7 +1134,7 @@
         "executionId",
         "metadata"
       ],
-      "title": "deco-cx/durable/handler.ts@RunRequest+Arg+44f65465fb0911f638beefa48df6162d&Metadata"
+      "title": "deco-cx/durable/handler.ts@RunRequest+Arg+Metadata&e859bd03699c10011ddce6708a032c20"
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz@Props": {
       "type": "object",
@@ -1588,7 +1588,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hBbHdheXMudHM=": {
-      "title": "$live/matchers/MatchAlways.ts",
+      "title": "Always",
       "type": "object",
       "required": [
         "__resolveType"
@@ -1604,7 +1604,8 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hDcm9uLnRz": {
-      "title": "$live/matchers/MatchCron.ts",
+      "title": "Con Matcher",
+      "description": "Use cron at minute precision to calculate if it is active",
       "type": "object",
       "allOf": [
         {
@@ -1625,7 +1626,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEYXRlLnRz": {
-      "title": "$live/matchers/MatchDate.ts",
+      "title": "Date Matcher",
       "type": "object",
       "allOf": [
         {
@@ -1668,7 +1669,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==": {
-      "title": "$live/matchers/MatchEnvironment.ts",
+      "title": "Environment Matcher",
       "type": "object",
       "allOf": [
         {
@@ -1689,7 +1690,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz": {
-      "title": "$live/matchers/MatchHost.ts",
+      "title": "Host Matcher",
       "type": "object",
       "allOf": [
         {
@@ -1710,7 +1711,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==": {
-      "title": "$live/matchers/MatchMulti.ts",
+      "title": "OR & AND Matcher",
       "type": "object",
       "allOf": [
         {
@@ -1731,7 +1732,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=": {
-      "title": "$live/matchers/MatchRandom.ts",
+      "title": "Random Matcher",
       "type": "object",
       "allOf": [
         {
@@ -1752,7 +1753,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz": {
-      "title": "$live/matchers/MatchSite.ts",
+      "title": "Site Matcher",
       "type": "object",
       "allOf": [
         {
@@ -1773,7 +1774,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=": {
-      "title": "$live/matchers/MatchUserAgent.ts",
+      "title": "User Agent Matcher",
       "type": "object",
       "allOf": [
         {
@@ -1865,7 +1866,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest+Arg+44f65465fb0911f638beefa48df6162d&Metadata"
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest+Arg+Metadata&e859bd03699c10011ddce6708a032c20"
         }
       ],
       "required": [
