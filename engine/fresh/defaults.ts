@@ -41,7 +41,7 @@ export default {
           props: { block },
         };
       }
-      const { __resolveType } = resolvable;
+      const { __resolveType, ...props } = resolvable;
       const resolvablePvResolverKey = `${PREVIEW_PREFIX_KEY}${__resolveType}`;
       if (!resolvers[resolvablePvResolverKey]) {
         return {
@@ -51,7 +51,8 @@ export default {
       }
       return resolve({
         __resolveType: resolvablePvResolverKey,
-        ...value,
+        ...(value ?? {}),
+        ...props,
       });
     }
     return resolve({
