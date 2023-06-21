@@ -1,15 +1,12 @@
 import { Head } from "$fresh/runtime.ts";
-import { Page } from "$live/blocks/page.ts";
 import { isSection, Section } from "$live/blocks/section.ts";
 import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
 import LiveControls from "$live/components/LiveControls.tsx";
-import LivePageShowcase from "../components/LivePageShowcase.tsx";
 import LivePageEditor, {
   BlockControls,
 } from "$live/components/LivePageEditor.tsx";
 import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import { ComponentMetadata, PreactComponent } from "$live/engine/block.ts";
-import { notUndefined } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
 import {
   usePageContext,
@@ -18,9 +15,9 @@ import {
 import { isLivePageProps } from "$live/sections/PageInclude.tsx";
 import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
-import { ComponentChildren, createContext, JSX } from "preact";
+import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
-import { FieldResolver } from "../engine/core/resolver.ts";
+import LivePageShowcase from "../components/LivePageShowcase.tsx";
 
 /**
  * @titleBy name
@@ -44,6 +41,9 @@ export function renderSectionFor(mode?: Mode) {
     idx: number,
   ) {
     // TODO: Remove editMode at Section Props and pass via context
+
+    console.log({ metadata });
+
     return (
       <section
         id={`${metadata?.component}-${idx}`}
@@ -149,7 +149,10 @@ const renderPage = (
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode: Mode = "default",
 ): JSX.Element => {
-  const validSections = maybeSections?.filter(notUndefined) ?? [];
+  const validSections =
+    maybeSections?.filter((section) =>
+      typeof section?.Component === "function"
+    ) ?? [];
   // TODO: Uncomment when bring bag layout props
   // const layoutProps = layout?.props;
   const layoutProps = undefined;

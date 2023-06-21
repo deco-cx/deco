@@ -36,7 +36,10 @@ export default {
     if (!previewResolver) {
       const resolvable = resolvables[block];
       if (!resolvable) {
-        return { Component: PreviewNotAvailable, props: { block } };
+        return {
+          Component: PreviewNotAvailable,
+          props: { block },
+        };
       }
       const { __resolveType } = resolvable;
       const resolvablePvResolverKey = `${PREVIEW_PREFIX_KEY}${__resolveType}`;
