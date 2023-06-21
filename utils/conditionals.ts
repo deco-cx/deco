@@ -47,5 +47,5 @@ export default async function Conditionals<TValue>(
       return then;
     }
   }
-  return get<TValue>(otherwise);
+  return otherwise;
 }
