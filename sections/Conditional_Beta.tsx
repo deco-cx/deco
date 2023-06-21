@@ -3,6 +3,7 @@ import { renderSection } from "$live/pages/LivePage.tsx";
 import withConditions, {
   Props as ConditionalProps,
 } from "$live/utils/conditionals.ts";
+import { LoaderContext } from "$live/types.ts";
 
 export interface Props {
   sections: Section[];
@@ -26,9 +27,10 @@ export default function ConditionalSection(
   );
 }
 
-export const loader = (
+export const loader = async (
   props: ConditionalProps<Section[]>,
   req: Request,
-): Props => {
-  return { sections: withConditions(props, req) };
+  ctx: LoaderContext,
+): Promise<Props> => {
+  return { sections: await withConditions(props, req, ctx) };
 };

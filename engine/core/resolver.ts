@@ -320,7 +320,7 @@ const MAX_DEPTH_RESOLVE_ENV_VAR = "DECO_MAX_DEPTH_RESOLVE";
 
 const MAX_DEPTH_RESOLVE = Deno.env.has(MAX_DEPTH_RESOLVE_ENV_VAR)
   ? +Deno.env.get(MAX_DEPTH_RESOLVE_ENV_VAR)!
-  : 4;
+  : 3;
 
 export const resolve = async <
   T,

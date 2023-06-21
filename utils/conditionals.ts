@@ -35,10 +35,11 @@ export const withConditionals = <
 };
 
 export default async function Conditionals<TValue>(
-  { rules, else: otherwise }: Props<TValue>,
+  _rule: Props<TValue>,
   req: Request,
   { get }: LoaderContext,
 ): Promise<TValue> {
+  const { rules, else: otherwise } = await get(_rule);
   for (
     const { if: rule, then } of rules
   ) {
