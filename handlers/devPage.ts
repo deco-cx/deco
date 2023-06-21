@@ -24,7 +24,7 @@ export default function DevPage(devConfig: DevConfig) {
       context.isDeploy
     ) {
       if (!referer || !isOnAdmin) {
-        if (pageId < 0) {
+        if (pageId === -1) {
           return Response.error();
         }
         // redirect
