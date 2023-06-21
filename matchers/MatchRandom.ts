@@ -3,6 +3,9 @@ export interface Props {
   traffic: number;
 }
 
+/**
+ * @title Random Matcher
+ */
 const MatchRandom = (
   { traffic }: Props,
   { isMatchFromCookie }: MatchWithCookieValue,

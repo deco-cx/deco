@@ -316,7 +316,11 @@ export const isResolved = <T>(
     resolvable.__resolveType === ALREADY_RESOLVED;
 };
 
-const MAX_DEPTH_RESOLVE = 3;
+const MAX_DEPTH_RESOLVE_ENV_VAR = "DECO_MAX_DEPTH_RESOLVE";
+
+const MAX_DEPTH_RESOLVE = Deno.env.has(MAX_DEPTH_RESOLVE_ENV_VAR)
+  ? +Deno.env.get(MAX_DEPTH_RESOLVE_ENV_VAR)!
+  : 3;
 
 export const resolve = async <
   T,
@@ -392,7 +396,9 @@ export const resolve = async <
         end?.();
       }
     }
-    return resolve(respOrPromise, ctx);
+    return isResolvable(respOrPromise)
+      ? resolve(respOrPromise, ctx)
+      : respOrPromise;
   }
   const resolvableRef = resolvables[resolveType] as Resolvable<T>;
   if (resolvableRef === undefined) {

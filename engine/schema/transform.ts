@@ -7,6 +7,7 @@ import {
   TsTypeDef,
   TsTypeDefLiteral,
   TsTypeLiteralDef,
+  TsTypeParamDef,
   TsTypeRefDef,
   TsTypeUnionDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
@@ -24,6 +25,7 @@ export interface SchemeableBase {
   id?: string; // generated on-demand
   name?: string;
   file?: string;
+  anchor?: string;
 }
 export interface InlineSchemeable extends SchemeableBase {
   type: "inline";
@@ -106,6 +108,8 @@ const schemeableWellKnownType = async (
   ref: TsTypeRefDef,
   root: [string, DocNode[]],
   seen: Map<DocNode, Schemeable>,
+  typeParams?: TsTypeParamDef[],
+  typeParamsImpl?: Schemeable[],
 ): Promise<Schemeable | undefined> => {
   switch (ref.typeName) {
     case "Partial": {
@@ -118,6 +122,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
       if (schemeable.type !== "object") { // TODO(mcandeia) support arrays, unions and intersections
         return {
@@ -141,7 +148,14 @@ const schemeableWellKnownType = async (
           type: "unknown",
         };
       }
-      return tsTypeToSchemeableRec(ref.typeParams![0], root, seen);
+      return tsTypeToSchemeableRec(
+        ref.typeParams![0],
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "Pick": {
       if (
@@ -155,6 +169,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
       const keys = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
@@ -198,6 +215,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
       const keys: string[] = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
@@ -233,7 +253,14 @@ const schemeableWellKnownType = async (
           type: "unknown",
         };
       }
-      return tsTypeToSchemeableRec(ref.typeParams![0], root, seen);
+      return tsTypeToSchemeableRec(
+        ref.typeParams![0],
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "Resolvable": {
       if (ref.typeParams === null || (ref.typeParams?.length ?? 0) < 1) {
@@ -254,7 +281,14 @@ const schemeableWellKnownType = async (
         };
       }
 
-      return tsTypeToSchemeableRec(typeRef, root, seen);
+      return tsTypeToSchemeableRec(
+        typeRef,
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "BlockInstance": {
       if ((ref.typeParams?.length ?? 0) < 1) {
@@ -315,7 +349,14 @@ const schemeableWellKnownType = async (
         };
       }
 
-      return tsTypeToSchemeableRec(typeRef, root, seen);
+      return tsTypeToSchemeableRec(
+        typeRef,
+        root,
+        seen,
+        false,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "Array": {
       if (ref.typeParams === null || (ref?.typeParams?.length ?? 0) < 1) {
@@ -331,6 +372,9 @@ const schemeableWellKnownType = async (
         ref.typeParams![0],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
 
       return {
@@ -350,6 +394,9 @@ const schemeableWellKnownType = async (
         ref.typeParams[1],
         root,
         seen,
+        false,
+        typeParams,
+        typeParamsImpl,
       );
 
       return {
@@ -370,6 +417,7 @@ export const findSchemeableFromNode = async (
   rootNode: DocNode,
   root: [string, DocNode[]],
   seen: Map<DocNode, Schemeable>,
+  typeParams?: Schemeable[],
 ): Promise<Schemeable> => {
   const currLocation = {
     file: fromFileUrlOrNoop(rootNode.location.filename),
@@ -380,6 +428,7 @@ export const findSchemeableFromNode = async (
     value: currLocation,
   } as SchemeableRef;
   const seenValue = seen.get(rootNode);
+
   if (seenValue !== undefined) {
     return seenValue;
   }
@@ -399,7 +448,13 @@ export const findSchemeableFromNode = async (
           ...currLocation,
           extends: allOf && allOf.length > 0 ? allOf : undefined,
           type: "object",
-          ...(await typeDefToSchemeable(rootNode.interfaceDef, root, seen)),
+          ...(await typeDefToSchemeable(
+            rootNode.interfaceDef,
+            root,
+            seen,
+            rootNode.interfaceDef.typeParams,
+            typeParams,
+          )),
           jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
         };
       }
@@ -410,6 +465,9 @@ export const findSchemeableFromNode = async (
             rootNode.typeAliasDef.tsType,
             root,
             seen,
+            false,
+            rootNode.typeAliasDef.typeParams,
+            typeParams,
           )),
           jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
         };
@@ -428,10 +486,15 @@ export const findSchemeableFromNode = async (
         }
         return {
           ...currLocation,
-          ...await findSchemeableFromNode(node, [
-            rootNode.importDef.src,
-            newRoots,
-          ], seen),
+          ...await findSchemeableFromNode(
+            node,
+            [
+              rootNode.importDef.src,
+              newRoots,
+            ],
+            seen,
+            typeParams,
+          ),
         };
       }
     }
@@ -450,6 +513,8 @@ const typeDefToSchemeable = async (
   node: InterfaceDef | TsTypeLiteralDef,
   root: [string, DocNode[]],
   seen: Map<DocNode, Schemeable>,
+  typeParams?: TsTypeParamDef[],
+  typeParamsImpl?: Schemeable[],
 ): Promise<Omit<ObjectSchemeable, "id" | "type">> => {
   const properties = await Promise.all(
     node.properties.map(async (property) => {
@@ -461,6 +526,8 @@ const typeDefToSchemeable = async (
         root,
         new Map(seen),
         property.optional,
+        typeParams,
+        typeParamsImpl,
       );
 
       return [
@@ -497,17 +564,29 @@ const tsTypeToSchemeableRec = async (
   root: [string, DocNode[]],
   seen: Map<DocNode, Schemeable>,
   optional?: boolean,
+  typeParams?: TsTypeParamDef[],
+  typeParamsImpl?: Schemeable[],
 ): Promise<Schemeable> => {
   const kind = node.kind;
   switch (kind) {
     case "parenthesized": {
-      return await tsTypeToSchemeableRec(node.parenthesized, root, seen);
+      return await tsTypeToSchemeableRec(
+        node.parenthesized,
+        root,
+        seen,
+        optional,
+        typeParams,
+        typeParamsImpl,
+      );
     }
     case "indexedAccess": {
       const objSchemeable = await tsTypeToSchemeableRec(
         node.indexedAccess.objType,
         root,
         seen,
+        optional,
+        typeParams,
+        typeParamsImpl,
       );
       const indexType = node.indexedAccess.indexType;
       if (indexType.kind !== "literal") { // supporting only literal access A["b"]
@@ -550,6 +629,9 @@ const tsTypeToSchemeableRec = async (
         node.array,
         root,
         seen,
+        optional,
+        typeParams,
+        typeParamsImpl,
       );
 
       return {
@@ -564,6 +646,8 @@ const tsTypeToSchemeableRec = async (
         node.typeRef,
         root,
         seen,
+        typeParams,
+        typeParamsImpl,
       );
       if (wellknown) {
         return wellknown;
@@ -572,11 +656,88 @@ const tsTypeToSchemeableRec = async (
         return n.name === node.typeRef.typeName;
       });
       if (!rootNode) {
+        const typeParamsMap = (typeParams ?? []).reduce(
+          (
+            tpParamsMap,
+            tpParam,
+            i,
+          ) => {
+            return {
+              ...tpParamsMap,
+              [tpParam.name]: [tpParam.default, i] as [
+                TsTypeDef | undefined,
+                number,
+              ],
+            };
+          },
+          {} as Record<string, [TsTypeDef | undefined, number]>,
+        );
+        if (node.typeRef.typeName in typeParamsMap) {
+          const anchor = node.typeRef.typeName;
+          const [genType, idx] = typeParamsMap[node.typeRef.typeName];
+          const fromTypeParams = (typeParamsImpl ?? [])[idx];
+          if (fromTypeParams) {
+            return {
+              ...fromTypeParams,
+              anchor,
+            };
+          }
+          if (genType) {
+            const typeSchemeable = await tsTypeToSchemeableRec(
+              genType,
+              root,
+              seen,
+              optional,
+              typeParams,
+              typeParamsImpl,
+            );
+            return {
+              ...typeSchemeable,
+              anchor,
+            };
+          }
+          const anyDoc = root[1]?.[0];
+          return {
+            type: "inline",
+            anchor,
+            file: anyDoc
+              ? fromFileUrlOrNoop(anyDoc?.location.filename)
+              : undefined,
+            value: {} as JSONSchema7,
+          };
+        }
         return {
           type: "unknown",
         };
       }
-      return findSchemeableFromNode(rootNode, root, seen);
+
+      const implementations = await Promise.all(
+        (node.typeRef.typeParams ?? []).map((impl) =>
+          tsTypeToSchemeableRec(
+            impl,
+            root,
+            seen,
+            optional,
+            typeParams,
+            typeParamsImpl,
+          )
+        ),
+      );
+      const withName = (implementations ?? []).map((impl) => impl.name).filter(
+        Boolean,
+      ).join("+");
+      const resp = await findSchemeableFromNode(
+        rootNode,
+        root,
+        seen,
+        implementations,
+      );
+      return {
+        ...resp,
+        name: resp.name && withName.length > 0
+          ? `${resp.name}+${withName}`
+          : resp.name,
+      };
     }
     case "keyword": {
       if (node.keyword === "unknown") {
@@ -601,22 +762,37 @@ const tsTypeToSchemeableRec = async (
     case "typeLiteral":
       return {
         type: "object",
-        ...(await typeDefToSchemeable(node.typeLiteral, root, seen)),
+        ...(await typeDefToSchemeable(
+          node.typeLiteral,
+          root,
+          seen,
+          typeParams,
+          typeParamsImpl,
+        )),
       };
     case "literal": {
+      // deno-lint-ignore no-explicit-any
+      const value = (node.literal as any)[node.literal.kind];
       return {
         type: "inline",
         value: {
           type: node.literal.kind as JSONSchema7TypeName, // FIXME(mcandeia) not compliant with JSONSchema
-          // deno-lint-ignore no-explicit-any
-          const: (node.literal as any)[node.literal.kind],
+          const: value,
+          default: value,
         },
       };
     }
     case "intersection": {
       const values = await Promise.all(
         node.intersection.map((t) =>
-          tsTypeToSchemeableRec(t, root, new Map(seen))
+          tsTypeToSchemeableRec(
+            t,
+            root,
+            new Map(seen),
+            optional,
+            typeParams,
+            typeParamsImpl,
+          )
         ),
       );
       const ids = [];
@@ -628,6 +804,8 @@ const tsTypeToSchemeableRec = async (
           ids.push("null");
         } else if (node.repr) {
           ids.push(node.repr);
+        } else if (tp.anchor) {
+          ids.push(tp.anchor);
         } else {
           const hash = await crypto.subtle.digest(
             "MD5",
@@ -647,7 +825,16 @@ const tsTypeToSchemeableRec = async (
     }
     case "union": {
       const values = await Promise.all(
-        node.union.map((t) => tsTypeToSchemeableRec(t, root, new Map(seen))),
+        node.union.map((t) =>
+          tsTypeToSchemeableRec(
+            t,
+            root,
+            new Map(seen),
+            false,
+            typeParams,
+            typeParamsImpl,
+          )
+        ),
       );
       const ids = [];
       for (let i = 0; i < node.union.length; i++) {
@@ -658,6 +845,8 @@ const tsTypeToSchemeableRec = async (
           ids.push("null");
         } else if (node.repr) {
           ids.push(node.repr);
+        } else if (tp.anchor) {
+          ids.push(tp.anchor);
         } else {
           const hash = await crypto.subtle.digest(
             "MD5",

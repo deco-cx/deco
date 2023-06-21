@@ -1,3 +1,6 @@
+/**
+ * @titleBy start
+ */
 export interface Props {
   /**
    * @format date-time
@@ -9,6 +12,9 @@ export interface Props {
   end?: string;
 }
 
+/**
+ * @title Date Matcher
+ */
 const MatchDate = (props: Props) => {
   const now = new Date();
   const start = props.start ? now > new Date(props.start) : true;
