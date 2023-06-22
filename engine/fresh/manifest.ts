@@ -194,6 +194,7 @@ export const $live = <T extends DecoManifest>(
     getResolvables: (forceFresh?: boolean) => {
       return provider.state({ forceFresh });
     },
+    revision: provider.revision.bind(provider),
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,

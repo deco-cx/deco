@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { genHints, ResolveHints } from "$live/engine/core/hints.ts";
 import {
   BaseContext,
   Monitoring,
@@ -8,13 +9,13 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
-import { withResolveChain } from "$live/engine/core/resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
   getResolvables: (
     fresh?: boolean,
   ) => PromiseOrValue<Record<string, Resolvable<any>>>;
+  revision: () => PromiseOrValue<string>;
   danglingRecover?: Resolver;
 }
 
@@ -22,6 +23,7 @@ export interface ResolveOptions {
   overrides?: Record<string, string>;
   monitoring?: Monitoring;
   forceFresh?: boolean;
+  maxDepth?: number;
 }
 
 const withOverrides = (
@@ -39,10 +41,16 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   >;
   protected resolvers: ResolverMap<TContext>;
   protected danglingRecover?: Resolver;
+  private resolveHints: ResolveHints;
+  private currentRevision: string | null;
+  private getRevision: () => PromiseOrValue<string>;
   constructor(config: ResolverOptions<TContext>) {
     this.resolvers = config.resolvers;
     this.getResolvables = config.getResolvables;
     this.danglingRecover = config.danglingRecover;
+    this.getRevision = config.revision;
+    this.resolveHints = {};
+    this.currentRevision = null;
   }
 
   public addResolvers = (resolvers: ResolverMap<TContext>) => {
@@ -67,12 +75,12 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   ) =>
   <T = any>(
     typeOrResolvable: string | Resolvable<T>,
-    forceFresh?: boolean,
+    overrideOptions?: Partial<ResolveOptions>,
     partialCtx: Partial<Omit<TContext, keyof BaseContext>> = {},
   ): Promise<T> => {
     return this.resolve(typeOrResolvable, { ...context, ...partialCtx }, {
-      ...options ?? {},
-      forceFresh: forceFresh ?? options?.forceFresh,
+      ...(options ?? {}),
+      ...(overrideOptions ?? {}),
     });
   };
 
@@ -81,7 +89,11 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
+    const revision = await this.getRevision(); // should not be done in parallel since there's a racing condition that could return a new revision with old data.
     const resolvables = await this.getResolvables(options?.forceFresh);
+    if (this.currentRevision !== revision) {
+      this.resolveHints = genHints(resolvables);
+    }
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();
     const baseCtx: BaseContext = {
@@ -89,21 +101,19 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolve: _resolve,
       resolveId: crypto.randomUUID(),
       resolveChain: [],
+      resolveHints: this.resolveHints,
       resolvables: nresolvables,
       resolvers,
       monitoring: options?.monitoring,
     };
-    const _ctx = {
+    const ctx = {
       ...context,
       ...baseCtx,
     };
 
-    const [resolvable, ctx] = typeof typeOrResolvable === "string"
-      ? [
-        nresolvables[typeOrResolvable],
-        withResolveChain(_ctx, { type: "resolvable", value: typeOrResolvable }),
-      ]
-      : [typeOrResolvable, _ctx];
+    const resolvable = typeof typeOrResolvable === "string"
+      ? { __resolveType: typeOrResolvable }
+      : typeOrResolvable;
 
     function _resolve<T>(
       data: Resolvable<T, TContext>,

@@ -1883,6 +1883,20 @@
     "description": "Discover the collections of the season",
     "__resolveType": "deco-sites/fashion/sections/Images/ImageGallery.tsx"
   },
+  "Product Shelf - Teste": {
+    "title": "Teste",
+    "products": {
+      "count": 8,
+      "query": {
+        "__resolveType": "saved_query"
+      },
+      "collection": [],
+      "__resolveType": "deco-sites/std/functions/vtexProductList.ts"
+    },
+    "cardLayout": { "hide": {} },
+    "description": "The best selection for you",
+    "__resolveType": "deco-sites/fashion/sections/Product/ProductShelf.tsx"
+  },
   "Product Shelf - 01": {
     "title": "Teste",
     "products": { "__resolveType": "Colecao 137 - Casacos" },

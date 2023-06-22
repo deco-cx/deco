@@ -10,9 +10,10 @@ import {
   spy,
 } from "https://deno.land/std@0.179.0/testing/mock.ts";
 import { assertEquals, assertRejects } from "std/testing/asserts.ts";
+import { genHints } from "$live/engine/core/hints.ts";
 
 Deno.test("resolve", async (t) => {
-  const context: BaseContext = {
+  const context: Omit<BaseContext, "resolveHints"> = {
     resolveChain: [],
     resolveId: "1",
     resolvables: {},
@@ -49,7 +50,7 @@ Deno.test("resolve", async (t) => {
           bar: 10,
           __resolveType: addToStringBarResolver.name,
         },
-        ctx,
+        { ...ctx, resolveHints: {} },
       );
       assertEquals(result, { barString: "10" });
       assertSpyCallArg(resolverMap.addToStringBarResolver, 0, 0, { bar: 10 });
@@ -74,7 +75,7 @@ Deno.test("resolve", async (t) => {
             {
               __resolveType: "not_found_resolver",
             },
-            context,
+            { ...context, resolveHints: {} },
           ),
         "Dangling reference of: not_found_resolver",
       );
@@ -111,7 +112,7 @@ Deno.test("resolve", async (t) => {
         ],
         __resolveType: "resolve",
       },
-      { ...context, resolvers: resolverMap },
+      { ...context, resolvers: resolverMap, resolveHints: {} },
     );
     assertEquals(result, {
       values: [
@@ -140,7 +141,7 @@ Deno.test("resolve", async (t) => {
         bar: 1,
         __resolveType: "testResolver",
       },
-      { ...context, resolvers: resolverMap },
+      { ...context, resolvers: resolverMap, resolveHints: {} },
     );
     assertEquals(result, { foo: "hello", bar: 2 });
   });
@@ -184,7 +185,12 @@ Deno.test("resolve", async (t) => {
       {
         __resolveType: "key",
       },
-      { ...context, resolvers: resolverMap, resolvables: resolvableMap },
+      {
+        ...context,
+        resolvers: resolverMap,
+        resolvables: resolvableMap,
+        resolveHints: genHints(resolvableMap),
+      },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
   });
@@ -219,7 +225,7 @@ Deno.test("resolve", async (t) => {
         bar: 10,
         __resolveType: "testResolver",
       },
-      { ...context, resolvers: resolverMap },
+      { ...context, resolvers: resolverMap, resolveHints: {} },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
   });

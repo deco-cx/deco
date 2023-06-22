@@ -73,7 +73,7 @@ export const handler = async (
       block,
       props,
     },
-    false,
+    { forceFresh: false },
     {
       context: { ...ctx, params: params ?? ctx.params },
       request: newReq,

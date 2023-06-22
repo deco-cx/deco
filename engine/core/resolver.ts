@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import type { ResolveHints } from "$live/engine/core/hints.ts";
 import {
   isAwaitable,
   mapObjKeys,
@@ -8,6 +9,7 @@ import {
   waitKeys,
 } from "$live/engine/core/utils.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import { ResolveOptions } from "$live/engine/core/mod.ts";
 
 export class DanglingReference extends Error {
   public resolverType: string;
@@ -18,7 +20,7 @@ export class DanglingReference extends Error {
 }
 export type ResolveFunc = <T = any, TContext extends BaseContext = BaseContext>(
   data: Resolvable<T>,
-  forceFresh?: boolean,
+  options?: Partial<ResolveOptions>,
   partialCtx?: Partial<Omit<TContext, keyof BaseContext>>,
 ) => Promise<T>;
 
@@ -34,6 +36,7 @@ export interface BaseContext {
   resolvables: Record<string, Resolvable<any>>;
   resolvers: Record<string, Resolver>;
   danglingRecover?: Resolver;
+  resolveHints: ResolveHints;
 }
 
 export interface PropFieldResolver {
@@ -56,6 +59,7 @@ export type FieldResolver =
   | ResolvableFieldResolver
   | ResolverFieldResolver;
 
+export type ResolveChain = FieldResolver[];
 export type ResolvesTo<
   T,
   TContext extends BaseContext = BaseContext,
@@ -326,6 +330,113 @@ export const isResolved = <T>(
     resolvable.__resolveType === ALREADY_RESOLVED;
 };
 
+/**
+ * Returns the object value given its key path.
+ */
+export const getValue = (data: any, keys: (string | number)[]): any => {
+  if (keys.length === 0 || !data) {
+    return data;
+  }
+  const [current, ...rest] = keys;
+  return getValue(data[current], rest);
+};
+
+/**
+ * Returns a new data with the specified key changed to its specified @param newValue.
+ * @returns the changed object. ["sections", "3"] a[sections][3] = newValue
+ */
+const withNewValue = (
+  data: any,
+  keys: (string | number)[],
+  newValue: any,
+): any => {
+  if (!data) {
+    return undefined;
+  }
+  if (keys.length === 0) {
+    return newValue;
+  }
+  const [current, ...rest] = keys;
+  if (Array.isArray(data) && typeof +current === "number") {
+    data[+current] = withNewValue(data[+current], rest, newValue);
+  }
+  data[current] = withNewValue(data[current], rest, newValue);
+};
+
+const resolveResolvable = async <
+  T,
+  TContext extends BaseContext = BaseContext,
+>(
+  resolveType: string,
+  context: TContext,
+): Promise<T> => {
+  const {
+    resolvables: { [resolveType]: resolvableObj },
+    resolveHints: { [resolveType]: hints },
+  } = context;
+
+  if (resolvableObj === undefined) {
+    if (!context.danglingRecover) {
+      throw new DanglingReference(resolveType);
+    }
+    return context.danglingRecover(resolveType, context);
+  }
+  const ctx = withResolveChain(
+    context,
+    { type: "resolvable", value: resolveType },
+  );
+  const resolvedKeysPromise: Promise<
+    { path: (string | number)[]; resolved: any }
+  >[] = [];
+  for (const hint of hints) {
+    const props = hint.filter((field) => field.type === "prop").map((field) =>
+      field.value
+    );
+    const resolvable = getValue(resolvableObj, props);
+    resolvedKeysPromise.push(
+      resolveResolver(resolvable, withResolveChain(ctx, ...hint)).then(
+        (resolved) => ({ path: props, resolved }),
+      ),
+    );
+  }
+  const resolvedKeys = await Promise.all(resolvedKeysPromise);
+  const clonedObj = structuredClone(resolvableObj);
+  for (const { path, resolved } of resolvedKeys) {
+    withNewValue(clonedObj, path, resolved);
+  }
+  return resolveResolver(clonedObj, ctx);
+};
+
+const resolveResolver = async <
+  T,
+  TContext extends BaseContext = BaseContext,
+>({ __resolveType, ...props }: Resolvable, ctx: TContext): Promise<T> => {
+  const { resolvers } = ctx;
+  const resolver = resolvers[__resolveType];
+  let end: (() => void) | undefined = undefined;
+  let respOrPromise = resolver(props, ctx);
+  if (isAwaitable(respOrPromise)) {
+    const timingName = __resolveType.replaceAll("/", ".");
+    end = ctx.monitoring?.t?.start(timingName);
+    respOrPromise = await respOrPromise;
+
+    // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+    // in order to achieve the correct result we should wrap the inner function with the timings function.
+    if (typeof respOrPromise === "function") {
+      const original = respOrPromise;
+      respOrPromise = async (...args: any[]) => {
+        const resp = await original(...args);
+        end?.();
+        return resp;
+      };
+    } else {
+      end?.();
+    }
+  }
+  return isResolvable(respOrPromise)
+    ? resolve(respOrPromise, ctx)
+    : respOrPromise;
+};
 const MAX_DEPTH_RESOLVE_ENV_VAR = "DECO_MAX_DEPTH_RESOLVE";
 
 const MAX_DEPTH_RESOLVE = Deno.env.has(MAX_DEPTH_RESOLVE_ENV_VAR)
@@ -338,7 +449,7 @@ export const resolve = async <
 >(
   resolvable: Resolvable<T, TContext>,
   context: TContext,
-  depth = 0,
+  depth = MAX_DEPTH_RESOLVE,
 ): Promise<T> => {
   if (isResolved(resolvable)) {
     return resolvable.data;
@@ -347,6 +458,10 @@ export const resolve = async <
 
   // get the __resolveType from the resolvable
   const [resolvableObj, resolveType] = resolveTypeOf(resolvable);
+
+  if (resolveType && resolveType in resolvables) {
+    return resolveResolvable(resolveType, context);
+  }
 
   // define the type resolver based on the object type
   const typeResolver = nativeResolverByType[typeof resolvableObj];
@@ -360,7 +475,7 @@ export const resolve = async <
     )
     : context;
   if (
-    depth >= MAX_DEPTH_RESOLVE && !hasResolvable
+    depth === 0 && !hasResolvable
   ) {
     return resolvableObj as T;
   }
@@ -377,49 +492,23 @@ export const resolve = async <
             value: typeof prop === "number" ? prop : prop.toString(),
           },
         ),
-        hasResolvable ? 1 : depth + 1,
+        hasResolvable ? MAX_DEPTH_RESOLVE : depth - 1,
       ),
   ) as T;
 
-  // if the resolveType is not defined we should use the typeresolver
   if (!hasResolvable) {
     return resolved;
   }
-  const resolver = resolverMap[resolveType];
-  if (resolver !== undefined) {
-    let end: (() => void) | undefined = undefined;
-    let respOrPromise = resolver(resolved, ctx);
-    if (isAwaitable(respOrPromise)) {
-      const timingName = resolveType.replaceAll("/", ".");
-      end = ctx.monitoring?.t?.start(timingName);
-      respOrPromise = await respOrPromise;
 
-      // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
-      // in order to achieve the correct result we should wrap the inner function with the timings function.
-      if (typeof respOrPromise === "function") {
-        const original = respOrPromise;
-        respOrPromise = async (...args: any[]) => {
-          const resp = await original(...args);
-          end?.();
-          return resp;
-        };
-      } else {
-        end?.();
-      }
-    }
-    return isResolvable(respOrPromise)
-      ? resolve(respOrPromise, ctx)
-      : respOrPromise;
+  if (resolveType && resolveType in resolverMap) {
+    return resolveResolver(
+      { ...resolved, __resolveType: resolveType },
+      ctx,
+    );
   }
-  const resolvableRef = resolvables[resolveType] as Resolvable<T>;
-  if (resolvableRef === undefined) {
-    if (!ctx.danglingRecover) {
-      throw new DanglingReference(resolveType);
-    }
-    return ctx.danglingRecover(resolved, ctx);
+
+  if (!ctx.danglingRecover) {
+    throw new DanglingReference(resolveType);
   }
-  return resolve<T, TContext>(
-    resolvableRef,
-    ctx,
-  );
+  return ctx.danglingRecover(resolved, ctx);
 };

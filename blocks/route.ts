@@ -174,10 +174,12 @@ const mapMiddleware = (
     const endTiming = context?.state?.t?.start("load-page");
     const $live = (await ctxResolver(
       middlewareKey,
-      !isInternalOrStatic && (
-        !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
-        url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
-      ),
+      {
+        forceFresh: !isInternalOrStatic && (
+          !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
+          url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+        ),
+      },
     )) ?? {};
 
     endTiming?.();
