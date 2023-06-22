@@ -507,7 +507,7 @@
         "pathTemplate",
         "handler"
       ],
-      "title": "Route",
+      "title": "Site Route",
       "titleBy": "pathTemplate"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]": {
@@ -515,7 +515,8 @@
       "items": {
         "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
       },
-      "title": "Route[]"
+      "title": "Routes",
+      "description": "Used to configure your site routes"
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
       "type": "object",

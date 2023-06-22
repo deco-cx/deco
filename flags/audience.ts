@@ -6,6 +6,7 @@ import JsonViewer from "../components/JsonViewer.tsx";
 import { metabasePreview } from "../utils/metabase.tsx";
 
 /**
+ * @title Site Route
  * @titleBy pathTemplate
  */
 export interface Route {
@@ -17,6 +18,11 @@ export interface Route {
   // FIXME this should be placed at nested level 3 of the object to avoid being resolved before the routeSelection is executed.
   handler: { value: Resolvable<Handler> };
 }
+/**
+ * @title Routes
+ * @description Used to configure your site routes
+ */
+export type Routes = Route[];
 export interface Override {
   use: string;
   insteadOf: string;
@@ -33,7 +39,7 @@ export interface Audience {
    * @pattern ^[A-Za-z0-9_-]+$
    */
   name: string;
-  routes?: Route[];
+  routes?: Routes;
   overrides?: Override[];
 }
 

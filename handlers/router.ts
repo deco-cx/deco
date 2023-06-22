@@ -1,9 +1,10 @@
 import { Handler } from "$live/blocks/handler.ts";
-import { Route } from "../flags/audience.ts";
+import { Routes } from "../flags/audience.ts";
 import { router } from "./routesSelection.ts";
+
 export interface RouterConfig {
   base?: string;
-  routes: Route[];
+  routes: Routes;
 }
 
 export default function Router({

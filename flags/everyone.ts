@@ -1,8 +1,8 @@
-import Audience, { Override, Route } from "$live/flags/audience.ts";
+import Audience, { Override, Routes } from "$live/flags/audience.ts";
 import MatchAlways from "$live/matchers/MatchAlways.ts";
 
 export interface EveryoneConfig {
-  routes?: Route[];
+  routes?: Routes;
   overrides?: Override[];
 }
 
