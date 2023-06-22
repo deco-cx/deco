@@ -7,6 +7,7 @@ const IS_LOCALHOST = context.deploymentId === undefined;
 
 interface Page {
   id: string | number;
+  pathTemplate?: string;
 }
 
 declare global {
@@ -128,9 +129,8 @@ const main = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      const pathname = window.LIVE.site.id > 0
-        ? `/admin/${window.LIVE.site.id}/pages/${window.LIVE.page.id}`
-        : `/admin/sites/${window.LIVE.site.name}/blocks/${window.LIVE.page.id}`;
+      const pathname =
+        `/admin/sites/${window.LIVE.site.name}/blocks/${window.LIVE.page.id}`;
 
       const href = new URL(
         pathname,
@@ -138,10 +138,14 @@ const main = () => {
       );
 
       href.searchParams.set(
-        "pagePath",
+        "path",
         encodeURIComponent(
           `${window.location.pathname}${window.location.search}`,
         ),
+      );
+      href.searchParams.set(
+        "pathTemplate",
+        encodeURIComponent(window.LIVE.page.pathTemplate ?? "/*"),
       );
       window.location.href = `${href}`;
     }
@@ -303,10 +307,6 @@ const main = () => {
 };
 
 function LiveControls({ site, page }: Props) {
-  const partialPage = page && {
-    id: page.id,
-  };
-
   return (
     <>
       <Head>
@@ -314,7 +314,7 @@ function LiveControls({ site, page }: Props) {
           type="application/json"
           id="__DECO_STATE"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({ page: partialPage, site }),
+            __html: JSON.stringify({ page, site }),
           }}
         />
         <script
