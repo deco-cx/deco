@@ -40,8 +40,9 @@ const traverseAny = (
   const hints = isResolvable(value)
     ? [[...hint, {
       type: // TODO (mcandeia) dumb way of doing this, this can be done by checking the resolver/resolvable map, improve this later.
-        value.__resolveType.endsWith(".ts") ||
-          value.__resolveType.endsWith(".tsx")
+        !value.__resolveType.includes("routes") &&
+          (value.__resolveType.endsWith(".ts") ||
+            value.__resolveType.endsWith(".tsx"))
           ? "resolver" as const
           : "resolvable" as const,
       value: value.__resolveType,

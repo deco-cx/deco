@@ -24,6 +24,7 @@ export interface ResolveOptions {
   monitoring?: Monitoring;
   forceFresh?: boolean;
   maxDepth?: number;
+  nullIfDangling?: boolean;
 }
 
 const withOverrides = (
@@ -92,7 +93,9 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     const revision = await this.getRevision(); // should not be done in parallel since there's a racing condition that could return a new revision with old data.
     const resolvables = await this.getResolvables(options?.forceFresh);
     if (this.currentRevision !== revision) {
+      const start = performance.now();
       this.resolveHints = genHints(resolvables);
+      console.log("hints generated took: ", performance.now() - start, "ms");
     }
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();

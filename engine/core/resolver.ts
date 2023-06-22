@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import type { ResolveHints } from "$live/engine/core/hints.ts";
+import { ResolveOptions } from "$live/engine/core/mod.ts";
 import {
   isAwaitable,
   mapObjKeys,
@@ -9,7 +10,6 @@ import {
   waitKeys,
 } from "$live/engine/core/utils.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { ResolveOptions } from "$live/engine/core/mod.ts";
 
 export class DanglingReference extends Error {
   public resolverType: string;
@@ -351,23 +351,21 @@ const withNewValue = (
   newValue: any,
 ): any => {
   if (!data) {
-    return undefined;
+    return;
   }
-  if (keys.length === 0) {
-    return newValue;
+  if (keys.length === 1) {
+    data[keys[0]] = newValue;
+    return;
   }
   const [current, ...rest] = keys;
-  if (Array.isArray(data) && typeof +current === "number") {
-    data[+current] = withNewValue(data[+current], rest, newValue);
-  }
-  data[current] = withNewValue(data[current], rest, newValue);
+  withNewValue(data[current], rest, newValue);
 };
 
 const resolveResolvable = async <
   T,
   TContext extends BaseContext = BaseContext,
 >(
-  resolveType: string,
+  { __resolveType: resolveType }: Resolvable,
   context: TContext,
 ): Promise<T> => {
   const {
@@ -375,12 +373,6 @@ const resolveResolvable = async <
     resolveHints: { [resolveType]: hints },
   } = context;
 
-  if (resolvableObj === undefined) {
-    if (!context.danglingRecover) {
-      throw new DanglingReference(resolveType);
-    }
-    return context.danglingRecover(resolveType, context);
-  }
   const ctx = withResolveChain(
     context,
     { type: "resolvable", value: resolveType },
@@ -393,8 +385,12 @@ const resolveResolvable = async <
       field.value
     );
     const resolvable = getValue(resolvableObj, props);
+    const resolving = hint[hint.length - 1];
+    const resolveFunc = resolving.type === "resolver"
+      ? resolveResolver
+      : resolveResolvable;
     resolvedKeysPromise.push(
-      resolveResolver(resolvable, withResolveChain(ctx, ...hint)).then(
+      resolveFunc(resolvable, withResolveChain(ctx, ...hint)).then(
         (resolved) => ({ path: props, resolved }),
       ),
     );
@@ -449,6 +445,7 @@ export const resolve = async <
 >(
   resolvable: Resolvable<T, TContext>,
   context: TContext,
+  nullIfDangling = false,
   depth = MAX_DEPTH_RESOLVE,
 ): Promise<T> => {
   if (isResolved(resolvable)) {
@@ -460,7 +457,7 @@ export const resolve = async <
   const [resolvableObj, resolveType] = resolveTypeOf(resolvable);
 
   if (resolveType && resolveType in resolvables) {
-    return resolveResolvable(resolveType, context);
+    return resolveResolvable(resolvable, context);
   }
 
   // define the type resolver based on the object type
@@ -492,6 +489,7 @@ export const resolve = async <
             value: typeof prop === "number" ? prop : prop.toString(),
           },
         ),
+        nullIfDangling,
         hasResolvable ? MAX_DEPTH_RESOLVE : depth - 1,
       ),
   ) as T;
@@ -505,6 +503,10 @@ export const resolve = async <
       { ...resolved, __resolveType: resolveType },
       ctx,
     );
+  }
+
+  if (nullIfDangling) {
+    return null as T;
   }
 
   if (!ctx.danglingRecover) {

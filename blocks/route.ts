@@ -179,6 +179,7 @@ const mapMiddleware = (
           !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
           url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
         ),
+        nullIfDangling: true,
       },
     )) ?? {};
 
@@ -222,6 +223,7 @@ const mapHandlers = (
   ) {
     const $live = (await context?.state?.resolve?.(
       indexTsxToCatchAll[key] ?? key,
+      { nullIfDangling: true },
     )) ?? {};
 
     if (typeof handlers === "function") {

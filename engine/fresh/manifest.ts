@@ -63,7 +63,7 @@ const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
     const curr = ctx.resolveChain.findLast((r) => r.type === "resolver")?.value;
 
     if (typeof curr !== "string") {
-      throw new Error("Resolver not found");
+      throw new Error(`Resolver not found ${JSON.stringify(ctx.resolveChain)}`);
     }
 
     for (const { recoverable, recover } of recovers) {
