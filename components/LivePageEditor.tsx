@@ -192,7 +192,7 @@ export function BlockControls(
             action: "insert",
             key: metadata?.component ?? "",
             index,
-            at: index - 1,
+            at: index,
             path,
           })}
         >
