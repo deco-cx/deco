@@ -10,7 +10,7 @@ import {
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
+import { PromiseOrValue, mapObjKeys } from "$live/engine/core/utils.ts";
 import defaultResolvers, {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,
@@ -21,9 +21,9 @@ import { getComposedConfigStore } from "$live/engine/releases/provider.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest, LiveConfig } from "$live/types.ts";
 
-import { parse } from "https://deno.land/std@0.181.0/flags/mod.ts";
-import { usePreviewFunc } from "../../blocks/utils.ts";
-import { SiteInfo } from "../../types.ts";
+import { usePreviewFunc } from "$live/blocks/utils.ts";
+import { SiteInfo } from "$live/types.ts";
+import { parse } from "std/flags/mod.ts";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
