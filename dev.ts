@@ -7,9 +7,15 @@ import { ManifestBuilder } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { genSchemas, reset } from "./engine/schema/reader.ts";
-import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
-import { checkUpdates } from "./utils/update.ts";
+import { genSchemas, reset } from "$live/engine/schema/reader.ts";
+import {
+  namespaceFromSiteJson,
+  updateImportMap,
+} from "$live/utils/namespace.ts";
+import { checkUpdates } from "$live/utils/update.ts";
+import { parse } from "std/flags/mod.ts";
+
+const genOnly = parse(Deno.args)["gen-only"] === true;
 
 /**
  * Ensures that the target function runs only once per `deno task start`, in other words the watcher will not trigger the function again.
@@ -130,7 +136,7 @@ export default async function dev(
 
   await generate(dir, manifest);
 
-  (async () => {
+  const genPromise = (async () => {
     await setManifest(dir);
     await genSchemas();
     reset();
@@ -138,7 +144,11 @@ export default async function dev(
 
   onListen?.();
 
-  await import(entrypoint);
+  if (genOnly) {
+    await genPromise;
+  } else {
+    await import(entrypoint);
+  }
 }
 
 export async function format(content: string) {
