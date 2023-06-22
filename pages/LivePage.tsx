@@ -196,7 +196,7 @@ export default function LivePage(
       <LivePolyfills />
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
-        page={{ id: pageId }}
+        page={{ id: pageId, pathTemplate: routerCtx?.pagePath }}
       />
       <LiveAnalytics
         id={pageId}
