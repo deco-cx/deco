@@ -10,7 +10,7 @@ import {
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue, mapObjKeys } from "$live/engine/core/utils.ts";
+import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
 import defaultResolvers, {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,

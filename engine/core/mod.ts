@@ -8,6 +8,7 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { withResolveChain } from "$live/engine/core/resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
@@ -92,10 +93,18 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolvers,
       monitoring: options?.monitoring,
     };
-    const ctx = {
+    const _ctx = {
       ...context,
       ...baseCtx,
     };
+
+    const [resolvable, ctx] = typeof typeOrResolvable === "string"
+      ? [
+        nresolvables[typeOrResolvable],
+        withResolveChain(_ctx, { type: "resolvable", value: typeOrResolvable }),
+      ]
+      : [typeOrResolvable, _ctx];
+
     function _resolve<T>(
       data: Resolvable<T, TContext>,
     ): Promise<T> {
@@ -104,9 +113,6 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
         ctx as TContext,
       );
     }
-    const resolvable = typeof typeOrResolvable === "string"
-      ? nresolvables[typeOrResolvable]
-      : typeOrResolvable;
     if (resolvable === undefined) {
       return undefined as T;
     }

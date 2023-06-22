@@ -155,7 +155,7 @@ const resolveTypeOf = <
   return [resolvable as Omit<T, "__resolveType">, undefined];
 };
 
-const isResolvable = <
+export const isResolvable = <
   T = any,
   TContext extends BaseContext = BaseContext,
   TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
@@ -289,7 +289,17 @@ export const withResolveChain = <T extends BaseContext = BaseContext>(
     ...ctx,
     resolveChain: [...ctx.resolveChain, ...resolverType],
   };
-  return newCtx;
+  return {
+    ...newCtx,
+    resolve: function (
+      data: Resolvable<T, T>,
+    ): Promise<T> {
+      return resolve<T, T>(
+        data,
+        newCtx as T,
+      );
+    },
+  };
 };
 
 export const ALREADY_RESOLVED = "resolved";
@@ -354,6 +364,7 @@ export const resolve = async <
   ) {
     return resolvableObj as T;
   }
+
   const resolved = await typeResolver<T, TContext>(
     resolvableObj,
     (data, prop: string | number | symbol) =>
