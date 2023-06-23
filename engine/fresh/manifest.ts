@@ -161,7 +161,11 @@ export const $live = <T extends DecoManifest>(
           decorated,
           (mod, key) => {
             const resolver = blk.adapt!(mod, key);
-            return Array.isArray(resolver) ? compose(...resolver) : resolver;
+            const composed = Array.isArray(resolver)
+              ? compose(...resolver)
+              : resolver;
+            composed.onBeforeResolveProps = mod.onBeforeResolveProps;
+            return composed;
           },
         )
         : {}; // if block has no adapt so it's not considered a resolver.

@@ -18,3 +18,21 @@ export default function Everyone({ routes, overrides }: EveryoneConfig) {
     name: "Everyone",
   });
 }
+
+export const onBeforeResolveProps = <T extends { routes?: Routes }>(
+  props: T,
+): T => {
+  if (Array.isArray(props?.routes)) {
+    const newRoutes: T = { ...props, routes: [] };
+    for (const route of (props?.routes ?? [])) {
+      newRoutes.routes!.push({
+        ...route,
+        handler: {
+          value: { __resolveType: "resolved", data: route.handler.value },
+        },
+      });
+    }
+    return newRoutes;
+  }
+  return props;
+};

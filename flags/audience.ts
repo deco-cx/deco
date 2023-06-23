@@ -4,7 +4,7 @@ import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { metabasePreview } from "../utils/metabase.tsx";
-
+export { onBeforeResolveProps } from "./everyone.ts";
 /**
  * @title Site Route
  * @titleBy pathTemplate

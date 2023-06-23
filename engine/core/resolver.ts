@@ -7,6 +7,7 @@ import {
 } from "$live/engine/core/hints.ts";
 import { ResolveOptions } from "$live/engine/core/mod.ts";
 import { isAwaitable, UnPromisify } from "$live/engine/core/utils.ts";
+import { identity } from "$live/utils/object.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 
 export class DanglingReference extends Error {
@@ -314,7 +315,7 @@ const resolvePropsWithHints = async <
   return clonedObj;
 };
 
-const resolveResolvable = async <
+const resolveResolvable = <
   T,
   TContext extends BaseContext = BaseContext,
 >(
@@ -332,24 +333,60 @@ const resolveResolvable = async <
     { type: "resolvable", value: resolveType },
   );
   const [props, type] = resolveTypeOf(resolvableObj);
-  const resolvedProps = await resolvePropsWithHints(
+
+  if (type && type in context.resolvers) {
+    return invokeWithResolvedProps(
+      props,
+      type,
+      ctx,
+      nullIfDangling,
+      true,
+      hints,
+    );
+  }
+  return resolvePropsWithHints(
     props,
     hints,
     ctx,
     nullIfDangling,
   );
-  if (type) {
-    return invokeResolverWithProps(resolvedProps, type, ctx);
-  }
-  return resolvedProps;
+};
+
+const invokeWithResolvedProps = async <
+  T,
+  TContext extends BaseContext = BaseContext,
+>(
+  _props: T,
+  __resolveType: string,
+  ctx: TContext,
+  nullIfDangling = false,
+  resolveProps = true,
+  hints?: Hint[],
+): Promise<T> => {
+  const { resolvers: { [__resolveType]: resolver } } = ctx;
+  const onBeforeResolveProps = resolver?.onBeforeResolveProps ?? identity;
+  const props = onBeforeResolveProps(_props);
+  const resolvedProps = resolveProps
+    ? await resolvePropsWithHints(
+      props,
+      hints ?? traverseAny(props, typeOfFrom(ctx.resolvables, ctx.resolvers)),
+      ctx,
+      nullIfDangling,
+    )
+    : props;
+
+  return invokeResolverWithProps(resolvedProps, resolver, __resolveType, ctx);
 };
 
 const invokeResolverWithProps = async <
   T,
   TContext extends BaseContext = BaseContext,
->(props: T, __resolveType: string, ctx: TContext): Promise<T> => {
-  const { resolvers } = ctx;
-  const resolver = resolvers[__resolveType];
+>(
+  props: T,
+  resolver: Resolver,
+  __resolveType: string,
+  ctx: TContext,
+): Promise<T> => {
   let end: (() => void) | undefined = undefined;
   let respOrPromise = resolver(props, ctx);
   if (isAwaitable(respOrPromise)) {
@@ -396,16 +433,17 @@ export const resolve = async <
   if (hasResolveType && resolveType in resolvables) {
     return resolveResolvable(resolveType, context, nullIfDangling);
   }
-  const isResolver = hasResolveType && resolveType in resolverMap;
-  const isDangling = hasResolveType && !isResolver;
-
-  const chain = isResolver
-    ? "resolver" as const
-    : isDangling
-    ? "dangling"
-    : undefined;
-  const ctx = chain && resolveType
-    ? withResolveChain(context, { type: chain, value: resolveType })
+  if (hasResolveType && resolveType in resolverMap) {
+    return invokeWithResolvedProps(
+      props as T,
+      resolveType,
+      context,
+      nullIfDangling,
+      resolveProps,
+    );
+  }
+  const ctx = hasResolveType
+    ? withResolveChain(context, { type: "dangling", value: resolveType })
     : context;
 
   const resolvedProps = resolveProps
@@ -418,14 +456,6 @@ export const resolve = async <
 
   if (!hasResolveType) {
     return resolvedProps as T;
-  }
-
-  if (isResolver) {
-    return invokeResolverWithProps<T>(
-      resolvedProps as T,
-      resolveType,
-      ctx,
-    );
   }
 
   if (nullIfDangling) {

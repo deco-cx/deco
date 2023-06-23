@@ -67,7 +67,8 @@ const traverse = (typeOf: TypeOf) =>
   hints: ResolveHints,
   [id, resolvable]: [string, Resolvable],
 ): ResolveHints => {
-  return { ...hints, [id]: traverseObject(resolvable, typeOf) };
+  hints[id] = traverseObject(resolvable, typeOf);
+  return hints;
 };
 
 export const typeOfFrom = (

@@ -31,6 +31,7 @@ export type BlockModule<
   invoke?: Resolver<TSerializable, BlockInvocation, any>;
   preview?: Resolver<PreactComponent, TSerializable, any>;
   Preview?: ComponentFunc;
+  onBeforeResolveProps?: (props: any) => any;
 };
 
 export type IntrospectFunc = (
