@@ -210,6 +210,7 @@ const mapHandlers = (
       ) {
         const $live = await context?.state?.resolve?.(
           indexTsxToCatchAll[key] ?? key,
+          { nullIfDangling: true },
         ); // middleware should be executed first.
         context.state.$live = $live;
 

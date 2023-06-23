@@ -23,7 +23,6 @@ export interface ResolveOptions {
   overrides?: Record<string, string>;
   monitoring?: Monitoring;
   forceFresh?: boolean;
-  maxDepth?: number;
   nullIfDangling?: boolean;
 }
 
@@ -92,13 +91,14 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   ): Promise<T> => {
     const revision = await this.getRevision(); // should not be done in parallel since there's a racing condition that could return a new revision with old data.
     const resolvables = await this.getResolvables(options?.forceFresh);
-    if (this.currentRevision !== revision) {
-      const start = performance.now();
-      this.resolveHints = genHints(resolvables);
-      console.log("hints generated took: ", performance.now() - start, "ms");
-    }
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();
+    if (this.currentRevision !== revision) {
+      const end = options?.monitoring?.t?.start(`generate-hints-${revision}`);
+      this.resolveHints = genHints(nresolvables, resolvers);
+      end?.();
+      this.currentRevision = revision;
+    }
     const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,
       resolve: _resolve,
@@ -124,6 +124,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       return resolve<T, TContext>(
         data,
         ctx as TContext,
+        options?.nullIfDangling,
       );
     }
     if (resolvable === undefined) {
@@ -132,6 +133,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     return resolve<T, TContext>(
       resolvable,
       ctx as TContext,
+      options?.nullIfDangling,
     );
   };
 }

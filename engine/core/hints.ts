@@ -1,20 +1,24 @@
 import {
+  FieldResolver,
   isResolvable,
   Resolvable,
   ResolveChain,
+  ResolverMap,
 } from "$live/engine/core/resolver.ts";
 
+export type TypeOf = (resolveType: string) => FieldResolver["type"];
 export type Hint = ResolveChain;
 export type ResolveHints = Record<string, Hint[]>;
 const traverseObject = (
   // deno-lint-ignore ban-types
   obj: object,
+  typeOf: TypeOf,
   maybeHint?: Hint,
 ): Hint[] => {
   const hints = [];
   for (const [key, value] of Object.entries(obj)) {
     hints.push(
-      ...traverseAny(value, [...(maybeHint ?? []), {
+      ...traverseAny(value, typeOf, [...(maybeHint ?? []), {
         type: "prop",
         value: key,
       }]),
@@ -23,47 +27,59 @@ const traverseObject = (
   return hints;
 };
 
-const traverseArray = (arr: unknown[], hint: Hint): Hint[] => {
+const traverseArray = (arr: unknown[], typeOf: TypeOf, hint: Hint): Hint[] => {
   const hints = [];
   for (let index = 0; index < arr.length; index++) {
     hints.push(
-      ...traverseAny(arr[index], [...hint, { type: "prop", value: index }]),
+      ...traverseAny(arr[index], typeOf, [...hint, {
+        type: "prop",
+        value: index,
+      }]),
     );
   }
   return hints;
 };
 
-const traverseAny = (
+export const traverseAny = (
   value: unknown,
-  hint: Hint,
+  typeOf: TypeOf,
+  maybeHint?: Hint,
 ): Hint[] => {
-  const hints = isResolvable(value)
+  const hint = maybeHint ?? [];
+  const chainType = isResolvable(value) && typeOf(value.__resolveType);
+  const hints = chainType
     ? [[...hint, {
-      type: // TODO (mcandeia) dumb way of doing this, this can be done by checking the resolver/resolvable map, improve this later.
-        !value.__resolveType.includes("routes") &&
-          (value.__resolveType.endsWith(".ts") ||
-            value.__resolveType.endsWith(".tsx"))
-          ? "resolver" as const
-          : "resolvable" as const,
+      type: chainType,
       value: value.__resolveType,
     }]]
     : [];
   if (Array.isArray(value)) {
-    return [...traverseArray(value, hint), ...hints];
+    return [...traverseArray(value, typeOf, hint), ...hints];
   }
   if (value && typeof value === "object") {
-    return [...traverseObject(value, hint), ...hints];
+    return [...traverseObject(value, typeOf, hint), ...hints];
   }
   return hints;
 };
 
-const traverse = (
+const traverse = (typeOf: TypeOf) =>
+(
   hints: ResolveHints,
   [id, resolvable]: [string, Resolvable],
 ): ResolveHints => {
-  return { ...hints, [id]: traverseObject(resolvable) };
+  return { ...hints, [id]: traverseObject(resolvable, typeOf) };
 };
 
+export const typeOfFrom = (
+  resolvableMap: Record<string, Resolvable>,
+  resolverMap?: ResolverMap,
+) =>
+(resolveType: string) =>
+  resolveType in (resolverMap ?? {})
+    ? "resolver"
+    : resolveType in resolvableMap
+    ? "resolvable"
+    : "dangling";
 /**
  * Generate resolvable hints for a given resolvable.
  * hints are useful to rapid resolve any resolvable by just accessing its properties.
@@ -72,6 +88,10 @@ const traverse = (
  */
 export const genHints = (
   resolvableMap: Record<string, Resolvable>,
+  resolverMap?: ResolverMap,
 ): ResolveHints => {
-  return Object.entries(resolvableMap).reduce(traverse, {});
+  return Object.entries(resolvableMap).reduce(
+    traverse(typeOfFrom(resolvableMap, resolverMap)),
+    {},
+  );
 };
