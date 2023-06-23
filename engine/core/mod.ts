@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { genHints, ResolveHints } from "$live/engine/core/hints.ts";
+import { ResolveHints } from "$live/engine/core/hints.ts";
 import {
   BaseContext,
   Monitoring,
@@ -94,9 +94,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();
     if (this.currentRevision !== revision) {
-      const end = options?.monitoring?.t?.start(`generate-hints-${revision}`);
-      this.resolveHints = genHints(nresolvables, resolvers);
-      end?.();
+      this.resolveHints = {};
       this.currentRevision = revision;
     }
     const baseCtx: BaseContext = {
@@ -114,10 +112,6 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ...baseCtx,
     };
 
-    const resolvable = typeof typeOrResolvable === "string"
-      ? { __resolveType: typeOrResolvable }
-      : typeOrResolvable;
-
     function _resolve<T>(
       data: Resolvable<T, TContext>,
     ): Promise<T> {
@@ -127,11 +121,12 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
         options?.nullIfDangling,
       );
     }
-    if (resolvable === undefined) {
+    if (typeOrResolvable === undefined) {
       return undefined as T;
     }
+
     return resolve<T, TContext>(
-      resolvable,
+      typeOrResolvable,
       ctx as TContext,
       options?.nullIfDangling,
     );

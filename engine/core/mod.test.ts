@@ -1,7 +1,7 @@
 import {
   BaseContext,
   Resolvable,
-  resolve,
+  resolveAny,
 } from "$live/engine/core/resolver.ts";
 import {
   assertSpyCall,
@@ -45,7 +45,7 @@ Deno.test("resolve", async (t) => {
       };
 
       const ctx = { ...context, resolvers: resolverMap };
-      const result = await resolve<OutputType>(
+      const result = await resolveAny<OutputType>(
         {
           bar: 10,
           __resolveType: addToStringBarResolver.name,
@@ -71,7 +71,7 @@ Deno.test("resolve", async (t) => {
     async () => {
       await assertRejects(
         () =>
-          resolve(
+          resolveAny(
             {
               __resolveType: "not_found_resolver",
             },
@@ -96,7 +96,7 @@ Deno.test("resolve", async (t) => {
         };
       },
     };
-    const result = await resolve<{ values: TestType[] }>(
+    const result = await resolveAny<{ values: TestType[] }>(
       {
         values: [
           {
@@ -135,7 +135,7 @@ Deno.test("resolve", async (t) => {
         };
       },
     };
-    const result = await resolve<TestType>(
+    const result = await resolveAny<TestType>(
       {
         foo: "hello",
         bar: 1,
@@ -178,7 +178,7 @@ Deno.test("resolve", async (t) => {
       },
     };
 
-    const result = await resolve<
+    const result = await resolveAny<
       TestType,
       BaseContext
     >(
@@ -216,7 +216,7 @@ Deno.test("resolve", async (t) => {
         };
       },
     };
-    const result = await resolve<
+    const result = await resolveAny<
       TestType,
       BaseContext
     >(
