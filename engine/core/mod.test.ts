@@ -1,13 +1,20 @@
 import { genHints } from "$live/engine/core/hints.ts";
-import { BaseContext, resolve } from "$live/engine/core/resolver.ts";
+import {
+  BaseContext,
+  resolve,
+  ResolverMap,
+} from "$live/engine/core/resolver.ts";
 import { assertEquals, assertRejects } from "std/testing/asserts.ts";
+import { assertSpyCalls, spy } from "std/testing/mock.ts";
+import defaults from "../fresh/defaults.ts";
 
 Deno.test("resolve", async (t) => {
-  const context: Omit<BaseContext, "resolveHints"> = {
+  const context: BaseContext = {
     resolveChain: [],
     resolveId: "1",
     resolvables: {},
     resolvers: {},
+    resolveHints: {},
     resolve: <T>(data: unknown) => {
       return data as T;
     },
@@ -71,6 +78,80 @@ Deno.test("resolve", async (t) => {
       );
     },
   );
+  await t.step(
+    "resolve should not change the original data",
+    async () => {
+      const identityResolver = (parent: unknown): unknown => {
+        return Promise.resolve(parent);
+      };
+      const resolverMap = {
+        ...defaults,
+        resolve: (data: unknown) => context.resolve(data),
+        identityResolver,
+      };
+      const resolvableMap = {
+        shouldNotBeChanged: {
+          bar: 10,
+          foo: {
+            barNested: {
+              fooNested: 10,
+            },
+            __resolveType: identityResolver.name,
+          },
+          __resolveType: identityResolver.name,
+        },
+      };
+      const clone = structuredClone(resolvableMap);
+      const resolvable = {
+        __resolveType: "shouldNotBeChanged",
+      };
+      const result = await resolve<typeof resolvable>(
+        resolvable,
+        {
+          ...context,
+          resolvers: resolverMap as unknown as ResolverMap,
+          resolvables: resolvableMap,
+        },
+      );
+      assertEquals(clone, resolvableMap);
+      assertEquals({
+        bar: 10,
+        foo: {
+          barNested: {
+            fooNested: 10,
+          },
+        },
+      } as unknown, result);
+    },
+  );
+  await t.step(
+    "resolved data should not be nested resolved",
+    async () => {
+      const shouldNotBeCalledResolver = (parent: unknown): unknown => {
+        return Promise.resolve(parent);
+      };
+      const resolverMap = {
+        ...defaults,
+        resolve: (data: unknown) => context.resolve(data),
+        shouldNotBeCalledResolver: spy(shouldNotBeCalledResolver),
+      };
+      const nestedResolvable = {
+        props: {
+          bar: 10,
+        },
+        __resolveType: shouldNotBeCalledResolver.name,
+      };
+      const result = await resolve<typeof nestedResolvable>(
+        {
+          data: nestedResolvable,
+          __resolveType: "resolved",
+        },
+        { ...context, resolvers: resolverMap as unknown as ResolverMap },
+      );
+      assertEquals(result, nestedResolvable);
+      assertSpyCalls(resolverMap.shouldNotBeCalledResolver, 0);
+    },
+  );
 
   await t.step("resolving a nested array", async () => {
     type TestType = {
@@ -102,7 +183,7 @@ Deno.test("resolve", async (t) => {
         ],
         __resolveType: "resolve",
       },
-      { ...context, resolvers: resolverMap, resolveHints: {} },
+      { ...context, resolvers: resolverMap },
     );
     assertEquals(result, {
       values: [
@@ -131,7 +212,7 @@ Deno.test("resolve", async (t) => {
         bar: 1,
         __resolveType: "testResolver",
       },
-      { ...context, resolvers: resolverMap, resolveHints: {} },
+      { ...context, resolvers: resolverMap },
     );
     assertEquals(result, { foo: "hello", bar: 2 });
   });
@@ -215,7 +296,7 @@ Deno.test("resolve", async (t) => {
         bar: 10,
         __resolveType: "testResolver",
       },
-      { ...context, resolvers: resolverMap, resolveHints: {} },
+      { ...context, resolvers: resolverMap },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
   });
