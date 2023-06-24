@@ -286,14 +286,9 @@ const resolvePropsWithHints = async <
   const props = onBeforeResolveProps(_thisProps as T);
   const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 
-  const shallow = Array.isArray(props)
-    ? new Array(...props) as T
-    : { ...props };
-
   const resolvedPropsPromise = Object.entries(hints).map(
     async ([_key, hint]) => {
       const key = _key as keyof T;
-      delete shallow[key];
       if (props[key]) {
         const resolved = await resolvePropsWithHints(
           props[key],
@@ -310,23 +305,31 @@ const resolvePropsWithHints = async <
     },
   );
 
-  const resolvedProps = await Promise.all(resolvedPropsPromise);
+  const mutableProps: T = resolvedPropsPromise.length === 0 // if there's no resolved properties so no shallow copy is needed.
+    ? props
+    : Array.isArray(props)
+    ? new Array(...props) as T
+    : { ...props };
 
+  const resolvedProps = await Promise.all(resolvedPropsPromise);
   for (const { key, resolved } of resolvedProps.filter(notUndefined)) {
-    shallow[key] = resolved;
+    mutableProps[key] = resolved;
   }
 
   if (!type) {
-    return shallow;
+    return mutableProps;
   }
 
   return await resolveWithType<T>(
     type,
-    shallow,
+    mutableProps,
     ctx,
     nullIfDangling,
   );
 };
+/**
+ * Invoke the given resolver with the given resolved props, calculate the timings.
+ */
 const invokeResolverWithProps = async <
   T,
   TContext extends BaseContext = BaseContext,
@@ -366,7 +369,12 @@ const invokeResolverWithProps = async <
   return respOrPromise;
 };
 
-export const resolveWithType = <
+/**
+ * Receives the props resolved and a type that should be called with the given props.
+ * This type can be a resolvable which currently just ignore the resolved props and returns the given resolved resolvable.
+ * If the type wasn't found, it will throw a DanglingReference or calls it recover if configured.
+ */
+const resolveWithType = <
   T,
   TContext extends BaseContext = BaseContext,
 >(
@@ -452,6 +460,10 @@ export const resolveAny = <
   );
 };
 
+/**
+ * Receives a string (pointing to a resolvable or a resolver), a context and optionally dangling and propsIsResolved flag, and returns the resolved object.
+ * See readme for more details
+ */
 export const resolve = <
   T,
   TContext extends BaseContext = BaseContext,
@@ -459,7 +471,20 @@ export const resolve = <
   maybeResolvable: string | Resolvable<T, TContext>,
   context: TContext,
   nullIfDangling = false,
+  propsIsResolved = false,
 ): Promise<T> => {
+  if (
+    propsIsResolved && isResolvable(maybeResolvable) &&
+    typeof maybeResolvable === "object"
+  ) {
+    const { __resolveType, ...props } = maybeResolvable;
+    return resolveWithType<T>(
+      __resolveType,
+      props as T,
+      context,
+      nullIfDangling,
+    );
+  }
   if (
     typeof maybeResolvable === "string"
   ) {

@@ -2,14 +2,12 @@
 import { ResolveHints } from "$live/engine/core/hints.ts";
 import {
   BaseContext,
-  isResolvable,
   Monitoring,
   Resolvable,
   resolve,
   ResolveFunc,
   Resolver,
   ResolverMap,
-  resolveWithType,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 
@@ -93,7 +91,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const revision = await this.getRevision(); // should not be done in parallel since there's a racing condition that could return a new revision with old data.
+    const revision = await this.getRevision(); // (mcandeia) should not be done in parallel since there's a racing condition that could return a new revision with old data.
     const resolvables = await this.getResolvables(options?.forceFresh);
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();
@@ -124,23 +122,12 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     ): Promise<T> {
       return innerResolver(typeOrResolvable, overrideOptions, partialCtx);
     }
-    if (typeOrResolvable === undefined) {
-      return undefined as T;
-    }
-    if (options?.propsIsResolved && isResolvable(typeOrResolvable)) {
-      const { __resolveType, ...props } = typeOrResolvable as Resolvable;
-      return resolveWithType(
-        __resolveType,
-        props,
-        ctx,
-        options?.nullIfDangling,
-      );
-    }
 
     return resolve<T, TContext>(
       typeOrResolvable,
       ctx as TContext,
       options?.nullIfDangling,
+      options?.propsIsResolved,
     );
   };
 }
