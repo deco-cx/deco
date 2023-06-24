@@ -2,11 +2,14 @@
 import { ResolveHints } from "$live/engine/core/hints.ts";
 import {
   BaseContext,
+  isResolvable,
   Monitoring,
   Resolvable,
   resolve,
+  ResolveFunc,
   Resolver,
   ResolverMap,
+  resolveWithType,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 
@@ -24,6 +27,7 @@ export interface ResolveOptions {
   monitoring?: Monitoring;
   forceFresh?: boolean;
   nullIfDangling?: boolean;
+  propsIsResolved?: boolean;
 }
 
 const withOverrides = (
@@ -99,7 +103,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     }
     const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,
-      resolve: _resolve,
+      resolve: _resolve as ResolveFunc,
       resolveId: crypto.randomUUID(),
       resolveChain: [],
       resolveHints: this.resolveHints,
@@ -112,17 +116,25 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ...baseCtx,
     };
 
+    const innerResolver = this.resolverFor(ctx, options);
     function _resolve<T>(
-      data: Resolvable<T, TContext>,
+      typeOrResolvable: string | Resolvable<T>,
+      overrideOptions?: Partial<ResolveOptions>,
+      partialCtx: Partial<Omit<TContext, keyof BaseContext>> = {},
     ): Promise<T> {
-      return resolve<T, TContext>(
-        data,
-        ctx as TContext,
-        options?.nullIfDangling,
-      );
+      return innerResolver(typeOrResolvable, overrideOptions, partialCtx);
     }
     if (typeOrResolvable === undefined) {
       return undefined as T;
+    }
+    if (options?.propsIsResolved && isResolvable(typeOrResolvable)) {
+      const { __resolveType, ...props } = typeOrResolvable as Resolvable;
+      return resolveWithType(
+        __resolveType,
+        props,
+        ctx,
+        options?.nullIfDangling,
+      );
     }
 
     return resolve<T, TContext>(

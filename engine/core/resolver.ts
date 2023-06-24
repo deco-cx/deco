@@ -10,8 +10,8 @@ import {
   PromiseOrValue,
   UnPromisify,
 } from "$live/engine/core/utils.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
 import { identity } from "$live/utils/object.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
 
 export class DanglingReference extends Error {
   public resolverType: string;
@@ -21,7 +21,7 @@ export class DanglingReference extends Error {
   }
 }
 export type ResolveFunc = <T = any, TContext extends BaseContext = BaseContext>(
-  data: Resolvable<T>,
+  data: string | Resolvable<T>,
   options?: Partial<ResolveOptions>,
   partialCtx?: Partial<Omit<TContext, keyof BaseContext>>,
 ) => Promise<T>;
@@ -257,11 +257,11 @@ const resolvePropsWithHints = async <
   T,
   TContext extends BaseContext = BaseContext,
 >(_props: T, hints: HintNode<T>, _ctx: TContext, nullIfDangling = false) => {
-  const [p, type] = resolveTypeOf(_props);
+  const [_thisProps, type] = resolveTypeOf(_props);
   const onBeforeResolveProps = type && type in _ctx.resolvers
     ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
     : identity;
-  const props = onBeforeResolveProps(p as T);
+  const props = onBeforeResolveProps(_thisProps as T);
   const ctx = type
     ? withResolveChain(_ctx, {
       type: type in _ctx.resolvables
@@ -273,9 +273,13 @@ const resolvePropsWithHints = async <
     })
     : _ctx;
 
+  const shallow = Array.isArray(props)
+    ? new Array(...props) as T
+    : { ...props };
   const resolvedPropsPromise: Promise<ResolvedKey<T, keyof T>>[] = [];
   for (const [_key, hint] of Object.entries(hints)) {
     const key = _key as keyof T;
+    delete shallow[key];
     if (props[key]) {
       resolvedPropsPromise.push(
         resolvePropsWithHints(
@@ -293,16 +297,16 @@ const resolvePropsWithHints = async <
   const resolvedProps = await Promise.all(resolvedPropsPromise);
 
   for (const { key, resolved } of resolvedProps) {
-    props[key] = resolved;
+    shallow[key] = resolved;
   }
 
   if (!type) {
-    return props;
+    return shallow;
   }
 
   return await resolveWithType<T>(
     type,
-    props,
+    shallow,
     ctx,
     nullIfDangling,
   );
@@ -346,7 +350,7 @@ const invokeResolverWithProps = async <
   return respOrPromise;
 };
 
-const resolveWithType = async <
+export const resolveWithType = async <
   T,
   TContext extends BaseContext = BaseContext,
 >(
@@ -431,11 +435,8 @@ export const resolveAny = <
   if (!maybeResolvable) {
     return Promise.resolve(maybeResolvable);
   }
-  if (isResolved(maybeResolvable)) {
-    return Promise.resolve(maybeResolvable.data as T);
-  }
   return resolvePropsWithHints(
-    structuredClone(maybeResolvable),
+    maybeResolvable as T,
     hints ?? traverseAny(
       maybeResolvable,
     ) ?? {},

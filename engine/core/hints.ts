@@ -1,4 +1,4 @@
-import { isResolvable, Resolvable } from "$live/engine/core/resolver.ts";
+import { isResolvable, isResolved, Resolvable } from "$live/engine/core/resolver.ts";
 
 export type HintNode<T> = {
   [key in keyof T]?: HintNode<T[key]> | null;
@@ -38,6 +38,9 @@ const traverseArray = <T extends unknown[]>(
 export const traverseAny = <T>(
   value: unknown,
 ): HintNode<T> | null => {
+  if (isResolved(value)) {
+    return {};
+  }
   const node = isResolvable(value) ? {} : null;
   if (Array.isArray(value)) {
     return traverseArray(value) ?? node;
