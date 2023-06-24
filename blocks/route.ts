@@ -156,10 +156,7 @@ const mapMiddleware = (
       context.state.t = { start, end, printTimings };
     }
     const url = new URL(request.url);
-    const isInternalOrStatic = url.pathname.startsWith("/_frsh") || // fresh urls /_fresh/js/*
-      url.pathname.startsWith("~partytown") || // party town urls
-      url.searchParams.has("__frsh_c") || // static assets, fresh uses ?__fresh_c=$id
-      url.pathname.startsWith("/live/_meta"); // live-meta
+    const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
 
     const resolver = liveContext.releaseResolver!;
     const ctxResolver = resolver
@@ -171,20 +168,25 @@ const mapMiddleware = (
       )
       .bind(resolver);
 
-    const endTiming = context?.state?.t?.start("load-page");
-    const $live = (await ctxResolver(
-      middlewareKey,
-      {
-        forceFresh: !isInternalOrStatic && (
-          !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
-          url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
-        ),
-        nullIfDangling: true,
-      },
-    )) ?? {};
+    if (
+      context.destination !== "internal" && context.destination !== "static"
+    ) {
+      const endTiming = context?.state?.t?.start("load-page");
+      const $live = (await ctxResolver(
+        middlewareKey,
+        {
+          forceFresh: !isLiveMeta && (
+            !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
+            url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+          ),
+          nullIfDangling: true,
+        },
+      )) ?? {};
 
-    endTiming?.();
-    context.state.$live = $live;
+      endTiming?.();
+      context.state.$live = $live;
+    }
+
     context.state.resolve = ctxResolver;
     context.state.release = liveContext.release!;
     context.state.invoke = (key, props) =>
