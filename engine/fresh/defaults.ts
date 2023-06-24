@@ -21,6 +21,7 @@ export default {
     }
     return obj;
   },
+  resolved: <T, R extends { data: T }>(props: R) => props?.data,
   preview: async (
     { block, props }: BlockInvocation,
     { resolvables, resolvers, resolve },

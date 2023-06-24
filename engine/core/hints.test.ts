@@ -1,9 +1,8 @@
-import resolversJSON from "./hints.resolvers.test.json" assert { type: "json" };
 import expectedHints from "./hints.test.expected.json" assert { type: "json" };
 import releaseJSON from "./hints.test.json" assert { type: "json" };
 
 import { genHints, ResolveHints } from "$live/engine/core/hints.ts";
-import { Resolvable, ResolverMap } from "$live/engine/core/resolver.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { assertEquals } from "std/testing/asserts.ts";
 
 Deno.test("hints", async (t) => {
@@ -11,7 +10,7 @@ Deno.test("hints", async (t) => {
 
   await t.step("should be properly generated", () => {
     assertEquals(
-      genHints(resolvableMap, resolversJSON as unknown as ResolverMap),
+      genHints(resolvableMap),
       expectedHints as ResolveHints,
     );
   });

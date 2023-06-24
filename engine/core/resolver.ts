@@ -1,13 +1,17 @@
 // deno-lint-ignore-file no-explicit-any
 import {
-  Hint,
+  HintNode,
   ResolveHints,
   traverseAny,
-  typeOfFrom,
 } from "$live/engine/core/hints.ts";
 import { ResolveOptions } from "$live/engine/core/mod.ts";
-import { isAwaitable, UnPromisify } from "$live/engine/core/utils.ts";
+import {
+  isAwaitable,
+  PromiseOrValue,
+  UnPromisify,
+} from "$live/engine/core/utils.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
+import { identity } from "$live/utils/object.ts";
 
 export class DanglingReference extends Error {
   public resolverType: string;
@@ -153,7 +157,7 @@ export const isResolvable = <
   return (v as { __resolveType: string })?.__resolveType !== undefined;
 };
 
-export type OnBeforeResolveProps = (props: any) => any;
+export type OnBeforeResolveProps = <T>(props: T) => T;
 export type AsyncResolver<
   T = any,
   TParent = any,
@@ -186,24 +190,13 @@ export type ResolverMap<TContext extends BaseContext = BaseContext> = Record<
   Resolver<any, any, TContext>
 >;
 
-export const withResolveChain = <T extends BaseContext = BaseContext>(
-  ctx: T,
+export const withResolveChain = <TContext extends BaseContext = BaseContext>(
+  ctx: TContext,
   ...resolverType: FieldResolver[]
-): T => {
-  const newCtx = {
+): TContext => {
+  return {
     ...ctx,
     resolveChain: [...ctx.resolveChain, ...resolverType],
-  };
-  return {
-    ...newCtx,
-    resolve: function (
-      data: Resolvable<T, T>,
-    ): Promise<T> {
-      return resolveAny<T, T>(
-        data,
-        newCtx as T,
-      );
-    },
   };
 };
 
@@ -231,95 +224,105 @@ export const isResolved = <T>(
     resolvable.__resolveType === ALREADY_RESOLVED;
 };
 
-/**
- * Returns the object value given its key path.
- */
-export const getValue = (data: any, keys: (string | number)[]): any => {
-  if (keys.length === 0 || !data) {
-    return data;
+const resolveTypeOf = <
+  T = any,
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolvableMap extends Record<
+    string,
+    Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
+  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
+>(
+  resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>,
+): [
+  Omit<T, "__resolveType">,
+  string | undefined,
+] => {
+  if (isResolvable(resolvable)) {
+    const { __resolveType, ...rest } = resolvable;
+    return [
+      rest as Omit<T, "__resolveType">,
+      __resolveType,
+    ];
   }
-  const [current, ...rest] = keys;
-  return getValue(data[current], rest);
+  return [resolvable as Omit<T, "__resolveType">, undefined];
 };
 
-/**
- * Returns a new data with the specified key changed to its specified @param newValue.
- * @returns the changed object. ["sections", "3"] a[sections][3] = newValue
- */
-const withNewValue = (
-  data: any,
-  keys: (string | number)[],
-  newValue: any,
-): any => {
-  if (!data) {
-    return;
-  }
-  if (keys.length === 1) {
-    data[keys[0]] = newValue;
-    return;
-  }
-  const [current, ...rest] = keys;
-  withNewValue(data[current], rest, newValue);
-};
-
-interface ResolvedKey {
-  path: (string | number)[];
-  resolved: any;
+interface ResolvedKey<T, K extends keyof T> {
+  key: K;
+  resolved: T[K];
 }
 
 const resolvePropsWithHints = async <
   T,
   TContext extends BaseContext = BaseContext,
->(props: T, hints: Hint[], ctx: TContext, nullIfDangling = false) => {
-  const resolvedKeysPromise: Promise<ResolvedKey>[] = [];
-  for (const hint of hints) {
-    const keys = hint.filter((field) => field.type === "prop").map((field) =>
-      field.value
-    );
-    if (keys.length === 0) {
-      continue;
-    }
-    const resolvable = getValue(props, keys);
-    if (!resolvable) { // TODO(mcandeia) generally this should means a bug but since we are using `onBeforeResolveProps` it could happen, so skipping for now.
-      continue;
-    }
-    const { __resolveType: resolveType, ..._props } = resolvable;
-    resolvedKeysPromise.push(
-      resolveWithType(
-        resolveType,
-        _props,
-        withResolveChain(ctx, ...hint),
-        nullIfDangling,
-      )
-        .then(
-          (resolved) => ({ path: keys, resolved }),
-        ),
-    );
-  }
-  const resolvedKeys = await Promise.all(resolvedKeysPromise);
-  const resolvedObject = structuredClone(props);
-  for (const { path, resolved } of resolvedKeys) {
-    withNewValue(resolvedObject, path, resolved);
-  }
-  return resolvedObject;
-};
+>(_props: T, hints: HintNode<T>, _ctx: TContext, nullIfDangling = false) => {
+  const [p, type] = resolveTypeOf(_props);
+  const onBeforeResolveProps = type && type in _ctx.resolvers
+    ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
+    : identity;
+  const props = onBeforeResolveProps(p as T);
+  const ctx = type
+    ? withResolveChain(_ctx, {
+      type: type in _ctx.resolvables
+        ? "resolvable"
+        : type in _ctx.resolvers
+        ? "resolver"
+        : "dangling",
+      value: type,
+    })
+    : _ctx;
 
+  const resolvedPropsPromise: Promise<ResolvedKey<T, keyof T>>[] = [];
+  for (const [_key, hint] of Object.entries(hints)) {
+    const key = _key as keyof T;
+    if (props[key]) {
+      resolvedPropsPromise.push(
+        resolvePropsWithHints(
+          props[key],
+          hint as HintNode<T[typeof key]>,
+          withResolveChain(ctx, {
+            type: "prop",
+            value: key.toString(),
+          }),
+          nullIfDangling,
+        ).then((resolved) => ({ key, resolved })),
+      );
+    }
+  }
+  const resolvedProps = await Promise.all(resolvedPropsPromise);
+
+  for (const { key, resolved } of resolvedProps) {
+    props[key] = resolved;
+  }
+
+  if (!type) {
+    return props;
+  }
+
+  return await resolveWithType<T>(
+    type,
+    props,
+    ctx,
+    nullIfDangling,
+  );
+};
 const invokeResolverWithProps = async <
   T,
   TContext extends BaseContext = BaseContext,
 >(
-  _props: PropsResolver<T> | T,
+  props: T,
   resolver: Resolver,
   __resolveType: string,
   ctx: TContext,
 ): Promise<T> => {
   let end: (() => void) | undefined = undefined;
-  const props = isPropsResolver(_props)
-    ? _props
-    : (onBeforeResolveProps?: OnBeforeResolveProps) =>
-      onBeforeResolveProps ? onBeforeResolveProps(_props) : _props;
+
+  if (isResolvable(props)) {
+    delete (props as Resolvable)["__resolveType"];
+  }
   let respOrPromise = resolver(
-    await props(resolver?.onBeforeResolveProps),
+    props,
     ctx,
   );
   if (isAwaitable(respOrPromise)) {
@@ -340,9 +343,7 @@ const invokeResolverWithProps = async <
       end?.();
     }
   }
-  return isResolvable(respOrPromise)
-    ? resolveAny(respOrPromise, ctx)
-    : respOrPromise;
+  return respOrPromise;
 };
 
 const resolveWithType = async <
@@ -350,7 +351,7 @@ const resolveWithType = async <
   TContext extends BaseContext = BaseContext,
 >(
   resolveType: string,
-  props: PropsResolver<T> | T,
+  props: T,
   context: TContext,
   nullIfDangling = false,
 ): Promise<T> => {
@@ -397,22 +398,16 @@ const resolveResolvable = <
     resolvables: { [resolveType]: resolvableObj },
   } = context;
 
-  const ctx = withResolveChain(
-    context,
-    { type: "resolvable", value: resolveType },
-  );
-
   const hints = context.resolveHints[resolveType] ??= traverseAny(
     resolvableObj,
-    typeOfFrom(ctx.resolvables, ctx.resolvers),
   );
 
-  return resolveAny(resolvableObj, ctx, nullIfDangling, hints);
+  return resolveAny(resolvableObj, context, nullIfDangling, hints);
 };
 
 export type PropsResolver<T> = (
   onBeforeResolveProps?: OnBeforeResolveProps,
-) => Promise<T>;
+) => PromiseOrValue<T>;
 
 const isPropsResolver = <T>(
   propsResolver: T | PropsResolver<T>,
@@ -431,7 +426,7 @@ export const resolveAny = <
     | Resolvable<T & { __resolveType: string }, TContext>,
   context: TContext,
   nullIfDangling = false,
-  hints?: Hint[],
+  hints?: HintNode<T> | null,
 ): Promise<T> => {
   if (!maybeResolvable) {
     return Promise.resolve(maybeResolvable);
@@ -439,31 +434,14 @@ export const resolveAny = <
   if (isResolved(maybeResolvable)) {
     return Promise.resolve(maybeResolvable.data as T);
   }
-  const _props: PropsResolver<T> = (
-    onBeforeResolveProps?: OnBeforeResolveProps,
-  ) => {
-    const { __resolveType: _, ..._props } = maybeResolvable as Resolvable;
-    const props = onBeforeResolveProps?.(_props) ?? _props;
-    return resolvePropsWithHints(
-      props,
-      hints ?? traverseAny(
-        props,
-        typeOfFrom(context.resolvables, context.resolvers),
-      ),
-      context,
-      nullIfDangling,
-    );
-  };
-  if (isResolvable(maybeResolvable)) {
-    const { __resolveType } = maybeResolvable;
-    return resolveWithType<T, TContext>(
-      __resolveType,
-      _props,
-      context,
-      nullIfDangling,
-    );
-  }
-  return _props();
+  return resolvePropsWithHints(
+    structuredClone(maybeResolvable),
+    hints ?? traverseAny(
+      maybeResolvable,
+    ) ?? {},
+    context,
+    nullIfDangling,
+  );
 };
 
 export const resolve = <

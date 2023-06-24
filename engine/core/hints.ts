@@ -1,86 +1,61 @@
-import {
-  FieldResolver,
-  isResolvable,
-  Resolvable,
-  ResolveChain,
-  ResolverMap,
-} from "$live/engine/core/resolver.ts";
+import { isResolvable, Resolvable } from "$live/engine/core/resolver.ts";
 
-export type TypeOf = (resolveType: string) => FieldResolver["type"];
-export type Hint = ResolveChain;
-export type ResolveHints = Record<string, Hint[]>;
-const traverseObject = (
-  // deno-lint-ignore ban-types
-  obj: object,
-  typeOf: TypeOf,
-  maybeHint?: Hint,
-): Hint[] => {
-  const hints = [];
+export type HintNode<T> = {
+  [key in keyof T]?: HintNode<T[key]> | null;
+};
+
+// deno-lint-ignore no-explicit-any
+export type ResolveHints = Record<string, HintNode<any> | null>;
+// deno-lint-ignore no-explicit-any
+const traverseObject = <T extends Record<string, any>>(
+  obj: T,
+): HintNode<T> | null => {
+  let node: HintNode<T> | null = null;
   for (const [key, value] of Object.entries(obj)) {
-    hints.push(
-      ...traverseAny(value, typeOf, [...(maybeHint ?? []), {
-        type: "prop",
-        value: key,
-      }]),
-    );
+    const innerNode = traverseAny(value);
+    if (innerNode) {
+      node ??= {};
+      node[key as keyof T] = innerNode;
+    }
   }
-  return hints;
+  return node;
 };
 
-const traverseArray = (arr: unknown[], typeOf: TypeOf, hint: Hint): Hint[] => {
-  const hints = [];
+const traverseArray = <T extends unknown[]>(
+  arr: unknown[],
+): HintNode<T> | null => {
+  let node: HintNode<T> | null = null;
   for (let index = 0; index < arr.length; index++) {
-    hints.push(
-      ...traverseAny(arr[index], typeOf, [...hint, {
-        type: "prop",
-        value: index,
-      }]),
-    );
+    const hintNode = traverseAny(arr[index]);
+    if (hintNode !== null) {
+      node ??= {};
+      node[index] = hintNode;
+    }
   }
-  return hints;
+  return node;
 };
 
-export const traverseAny = (
+export const traverseAny = <T>(
   value: unknown,
-  typeOf: TypeOf,
-  maybeHint?: Hint,
-): Hint[] => {
-  const hint = maybeHint ?? [];
-  const chainType = isResolvable(value) && typeOf(value.__resolveType);
-  const hints = chainType
-    ? [[...hint, {
-      type: chainType,
-      value: value.__resolveType,
-    }]]
-    : [];
+): HintNode<T> | null => {
+  const node = isResolvable(value) ? {} : null;
   if (Array.isArray(value)) {
-    return [...traverseArray(value, typeOf, hint), ...hints];
+    return traverseArray(value) ?? node;
   }
   if (value && typeof value === "object") {
-    return [...traverseObject(value, typeOf, hint), ...hints];
+    return traverseObject(value) ?? node;
   }
-  return hints;
+  return node;
 };
 
-const traverse = (typeOf: TypeOf) =>
-(
+const traverse = (
   hints: ResolveHints,
   [id, resolvable]: [string, Resolvable],
 ): ResolveHints => {
-  hints[id] = traverseObject(resolvable, typeOf);
+  hints[id] = traverseObject(resolvable);
   return hints;
 };
 
-export const typeOfFrom = (
-  resolvableMap: Record<string, Resolvable>,
-  resolverMap?: ResolverMap,
-) =>
-(resolveType: string) =>
-  resolveType in (resolverMap ?? {})
-    ? "resolver"
-    : resolveType in resolvableMap
-    ? "resolvable"
-    : "dangling";
 /**
  * Generate resolvable hints for a given resolvable.
  * hints are useful to rapid resolve any resolvable by just accessing its properties.
@@ -89,10 +64,9 @@ export const typeOfFrom = (
  */
 export const genHints = (
   resolvableMap: Record<string, Resolvable>,
-  resolverMap?: ResolverMap,
 ): ResolveHints => {
   return Object.entries(resolvableMap).reduce(
-    traverse(typeOfFrom(resolvableMap, resolverMap)),
+    traverse,
     {},
   );
 };

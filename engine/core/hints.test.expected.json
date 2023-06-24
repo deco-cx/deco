@@ -1,580 +1,137 @@
 {
-  "everyone": [
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 0 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "resolvable", "value": "Search Page" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 0 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 1 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "resolvable", "value": "Categories" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 1 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 2 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "resolvable", "value": "Home" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 2 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 3 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "resolvable", "value": "Product Page" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 3 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 4 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "dangling", "value": "pages-pleasedelete me-ed39d24719c8" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 4 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 5 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "resolvable", "value": "pages-augustotesting-cc3a6e81f4dc" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 5 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 6 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "resolvable", "value": "pages-mynew page-c427a33475e7" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": 6 },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ]
-  ],
-  "./routes/_middleware.ts": [
-    [
-      { "type": "prop", "value": "state" },
-      { "type": "prop", "value": 1 },
-      { "type": "prop", "value": "value" },
-      { "type": "resolvable", "value": "configYourViews" }
-    ],
-    [
-      { "type": "prop", "value": "state" },
-      { "type": "prop", "value": 2 },
-      { "type": "prop", "value": "value" },
-      { "type": "resolvable", "value": "configVTEX" }
-    ],
-    [
-      { "type": "prop", "value": "state" },
-      { "type": "prop", "value": 3 },
-      { "type": "prop", "value": "value" },
-      { "type": "resolvable", "value": "configVNDA" }
-    ],
-    [
-      { "type": "prop", "value": "state" },
-      { "type": "prop", "value": 4 },
-      { "type": "prop", "value": "value" },
-      { "type": "resolvable", "value": "configShopify" }
-    ],
-    [
-      { "type": "prop", "value": "state" },
-      { "type": "prop", "value": 5 },
-      { "type": "prop", "value": "value" },
-      { "type": "resolvable", "value": "configOCC" }
-    ]
-  ],
-  "./routes/[...catchall].tsx": [
-    [
-      { "type": "prop", "value": "audiences" },
-      { "type": "prop", "value": 0 },
-      { "type": "resolvable", "value": "everyone" }
-    ],
-    [
-      { "type": "prop", "value": "audiences" },
-      { "type": "prop", "value": 1 },
-      { "type": "resolvable", "value": "everyone" }
-    ],
-    [
-      { "type": "prop", "value": "audiences" },
-      { "type": "prop", "value": 2 },
-      { "type": "resolvable", "value": "vtex_proxy" }
-    ]
-  ],
-  "Home": [
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 0 },
-      { "type": "resolvable", "value": "Fashion by Deco" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 1 },
-      { "type": "resolvable", "value": "SEODefault" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 2 },
-      { "type": "resolvable", "value": "Header - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 3 },
-      { "type": "resolvable", "value": "Carousel - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 4 },
-      { "type": "resolvable", "value": "Campaign Timer - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 5 },
-      { "type": "resolvable", "value": "Category List - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 6 },
-      { "type": "prop", "value": "products" },
-      { "type": "resolvable", "value": "Colecao 139 - Camisas" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 6 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Product/ProductShelf.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 7 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Content/Testimonials.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 8 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Content/Benefits.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 9 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Content/Logos.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 10 },
-      { "type": "resolvable", "value": "Newsletter - 03" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 11 },
-      { "type": "resolvable", "value": "FAQ - 02" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 12 },
-      { "type": "resolvable", "value": "Shortcuts - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 13 },
-      { "type": "resolvable", "value": "Footer - 01" }
-    ]
-  ],
-  "test1": [],
-  "Matheus": [],
-  "FAQ - 01": [],
-  "FAQ - 02": [],
-  "FAQ - 03": [],
-  "analytics": [],
-  "configOCC": [],
-  "Categories": [
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 0 },
-      { "type": "resolvable", "value": "Fashion by Deco" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 1 },
-      { "type": "resolvable", "value": "Header - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 2 },
-      { "type": "prop", "value": "page" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductListingPage.ts"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 2 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Category/CategoryBanner.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 3 },
-      { "type": "resolvable", "value": "Category Banner - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 4 },
-      { "type": "prop", "value": "page" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductListingPage.ts"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 4 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Product/SearchResult.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 5 },
-      { "type": "resolvable", "value": "Footer - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 6 },
-      { "type": "resolvable", "value": "Shortcuts - 01" }
-    ]
-  ],
-  "Logos - 01": [],
-  "Logos - 02": [],
-  "SEODefault": [],
-  "Teste Muri": [],
-  "configVNDA": [],
-  "configVTEX": [],
-  "vestidos-4": [],
-  "vtex-olive": [],
-  "vtex_proxy": [
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "resolver", "value": "deco-sites/std/loaders/vtex/proxy.ts" }
-    ],
-    [
-      { "type": "prop", "value": "matcher" },
-      { "type": "resolver", "value": "$live/matchers/MatchAlways.ts" }
-    ]
-  ],
-  "Footer - 01": [],
-  "Footer - 02": [],
-  "Footer - 03": [],
-  "Footer - 04": [],
-  "Footer - 05": [],
-  "Header - 01": [],
-  "Search Page": [
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 0 },
-      { "type": "resolvable", "value": "Fashion by Deco" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 1 },
-      { "type": "resolvable", "value": "Header - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 2 },
-      { "type": "prop", "value": "page" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/loaders/vtex/intelligentSearch/productListingPage.ts"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 2 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Product/SearchResult.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 3 },
-      { "type": "resolvable", "value": "Footer - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 4 },
-      { "type": "resolvable", "value": "Shortcuts - 01" }
-    ]
-  ],
-  "Product Page": [
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 0 },
-      { "type": "prop", "value": "context" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductDetailsPage.ts"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 0 },
-      { "type": "resolver", "value": "deco-sites/std/sections/SEO.tsx" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 1 },
-      { "type": "resolvable", "value": "Fashion by Deco" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 2 },
-      { "type": "resolvable", "value": "Header - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 3 },
-      { "type": "prop", "value": "page" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/loaders/vtex/intelligentSearch/productDetailsPage.ts"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 3 },
-      {
-        "type": "resolver",
-        "value": "deco-sites/fashion/sections/Product/ProductDetails.tsx"
-      }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 4 },
-      { "type": "resolvable", "value": "Footer - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 5 },
-      { "type": "resolvable", "value": "Shortcuts - 01" }
-    ]
-  ],
-  "Benefits - 01": [],
-  "Benefits - 02": [],
-  "Benefits - 03": [],
-  "Carousel - 01": [],
-  "LinkTree - 01": [],
-  "Teste augusto": [],
-  "configShopify": [],
-  "Shortcuts - 01": [],
-  "Fashion by Deco": [],
-  "Newsletter - 01": [],
-  "Newsletter - 02": [],
-  "Newsletter - 03": [],
-  "Newsletter - 04": [],
-  "Newsletter - 05": [],
-  "Newsletter - 06": [],
-  "configYourViews": [],
-  "Banner Grid - 01": [],
-  "VtexVestidoLists": [],
-  "Testimonials - 01": [],
-  "Testimonials - 02": [],
-  "Category List - 01": [],
-  "Image Gallery - 01": [],
-  "Image Gallery - 02": [],
-  "Image Gallery - 03": [],
-  "Image Gallery - 04": [],
-  "Product Shelf - Teste": [
-    [
-      { "type": "prop", "value": "products" },
-      { "type": "prop", "value": "query" },
-      { "type": "dangling", "value": "saved_query" }
-    ],
-    [
-      { "type": "prop", "value": "products" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductList.ts"
-      }
-    ]
-  ],
-  "Product Shelf - 01": [
-    [
-      { "type": "prop", "value": "products" },
-      { "type": "resolvable", "value": "Colecao 137 - Casacos" }
-    ]
-  ],
-  "Product Shelf - 02": [
-    [
-      { "type": "prop", "value": "products" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductList.ts"
-      }
-    ]
-  ],
-  "Product Shelf - 03": [
-    [
-      { "type": "prop", "value": "products" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductList.ts"
-      }
-    ]
-  ],
-  "Product Shelf - 04": [
-    [
-      { "type": "prop", "value": "products" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductList.ts"
-      }
-    ]
-  ],
-  "Product Shelf - 05": [
-    [
-      { "type": "prop", "value": "products" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductList.ts"
-      }
-    ]
-  ],
-  "Product Shelf - 06": [
-    [
-      { "type": "prop", "value": "products" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/functions/vtexProductList.ts"
-      }
-    ]
-  ],
-  "Campaign Timer - 01": [],
-  "Campaign Timer - 02": [],
-  "Cookie Consent - 01": [],
-  "Cookie Consent - 02": [],
-  "Cookie Consent - 03": [],
-  "Product Detail - 01": [
-    [
-      { "type": "prop", "value": "page" },
-      {
-        "type": "resolver",
-        "value": "deco-sites/std/loaders/vtex/intelligentSearch/productDetailsPage.ts"
-      }
-    ]
-  ],
-  "vtex_proxy_audience": [
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": "0" },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "prop", "value": "page" },
-      { "type": "dangling", "value": "21500" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "prop", "value": "0" },
-      { "type": "prop", "value": "handler" },
-      { "type": "prop", "value": "value" },
-      { "type": "resolver", "value": "$live/handlers/fresh.ts" }
-    ],
-    [
-      { "type": "prop", "value": "routes" },
-      { "type": "resolver", "value": "deco-sites/std/loaders/vtex/proxy.ts" }
-    ],
-    [
-      { "type": "prop", "value": "matcher" },
-      { "type": "resolver", "value": "$live/matchers/MatchAlways.ts" }
-    ]
-  ],
-  "Category Banner - 01": [],
-  "Camisas mais vendidas": [],
-  "Colecao 137 - Casacos": [],
-  "Colecao 139 - Camisas": [],
-  "Shoppable Banner - 01": [],
-  "minha colecao boladona": [],
-  "pages-mynew page-c427a33475e7": [
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 0 },
-      { "type": "resolvable", "value": "Banner Grid - 01" }
-    ],
-    [
-      { "type": "prop", "value": "sections" },
-      { "type": "prop", "value": 1 },
-      { "type": "resolvable", "value": "Footer - 01" }
-    ]
-  ],
-  "pages-augustotesting-cc3a6e81f4dc": []
+  "everyone": {
+    "routes": {
+      "0": { "handler": { "value": { "page": {} } } },
+      "1": { "handler": { "value": { "page": {} } } },
+      "2": { "handler": { "value": { "page": {} } } },
+      "3": { "handler": { "value": { "page": {} } } },
+      "4": { "handler": { "value": { "page": {} } } },
+      "5": { "handler": { "value": { "page": {} } } },
+      "6": { "handler": { "value": { "page": {} } } }
+    }
+  },
+  "./routes/_middleware.ts": {
+    "state": {
+      "1": { "value": {} },
+      "2": { "value": {} },
+      "3": { "value": {} },
+      "4": { "value": {} },
+      "5": { "value": {} }
+    }
+  },
+  "./routes/[...catchall].tsx": { "audiences": { "0": {}, "1": {}, "2": {} } },
+  "Home": {
+    "sections": {
+      "0": {},
+      "1": {},
+      "2": {},
+      "3": {},
+      "4": {},
+      "5": {},
+      "6": { "products": {} },
+      "7": {},
+      "8": {},
+      "9": {},
+      "10": {},
+      "11": {},
+      "12": {},
+      "13": {}
+    }
+  },
+  "test1": null,
+  "Matheus": null,
+  "FAQ - 01": null,
+  "FAQ - 02": null,
+  "FAQ - 03": null,
+  "analytics": null,
+  "configOCC": null,
+  "Categories": {
+    "sections": {
+      "0": {},
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": { "page": {} },
+      "5": {},
+      "6": {}
+    }
+  },
+  "Logos - 01": null,
+  "Logos - 02": null,
+  "SEODefault": null,
+  "Teste Muri": null,
+  "configVNDA": null,
+  "configVTEX": null,
+  "vestidos-4": null,
+  "vtex-olive": null,
+  "vtex_proxy": { "routes": {}, "matcher": {} },
+  "Footer - 01": null,
+  "Footer - 02": null,
+  "Footer - 03": null,
+  "Footer - 04": null,
+  "Footer - 05": null,
+  "Header - 01": null,
+  "Search Page": {
+    "sections": { "0": {}, "1": {}, "2": { "page": {} }, "3": {}, "4": {} }
+  },
+  "Product Page": {
+    "sections": {
+      "0": { "context": {} },
+      "1": {},
+      "2": {},
+      "3": { "page": {} },
+      "4": {},
+      "5": {}
+    }
+  },
+  "Benefits - 01": null,
+  "Benefits - 02": null,
+  "Benefits - 03": null,
+  "Carousel - 01": null,
+  "LinkTree - 01": null,
+  "Teste augusto": null,
+  "configShopify": null,
+  "Shortcuts - 01": null,
+  "Fashion by Deco": null,
+  "Newsletter - 01": null,
+  "Newsletter - 02": null,
+  "Newsletter - 03": null,
+  "Newsletter - 04": null,
+  "Newsletter - 05": null,
+  "Newsletter - 06": null,
+  "configYourViews": null,
+  "Banner Grid - 01": null,
+  "VtexVestidoLists": null,
+  "Testimonials - 01": null,
+  "Testimonials - 02": null,
+  "Category List - 01": null,
+  "Image Gallery - 01": null,
+  "Image Gallery - 02": null,
+  "Image Gallery - 03": null,
+  "Image Gallery - 04": null,
+  "Product Shelf - Teste": { "products": { "query": {} } },
+  "Product Shelf - 01": { "products": {} },
+  "Product Shelf - 02": { "products": {} },
+  "Product Shelf - 03": { "products": {} },
+  "Product Shelf - 04": { "products": {} },
+  "Product Shelf - 05": { "products": {} },
+  "Product Shelf - 06": { "products": {} },
+  "Campaign Timer - 01": null,
+  "Campaign Timer - 02": null,
+  "Cookie Consent - 01": null,
+  "Cookie Consent - 02": null,
+  "Cookie Consent - 03": null,
+  "Product Detail - 01": { "page": {} },
+  "vtex_proxy_audience": {
+    "routes": { "0": { "handler": { "value": { "page": {} } } } },
+    "matcher": {}
+  },
+  "Category Banner - 01": null,
+  "Camisas mais vendidas": null,
+  "Colecao 137 - Casacos": null,
+  "Colecao 139 - Camisas": null,
+  "Shoppable Banner - 01": null,
+  "minha colecao boladona": null,
+  "pages-mynew page-c427a33475e7": { "sections": { "0": {}, "1": {} } },
+  "pages-augustotesting-cc3a6e81f4dc": null
 }
