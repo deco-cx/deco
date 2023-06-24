@@ -7,6 +7,7 @@ import {
 import { ResolveOptions } from "$live/engine/core/mod.ts";
 import {
   isAwaitable,
+  notUndefined,
   PromiseOrValue,
   UnPromisify,
 } from "$live/engine/core/utils.ts";
@@ -200,6 +201,28 @@ export const withResolveChain = <TContext extends BaseContext = BaseContext>(
   };
 };
 
+export const withResolveChainOfType = <
+  TContext extends BaseContext = BaseContext,
+>(
+  ctx: TContext,
+  ...resolverType: string[]
+): TContext => {
+  return {
+    ...ctx,
+    resolveChain: [
+      ...ctx.resolveChain,
+      ...(resolverType.map((tp) => ({
+        type: tp in ctx.resolvables
+          ? "resolvable"
+          : tp in ctx.resolvers
+          ? "resolver"
+          : "dangling",
+        value: tp,
+      }))),
+    ],
+  };
+};
+
 export const ALREADY_RESOLVED = "resolved";
 
 /**
@@ -262,27 +285,18 @@ const resolvePropsWithHints = async <
     ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
     : identity;
   const props = onBeforeResolveProps(_thisProps as T);
-  const ctx = type
-    ? withResolveChain(_ctx, {
-      type: type in _ctx.resolvables
-        ? "resolvable"
-        : type in _ctx.resolvers
-        ? "resolver"
-        : "dangling",
-      value: type,
-    })
-    : _ctx;
+  const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 
   const shallow = Array.isArray(props)
     ? new Array(...props) as T
     : { ...props };
-  const resolvedPropsPromise: Promise<ResolvedKey<T, keyof T>>[] = [];
-  for (const [_key, hint] of Object.entries(hints)) {
-    const key = _key as keyof T;
-    delete shallow[key];
-    if (props[key]) {
-      resolvedPropsPromise.push(
-        resolvePropsWithHints(
+
+  const resolvedPropsPromise = Object.entries(hints).map(
+    async ([_key, hint]) => {
+      const key = _key as keyof T;
+      delete shallow[key];
+      if (props[key]) {
+        const resolved = await resolvePropsWithHints(
           props[key],
           hint as HintNode<T[typeof key]>,
           withResolveChain(ctx, {
@@ -290,13 +304,16 @@ const resolvePropsWithHints = async <
             value: key.toString(),
           }),
           nullIfDangling,
-        ).then((resolved) => ({ key, resolved })),
-      );
-    }
-  }
+        );
+        return { key, resolved } as ResolvedKey<T, typeof key>;
+      }
+      return undefined;
+    },
+  );
+
   const resolvedProps = await Promise.all(resolvedPropsPromise);
 
-  for (const { key, resolved } of resolvedProps) {
+  for (const { key, resolved } of resolvedProps.filter(notUndefined)) {
     shallow[key] = resolved;
   }
 
