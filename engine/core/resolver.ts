@@ -8,7 +8,6 @@ import { ResolveOptions } from "$live/engine/core/mod.ts";
 import {
   isAwaitable,
   notUndefined,
-  PromiseOrValue,
   UnPromisify,
 } from "$live/engine/core/utils.ts";
 import { identity } from "$live/utils/object.ts";
@@ -367,7 +366,7 @@ const invokeResolverWithProps = async <
   return respOrPromise;
 };
 
-export const resolveWithType = async <
+export const resolveWithType = <
   T,
   TContext extends BaseContext = BaseContext,
 >(
@@ -402,7 +401,7 @@ export const resolveWithType = async <
     throw new DanglingReference(resolveType);
   }
   return ctx.danglingRecover(
-    isPropsResolver(props) ? await props() : props,
+    props,
     ctx,
   );
 };
@@ -426,15 +425,6 @@ const resolveResolvable = <
   return resolveAny(resolvableObj, context, nullIfDangling, hints);
 };
 
-export type PropsResolver<T> = (
-  onBeforeResolveProps?: OnBeforeResolveProps,
-) => PromiseOrValue<T>;
-
-const isPropsResolver = <T>(
-  propsResolver: T | PropsResolver<T>,
-): propsResolver is PropsResolver<T> => {
-  return propsResolver && typeof propsResolver === "function";
-};
 export const resolveAny = <
   T,
   TContext extends BaseContext = BaseContext,
