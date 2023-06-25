@@ -204,10 +204,6 @@ export const stringify = ({
 }: ManifestData): string => {
   manifest["routes"] ??= { kind: "obj", value: {} };
   manifest["islands"] ??= { kind: "obj", value: {} };
-  manifest["config"] = {
-    kind: "js",
-    raw: { identifier: "config" },
-  };
 
   manifest["baseUrl"] = {
     kind: "js",
@@ -217,7 +213,6 @@ export const stringify = ({
 // This file SHOULD be checked into source version control.
 // This file is automatically updated during development when running \`dev.ts\`.
 
-import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 ${Object.entries(imports).map(stringifyImport).join("\n")}
 
@@ -237,7 +232,9 @@ ${
 
 export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
   return {
-    mergeWith: (def: DecoManifest[]): ManifestBuilder => {
+    mergeWith: (
+      def: (DecoManifest & { config?: unknown })[],
+    ): ManifestBuilder => {
       let innerBuilder = newManifestBuilder(initial);
 
       let manI = 0;
@@ -246,6 +243,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         const {
           routes: _doNotMergeRoutes,
           islands: _doNotMergeIslands,
+          config: _ignoreConfig,
           baseUrl: _ignoreBaseUrl,
           ...blocks
         } = manifest;

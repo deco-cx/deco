@@ -2,7 +2,6 @@
 // This file SHOULD be checked into source version control.
 // This file is automatically updated during development when running `dev.ts`.
 
-import config from "./deno.json" assert { type: "json" };
 import { DecoManifest } from "$live/types.ts";
 import * as $$$0 from "./loaders/state.ts";
 import * as $$$1 from "./loaders/workflows/get.ts";
@@ -111,7 +110,6 @@ const manifest = {
     "$live/actions/workflows/start.ts": $$$$$$$$$$$0,
   },
   "islands": {},
-  "config": config,
   "baseUrl": import.meta.url,
 };
 
