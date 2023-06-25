@@ -308,7 +308,7 @@ const resolvePropsWithHints = async <
   const mutableProps: T = resolvedPropsPromise.length === 0 // if there's no resolved properties so no shallow copy is needed.
     ? props
     : Array.isArray(props)
-    ? new Array(...props) as T
+    ? [...props] as T
     : { ...props };
 
   const resolvedProps = await Promise.all(resolvedPropsPromise);

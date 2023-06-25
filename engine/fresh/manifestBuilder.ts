@@ -246,7 +246,6 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
         const {
           routes: _doNotMergeRoutes,
           islands: _doNotMergeIslands,
-          config: _ignoreConfig,
           baseUrl: _ignoreBaseUrl,
           ...blocks
         } = manifest;
