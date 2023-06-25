@@ -9,14 +9,11 @@ import {
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Release } from "$live/engine/releases/provider.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
-  getResolvables: (
-    fresh?: boolean,
-  ) => PromiseOrValue<Record<string, Resolvable<any>>>;
-  revision: () => PromiseOrValue<string>;
+  release: Release;
   danglingRecover?: Resolver;
 }
 
@@ -38,21 +35,18 @@ const withOverrides = (
 };
 
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
-  public getResolvables: (forceFresh?: boolean) => PromiseOrValue<
-    Record<string, Resolvable<any>>
-  >;
+  protected release: Release;
   protected resolvers: ResolverMap<TContext>;
   protected danglingRecover?: Resolver;
   private resolveHints: ResolveHints;
-  private currentRevision: string | null;
-  private getRevision: () => PromiseOrValue<string>;
   constructor(config: ResolverOptions<TContext>) {
     this.resolvers = config.resolvers;
-    this.getResolvables = config.getResolvables;
+    this.release = config.release;
     this.danglingRecover = config.danglingRecover;
-    this.getRevision = config.revision;
     this.resolveHints = {};
-    this.currentRevision = null;
+    this.release.onChange(() => {
+      this.resolveHints = {};
+    });
   }
 
   public addResolvers = (resolvers: ResolverMap<TContext>) => {
@@ -91,14 +85,11 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const revision = await this.getRevision(); // (mcandeia) should not be done in parallel since there's a racing condition that could return a new revision with old data.
-    const resolvables = await this.getResolvables(options?.forceFresh);
+    const resolvables = await this.release.state({
+      forceFresh: options?.forceFresh,
+    });
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();
-    if (this.currentRevision !== revision) {
-      this.resolveHints = {};
-      this.currentRevision = revision;
-    }
     const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,

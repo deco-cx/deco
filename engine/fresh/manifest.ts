@@ -10,7 +10,7 @@ import {
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
+import { PromiseOrValue, mapObjKeys } from "$live/engine/core/utils.ts";
 import defaultResolvers, {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,
@@ -195,17 +195,14 @@ export const $live = <T extends DecoManifest>(
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers },
-    getResolvables: (forceFresh?: boolean) => {
-      return provider.state({ forceFresh });
-    },
-    revision: provider.revision.bind(provider),
+    release: provider,
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,
   });
 
   if (shouldCheckIntegrity) {
-    resolver.getResolvables().then(
+    provider.state().then(
       (resolvables: Record<string, Resolvable>) => {
         integrityCheck(resolver.getResolvers(), resolvables);
       },
