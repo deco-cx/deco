@@ -19,50 +19,6 @@ Deno.test("resolve", async (t) => {
       return data as T;
     },
   };
-
-  // await t.step(
-  //   "resolveType as function should be called when specified",
-  //   async () => {
-  //     type InputType = {
-  //       bar: number;
-  //     };
-  //     type OutputType = {
-  //       barString: string;
-  //     };
-
-  //     const toStringBarResolver = (d: InputType): OutputType => {
-  //       return { barString: d.bar.toString() };
-  //     };
-  //     const addToStringBarResolver = (d: InputType): Resolvable<InputType> => {
-  //       return { ...d, __resolveType: toStringBarResolver.name };
-  //     };
-  //     const resolverMap = {
-  //       toStringBarResolver: spy(toStringBarResolver),
-  //       addToStringBarResolver: spy(addToStringBarResolver),
-  //     };
-
-  //     const ctx = { ...context, resolvers: resolverMap };
-  //     const result = await resolve<OutputType>(
-  //       {
-  //         bar: 10,
-  //         __resolveType: addToStringBarResolver.name,
-  //       },
-  //       { ...ctx, resolveHints: {} },
-  //     );
-  //     assertEquals(result, { barString: "10" });
-  //     assertSpyCallArg(resolverMap.addToStringBarResolver, 0, 0, { bar: 10 });
-  //     assertSpyCall(resolverMap.addToStringBarResolver, 0, {
-  //       returned: { bar: 10, __resolveType: toStringBarResolver.name },
-  //     });
-  //     assertSpyCallArg(resolverMap.toStringBarResolver, 0, 0, { bar: 10 });
-  //     assertSpyCall(resolverMap.toStringBarResolver, 0, {
-  //       returned: { barString: "10" },
-  //     });
-
-  //     assertSpyCalls(resolverMap.addToStringBarResolver, 1);
-  //     assertSpyCalls(resolverMap.toStringBarResolver, 1);
-  //   },
-  // );
   await t.step(
     "dangling reference should be thrown when resolver is missing",
     async () => {
@@ -72,7 +28,7 @@ Deno.test("resolve", async (t) => {
             {
               __resolveType: "not_found_resolver",
             },
-            { ...context, resolveHints: {} },
+            context,
           ),
         "Dangling reference of: not_found_resolver",
       );
