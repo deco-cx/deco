@@ -34,16 +34,27 @@ export const newFsProvider = (
   const sf = singleFlight<Record<string, any>>();
   const fullPath = join(Deno.cwd(), path);
   const onChangeCbs: OnChangeCallback[] = [];
+  let currentVersion = "unknown";
 
   const load = async () => {
+    let dataText: string | null = null;
     try {
       if (!(await exists(fullPath))) {
-        await Deno.writeTextFile(fullPath, JSON.stringify(sample, null, 2));
+        dataText = JSON.stringify(sample, null, 2);
+        await Deno.writeTextFile(fullPath, dataText);
         return sample;
       }
-      return JSON.parse(await Deno.readTextFile(fullPath));
+      dataText = await Deno.readTextFile(fullPath);
+      return JSON.parse(dataText);
     } finally {
-      onChangeCbs.forEach((cb) => cb());
+      if (dataText) {
+        stringToHexSha256(dataText).then((version) => {
+          if (version !== currentVersion) {
+            currentVersion = version;
+            onChangeCbs.forEach((cb) => cb());
+          }
+        });
+      }
     }
   };
   return {
@@ -52,9 +63,6 @@ export const newFsProvider = (
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
     },
-    revision: () =>
-      sf.do("load", load).then(async (resp) => {
-        return await stringToHexSha256(JSON.stringify(resp));
-      }),
+    revision: () => Promise.resolve(currentVersion),
   };
 };
