@@ -8,7 +8,7 @@ import {
   assertSpyCallArg,
   assertSpyCalls,
   spy,
-} from "https://deno.land/std@0.179.0/testing/mock.ts";
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.179.0/testing/mock.ts";
 import { assertEquals, assertRejects } from "std/testing/asserts.ts";
 
 Deno.test("resolve", async (t) => {

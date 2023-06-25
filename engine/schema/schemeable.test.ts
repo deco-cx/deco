@@ -4,8 +4,11 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { Sha1 } from "https://deno.land/std@0.61.0/hash/sha1.ts";
+import {
+  dirname,
+  join,
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.61.0/path/mod.ts";
+import { Sha1 } from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.61.0/hash/sha1.ts";
 import { assertEquals, assertObjectMatch, fail } from "std/testing/asserts.ts";
 
 import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
@@ -14,13 +17,13 @@ import {
   Schemeable,
 } from "$live/engine/schema/transform.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
-import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
+import { fromFileUrl } from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.170.0/path/mod.ts";
 import { fileSeparatorToSlash } from "$live/utils/filesystem.ts";
 import {
   assertSpyCall,
   assertSpyCalls,
   spy,
-} from "https://deno.land/std@0.179.0/testing/mock.ts";
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.179.0/testing/mock.ts";
 
 const folder = dirname(import.meta.url);
 const file = "schemeable.test.types.ts";

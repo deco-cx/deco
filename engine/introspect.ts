@@ -14,7 +14,7 @@ import {
   InterfaceDef,
   TsTypeDef,
   TsTypeLiteralDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_doc@0.58.0/lib/types.d.ts";
 import { jsDocToSchema } from "$live/engine/schema/utils.ts";
 
 type Key = string | number | symbol;

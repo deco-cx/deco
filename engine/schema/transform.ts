@@ -10,7 +10,7 @@ import {
   TsTypeParamDef,
   TsTypeRefDef,
   TsTypeUnionDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7TypeName } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
 import { crypto, toHashString } from "std/crypto/mod.ts";
 

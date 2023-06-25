@@ -19,7 +19,7 @@ import {
 } from "$live/routes/live/invoke/index.ts";
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
+import { METHODS } from "https://cdn.jsdelivr.net/gh/denosaurs/rutt@0.0.13/mod.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 
 export interface LiveRouteConfig extends RouteConfig {

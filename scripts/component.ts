@@ -1,6 +1,6 @@
 import { HTMLtoJSX } from "../lib/htmltopreact.js";
 import { format } from "../dev.ts";
-import clipboard from "https://deno.land/x/clipboard@v0.0.2/mod.ts";
+import clipboard from "https://cdn.jsdelivr.net/gh/NinoDS/clipboard@v0.0.2/mod.ts";
 
 if (Deno.args.length < 1) {
   console.error(

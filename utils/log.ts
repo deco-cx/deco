@@ -4,7 +4,7 @@ import {
   green,
   red,
   yellow,
-} from "https://deno.land/std@0.147.0/fmt/colors.ts";
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.147.0/fmt/colors.ts";
 import { context } from "$live/live.ts";
 
 export const formatLog = (opts: {

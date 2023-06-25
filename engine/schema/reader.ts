@@ -1,6 +1,6 @@
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { context } from "$live/live.ts";
-import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { join } from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.61.0/path/mod.ts";
 import { genSchemasFromManifest } from "./gen.ts";
 
 let schemas: Promise<Schemas> | null = null;

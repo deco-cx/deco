@@ -1,7 +1,10 @@
-import { join } from "https://deno.land/std@0.181.0/path/mod.ts";
-import { increment } from "https://deno.land/std@0.181.0/semver/mod.ts";
-import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
-import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
+import { join } from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.181.0/path/mod.ts";
+import { increment } from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.181.0/semver/mod.ts";
+import { Select } from "https://cdn.jsdelivr.net/gh/c4spar/deno-cliffy/prompt/mod.ts";
+import {
+  exec,
+  OutputMode,
+} from "https://cdn.jsdelivr.net/gh/gpasq/deno-exec@0.0.5/mod.ts";
 
 await exec("git fetch --tags");
 

@@ -6,7 +6,7 @@ import {
   newManifestBuilder,
 } from "$live/engine/fresh/manifestBuilder.ts";
 import { exists, fileSeparatorToSlash } from "$live/utils/filesystem.ts";
-import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { join } from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.61.0/path/mod.ts";
 import { walk, WalkEntry } from "std/fs/walk.ts";
 
 const withDefinition = (

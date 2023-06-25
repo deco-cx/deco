@@ -3,9 +3,9 @@ import {
   brightRed,
   brightYellow,
   gray,
-} from "https://deno.land/std@0.170.0/fmt/colors.ts";
-import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
-import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.170.0/fmt/colors.ts";
+import { join } from "https://cdn.jsdelivr.net/gh/denoland/deno_std@0.170.0/path/mod.ts";
+import $ from "https://cdn.jsdelivr.net/gh/dsherret/dax@0.28.0/mod.ts";
 import { diffLines } from "https://esm.sh/diff@5.1.0";
 import deno from "../deno.json" assert { type: "json" };
 import meta from "../meta.json" assert { type: "json" };

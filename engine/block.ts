@@ -9,7 +9,7 @@ import { DotNestedKeys } from "$live/utils/object.ts";
 import {
   DocNode,
   TsTypeDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+} from "https://cdn.jsdelivr.net/gh/denoland/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import { JSX } from "preact";
 import { BlockInvocation } from "./fresh/defaults.ts";

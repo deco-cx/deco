@@ -1,4 +1,4 @@
-import Cron from "https://deno.land/x/croner@6.0.3/dist/croner.js";
+import Cron from "https://cdn.jsdelivr.net/gh/Hexagon/croner@6.0.3/dist/croner.js";
 
 /**
  * @titleBy cron
