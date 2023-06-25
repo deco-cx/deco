@@ -106,10 +106,13 @@ export const newSupabase = (
       currResolvables = Promise.resolve(
         resolvables,
       );
-      currentRevision = await stringToHexSha256(JSON.stringify(resolvables));
+      const nextRevision = await stringToHexSha256(JSON.stringify(resolvables));
+      if (currentRevision !== nextRevision) {
+        notify();
+      }
+      currentRevision = nextRevision;
     } finally {
       singleFlight = false;
-      notify();
     }
   };
 
