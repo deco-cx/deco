@@ -1,4 +1,4 @@
-import { setupGithooks } from "https://deno.land/x/githooks@0.0.4/githooks.ts";
+import { setupGithooks } from "https://cdn.jsdelivr.net/gh/deco-cx/deno-githooks@0.0.4/githooks.ts";
 import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
