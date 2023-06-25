@@ -10,7 +10,7 @@ import {
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue, mapObjKeys } from "$live/engine/core/utils.ts";
+import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
 import defaultResolvers, {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,
@@ -119,6 +119,73 @@ export const withoutLocalModules = (
   return r;
 };
 
+const buildRuntime = (
+  [currMan, currMap, recovers]: [
+    DecoManifest,
+    ResolverMap<FreshContext>,
+    DanglingRecover[],
+  ],
+  blk: Block,
+): [
+  DecoManifest,
+  ResolverMap<FreshContext>,
+  DanglingRecover[],
+] => {
+  const blocks = asManifest(currMan)[blk.type] ?? {};
+  const decorated: Record<string, BlockModule> = blk.decorate
+    ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
+      blocks,
+      blk.decorate,
+    )
+    : blocks;
+
+  const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
+    const previewFunc = mod.preview ??
+      (mod.Preview ? usePreviewFunc(mod.Preview) : blk.defaultPreview);
+    if (previewFunc) {
+      return { ...prv, [`${PREVIEW_PREFIX_KEY}${key}`]: previewFunc };
+    }
+    return prv;
+  }, {} as ResolverMap<FreshContext>);
+
+  const invocations = Object.entries(decorated).reduce(
+    (invk, [key, mod]) => {
+      const invokeFunc = mod.invoke ?? blk.defaultInvoke;
+      if (invokeFunc) {
+        return { ...invk, [`${INVOKE_PREFIX_KEY}${key}`]: invokeFunc };
+      }
+      return invk;
+    },
+    {} as ResolverMap<FreshContext>,
+  );
+
+  const adapted = blk.adapt
+    ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
+      decorated,
+      (mod, key) => {
+        const resolver = blk.adapt!(mod, key);
+        const composed = Array.isArray(resolver)
+          ? compose(...resolver)
+          : resolver;
+        composed.onBeforeResolveProps = mod.onBeforeResolveProps;
+        return composed;
+      },
+    )
+    : {}; // if block has no adapt so it's not considered a resolver.
+  const recover = adapted[localRef(blk.type, danglingModuleTS)] ??
+    adapted[localRef(blk.type, danglingModuleTSX)] ??
+    blk.defaultDanglingRecover;
+  return [
+    { ...currMan, [blk.type]: decorated },
+    { ...currMap, ...adapted, ...previews, ...invocations },
+    (recover as Resolver | undefined)
+      ? [...recovers, {
+        recoverable: resolverIsBlock(blk),
+        recover,
+      } as DanglingRecover]
+      : recovers,
+  ];
+};
 export const $live = <T extends DecoManifest>(
   m: T,
   { siteId, namespace }: SiteInfo,
@@ -127,62 +194,7 @@ export const $live = <T extends DecoManifest>(
   context.siteId = siteId ?? -1;
   context.namespace = namespace;
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
-    ([currMan, currMap, recovers], blk) => {
-      const blocks = asManifest(currMan)[blk.type] ?? {};
-      const decorated: Record<string, BlockModule> = blk.decorate
-        ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
-          blocks,
-          blk.decorate,
-        )
-        : blocks;
-
-      const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
-        const previewFunc = mod.preview ??
-          (mod.Preview ? usePreviewFunc(mod.Preview) : blk.defaultPreview);
-        if (previewFunc) {
-          return { ...prv, [`${PREVIEW_PREFIX_KEY}${key}`]: previewFunc };
-        }
-        return prv;
-      }, {} as ResolverMap<FreshContext>);
-
-      const invocations = Object.entries(decorated).reduce(
-        (invk, [key, mod]) => {
-          const invokeFunc = mod.invoke ?? blk.defaultInvoke;
-          if (invokeFunc) {
-            return { ...invk, [`${INVOKE_PREFIX_KEY}${key}`]: invokeFunc };
-          }
-          return invk;
-        },
-        {} as ResolverMap<FreshContext>,
-      );
-
-      const adapted = blk.adapt
-        ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
-          decorated,
-          (mod, key) => {
-            const resolver = blk.adapt!(mod, key);
-            const composed = Array.isArray(resolver)
-              ? compose(...resolver)
-              : resolver;
-            composed.onBeforeResolveProps = mod.onBeforeResolveProps;
-            return composed;
-          },
-        )
-        : {}; // if block has no adapt so it's not considered a resolver.
-      const recover = adapted[localRef(blk.type, danglingModuleTS)] ??
-        adapted[localRef(blk.type, danglingModuleTSX)] ??
-        blk.defaultDanglingRecover;
-      return [
-        { ...currMan, [blk.type]: decorated },
-        { ...currMap, ...adapted, ...previews, ...invocations },
-        (recover as Resolver | undefined)
-          ? [...recovers, {
-            recoverable: resolverIsBlock(blk),
-            recover,
-          } as DanglingRecover]
-          : recovers,
-      ];
-    },
+    buildRuntime,
     [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();
