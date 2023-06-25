@@ -32,8 +32,8 @@ function nowWithMinutePrecision() {
 }
 
 /**
- * @title Con Matcher
- * @description Use cron at minute precision to calculate if it is active
+ * @title Cron Matcher
+ * @description Use cron, at minute precision, to declare date and hour ranges 
  */
 const MatchCron = (props: CronProps) => {
   if (!props?.cron) {
