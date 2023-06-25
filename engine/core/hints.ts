@@ -59,7 +59,7 @@ const traverse = (
   hints: ResolveHints,
   [id, resolvable]: [string, Resolvable],
 ): ResolveHints => {
-  hints[id] = traverseObject(resolvable);
+  hints[id] = traverseObject(resolvable) ?? {};
   return hints;
 };
 

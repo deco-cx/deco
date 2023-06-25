@@ -428,7 +428,7 @@ const resolveResolvable = <
 
   const hints = context.resolveHints[resolveType] ??= traverseAny(
     resolvableObj,
-  );
+  ) ?? {};
 
   return resolveAny(resolvableObj, context, nullIfDangling, hints);
 };

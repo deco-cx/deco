@@ -2,6 +2,7 @@ import { BaseContext, resolve } from "$live/engine/core/resolver.ts";
 import meta from "$live/meta.json" assert { type: "json" };
 import releaseJSON from "./hints.test.json" assert { type: "json" };
 const danglingRecover = (parent: unknown) => parent;
+const resolveHints = {}; //on-demand hints
 Deno.bench(
   "resolve current version",
   { group: "resolve", baseline: true },
@@ -11,7 +12,7 @@ Deno.bench(
       resolveId: "1",
       resolvables: releaseJSON,
       resolvers: {},
-      resolveHints: {},
+      resolveHints,
       danglingRecover,
       resolve: <T>(data: unknown) => {
         return data as T;
