@@ -9,7 +9,7 @@ import {
   TsTypeFnOrConstructorDef,
 } from "https://cdn.jsdelivr.net/gh/denoland/deno_doc@0.58.0/lib/types.d.ts";
 import { doc } from "https://cdn.jsdelivr.net/gh/denoland/deno_doc@0.58.0/mod.ts";
-import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
+import { pLimit } from "https://cdn.jsdelivr.net/gh/magic-akari/p_limit@v1.0.0/mod.ts";
 import { fromFileUrl, join } from "std/path/mod.ts";
 
 const limit = pLimit(5);
