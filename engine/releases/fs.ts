@@ -11,8 +11,10 @@ const sample = {
     routes: [{
       pathTemplate: "/*",
       handler: {
-        url: "https://www.google.com",
-        __resolveType: "$live/handlers/proxy.ts",
+        value: {
+          url: "https://www.google.com",
+          __resolveType: "$live/handlers/proxy.ts",
+        },
       },
     }],
     __resolveType: "$live/flags/everyone.ts",

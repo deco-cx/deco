@@ -108,9 +108,9 @@ export const newSupabase = (
       );
       const nextRevision = await stringToHexSha256(JSON.stringify(resolvables));
       if (currentRevision !== nextRevision) {
+        currentRevision = nextRevision;
         notify();
       }
-      currentRevision = nextRevision;
     } finally {
       singleFlight = false;
     }
