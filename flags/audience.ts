@@ -44,6 +44,11 @@ export interface Audience {
 }
 
 /**
+ * @title Audience Value
+ */
+export type AudienceValue = Pick<Audience, "routes" | "overrides">;
+
+/**
  * @title Audience
  * @description Select routes based on the matched audience.
  */
@@ -52,7 +57,7 @@ export default function Audience({
   routes,
   name,
   overrides,
-}: Audience): FlagObj<Pick<Audience, "routes" | "overrides">> {
+}: Audience): FlagObj<AudienceValue> {
   return {
     matcher,
     true: { routes, overrides },

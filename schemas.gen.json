@@ -538,32 +538,87 @@
       ],
       "title": "$live/handlers/router.ts@RouterConfig"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
+      "type": "object",
+      "properties": {
+        "use": {
+          "type": "string",
+          "title": "Use"
         },
-        {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
+        "insteadOf": {
+          "type": "string",
+          "title": "Instead Of"
         }
+      },
+      "required": [
+        "use",
+        "insteadOf"
       ],
-      "title": "Audiences"
+      "title": "Override"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]": {
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag"
+        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override"
       },
-      "title": "15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]"
+      "title": "Override[]"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "routes": {
+              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
+              "title": "Routes"
+            },
+            "overrides": {
+              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
+              "title": "Overrides"
+            }
+          },
+          "required": [],
+          "title": "Audience Value"
+        },
+        {
+          "title": "Audience",
+          "description": "Select routes based on the matched audience.",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/flags/audience.ts"
+              ],
+              "default": "$live/flags/audience.ts"
+            }
+          }
+        }
+      ]
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience"
+      },
+      "title": "pickb3ZlcnJpZGVzLHJvdXRlcw==Audience[]"
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
       "properties": {
         "audiences": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]",
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience[]",
           "title": "Audiences"
         }
       },
@@ -1004,31 +1059,6 @@
       },
       "required": [],
       "title": "$live/matchers/MatchUserAgent.ts@Props"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
-      "type": "object",
-      "properties": {
-        "use": {
-          "type": "string",
-          "title": "Use"
-        },
-        "insteadOf": {
-          "type": "string",
-          "title": "Instead Of"
-        }
-      },
-      "required": [
-        "use",
-        "insteadOf"
-      ],
-      "title": "Override"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override"
-      },
-      "title": "Override[]"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",

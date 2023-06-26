@@ -1,9 +1,13 @@
+import { HttpContext } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
-import { applyConfig } from "$live/blocks/utils.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { introspectWith } from "$live/engine/introspect.ts";
 import { context } from "$live/live.ts";
-
+import {
+  TsTypeDef,
+  TsTypeTypeRefDef,
+} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 // TODO Inheritance flag is not working Author Marcos V. Candeia
@@ -20,14 +24,27 @@ export type FlagFunc<TConfig = any> = (c: TConfig) => FlagObj;
 
 const flagBlock: Block<BlockModule<FlagFunc>> = {
   type: "flags",
-  introspect: {
-    default: "0",
-  },
-  adapt: applyConfig,
-  defaultPreview: (flag, { request }) => {
+  introspect: introspectWith<BlockModule<FlagFunc>>({
+    "default": "0",
+  }, (tsType: TsTypeDef) => {
+    return (tsType as TsTypeTypeRefDef)?.typeRef?.typeParams?.[0];
+  }),
+  adapt: <
+    TConfig = unknown,
+  >(func: {
+    default: FlagFunc<TConfig>;
+  }) =>
+  ($live: TConfig, { request }: HttpContext) => {
+    const flag = func.default($live);
     const ctx = { request, siteId: context.siteId };
-    const resp = flag.matcher(ctx) ? flag.true : flag.false;
-    return { Component: JsonViewer, props: { body: JSON.stringify(resp) } };
+    const matchValue = flag.matcher(ctx);
+    return matchValue ? flag.true : flag.false;
+  },
+  defaultPreview: (resp) => {
+    return {
+      Component: JsonViewer,
+      props: { body: JSON.stringify(resp) },
+    };
   },
 };
 

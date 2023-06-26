@@ -77,7 +77,9 @@ export type FnProps<
   ctx: FnContext<TState>,
 ) => PromiseOrValue<TResp>;
 
-export const fnContextFromHttpContext = (ctx: HttpContext): FnContext => {
+export const fnContextFromHttpContext = (
+  ctx: HttpContext<{ global?: any; response?: { headers: Headers } }>,
+): FnContext => {
   return {
     ...ctx?.context?.state?.global,
     get: ctx.resolve,

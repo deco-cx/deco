@@ -1,25 +1,14 @@
-import { Flag } from "$live/blocks/flag.ts";
-import { MatchContext } from "$live/blocks/matcher.ts";
-import { BlockInstance } from "$live/engine/block.ts";
 import { ResolveOptions } from "$live/engine/core/mod.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
-import { Override, Route } from "$live/flags/audience.ts";
+import { AudienceValue, Override, Route } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
 import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
-/**
- * @title Audiences
- */
-export type Audiences =
-  | Resolvable<Flag>
-  | BlockInstance<"$live/flags/audience.ts">
-  | BlockInstance<"$live/flags/everyone.ts">;
-
 export interface SelectionConfig {
-  audiences: Audiences[];
+  audiences: AudienceValue[];
 }
 
 const rankRoute = (pattern: string) =>
@@ -138,20 +127,10 @@ const toOverrides = (overrides?: Override[]): Record<string, string> => {
  * @description Select routes based on the target audience.
  */
 export default function RoutesSelection(
-  { audiences: _audiences }: SelectionConfig,
+  { audiences: audiences }: SelectionConfig,
 ): Handler {
-  const audiences = _audiences as (
-    | BlockInstance<"$live/flags/audience.ts">
-    | BlockInstance<"$live/flags/everyone.ts">
-  )[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
-
-    // create the base match context.
-    const matchCtx: Omit<MatchContext, "isMatchFromCookie"> = {
-      siteId: context.siteId,
-      request: req,
-    };
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
     const [routes, overrides, hrefRoutes] = audiences
@@ -160,15 +139,12 @@ export default function RoutesSelection(
       .reduce(
         ([routes, overrides, hrefRoutes], audience) => {
           // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
-          const isMatch = audience.matcher(matchCtx);
-          const [newRoutes, newHrefRoutes] = toRouteMap(audience.true.routes);
-          return isMatch
-            ? [
-              { ...routes, ...newRoutes },
-              { ...overrides, ...toOverrides(audience.true.overrides) },
-              { ...hrefRoutes, ...newHrefRoutes },
-            ]
-            : [routes, overrides, hrefRoutes];
+          const [newRoutes, newHrefRoutes] = toRouteMap(audience.routes ?? []);
+          return [
+            { ...routes, ...newRoutes },
+            { ...overrides, ...toOverrides(audience.overrides ?? []) },
+            { ...hrefRoutes, ...newHrefRoutes },
+          ];
         },
         [{}, {}, {}] as [
           Record<string, Resolvable<Handler>>,
