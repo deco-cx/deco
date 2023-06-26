@@ -21,7 +21,7 @@ export const cookies = {
         try {
           return JSON.parse(atob(cookies[cookie]));
         } catch (err) {
-          console.error("error parsing cookies", err)
+          console.error("error parsing cookies", err);
           return undefined;
         }
       })

@@ -23,10 +23,6 @@ export interface Route {
  * @description Used to configure your site routes
  */
 export type Routes = Route[];
-export interface Override {
-  use: string;
-  insteadOf: string;
-}
 /**
  * @titleBy name
  */
@@ -40,13 +36,7 @@ export interface Audience {
    */
   name: string;
   routes?: Routes;
-  overrides?: Override[];
 }
-
-/**
- * @title Audience Value
- */
-export type AudienceValue = Pick<Audience, "routes" | "overrides">;
 
 /**
  * @title Audience
@@ -56,12 +46,11 @@ export default function Audience({
   matcher,
   routes,
   name,
-  overrides,
-}: Audience): FlagObj<AudienceValue> {
+}: Audience): FlagObj<Route[]> {
   return {
     matcher,
-    true: { routes, overrides },
-    false: { routes: [], overrides: [] },
+    true: routes ?? [],
+    false: [],
     name,
   };
 }

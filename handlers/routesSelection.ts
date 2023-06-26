@@ -1,14 +1,14 @@
 import { ResolveOptions } from "$live/engine/core/mod.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
-import { AudienceValue, Override, Route } from "$live/flags/audience.ts";
+import { Route, Routes } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
 import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
 export interface SelectionConfig {
-  audiences: AudienceValue[];
+  audiences: Routes[];
 }
 
 const rankRoute = (pattern: string) =>
@@ -114,13 +114,6 @@ export const toRouteMap = (
     });
   return [routeMap, hrefRoutes];
 };
-const toOverrides = (overrides?: Override[]): Record<string, string> => {
-  const overrideMap: Record<string, string> = {};
-  (overrides ?? []).forEach(({ insteadOf, use }) => {
-    overrideMap[insteadOf] = use;
-  });
-  return overrideMap;
-};
 
 /**
  * @title Routes Selection
@@ -133,22 +126,20 @@ export default function RoutesSelection(
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
-    const [routes, overrides, hrefRoutes] = audiences
+    const [routes, hrefRoutes] = audiences
       // We should tackle this problem elsewhere
       .filter(Boolean)
       .reduce(
-        ([routes, overrides, hrefRoutes], audience) => {
+        ([routes, hrefRoutes], audience) => {
           // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
-          const [newRoutes, newHrefRoutes] = toRouteMap(audience.routes ?? []);
+          const [newRoutes, newHrefRoutes] = toRouteMap(audience ?? []);
           return [
             { ...routes, ...newRoutes },
-            { ...overrides, ...toOverrides(audience.overrides ?? []) },
             { ...hrefRoutes, ...newHrefRoutes },
           ];
         },
-        [{}, {}, {}] as [
+        [{}, {}] as [
           Record<string, Resolvable<Handler>>,
-          Record<string, string>,
           Record<string, Resolvable<Handler>>,
         ],
       );
@@ -166,7 +157,6 @@ export default function RoutesSelection(
       })),
       hrefRoutes,
       {
-        overrides,
         monitoring: t ? { t } : undefined,
       },
     );

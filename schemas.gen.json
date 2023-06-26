@@ -511,77 +511,17 @@
       "titleBy": "pathTemplate"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
-      },
-      "title": "Routes",
-      "description": "Used to configure your site routes"
-    },
-    "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
-      "type": "object",
-      "properties": {
-        "base": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "title": "Base"
-        },
-        "routes": {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
-          "title": "Routes"
-        }
-      },
-      "required": [
-        "routes"
-      ],
-      "title": "$live/handlers/router.ts@RouterConfig"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
-      "type": "object",
-      "properties": {
-        "use": {
-          "type": "string",
-          "title": "Use"
-        },
-        "insteadOf": {
-          "type": "string",
-          "title": "Instead Of"
-        }
-      },
-      "required": [
-        "use",
-        "insteadOf"
-      ],
-      "title": "Override"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override"
-      },
-      "title": "Override[]"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience": {
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
         },
         {
-          "type": "object",
-          "properties": {
-            "routes": {
-              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
-              "title": "Routes"
-            },
-            "overrides": {
-              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
-              "title": "Overrides"
-            }
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
           },
-          "required": [],
-          "title": "Audience Value"
+          "title": "Routes",
+          "description": "Used to configure your site routes"
         },
         {
           "title": "Audience",
@@ -604,21 +544,63 @@
               "default": "$live/flags/audience.ts"
             }
           }
+        },
+        {
+          "title": "Audience Everyone",
+          "description": "Always match regardless of the current user",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/flags/everyone.ts"
+              ],
+              "default": "$live/flags/everyone.ts"
+            }
+          }
         }
       ]
     },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience[]": {
+    "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Base"
+        },
+        "routes": {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
+          "title": "Routes"
+        }
+      },
+      "required": [
+        "routes"
+      ],
+      "title": "$live/handlers/router.ts@RouterConfig"
+    },
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[][]": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience"
+        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]"
       },
-      "title": "pickb3ZlcnJpZGVzLHJvdXRlcw==Audience[]"
+      "title": "Route[][]"
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
       "properties": {
         "audiences": {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@pickb3ZlcnJpZGVzLHJvdXRlcw==Audience[]",
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[][]",
           "title": "Audiences"
         }
       },
@@ -1077,10 +1059,6 @@
         "routes": {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
           "title": "Routes"
-        },
-        "overrides": {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
-          "title": "Overrides"
         }
       },
       "required": [
@@ -1096,10 +1074,6 @@
         "routes": {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
           "title": "Routes"
-        },
-        "overrides": {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
-          "title": "Overrides"
         }
       },
       "required": [],

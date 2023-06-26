@@ -1,14 +1,9 @@
 import { FlagObj } from "$live/blocks/flag.ts";
-import Audience, {
-  AudienceValue,
-  Override,
-  Routes,
-} from "$live/flags/audience.ts";
+import Audience, { Route, Routes } from "$live/flags/audience.ts";
 import MatchAlways from "$live/matchers/MatchAlways.ts";
 
 export interface EveryoneConfig {
   routes?: Routes;
-  overrides?: Override[];
 }
 
 /**
@@ -16,12 +11,11 @@ export interface EveryoneConfig {
  * @description Always match regardless of the current user
  */
 export default function Everyone(
-  { routes, overrides }: EveryoneConfig,
-): FlagObj<AudienceValue> {
+  { routes }: EveryoneConfig,
+): FlagObj<Route[]> {
   return Audience({
     matcher: MatchAlways,
     routes: routes ?? [],
-    overrides,
     name: "Everyone",
   });
 }
