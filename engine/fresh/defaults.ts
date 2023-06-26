@@ -21,6 +21,14 @@ export default {
     }
     return obj;
   },
+  mergeProps: <T>({ props }: { props: Partial<T>[] }) => {
+    let result = {};
+    for (const prop of props) {
+      result = { ...result, ...prop };
+    }
+    return result;
+  },
+  resolved: <T, R extends { data: T }>(props: R) => props?.data,
   preview: async (
     { block, props }: BlockInvocation,
     { resolvables, resolvers, resolve },
@@ -54,7 +62,7 @@ export default {
       ...(await resolve({ __resolveType: block, ...props })),
     });
   },
-  invoke: function invoke(
+  invoke: async function invoke(
     { props, block }: BlockInvocation, // wishListVtex deco-sites/std/vtexProductList.ts
     { resolvables, resolvers, resolve },
   ) {
@@ -77,19 +85,19 @@ export default {
         }
         const { __resolveType, ...savedprops } = resolvable;
         // recursive call
-        return resolve({
+        return await resolve({
           __resolveType: "invoke",
           props: {
-            ...savedprops,
-            ...props,
+            props: [{ __resolveType: "resolved", data: props }, savedprops],
+            __resolveType: "mergeProps",
           },
           block: __resolveType,
         });
       }
-      return resolve({
+      return await resolve({
         ...props,
         __resolveType,
-      });
+      }, { propsIsResolved: true });
     } catch (err) {
       if (!(err instanceof HttpError)) {
         throw new HttpError(

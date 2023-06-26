@@ -30,7 +30,6 @@ export const toManifestBlocks = (
 ): ManifestBlocks => {
   const {
     baseUrl: _ignoreBaseUrl,
-    config: _ignoreConfig,
     routes: _ignoreRoutes,
     ...blocks
   } = decoManifest;

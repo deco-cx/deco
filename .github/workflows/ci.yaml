@@ -51,6 +51,8 @@ jobs:
 
       - run: |
           deno test --lock=deno.lock --lock-write -A .
+      - run: |
+          deno bench --lock=deno.lock --lock-write -A .
       - name: check lint
         continue-on-error: true
         run: |

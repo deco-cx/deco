@@ -3,7 +3,7 @@ import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { singleFlight } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import { Release } from "./provider.ts";
+import { OnChangeCallback, Release } from "./provider.ts";
 
 const sample = {
   "audience-everyone": {
@@ -11,8 +11,10 @@ const sample = {
     routes: [{
       pathTemplate: "/*",
       handler: {
-        url: "https://www.google.com",
-        __resolveType: "$live/handlers/proxy.ts",
+        value: {
+          url: "https://www.google.com",
+          __resolveType: "$live/handlers/proxy.ts",
+        },
       },
     }],
     __resolveType: "$live/flags/everyone.ts",
@@ -26,26 +28,43 @@ const sample = {
     __resolveType: "$live/handlers/routesSelection.ts",
   },
 };
+
 export const newFsProvider = (
   path = ".release.json",
 ): Release => {
   // deno-lint-ignore no-explicit-any
   const sf = singleFlight<Record<string, any>>();
   const fullPath = join(Deno.cwd(), path);
+  const onChangeCbs: OnChangeCallback[] = [];
+  let currentVersion = "unknown";
 
   const load = async () => {
-    if (!(await exists(fullPath))) {
-      await Deno.writeTextFile(fullPath, JSON.stringify(sample, null, 2));
-      return sample;
+    let dataText: string | null = null;
+    try {
+      if (!(await exists(fullPath))) {
+        dataText = JSON.stringify(sample, null, 2);
+        await Deno.writeTextFile(fullPath, dataText);
+        return sample;
+      }
+      dataText = await Deno.readTextFile(fullPath);
+      return JSON.parse(dataText);
+    } finally {
+      if (dataText) {
+        stringToHexSha256(dataText).then((version) => {
+          if (version !== currentVersion) {
+            currentVersion = version;
+            onChangeCbs.forEach((cb) => cb());
+          }
+        });
+      }
     }
-    return JSON.parse(await Deno.readTextFile(fullPath));
   };
   return {
     state: () => sf.do("load", load),
     archived: () => sf.do("load", load),
-    revision: () =>
-      sf.do("load", load).then(async (resp) => {
-        return await stringToHexSha256(JSON.stringify(resp));
-      }),
+    onChange: (cb: OnChangeCallback) => {
+      onChangeCbs.push(cb);
+    },
+    revision: () => Promise.resolve(currentVersion),
   };
 };

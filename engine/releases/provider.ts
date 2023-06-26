@@ -7,6 +7,7 @@ import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
 import { newSupabase } from "./supabaseProvider.ts";
 
+export type OnChangeCallback = () => void;
 export interface ReadOptions {
   forceFresh?: boolean;
 }
@@ -14,6 +15,7 @@ export interface Release {
   state(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   revision(): Promise<string>;
+  onChange(callback: OnChangeCallback): void;
 }
 
 interface RoutesSelection extends SelectionConfig {
@@ -56,6 +58,10 @@ export const compose = (...providers: Release[]): Release => {
             currentResolvables[ENTRYPOINT],
           ),
         };
+      },
+      onChange: (cb) => {
+        providers.onChange(cb);
+        current.onChange(cb);
       },
       revision: () => {
         return Promise.all([

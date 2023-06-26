@@ -218,7 +218,7 @@ export const pageIdFromMetadata = (
 
   const { resolveChain, component } = metadata;
   const pageResolverIndex =
-    (resolveChain.findIndex((chain) =>
+    (resolveChain.findLastIndex((chain) =>
       chain.type === "resolver" && chain.value === component
     )) || PAGE_NOT_FOUND;
 

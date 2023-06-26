@@ -1,12 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
 import {
+  HintNode,
+  ResolveHints,
+  traverseAny,
+} from "$live/engine/core/hints.ts";
+import { ResolveOptions } from "$live/engine/core/mod.ts";
+import {
   isAwaitable,
-  mapObjKeys,
-  PromiseOrValue,
-  Promisified,
+  notUndefined,
   UnPromisify,
-  waitKeys,
 } from "$live/engine/core/utils.ts";
+import { identity } from "$live/utils/object.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 
 export class DanglingReference extends Error {
@@ -17,8 +21,8 @@ export class DanglingReference extends Error {
   }
 }
 export type ResolveFunc = <T = any, TContext extends BaseContext = BaseContext>(
-  data: Resolvable<T>,
-  forceFresh?: boolean,
+  data: string | Resolvable<T>,
+  options?: Partial<ResolveOptions>,
   partialCtx?: Partial<Omit<TContext, keyof BaseContext>>,
 ) => Promise<T>;
 
@@ -34,6 +38,7 @@ export interface BaseContext {
   resolvables: Record<string, Resolvable<any>>;
   resolvers: Record<string, Resolver>;
   danglingRecover?: Resolver;
+  resolveHints: ResolveHints;
 }
 
 export interface PropFieldResolver {
@@ -50,12 +55,17 @@ export interface ResolverFieldResolver {
   value: string;
   type: "resolver";
 }
-
+export interface DanglingFieldResolver {
+  value: string;
+  type: "dangling";
+}
 export type FieldResolver =
   | PropFieldResolver
   | ResolvableFieldResolver
-  | ResolverFieldResolver;
+  | ResolverFieldResolver
+  | DanglingFieldResolver;
 
+export type ResolveChain = FieldResolver[];
 export type ResolvesTo<
   T,
   TContext extends BaseContext = BaseContext,
@@ -131,31 +141,7 @@ export type Resolvable<
     __resolveType: ResolveTypeOf<T, TContext, TResolverMap>;
   });
 
-const resolveTypeOf = <
-  T = any,
-  TContext extends BaseContext = BaseContext,
-  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
-  TResolvableMap extends Record<
-    string,
-    Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
-  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
->(
-  resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>,
-): [
-  Omit<T, "__resolveType">,
-  string | undefined,
-] => {
-  if (isResolvable(resolvable)) {
-    const { __resolveType, ...rest } = resolvable;
-    return [
-      rest as Omit<T, "__resolveType">,
-      __resolveType,
-    ];
-  }
-  return [resolvable as Omit<T, "__resolveType">, undefined];
-};
-
-const isResolvable = <
+export const isResolvable = <
   T = any,
   TContext extends BaseContext = BaseContext,
   TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
@@ -171,37 +157,27 @@ const isResolvable = <
   return (v as { __resolveType: string })?.__resolveType !== undefined;
 };
 
-const isResolvableObj = <
-  T = any,
-  TContext extends BaseContext = BaseContext,
-  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
-  TResolvableMap extends Record<
-    string,
-    Resolvable<any, TContext, TResolverMap>
-  > = Record<string, Resolvable<any, TContext, TResolverMap>>,
->(
-  v:
-    | T
-    | Resolvable<T, TContext, TResolverMap, TResolvableMap>
-    | ResolvableObj<T, TContext, TResolverMap>,
-): v is ResolvableObj<T, TContext, TResolverMap> => {
-  return !isResolvable(v as { __resolveType: string }) && typeof v === "object";
-};
-
+export type OnBeforeResolveProps = <T>(props: T) => T;
 export type AsyncResolver<
   T = any,
   TParent = any,
   TContext extends BaseContext = BaseContext,
-> = (
-  parent: TParent,
-  context: TContext,
-) => Promise<Resolvable<T, TContext, any>>;
+> = {
+  (
+    parent: TParent,
+    context: TContext,
+  ): Promise<Resolvable<T, TContext, any>>;
+  onBeforeResolveProps?: OnBeforeResolveProps;
+};
 
 export type SyncResolver<
   T = any,
   TParent = any,
   TContext extends BaseContext = BaseContext,
-> = (parent: TParent, context: TContext) => Resolvable<T, TContext, any>;
+> = {
+  (parent: TParent, context: TContext): Resolvable<T, TContext, any>;
+  onBeforeResolveProps?: OnBeforeResolveProps;
+};
 
 export type Resolver<
   T = any,
@@ -214,82 +190,36 @@ export type ResolverMap<TContext extends BaseContext = BaseContext> = Record<
   Resolver<any, any, TContext>
 >;
 
-async function object<
-  T,
-  TContext extends BaseContext = BaseContext,
-  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
-  TResolvableMap extends Record<
-    string,
-    Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
-  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
->(
-  obj: Omit<
-    Resolvable<T, TContext, TResolverMap, TResolvableMap>,
-    "__resolveType"
-  >,
-  resolve: <K extends keyof T>(
-    resolvable: Resolvable<T[K], TContext, TResolverMap, TResolvableMap>,
-    prop: string | number | symbol,
-  ) => PromiseOrValue<T[K]>,
-): Promise<T> {
-  if (obj instanceof Date) {
-    return obj as T;
-  }
-  if (!isResolvableObj(obj)) {
-    return obj as T;
-  }
-  // @ts-ignore: "typescript can't analyze this type"
-  if (Array.isArray(obj)) {
-    return (await Promise.all(obj.map(resolve))) as T;
-  }
-  const promisifedKeys = mapObjKeys<
-    ResolvableObj<T>,
-    Promisified<ResolvableObj<T>>
-  >(obj, resolve);
-
-  return (await waitKeys(promisifedKeys)) as T;
-}
-
-const identity = <V>(k: Omit<Resolvable<V, any, any, any>, "__resolveType">) =>
-  k as V;
-const nativeResolverByType: Record<
-  string,
-  <
-    T,
-    TContext extends BaseContext = BaseContext,
-    TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
-    TResolvableMap extends Record<
-      string,
-      Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
-    > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
-  >(
-    obj: Omit<
-      Resolvable<T, TContext, TResolverMap, TResolvableMap>,
-      "__resolveType"
-    >,
-    resolve: <K>(
-      resolvable: Resolvable<K, TContext, TResolverMap, TResolvableMap>,
-      prop: string | number | symbol,
-    ) => PromiseOrValue<K>,
-  ) => PromiseOrValue<T>
-> = {
-  object,
-  number: identity,
-  string: identity,
-  function: identity,
-  boolean: identity,
-  undefined: identity,
-};
-
-export const withResolveChain = <T extends BaseContext = BaseContext>(
-  ctx: T,
+export const withResolveChain = <TContext extends BaseContext = BaseContext>(
+  ctx: TContext,
   ...resolverType: FieldResolver[]
-): T => {
-  const newCtx = {
+): TContext => {
+  return {
     ...ctx,
     resolveChain: [...ctx.resolveChain, ...resolverType],
   };
-  return newCtx;
+};
+
+export const withResolveChainOfType = <
+  TContext extends BaseContext = BaseContext,
+>(
+  ctx: TContext,
+  ...resolverType: string[]
+): TContext => {
+  return {
+    ...ctx,
+    resolveChain: [
+      ...ctx.resolveChain,
+      ...(resolverType.map((tp) => ({
+        type: tp in ctx.resolvables
+          ? "resolvable"
+          : tp in ctx.resolvers
+          ? "resolver"
+          : "dangling",
+        value: tp,
+      }))),
+    ],
+  };
 };
 
 export const ALREADY_RESOLVED = "resolved";
@@ -316,99 +246,254 @@ export const isResolved = <T>(
     resolvable.__resolveType === ALREADY_RESOLVED;
 };
 
-const MAX_DEPTH_RESOLVE_ENV_VAR = "DECO_MAX_DEPTH_RESOLVE";
+const resolveTypeOf = <
+  T = any,
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolvableMap extends Record<
+    string,
+    Resolvable<any, TContext, TResolverMap, TResolvableMap> | undefined
+  > = Record<string, Resolvable<any, TContext, TResolverMap> | undefined>,
+>(
+  resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>,
+): [
+  Omit<T, "__resolveType">,
+  string | undefined,
+] => {
+  if (isResolvable(resolvable)) {
+    const { __resolveType, ...rest } = resolvable;
+    return [
+      rest as Omit<T, "__resolveType">,
+      __resolveType,
+    ];
+  }
+  return [resolvable as Omit<T, "__resolveType">, undefined];
+};
 
-const MAX_DEPTH_RESOLVE = Deno.env.has(MAX_DEPTH_RESOLVE_ENV_VAR)
-  ? +Deno.env.get(MAX_DEPTH_RESOLVE_ENV_VAR)!
-  : 3;
+interface ResolvedKey<T, K extends keyof T> {
+  key: K;
+  resolved: T[K];
+}
 
-export const resolve = async <
+const resolvePropsWithHints = async <
+  T,
+  TContext extends BaseContext = BaseContext,
+>(_props: T, hints: HintNode<T>, _ctx: TContext, nullIfDangling = false) => {
+  const [_thisProps, type] = resolveTypeOf(_props);
+  const onBeforeResolveProps = type && type in _ctx.resolvers
+    ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
+    : identity;
+  const props = onBeforeResolveProps(_thisProps as T);
+  const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
+
+  const resolvedPropsPromise = Object.entries(hints).map(
+    async ([_key, hint]) => {
+      const key = _key as keyof T;
+      if (props[key]) {
+        const resolved = await resolvePropsWithHints(
+          props[key],
+          hint as HintNode<T[typeof key]>,
+          withResolveChain(ctx, {
+            type: "prop",
+            value: key.toString(),
+          }),
+          nullIfDangling,
+        );
+        return { key, resolved } as ResolvedKey<T, typeof key>;
+      }
+      return undefined;
+    },
+  );
+
+  const mutableProps: T = resolvedPropsPromise.length === 0 // if there's no resolved properties so no shallow copy is needed.
+    ? props
+    : Array.isArray(props)
+    ? [...props] as T
+    : { ...props };
+
+  const resolvedProps = await Promise.all(resolvedPropsPromise);
+  for (const { key, resolved } of resolvedProps.filter(notUndefined)) {
+    mutableProps[key] = resolved;
+  }
+
+  if (!type) {
+    return mutableProps;
+  }
+
+  return await resolveWithType<T>(
+    type,
+    mutableProps,
+    ctx,
+    nullIfDangling,
+  );
+};
+/**
+ * Invoke the given resolver with the given resolved props, calculate the timings.
+ */
+const invokeResolverWithProps = async <
   T,
   TContext extends BaseContext = BaseContext,
 >(
-  resolvable: Resolvable<T, TContext>,
-  context: TContext,
-  depth = 0,
+  props: T,
+  resolver: Resolver,
+  __resolveType: string,
+  ctx: TContext,
 ): Promise<T> => {
-  if (isResolved(resolvable)) {
-    return resolvable.data;
-  }
-  const { resolvers: resolverMap, resolvables } = context;
+  let end: (() => void) | undefined = undefined;
 
-  // get the __resolveType from the resolvable
-  const [resolvableObj, resolveType] = resolveTypeOf(resolvable);
-
-  // define the type resolver based on the object type
-  const typeResolver = nativeResolverByType[typeof resolvableObj];
-
-  const hasResolvable = resolveType !== undefined;
-  const isResolver = resolverMap[resolveType!] !== undefined;
-  const ctx = hasResolvable
-    ? withResolveChain(
-      context,
-      { type: isResolver ? "resolver" : "resolvable", value: resolveType },
-    )
-    : context;
-  if (
-    depth >= MAX_DEPTH_RESOLVE && !hasResolvable
-  ) {
-    return resolvableObj as T;
+  if (isResolvable(props)) {
+    delete (props as Resolvable)["__resolveType"];
   }
-  const resolved = await typeResolver<T, TContext>(
-    resolvableObj,
-    (data, prop: string | number | symbol) =>
-      resolve(
-        data,
-        withResolveChain(
-          ctx,
-          {
-            type: "prop",
-            value: typeof prop === "number" ? prop : prop.toString(),
-          },
-        ),
-        hasResolvable ? 1 : depth + 1,
-      ),
-  ) as T;
-
-  // if the resolveType is not defined we should use the typeresolver
-  if (!hasResolvable) {
-    return resolved;
-  }
-  const resolver = resolverMap[resolveType];
-  if (resolver !== undefined) {
-    let end: (() => void) | undefined = undefined;
-    let respOrPromise = resolver(resolved, ctx);
-    if (isAwaitable(respOrPromise)) {
-      const timingName = resolveType.replaceAll("/", ".");
-      end = ctx.monitoring?.t?.start(timingName);
-      respOrPromise = await respOrPromise;
-
-      // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
-      // in order to achieve the correct result we should wrap the inner function with the timings function.
-      if (typeof respOrPromise === "function") {
-        const original = respOrPromise;
-        respOrPromise = async (...args: any[]) => {
-          const resp = await original(...args);
-          end?.();
-          return resp;
-        };
-      } else {
-        end?.();
-      }
-    }
-    return isResolvable(respOrPromise)
-      ? resolve(respOrPromise, ctx)
-      : respOrPromise;
-  }
-  const resolvableRef = resolvables[resolveType] as Resolvable<T>;
-  if (resolvableRef === undefined) {
-    if (!ctx.danglingRecover) {
-      throw new DanglingReference(resolveType);
-    }
-    return ctx.danglingRecover(resolved, ctx);
-  }
-  return resolve<T, TContext>(
-    resolvableRef,
+  let respOrPromise = resolver(
+    props,
     ctx,
   );
+  if (isAwaitable(respOrPromise)) {
+    const timingName = __resolveType.replaceAll("/", ".");
+    end = ctx.monitoring?.t?.start(timingName);
+    respOrPromise = await respOrPromise;
+
+    // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+    // in order to achieve the correct result we should wrap the inner function with the timings function.
+    if (typeof respOrPromise === "function") {
+      const original = respOrPromise;
+      respOrPromise = async (...args: any[]) => {
+        const resp = await original(...args);
+        end?.();
+        return resp;
+      };
+    } else {
+      end?.();
+    }
+  }
+  return respOrPromise;
+};
+
+/**
+ * Receives the props resolved and a type that should be called with the given props.
+ * This type can be a resolvable which currently just ignore the resolved props and returns the given resolved resolvable.
+ * If the type wasn't found, it will throw a DanglingReference or calls it recover if configured.
+ */
+const resolveWithType = <
+  T,
+  TContext extends BaseContext = BaseContext,
+>(
+  resolveType: string,
+  props: T,
+  context: TContext,
+  nullIfDangling = false,
+): Promise<T> => {
+  const { resolvers: resolverMap, resolvables } = context;
+
+  if (resolveType in resolvables) {
+    return resolveResolvable(resolveType, context, nullIfDangling);
+  } else if (resolveType in resolverMap) {
+    return invokeResolverWithProps(
+      props,
+      resolverMap[resolveType],
+      resolveType,
+      context,
+    );
+  }
+
+  const ctx = withResolveChain(context, {
+    type: "dangling",
+    value: resolveType,
+  });
+
+  if (nullIfDangling) {
+    return Promise.resolve(null as T);
+  }
+
+  if (!ctx.danglingRecover) {
+    throw new DanglingReference(resolveType);
+  }
+  return ctx.danglingRecover(
+    props,
+    ctx,
+  );
+};
+
+const resolveResolvable = <
+  T,
+  TContext extends BaseContext = BaseContext,
+>(
+  resolveType: string,
+  context: TContext,
+  nullIfDangling = false,
+): Promise<T> => {
+  const {
+    resolvables: { [resolveType]: resolvableObj },
+  } = context;
+
+  const hints = context.resolveHints[resolveType] ??= traverseAny(
+    resolvableObj,
+  ) ?? {};
+
+  return resolveAny(resolvableObj, context, nullIfDangling, hints);
+};
+
+export const resolveAny = <
+  T,
+  TContext extends BaseContext = BaseContext,
+>(
+  maybeResolvable:
+    | Resolvable<
+      T,
+      TContext
+    >
+    | Resolvable<T & { __resolveType: string }, TContext>,
+  context: TContext,
+  nullIfDangling = false,
+  hints?: HintNode<T> | null,
+): Promise<T> => {
+  if (!maybeResolvable) {
+    return Promise.resolve(maybeResolvable);
+  }
+  return resolvePropsWithHints(
+    maybeResolvable as T,
+    hints ?? traverseAny(
+      maybeResolvable,
+    ) ?? {},
+    context,
+    nullIfDangling,
+  );
+};
+
+/**
+ * Receives a string (pointing to a resolvable or a resolver), a context and optionally dangling and propsIsResolved flag, and returns the resolved object.
+ * See readme for more details
+ */
+export const resolve = <
+  T,
+  TContext extends BaseContext = BaseContext,
+>(
+  maybeResolvable: string | Resolvable<T, TContext>,
+  context: TContext,
+  nullIfDangling = false,
+  propsIsResolved = false,
+): Promise<T> => {
+  if (
+    propsIsResolved && isResolvable(maybeResolvable) &&
+    typeof maybeResolvable === "object"
+  ) {
+    const { __resolveType, ...props } = maybeResolvable;
+    return resolveWithType<T>(
+      __resolveType,
+      props as T,
+      context,
+      nullIfDangling,
+    );
+  }
+  if (
+    typeof maybeResolvable === "string"
+  ) {
+    return resolveWithType(
+      maybeResolvable,
+      {} as T,
+      context,
+      nullIfDangling,
+    );
+  }
+  return resolveAny<T>(maybeResolvable, context, nullIfDangling);
 };

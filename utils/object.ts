@@ -136,3 +136,5 @@ export const buildObj = (
   }
   buildObj(partial[key], [rest, value]);
 };
+
+export const identity = <T>(value: T): T => value;

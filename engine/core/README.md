@@ -141,3 +141,13 @@ To fix that use the `resolve` func.
   "__resolveType": "resolve"
 }
 ```
+
+# The algorithm has changed since deco version 1.15.1
+
+The algorithm now uses an auxiliary structure named `hints`, hints are used to
+determine the exactly fields that should be resolved when resolving an arbitrary
+resolvable. Those hints are calculated once when the configuration changes and
+its cached all the way long for the entire live of a given release. The idea
+behind the algorithm is the same, but the hints helps to decrease the
+performance burden associated to discover the exact fields that should be
+resolved in runtime.

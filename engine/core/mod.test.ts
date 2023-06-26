@@ -1,15 +1,12 @@
+import { genHints } from "$live/engine/core/hints.ts";
 import {
   BaseContext,
-  Resolvable,
   resolve,
+  ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import {
-  assertSpyCall,
-  assertSpyCallArg,
-  assertSpyCalls,
-  spy,
-} from "https://deno.land/std@0.179.0/testing/mock.ts";
 import { assertEquals, assertRejects } from "std/testing/asserts.ts";
+import { assertSpyCalls, spy } from "std/testing/mock.ts";
+import defaults from "../fresh/defaults.ts";
 
 Deno.test("resolve", async (t) => {
   const context: BaseContext = {
@@ -17,54 +14,11 @@ Deno.test("resolve", async (t) => {
     resolveId: "1",
     resolvables: {},
     resolvers: {},
+    resolveHints: {},
     resolve: <T>(data: unknown) => {
       return data as T;
     },
   };
-
-  await t.step(
-    "resolveType as function should be called when specified",
-    async () => {
-      type InputType = {
-        bar: number;
-      };
-      type OutputType = {
-        barString: string;
-      };
-
-      const toStringBarResolver = (d: InputType): OutputType => {
-        return { barString: d.bar.toString() };
-      };
-      const addToStringBarResolver = (d: InputType): Resolvable<InputType> => {
-        return { ...d, __resolveType: toStringBarResolver.name };
-      };
-      const resolverMap = {
-        toStringBarResolver: spy(toStringBarResolver),
-        addToStringBarResolver: spy(addToStringBarResolver),
-      };
-
-      const ctx = { ...context, resolvers: resolverMap };
-      const result = await resolve<OutputType>(
-        {
-          bar: 10,
-          __resolveType: addToStringBarResolver.name,
-        },
-        ctx,
-      );
-      assertEquals(result, { barString: "10" });
-      assertSpyCallArg(resolverMap.addToStringBarResolver, 0, 0, { bar: 10 });
-      assertSpyCall(resolverMap.addToStringBarResolver, 0, {
-        returned: { bar: 10, __resolveType: toStringBarResolver.name },
-      });
-      assertSpyCallArg(resolverMap.toStringBarResolver, 0, 0, { bar: 10 });
-      assertSpyCall(resolverMap.toStringBarResolver, 0, {
-        returned: { barString: "10" },
-      });
-
-      assertSpyCalls(resolverMap.addToStringBarResolver, 1);
-      assertSpyCalls(resolverMap.toStringBarResolver, 1);
-    },
-  );
   await t.step(
     "dangling reference should be thrown when resolver is missing",
     async () => {
@@ -78,6 +32,80 @@ Deno.test("resolve", async (t) => {
           ),
         "Dangling reference of: not_found_resolver",
       );
+    },
+  );
+  await t.step(
+    "resolve should not change the original data",
+    async () => {
+      const identityResolver = (parent: unknown): unknown => {
+        return Promise.resolve(parent);
+      };
+      const resolverMap = {
+        ...defaults,
+        resolve: (data: unknown) => context.resolve(data),
+        identityResolver,
+      };
+      const resolvableMap = {
+        shouldNotBeChanged: {
+          bar: 10,
+          foo: {
+            barNested: {
+              fooNested: 10,
+            },
+            __resolveType: identityResolver.name,
+          },
+          __resolveType: identityResolver.name,
+        },
+      };
+      const clone = structuredClone(resolvableMap);
+      const resolvable = {
+        __resolveType: "shouldNotBeChanged",
+      };
+      const result = await resolve<typeof resolvable>(
+        resolvable,
+        {
+          ...context,
+          resolvers: resolverMap as unknown as ResolverMap,
+          resolvables: resolvableMap,
+        },
+      );
+      assertEquals(clone, resolvableMap);
+      assertEquals({
+        bar: 10,
+        foo: {
+          barNested: {
+            fooNested: 10,
+          },
+        },
+      } as unknown, result);
+    },
+  );
+  await t.step(
+    "resolved data should not be nested resolved",
+    async () => {
+      const shouldNotBeCalledResolver = (parent: unknown): unknown => {
+        return Promise.resolve(parent);
+      };
+      const resolverMap = {
+        ...defaults,
+        resolve: (data: unknown) => context.resolve(data),
+        shouldNotBeCalledResolver: spy(shouldNotBeCalledResolver),
+      };
+      const nestedResolvable = {
+        props: {
+          bar: 10,
+        },
+        __resolveType: shouldNotBeCalledResolver.name,
+      };
+      const result = await resolve<typeof nestedResolvable>(
+        {
+          data: nestedResolvable,
+          __resolveType: "resolved",
+        },
+        { ...context, resolvers: resolverMap as unknown as ResolverMap },
+      );
+      assertEquals(result, nestedResolvable);
+      assertSpyCalls(resolverMap.shouldNotBeCalledResolver, 0);
     },
   );
 
@@ -184,7 +212,12 @@ Deno.test("resolve", async (t) => {
       {
         __resolveType: "key",
       },
-      { ...context, resolvers: resolverMap, resolvables: resolvableMap },
+      {
+        ...context,
+        resolvers: resolverMap,
+        resolvables: resolvableMap,
+        resolveHints: genHints(resolvableMap),
+      },
     );
     assertEquals(result, { foo: "hello", bar: { value: 10 } });
   });

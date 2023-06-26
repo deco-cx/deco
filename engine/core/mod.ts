@@ -1,19 +1,19 @@
 // deno-lint-ignore-file no-explicit-any
+import { ResolveHints } from "$live/engine/core/hints.ts";
 import {
   BaseContext,
   Monitoring,
   Resolvable,
   resolve,
+  ResolveFunc,
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { Release } from "$live/engine/releases/provider.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvers: ResolverMap<TContext>;
-  getResolvables: (
-    fresh?: boolean,
-  ) => PromiseOrValue<Record<string, Resolvable<any>>>;
+  release: Release;
   danglingRecover?: Resolver;
 }
 
@@ -21,6 +21,8 @@ export interface ResolveOptions {
   overrides?: Record<string, string>;
   monitoring?: Monitoring;
   forceFresh?: boolean;
+  nullIfDangling?: boolean;
+  propsIsResolved?: boolean;
 }
 
 const withOverrides = (
@@ -33,15 +35,19 @@ const withOverrides = (
 };
 
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
-  public getResolvables: (forceFresh?: boolean) => PromiseOrValue<
-    Record<string, Resolvable<any>>
-  >;
+  protected release: Release;
   protected resolvers: ResolverMap<TContext>;
   protected danglingRecover?: Resolver;
+  private resolveHints: ResolveHints;
   constructor(config: ResolverOptions<TContext>) {
     this.resolvers = config.resolvers;
-    this.getResolvables = config.getResolvables;
+    this.release = config.release;
     this.danglingRecover = config.danglingRecover;
+    this.resolveHints = {};
+    this.release.onChange(() => {
+      console.debug("release has been changed");
+      this.resolveHints = {};
+    });
   }
 
   public addResolvers = (resolvers: ResolverMap<TContext>) => {
@@ -66,12 +72,12 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   ) =>
   <T = any>(
     typeOrResolvable: string | Resolvable<T>,
-    forceFresh?: boolean,
+    overrideOptions?: Partial<ResolveOptions>,
     partialCtx: Partial<Omit<TContext, keyof BaseContext>> = {},
   ): Promise<T> => {
     return this.resolve(typeOrResolvable, { ...context, ...partialCtx }, {
-      ...options ?? {},
-      forceFresh: forceFresh ?? options?.forceFresh,
+      ...(options ?? {}),
+      ...(overrideOptions ?? {}),
     });
   };
 
@@ -80,14 +86,17 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const resolvables = await this.getResolvables(options?.forceFresh);
+    const resolvables = await this.release.state({
+      forceFresh: options?.forceFresh,
+    });
     const nresolvables = withOverrides(options?.overrides, resolvables);
     const resolvers = this.getResolvers();
     const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,
-      resolve: _resolve,
+      resolve: _resolve as ResolveFunc,
       resolveId: crypto.randomUUID(),
       resolveChain: [],
+      resolveHints: this.resolveHints,
       resolvables: nresolvables,
       resolvers,
       monitoring: options?.monitoring,
@@ -96,23 +105,21 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ...context,
       ...baseCtx,
     };
+
+    const innerResolver = this.resolverFor(ctx, options);
     function _resolve<T>(
-      data: Resolvable<T, TContext>,
+      typeOrResolvable: string | Resolvable<T>,
+      overrideOptions?: Partial<ResolveOptions>,
+      partialCtx: Partial<Omit<TContext, keyof BaseContext>> = {},
     ): Promise<T> {
-      return resolve<T, TContext>(
-        data,
-        ctx as TContext,
-      );
+      return innerResolver(typeOrResolvable, overrideOptions, partialCtx);
     }
-    const resolvable = typeof typeOrResolvable === "string"
-      ? nresolvables[typeOrResolvable]
-      : typeOrResolvable;
-    if (resolvable === undefined) {
-      return undefined as T;
-    }
+
     return resolve<T, TContext>(
-      resolvable,
+      typeOrResolvable,
       ctx as TContext,
+      options?.nullIfDangling,
+      options?.propsIsResolved,
     );
   };
 }

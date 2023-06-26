@@ -1,0 +1,376 @@
+{
+  "3771": { "sections": { "0": {} } },
+  "7048": {
+    "sections": { "0": { "user": {}, "products": {}, "configVTEX": {} } }
+  },
+  "8467": {
+    "sections": {
+      "0": {},
+      "1": { "page": {} },
+      "2": { "products": {} },
+      "3": {},
+      "4": {},
+      "5": {}
+    }
+  },
+  "8488": { "sections": { "0": {} } },
+  "9151": {
+    "sections": {
+      "0": {},
+      "1": { "page": {} },
+      "2": {},
+      "3": { "page": {} },
+      "4": {}
+    }
+  },
+  "9319": { "sections": { "0": {} } },
+  "9402": { "sections": { "0": {} } },
+  "9745": { "sections": { "0": { "page": {} }, "1": {}, "2": { "page": {} } } },
+  "13216": { "sections": { "0": { "page": {} } } },
+  "13218": { "sections": { "0": { "page": {} } } },
+  "13466": { "sections": { "0": { "page": {}, "products": {} } } },
+  "19163": {
+    "sections": {
+      "0": { "page": {} },
+      "1": { "page": {} },
+      "2": { "page": {} },
+      "3": { "page": {} },
+      "4": {},
+      "5": { "page": {} },
+      "6": { "page": {} }
+    }
+  },
+  "19660": { "sections": { "0": {} } },
+  "19661": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": {},
+      "3": { "page": {} },
+      "4": { "page": {} }
+    }
+  },
+  "19662": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": {},
+      "3": { "page": {} },
+      "4": { "page": {} }
+    }
+  },
+  "19663": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": {},
+      "3": { "page": {} },
+      "4": { "page": {} }
+    }
+  },
+  "19664": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": {},
+      "3": { "page": {} },
+      "4": { "page": {} }
+    }
+  },
+  "19665": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": {},
+      "3": { "page": {} },
+      "4": { "page": {} }
+    }
+  },
+  "19667": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": {},
+      "3": { "page": {} },
+      "4": { "page": {} }
+    }
+  },
+  "19712": {
+    "sections": {
+      "0": {},
+      "1": { "page": {} },
+      "2": {},
+      "3": {},
+      "4": { "page": {} },
+      "5": { "page": {} }
+    }
+  },
+  "20158": {
+    "sections": {
+      "0": {},
+      "1": { "page": {} },
+      "2": { "page": {} },
+      "3": {},
+      "4": {},
+      "5": {},
+      "6": {},
+      "7": {},
+      "8": {},
+      "9": {},
+      "10": { "page": {} },
+      "11": {},
+      "12": { "page": {} }
+    }
+  },
+  "20525": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": { "page": {} },
+      "4": { "page": {}, "products": {} },
+      "5": { "page": {} }
+    }
+  },
+  "20897": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": { "page": {} },
+      "5": { "page": {} },
+      "6": { "page": {} }
+    }
+  },
+  "20902": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": { "page": {} },
+      "5": { "page": {} },
+      "6": { "page": {} },
+      "7": { "page": {} }
+    }
+  },
+  "20905": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": { "page": {} },
+      "5": { "page": {} },
+      "6": { "page": {} }
+    }
+  },
+  "20906": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": { "page": {} },
+      "5": { "page": {} },
+      "6": { "page": {} }
+    }
+  },
+  "20907": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": { "page": {} },
+      "5": { "page": {} },
+      "6": { "page": {} }
+    }
+  },
+  "21158": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": {},
+      "5": { "page": {} },
+      "6": { "page": {} }
+    }
+  },
+  "21163": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": {},
+      "5": { "page": {} },
+      "6": { "page": {} }
+    }
+  },
+  "21916": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": {},
+      "4": {},
+      "5": {},
+      "6": { "page": {} },
+      "7": { "page": {} }
+    }
+  },
+  "21972": {
+    "sections": {
+      "0": { "page": {} },
+      "1": { "page": {} },
+      "2": { "page": {} },
+      "3": { "page": {} },
+      "4": { "page": {} },
+      "5": { "page": {}, "products": {} },
+      "6": { "page": {} },
+      "7": { "page": {} }
+    }
+  },
+  "22158": {
+    "sections": {
+      "0": {},
+      "1": { "page": {} },
+      "2": {},
+      "3": { "page": {} },
+      "4": { "banners": { "0": { "rule": {} } } },
+      "5": {},
+      "6": { "banners": { "0": { "rule": {} } } },
+      "7": {},
+      "8": { "products": {} },
+      "9": { "banners": { "0": { "rule": {} } } },
+      "10": { "products": {} },
+      "11": {},
+      "12": { "page": {} },
+      "13": { "page": {} }
+    }
+  },
+  "22159": {
+    "sections": {
+      "0": { "page": {} },
+      "1": { "page": {} },
+      "2": { "page": {} },
+      "3": {},
+      "4": { "page": {}, "products": {} },
+      "5": { "page": {} }
+    }
+  },
+  "22167": {
+    "sections": {
+      "0": { "page": {} },
+      "1": {},
+      "2": { "page": {} },
+      "3": { "page": {} },
+      "4": { "page": {}, "products": {} },
+      "5": { "page": {} }
+    }
+  },
+  "22168": {
+    "sections": {
+      "0": { "page": {} },
+      "1": { "page": { "slug": {} } },
+      "2": { "page": {} },
+      "3": { "page": {}, "crossSelling": { "slug": {} } },
+      "4": {
+        "page": { "slug": {} },
+        "firstCrossSelling": { "slug": {} },
+        "secondCrossSelling": { "slug": {} }
+      },
+      "5": { "products": { "slug": {} } },
+      "6": { "page": {} }
+    }
+  },
+  "everyone": {
+    "routes": {
+      "0": { "handler": { "value": { "page": {} } } },
+      "1": { "handler": { "value": { "page": {} } } },
+      "2": { "handler": { "value": { "page": {} } } },
+      "3": { "handler": { "value": { "page": {} } } },
+      "4": { "handler": { "value": { "page": {} } } },
+      "5": { "handler": { "value": { "page": {} } } },
+      "6": { "handler": { "value": { "page": {} } } },
+      "7": { "handler": { "value": { "page": {} } } },
+      "8": { "handler": { "value": { "page": {} } } },
+      "9": { "handler": { "value": { "page": {} } } },
+      "10": { "handler": { "value": { "page": {} } } },
+      "11": { "handler": { "value": { "page": {} } } },
+      "12": { "handler": { "value": { "page": {} } } },
+      "13": { "handler": { "value": { "page": {} } } },
+      "14": { "handler": { "value": { "page": {} } } },
+      "15": { "handler": { "value": { "page": {} } } },
+      "16": { "handler": { "value": { "page": {} } } },
+      "17": { "handler": { "value": { "page": {} } } },
+      "18": { "handler": { "value": { "page": {} } } },
+      "19": { "handler": { "value": { "page": {} } } },
+      "20": { "handler": { "value": { "page": {} } } },
+      "21": { "handler": { "value": { "page": {} } } },
+      "22": { "handler": { "value": { "page": {} } } },
+      "23": { "handler": { "value": { "page": {} } } },
+      "24": { "handler": { "value": { "page": {} } } },
+      "25": { "handler": { "value": { "page": {} } } },
+      "26": { "handler": { "value": { "page": {} } } },
+      "27": { "handler": { "value": { "page": {} } } },
+      "28": { "handler": { "value": { "page": {} } } }
+    }
+  },
+  "./routes/_middleware.ts": { "state": { "0": { "value": {} } } },
+  "./routes/[...catchall].tsx": {
+    "audiences": {
+      "0": {},
+      "1": {},
+      "2": {
+        "routes": {
+          "0": { "handler": { "value": {} } },
+          "1": { "handler": { "value": {} } },
+          "2": { "handler": { "value": {} } },
+          "3": { "handler": { "value": {} } },
+          "4": { "handler": { "value": {} } },
+          "5": { "handler": { "value": {} } },
+          "6": { "handler": { "value": {} } },
+          "7": { "handler": { "value": {} } },
+          "8": { "handler": { "value": {} } },
+          "9": { "handler": { "value": {} } },
+          "10": { "handler": { "value": {} } },
+          "11": { "handler": { "value": {} } },
+          "12": { "handler": { "value": {} } }
+        },
+        "matcher": {}
+      },
+      "3": { "routes": {}, "matcher": {} }
+    }
+  },
+  "Header": { "user": {}, "products": {}, "configVTEX": {} },
+  "configVTEX": {},
+  "campaign-test": {
+    "banners": { "0": { "rule": {} }, "1": { "rule": {} }, "2": { "rule": {} } }
+  },
+  "redirects-torra": {},
+  "redirects-local-csv": {},
+  "related products by url": { "slug": {} },
+  "relatedProductsFromSlug": { "slug": {} },
+  "pages-hometest-e9e6f5ce6544": {
+    "sections": {
+      "0": {},
+      "1": { "page": {} },
+      "2": { "page": {} },
+      "3": {},
+      "4": {},
+      "5": {},
+      "6": {},
+      "7": { "products": {} },
+      "8": { "kitLooks": {} },
+      "9": {},
+      "10": { "products": {} },
+      "11": {},
+      "12": { "page": {} },
+      "13": { "page": {} }
+    }
+  }
+}

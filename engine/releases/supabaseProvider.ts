@@ -1,7 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "$live/deps.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { ReadOptions, Release } from "$live/engine/releases/provider.ts";
+import {
+  OnChangeCallback,
+  ReadOptions,
+  Release,
+} from "$live/engine/releases/provider.ts";
 import { stringToHexSha256 } from "$live/utils/encoding.ts";
 export interface SupabaseReleaseProvider {
   /**
@@ -46,6 +50,11 @@ export const newSupabase = (
   provider: SupabaseReleaseProvider,
   backgroundUpdate?: boolean,
 ): Release => {
+  // callbacks
+  const onChangeCbs: OnChangeCallback[] = [];
+  const notify = () => {
+    onChangeCbs.forEach((cb) => cb());
+  };
   // the first load retry attempts
   let remainingRetries = 5;
   // the last error based on the retries
@@ -97,7 +106,11 @@ export const newSupabase = (
       currResolvables = Promise.resolve(
         resolvables,
       );
-      currentRevision = await stringToHexSha256(JSON.stringify(resolvables));
+      const nextRevision = await stringToHexSha256(JSON.stringify(resolvables));
+      if (currentRevision !== nextRevision) {
+        currentRevision = nextRevision;
+        notify();
+      }
     } finally {
       singleFlight = false;
     }
@@ -115,6 +128,7 @@ export const newSupabase = (
         );
         currResolvables = Promise.resolve(newResolvables);
         currentRevision = Date.now().toString();
+        notify();
       }, (_status, err) => {
         if (err) {
           console.error(
@@ -136,6 +150,9 @@ export const newSupabase = (
       }
       const resolvables = await currResolvables;
       return resolvables.archived;
+    },
+    onChange: (cb: OnChangeCallback) => {
+      onChangeCbs.push(cb);
     },
     revision: () => Promise.resolve(currentRevision),
     /**
