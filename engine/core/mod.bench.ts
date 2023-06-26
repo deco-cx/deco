@@ -64,7 +64,7 @@ const latestVersion = await import(
   `https://denopkg.com/deco-cx/live@${meta.version}/engine/core/resolver.ts`
 );
 Deno.bench(
-  `resolve ${meta.version} version`,
+  `resolve ${meta.version} version (with on-demand hints)`,
   { group: "resolve" },
   async () => {
     const context = {
@@ -72,6 +72,7 @@ Deno.bench(
       resolveId: "1",
       resolvables: releaseJSON,
       resolvers: {},
+      resolveHints,
       danglingRecover,
       resolve: <T>(data: unknown) => {
         return data as T;
