@@ -127,7 +127,7 @@ const toOverrides = (overrides?: Override[]): Record<string, string> => {
  * @description Select routes based on the target audience.
  */
 export default function RoutesSelection(
-  { audiences: audiences }: SelectionConfig,
+  { audiences }: SelectionConfig,
 ): Handler {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;

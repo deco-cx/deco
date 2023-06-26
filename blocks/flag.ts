@@ -37,8 +37,10 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
   ($live: TConfig, { request }: HttpContext) => {
     const flag = func.default($live);
     const ctx = { request, siteId: context.siteId };
-    const matchValue = flag.matcher(ctx);
-    return matchValue ? flag.true : flag.false;
+    const matchValue = typeof flag?.matcher === "function"
+      ? flag.matcher(ctx)
+      : false;
+    return matchValue ? flag?.true : flag?.false;
   },
   defaultPreview: (resp) => {
     return {
