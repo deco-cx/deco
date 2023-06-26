@@ -158,7 +158,11 @@ export function setCSPHeaders(
   response.headers.set(
     "Content-Security-Policy",
     `frame-ancestors ${localhost} ${adminDomain} ${
-      referer && isOnAdmin ? "https://" + new URL(referer).host : ""
+      referer && isOnAdmin
+        ? "https://" + referer.startsWith("http")
+          ? new URL(referer).host
+          : referer
+        : ""
     }`,
   );
   return response;
