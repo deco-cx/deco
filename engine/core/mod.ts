@@ -45,7 +45,6 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     this.danglingRecover = config.danglingRecover;
     this.resolveHints = {};
     this.release.onChange(() => {
-      console.debug("release has been changed");
       this.resolveHints = {};
     });
   }
