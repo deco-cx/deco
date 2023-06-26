@@ -33,81 +33,84 @@ export const handler = async (
   req: Request,
   ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
 ) => {
-  ctx.state.site = {
-    id: context.siteId,
-    name: context.site,
-  };
-
   const begin = performance.now();
   const url = new URL(req.url);
-  // FIXME (mcandeia) compatibility only.
-  if (
-    url.searchParams.has("editorData") &&
-    !url.pathname.startsWith("/live/editorData")
-  ) {
-    url.pathname = "/live/editorData";
-    url.searchParams.set("forceFresh", "");
-    return redirectTo(url);
-  }
+  let initialResponse: Response | null = null;
+  try {
+    ctx.state.site = {
+      id: context.siteId,
+      name: context.site,
+    };
 
-  if (url.pathname.startsWith("/_live/workbench")) {
-    url.pathname = "/live/workbench";
-    return redirectTo(url);
-  }
+    // FIXME (mcandeia) compatibility only.
+    if (
+      url.searchParams.has("editorData") &&
+      !url.pathname.startsWith("/live/editorData")
+    ) {
+      url.pathname = "/live/editorData";
+      url.searchParams.set("forceFresh", "");
+      return redirectTo(url);
+    }
 
-  if (
-    !url.pathname.startsWith("/live/previews") &&
-    url.searchParams.has("pageId") &&
-    !url.searchParams.has("editorData")
-  ) {
-    return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
-  }
+    if (url.pathname.startsWith("/_live/workbench")) {
+      url.pathname = "/live/workbench";
+      return redirectTo(url);
+    }
 
-  const response = { headers: new Headers(defaultHeaders) };
-  const state = ctx.state?.$live?.state;
-  if (state) {
-    state.response = response;
-    Object.assign(ctx.state, state);
-    ctx.state.global = state; // compatibility mode with functions.
-  }
+    if (
+      !url.pathname.startsWith("/live/previews") &&
+      url.searchParams.has("pageId") &&
+      !url.searchParams.has("editorData")
+    ) {
+      return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
+    }
 
-  // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-  const initialResponse = await ctx.next();
-  const newHeaders = new Headers(initialResponse.headers);
-  if (
-    url.pathname.startsWith("/live/previews") &&
-    url.searchParams.has("mode") && url.searchParams.get("mode") == "showcase"
-  ) {
-    Object.entries(allowCorsFor(req)).map(([name, value]) => {
-      newHeaders.set(name, value);
+    const response = { headers: new Headers(defaultHeaders) };
+    const state = ctx.state?.$live?.state;
+    if (state) {
+      state.response = response;
+      Object.assign(ctx.state, state);
+      ctx.state.global = state; // compatibility mode with functions.
+    }
+
+    // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
+    initialResponse = await ctx.next();
+    const newHeaders = new Headers(initialResponse.headers);
+    if (
+      url.pathname.startsWith("/live/previews") &&
+      url.searchParams.has("mode") && url.searchParams.get("mode") == "showcase"
+    ) {
+      Object.entries(allowCorsFor(req)).map(([name, value]) => {
+        newHeaders.set(name, value);
+      });
+    }
+    response.headers.forEach((value, key) => newHeaders.append(key, value));
+    const printTimings = ctx?.state?.t?.printTimings;
+    printTimings && newHeaders.set("Server-Timing", printTimings());
+
+    if (
+      url.pathname.startsWith("/_frsh/") &&
+      [400, 404, 500].includes(initialResponse.status)
+    ) {
+      newHeaders.set("Cache-Control", "no-cache, no-store, private");
+    }
+
+    const newResponse = new Response(initialResponse.body, {
+      status: initialResponse.status,
+      headers: newHeaders,
     });
+
+    return newResponse;
+  } finally {
+    // TODO: print these on debug mode when there's debug mode.
+    if (!url.pathname.startsWith("/_frsh")) {
+      console.info(
+        formatLog({
+          status: initialResponse?.status ?? 500,
+          url,
+          begin,
+        }),
+      );
+    }
   }
-  response.headers.forEach((value, key) => newHeaders.append(key, value));
-  const printTimings = ctx?.state?.t?.printTimings;
-  printTimings && newHeaders.set("Server-Timing", printTimings());
-
-  if (
-    url.pathname.startsWith("/_frsh/") &&
-    [400, 404, 500].includes(initialResponse.status)
-  ) {
-    newHeaders.set("Cache-Control", "no-cache, no-store, private");
-  }
-
-  const newResponse = new Response(initialResponse.body, {
-    status: initialResponse.status,
-    headers: newHeaders,
-  });
-
-  // TODO: print these on debug mode when there's debug mode.
-  if (!url.pathname.startsWith("/_frsh")) {
-    console.info(
-      formatLog({
-        status: initialResponse.status,
-        url,
-        begin,
-      }),
-    );
-  }
-
-  return newResponse;
 };
