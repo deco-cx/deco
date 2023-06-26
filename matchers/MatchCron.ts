@@ -33,7 +33,7 @@ function nowWithMinutePrecision() {
 
 /**
  * @title Cron Matcher
- * @description Use cron, at minute precision, to declare date and hour ranges 
+ * @description Use cron, at minute precision, to declare date and hour ranges
  */
 const MatchCron = (props: CronProps) => {
   if (!props?.cron) {
