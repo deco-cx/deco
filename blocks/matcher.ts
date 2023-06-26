@@ -1,4 +1,6 @@
+import { HttpContext } from "$live/blocks/handler.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { setCookie } from "std/http/mod.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -25,20 +27,36 @@ const matcherBlock: Block<
   introspect: {
     default: "0",
   },
-  adapt:
-    <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>
-    ($live: TConfig) => {
-      return (ctx: MatchContext) => {
-        const fMatcher = func as unknown as
-          | ((c: TConfig, ctx: MatchContext) => boolean)
-          | MatchFunc;
-        const matcherFuncOrValue = fMatcher($live, ctx);
-        if (typeof matcherFuncOrValue === "function") {
-          return matcherFuncOrValue(ctx);
-        }
-        return matcherFuncOrValue;
-      };
-    },
+  adapt: <TConfig = unknown>(
+    { default: func }: { default: MatchFunc },
+    name: string,
+  ) =>
+  (
+    $live: TConfig,
+    httpCtx: HttpContext<
+      { global: any; response: { headers: Headers } },
+      unknown
+    >,
+  ) => {
+    const matcherFunc = (ctx: MatchContext) => {
+      const fMatcher = func as unknown as
+        | ((c: TConfig, ctx: MatchContext) => boolean)
+        | MatchFunc;
+      const matcherFuncOrValue = fMatcher($live, ctx);
+      if (typeof matcherFuncOrValue === "function") {
+        return matcherFuncOrValue(ctx);
+      }
+      return matcherFuncOrValue;
+    };
+    return (ctx: MatchContext) => {
+      const result = matcherFunc(ctx);
+      setCookie(httpCtx.context.state.response.headers, {
+        name: "matcher_ctx",
+        value: `${name}=${result ? 1 : 0}`,
+      });
+      return result;
+    };
+  },
 };
 
 /**
