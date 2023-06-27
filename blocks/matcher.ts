@@ -124,7 +124,7 @@ const matcherBlock: Block<
         }
         const flags = httpCtx?.context?.state?.flags;
         if (flags) {
-          flags[uniqueId] = { result, unstable: !!unstable };
+          flags[uniqueId] = result;
         }
         return result;
       } finally {

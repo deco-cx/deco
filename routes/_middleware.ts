@@ -8,6 +8,7 @@ import { context } from "$live/live.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
+import { getSetCookies } from "std/http/mod.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -29,7 +30,7 @@ export interface MiddlewareConfig {
   state: Record<string, Resolvable>;
 }
 
-export type Flags = Record<string, { result: boolean; unstable: boolean }>;
+export type Flags = Record<string, boolean>;
 export const handler = async (
   req: Request,
   ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
@@ -98,16 +99,17 @@ export const handler = async (
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
     }
 
-    let hasUnstableFlags = false;
     for (const [flag, flagValue] of Object.entries(flags)) {
       newHeaders.append(
         "_dxcf_matchers",
-        `${flag}=${flagValue.result ? 1 : 0}`,
+        `${flag}=${flagValue ? 1 : 0}`,
       );
-      hasUnstableFlags ||= flagValue.unstable;
     }
 
-    if (!hasUnstableFlags) {
+    // if there's no set cookie it means that none unstable matcher was evaluated
+    if (
+      Object.keys(getSetCookies(newHeaders)).length === 0
+    ) {
       newHeaders.set("cache-control", "public, max-age=10");
     }
 
