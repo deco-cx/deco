@@ -17,7 +17,15 @@ export const cookies = {
     const cookies = getCookies(headers);
     const flags: CookiedFlag[] | undefined = Object.keys(cookies)
       .filter((cookie) => cookie.startsWith(DECO_COOKIE))
-      .map((cookie) => JSON.parse(atob(cookies[cookie])));
+      .map((cookie) => {
+        try {
+          return JSON.parse(atob(cookies[cookie]));
+        } catch (err) {
+          console.error("error parsing cookies", err);
+          return undefined;
+        }
+      })
+      .filter(Boolean);
 
     if (!flags) {
       return null;

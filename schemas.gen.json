@@ -40,6 +40,7 @@
               "$live/matchers/MatchUserAgent.ts",
               "$live/flags/audience.ts",
               "$live/flags/everyone.ts",
+              "$live/flags/flag.ts",
               "$live/actions/workflows/cancel.ts",
               "$live/actions/workflows/run.ts",
               "$live/actions/workflows/signal.ts",
@@ -511,12 +512,63 @@
       "titleBy": "pathTemplate"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
-      },
-      "title": "Routes",
-      "description": "Used to configure your site routes"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route"
+          },
+          "title": "Routes",
+          "description": "Used to configure your site routes"
+        },
+        {
+          "title": "Audience",
+          "description": "Select routes based on the matched audience.",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/flags/audience.ts"
+              ],
+              "default": "$live/flags/audience.ts"
+            }
+          }
+        },
+        {
+          "title": "Audience Everyone",
+          "description": "Always match regardless of the current user",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM=@EveryoneConfig"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/flags/everyone.ts"
+              ],
+              "default": "$live/flags/everyone.ts"
+            }
+          }
+        }
+      ]
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVyLnRz@RouterConfig": {
       "type": "object",
@@ -538,32 +590,18 @@
       ],
       "title": "$live/handlers/router.ts@RouterConfig"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM="
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
-        }
-      ],
-      "title": "Audiences"
-    },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]": {
+    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[][]": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag"
+        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]"
       },
-      "title": "15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]"
+      "title": "Route[][]"
     },
     "JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz@SelectionConfig": {
       "type": "object",
       "properties": {
         "audiences": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@15b1ddc7b4bb6e032bd22948a3dc02c4|9cc5443ad72a10e9797a691a19b4ce81|Flag[]",
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[][]",
           "title": "Audiences"
         }
       },
@@ -1005,31 +1043,6 @@
       "required": [],
       "title": "$live/matchers/MatchUserAgent.ts@Props"
     },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override": {
-      "type": "object",
-      "properties": {
-        "use": {
-          "type": "string",
-          "title": "Use"
-        },
-        "insteadOf": {
-          "type": "string",
-          "title": "Instead Of"
-        }
-      },
-      "required": [
-        "use",
-        "insteadOf"
-      ],
-      "title": "Override"
-    },
-    "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override"
-      },
-      "title": "Override[]"
-    },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",
       "properties": {
@@ -1047,10 +1060,6 @@
         "routes": {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
           "title": "Routes"
-        },
-        "overrides": {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
-          "title": "Overrides"
         }
       },
       "required": [
@@ -1066,14 +1075,36 @@
         "routes": {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Route[]",
           "title": "Routes"
-        },
-        "overrides": {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Override[]",
-          "title": "Overrides"
         }
       },
       "required": [],
       "title": "$live/flags/everyone.ts@EveryoneConfig"
+    },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@FlagObj": {
+      "type": "object",
+      "properties": {
+        "matcher": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "Matcher"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name"
+        },
+        "true": {
+          "title": "True"
+        },
+        "false": {
+          "title": "False"
+        }
+      },
+      "required": [
+        "matcher",
+        "name",
+        "true",
+        "false"
+      ],
+      "title": "$live/blocks/flag.ts@FlagObj"
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz@Props": {
       "type": "object",
@@ -1839,6 +1870,27 @@
         }
       }
     },
+    "JGxpdmUvZmxhZ3MvZmxhZy50cw==": {
+      "title": "Flag",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@FlagObj"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/flags/flag.ts"
+          ],
+          "default": "$live/flags/flag.ts"
+        }
+      }
+    },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz": {
       "title": "$live/actions/workflows/cancel.ts",
       "description": "Cancels the workflow execution, you can, optionally, add a reason of the cancellation.",
@@ -2074,6 +2126,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZXZlcnlvbmUudHM="
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvZmxhZy50cw=="
         }
       ]
     },

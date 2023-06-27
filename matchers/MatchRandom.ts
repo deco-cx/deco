@@ -1,4 +1,4 @@
-import { MatchWithCookieValue } from "$live/handlers/routesSelection.ts";
+import { MatchContext } from "$live/blocks/matcher.ts";
 export interface Props {
   traffic: number;
 }
@@ -8,7 +8,7 @@ export interface Props {
  */
 const MatchRandom = (
   { traffic }: Props,
-  { isMatchFromCookie }: MatchWithCookieValue,
+  { isMatchFromCookie }: MatchContext,
 ) => {
   if (isMatchFromCookie !== undefined) {
     return isMatchFromCookie;

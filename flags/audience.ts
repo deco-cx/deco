@@ -4,6 +4,7 @@ import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { metabasePreview } from "../utils/metabase.tsx";
+import Flag from "./flag.ts";
 export { onBeforeResolveProps } from "./everyone.ts";
 /**
  * @title Site Route
@@ -23,10 +24,6 @@ export interface Route {
  * @description Used to configure your site routes
  */
 export type Routes = Route[];
-export interface Override {
-  use: string;
-  insteadOf: string;
-}
 /**
  * @titleBy name
  */
@@ -40,7 +37,6 @@ export interface Audience {
    */
   name: string;
   routes?: Routes;
-  overrides?: Override[];
 }
 
 /**
@@ -51,14 +47,13 @@ export default function Audience({
   matcher,
   routes,
   name,
-  overrides,
-}: Audience): FlagObj<Pick<Audience, "routes" | "overrides">> {
-  return {
+}: Audience): FlagObj<Route[]> {
+  return Flag<Route[]>({
     matcher,
-    true: { routes, overrides },
-    false: { routes: [], overrides: [] },
+    true: routes ?? [],
+    false: [],
     name,
-  };
+  });
 }
 
 export const preview = (result: unknown, ctx: { request: Request }) => {

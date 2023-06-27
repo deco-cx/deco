@@ -8,14 +8,17 @@ import {
   TransformContext,
   tsTypeToSchemeable,
 } from "$live/engine/schema/transform.ts";
-import { denoDoc, fnDefinitionRoot } from "$live/engine/schema/utils.ts";
+import {
+  denoDoc,
+  fnDefinitionRoot,
+  jsDocToSchema,
+} from "$live/engine/schema/utils.ts";
 import {
   DocNode,
   InterfaceDef,
   TsTypeDef,
   TsTypeLiteralDef,
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
-import { jsDocToSchema } from "$live/engine/schema/utils.ts";
 
 type Key = string | number | symbol;
 
@@ -155,6 +158,9 @@ const fromTsType = async (
   );
 };
 
+export interface ReturnIntrospect {
+  include?: boolean;
+}
 export const introspectAddr = async <
   TBlockModule extends BlockModule = BlockModule,
 >(
@@ -162,7 +168,7 @@ export const introspectAddr = async <
   ctx: TransformContext,
   path: string,
   ast: DocNode[],
-  includeReturn?: boolean,
+  includeReturn?: boolean | ((ts: TsTypeDef) => TsTypeDef | undefined),
 ): Promise<BlockModuleRef | undefined> => {
   const addrKeys = Object.keys(addr);
   if (addrKeys.length === 0) {
@@ -180,11 +186,14 @@ export const introspectAddr = async <
     return undefined;
   }
 
+  const retn = typeof includeReturn === "function"
+    ? includeReturn(fn.return)
+    : fn.return;
   const baseBlockRef = {
     functionJSDoc: func.jsDoc && jsDocToSchema(func.jsDoc),
     functionRef: path,
-    outputSchema: includeReturn && fn.return
-      ? await tsTypeToSchemeable(func, fn.return, root)
+    outputSchema: includeReturn && retn
+      ? await tsTypeToSchemeable(func, retn, root)
       : undefined,
   };
   const addrVal = addr[funcName];
@@ -227,7 +236,7 @@ export const introspectWith = <TBlockModule extends BlockModule = BlockModule>(
     | IntrospectPath<TBlockModule>
     | IntrospectPath<TBlockModule>[]
     | IntrospectFunc,
-  includeReturn?: boolean,
+  includeReturn?: boolean | ((ts: TsTypeDef) => TsTypeDef | undefined),
 ) =>
 async (
   ctx: TransformContext,

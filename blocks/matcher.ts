@@ -1,13 +1,43 @@
+import { HttpContext } from "$live/blocks/handler.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { FieldResolver } from "$live/engine/core/resolver.ts";
+import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
+import { getCookies, setCookie } from "std/http/mod.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
-// deno-lint-ignore no-explicit-any
-export type MatchContext<T = any> = T & {
+// deno-lint-ignore ban-types
+export type MatchContext<T = {}> = T & {
   siteId: number;
   request: Request;
+  isMatchFromCookie?: boolean;
 };
 
+// Murmurhash3 was chosen because it is fast
+const hasher = new Murmurhash3("string"); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
+
+const SEPARATOR = "@";
+const cookieValue = {
+  build: (id: string, result: boolean) =>
+    `${btoa(id)}${SEPARATOR}${result ? 1 : 0}`,
+  boolean: (str: string): boolean | undefined => {
+    const parts = (str ?? "").split(SEPARATOR);
+    if (parts.length < 2) {
+      return undefined;
+    }
+    const [_, result] = parts;
+    return result === "1";
+  },
+};
+
+const typeAsNumber = (
+  type: FieldResolver["type"],
+): string => ({
+  "prop": "0",
+  "resolver": "1",
+  "resolvable": "2",
+  "dangling": "3",
+}[type]);
 // deno-lint-ignore no-explicit-any
 type MatchFunc<TConfig = any> =
   | ((config: TConfig) => (ctx: MatchContext) => boolean)
@@ -25,20 +55,65 @@ const matcherBlock: Block<
   introspect: {
     default: "0",
   },
-  adapt:
-    <TConfig = unknown>({ default: func }: { default: MatchFunc }) =>
-    ($live: TConfig) => {
-      return (ctx: MatchContext) => {
-        const fMatcher = func as unknown as
-          | ((c: TConfig, ctx: MatchContext) => boolean)
-          | MatchFunc;
-        const matcherFuncOrValue = fMatcher($live, ctx);
-        if (typeof matcherFuncOrValue === "function") {
-          return matcherFuncOrValue(ctx);
+  adapt: <TConfig = unknown>(
+    { default: func }: { default: MatchFunc },
+  ) =>
+  (
+    $live: TConfig,
+    httpCtx: HttpContext<
+      { global: unknown; response: { headers: Headers } },
+      unknown
+    >,
+  ) => {
+    const matcherFunc = (ctx: MatchContext) => {
+      const fMatcher = func as unknown as
+        | ((c: TConfig, ctx: MatchContext) => boolean)
+        | MatchFunc;
+      const matcherFuncOrValue = fMatcher($live, ctx);
+      if (typeof matcherFuncOrValue === "function") {
+        return matcherFuncOrValue(ctx);
+      }
+      return matcherFuncOrValue;
+    };
+    const respHeaders = httpCtx.context.state.response.headers;
+    const cacheControl = httpCtx.request.headers.get("Cache-Control");
+    const isNoCache = cacheControl === "no-cache";
+    return (ctx: MatchContext) => {
+      try {
+        let uniqueId = "";
+        // from last to first and stop in the first resolvable
+        // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
+        for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
+          const chain = httpCtx.resolveChain[i];
+          hasher.hash(typeAsNumber(chain.type));
+          hasher.hash(`${chain.value}`);
+          uniqueId =
+            (`${chain.type}@${chain.value}${uniqueId.length > 0 ? "," : ""}`) +
+            uniqueId;
+          // stop on first resolvable
+          if (chain.type === "resolvable") {
+            break;
+          }
         }
-        return matcherFuncOrValue;
-      };
-    },
+        const cookieName = `_dcxf_matchers_${hasher.result()}`;
+        const isMatchFromCookie = isNoCache
+          ? undefined
+          : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
+
+        const result = matcherFunc({ ...ctx, isMatchFromCookie });
+        if (result !== isMatchFromCookie) {
+          setCookie(respHeaders, {
+            name: cookieName,
+            value: cookieValue.build(uniqueId, result),
+          });
+          respHeaders.append("vary", "cookie");
+        }
+        return result;
+      } finally {
+        hasher.reset();
+      }
+    };
+  },
 };
 
 /**

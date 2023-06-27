@@ -10,8 +10,8 @@ export interface HttpContext<
   // deno-lint-ignore ban-types
   State = {},
   TConfig = any,
-  TCtx extends StatefulContext<LiveConfig<State, TConfig>> = StatefulContext<
-    LiveConfig<State, TConfig>
+  TCtx extends StatefulContext<LiveConfig<TConfig, State>> = StatefulContext<
+    LiveConfig<TConfig, State>
   >,
 > extends BaseContext {
   context: TCtx;

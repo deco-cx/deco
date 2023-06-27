@@ -1,26 +1,14 @@
-import { Flag } from "$live/blocks/flag.ts";
-import { MatchContext } from "$live/blocks/matcher.ts";
-import { BlockInstance } from "$live/engine/block.ts";
 import { ResolveOptions } from "$live/engine/core/mod.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
-import { CookiedFlag, cookies } from "$live/flags.ts";
-import { Override, Route } from "$live/flags/audience.ts";
+import { Route, Routes } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
 import { LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
-/**
- * @title Audiences
- */
-export type Audiences =
-  | Resolvable<Flag>
-  | BlockInstance<"$live/flags/audience.ts">
-  | BlockInstance<"$live/flags/everyone.ts">;
-
 export interface SelectionConfig {
-  audiences: Audiences[];
+  audiences: Routes[];
 }
 
 const rankRoute = (pattern: string) =>
@@ -51,7 +39,6 @@ export const router = (
   routes: Route[],
   hrefRoutes: Record<string, Resolvable<Handler>> = {},
   configs?: ResolveOptions,
-  flags?: Map<string, CookiedFlag>,
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const url = new URL(req.url);
@@ -69,7 +56,7 @@ export const router = (
       };
 
       ctx.state.routerInfo = {
-        flags: flags ? Array.from(flags.keys()).join(",") : "",
+        flags: "",
         pagePath: routePath,
       };
 
@@ -109,10 +96,6 @@ export const router = (
   };
 };
 
-export type MatchWithCookieValue = MatchContext<{
-  isMatchFromCookie?: boolean;
-}>;
-
 export const toRouteMap = (
   routes?: Route[],
 ): [
@@ -131,92 +114,32 @@ export const toRouteMap = (
     });
   return [routeMap, hrefRoutes];
 };
-const toOverrides = (overrides?: Override[]): Record<string, string> => {
-  const overrideMap: Record<string, string> = {};
-  (overrides ?? []).forEach(({ insteadOf, use }) => {
-    overrideMap[insteadOf] = use;
-  });
-  return overrideMap;
-};
 
 /**
  * @title Routes Selection
  * @description Select routes based on the target audience.
  */
 export default function RoutesSelection(
-  { audiences: _audiences }: SelectionConfig,
+  { audiences }: SelectionConfig,
 ): Handler {
-  const audiences = _audiences as (
-    | BlockInstance<"$live/flags/audience.ts">
-    | BlockInstance<"$live/flags/everyone.ts">
-  )[];
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
-    const cacheControl = req.headers.get("Cache-Control");
-    const isNoCache = cacheControl === "no-cache";
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
 
-    // Read flags from cookie or start an empty map.
-    const flags = cookies.getFlags(req.headers) ??
-      new Map<string, CookiedFlag>();
-
-    // create the base match context.
-    const matchCtx: Omit<MatchWithCookieValue, "isMatchFromCookie"> = {
-      siteId: context.siteId,
-      request: req,
-    };
-
-    // track flags that aren't on the original cookie or changed its `isMatch` property.
-    const flagsThatShouldBeCookied: CookiedFlag[] = [];
-    const cookiesThatShouldBeDeleted = new Map(flags); // initially all cookies should be deleted.
-
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
-    const [routes, overrides, hrefRoutes] = audiences
+    const [routes, hrefRoutes] = audiences
       // We should tackle this problem elsewhere
       .filter(Boolean)
       .reduce(
-        ([routes, overrides, hrefRoutes], audience) => {
+        ([routes, hrefRoutes], audience) => {
           // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
-          const isMatch = audience.matcher({
-            ...matchCtx,
-            isMatchFromCookie: isNoCache
-              ? undefined
-              : flags.get(audience.name)?.isMatch,
-          } as MatchWithCookieValue);
-          // if the audience exists so it should not be deleted
-          cookiesThatShouldBeDeleted.delete(audience.name);
-
-          // if the flag doesn't exists (e.g. new audience being used) or the `isMatch` value has changed so add as a `newFlags`
-          // TODO should we track when the flag VALUE changed?
-          // this code has a bug that when the isMatch doesn't change but the flag value does so the cookie will kept the old value.
-          // I will not fix this for now because this shouldn't be a issue in the long run and requires deep equals between objects which could be more expansive than just assume that the value is equal.
-          // as it is in 99% of the cases.
-          if (
-            !flags.has(audience.name) ||
-            flags.get(audience.name)?.isMatch !== isMatch
-          ) {
-            // create the flag value
-            const flagValue = {
-              isMatch,
-              key: audience.name,
-              updated_at: new Date().toISOString(),
-            };
-            // set as flag that should be cookied
-            flagsThatShouldBeCookied.push(flagValue);
-            // set in the current map just in case (duplicated audiences?)
-            flags.set(audience.name, flagValue);
-          }
-          const [newRoutes, newHrefRoutes] = toRouteMap(audience.true.routes);
-          return isMatch
-            ? [
-              { ...routes, ...newRoutes },
-              { ...overrides, ...toOverrides(audience.true.overrides) },
-              { ...hrefRoutes, ...newHrefRoutes },
-            ]
-            : [routes, overrides, hrefRoutes];
+          const [newRoutes, newHrefRoutes] = toRouteMap(audience ?? []);
+          return [
+            { ...routes, ...newRoutes },
+            { ...hrefRoutes, ...newHrefRoutes },
+          ];
         },
-        [{}, {}, {}] as [
+        [{}, {}] as [
           Record<string, Resolvable<Handler>>,
-          Record<string, string>,
           Record<string, Resolvable<Handler>>,
         ],
       );
@@ -234,21 +157,10 @@ export default function RoutesSelection(
       })),
       hrefRoutes,
       {
-        overrides,
         monitoring: t ? { t } : undefined,
       },
-      flags,
     );
 
-    // call the target handler
-    const resp = await server(req, connInfo);
-
-    // set cookie for the flags that has changed.
-    if (flagsThatShouldBeCookied.length > 0 && resp.status < 300) { // errors and redirects have immutable headers
-      cookies.setFlags(resp.headers, flagsThatShouldBeCookied);
-      cookies.pruneFlags(resp.headers, cookiesThatShouldBeDeleted);
-      resp.headers.append("vary", "cookie");
-    }
-    return resp;
+    return await server(req, connInfo);
   };
 }

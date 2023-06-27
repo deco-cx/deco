@@ -1,5 +1,6 @@
 import { Matcher } from "$live/blocks/matcher.ts";
 import { FnProps } from "$live/blocks/utils.ts";
+import { context } from "$live/live.ts";
 import { LoaderContext } from "$live/mod.ts";
 
 /**
@@ -30,20 +31,21 @@ export const withConditionals = <
   return (
     props: T,
     req: Request,
-    ctx: LoaderContext,
-  ) => Conditionals<TValue>(props[key], req, ctx);
+  ) => Conditionals<TValue>(props[key], req);
 };
 
-export default async function Conditionals<TValue>(
+export default function Conditionals<TValue>(
   _rule: Props<TValue>,
   req: Request,
-  { get }: LoaderContext,
-): Promise<TValue> {
-  const { rules, else: otherwise } = await get(_rule);
+): TValue {
+  const { rules, else: otherwise } = _rule;
   for (
     const { if: rule, then } of rules
   ) {
-    if (rule && typeof rule === "function" && rule({ request: req })) {
+    if (
+      rule && typeof rule === "function" &&
+      rule({ request: req, siteId: context.siteId })
+    ) {
       return then;
     }
   }
