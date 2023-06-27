@@ -1,6 +1,7 @@
 import { HttpContext } from "$live/blocks/handler.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { FieldResolver } from "$live/engine/core/resolver.ts";
+import { Flags } from "$live/routes/_middleware.ts";
 import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 
@@ -44,6 +45,14 @@ type MatchFunc<TConfig = any> =
   | ((config: TConfig) => boolean)
   | ((config: TConfig, ctx: MatchContext) => boolean);
 
+export interface MatcherModule extends
+  BlockModule<
+    MatchFunc,
+    boolean | ((ctx: MatchContext) => boolean),
+    (ctx: MatchContext) => boolean
+  > {
+  unstable?: boolean;
+}
 const matcherBlock: Block<
   BlockModule<
     MatchFunc,
@@ -56,12 +65,16 @@ const matcherBlock: Block<
     default: "0",
   },
   adapt: <TConfig = unknown>(
-    { default: func }: { default: MatchFunc },
+    { default: func, unstable }: MatcherModule,
   ) =>
   (
     $live: TConfig,
     httpCtx: HttpContext<
-      { global: unknown; response: { headers: Headers } },
+      {
+        global: unknown;
+        flags: Flags;
+        response: { headers: Headers };
+      },
       unknown
     >,
   ) => {
@@ -101,12 +114,17 @@ const matcherBlock: Block<
           : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
 
         const result = matcherFunc({ ...ctx, isMatchFromCookie });
-        if (result !== isMatchFromCookie) {
+        const value = cookieValue.build(uniqueId, result);
+        if (result !== isMatchFromCookie && unstable) {
           setCookie(respHeaders, {
             name: cookieName,
-            value: cookieValue.build(uniqueId, result),
+            value,
           });
           respHeaders.append("vary", "cookie");
+        }
+        const flags = httpCtx?.context?.state?.flags;
+        if (flags) {
+          flags[uniqueId] = { result, unstable: !!unstable };
         }
         return result;
       } finally {

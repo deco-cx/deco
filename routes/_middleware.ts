@@ -29,6 +29,7 @@ export interface MiddlewareConfig {
   state: Record<string, Resolvable>;
 }
 
+export type Flags = Record<string, { result: boolean; unstable: boolean }>;
 export const handler = async (
   req: Request,
   ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
@@ -66,9 +67,11 @@ export const handler = async (
     }
 
     const response = { headers: new Headers(defaultHeaders) };
+    const flags: Flags = {};
     const state = ctx.state?.$live?.state;
     if (state) {
       state.response = response;
+      state.flags = flags;
       Object.assign(ctx.state, state);
       ctx.state.global = state; // compatibility mode with functions.
     }
@@ -93,6 +96,19 @@ export const handler = async (
       [400, 404, 500].includes(initialResponse.status)
     ) {
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
+    }
+
+    let hasUnstableFlags = false;
+    for (const [flag, flagValue] of Object.entries(flags)) {
+      newHeaders.append(
+        "_dxcf_matchers",
+        `${flag}=${flagValue.result ? 1 : 0}`,
+      );
+      hasUnstableFlags ||= flagValue.unstable;
+    }
+
+    if (!hasUnstableFlags) {
+      newHeaders.set("cache-control", "public, max-age=10");
     }
 
     const newResponse = new Response(initialResponse.body, {
