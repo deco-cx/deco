@@ -41,14 +41,20 @@ const fetchJSON = async (
   throw new Error(`${response.status}, ${init?.body}`);
 };
 
-const invokeKey = (key: string, props?: unknown) =>
+const invokeKey = (
+  key: string,
+  props?: unknown,
+  init?: RequestInit | undefined,
+) =>
   fetchJSON(`/live/invoke/${key}`, {
     body: JSON.stringify(props ?? {}),
+    ...init,
   });
 
-const batchInvoke = (payload: unknown) =>
+const batchInvoke = (payload: unknown, init?: RequestInit | undefined) =>
   fetchJSON(`/live/invoke`, {
     body: JSON.stringify(payload),
+    ...init,
   });
 
 export type InvocationFunc<TManifest extends DecoManifest> = <
@@ -101,12 +107,13 @@ export const invoke = <
     >,
 >(
   payload: TPayload,
+  init?: RequestInit | undefined,
 ): Promise<
   InvokeResult<
     TPayload,
     TManifest
   >
-> => batchInvoke(payload);
+> => batchInvoke(payload, init);
 
 export const create = <
   TManifest extends DecoManifest,
@@ -127,12 +134,13 @@ export const create = <
 >(key: TInvocableKey) =>
 (
   props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+  init?: RequestInit | undefined,
 ): Promise<
   InvokeResult<
     TPayload,
     TManifest
   >
-> => invokeKey(key, props);
+> => invokeKey(key, props, init);
 
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.
