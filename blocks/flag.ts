@@ -10,17 +10,40 @@ import {
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
-// TODO Inheritance flag is not working Author Marcos V. Candeia
 export interface FlagObj<T = unknown> {
   matcher: Matcher;
   name: string;
   true: T;
   false: T;
-  // date && percentage
 }
 
+/**
+ * @title Variant
+ */
+export interface Variant<T> {
+  matcher: Matcher;
+  value: T;
+}
+
+/**
+ * @title Multivariate Flag
+ */
+export interface MultivariateFlag<T = unknown> {
+  variants?: Variant<T>[];
+  default: T;
+}
+
+const isMultivariate = (
+  f: FlagObj | MultivariateFlag,
+): f is MultivariateFlag => {
+  return (f as MultivariateFlag).variants !== undefined ||
+    (f as MultivariateFlag)?.default !== undefined;
+};
+
 // deno-lint-ignore no-explicit-any
-export type FlagFunc<TConfig = any> = (c: TConfig) => FlagObj;
+export type FlagFunc<TConfig = any> = (
+  c: TConfig,
+) => FlagObj | MultivariateFlag;
 
 const flagBlock: Block<BlockModule<FlagFunc>> = {
   type: "flags",
@@ -37,6 +60,11 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
   ($live: TConfig, { request }: HttpContext) => {
     const flag = func.default($live);
     const ctx = { request, siteId: context.siteId };
+    if (isMultivariate(flag)) {
+      return (flag?.variants ?? []).find((variant) =>
+        variant?.matcher(ctx) ?? false
+      )?.value ?? flag?.default;
+    }
     const matchValue = typeof flag?.matcher === "function"
       ? flag.matcher(ctx)
       : false;
