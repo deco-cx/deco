@@ -42,6 +42,7 @@
               "$live/flags/everyone.ts",
               "$live/flags/flag.ts",
               "$live/flags/multivariate.ts",
+              "$live/flags/pageVariants_beta.ts",
               "$live/actions/workflows/cancel.ts",
               "$live/actions/workflows/run.ts",
               "$live/actions/workflows/signal.ts",
@@ -629,11 +630,39 @@
       "title": "$live/handlers/workflowRunner.ts@Config"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
-      },
-      "title": "Section[]"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
+          },
+          "title": "Section[]"
+        },
+        {
+          "title": "Page Variant",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section[]+Section[]"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/flags/pageVariants_beta.ts"
+              ],
+              "default": "$live/flags/pageVariants_beta.ts"
+            }
+          }
+        }
+      ]
     },
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
       "type": "object",
@@ -1110,16 +1139,16 @@
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant": {
       "type": "object",
       "properties": {
-        "matcher": {
+        "rule": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
-          "title": "Matcher"
+          "title": "Rule"
         },
         "value": {
           "title": "Value"
         }
       },
       "required": [
-        "matcher",
+        "rule",
         "value"
       ],
       "title": "Variant"
@@ -1136,14 +1165,51 @@
       "properties": {
         "variants": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant[]",
+          "minItems": 1,
           "title": "Variants"
-        },
-        "default": {
-          "title": "Default"
         }
       },
       "required": [
-        "default"
+        "variants"
+      ],
+      "title": "Multivariate"
+    },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[]": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
+          "title": "Rule"
+        },
+        "value": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "title": "Variant"
+    },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[][]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[]"
+      },
+      "title": "Variant+Section[][]"
+    },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section[]+Section[]": {
+      "type": "object",
+      "properties": {
+        "variants": {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[][]",
+          "minItems": 1,
+          "title": "Variants"
+        }
+      },
+      "required": [
+        "variants"
       ],
       "title": "Multivariate"
     },
@@ -1953,6 +2019,27 @@
         }
       }
     },
+    "JGxpdmUvZmxhZ3MvcGFnZVZhcmlhbnRzX2JldGEudHM=": {
+      "title": "Page Variant",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section[]+Section[]"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/flags/pageVariants_beta.ts"
+          ],
+          "default": "$live/flags/pageVariants_beta.ts"
+        }
+      }
+    },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz": {
       "title": "$live/actions/workflows/cancel.ts",
       "description": "Cancels the workflow execution, you can, optionally, add a reason of the cancellation.",
@@ -2194,6 +2281,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvbXVsdGl2YXJpYXRlLnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvcGFnZVZhcmlhbnRzX2JldGEudHM="
         }
       ]
     },

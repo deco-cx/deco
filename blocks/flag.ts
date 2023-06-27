@@ -21,7 +21,7 @@ export interface FlagObj<T = unknown> {
  * @title Variant
  */
 export interface Variant<T> {
-  matcher: Matcher;
+  rule: Matcher;
   value: T;
 }
 
@@ -29,15 +29,16 @@ export interface Variant<T> {
  * @title Multivariate Flag
  */
 export interface MultivariateFlag<T = unknown> {
-  variants?: Variant<T>[];
-  default: T;
+  /**
+   * @minItems 1
+   */
+  variants: Variant<T>[];
 }
 
 const isMultivariate = (
   f: FlagObj | MultivariateFlag,
 ): f is MultivariateFlag => {
-  return (f as MultivariateFlag).variants !== undefined ||
-    (f as MultivariateFlag)?.default !== undefined;
+  return (f as MultivariateFlag).variants !== undefined;
 };
 
 // deno-lint-ignore no-explicit-any
@@ -62,8 +63,8 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     const ctx = { request, siteId: context.siteId };
     if (isMultivariate(flag)) {
       return (flag?.variants ?? []).find((variant) =>
-        variant?.matcher(ctx) ?? false
-      )?.value ?? flag?.default;
+        variant?.rule(ctx) ?? false
+      )?.value ?? (flag?.variants ?? [])[flag?.variants?.length - 1];
     }
     const matchValue = typeof flag?.matcher === "function"
       ? flag.matcher(ctx)
