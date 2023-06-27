@@ -7,3 +7,5 @@ export type {
   JSONSchema7Definition,
   JSONSchema7Type,
 } from "https://esm.sh/@types/json-schema@7.0.11?pin=102";
+
+export * from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";

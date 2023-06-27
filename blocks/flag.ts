@@ -1,13 +1,10 @@
 import { HttpContext } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
+import { TsTypeDef, TsTypeTypeRefDef } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { context } from "$live/live.ts";
-import {
-  TsTypeDef,
-  TsTypeTypeRefDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 // TODO Inheritance flag is not working Author Marcos V. Candeia
