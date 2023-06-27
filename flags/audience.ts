@@ -4,6 +4,7 @@ import { Matcher } from "$live/blocks/matcher.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { metabasePreview } from "../utils/metabase.tsx";
+import Flag from "./flag.ts";
 export { onBeforeResolveProps } from "./everyone.ts";
 /**
  * @title Site Route
@@ -47,12 +48,12 @@ export default function Audience({
   routes,
   name,
 }: Audience): FlagObj<Route[]> {
-  return {
+  return Flag<Route[]>({
     matcher,
     true: routes ?? [],
     false: [],
     name,
-  };
+  });
 }
 
 export const preview = (result: unknown, ctx: { request: Request }) => {
