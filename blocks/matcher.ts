@@ -1,7 +1,6 @@
 import { HttpContext } from "$live/blocks/handler.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { FieldResolver } from "$live/engine/core/resolver.ts";
-import { Flags } from "$live/routes/_middleware.ts";
 import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 
@@ -72,7 +71,6 @@ const matcherBlock: Block<
     httpCtx: HttpContext<
       {
         global: unknown;
-        flags: Flags;
         response: { headers: Headers };
       },
       unknown
@@ -122,10 +120,7 @@ const matcherBlock: Block<
           });
           respHeaders.append("vary", "cookie");
         }
-        const flags = httpCtx?.context?.state?.flags;
-        if (flags) {
-          flags[uniqueId] = result;
-        }
+        respHeaders.append("_dxcf_matchers", `${uniqueId}=${result ? 1 : 0}`);
         return result;
       } finally {
         hasher.reset();

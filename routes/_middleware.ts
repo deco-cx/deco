@@ -30,7 +30,6 @@ export interface MiddlewareConfig {
   state: Record<string, Resolvable>;
 }
 
-export type Flags = Record<string, boolean>;
 export const handler = async (
   req: Request,
   ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
@@ -68,11 +67,9 @@ export const handler = async (
     }
 
     const response = { headers: new Headers(defaultHeaders) };
-    const flags: Flags = {};
     const state = ctx.state?.$live?.state;
     if (state) {
       state.response = response;
-      state.flags = flags;
       Object.assign(ctx.state, state);
       ctx.state.global = state; // compatibility mode with functions.
     }
@@ -97,13 +94,6 @@ export const handler = async (
       [400, 404, 500].includes(initialResponse.status)
     ) {
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
-    }
-
-    for (const [flag, flagValue] of Object.entries(flags)) {
-      newHeaders.append(
-        "_dxcf_matchers",
-        `${flag}=${flagValue ? 1 : 0}`,
-      );
     }
 
     // if there's no set cookie it means that none unstable matcher was evaluated
