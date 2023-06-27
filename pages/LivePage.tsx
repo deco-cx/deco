@@ -17,7 +17,6 @@ import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
 import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
 import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
-import LivePageShowcase from "../components/LivePageShowcase.tsx";
 
 /**
  * @titleBy name
@@ -30,7 +29,7 @@ export interface Props {
   sections: Section[];
 }
 
-type Mode = "default" | "edit" | "showcase";
+type Mode = "default" | "edit";
 
 export function renderSectionFor(mode?: Mode) {
   const isEditMode = mode === "edit";
@@ -229,9 +228,9 @@ export const pageIdFromMetadata = (
   return pageParent?.value ?? PAGE_NOT_FOUND;
 };
 
-const getMode = (params?: URLSearchParams): "edit" | "showcase" | "default" => {
+const getMode = (params?: URLSearchParams): "edit" | "default" => {
   const mode = params?.get("mode");
-  if (mode === "edit" || mode === "showcase") {
+  if (mode === "edit") {
     return mode;
   }
 
@@ -251,7 +250,6 @@ export function Preview(props: Props) {
       </Head>
       {renderPage(props, {}, mode)}
       {mode === "edit" && <LivePageEditor />}
-      {mode === "showcase" && <LivePageShowcase />}
     </LivePageContext.Provider>
   );
 }
