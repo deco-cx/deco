@@ -283,6 +283,7 @@ const resolvePropsWithHints = async <
   const onBeforeResolveProps = type && type in _ctx.resolvers
     ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
     : identity;
+
   const props = onBeforeResolveProps(_thisProps as T);
   const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 

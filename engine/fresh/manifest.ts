@@ -143,6 +143,7 @@ const buildRuntime = (
     const previewFunc = mod.preview ??
       (mod.Preview ? usePreviewFunc(mod.Preview) : blk.defaultPreview);
     if (previewFunc) {
+      previewFunc.onBeforeResolveProps = mod.onBeforeResolveProps;
       return { ...prv, [`${PREVIEW_PREFIX_KEY}${key}`]: previewFunc };
     }
     return prv;
