@@ -49,7 +49,14 @@ const fetchWithProps = async (
   }
 
   console.error(init?.body, response);
-  throw new Error(`${response.status}, ${init?.body}`);
+  const error = await response.text();
+  let errorObj;
+  try {
+    errorObj = JSON.parse(error);
+  } catch (_err) {
+    throw new Error(`${response.status}: ${response.statusText}`, { cause: error });
+  }
+  throw new Error(`${response.status}: ${response.statusText}`, { cause: errorObj.message + (errorObj.code ? " - " + errorObj.code : "") });
 };
 
 const invokeKey = (
@@ -63,16 +70,16 @@ const batchInvoke = (payload: unknown, init?: RequestInit | undefined) =>
 
 export type InvocationFunc<TManifest extends DecoManifest> = <
   TInvocableKey extends
-    | AvailableFunctions<TManifest>
-    | AvailableLoaders<TManifest>
-    | AvailableActions<TManifest>,
+  | AvailableFunctions<TManifest>
+  | AvailableLoaders<TManifest>
+  | AvailableActions<TManifest>,
   TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
-    ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
-    : TInvocableKey extends AvailableActions<TManifest>
-      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-    : TInvocableKey extends AvailableLoaders<TManifest>
-      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
-    : never,
+  ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+  : TInvocableKey extends AvailableActions<TManifest>
+  ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+  : TInvocableKey extends AvailableLoaders<TManifest>
+  ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+  : never,
   TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
 >(
   key: TInvocableKey,
@@ -91,60 +98,60 @@ export type InvocationFunc<TManifest extends DecoManifest> = <
 export const invoke = <
   TManifest extends DecoManifest,
 >() =>
-<
-  TInvocableKey extends
+  <
+    TInvocableKey extends
     | AvailableFunctions<TManifest>
     | AvailableLoaders<TManifest>
     | AvailableActions<TManifest>,
-  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+    TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
     ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableActions<TManifest>
-      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+    ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableLoaders<TManifest>
-      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
     : never,
-  TPayload extends
+    TPayload extends
     | Invoke<TManifest, TInvocableKey, TFuncSelector>
     | Record<
       string,
       Invoke<TManifest, TInvocableKey, TFuncSelector>
     >,
->(
-  payload: TPayload,
-  init?: RequestInit | undefined,
-): Promise<
-  InvokeResult<
-    TPayload,
-    TManifest
-  >
-> => batchInvoke(payload, init);
+  >(
+    payload: TPayload,
+    init?: RequestInit | undefined,
+  ): Promise<
+    InvokeResult<
+      TPayload,
+      TManifest
+    >
+  > => batchInvoke(payload, init);
 
 export const create = <
   TManifest extends DecoManifest,
 >() =>
-<
-  TInvocableKey extends
+  <
+    TInvocableKey extends
     | AvailableFunctions<TManifest>
     | AvailableLoaders<TManifest>
     | AvailableActions<TManifest>,
-  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+    TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
     ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableActions<TManifest>
-      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+    ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableLoaders<TManifest>
-      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
     : never,
-  TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
->(key: TInvocableKey) =>
-(
-  props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-  init?: RequestInit | undefined,
-): Promise<
-  InvokeResult<
-    TPayload,
-    TManifest
-  >
-> => invokeKey(key, props, init);
+    TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
+  >(key: TInvocableKey) =>
+    (
+      props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+      init?: RequestInit | undefined,
+    ): Promise<
+      InvokeResult<
+        TPayload,
+        TManifest
+      >
+    > => invokeKey(key, props, init);
 
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.
