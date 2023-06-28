@@ -37,7 +37,10 @@ export const onBeforeResolveProps = (props: unknown) => {
     const newVariants = [];
     for (const variant of props.variants) {
       if (isVariant(variant)) {
-        newVariants.push({ ...variant, value: asResolved(variant.value) });
+        newVariants.push({
+          ...variant,
+          value: asResolved(variant.value, true),
+        });
       } else {
         newVariants.push(variant);
       }

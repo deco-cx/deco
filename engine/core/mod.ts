@@ -2,6 +2,7 @@
 import { ResolveHints } from "$live/engine/core/hints.ts";
 import {
   BaseContext,
+  FieldResolver,
   Monitoring,
   Resolvable,
   resolve,
@@ -23,6 +24,7 @@ export interface ResolveOptions {
   forceFresh?: boolean;
   nullIfDangling?: boolean;
   propsIsResolved?: boolean;
+  resolveChain?: FieldResolver[];
 }
 
 const withOverrides = (
@@ -94,7 +96,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
       resolveId: crypto.randomUUID(),
-      resolveChain: [],
+      resolveChain: options?.resolveChain ?? [],
       resolveHints: this.resolveHints,
       resolvables: nresolvables,
       resolvers,

@@ -8,6 +8,7 @@ import { ResolveOptions } from "$live/engine/core/mod.ts";
 import {
   isAwaitable,
   notUndefined,
+  PromiseOrValue,
   UnPromisify,
 } from "$live/engine/core/utils.ts";
 import { identity } from "$live/utils/object.ts";
@@ -227,11 +228,21 @@ export const ALREADY_RESOLVED = "resolved";
 /**
  * wraps an arbitrary data as a resolved object skiping the config resolution algorithm.
  */
-export const asResolved = <T>(data: T): T => {
+export const asResolved = <T>(data: T, deferred?: boolean): T => {
   return {
     data,
+    deferred,
     __resolveType: ALREADY_RESOLVED,
   } as T; // trust me;
+};
+
+export type Deferred<T> = {
+  _deferred: true;
+  (): PromiseOrValue<T>;
+};
+
+export const isDeferred = <T>(f: Deferred<T> | unknown): f is Deferred<T> => {
+  return typeof f === "function" && (f as Deferred<T>)?._deferred;
 };
 
 export interface Resolved<T> {

@@ -2,6 +2,7 @@ import { HttpContext } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { isDeferred } from "$live/engine/core/resolver.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { context } from "$live/live.ts";
 import {
@@ -58,14 +59,14 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
   >(func: {
     default: FlagFunc<TConfig>;
   }) =>
-  ($live: TConfig, { request, resolve }: HttpContext) => {
+  ($live: TConfig, { request }: HttpContext) => {
     const flag = func.default($live);
     const ctx = { request, siteId: context.siteId };
     if (isMultivariate(flag)) {
       const value = (flag?.variants ?? []).find((variant) =>
         variant?.rule(ctx) ?? false
       )?.value ?? (flag?.variants ?? [])[flag?.variants?.length - 1];
-      return value ? resolve(value) : value;
+      return isDeferred(value) ? value() : value;
     }
     const matchValue = typeof flag?.matcher === "function"
       ? flag.matcher(ctx)
