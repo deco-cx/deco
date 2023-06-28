@@ -48,19 +48,24 @@ export default {
           props: { block: __resolveType },
         };
       }
+      const resolvedSavedProps = Object.keys(resolvableProps ?? {}).length > 0
+        ? await resolve(resolvableProps)
+        : resolvableProps;
       return resolve({
         __resolveType: resolvablePvResolverKey,
         ...(await resolve({
           __resolveType: __resolveType,
-          ...resolvableProps,
+          ...resolvedSavedProps,
           ...props,
-        })),
-      });
+        }, { propsIsResolved: true })),
+      }, { propsIsResolved: true });
     }
     return resolve({
       __resolveType: pvResolver,
-      ...(await resolve({ __resolveType: block, ...props })),
-    });
+      ...(await resolve({ __resolveType: block, ...props }, {
+        propsIsResolved: true,
+      })),
+    }, { propsIsResolved: true });
   },
   invoke: async function invoke(
     { props, block }: BlockInvocation, // wishListVtex deco-sites/std/vtexProductList.ts
