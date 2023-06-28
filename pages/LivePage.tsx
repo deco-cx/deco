@@ -140,10 +140,11 @@ const renderPage = (
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode: Mode = "default",
 ): JSX.Element => {
-  const validSections =
-    maybeSections?.filter((section) =>
+  const validSections = Array.isArray(maybeSections)
+    ? maybeSections?.filter((section) =>
       typeof section?.Component === "function"
-    ) ?? [];
+    ) ?? []
+    : [];
   // TODO: Uncomment when bring bag layout props
   // const layoutProps = layout?.props;
   const layoutProps = undefined;
