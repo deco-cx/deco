@@ -19,6 +19,10 @@ import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
 
 /**
+ * @title Page Sections
+ */
+export type Sections = Section[];
+/**
  * @titleBy name
  */
 export interface Props {
@@ -26,7 +30,7 @@ export interface Props {
   path?: string;
   // TODO: Bring it back as soon as possible;
   // layout?: Page;
-  sections: Section[];
+  sections: Sections;
 }
 
 type Mode = "default" | "edit";
