@@ -64,7 +64,7 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     const ctx = { request, siteId: context.siteId };
     if (isMultivariate(flag)) {
       const value = (flag?.variants ?? []).find((variant) =>
-        variant?.rule(ctx) ?? false
+        typeof variant?.rule === "function" && variant?.rule(ctx)
       )?.value ?? (flag?.variants ?? [])[flag?.variants?.length - 1];
       return isDeferred(value) ? value() : value;
     }
