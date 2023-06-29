@@ -105,7 +105,15 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ...baseCtx,
     };
 
-    const innerResolver = this.resolverFor(ctx, options);
+    const innerResolver = this.resolverFor(
+      ctx,
+      options
+        ? { // null if dangling, force fresh and propsIsResolved should not be reused across inner resolvables calls
+          overrides: options?.overrides,
+          monitoring: options?.monitoring,
+        }
+        : {},
+    );
     function _resolve<T>(
       typeOrResolvable: string | Resolvable<T>,
       overrideOptions?: Partial<ResolveOptions>,
