@@ -16,19 +16,36 @@ export type MatchContext<T = {}> = T & {
 // Murmurhash3 was chosen because it is fast
 const hasher = new Murmurhash3("string"); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
-const DECO_MATCHER_HEADER = "x-deco-matchers";
-const DECO_MATCHER_HEADER_OVERRIDE = `${DECO_MATCHER_HEADER}-override`;
+const DECO_MATCHER_HEADER_QS = "x-deco-matchers";
+const DECO_MATCHER_HEADER_QS_OVERRIDE = `${DECO_MATCHER_HEADER_QS}-override`;
 
-const matchersHeaders = {
-  parse: (headers: Headers): Record<string, boolean> => {
+const matchersOverride = {
+  parse: (request: Request): Record<string, boolean> => {
+    return matchersOverride.parseFromHeaders(request.headers) ??
+      matchersOverride.parseFromQS(request.url) ?? {};
+  },
+  parseFromQS: (reqUrl: string): Record<string, boolean> | undefined => {
+    const url = new URL(reqUrl);
+    if (!url.searchParams.has(DECO_MATCHER_HEADER_QS_OVERRIDE)) {
+      return undefined;
+    }
     const values: Record<string, boolean> = {};
-    if (!headers.has(DECO_MATCHER_HEADER_OVERRIDE)) {
-      return values;
+    const vals = url.searchParams.getAll(DECO_MATCHER_HEADER_QS_OVERRIDE);
+    for (const val of vals) {
+      const [key, value] = val.split("=");
+      values[key] = value === "1";
     }
-    const val = headers.get(DECO_MATCHER_HEADER_OVERRIDE);
+    return values;
+  },
+  parseFromHeaders: (headers: Headers): Record<string, boolean> | undefined => {
+    if (!headers.has(DECO_MATCHER_HEADER_QS_OVERRIDE)) {
+      return undefined;
+    }
+    const val = headers.get(DECO_MATCHER_HEADER_QS_OVERRIDE);
     if (!val) {
-      return values;
+      return undefined;
     }
+    const values: Record<string, boolean> = {};
     const eachHeader = val.split(" ");
 
     for (const keyValue of eachHeader) {
@@ -129,8 +146,8 @@ const matcherBlock: Block<
           }
         }
         const cookieName = `_dcxf_matchers_${hasher.result()}`;
-        const { [uniqueId]: isEnabled } = matchersHeaders.parse(
-          ctx.request.headers,
+        const { [uniqueId]: isEnabled } = matchersOverride.parse(
+          ctx.request,
         );
         const isMatchFromCookie = isNoCache
           ? undefined
@@ -146,7 +163,7 @@ const matcherBlock: Block<
           respHeaders.append("vary", "cookie");
         }
         respHeaders.append(
-          DECO_MATCHER_HEADER,
+          DECO_MATCHER_HEADER_QS,
           `${uniqueId}=${result ? 1 : 0}`,
         );
         return result;
