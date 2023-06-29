@@ -16,6 +16,28 @@ export type MatchContext<T = {}> = T & {
 // Murmurhash3 was chosen because it is fast
 const hasher = new Murmurhash3("string"); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
+const DECO_MATCHER_HEADER = "x-deco-matchers";
+const DECO_MATCHER_HEADER_OVERRIDE = `${DECO_MATCHER_HEADER}-override`;
+
+const matchersHeaders = {
+  parse: (headers: Headers): Record<string, boolean> => {
+    const values: Record<string, boolean> = {};
+    if (!headers.has(DECO_MATCHER_HEADER_OVERRIDE)) {
+      return values;
+    }
+    const val = headers.get(DECO_MATCHER_HEADER_OVERRIDE);
+    if (!val) {
+      return values;
+    }
+    const eachHeader = val.split(" ");
+
+    for (const keyValue of eachHeader) {
+      const [key, value] = keyValue.split("=");
+      values[key] = value === "1";
+    }
+    return values;
+  },
+};
 const SEPARATOR = "@";
 const cookieValue = {
   build: (id: string, result: boolean) =>
@@ -107,11 +129,14 @@ const matcherBlock: Block<
           }
         }
         const cookieName = `_dcxf_matchers_${hasher.result()}`;
+        const { [uniqueId]: isEnabled } = matchersHeaders.parse(
+          ctx.request.headers,
+        );
         const isMatchFromCookie = isNoCache
           ? undefined
           : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
 
-        const result = matcherFunc({ ...ctx, isMatchFromCookie });
+        const result = isEnabled ?? matcherFunc({ ...ctx, isMatchFromCookie });
         const value = cookieValue.build(uniqueId, result);
         if (result !== isMatchFromCookie && unstable) {
           setCookie(respHeaders, {
@@ -120,7 +145,10 @@ const matcherBlock: Block<
           });
           respHeaders.append("vary", "cookie");
         }
-        respHeaders.append("_dxcf_matchers", `${uniqueId}=${result ? 1 : 0}`);
+        respHeaders.append(
+          DECO_MATCHER_HEADER,
+          `${uniqueId}=${result ? 1 : 0}`,
+        );
         return result;
       } finally {
         hasher.reset();
