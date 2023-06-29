@@ -98,7 +98,8 @@ export const handler = async (
 
     // if there's no set cookie it means that none unstable matcher was evaluated
     if (
-      Object.keys(getSetCookies(newHeaders)).length === 0
+      Object.keys(getSetCookies(newHeaders)).length === 0 &&
+      Deno.env.has("DECO_ANONYMOUS_CACHE")
     ) {
       newHeaders.set("cache-control", "public, max-age=10");
     }
