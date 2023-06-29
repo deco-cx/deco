@@ -18,7 +18,9 @@ export default function Redirect({ to, type = "temporary" }: RedirectConfig) {
 
   return (_req: Request, conn: ConnInfo) => {
     const params = isFreshCtx(conn) ? conn.params ?? {} : {};
-    const location = to.replace(/:[^\/]+/g, (g) => (params[g.substr(1)]));
+    const location = Object.keys(params).length > 0
+      ? to.replace(/:[^\/]+/g, (g) => (params[g.substr(1)]))
+      : to;
 
     return new Response(null, {
       status: statusByRedirectType[type],
