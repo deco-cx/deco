@@ -639,7 +639,7 @@
           "items": {
             "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
           },
-          "title": "Section[]"
+          "title": "Page Sections"
         },
         {
           "title": "Page Variant",
