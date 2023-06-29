@@ -3,6 +3,8 @@ export interface Props {
   traffic: number;
 }
 
+export const unstable = true;
+
 /**
  * @title Random Matcher
  */

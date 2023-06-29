@@ -8,6 +8,7 @@ import { context } from "$live/live.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
+import { getSetCookies } from "std/http/mod.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -93,6 +94,14 @@ export const handler = async (
       [400, 404, 500].includes(initialResponse.status)
     ) {
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
+    }
+
+    // if there's no set cookie it means that none unstable matcher was evaluated
+    if (
+      Object.keys(getSetCookies(newHeaders)).length === 0 &&
+      Deno.env.has("DECO_ANONYMOUS_CACHE")
+    ) {
+      newHeaders.set("cache-control", "public, max-age=10");
     }
 
     const newResponse = new Response(initialResponse.body, {
