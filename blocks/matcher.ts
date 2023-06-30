@@ -133,15 +133,20 @@ const matcherBlock: Block<
         let uniqueId = "";
         // from last to first and stop in the first resolvable
         // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
+        const charByType = {
+          "resolvable": "@",
+          "prop": ".",
+        };
         for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
-          const chain = httpCtx.resolveChain[i];
-          if (chain.type === "prop" || chain.type === "resolvable") {
-            hasher.hash(`${chain.value}`);
-            uniqueId = (`${chain.value}${uniqueId.length > 0 ? "," : ""}`) +
+          const { type, value } = httpCtx.resolveChain[i];
+          if (type === "prop" || type === "resolvable") {
+            hasher.hash(`${value}`);
+            uniqueId =
+              (`${value}${uniqueId.length > 0 ? charByType[type] : ""}`) +
               uniqueId;
           }
           // stop on first resolvable
-          if (chain.type === "resolvable") {
+          if (type === "resolvable") {
             break;
           }
         }
