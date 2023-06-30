@@ -69,14 +69,6 @@ const cookieValue = {
   },
 };
 
-const typeAsNumber = (
-  type: FieldResolver["type"],
-): string => ({
-  "prop": "0",
-  "resolver": "1",
-  "resolvable": "2",
-  "dangling": "3",
-}[type]);
 // deno-lint-ignore no-explicit-any
 type MatchFunc<TConfig = any> =
   | ((config: TConfig) => (ctx: MatchContext) => boolean)
