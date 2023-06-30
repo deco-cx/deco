@@ -135,11 +135,11 @@ const matcherBlock: Block<
         // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
         for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
           const chain = httpCtx.resolveChain[i];
-          hasher.hash(typeAsNumber(chain.type));
-          hasher.hash(`${chain.value}`);
-          uniqueId =
-            (`${chain.type}@${chain.value}${uniqueId.length > 0 ? "," : ""}`) +
-            uniqueId;
+          if (chain.type === "prop" || chain.type === "resolvable") {
+            hasher.hash(`${chain.value}`);
+            uniqueId = (`${chain.value}${uniqueId.length > 0 ? "," : ""}`) +
+              uniqueId;
+          }
           // stop on first resolvable
           if (chain.type === "resolvable") {
             break;
