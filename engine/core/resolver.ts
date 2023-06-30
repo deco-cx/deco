@@ -223,7 +223,7 @@ export const withResolveChainOfType = <
   };
 };
 
-export const ALREADY_RESOLVED = "resolved";
+export const RESOLVE_SHORTCIRCUIT = "resolved";
 
 /**
  * wraps an arbitrary data as a resolved object skiping the config resolution algorithm.
@@ -232,7 +232,7 @@ export const asResolved = <T>(data: T, deferred?: boolean): T => {
   return {
     data,
     deferred,
-    __resolveType: ALREADY_RESOLVED,
+    __resolveType: RESOLVE_SHORTCIRCUIT,
   } as T; // trust me;
 };
 
@@ -254,7 +254,7 @@ export const isResolved = <T>(
   resolvable: Resolvable<T> | Resolved<T>,
 ): resolvable is Resolved<T> => {
   return (isResolvable(resolvable)) &&
-    resolvable.__resolveType === ALREADY_RESOLVED;
+    resolvable.__resolveType === RESOLVE_SHORTCIRCUIT;
 };
 
 const resolveTypeOf = <
