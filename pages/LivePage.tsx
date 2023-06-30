@@ -188,6 +188,9 @@ const LivePageContext = createContext<LivePageContext>({
 });
 export const useLivePageContext = () => useContext(LivePageContext);
 
+/**
+ * @title Page
+ */
 export default function LivePage(
   props: Props,
 ): JSX.Element {

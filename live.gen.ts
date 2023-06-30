@@ -40,11 +40,10 @@ import * as $$$$$$$$$6 from "./matchers/MatchRandom.ts";
 import * as $$$$$$$$$7 from "./matchers/MatchDevice.ts";
 import * as $$$$$$$$$8 from "./matchers/MatchEnvironment.ts";
 import * as $$$$$$$$$9 from "./matchers/MatchAlways.ts";
-import * as $$$$$$$$$$0 from "./flags/pageVariants_beta.ts";
-import * as $$$$$$$$$$1 from "./flags/audience.ts";
-import * as $$$$$$$$$$2 from "./flags/multivariate.ts";
-import * as $$$$$$$$$$3 from "./flags/everyone.ts";
-import * as $$$$$$$$$$4 from "./flags/flag.ts";
+import * as $$$$$$$$$$0 from "./flags/audience.ts";
+import * as $$$$$$$$$$1 from "./flags/multivariate.ts";
+import * as $$$$$$$$$$2 from "./flags/everyone.ts";
+import * as $$$$$$$$$$3 from "./flags/flag.ts";
 import * as $$$$$$$$$$$0 from "./actions/workflows/start.ts";
 import * as $$$$$$$$$$$1 from "./actions/workflows/cancel.ts";
 import * as $$$$$$$$$$$2 from "./actions/workflows/signal.ts";
@@ -103,11 +102,10 @@ const manifest = {
     "$live/matchers/MatchUserAgent.ts": $$$$$$$$$1,
   },
   "flags": {
-    "$live/flags/audience.ts": $$$$$$$$$$1,
-    "$live/flags/everyone.ts": $$$$$$$$$$3,
-    "$live/flags/flag.ts": $$$$$$$$$$4,
-    "$live/flags/multivariate.ts": $$$$$$$$$$2,
-    "$live/flags/pageVariants_beta.ts": $$$$$$$$$$0,
+    "$live/flags/audience.ts": $$$$$$$$$$0,
+    "$live/flags/everyone.ts": $$$$$$$$$$2,
+    "$live/flags/flag.ts": $$$$$$$$$$3,
+    "$live/flags/multivariate.ts": $$$$$$$$$$1,
   },
   "actions": {
     "$live/actions/workflows/cancel.ts": $$$$$$$$$$$1,

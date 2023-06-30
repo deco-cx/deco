@@ -42,7 +42,6 @@
               "$live/flags/everyone.ts",
               "$live/flags/flag.ts",
               "$live/flags/multivariate.ts",
-              "$live/flags/pageVariants_beta.ts",
               "$live/actions/workflows/cancel.ts",
               "$live/actions/workflows/run.ts",
               "$live/actions/workflows/signal.ts",
@@ -642,7 +641,7 @@
           "title": "Page Sections"
         },
         {
-          "title": "Page Variant",
+          "title": "Variant",
           "type": "object",
           "allOf": [
             {
@@ -656,9 +655,9 @@
             "__resolveType": {
               "type": "string",
               "enum": [
-                "$live/flags/pageVariants_beta.ts"
+                "$live/flags/multivariate.ts"
               ],
-              "default": "$live/flags/pageVariants_beta.ts"
+              "default": "$live/flags/multivariate.ts"
             }
           }
         }
@@ -913,35 +912,30 @@
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hEZXZpY2UudHM=@Props": {
       "type": "object",
       "properties": {
-        "devices": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "type": "string",
-                "const": "mobile",
-                "default": "mobile"
-              },
-              {
-                "type": "string",
-                "const": "tablet",
-                "default": "tablet"
-              },
-              {
-                "type": "string",
-                "const": "desktop",
-                "default": "desktop"
-              }
-            ],
-            "type": "string"
-          },
-          "title": "Devices"
+        "mobile": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "title": "Mobile"
+        },
+        "tablet": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "title": "Tablet"
+        },
+        "desktop": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "title": "Desktop"
         }
       },
-      "required": [
-        "devices"
-      ],
-      "title": "$live/matchers/MatchDevice.ts@Props"
+      "required": [],
+      "title": "{{#mobile}}Mobile{{/mobile}} {{#tablet}}Tablet{{/tablet}} {{#desktop}}Desktop{{/desktop}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hFbnZpcm9ubWVudC50cw==@Props": {
       "type": "object",
@@ -966,7 +960,7 @@
       "required": [
         "environment"
       ],
-      "title": "$live/matchers/MatchEnvironment.ts@Props"
+      "title": "{{environment}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz@Props": {
       "type": "object",
@@ -987,7 +981,7 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchHost.ts@Props"
+      "title": "{{includes}} {{match}}"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]": {
       "type": "array",
@@ -1024,7 +1018,7 @@
         "op",
         "matchers"
       ],
-      "title": "$live/matchers/MatchMulti.ts@Props"
+      "title": "Combined options with {{op}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props": {
       "type": "object",
@@ -1037,7 +1031,7 @@
       "required": [
         "traffic"
       ],
-      "title": "$live/matchers/MatchRandom.ts@Props"
+      "title": "ABTest {{percentage traffic}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props": {
       "type": "object",
@@ -1050,7 +1044,7 @@
       "required": [
         "siteId"
       ],
-      "title": "$live/matchers/MatchSite.ts@Props"
+      "title": "{{siteId}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props": {
       "type": "object",
@@ -1071,7 +1065,7 @@
         }
       },
       "required": [],
-      "title": "$live/matchers/MatchUserAgent.ts@Props"
+      "title": "{{includes}} {{match}}"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",
@@ -1136,54 +1130,16 @@
       ],
       "title": "$live/blocks/flag.ts@FlagObj"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant": {
-      "type": "object",
-      "properties": {
-        "rule": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
-          "title": "Rule"
-        },
-        "value": {
-          "title": "Value"
-        }
-      },
-      "required": [
-        "rule",
-        "value"
-      ],
-      "title": "Variant"
-    },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant[]": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant"
-      },
-      "title": "Variant[]"
-    },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag": {
-      "type": "object",
-      "properties": {
-        "variants": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant[]",
-          "minItems": 1,
-          "title": "Variants"
-        }
-      },
-      "required": [
-        "variants"
-      ],
-      "title": "Multivariate"
-    },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[]": {
       "type": "object",
       "properties": {
         "rule": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher",
-          "title": "Rule"
+          "title": "Condition"
         },
         "value": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
-          "title": "Value"
+          "title": "Content"
         }
       },
       "required": [
@@ -1606,7 +1562,7 @@
       }
     },
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4": {
-      "title": "$live/pages/LivePage.tsx",
+      "title": "Page",
       "type": "object",
       "allOf": [
         {
@@ -1999,28 +1955,7 @@
       }
     },
     "JGxpdmUvZmxhZ3MvbXVsdGl2YXJpYXRlLnRz": {
-      "title": "Multivariate Option",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/flags/multivariate.ts"
-          ],
-          "default": "$live/flags/multivariate.ts"
-        }
-      }
-    },
-    "JGxpdmUvZmxhZ3MvcGFnZVZhcmlhbnRzX2JldGEudHM=": {
-      "title": "Page Variant",
+      "title": "Variant",
       "type": "object",
       "allOf": [
         {
@@ -2034,9 +1969,9 @@
         "__resolveType": {
           "type": "string",
           "enum": [
-            "$live/flags/pageVariants_beta.ts"
+            "$live/flags/multivariate.ts"
           ],
-          "default": "$live/flags/pageVariants_beta.ts"
+          "default": "$live/flags/multivariate.ts"
         }
       }
     },
@@ -2281,9 +2216,6 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvZmxhZ3MvbXVsdGl2YXJpYXRlLnRz"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvZmxhZ3MvcGFnZVZhcmlhbnRzX2JldGEudHM="
         }
       ]
     },

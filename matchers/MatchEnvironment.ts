@@ -1,3 +1,6 @@
+/**
+ * @title {{environment}}
+ */
 export interface Props {
   environment: "production" | "development";
 }

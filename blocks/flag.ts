@@ -22,7 +22,13 @@ export interface FlagObj<T = unknown> {
  * @title Variant
  */
 export interface Variant<T> {
+  /**
+   * @title Condition
+   */
   rule: Matcher;
+  /**
+   * @title Content
+   */
   value: T;
 }
 

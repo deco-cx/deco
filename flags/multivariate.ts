@@ -1,17 +1,18 @@
 import { MultivariateFlag, Variant } from "$live/blocks/flag.ts";
+import { Section } from "$live/blocks/section.ts";
 import { asResolved } from "$live/engine/core/resolver.ts";
 
 /**
  * @title Multivariate
  */
-export type MultivariateProps<T> = MultivariateFlag<T>;
+export type MultivariateProps<T = Section[]> = MultivariateFlag<T>;
 
 /**
- * @title Multivariate Option
+ * @title Variant
  */
-export default function MultivariateFlag<T>(
-  props: MultivariateProps<T>,
-): MultivariateFlag<T> {
+export default function MultivariateFlag(
+  props: MultivariateProps<Section[]>,
+): MultivariateFlag<Section[]> {
   return props;
 }
 
