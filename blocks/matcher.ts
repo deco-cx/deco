@@ -83,6 +83,11 @@ export interface MatcherModule extends
   > {
   sticky?: MatcherStickiness;
 }
+
+const charByType = {
+  "resolvable": "@",
+  "prop": ".",
+};
 const matcherBlock: Block<
   BlockModule<
     MatchFunc,
@@ -120,53 +125,54 @@ const matcherBlock: Block<
     const respHeaders = httpCtx.context.state.response.headers;
     const cacheControl = httpCtx.request.headers.get("Cache-Control");
     const isNoCache = cacheControl === "no-cache";
+    const shouldStickyOnSession = sticky === "session";
     return (ctx: MatchContext) => {
-      try {
-        let uniqueId = "";
-        // from last to first and stop in the first resolvable
-        // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
-        const charByType = {
-          "resolvable": "@",
-          "prop": ".",
-        };
-        for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
-          const { type, value } = httpCtx.resolveChain[i];
-          if (type === "prop" || type === "resolvable") {
-            hasher.hash(`${value}`);
-            uniqueId =
-              (`${value}${uniqueId.length > 0 ? charByType[type] : ""}`) +
-              uniqueId;
-          }
-          // stop on first resolvable
-          if (type === "resolvable") {
-            break;
-          }
+      let uniqueId = "";
+
+      // from last to first and stop in the first resolvable
+      // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
+      for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
+        const { type, value } = httpCtx.resolveChain[i];
+        if (type === "prop" || type === "resolvable") {
+          uniqueId =
+            (`${value}${uniqueId.length > 0 ? charByType[type] : ""}`) +
+            uniqueId;
         }
+        // stop on first resolvable
+        if (type === "resolvable") {
+          break;
+        }
+      }
+      const { [uniqueId]: isEnabled } = matchersOverride.parse(
+        ctx.request,
+      );
+
+      let result = isEnabled;
+      // if it is not sticky then we can run the matcher function
+      if (!shouldStickyOnSession) {
+        result ??= matcherFunc(ctx);
+      } else {
+        hasher.hash(uniqueId);
         const cookieName = `_dcxf_matchers_${hasher.result()}`;
-        const { [uniqueId]: isEnabled } = matchersOverride.parse(
-          ctx.request,
-        );
+        hasher.reset();
         const isMatchFromCookie = isNoCache
           ? undefined
           : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
-
-        const result = isEnabled ?? isMatchFromCookie ?? matcherFunc(ctx);
-        const value = cookieValue.build(uniqueId, result);
-        if (result !== isMatchFromCookie && sticky === "session") {
+        result ??= isMatchFromCookie ?? matcherFunc(ctx);
+        if (result !== isMatchFromCookie) {
           setCookie(respHeaders, {
             name: cookieName,
-            value,
+            value: cookieValue.build(uniqueId, result),
           });
           respHeaders.append("vary", "cookie");
         }
-        respHeaders.append(
-          DECO_MATCHER_HEADER_QS,
-          `${uniqueId}=${result ? 1 : 0}`,
-        );
-        return result;
-      } finally {
-        hasher.reset();
       }
+
+      respHeaders.append(
+        DECO_MATCHER_HEADER_QS,
+        `${uniqueId}=${result ? 1 : 0}`,
+      );
+      return result;
     };
   },
 };
