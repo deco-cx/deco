@@ -19,7 +19,8 @@ export interface FlagObj<T = unknown> {
 }
 
 /**
- * @title Variant
+ * @title {{#beautifySchemaTitle}}{{{rule.__resolveType}}}{{/beautifySchemaTitle}} Variant
+ * @icon flag
  */
 export interface Variant<T> {
   /**
@@ -38,6 +39,7 @@ export interface Variant<T> {
 export interface MultivariateFlag<T = unknown> {
   /**
    * @minItems 1
+   * @addBehavior 1
    */
   variants: Variant<T>[];
 }
