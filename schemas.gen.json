@@ -960,7 +960,7 @@
       "required": [
         "environment"
       ],
-      "title": "{{environment}}"
+      "title": "{{{environment}}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz@Props": {
       "type": "object",
@@ -981,7 +981,7 @@
         }
       },
       "required": [],
-      "title": "{{includes}} {{match}}"
+      "title": "{{{includes}}} {{{match}}}"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]": {
       "type": "array",
@@ -1018,7 +1018,7 @@
         "op",
         "matchers"
       ],
-      "title": "Combined options with {{op}}"
+      "title": "Combined options with {{{op}}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hSYW5kb20udHM=@Props": {
       "type": "object",
@@ -1031,7 +1031,7 @@
       "required": [
         "traffic"
       ],
-      "title": "ABTest {{percentage traffic}}"
+      "title": "ABTest {{{percentage traffic}}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hTaXRlLnRz@Props": {
       "type": "object",
@@ -1044,7 +1044,7 @@
       "required": [
         "siteId"
       ],
-      "title": "{{siteId}}"
+      "title": "{{{siteId}}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hVc2VyQWdlbnQudHM=@Props": {
       "type": "object",
@@ -1065,7 +1065,7 @@
         }
       },
       "required": [],
-      "title": "{{includes}} {{match}}"
+      "title": "{{{includes}}} {{{match}}}"
     },
     "JGxpdmUvZmxhZ3MvYXVkaWVuY2UudHM=@Audience": {
       "type": "object",

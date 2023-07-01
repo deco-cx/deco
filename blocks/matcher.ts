@@ -9,7 +9,6 @@ export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 export type MatchContext<T = {}> = T & {
   siteId: number;
   request: Request;
-  isMatchFromCookie?: boolean;
 };
 
 // Murmurhash3 was chosen because it is fast
@@ -74,13 +73,15 @@ type MatchFunc<TConfig = any> =
   | ((config: TConfig) => boolean)
   | ((config: TConfig, ctx: MatchContext) => boolean);
 
+export type MatcherStickiness = "session" | "none";
+
 export interface MatcherModule extends
   BlockModule<
     MatchFunc,
     boolean | ((ctx: MatchContext) => boolean),
     (ctx: MatchContext) => boolean
   > {
-  unstable?: boolean;
+  sticky?: MatcherStickiness;
 }
 const matcherBlock: Block<
   BlockModule<
@@ -94,7 +95,7 @@ const matcherBlock: Block<
     default: "0",
   },
   adapt: <TConfig = unknown>(
-    { default: func, unstable }: MatcherModule,
+    { default: func, sticky }: MatcherModule,
   ) =>
   (
     $live: TConfig,
@@ -149,9 +150,9 @@ const matcherBlock: Block<
           ? undefined
           : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
 
-        const result = isEnabled ?? matcherFunc({ ...ctx, isMatchFromCookie });
+        const result = isEnabled ?? isMatchFromCookie ?? matcherFunc(ctx);
         const value = cookieValue.build(uniqueId, result);
-        if (result !== isMatchFromCookie && unstable) {
+        if (result !== isMatchFromCookie && sticky === "session") {
           setCookie(respHeaders, {
             name: cookieName,
             value,

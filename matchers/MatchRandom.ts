@@ -1,4 +1,3 @@
-import { MatchContext } from "$live/blocks/matcher.ts";
 /**
  * @title ABTest {{{percentage traffic}}}
  */
@@ -6,18 +5,15 @@ export interface Props {
   traffic: number;
 }
 
-export const unstable = true;
+// once selected the session will reuse the same value
+export const sticky = "session";
 
 /**
  * @title Random Matcher
  */
 const MatchRandom = (
   { traffic }: Props,
-  { isMatchFromCookie }: MatchContext,
 ) => {
-  if (isMatchFromCookie !== undefined) {
-    return isMatchFromCookie;
-  }
   return Math.random() < traffic;
 };
 
