@@ -1,6 +1,5 @@
 import { HttpContext } from "$live/blocks/handler.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { FieldResolver } from "$live/engine/core/resolver.ts";
 import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 

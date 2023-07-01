@@ -2,7 +2,7 @@ import { MatchContext } from "$live/blocks/matcher.ts";
 import { UAParser } from "https://esm.sh/ua-parser-js@1.0.35";
 
 /**
- * @title {{.}}
+ * @title {{{.}}}
  */
 export type Device = "mobile" | "tablet" | "desktop";
 

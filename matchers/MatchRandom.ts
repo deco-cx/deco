@@ -1,6 +1,6 @@
 import { MatchContext } from "$live/blocks/matcher.ts";
 /**
- * @title ABTest {{percentage traffic}}
+ * @title ABTest {{{percentage traffic}}}
  */
 export interface Props {
   traffic: number;
