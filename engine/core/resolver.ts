@@ -236,13 +236,15 @@ export const asResolved = <T>(data: T, deferred?: boolean): T => {
   } as T; // trust me;
 };
 
-export type Deferred<T> = {
+export type Deferred<T, TContext extends BaseContext = BaseContext> = {
   _deferred: true;
-  (): PromiseOrValue<T>;
+  (partialCtx?: Partial<TContext>): PromiseOrValue<T>;
 };
 
-export const isDeferred = <T>(f: Deferred<T> | unknown): f is Deferred<T> => {
-  return typeof f === "function" && (f as Deferred<T>)?._deferred;
+export const isDeferred = <T, TContext extends BaseContext = BaseContext>(
+  f: Deferred<T, TContext> | unknown,
+): f is Deferred<T, TContext> => {
+  return typeof f === "function" && (f as Deferred<T, TContext>)?._deferred;
 };
 
 export interface Resolved<T> {

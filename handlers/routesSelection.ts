@@ -1,5 +1,9 @@
 import { ResolveOptions } from "$live/engine/core/mod.ts";
-import { isDeferred, Resolvable } from "$live/engine/core/resolver.ts";
+import {
+  BaseContext,
+  isDeferred,
+  Resolvable,
+} from "$live/engine/core/resolver.ts";
 import { isAwaitable } from "$live/engine/core/utils.ts";
 import { Route, Routes } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
@@ -60,13 +64,14 @@ export const router = (
         pagePath: routePath,
       };
 
-      const resolvedOrPromise = isDeferred<Handler>(handler)
-        ? handler()
-        : context.releaseResolver!.resolve<Handler>(
-          handler,
-          { context: ctx, request: req },
-          configs,
-        );
+      const resolvedOrPromise =
+        isDeferred<Handler, { context: typeof ctx } & BaseContext>(handler)
+          ? handler({ context: ctx })
+          : context.releaseResolver!.resolve<Handler>(
+            handler,
+            { context: ctx, request: req },
+            configs,
+          );
 
       const end = configs?.monitoring?.t.start("load-data");
       const hand = isAwaitable(resolvedOrPromise)

@@ -33,8 +33,12 @@ export default {
     ctx: FreshContext,
   ) => {
     if (props?.deferred && props?.data) {
-      const deferred = () =>
-        ctx.resolve(props?.data, { resolveChain: ctx.resolveChain });
+      const deferred = (tCtx: Partial<FreshContext>) =>
+        ctx.resolve(
+          props?.data,
+          { resolveChain: ctx.resolveChain },
+          tCtx ?? {},
+        );
       deferred._deferred = true;
       return deferred;
     }
