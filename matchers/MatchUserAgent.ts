@@ -1,5 +1,8 @@
 import { MatchContext } from "$live/blocks/matcher.ts";
 
+/**
+ * @title {{{includes}}} {{{match}}}
+ */
 export interface Props {
   includes?: string;
   match?: string;

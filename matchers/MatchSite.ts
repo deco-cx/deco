@@ -1,5 +1,8 @@
 import { MatchContext } from "$live/blocks/matcher.ts";
 
+/**
+ * @title {{{siteId}}}
+ */
 export interface Props {
   siteId: number;
 }

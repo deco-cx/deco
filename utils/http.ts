@@ -140,7 +140,7 @@ export const mergeCacheControl = (
 };
 
 export const defaultHeaders = {
-  ["x-powered-by"]: `live.ts@${meta.version}`,
+  ["x-powered-by"]: `deco@${meta.version}`,
 };
 
 export function setCSPHeaders(

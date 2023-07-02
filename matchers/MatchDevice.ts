@@ -1,8 +1,31 @@
 import { MatchContext } from "$live/blocks/matcher.ts";
 import { UAParser } from "https://esm.sh/ua-parser-js@1.0.35";
 
+/**
+ * @title {{{.}}}
+ */
 export type Device = "mobile" | "tablet" | "desktop";
+
+/**
+ * @title {{#mobile}}Mobile{{/mobile}} {{#tablet}}Tablet{{/tablet}} {{#desktop}}Desktop{{/desktop}}
+ */
 export interface Props {
+  /**
+   * @title Mobile
+   */
+  mobile?: boolean;
+  /**
+   * @title Tablet
+   */
+  tablet?: boolean;
+  /**
+   * @title Desktop
+   */
+  desktop?: boolean;
+}
+
+// backwards compatibility
+interface OldProps {
   devices: Device[];
 }
 
@@ -20,9 +43,13 @@ const ideviceToDevice: Record<string, Device> = {
  * @description Matches the user based on the used device, options are: mobile, desktop or tablet.
  */
 const MatchDevice = (
-  { devices }: Props,
+  { mobile, tablet, desktop, ...rest }: Props,
   { request }: MatchContext,
 ) => {
+  const devices = (rest as OldProps)?.devices ?? [];
+  mobile && devices.push("mobile");
+  tablet && devices.push("tablet");
+  desktop && devices.push("desktop");
   const url = new URL(request.url);
   const ua: string | null = request.headers.get("user-agent") || "";
   // use cf hint at first and then fallback to user-agent parser.

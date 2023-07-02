@@ -28,7 +28,18 @@ export default {
     }
     return result;
   },
-  resolved: <T, R extends { data: T }>(props: R) => props?.data,
+  resolved: <T, R extends { data: T; deferred?: boolean }>(
+    props: R,
+    ctx: FreshContext,
+  ) => {
+    if (props?.deferred && props?.data) {
+      const deferred = () =>
+        ctx.resolve(props?.data, { resolveChain: ctx.resolveChain });
+      deferred._deferred = true;
+      return deferred;
+    }
+    return props?.data;
+  },
   preview: async (
     { block, props }: BlockInvocation,
     { resolvables, resolvers, resolve },

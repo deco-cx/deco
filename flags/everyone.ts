@@ -1,4 +1,5 @@
 import { FlagObj } from "$live/blocks/flag.ts";
+import { asResolved } from "$live/engine/core/resolver.ts";
 import Audience, { Route, Routes } from "$live/flags/audience.ts";
 import MatchAlways from "$live/matchers/MatchAlways.ts";
 
@@ -29,7 +30,7 @@ export const onBeforeResolveProps = <T extends { routes?: Routes }>(
       newRoutes.routes!.push({
         ...route,
         handler: {
-          value: { __resolveType: "resolved", data: route.handler.value },
+          value: asResolved(route.handler.value, true),
         },
       });
     }

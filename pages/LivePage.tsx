@@ -19,6 +19,10 @@ import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
 
 /**
+ * @title Page Sections
+ */
+export type Sections = Section[];
+/**
  * @titleBy name
  */
 export interface Props {
@@ -26,7 +30,7 @@ export interface Props {
   path?: string;
   // TODO: Bring it back as soon as possible;
   // layout?: Page;
-  sections: Section[];
+  sections: Sections;
 }
 
 type Mode = "default" | "edit";
@@ -136,10 +140,11 @@ const renderPage = (
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode: Mode = "default",
 ): JSX.Element => {
-  const validSections =
-    maybeSections?.filter((section) =>
+  const validSections = Array.isArray(maybeSections)
+    ? maybeSections?.filter((section) =>
       typeof section?.Component === "function"
-    ) ?? [];
+    ) ?? []
+    : [];
   // TODO: Uncomment when bring bag layout props
   // const layoutProps = layout?.props;
   const layoutProps = undefined;
@@ -183,6 +188,9 @@ const LivePageContext = createContext<LivePageContext>({
 });
 export const useLivePageContext = () => useContext(LivePageContext);
 
+/**
+ * @title Page
+ */
 export default function LivePage(
   props: Props,
 ): JSX.Element {

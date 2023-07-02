@@ -8,6 +8,7 @@ import { ResolveOptions } from "$live/engine/core/mod.ts";
 import {
   isAwaitable,
   notUndefined,
+  PromiseOrValue,
   UnPromisify,
 } from "$live/engine/core/utils.ts";
 import { identity } from "$live/utils/object.ts";
@@ -222,16 +223,26 @@ export const withResolveChainOfType = <
   };
 };
 
-export const ALREADY_RESOLVED = "resolved";
+export const RESOLVE_SHORTCIRCUIT = "resolved";
 
 /**
  * wraps an arbitrary data as a resolved object skiping the config resolution algorithm.
  */
-export const asResolved = <T>(data: T): T => {
+export const asResolved = <T>(data: T, deferred?: boolean): T => {
   return {
     data,
-    __resolveType: ALREADY_RESOLVED,
+    deferred,
+    __resolveType: RESOLVE_SHORTCIRCUIT,
   } as T; // trust me;
+};
+
+export type Deferred<T> = {
+  _deferred: true;
+  (): PromiseOrValue<T>;
+};
+
+export const isDeferred = <T>(f: Deferred<T> | unknown): f is Deferred<T> => {
+  return typeof f === "function" && (f as Deferred<T>)?._deferred;
 };
 
 export interface Resolved<T> {
@@ -243,7 +254,7 @@ export const isResolved = <T>(
   resolvable: Resolvable<T> | Resolved<T>,
 ): resolvable is Resolved<T> => {
   return (isResolvable(resolvable)) &&
-    resolvable.__resolveType === ALREADY_RESOLVED;
+    resolvable.__resolveType === RESOLVE_SHORTCIRCUIT;
 };
 
 const resolveTypeOf = <
@@ -283,6 +294,7 @@ const resolvePropsWithHints = async <
   const onBeforeResolveProps = type && type in _ctx.resolvers
     ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
     : identity;
+
   const props = onBeforeResolveProps(_thisProps as T);
   const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 

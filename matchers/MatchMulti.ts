@@ -1,5 +1,8 @@
 import { MatchContext, Matcher } from "$live/blocks/matcher.ts";
 
+/**
+ * @title Combined options with {{{op}}}
+ */
 export interface Props {
   op: "or" | "and";
   matchers: Matcher[];

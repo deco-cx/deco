@@ -2,6 +2,7 @@ import { HttpContext } from "$live/blocks/handler.ts";
 import { Matcher } from "$live/blocks/matcher.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { isDeferred } from "$live/engine/core/resolver.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
 import { context } from "$live/live.ts";
 import {
@@ -10,17 +11,49 @@ import {
 } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
-// TODO Inheritance flag is not working Author Marcos V. Candeia
 export interface FlagObj<T = unknown> {
   matcher: Matcher;
   name: string;
   true: T;
   false: T;
-  // date && percentage
 }
 
+/**
+ * @title {{#beautifySchemaTitle}}{{{rule.__resolveType}}}{{/beautifySchemaTitle}} Variant
+ * @icon flag
+ */
+export interface Variant<T> {
+  /**
+   * @title Condition
+   */
+  rule: Matcher;
+  /**
+   * @title Content
+   */
+  value: T;
+}
+
+/**
+ * @title Multivariate Flag
+ */
+export interface MultivariateFlag<T = unknown> {
+  /**
+   * @minItems 1
+   * @addBehavior 1
+   */
+  variants: Variant<T>[];
+}
+
+const isMultivariate = (
+  f: FlagObj | MultivariateFlag,
+): f is MultivariateFlag => {
+  return (f as MultivariateFlag).variants !== undefined;
+};
+
 // deno-lint-ignore no-explicit-any
-export type FlagFunc<TConfig = any> = (c: TConfig) => FlagObj;
+export type FlagFunc<TConfig = any> = (
+  c: TConfig,
+) => FlagObj | MultivariateFlag;
 
 const flagBlock: Block<BlockModule<FlagFunc>> = {
   type: "flags",
@@ -37,6 +70,12 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
   ($live: TConfig, { request }: HttpContext) => {
     const flag = func.default($live);
     const ctx = { request, siteId: context.siteId };
+    if (isMultivariate(flag)) {
+      const value = (flag?.variants ?? []).find((variant) =>
+        typeof variant?.rule === "function" && variant?.rule(ctx)
+      )?.value ?? (flag?.variants ?? [])[flag?.variants?.length - 1];
+      return isDeferred(value) ? value() : value;
+    }
     const matchValue = typeof flag?.matcher === "function"
       ? flag.matcher(ctx)
       : false;
