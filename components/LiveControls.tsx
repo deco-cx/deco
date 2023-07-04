@@ -277,6 +277,8 @@ const main = () => {
 
         if (allowList.includes(event.origin)) {
           eval(data.args.script);
+        } else {
+          console.warn('Origin', event.origin, 'not allowed to inject scripts')
         }
 
         return;
