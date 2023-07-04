@@ -32,7 +32,7 @@ type LiveEvent = {
   args: "activate" | "deactivate";
 } | {
   type: "editor::rerender";
-  args: { url: string; props: string; snippet?: string };
+  args: { url: string; props: string };
 } | {
   type: "editor::focus";
   args: { index: number };
