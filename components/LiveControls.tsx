@@ -268,7 +268,18 @@ const main = () => {
         return;
       }
       case "editor::inject": {
-        return eval(data.args.script);
+        const allowList = [
+          "http://localhost:8000",
+          "http://localhost:4200",
+          "https://deco.cx",
+          "https://admin.deco.cx",
+        ];
+
+        if (allowList.includes(event.origin)) {
+          eval(data.args.script);
+        }
+
+        return;
       }
     }
   };
