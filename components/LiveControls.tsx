@@ -268,20 +268,7 @@ const main = () => {
         return;
       }
       case "editor::inject": {
-        const allowList = [
-          "http://localhost:8000",
-          "http://localhost:4200",
-          "https://deco.cx",
-          "https://admin.deco.cx",
-        ];
-
-        if (allowList.includes(event.origin)) {
-          eval(data.args.script);
-        } else {
-          console.warn('Origin', event.origin, 'not allowed to inject scripts')
-        }
-
-        return;
+        return eval(data.args.script);
       }
     }
   };
