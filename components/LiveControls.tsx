@@ -32,10 +32,13 @@ type LiveEvent = {
   args: "activate" | "deactivate";
 } | {
   type: "editor::rerender";
-  args: { url: string; props: string };
+  args: { url: string; props: string; snippet?: string };
 } | {
   type: "editor::focus";
   args: { index: number };
+} | {
+  type: "editor::inject";
+  args: { script: string };
 };
 
 // TODO: Move inspect-vscode code to here so we don't need to do this stringification
@@ -97,15 +100,6 @@ const main = () => {
     left: 50%;
   }
   `;
-
-  // deno-lint-ignore no-explicit-any
-  const isLiveEvent = (data: any): data is LiveEvent =>
-    [
-      "scrollToComponent",
-      "DOMInspector",
-      "editor::rerender",
-      "editor::focus",
-    ].includes(data?.type);
 
   const onKeydown = (event: KeyboardEvent) => {
     // in case loaded in iframe, avoid redirecting to editor while in editor
@@ -228,10 +222,6 @@ const main = () => {
   const onMessage = (event: MessageEvent<LiveEvent>) => {
     const { data } = event;
 
-    if (!isLiveEvent(data)) {
-      return;
-    }
-
     switch (data.type) {
       case "scrollToComponent": {
         const findById = document
@@ -276,6 +266,9 @@ const main = () => {
         }
 
         return;
+      }
+      case "editor::inject": {
+        return eval(data.args.script);
       }
     }
   };
