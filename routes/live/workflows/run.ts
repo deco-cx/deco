@@ -1,16 +1,19 @@
+import { HandlerContext } from "$fresh/server.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
+import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
 import {
   Arg,
   Command,
+  fetchPublicKey,
   InvalidSignatureError,
   Metadata,
   RunRequest,
-  fetchPublicKey,
   verifySignature,
   workflowRemoteRunner,
 } from "$live/deps.ts";
-import { asResolved, isResolved } from "$live/engine/core/resolver.ts";
-import { workflowServiceInfo } from "../../commons/workflows/serviceInfo.ts";
+import { isResolved } from "$live/engine/core/resolver.ts";
+import { LiveConfig } from "$live/mod.ts";
+import { LiveState } from "$live/types.ts";
 
 export type Props = RunRequest<Arg, { workflow: Workflow } & Metadata>;
 
@@ -52,7 +55,7 @@ export const isValidRequestFromDurable = async (req: Request) => {
 /**
  * @description Proceed the workflow execution based on the current state of the workflow.
  */
-export default async function runWorkflow(
+async function runWorkflow(
   props: Props,
   req: Request,
 ): Promise<Command> {
@@ -61,12 +64,21 @@ export default async function runWorkflow(
   const results = isResolved(props.results)
     ? props.results.data
     : props.results;
+
   await verifyWithCurrentKeyOrRefetch(req);
   const { metadata: { workflow } } = props;
   const handler = workflowRemoteRunner(workflow, WorkflowContext);
   return handler({ ...props, results });
 }
 
-export const onBeforeResolveProps = (props: Props) => {
-  return { ...props, results: asResolved(props.results) };
+export const handler = async (
+  req: Request,
+  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
+) => {
+  const props: Props = await req.json();
+  const metadata = await ctx.state.resolve(props?.metadata ?? {});
+  return new Response(
+    JSON.stringify(await runWorkflow({ ...props, metadata }, req)),
+    { status: 200 },
+  );
 };

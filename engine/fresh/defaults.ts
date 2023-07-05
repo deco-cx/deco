@@ -32,7 +32,6 @@ export default {
     props: R,
     ctx: FreshContext,
   ) => {
-    console.log("PASSOU AQUI RESOLVED");
     if (props?.deferred && props?.data) {
       const deferred = (tCtx: Partial<FreshContext>) =>
         ctx.resolve(

@@ -72,7 +72,7 @@ export default async function startWorkflow<
   const { id, args } = props;
   const [service, serviceUrl] = workflowServiceInfo();
   const payload = {
-    alias: `${service}/live/invoke/$live/actions/workflows/run.ts`,
+    alias: `${service}/live/workflows/run`,
     id,
     input: args,
     metadata: {
