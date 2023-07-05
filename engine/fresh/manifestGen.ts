@@ -45,6 +45,12 @@ export const defaultRoutes: {
 }[] = [
   {
     block: "routes",
+    from: "$live/routes/live/workflows/run.ts",
+    key: "./routes/live/workflows/run.ts",
+    ref: "$live_workflows",
+  },
+  {
+    block: "routes",
     from: "$live/routes/_middleware.ts",
     key: "./routes/_middleware.ts",
     ref: "$live_middleware",

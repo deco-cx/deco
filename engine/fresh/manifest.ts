@@ -153,6 +153,7 @@ const buildRuntime = (
     (invk, [key, mod]) => {
       const invokeFunc = mod.invoke ?? blk.defaultInvoke;
       if (invokeFunc) {
+        invokeFunc.onBeforeResolveProps = mod.onBeforeResolveProps;
         return { ...invk, [`${INVOKE_PREFIX_KEY}${key}`]: invokeFunc };
       }
       return invk;

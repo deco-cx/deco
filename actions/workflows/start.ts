@@ -4,7 +4,10 @@ import {
   WorkflowFn,
   WorkflowMetadata,
 } from "$live/blocks/workflow.ts";
-import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import {
+  signedFetch,
+  workflowServiceInfo,
+} from "$live/commons/workflows/serviceInfo.ts";
 import {
   toExecution,
   WorkflowExecution,
@@ -69,7 +72,7 @@ export default async function startWorkflow<
   const { id, args } = props;
   const [service, serviceUrl] = workflowServiceInfo();
   const payload = {
-    alias: `${service}/live/invoke/$live/actions/workflows/run.ts`,
+    alias: `${service}/live/workflows/run`,
     id,
     input: args,
     metadata: {
@@ -78,7 +81,7 @@ export default async function startWorkflow<
       __resolveType: "resolve",
     },
   };
-  const resp = await fetch(`${serviceUrl}/executions`, {
+  const resp = await signedFetch(`${serviceUrl}/executions`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

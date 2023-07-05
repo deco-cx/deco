@@ -11,12 +11,13 @@ import * as $$$$1 from "./routes/live/inspect/[...block].ts";
 import * as $$$$2 from "./routes/live/invoke/[...key].ts";
 import * as $$$$3 from "./routes/live/invoke/index.ts";
 import * as $$$$4 from "./routes/live/editorData.ts";
-import * as $$$$5 from "./routes/live/workbench.ts";
-import * as $$$$6 from "./routes/live/previews/index.tsx";
-import * as $$$$7 from "./routes/live/previews/[...block].tsx";
-import * as $$$$8 from "./routes/live/release.ts";
-import * as $$$$9 from "./routes/live/_meta.ts";
-import * as $$$$10 from "./routes/[...catchall].tsx";
+import * as $$$$5 from "./routes/live/workflows/run.ts";
+import * as $$$$6 from "./routes/live/workbench.ts";
+import * as $$$$7 from "./routes/live/previews/index.tsx";
+import * as $$$$8 from "./routes/live/previews/[...block].tsx";
+import * as $$$$9 from "./routes/live/release.ts";
+import * as $$$$10 from "./routes/live/_meta.ts";
+import * as $$$$11 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "./handlers/routesSelection.ts";
 import * as $$$$$$1 from "./handlers/router.ts";
 import * as $$$$$$2 from "./handlers/devPage.ts";
@@ -47,7 +48,6 @@ import * as $$$$$$$$$$3 from "./flags/flag.ts";
 import * as $$$$$$$$$$$0 from "./actions/workflows/start.ts";
 import * as $$$$$$$$$$$1 from "./actions/workflows/cancel.ts";
 import * as $$$$$$$$$$$2 from "./actions/workflows/signal.ts";
-import * as $$$$$$$$$$$3 from "./actions/workflows/run.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
 
 const manifest = {
@@ -58,17 +58,18 @@ const manifest = {
   },
   "routes": {
     "./routes/_middleware.ts": $$$$0,
-    "./routes/[...catchall].tsx": $$$$10,
+    "./routes/[...catchall].tsx": $$$$11,
     "./routes/index.tsx": $live_catchall,
-    "./routes/live/_meta.ts": $$$$9,
+    "./routes/live/_meta.ts": $$$$10,
     "./routes/live/editorData.ts": $$$$4,
     "./routes/live/inspect/[...block].ts": $$$$1,
     "./routes/live/invoke/[...key].ts": $$$$2,
     "./routes/live/invoke/index.ts": $$$$3,
-    "./routes/live/previews/[...block].tsx": $$$$7,
-    "./routes/live/previews/index.tsx": $$$$6,
-    "./routes/live/release.ts": $$$$8,
-    "./routes/live/workbench.ts": $$$$5,
+    "./routes/live/previews/[...block].tsx": $$$$8,
+    "./routes/live/previews/index.tsx": $$$$7,
+    "./routes/live/release.ts": $$$$9,
+    "./routes/live/workbench.ts": $$$$6,
+    "./routes/live/workflows/run.ts": $$$$5,
   },
   "handlers": {
     "$live/handlers/devPage.ts": $$$$$$2,
@@ -109,7 +110,6 @@ const manifest = {
   },
   "actions": {
     "$live/actions/workflows/cancel.ts": $$$$$$$$$$$1,
-    "$live/actions/workflows/run.ts": $$$$$$$$$$$3,
     "$live/actions/workflows/signal.ts": $$$$$$$$$$$2,
     "$live/actions/workflows/start.ts": $$$$$$$$$$$0,
   },
