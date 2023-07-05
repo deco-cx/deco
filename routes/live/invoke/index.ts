@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/src/server/types.ts";
-import { asResolved, Resolvable } from "$live/engine/core/resolver.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import dfs from "$live/engine/fresh/defaults.ts";
 import type { Manifest } from "$live/live.gen.ts";
@@ -211,7 +211,7 @@ export const payloadForFunc = (
 ) => ({
   keys: func.select,
   obj: {
-    props: asResolved(func.props),
+    props: func.props,
     block: sanitizer(func.key),
     __resolveType: dfs["invoke"].name,
   },

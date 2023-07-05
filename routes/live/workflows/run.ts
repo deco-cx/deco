@@ -2,16 +2,15 @@ import { HandlerContext } from "$fresh/server.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
 import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
 import {
-  Arg,
-  Command,
-  fetchPublicKey,
-  InvalidSignatureError,
-  Metadata,
-  RunRequest,
-  verifySignature,
-  workflowRemoteRunner,
+    Arg,
+    Command,
+    InvalidSignatureError,
+    Metadata,
+    RunRequest,
+    fetchPublicKey,
+    verifySignature,
+    workflowRemoteRunner,
 } from "$live/deps.ts";
-import { isResolved } from "$live/engine/core/resolver.ts";
 import { LiveConfig } from "$live/mod.ts";
 import { LiveState } from "$live/types.ts";
 
@@ -59,16 +58,10 @@ async function runWorkflow(
   props: Props,
   req: Request,
 ): Promise<Command> {
-  // TODO (mcandeia) for some reason this is not properly working.
-  // This should not be necessary since onBeforeResolveProps should preemptively shortcircuit the results resolution.
-  const results = isResolved(props.results)
-    ? props.results.data
-    : props.results;
-
   await verifyWithCurrentKeyOrRefetch(req);
   const { metadata: { workflow } } = props;
   const handler = workflowRemoteRunner(workflow, WorkflowContext);
-  return handler({ ...props, results });
+  return handler(props);
 }
 
 export const handler = async (

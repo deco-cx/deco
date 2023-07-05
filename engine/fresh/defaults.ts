@@ -1,4 +1,4 @@
-import { asResolved, ResolverMap } from "$live/engine/core/resolver.ts";
+import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { FreshContext } from "$live/engine/fresh/manifest.ts";
 import { DotNestedKeys, pickPaths } from "$live/utils/object.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
@@ -107,17 +107,17 @@ export default {
         // recursive call
         return await resolve({
           __resolveType: "invoke",
-          props: asResolved({
-            ...savedprops,
-            ...props,
-          }),
+          props: {
+            props: [{ __resolveType: "resolved", data: props }, savedprops],
+            __resolveType: "mergeProps",
+          },
           block: __resolveType,
         });
       }
       return await resolve({
         ...props,
         __resolveType,
-      }, { propsIsResolved: false });
+      }, { propsIsResolved: true });
     } catch (err) {
       if (!(err instanceof HttpError)) {
         throw new HttpError(
