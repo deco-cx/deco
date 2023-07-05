@@ -1,4 +1,4 @@
-import { ResolverMap } from "$live/engine/core/resolver.ts";
+import { asResolved, ResolverMap } from "$live/engine/core/resolver.ts";
 import { FreshContext } from "$live/engine/fresh/manifest.ts";
 import { DotNestedKeys, pickPaths } from "$live/utils/object.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
@@ -32,6 +32,7 @@ export default {
     props: R,
     ctx: FreshContext,
   ) => {
+    console.log("PASSOU AQUI RESOLVED");
     if (props?.deferred && props?.data) {
       const deferred = (tCtx: Partial<FreshContext>) =>
         ctx.resolve(
@@ -107,17 +108,17 @@ export default {
         // recursive call
         return await resolve({
           __resolveType: "invoke",
-          props: {
-            props: [{ __resolveType: "resolved", data: props }, savedprops],
-            __resolveType: "mergeProps",
-          },
+          props: asResolved({
+            ...savedprops,
+            ...props,
+          }),
           block: __resolveType,
         });
       }
       return await resolve({
         ...props,
         __resolveType,
-      }, { propsIsResolved: true });
+      }, { propsIsResolved: false });
     } catch (err) {
       if (!(err instanceof HttpError)) {
         throw new HttpError(

@@ -2,13 +2,14 @@ import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
 import {
   Arg,
   Command,
-  fetchPublicKey,
   InvalidSignatureError,
   Metadata,
   RunRequest,
+  fetchPublicKey,
   verifySignature,
   workflowRemoteRunner,
 } from "$live/deps.ts";
+import { asResolved, isResolved } from "$live/engine/core/resolver.ts";
 import { workflowServiceInfo } from "../../commons/workflows/serviceInfo.ts";
 
 export type Props = RunRequest<Arg, { workflow: Workflow } & Metadata>;
@@ -55,8 +56,17 @@ export default async function runWorkflow(
   props: Props,
   req: Request,
 ): Promise<Command> {
+  // TODO (mcandeia) for some reason this is not properly working.
+  // This should not be necessary since onBeforeResolveProps should preemptively shortcircuit the results resolution.
+  const results = isResolved(props.results)
+    ? props.results.data
+    : props.results;
   await verifyWithCurrentKeyOrRefetch(req);
   const { metadata: { workflow } } = props;
   const handler = workflowRemoteRunner(workflow, WorkflowContext);
-  return handler(props);
+  return handler({ ...props, results });
 }
+
+export const onBeforeResolveProps = (props: Props) => {
+  return { ...props, results: asResolved(props.results) };
+};
