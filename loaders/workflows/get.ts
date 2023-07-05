@@ -1,4 +1,7 @@
-import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import {
+  signedFetch,
+  workflowServiceInfo,
+} from "$live/commons/workflows/serviceInfo.ts";
 import {
   toExecution,
   WorkflowExecution,
@@ -15,7 +18,7 @@ export default async function getExecution(
 ): Promise<WorkflowExecution> {
   const [_, svcUrl] = workflowServiceInfo();
 
-  const resp = await fetch(`${svcUrl}/executions/${id}`);
+  const resp = await signedFetch(`${svcUrl}/executions/${id}`);
   if (resp.ok) {
     return toExecution(await resp.json());
   }

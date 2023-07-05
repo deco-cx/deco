@@ -1,4 +1,7 @@
-import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import {
+  signedFetch,
+  workflowServiceInfo,
+} from "$live/commons/workflows/serviceInfo.ts";
 
 export interface Props {
   signal: string;
@@ -14,7 +17,7 @@ export default async function signalWorkflow(
   { signal, payload, executionId }: Props,
 ): Promise<void> {
   const [_, serviceUrl] = workflowServiceInfo();
-  const resp = await fetch(
+  const resp = await signedFetch(
     `${serviceUrl}/executions/${executionId}/signals/${signal}`,
     {
       method: "POST",

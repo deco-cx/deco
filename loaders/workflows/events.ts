@@ -1,4 +1,7 @@
-import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import {
+  signedFetch,
+  workflowServiceInfo,
+} from "$live/commons/workflows/serviceInfo.ts";
 import { WorkflowExecution } from "$live/deps.ts";
 export interface Props {
   id: string;
@@ -16,7 +19,7 @@ export default async function getExecutionEvents(
 ): Promise<WorkflowExecution> {
   const [_, svcUrl] = workflowServiceInfo();
 
-  const resp = await fetch(
+  const resp = await signedFetch(
     `${svcUrl}/executions/${id}/history?page=${page ?? 0}&pageSize=${
       pageSize ?? DEFAULT_PAGE_SIZE
     }`,

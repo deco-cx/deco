@@ -4,7 +4,10 @@ import {
   WorkflowFn,
   WorkflowMetadata,
 } from "$live/blocks/workflow.ts";
-import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import {
+  signedFetch,
+  workflowServiceInfo,
+} from "$live/commons/workflows/serviceInfo.ts";
 import {
   toExecution,
   WorkflowExecution,
@@ -78,7 +81,7 @@ export default async function startWorkflow<
       __resolveType: "resolve",
     },
   };
-  const resp = await fetch(`${serviceUrl}/executions`, {
+  const resp = await signedFetch(`${serviceUrl}/executions`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
