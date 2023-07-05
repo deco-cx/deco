@@ -35,7 +35,7 @@ export interface Props {
 
 type Mode = "default" | "edit";
 
-export function renderSectionFor(mode?: Mode) {
+export function renderSectionFor(mode: Mode, isPreview: boolean) {
   const isEditMode = mode === "edit";
   const Controls = isEditMode ? BlockControls : () => null;
 
@@ -47,6 +47,9 @@ export function renderSectionFor(mode?: Mode) {
       <section
         id={`${metadata?.component}-${idx}`}
         data-manifest-key={metadata?.component}
+        data-resolve-chain={isPreview
+          ? JSON.stringify(metadata?.resolveChain)
+          : undefined}
       >
         <Controls metadata={metadata} />
         <Section {...props} />
@@ -55,7 +58,7 @@ export function renderSectionFor(mode?: Mode) {
   };
 }
 
-export const renderSection = renderSectionFor();
+export const renderSection = renderSectionFor("default", false);
 
 interface UseSlotSection {
   // useSection can be either a `UseSlotSection` or a `Section[]` that is outside a slot.
@@ -139,6 +142,7 @@ const renderPage = (
   { sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode: Mode = "default",
+  isPreview: boolean = false,
 ): JSX.Element => {
   const validSections = Array.isArray(maybeSections)
     ? maybeSections?.filter((section) =>
@@ -151,7 +155,7 @@ const renderPage = (
   const sections = Object.keys(useSlotsFromChild).length > 0
     ? validSections.flatMap(useSlots(useSlotsFromChild))
     : validSections;
-  const _renderSection = renderSectionFor(editMode);
+  const _renderSection = renderSectionFor(editMode, isPreview);
 
   if (layoutProps && isLivePageProps(layoutProps)) {
     const useSlots = indexedBySlotName(
@@ -184,7 +188,7 @@ interface LivePageContext {
   renderSection: ReturnType<typeof renderSectionFor>;
 }
 const LivePageContext = createContext<LivePageContext>({
-  renderSection: renderSectionFor(),
+  renderSection: renderSectionFor("default", false),
 });
 export const useLivePageContext = () => useContext(LivePageContext);
 
@@ -251,12 +255,12 @@ export function Preview(props: Props) {
 
   return (
     <LivePageContext.Provider
-      value={{ renderSection: renderSectionFor(mode) }}
+      value={{ renderSection: renderSectionFor(mode, true) }}
     >
       <Head>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      {renderPage(props, {}, mode)}
+      {renderPage(props, {}, mode, true)}
       {mode === "edit" && <LivePageEditor />}
     </LivePageContext.Provider>
   );
