@@ -48,7 +48,6 @@ import * as $$$$$$$$$$3 from "./flags/flag.ts";
 import * as $$$$$$$$$$$0 from "./actions/workflows/start.ts";
 import * as $$$$$$$$$$$1 from "./actions/workflows/cancel.ts";
 import * as $$$$$$$$$$$2 from "./actions/workflows/signal.ts";
-import * as $$$$$$$$$$$3 from "./actions/workflows/run.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
 
 const manifest = {
@@ -111,7 +110,6 @@ const manifest = {
   },
   "actions": {
     "$live/actions/workflows/cancel.ts": $$$$$$$$$$$1,
-    "$live/actions/workflows/run.ts": $$$$$$$$$$$3,
     "$live/actions/workflows/signal.ts": $$$$$$$$$$$2,
     "$live/actions/workflows/start.ts": $$$$$$$$$$$0,
   },

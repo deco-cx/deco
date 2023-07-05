@@ -43,7 +43,6 @@
               "$live/flags/flag.ts",
               "$live/flags/multivariate.ts",
               "$live/actions/workflows/cancel.ts",
-              "$live/actions/workflows/run.ts",
               "$live/actions/workflows/signal.ts",
               "$live/actions/workflows/start.ts"
             ]
@@ -1191,48 +1190,6 @@
       ],
       "title": "$live/actions/workflows/cancel.ts@Props"
     },
-    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata&e859bd03699c10011ddce6708a032c20": {
-      "allOf": [
-        {
-          "type": "object",
-          "properties": {
-            "workflow": {
-              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@Workflow",
-              "title": "Workflow"
-            }
-          },
-          "required": [
-            "workflow"
-          ]
-        },
-        {
-          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata"
-        }
-      ],
-      "title": "Metadata&e859bd03699c10011ddce6708a032c20"
-    },
-    "ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest+Arg+Metadata&e859bd03699c10011ddce6708a032c20": {
-      "type": "object",
-      "properties": {
-        "results": {
-          "title": "Results"
-        },
-        "executionId": {
-          "type": "string",
-          "title": "Execution Id"
-        },
-        "metadata": {
-          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata&e859bd03699c10011ddce6708a032c20",
-          "title": "Metadata"
-        }
-      },
-      "required": [
-        "results",
-        "executionId",
-        "metadata"
-      ],
-      "title": "deco-cx/durable/handler.ts@RunRequest+Arg+Metadata&e859bd03699c10011ddce6708a032c20"
-    },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz@Props": {
       "type": "object",
       "properties": {
@@ -1999,28 +1956,6 @@
         }
       }
     },
-    "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvcnVuLnRz": {
-      "title": "$live/actions/workflows/run.ts",
-      "description": "Proceed the workflow execution based on the current state of the workflow.",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2hhbmRsZXIudHM=@RunRequest+Arg+Metadata&e859bd03699c10011ddce6708a032c20"
-        }
-      ],
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/actions/workflows/run.ts"
-          ],
-          "default": "$live/actions/workflows/run.ts"
-        }
-      }
-    },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz": {
       "title": "$live/actions/workflows/signal.ts",
       "description": "Sends a signal to the workflow using the specified payload.",
@@ -2229,9 +2164,6 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvY2FuY2VsLnRz"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3MvcnVuLnRz"
         },
         {
           "$ref": "#/definitions/JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc2lnbmFsLnRz"
