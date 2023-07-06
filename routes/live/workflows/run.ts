@@ -2,14 +2,16 @@ import { HandlerContext } from "$fresh/server.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
 import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
 import {
-    Arg,
-    Command,
-    InvalidSignatureError,
-    Metadata,
-    RunRequest,
-    fetchPublicKey,
-    verifySignature,
-    workflowRemoteRunner,
+  Arg,
+  asVerifiedChannel,
+  Channel,
+  Command,
+  fetchPublicKey,
+  InvalidSignatureError,
+  Metadata,
+  RunRequest,
+  verifySignature,
+  workflowRemoteRunner,
 } from "$live/deps.ts";
 import { LiveConfig } from "$live/mod.ts";
 import { LiveState } from "$live/types.ts";
@@ -54,24 +56,66 @@ export const isValidRequestFromDurable = async (req: Request) => {
 /**
  * @description Proceed the workflow execution based on the current state of the workflow.
  */
-async function runWorkflow(
+function runWorkflow(
   props: Props,
-  req: Request,
-): Promise<Command> {
-  await verifyWithCurrentKeyOrRefetch(req);
+): Command {
   const { metadata: { workflow } } = props;
   const handler = workflowRemoteRunner(workflow, WorkflowContext);
   return handler(props);
 }
 
+const handleProps = async (
+  props: Props,
+  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
+) => {
+  const metadata = await ctx.state.resolve(props?.metadata ?? {});
+  return runWorkflow({ ...props, metadata });
+};
+
 export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
 ) => {
+  if (req.headers.get("upgrade") === "websocket") {
+    return webSocketHandler(req, ctx);
+  }
+  const verifyPromise = verifyWithCurrentKeyOrRefetch(req);
   const props: Props = await req.json();
-  const metadata = await ctx.state.resolve(props?.metadata ?? {});
+  await verifyPromise;
+  const resp = await handleProps(props, ctx);
   return new Response(
-    JSON.stringify(await runWorkflow({ ...props, metadata }, req)),
+    JSON.stringify(resp),
     { status: 200 },
   );
+};
+
+const useChannel = (
+  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
+) =>
+async (chan: Channel<Command, Props>) => {
+  while (!chan.closed.is_set()) {
+    const props = await Promise.race([chan.recv(), chan.closed.wait()]);
+    if (props === true) {
+      return;
+    }
+    const cmd = await handleProps(props, ctx);
+    if (chan.closed.is_set()) {
+      return;
+    }
+    chan.send(cmd);
+  }
+};
+const webSocketHandler = async (
+  req: Request,
+  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
+) => {
+  const { socket, response } = Deno.upgradeWebSocket(req);
+  asVerifiedChannel<Command, Props>(socket, await getOrFetchPublicKey()).then(
+    useChannel(ctx),
+  ).catch((err) => {
+    console.log("socket err", err);
+    socket.close();
+  });
+
+  return response;
 };

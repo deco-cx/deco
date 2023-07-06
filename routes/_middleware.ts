@@ -76,6 +76,9 @@ export const handler = async (
 
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     initialResponse = await ctx.next();
+    if (req.headers.get("upgrade") === "websocket") {
+      return initialResponse;
+    }
     const newHeaders = new Headers(initialResponse.headers);
     if (
       url.pathname.startsWith("/live/previews") &&

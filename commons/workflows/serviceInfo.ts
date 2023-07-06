@@ -12,8 +12,8 @@ export const workflowServiceInfo = () =>
         "https://durable-workers.fly.dev",
     ]
     : [
-      "local.",
-      Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ?? "http:/localhost:8001",
+      "local-socket.",
+      Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ?? "http://localhost:8001",
     ];
 
 type FetchParams = Parameters<typeof fetch>;
