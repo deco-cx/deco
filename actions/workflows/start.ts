@@ -13,6 +13,7 @@ import {
   WorkflowExecution,
 } from "$live/commons/workflows/types.ts";
 import { BlockFromKey, BlockFunc, BlockKeys } from "$live/engine/block.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Manifest } from "$live/live.gen.ts";
 import { DecoManifest } from "$live/types.ts";
 
@@ -48,7 +49,7 @@ const fromWorkflowProps = <
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 >(
   props: WorkflowProps<key, TManifest, block> | AnyWorkflow,
-) => {
+): Resolvable<Workflow> => {
   const anyProps = props as AnyWorkflow;
   if (
     anyProps?.workflow?.__resolveType &&
@@ -58,6 +59,25 @@ const fromWorkflowProps = <
   }
   const wkflowProps = props as any as { key: string; props: any };
   return { ...(wkflowProps.props ?? {}), __resolveType: wkflowProps?.key };
+};
+
+const WORKFLOW_QS = "workflow";
+export const WorkflowQS = {
+  buildFromProps: (workflow: ReturnType<typeof fromWorkflowProps>): string => {
+    return `${WORKFLOW_QS}=${
+      encodeURIComponent(btoa(JSON.stringify(workflow)))
+    }`;
+  },
+  extractFromUrl: (
+    urlString: string,
+  ): Resolvable<Workflow> | undefined => {
+    const url = new URL(urlString);
+    const qs = url.searchParams.get(WORKFLOW_QS);
+    if (!qs) {
+      return undefined;
+    }
+    return JSON.parse(atob(decodeURIComponent(qs)));
+  },
 };
 /**
  * @description Start the workflow execution with the given props and args. You can set the id of the workflow as you wish.
@@ -71,14 +91,16 @@ export default async function startWorkflow<
 ): Promise<WorkflowExecution> {
   const { id, args } = props;
   const [service, serviceUrl] = workflowServiceInfo();
+  const workflow = fromWorkflowProps(props);
   const payload = {
-    alias: `${service}/live/workflows/run`,
+    alias: `${service}/live/workflows/run?${
+      WorkflowQS.buildFromProps(workflow)
+    }`,
     id,
     input: args,
     metadata: {
       workflow: fromWorkflowProps(props),
       ...(props?.metadata ?? {}),
-      __resolveType: "resolve",
     },
   };
   const resp = await signedFetch(`${serviceUrl}/executions`, {
