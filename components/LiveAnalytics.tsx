@@ -82,7 +82,7 @@ const main = (
 
     /* Listen web-vitals */
     const webVitals = await import(
-      "https://esm.sh/v99/web-vitals@3.1.0/es2022/web-vitals.js"
+      "https://esm.sh/v128/web-vitals@3.1.0/es2022/web-vitals.mjs"
     );
 
     webVitals.onCLS(onWebVitalsReport);
