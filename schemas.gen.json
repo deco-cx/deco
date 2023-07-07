@@ -181,16 +181,16 @@
       ],
       "title": "$live/loaders/state.ts@Props"
     },
-    "L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvY29udGV4dC50cw==@Metadata": {
+    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata": {
       "type": "object",
       "properties": {},
       "required": [],
       "title": "Metadata"
     },
-    "L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvdHlwZXMudHM=@Arg": {
+    "ZGVjby1jeC9kdXJhYmxlL3R5cGVzLnRz@Arg": {
       "title": "Arg"
     },
-    "L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvYmFja2VuZHMvYmFja2VuZC50cw==@WorkflowExecution": {
+    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@WorkflowExecution": {
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
@@ -213,11 +213,11 @@
               "title": "Status"
             },
             "metadata": {
-              "$ref": "#/definitions/L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvY29udGV4dC50cw==@Metadata",
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata",
               "title": "Metadata"
             },
             "input": {
-              "$ref": "#/definitions/L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvdHlwZXMudHM=@Arg",
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3R5cGVzLnRz@Arg",
               "title": "Input"
             },
             "output": {
@@ -229,7 +229,7 @@
             "alias",
             "status"
           ],
-          "title": "/Users/marcoscandeia/workspace/durable/backends/backend.ts@WorkflowExecution"
+          "title": "deco-cx/durable/backends/backend.ts@WorkflowExecution"
         },
         {
           "title": "$live/loaders/workflows/events.ts",
@@ -282,7 +282,7 @@
       ],
       "title": "$live/loaders/workflows/events.ts@Props"
     },
-    "L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvYmFja2VuZHMvYmFja2VuZC50cw==@indexedAccessstatusWorkflowExecution+Arg": {
+    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessstatusWorkflowExecution+Arg": {
       "type": "object",
       "properties": {
         "status": {
@@ -297,7 +297,7 @@
     "JGxpdmUvY29tbW9ucy93b3JrZmxvd3MvdHlwZXMudHM=@Arg": {
       "title": "Arg"
     },
-    "L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvYmFja2VuZHMvYmFja2VuZC50cw==@indexedAccessinputWorkflowExecution+Arg": {
+    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessinputWorkflowExecution+Arg": {
       "type": "object",
       "properties": {
         "input": {
@@ -324,7 +324,7 @@
               "title": "Id"
             },
             "status": {
-              "$ref": "#/definitions/L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvYmFja2VuZHMvYmFja2VuZC50cw==@indexedAccessstatusWorkflowExecution+Arg",
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessstatusWorkflowExecution+Arg",
               "title": "Status"
             },
             "workflow": {
@@ -332,7 +332,7 @@
               "title": "Workflow"
             },
             "input": {
-              "$ref": "#/definitions/L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvYmFja2VuZHMvYmFja2VuZC50cw==@indexedAccessinputWorkflowExecution+Arg",
+              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@indexedAccessinputWorkflowExecution+Arg",
               "title": "Input"
             },
             "output": {
@@ -1222,7 +1222,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/L1VzZXJzL21hcmNvc2NhbmRlaWEvd29ya3NwYWNlL2R1cmFibGUvY29udGV4dC50cw==@Metadata"
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata"
         }
       ],
       "properties": {
