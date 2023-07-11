@@ -8,7 +8,7 @@ import { isAwaitable } from "$live/engine/core/utils.ts";
 import { Route, Routes } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
 import { context } from "$live/live.ts";
-import { LiveState, RouterContext } from "$live/types.ts";
+import { Flag, LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
 
 export interface SelectionConfig {
@@ -56,11 +56,12 @@ export const router = (
         params: Record<string, string>;
         state: {
           routerInfo: RouterContext;
+          flags: Flag[];
         };
       };
 
       ctx.state.routerInfo = {
-        flags: "",
+        flags: ctx.state.flags,
         pagePath: routePath,
       };
 

@@ -1,6 +1,7 @@
 import { context } from "$live/live.ts";
 import Script from "partytown/Script.tsx";
 import Jitsu from "partytown/integrations/Jitsu.tsx";
+import { Flag } from "$live/types.ts";
 
 const main = (
   userData: {
@@ -123,11 +124,13 @@ const main = (
 const innerHtml = (
   { id, path, flags }: Props,
 ) =>
-  `(${main.toString()})({page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", active_flags: "${flags}"});
+  `(${main.toString()})({page_id: "${id}", page_path: "${path}", site_id: "${context.siteId}", active_flags: "${
+    flags?.map((f) => `${f.name}=${f.value ? 0 : 1}`).join(",") ?? ""
+  }"});
 `;
 
 type Props = Partial<{ id: number | string; path: string }> & {
-  flags?: string;
+  flags?: Flag[];
 };
 
 /**

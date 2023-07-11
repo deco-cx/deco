@@ -1,7 +1,7 @@
 import { Head } from "$fresh/runtime.ts";
-import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
 import { context } from "$live/live.ts";
-import type { Site } from "$live/types.ts";
+import type { Flag, Site } from "$live/types.ts";
+import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
 
@@ -22,6 +22,7 @@ declare global {
 interface Props {
   site: Site;
   page?: Page;
+  flags?: Flag[];
 }
 
 type LiveEvent = {
@@ -299,7 +300,7 @@ const main = () => {
   addEventListener("message", onMessage);
 };
 
-function LiveControls({ site, page }: Props) {
+function LiveControls({ site, page, flags }: Props) {
   return (
     <>
       <Head>
@@ -307,7 +308,7 @@ function LiveControls({ site, page }: Props) {
           type="application/json"
           id="__DECO_STATE"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({ page, site }),
+            __html: JSON.stringify({ page, site, flags }),
           }}
         />
         <script

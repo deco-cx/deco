@@ -1,4 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { DECO_MATCHER_HEADER_QS } from "$live/blocks/matcher.ts";
 import {
   getPagePathTemplate,
   redirectTo,
@@ -70,6 +71,7 @@ export const handler = async (
     const state = ctx.state?.$live?.state;
     if (state) {
       state.response = response;
+      state.flags = [];
       Object.assign(ctx.state, state);
       ctx.state.global = state; // compatibility mode with functions.
     }
@@ -105,6 +107,13 @@ export const handler = async (
       Deno.env.has("DECO_ANONYMOUS_CACHE")
     ) {
       newHeaders.set("cache-control", "public, max-age=10");
+    }
+
+    for (const flag of state?.flags ?? []) {
+      newHeaders.append(
+        DECO_MATCHER_HEADER_QS,
+        `${flag.name}=${flag.value ? 1 : 0}`,
+      );
     }
 
     const newResponse = new Response(initialResponse.body, {

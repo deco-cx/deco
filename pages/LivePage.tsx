@@ -208,6 +208,7 @@ export default function LivePage(
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
         page={{ id: pageId, pathTemplate: routerCtx?.pagePath }}
+        flags={routerCtx?.flags}
       />
       <LiveAnalytics
         id={pageId}
