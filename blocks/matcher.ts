@@ -1,5 +1,6 @@
 import { HttpContext } from "$live/blocks/handler.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { Flag } from "$live/types.ts";
 import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
 
@@ -14,7 +15,7 @@ export type MatchContext<T = {}> = T & {
 // Murmurhash3 was chosen because it is fast
 const hasher = new Murmurhash3("string"); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
-const DECO_MATCHER_HEADER_QS = "x-deco-matchers";
+export const DECO_MATCHER_HEADER_QS = "x-deco-matchers";
 const DECO_MATCHER_HEADER_QS_OVERRIDE = `${DECO_MATCHER_HEADER_QS}-override`;
 
 const matchersOverride = {
@@ -108,6 +109,7 @@ const matcherBlock: Block<
       {
         global: unknown;
         response: { headers: Headers };
+        flags: Flag[];
       },
       unknown
     >,
@@ -168,10 +170,8 @@ const matcherBlock: Block<
         }
       }
 
-      respHeaders.append(
-        DECO_MATCHER_HEADER_QS,
-        `${uniqueId}=${result ? 1 : 0}`,
-      );
+      httpCtx.context.state.flags.push({ name: uniqueId, value: result });
+
       return result;
     };
   },

@@ -58,8 +58,13 @@ export type LiveState<T = unknown> = {
   global: T;
 };
 
+export interface Flag {
+  name: string;
+  value: boolean;
+}
+
 export type RouterContext = {
-  flags: string;
+  flags: Flag[];
   pagePath: string;
 };
 
