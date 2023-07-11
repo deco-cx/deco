@@ -86,6 +86,15 @@ export async function generate(
 }
 
 export const siteJSON = "site.json";
+const importManifests = (manifests: string[]): Promise<
+  Array<
+    DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+  >
+> => {
+  return Promise.all(
+    manifests.map(async (manifest) => (await import(manifest)).default),
+  );
+};
 
 const getAndUpdateNamespace = async (
   dir: string,
@@ -105,6 +114,7 @@ export default async function dev(
     onListen,
   }: {
     imports?:
+      | Array<string>
       | Array<
         DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
       >
@@ -129,7 +139,11 @@ export default async function dev(
 
   let manifest = await decoManifestBuilder(dir, ns);
   manifest = manifest.mergeWith(
-    typeof imports === "object" ? Object.values(imports) : imports,
+    isDyamicImportArray(imports)
+      ? await importManifests(imports)
+      : typeof imports === "object"
+      ? Object.values(imports)
+      : imports,
   );
 
   oncePerRun(setupGithooks);
@@ -149,6 +163,19 @@ export default async function dev(
   } else {
     await import(entrypoint);
   }
+}
+
+function isDyamicImportArray(
+  imports:
+    | string[]
+    | (DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>))[]
+    | Record<
+      string,
+      DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+    >,
+): imports is string[] {
+  return Array.isArray(imports) && imports.length > 0 &&
+    typeof imports[0] === "string";
 }
 
 export async function format(content: string) {
