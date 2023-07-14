@@ -13,7 +13,7 @@ const HOP_BY_HOP = [
 
 const sanitize = (str: string) => str.startsWith("/") ? str : `/${str}`;
 const removeCFHeaders = (headers: Headers) => {
-  for (const header of Object.keys(headers)) {
+  for (const header of headers.keys()) {
     if (header.startsWith("cf-")) {
       headers.delete(header);
     }
