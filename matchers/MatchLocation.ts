@@ -10,15 +10,15 @@ export interface Location {
    */
   city?: string;
   /**
+   * @title Region Code
+   * @example SP
+   */
+  regionCode?: string;
+  /**
    * @title Country
-   * @example Brazil
+   * @example BR
    */
   country?: string;
-  /**
-   * @title Postal Code
-   * @example 58033000
-   */
-  postalCode?: string;
 }
 
 export interface Props {
@@ -34,15 +34,22 @@ export interface Props {
 
 const matchLocation =
   (defaultNotMatched = true, source: Location) => (target: Location) => {
-    if (!target.postalCode && !target.city && !target.country) {
+    if (!target.regionCode && !target.city && !target.country) {
       return defaultNotMatched;
     }
-    let result = !target.postalCode || target.postalCode === source.postalCode;
+    let result = !target.regionCode || target.regionCode === source.regionCode;
     result &&= !target.city || target.city === source.city;
     result &&= !target.country || target.country === source.country;
     return result;
   };
 
+const escaped = ({ city, country, regionCode }: Location): Location => {
+  return {
+    regionCode,
+    city: city ? decodeURIComponent(escape(city)) : city,
+    country: country ? decodeURIComponent(escape(country)) : country,
+  };
+};
 /**
  * @title Location Matcher
  */
@@ -60,5 +67,6 @@ export default function MatchLocation(
   if (isLocationExcluded) {
     return false;
   }
-  return includeLocations?.some(matchLocation(true, userLocation)) ?? true;
+  return includeLocations?.some(matchLocation(true, escaped(userLocation))) ??
+    true;
 }
