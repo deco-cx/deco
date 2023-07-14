@@ -12,6 +12,14 @@ const HOP_BY_HOP = [
 ];
 
 const sanitize = (str: string) => str.startsWith("/") ? str : `/${str}`;
+const removeCFHeaders = (headers: Headers) => {
+  for (const header of Object.keys(headers)) {
+    if (header.startsWith("cf-")) {
+      headers.delete(header);
+    }
+  }
+};
+
 const proxyTo = (
   { proxyUrl, basePath, host: hostToUse }: {
     proxyUrl: string;
@@ -32,6 +40,9 @@ async (req, _ctx) => {
 
   const headers = new Headers(req.headers);
   HOP_BY_HOP.forEach((h) => headers.delete(h));
+
+  removeCFHeaders(headers); // cf-headers are not ASCII-compliant
+
   headers.set("origin", to.origin);
   headers.set("host", hostToUse ?? to.host);
   headers.set("x-forwarded-host", url.host);
