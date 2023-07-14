@@ -1,7 +1,7 @@
 import { MatchContext } from "$live/blocks/matcher.ts";
 
 /**
- * @title {{{city}}} {{{country}}} {{{postalCode}}}
+ * @title {{{city}}} {{{regionCode}}} {{{country}}}
  */
 export interface Location {
   /**
