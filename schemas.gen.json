@@ -34,6 +34,7 @@
               "$live/matchers/MatchDevice.ts",
               "$live/matchers/MatchEnvironment.ts",
               "$live/matchers/MatchHost.ts",
+              "$live/matchers/MatchLocation.ts",
               "$live/matchers/MatchMulti.ts",
               "$live/matchers/MatchRandom.ts",
               "$live/matchers/MatchSite.ts",
@@ -982,6 +983,56 @@
       "required": [],
       "title": "{{{includes}}} {{{match}}}"
     },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Location": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "City"
+        },
+        "country": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Country"
+        },
+        "postalCode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Postal Code"
+        }
+      },
+      "required": [],
+      "title": "{{{city}}} {{{country}}} {{{postalCode}}}"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Location[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Location"
+      },
+      "title": "Location[]"
+    },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Props": {
+      "type": "object",
+      "properties": {
+        "includeLocations": {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Location[]",
+          "title": "Include Locations"
+        },
+        "excludeLocations": {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Location[]",
+          "title": "Exclude Locations"
+        }
+      },
+      "required": [],
+      "title": "$live/matchers/MatchLocation.ts@Props"
+    },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher[]": {
       "type": "array",
       "items": {
@@ -1764,6 +1815,27 @@
         }
       }
     },
+    "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==": {
+      "title": "Location Matcher",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Props"
+        }
+      ],
+      "required": [
+        "__resolveType"
+      ],
+      "properties": {
+        "__resolveType": {
+          "type": "string",
+          "enum": [
+            "$live/matchers/MatchLocation.ts"
+          ],
+          "default": "$live/matchers/MatchLocation.ts"
+        }
+      }
+    },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw==": {
       "title": "OR & AND Matcher",
       "type": "object",
@@ -2121,6 +2193,9 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hIb3N0LnRz"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw=="
         },
         {
           "$ref": "#/definitions/JGxpdmUvbWF0Y2hlcnMvTWF0Y2hNdWx0aS50cw=="
