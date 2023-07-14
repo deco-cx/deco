@@ -156,6 +156,15 @@ const mapMiddleware = (
       context.state.t = { start, end, printTimings };
     }
     const url = new URL(request.url);
+    const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
+
+    if (isEchoRoute) {
+      return new Response(request.body, {
+        status: 200,
+        headers: request.headers,
+      });
+    }
+
     const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
 
     const resolver = liveContext.releaseResolver!;
