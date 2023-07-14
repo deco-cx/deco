@@ -34,16 +34,13 @@ export interface Props {
 
 const matchLocation =
   (defaultNotMatched = true, source: Location) => (target: Location) => {
-    if (target.postalCode) {
-      return source.postalCode === target.postalCode;
+    if (!target.postalCode && !target.city && !target.country) {
+      return defaultNotMatched;
     }
-    if (target.city) {
-      return source.city === target.city;
-    }
-    if (target.country) {
-      return source.country === target.country;
-    }
-    return defaultNotMatched;
+    let result = !target.postalCode || target.postalCode === source.postalCode;
+    result &&= !target.city || target.city === source.city;
+    result &&= !target.country || target.country === source.country;
+    return result;
   };
 
 /**
@@ -55,7 +52,7 @@ export default function MatchLocation(
 ) {
   const city = request.headers.get("cf-ipcity") ?? undefined;
   const country = request.headers.get("cf-ipcountry") ?? undefined;
-  const postalCode = request.headers.get("cf-postal-code:") ?? undefined;
+  const postalCode = request.headers.get("cf-postal-code") ?? undefined;
   const userLocation = { city, country, postalCode };
   const isLocationExcluded = excludeLocations?.some(
     matchLocation(false, userLocation),
