@@ -46,6 +46,9 @@ const matchLocation =
     return defaultNotMatched;
   };
 
+/**
+ * @title Location Matcher
+ */
 export default function MatchLocation(
   { includeLocations, excludeLocations }: Props,
   { request }: MatchContext,

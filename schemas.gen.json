@@ -1816,7 +1816,7 @@
       }
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==": {
-      "title": "$live/matchers/MatchLocation.ts",
+      "title": "Location Matcher",
       "type": "object",
       "allOf": [
         {
