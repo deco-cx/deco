@@ -63,9 +63,9 @@ async function runWorkflow(
 ): Promise<Command> {
   const { metadata: { workflow } } = props;
   const handler = workflowRemoteRunner(workflow, WorkflowContext);
-  const events = arrToStream(props.results);
-  await handler({ ...props, events });
-  return events.nextCommand;
+  const commands = arrToStream(props.results);
+  await handler({ ...props, commands });
+  return commands.nextCommand();
 }
 
 const handleProps = async (

@@ -9,7 +9,7 @@ export const workflowServiceInfo = () =>
       Deno.env.get("LIVE_WORKFLOW_REGISTRY") ??
         `deco-sites.${context.site}-${context.deploymentId}@`,
       Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ??
-        "https://durable-workers.fly.dev",
+        "https://durable-workers.deco-cx.workers.dev",
     ]
     : [
       "local-socket.",
