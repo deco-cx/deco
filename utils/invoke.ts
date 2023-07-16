@@ -42,7 +42,9 @@ export const invokeToHttpResponse = (
       } finally {
         try {
           await writer.close();
-        } catch {}
+        } catch (err) {
+          console.log("closing err", err);
+        }
       }
     })();
 

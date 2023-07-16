@@ -1,12 +1,24 @@
-import { workflowHTTPHandler } from "$live/deps.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
+import { workflowHTTPHandler } from "$live/deps.ts";
+import type { Manifest } from "$live/live.gen.ts";
+import { LiveConfig, LiveState } from "$live/mod.ts";
+import { ConnInfo } from "std/http/server.ts";
 import { Handler } from "../blocks/handler.ts";
+import { isFreshCtx } from "./fresh.ts";
 export interface Config {
   workflow: Workflow;
 }
 
 export default function WorkflowHandler({ workflow }: Config): Handler {
-  // FIXME missing verify request signature here.
-  const handler = workflowHTTPHandler(workflow, WorkflowContext);
-  return handler;
+  return (req: Request, conn: ConnInfo) => {
+    if (isFreshCtx<LiveConfig<unknown, LiveState, Manifest>>(conn)) {
+      const handler = workflowHTTPHandler(
+        workflow,
+        (execId, metadata, runtimeParams) =>
+          new WorkflowContext(conn.state, execId, metadata, runtimeParams),
+      );
+      return handler(req, conn);
+    }
+    return new Response(null, { status: 501 });
+  };
 }

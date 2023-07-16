@@ -242,7 +242,7 @@ export const handler = async (
     unknown,
     LiveConfig<unknown, LiveState>
   >,
-) => {
+): Promise<Response> => {
   const { state: { resolve } } = ctx;
   const data = req.method === "POST"
     ? await req.json()

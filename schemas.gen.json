@@ -489,6 +489,16 @@
         },
         "result": {
           "title": "Result"
+        },
+        "activityName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Activity Name"
+        },
+        "activityParams": {
+          "title": "Activity Params"
         }
       },
       "required": [
@@ -1721,6 +1731,48 @@
       "required": [],
       "title": "WorkflowMetadata"
     },
+    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@RuntimeParameters": {
+      "type": "object",
+      "properties": {
+        "http": {
+          "type": "object",
+          "properties": {
+            "defaultHeaders": {
+              "title": "Default Headers",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "defaultHeaders"
+          ],
+          "title": "Http"
+        },
+        "websocket": {
+          "type": "object",
+          "properties": {
+            "defaultQueryParams": {
+              "title": "Default Query Params",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "defaultQueryParams"
+          ],
+          "title": "Websocket"
+        }
+      },
+      "required": [
+        "http",
+        "websocket"
+      ],
+      "title": "RuntimeParameters"
+    },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@CommonProps": {
       "type": "object",
       "properties": {
@@ -1734,6 +1786,10 @@
         "metadata": {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@WorkflowMetadata",
           "title": "Metadata"
+        },
+        "runtimeParameters": {
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@RuntimeParameters",
+          "title": "Runtime Parameters"
         }
       },
       "required": [],
