@@ -6,7 +6,7 @@ export interface StreamProps {
 export const isStreamProps = <TProps>(
   props: TProps | TProps & StreamProps,
 ): props is TProps & StreamProps => {
-  return (props as StreamProps)?.stream === true;
+  return Boolean((props as StreamProps)?.stream) === true;
 };
 
 export const isEventStreamResponse = (
