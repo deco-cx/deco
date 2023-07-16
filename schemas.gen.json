@@ -182,56 +182,54 @@
       ],
       "title": "$live/loaders/state.ts@Props"
     },
-    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata": {
+    "ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b": {
       "type": "object",
-      "properties": {},
-      "required": [],
-      "title": "Metadata"
+      "properties": {
+        "page": {
+          "type": "number",
+          "title": "Page"
+        },
+        "pageSize": {
+          "type": "number",
+          "title": "Page Size"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {},
+              {}
+            ]
+          },
+          "title": "Items"
+        }
+      },
+      "required": [
+        "page",
+        "pageSize",
+        "items"
+      ],
+      "title": "Pagination+bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b"
     },
-    "ZGVjby1jeC9kdXJhYmxlL3R5cGVzLnRz@Arg": {
-      "title": "Arg"
-    },
-    "ZGVjby1jeC9kdXJhYmxlL2JhY2tlbmRzL2JhY2tlbmQudHM=@WorkflowExecution": {
+    "ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b": {
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
         },
         {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "title": "Id"
-            },
-            "alias": {
-              "type": "string",
-              "title": "Alias"
-            },
-            "completedAt": {
-              "title": "Completed At"
-            },
-            "status": {
-              "title": "Status"
-            },
-            "metadata": {
-              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata",
-              "title": "Metadata"
-            },
-            "input": {
-              "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3R5cGVzLnRz@Arg",
-              "title": "Input"
-            },
-            "output": {
-              "title": "Output"
-            }
-          },
-          "required": [
-            "id",
-            "alias",
-            "status"
-          ],
-          "title": "deco-cx/durable/backends/backend.ts@WorkflowExecution"
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b"
         },
+        {},
         {
           "title": "$live/loaders/workflows/events.ts",
           "description": "Get the workflow execution events.",
@@ -256,8 +254,33 @@
         }
       ]
     },
+    "JGxpdmUvdXRpbHMvaW52b2tlLnRz@StreamProps": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Id"
+        },
+        "stream": {
+          "type": "boolean",
+          "const": true,
+          "default": true,
+          "title": "Stream"
+        }
+      },
+      "required": [
+        "id",
+        "stream"
+      ],
+      "title": "StreamProps"
+    },
     "JGxpdmUvbG9hZGVycy93b3JrZmxvd3MvZXZlbnRzLnRz@Props": {
       "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/JGxpdmUvdXRpbHMvaW52b2tlLnRz@StreamProps"
+        }
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -993,23 +1016,23 @@
           ],
           "title": "City"
         },
+        "regionCode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "title": "Region Code"
+        },
         "country": {
           "type": [
             "string",
             "null"
           ],
           "title": "Country"
-        },
-        "postalCode": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "title": "Postal Code"
         }
       },
       "required": [],
-      "title": "{{{city}}} {{{country}}} {{{postalCode}}}"
+      "title": "{{{city}}} {{{regionCode}}} {{{country}}}"
     },
     "JGxpdmUvbWF0Y2hlcnMvTWF0Y2hMb2NhdGlvbi50cw==@Location[]": {
       "type": "array",
@@ -1268,6 +1291,12 @@
     },
     "JGxpdmUvYWN0aW9ucy93b3JrZmxvd3Mvc3RhcnQudHM=@WorkflowProps": {
       "title": "WorkflowProps"
+    },
+    "ZGVjby1jeC9kdXJhYmxlL2NvbnRleHQudHM=@Metadata": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "title": "Metadata"
     },
     "JGxpdmUvYmxvY2tzL3dvcmtmbG93LnRz@WorkflowMetadata": {
       "type": "object",
