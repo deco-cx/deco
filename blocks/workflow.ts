@@ -59,9 +59,26 @@ export class WorkflowContext<
     InvokeResult<
       TPayload,
       TManifest
-    >
+    >,
+    [Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]]
   > {
-    return { name: "local_activity", fn: () => this.ctx.invoke(key, props) };
+    const ctx = this.ctx;
+    const fn = function (
+      props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+    ): Promise<
+      InvokeResult<
+        TPayload,
+        TManifest
+      >
+    > {
+      return ctx.invoke(key, props);
+    };
+    Object.defineProperty(fn, "name", { value: key });
+    return {
+      name: "local_activity",
+      fn,
+      args: [props],
+    };
   }
 }
 

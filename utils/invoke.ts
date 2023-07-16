@@ -35,10 +35,15 @@ export const invokeToHttpResponse = (
       const encoder = new TextEncoder();
       const writer = writable.getWriter();
 
-      for await (const content of invokeResponse) {
-        await writer.write(encoder.encode(JSON.stringify(content)));
+      try {
+        for await (const content of invokeResponse) {
+          await writer.write(encoder.encode(JSON.stringify(content)));
+        }
+      } finally {
+        if (!writer.closed) {
+          writer.close();
+        }
       }
-      writer.close();
     })();
 
     return new Response(readable, {
