@@ -72,7 +72,7 @@ export type WorkflowFn<
   TArgs extends Arg = any,
   TResp = any,
   TMetadata extends Metadata = Metadata,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends DecoManifest = any,
 > = (
   c: TConfig,
 ) => DurableWorkflow<TArgs, TResp, WorkflowContext<TManifest, TMetadata>>;
