@@ -195,3 +195,29 @@ export const allowCorsFor = (req?: Request): Record<string, string> => ({
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, *",
 });
+
+export async function* readFromStream<T>(
+  response: Response,
+): AsyncIterableIterator<T> {
+  if (!response.body) {
+    return;
+  }
+  const reader = response.body
+    .pipeThrough(new TextDecoderStream())
+    .getReader();
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    const parsedValue = value
+      .split("\n")
+      .filter(Boolean);
+
+    for (const chnks of parsedValue) {
+      yield JSON.parse(chnks);
+    }
+  }
+}

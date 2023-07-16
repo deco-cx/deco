@@ -9,22 +9,30 @@ import type {
   ManifestFunction,
   ManifestLoader,
 } from "$live/routes/live/invoke/index.ts";
+import { readFromStream } from "$live/utils/http.ts";
 import { DotNestedKeys } from "$live/utils/object.ts";
 import type { DecoManifest } from "../types.ts";
+import { isStreamProps } from "../utils/invoke.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
-const fetchJSON = async (
-  input: URL | RequestInfo,
+const fetchWithProps = async (
+  url: string,
+  props: unknown,
   init?: RequestInit | undefined,
 ) => {
   const headers = new Headers(init?.headers);
+  const isStream = isStreamProps(props) && props.stream;
 
-  headers.set("accept", "application/json");
+  headers.set(
+    "accept",
+    `application/json, ${isStream ? "text/event-stream" : ""}`,
+  );
   headers.set("content-type", "application/json");
 
-  const response = await fetch(input, {
+  const response = await fetch(url, {
     method: "POST",
+    body: JSON.stringify(props),
     ...init,
     headers,
   });
@@ -34,6 +42,9 @@ const fetchJSON = async (
   }
 
   if (response.ok) {
+    if (isStream) {
+      return readFromStream(response);
+    }
     return response.json();
   }
 
@@ -45,17 +56,10 @@ const invokeKey = (
   key: string,
   props?: unknown,
   init?: RequestInit | undefined,
-) =>
-  fetchJSON(`/live/invoke/${key}`, {
-    body: JSON.stringify(props ?? {}),
-    ...init,
-  });
+) => fetchWithProps(`/live/invoke/${key}`, props, init);
 
 const batchInvoke = (payload: unknown, init?: RequestInit | undefined) =>
-  fetchJSON(`/live/invoke`, {
-    body: JSON.stringify(payload),
-    ...init,
-  });
+  fetchWithProps(`/live/invoke`, payload, init);
 
 export type InvocationFunc<TManifest extends DecoManifest> = <
   TInvocableKey extends

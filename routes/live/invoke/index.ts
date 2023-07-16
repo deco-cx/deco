@@ -7,6 +7,7 @@ import type { Manifest } from "$live/live.gen.ts";
 import { LiveConfig } from "$live/mod.ts";
 import type { DecoManifest, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
+import { invokeToHttpResponse } from "$live/utils/invoke.ts";
 import { DeepPick, DotNestedKeys } from "$live/utils/object.ts";
 import { UnionToIntersection } from "https://esm.sh/utility-types@3.10.0";
 export type AvailableFunctions<TManifest extends DecoManifest> =
@@ -249,9 +250,5 @@ export const handler = async (
 
   const resp = await resolve(payloadToResolvable(data));
 
-  if (resp === undefined) {
-    return new Response(null, { status: 204 });
-  }
-
-  return Response.json(resp);
+  return invokeToHttpResponse(req, resp);
 };

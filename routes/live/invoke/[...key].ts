@@ -1,6 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
+import { invokeToHttpResponse } from "$live/utils/invoke.ts";
 import { InvokeFunction, payloadForFunc } from "./index.ts";
 
 export const handler = async (
@@ -25,9 +26,5 @@ export const handler = async (
 
   const resp = await resolve(payloadForFunc(invokeFunc));
 
-  if (resp === undefined) {
-    return new Response(null, { status: 204 });
-  }
-
-  return Response.json(resp);
+  return invokeToHttpResponse(req, resp);
 };
