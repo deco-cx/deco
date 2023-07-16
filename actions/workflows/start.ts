@@ -12,6 +12,7 @@ import {
   toExecution,
   WorkflowExecution,
 } from "$live/commons/workflows/types.ts";
+import { RuntimeParameters } from "$live/deps.ts";
 import { BlockFromKey, BlockFunc, BlockKeys } from "$live/engine/block.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Manifest } from "$live/live.gen.ts";
@@ -22,6 +23,7 @@ export interface CommonProps<
 > {
   id?: string;
   metadata?: TMetadata;
+  runtimeParameters?: RuntimeParameters;
 }
 export interface AnyWorkflow extends CommonProps {
   args?: readonly any[];
@@ -89,7 +91,7 @@ export default async function startWorkflow<
 >(
   props: WorkflowProps<key, TManifest, block> | AnyWorkflow,
 ): Promise<WorkflowExecution> {
-  const { id, args } = props;
+  const { id, args, runtimeParameters } = props;
   const [service, serviceUrl] = workflowServiceInfo();
   const workflow = fromWorkflowProps(props);
   const payload = {
@@ -98,6 +100,7 @@ export default async function startWorkflow<
     }`,
     id,
     input: args,
+    runtimeParameters,
     metadata: {
       workflow: fromWorkflowProps(props),
       ...(props?.metadata ?? {}),

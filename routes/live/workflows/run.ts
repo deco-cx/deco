@@ -14,6 +14,7 @@ import {
   workflowRemoteRunner,
   workflowWebSocketHandler,
 } from "$live/deps.ts";
+import type { Manifest } from "$live/live.gen.ts";
 import { LiveConfig } from "$live/mod.ts";
 import { LiveState } from "$live/types.ts";
 
@@ -60,9 +61,13 @@ export const isValidRequestFromDurable = async (req: Request) => {
  */
 async function runWorkflow(
   props: Props,
+  ctx: LiveConfig<unknown, LiveState, Manifest>,
 ): Promise<Command> {
   const { metadata: { workflow } } = props;
-  const handler = workflowRemoteRunner(workflow, WorkflowContext);
+  const handler = workflowRemoteRunner(
+    workflow,
+    (workflowId, metadata) => new WorkflowContext(ctx, workflowId, metadata),
+  );
   const commands = arrToStream(props.results);
   await handler({ ...props, commands });
   return commands.nextCommand();
@@ -70,16 +75,16 @@ async function runWorkflow(
 
 const handleProps = async (
   props: Props,
-  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
+  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState, Manifest>>,
 ) => {
   const metadata = await ctx.state.resolve(props?.metadata ?? {});
-  return runWorkflow({ ...props, metadata });
+  return runWorkflow({ ...props, metadata }, ctx.state);
 };
 
 export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
-) => {
+): Promise<Response> => {
   if (req.headers.get("upgrade") === "websocket") {
     const workflow = WorkflowQS.extractFromUrl(req.url);
     if (!workflow) {
@@ -88,7 +93,12 @@ export const handler = async (
     const workflowFn = await ctx.state.resolve(workflow);
     const handler = workflowWebSocketHandler(
       workflowFn,
-      WorkflowContext,
+      (executionId, metadata) =>
+        new WorkflowContext(
+          ctx.state as unknown as LiveConfig<unknown, LiveState, Manifest>,
+          executionId,
+          metadata,
+        ),
       await getOrFetchPublicKey(),
     );
     return handler(req, ctx);
@@ -96,7 +106,13 @@ export const handler = async (
   const verifyPromise = verifyWithCurrentKeyOrRefetch(req);
   const props: Props = await req.json();
   await verifyPromise;
-  const resp = await handleProps(props, ctx);
+  const resp = await handleProps(
+    props,
+    ctx as unknown as HandlerContext<
+      unknown,
+      LiveConfig<unknown, LiveState, Manifest>
+    >,
+  );
   return new Response(
     JSON.stringify(resp),
     { status: 200 },

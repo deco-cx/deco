@@ -2,30 +2,25 @@
 import { applyConfigSync } from "$live/blocks/utils.ts";
 import {
   Arg,
-  InvokeHttpEndpointCommand,
-  Metadata,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
+  LocalActivityCommand,
+  Metadata,
 } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { Manifest } from "$live/live.gen.ts";
-import { context } from "$live/live.ts";
+import type { Manifest } from "$live/live.gen.ts";
 import {
   AvailableActions,
   AvailableFunctions,
   AvailableLoaders,
   Invoke,
+  InvokeResult,
   ManifestAction,
   ManifestFunction,
   ManifestLoader,
 } from "$live/routes/live/invoke/index.ts";
-import { DecoManifest } from "$live/types.ts";
+import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { DotNestedKeys } from "$live/utils/object.ts";
-
-const myUrl = () =>
-  context.isDeploy
-    ? `https://deco-sites-${context.site}-${context.deploymentId}.deno.dev/live/invoke`
-    : "http://localhost:8000/live/invoke";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
@@ -34,7 +29,11 @@ export class WorkflowContext<
   TManifest extends DecoManifest = Manifest,
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
 > extends DurableWorkflowContext<TMetadata> {
-  constructor(executionId: string, metadata?: TMetadata) {
+  constructor(
+    protected ctx: LiveConfig<unknown, LiveState, TManifest>,
+    executionId: string,
+    metadata?: TMetadata,
+  ) {
     super(executionId, metadata);
   }
 
@@ -50,24 +49,17 @@ export class WorkflowContext<
       : TInvocableKey extends AvailableLoaders<TManifest>
         ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
       : never,
+    TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
   >(
     key: TInvocableKey,
     props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-    headers?: Record<string, string>,
-  ): InvokeHttpEndpointCommand<
-    Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]
+  ): LocalActivityCommand<
+    InvokeResult<
+      TPayload,
+      TManifest
+    >
   > {
-    return {
-      name: "invoke_http_endpoint",
-      url: `${myUrl()}/${key}`, // FIXME define the actual port
-      method: "POST",
-      body: props,
-      headers: {
-        ...(headers ?? {}),
-        ...(this.metadata?.defaultInvokeHeaders ?? {}),
-        "accept": "application/json",
-      },
-    };
+    return { name: "local_activity", fn: () => this.ctx.invoke(key, props) };
   }
 }
 
