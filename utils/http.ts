@@ -207,6 +207,7 @@ export async function* readFromStream<T>(
     .getReader();
 
   while (true) {
+    let acc = "";
     const { value, done } = await reader.read();
     if (done) {
       break;
@@ -217,7 +218,13 @@ export async function* readFromStream<T>(
       .filter(Boolean);
 
     for (const chnks of parsedValue) {
-      yield JSON.parse(chnks);
+      acc += chnks;
+      try {
+        yield JSON.parse(acc);
+      } catch {
+        continue;
+      }
+      acc = "";
     }
   }
 }

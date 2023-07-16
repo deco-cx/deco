@@ -40,9 +40,9 @@ export const invokeToHttpResponse = (
           await writer.write(encoder.encode(JSON.stringify(content)));
         }
       } finally {
-        if (!writer.closed) {
-          writer.close();
-        }
+        try {
+          await writer.close();
+        } catch {}
       }
     })();
 
