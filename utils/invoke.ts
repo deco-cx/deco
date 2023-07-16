@@ -38,6 +38,7 @@ export const invokeToHttpResponse = (
       for await (const content of invokeResponse) {
         await writer.write(encoder.encode(JSON.stringify(content)));
       }
+      writer.close();
     })();
 
     return new Response(readable, {
