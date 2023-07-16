@@ -2,10 +2,11 @@
 import { applyConfigSync } from "$live/blocks/utils.ts";
 import {
   Arg,
-  Workflow as DurableWorkflow,
-  WorkflowContext as DurableWorkflowContext,
   LocalActivityCommand,
   Metadata,
+  RuntimeParameters,
+  Workflow as DurableWorkflow,
+  WorkflowContext as DurableWorkflowContext,
 } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import type { Manifest } from "$live/live.gen.ts";
@@ -33,8 +34,9 @@ export class WorkflowContext<
     protected ctx: LiveConfig<unknown, LiveState, TManifest>,
     executionId: string,
     metadata?: TMetadata,
+    runtimeParameters?: RuntimeParameters,
   ) {
-    super(executionId, metadata);
+    super(executionId, metadata, runtimeParameters);
   }
 
   public invoke<
