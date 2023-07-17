@@ -10,3 +10,4 @@ export { $live } from "$live/engine/fresh/manifest.ts";
 export * from "$live/types.ts";
 export type { WorkflowGen } from "./deps.ts";
 export { stylesPlugin };
+export type { StreamProps } from "./utils/invoke.ts";

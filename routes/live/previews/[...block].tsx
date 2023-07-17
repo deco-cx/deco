@@ -54,7 +54,7 @@ export const handler = async (
     unknown,
     LiveConfig<unknown, LiveState>
   >,
-) => {
+): Promise<Response> => {
   const { state: { resolve } } = ctx;
   const url = new URL(req.url);
   const props = await getPropsFromRequest(req);

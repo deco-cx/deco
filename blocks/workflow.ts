@@ -2,30 +2,26 @@
 import { applyConfigSync } from "$live/blocks/utils.ts";
 import {
   Arg,
-  InvokeHttpEndpointCommand,
+  LocalActivityCommand,
   Metadata,
+  RuntimeParameters,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
 } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { Manifest } from "$live/live.gen.ts";
-import { context } from "$live/live.ts";
+import type { Manifest } from "$live/live.gen.ts";
 import {
   AvailableActions,
   AvailableFunctions,
   AvailableLoaders,
   Invoke,
+  InvokeResult,
   ManifestAction,
   ManifestFunction,
   ManifestLoader,
 } from "$live/routes/live/invoke/index.ts";
-import { DecoManifest } from "$live/types.ts";
+import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { DotNestedKeys } from "$live/utils/object.ts";
-
-const myUrl = () =>
-  context.isDeploy
-    ? `https://deco-sites-${context.site}-${context.deploymentId}.deno.dev/live/invoke`
-    : "http://localhost:8000/live/invoke";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
@@ -34,8 +30,13 @@ export class WorkflowContext<
   TManifest extends DecoManifest = Manifest,
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
 > extends DurableWorkflowContext<TMetadata> {
-  constructor(executionId: string, metadata?: TMetadata) {
-    super(executionId, metadata);
+  constructor(
+    protected ctx: LiveConfig<unknown, LiveState, TManifest>,
+    executionId: string,
+    metadata?: TMetadata,
+    runtimeParameters?: RuntimeParameters,
+  ) {
+    super(executionId, metadata, runtimeParameters);
   }
 
   public invoke<
@@ -50,23 +51,33 @@ export class WorkflowContext<
       : TInvocableKey extends AvailableLoaders<TManifest>
         ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
       : never,
+    TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
   >(
     key: TInvocableKey,
     props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-    headers?: Record<string, string>,
-  ): InvokeHttpEndpointCommand<
-    Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]
+  ): LocalActivityCommand<
+    InvokeResult<
+      TPayload,
+      TManifest
+    >,
+    [Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]]
   > {
+    const ctx = this.ctx;
+    const fn = function (
+      props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+    ): Promise<
+      InvokeResult<
+        TPayload,
+        TManifest
+      >
+    > {
+      return ctx.invoke(key, props);
+    };
+    Object.defineProperty(fn, "name", { value: key });
     return {
-      name: "invoke_http_endpoint",
-      url: `${myUrl()}/${key}`, // FIXME define the actual port
-      method: "POST",
-      body: props,
-      headers: {
-        ...(headers ?? {}),
-        ...(this.metadata?.defaultInvokeHeaders ?? {}),
-        "accept": "application/json",
-      },
+      name: "local_activity",
+      fn,
+      args: [props],
     };
   }
 }
@@ -78,7 +89,7 @@ export type WorkflowFn<
   TArgs extends Arg = any,
   TResp = any,
   TMetadata extends Metadata = Metadata,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends DecoManifest = any,
 > = (
   c: TConfig,
 ) => DurableWorkflow<TArgs, TResp, WorkflowContext<TManifest, TMetadata>>;

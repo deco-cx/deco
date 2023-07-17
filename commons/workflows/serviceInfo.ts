@@ -9,7 +9,7 @@ export const workflowServiceInfo = () =>
       Deno.env.get("LIVE_WORKFLOW_REGISTRY") ??
         `deco-sites.${context.site}-${context.deploymentId}@`,
       Deno.env.get("LIVE_WORKFLOW_SERVICE_URL") ??
-        "https://durable-workers.fly.dev",
+        "https://durable-workers.deco-cx.workers.dev",
     ]
     : [
       "local-socket.",
@@ -37,5 +37,10 @@ export const signedFetch = async (
   input: FetchParams[0],
   init?: FetchParams[1],
 ) => {
-  return fetchDurableWithKey(input, init, await getPkCrypto());
+  try {
+    return await fetchDurableWithKey(input, init, await getPkCrypto());
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
 };
