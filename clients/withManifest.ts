@@ -49,7 +49,17 @@ const fetchWithProps = async (
   }
 
   console.error(init?.body, response);
-  throw new Error(`${response.status}, ${init?.body}`);
+  const error = await response.text();
+  let errorObj;
+  if (response.headers.get("content-type") === "application/json") {
+    errorObj = JSON.parse(error);
+    throw new Error(`${response.status}: ${response.statusText}`, {
+      cause: errorObj.message + (errorObj.code ? `(${errorObj.code})` : ""),
+    });
+  }
+  throw new Error(`${response.status}: ${response.statusText}`, {
+    cause: error,
+  });
 };
 
 const invokeKey = (
