@@ -16,7 +16,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export type Events =
   | Pagination<HistoryEvent>
-  | AsyncIterableIterator<HistoryEvent[]>;
+  | AsyncIterableIterator<HistoryEvent>;
 
 /**
  * @description Get the workflow execution events.
@@ -28,7 +28,7 @@ export default async function getExecutionEvents(
   const base = `${svcUrl}/executions/${props.id}/history`;
   if (isStreamProps(props)) {
     const resp = await signedFetch(`${base}?stream=true`);
-    return readFromStream<HistoryEvent[]>(resp);
+    return readFromStream<HistoryEvent>(resp);
   }
 
   const { page, pageSize } = props;
