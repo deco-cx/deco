@@ -54,7 +54,7 @@ export interface SectionModule<TConfig = any, TProps = any> extends
     JSX.Element | null,
     PreactComponent
   > {
-  errorBoundary?: ErrorBoundaryComponent<TProps>;
+  ErrorBoundary?: ErrorBoundaryComponent<TProps>;
   loader?: PropsLoader<TConfig, TProps>;
 }
 
@@ -75,7 +75,7 @@ const sectionBlock: Block<SectionModule> = {
       TConfig,
       HttpContext
     > => {
-    const errBoundary = mod.errorBoundary;
+    const errBoundary = mod.ErrorBoundary;
     const componentFunc = componentWith(resolver, mod.default, errBoundary);
     const loader = mod.loader;
     if (!loader) {
