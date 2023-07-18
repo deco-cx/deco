@@ -17,6 +17,7 @@ import {
 import type { Manifest } from "$live/live.gen.ts";
 import { LiveConfig } from "$live/mod.ts";
 import { LiveState } from "$live/types.ts";
+import { ConnInfo } from "std/http/server.ts";
 
 export type Props = HttpRunRequest<Arg, { workflow: Workflow } & Metadata>;
 
@@ -101,7 +102,7 @@ export const handler = async (
         ),
       await getOrFetchPublicKey(),
     );
-    return handler(req, ctx);
+    return handler(req, ctx as ConnInfo);
   }
   const verifyPromise = verifyWithCurrentKeyOrRefetch(req);
   const props: Props = await req.json();

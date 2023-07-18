@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { applyConfigSync } from "$live/blocks/utils.ts";
+import { applyConfigSync } from "$live/blocks/utils.tsx";
 import {
   Arg,
   LocalActivityCommand,

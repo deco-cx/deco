@@ -21,7 +21,7 @@ import { getComposedConfigStore } from "$live/engine/releases/provider.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest, LiveConfig } from "$live/types.ts";
 
-import { usePreviewFunc } from "$live/blocks/utils.ts";
+import { usePreviewFunc } from "$live/blocks/utils.tsx";
 import { SiteInfo } from "$live/types.ts";
 import { parse } from "std/flags/mod.ts";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;

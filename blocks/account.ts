@@ -1,4 +1,4 @@
-import { applyConfigSync } from "$live/blocks/utils.ts";
+import { applyConfigSync } from "$live/blocks/utils.tsx";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 

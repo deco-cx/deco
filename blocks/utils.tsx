@@ -12,11 +12,13 @@ import {
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
-import { JSX } from "preact";
+import { context } from "$live/live.ts";
+import { Component, JSX } from "preact";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import type { Manifest } from "../live.gen.ts";
 import { DecoManifest } from "../types.ts";
 import { HttpContext } from "./handler.ts";
+import { ErrorBoundaryComponent } from "./section.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -104,15 +106,45 @@ export const applyProps = <
   );
 };
 
+class ErrorBoundary
+  extends Component<{ fallback: ComponentFunc<any>; component: string }> {
+  state = { error: null };
+
+  static getDerivedStateFromError(error: any) {
+    return { error };
+  }
+
+  render() {
+    return this.state.error
+      ? this.props.fallback(this.state.error)
+      : this.props.children;
+  }
+}
+
 export const componentWith = <TProps = any>(
   resolver: string,
-  componentFunc: ComponentFunc,
+  ComponentFunc: ComponentFunc,
+  errBoundary?: ErrorBoundaryComponent<TProps>,
 ) =>
 (
   props: TProps,
   { resolveChain }: { resolveChain: FieldResolver[] },
 ) => ({
-  Component: componentFunc,
+  Component: (props: TProps) => {
+    return (
+      <ErrorBoundary
+        component={resolver}
+        fallback={(error) =>
+          errBoundary
+            ? errBoundary({ error, props })
+            : context.isDeploy
+            ? null
+            : <p>Error happened: {error.message}</p>}
+      >
+        <ComponentFunc {...props} />
+      </ErrorBoundary>
+    );
+  },
   props,
   metadata: {
     component: resolver,

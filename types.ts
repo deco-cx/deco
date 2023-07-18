@@ -5,12 +5,11 @@ import actionBlock from "$live/blocks/action.ts";
 import flagBlock from "$live/blocks/flag.ts";
 import functionBlock from "$live/blocks/function.ts";
 import handlerBlock from "$live/blocks/handler.ts";
-import islandBlock from "$live/blocks/island.ts";
 import loaderBlock from "$live/blocks/loader.ts";
 import matcherBlock from "$live/blocks/matcher.ts";
 import pageBlock from "$live/blocks/page.ts";
 import sectionBlock from "$live/blocks/section.ts";
-import { FnContext } from "$live/blocks/utils.ts";
+import { FnContext } from "$live/blocks/utils.tsx";
 import workflowBlock from "$live/blocks/workflow.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
 import { ModuleOf } from "$live/engine/block.ts";
@@ -20,12 +19,15 @@ import { Release } from "$live/engine/releases/provider.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
+export type {
+  ErrorBoundaryComponent,
+  ErrorBoundaryParams,
+} from "$live/blocks/section.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
-  islands: Record<string, ModuleOf<typeof islandBlock>>;
   workflows?: Record<string, ModuleOf<typeof workflowBlock>>;
   actions?: Record<string, ModuleOf<typeof actionBlock>>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
@@ -88,7 +90,7 @@ export type LiveConfig<
 
 export type { PropsLoader } from "$live/blocks/propsLoader.ts";
 export type { SectionProps } from "$live/blocks/section.ts";
-export type { FnContext } from "$live/blocks/utils.ts";
+export type { FnContext } from "$live/blocks/utils.tsx";
 export type ActionContext<
   TState = {},
   TManifest extends DecoManifest = LiveManifest,

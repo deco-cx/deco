@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { applyProps, FnProps } from "$live/blocks/utils.ts";
+import { applyProps, FnProps } from "$live/blocks/utils.tsx";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 
