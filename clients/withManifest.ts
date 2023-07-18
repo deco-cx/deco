@@ -13,6 +13,7 @@ import { readFromStream } from "$live/utils/http.ts";
 import { DotNestedKeys } from "$live/utils/object.ts";
 import type { DecoManifest } from "../types.ts";
 import { isStreamProps } from "../utils/invoke.ts";
+import { IS_BROWSER } from "$fresh/runtime.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
@@ -21,6 +22,11 @@ const fetchWithProps = async (
   props: unknown,
   init?: RequestInit | undefined,
 ) => {
+  if (!IS_BROWSER) {
+    console.warn(
+      "👋 Oops! Runtime.invoke should be called only on the client-side, but it seems to be called on the server-side instead. No worries, mistakes happen! 😉",
+    );
+  }
   const headers = new Headers(init?.headers);
   const isStream = isStreamProps(props) && props.stream;
 
