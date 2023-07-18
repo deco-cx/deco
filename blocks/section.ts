@@ -1,6 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "$live/blocks/handler.ts";
 import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
+import {
+  componentWith,
+  fnContextFromHttpContext,
+} from "$live/blocks/utils.tsx";
 import StubSection, { Empty } from "$live/components/StubSection.tsx";
 import {
   Block,
@@ -14,7 +18,6 @@ import type { Manifest } from "$live/live.gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest, FunctionContext } from "$live/types.ts";
 import { JSX } from "preact";
-import { componentWith, fnContextFromHttpContext } from "./utils.ts";
 
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
@@ -37,12 +40,21 @@ export const isSection = <
 export type SectionProps<T> = T extends PropsLoader<any, infer Props> ? Props
   : unknown;
 
+export interface ErrorBoundaryParams<TProps> {
+  error: any;
+  props: TProps;
+}
+
+export type ErrorBoundaryComponent<TProps> = ComponentFunc<
+  ErrorBoundaryParams<TProps>
+>;
 export interface SectionModule<TConfig = any, TProps = any> extends
   BlockModule<
     ComponentFunc<TProps>,
     JSX.Element | null,
     PreactComponent
   > {
+  errorBoundary?: ErrorBoundaryComponent<TProps>;
   loader?: PropsLoader<TConfig, TProps>;
 }
 
@@ -63,7 +75,8 @@ const sectionBlock: Block<SectionModule> = {
       TConfig,
       HttpContext
     > => {
-    const componentFunc = componentWith(resolver, mod.default);
+    const errBoundary = mod.errorBoundary;
+    const componentFunc = componentWith(resolver, mod.default, errBoundary);
     const loader = mod.loader;
     if (!loader) {
       return (

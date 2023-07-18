@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { FnProps } from "$live/blocks/utils.tsx";
 import { Promisified, waitKeys } from "$live/engine/core/utils.ts";
 import { FnContext } from "$live/types.ts";
 import {
@@ -8,7 +9,6 @@ import {
   Overwrite,
   RequiredKeys,
 } from "https://esm.sh/utility-types@3.10.0";
-import { FnProps } from "./utils.ts";
 
 export type PropsUnion<
   TLoadProps,

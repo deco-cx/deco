@@ -1,14 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "$live/blocks/handler.ts";
 import {
+  applyProps,
   FnProps,
   newSingleFlightGroup,
   SingleFlightKeyFunc,
-} from "$live/blocks/utils.ts";
+} from "$live/blocks/utils.tsx";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { introspectWith } from "$live/engine/introspect.ts";
-import { applyProps } from "./utils.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 

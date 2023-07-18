@@ -1,5 +1,5 @@
 import { Matcher } from "$live/blocks/matcher.ts";
-import { FnProps } from "$live/blocks/utils.ts";
+import { FnProps } from "$live/blocks/utils.tsx";
 import { context } from "$live/live.ts";
 import { LoaderContext } from "$live/mod.ts";
 
