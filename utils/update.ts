@@ -6,7 +6,7 @@ import { join } from "std/path/mod.ts";
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
-  /(\$live)|(deco-sites\/.*\/$)|(\$fresh)|(preact-render-to-string)/;
+  /(\$live)|(deco-sites\/.*\/$)/;
 
 interface ImportMap {
   imports: Record<string, string>;
