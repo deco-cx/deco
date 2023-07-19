@@ -11,6 +11,7 @@ import {
   Resolver,
 } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
+import { HttpError } from "$live/engine/errors.ts";
 import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
 import { context } from "$live/live.ts";
 import { Component, JSX } from "preact";
@@ -111,6 +112,9 @@ class ErrorBoundary
   state = { error: null };
 
   static getDerivedStateFromError(error: any) {
+    if (error instanceof HttpError) {
+      throw error;
+    }
     return { error };
   }
 
