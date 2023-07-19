@@ -154,6 +154,7 @@ const mapMiddleware = (
     if (enabled) {
       const { start, end, printTimings } = createServerTimings();
       context.state.t = { start, end, printTimings };
+      context.state.debugEnabled = true;
     }
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
