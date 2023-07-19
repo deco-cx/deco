@@ -119,6 +119,12 @@ class ErrorBoundary
   }
 
   render() {
+    if (this.state.error) {
+      console.error(
+        `rendering error ${this.props.component}:`,
+        this.state.error,
+      );
+    }
     return this.state.error
       ? this.props.fallback(this.state.error)
       : this.props.children;
@@ -133,17 +139,22 @@ export const componentWith = <TProps = any>(
 (
   props: TProps,
   { resolveChain }: { resolveChain: FieldResolver[] },
+  debugEnabled?: boolean,
 ) => ({
   Component: (props: TProps) => {
     return (
       <ErrorBoundary
         component={resolver}
         fallback={(error) =>
-          errBoundary
-            ? errBoundary({ error, props })
-            : context.isDeploy
-            ? null
-            : <p>Error happened: {error.message}</p>}
+          errBoundary ? errBoundary({ error, props }) : (
+            <p
+              style={context.isDeploy && !debugEnabled
+                ? "display: none"
+                : undefined}
+            >
+              Error happened rendering {resolver}: {error.message}
+            </p>
+          )}
       >
         <ComponentFunc {...props} />
       </ErrorBoundary>

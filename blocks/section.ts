@@ -13,7 +13,7 @@ import {
   InstanceOf,
   PreactComponent,
 } from "$live/engine/block.ts";
-import { BaseContext, Resolver } from "$live/engine/core/resolver.ts";
+import { Resolver } from "$live/engine/core/resolver.ts";
 import type { Manifest } from "$live/live.gen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest, FunctionContext } from "$live/types.ts";
@@ -69,7 +69,7 @@ const sectionBlock: Block<SectionModule> = {
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
   ):
-    | Resolver<PreactComponent<JSX.Element, TProps>, TProps, BaseContext>
+    | Resolver<PreactComponent<JSX.Element, TProps>, TProps, HttpContext>
     | Resolver<
       PreactComponent<JSX.Element, TProps>,
       TConfig,
@@ -81,9 +81,13 @@ const sectionBlock: Block<SectionModule> = {
     if (!loader) {
       return (
         props: TProps,
-        { resolveChain }: BaseContext,
+        { resolveChain, context }: HttpContext,
       ): PreactComponent<any, TProps> => {
-        return componentFunc(props, { resolveChain });
+        return componentFunc(
+          props,
+          { resolveChain },
+          context?.state?.debugEnabled,
+        );
       };
     }
     return async (
@@ -103,6 +107,7 @@ const sectionBlock: Block<SectionModule> = {
           fnContextFromHttpContext(httpCtx),
         ),
         { resolveChain },
+        ctx?.state?.debugEnabled,
       );
     };
   },
