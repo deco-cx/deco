@@ -392,11 +392,16 @@
         },
         "until": {
           "title": "Until"
+        },
+        "timerId": {
+          "type": "string",
+          "title": "Timer Id"
         }
       },
       "required": [
         "type",
-        "until"
+        "until",
+        "timerId"
       ],
       "title": "TimerScheduledEvent"
     },
@@ -413,10 +418,15 @@
           "const": "timer_fired",
           "default": "timer_fired",
           "title": "Type"
+        },
+        "timerId": {
+          "type": "string",
+          "title": "Timer Id"
         }
       },
       "required": [
-        "type"
+        "type",
+        "timerId"
       ],
       "title": "TimerFiredEvent"
     },
@@ -564,7 +574,7 @@
       ],
       "title": "InvokeHttpResponseEvent"
     },
-    "ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent": {
+    "ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b": {
       "anyOf": [
         {
           "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@NoOpEvent"
@@ -601,18 +611,20 @@
         },
         {
           "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@InvokeHttpResponseEvent"
-        }
+        },
+        {},
+        {}
       ],
-      "title": "ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent"
+      "title": "ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b"
     },
-    "ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent[]": {
+    "ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b[]": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent"
+        "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b"
       },
-      "title": "ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent[]"
+      "title": "ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b[]"
     },
-    "ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent": {
+    "ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b": {
       "type": "object",
       "properties": {
         "page": {
@@ -624,7 +636,7 @@
           "title": "Page Size"
         },
         "items": {
-          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent[]",
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL3J1bnRpbWUvY29yZS9ldmVudHMudHM=@ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b[]",
           "title": "Items"
         }
       },
@@ -633,15 +645,15 @@
         "pageSize",
         "items"
       ],
-      "title": "Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent"
+      "title": "Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b"
     },
-    "ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b": {
+    "ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b": {
       "anyOf": [
         {
           "$ref": "#/definitions/Resolvable"
         },
         {
-          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent"
+          "$ref": "#/definitions/ZGVjby1jeC9kdXJhYmxlL2FwaS9zZXJ2aWNlLnRz@Pagination+ActivityCompletedEvent|ActivityStartedEvent|InvokeHttpResponseEvent|LocalActivityCalledEvent|NoOpEvent|SignalReceivedEvent|TimerFiredEvent|TimerScheduledEvent|WaitingSignalEvent|WorkflowCanceledEvent|WorkflowFinishedEvent|WorkflowStartedEvent|bfe3d4666feaf8f69ce8c4ce6d8b117b|bfe3d4666feaf8f69ce8c4ce6d8b117b"
         },
         {},
         {
