@@ -170,6 +170,7 @@ export const handler = async (
 
     return JSON.stringify(info);
   });
+
   return new Response(
     info,
     {
