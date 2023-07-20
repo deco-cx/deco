@@ -136,12 +136,12 @@ const buildSchemaWithResolvables = (
   return { definitions, root };
 };
 
-const sf = singleFlight<Response>();
-export const handler = (
+const sf = singleFlight<string>();
+export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
 ) => {
-  return sf.do("schema", async () => {
+  const info = await sf.do("schema", async () => {
     const end = ctx.state.t?.start("fetch-release");
     const [schema, revision] = await Promise.all([
       getCurrent(),
@@ -168,14 +168,15 @@ export const handler = (
       schema: mschema,
     };
 
-    return new Response(
-      JSON.stringify(info),
-      {
-        headers: {
-          "Content-Type": "application/json",
-          ...allowCorsFor(req),
-        },
-      },
-    );
+    return JSON.stringify(info);
   });
+  return new Response(
+    info,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        ...allowCorsFor(req),
+      },
+    },
+  );
 };
