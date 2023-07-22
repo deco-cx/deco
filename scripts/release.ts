@@ -2,6 +2,7 @@ import { join } from "https://deno.land/std@0.181.0/path/mod.ts";
 import { increment } from "https://deno.land/std@0.181.0/semver/mod.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
 import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
+import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
 
 await exec("git fetch --tags");
 
@@ -64,7 +65,7 @@ if (await exists(metaJSONFilePath)) {
 
   await Deno.writeTextFile(
     metaJSONFilePath,
-    JSON.stringify({ ...meta, version: newVersion }, null, 2),
+    stringifyForWrite({ ...meta, version: newVersion }),
   );
 
   const GIT_ADD_COMMAND = `git add ${metaJSONFilePath}`;

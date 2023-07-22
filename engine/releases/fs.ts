@@ -4,6 +4,7 @@ import { exists } from "../../utils/filesystem.ts";
 import { singleFlight } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
+import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
 
 const sample = {
   "audience-everyone": {
@@ -42,7 +43,7 @@ export const newFsProvider = (
     let dataText: string | null = null;
     try {
       if (!(await exists(fullPath))) {
-        dataText = JSON.stringify(sample, null, 2);
+        dataText = stringifyForWrite(sample);
         await Deno.writeTextFile(fullPath, dataText);
         return sample;
       }

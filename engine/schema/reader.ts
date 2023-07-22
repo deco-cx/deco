@@ -2,6 +2,7 @@ import { Schemas } from "$live/engine/schema/builder.ts";
 import { context } from "$live/live.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { genSchemasFromManifest } from "./gen.ts";
+import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
 
 let schemas: Promise<Schemas> | null = null;
 const schemaFile = "schemas.gen.json";
@@ -15,11 +16,7 @@ export const genSchemas = async () => {
 
   await Deno.writeTextFile(
     join(Deno.cwd(), schemaFile),
-    JSON.stringify(
-      schema,
-      null,
-      2,
-    ),
+    stringifyForWrite(schema),
   );
 
   console.log(
