@@ -1,7 +1,4 @@
-import {
-  signedFetch,
-  workflowServiceInfo,
-} from "$live/commons/workflows/serviceInfo.ts";
+import { signal } from "$live/commons/workflows/initialize.ts"; // side-effect initialize
 
 export interface Props {
   signal: string;
@@ -14,17 +11,7 @@ export interface Props {
  * @description Sends a signal to the workflow using the specified payload.
  */
 export default async function signalWorkflow(
-  { signal, payload, executionId }: Props,
+  { signal: _signal, payload, executionId }: Props,
 ): Promise<void> {
-  const [_, serviceUrl] = workflowServiceInfo();
-  const resp = await signedFetch(
-    `${serviceUrl}/executions/${executionId}/signals/${signal}`,
-    {
-      method: "POST",
-      body: payload ? JSON.stringify(payload) : undefined,
-    },
-  );
-  if (!resp.ok) {
-    throw new Error(`${resp.status}, ${JSON.stringify(payload)}`);
-  }
+  await signal(executionId, _signal, payload);
 }

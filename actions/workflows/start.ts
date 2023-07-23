@@ -1,21 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
-import {
-  Workflow,
-  WorkflowFn,
-  WorkflowMetadata,
-} from "$live/blocks/workflow.ts";
-import {
-  signedFetch,
-  workflowServiceInfo,
-} from "$live/commons/workflows/serviceInfo.ts";
+import { Workflow, WorkflowFn } from "$live/blocks/workflow.ts";
+import { start } from "$live/commons/workflows/initialize.ts"; // side-effect initialize
 import {
   toExecution,
   WorkflowExecution,
+  WorkflowMetadata,
 } from "$live/commons/workflows/types.ts";
-import { RuntimeParameters } from "$live/deps.ts";
+import { Arg, RuntimeParameters, WorkflowExecutionBase } from "$live/deps.ts";
 import { BlockFromKey, BlockFunc, BlockKeys } from "$live/engine/block.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { Manifest } from "$live/live.gen.ts";
+import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 
 export interface CommonProps<
@@ -92,26 +87,35 @@ export default async function startWorkflow<
   props: WorkflowProps<key, TManifest, block> | AnyWorkflow,
 ): Promise<WorkflowExecution> {
   const { id, args, runtimeParameters } = props;
-  const [service, serviceUrl] = workflowServiceInfo();
   const workflow = fromWorkflowProps(props);
-  const payload = {
-    alias: `${service}/live/workflows/run?${
-      WorkflowQS.buildFromProps(workflow)
-    }`,
+  const service = context.isDeploy
+    ? `wss://deco-sites-${context.site}-${context.deploymentId}.deno.dev`
+    : "ws://localhost:8000";
+
+  const url = new URL(
+    `${service}/live/workflows/run?${WorkflowQS.buildFromProps(workflow)}`,
+  );
+
+  for (
+    const [key, value] of Object.entries(
+      runtimeParameters?.websocket?.defaultQueryParams ?? {},
+    )
+  ) {
+    url.searchParams.set(key, value);
+  }
+  const payload: WorkflowExecutionBase = {
+    workflow: {
+      type: "websocket",
+      url: url.toString(),
+    },
     id,
     input: args,
+    namespace: context.site,
     runtimeParameters,
     metadata: {
       workflow: fromWorkflowProps(props),
       ...(props?.metadata ?? {}),
     },
   };
-  const resp = await signedFetch(`${serviceUrl}/executions`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-  if (resp.ok) {
-    return toExecution(await resp.json());
-  }
-  throw new Error(`${resp.status}, ${JSON.stringify(payload)}`);
+  return await start<Arg, unknown, WorkflowMetadata>(payload).then(toExecution);
 }

@@ -1,7 +1,4 @@
-import {
-  signedFetch,
-  workflowServiceInfo,
-} from "$live/commons/workflows/serviceInfo.ts";
+import { cancel } from "$live/commons/workflows/initialize.ts"; // side-effect initialize
 
 export interface Props {
   executionId: string;
@@ -14,15 +11,5 @@ export interface Props {
 export default async function cancelWorkflow(
   { reason, executionId }: Props,
 ): Promise<void> {
-  const [_, serviceUrl] = workflowServiceInfo();
-  const resp = await signedFetch(
-    `${serviceUrl}/executions/${executionId}`,
-    {
-      method: "DELETE",
-      body: JSON.stringify({ reason }),
-    },
-  );
-  if (!resp.ok) {
-    throw new Error(`${resp.status}, ${JSON.stringify({ reason })}`);
-  }
+  await cancel(executionId, reason);
 }
