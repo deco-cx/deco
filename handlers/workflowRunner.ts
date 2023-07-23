@@ -14,8 +14,7 @@ export default function WorkflowHandler({ workflow }: Config): Handler {
     if (isFreshCtx<LiveConfig<unknown, LiveState, Manifest>>(conn)) {
       const handler = workflowHTTPHandler(
         workflow,
-        (execId, metadata, runtimeParams) =>
-          new WorkflowContext(conn.state, execId, metadata, runtimeParams),
+        (exec) => new WorkflowContext(conn.state, exec),
       );
       return handler(req, conn);
     }

@@ -4,9 +4,9 @@ import {
   Arg,
   LocalActivityCommand,
   Metadata,
-  RuntimeParameters,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
+  WorkflowExecution,
 } from "$live/deps.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import type { Manifest } from "$live/live.gen.ts";
@@ -32,11 +32,9 @@ export class WorkflowContext<
 > extends DurableWorkflowContext<TMetadata> {
   constructor(
     protected ctx: LiveConfig<unknown, LiveState, TManifest>,
-    executionId: string,
-    metadata?: TMetadata,
-    runtimeParameters?: RuntimeParameters,
+    execution: WorkflowExecution<Arg, unknown, TMetadata>,
   ) {
-    super(executionId, metadata, runtimeParameters);
+    super(execution);
   }
 
   public invoke<

@@ -1,16 +1,14 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { WorkflowQS } from "$live/actions/workflows/start.ts";
 import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
-import { workflowServiceInfo } from "$live/commons/workflows/serviceInfo.ts";
+import { initOnce } from "$live/commons/workflows/initialize.ts";
+import { WorkflowMetadata } from "$live/commons/workflows/types.ts";
 import {
   Arg,
   arrToStream,
   Command,
-  fetchPublicKey,
   HttpRunRequest,
-  InvalidSignatureError,
   Metadata,
-  verifySignature,
   workflowRemoteRunner,
   workflowWebSocketHandler,
 } from "$live/deps.ts";
@@ -19,43 +17,11 @@ import { LiveConfig } from "$live/mod.ts";
 import { LiveState } from "$live/types.ts";
 import { ConnInfo } from "std/http/server.ts";
 
-export type Props = HttpRunRequest<Arg, { workflow: Workflow } & Metadata>;
-
-let key: Promise<JsonWebKey> | null = null;
-
-const getOrFetchPublicKey = (): Promise<JsonWebKey> => {
-  const [_, serviceUrl] = workflowServiceInfo();
-  return key ??= fetchPublicKey(serviceUrl);
-};
-
-const verifyWithCurrentKeyOrRefetch = async (req: Request) => {
-  try {
-    await verifySignature(req, getOrFetchPublicKey());
-  } catch (err) {
-    if (!(err instanceof InvalidSignatureError)) {
-      throw err;
-    }
-    console.log(
-      "error when validating signature",
-      err,
-      "retrying with a new key",
-    );
-    key = null;
-    await verifySignature(req, getOrFetchPublicKey());
-  }
-};
-
-/**
- * Check if the request comes from durable and its signature is valid.
- */
-export const isValidRequestFromDurable = async (req: Request) => {
-  try {
-    await verifyWithCurrentKeyOrRefetch(req);
-    return true;
-  } catch {
-    return false;
-  }
-};
+export type Props = HttpRunRequest<
+  Arg,
+  unknown,
+  { workflow: Workflow } & Metadata
+>;
 
 /**
  * @description Proceed the workflow execution based on the current state of the workflow.
@@ -64,10 +30,11 @@ async function runWorkflow(
   props: Props,
   ctx: LiveConfig<unknown, LiveState, Manifest>,
 ): Promise<Command> {
-  const { metadata: { workflow } } = props;
+  const { execution: { metadata } } = props;
+  const workflow = metadata!.workflow;
   const handler = workflowRemoteRunner(
     workflow,
-    (workflowId, metadata) => new WorkflowContext(ctx, workflowId, metadata),
+    (execution) => new WorkflowContext(ctx, execution),
   );
   const commands = arrToStream(props.results);
   await handler({ ...props, commands });
@@ -78,14 +45,20 @@ const handleProps = async (
   props: Props,
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState, Manifest>>,
 ) => {
-  const metadata = await ctx.state.resolve(props?.metadata ?? {});
-  return runWorkflow({ ...props, metadata }, ctx.state);
+  const metadata = await ctx.state.resolve<WorkflowMetadata>(
+    (props?.execution?.metadata ?? {}) as WorkflowMetadata,
+  );
+  return runWorkflow(
+    { ...props, execution: { ...props.execution, metadata } },
+    ctx.state,
+  );
 };
 
 export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
 ): Promise<Response> => {
+  initOnce();
   if (req.headers.get("upgrade") === "websocket") {
     const workflow = WorkflowQS.extractFromUrl(req.url);
     if (!workflow) {
@@ -94,19 +67,15 @@ export const handler = async (
     const workflowFn = await ctx.state.resolve(workflow);
     const handler = workflowWebSocketHandler(
       workflowFn,
-      (executionId, metadata) =>
+      (execution) =>
         new WorkflowContext(
           ctx.state as unknown as LiveConfig<unknown, LiveState, Manifest>,
-          executionId,
-          metadata,
+          execution,
         ),
-      await getOrFetchPublicKey(),
     );
     return handler(req, ctx as ConnInfo);
   }
-  const verifyPromise = verifyWithCurrentKeyOrRefetch(req);
   const props: Props = await req.json();
-  await verifyPromise;
   const resp = await handleProps(
     props,
     ctx as unknown as HandlerContext<
