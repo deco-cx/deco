@@ -12,8 +12,10 @@ import { context } from "$live/live.ts";
 const initializeOnceWhen = <TArgs extends Arg = Arg, TResult = unknown>(
   f: (...args: [...TArgs]) => TResult,
 ): (...args: [...TArgs]) => TResult => {
-  initOnce();
-  return f;
+  return (...args: [...TArgs]) => {
+    initOnce();
+    return f(...args);
+  };
 };
 
 let initialized = false;
