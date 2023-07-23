@@ -91,12 +91,22 @@ export default async function startWorkflow<
   const service = context.isDeploy
     ? `wss://deco-sites-${context.site}-${context.deploymentId}.deno.dev`
     : "ws://localhost:8000";
+
+  const url = new URL(
+    `${service}/live/workflows/run?${WorkflowQS.buildFromProps(workflow)}`,
+  );
+
+  for (
+    const [key, value] of Object.entries(
+      runtimeParameters?.websocket?.defaultQueryParams ?? {},
+    )
+  ) {
+    url.searchParams.set(key, value);
+  }
   const payload: WorkflowExecutionBase = {
     workflow: {
       type: "websocket",
-      url: `${service}/live/workflows/run?${
-        WorkflowQS.buildFromProps(workflow)
-      }`,
+      url: url.toString(),
     },
     id,
     input: args,
