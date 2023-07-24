@@ -155,7 +155,13 @@ const mapMiddleware = (
       const { start, end, printTimings } = createServerTimings();
       context.state.t = { start, end, printTimings };
       context.state.debugEnabled = true;
+      context.state.log = console.log;
+    } else {
+      context.state.log = () => {}; // stub
     }
+    context.state.log(
+      `[${liveContext.site}][${request.url}]\n[Headers]:[${request.headers}]`,
+    );
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
 
