@@ -21,7 +21,6 @@
               "$live/handlers/redirect.ts",
               "$live/handlers/router.ts",
               "$live/handlers/routesSelection.ts",
-              "$live/handlers/sitemap.ts",
               "$live/handlers/workflowRunner.ts",
               "$live/pages/LivePage.tsx",
               "$live/sections/Conditional_Beta.tsx",
@@ -2127,22 +2126,6 @@
         }
       }
     },
-    "JGxpdmUvaGFuZGxlcnMvc2l0ZW1hcC50cw==": {
-      "title": "Serve your site's SiteMap",
-      "type": "object",
-      "required": [
-        "__resolveType"
-      ],
-      "properties": {
-        "__resolveType": {
-          "type": "string",
-          "enum": [
-            "$live/handlers/sitemap.ts"
-          ],
-          "default": "$live/handlers/sitemap.ts"
-        }
-      }
-    },
     "JGxpdmUvaGFuZGxlcnMvd29ya2Zsb3dSdW5uZXIudHM=": {
       "title": "$live/handlers/workflowRunner.ts",
       "type": "object",
@@ -2723,9 +2706,6 @@
         },
         {
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcm91dGVzU2VsZWN0aW9uLnRz"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvc2l0ZW1hcC50cw=="
         },
         {
           "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvd29ya2Zsb3dSdW5uZXIudHM="
