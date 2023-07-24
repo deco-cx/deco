@@ -12,6 +12,8 @@ const HOP_BY_HOP = [
   "Proxy-Authenticate",
 ];
 
+const noTrailingSlashes = (str: string) =>
+  str.at(-1) === "/" ? str.slice(0, -1) : str;
 const sanitize = (str: string) => str.startsWith("/") ? str : `/${str}`;
 const removeCFHeaders = (headers: Headers) => {
   headers.forEach((_value, key) => {
@@ -22,7 +24,7 @@ const removeCFHeaders = (headers: Headers) => {
 };
 
 const proxyTo = (
-  { proxyUrl, basePath, host: hostToUse }: {
+  { proxyUrl: rawProxyUrl, basePath, host: hostToUse }: {
     proxyUrl: string;
     basePath?: string;
     host?: string;
@@ -30,6 +32,7 @@ const proxyTo = (
 ): Handler =>
 async (req, _ctx) => {
   const url = new URL(req.url);
+  const proxyUrl = noTrailingSlashes(rawProxyUrl);
   const qs = url.searchParams.toString();
   const path = basePath && basePath.length > 0
     ? url.pathname.replace(basePath, "")
