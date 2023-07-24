@@ -6,7 +6,7 @@ export type Secret = InstanceOf<typeof secretBlock, "#/root/secrets">;
 // deno-lint-ignore no-explicit-any
 export type SecretFunc<TConfig = any> = (c: TConfig) => Vault;
 export interface Vault {
-  get(): PromiseOrValue<string>;
+  get(): PromiseOrValue<string | undefined>;
 }
 
 const secretBlock: Block<BlockModule<SecretFunc>> = {
