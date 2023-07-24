@@ -249,7 +249,6 @@ export const handler = async (
   const data = req.method === "POST"
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url));
-
   const isInvoked = isInvokeFunc(data);
 
   const wrapped = isInvoked ? { invoked: data } : data;
