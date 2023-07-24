@@ -1,4 +1,5 @@
 import { getSetCookies, Handler, setCookie } from "std/http/mod.ts";
+import { isFreshCtx } from "$live/handlers/fresh.ts";
 
 const HOP_BY_HOP = [
   "Keep-Alive",
@@ -41,7 +42,13 @@ async (req, _ctx) => {
   const headers = new Headers(req.headers);
   HOP_BY_HOP.forEach((h) => headers.delete(h));
 
+  if (isFreshCtx<{ log: typeof console.log }>(_ctx)) {
+    _ctx?.state?.log("proxy received headers", headers);
+  }
   removeCFHeaders(headers); // cf-headers are not ASCII-compliant
+  if (isFreshCtx<{ log: typeof console.log }>(_ctx)) {
+    _ctx?.state?.log("proxy sent headers", headers);
+  }
 
   headers.set("origin", to.origin);
   headers.set("host", hostToUse ?? to.host);
