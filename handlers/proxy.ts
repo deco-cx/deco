@@ -14,11 +14,11 @@ const HOP_BY_HOP = [
 
 const sanitize = (str: string) => str.startsWith("/") ? str : `/${str}`;
 const removeCFHeaders = (headers: Headers) => {
-  for (const header of headers.keys()) {
-    if (header.startsWith("cf-")) {
-      headers.delete(header);
+  headers.forEach((_value, key) => {
+    if (key.startsWith("cf-")) {
+      headers.delete(key);
     }
-  }
+  });
 };
 
 const proxyTo = (
