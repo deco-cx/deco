@@ -84,6 +84,7 @@ export type LiveConfig<
   & TState
   & {
     debugEnabled?: boolean;
+    log: (...args: any[]) => void;
     $live: TConfig;
     resolve: ResolveFunc;
     release: Release;
