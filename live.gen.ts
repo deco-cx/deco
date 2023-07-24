@@ -21,10 +21,11 @@ import * as $$$$11 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "./handlers/routesSelection.ts";
 import * as $$$$$$1 from "./handlers/router.ts";
 import * as $$$$$$2 from "./handlers/devPage.ts";
-import * as $$$$$$3 from "./handlers/proxy.ts";
-import * as $$$$$$4 from "./handlers/fresh.ts";
-import * as $$$$$$5 from "./handlers/redirect.ts";
-import * as $$$$$$6 from "./handlers/workflowRunner.ts";
+import * as $$$$$$3 from "./handlers/sitemap.ts";
+import * as $$$$$$4 from "./handlers/proxy.ts";
+import * as $$$$$$5 from "./handlers/fresh.ts";
+import * as $$$$$$6 from "./handlers/redirect.ts";
+import * as $$$$$$7 from "./handlers/workflowRunner.ts";
 import * as $$$$$$$0 from "./pages/LivePage.tsx";
 import * as $$$$$$$$0 from "./sections/UseSlot.tsx";
 import * as $$$$$$$$1 from "./sections/Slot.tsx";
@@ -74,12 +75,13 @@ const manifest = {
   },
   "handlers": {
     "$live/handlers/devPage.ts": $$$$$$2,
-    "$live/handlers/fresh.ts": $$$$$$4,
-    "$live/handlers/proxy.ts": $$$$$$3,
-    "$live/handlers/redirect.ts": $$$$$$5,
+    "$live/handlers/fresh.ts": $$$$$$5,
+    "$live/handlers/proxy.ts": $$$$$$4,
+    "$live/handlers/redirect.ts": $$$$$$6,
     "$live/handlers/router.ts": $$$$$$1,
     "$live/handlers/routesSelection.ts": $$$$$$0,
-    "$live/handlers/workflowRunner.ts": $$$$$$6,
+    "$live/handlers/sitemap.ts": $$$$$$3,
+    "$live/handlers/workflowRunner.ts": $$$$$$7,
   },
   "pages": {
     "$live/pages/LivePage.tsx": $$$$$$$0,

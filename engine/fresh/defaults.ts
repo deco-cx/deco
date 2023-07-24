@@ -1,4 +1,4 @@
-import { ResolverMap } from "$live/engine/core/resolver.ts";
+import { isResolvable, ResolverMap } from "$live/engine/core/resolver.ts";
 import { FreshContext } from "$live/engine/fresh/manifest.ts";
 import { DotNestedKeys, pickPaths } from "$live/utils/object.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
@@ -40,6 +40,9 @@ export default {
           tCtx ?? {},
         );
       deferred._deferred = true;
+      deferred.__resolveType = isResolvable(props?.data)
+        ? props?.data?.__resolveType
+        : undefined;
       return deferred;
     }
     return props?.data;

@@ -238,6 +238,7 @@ export const asResolved = <T>(data: T, deferred?: boolean): T => {
 
 export type Deferred<T, TContext extends BaseContext = BaseContext> = {
   _deferred: true;
+  __resolveType?: string;
   (partialCtx?: Partial<TContext>): PromiseOrValue<T>;
 };
 
