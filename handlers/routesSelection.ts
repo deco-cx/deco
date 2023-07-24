@@ -55,11 +55,13 @@ export const router = (
       const ctx = { ...connInfo, params: (groups ?? {}) } as ConnInfo & {
         params: Record<string, string>;
         state: {
+          routes: Route[];
           routerInfo: RouterContext;
           flags: Flag[];
         };
       };
 
+      ctx.state.routes = routes;
       ctx.state.routerInfo = {
         flags: ctx.state.flags,
         pagePath: routePath,
@@ -123,6 +125,27 @@ export const toRouteMap = (
   return [routeMap, hrefRoutes];
 };
 
+export const buildRoutes = (audiences: Routes[]): [
+  Record<string, Resolvable<Handler>>,
+  Record<string, Resolvable<Handler>>,
+] => {
+  // We should tackle this problem elsewhere
+  return audiences.filter(Boolean)
+    .reduce(
+      ([routes, hrefRoutes], audience) => {
+        // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
+        const [newRoutes, newHrefRoutes] = toRouteMap(audience ?? []);
+        return [
+          { ...routes, ...newRoutes },
+          { ...hrefRoutes, ...newHrefRoutes },
+        ];
+      },
+      [{}, {}] as [
+        Record<string, Resolvable<Handler>>,
+        Record<string, Resolvable<Handler>>,
+      ],
+    );
+};
 /**
  * @title Routes Selection
  * @description Select routes based on the target audience.
@@ -134,24 +157,7 @@ export default function RoutesSelection(
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
-    const [routes, hrefRoutes] = audiences
-      // We should tackle this problem elsewhere
-      .filter(Boolean)
-      .reduce(
-        ([routes, hrefRoutes], audience) => {
-          // check if the audience matches with the given context considering the `isMatch` provided by the cookies.
-          const [newRoutes, newHrefRoutes] = toRouteMap(audience ?? []);
-          return [
-            { ...routes, ...newRoutes },
-            { ...hrefRoutes, ...newHrefRoutes },
-          ];
-        },
-        [{}, {}] as [
-          Record<string, Resolvable<Handler>>,
-          Record<string, Resolvable<Handler>>,
-        ],
-      );
-
+    const [routes, hrefRoutes] = buildRoutes(audiences);
     // build the router from entries
     const builtRoutes = Object.entries(routes).sort((
       [routeStringA],

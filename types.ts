@@ -18,6 +18,7 @@ import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { Release } from "$live/engine/releases/provider.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
+import { Route } from "$live/flags/audience.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
 export type {
   ErrorBoundaryComponent,
@@ -87,6 +88,7 @@ export type LiveConfig<
     resolve: ResolveFunc;
     release: Release;
     invoke: InvocationFunc<TManifest>;
+    routes?: Route[];
   };
 
 export type { PropsLoader } from "$live/blocks/propsLoader.ts";

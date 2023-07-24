@@ -1,4 +1,5 @@
 import stylesPlugin from "$live/plugins/styles.ts";
+export { isDeferred } from "$live/engine/core/resolver.ts";
 export { WorkflowContext } from "$live/blocks/workflow.ts";
 export type { Workflow } from "$live/blocks/workflow.ts";
 export { withManifest } from "$live/clients/withManifest.ts";
