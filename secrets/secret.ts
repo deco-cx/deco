@@ -8,16 +8,14 @@ export interface Props {
   secret: string;
 }
 
-const vault: Record<string, string> = Deno.env.has("DECO_SECRETS")
+const vault: Record<string, string> = !Deno.env.has("DECO_SECRETS")
   ? {}
   : JSON.parse(atob(Deno.env.get("DECO_SECRETS")!));
 
 export default function Secret(props: Props): Vault {
   return {
-    use: <TResult = unknown>(
-      cb: (key: string) => PromiseOrValue<TResult>,
-    ): PromiseOrValue<TResult> => {
-      return cb(vault[props.secret]);
+    get: (): PromiseOrValue<string> => {
+      return vault[props.secret];
     },
   };
 }

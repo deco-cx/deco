@@ -12,6 +12,7 @@ import routeBlock from "$live/blocks/route.ts";
 import sectionBlock from "$live/blocks/section.ts";
 import workflowBlock from "$live/blocks/workflow.ts";
 import { Block } from "$live/engine/block.ts";
+import secretBlock from "$live/blocks/secret.ts";
 
 export default [
   functionBlock, // legacy
@@ -27,4 +28,5 @@ export default [
   actionBlock,
   workflowBlock,
   appBlock,
+  secretBlock,
 ] as Block[];

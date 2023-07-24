@@ -1,4 +1,3 @@
-import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 
@@ -7,14 +6,8 @@ export type Secret = InstanceOf<typeof secretBlock, "#/root/secrets">;
 // deno-lint-ignore no-explicit-any
 export type SecretFunc<TConfig = any> = (c: TConfig) => Vault;
 export interface Vault {
-  use: <TResult = unknown>(
-    cb: (key: string) => PromiseOrValue<TResult>,
-  ) => PromiseOrValue<TResult>;
+  get(): PromiseOrValue<string>;
 }
-
-const vault: Record<string, string> = Deno.env.has("DECO_SECRETS")
-  ? {}
-  : JSON.parse(atob(Deno.env.get("DECO_SECRETS")!));
 
 const secretBlock: Block<BlockModule<SecretFunc>> = {
   type: "secrets",
@@ -29,21 +22,15 @@ const secretBlock: Block<BlockModule<SecretFunc>> = {
   }) =>
   (
     confg: TConfig,
-  ) => { // by default use global state
+  ) => {
     return func.default(
       confg,
     );
   },
-  defaultPreview: (secret) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(secret, null, 2) },
-    };
-  },
 };
 
 /**
- * <TConfig>(config:TConfig) => Account
- * The account block is used to configure platforms using settings
+ * <TConfig>(config:TConfig) => Secret
+ * A Secret vault that is a function with a callback to use the secret (this avoid being serialized in a island)
  */
 export default secretBlock;
