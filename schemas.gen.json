@@ -957,6 +957,31 @@
       ],
       "title": "$live/handlers/fresh.ts@FreshConfig"
     },
+    "JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Header": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "title": "Key"
+        },
+        "value": {
+          "type": "string",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "title": "{{{key}}} - {{{value}}}"
+    },
+    "JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Header[]": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Header"
+      },
+      "title": "Header[]"
+    },
     "JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Props": {
       "type": "object",
       "properties": {
@@ -980,6 +1005,11 @@
           ],
           "description": "Host that should be used when proxying the request",
           "title": "Host"
+        },
+        "customHeaders": {
+          "$ref": "#/definitions/JGxpdmUvaGFuZGxlcnMvcHJveHkudHM=@Header[]",
+          "description": "custom headers",
+          "title": "Custom Headers"
         }
       },
       "required": [
