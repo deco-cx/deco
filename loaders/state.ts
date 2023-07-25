@@ -1,4 +1,4 @@
-import { Account } from "../blocks/account.ts";
+import { Accounts } from "../blocks/account.ts";
 import { Flag } from "../blocks/flag.ts";
 import { Loader } from "../blocks/loader.ts";
 import { Page } from "../blocks/page.ts";
@@ -12,13 +12,7 @@ import { MiddlewareConfig } from "../routes/_middleware.ts";
  */
 export interface StateProp {
   key: string;
-  value:
-    | Resolvable
-    | Resolvable<Loader>
-    | Resolvable<Account>
-    | Resolvable<Flag>
-    | Resolvable<Section>
-    | Resolvable<Page>;
+  value: Accounts | Flag | Section | Loader | Page;
 }
 export interface Props {
   state: StateProp[];

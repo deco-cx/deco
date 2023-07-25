@@ -98,15 +98,9 @@
         }
       ]
     },
-    "JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@Loader": {
-      "$ref": "#/root/loaders",
-      "title": "Loader"
-    },
-    "JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Account": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "title": "Account"
+    "JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Accounts": {
+      "$ref": "#/root/accounts",
+      "title": "Accounts"
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag": {
       "$ref": "#/root/flags",
@@ -116,20 +110,18 @@
       "$ref": "#/root/sections",
       "title": "Section"
     },
+    "JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@Loader": {
+      "$ref": "#/root/loaders",
+      "title": "Loader"
+    },
     "JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page": {
       "$ref": "#/root/pages",
       "title": "Page"
     },
-    "JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@4dc8c2f895a6513848bc8f3f1319d3f2|Account|Flag|Loader|Page|Section": {
+    "JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Accounts|Flag|Loader|Page|Section": {
       "anyOf": [
         {
-          "$ref": "#/definitions/Resolvable"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@Loader"
-        },
-        {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Account"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Accounts"
         },
         {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Flag"
@@ -138,10 +130,13 @@
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
         },
         {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@Loader"
+        },
+        {
           "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3BhZ2UudHM=@Page"
         }
       ],
-      "title": "4dc8c2f895a6513848bc8f3f1319d3f2|Account|Flag|Loader|Page|Section"
+      "title": "Accounts|Flag|Loader|Page|Section"
     },
     "JGxpdmUvbG9hZGVycy9zdGF0ZS50cw==@StateProp": {
       "type": "object",
@@ -151,7 +146,7 @@
           "title": "Key"
         },
         "value": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@4dc8c2f895a6513848bc8f3f1319d3f2|Account|Flag|Loader|Page|Section",
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2FjY291bnQudHM=@Accounts|Flag|Loader|Page|Section",
           "title": "Value"
         }
       },
