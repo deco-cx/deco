@@ -3,6 +3,7 @@ import {
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { join } from "std/path/mod.ts";
+import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK = /(\$live)|(deco-sites\/.*\/$)/;
@@ -66,7 +67,7 @@ export async function update() {
 
   await Deno.writeTextFile(
     importMapPath,
-    JSON.stringify(newImportMap, null, 2),
+    stringifyForWrite(newImportMap),
   );
   console.info("Upgraded successfully");
 }

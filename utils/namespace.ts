@@ -1,6 +1,7 @@
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import { siteJSON } from "../dev.ts";
 import { exists } from "./filesystem.ts";
+import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
 
 const sanitizer = (str: string | undefined) =>
   str?.endsWith("/") ? str : `${str}/`;
@@ -22,7 +23,7 @@ export const updateImportMap = async (dir: string, ns: string) => {
     if (!imports[namespace]) {
       await Deno.writeTextFile(
         importMapPath,
-        JSON.stringify(
+        stringifyForWrite(
           {
             ...(importMap ?? {}),
             imports: {
@@ -30,8 +31,6 @@ export const updateImportMap = async (dir: string, ns: string) => {
               ...imports,
             },
           },
-          null,
-          2,
         ),
       );
     }
