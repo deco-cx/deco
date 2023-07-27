@@ -51,7 +51,7 @@ export const jsDocToSchema = (node: JsDoc) =>
           }
 
           const match = (tag as JsDocTagValued).value?.match(
-            /^@(?<key>[a-zA-Z$]+) (?<value>.*)$/,
+            /^@(?<key>\w+) (?<value>.*)$/,
           );
 
           const key = match?.groups?.key;
