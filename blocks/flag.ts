@@ -20,6 +20,7 @@ export interface FlagObj<T = unknown> {
 
 /**
  * @title {{#beautifySchemaTitle}}{{{rule.__resolveType}}}{{/beautifySchemaTitle}} Variant
+ * @label hidden
  * @icon flag
  */
 export interface Variant<T> {

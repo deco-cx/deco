@@ -19,11 +19,12 @@ import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
 
 /**
- * @title Page Sections
+ * @title Sections
+ * @label hidden
  */
 export type Sections = Section[];
 /**
- * @titleBy name
+ * @label rootHidden
  */
 export interface Props {
   name: string;
