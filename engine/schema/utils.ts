@@ -1,4 +1,5 @@
 import { TransformContext } from "$live/engine/schema/transform.ts";
+import { context } from "$live/live.ts";
 import {
   DocNode,
   DocNodeFunction,
@@ -11,6 +12,7 @@ import {
 import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
 import { fromFileUrl, join } from "std/path/mod.ts";
+import { getDenoDoc } from "./docServer.ts";
 
 const limit = pLimit(5);
 
@@ -124,7 +126,7 @@ export const exec = async (cmd: string[]) => {
   return new TextDecoder().decode(stdout);
 };
 
-const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
+const _docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
   return doc(path, {
     importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
   });
@@ -169,9 +171,10 @@ function isQuotaExceededError(err: unknown): boolean {
 }
 export const denoDoc = async (
   path: string,
-  importMap?: string,
+  _importMap?: string,
 ): Promise<DocNode[]> => {
   try {
+    const docFunc = context.isDeploy ? await getDenoDoc() : docAsExec;
     const isLocal = path.startsWith("file");
     const lastModified = isLocal
       ? await Deno.stat(new URL(path)).then((s) =>
@@ -186,9 +189,7 @@ export const denoDoc = async (
       }
     }
     const promise = denoDocLocalCache.get(path) ??
-      (typeof Deno.run === "function"
-        ? docAsExec(path)
-        : docAsLib(path, importMap));
+      docFunc(path);
     promise.then((doc) => {
       try {
         localStorage.setItem(

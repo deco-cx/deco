@@ -1207,43 +1207,15 @@
       "title": "$live/handlers/workflowRunner.ts@Config"
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/Resolvable"
-        },
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
-          },
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
+      },
           "title": "Sections",
           "label": "hidden",
           "changeable": "true"
-        },
-        {
-          "title": "Variant",
-          "label": "hidden",
-          "type": "object",
-          "allOf": [
-            {
-              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section[]+Section[]"
-            }
-          ],
-          "required": [
-            "__resolveType"
-          ],
-          "properties": {
-            "__resolveType": {
-              "type": "string",
-              "enum": [
-                "$live/flags/multivariate.ts"
-              ],
-              "default": "$live/flags/multivariate.ts"
-            }
-          }
-        }
-      ]
     },
+          "label": "hidden",
     "JGxpdmUvcGFnZXMvTGl2ZVBhZ2UudHN4@Props": {
       "type": "object",
       "properties": {
@@ -1762,7 +1734,41 @@
       ],
       "title": "$live/blocks/flag.ts@FlagObj"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[]": {
+    "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section|Section[]": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Resolvable"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]"
+        },
+        {
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
+        },
+        {
+          "title": "Variant",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section|Section[]+Section|Section[]"
+            }
+          ],
+          "required": [
+            "__resolveType"
+          ],
+          "properties": {
+            "__resolveType": {
+              "type": "string",
+              "enum": [
+                "$live/flags/multivariate.ts"
+              ],
+              "default": "$live/flags/multivariate.ts"
+            }
+          }
+        }
+      ]
+    },
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section|Section[]": {
       "type": "object",
       "properties": {
         "rule": {
@@ -1770,7 +1776,7 @@
           "title": "Condition"
         },
         "value": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section[]",
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section|Section[]",
           "title": "Content"
         }
       },
@@ -1782,18 +1788,18 @@
       "label": "hidden",
       "icon": "flag"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[][]": {
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section|Section[][]": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[]"
+        "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section|Section[]"
       },
-      "title": "Variant+Section[][]"
+      "title": "Variant+Section|Section[][]"
     },
-    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section[]+Section[]": {
+    "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section|Section[]+Section|Section[]": {
       "type": "object",
       "properties": {
         "variants": {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[][]",
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section|Section[][]",
           "minItems": 1,
           "addBehavior": "1",
           "title": "Variants"
@@ -2606,7 +2612,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section[]+Section[]"
+          "$ref": "#/definitions/JGxpdmUvYmxvY2tzL2ZsYWcudHM=@MultivariateFlag+Section|Section[]+Section|Section[]"
         }
       ],
       "required": [

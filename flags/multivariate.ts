@@ -5,15 +5,15 @@ import { asResolved } from "$live/engine/core/resolver.ts";
 /**
  * @title Multivariate
  */
-export type MultivariateProps<T = Section[]> = MultivariateFlag<T>;
+export type MultivariateProps<T = Section[] | Section> = MultivariateFlag<T>;
 
 /**
  * @title Variant
  * @label hidden
  */
 export default function MultivariateFlag(
-  props: MultivariateProps<Section[]>,
-): MultivariateFlag<Section[]> {
+  props: MultivariateProps<Section[] | Section>,
+): MultivariateFlag<Section[] | Section> {
   return props;
 }
 
