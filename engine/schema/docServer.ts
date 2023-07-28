@@ -11,7 +11,7 @@ import type {
   DocRequest,
   DocResponse,
 } from "https://denopkg.com/deco-cx/denodoc@9c2ddd8cce33261745f376eb2d32f05273b91a74/main.ts";
-const serverUrl = "ws://localhost:8081/ws"; // "wss://denodoc-server.fly.dev/ws"; //"ws://localhost:8081/ws";
+const serverUrl = "wss://denodoc-server.fly.dev/ws"; //"ws://localhost:8081/ws";
 
 type DenoDocChannel = Channel<
   BeginDenoDocRequest | DocRequest,

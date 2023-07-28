@@ -174,7 +174,7 @@ export const denoDoc = async (
   _importMap?: string,
 ): Promise<DocNode[]> => {
   try {
-    if (!context.isDeploy) {
+    if (context.isDeploy) {
       const docFunc = await getDenoDoc();
       denoDocLocalCache[path] ??= docFunc(path);
       return denoDocLocalCache[path];
