@@ -1,16 +1,14 @@
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { channel } from "$live/engine/schema/docServer.ts";
-import { context } from "$live/live.ts";
+import { DecoManifest } from "$live/types.ts";
 import { genSchemasFromManifest } from "./gen.ts";
 import { stringifyForWrite } from "$live/utils/json.ts";
 
-let schemas: Promise<Schemas> | null = null;
-
-export const genSchemas = async () => {
+export const genSchemas = async (manifest: DecoManifest) => {
   console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
   const start = performance.now();
   const schema = await genSchemasFromManifest(
-    context.manifest!,
+    manifest,
   );
 
   if (channel) {
@@ -28,6 +26,8 @@ export const genSchemas = async () => {
   return schema;
 };
 
-export const getCurrent = (): Promise<Schemas> => {
-  return genSchemas();
+const cache: Record<string, Promise<Schemas>> = {};
+export const getCurrent = (manifest: DecoManifest): Promise<Schemas> => {
+  const key = JSON.stringify(manifest);
+  return cache[key] ??= genSchemas(manifest);
 };

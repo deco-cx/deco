@@ -130,7 +130,7 @@ export const handler = async (
   const info = await sf.do("schema", async () => {
     const end = ctx.state.t?.start("fetch-release");
     const [schema, revision] = await Promise.all([
-      getCurrent(),
+      getCurrent(ctx.state.manifest),
       ctx.state.release.revision(),
     ]);
     end?.();
