@@ -19,15 +19,26 @@ type DenoDocChannel = Channel<
 >;
 
 export let channel: Promise<DenoDocChannel> | null = null;
-export const newChannel = (): Promise<
-  DenoDocChannel
-> => {
-  channel ??= asChannel((() => {
+
+const createChannel = () => {
+  return asChannel<BeginDenoDocRequest | DocRequest, DocResponse>((() => {
     const socket = new WebSocket(serverUrl);
     socket.binaryType = "arraybuffer";
     return socket;
   })());
-  return channel;
+};
+export const newChannel = (): Promise<
+  DenoDocChannel
+> => {
+  if (channel === null) {
+    return channel ??= createChannel();
+  }
+  return channel.then((c) => {
+    if (c.closed.is_set()) {
+      return channel ??= createChannel();
+    }
+    return c;
+  });
 };
 
 export type DocFunction = (path: string) => Promise<DocNode[]>;
