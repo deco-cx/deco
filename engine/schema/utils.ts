@@ -105,7 +105,7 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-const denoDocLocalCache = new Map<string, Promise<DocNode[]>>();
+const denoDocLocalCache: Record<string, Promise<DocNode[]>> = {};
 
 export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
@@ -174,7 +174,11 @@ export const denoDoc = async (
   _importMap?: string,
 ): Promise<DocNode[]> => {
   try {
-    const docFunc = context.isDeploy ? await getDenoDoc() : docAsExec;
+    if (context.isDeploy) {
+      const docFunc = await getDenoDoc();
+      denoDocLocalCache[path] ??= docFunc(path);
+      return denoDocLocalCache[path];
+    }
     const isLocal = path.startsWith("file");
     const lastModified = isLocal
       ? await Deno.stat(new URL(path)).then((s) =>
@@ -188,9 +192,8 @@ export const denoDoc = async (
         return parsed.docNodes;
       }
     }
-    const promise = denoDocLocalCache.get(path) ??
-      docFunc(path);
-    promise.then((doc) => {
+    denoDocLocalCache[path] ??= docAsExec(path);
+    denoDocLocalCache[path].then((doc) => {
       try {
         localStorage.setItem(
           path,
@@ -202,8 +205,7 @@ export const denoDoc = async (
         }
       }
     });
-    denoDocLocalCache.set(path, promise);
-    return await promise;
+    return denoDocLocalCache[path];
   } catch (err) {
     console.warn("deno doc error, ignoring", err);
     return [];
