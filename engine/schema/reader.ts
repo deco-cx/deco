@@ -29,5 +29,5 @@ export const genSchemas = async () => {
 };
 
 export const getCurrent = (): Promise<Schemas> => {
-  return schemas ??= genSchemas();
+  return genSchemas();
 };

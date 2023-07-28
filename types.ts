@@ -20,6 +20,7 @@ import { createServerTimings } from "$live/utils/timings.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import { Route } from "$live/flags/audience.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
+import packBlock from "$live/blocks/pack.ts";
 export type {
   ErrorBoundaryComponent,
   ErrorBoundaryParams,
@@ -29,6 +30,7 @@ export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
+  packs?: Record<string, ModuleOf<typeof packBlock>>;
   workflows?: Record<string, ModuleOf<typeof workflowBlock>>;
   actions?: Record<string, ModuleOf<typeof actionBlock>>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
@@ -90,6 +92,7 @@ export type LiveConfig<
     release: Release;
     invoke: InvocationFunc<TManifest>;
     routes?: Route[];
+    manifest: TManifest;
   };
 
 export type { PropsLoader } from "$live/blocks/propsLoader.ts";

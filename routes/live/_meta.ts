@@ -150,7 +150,7 @@ export const handler = async (
       version: meta.version,
       namespace: context.namespace!,
       site: context.site!,
-      manifest: toManifestBlocks(context.manifest!),
+      manifest: toManifestBlocks(ctx.state.manifest),
       schema: mschema,
     };
 

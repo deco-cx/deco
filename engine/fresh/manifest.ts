@@ -119,6 +119,19 @@ export const withoutLocalModules = (
   return r;
 };
 
+export const resolversFrom = <T extends DecoManifest>(
+  man: T,
+): ResolverMap<FreshContext> => {
+  const [_, resolvers, __] = (blocks ?? []).reduce(
+    buildRuntime,
+    [man, {}, []] as [
+      DecoManifest,
+      ResolverMap<FreshContext>,
+      DanglingRecover[],
+    ],
+  );
+  return resolvers;
+};
 const buildRuntime = (
   [currMan, currMap, recovers]: [
     DecoManifest,
