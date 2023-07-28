@@ -9,6 +9,7 @@ export type MultivariateProps<T = Section[]> = MultivariateFlag<T>;
 
 /**
  * @title Variant
+ * @label hidden
  */
 export default function MultivariateFlag(
   props: MultivariateProps<Section[]>,

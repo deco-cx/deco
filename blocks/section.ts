@@ -19,6 +19,9 @@ import { context } from "$live/live.ts";
 import { DecoManifest, FunctionContext } from "$live/types.ts";
 import { JSX } from "preact";
 
+/**
+ * @widget none
+ */
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
 export const isSection = <

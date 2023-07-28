@@ -459,17 +459,21 @@ export const findSchemeableFromNode = async (
         };
       }
       case "typeAlias": {
+        const childSchema = await tsTypeToSchemeableRec(
+          rootNode.typeAliasDef.tsType,
+          root,
+          seen,
+          false,
+          rootNode.typeAliasDef.typeParams,
+          typeParams,
+        );
+
         return {
           ...currLocation,
-          ...(await tsTypeToSchemeableRec(
-            rootNode.typeAliasDef.tsType,
-            root,
-            seen,
-            false,
-            rootNode.typeAliasDef.typeParams,
-            typeParams,
-          )),
-          jsDocSchema: rootNode.jsDoc && jsDocToSchema(rootNode.jsDoc),
+          ...childSchema,
+          jsDocSchema: rootNode.jsDoc
+            ? { ...childSchema.jsDocSchema, ...jsDocToSchema(rootNode.jsDoc) }
+            : childSchema.jsDocSchema,
         };
       }
       case "import": {
