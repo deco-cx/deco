@@ -2,12 +2,15 @@ import { DocNode } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import { Deferred, deferred } from "std/async/deferred.ts";
 import { crypto, toHashString } from "std/crypto/mod.ts";
 import { fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
-import { asChannel, Channel } from "../../../denodoc/channel.ts";
+import {
+  asChannel,
+  Channel,
+} from "https://denopkg.com/deco-cx/denodoc@9c2ddd8cce33261745f376eb2d32f05273b91a74/channel.ts";
 import type {
   BeginDenoDocRequest,
   DocRequest,
   DocResponse,
-} from "../../../denodoc/main.ts";
+} from "https://denopkg.com/deco-cx/denodoc@9c2ddd8cce33261745f376eb2d32f05273b91a74/main.ts";
 const serverUrl = "ws://localhost:8081/ws"; // "wss://denodoc-server.fly.dev/ws"; //"ws://localhost:8081/ws";
 
 type DenoDocChannel = Channel<
