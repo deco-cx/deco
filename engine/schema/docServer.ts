@@ -35,7 +35,7 @@ export const newChannel = (): Promise<
   }
   return channel.then((c) => {
     if (c.closed.is_set()) {
-      return channel ??= createChannel();
+      return channel = createChannel();
     }
     return c;
   });
@@ -62,15 +62,12 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
     cwd: toFileUrl(Deno.cwd()).toString(),
   });
   const resolved: Record<string, Deferred<DocNode[]>> = {};
-  const pendings: Record<string, boolean> = {};
   const fileRead: Record<string, Promise<string>> = {};
   const hashes: Record<string, Promise<string>> = {};
   (async () => {
     try {
       while (!c.closed.is_set()) {
-        console.log("waiting");
         const closed = await Promise.race([c.closed.wait(), c.recv()]);
-        console.log("recv");
         if (closed === true) {
           break;
         }
@@ -78,7 +75,7 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
         try {
           resolved[closed.path].resolve(JSON.parse(closed.docNodes));
         } catch (err) {
-          console.log("ERR", err);
+          console.log("should not reach here", err);
           resolved[closed.path].resolve([]);
         }
       }
@@ -92,13 +89,9 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
         return resolved[path];
       }
       resolved[path] ??= deferred<DocNode[]>();
-      pendings[path] = true;
       if (!path.startsWith("file://")) {
         c.send({ path });
-        return resolved[path].finally(() => {
-          delete pendings[path];
-          console.log(Object.keys(pendings));
-        });
+        return resolved[path];
       }
       fileRead[path] ??= Deno.readTextFile(fromFileUrl(path));
       hashes[path] ??= fileRead[path].then(async (str) => {
@@ -111,10 +104,7 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
 
       const [content, hash] = await Promise.all([fileRead[path], hashes[path]]);
       c.send({ path, content, hash });
-      return resolved[path].finally(() => {
-        delete pendings[path];
-        console.log(Object.keys(pendings));
-      });
+      return resolved[path];
     }
     return Promise.resolve([]);
   };
