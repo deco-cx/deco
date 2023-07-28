@@ -25,6 +25,7 @@ import { useContext } from "preact/hooks";
  */
 export type Sections = Section[];
 /**
+ * @titleBy name
  * @label rootHidden
  */
 export interface Props {
