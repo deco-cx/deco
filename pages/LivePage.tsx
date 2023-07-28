@@ -21,6 +21,7 @@ import { useContext } from "preact/hooks";
 /**
  * @title Sections
  * @label hidden
+ * @changeable true
  */
 export type Sections = Section[];
 /**
