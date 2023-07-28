@@ -7,7 +7,6 @@ import { ManifestBuilder } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { genSchemas, reset } from "$live/engine/schema/reader.ts";
 import {
   namespaceFromSiteJson,
   updateImportMap,

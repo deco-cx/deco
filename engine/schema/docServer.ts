@@ -1,23 +1,18 @@
-import { context } from "$live/live.ts";
 import { DocNode } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import {
-  asChannel,
-  Channel,
-} from "https://denopkg.com/deco-cx/denodoc@3a5c9aa8c1aef4b602e943ddbbced5b58b870cf6/channel.ts";
+import { Deferred, deferred } from "std/async/deferred.ts";
+import { crypto, toHashString } from "std/crypto/mod.ts";
+import { fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
+import { asChannel, Channel } from "../../../denodoc/channel.ts";
 import type {
   BeginDenoDocRequest,
   DocRequest,
   DocResponse,
-  FileContentRequest,
-  FileContentResponse,
-} from "https://denopkg.com/deco-cx/denodoc@3a5c9aa8c1aef4b602e943ddbbced5b58b870cf6/main.ts";
-import { Deferred, deferred } from "std/async/deferred.ts";
-import { fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
-const serverUrl = "wss://denodoc-server.fly.dev/ws"; //"ws://localhost:8081/ws";
+} from "../../../denodoc/main.ts";
+const serverUrl = "ws://localhost:8081/ws"; // "wss://denodoc-server.fly.dev/ws"; //"ws://localhost:8081/ws";
 
 type DenoDocChannel = Channel<
-  BeginDenoDocRequest | DocRequest | FileContentResponse,
-  DocResponse | FileContentRequest
+  BeginDenoDocRequest | DocRequest,
+  DocResponse
 >;
 
 export let channel: Promise<DenoDocChannel> | null = null;
@@ -30,10 +25,6 @@ export const newChannel = (): Promise<
     return socket;
   })());
   return channel;
-};
-
-const isDocResponse = (v: unknown | DocResponse): v is DocResponse => {
-  return (v as DocResponse).docNodes !== undefined;
 };
 
 export type DocFunction = (path: string) => Promise<DocNode[]>;
@@ -54,11 +45,12 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
   }
   c.send({
     importMap,
-    deploymentId: context.deploymentId! ?? btoa(Deno.hostname()),
     cwd: toFileUrl(Deno.cwd()).toString(),
   });
   const resolved: Record<string, Deferred<DocNode[]>> = {};
   const pendings: Record<string, boolean> = {};
+  const fileRead: Record<string, Promise<string>> = {};
+  const hashes: Record<string, Promise<string>> = {};
   (async () => {
     try {
       while (!c.closed.is_set()) {
@@ -68,35 +60,43 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
         if (closed === true) {
           break;
         }
-        if (isDocResponse(closed)) {
-          resolved[closed.path] ??= deferred<DocNode[]>();
-          try {
-            resolved[closed.path].resolve(JSON.parse(closed.docNodes));
-          } catch (err) {
-            console.log("ERR", err);
-            resolved[closed.path].resolve([]);
-          }
-        } else if (!c.closed.is_set()) {
-          c.send({
-            path: closed.path,
-            content: await Deno.readTextFile(
-              fromFileUrl(toFileUrl(join(Deno.cwd(), closed.path)).toString()),
-            ),
-          });
+        resolved[closed.path] ??= deferred<DocNode[]>();
+        try {
+          resolved[closed.path].resolve(JSON.parse(closed.docNodes));
+        } catch (err) {
+          console.log("ERR", err);
+          resolved[closed.path].resolve([]);
         }
       }
     } catch (err) {
       console.log("loop err", err);
     }
   })();
-  return (path: string): Promise<DocNode[]> => {
+  return async (path: string): Promise<DocNode[]> => {
     if (!c.closed.is_set()) {
       if (resolved[path] !== undefined) {
         return resolved[path];
       }
       resolved[path] ??= deferred<DocNode[]>();
       pendings[path] = true;
-      c.send({ path });
+      if (!path.startsWith("file://")) {
+        c.send({ path });
+        return resolved[path].finally(() => {
+          delete pendings[path];
+          console.log(Object.keys(pendings));
+        });
+      }
+      fileRead[path] ??= Deno.readTextFile(fromFileUrl(path));
+      hashes[path] ??= fileRead[path].then(async (str) => {
+        const hash = await crypto.subtle.digest(
+          "MD5",
+          new TextEncoder().encode(str),
+        );
+        return toHashString(hash);
+      });
+
+      const [content, hash] = await Promise.all([fileRead[path], hashes[path]]);
+      c.send({ path, content, hash });
       return resolved[path].finally(() => {
         delete pendings[path];
         console.log(Object.keys(pendings));
