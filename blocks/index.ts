@@ -26,5 +26,5 @@ export default [
   flagBlock,
   actionBlock,
   workflowBlock,
-  packBlock
+  packBlock,
 ] as Block[];

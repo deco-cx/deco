@@ -17,7 +17,7 @@ const mergeManifests = (man1: DecoManifest, man2: DecoManifest) => {
 
   const manifestResult = { ...man1, ...man2 };
   for (const [key, value] of Object.entries(blocks1)) {
-    const manifestBlocks = manifestResult[key as BlockKey] ?? {};
+    const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
     for (const [blockKey, blockFunc] of Object.entries(value)) {
       manifestBlocks[blockKey] = blockFunc;
     }
@@ -28,7 +28,7 @@ const mergeManifests = (man1: DecoManifest, man2: DecoManifest) => {
   return manifestResult;
 };
 export default function Manifest({ packs }: Props): DecoManifest {
-  let initialManifest = context.manifest!;
+  let initialManifest = { ...context.manifest! };
 
   for (const pack of packs) {
     initialManifest = mergeManifests(initialManifest, pack);

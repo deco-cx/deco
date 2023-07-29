@@ -254,7 +254,7 @@ const labelOf = (resolveType: string): string => {
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
-  const schema = await getCurrent();
+  const schema = await getCurrent(context.manifest!);
 
   const allPages = await pages();
   const defaultPage: Pick<Page, "sections" | "state" | "name"> = {

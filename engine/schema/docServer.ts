@@ -1,7 +1,4 @@
 import { DocNode } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import { Deferred, deferred } from "std/async/deferred.ts";
-import { crypto, toHashString } from "std/crypto/mod.ts";
-import { fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import {
   asChannel,
   Channel,
@@ -11,11 +8,17 @@ import type {
   DocRequest,
   DocResponse,
 } from "https://denopkg.com/deco-cx/denodoc@9c2ddd8cce33261745f376eb2d32f05273b91a74/main.ts";
-const serverUrl = "wss://denodoc-go.fly.dev/ws"; // "ws://localhost:8081/ws"; //"wss://denodoc-server.fly.dev/ws"
+import { Deferred, deferred } from "std/async/deferred.ts";
+import { crypto, toHashString } from "std/crypto/mod.ts";
+import { fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
+const serverUrl = "wss://denodoc-go.fly.dev/ws"; //"ws://localhost:8080/ws"; // "wss://denodoc-go.fly.dev/ws"; // "ws://localhost:8081/ws"; //"wss://denodoc-server.fly.dev/ws"
 
+interface DocResponseChal extends DocResponse {
+  chal?: boolean;
+}
 type DenoDocChannel = Channel<
   BeginDenoDocRequest | DocRequest,
-  DocResponse
+  DocResponseChal
 >;
 
 export let channel: Promise<DenoDocChannel> | null = null;
@@ -64,6 +67,8 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
   const resolved: Record<string, Deferred<DocNode[]>> = {};
   const fileRead: Record<string, Promise<string>> = {};
   const hashes: Record<string, Promise<string>> = {};
+  const send = sendFor(fileRead, hashes, c, resolved);
+
   (async () => {
     try {
       while (!c.closed.is_set()) {
@@ -71,7 +76,15 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
         if (closed === true) {
           break;
         }
-        resolved[closed.path] ??= deferred<DocNode[]>();
+        if (closed.chal) {
+          const fullURL = toFileUrl(join(Deno.cwd(), closed.path)).toString();
+          if (resolved[fullURL] !== undefined) {
+            continue;
+          }
+          resolved[fullURL] ??= deferred<DocNode[]>();
+          send(fullURL);
+          continue;
+        }
         try {
           resolved[closed.path].resolve(JSON.parse(closed.docNodes));
         } catch (err) {
@@ -93,19 +106,31 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
         c.send({ path });
         return resolved[path];
       }
-      fileRead[path] ??= Deno.readTextFile(fromFileUrl(path));
-      hashes[path] ??= fileRead[path].then(async (str) => {
-        const hash = await crypto.subtle.digest(
-          "MD5",
-          new TextEncoder().encode(str),
-        );
-        return toHashString(hash);
-      });
-
-      const [content, hash] = await Promise.all([fileRead[path], hashes[path]]);
-      c.send({ path, content, hash });
-      return resolved[path];
+      return await send(path);
     }
     return Promise.resolve([]);
   };
+};
+
+const sendFor = (
+  fileRead: Record<string, Promise<string>>,
+  hashes: Record<string, Promise<string>>,
+  c: DenoDocChannel,
+  resolved: Record<string, Deferred<DocNode[]>>,
+) =>
+async (
+  path: string,
+) => {
+  fileRead[path] ??= Deno.readTextFile(fromFileUrl(path));
+  hashes[path] ??= fileRead[path].then(async (str) => {
+    const hash = await crypto.subtle.digest(
+      "MD5",
+      new TextEncoder().encode(str),
+    );
+    return toHashString(hash);
+  });
+
+  const [content, hash] = await Promise.all([fileRead[path], hashes[path]]);
+  c.send({ path, content, hash });
+  return resolved[path];
 };
