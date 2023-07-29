@@ -1,7 +1,7 @@
 import { join } from "https://deno.land/std@0.170.0/path/mod.ts";
 import { siteJSON } from "../dev.ts";
 import { exists } from "./filesystem.ts";
-import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
+import { stringifyForWrite } from "$live/utils/json.ts";
 
 const sanitizer = (str: string | undefined) =>
   str?.endsWith("/") ? str : `${str}/`;

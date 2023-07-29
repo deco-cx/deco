@@ -4,7 +4,7 @@ import { exists } from "../../utils/filesystem.ts";
 import { singleFlight } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
-import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
+import { stringifyForWrite } from "$live/utils/json.ts";
 
 const sample = {
   "audience-everyone": {

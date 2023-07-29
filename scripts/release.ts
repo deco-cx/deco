@@ -2,7 +2,7 @@ import { join } from "https://deno.land/std@0.181.0/path/mod.ts";
 import { increment } from "https://deno.land/std@0.181.0/semver/mod.ts";
 import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
 import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
-import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
+import { stringifyForWrite } from "$live/utils/json.ts";
 
 await exec("git fetch --tags");
 

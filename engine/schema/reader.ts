@@ -2,7 +2,7 @@ import { Schemas } from "$live/engine/schema/builder.ts";
 import { context } from "$live/live.ts";
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { genSchemasFromManifest } from "./gen.ts";
-import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
+import { stringifyForWrite } from "$live/utils/json.ts";
 
 let schemas: Promise<Schemas> | null = null;
 const schemaFile = "schemas.gen.json";
