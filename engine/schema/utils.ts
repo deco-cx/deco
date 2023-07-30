@@ -175,8 +175,9 @@ export const denoDoc = async (
 ): Promise<DocNode[]> => {
   try {
     if (context.isDeploy) {
-      const docFunc = await getDenoDoc();
-      return denoDocLocalCache[path] ??= docFunc(path);
+      return denoDocLocalCache[path] ??= getDenoDoc().then((docFunc) =>
+        docFunc(path)
+      );
     }
     const isLocal = path.startsWith("file");
     const lastModified = isLocal

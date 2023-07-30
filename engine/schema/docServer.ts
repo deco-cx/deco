@@ -11,7 +11,7 @@ import type {
 import { Deferred, deferred } from "std/async/deferred.ts";
 import { crypto, toHashString } from "std/crypto/mod.ts";
 import { fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
-const serverUrl = "wss://denodoc-go.fly.dev/ws"; //"ws://localhost:8080/ws"; // "wss://denodoc-go.fly.dev/ws"; // "ws://localhost:8081/ws"; //"wss://denodoc-server.fly.dev/ws"
+const serverUrl =  "wss://denodoc-go.fly.dev/ws"; // "ws://localhost:8080/ws"; 
 
 interface DocResponseChal extends DocResponse {
   chal?: boolean;
@@ -120,7 +120,7 @@ const sendFor = (
 ) =>
 async (
   path: string,
-  chal = false
+  chal = false,
 ) => {
   fileRead[path] ??= Deno.readTextFile(fromFileUrl(path));
   hashes[path] ??= fileRead[path].then(async (str) => {
