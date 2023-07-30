@@ -82,7 +82,7 @@ const denoDocForChannel = async (c: DenoDocChannel): Promise<DocFunction> => {
             continue;
           }
           resolved[fullURL] ??= deferred<DocNode[]>();
-          send(fullURL);
+          send(fullURL, true);
           continue;
         }
         try {
@@ -120,6 +120,7 @@ const sendFor = (
 ) =>
 async (
   path: string,
+  chal = false
 ) => {
   fileRead[path] ??= Deno.readTextFile(fromFileUrl(path));
   hashes[path] ??= fileRead[path].then(async (str) => {

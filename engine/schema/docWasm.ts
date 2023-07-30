@@ -7,6 +7,7 @@ import { join } from "std/path/mod.ts";
 import { singleFlight } from "$live/engine/core/utils.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
 import { crypto, toHashString } from "std/crypto/mod.ts";
+import { context } from "$live/live.ts";
 
 const limit = pLimit(1);
 
@@ -68,7 +69,7 @@ export const docAsLib = (
   });
 };
 // @ts-ignore as `Deno.openKv` is still unstable.
-const kvPromise = Deno.openKv?.().catch((e) => {
+const kv = await Deno.openKv?.().catch((e) => {
   console.error(e);
 
   return null;
@@ -83,12 +84,20 @@ const docCache: Record<string, Promise<DocNode[]>> = {};
 const getKvCache: Record<string, Promise<Deno.KvEntryMaybe<DocCache>>> = {};
 
 const sf = singleFlight<DocNode[]>();
+// layers of cache
+// ["deploymentId", "path"]
+// ["path", "md5"]
 export const denoDoc = (
   path: string,
   importMap?: string,
 ): Promise<DocNode[]> => {
   const pathResolved = import.meta.resolve(path);
   return sf.do(pathResolved, async () => {
+    if (kv) {
+      // kv.list({ prefix: ["denodocs", context.deploymentId!] }, {
+      //   consistency: "eventual",
+      // });
+    }
     const start = performance.now();
     try {
       loadCache[pathResolved] ??= load(pathResolved);
@@ -106,10 +115,7 @@ export const denoDoc = (
         ).then(toHashString);
       });
       const start1 = performance.now();
-      const [hash, kv] = await Promise.all([
-        hashCache[pathResolved],
-        kvPromise,
-      ]);
+      const hash = await hashCache[pathResolved];
       console.log("hash and kv took", performance.now() - start1);
       if (kv === null || hash === undefined || kv === undefined) {
         return docCache[pathResolved] ??= docAsLib(path, importMap);
