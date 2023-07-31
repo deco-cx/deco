@@ -9,10 +9,9 @@ import {
   TsTypeDef,
   TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
-import { fromFileUrl, join } from "std/path/mod.ts";
-import { getDenoDoc } from "./docServer.ts";
+import { fromFileUrl } from "std/path/mod.ts";
+import { denoDoc as docLib } from "./docWasm.ts";
 
 const limit = pLimit(5);
 
@@ -105,7 +104,7 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-const denoDocLocalCache: Record<string, Promise<DocNode[]>> = {};
+export const denoDocLocalCache: Record<string, Promise<DocNode[]>> = {};
 
 export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
@@ -124,12 +123,6 @@ export const exec = async (cmd: string[]) => {
   }
 
   return new TextDecoder().decode(stdout);
-};
-
-const _docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
-  return doc(path, {
-    importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
-  });
 };
 
 const docAsExec = async (
@@ -175,9 +168,7 @@ export const denoDoc = async (
 ): Promise<DocNode[]> => {
   try {
     if (context.isDeploy) {
-      return denoDocLocalCache[path] ??= getDenoDoc().then((docFunc) =>
-        docFunc(path)
-      );
+      return denoDocLocalCache[path] ??= docLib(path);
     }
     const isLocal = path.startsWith("file");
     const lastModified = isLocal
@@ -189,7 +180,7 @@ export const denoDoc = async (
     if (current) {
       const parsed: DocCache = JSON.parse(current);
       if (parsed.lastModified === lastModified) {
-        return parsed.docNodes;
+        return denoDocLocalCache[path] ??= Promise.resolve(parsed.docNodes);
       }
     }
     denoDocLocalCache[path] ??= docAsExec(path);

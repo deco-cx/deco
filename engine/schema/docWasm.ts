@@ -75,13 +75,7 @@ const kv = await Deno.openKv?.().catch((e) => {
   return null;
 });
 
-interface DocCache {
-  content: DocNode[];
-}
-
-const hashCache: Record<string, Promise<string | undefined>> = {};
 const docCache: Record<string, Promise<DocNode[]>> = {};
-const getKvCache: Record<string, Promise<Deno.KvEntryMaybe<DocCache>>> = {};
 
 const sf = singleFlight<DocNode[]>();
 // layers of cache
@@ -93,69 +87,50 @@ export const denoDoc = (
 ): Promise<DocNode[]> => {
   const pathResolved = import.meta.resolve(path);
   return sf.do(pathResolved, async () => {
-    if (kv) {
-      // kv.list({ prefix: ["denodocs", context.deploymentId!] }, {
-      //   consistency: "eventual",
-      // });
+    if (docCache[pathResolved] !== undefined) {
+      return docCache[pathResolved];
     }
-    const start = performance.now();
-    try {
-      loadCache[pathResolved] ??= load(pathResolved);
-      hashCache[pathResolved] ??= loadCache[pathResolved].then((resolved) => {
-        if (typeof resolved === "undefined") {
-          return undefined;
-        }
-        const content = (resolved as { content: string })?.content;
-        if (!content) {
-          return undefined;
-        }
-        return crypto.subtle.digest(
-          "MD5",
-          new TextEncoder().encode(content),
-        ).then(toHashString);
-      });
-      const start1 = performance.now();
-      const hash = await hashCache[pathResolved];
-      console.log("hash and kv took", performance.now() - start1);
-      if (kv === null || hash === undefined || kv === undefined) {
-        return docCache[pathResolved] ??= docAsLib(path, importMap);
-      }
-      getKvCache[pathResolved] ??= kv.get<DocCache>([
-        "denodoc",
-        pathResolved,
-        hash,
-      ]);
-      const start2 = performance.now();
-      const cacheEntry = await getKvCache[pathResolved];
-      console.log("get kv entry took", performance.now() - start2);
-
-      if (cacheEntry?.value?.content) {
-        console.log("hit");
-        return cacheEntry.value.content;
-      }
-
-      console.log("miss", pathResolved);
-      docCache[pathResolved] ??= docAsLib(path).then(
-        async (content) => {
-          await kv.set(["denodoc", pathResolved, hash], { content }).catch(
-            (_err) => {
-              console.log("err set", _err);
-              null;
-            },
-          );
-          return content;
-        },
-      );
-
-      const start3 = performance.now();
-      const resp = await docCache[pathResolved];
-      console.log("deno doc took", performance.now() - start3);
-      return resp;
-    } catch (err) {
-      console.warn("deno doc error, ignoring", err);
+    if (!kv) {
+      return docCache[pathResolved] ??= docAsLib(path);
+    }
+    loadCache[pathResolved] ??= load(pathResolved);
+    const byPathKey = [
+      "denodocs",
+      context.deploymentId!,
+      pathResolved,
+    ];
+    const docs = await kv.get<DocNode[]>(byPathKey);
+    if (docs.value !== null) {
+      docCache[pathResolved] = Promise.resolve(docs.value);
+      return docCache[pathResolved];
+    }
+    const module = await loadCache[pathResolved];
+    const content = (module as { content: string })?.content;
+    if (!content) {
       return [];
-    } finally {
-      console.log("deno doc took", performance.now() - start, path);
     }
+    const moduleMd5 = await crypto.subtle.digest(
+      "MD5",
+      new TextEncoder().encode(content),
+    ).then(toHashString);
+
+    const byMd5Key = [
+      "denodocs",
+      pathResolved,
+      moduleMd5,
+    ];
+    const byMD5Content = await kv.get<DocNode[]>(byMd5Key);
+
+    if (byMD5Content.value) {
+      docCache[pathResolved] = Promise.resolve(byMD5Content.value);
+      return docCache[pathResolved];
+    }
+    return docCache[pathResolved] ??= docAsLib(path, importMap).then((doc) => {
+      kv.atomic().set(byPathKey, doc).set(byMd5Key, doc).commit();
+      return doc;
+    });
+  }).catch((e) => {
+    console.log(`denodoc ${pathResolved} error igonoring`, e);
+    return [];
   });
 };

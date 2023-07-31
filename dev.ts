@@ -5,6 +5,7 @@ import { gte } from "std/semver/mod.ts";
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { ManifestBuilder } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
+import { genSchemas } from "$live/engine/schema/reader.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 import {
@@ -147,11 +148,16 @@ export default async function dev(
 
   oncePerRun(setupGithooks);
 
-  await generate(dir, manifest);
+  const genPromise = (async () => {
+    await setManifest(dir);
+    await genSchemas(context.manifest!);
+  })();
 
   onListen?.();
 
-  if (!genOnly) {
+  if (genOnly) {
+    await genPromise;
+  } else {
     await import(entrypoint);
   }
 }
@@ -201,6 +207,7 @@ if (import.meta.main) {
   const newManifestData = await decoManifestBuilder(dir, liveNs);
   await generate(dir, newManifestData).then(async () => {
     await setManifest(dir);
+    await genSchemas(context.manifest!);
   });
 }
 
