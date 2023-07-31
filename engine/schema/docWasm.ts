@@ -135,6 +135,7 @@ export const denoDoc = (
   path: string,
   importMap?: string,
 ): Promise<DocNode[]> => {
+  console.log("DOC LIB\n\n\n\n\n\n\n")
   const pathResolved = import.meta.resolve(path);
   return sf.do(pathResolved, async () => {
     if (docCache[pathResolved] !== undefined) {

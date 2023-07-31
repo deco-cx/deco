@@ -20,7 +20,7 @@ export const genSchemas = async (manifest: DecoManifest) => {
     );
 
     for (const [key, value] of Object.entries(cache)) {
-      denoDocLocalCache[key] = Promise.resolve(value);
+      denoDocLocalCache[key] ??= Promise.resolve(value);
     }
   } catch (e) {
     // ignore if not found
