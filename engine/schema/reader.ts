@@ -27,7 +27,8 @@ export const genSchemas = async (manifest: DecoManifest) => {
     if (!(e instanceof Deno.errors.NotFound)) {
       throw e;
     }
-    Deno.remove(join(Deno.cwd(), "schemas.gen.json"));
+    Deno.remove(join(Deno.cwd(), "schemas.gen.json")).catch((_err) => {
+    });
   }
   const schema = await genSchemasFromManifest(
     manifest,
