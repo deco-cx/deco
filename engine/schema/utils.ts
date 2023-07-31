@@ -162,13 +162,16 @@ function isQuotaExceededError(err: unknown): boolean {
       err.name === "NS_ERROR_DOM_QUOTA_REACHED")
   );
 }
+export const withoutCWD = (path: string) =>
+  path.replace(`file://${Deno.cwd()}/`, "");
 export const denoDoc = async (
   path: string,
   _importMap?: string,
 ): Promise<DocNode[]> => {
   try {
+    const docCacheKey = withoutCWD(path);
     if (context.isDeploy) {
-      return denoDocLocalCache[path] ??= docLib(path);
+      return denoDocLocalCache[docCacheKey] ??= docLib(path);
     }
     const isLocal = path.startsWith("file");
     const lastModified = isLocal
@@ -180,11 +183,13 @@ export const denoDoc = async (
     if (current) {
       const parsed: DocCache = JSON.parse(current);
       if (parsed.lastModified === lastModified) {
-        return denoDocLocalCache[path] ??= Promise.resolve(parsed.docNodes);
+        return denoDocLocalCache[docCacheKey] ??= Promise.resolve(
+          parsed.docNodes,
+        );
       }
     }
-    denoDocLocalCache[path] ??= docAsExec(path);
-    denoDocLocalCache[path].then((doc) => {
+    denoDocLocalCache[docCacheKey] ??= docAsExec(path);
+    denoDocLocalCache[docCacheKey].then((doc) => {
       try {
         localStorage.setItem(
           path,
@@ -196,7 +201,7 @@ export const denoDoc = async (
         }
       }
     });
-    return denoDocLocalCache[path];
+    return denoDocLocalCache[docCacheKey];
   } catch (err) {
     console.warn("deno doc error, ignoring", err);
     return [];

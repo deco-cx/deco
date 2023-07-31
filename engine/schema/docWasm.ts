@@ -8,6 +8,7 @@ import { singleFlight } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
 import { crypto, toHashString } from "std/crypto/mod.ts";
+import { withoutCWD } from "$live/engine/schema/utils.ts";
 
 const limit = pLimit(1);
 
@@ -135,17 +136,17 @@ export const denoDoc = (
   path: string,
   importMap?: string,
 ): Promise<DocNode[]> => {
-  console.log("DOC LIB\n\n\n\n\n\n\n")
   const pathResolved = import.meta.resolve(path);
   return sf.do(pathResolved, async () => {
+    const pathKey = withoutCWD(pathResolved);
     if (docCache[pathResolved] !== undefined) {
-      return docCache[pathResolved]; //.then(saveOnKv(pathResolved)); TODO(mcandeia activate save on kv for future usages)
+      return docCache[pathResolved]; //.then(saveOnKv(pathKey)); TODO(mcandeia activate save on kv for future usages)
     }
     if (!kv) {
       return docCache[pathResolved] ??= docAsLib(path);
     }
     loadCache[pathResolved] ??= load(pathResolved);
-    const byPathKey = pathKeyForPath(pathResolved);
+    const byPathKey = pathKeyForPath(pathKey);
     const docs = await kv.get<DocNode[]>(byPathKey);
     if (docs.value !== null) {
       docCache[pathResolved] = Promise.resolve(docs.value);
@@ -157,7 +158,7 @@ export const denoDoc = (
       return [];
     }
     const moduleMd5 = await stringToHexMd5(content);
-    const byMd5Key = md5KeyForMd5(pathResolved, moduleMd5);
+    const byMd5Key = md5KeyForMd5(pathKey, moduleMd5);
     const byMD5Content = await kv.get<DocNode[]>(byMd5Key);
 
     if (byMD5Content.value) {

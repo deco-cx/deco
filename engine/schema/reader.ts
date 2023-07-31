@@ -14,21 +14,21 @@ export const genSchemas = async (manifest: DecoManifest) => {
   const cachePath = join(Deno.cwd(), cacheFile);
   console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
   const start = performance.now();
-  try {
-    const cache = decompressToJSON<Record<string, DocNode[]>>(
-      await Deno.readFile(cachePath),
-    );
+  if (context.isDeploy) {
+    try {
+      const cache = decompressToJSON<Record<string, DocNode[]>>(
+        await Deno.readFile(cachePath),
+      );
 
-    for (const [key, value] of Object.entries(cache)) {
-      denoDocLocalCache[key] ??= Promise.resolve(value);
+      for (const [key, value] of Object.entries(cache)) {
+        denoDocLocalCache[key] ??= Promise.resolve(value);
+      }
+    } catch (e) {
+      // ignore if not found
+      if (!(e instanceof Deno.errors.NotFound)) {
+        throw e;
+      }
     }
-  } catch (e) {
-    // ignore if not found
-    if (!(e instanceof Deno.errors.NotFound)) {
-      throw e;
-    }
-    Deno.remove(join(Deno.cwd(), "schemas.gen.json")).catch((_err) => {
-    });
   }
   const schema = await genSchemasFromManifest(
     manifest,
