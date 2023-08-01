@@ -26,6 +26,11 @@ export const invokeToHttpResponse = (
   if (invokeResponse === undefined) {
     return new Response(null, { status: 204 });
   }
+
+  if (invokeResponse instanceof Response) {
+    return invokeResponse;
+  }
+
   if (isEventStreamResponse(invokeResponse)) {
     req.signal.onabort = () => {
       invokeResponse?.return?.();
