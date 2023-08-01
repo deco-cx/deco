@@ -2,12 +2,14 @@
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { hydrateDocCacheWith } from "$live/engine/schema/docCache.ts";
 import { DecoManifest } from "$live/types.ts";
-import { once, SyncOnce } from "$live/utils/sync.ts";
+import { SyncOnce, once } from "$live/utils/sync.ts";
 import { fromFileUrl } from "std/path/mod.ts";
 
 export type Pack = InstanceOf<typeof packBlock, "#/root/packs">;
 
-export type PackF<State = any, TManifest extends DecoManifest = any> = (
+export type PackManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
+
+export type PackF<State = any, TManifest extends PackManifest = PackManifest> = (
   c: State,
 ) => TManifest;
 
