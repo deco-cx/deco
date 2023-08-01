@@ -8,7 +8,6 @@ import { singleFlight } from "$live/engine/core/utils.ts";
 import { context } from "$live/live.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
 import { crypto, toHashString } from "std/crypto/mod.ts";
-import { withoutCWD } from "$live/engine/schema/utils.ts";
 
 const limit = pLimit(1);
 
@@ -138,7 +137,7 @@ export const denoDoc = (
 ): Promise<DocNode[]> => {
   const pathResolved = import.meta.resolve(path);
   return sf.do(pathResolved, async () => {
-    const pathKey = withoutCWD(pathResolved);
+    const pathKey = pathResolved;
     if (docCache[pathResolved] !== undefined) {
       return docCache[pathResolved]; //.then(saveOnKv(pathKey)); TODO(mcandeia activate save on kv for future usages)
     }

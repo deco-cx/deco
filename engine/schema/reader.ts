@@ -1,6 +1,9 @@
 import { waitKeys } from "$live/engine/core/utils.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
-import { hydrateDocCacheWith } from "$live/engine/schema/docCache.ts";
+import {
+  hydrateDocCacheWith,
+  LOCATION_TAG,
+} from "$live/engine/schema/docCache.ts";
 import { channel } from "$live/engine/schema/docServer.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { denoDocLocalCache } from "$live/engine/schema/utils.ts";
@@ -17,7 +20,7 @@ export const genSchemas = async (manifest: DecoManifest) => {
   const start = performance.now();
   if (context.isDeploy) {
     try {
-      await hydrateDocCacheWith(cachePath);
+      await hydrateDocCacheWith(cachePath, `file://${Deno.cwd()}/`);
     } catch (e) {
       // ignore if not found
       if (!(e instanceof Deno.errors.NotFound)) {
@@ -36,7 +39,10 @@ export const genSchemas = async (manifest: DecoManifest) => {
     const docCache = await waitKeys(denoDocLocalCache);
     await Deno.writeFile(
       cachePath,
-      compressFromJSON(docCache),
+      compressFromJSON(
+        docCache,
+        (str: string) => str.replaceAll(`file://${Deno.cwd()}/`, LOCATION_TAG),
+      ),
     );
   }
 

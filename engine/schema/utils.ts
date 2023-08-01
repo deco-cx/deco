@@ -162,14 +162,13 @@ function isQuotaExceededError(err: unknown): boolean {
       err.name === "NS_ERROR_DOM_QUOTA_REACHED")
   );
 }
-export const withoutCWD = (path: string) =>
-  path.replace(`file://${Deno.cwd()}/`, "");
+
 export const denoDoc = async (
   path: string,
   _importMap?: string,
 ): Promise<DocNode[]> => {
   try {
-    const docCacheKey = withoutCWD(path);
+    const docCacheKey = path;
     if (context.isDeploy) {
       return denoDocLocalCache[docCacheKey] ??= docLib(path);
     }
