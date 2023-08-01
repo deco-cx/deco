@@ -2,7 +2,8 @@
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { hydrateDocCacheWith } from "$live/engine/schema/docCache.ts";
 import { DecoManifest } from "$live/types.ts";
-import { SyncOnce, once } from "$live/utils/sync.ts";
+import { once, SyncOnce } from "$live/utils/sync.ts";
+import { fromFileUrl } from "std/path/mod.ts";
 
 export type Pack = InstanceOf<typeof packBlock, "#/root/packs">;
 
@@ -31,15 +32,18 @@ const packBlock: Block<PackModule> = {
         "packs without a name is not support yet",
       );
     }
-    const baseKey = import.meta.resolve(name);
+    const baseKey = import.meta.resolve(`${name}/`);
     hydrateOnce[name] ??= once<void>();
     hydrateOnce[name].do(() => {
-      return hydrateDocCacheWith(`${baseKey}/doccache.zst`, (key: string) => {
-        if (key.startsWith("http")) {
-          return key;
-        }
-        return `${baseKey}/${key}`;
-      });
+      return hydrateDocCacheWith(
+        fromFileUrl(`${baseKey}doccache.zst`),
+        (key: string) => {
+          if (key.startsWith("http")) {
+            return key;
+          }
+          return `${baseKey}${key}`;
+        },
+      );
     });
     return fn(state);
   },

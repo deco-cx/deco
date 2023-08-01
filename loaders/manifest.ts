@@ -12,11 +12,11 @@ const mergeManifests = (man1: DecoManifest, man2: DecoManifest) => {
     routes: _doNotMergeRoutes,
     islands: _doNotMergeIslands,
     baseUrl: _ignoreBaseUrl,
-    ...blocks1
-  } = man1;
+    ...blocks2
+  } = man2;
 
-  const manifestResult = { ...man1, ...man2 };
-  for (const [key, value] of Object.entries(blocks1)) {
+  const manifestResult = { ...man2, ...man1 };
+  for (const [key, value] of Object.entries(blocks2)) {
     const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
     for (const [blockKey, blockFunc] of Object.entries(value)) {
       manifestBlocks[blockKey] = blockFunc;
