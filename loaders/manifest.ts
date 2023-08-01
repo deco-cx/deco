@@ -1,5 +1,6 @@
 import { Pack } from "$live/blocks/pack.ts";
 import { context } from "$live/live.ts";
+import { DecoManifest } from "$live/mod.ts";
 
 export interface Props {
   packs: Pack[];
@@ -20,7 +21,7 @@ const mergeManifests = (man1: Pack, man2: Pack) => {
   return manifestResult;
 };
 
-export default function Manifest({ packs }: Props): Pack {
+export default function Manifest({ packs }: Props): DecoManifest {
   let { routes, islands, baseUrl, ...initialManifest } = {
     ...context.manifest!,
   };
@@ -28,5 +29,5 @@ export default function Manifest({ packs }: Props): Pack {
   for (const pack of packs) {
     initialManifest = mergeManifests(initialManifest, pack);
   }
-  return { ...initialManifest, routes, islands, baseUrl } as Pack;
+  return { ...initialManifest, routes, islands, baseUrl };
 }

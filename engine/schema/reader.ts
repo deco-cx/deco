@@ -1,6 +1,7 @@
 import { waitKeys } from "$live/engine/core/utils.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import {
+  DOC_CACHE_FILE_NAME,
   hydrateDocCacheWith,
   LOCATION_TAG,
 } from "$live/engine/schema/docCache.ts";
@@ -13,9 +14,8 @@ import { compressFromJSON } from "$live/utils/zstd.ts";
 import { stringifyForWrite } from "$live/utils/json.ts";
 import { join } from "std/path/mod.ts";
 
-const cacheFile = "doccache.zst";
 export const genSchemas = async (manifest: DecoManifest) => {
-  const cachePath = join(Deno.cwd(), cacheFile);
+  const cachePath = join(Deno.cwd(), DOC_CACHE_FILE_NAME);
   console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
   const start = performance.now();
   if (context.isDeploy) {

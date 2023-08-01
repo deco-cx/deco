@@ -3,6 +3,7 @@ import { decompressToJSON } from "$live/utils/zstd.ts";
 import { DocNode } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 
 export const LOCATION_TAG = "___LOCATION___";
+export const DOC_CACHE_FILE_NAME = "doccache.zst";
 const getFileBinary = async (url: string): Promise<Uint8Array> => {
   const response = await fetch(url, { redirect: "follow" });
   if (response.status !== 200) {

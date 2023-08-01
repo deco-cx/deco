@@ -1,17 +1,21 @@
 // deno-lint-ignore-file no-explicit-any
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { hydrateDocCacheWith } from "$live/engine/schema/docCache.ts";
+import {
+  DOC_CACHE_FILE_NAME,
+  hydrateDocCacheWith,
+} from "$live/engine/schema/docCache.ts";
 import { DecoManifest } from "$live/types.ts";
-import { SyncOnce, once } from "$live/utils/sync.ts";
+import { once, SyncOnce } from "$live/utils/sync.ts";
 import { fromFileUrl } from "std/path/mod.ts";
 
 export type Pack = InstanceOf<typeof packBlock, "#/root/packs">;
 
 export type PackManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
 
-export type PackF<State = any, TManifest extends PackManifest = PackManifest> = (
-  c: State,
-) => TManifest;
+export type PackF<State = any, TManifest extends PackManifest = PackManifest> =
+  (
+    c: State,
+  ) => TManifest;
 
 export interface PackModule extends BlockModule<PackF> {
   name?: string;
@@ -35,7 +39,7 @@ const packBlock: Block<PackModule> = {
       );
     }
     const baseKey = import.meta.resolve(`${name}/`);
-    const fileUrl = `${baseKey}doccache.zst`;
+    const fileUrl = `${baseKey}${DOC_CACHE_FILE_NAME}`;
     hydrateOnce[name] ??= once<void>();
     hydrateOnce[name].do(() => {
       return hydrateDocCacheWith(
