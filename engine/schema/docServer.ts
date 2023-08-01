@@ -1,12 +1,12 @@
 import { DocNode } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import {
-    asChannel,
-    Channel,
+  asChannel,
+  Channel,
 } from "https://denopkg.com/deco-cx/denodoc@9c2ddd8cce33261745f376eb2d32f05273b91a74/channel.ts";
 import type {
-    BeginDenoDocRequest,
-    DocRequest,
-    DocResponse,
+  BeginDenoDocRequest,
+  DocRequest,
+  DocResponse,
 } from "https://denopkg.com/deco-cx/denodoc@9c2ddd8cce33261745f376eb2d32f05273b91a74/main.ts";
 import { Deferred, deferred } from "std/async/deferred.ts";
 import { crypto, toHashString } from "std/crypto/mod.ts";
@@ -16,7 +16,7 @@ const serverUrl = "wss://denodoc-go.fly.dev/ws"; // "ws://localhost:8080/ws";
 interface DocResponseChal extends DocResponse {
   chal?: boolean;
 }
-type DocRequestChal = DocRequest & { chal?:boolean}
+type DocRequestChal = DocRequest & { chal?: boolean };
 type DenoDocChannel = Channel<
   BeginDenoDocRequest | DocRequestChal,
   DocResponseChal

@@ -1,11 +1,12 @@
 import { waitKeys } from "$live/engine/core/utils.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
+import { hydrateDocCacheWith } from "$live/engine/schema/docCache.ts";
 import { channel } from "$live/engine/schema/docServer.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { denoDocLocalCache } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { compressFromJSON, decompressToJSON } from "$live/utils/zstd.ts";
+import { compressFromJSON } from "$live/utils/zstd.ts";
 import { stringifyForWrite } from "$live/utils/json.ts";
 import { join } from "std/path/mod.ts";
 
@@ -16,13 +17,7 @@ export const genSchemas = async (manifest: DecoManifest) => {
   const start = performance.now();
   if (context.isDeploy) {
     try {
-      const cache = decompressToJSON<Record<string, DocNode[]>>(
-        await Deno.readFile(cachePath),
-      );
-
-      for (const [key, value] of Object.entries(cache)) {
-        denoDocLocalCache[key] ??= Promise.resolve(value);
-      }
+      await hydrateDocCacheWith(cachePath);
     } catch (e) {
       // ignore if not found
       if (!(e instanceof Deno.errors.NotFound)) {

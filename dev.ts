@@ -148,6 +148,8 @@ export default async function dev(
 
   oncePerRun(setupGithooks);
 
+  await generate(dir, manifest);
+
   const genPromise = (async () => {
     await setManifest(dir);
     await genSchemas(context.manifest!);
