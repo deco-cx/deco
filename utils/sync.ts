@@ -5,7 +5,7 @@ export interface SyncOnce<T> {
 /**
  * Run the function only once.
  * usage:
- * 
+ *
  * const runOnce = once<T>()
  * runOnce.do(() => new Date()) // this will return always the first value used.
  */
