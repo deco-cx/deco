@@ -11,7 +11,6 @@ import {
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
 import { fromFileUrl } from "std/path/mod.ts";
-import { denoDoc as docLib } from "./docWasm.ts";
 
 const limit = pLimit(5);
 
@@ -170,7 +169,11 @@ export const denoDoc = async (
   try {
     const docCacheKey = path;
     if (context.isDeploy) {
-      return denoDocLocalCache[docCacheKey] ??= docLib(path);
+      const cached = denoDocLocalCache[docCacheKey];
+      if (!cached) {
+        throw new Error(`could not resolve ${docCacheKey} on denodoc`);
+      }
+      return cached;
     }
     const isLocal = path.startsWith("file");
     const lastModified = isLocal

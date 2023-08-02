@@ -5,7 +5,6 @@ import {
   hydrateDocCacheWith,
   LOCATION_TAG,
 } from "$live/engine/schema/docCache.ts";
-import { channel } from "$live/engine/schema/docServer.ts";
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { denoDocLocalCache } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
@@ -32,9 +31,7 @@ export const genSchemas = async (manifest: DecoManifest) => {
     manifest,
   );
 
-  if (channel) {
-    (await channel)?.close();
-  } else if (!context.isDeploy) {
+  if (!context.isDeploy) {
     // save cache on dev mode
     const docCache = await waitKeys(denoDocLocalCache);
     await Deno.writeFile(
