@@ -19,7 +19,9 @@ export type PackF<State = any, TManifest extends PackManifest = PackManifest> =
 
 export interface PackModule extends BlockModule<PackF> {
   name?: string;
+  docCacheFileUrl?: string;
 }
+
 const hydrateOnce: Record<string, SyncOnce<void>> = {};
 const packBlock: Block<PackModule> = {
   type: "packs",
@@ -28,10 +30,7 @@ const packBlock: Block<PackModule> = {
   },
   adapt: <
     TConfig = any,
-  >({ default: fn, name }: {
-    default: PackF;
-    name?: string;
-  }) =>
+  >({ default: fn, name, docCacheFileUrl }: PackModule) =>
   (state: TConfig) => {
     if (!name) {
       throw new Error(
@@ -39,7 +38,7 @@ const packBlock: Block<PackModule> = {
       );
     }
     const baseKey = import.meta.resolve(`${name}/`);
-    const fileUrl = `${baseKey}${DOC_CACHE_FILE_NAME}`;
+    const fileUrl = docCacheFileUrl ?? `${baseKey}${DOC_CACHE_FILE_NAME}`;
     hydrateOnce[name] ??= once<void>();
     hydrateOnce[name].do(() => {
       return hydrateDocCacheWith(
