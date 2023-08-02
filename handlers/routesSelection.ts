@@ -15,6 +15,11 @@ export interface SelectionConfig {
   audiences: Routes[];
 }
 
+interface MaybePriorityHandler {
+  func: Resolvable<Handler>;
+  highPriority?: boolean;
+}
+
 const rankRoute = (pattern: string) =>
   pattern
     .split("/")
@@ -109,24 +114,26 @@ export const router = (
 export const toRouteMap = (
   routes?: Route[],
 ): [
-  Record<string, Resolvable<Handler>>,
+  Record<string, MaybePriorityHandler>,
   Record<string, Resolvable<Handler>>,
 ] => {
-  const routeMap: Record<string, Resolvable<Handler>> = {};
+  const routeMap: Record<string, MaybePriorityHandler> = {};
   const hrefRoutes: Record<string, Resolvable<Handler>> = {};
   (routes ?? [])
-    .forEach(({ pathTemplate, isHref, handler: { value: handler } }) => {
-      if (isHref) {
-        hrefRoutes[pathTemplate] = handler;
-      } else {
-        routeMap[pathTemplate] = handler;
-      }
-    });
+    .forEach(
+      ({ pathTemplate, isHref, highPriority, handler: { value: handler } }) => {
+        if (isHref) {
+          hrefRoutes[pathTemplate] = handler;
+        } else {
+          routeMap[pathTemplate] = { func: handler, highPriority };
+        }
+      },
+    );
   return [routeMap, hrefRoutes];
 };
 
 export const buildRoutes = (audiences: Routes[]): [
-  Record<string, Resolvable<Handler>>,
+  Record<string, MaybePriorityHandler>,
   Record<string, Resolvable<Handler>>,
 ] => {
   // We should tackle this problem elsewhere
@@ -141,7 +148,7 @@ export const buildRoutes = (audiences: Routes[]): [
         ];
       },
       [{}, {}] as [
-        Record<string, Resolvable<Handler>>,
+        Record<string, MaybePriorityHandler>,
         Record<string, Resolvable<Handler>>,
       ],
     );
@@ -160,14 +167,17 @@ export default function RoutesSelection(
     const [routes, hrefRoutes] = buildRoutes(audiences);
     // build the router from entries
     const builtRoutes = Object.entries(routes).sort((
-      [routeStringA],
-      [routeStringB],
-    ) => rankRoute(routeStringB) - rankRoute(routeStringA));
+      [routeStringA, { highPriority: highPriorityA }],
+      [routeStringB, { highPriority: highPriorityB }],
+    ) =>
+      (highPriorityB ? 1000 : 0) + rankRoute(routeStringB) -
+      (highPriorityA ? 1000 : 0) + rankRoute(routeStringA)
+    );
 
     const server = router(
       builtRoutes.map((route) => ({
         pathTemplate: route[0],
-        handler: { value: route[1] },
+        handler: { value: route[1].func },
       })),
       hrefRoutes,
       {
