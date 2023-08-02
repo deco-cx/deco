@@ -20,6 +20,8 @@ interface MaybePriorityHandler {
   highPriority?: boolean;
 }
 
+const HIGH_PRIORITY_ROUTE_RANK_BASE_VALUE = 1000;
+
 const rankRoute = (pattern: string) =>
   pattern
     .split("/")
@@ -170,8 +172,8 @@ export default function RoutesSelection(
       [routeStringA, { highPriority: highPriorityA }],
       [routeStringB, { highPriority: highPriorityB }],
     ) =>
-      (highPriorityB ? 1000 : 0) + rankRoute(routeStringB) -
-      (highPriorityA ? 1000 : 0) + rankRoute(routeStringA)
+      (highPriorityB ? HIGH_PRIORITY_ROUTE_RANK_BASE_VALUE : 0) + rankRoute(routeStringB) -
+      (highPriorityA ? HIGH_PRIORITY_ROUTE_RANK_BASE_VALUE : 0) + rankRoute(routeStringA)
     );
 
     const server = router(
