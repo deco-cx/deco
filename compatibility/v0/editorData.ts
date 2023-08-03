@@ -10,7 +10,7 @@ import {
   PageState,
 } from "$live/engine/releases/pages.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
-import { getCurrent } from "$live/engine/schema/reader.ts";
+import { genSchemas } from "$live/engine/schema/reader.ts";
 import { Audience } from "$live/flags/audience.ts";
 import { EveryoneConfig } from "$live/flags/everyone.ts";
 import { context } from "$live/live.ts";
@@ -254,7 +254,7 @@ const labelOf = (resolveType: string): string => {
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
-  const schema = await getCurrent(context.manifest!);
+  const schema = await genSchemas(context.manifest!);
 
   const allPages = await pages();
   const defaultPage: Pick<Page, "sections" | "state" | "name"> = {

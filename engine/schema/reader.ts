@@ -1,5 +1,4 @@
 import { waitKeys } from "$live/engine/core/utils.ts";
-import { Schemas } from "$live/engine/schema/builder.ts";
 import {
   DOC_CACHE_FILE_NAME,
   hydrateDocCacheWith,
@@ -55,10 +54,4 @@ export const genSchemas = async (manifest: DecoManifest) => {
     }ms`,
   );
   return schema;
-};
-
-const cache: Record<string, Promise<Schemas>> = {};
-export const getCurrent = (manifest: DecoManifest): Promise<Schemas> => {
-  const key = JSON.stringify(manifest);
-  return cache[key] ??= genSchemas(manifest);
 };
