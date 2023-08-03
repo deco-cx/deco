@@ -24,6 +24,9 @@ const mergeManifests = (
   return manifestResult;
 };
 
+/**
+ * @title Installed Apps
+ */
 export default function Manifest({ apps }: Props): DecoManifest {
   let { routes, islands, baseUrl, ...initialManifest } = {
     ...context.manifest!,

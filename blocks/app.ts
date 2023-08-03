@@ -16,6 +16,9 @@ export type Apps = InstanceOf<typeof appBlock, "#/root/apps">;
 
 export type AppManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
 
+/**
+ * @icon app-window
+ */
 export interface App<
   TAppManifest extends AppManifest = AppManifest,
   TAppState = any,

@@ -188,6 +188,13 @@ export const decoManifestBuilder = async (
     for await (
       const entry of listBlocks(dir, blk)
     ) {
+      // ignore file name with __NAME__.ts
+      if (
+        entry.name.startsWith("__") &&
+        (entry.name.endsWith("__.ts") || entry.name.endsWith("__.tsx"))
+      ) {
+        continue;
+      }
       initialManifest = withDefinition(
         initialManifest,
         namespace,
