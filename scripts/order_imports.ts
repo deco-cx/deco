@@ -1,4 +1,4 @@
-import stringifyForWrite from "$live/utils/stringifyForWrite.ts";
+import { stringifyForWrite } from "$live/utils/json.ts";
 
 export async function orderImports() {
   const importMapFile = await Deno.readTextFile("./import_map.json");
