@@ -49,7 +49,7 @@ export const toManifestBlocks = (
   return { blocks: manBlocks };
 };
 
-const resolvable = (ref: string, id: string): JSONSchema7 => {
+export const resolvable = (ref: string, id: string): JSONSchema7 => {
   return {
     title: `#${ref}@${id}`,
     type: "object",
