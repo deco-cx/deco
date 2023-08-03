@@ -10,6 +10,7 @@ import meta from "$live/meta.json" assert { type: "json" };
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
 import { major } from "std/semver/mod.ts";
+import { resolvable } from "$live/utils/admin.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -47,21 +48,6 @@ export const toManifestBlocks = (
     }
   }
   return { blocks: manBlocks };
-};
-
-const resolvable = (ref: string, id: string): JSONSchema7 => {
-  return {
-    title: `#${ref}@${id}`,
-    type: "object",
-    required: ["__resolveType"],
-    properties: {
-      __resolveType: {
-        type: "string",
-        enum: [id],
-        default: id,
-      },
-    },
-  };
 };
 
 let mschema: Schemas | null = null;
