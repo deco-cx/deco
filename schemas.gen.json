@@ -108,6 +108,7 @@
     },
     "JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section": {
       "$ref": "#/root/sections",
+      "widget": "none",
       "title": "Section"
     },
     "JGxpdmUvYmxvY2tzL2xvYWRlci50cw==@Loader": {
@@ -1072,6 +1073,14 @@
             "value"
           ],
           "title": "Handler"
+        },
+        "highPriority": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "title": "Priority",
+          "description": "higher priority means that this route will be used in favor of other routes with less or none priority"
         }
       },
       "required": [
@@ -1207,10 +1216,13 @@
           "items": {
             "$ref": "#/definitions/JGxpdmUvYmxvY2tzL3NlY3Rpb24udHM=@Section"
           },
-          "title": "Page Sections"
+          "title": "Sections",
+          "label": "hidden",
+          "changeable": "true"
         },
         {
           "title": "Variant",
+          "label": "hidden",
           "type": "object",
           "allOf": [
             {
@@ -1256,7 +1268,8 @@
         "sections"
       ],
       "title": "$live/pages/LivePage.tsx@Props",
-      "titleBy": "name"
+      "titleBy": "name",
+      "label": "rootHidden"
     },
     "JGxpdmUvYmxvY2tzL21hdGNoZXIudHM=@Matcher": {
       "$ref": "#/root/matchers",
@@ -1766,6 +1779,7 @@
         "value"
       ],
       "title": "{{#beautifySchemaTitle}}{{{rule.__resolveType}}}{{/beautifySchemaTitle}} Variant",
+      "label": "hidden",
       "icon": "flag"
     },
     "JGxpdmUvYmxvY2tzL2ZsYWcudHM=@Variant+Section[][]": {
@@ -2588,6 +2602,7 @@
     },
     "JGxpdmUvZmxhZ3MvbXVsdGl2YXJpYXRlLnRz": {
       "title": "Variant",
+      "label": "hidden",
       "type": "object",
       "allOf": [
         {
