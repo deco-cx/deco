@@ -18,6 +18,11 @@ export interface Route {
   isHref?: boolean;
   // FIXME this should be placed at nested level 3 of the object to avoid being resolved before the routeSelection is executed.
   handler: { value: Resolvable<Handler> };
+  /**
+   * @title Priority
+   * @description higher priority means that this route will be used in favor of other routes with less or none priority
+   */
+  highPriority?: boolean;
 }
 /**
  * @title Routes
