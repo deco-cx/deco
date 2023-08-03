@@ -2,6 +2,7 @@
 import type { Manifest } from "$fresh/server.ts";
 import accountBlock from "$live/blocks/account.ts";
 import actionBlock from "$live/blocks/action.ts";
+import appBlock from "$live/blocks/app.ts";
 import flagBlock from "$live/blocks/flag.ts";
 import functionBlock from "$live/blocks/function.ts";
 import handlerBlock from "$live/blocks/handler.ts";
@@ -16,11 +17,11 @@ import { ModuleOf } from "$live/engine/block.ts";
 import { ResolveFunc } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { Release } from "$live/engine/releases/provider.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
-import type { InvocationFunc } from "./clients/withManifest.ts";
 import { Route } from "$live/flags/audience.ts";
+import { createServerTimings } from "$live/utils/timings.ts";
+import { AppManifest } from "./blocks/app.ts";
+import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
-import packBlock from "$live/blocks/pack.ts";
 export type {
   ErrorBoundaryComponent,
   ErrorBoundaryParams,
@@ -30,7 +31,7 @@ export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
-  packs?: Record<string, ModuleOf<typeof packBlock>>;
+  apps?: Record<string, ModuleOf<typeof appBlock>>;
   workflows?: Record<string, ModuleOf<typeof workflowBlock>>;
   actions?: Record<string, ModuleOf<typeof actionBlock>>;
   sections?: Record<string, ModuleOf<typeof sectionBlock>>;
@@ -100,11 +101,11 @@ export type { SectionProps } from "$live/blocks/section.ts";
 export type { FnContext } from "$live/blocks/utils.tsx";
 export type ActionContext<
   TState = {},
-  TManifest extends DecoManifest = LiveManifest,
+  TManifest extends AppManifest = LiveManifest,
 > = FnContext<TState, TManifest>;
 export type LoaderContext<
   TState = {},
-  TManifest extends DecoManifest = LiveManifest,
+  TManifest extends AppManifest = LiveManifest,
 > = FnContext<TState, TManifest>;
 
 export type FunctionContext<TProps = any, TState = {}> = StatefulContext<

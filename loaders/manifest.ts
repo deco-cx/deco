@@ -1,15 +1,18 @@
-import { Pack } from "$live/blocks/pack.ts";
+import { AppManifest, Apps } from "$live/blocks/app.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/mod.ts";
 
 export interface Props {
-  packs: Pack[];
+  apps: Apps[];
 }
 
-type BlockKey = keyof Pack;
-const mergeManifests = (man1: Pack, man2: Pack) => {
-  const manifestResult = { ...man2, ...man1 };
-  for (const [key, value] of Object.entries(man2)) {
+type BlockKey = keyof AppManifest;
+const mergeManifests = (
+  appManifest1: AppManifest,
+  appManifest2: AppManifest,
+) => {
+  const manifestResult = { ...appManifest2, ...appManifest1 };
+  for (const [key, value] of Object.entries(appManifest2)) {
     const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
     for (const [blockKey, blockFunc] of Object.entries(value)) {
       manifestBlocks[blockKey] = blockFunc;
@@ -21,13 +24,13 @@ const mergeManifests = (man1: Pack, man2: Pack) => {
   return manifestResult;
 };
 
-export default function Manifest({ packs }: Props): DecoManifest {
+export default function Manifest({ apps }: Props): DecoManifest {
   let { routes, islands, baseUrl, ...initialManifest } = {
     ...context.manifest!,
   };
 
-  for (const pack of packs) {
-    initialManifest = mergeManifests(initialManifest, pack);
+  for (const app of apps) {
+    initialManifest = mergeManifests(initialManifest, app.manifest);
   }
   return { ...initialManifest, routes, islands, baseUrl };
 }

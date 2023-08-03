@@ -1,4 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
+import { IS_BROWSER } from "$fresh/runtime.ts";
+import { AppManifest } from "$live/blocks/app.ts";
 import type {
   AvailableActions,
   AvailableFunctions,
@@ -11,9 +13,7 @@ import type {
 } from "$live/routes/live/invoke/index.ts";
 import { readFromStream } from "$live/utils/http.ts";
 import { DotNestedKeys } from "$live/utils/object.ts";
-import type { DecoManifest } from "../types.ts";
 import { isStreamProps } from "../utils/invoke.ts";
-import { IS_BROWSER } from "$fresh/runtime.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
@@ -77,7 +77,7 @@ const invokeKey = (
 const batchInvoke = (payload: unknown, init?: RequestInit | undefined) =>
   fetchWithProps(`/live/invoke`, payload, init);
 
-export type InvocationFunc<TManifest extends DecoManifest> = <
+export type InvocationFunc<TManifest extends AppManifest> = <
   TInvocableKey extends
     | AvailableFunctions<TManifest>
     | AvailableLoaders<TManifest>
@@ -105,7 +105,7 @@ export type InvocationFunc<TManifest extends DecoManifest> = <
  * @returns the function return.
  */
 export const invoke = <
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
 >() =>
 <
   TInvocableKey extends
@@ -136,7 +136,7 @@ export const invoke = <
 > => batchInvoke(payload, init);
 
 export const create = <
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
 >() =>
 <
   TInvocableKey extends
@@ -165,7 +165,7 @@ export const create = <
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.
  */
-export const withManifest = <TManifest extends DecoManifest>() => {
+export const withManifest = <TManifest extends AppManifest>() => {
   return {
     /**
      * Invokes the target function using the invoke api.

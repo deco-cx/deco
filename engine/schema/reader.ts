@@ -32,6 +32,9 @@ export const genSchemas = async (manifest: DecoManifest) => {
   );
 
   if (!context.isDeploy) {
+    Deno.remove(join(Deno.cwd(), "schemas.gen.json")).catch((_err) => {
+      // ignore err
+    });
     // save cache on dev mode
     const docCache = await waitKeys(denoDocLocalCache);
     await Deno.writeFile(

@@ -1,29 +1,30 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/src/server/types.ts";
+import { AppManifest } from "$live/blocks/app.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import dfs from "$live/engine/fresh/defaults.ts";
 import type { Manifest } from "$live/live.gen.ts";
 import { LiveConfig } from "$live/mod.ts";
-import type { DecoManifest, LiveState } from "$live/types.ts";
+import type { LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
 import { invokeToHttpResponse } from "$live/utils/invoke.ts";
 import { DeepPick, DotNestedKeys } from "$live/utils/object.ts";
 import { UnionToIntersection } from "https://esm.sh/utility-types@3.10.0";
-export type AvailableFunctions<TManifest extends DecoManifest> =
+export type AvailableFunctions<TManifest extends AppManifest> =
   & keyof TManifest["functions"]
   & string;
 
-export type AvailableActions<TManifest extends DecoManifest> =
+export type AvailableActions<TManifest extends AppManifest> =
   & keyof TManifest["actions"]
   & string;
 
-export type AvailableLoaders<TManifest extends DecoManifest> =
+export type AvailableLoaders<TManifest extends AppManifest> =
   & keyof TManifest["loaders"]
   & string;
 
 export type ManifestFunction<
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
   TFunc extends string,
 > = TFunc extends AvailableFunctions<TManifest>
   ? TManifest["functions"][TFunc] extends { default: infer TLoader }
@@ -38,7 +39,7 @@ export type ManifestFunction<
   : never;
 
 export type ManifestLoader<
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
   TLoader extends string,
 > = TLoader extends AvailableLoaders<TManifest>
   ? TManifest["loaders"][TLoader] extends { default: infer TLoader }
@@ -52,7 +53,7 @@ export type ManifestLoader<
   : never;
 
 export type ManifestAction<
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
   TAction extends string,
 > = TAction extends AvailableActions<TManifest>
   ? TManifest["actions"][TAction] extends { default: infer TAction }
@@ -66,7 +67,7 @@ export type ManifestAction<
   : never;
 
 export type ManifestInvocable<
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
   TKey extends string,
 > =
   | ManifestAction<TManifest, TKey>
@@ -74,7 +75,7 @@ export type ManifestInvocable<
   | ManifestFunction<TManifest, TKey>;
 
 export interface InvokeAction<
-  TManifest extends DecoManifest = DecoManifest,
+  TManifest extends AppManifest = AppManifest,
   TAction extends AvailableActions<TManifest> = AvailableActions<TManifest>,
   TFunc extends ManifestAction<TManifest, TAction> = ManifestAction<
     TManifest,
@@ -90,7 +91,7 @@ export interface InvokeAction<
 }
 
 export interface InvokeFunction<
-  TManifest extends DecoManifest = DecoManifest,
+  TManifest extends AppManifest = AppManifest,
   TLoader extends AvailableFunctions<TManifest> = AvailableFunctions<TManifest>,
   TFunc extends ManifestFunction<TManifest, TLoader> = ManifestFunction<
     TManifest,
@@ -106,7 +107,7 @@ export interface InvokeFunction<
 }
 
 export type Invoke<
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
   TInvocableKey extends string,
   TFuncSelector extends DotNestedKeys<
     ManifestInvocable<TManifest, TInvocableKey>["return"]
@@ -132,7 +133,7 @@ export type Invoke<
   : never;
 
 export interface InvokeLoader<
-  TManifest extends DecoManifest = DecoManifest,
+  TManifest extends AppManifest = AppManifest,
   TLoader extends AvailableLoaders<TManifest> = AvailableLoaders<TManifest>,
   TFunc extends ManifestLoader<TManifest, TLoader> = ManifestLoader<
     TManifest,
@@ -148,7 +149,7 @@ export interface InvokeLoader<
 }
 
 export type InvokePayload<
-  TManifest extends DecoManifest = DecoManifest,
+  TManifest extends AppManifest = AppManifest,
   TFunc extends
     | AvailableLoaders<TManifest>
     | AvailableFunctions<TManifest>
@@ -175,7 +176,7 @@ type ReturnWith<TRet, TPayload> = TPayload extends
   : TRet;
 
 export type DotNestedReturn<
-  TManifest extends DecoManifest,
+  TManifest extends AppManifest,
   TInvocableKey extends string,
 > = DotNestedKeys<ManifestInvocable<TManifest, TInvocableKey>["return"]>;
 
@@ -186,7 +187,7 @@ export type InvokeResult<
       string,
       Invoke<TManifest, any, any>
     >,
-  TManifest extends DecoManifest = DecoManifest,
+  TManifest extends AppManifest = AppManifest,
 > = TPayload extends Invoke<TManifest, infer TFunc, any>
   ? ReturnWith<ManifestInvocable<TManifest, TFunc>["return"], TPayload>
   : TPayload extends Record<string, any> ? {
