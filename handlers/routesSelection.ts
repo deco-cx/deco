@@ -172,8 +172,10 @@ export default function RoutesSelection(
       [routeStringA, { highPriority: highPriorityA }],
       [routeStringB, { highPriority: highPriorityB }],
     ) =>
-      (highPriorityB ? HIGH_PRIORITY_ROUTE_RANK_BASE_VALUE : 0) + rankRoute(routeStringB) -
-      (highPriorityA ? HIGH_PRIORITY_ROUTE_RANK_BASE_VALUE : 0) + rankRoute(routeStringA)
+      (highPriorityB ? HIGH_PRIORITY_ROUTE_RANK_BASE_VALUE : 0) +
+      rankRoute(routeStringB) -
+      ((highPriorityA ? HIGH_PRIORITY_ROUTE_RANK_BASE_VALUE : 0) +
+        rankRoute(routeStringA))
     );
 
     const server = router(
