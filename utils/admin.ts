@@ -1,3 +1,5 @@
+import { JSONSchema7 } from "$live/deps.ts";
+
 export const adminDomain = `https://deco.cx`;
 const adminPreviewUrls = "https://deco-sites-admin-";
 const adminPreviewDomain = "deno.dev";
@@ -18,4 +20,19 @@ export const adminUrlFor = (
   siteId: number,
 ): string => {
   return `${adminDomain}/admin/${siteId}/pages/${pageId}?sort=asc`;
+};
+
+export const resolvable = (ref: string, id: string): JSONSchema7 => {
+  return {
+    title: `#${ref}@${id}`,
+    type: "object",
+    required: ["__resolveType"],
+    properties: {
+      __resolveType: {
+        type: "string",
+        enum: [id],
+        default: id,
+      },
+    },
+  };
 };
