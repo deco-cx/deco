@@ -9,7 +9,7 @@ import {
   hydrateDocCacheWith,
 } from "$live/engine/schema/docCache.ts";
 import { DecoManifest, FnContext } from "$live/types.ts";
-import { SyncOnce, once } from "$live/utils/sync.ts";
+import { once, SyncOnce } from "$live/utils/sync.ts";
 import { fromFileUrl } from "std/path/mod.ts";
 
 export type Apps = InstanceOf<typeof appBlock, "#/root/apps">;
@@ -21,7 +21,8 @@ export type AppManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
  */
 export interface App<
   TAppManifest extends AppManifest = AppManifest,
-  TAppState = any,
+  // deno-lint-ignore ban-types
+  TAppState = {},
 > {
   manifest: TAppManifest;
   state: TAppState;
@@ -35,7 +36,8 @@ export type AppContext<TApp extends App = App> = FnContext<
 export type AppFunc<
   TProps = any,
   TAppManifest extends AppManifest = AppManifest,
-  TState = any,
+  // deno-lint-ignore ban-types
+  TState = {},
 > = (
   c: TProps,
 ) => App<TAppManifest, TState>;
