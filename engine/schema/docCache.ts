@@ -4,12 +4,12 @@ import { DocNode } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
 
 export const LOCATION_TAG = "___LOCATION___";
 export const DOC_CACHE_FILE_NAME = "doccache.zst";
-const getFileBinary = async (url: string): Promise<Uint8Array> => {
+const getFileBinary = async (url: string): Promise<Uint8Array | undefined> => {
   const response = await fetch(url, { redirect: "follow" });
   if (response.status !== 200) {
     // ensure the body is read as to not leak resources
     await response.arrayBuffer();
-    return new Uint8Array();
+    return undefined;
   }
   return new Uint8Array(await response.arrayBuffer());
 };
@@ -23,8 +23,13 @@ export const loadFromBinary = (binary: Uint8Array, importedFrom: string) => {
 
 export const loadFromFile = async (filePath: string, importedFrom: string) => {
   const loader = filePath.startsWith("http") ? getFileBinary : Deno.readFile;
+  const data = await loader(filePath);
+  if (!data) {
+    console.error(`could not load app cache file for ${filePath}`);
+    return {};
+  }
   return loadFromBinary(
-    await loader(filePath),
+    data,
     importedFrom,
   );
 };
