@@ -9,7 +9,7 @@ import {
   hydrateDocCacheWith,
 } from "$live/engine/schema/docCache.ts";
 import { DecoManifest, FnContext } from "$live/types.ts";
-import { once, SyncOnce } from "$live/utils/sync.ts";
+import { SyncOnce, once } from "$live/utils/sync.ts";
 import { fromFileUrl } from "std/path/mod.ts";
 
 export type Apps = InstanceOf<typeof appBlock, "#/root/apps">;
@@ -27,7 +27,7 @@ export interface App<
   state: TAppState;
 }
 
-export type AppContext<TApp extends Apps = Apps> = FnContext<
+export type AppContext<TApp extends App = App> = FnContext<
   TApp["state"],
   TApp["manifest"]
 >;
