@@ -62,11 +62,18 @@ const createFromTemplate =
     await Promise.all(subTemplates);
   };
 
-const templates: Templates = ["import_map.json", "deno.json", "deco.ts", "state.ts", "deps.ts", {
-  app: {
-    loaders: ["bin.ts"],
+const templates: Templates = [
+  "import_map.json",
+  "deno.json",
+  "deco.ts",
+  "state.ts",
+  "deps.ts",
+  {
+    app: {
+      loaders: ["bin.ts"],
+    },
   },
-}];
+];
 
 const init = async () => {
   const latestVersionPromise = lookup(

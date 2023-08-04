@@ -1,4 +1,4 @@
-import { InitContext } from "$live/scripts/apps/init.ts";
+import { InitContext } from "../init.ts";
 
 export default function AppLoadersBin(
   { appName, decoVersion }: InitContext,

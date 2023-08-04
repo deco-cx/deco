@@ -31,7 +31,7 @@ export const genSchemas = async (
   }
   const schema = await genSchemasFromManifest(
     manifest,
-    base
+    base,
   );
 
   if (!context.isDeploy) {

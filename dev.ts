@@ -14,6 +14,7 @@ import {
 } from "$live/utils/namespace.ts";
 import { checkUpdates } from "$live/utils/update.ts";
 import { parse } from "std/flags/mod.ts";
+export { format } from "$live/utils/formatter.ts";
 
 const genOnly = parse(Deno.args)["gen-only"] === true;
 
@@ -175,30 +176,6 @@ function isDyamicImportArray(
 ): imports is string[] {
   return Array.isArray(imports) && imports.length > 0 &&
     typeof imports[0] === "string";
-}
-
-export async function format(content: string) {
-  const fmt = new Deno.Command(Deno.execPath(), {
-    args: ["fmt", "-"],
-    stdin: "piped",
-    stdout: "piped",
-    stderr: "null",
-  });
-
-  const proc = fmt.spawn();
-
-  const raw = new ReadableStream({
-    start(controller) {
-      controller.enqueue(new TextEncoder().encode(content));
-      controller.close();
-    },
-  });
-
-  await raw.pipeTo(proc.stdin);
-  const out = await proc.output();
-  await proc.status;
-
-  return new TextDecoder().decode(out.stdout);
 }
 
 // Generate live own manifest data so that other sites can import native functions and sections.

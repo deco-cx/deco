@@ -1,8 +1,8 @@
-import { format } from "$live/dev.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemas } from "$live/engine/schema/reader.ts";
 import * as colors from "std/fmt/colors.ts";
 import { join, toFileUrl } from "std/path/mod.ts";
+import { format } from "../../utils/formatter.ts";
 import { AppConfig, getDecoConfig } from "./config.ts";
 
 const appModTemplate = (manifest: string, name: string) => `
