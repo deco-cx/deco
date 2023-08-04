@@ -30,7 +30,7 @@ const bundleApp = (dir: string) => async (app: AppConfig) => {
   const appDir = join(dir, app.dir);
   const manifest = await decoManifestBuilder(appDir, app.name, true);
   await Deno.writeTextFile(
-    join(appDir, "deco.app.ts"),
+    join(appDir, "mod.ts"),
     await format(appModTemplate(manifest.build(), app.name)),
   );
   console.log(

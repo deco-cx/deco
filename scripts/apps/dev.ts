@@ -55,7 +55,7 @@ export const dev = async (appName: string, target: string, link: boolean) => {
       if (link) {
         await Deno.writeTextFile(
           appFile,
-          `export { default } from "${app.name}/deco.app.ts";`,
+          `export { default } from "${app.name}/mod.ts";`,
           { create: true },
         );
       } else {
