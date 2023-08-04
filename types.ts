@@ -27,6 +27,8 @@ export type {
   ErrorBoundaryParams,
 } from "$live/blocks/section.ts";
 
+export type { App, AppContext } from "$live/blocks/app.ts";
+
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 

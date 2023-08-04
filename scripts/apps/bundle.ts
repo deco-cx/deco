@@ -8,7 +8,7 @@ import { AppConfig, getDecoConfig } from "./config.ts";
 const appModTemplate = (manifest: string, name: string) => `
 import { State } from "./state.ts";
 export type { State };
-import { App, AppContext as AC } from "$live/blocks/app.ts";
+import { App, AppContext as AC } from "../deps.ts";
 ${manifest}
 
 export const name = "${name}";
