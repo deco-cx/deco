@@ -59,7 +59,7 @@ export const dev = async (
       if (link) {
         await Deno.writeTextFile(
           appFile,
-          `export { default } from "${app.name}/mod.ts";`,
+          `export { default, name } from "${app.name}/mod.ts";`,
           { create: true },
         );
       } else {
