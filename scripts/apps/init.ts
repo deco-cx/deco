@@ -1,4 +1,4 @@
-import { join, toFileUrl } from "https://deno.land/std@0.190.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.190.0/path/mod.ts";
 import {
   lookup,
   REGISTRIES,
@@ -21,14 +21,16 @@ const createFromTemplates = async (
   templates: Templates,
   dir: string,
   ctx: InitContext,
+  refPrefix = "",
 ) => {
-  await Promise.all(templates.map(createFromTemplate(ctx, dir)));
+  await Promise.all(templates.map(createFromTemplate(ctx, dir, refPrefix)));
 };
 const createFromTemplate =
-  (ctx: InitContext, dir: string) => async (ref: TemplateRef) => {
+  (ctx: InitContext, dir: string, refPrefix: string) =>
+  async (ref: TemplateRef) => {
     if (isTemplateName(ref)) {
       const func: { default: TemplateGenerator } = await import(
-        toFileUrl(import.meta.resolve(`./${ref}.ts`)).toString()
+        `./templates/${refPrefix}${ref}.ts`
       );
       const str = await func.default(ctx);
       const fileDir = join(dir, ref);
@@ -39,26 +41,36 @@ const createFromTemplate =
     for (const key of Object.keys(ref)) {
       subTemplates.push((async () => {
         const subDir = join(dir, key);
+        const newPrefix = `${refPrefix}${key}.`;
         await Deno.mkdir(subDir);
-        const subTemplateCreate = createFromTemplate(ctx, subDir);
+        const subTemplateCreate = createFromTemplate(
+          ctx,
+          subDir,
+          newPrefix,
+        );
         const subTemplates = ref[key];
         await (Array.isArray(subTemplates)
-          ? createFromTemplates(subTemplates, subDir, ctx)
+          ? createFromTemplates(
+            subTemplates,
+            subDir,
+            ctx,
+            newPrefix,
+          )
           : subTemplateCreate(subTemplates));
       })());
     }
     await Promise.all(subTemplates);
   };
 
-const templates: Templates = ["deno.json", "deco.ts", "state.ts", "deps.ts", {
+const templates: Templates = ["import_map.json", "deno.json", "deco.ts", "state.ts", "deps.ts", {
   app: {
-    loaders: ["app.loaders.bin.ts"],
+    loaders: ["bin.ts"],
   },
 }];
 
 const init = async () => {
   const latestVersionPromise = lookup(
-    "https://denopkg.com/deco-cx/deco",
+    "https://denopkg.com/deco-cx/deco@main/",
     REGISTRIES,
   )
     ?.all().then((all) => all[0]);
