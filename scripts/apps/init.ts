@@ -66,12 +66,9 @@ const templates: Templates = [
   "import_map.json",
   "deno.json",
   "deco.ts",
-  "state.ts",
   "deps.ts",
   {
-    app: {
-      loaders: ["bin.ts"],
-    },
+    app: ["state.ts", { loaders: ["bin.ts"] }],
   },
 ];
 
