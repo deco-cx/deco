@@ -32,8 +32,8 @@ export default function Manifest({ apps }: Props): DecoManifest {
     ...context.manifest!,
   };
 
-  for (const app of apps) {
-    initialManifest = mergeManifests(initialManifest, app.manifest);
+  for (const app of (apps ?? [])) {
+    initialManifest = mergeManifests(initialManifest, app?.manifest ?? {});
   }
   return { ...initialManifest, routes, islands, baseUrl };
 }
