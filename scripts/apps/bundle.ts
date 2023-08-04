@@ -1,7 +1,8 @@
 import { format } from "$live/dev.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemas } from "$live/engine/schema/reader.ts";
-import { join } from "std/path/mod.ts";
+import * as colors from "std/fmt/colors.ts";
+import { join, toFileUrl } from "std/path/mod.ts";
 
 const appModTemplate = (manifest: string, name: string) => `
 import { State } from "./state.ts";
@@ -32,23 +33,39 @@ interface DecoConfig {
 }
 const bundleApp = async () => {
   const dir = Deno.cwd();
-  const decoConfig: DecoConfig = await import(join(dir, "deco.ts"))
+  console.log(colors.brightGreen(`start bundling apps... ${dir}`));
+  const decoConfig: DecoConfig = await import(
+    toFileUrl(join(dir, "deco.ts")).toString()
+  )
     .then((file) => file.default).catch(
-      (_err) => ({
-        apps: [{
-          name: Deno.args[0] ?? "unknown",
-          dir: ".",
-        }],
-      }),
+      (_err) => {
+        console.debug(
+          `could not import deco.ts: ${colors.red(_err?.message ?? "")}`,
+        );
+        return {
+          apps: [{
+            name: Deno.args[0] ?? "unknown",
+            dir: ".",
+          }],
+        };
+      },
     );
 
+  console.debug(
+    `found ${
+      colors.brightBlue((decoConfig?.apps ?? []).length.toString())
+    } apps`,
+  );
+
   for (const app of (decoConfig?.apps ?? [])) {
+    console.log(`generating manfiest for ${colors.bgBrightGreen(app.name)}...`);
     const appDir = join(dir, app.dir);
     const manifest = await decoManifestBuilder(appDir, app.name, true);
     await Deno.writeTextFile(
       join(appDir, "deco.app.ts"),
       await format(appModTemplate(manifest.build(), app.name)),
     );
+    console.log(colors.brightBlue(`the manifest has been generated`));
 
     // temporary manifest
     const manifestFile = join(appDir, "manifest.temp.ts");
