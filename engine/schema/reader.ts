@@ -9,11 +9,14 @@ import { denoDocLocalCache } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
 import { compressFromJSON } from "$live/utils/zstd.ts";
-import { stringifyForWrite } from "$live/utils/json.ts";
 import { join } from "std/path/mod.ts";
 
-export const genSchemas = async (manifest: DecoManifest) => {
-  const cachePath = join(Deno.cwd(), DOC_CACHE_FILE_NAME);
+export const genSchemas = async (
+  manifest: DecoManifest,
+  docCachePath?: string,
+) => {
+  const base = docCachePath ? join(Deno.cwd(), docCachePath) : Deno.cwd();
+  const cachePath = join(base, DOC_CACHE_FILE_NAME);
   console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
   const start = performance.now();
   if (context.isDeploy) {
@@ -28,6 +31,7 @@ export const genSchemas = async (manifest: DecoManifest) => {
   }
   const schema = await genSchemasFromManifest(
     manifest,
+    base
   );
 
   if (!context.isDeploy) {
@@ -40,7 +44,7 @@ export const genSchemas = async (manifest: DecoManifest) => {
       cachePath,
       compressFromJSON(
         docCache,
-        (str: string) => str.replaceAll(`file://${Deno.cwd()}/`, LOCATION_TAG),
+        (str: string) => str.replaceAll(`file://${base}/`, LOCATION_TAG),
       ),
     );
   }
