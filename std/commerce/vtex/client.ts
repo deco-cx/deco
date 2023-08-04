@@ -83,7 +83,7 @@ export const createClient = ({
       .join("/");
 
     return fetchAPI(
-      `${baseUrl}/${account}/intelligent-search/${type}/${pathname}?${params.toString()}`,
+      `https://fastly.decocache.com/https://${account}.vtexcommercestable.com.br/api/io/_v/api/intelligent-search/${type}/${pathname}?${params.toString()}`,
     );
   };
 
