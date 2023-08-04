@@ -4,7 +4,7 @@ import { Resolvable } from "$live/engine/core/resolver.ts";
 import { notUndefined, singleFlight } from "$live/engine/core/utils.ts";
 import { Schemas } from "$live/engine/schema/builder.ts";
 import { namespaceOf } from "$live/engine/schema/gen.ts";
-import { getCurrent } from "$live/engine/schema/reader.ts";
+import { genSchemas } from "$live/engine/schema/reader.ts";
 import { context } from "$live/live.ts";
 import meta from "$live/meta.json" assert { type: "json" };
 import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
@@ -128,17 +128,14 @@ export const handler = async (
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
 ) => {
   const info = await sf.do("schema", async () => {
-    const end = ctx.state.t?.start("fetch-release");
-    const [schema, revision] = await Promise.all([
-      getCurrent(),
-      ctx.state.release.revision(),
-    ]);
+    const end = ctx.state.t?.start("fetch-revision");
+    const revision = await ctx.state.release.revision();
     end?.();
 
     if (revision !== latestRevision || mschema === null) {
       const endBuildSchema = ctx.state?.t?.start("build-resolvables");
       mschema = buildSchemaWithResolvables(
-        schema,
+        await genSchemas(ctx.state.manifest),
         { ...await ctx.state.release.state({ forceFresh: false }) },
       );
       latestRevision = revision;
@@ -150,7 +147,7 @@ export const handler = async (
       version: meta.version,
       namespace: context.namespace!,
       site: context.site!,
-      manifest: toManifestBlocks(context.manifest!),
+      manifest: toManifestBlocks(ctx.state.manifest),
       schema: mschema,
     };
 

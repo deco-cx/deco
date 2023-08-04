@@ -5,8 +5,9 @@ import {
   redirectTo,
 } from "$live/compatibility/v0/editorData.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
+import { resolversFrom } from "$live/engine/fresh/manifest.ts";
 import { context } from "$live/live.ts";
-import { LiveConfig, LiveState } from "$live/types.ts";
+import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { getSetCookies } from "std/http/mod.ts";
@@ -29,6 +30,7 @@ export interface MiddlewareConfig {
    * @description Configure your loaders global state.
    */
   state: Record<string, Resolvable>;
+  manifest?: DecoManifest;
 }
 
 export const handler = async (
@@ -74,6 +76,24 @@ export const handler = async (
       state.flags = [];
       Object.assign(ctx.state, state);
       ctx.state.global = state; // compatibility mode with functions.
+    }
+    const loadedManifest = ctx?.state?.$live?.manifest;
+    ctx.state.manifest = context.manifest!;
+    if (loadedManifest) {
+      ctx.state.manifest = loadedManifest;
+      const customResolvers = resolversFrom(loadedManifest);
+      const newReleaseResolver = context.releaseResolver!.withResolvers(
+        customResolvers,
+      );
+      const ctxResolver = newReleaseResolver
+        .resolverFor(
+          { context: ctx, request: req },
+          {
+            monitoring: { t: ctx.state.t },
+          },
+        )
+        .bind(newReleaseResolver);
+      ctx.state.resolve = ctxResolver;
     }
 
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage

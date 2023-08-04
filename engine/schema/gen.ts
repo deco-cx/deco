@@ -20,9 +20,10 @@ export const namespaceOf = (blkType: string, blkKey: string): string => {
 
 export const genSchemasFromManifest = async (
   manifest: DecoManifest,
+  baseDir?: string,
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, ...manifestBlocks } = manifest;
-  const dir = Deno.cwd();
+  const dir = baseDir ? baseDir : Deno.cwd();
 
   const rootWithBlocks: Record<string, JSONSchema7> = blocks.reduce(
     (root, blk) => {

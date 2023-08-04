@@ -1,23 +1,53 @@
-import { Schemas } from "$live/engine/schema/builder.ts";
+import { waitKeys } from "$live/engine/core/utils.ts";
+import {
+  DOC_CACHE_FILE_NAME,
+  hydrateDocCacheWith,
+  LOCATION_TAG,
+} from "$live/engine/schema/docCache.ts";
+import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
+import { denoDocLocalCache } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
-import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { genSchemasFromManifest } from "./gen.ts";
-import { stringifyForWrite } from "$live/utils/json.ts";
+import { DecoManifest } from "$live/types.ts";
+import { compressFromJSON } from "$live/utils/zstd.ts";
+import { join } from "std/path/mod.ts";
 
-let schemas: Promise<Schemas> | null = null;
-const schemaFile = "schemas.gen.json";
-
-export const genSchemas = async () => {
+export const genSchemas = async (
+  manifest: DecoManifest,
+  docCachePath?: string,
+) => {
+  const base = docCachePath ? join(Deno.cwd(), docCachePath) : Deno.cwd();
+  const cachePath = join(base, DOC_CACHE_FILE_NAME);
   console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
   const start = performance.now();
+  if (context.isDeploy) {
+    try {
+      await hydrateDocCacheWith(cachePath, `file://${Deno.cwd()}/`);
+    } catch (e) {
+      // ignore if not found
+      if (!(e instanceof Deno.errors.NotFound)) {
+        throw e;
+      }
+    }
+  }
   const schema = await genSchemasFromManifest(
-    context.manifest!,
+    manifest,
+    base,
   );
 
-  await Deno.writeTextFile(
-    join(Deno.cwd(), schemaFile),
-    stringifyForWrite(schema),
-  );
+  if (!context.isDeploy) {
+    Deno.remove(join(Deno.cwd(), "schemas.gen.json")).catch((_err) => {
+      // ignore err
+    });
+    // save cache on dev mode
+    const docCache = await waitKeys(denoDocLocalCache);
+    await Deno.writeFile(
+      cachePath,
+      compressFromJSON(
+        docCache,
+        (str: string) => str.replaceAll(`file://${base}/`, LOCATION_TAG),
+      ),
+    );
+  }
 
   console.log(
     `✔️ ready to rock and roll! Your project is live 🤘 - took: ${
@@ -28,16 +58,4 @@ export const genSchemas = async () => {
     }ms`,
   );
   return schema;
-};
-
-const getSchema = async (): Promise<Schemas> => {
-  return await Deno.readTextFile(join(Deno.cwd(), schemaFile)).then(JSON.parse);
-};
-
-export const getCurrent = (): Promise<Schemas> => {
-  return schemas ??= context.isDeploy ? getSchema() : genSchemas();
-};
-
-export const reset = () => {
-  schemas = null;
 };

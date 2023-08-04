@@ -175,12 +175,14 @@ export async function* listBlocks(
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
+  appMode = false,
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
     namespace,
     imports: {},
     exports: [],
     manifest: {},
+    appMode,
   });
   let blockIdx = 1;
   for (const blk of blocks) {
@@ -188,6 +190,13 @@ export const decoManifestBuilder = async (
     for await (
       const entry of listBlocks(dir, blk)
     ) {
+      // ignore file name with __NAME__.ts
+      if (
+        entry.name.startsWith("__") &&
+        (entry.name.endsWith("__.ts") || entry.name.endsWith("__.tsx"))
+      ) {
+        continue;
+      }
       initialManifest = withDefinition(
         initialManifest,
         namespace,
@@ -200,10 +209,17 @@ export const decoManifestBuilder = async (
     blockIdx++;
   }
 
-  return defaultLiveRoutes(
-    initialManifest
-      .addExportDefault({
-        variable: { identifier: "manifest" },
-      }),
-  );
+  initialManifest = !appMode
+    ? defaultLiveRoutes(
+      initialManifest
+        .addImports({
+          from: "$live/types.ts",
+          clauses: [{ import: "DecoManifest" }],
+        })
+        .addExportDefault({
+          variable: { identifier: "manifest", satisfies: "DecoManifest" },
+        }),
+    )
+    : initialManifest;
+  return initialManifest;
 };

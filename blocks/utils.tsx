@@ -17,9 +17,9 @@ import { context } from "$live/live.ts";
 import { Component, JSX } from "preact";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import type { Manifest } from "../live.gen.ts";
-import { DecoManifest } from "../types.ts";
 import { HttpContext } from "./handler.ts";
 import { ErrorBoundaryComponent } from "./section.ts";
+import { AppManifest } from "$live/blocks/app.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -63,7 +63,7 @@ async ($live: TConfig) => {
 export type FnContext<
   // deno-lint-ignore ban-types
   TState = {},
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
 > = TState & {
   response: { headers: Headers };
   get: ResolveFunc;

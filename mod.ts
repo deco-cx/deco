@@ -12,3 +12,4 @@ export * from "$live/types.ts";
 export type { WorkflowGen } from "./deps.ts";
 export { stylesPlugin };
 export type { StreamProps } from "./utils/invoke.ts";
+export type { App, AppContext } from "./types.ts";

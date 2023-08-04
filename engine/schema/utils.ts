@@ -1,4 +1,5 @@
 import { TransformContext } from "$live/engine/schema/transform.ts";
+import { context } from "$live/live.ts";
 import {
   DocNode,
   DocNodeFunction,
@@ -8,9 +9,8 @@ import {
   TsTypeDef,
   TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import { doc } from "https://deno.land/x/deno_doc@0.62.0/mod.ts";
 import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
-import { fromFileUrl, join } from "std/path/mod.ts";
+import { fromFileUrl } from "std/path/mod.ts";
 
 const limit = pLimit(5);
 
@@ -103,7 +103,7 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-const denoDocLocalCache = new Map<string, Promise<DocNode[]>>();
+export const denoDocLocalCache: Record<string, Promise<DocNode[]>> = {};
 
 export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
@@ -122,12 +122,6 @@ export const exec = async (cmd: string[]) => {
   }
 
   return new TextDecoder().decode(stdout);
-};
-
-const docAsLib = (path: string, importMap?: string): Promise<DocNode[]> => {
-  return doc(path, {
-    importMap: importMap ?? join("file://", Deno.cwd(), "import_map.json"),
-  });
 };
 
 const docAsExec = async (
@@ -167,11 +161,22 @@ function isQuotaExceededError(err: unknown): boolean {
       err.name === "NS_ERROR_DOM_QUOTA_REACHED")
   );
 }
+
 export const denoDoc = async (
   path: string,
-  importMap?: string,
+  _importMap?: string,
 ): Promise<DocNode[]> => {
   try {
+    const docCacheKey = path;
+    if (context.isDeploy) {
+      const cached = denoDocLocalCache[docCacheKey];
+      if (!cached) {
+        throw new Error(
+          `could not resolve ${docCacheKey} on denodoc. Create denodoc cache locally with "deno task start --gen-only" and push the doccache.zst file`,
+        );
+      }
+      return cached;
+    }
     const isLocal = path.startsWith("file");
     const lastModified = isLocal
       ? await Deno.stat(new URL(path)).then((s) =>
@@ -182,14 +187,13 @@ export const denoDoc = async (
     if (current) {
       const parsed: DocCache = JSON.parse(current);
       if (parsed.lastModified === lastModified) {
-        return parsed.docNodes;
+        return denoDocLocalCache[docCacheKey] ??= Promise.resolve(
+          parsed.docNodes,
+        );
       }
     }
-    const promise = denoDocLocalCache.get(path) ??
-      (typeof Deno.run === "function"
-        ? docAsExec(path)
-        : docAsLib(path, importMap));
-    promise.then((doc) => {
+    denoDocLocalCache[docCacheKey] ??= docAsExec(path);
+    denoDocLocalCache[docCacheKey].then((doc) => {
       try {
         localStorage.setItem(
           path,
@@ -201,8 +205,7 @@ export const denoDoc = async (
         }
       }
     });
-    denoDocLocalCache.set(path, promise);
-    return await promise;
+    return denoDocLocalCache[docCacheKey];
   } catch (err) {
     console.warn("deno doc error, ignoring", err);
     return [];

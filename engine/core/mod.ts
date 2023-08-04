@@ -41,15 +41,23 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected resolvers: ResolverMap<TContext>;
   protected danglingRecover?: Resolver;
   private resolveHints: ResolveHints;
-  constructor(config: ResolverOptions<TContext>) {
+  constructor(config: ResolverOptions<TContext>, hints?: ResolveHints) {
     this.resolvers = config.resolvers;
     this.release = config.release;
     this.danglingRecover = config.danglingRecover;
-    this.resolveHints = {};
+    this.resolveHints = hints ?? {};
     this.release.onChange(() => {
       this.resolveHints = {};
     });
   }
+
+  public withResolvers = (resolvers: ResolverMap<TContext>) => {
+    return new ReleaseResolver<TContext>({
+      release: this.release,
+      resolvers: { ...this.resolvers, ...resolvers },
+      danglingRecover: this.danglingRecover?.bind(this),
+    }, this.resolveHints);
+  };
 
   public addResolvers = (resolvers: ResolverMap<TContext>) => {
     this.resolvers = {

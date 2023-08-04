@@ -5,15 +5,16 @@ import { gte } from "std/semver/mod.ts";
 import { ResolverMap } from "$live/engine/core/resolver.ts";
 import { ManifestBuilder } from "$live/engine/fresh/manifestBuilder.ts";
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
+import { genSchemas } from "$live/engine/schema/reader.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest } from "$live/types.ts";
-import { genSchemas, reset } from "$live/engine/schema/reader.ts";
 import {
   namespaceFromSiteJson,
   updateImportMap,
 } from "$live/utils/namespace.ts";
 import { checkUpdates } from "$live/utils/update.ts";
 import { parse } from "std/flags/mod.ts";
+export { format } from "$live/utils/formatter.ts";
 
 const genOnly = parse(Deno.args)["gen-only"] === true;
 
@@ -152,8 +153,7 @@ export default async function dev(
 
   const genPromise = (async () => {
     await setManifest(dir);
-    await genSchemas();
-    reset();
+    await genSchemas(context.manifest!);
   })();
 
   onListen?.();
@@ -178,30 +178,6 @@ function isDyamicImportArray(
     typeof imports[0] === "string";
 }
 
-export async function format(content: string) {
-  const fmt = new Deno.Command(Deno.execPath(), {
-    args: ["fmt", "-"],
-    stdin: "piped",
-    stdout: "piped",
-    stderr: "null",
-  });
-
-  const proc = fmt.spawn();
-
-  const raw = new ReadableStream({
-    start(controller) {
-      controller.enqueue(new TextEncoder().encode(content));
-      controller.close();
-    },
-  });
-
-  await raw.pipeTo(proc.stdin);
-  const out = await proc.output();
-  await proc.status;
-
-  return new TextDecoder().decode(out.stdout);
-}
-
 // Generate live own manifest data so that other sites can import native functions and sections.
 export const liveNs = "$live";
 if (import.meta.main) {
@@ -210,7 +186,7 @@ if (import.meta.main) {
   const newManifestData = await decoManifestBuilder(dir, liveNs);
   await generate(dir, newManifestData).then(async () => {
     await setManifest(dir);
-    await genSchemas();
+    await genSchemas(context.manifest!);
   });
 }
 
