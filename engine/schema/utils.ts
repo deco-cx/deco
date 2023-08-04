@@ -171,7 +171,9 @@ export const denoDoc = async (
     if (context.isDeploy) {
       const cached = denoDocLocalCache[docCacheKey];
       if (!cached) {
-        throw new Error(`could not resolve ${docCacheKey} on denodoc`);
+        throw new Error(
+          `could not resolve ${docCacheKey} on denodoc. Create denodoc cache locally with "deno task start --gen-only" and push the doccache.zst file`,
+        );
       }
       return cached;
     }

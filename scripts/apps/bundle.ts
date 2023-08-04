@@ -9,7 +9,6 @@ const appModTemplate = (manifest: string, name: string) => `
 import { State } from "./state.ts";
 export type { State };
 import { App, AppContext as AC } from "$live/blocks/app.ts";
-import { getDecoConfig } from './config';
 ${manifest}
 
 export const name = "${name}";

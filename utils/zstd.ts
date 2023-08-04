@@ -9,6 +9,8 @@ await init();
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
+const COMPRESS_LEVEL = 10;
+
 export const compressFromJSON = <T>(
   data: T,
   interceptor?: (str: string) => string,
@@ -17,7 +19,7 @@ export const compressFromJSON = <T>(
   const buffer = encoder.encode(
     interceptor ? interceptor(stringifiedData) : stringifiedData,
   );
-  return compress(buffer, 10);
+  return compress(buffer, COMPRESS_LEVEL);
 };
 
 export const decompressToJSON = <T>(
