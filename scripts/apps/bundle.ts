@@ -3,11 +3,13 @@ import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import { genSchemas } from "$live/engine/schema/reader.ts";
 import * as colors from "std/fmt/colors.ts";
 import { join, toFileUrl } from "std/path/mod.ts";
+import { AppConfig, getDecoConfig } from "./config.ts";
 
 const appModTemplate = (manifest: string, name: string) => `
 import { State } from "./state.ts";
 export type { State };
 import { App, AppContext as AC } from "$live/blocks/app.ts";
+import { getDecoConfig } from './config';
 ${manifest}
 
 export const name = "${name}";
@@ -24,13 +26,6 @@ export default function App(
 export type AppContext = AC<ReturnType<typeof App>>;
 `;
 
-interface AppConfig {
-  name: string;
-  dir: string;
-}
-interface DecoConfig {
-  apps?: AppConfig[];
-}
 const bundleApp = (dir: string) => async (app: AppConfig) => {
   console.log(`generating manfiest for ${colors.bgBrightGreen(app.name)}...`);
   const appDir = join(dir, app.dir);
@@ -61,22 +56,7 @@ const bundleApp = (dir: string) => async (app: AppConfig) => {
 const bundleApps = async () => {
   const dir = Deno.cwd();
   console.log(colors.brightGreen(`start bundling apps... ${dir}`));
-  const decoConfig: DecoConfig = await import(
-    toFileUrl(join(dir, "deco.ts")).toString()
-  )
-    .then((file) => file.default).catch(
-      (_err) => {
-        console.debug(
-          `could not import deco.ts: ${colors.red(_err?.message ?? "")}`,
-        );
-        return {
-          apps: [{
-            name: Deno.args[0] ?? "unknown",
-            dir: ".",
-          }],
-        };
-      },
-    );
+  const decoConfig = await getDecoConfig(dir);
 
   console.debug(
     `found ${
