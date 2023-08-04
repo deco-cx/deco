@@ -3,7 +3,12 @@ import * as colors from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
 import { getDecoConfig } from "./config.ts";
 
-export const dev = async (appName: string, target: string, link: boolean) => {
+export const dev = async (
+  appName: string,
+  target: string,
+  link: boolean,
+  appLocation: string,
+) => {
   if (!target) {
     console.error(
       colors.red(
@@ -24,8 +29,7 @@ export const dev = async (appName: string, target: string, link: boolean) => {
     );
     return;
   }
-  const dir = Deno.cwd();
-  const config = await getDecoConfig(dir);
+  const config = await getDecoConfig(appLocation);
   const apps = appName
     ? (config?.apps ?? []).filter((app) => app.name === appName)
     : (config?.apps ?? []);
@@ -45,7 +49,7 @@ export const dev = async (appName: string, target: string, link: boolean) => {
   for (const app of apps) {
     changes.push((async () => {
       importMapContent.imports[`${app.name}/`] = link
-        ? `${join(dir, app.dir)}/`
+        ? `${join(appLocation, app.dir)}/`
         : undefined;
 
       const appFile = join(
