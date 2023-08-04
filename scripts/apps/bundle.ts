@@ -31,7 +31,34 @@ interface AppConfig {
 interface DecoConfig {
   apps?: AppConfig[];
 }
-const bundleApp = async () => {
+const bundleApp = (dir: string) => async (app: AppConfig) => {
+  console.log(`generating manfiest for ${colors.bgBrightGreen(app.name)}...`);
+  const appDir = join(dir, app.dir);
+  const manifest = await decoManifestBuilder(appDir, app.name, true);
+  await Deno.writeTextFile(
+    join(appDir, "deco.app.ts"),
+    await format(appModTemplate(manifest.build(), app.name)),
+  );
+  console.log(
+    colors.brightBlue(`the manifest of ${app.name} has been generated`),
+  );
+
+  // temporary manifest
+  const manifestFile = join(appDir, "manifest.temp.ts");
+  await Deno.writeTextFile(
+    manifestFile,
+    manifest.addExportDefault({
+      variable: { identifier: "manifest" },
+    }).build(),
+  );
+  const manifestContent =
+    (await import(toFileUrl(manifestFile).toString())).default;
+  await genSchemas(manifestContent, app.dir);
+  Deno.remove(manifestFile).catch((_err) => {
+    //ignore
+  });
+};
+const bundleApps = async () => {
   const dir = Deno.cwd();
   console.log(colors.brightGreen(`start bundling apps... ${dir}`));
   const decoConfig: DecoConfig = await import(
@@ -57,30 +84,7 @@ const bundleApp = async () => {
     } apps`,
   );
 
-  for (const app of (decoConfig?.apps ?? [])) {
-    console.log(`generating manfiest for ${colors.bgBrightGreen(app.name)}...`);
-    const appDir = join(dir, app.dir);
-    const manifest = await decoManifestBuilder(appDir, app.name, true);
-    await Deno.writeTextFile(
-      join(appDir, "deco.app.ts"),
-      await format(appModTemplate(manifest.build(), app.name)),
-    );
-    console.log(colors.brightBlue(`the manifest has been generated`));
-
-    // temporary manifest
-    const manifestFile = join(appDir, "manifest.temp.ts");
-    await Deno.writeTextFile(
-      manifestFile,
-      manifest.addExportDefault({
-        variable: { identifier: "manifest" },
-      }).build(),
-    );
-    const manifestContent = (await import(manifestFile)).default;
-    await genSchemas(manifestContent, app.dir);
-    Deno.remove(manifestFile).catch((_err) => {
-      //ignore
-    });
-  }
+  await Promise.all((decoConfig?.apps ?? []).map(bundleApp(dir)));
 };
 
-await bundleApp();
+await bundleApps();
