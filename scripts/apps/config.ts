@@ -1,9 +1,9 @@
-import * as colors from "std/fmt/colors.ts";
 import { join, toFileUrl } from "std/path/mod.ts";
 
 export interface AppConfig {
   name: string;
   dir: string;
+  deps?: string;
 }
 export interface DecoConfig {
   apps?: AppConfig[];
@@ -18,13 +18,11 @@ export const getDecoConfig = async (appLocation: string) => {
   )
     .then((file) => file.default).catch(
       (_err) => {
-        console.debug(
-          `could not import ${decoTs}: ${colors.red(_err?.message ?? "")}`,
-        );
         return {
           apps: [{
             name: Deno.args[0] ?? "unknown",
             dir: ".",
+            deps: "./deps.ts",
           }],
         };
       },

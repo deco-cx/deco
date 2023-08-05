@@ -172,6 +172,12 @@ export async function* listBlocks(
     yield entry;
   }
 }
+
+const localBlocks: Record<string, boolean> = {
+  routes: true,
+  islands: true,
+};
+const appsBlocks = (blk: Block) => localBlocks[blk.type] !== true;
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
@@ -185,7 +191,7 @@ export const decoManifestBuilder = async (
     appMode,
   });
   let blockIdx = 1;
-  for (const blk of blocks) {
+  for (const blk of (appMode ? blocks.filter(appsBlocks) : blocks)) {
     let totalBlocks = 0;
     for await (
       const entry of listBlocks(dir, blk)

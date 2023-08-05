@@ -104,8 +104,11 @@ export interface ExportAssignment {
 export interface ExportConst {
   name: string;
 }
+export interface ExportType {
+  type: string;
+}
 
-export type Export = ExportConst | ExportAssignment;
+export type Export = ExportConst | ExportAssignment | ExportType;
 
 export interface Assignment {
   variable: string;
@@ -189,7 +192,13 @@ const stringifyJS = (js: JS): string => {
   return js.raw.identifier;
 };
 
+const isExportType = (exp: Export): exp is ExportType => {
+  return (exp as ExportType)?.type !== undefined;
+};
 const stringifyExport = (exp: Export): string => {
+  if (isExportType(exp)) {
+    return `export type { ${exp.type} };`;
+  }
   const nExp = (exp as ExportAssignment).js;
   if (nExp !== undefined) {
     return `export const ${exp.name} = ${stringifyJS(nExp)}`;

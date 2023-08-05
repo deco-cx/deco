@@ -3,11 +3,23 @@ import * as colors from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
 import { getDecoConfig } from "./config.ts";
 
+const resolveAppLocation = async (appLocation: string) => {
+  if (appLocation.startsWith("http")) {
+    return appLocation;
+  }
+  const existsOnFS = await Deno.stat(appLocation).then((_r) => true).catch((
+    _err,
+  ) => false);
+  if (existsOnFS) {
+    return appLocation;
+  }
+  return `https://denopkg.com/${appLocation}`;
+};
 export const dev = async (
   appName: string,
   target: string,
   link: boolean,
-  appLocation: string,
+  _appLocation: string,
 ) => {
   if (!target) {
     console.error(
@@ -17,6 +29,7 @@ export const dev = async (
     );
     return;
   }
+  const appLocation = await resolveAppLocation(_appLocation);
   const importMap = join(target, "import_map.json");
   const exists = await Deno.stat(importMap).then((s) => !s.isDirectory).catch(
     (_err) => false,

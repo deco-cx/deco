@@ -5,13 +5,8 @@ import { join, toFileUrl } from "std/path/mod.ts";
 import { format } from "../../utils/formatter.ts";
 import { AppConfig, getDecoConfig } from "./config.ts";
 
-const appModTemplate = (manifest: string, name: string) => `
-import { State } from "./state.ts";
-export type { State };
-import { App, AppContext as AC } from "../deps.ts";
+const appModTemplate = (manifest: string) => `
 ${manifest}
-
-export const name = "${name}";
 
 export default function App(
   state: State,
@@ -28,10 +23,26 @@ export type AppContext = AC<ReturnType<typeof App>>;
 const bundleApp = (dir: string) => async (app: AppConfig) => {
   console.log(`generating manfiest for ${colors.bgBrightGreen(app.name)}...`);
   const appDir = join(dir, app.dir);
-  const manifest = await decoManifestBuilder(appDir, app.name, true);
+  const manifest = (await decoManifestBuilder(appDir, app.name, true))
+    .addImports({
+      from: "./state.ts",
+      clauses: [{ import: "State" }],
+    }, {
+      from: app.deps ?? "../deps.ts",
+      clauses: [{ import: "App, AppContext as AC" }],
+    }).addExports({
+      name: "name",
+      js: {
+        kind: "js",
+        raw: app.name,
+      },
+    }, {
+      type: "State",
+    });
+
   await Deno.writeTextFile(
     join(appDir, "mod.ts"),
-    await format(appModTemplate(manifest.build(), app.name)),
+    await format(appModTemplate(manifest.build())),
   );
   console.log(
     colors.brightBlue(`the manifest of ${app.name} has been generated`),
