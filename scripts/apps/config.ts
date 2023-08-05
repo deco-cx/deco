@@ -10,7 +10,7 @@ export interface DecoConfig {
 }
 
 const decoTs = "deco.ts";
-export const getDecoConfig = async (appLocation: string) => {
+export const getDecoConfig = async (appLocation: string, appName?: string) => {
   const decoConfig: DecoConfig = await import(
     appLocation.startsWith("http")
       ? `${appLocation}/${decoTs}`
@@ -20,7 +20,7 @@ export const getDecoConfig = async (appLocation: string) => {
       (_err) => {
         return {
           apps: [{
-            name: Deno.args[0] ?? "unknown",
+            name: appName ?? Deno.args[0] ?? "unknown",
             dir: ".",
             deps: "./deps.ts",
           }],

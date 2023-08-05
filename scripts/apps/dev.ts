@@ -42,7 +42,7 @@ export const dev = async (
     );
     return;
   }
-  const config = await getDecoConfig(appLocation);
+  const config = await getDecoConfig(appLocation, appName);
   const apps = appName
     ? (config?.apps ?? []).filter((app) => app.name === appName)
     : (config?.apps ?? []);
@@ -62,7 +62,7 @@ export const dev = async (
   for (const app of apps) {
     changes.push((async () => {
       importMapContent.imports[`${app.name}/`] = link
-        ? `${join(appLocation, app.dir)}/`
+        ? `${join(appLocation, app.dir)}/`.replace(Deno.cwd(), ".")
         : undefined;
 
       const appFile = join(
