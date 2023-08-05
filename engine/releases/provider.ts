@@ -1,5 +1,4 @@
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { fromPagesTable } from "$live/engine/releases/pages.ts";
 import { fromConfigsTable } from "$live/engine/releases/release.ts";
 import { context } from "$live/live.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
@@ -95,19 +94,15 @@ export const compose = (...providers: Release[]): Release => {
  * @returns the config store provider.
  */
 export const getComposedConfigStore = (
-  ns: string,
+  _ns: string,
   site: string,
-  siteId: number,
+  _siteId: number,
   localStorageOnly = false,
 ): Release => {
   const providers = [];
 
   if (Deno.env.has("USE_LOCAL_STORAGE_ONLY") || localStorageOnly) {
     return newFsProvider();
-  }
-
-  if (siteId > 0) {
-    providers.push(newSupabase(fromPagesTable(siteId, ns), context.isDeploy)); // if not deploy so no background is needed
   }
 
   providers.push(newSupabase(fromConfigsTable(site), context.isDeploy)); // if not deploy so no background is needed
