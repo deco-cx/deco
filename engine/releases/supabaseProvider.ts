@@ -32,7 +32,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 const sleepBetweenRetriesMS = 100;
-const refetchIntervalMSDeploy = 5_000;
+const refetchIntervalMSDeploy = 30_000;
 
 export interface CurrResolvables {
   state: Record<string, Resolvable<any>>;
