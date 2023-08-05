@@ -101,6 +101,11 @@ export async function checkUpdates(_dir?: string) {
       "background-color: #2FD080; color: #003232; font-weight: bold",
       "",
     );
-    console.log(`deno eval 'import \"$live/scripts/update.ts\"'`);
+
+    if (Deno.build.os === "windows") {
+      console.log(`deno eval 'import \\"$live/scripts/update.ts\\"'`);
+    } else {
+      console.log(`deno eval 'import \"$live/scripts/update.ts\"'`);
+    }
   }
 }
