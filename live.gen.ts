@@ -49,8 +49,8 @@ import * as $$$$$$$$$$3 from "./flags/flag.ts";
 import * as $$$$$$$$$$$0 from "./actions/workflows/start.ts";
 import * as $$$$$$$$$$$1 from "./actions/workflows/cancel.ts";
 import * as $$$$$$$$$$$2 from "./actions/workflows/signal.ts";
-import { DecoManifest } from "$live/types.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
+import { DecoManifest } from "$live/types.ts";
 
 const manifest = {
   "loaders": {

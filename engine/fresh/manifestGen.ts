@@ -215,17 +215,20 @@ export const decoManifestBuilder = async (
     blockIdx++;
   }
 
-  initialManifest = !appMode
-    ? defaultLiveRoutes(
-      initialManifest
-        .addImports({
-          from: "$live/types.ts",
-          clauses: [{ import: "DecoManifest" }],
-        })
-        .addExportDefault({
-          variable: { identifier: "manifest", satisfies: "DecoManifest" },
-        }),
-    )
-    : initialManifest;
-  return initialManifest;
+  const [appManifest, manifestType] = !appMode
+    ? [
+      defaultLiveRoutes(
+        initialManifest,
+      ),
+      "DecoManifest",
+    ]
+    : [initialManifest, "AppManifest"];
+  return appManifest
+    .addImports({
+      from: "$live/types.ts",
+      clauses: [{ import: manifestType }],
+    })
+    .addExportDefault({
+      variable: { identifier: "manifest", satisfies: manifestType },
+    });
 };

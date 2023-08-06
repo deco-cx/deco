@@ -21,6 +21,7 @@ import { getComposedConfigStore } from "$live/engine/releases/provider.ts";
 import { context } from "$live/live.ts";
 import { DecoManifest, LiveConfig } from "$live/types.ts";
 
+import { AppManifest } from "$live/blocks/app.ts";
 import { usePreviewFunc } from "$live/blocks/utils.tsx";
 import { SiteInfo } from "$live/types.ts";
 import { parse } from "std/flags/mod.ts";
@@ -48,7 +49,7 @@ export type LiveState<T, TState = unknown> = TState & {
   $live: T;
 };
 
-interface DanglingRecover {
+export interface DanglingRecover {
   recoverable: (type: string) => boolean;
   recover: Resolver;
 }
@@ -58,7 +59,7 @@ const resolverIsBlock = (blk: Block) => (resolver: string) => {
   // check if there's any segment on the same name of the block
   return splitted.some((segment) => segment === blk.type); //FIXME (mcandeia) this is not a straightforward solution
 };
-const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
+export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   return (parent, ctx) => {
     const curr = ctx.resolveChain.findLast((r) => r.type === "dangling")?.value;
 
@@ -84,8 +85,8 @@ const siteName = (): string => {
   return siteName;
 };
 
-const asManifest = (
-  d: DecoManifest,
+const asManifest = <TManifest extends AppManifest>(
+  d: TManifest,
 ): Record<string, Record<string, BlockModule>> =>
   d as unknown as Record<string, Record<string, BlockModule>>;
 
@@ -132,16 +133,19 @@ export const resolversFrom = <T extends DecoManifest>(
   );
   return resolvers;
 };
-const buildRuntime = (
+export const buildRuntime = <
+  TManifest extends AppManifest,
+  TContext extends BaseContext = BaseContext,
+>(
   [currMan, currMap, recovers]: [
-    DecoManifest,
-    ResolverMap<FreshContext>,
+    TManifest,
+    ResolverMap<TContext>,
     DanglingRecover[],
   ],
   blk: Block,
 ): [
-  DecoManifest,
-  ResolverMap<FreshContext>,
+  TManifest,
+  ResolverMap<TContext>,
   DanglingRecover[],
 ] => {
   const blocks = asManifest(currMan)[blk.type] ?? {};
@@ -160,7 +164,7 @@ const buildRuntime = (
       return { ...prv, [`${PREVIEW_PREFIX_KEY}${key}`]: previewFunc };
     }
     return prv;
-  }, {} as ResolverMap<FreshContext>);
+  }, {} as ResolverMap<TContext>);
 
   const invocations = Object.entries(decorated).reduce(
     (invk, [key, mod]) => {
@@ -171,7 +175,7 @@ const buildRuntime = (
       }
       return invk;
     },
-    {} as ResolverMap<FreshContext>,
+    {} as ResolverMap<TContext>,
   );
 
   const adapted = blk.adapt

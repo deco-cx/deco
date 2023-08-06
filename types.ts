@@ -20,6 +20,7 @@ import { Release } from "$live/engine/releases/provider.ts";
 import { Route } from "$live/flags/audience.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { AppManifest } from "./blocks/app.ts";
+export type { AppManifest };
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
 export type {
