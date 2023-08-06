@@ -80,9 +80,10 @@ export type FnProps<
   ctx: FnContext<TState>,
 ) => PromiseOrValue<TResp>;
 
-export const fnContextFromHttpContext = (
+// deno-lint-ignore ban-types
+export const fnContextFromHttpContext = <TState = {}>(
   ctx: HttpContext<{ global?: any; response?: { headers: Headers } }>,
-): FnContext => {
+): FnContext<TState> => {
   return {
     ...ctx?.context?.state?.global,
     get: ctx.resolve,

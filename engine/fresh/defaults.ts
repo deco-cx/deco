@@ -1,5 +1,8 @@
-import { isResolvable, ResolverMap } from "$live/engine/core/resolver.ts";
-import { FreshContext } from "$live/engine/fresh/manifest.ts";
+import {
+  BaseContext,
+  isResolvable,
+  ResolverMap,
+} from "$live/engine/core/resolver.ts";
 import { DotNestedKeys, pickPaths } from "$live/utils/object.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 import { HttpError } from "../errors.ts";
@@ -30,10 +33,10 @@ export default {
   },
   resolved: <T, R extends { data: T; deferred?: boolean }>(
     props: R,
-    ctx: FreshContext,
+    ctx: BaseContext,
   ) => {
     if (props?.deferred && props?.data) {
-      const deferred = (tCtx: Partial<FreshContext>) =>
+      const deferred = (tCtx: Partial<BaseContext>) =>
         ctx.resolve(
           props?.data,
           { resolveChain: ctx.resolveChain },
@@ -141,7 +144,4 @@ export default {
       throw err;
     }
   },
-  fromParams: function fromParams({ param }, { context: { params } }) {
-    return params[param];
-  },
-} satisfies ResolverMap<FreshContext>;
+} satisfies ResolverMap<BaseContext>;

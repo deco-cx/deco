@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { ServeHandler } from "$fresh/src/server/deps.ts";
-import { applyConfig } from "$live/blocks/utils.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { BaseContext } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { LiveConfig, StatefulContext } from "$live/types.ts";
 import { Handler as DenoHandler } from "std/http/server.ts";
+import { FnContext, fnContextFromHttpContext } from "./utils.tsx";
 
 export interface HttpContext<
   // deno-lint-ignore ban-types
@@ -24,8 +24,9 @@ export type HttpHandler = <State = any, TConfig = any>(
   ctx: HttpContext<State, TConfig>,
 ) => PromiseOrValue<Response>;
 
-type HandlerFunc<TConfig = any> = (
+type HandlerFunc<TConfig = any, TState = any> = (
   config: TConfig,
+  ctx: FnContext<TState>,
 ) => DenoHandler | ServeHandler;
 
 const handlerBlock: Block<BlockModule<HandlerFunc>> = {
@@ -33,7 +34,19 @@ const handlerBlock: Block<BlockModule<HandlerFunc>> = {
   introspect: {
     default: "0",
   },
-  adapt: applyConfig,
+  adapt: <
+    TConfig = any,
+    // deno-lint-ignore ban-types
+    TState = {},
+  >(func: {
+    default: HandlerFunc<TConfig, TState>;
+  }) =>
+  (
+    $live: TConfig,
+    ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+  ) => {
+    return func.default($live, fnContextFromHttpContext(ctx));
+  },
 };
 
 export type Handler = InstanceOf<typeof handlerBlock, "#/root/handlers">;

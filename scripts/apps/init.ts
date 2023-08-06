@@ -68,7 +68,7 @@ const templates: Templates = [
   "deco.ts",
   "deps.ts",
   {
-    app: ["state.ts", { loaders: ["bin.ts"] }],
+    app: ["mod.ts", { loaders: ["bin.ts"] }],
   },
 ];
 
