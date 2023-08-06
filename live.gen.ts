@@ -5,7 +5,6 @@
 import * as $$$0 from "./loaders/state.ts";
 import * as $$$1 from "./loaders/workflows/get.ts";
 import * as $$$2 from "./loaders/workflows/events.ts";
-import * as $$$3 from "./loaders/manifest.ts";
 import * as $$$$0 from "./routes/_middleware.ts";
 import * as $$$$1 from "./routes/live/inspect/[...block].ts";
 import * as $$$$2 from "./routes/live/invoke/[...key].ts";
@@ -54,7 +53,6 @@ import { DecoManifest } from "$live/types.ts";
 
 const manifest = {
   "loaders": {
-    "$live/loaders/manifest.ts": $$$3,
     "$live/loaders/state.ts": $$$0,
     "$live/loaders/workflows/events.ts": $$$2,
     "$live/loaders/workflows/get.ts": $$$1,
