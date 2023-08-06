@@ -7,12 +7,12 @@ import {
 import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
 import { denoDocLocalCache } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
-import { DecoManifest } from "$live/types.ts";
+import { AppManifest } from "$live/types.ts";
 import { compressFromJSON } from "$live/utils/zstd.ts";
 import { join } from "std/path/mod.ts";
 
 export const genSchemas = async (
-  manifest: DecoManifest,
+  manifest: AppManifest,
   docCachePath?: string,
 ) => {
   const base = docCachePath ? join(Deno.cwd(), docCachePath) : Deno.cwd();

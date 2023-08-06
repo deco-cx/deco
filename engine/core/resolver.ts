@@ -191,6 +191,18 @@ export type ResolverMap<TContext extends BaseContext = BaseContext> = Record<
   Resolver<any, any, TContext>
 >;
 
+export type ResolvableMap<
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolvableMap extends ResolvableMap<TContext, TResolverMap> = Record<
+    string,
+    any
+  >,
+> = Record<
+  string,
+  Resolvable<any, TContext, TResolverMap, TResolvableMap>
+>;
+
 export const withResolveChain = <TContext extends BaseContext = BaseContext>(
   ctx: TContext,
   ...resolverType: FieldResolver[]

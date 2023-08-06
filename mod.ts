@@ -10,6 +10,6 @@ export { badRequest, notFound, redirect } from "$live/engine/errors.ts";
 export { $live } from "$live/engine/fresh/manifest.ts";
 export * from "$live/types.ts";
 export type { WorkflowGen } from "./deps.ts";
-export type { App, AppContext } from "./types.ts";
+export type { App, AppContext, AppRuntime } from "./types.ts";
 export type { StreamProps } from "./utils/invoke.ts";
 export { stylesPlugin };

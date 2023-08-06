@@ -3,7 +3,13 @@ import { propsLoader } from "$live/blocks/propsLoader.ts";
 import { SectionModule } from "$live/blocks/section.ts";
 import { FnProps } from "$live/blocks/utils.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import {
+  BaseContext,
+  ResolvableMap,
+  ResolverMap,
+} from "$live/engine/core/resolver.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
+import { resolversFrom } from "$live/engine/fresh/manifest.ts";
 import {
   DOC_CACHE_FILE_NAME,
   hydrateDocCacheWith,
@@ -40,9 +46,49 @@ export type AppFunc<
   TState = {},
 > = (
   c: TProps,
-) => App<TAppManifest, TState>;
+) => App<TAppManifest, TState> | AppRuntime;
 
-export interface AppModule extends BlockModule<AppFunc> {
+export interface AppRuntime<
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolvableMap extends ResolvableMap<TContext, TResolverMap> = Record<
+    string,
+    any
+  >,
+> {
+  resolvers: TResolverMap;
+  manifest: AppManifest;
+  resolvables?: TResolvableMap;
+}
+
+export const buildApp = <
+  TApp extends App,
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolvableMap extends ResolvableMap<TContext, TResolverMap> = Record<
+    string,
+    any
+  >,
+>(
+  { state, manifest }: TApp,
+): AppRuntime<TContext, TResolverMap, TResolvableMap> => {
+  const injectedManifest = injectAppStateOnManifest(state, manifest);
+  return {
+    resolvers: resolversFrom<TApp["manifest"], TContext, TResolverMap>(
+      injectedManifest,
+    ),
+    manifest: injectedManifest,
+  };
+};
+
+const isAppRuntime = <TApp extends App, TAppRuntime extends AppRuntime>(
+  app: TApp | TAppRuntime,
+): app is TAppRuntime => {
+  return (app as TAppRuntime)?.resolvers !== undefined;
+};
+
+export interface AppModule
+  extends BlockModule<AppFunc, App | AppRuntime, AppRuntime> {
   name?: string;
   docCacheFileUrl?: string;
 }
@@ -93,6 +139,14 @@ const injectAppStateOnManifest = <
         loader: injectAppStateOnInlineLoader(state, mod.loader),
       }),
     ),
+    handlers: mapObjKeys(
+      manifest.handlers ?? {},
+      (mod) => ({
+        ...mod,
+        default: (props: unknown, _state: unknown) =>
+          mod.default(props, { ..._state ?? {}, ...state }),
+      }),
+    ),
     actions: mapObjKeys(
       manifest.actions ?? {},
       (mod) => ({ ...mod, default: injectAppState(state, mod.default) }),
@@ -128,11 +182,12 @@ const appBlock: Block<AppModule> = {
         baseKey,
       );
     });
-    const { state, manifest } = fn(props);
-    return {
-      state,
-      manifest: injectAppStateOnManifest(state, manifest),
-    };
+    const app = fn(props);
+    if (isAppRuntime(app)) {
+      return app;
+    }
+
+    return buildApp(app);
   },
 };
 

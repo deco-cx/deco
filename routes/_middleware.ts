@@ -5,9 +5,9 @@ import {
   redirectTo,
 } from "$live/compatibility/v0/editorData.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-import { resolversFrom } from "$live/engine/fresh/manifest.ts";
 import { context } from "$live/live.ts";
-import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
+import { Apps } from "$live/mod.ts";
+import { LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { getSetCookies } from "std/http/mod.ts";
@@ -30,7 +30,7 @@ export interface MiddlewareConfig {
    * @description Configure your loaders global state.
    */
   state: Record<string, Resolvable>;
-  manifest?: DecoManifest;
+  app?: Apps;
 }
 
 export const handler = async (
@@ -77,13 +77,12 @@ export const handler = async (
       Object.assign(ctx.state, state);
       ctx.state.global = state; // compatibility mode with functions.
     }
-    const loadedManifest = ctx?.state?.$live?.manifest;
+    const mainApp = ctx?.state?.$live?.app;
     ctx.state.manifest = context.manifest!;
-    if (loadedManifest) {
-      ctx.state.manifest = loadedManifest;
-      const customResolvers = resolversFrom(loadedManifest);
+    if (mainApp) {
+      ctx.state.manifest = mainApp.manifest;
       const newReleaseResolver = context.releaseResolver!.withResolvers(
-        customResolvers,
+        mainApp.resolvers,
       );
       const ctxResolver = newReleaseResolver
         .resolverFor(

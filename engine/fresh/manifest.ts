@@ -120,14 +120,18 @@ export const withoutLocalModules = (
   return r;
 };
 
-export const resolversFrom = <T extends DecoManifest>(
+export const resolversFrom = <
+  T extends AppManifest,
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+>(
   man: T,
-): ResolverMap<FreshContext> => {
+): TResolverMap => {
   const [_, resolvers, __] = (blocks ?? []).reduce(
-    buildRuntime,
-    [man, {}, []] as [
-      DecoManifest,
-      ResolverMap<FreshContext>,
+    (curr, acc) => buildRuntime<AppManifest, TContext, TResolverMap>(curr, acc),
+    [man, {} as TResolverMap, []] as [
+      AppManifest,
+      TResolverMap,
       DanglingRecover[],
     ],
   );
@@ -136,16 +140,17 @@ export const resolversFrom = <T extends DecoManifest>(
 export const buildRuntime = <
   TManifest extends AppManifest,
   TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
 >(
   [currMan, currMap, recovers]: [
     TManifest,
-    ResolverMap<TContext>,
+    TResolverMap,
     DanglingRecover[],
   ],
   blk: Block,
 ): [
   TManifest,
-  ResolverMap<TContext>,
+  TResolverMap,
   DanglingRecover[],
 ] => {
   const blocks = asManifest(currMan)[blk.type] ?? {};
@@ -164,7 +169,7 @@ export const buildRuntime = <
       return { ...prv, [`${PREVIEW_PREFIX_KEY}${key}`]: previewFunc };
     }
     return prv;
-  }, {} as ResolverMap<TContext>);
+  }, {} as TResolverMap);
 
   const invocations = Object.entries(decorated).reduce(
     (invk, [key, mod]) => {
@@ -175,7 +180,7 @@ export const buildRuntime = <
       }
       return invk;
     },
-    {} as ResolverMap<TContext>,
+    {} as TResolverMap,
   );
 
   const adapted = blk.adapt
@@ -213,7 +218,7 @@ export const $live = <T extends DecoManifest>(
   context.siteId = siteId ?? -1;
   context.namespace = namespace;
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
-    buildRuntime,
+    (curr, acc) => buildRuntime<DecoManifest, FreshContext>(curr, acc),
     [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();

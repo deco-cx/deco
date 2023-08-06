@@ -11,7 +11,7 @@ import {
 } from "$live/engine/schema/builder.ts";
 import { denoDoc } from "$live/engine/schema/utils.ts";
 import { context } from "$live/live.ts";
-import { DecoManifest } from "$live/types.ts";
+import { AppManifest } from "../../blocks/app.ts";
 import { JSONSchema7 } from "../../deps.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
@@ -19,7 +19,7 @@ export const namespaceOf = (blkType: string, blkKey: string): string => {
 };
 
 export const genSchemasFromManifest = async (
-  manifest: DecoManifest,
+  manifest: AppManifest & { baseUrl?: string },
   baseDir?: string,
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, ...manifestBlocks } = manifest;
