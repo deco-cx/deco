@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
-import { DecoManifest } from "$live/types.ts";
+import { AppManifest, DecoManifest } from "$live/types.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -75,8 +75,8 @@ export interface Import {
   from: string;
   clauses: ImportClause[];
 }
-export interface ManifestBuilder {
-  mergeWith: (def: DecoManifest[]) => ManifestBuilder;
+export interface ManifestBuilder<TManifest extends AppManifest = AppManifest> {
+  mergeWith: (def: TManifest[]) => ManifestBuilder;
   equal: (other: ManifestBuilder) => boolean;
   data: ManifestData;
   toJSONString: () => string;
@@ -247,10 +247,12 @@ ${
 `;
 };
 
-export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
+export const newManifestBuilder = <TManifest extends AppManifest = AppManifest>(
+  initial: ManifestData,
+): ManifestBuilder<TManifest> => {
   return {
     mergeWith: (
-      def: (DecoManifest & { config?: unknown })[],
+      def: (TManifest & { config?: unknown })[],
     ): ManifestBuilder => {
       let innerBuilder = newManifestBuilder(initial);
 
@@ -263,7 +265,7 @@ export const newManifestBuilder = (initial: ManifestData): ManifestBuilder => {
           config: _ignoreConfig,
           baseUrl: _ignoreBaseUrl,
           ...blocks
-        } = manifest;
+        } = manifest as unknown as DecoManifest & { config?: unknown };
 
         let blockN = 0;
         for (

@@ -4,9 +4,8 @@ import { Loader } from "../blocks/loader.ts";
 import { Page } from "../blocks/page.ts";
 import { Section } from "../blocks/section.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
-import { LoaderContext } from "../mod.ts";
+import { Apps, LoaderContext } from "../mod.ts";
 import { MiddlewareConfig } from "../routes/_middleware.ts";
-import { DecoManifest } from "$live/types.ts";
 
 /**
  * @titleBy key
@@ -17,7 +16,7 @@ export interface StateProp {
 }
 export interface Props {
   state: StateProp[];
-  manifest?: DecoManifest;
+  apps?: Apps[];
 }
 
 /**
@@ -25,7 +24,7 @@ export interface Props {
  * @description Set the application state using resolvables.
  */
 export default async function StateLoader(
-  { state, manifest }: Props,
+  { state, apps }: Props,
   _req: Request,
   { get }: LoaderContext,
 ): Promise<MiddlewareConfig> {
@@ -40,6 +39,6 @@ export default async function StateLoader(
 
   return {
     state: Object.fromEntries(await Promise.all(mState)),
-    manifest,
+    apps,
   };
 }

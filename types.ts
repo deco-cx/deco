@@ -19,10 +19,10 @@ import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { Release } from "$live/engine/releases/provider.ts";
 import { Route } from "$live/flags/audience.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { AppManifest } from "./blocks/app.ts";
-export type { AppManifest };
+import { AppManifest, AppRuntime } from "./blocks/app.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
+export type { AppManifest, AppRuntime };
 export type {
   ErrorBoundaryComponent,
   ErrorBoundaryParams,
@@ -85,7 +85,7 @@ export interface StatefulContext<T> {
 export type LiveConfig<
   TConfig = any,
   TState = {},
-  TManifest extends DecoManifest = DecoManifest,
+  TManifest extends AppManifest = AppManifest,
 > =
   & TState
   & {

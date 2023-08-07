@@ -7,10 +7,10 @@ import { namespaceOf } from "$live/engine/schema/gen.ts";
 import { genSchemas } from "$live/engine/schema/reader.ts";
 import { context } from "$live/live.ts";
 import meta from "$live/meta.json" assert { type: "json" };
-import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
+import { AppManifest, LiveConfig, LiveState } from "$live/types.ts";
+import { resolvable } from "$live/utils/admin.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
 import { major } from "std/semver/mod.ts";
-import { resolvable } from "$live/utils/admin.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -27,7 +27,10 @@ export interface MetaInfo {
 }
 
 export const toManifestBlocks = (
-  decoManifest: DecoManifest,
+  decoManifest: AppManifest & {
+    baseUrl?: string;
+    routes?: unknown;
+  },
 ): ManifestBlocks => {
   const {
     baseUrl: _ignoreBaseUrl,
