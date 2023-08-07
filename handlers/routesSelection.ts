@@ -7,9 +7,9 @@ import {
 import { isAwaitable } from "$live/engine/core/utils.ts";
 import { Route, Routes } from "$live/flags/audience.ts";
 import { isFreshCtx } from "$live/handlers/fresh.ts";
-import { context } from "$live/live.ts";
 import { Flag, LiveState, RouterContext } from "$live/types.ts";
 import { ConnInfo, Handler } from "std/http/server.ts";
+import { ResolveFunc } from "../engine/core/resolver.ts";
 
 export interface SelectionConfig {
   audiences: Routes[];
@@ -49,6 +49,7 @@ const createUrlPatternFromHref = (href: string) => {
 export const router = (
   routes: Route[],
   hrefRoutes: Record<string, Resolvable<Handler>> = {},
+  resolver: ResolveFunc,
   configs?: ResolveOptions,
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
@@ -77,10 +78,10 @@ export const router = (
       const resolvedOrPromise =
         isDeferred<Handler, { context: typeof ctx } & BaseContext>(handler)
           ? handler({ context: ctx })
-          : context.releaseResolver!.resolve<Handler>(
+          : resolver<Handler>(
             handler,
-            { context: ctx, request: req },
             configs,
+            { context: ctx, request: req },
           );
 
       const end = configs?.monitoring?.t.start("load-data");
@@ -161,6 +162,7 @@ export const buildRoutes = (audiences: Routes[]): [
  */
 export default function RoutesSelection(
   { audiences }: SelectionConfig,
+  ctx: { get: ResolveFunc },
 ): Handler {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
@@ -184,6 +186,7 @@ export default function RoutesSelection(
         handler: { value: route[1].func },
       })),
       hrefRoutes,
+      ctx.get,
       {
         monitoring: t ? { t } : undefined,
       },
