@@ -1,8 +1,6 @@
 /// <reference lib="deno.unstable" />
 
 import { crypto } from "std/crypto/mod.ts";
-export const alg = "RSASSA-PKCS1-v1_5";
-export const hash = "SHA-256";
 
 const generateKey = async (): Promise<CryptoKey> => {
   return await crypto.subtle.generateKey(
@@ -12,26 +10,13 @@ const generateKey = async (): Promise<CryptoKey> => {
   );
 };
 
-const importJWK = (
-  jwk: JsonWebKey,
-  usages?: string[],
-): Promise<CryptoKey> =>
-  crypto.subtle.importKey(
-    // @ts-ignore: for some reason deno is complaning about importing jwk's but it follows the crypto spec.
-    "jwk",
-    jwk,
-    { name: alg, hash },
-    true,
-    usages ?? ["encrypt"],
-  );
-
 export interface AESKey {
   key: CryptoKey;
   iv: Uint8Array;
 }
 
 interface SavedAESKey {
-  key: JsonWebKey;
+  key: string;
   iv: string;
 }
 
@@ -42,15 +27,22 @@ export const te = (s: string) => textEncoder.encode(s);
 export const td = (d: Uint8Array) => textDecoder.decode(d);
 
 const fromSavedAESKey = async ({ key, iv }: SavedAESKey): Promise<AESKey> => {
+  const importedKey = await crypto.subtle.importKey(
+    "raw",
+    te(key).buffer,
+    "AES-CBC",
+    true,
+    ["encrypt", "decrypt"],
+  );
   return {
-    key: await importJWK(key, ["encrypt", "decrypt"]),
+    key: importedKey,
     iv: te(iv),
   };
 };
 let key: null | Promise<AESKey> = null;
 
 const kv: Deno.Kv | null = await Deno?.openKv().catch((_err) => null);
-const cryptoKey = ["deco", "_cryptokey"];
+const cryptoKey = ["deco", "___cryptokey__"];
 
 export const getOrGenerateKey = (): Promise<AESKey> => {
   if (key) {
@@ -65,14 +57,13 @@ export const getOrGenerateKey = (): Promise<AESKey> => {
       const keyFromKv = keys.value;
       if (keyFromKv === null) {
         const generatedKey = await generateKey();
-        const jwk = await crypto.subtle.exportKey(
-          "jwk",
-          generatedKey,
+        const rawKey = new Uint8Array(
+          await crypto.subtle.exportKey("raw", generatedKey),
         );
         const iv = crypto.getRandomValues(new Uint8Array(16));
 
         const res = await kv.atomic().set(cryptoKey, {
-          key: jwk,
+          key: td(rawKey),
           iv: td(iv),
         }).check(keys)
           .commit();
