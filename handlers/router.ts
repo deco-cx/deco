@@ -1,4 +1,5 @@
 import { Handler } from "$live/blocks/handler.ts";
+import { FnContext } from "$live/types.ts";
 import { Routes } from "../flags/audience.ts";
 import { router } from "./routesSelection.ts";
 
@@ -10,7 +11,7 @@ export interface RouterConfig {
 export default function Router({
   routes: entrypoints,
   base,
-}: RouterConfig): Handler {
+}: RouterConfig, ctx: FnContext): Handler {
   let routes = entrypoints;
 
   if (base) {
@@ -24,5 +25,5 @@ export default function Router({
     }
   }
 
-  return router(routes);
+  return router(routes, {}, ctx.get.bind(ctx));
 }
