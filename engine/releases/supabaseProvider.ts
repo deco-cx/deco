@@ -120,7 +120,7 @@ export const newSupabase = (
     // if background updates are enabled so the first attempt will try to connect with supabase realtime-updates.
     // if it fails for some reason it will fallback to background updates with a setInterval of 5s.
     // TODO should we try to connect again after a while?! @author Marcos V. Candeia
-    currResolvables.then(() => {
+    const trySubscribeOrFetch = () => {
       provider.subscribe((newResolvables) => {
         console.debug(
           "realtime update received",
@@ -135,10 +135,15 @@ export const newSupabase = (
             "error when trying to subscribe to release changes falling back to background updates",
             err,
           );
-          setInterval(updateInternalState, refetchIntervalMSDeploy);
+          updateInternalState().finally(() => {
+            sleep(refetchIntervalMSDeploy).then(() => {
+              trySubscribeOrFetch();
+            });
+          });
         }
       });
-    });
+    };
+    currResolvables.then(trySubscribeOrFetch);
   }
   return {
     /**
