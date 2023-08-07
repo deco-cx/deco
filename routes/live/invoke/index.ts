@@ -211,11 +211,13 @@ const isInvokeFunc = (
 
 export const payloadForFunc = (
   func: InvokeFunction<Manifest>,
+  source: "internal" | "external" = "external",
 ) => ({
   keys: func.select,
   obj: {
     props: func.props,
     block: sanitizer(func.key),
+    source,
     __resolveType: dfs["invoke"].name,
   },
   __resolveType: dfs["selectKeys"].name,

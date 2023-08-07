@@ -1,12 +1,15 @@
+import { HttpContext } from "$live/blocks/handler.ts";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
+import { FnContext } from "$live/mod.ts";
+import { fnContextFromHttpContext } from "./utils.tsx";
 
 export type Secret = InstanceOf<typeof secretBlock, "#/root/secrets">;
 
 // deno-lint-ignore no-explicit-any
-export type SecretFunc<TConfig = any> = (c: TConfig) => Vault;
+export type SecretFunc<TConfig = any> = (c: TConfig, ctx: FnContext) => Vault;
 export interface Vault {
-  get(): PromiseOrValue<string | undefined>;
+  get(): PromiseOrValue<string | null>;
 }
 
 const secretBlock: Block<BlockModule<SecretFunc>> = {
@@ -22,9 +25,12 @@ const secretBlock: Block<BlockModule<SecretFunc>> = {
   }) =>
   (
     confg: TConfig,
+    // deno-lint-ignore no-explicit-any
+    ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
   ) => {
     return func.default(
       confg,
+      fnContextFromHttpContext(ctx),
     );
   },
 };

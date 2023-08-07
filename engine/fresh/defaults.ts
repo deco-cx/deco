@@ -14,6 +14,7 @@ export const INVOKE_PREFIX_KEY = "Invoke@";
 export interface BlockInvocation<TProps = any> {
   block: string;
   props: TProps;
+  source?: "internal" | "external";
 }
 export default {
   selectKeys: function selectKeys<T>(
@@ -89,7 +90,7 @@ export default {
     }, { propsIsResolved: true });
   },
   invoke: async function invoke(
-    { props, block }: BlockInvocation, // wishListVtex deco-sites/std/vtexProductList.ts
+    { props, block, source }: BlockInvocation, // wishListVtex deco-sites/std/vtexProductList.ts
     { resolvables, resolvers, resolve },
   ) {
     try {
@@ -118,6 +119,7 @@ export default {
             __resolveType: "mergeProps",
           },
           block: __resolveType,
+          source,
         });
       }
       return await resolve({

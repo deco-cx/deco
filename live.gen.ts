@@ -45,9 +45,11 @@ import * as $$$$$$$$$$0 from "./flags/audience.ts";
 import * as $$$$$$$$$$1 from "./flags/multivariate.ts";
 import * as $$$$$$$$$$2 from "./flags/everyone.ts";
 import * as $$$$$$$$$$3 from "./flags/flag.ts";
-import * as $$$$$$$$$$$0 from "./actions/workflows/start.ts";
-import * as $$$$$$$$$$$1 from "./actions/workflows/cancel.ts";
-import * as $$$$$$$$$$$2 from "./actions/workflows/signal.ts";
+import * as $$$$$$$$$$$0 from "./actions/secrets/decrypt.ts";
+import * as $$$$$$$$$$$1 from "./actions/secrets/encrypt.ts";
+import * as $$$$$$$$$$$2 from "./actions/workflows/start.ts";
+import * as $$$$$$$$$$$3 from "./actions/workflows/cancel.ts";
+import * as $$$$$$$$$$$4 from "./actions/workflows/signal.ts";
 import * as $$$$$$$$$$$$$$0 from "./secrets/secret.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
 import { DecoManifest } from "$live/types.ts";
@@ -112,9 +114,11 @@ const manifest = {
     "$live/flags/multivariate.ts": $$$$$$$$$$1,
   },
   "actions": {
-    "$live/actions/workflows/cancel.ts": $$$$$$$$$$$1,
-    "$live/actions/workflows/signal.ts": $$$$$$$$$$$2,
-    "$live/actions/workflows/start.ts": $$$$$$$$$$$0,
+    "$live/actions/secrets/decrypt.ts": $$$$$$$$$$$0,
+    "$live/actions/secrets/encrypt.ts": $$$$$$$$$$$1,
+    "$live/actions/workflows/cancel.ts": $$$$$$$$$$$3,
+    "$live/actions/workflows/signal.ts": $$$$$$$$$$$4,
+    "$live/actions/workflows/start.ts": $$$$$$$$$$$2,
   },
   "secrets": {
     "$live/secrets/secret.ts": $$$$$$$$$$$$$$0,
