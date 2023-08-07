@@ -207,7 +207,7 @@ const mapMiddleware = (
     context.state.release = liveContext.release!;
     context.state.invoke = (key, props) =>
       ctxResolver<Awaited<ReturnType<InvocationFunc<Manifest>>>>(
-        payloadForFunc({ key, props } as unknown as InvokeFunction<Manifest>, "internal"),
+        payloadForFunc({ key, props } as unknown as InvokeFunction<Manifest>),
       );
 
     const resp = await context.next();

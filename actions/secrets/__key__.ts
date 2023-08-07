@@ -50,7 +50,7 @@ const fromSavedAESKey = async ({ key, iv }: SavedAESKey): Promise<AESKey> => {
 let key: null | Promise<AESKey> = null;
 
 const kv: Deno.Kv | null = await Deno?.openKv().catch((_err) => null);
-const cryptoKey = ["deco", "cryptokey"];
+const cryptoKey = ["deco", "_cryptokey"];
 
 export const getOrGenerateKey = (): Promise<AESKey> => {
   if (key) {
