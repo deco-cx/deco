@@ -1,4 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { mergeRuntimes } from "$live/blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "$live/blocks/matcher.ts";
 import {
   getPagePathTemplate,
@@ -7,7 +8,7 @@ import {
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { Apps } from "$live/mod.ts";
-import { LiveConfig, LiveState } from "$live/types.ts";
+import { AppRuntime, LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { getSetCookies } from "std/http/mod.ts";
@@ -30,7 +31,7 @@ export interface MiddlewareConfig {
    * @description Configure your loaders global state.
    */
   state: Record<string, Resolvable>;
-  app?: Apps;
+  apps?: Apps[];
 }
 
 export const handler = async (
@@ -77,12 +78,20 @@ export const handler = async (
       Object.assign(ctx.state, state);
       ctx.state.global = state; // compatibility mode with functions.
     }
-    const mainApp = ctx?.state?.$live?.app;
+    const apps = ctx?.state?.$live?.apps;
     ctx.state.manifest = context.manifest!;
-    if (mainApp) {
-      ctx.state.manifest = mainApp.manifest;
+    if (apps) {
+      const currentAppRuntime: AppRuntime = {
+        resolvers: context.releaseResolver!.getResolvers(),
+        manifest: context.manifest!,
+      };
+      const { resolvers, manifest } = apps.reduce(
+        mergeRuntimes,
+        currentAppRuntime,
+      );
+      ctx.state.manifest = manifest;
       const newReleaseResolver = context.releaseResolver!.withResolvers(
-        mainApp.resolvers,
+        resolvers,
       );
       const ctxResolver = newReleaseResolver
         .resolverFor(

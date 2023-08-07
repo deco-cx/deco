@@ -16,7 +16,7 @@ export interface StateProp {
 }
 export interface Props {
   state: StateProp[];
-  app?: Apps;
+  apps?: Apps[];
 }
 
 /**
@@ -24,7 +24,7 @@ export interface Props {
  * @description Set the application state using resolvables.
  */
 export default async function StateLoader(
-  { state, app }: Props,
+  { state, apps }: Props,
   _req: Request,
   { get }: LoaderContext,
 ): Promise<MiddlewareConfig> {
@@ -39,6 +39,6 @@ export default async function StateLoader(
 
   return {
     state: Object.fromEntries(await Promise.all(mState)),
-    app,
+    apps,
   };
 }

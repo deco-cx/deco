@@ -61,6 +61,36 @@ export interface AppRuntime<
   resolvables?: TResolvableMap;
 }
 
+type BlockKey = keyof AppManifest;
+const mergeManifests = (
+  appManifest1: AppManifest,
+  appManifest2: AppManifest,
+) => {
+  const manifestResult = { ...appManifest2, ...appManifest1 };
+  for (const [key, value] of Object.entries(appManifest2)) {
+    const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
+    for (const [blockKey, blockFunc] of Object.entries(value)) {
+      manifestBlocks[blockKey] = blockFunc;
+    }
+    manifestResult[key as BlockKey] = manifestBlocks as any;
+  }
+
+  return manifestResult;
+};
+
+export const mergeRuntimes = (
+  { resolvers: currentResolvers, manifest: currentManifest }: AppRuntime,
+  { resolvers, manifest }: AppRuntime,
+): AppRuntime => {
+  return {
+    manifest: mergeManifests(currentManifest, manifest),
+    resolvers: {
+      ...currentResolvers,
+      ...resolvers,
+    },
+  };
+};
+
 export const buildApp = <
   TApp extends App,
   TContext extends BaseContext = BaseContext,
