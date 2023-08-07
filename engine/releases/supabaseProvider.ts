@@ -33,6 +33,7 @@ function sleep(ms: number) {
 }
 const sleepBetweenRetriesMS = 100;
 const refetchIntervalMSDeploy = 30_000;
+const REFETCH_JITTER_MS = 2_000;
 
 export interface CurrResolvables {
   state: Record<string, Resolvable<any>>;
@@ -118,9 +119,8 @@ export const newSupabase = (
 
   if (backgroundUpdate) {
     // if background updates are enabled so the first attempt will try to connect with supabase realtime-updates.
-    // if it fails for some reason it will fallback to background updates with a setInterval of 5s.
-    // TODO should we try to connect again after a while?! @author Marcos V. Candeia
-    currResolvables.then(() => {
+    // if it fails for some reason it will fallback to background updates with a setInterval of 30s.
+    const trySubscribeOrFetch = () => {
       provider.subscribe((newResolvables) => {
         console.debug(
           "realtime update received",
@@ -135,10 +135,16 @@ export const newSupabase = (
             "error when trying to subscribe to release changes falling back to background updates",
             err,
           );
-          setInterval(updateInternalState, refetchIntervalMSDeploy);
+          updateInternalState().finally(() => {
+            const jitter = Math.floor(REFETCH_JITTER_MS * Math.random());
+            sleep(refetchIntervalMSDeploy + jitter).then(() => {
+              trySubscribeOrFetch();
+            });
+          });
         }
       });
-    });
+    };
+    currResolvables.then(trySubscribeOrFetch);
   }
   return {
     /**
