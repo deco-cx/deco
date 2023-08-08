@@ -15,20 +15,23 @@ export interface Props {
   encrypted: string;
 }
 
+const cache: Record<string, Promise<string>> = {};
+
 /**
  * @title Secret
  */
 export default function Secret(
   props: Props,
 ): Secret {
-  let decrypted: Promise<string> | null = null;
   return {
-    get: async (): Promise<string | null> => {
-      return await (decrypted ??= props.encrypted
-        ? decryptFromHex(props?.encrypted).then((
-          { decrypted: value },
-        ) => value)
-        : null);
+    get: (): Promise<string | null> => {
+      const encrypted = props?.encrypted;
+      if (!encrypted) {
+        return Promise.resolve(null);
+      }
+      return cache[encrypted] ??= decryptFromHex(encrypted).then((d) =>
+        d.decrypted
+      );
     },
   };
 }
