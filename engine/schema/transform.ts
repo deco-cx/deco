@@ -754,6 +754,11 @@ const tsTypeToSchemeableRec = async (
         any: "object",
         never: "object",
       };
+      if (node.keyword === "never") {
+        console.warn(
+          `never keyword is being used on ${root[0]}, falling back to object`,
+        );
+      }
       const type = keywordToType[node.keyword] ?? node.keyword;
       return {
         type: "inline",
