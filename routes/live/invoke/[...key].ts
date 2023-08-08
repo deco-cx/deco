@@ -2,7 +2,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { LiveConfig, LiveState } from "$live/types.ts";
 import { bodyFromUrl } from "$live/utils/http.ts";
 import { invokeToHttpResponse } from "$live/utils/invoke.ts";
-import { InvokeFunction, payloadForFunc } from "./index.ts";
+import { InvokeFunction, payloadToResolvable } from "./index.ts";
 
 export const handler = async (
   req: Request,
@@ -24,7 +24,9 @@ export const handler = async (
       (url.searchParams.getAll("select") ?? []) as InvokeFunction["select"],
   };
 
-  const resp = await resolve(payloadForFunc(invokeFunc));
+  const { invoked: resp } = await resolve(
+    payloadToResolvable({ invoked: invokeFunc }),
+  );
 
   return invokeToHttpResponse(req, resp);
 };
