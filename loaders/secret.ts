@@ -16,7 +16,8 @@ export interface Props {
   encrypted: string;
   /**
    * @title Secret Name
-   * @description Used in dev mode as a environment variable
+   * @description Used in dev mode as a environment variable (should not contain spaces or special characters)
+   * @pattern ^[a-zA-Z_][a-zA-Z0-9_]*$
    */
   name?: string;
 }
