@@ -250,9 +250,11 @@ export const handler = async (
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url));
 
-  const { invoked: resp } = await resolve(
-    payloadToResolvable({ invoked: data }),
-  );
+  const isInvoked = isInvokeFunc(data);
 
-  return invokeToHttpResponse(req, resp);
+  const wrapped = isInvoked ? { invoked: data } : data;
+  const result = await resolve(payloadToResolvable(wrapped));
+  const unwrapped = isInvoked ? result.invoked : result;
+
+  return invokeToHttpResponse(req, unwrapped);
 };
