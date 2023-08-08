@@ -37,7 +37,7 @@ jobs:
 
       ## Generate updated live.gen.ts
       - run: |
-          deno run --lock=deno.lock --lock-write -A dev.ts
+          deno run --unstable --lock=deno.lock --lock-write -A dev.ts
 
       - name: Check if there are changes on ${{ matrix.os }}
         id: changes
