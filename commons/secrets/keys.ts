@@ -45,6 +45,15 @@ let key: null | Promise<AESKey> = null;
 const kv: Deno.Kv | null = await Deno?.openKv().catch((_err) => null);
 const cryptoKey = ["deco", "secret_cryptokey"];
 
+/**
+ * The overall behavior here is to generate the key in the first use and then use it for the entire environment life (across deployments).
+ * Essentially we try to retrieve the key from the memory and then fallback to KV using the following order.
+ * 1. Use the in-memory key variable if available (which means it was retrieved at least once)
+ * 2. If not, try fetch from KV (which means it was generated at least once)
+ * 3. If not available, on KV so it needs to be generated. So we generate a new key and then try to atomically save it on KV.
+ * in that way we avoid concurrency of two keys being saved/stored in memory at the same time.
+ * 4. If any transaction error occur so we try to retrieve from KV again and use it for the entire isolate life.
+ */
 export const getOrGenerateKey = (): Promise<AESKey> => {
   if (key) {
     return key;
