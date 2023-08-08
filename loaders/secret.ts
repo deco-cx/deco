@@ -1,7 +1,7 @@
 import { decryptFromHex } from "$live/commons/secrets/keys.ts";
 
 /**
- * @title Secret
+ * @title Plain Text Secret (use Secret instead)
  */
 export interface Secret {
   get: () => Promise<string | null>;

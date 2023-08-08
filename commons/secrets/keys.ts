@@ -1,9 +1,7 @@
 /// <reference lib="deno.unstable" />
 
 import { crypto } from "std/crypto/mod.ts";
-import { encode as he } from "std/encoding/hex.ts";
-import { decode as hd } from "std/encoding/hex.ts";
-import { Buffer } from "std/io/buffer.ts";
+import { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
 
 const generateKey = async (): Promise<CryptoKey> => {
   return await crypto.subtle.generateKey(
@@ -19,41 +17,33 @@ export interface AESKey {
 }
 
 interface SavedAESKey {
-  key: string;
-  iv: string;
+  key: Uint8Array;
+  iv: Uint8Array;
 }
 
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 
-export const te = (s: string) => textEncoder.encode(s);
-export const td = (d: Uint8Array) => textDecoder.decode(d);
+export const textEncode = (str: string) => textEncoder.encode(str);
+export const textDecode = (bytes: Uint8Array) => textDecoder.decode(bytes);
 
-function base64ToArrayBuffer(base64: string) {
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
 const fromSavedAESKey = async ({ key, iv }: SavedAESKey): Promise<AESKey> => {
   const importedKey = await crypto.subtle.importKey(
     "raw",
-    base64ToArrayBuffer(key).buffer,
+    key.buffer,
     "AES-CBC",
     true,
     ["encrypt", "decrypt"],
   );
   return {
     key: importedKey,
-    iv: base64ToArrayBuffer(iv),
+    iv,
   };
 };
 let key: null | Promise<AESKey> = null;
 
 const kv: Deno.Kv | null = await Deno?.openKv().catch((_err) => null);
-const cryptoKey = ["deco", "cryptokey___"];
+const cryptoKey = ["deco", "secret_cryptokey"];
 
 export const getOrGenerateKey = (): Promise<AESKey> => {
   if (key) {
@@ -74,8 +64,8 @@ export const getOrGenerateKey = (): Promise<AESKey> => {
         const iv = crypto.getRandomValues(new Uint8Array(16));
 
         const res = await kv.atomic().set(cryptoKey, {
-          key: btoa(new Buffer(rawKey).toString()),
-          iv: btoa(new Buffer(iv).toString()),
+          key: rawKey,
+          iv,
         }).check(keys)
           .commit();
         if (!res.ok) {
@@ -100,10 +90,10 @@ export const encryptToHex = async (value: string): Promise<string> => {
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-CBC", iv },
     key,
-    te(value),
+    textEncode(value),
   );
   const encryptedBytes = new Uint8Array(encrypted);
-  return td(he(encryptedBytes));
+  return textDecode(encodeHex(encryptedBytes));
 };
 
 export const decryptFromHex = async (encrypted: string) => {
@@ -111,8 +101,8 @@ export const decryptFromHex = async (encrypted: string) => {
   const decrypted = await crypto.subtle.decrypt(
     { name: "AES-CBC", iv },
     key,
-    hd(te(encrypted)),
+    decodeHex(textEncode(encrypted)),
   );
   const decryptedBytes = new Uint8Array(decrypted);
-  return { decrypted: td(decryptedBytes) };
+  return { decrypted: textDecode(decryptedBytes) };
 };
