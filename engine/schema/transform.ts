@@ -752,6 +752,7 @@ const tsTypeToSchemeableRec = async (
       const keywordToType: Record<string, JSONSchema7Type> = {
         undefined: "null",
         any: "object",
+        never: "object",
       };
       const type = keywordToType[node.keyword] ?? node.keyword;
       return {
