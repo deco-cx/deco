@@ -1,7 +1,12 @@
-import { getOrGenerateKey, td, te } from "$live/actions/secrets/__key__.ts";
-import { Vault } from "$live/blocks/secret.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
-import { decode as hd } from "https://deno.land/std@0.190.0/encoding/hex.ts";
+import { getOrGenerateKey, td, te } from "$live/commons/secrets/keys.ts";
+import { decode as hd } from "std/encoding/hex.ts";
+
+/**
+ * @title Secret
+ */
+export interface Secret {
+  get: () => Promise<string | null>;
+}
 
 export interface Props {
   /**
@@ -21,20 +26,21 @@ const decrypt = async ({ encrypted }: Props) => {
   const decryptedBytes = new Uint8Array(decrypted);
   return { decrypted: td(decryptedBytes) };
 };
+
 /**
  * @title Secret
  */
 export default function Secret(
   props: Props,
-): Vault {
+): Secret {
   let decrypted: Promise<string> | null = null;
   return {
-    get: (): PromiseOrValue<string | null> => {
-      return decrypted ??= props.encrypted
+    get: async (): Promise<string | null> => {
+      return await (decrypted ??= props.encrypted
         ? decrypt(props).then((
           { decrypted: value },
         ) => value)
-        : null;
+        : null);
     },
   };
 }

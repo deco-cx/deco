@@ -1,7 +1,7 @@
+import { getOrGenerateKey, td, te } from "$live/commons/secrets/keys.ts";
+import { ActionContext } from "$live/types.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
-import { encode as he } from "https://deno.land/std@0.190.0/encoding/hex.ts";
-import { ActionContext } from "../../types.ts";
-import { getOrGenerateKey, td, te } from "./__key__.ts";
+import { encode as he } from "std/encoding/hex.ts";
 
 export interface Props {
   value: string;

@@ -3,8 +3,9 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import * as $$$0 from "./loaders/state.ts";
-import * as $$$1 from "./loaders/workflows/get.ts";
-import * as $$$2 from "./loaders/workflows/events.ts";
+import * as $$$1 from "./loaders/secret.ts";
+import * as $$$2 from "./loaders/workflows/get.ts";
+import * as $$$3 from "./loaders/workflows/events.ts";
 import * as $$$$0 from "./routes/_middleware.ts";
 import * as $$$$1 from "./routes/live/inspect/[...block].ts";
 import * as $$$$2 from "./routes/live/invoke/[...key].ts";
@@ -49,15 +50,15 @@ import * as $$$$$$$$$$$0 from "./actions/secrets/encrypt.ts";
 import * as $$$$$$$$$$$1 from "./actions/workflows/start.ts";
 import * as $$$$$$$$$$$2 from "./actions/workflows/cancel.ts";
 import * as $$$$$$$$$$$3 from "./actions/workflows/signal.ts";
-import * as $$$$$$$$$$$$$$0 from "./secrets/secret.ts";
 import * as $live_catchall from "$live/routes/[...catchall].tsx";
 import { DecoManifest } from "$live/types.ts";
 
 const manifest = {
   "loaders": {
+    "$live/loaders/secret.ts": $$$1,
     "$live/loaders/state.ts": $$$0,
-    "$live/loaders/workflows/events.ts": $$$2,
-    "$live/loaders/workflows/get.ts": $$$1,
+    "$live/loaders/workflows/events.ts": $$$3,
+    "$live/loaders/workflows/get.ts": $$$2,
   },
   "routes": {
     "./routes/_middleware.ts": $$$$0,
@@ -117,9 +118,6 @@ const manifest = {
     "$live/actions/workflows/cancel.ts": $$$$$$$$$$$2,
     "$live/actions/workflows/signal.ts": $$$$$$$$$$$3,
     "$live/actions/workflows/start.ts": $$$$$$$$$$$1,
-  },
-  "secrets": {
-    "$live/secrets/secret.ts": $$$$$$$$$$$$$$0,
   },
   "islands": {},
   "baseUrl": import.meta.url,
