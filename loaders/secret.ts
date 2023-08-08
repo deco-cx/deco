@@ -1,5 +1,4 @@
-import { getOrGenerateKey, td, te } from "$live/commons/secrets/keys.ts";
-import { decode as hd } from "std/encoding/hex.ts";
+import { decryptFromHex } from "$live/commons/secrets/keys.ts";
 
 /**
  * @title Secret
@@ -16,17 +15,6 @@ export interface Props {
   encrypted: string;
 }
 
-const decrypt = async ({ encrypted }: Props) => {
-  const { key, iv } = await getOrGenerateKey();
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-CBC", iv },
-    key,
-    hd(te(encrypted)),
-  );
-  const decryptedBytes = new Uint8Array(decrypted);
-  return { decrypted: td(decryptedBytes) };
-};
-
 /**
  * @title Secret
  */
@@ -37,7 +25,7 @@ export default function Secret(
   return {
     get: async (): Promise<string | null> => {
       return await (decrypted ??= props.encrypted
-        ? decrypt(props).then((
+        ? decryptFromHex(props?.encrypted).then((
           { decrypted: value },
         ) => value)
         : null);
