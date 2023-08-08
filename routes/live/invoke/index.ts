@@ -11,6 +11,7 @@ import { bodyFromUrl } from "$live/utils/http.ts";
 import { invokeToHttpResponse } from "$live/utils/invoke.ts";
 import { DeepPick, DotNestedKeys } from "$live/utils/object.ts";
 import { UnionToIntersection } from "https://esm.sh/utility-types@3.10.0";
+
 export type AvailableFunctions<TManifest extends AppManifest> =
   & keyof TManifest["functions"]
   & string;
@@ -220,7 +221,7 @@ export const payloadForFunc = (
   __resolveType: dfs["selectKeys"].name,
 });
 
-const payloadToResolvable = (
+export const payloadToResolvable = (
   p: InvokePayload<any>,
 ): Resolvable => {
   if (isInvokeFunc(p)) {
@@ -249,7 +250,9 @@ export const handler = async (
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url));
 
-  const resp = await resolve(payloadToResolvable(data));
+  const { invoked: resp } = await resolve(
+    payloadToResolvable({ invoked: data }),
+  );
 
   return invokeToHttpResponse(req, resp);
 };
