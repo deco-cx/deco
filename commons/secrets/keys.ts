@@ -42,7 +42,12 @@ const fromSavedAESKey = async ({ key, iv }: SavedAESKey): Promise<AESKey> => {
 };
 let key: null | Promise<AESKey> = null;
 
-const kv: Deno.Kv | null = await Deno?.openKv().catch((_err) => null);
+let kv: Deno.Kv | null = null;
+try {
+  kv = await Deno?.openKv().catch((_err) => null);
+} catch {
+  console.warn("please run with `--unstable` to enable deno kv support");
+}
 const cryptoKey = ["deco", "secret_cryptokey"];
 
 /**
@@ -72,13 +77,13 @@ export const getOrGenerateKey = (): Promise<AESKey> => {
         );
         const iv = crypto.getRandomValues(new Uint8Array(16));
 
-        const res = await kv.atomic().set(cryptoKey, {
+        const res = await kv!.atomic().set(cryptoKey, {
           key: rawKey,
           iv,
         }).check(keys)
           .commit();
         if (!res.ok) {
-          return await kv.get<SavedAESKey>(cryptoKey).then(({ value }) => {
+          return await kv!.get<SavedAESKey>(cryptoKey).then(({ value }) => {
             if (!value) {
               throw new Error("could not generate keys, kv is not available.");
             }
