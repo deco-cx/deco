@@ -29,7 +29,6 @@ export type BlockModule<
 > = {
   default: TDefaultExportFunc;
   invoke?: Resolver<TSerializable, BlockInvocation, any>;
-  invokeVisibility?: "private" | "public";
   preview?: Resolver<PreactComponent, TSerializable, any>;
   Preview?: ComponentFunc;
   onBeforeResolveProps?: (props: any) => any;
