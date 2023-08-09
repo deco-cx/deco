@@ -39,6 +39,7 @@ export default function Conditionals<TValue>(
   req: Request,
 ): TValue {
   const { rules, else: otherwise } = _rule;
+  if (!Array.isArray(rules)) return otherwise;
   for (
     const { if: rule, then } of rules
   ) {
