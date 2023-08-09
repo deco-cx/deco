@@ -79,11 +79,19 @@ const mergeManifests = (
 };
 
 export const mergeRuntimes = (
-  { resolvers: currentResolvers, manifest: currentManifest }: AppRuntime,
-  { resolvers, manifest }: AppRuntime,
+  {
+    resolvers: currentResolvers,
+    manifest: currentManifest,
+    resolvables: currentResolvables,
+  }: AppRuntime,
+  { resolvers, manifest, resolvables }: AppRuntime,
 ): AppRuntime => {
   return {
     manifest: mergeManifests(currentManifest, manifest),
+    resolvables: {
+      ...currentResolvables,
+      ...resolvables,
+    },
     resolvers: {
       ...currentResolvers,
       ...resolvers,
