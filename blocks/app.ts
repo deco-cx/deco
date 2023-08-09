@@ -169,6 +169,13 @@ const injectAppStateOnManifest = <
         loader: injectAppStateOnInlineLoader(state, mod.loader),
       }),
     ),
+    pages: mapObjKeys(
+      manifest.pages ?? {},
+      (mod) => ({
+        ...mod,
+        loader: injectAppStateOnInlineLoader(state, mod.loader),
+      }),
+    ),
     handlers: mapObjKeys(
       manifest.handlers ?? {},
       (mod) => ({
