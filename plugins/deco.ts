@@ -18,8 +18,14 @@ import { default as PreviewsPage } from "$live/routes/live/previews/index.tsx";
 import { handler as releaseHandler } from "$live/routes/live/release.ts";
 import { handler as workbenchHandler } from "$live/routes/live/workbench.ts";
 import { handler as workflowHandler } from "$live/routes/live/workflows/run.ts";
+import { AppManifest, SiteInfo } from "$live/mod.ts";
 
-export default function decoPlugin(): Plugin {
+export interface Options<TManifest extends AppManifest = AppManifest> {
+  manifest: TManifest;
+  site: SiteInfo;
+  useLocalStorageOnly?: boolean;
+}
+export default function decoPlugin(opt?: Options): Plugin {
   return {
     name: "deco",
     middlewares: [

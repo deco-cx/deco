@@ -19,7 +19,7 @@ import { integrityCheck } from "$live/engine/integrity.ts";
 import { compose } from "$live/engine/middleware.ts";
 import { getComposedConfigStore } from "$live/engine/releases/provider.ts";
 import { context } from "$live/live.ts";
-import { DecoManifest, LiveConfig } from "$live/types.ts";
+import { LiveConfig } from "$live/types.ts";
 
 import { AppManifest } from "$live/blocks/app.ts";
 import { usePreviewFunc } from "$live/blocks/utils.tsx";
@@ -210,7 +210,7 @@ export const buildRuntime = <
       : recovers,
   ];
 };
-export const $live = <T extends DecoManifest>(
+export const $live = <T extends AppManifest>(
   m: T,
   { siteId, namespace }: SiteInfo,
   useLocalStorageOnly = false,
@@ -218,8 +218,8 @@ export const $live = <T extends DecoManifest>(
   context.siteId = siteId ?? -1;
   context.namespace = namespace;
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
-    (curr, acc) => buildRuntime<DecoManifest, FreshContext>(curr, acc),
-    [m, {}, []] as [DecoManifest, ResolverMap<FreshContext>, DanglingRecover[]],
+    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
+    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   context.site = siteName();
   const provider = getComposedConfigStore(
