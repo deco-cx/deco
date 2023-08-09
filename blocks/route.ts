@@ -90,6 +90,8 @@ const middlewareKey = "./routes/_middleware.ts";
  * So we're replicating the same handler for index.tsx as well, as a consequence of that, we need to manually convert the route name to [...catchall].tsx to avoid having two different configurations for each.
  */
 const indexTsxToCatchAll: Record<string, string> = {
+  "/index": "./routes/[...catchall].tsx",
+  "/[...catchall]": "./routes/[...catchall].tsx",
   "./routes/index.tsx": "./routes/[...catchall].tsx",
 };
 const addHours = function (date: Date, h: number) {
@@ -218,18 +220,18 @@ const mapMiddleware = (
   return [buildLiveState, ...Array.isArray(mid) ? mid : [mid]];
 };
 
-const mapHandlers = (
-  key: string,
+export const injectLiveStateForPath = (
+  path: string,
   handlers: Handler<any, any> | Handlers<any, any> | undefined,
 ): Handler<any, any> | Handlers<any, any> => {
   if (typeof handlers === "object") {
     return mapObjKeys(handlers, (val) => {
-      return withErrorHandler(key, async function (
+      return withErrorHandler(path, async function (
         request: Request,
         context: HandlerContext<any, LiveConfig<any, LiveState>>,
       ) {
         const $live = await context?.state?.resolve?.(
-          indexTsxToCatchAll[key] ?? key,
+          indexTsxToCatchAll[path] ?? path,
           { nullIfDangling: true },
         ); // middleware should be executed first.
         context.state.$live = $live;
@@ -238,12 +240,12 @@ const mapHandlers = (
       });
     });
   }
-  return withErrorHandler(key, async function (
+  return withErrorHandler(path, async function (
     request: Request,
     context: HandlerContext<any, LiveConfig<any, LiveState>>,
   ) {
     const $live = (await context?.state?.resolve?.(
-      indexTsxToCatchAll[key] ?? key,
+      indexTsxToCatchAll[path] ?? path,
       { nullIfDangling: true },
     )) ?? {};
 
@@ -291,7 +293,7 @@ const routeBlock: Block<RouteMod> = {
       const liveKey = configurableRoute.config?.liveKey ?? key;
       return {
         ...routeModule,
-        handler: mapHandlers(liveKey, handl),
+        handler: injectLiveStateForPath(liveKey, handl),
       };
     }
     return routeModule;

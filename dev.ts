@@ -113,7 +113,9 @@ export default async function dev(
   {
     imports = [],
     onListen,
+    injectRoutes = false,
   }: {
+    injectRoutes?: boolean;
     imports?:
       | Array<string>
       | Array<
@@ -138,7 +140,7 @@ export default async function dev(
 
   entrypoint = new URL(entrypoint, base).href;
 
-  let manifest = await decoManifestBuilder(dir, ns);
+  let manifest = await decoManifestBuilder(dir, ns, { injectRoutes });
   manifest = manifest.mergeWith(
     isDyamicImportArray(imports)
       ? await importManifests(imports)

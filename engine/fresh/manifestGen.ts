@@ -178,10 +178,19 @@ const localBlocks: Record<string, boolean> = {
   islands: true,
 };
 const appsBlocks = (blk: Block) => localBlocks[blk.type] !== true;
+
+export interface ManifestOpts {
+  appMode?: boolean;
+  injectRoutes?: boolean;
+}
+
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
-  appMode = false,
+  { appMode, injectRoutes }: ManifestOpts = {
+    appMode: false,
+    injectRoutes: false,
+  },
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
     namespace,
@@ -217,9 +226,11 @@ export const decoManifestBuilder = async (
 
   const [appManifest, manifestType] = !appMode
     ? [
-      defaultLiveRoutes(
-        initialManifest,
-      ),
+      !injectRoutes
+        ? defaultLiveRoutes(
+          initialManifest,
+        )
+        : initialManifest,
       "DecoManifest",
     ]
     : [initialManifest, "AppManifest"];
