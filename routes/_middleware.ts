@@ -85,13 +85,13 @@ export const handler = async (
         resolvers: context.releaseResolver!.getResolvers(),
         manifest: context.manifest!,
       };
-      const { resolvers, manifest } = apps.reduce(
+      const { resolvers, manifest, resolvables } = apps.reduce(
         mergeRuntimes,
         currentAppRuntime,
       );
       ctx.state.manifest = manifest;
-      const newReleaseResolver = context.releaseResolver!.withResolvers(
-        resolvers,
+      const newReleaseResolver = context.releaseResolver!.with(
+        { resolvers, resolvables },
       );
       const ctxResolver = newReleaseResolver
         .resolverFor(

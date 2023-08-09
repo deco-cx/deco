@@ -1,6 +1,3 @@
-import { context } from "$live/live.ts";
-
-import { DecoManifest } from "$live/mod.ts";
 import {
   fromFileUrl,
   join,
@@ -9,7 +6,7 @@ import {
 
 export const resolveFilePath = (path: string) => {
   return join(
-    fromFileUrl((context.manifest as DecoManifest)?.baseUrl ?? ""),
+    Deno.cwd(),
     "..",
     path,
   );

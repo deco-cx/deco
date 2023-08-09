@@ -9,6 +9,7 @@ import {
 } from "$fresh/src/server/types.ts";
 import { InvocationFunc } from "$live/clients/withManifest.ts";
 import { Block, BlockModule, ComponentFunc } from "$live/engine/block.ts";
+import { Resolvable } from "$live/engine/core/resolver.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { HttpError } from "$live/engine/errors.ts";
 import type { Manifest } from "$live/live.gen.ts";
@@ -143,81 +144,82 @@ const debug = {
   },
 };
 
-export const buildDecoState = async function (
-  request: Request,
-  context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
-) {
-  const { enabled, action } = debug.fromRequest(request);
-  if (enabled) {
-    const { start, end, printTimings } = createServerTimings();
-    context.state.t = { start, end, printTimings };
-    context.state.debugEnabled = true;
-    context.state.log = console.log;
-  } else {
-    context.state.log = () => {}; // stub
-  }
-  context.state.log(
-    `[${liveContext.site}][${request.url}]\n[Headers]:[${request.headers}]`,
-  );
-  const url = new URL(request.url);
-  const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
-
-  if (isEchoRoute) {
-    return new Response(request.body, {
-      status: 200,
-      headers: request.headers,
-    });
-  }
-
-  const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
-
-  const resolver = liveContext.releaseResolver!;
-  const ctxResolver = resolver
-    .resolverFor(
-      { context, request },
-      {
-        monitoring: { t: context.state.t },
-      },
-    )
-    .bind(resolver);
-
-  if (
-    context.destination !== "internal" && context.destination !== "static"
+export const buildDecoState = (resolveKey: string | Resolvable) =>
+  async function (
+    request: Request,
+    context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
   ) {
-    const endTiming = context?.state?.t?.start("load-page");
-    const $live = (await ctxResolver(
-      middlewareKey,
-      {
-        forceFresh: !isLiveMeta && (
-          !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
-          url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
-        ),
-        nullIfDangling: true,
-      },
-    )) ?? {};
-
-    endTiming?.();
-    context.state.$live = $live;
-  }
-
-  context.state.resolve = ctxResolver;
-  context.state.release = liveContext.release!;
-  context.state.invoke = (key, props) =>
-    ctxResolver<Awaited<ReturnType<InvocationFunc<Manifest>>>>(
-      payloadForFunc({ key, props } as unknown as InvokeFunction<Manifest>),
+    const { enabled, action } = debug.fromRequest(request);
+    if (enabled) {
+      const { start, end, printTimings } = createServerTimings();
+      context.state.t = { start, end, printTimings };
+      context.state.debugEnabled = true;
+      context.state.log = console.log;
+    } else {
+      context.state.log = () => {}; // stub
+    }
+    context.state.log(
+      `[${liveContext.site}][${request.url}]\n[Headers]:[${request.headers}]`,
     );
+    const url = new URL(request.url);
+    const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
 
-  const resp = await context.next();
-  // enable or disable debugging
-  debug[action](resp);
-  return resp;
-};
+    if (isEchoRoute) {
+      return new Response(request.body, {
+        status: 200,
+        headers: request.headers,
+      });
+    }
+
+    const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
+
+    const resolver = liveContext.releaseResolver!;
+    const ctxResolver = resolver
+      .resolverFor(
+        { context, request },
+        {
+          monitoring: { t: context.state.t },
+        },
+      )
+      .bind(resolver);
+
+    if (
+      context.destination !== "internal" && context.destination !== "static"
+    ) {
+      const endTiming = context?.state?.t?.start("load-page");
+      const $live = (await ctxResolver(
+        resolveKey,
+        {
+          forceFresh: !isLiveMeta && (
+            !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
+            url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+          ),
+          nullIfDangling: true,
+        },
+      )) ?? {};
+
+      endTiming?.();
+      context.state.$live = $live;
+    }
+
+    context.state.resolve = ctxResolver;
+    context.state.release = liveContext.release!;
+    context.state.invoke = (key, props) =>
+      ctxResolver<Awaited<ReturnType<InvocationFunc<Manifest>>>>(
+        payloadForFunc({ key, props } as unknown as InvokeFunction<Manifest>),
+      );
+
+    const resp = await context.next();
+    // enable or disable debugging
+    debug[action](resp);
+    return resp;
+  };
 const mapMiddleware = (
   mid: MiddlewareHandler<LiveConfig<any, LiveState>> | MiddlewareHandler<
     LiveConfig<any, LiveState>
   >[],
 ): MiddlewareHandler<LiveConfig<any, LiveState>>[] => {
-  return [buildDecoState, ...Array.isArray(mid) ? mid : [mid]];
+  return [buildDecoState(middlewareKey), ...Array.isArray(mid) ? mid : [mid]];
 };
 
 export const injectLiveStateForPath = (

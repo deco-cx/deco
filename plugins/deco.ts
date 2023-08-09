@@ -1,5 +1,6 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { buildDecoState, injectLiveStateForPath } from "$live/blocks/route.ts";
+import { context } from "$live/live.ts";
 import { $live, AppManifest, SiteInfo } from "$live/mod.ts";
 import {
   default as Render,
@@ -36,7 +37,15 @@ export default function decoPlugin(opt?: Options): Plugin {
         path: "/",
         middleware: {
           handler: [
-            buildDecoState,
+            buildDecoState(
+              opt
+                ? {
+                  apps: [{
+                    __resolveType: context.site,
+                  }],
+                }
+                : "./routes/_middleware.ts",
+            ),
             decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],
         },
