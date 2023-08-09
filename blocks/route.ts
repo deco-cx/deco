@@ -143,7 +143,7 @@ const debug = {
   },
 };
 
-export const buildLiveState = async function (
+export const buildDecoState = async function (
   request: Request,
   context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
 ) {
@@ -217,7 +217,7 @@ const mapMiddleware = (
     LiveConfig<any, LiveState>
   >[],
 ): MiddlewareHandler<LiveConfig<any, LiveState>>[] => {
-  return [buildLiveState, ...Array.isArray(mid) ? mid : [mid]];
+  return [buildDecoState, ...Array.isArray(mid) ? mid : [mid]];
 };
 
 export const injectLiveStateForPath = (

@@ -1,5 +1,5 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
-import { buildLiveState, injectLiveStateForPath } from "$live/blocks/route.ts";
+import { buildDecoState, injectLiveStateForPath } from "$live/blocks/route.ts";
 import {
   default as Render,
   handler as entrypoint,
@@ -27,7 +27,7 @@ export default function decoPlugin(): Plugin {
         path: "/",
         middleware: {
           handler: [
-            buildLiveState,
+            buildDecoState,
             decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],
         },
