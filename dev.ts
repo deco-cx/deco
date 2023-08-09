@@ -113,7 +113,7 @@ export default async function dev(
   {
     imports = [],
     onListen,
-    injectRoutes = false,
+    injectRoutes = true,
   }: {
     injectRoutes?: boolean;
     imports?:

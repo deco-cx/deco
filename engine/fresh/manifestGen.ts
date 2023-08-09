@@ -189,7 +189,7 @@ export const decoManifestBuilder = async (
   namespace: string,
   { appMode, injectRoutes }: ManifestOpts = {
     appMode: false,
-    injectRoutes: false,
+    injectRoutes: true,
   },
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
@@ -226,7 +226,7 @@ export const decoManifestBuilder = async (
 
   const [appManifest, manifestType] = !appMode
     ? [
-      !injectRoutes
+      injectRoutes
         ? defaultLiveRoutes(
           initialManifest,
         )
