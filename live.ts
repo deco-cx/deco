@@ -5,12 +5,12 @@
 /// <reference lib="dom.iterable" />
 
 import { ReleaseResolver } from "$live/engine/core/mod.ts";
-import { DecoManifest } from "$live/types.ts";
+import { AppManifest } from "$live/mod.ts";
 import { Release } from "./engine/releases/provider.ts";
 
 // The global live context
 export type LiveContext = {
-  manifest?: DecoManifest;
+  manifest?: AppManifest;
   deploymentId: string | undefined;
   isDeploy: boolean;
   site: string;

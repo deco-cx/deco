@@ -1,5 +1,6 @@
 import { context } from "$live/live.ts";
 
+import { DecoManifest } from "$live/mod.ts";
 import {
   fromFileUrl,
   join,
@@ -7,7 +8,11 @@ import {
 } from "https://deno.land/std@0.147.0/path/mod.ts";
 
 export const resolveFilePath = (path: string) => {
-  return join(fromFileUrl(context.manifest?.baseUrl ?? ""), "..", path);
+  return join(
+    fromFileUrl((context.manifest as DecoManifest)?.baseUrl ?? ""),
+    "..",
+    path,
+  );
 };
 
 export const exists = async (dir: string): Promise<boolean> => {
