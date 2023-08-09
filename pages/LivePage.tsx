@@ -5,7 +5,6 @@ import LiveControls from "$live/components/LiveControls.tsx";
 import LivePageEditor, {
   BlockControls,
 } from "$live/components/LivePageEditor.tsx";
-import LivePolyfills from "$live/components/LivePolyfills.tsx";
 import { ComponentMetadata, PreactComponent } from "$live/engine/block.ts";
 import { context } from "$live/live.ts";
 import {
@@ -207,7 +206,6 @@ export default function LivePage(
 
   return (
     <>
-      <LivePolyfills />
       <LiveControls
         site={{ id: context.siteId, name: context.site }}
         page={{ id: pageId, pathTemplate: routerCtx?.pagePath }}

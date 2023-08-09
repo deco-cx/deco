@@ -11,6 +11,10 @@ const main = (
     active_flags: string;
   },
 ) => {
+  // Required for Safari
+  const onIdle = window.requestIdleCallback ||
+    ((callback: IdleRequestCallback) => setTimeout(callback, 0));
+
   const loadingErrors: string[] = [];
 
   // More info at:
@@ -58,7 +62,7 @@ const main = (
       error_name: error.name,
     });
 
-  requestIdleCallback(async () => {
+  onIdle(async () => {
     if (top !== window) {
       reportPerformance("dom-elements", getTotalDOMSize());
 
