@@ -100,7 +100,7 @@ export default function decoPlugin(opt?: Options): Plugin {
         handler: previewHandler,
       },
       {
-        path: "/workflows/run",
+        path: "/live/workflows/run",
         handler: workflowHandler,
       },
     ].map((route) => {
