@@ -145,11 +145,7 @@ export type ManifestSchemas = References<{}>; // FIXME (mcandeia) this was used 
 
 export type InstanceOf<
   T,
-  _Schema extends T extends Block
-    ? `#/root/${T["type"]}` & ManifestSchemas | string
-    : ManifestSchemas = T extends Block
-      ? `#/root/${T["type"]}` & ManifestSchemas
-      : ManifestSchemas,
+  _Schema,
 > = T extends Block<BlockModule<any, any, infer TSerializable>> ? TSerializable
   : T;
 
