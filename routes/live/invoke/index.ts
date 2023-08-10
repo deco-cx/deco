@@ -228,10 +228,7 @@ export const payloadToResolvable = (
     return payloadForFunc(p);
   }
 
-  const resolvable: Resolvable = {
-    __resolveType: "resolve",
-  };
-
+  const resolvable: Resolvable = {};
   for (const [prop, invoke] of Object.entries(p)) {
     resolvable[prop] = payloadToResolvable(invoke);
   }
@@ -249,11 +246,8 @@ export const handler = async (
   const data = req.method === "POST"
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url));
-  const isInvoked = isInvokeFunc(data);
 
-  const wrapped = isInvoked ? { invoked: data } : data;
-  const result = await resolve(payloadToResolvable(wrapped));
-  const unwrapped = isInvoked ? result.invoked : result;
+  const result = await resolve(payloadToResolvable(data));
 
-  return invokeToHttpResponse(req, unwrapped);
+  return invokeToHttpResponse(req, result);
 };

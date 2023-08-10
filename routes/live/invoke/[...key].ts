@@ -24,9 +24,7 @@ export const handler = async (
       (url.searchParams.getAll("select") ?? []) as InvokeFunction["select"],
   };
 
-  const { invoked: resp } = await resolve(
-    payloadToResolvable({ invoked: invokeFunc }),
-  );
+  const resp = await resolve(payloadToResolvable(invokeFunc));
 
   return invokeToHttpResponse(req, resp);
 };
