@@ -31,17 +31,8 @@ const main = (
     return count;
   };
 
-  /**
-   * Send report to admin and console.debug
-   */
-  const reportPerformance = (
-    type: "web-vitals" | "resource" | "dom-elements" | "navigation",
-    args: unknown,
-  ) => top !== window && top?.postMessage({ type, args }, "*");
-
   const onWebVitalsReport = (event: unknown) => {
-    window.jitsu?.("track", "web-vitals", event);
-    reportPerformance("web-vitals", JSON.stringify(event));
+    window.jitsu && window.jitsu("track", "web-vitals", event);
   };
 
   /* Send exception error to jitsu */
@@ -52,7 +43,7 @@ const main = (
     columnNo?: number;
     error: Error;
   }) =>
-    window.jitsu?.("track", "error", {
+    window.jitsu && window.jitsu("track", "error", {
       error_1type: "Exception",
       message,
       url,
@@ -63,28 +54,6 @@ const main = (
     });
 
   onIdle(async () => {
-    if (top !== window) {
-      reportPerformance("dom-elements", getTotalDOMSize());
-
-      if (typeof PerformanceObserver !== "undefined") {
-        // Report main html timings
-        reportPerformance(
-          "navigation",
-          JSON.stringify(
-            performance.getEntriesByType("navigation")[0].toJSON(),
-          ),
-        );
-
-        // Report secondary resources timings
-        new PerformanceObserver((perf) =>
-          perf.getEntries().forEach((entry) =>
-            reportPerformance("resource", JSON.stringify(entry.toJSON()))
-          )
-        )
-          .observe({ type: "resource", buffered: true });
-      }
-    }
-
     /* Listen web-vitals */
     const webVitals = await import(
       "https://esm.sh/v128/web-vitals@3.1.0/es2022/web-vitals.mjs"
