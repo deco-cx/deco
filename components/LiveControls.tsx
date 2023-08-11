@@ -62,46 +62,6 @@ ${inspectVSCode.DomInspector.toString()}`
   : "";
 
 const main = () => {
-  const styleSheet = `
-  html {
-    height: 100%;
-  }
-  
-  body {
-    height: 100%;
-  }
-  
-  .live-controls-loading {
-    z-index: 999999;
-    pointer-events: none;
-    display: inline-block;
-    aspect-ratio: 1/1;
-    width: 2.5rem;
-    color: #2fd180;
-    background-color: currentColor;
-    -webkit-mask-size: 100%;
-    mask-size: 100%;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNDQnIGhlaWdodD0nNDQnIHZpZXdCb3g9JzAgMCA0NCA0NCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyBzdHJva2U9JyNmZmYnPjxnIGZpbGw9J25vbmUnIGZpbGwtcnVsZT0nZXZlbm9kZCcgc3Ryb2tlLXdpZHRoPScyJz48Y2lyY2xlIGN4PScyMicgY3k9JzIyJyByPScxJz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdyJyBiZWdpbj0nMHMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAyMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMTY1LCAwLjg0LCAwLjQ0LCAxJyByZXBlYXRDb3VudD0naW5kZWZpbml0ZScgLz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdzdHJva2Utb3BhY2l0eScgYmVnaW49JzBzJyBkdXI9JzEuOHMnIHZhbHVlcz0nMTsgMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMywgMC42MSwgMC4zNTUsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjwvY2lyY2xlPjxjaXJjbGUgY3g9JzIyJyBjeT0nMjInIHI9JzEnPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3InIGJlZ2luPSctMC45cycgZHVyPScxLjhzJyB2YWx1ZXM9JzE7IDIwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4xNjUsIDAuODQsIDAuNDQsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3N0cm9rZS1vcGFjaXR5JyBiZWdpbj0nLTAuOXMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4zLCAwLjYxLCAwLjM1NSwgMScgcmVwZWF0Q291bnQ9J2luZGVmaW5pdGUnIC8+PC9jaXJjbGU+PC9nPjwvc3ZnPg==);
-    mask-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNDQnIGhlaWdodD0nNDQnIHZpZXdCb3g9JzAgMCA0NCA0NCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyBzdHJva2U9JyNmZmYnPjxnIGZpbGw9J25vbmUnIGZpbGwtcnVsZT0nZXZlbm9kZCcgc3Ryb2tlLXdpZHRoPScyJz48Y2lyY2xlIGN4PScyMicgY3k9JzIyJyByPScxJz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdyJyBiZWdpbj0nMHMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAyMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMTY1LCAwLjg0LCAwLjQ0LCAxJyByZXBlYXRDb3VudD0naW5kZWZpbml0ZScgLz48YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSdzdHJva2Utb3BhY2l0eScgYmVnaW49JzBzJyBkdXI9JzEuOHMnIHZhbHVlcz0nMTsgMCcgY2FsY01vZGU9J3NwbGluZScga2V5VGltZXM9JzA7IDEnIGtleVNwbGluZXM9JzAuMywgMC42MSwgMC4zNTUsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjwvY2lyY2xlPjxjaXJjbGUgY3g9JzIyJyBjeT0nMjInIHI9JzEnPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3InIGJlZ2luPSctMC45cycgZHVyPScxLjhzJyB2YWx1ZXM9JzE7IDIwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4xNjUsIDAuODQsIDAuNDQsIDEnIHJlcGVhdENvdW50PSdpbmRlZmluaXRlJyAvPjxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9J3N0cm9rZS1vcGFjaXR5JyBiZWdpbj0nLTAuOXMnIGR1cj0nMS44cycgdmFsdWVzPScxOyAwJyBjYWxjTW9kZT0nc3BsaW5lJyBrZXlUaW1lcz0nMDsgMScga2V5U3BsaW5lcz0nMC4zLCAwLjYxLCAwLjM1NSwgMScgcmVwZWF0Q291bnQ9J2luZGVmaW5pdGUnIC8+PC9jaXJjbGU+PC9nPjwvc3ZnPg==)
-  }
-  
-  .live-controls-loading-uptop {
-    position: fixed;
-    top: 0;
-    left: 0;
-  }
-  
-  .live-controls-loading-center {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-  }
-  `;
-
   const onKeydown = (event: KeyboardEvent) => {
     // in case loaded in iframe, avoid redirecting to editor while in editor
     if (window !== window.parent) {
@@ -146,80 +106,6 @@ const main = () => {
     }
   };
 
-  let focusElementIndex = 0;
-
-  /** Focuses last changed section */
-  const focusLastUsedSection = () =>
-    document.querySelectorAll("body>section").item(focusElementIndex)
-      ?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-        inline: "nearest",
-      });
-
-  const queue = {
-    promise: Promise.resolve(),
-    size: 0,
-    abort: () => {},
-  };
-
-  const enqueue = (url: string, props: string) => {
-    queue.abort();
-
-    const controller = new AbortController();
-    queue.size++;
-
-    queue.promise = queue.promise.then(async () => {
-      try {
-        const style = document.createElement("style");
-        style.innerHTML = styleSheet;
-        document.body.appendChild(style);
-        const div = document.createElement("div");
-        div.classList.add("live-controls-loading");
-        div.classList.add("live-controls-loading-uptop");
-        document.body.appendChild(div);
-
-        const signal = controller.signal;
-        const html = await fetch(url, {
-          method: "POST",
-          body: props,
-          signal,
-        }).then((res) => res.text());
-
-        signal.throwIfAborted();
-
-        document.documentElement.innerHTML = html;
-
-        // Source: https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
-        document.querySelectorAll("script").forEach((oldScriptEl) => {
-          const newScriptEl = document.createElement("script");
-
-          Array.from(oldScriptEl.attributes).forEach((attr) => {
-            newScriptEl.setAttribute(attr.name, attr.value);
-          });
-
-          const scriptText = document.createTextNode(oldScriptEl.innerHTML);
-          newScriptEl.appendChild(scriptText);
-
-          oldScriptEl.parentNode?.replaceChild(newScriptEl, oldScriptEl);
-        });
-
-        // auto focus the last used section
-        focusLastUsedSection();
-      } catch (error) {
-        if (error === "Newer changes detected") {
-          return;
-        }
-
-        console.error(error);
-      } finally {
-        queue.size--;
-      }
-    });
-
-    queue.abort = () => controller.abort("Newer changes detected");
-  };
-
   const onMessage = (event: MessageEvent<LiveEvent>) => {
     const { data } = event;
 
@@ -246,24 +132,6 @@ const main = () => {
           inspector.activate();
         } else if (action === "deactivate" && inspector.isActive()) {
           inspector.deactivate();
-        }
-
-        return;
-      }
-      case "editor::rerender": {
-        const { url, props } = data.args;
-
-        if (url && props) enqueue(url, props);
-
-        return;
-      }
-      case "editor::focus": {
-        focusElementIndex = data.args.index;
-
-        // We are not fetching a new page. Focus the section.
-        // Otherwise, just wait for the autofocus to work
-        if (queue.size === 0) {
-          focusLastUsedSection();
         }
 
         return;
