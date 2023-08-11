@@ -89,10 +89,8 @@ export const handler = async (
     }
     const apps = ctx?.state?.$live?.apps;
     ctx.state.manifest = context.manifest!;
-    if (apps) {
-      for (const app of apps) {
-        ctx.state.manifest = mergeManifests(ctx.state.manifest, app.manifest);
-      }
+    for (const app of Array.isArray(apps) ? apps : []) {
+      ctx.state.manifest = mergeManifests(ctx.state.manifest, app.manifest);
     }
 
     const shouldAllowCorsForOptions = (req.method === "OPTIONS") && isAdminOrLocalhost(req);

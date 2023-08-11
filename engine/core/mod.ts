@@ -11,6 +11,7 @@ import {
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { Release } from "$live/engine/releases/provider.ts";
+import { once, SyncOnce } from "$live/utils/sync.ts";
 import { ResolvableMap } from "./resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
@@ -48,25 +49,36 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected resolvers: ResolverMap<TContext>;
   protected resolvables?: ResolvableMap;
   protected danglingRecover?: Resolver;
+  protected runOncePerRelease: Record<string, SyncOnce<any>>;
   private resolveHints: ResolveHints;
-  constructor(config: ResolverOptions<TContext>, hints?: ResolveHints) {
+  constructor(
+    config: ResolverOptions<TContext>,
+    hints?: ResolveHints,
+    oncePerRelease?: Record<string, SyncOnce<any>>,
+  ) {
     this.resolvers = config.resolvers;
     this.release = config.release;
     this.resolvables = config.resolvables;
     this.danglingRecover = config.danglingRecover;
     this.resolveHints = hints ?? {};
+    this.runOncePerRelease = oncePerRelease ?? {};
     this.release.onChange(() => {
+      this.runOncePerRelease = {};
       this.resolveHints = {};
     });
   }
 
   public clone = () => {
-    return new ReleaseResolver<TContext>({
-      resolvables: { ...this.resolvables },
-      release: this.release,
-      resolvers: { ...this.resolvers },
-      danglingRecover: this.danglingRecover?.bind(this),
-    }, this.resolveHints);
+    return new ReleaseResolver<TContext>(
+      {
+        resolvables: { ...this.resolvables },
+        release: this.release,
+        resolvers: { ...this.resolvers },
+        danglingRecover: this.danglingRecover?.bind(this),
+      },
+      this.resolveHints,
+      this.runOncePerRelease,
+    );
   };
 
   public extend = (
@@ -137,6 +149,9 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolvers,
       monitoring: options?.monitoring,
       extend: this.extend.bind(this),
+      runOnce: (key, f) => {
+        return (this.runOncePerRelease[key] ??= once()).do(f);
+      },
     };
     const ctx = {
       ...context,

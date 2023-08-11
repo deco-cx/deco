@@ -6,10 +6,7 @@ export default async function Deco(_ctx: InitContext) {
     `
     import manifest, { name } from "./manifest.gen.ts";
     import type { Manifest } from "./manifest.gen.ts";
-    export { name };
-    import type { App, AppContext as AC, AppModule } from "../deps.ts";
-
-    export const dependencies = [] satisfies AppModule[];
+    import type { App, FnContext } from "../deps.ts";
 
     export interface State {
       url: string;
@@ -18,12 +15,13 @@ export default async function Deco(_ctx: InitContext) {
       state: State,
     ): App<Manifest, State> {
       return {
+        name,
         manifest,
         state,
       };
     }
     
-    export type AppContext = AC<State, Manifest, typeof dependencies>;
+    export type AppContext = FnContext<State, Manifest>;
 `,
   );
 }

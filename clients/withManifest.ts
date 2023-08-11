@@ -1,6 +1,6 @@
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any ban-types
 import { IS_BROWSER } from "$fresh/runtime.ts";
-import { AppManifest } from "$live/blocks/app.ts";
+import type { App, AppManifest } from "$live/blocks/app.ts";
 import type {
   AvailableActions,
   AvailableFunctions,
@@ -180,4 +180,17 @@ export const withManifest = <TManifest extends AppManifest>() => {
      */
     create: create<TManifest>(),
   };
+};
+
+export const forApp = <
+  TApp extends App,
+  TDependantManifest = TApp extends
+    { dependencies?: ({ manifest: infer TManifestDependency })[] }
+    ? TManifestDependency extends AppManifest ? TManifestDependency : {}
+    : {},
+>() => {
+  return withManifest<
+    & TApp["manifest"]
+    & TDependantManifest
+  >();
 };

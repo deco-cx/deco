@@ -173,7 +173,7 @@ export const buildDecoState = (resolveKey: string | Resolvable) =>
 
     const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
 
-    const resolver = liveContext.releaseResolver!.clone(); // cloning for allowing extensions.
+    const resolver = liveContext.releaseResolver!;
     const ctxResolver = resolver
       .resolverFor(
         { context, request },

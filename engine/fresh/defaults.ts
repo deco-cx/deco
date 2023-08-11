@@ -1,6 +1,7 @@
 import {
   BaseContext,
   isResolvable,
+  Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
 import { DotNestedKeys, pickPaths } from "$live/utils/object.ts";
@@ -17,6 +18,38 @@ export interface BlockInvocation<TProps = any> {
   source?: "internal" | "external";
 }
 export default {
+  bootstrap: function (_props, { resolvables, resolve, runOnce, resolvers }) {
+    const apps = runOnce("bootstrap", () => {
+      const firstPassPromises: Promise<unknown>[] = [];
+      const appsKeys: string[] = [];
+      for (const [key, value] of Object.entries(resolvables)) {
+        if (!isResolvable(value)) {
+          continue;
+        }
+        let resolver: Resolver | undefined = undefined;
+        let currentResolveType = value.__resolveType;
+        while (true) {
+          resolver = resolvers[currentResolveType];
+          if (resolver !== undefined) {
+            break;
+          }
+          const resolvable = resolvables[currentResolveType];
+          if (!resolvable || !isResolvable(resolvable)) {
+            break;
+          }
+          currentResolveType = resolvable.__resolveType;
+        }
+        if (resolver !== undefined && resolver.type === "apps") {
+          firstPassPromises.push(
+            resolve({ __resolveType: currentResolveType }),
+          );
+          appsKeys.push(key);
+        }
+      }
+      return resolve({ apps: appsKeys.map((key) => ({ __resolveType: key })) });
+    });
+    return apps;
+  },
   selectKeys: function selectKeys<T>(
     { obj, keys }: { obj: T; keys: DotNestedKeys<T>[] },
   ) {

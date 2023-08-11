@@ -35,6 +35,7 @@ export interface Monitoring {
 export type ExtensionFunc<TContext extends BaseContext = BaseContext> = (
   opts: ExtensionOptions<TContext>,
 ) => void;
+
 export interface BaseContext<TContext extends BaseContext = any> {
   resolveChain: FieldResolver[];
   resolveId: string;
@@ -45,6 +46,7 @@ export interface BaseContext<TContext extends BaseContext = any> {
   danglingRecover?: Resolver;
   resolveHints: ResolveHints;
   extend: ExtensionFunc<TContext>;
+  runOnce: <T>(key: string, f: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
 
 export interface PropFieldResolver {
@@ -174,6 +176,7 @@ export type AsyncResolver<
     context: TContext,
   ): Promise<Resolvable<T, TContext, any>>;
   onBeforeResolveProps?: OnBeforeResolveProps;
+  type?: string;
 };
 
 export type SyncResolver<
@@ -183,6 +186,7 @@ export type SyncResolver<
 > = {
   (parent: TParent, context: TContext): Resolvable<T, TContext, any>;
   onBeforeResolveProps?: OnBeforeResolveProps;
+  type?: string;
 };
 
 export type Resolver<
