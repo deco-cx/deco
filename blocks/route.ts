@@ -211,6 +211,9 @@ export const buildDecoState = (resolveKey: string | Resolvable) =>
 
     const resp = await context.next();
     // enable or disable debugging
+    if (request.headers.get("upgrade") === "websocket") {
+      return resp;
+    }
     debug[action](resp);
     return resp;
   };
