@@ -4,22 +4,21 @@ import { InitContext } from "../init.ts";
 export default async function Deco(_ctx: InitContext) {
   return await format(
     `
-    import type { App, AppContext as AC } from "$live/mod.ts";
-    import manifest, { Manifest, name } from "./manifest.gen.ts";
-    export { manifest, name };
-    
+    import manifest, { name } from "./manifest.gen.ts";
+    import type { Manifest } from "./manifest.gen.ts";
+    export { name };
+    import type { App, AppContext as AC, AppModule } from "../deps.ts";
+
+    export const dependencies = [] satisfies AppModule[];
+
     export interface State {
       url: string;
     }
-    // you can freely add dependencies by just importing the app mod and put here
-    export const dependencies = [];
-    /**
-     * @title App
-     */
     export default function App(
       state: State,
-    ): App<State> {
+    ): App<Manifest, State> {
       return {
+        manifest,
         state,
       };
     }

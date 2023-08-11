@@ -20,6 +20,11 @@ export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   resolvables?: ResolvableMap;
 }
 
+export interface ExtensionOptions<TContext extends BaseContext = BaseContext>
+  extends Omit<ResolverOptions<TContext>, "release"> {
+  release?: Release;
+}
+
 export interface ResolveOptions {
   overrides?: Record<string, string>;
   monitoring?: Monitoring;
@@ -55,6 +60,22 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     });
   }
 
+  public clone = () => {
+    return new ReleaseResolver<TContext>({
+      resolvables: { ...this.resolvables },
+      release: this.release,
+      resolvers: { ...this.resolvers },
+      danglingRecover: this.danglingRecover?.bind(this),
+    }, this.resolveHints);
+  };
+
+  public extend = (
+    { resolvers, resolvables }: ExtensionOptions<TContext>,
+  ) => {
+    this.resolvables = { ...this.resolvables, ...resolvables };
+    this.resolvers = { ...this.resolvers, ...resolvers };
+  };
+
   public with = (
     { resolvers, resolvables }: {
       resolvers: ResolverMap<TContext>;
@@ -67,13 +88,6 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolvers: { ...this.resolvers, ...resolvers },
       danglingRecover: this.danglingRecover?.bind(this),
     }, this.resolveHints);
-  };
-
-  public addResolvers = (resolvers: ResolverMap<TContext>) => {
-    this.resolvers = {
-      ...this.resolvers,
-      ...resolvers,
-    };
   };
 
   public getResolvers(): ResolverMap<BaseContext> {
@@ -113,7 +127,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ...(this.resolvables ?? {}),
     });
     const resolvers = this.getResolvers();
-    const baseCtx: BaseContext = {
+    const baseCtx: BaseContext<TContext> = {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
       resolveId: crypto.randomUUID(),
@@ -122,6 +136,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolvables: nresolvables,
       resolvers,
       monitoring: options?.monitoring,
+      extend: this.extend.bind(this),
     };
     const ctx = {
       ...context,

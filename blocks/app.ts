@@ -18,6 +18,7 @@ import { DecoManifest, FnContext } from "$live/types.ts";
 import { once, SyncOnce } from "$live/utils/sync.ts";
 import { UnionToIntersection } from "https://esm.sh/utility-types@3.10.0";
 import { fromFileUrl } from "std/path/mod.ts";
+import { ExtensionFunc } from "../engine/core/resolver.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 
@@ -30,29 +31,33 @@ export type AppContext<
   TDeps extends AppModule[] = [],
 > = FnContext<
   TState,
-  TManifest & UnionToIntersection<TDeps[number]["manifest"]>
+  & TManifest
+  & UnionToIntersection<ReturnType<TDeps[number]["default"]>["manifest"]>
 >;
 
 /**
  * @icon app-window
  */
 export interface App<
+  TAppManifest extends AppManifest = AppManifest,
   // deno-lint-ignore ban-types
   TAppState = {},
   TResolvableMap extends ResolvableMap = ResolvableMap,
 > {
   resolvables?: TResolvableMap;
   state: TAppState;
+  manifest: TAppManifest;
 }
 
 export type AppFunc<
   TProps = any,
   // deno-lint-ignore ban-types
   TState = {},
+  TAppManifest extends AppManifest = AppManifest,
   TResolverMap extends ResolverMap = ResolverMap,
 > = (
   c: TProps,
-) => App<TState, TResolverMap>;
+) => App<TAppManifest, TState, TResolverMap> | AppRuntime;
 
 export interface AppRuntime<
   TContext extends BaseContext = BaseContext,
@@ -68,7 +73,7 @@ export interface AppRuntime<
 }
 
 type BlockKey = keyof AppManifest;
-const mergeManifests = (
+export const mergeManifests = (
   appManifest1: AppManifest,
   appManifest2: AppManifest,
 ) => {
@@ -84,14 +89,14 @@ const mergeManifests = (
   return manifestResult;
 };
 
-export const mergeRuntimes = (
+export const mergeRuntimes = <TAppRuntime extends AppRuntime = AppRuntime>(
   {
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
-  }: AppRuntime,
-  { resolvers, manifest, resolvables }: AppRuntime,
-): AppRuntime => {
+  }: TAppRuntime,
+  { resolvers, manifest, resolvables }: TAppRuntime,
+): Pick<TAppRuntime, "manifest" | "resolvables" | "resolvers"> => {
   return {
     manifest: mergeManifests(currentManifest, manifest),
     resolvables: {
@@ -105,104 +110,16 @@ export const mergeRuntimes = (
   };
 };
 
-export const buildApp = <
-  TProps = any,
-  TState = any,
-  TContext extends BaseContext = BaseContext,
-  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
-  TResolvableMap extends ResolvableMap<TContext, TResolverMap> = Record<
-    string,
-    any
-  >,
-  TAppModule extends AppModule<TProps, TState, TResolvableMap> = AppModule<
-    TProps,
-    TState,
-    TResolvableMap
-  >,
->(props: TProps) =>
-(
-  { default: stateFn, manifest, dependencies, docCacheFileUrl, name }:
-    TAppModule,
-): AppRuntime<TContext, TResolverMap, TResolvableMap> => {
-  if (!name) {
-    throw new Error(
-      "apps without a name are not support yet",
-    );
-  }
-  const { state, resolvables } = stateFn(props);
-  const baseKey = import.meta.resolve(`${name}/`);
-  const fileUrl = docCacheFileUrl ?? `${baseKey}${DOC_CACHE_FILE_NAME}`;
-  hydrateOnce[name] ??= once<void>();
-  hydrateOnce[name].do(() => {
-    return hydrateDocCacheWith(
-      fileUrl.startsWith("file:") ? fromFileUrl(fileUrl) : fileUrl,
-      baseKey,
-    );
-  });
-  const injectedManifest = injectAppStateOnManifest(state, manifest);
-  const currentRuntime = {
-    resolvers: resolversFrom<AppModule["manifest"], TContext, TResolverMap>(
-      injectedManifest,
-    ),
-    manifest: injectedManifest,
-    resolvables,
-  };
-  const runtimes = (dependencies ?? []).map(
-    buildApp<TProps, any, TContext, any, any, any>(props),
-  );
-  return runtimes.reduce(mergeRuntimes, currentRuntime);
+const isAppRuntime = <
+  TState,
+  TApp extends App<any, TState> = App<any, TState>,
+  TAppRuntime extends AppRuntime = AppRuntime,
+>(
+  app: TApp | TAppRuntime,
+): app is TAppRuntime => {
+  return (app as TAppRuntime)?.resolvers !== undefined;
 };
 
-export interface AppModule<
-  TProps = any,
-  // deno-lint-ignore ban-types
-  TState = {},
-  TResolverMap extends ResolverMap = ResolverMap,
-> extends
-  BlockModule<
-    AppFunc<TProps, TState, TResolverMap>,
-    App<TState, TResolverMap>,
-    AppRuntime
-  > {
-  name?: string;
-  docCacheFileUrl?: string;
-  manifest: AppManifest;
-  dependencies?: AppModule<TProps>[];
-}
-
-const injectAppState = <TState = any>(
-  state: TState,
-  fnProps: FnProps,
-): FnProps => {
-  return (
-    props: any,
-    request: Request,
-    { response, get, invoke }: FnContext,
-  ) => {
-    return fnProps(props, request, { ...state, response, get, invoke });
-  };
-};
-
-const injectAppStateOnInlineLoader = <TState = any>(
-  state: TState,
-  loader: SectionModule["loader"],
-): FnProps | undefined => {
-  if (!loader) {
-    return undefined;
-  }
-  return (
-    props: any,
-    request: Request,
-    { response, get, invoke }: FnContext,
-  ) => {
-    return propsLoader(loader, props, request, {
-      ...state,
-      response,
-      get,
-      invoke,
-    });
-  };
-};
 const injectAppStateOnManifest = <
   TState = any,
   TAppManifest extends AppManifest = AppManifest,
@@ -242,6 +159,125 @@ const injectAppStateOnManifest = <
   };
 };
 
+const buildRuntimeFromApp = <
+  TState,
+  TApp extends App<any, TState> = App<any, TState>,
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap = ResolverMap,
+>(
+  { state, manifest, resolvables }: TApp,
+): AppRuntime => {
+  const injectedManifest = injectAppStateOnManifest(state, manifest);
+  return {
+    resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
+      injectedManifest,
+    ),
+    manifest: injectedManifest,
+    resolvables,
+  };
+};
+export const buildApp = <
+  TProps = any,
+  TState = any,
+  TContext extends BaseContext = BaseContext,
+  TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
+  TResolvableMap extends ResolvableMap<TContext, TResolverMap> = Record<
+    string,
+    any
+  >,
+  TAppModule extends AppModule<TProps, TState, TResolvableMap> = AppModule<
+    TProps,
+    TState,
+    TResolvableMap
+  >,
+>(props: TProps, extend: ExtensionFunc<TContext>) =>
+(
+  { default: runtimeFn, dependencies, docCacheFileUrl, name }: TAppModule,
+): AppRuntime<TContext, TResolverMap, TResolvableMap> => {
+  if (!name) {
+    throw new Error(
+      "apps without a name are not support yet",
+    );
+  }
+  const runtimes = (dependencies ?? []).map(
+    buildApp<TProps, any, TContext, any, any, any>(props, extend),
+  );
+  // extend using dependencies
+  const dependenciesRuntime = runtimes.reduce(
+    mergeRuntimes,
+    { manifest: {}, resolvables: {}, resolvers: {} } as AppRuntime,
+  );
+  extend(dependenciesRuntime);
+
+  const appRuntime = runtimeFn(props);
+  const currentRuntime = isAppRuntime(appRuntime)
+    ? appRuntime
+    : buildRuntimeFromApp<TState>(appRuntime);
+  const baseKey = import.meta.resolve(`${name}/`);
+  const fileUrl = docCacheFileUrl ?? `${baseKey}${DOC_CACHE_FILE_NAME}`;
+  hydrateOnce[name] ??= once<void>();
+  hydrateOnce[name].do(() => {
+    return hydrateDocCacheWith(
+      fileUrl.startsWith("file:") ? fromFileUrl(fileUrl) : fileUrl,
+      baseKey,
+    );
+  });
+  extend(currentRuntime);
+
+  return mergeRuntimes(currentRuntime, dependenciesRuntime);
+};
+
+export interface AppModule<
+  TProps = any,
+  // deno-lint-ignore ban-types
+  TState = {},
+  TResolverMap extends ResolverMap = ResolverMap,
+  TAppManifest extends AppManifest = AppManifest,
+> extends
+  BlockModule<
+    AppFunc<TProps, TState, TAppManifest, TResolverMap>,
+    App<TAppManifest, TState, TResolverMap> | AppRuntime,
+    AppRuntime
+  > {
+  name?: string;
+  docCacheFileUrl?: string;
+  dependencies?: AppModule<TProps>[];
+}
+
+const injectAppState = <TState = any>(
+  state: TState,
+  fnProps: FnProps,
+): FnProps => {
+  return (
+    props: any,
+    request: Request,
+    { response, get, invoke }: FnContext,
+  ) => {
+    return fnProps(props, request, { ...state, response, get, invoke });
+  };
+};
+
+const injectAppStateOnInlineLoader = <TState = any>(
+  state: TState,
+  loader: SectionModule["loader"],
+): FnProps | undefined => {
+  if (!loader) {
+    return undefined;
+  }
+  return (
+    props: any,
+    request: Request,
+    { response, get, invoke }: FnContext,
+  ) => {
+    return propsLoader(loader, props, request, {
+      ...state,
+      response,
+      get,
+      invoke,
+    });
+  };
+};
+
 const hydrateOnce: Record<string, SyncOnce<void>> = {};
 const appBlock: Block<AppModule> = {
   type: "apps",
@@ -253,8 +289,8 @@ const appBlock: Block<AppModule> = {
   >(
     mod: AppModule<TProps>,
   ) =>
-  (props: TProps) => {
-    const buildAppWith = buildApp(props);
+  (props: TProps, ctx: BaseContext) => {
+    const buildAppWith = buildApp(props, ctx.extend);
     return buildAppWith(mod);
   },
 };

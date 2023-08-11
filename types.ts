@@ -19,14 +19,14 @@ import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { Release } from "$live/engine/releases/provider.ts";
 import { Route } from "$live/flags/audience.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
-import { AppContext, AppManifest, AppRuntime } from "./blocks/app.ts";
+import { AppContext, AppManifest, AppRuntime, AppModule } from "./blocks/app.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
 export type {
   ErrorBoundaryComponent,
   ErrorBoundaryParams,
 } from "$live/blocks/section.ts";
-export type { AppContext, AppManifest, AppRuntime };
+export type { AppContext, AppManifest, AppRuntime, AppModule };
 
 export type { App } from "$live/blocks/app.ts";
 
