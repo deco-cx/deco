@@ -91,7 +91,7 @@ export const handler = async (
     ctx.state.manifest = context.manifest!;
     if (apps) {
       for (const app of apps) {
-        ctx.state.manifest = mergeManifests(ctx.state.manifest, app.manifest)
+        ctx.state.manifest = mergeManifests(ctx.state.manifest, app.manifest);
       }
     }
 

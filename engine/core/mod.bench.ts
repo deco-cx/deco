@@ -16,6 +16,7 @@ Deno.bench(
       resolvers: {},
       resolveHints,
       danglingRecover,
+      extend: () => {},
       resolve: <T>(data: unknown) => {
         return data as T;
       },
@@ -44,6 +45,7 @@ Deno.bench(
       resolvers: {},
       resolveHints: generatedHints,
       danglingRecover,
+      extend: () => {},
       resolve: <T>(data: unknown) => {
         return data as T;
       },
@@ -74,6 +76,7 @@ Deno.bench(
       resolvers: {},
       resolveHints,
       danglingRecover,
+      extend: () => {},
       resolve: <T>(data: unknown) => {
         return data as T;
       },

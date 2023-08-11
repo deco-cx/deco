@@ -34,7 +34,7 @@ export interface Monitoring {
 
 export type ExtensionFunc<TContext extends BaseContext = BaseContext> = (
   opts: ExtensionOptions<TContext>,
-) => void
+) => void;
 export interface BaseContext<TContext extends BaseContext = any> {
   resolveChain: FieldResolver[];
   resolveId: string;
