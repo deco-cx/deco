@@ -104,10 +104,12 @@ export const mergeRuntimes = <TAppRuntime extends AppRuntime = AppRuntime>(
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
+    name,
   }: TAppRuntime,
   { resolvers, manifest, resolvables }: TAppRuntime,
-): Pick<TAppRuntime, "manifest" | "resolvables" | "resolvers"> => {
+): Pick<TAppRuntime, "manifest" | "resolvables" | "resolvers" | "name"> => {
   return {
+    name,
     manifest: mergeManifests(currentManifest, manifest),
     resolvables: {
       ...currentResolvables,
@@ -238,7 +240,7 @@ const injectAppStateOnInlineLoader = <TState = any>(
 const buildApp = (extend: ExtensionFunc) =>
 <TState = {}>(
   appRuntime: AppRuntime | App<any, TState>,
-) => {
+): AppRuntime => {
   const runtime = isAppRuntime(appRuntime)
     ? appRuntime
     : buildRuntimeFromApp<TState>(appRuntime);
@@ -252,9 +254,11 @@ const buildApp = (extend: ExtensionFunc) =>
       baseKey,
     );
   });
-  (runtime.dependencies ?? []).forEach(buildApp(extend));
+  const dependencies: AppRuntime[] = (runtime.dependencies ?? []).map(
+    buildApp(extend),
+  );
   extend(runtime);
-  return runtime;
+  return dependencies.reduce(mergeRuntimes, runtime);
 };
 const hydrateOnce: Record<string, SyncOnce<void>> = {};
 const appBlock: Block<AppModule> = {
