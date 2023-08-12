@@ -12,6 +12,25 @@ const schemeableToJSONSchemaFunc = (
       return schemeableToJSONSchema(genId, def, schemeable.value, seen);
     }
     case "array": {
+      if (Array.isArray(schemeable.value)) {
+        let nDef = def;
+        const items: JSONSchema7[] = [];
+
+        for (const sc of schemeable.value) {
+          const [newDefs, newItems] = schemeableToJSONSchema(
+            genId,
+            nDef,
+            sc,
+            seen,
+          );
+          items.push(newItems);
+          nDef = newDefs;
+        }
+        return [nDef, {
+          type: "array",
+          items,
+        }];
+      }
       const [nDef, items] = schemeableToJSONSchema(
         genId,
         def,

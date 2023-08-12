@@ -62,7 +62,7 @@ export interface IntersectionSchemeable extends SchemeableBase {
 }
 export interface ArraySchemeable extends SchemeableBase {
   type: "array";
-  value: Schemeable;
+  value: Schemeable | Schemeable[];
 }
 
 export interface UnknownSchemable extends SchemeableBase {
@@ -82,27 +82,6 @@ export type Schemeable =
   | RecordSchemeable
   | UnknownSchemable
   | SchemeableRef;
-
-export const schemeableEqual = (a: Schemeable, b: Schemeable): boolean => {
-  if (a.name !== b.name) {
-    return false;
-  }
-  if (a.type !== b.type) {
-    return false;
-  }
-  if (a.type === "array" && b.type === "array") {
-    return schemeableEqual(a.value, b.value);
-  }
-
-  if (a.type === "unknown" && b.type === "unknown") {
-    return true;
-  }
-
-  // TODO dumbway
-  const aStr = JSON.stringify(a);
-  const bStr = JSON.stringify(b);
-  return aStr === bStr;
-};
 
 const schemeableWellKnownType = async (
   ref: TsTypeRefDef,
@@ -614,7 +593,8 @@ const tsTypeToSchemeableRec = async (
       }
 
       if (
-        objSchemeable.type === "array" && indexType.literal.kind === "number"
+        objSchemeable.type === "array" && indexType.literal.kind === "number" &&
+        !Array.isArray(objSchemeable.value)
       ) {
         const type = objSchemeable.value;
         return {
