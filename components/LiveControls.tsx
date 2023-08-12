@@ -100,7 +100,7 @@ const main = () => {
       );
       href.searchParams.set(
         "pathTemplate",
-        encodeURIComponent(window.LIVE.page.pathTemplate ?? "/*"),
+        encodeURIComponent(window.LIVE.page.pathTemplate || "/*"),
       );
       window.location.href = `${href}`;
     }
@@ -119,7 +119,9 @@ const main = () => {
             .getElementById(data.args.alternateId)
           : undefined;
 
-        (findById ?? findByAlternateId)?.scrollIntoView({
+        const componentFound = findById || findByAlternateId;
+
+        componentFound && componentFound.scrollIntoView({
           behavior: "smooth",
         });
 
