@@ -12,9 +12,6 @@ export type AccountFunc<TConfig = any> = (c: TConfig) => Account;
 
 const accountBlock: Block<BlockModule<AccountFunc>> = {
   type: "accounts",
-  introspect: {
-    default: "0",
-  },
   adapt: applyConfigSync,
   defaultPreview: (account) => {
     return {

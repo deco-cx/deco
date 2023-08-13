@@ -263,9 +263,6 @@ const buildApp = (extend: ExtensionFunc) =>
 const hydrateOnce: Record<string, SyncOnce<void>> = {};
 const appBlock: Block<AppModule> = {
   type: "apps",
-  introspect: {
-    default: "0",
-  },
   adapt: <
     TProps = any,
     TState = {},

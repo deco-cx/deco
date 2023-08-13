@@ -1,5 +1,4 @@
 import { parsePath } from "./engine/schema/swc/swc.ts";
-import { programToSchemeable } from "$live/engine/schema/swc/transform.ts";
 
 const start = performance.now();
 await parsePath(import.meta.resolve("$live/loaders/state.ts"))

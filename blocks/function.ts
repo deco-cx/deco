@@ -7,7 +7,6 @@ import {
 } from "$live/blocks/utils.tsx";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule } from "$live/engine/block.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 import { LiveConfig, LoaderFunction } from "$live/types.ts";
 
 export type Function<TProps = any, TState = any> = LoaderFunction<
@@ -25,7 +24,7 @@ export interface FunctionModule<
 
 const functionBlock: Block<FunctionModule> = {
   type: "functions",
-  introspect: introspectWith<FunctionModule>({ default: "0" }, true),
+  introspect: { includeReturn: true },
   adapt: <
     TConfig = any,
     TState = any,

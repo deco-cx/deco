@@ -31,9 +31,6 @@ type HandlerFunc<TConfig = any, TState = any> = (
 
 const handlerBlock: Block<BlockModule<HandlerFunc>> = {
   type: "handlers",
-  introspect: {
-    default: "0",
-  },
   adapt: <
     TConfig = any,
     // deno-lint-ignore ban-types

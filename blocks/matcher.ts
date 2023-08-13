@@ -97,9 +97,6 @@ const matcherBlock: Block<
   >
 > = {
   type: "matchers",
-  introspect: {
-    default: "0",
-  },
   adapt: <TConfig = unknown>(
     { default: func, sticky }: MatcherModule,
   ) =>

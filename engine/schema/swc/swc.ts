@@ -60,11 +60,16 @@ import { RouterContext } from "$live/types.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { FreshConfig as FRESHCONFIG } from "$live/fresh.ts";
+export { default, loader } from "$store/components/ui/CategoryBanner.tsx";
 
 type Mapped = {
   [key in keyof FreshConfig]?: FreshConfig[key];
 }
 
+export const s = () => {
+
+}
+export function ss() {}
 type Omitted = Omit<FreshConfig, "key" | "otherKey">
 interface FCS extends FRESHCONFIG {
   /**
@@ -91,24 +96,6 @@ export const isFreshCtx = <TState>(
   return typeof (ctx as HandlerContext).render === "function";
 };
 
-/**
- * @title Fresh Page
- * @description Renders a fresh page.
- */
-export default function Fresh(page: FC) {
-  return async (req: Request, ctx: ConnInfo) => {
-    const url = new URL(req.url);
-    if (url.searchParams.get("asJson") !== null) {
-      return Response.json(page, { headers: allowCorsFor(req) });
-    }
-    if (isFreshCtx<{ routerInfo: RouterContext }>(ctx)) {
-      return await ctx.render({ ...page, routerInfo: ctx.state.routerInfo });
-    }
-    return Response.json({ message: "Fresh is not being used" }, {
-      status: 500,
-    });
-  };
-}
 `,
       {
         target: "es2022",

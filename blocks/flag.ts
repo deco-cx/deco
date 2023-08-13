@@ -3,12 +3,11 @@ import { Matcher } from "$live/blocks/matcher.ts";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { isDeferred } from "$live/engine/core/resolver.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 import { context } from "$live/live.ts";
 import {
-  TsTypeDef,
-  TsTypeTypeRefDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+  TsType,
+  TsTypeReference,
+} from "https://esm.sh/v130/@swc/core@1.2.212/types.d.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<T = unknown> {
@@ -58,11 +57,11 @@ export type FlagFunc<TConfig = any> = (
 
 const flagBlock: Block<BlockModule<FlagFunc>> = {
   type: "flags",
-  introspect: introspectWith<BlockModule<FlagFunc>>({
-    "default": "0",
-  }, (tsType: TsTypeDef) => {
-    return (tsType as TsTypeTypeRefDef)?.typeRef?.typeParams?.[0];
-  }),
+  introspect: {
+    includeReturn: (tsType: TsType) => {
+      return (tsType as TsTypeReference)?.typeParams?.params?.[0];
+    },
+  },
   adapt: <
     TConfig = unknown,
   >(func: {

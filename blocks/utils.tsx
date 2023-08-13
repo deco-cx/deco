@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { AppManifest } from "$live/blocks/app.ts";
 import {
   Block,
   BlockModule,
@@ -19,7 +20,6 @@ import type { InvocationFunc } from "../clients/withManifest.ts";
 import type { Manifest } from "../live.gen.ts";
 import { HttpContext } from "./handler.ts";
 import { ErrorBoundaryComponent } from "./section.ts";
-import { AppManifest } from "$live/blocks/app.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -192,9 +192,6 @@ export const newComponentBlock = <K extends string>(
   K
 > => ({
   type,
-  introspect: {
-    default: "0",
-  },
   defaultDanglingRecover,
   defaultPreview: (comp) => comp,
   adapt: fromComponentFunc,

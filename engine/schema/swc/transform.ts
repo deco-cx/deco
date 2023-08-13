@@ -1,11 +1,16 @@
 import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
+import { BlockModuleRef, IntrospectParams } from "$live/engine/block.ts";
 import { parsePath } from "$live/engine/schema/swc/swc.ts";
 import { Schemeable } from "$live/engine/schema/transform.ts";
 import {
+  ArrowFunctionExpression,
   ExportNamedDeclaration,
-  Identifier,
+  FunctionDeclaration,
+  FunctionExpression,
   NamedExportSpecifier,
   NamedImportSpecifier,
+  Param,
+  Pattern,
   Program,
   StringLiteral,
   TsArrayType,
@@ -19,6 +24,7 @@ import {
   TsParenthesizedType,
   TsTupleType,
   TsType,
+  TsTypeAnnotation,
   TsTypeElement,
   TsTypeLiteral,
   TsTypeReference,
@@ -28,7 +34,7 @@ import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.
 import { dirname, join } from "std/path/mod.ts";
 import { ObjectSchemeable, UnknownSchemable } from "../transform.ts";
 
-interface TransformContext {
+export interface SchemeableTransformContext {
   path: string;
   program: Program;
   instantiatedTypeParams?: (() => Promise<Schemeable>)[];
@@ -43,12 +49,12 @@ const UNKNOWN: UnknownSchemable = {
 
 const tsTypeElementsToObjectSchemeable = async (
   tsTypeElements: TsTypeElement[],
-  { path, program, tryGetFromInstantiatedParameters }: TransformContext,
+  { path, program, tryGetFromInstantiatedParameters }:
+    SchemeableTransformContext,
 ): Promise<ObjectSchemeable> => {
   const keysPromise: Promise<[string, ObjectSchemeable["value"][string]]>[] =
     [];
   for (const prop of tsTypeElements) {
-    console.log(prop);
     if (prop.type !== "TsPropertySignature") {
       continue;
     }
@@ -94,7 +100,7 @@ const tsInterfaceDeclarationToSchemeable = async (
     program,
     instantiatedTypeParams,
     tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
-  }: TransformContext,
+  }: SchemeableTransformContext,
 ): Promise<Schemeable> => {
   const allOfs: Promise<Schemeable>[] = [];
   const typeParamNameToIdx: Record<string, { idx: number; default: TsType }> =
@@ -112,7 +118,6 @@ const tsInterfaceDeclarationToSchemeable = async (
     name: string,
   ): Promise<Schemeable> | undefined => {
     const val = typeParamNameToIdx[name];
-    console.log(name, val);
     if (!val) {
       return undefined;
     }
@@ -152,7 +157,7 @@ const tsInterfaceDeclarationToSchemeable = async (
 const typeNameToSchemeable = async (
   typeName: string,
   { path, program, instantiatedTypeParams, tryGetFromInstantiatedParameters }:
-    TransformContext,
+    SchemeableTransformContext,
 ): Promise<Schemeable> => {
   const val = tryGetFromInstantiatedParameters?.(typeName);
   if (val) {
@@ -271,7 +276,8 @@ const typeNameToSchemeable = async (
 
 const wellKnownTypeReferenceToSchemeable = async (
   ref: TsTypeReference,
-  { path, program, tryGetFromInstantiatedParameters }: TransformContext,
+  { path, program, tryGetFromInstantiatedParameters }:
+    SchemeableTransformContext,
 ): Promise<Schemeable | undefined> => {
   const typeName = ref.typeName;
   if (typeName.type !== "Identifier") {
@@ -507,9 +513,10 @@ const wellKnownTypeReferenceToSchemeable = async (
   }
 };
 // cannot have typeParams but can have type parameters on context
-const tsTypeToSchemeable = async (
+export const tsTypeToSchemeable = async (
   tsType: TsType,
-  { path, program, tryGetFromInstantiatedParameters }: TransformContext,
+  { path, program, tryGetFromInstantiatedParameters }:
+    SchemeableTransformContext,
 ): Promise<Schemeable> => {
   switch (tsType.type) {
     case "TsLiteralType": {
@@ -710,33 +717,195 @@ const tsTypeToSchemeable = async (
       return UNKNOWN;
   }
 };
-export const programToSchemeable = async (
+
+export interface FunctionCanonicalDeclaration {
+  exp: FunctionExpression | FunctionDeclaration | ArrowFunctionExpression;
+  path: string;
+  program: Program;
+}
+const findFuncFromExportNamedDeclaration = async (
+  funcName: string,
+  item: ExportNamedDeclaration,
+  path: string,
+): Promise<FunctionCanonicalDeclaration | undefined> => {
+  for (const spec of item.specifiers) {
+    if (
+      item.source !== undefined &&
+      spec.type === "ExportSpecifier" &&
+      (spec.exported?.value ?? spec.orig.value) === funcName
+    ) {
+      const fileUrl = item.source.value.startsWith(".")
+        ? join(
+          Deno.cwd(),
+          dirname(path),
+          item.source.value,
+        )
+        : item.source.value;
+      const from = import.meta.resolve(
+        fileUrl,
+      );
+      const isFromDefault = spec.orig.value === "default";
+      const newProgram = await parsePath(from);
+      if (!newProgram) {
+        return undefined;
+      }
+      if (isFromDefault) {
+        return findDefaultFuncExport(from, newProgram);
+      } else {
+        return findFuncExport(spec.orig.value, from, newProgram);
+      }
+    }
+  }
+  return undefined;
+};
+
+const findFunc = async (
+  funcName: string,
   path: string,
   program: Program,
-): Promise<Schemeable> => {
-  const exportDefaultDeclaration = program.body.find((dec) =>
-    dec.type === "ExportDefaultDeclaration"
-  );
-  if (
-    !exportDefaultDeclaration ||
-    exportDefaultDeclaration.type !== "ExportDefaultDeclaration"
-  ) {
-    return UNKNOWN;
+): Promise<[FunctionCanonicalDeclaration, boolean] | undefined> => {
+  for (const item of program.body) {
+    if (item.type === "ExportNamedDeclaration") {
+      const found = await findFuncFromExportNamedDeclaration(
+        funcName,
+        item,
+        path,
+      );
+      if (found) {
+        return [found, true];
+      }
+    }
+
+    if (
+      item.type === "FunctionDeclaration" &&
+      item.identifier.value === funcName
+    ) {
+      return [{ path, program, exp: item }, false];
+    }
+
+    if (
+      item.type === "VariableDeclaration"
+    ) {
+      for (const decl of item.declarations) {
+        if (
+          decl.id.type === "Identifier" && decl.id.value === funcName &&
+          decl.init && decl.init.type === "ArrowFunctionExpression"
+        ) {
+          return [{ path, program, exp: decl.init }, false];
+        }
+      }
+    }
+
+    if (
+      item.type === "ExportDeclaration" &&
+      item.declaration.type === "FunctionDeclaration" &&
+      item.declaration.identifier.value === funcName
+    ) {
+      return [{ path, program, exp: item.declaration }, true];
+    }
+
+    if (
+      item.type === "ExportDeclaration" &&
+      item.declaration.type === "VariableDeclaration"
+    ) {
+      for (const decl of item.declaration.declarations) {
+        if (
+          decl.id.type === "Identifier" && decl.id.value === funcName &&
+          decl.init && decl.init.type === "ArrowFunctionExpression"
+        ) {
+          return [{ path, program, exp: decl.init }, true];
+        }
+      }
+    }
   }
-  if (exportDefaultDeclaration.decl.type !== "FunctionExpression") {
-    return UNKNOWN;
+};
+const findFuncExport = async (
+  funcName: string,
+  path: string,
+  program: Program,
+): Promise<FunctionCanonicalDeclaration | undefined> => {
+  const func = await findFunc(funcName, path, program);
+  if (!func) {
+    return undefined;
   }
-  const firstParameter = exportDefaultDeclaration.decl.params[0];
-  if (!firstParameter) {
-    return UNKNOWN;
+  return func[1] ? func[0] : undefined;
+};
+export const findDefaultFuncExport = async (
+  path: string,
+  program: Program,
+): Promise<FunctionCanonicalDeclaration | undefined> => {
+  for (const item of program.body) {
+    if (
+      item.type === "ExportDefaultExpression" &&
+      item.expression.type === "Identifier"
+    ) {
+      const func = await findFunc(item.expression.value, path, program);
+      return func?.[0];
+    }
+    if (
+      item.type === "ExportDefaultDeclaration" &&
+      item.decl.type === "FunctionExpression"
+    ) {
+      return { exp: item.decl, path, program };
+    }
+    if (item.type === "ExportNamedDeclaration") {
+      const found = await findFuncFromExportNamedDeclaration(
+        "default",
+        item,
+        path,
+      );
+      if (found) {
+        return found;
+      }
+    }
   }
-  const pat = firstParameter?.pat as Identifier;
-  if (!pat.typeAnnotation) {
-    return UNKNOWN;
+  return undefined;
+};
+export const programToBlockRef = async (
+  _path: string,
+  _program: Program,
+  introspect?: IntrospectParams,
+): Promise<BlockModuleRef | undefined> => {
+  const funcNames = introspect?.funcNames ?? ["default"];
+  for (const name of funcNames) {
+    const fn = name === "default"
+      ? await findDefaultFuncExport(_path, _program)
+      : await findFuncExport(name, _path, _program);
+    if (!fn) {
+      continue;
+    }
+
+    const includeReturn = introspect?.includeReturn;
+    const { exp: func, path, program } = fn;
+
+    const retn = typeof includeReturn === "function"
+      ? func.returnType
+        ? includeReturn(func.returnType.typeAnnotation)
+        : undefined
+      : func.returnType?.typeAnnotation;
+
+    const baseBlockRef = {
+      functionJSDoc: undefined, //func.jsDoc && jsDocToSchema(func.jsDoc),
+      functionRef: path,
+      outputSchema: includeReturn && retn
+        ? await tsTypeToSchemeable(retn, { path, program })
+        : undefined,
+    };
+    const paramIdx = 0;
+    if (func.params.length === 0) {
+      return baseBlockRef;
+    }
+    const param = func.params[paramIdx];
+    const pat = (param as Param)?.pat ?? param as Pattern;
+    const typeAnnotation = (pat as { typeAnnotation?: TsTypeAnnotation })
+      ?.typeAnnotation?.typeAnnotation;
+    if (!typeAnnotation) {
+      return baseBlockRef;
+    }
+    return {
+      ...baseBlockRef,
+      inputSchema: { ...await tsTypeToSchemeable(typeAnnotation, { path, program }), file: "https://denopkg.com/deco-cx/deco@1.2.3/a.ts", name: `${Math.random()}` },
+    };
   }
-  // can have typeParameters intantiation
-  return await tsTypeToSchemeable(pat.typeAnnotation.typeAnnotation, {
-    path,
-    program,
-  });
+  return undefined;
 };

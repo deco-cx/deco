@@ -1,15 +1,14 @@
 import blocks from "$live/blocks/index.ts";
-import { ModuleOf } from "$live/engine/block.ts";
 import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
 import { defaultRoutes } from "$live/engine/fresh/manifestGen.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 import {
   BlockModule,
   EntrypointModule,
   newSchemaBuilder,
   Schemas,
 } from "$live/engine/schema/builder.ts";
-import { denoDoc } from "$live/engine/schema/utils.ts";
+import { parsePath } from "$live/engine/schema/swc/swc.ts";
+import { programToBlockRef } from "$live/engine/schema/swc/transform.ts";
 import { context } from "$live/live.ts";
 import { AppManifest } from "../../blocks/app.ts";
 import { JSONSchema7 } from "../../deps.ts";
@@ -53,7 +52,7 @@ export const genSchemasFromManifest = async (
         ),
       )
     ) {
-      const [namespace, blockPath, blockKey] =
+      const [_namespace, blockPath, blockKey] =
         wellKnownLiveRoutes[blockModuleKey] ??
           (blockModuleKey.startsWith(".")
             ? [
@@ -67,18 +66,15 @@ export const genSchemasFromManifest = async (
               blockModuleKey,
             ]);
 
-      const docPromise = denoDoc(blockPath);
-      modulesPromises.push(docPromise.then(async (doc) => {
-        const introspectFunc = introspectWith<ModuleOf<typeof block>>(
-          block.introspect,
-        );
-        const ref = await introspectFunc(
-          {
-            base: dir,
-            namespace,
-          },
+      const programPromise = parsePath(blockPath);
+      modulesPromises.push(programPromise.then(async (doc) => {
+        if (!doc) {
+          return undefined;
+        }
+        const ref = await programToBlockRef(
           blockKey,
           doc,
+          block.introspect,
         );
         if (ref) {
           if (block.type === "routes") {
@@ -110,6 +106,7 @@ export const genSchemasFromManifest = async (
     (builder, mod) => mod ? builder.withBlockSchema(mod) : builder,
     schemaBuilder,
   );
+  console.log(JSON.stringify(schema.build(dir, context.namespace!)))
   return schema.build(dir, context.namespace!);
 };
 
