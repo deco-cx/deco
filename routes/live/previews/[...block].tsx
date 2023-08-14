@@ -96,7 +96,10 @@ export const render = async (previewUrl: string, props: any, req: Request, ctx: 
   if (pathname) {
     newUrl.pathname = pathname;
   }
-  const newReq = new Request(newUrl, req);
+  const newReq = new Request(newUrl, {
+    headers: new Headers(req.headers),
+    method: "GET",
+  });
   const page = await resolve(
     {
       __resolveType: "preview",

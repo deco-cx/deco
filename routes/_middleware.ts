@@ -12,6 +12,7 @@ import { AppRuntime, LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { getSetCookies } from "std/http/mod.ts";
+import { isAdmin } from "$live/utils/admin.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -32,6 +33,14 @@ export interface MiddlewareConfig {
    */
   state: Record<string, Resolvable>;
   apps?: Apps[];
+}
+
+const isAdminOrLocalhost = (req: Request): boolean => {
+  const referer = req.headers.get("origin") ?? req.headers.get("referer");
+  const isOnAdmin = referer && isAdmin(referer);
+  const url = new URL(req.url);
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(url.hostname);
+  return isOnAdmin || isLocalhost;
 }
 
 export const handler = async (
@@ -104,8 +113,10 @@ export const handler = async (
       ctx.state.resolve = ctxResolver;
     }
 
+    const shouldAllowCorsForOptions = (req.method === "OPTIONS") && isAdminOrLocalhost(req);
+    initialResponse = shouldAllowCorsForOptions ? new Response() : await ctx.next();
+
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-    initialResponse = await ctx.next();
     if (req.headers.get("upgrade") === "websocket") {
       return initialResponse;
     }
@@ -113,7 +124,7 @@ export const handler = async (
     if (
       (url.pathname.startsWith("/live/previews") &&
       url.searchParams.has("mode") && url.searchParams.get("mode") == "showcase") ||
-      url.pathname.startsWith("/_frsh/")
+      url.pathname.startsWith("/_frsh/") || shouldAllowCorsForOptions
     ) {
       Object.entries(allowCorsFor(req)).map(([name, value]) => {
         newHeaders.set(name, value);
