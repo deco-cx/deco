@@ -41,7 +41,7 @@ const isAdminOrLocalhost = (req: Request): boolean => {
   const url = new URL(req.url);
   const isLocalhost = ["localhost", "127.0.0.1"].includes(url.hostname);
   return isOnAdmin || isLocalhost;
-}
+};
 
 export const handler = async (
   req: Request,
@@ -93,8 +93,11 @@ export const handler = async (
       ctx.state.manifest = mergeManifests(ctx.state.manifest, app.manifest);
     }
 
-    const shouldAllowCorsForOptions = (req.method === "OPTIONS") && isAdminOrLocalhost(req);
-    initialResponse = shouldAllowCorsForOptions ? new Response() : await ctx.next();
+    const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
+      isAdminOrLocalhost(req);
+    initialResponse = shouldAllowCorsForOptions
+      ? new Response()
+      : await ctx.next();
 
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     if (req.headers.get("upgrade") === "websocket") {
