@@ -27,7 +27,11 @@ export interface Options<TManifest extends AppManifest = AppManifest> {
 }
 export default function decoPlugin(opt?: Options): Plugin {
   if (opt) {
-    $live(opt.manifest, opt.site, opt.useLocalStorageOnly);
+    $live(
+      { apps: { ...opt.manifest.apps } },
+      opt.site,
+      opt.useLocalStorageOnly,
+    );
   }
   return {
     name: "deco",
