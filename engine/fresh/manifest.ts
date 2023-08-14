@@ -166,6 +166,7 @@ export const buildRuntime = <
       (mod.Preview ? usePreviewFunc(mod.Preview) : blk.defaultPreview);
     if (previewFunc) {
       previewFunc.onBeforeResolveProps = mod.onBeforeResolveProps;
+      previewFunc.type = blk.type;
       return { ...prv, [`${PREVIEW_PREFIX_KEY}${key}`]: previewFunc };
     }
     return prv;
@@ -176,6 +177,7 @@ export const buildRuntime = <
       const invokeFunc = mod.invoke ?? blk.defaultInvoke;
       if (invokeFunc) {
         invokeFunc.onBeforeResolveProps = mod.onBeforeResolveProps;
+        invokeFunc.type = blk.type;
         return { ...invk, [`${INVOKE_PREFIX_KEY}${key}`]: invokeFunc };
       }
       return invk;
@@ -192,6 +194,7 @@ export const buildRuntime = <
           ? compose(...resolver)
           : resolver;
         composed.onBeforeResolveProps = mod.onBeforeResolveProps;
+        composed.type = blk.type;
         return composed;
       },
     )

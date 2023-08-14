@@ -1,5 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { mergeRuntimes } from "$live/blocks/app.ts";
+import { mergeManifests } from "$live/blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "$live/blocks/matcher.ts";
 import {
   getPagePathTemplate,
@@ -8,7 +8,7 @@ import {
 import { Resolvable } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
 import { Apps } from "$live/mod.ts";
-import { AppRuntime, LiveConfig, LiveState } from "$live/types.ts";
+import { LiveConfig, LiveState } from "$live/types.ts";
 import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
 import { formatLog } from "$live/utils/log.ts";
 import { getSetCookies } from "std/http/mod.ts";
@@ -41,7 +41,7 @@ const isAdminOrLocalhost = (req: Request): boolean => {
   const url = new URL(req.url);
   const isLocalhost = ["localhost", "127.0.0.1"].includes(url.hostname);
   return isOnAdmin || isLocalhost;
-}
+};
 
 export const handler = async (
   req: Request,
@@ -89,32 +89,15 @@ export const handler = async (
     }
     const apps = ctx?.state?.$live?.apps;
     ctx.state.manifest = context.manifest!;
-    if (apps) {
-      const currentAppRuntime: AppRuntime = {
-        resolvers: context.releaseResolver!.getResolvers(),
-        manifest: context.manifest!,
-      };
-      const { resolvers, manifest, resolvables } = apps.reduce(
-        mergeRuntimes,
-        currentAppRuntime,
-      );
-      ctx.state.manifest = manifest;
-      const newReleaseResolver = context.releaseResolver!.with(
-        { resolvers, resolvables },
-      );
-      const ctxResolver = newReleaseResolver
-        .resolverFor(
-          { context: ctx, request: req },
-          {
-            monitoring: { t: ctx.state.t },
-          },
-        )
-        .bind(newReleaseResolver);
-      ctx.state.resolve = ctxResolver;
+    for (const app of Array.isArray(apps) ? apps : []) {
+      ctx.state.manifest = mergeManifests(ctx.state.manifest, app.manifest);
     }
 
-    const shouldAllowCorsForOptions = (req.method === "OPTIONS") && isAdminOrLocalhost(req);
-    initialResponse = shouldAllowCorsForOptions ? new Response() : await ctx.next();
+    const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
+      isAdminOrLocalhost(req);
+    initialResponse = shouldAllowCorsForOptions
+      ? new Response()
+      : await ctx.next();
 
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     if (req.headers.get("upgrade") === "websocket") {
@@ -123,7 +106,8 @@ export const handler = async (
     const newHeaders = new Headers(initialResponse.headers);
     if (
       (url.pathname.startsWith("/live/previews") &&
-      url.searchParams.has("mode") && url.searchParams.get("mode") == "showcase") ||
+        url.searchParams.has("mode") &&
+        url.searchParams.get("mode") == "showcase") ||
       url.pathname.startsWith("/_frsh/") || shouldAllowCorsForOptions
     ) {
       Object.entries(allowCorsFor(req)).map(([name, value]) => {

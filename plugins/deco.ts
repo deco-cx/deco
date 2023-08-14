@@ -1,6 +1,5 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { buildDecoState, injectLiveStateForPath } from "$live/blocks/route.ts";
-import { context } from "$live/live.ts";
 import { $live, AppManifest, SiteInfo } from "$live/mod.ts";
 import {
   default as Render,
@@ -28,7 +27,11 @@ export interface Options<TManifest extends AppManifest = AppManifest> {
 }
 export default function decoPlugin(opt?: Options): Plugin {
   if (opt) {
-    $live(opt.manifest, opt.site, opt.useLocalStorageOnly);
+    $live(
+      { apps: { ...opt.manifest.apps } },
+      opt.site,
+      opt.useLocalStorageOnly,
+    );
   }
   return {
     name: "deco",
@@ -40,9 +43,7 @@ export default function decoPlugin(opt?: Options): Plugin {
             buildDecoState(
               opt
                 ? {
-                  apps: [{
-                    __resolveType: context.site,
-                  }],
+                  __resolveType: "bootstrap",
                 }
                 : "./routes/_middleware.ts",
             ),

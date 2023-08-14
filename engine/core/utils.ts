@@ -53,7 +53,7 @@ export const isPrimitive = <T>(v: T): boolean => {
   return !Array.isArray(v) && typeof v !== "object" && typeof v !== "function";
 };
 
-interface SingleFlight<T> {
+export interface SingleFlight<T> {
   do: (key: string, f: () => Promise<T>) => Promise<T>;
 }
 
