@@ -103,7 +103,8 @@ export const handler = async (
     const newHeaders = new Headers(initialResponse.headers);
     if (
       (url.pathname.startsWith("/live/previews") &&
-      url.searchParams.has("mode") && url.searchParams.get("mode") == "showcase") ||
+        url.searchParams.has("mode") &&
+        url.searchParams.get("mode") == "showcase") ||
       url.pathname.startsWith("/_frsh/") || shouldAllowCorsForOptions
     ) {
       Object.entries(allowCorsFor(req)).map(([name, value]) => {

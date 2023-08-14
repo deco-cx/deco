@@ -31,6 +31,7 @@ export interface ResolveOptions {
   monitoring?: Monitoring;
   forceFresh?: boolean;
   nullIfDangling?: boolean;
+  propagateOptions?: boolean;
   propsIsResolved?: boolean;
   resolveChain?: FieldResolver[];
 }
@@ -164,6 +165,9 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
         ? { // null if dangling, force fresh and propsIsResolved should not be reused across inner resolvables calls
           overrides: options?.overrides,
           monitoring: options?.monitoring,
+          ...(options?.propagateOptions
+            ? { nullIfDangling: options?.nullIfDangling }
+            : {}),
         }
         : {},
     );

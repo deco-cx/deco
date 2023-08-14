@@ -1,6 +1,7 @@
 import {
   BaseContext,
   isResolvable,
+  Resolvable,
   Resolver,
   ResolverMap,
 } from "$live/engine/core/resolver.ts";
@@ -19,10 +20,9 @@ export interface BlockInvocation<TProps = any> {
 }
 export default {
   bootstrap: function (_props, { resolvables, resolve, runOnce, resolvers }) {
-    const apps = runOnce("bootstrap", () => {
-      const firstPassPromises: Promise<unknown>[] = [];
-      const appsKeys: string[] = [];
-      for (const [key, value] of Object.entries(resolvables)) {
+    const apps = runOnce("bootstrap", async () => {
+      const apps: Resolvable[] = [];
+      for (const value of Object.values(resolvables)) {
         if (!isResolvable(value)) {
           continue;
         }
@@ -40,13 +40,13 @@ export default {
           currentResolveType = resolvable.__resolveType;
         }
         if (resolver !== undefined && resolver.type === "apps") {
-          firstPassPromises.push(
-            resolve({ __resolveType: currentResolveType }),
-          );
-          appsKeys.push(key);
+          apps.push(value);
         }
       }
-      return resolve({ apps: appsKeys.map((key) => ({ __resolveType: key })) });
+      // firstPass => nullIfDangling
+      await resolve({ apps }, { nullIfDangling: true, propagateOptions: true });
+
+      return resolve({ apps });
     });
     return apps;
   },
