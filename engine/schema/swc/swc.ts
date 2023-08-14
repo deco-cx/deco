@@ -41,9 +41,7 @@ const loadCache: Record<string, Promise<ParsedSource | undefined>> = {};
 export const parsePath = (path: string) => {
   return loadCache[path] ??= load(path).then((content) => {
     if (!content) {
-      console.log("UNDEFINED", path);
-      throw new Error(`UNDEFINED ${path}`)
-      return undefined;
+      throw new Error(`Path not found ${path}`);
     }
     try {
       return parse(content);
@@ -56,7 +54,7 @@ export const parsePath = (path: string) => {
 
 if (import.meta.main) {
   console.log(
-    JSON.stringify(parse(
+    JSON.stringify(await parse(
       `import { HandlerContext } from "$fresh/server.ts";
 import { Page } from "$live/blocks/page.ts";
 import { RouterContext } from "$live/types.ts";
@@ -71,8 +69,10 @@ type Mapped = {
 
 export const s = () => {
 
-} satisfies FRESHCONFIG ;
+} satisfies FRESHCONFIG;
 // test
+
+
 export function ss() {}
 type Omitted = Omit<FreshConfig, "key" | "otherKey">
 interface FCS extends FRESHCONFIG {
@@ -94,12 +94,13 @@ interface FCS extends FRESHCONFIG {
   y: number | string | ConnInfo["abcdef"]
 }
 type FC = FRESHCONFIG
+
+export { FCS };
 export const isFreshCtx = <TState>(
   ctx: ConnInfo | HandlerContext<unknown, TState>,
 ): ctx is HandlerContext<unknown, TState> => {
   return typeof (ctx as HandlerContext).render === "function";
 };
-
 `,
     )),
   );

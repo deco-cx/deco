@@ -10,8 +10,10 @@ import {
 import { parsePath } from "$live/engine/schema/swc/swc.ts";
 import { programToBlockRef } from "$live/engine/schema/swc/transform.ts";
 import { context } from "$live/live.ts";
+import { TsType } from "https://esm.sh/v130/@swc/wasm@1.3.76/wasm.js";
 import { AppManifest } from "../../blocks/app.ts";
 import { JSONSchema7 } from "../../deps.ts";
+import { Schemeable } from "$live/engine/schema/transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -43,6 +45,7 @@ export const genSchemasFromManifest = async (
   const modulesPromises: Promise<
     (BlockModule | EntrypointModule | undefined)
   >[] = [];
+  const schemeableReferences = new Map<TsType, Schemeable>();
   for (const block of blocks) {
     for (
       const blockModuleKey of Object.keys(
@@ -73,6 +76,7 @@ export const genSchemasFromManifest = async (
         const ref = await programToBlockRef(
           blockKey,
           doc,
+          schemeableReferences,
           block.introspect,
         );
         if (ref) {

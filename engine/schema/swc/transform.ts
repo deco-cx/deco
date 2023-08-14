@@ -38,6 +38,7 @@ import { ObjectSchemeable, UnknownSchemable } from "../transform.ts";
 export interface SchemeableTransformContext {
   path: string;
   parsedSource: ParsedSource;
+  references?: Map<TsType, Schemeable>;
   instantiatedTypeParams?: Schemeable[];
   tryGetFromInstantiatedParameters?: (
     name: string,
@@ -307,11 +308,15 @@ const typeNameToSchemeable = async (
       );
       if (spec) {
         try {
+          const pathResolved = import.meta.resolve(
+            path,
+          );
+          const url = pathResolved.startsWith("file")
+            ? fromFileUrl(pathResolved)
+            : pathResolved;
           const fromTarget = item.source.value.startsWith(".")
             ? join(
-              dirname(fromFileUrl(import.meta.resolve(
-                path,
-              ))),
+              dirname(url),
               item.source.value,
             )
             : import.meta.resolve(item.source.value);
@@ -346,12 +351,7 @@ const typeNameToSchemeable = async (
 
 const wellKnownTypeReferenceToSchemeable = async (
   ref: TsTypeReference,
-  {
-    path,
-    parsedSource,
-    instantiatedTypeParams,
-    tryGetFromInstantiatedParameters,
-  }: SchemeableTransformContext,
+  ctx: SchemeableTransformContext,
 ): Promise<Schemeable | undefined> => {
   const typeName = ref.typeName;
   if (typeName.type !== "Identifier") {
@@ -370,12 +370,7 @@ const wellKnownTypeReferenceToSchemeable = async (
 
       const recordSchemeable = await tsTypeToSchemeable(
         secondParam,
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
 
       return {
@@ -392,12 +387,7 @@ const wellKnownTypeReferenceToSchemeable = async (
 
       return tsTypeToSchemeable(
         typeRef,
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
     }
     case "Response": {
@@ -463,12 +453,7 @@ const wellKnownTypeReferenceToSchemeable = async (
 
       return tsTypeToSchemeable(
         typeRef,
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
     }
     case "Partial": {
@@ -477,12 +462,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       const schemeable = await tsTypeToSchemeable(
         typeParams[0],
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
       if (schemeable.type !== "object") { // TODO(mcandeia) support arrays, unions and intersections
         return UNKNOWN;
@@ -506,12 +486,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       const schemeable = await tsTypeToSchemeable(
         typeParams[0],
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
       const keys: string[] = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
@@ -560,12 +535,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       const schemeable = await tsTypeToSchemeable(
         typeParams[0],
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
       const keys: string[] = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
@@ -612,12 +582,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       const typeSchemeable = await tsTypeToSchemeable(
         typeParams[0],
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
 
       return {
@@ -632,12 +597,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       return tsTypeToSchemeable(
         typeParams[0],
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
     }
     case "LoaderReturnType": {
@@ -646,12 +606,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       return tsTypeToSchemeable(
         typeParams[0],
-        {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        },
+        ctx,
       );
     }
   }
@@ -659,258 +614,220 @@ const wellKnownTypeReferenceToSchemeable = async (
 // cannot have typeParams but can have type parameters on context
 export const tsTypeToSchemeable = async (
   tsType: TsType,
-  {
-    path,
-    parsedSource,
-    instantiatedTypeParams,
-    tryGetFromInstantiatedParameters,
-  }: SchemeableTransformContext,
+  ctx: SchemeableTransformContext,
 ): Promise<Schemeable> => {
-  switch (tsType.type) {
-    case "TsLiteralType": {
-      const type = tsType as TsLiteralType;
-      if (type.literal.type === "TemplateLiteral") {
+  const {
+    path,
+    references,
+  } = ctx;
+  const schemeable = references?.get?.(tsType);
+
+  if (schemeable !== undefined) {
+    return schemeable;
+  }
+  const ref = { type: "unknown", name: "unknown" } as Schemeable;
+  references?.set?.(tsType, ref);
+  const resolve = async (): Promise<Schemeable> => {
+    switch (tsType.type) {
+      case "TsLiteralType": {
+        const type = tsType as TsLiteralType;
+        if (type.literal.type === "TemplateLiteral") {
+          return UNKNOWN;
+        }
+        const literalToJsonSchemaType: Record<string, JSONSchema7TypeName> = {
+          "StringLiteral": "string",
+          "NumericLiteral": "number",
+          "BooleanLiteral": "boolean",
+        };
+        const value = type.literal.value;
+        const constVal = typeof value === "bigint"
+          ? value as unknown as number
+          : value;
+        return {
+          type: "inline",
+          name: `${constVal}`,
+          value: {
+            type: literalToJsonSchemaType[type.literal.type], // FIXME(mcandeia) not compliant with JSONSchema
+            const: constVal,
+            default: constVal,
+          },
+        };
+      }
+      case "TsIndexedAccessType": {
+        const type = tsType as TsIndexedAccessType;
+        const _indexType = type.indexType;
+        if (_indexType.type !== "TsLiteralType") {
+          return UNKNOWN;
+        }
+        const indexType = (_indexType as TsLiteralType).literal;
+        const schemeable = await tsTypeToSchemeable(type.objectType, ctx);
+        if (
+          schemeable.type === "object" && indexType.type === "StringLiteral"
+        ) {
+          const { [indexType.value]: prop } = schemeable.value;
+          return {
+            ...schemeable,
+            name: `${schemeable.name}idx${indexType.value}`,
+            file: path,
+            value: {
+              [indexType.value]: prop,
+            },
+          };
+        }
+        if (
+          schemeable.type === "array" && indexType.type === "NumericLiteral"
+        ) {
+          const itemSchemeable = Array.isArray(schemeable.value)
+            ? schemeable.value[indexType.value]
+            : schemeable.value;
+          return {
+            ...itemSchemeable,
+            file: path,
+            name: `${schemeable.name}idx${indexType.value}`,
+          };
+        }
         return UNKNOWN;
       }
-      const literalToJsonSchemaType: Record<string, JSONSchema7TypeName> = {
-        "StringLiteral": "string",
-        "NumericLiteral": "number",
-        "BooleanLiteral": "boolean",
-      };
-      const value = type.literal.value;
-      const constVal = typeof value === "bigint"
-        ? value as unknown as number
-        : value;
-      return {
-        type: "inline",
-        name: `${constVal}`,
-        value: {
-          type: literalToJsonSchemaType[type.literal.type], // FIXME(mcandeia) not compliant with JSONSchema
-          const: constVal,
-          default: constVal,
-        },
-      };
-    }
-    case "TsIndexedAccessType": {
-      const type = tsType as TsIndexedAccessType;
-      const _indexType = type.indexType;
-      if (_indexType.type !== "TsLiteralType") {
-        return UNKNOWN;
+      case "TsParenthesizedType": {
+        const type = tsType as TsParenthesizedType;
+        return tsTypeToSchemeable(type.typeAnnotation, ctx);
       }
-      const indexType = (_indexType as TsLiteralType).literal;
-      const schemeable = await tsTypeToSchemeable(type.objectType, {
-        path,
-        parsedSource,
-        instantiatedTypeParams,
-        tryGetFromInstantiatedParameters,
-      });
-      if (schemeable.type === "object" && indexType.type === "StringLiteral") {
-        const { [indexType.value]: prop } = schemeable.value;
+      case "TsIntersectionType": {
+        const type = tsType as TsIntersectionType;
+        const value = await Promise.all(
+          type.types.map((tp) => tsTypeToSchemeable(tp, ctx)),
+        );
+        return {
+          file: path,
+          name: value.map((v) => v.name).join("&"),
+          type: "intersection",
+          value,
+        };
+      }
+      case "TsUnionType": {
+        const type = tsType as TsUnionType;
+        const value = await Promise.all(
+          type.types.map((tp) => tsTypeToSchemeable(tp, ctx)),
+        );
+        return {
+          file: path,
+          type: "union",
+          name: value.map((v) => v.name).join("|"),
+          value,
+        };
+      }
+      case "TsOptionalType": {
+        const type = tsType as TsOptionalType;
+        const genType = await tsTypeToSchemeable(type.typeAnnotation, ctx);
+        return {
+          type: "union",
+          name: `union@null|${genType.name}`,
+          value: [
+            {
+              name: "null",
+              type: "inline",
+              value: {
+                type: "null",
+              },
+            },
+            genType,
+          ],
+        };
+      }
+      case "TsTupleType": {
+        const type = tsType as TsTupleType;
+        const value = await Promise.all(
+          type.elemTypes.map((tp) => tsTypeToSchemeable(tp.ty, ctx)),
+        );
+        return {
+          type: "array",
+          name: `tuple@${value.map((v) => v.name).join("|")}`,
+          value,
+        };
+      }
+      case "TsArrayType": {
+        const type = tsType as TsArrayType;
+        const value = await tsTypeToSchemeable(type.elemType, ctx);
+        return {
+          type: "array",
+          name: `array@${value.name}`,
+          value,
+        };
+      }
+      case "TsTypeLiteral": {
+        const type = tsType as TsTypeLiteral;
+        return {
+          file: path,
+          name: `typeLiteral@${tsType.span.start}-${tsType.span.end}`,
+          ...await tsTypeElementsToObjectSchemeable(type.members, ctx),
+        };
+      }
+      case "TsKeywordType": {
+        const type = tsType as TsKeywordType;
+        const keywordToType: Record<string, JSONSchema7Type> = {
+          undefined: "null",
+          any: "object",
+          never: "object",
+        };
+
+        if (type.kind === "never") {
+          console.warn(
+            `never keyword is being used on ${path}, falling back to object`,
+          );
+        }
+        const jsonSchemaType = keywordToType[type.kind] ?? type.kind;
+        return {
+          type: "inline",
+          name: `literal${jsonSchemaType}`,
+          value: type
+            ? ({
+              type: jsonSchemaType,
+            } as JSONSchema7)
+            : {},
+        };
+      }
+      case "TsTypeReference": {
+        const type = tsType as TsTypeReference;
+        if (type.typeName.type !== "Identifier") {
+          return UNKNOWN;
+        }
+        const wellKnownType = await wellKnownTypeReferenceToSchemeable(
+          type,
+          ctx,
+        );
+
+        if (wellKnownType) {
+          return wellKnownType;
+        }
+        const typeName = type.typeName.value;
+        const parameters = type.typeParams?.params ?? [];
+        const typeParams = await Promise.all(parameters.map((param) => {
+          return tsTypeToSchemeable(param, ctx);
+        }));
+
+        const schemeable = await typeNameToSchemeable(typeName, {
+          ...ctx,
+          instantiatedTypeParams: typeParams,
+        });
+
         return {
           ...schemeable,
-          name: `${schemeable.name}idx${indexType.value}`,
-          file: path,
-          value: {
-            [indexType.value]: prop,
-          },
+          name: `${schemeable.name}${
+            typeParams.length > 0
+              ? `+${typeParams.map((p) => p.name).join("+")}`
+              : ""
+          }`,
         };
       }
-      if (schemeable.type === "array" && indexType.type === "NumericLiteral") {
-        const itemSchemeable = Array.isArray(schemeable.value)
-          ? schemeable.value[indexType.value]
-          : schemeable.value;
-        return {
-          ...itemSchemeable,
-          file: path,
-          name: `${schemeable.name}idx${indexType.value}`,
-        };
-      }
-      return UNKNOWN;
-    }
-    case "TsParenthesizedType": {
-      const type = tsType as TsParenthesizedType;
-      return tsTypeToSchemeable(type.typeAnnotation, {
-        path,
-        parsedSource,
-        instantiatedTypeParams,
-        tryGetFromInstantiatedParameters,
-      });
-    }
-    case "TsIntersectionType": {
-      const type = tsType as TsIntersectionType;
-      const value = await Promise.all(
-        type.types.map((tp) =>
-          tsTypeToSchemeable(tp, {
-            path,
-            parsedSource,
-            instantiatedTypeParams,
-            tryGetFromInstantiatedParameters,
-          })
-        ),
-      );
-      return {
-        file: path,
-        name: value.map((v) => v.name).join("&"),
-        type: "intersection",
-        value,
-      };
-    }
-    case "TsUnionType": {
-      const type = tsType as TsUnionType;
-      const value = await Promise.all(
-        type.types.map((tp) =>
-          tsTypeToSchemeable(tp, {
-            path,
-            parsedSource,
-            instantiatedTypeParams,
-            tryGetFromInstantiatedParameters,
-          })
-        ),
-      );
-      return {
-        file: path,
-        type: "union",
-        name: value.map((v) => v.name).join("|"),
-        value,
-      };
-    }
-    case "TsOptionalType": {
-      const type = tsType as TsOptionalType;
-      const genType = await tsTypeToSchemeable(type.typeAnnotation, {
-        path,
-        parsedSource,
-        instantiatedTypeParams,
-        tryGetFromInstantiatedParameters,
-      });
-      return {
-        type: "union",
-        name: `union@null|${genType.name}`,
-        value: [
-          {
-            name: "null",
-            type: "inline",
-            value: {
-              type: "null",
-            },
-          },
-          genType,
-        ],
-      };
-    }
-    case "TsTupleType": {
-      const type = tsType as TsTupleType;
-      const value = await Promise.all(
-        type.elemTypes.map((tp) =>
-          tsTypeToSchemeable(tp.ty, {
-            path,
-            parsedSource,
-            instantiatedTypeParams,
-            tryGetFromInstantiatedParameters,
-          })
-        ),
-      );
-      return {
-        type: "array",
-        name: `tuple@${value.map((v) => v.name).join("|")}`,
-        value,
-      };
-    }
-    case "TsArrayType": {
-      const type = tsType as TsArrayType;
-      const value = await tsTypeToSchemeable(type.elemType, {
-        path,
-        parsedSource,
-        instantiatedTypeParams,
-        tryGetFromInstantiatedParameters,
-      });
-      return {
-        type: "array",
-        name: `array@${value.name}`,
-        value,
-      };
-    }
-    case "TsTypeLiteral": {
-      const type = tsType as TsTypeLiteral;
-      return {
-        file: path,
-        name: `typeLiteral@${tsType.span.start}-${tsType.span.end}`,
-        ...await tsTypeElementsToObjectSchemeable(type.members, {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        }),
-      };
-    }
-    case "TsKeywordType": {
-      const type = tsType as TsKeywordType;
-      const keywordToType: Record<string, JSONSchema7Type> = {
-        undefined: "null",
-        any: "object",
-        never: "object",
-      };
-
-      if (type.kind === "never") {
-        console.warn(
-          `never keyword is being used on ${path}, falling back to object`,
-        );
-      }
-      const jsonSchemaType = keywordToType[type.kind] ?? type.kind;
-      return {
-        type: "inline",
-        name: `literal${jsonSchemaType}`,
-        value: type
-          ? ({
-            type: jsonSchemaType,
-          } as JSONSchema7)
-          : {},
-      };
-    }
-    case "TsTypeReference": {
-      const type = tsType as TsTypeReference;
-      if (type.typeName.type !== "Identifier") {
+      default:
         return UNKNOWN;
-      }
-      const wellKnownType = await wellKnownTypeReferenceToSchemeable(type, {
-        path,
-        parsedSource,
-        instantiatedTypeParams,
-        tryGetFromInstantiatedParameters,
-      });
-
-      if (wellKnownType) {
-        return wellKnownType;
-      }
-      const typeName = type.typeName.value;
-      const parameters = type.typeParams?.params ?? [];
-      const typeParams = await Promise.all(parameters.map((param) => {
-        return tsTypeToSchemeable(param, {
-          path,
-          parsedSource,
-          instantiatedTypeParams,
-          tryGetFromInstantiatedParameters,
-        });
-      }));
-
-      const schemeable = await typeNameToSchemeable(typeName, {
-        path,
-        parsedSource,
-        instantiatedTypeParams: typeParams,
-        tryGetFromInstantiatedParameters,
-      });
-
-      return {
-        ...schemeable,
-        name: `${schemeable.name}${
-          typeParams.length > 0
-            ? `+${typeParams.map((p) => p.name).join("+")}`
-            : ""
-        }`,
-      };
     }
-    default:
-      return UNKNOWN;
-  }
+  };
+
+  const resolved: Schemeable = await resolve();
+  Object.assign(ref, resolved);
+  references?.delete?.(tsType);
+  return resolved;
 };
 
 export interface FunctionCanonicalDeclaration {
@@ -929,25 +846,20 @@ const findFuncFromExportNamedDeclaration = async (
       spec.type === "ExportSpecifier" &&
       (spec.exported?.value ?? spec.orig.value) === funcName
     ) {
-      const fileUrl = item.source.value.startsWith(".")
-        ? join(
-          Deno.cwd(),
-          dirname(path),
-          item.source.value,
+      const url = item.source.value.startsWith(".")
+        ? import.meta.resolve(
+          new URL(item.source.value, import.meta.resolve(path)).toString(),
         )
-        : item.source.value;
-      const from = import.meta.resolve(
-        fileUrl,
-      );
+        : import.meta.resolve(item.source.value);
       const isFromDefault = spec.orig.value === "default";
-      const newProgram = await parsePath(from);
+      const newProgram = await parsePath(url);
       if (!newProgram) {
         return undefined;
       }
       if (isFromDefault) {
-        return findDefaultFuncExport(from, newProgram);
+        return findDefaultFuncExport(url, newProgram);
       } else {
-        return findFuncExport(spec.orig.value, from, newProgram);
+        return findFuncExport(spec.orig.value, url, newProgram);
       }
     }
   }
@@ -1059,6 +971,7 @@ export const findDefaultFuncExport = async (
 export const programToBlockRef = async (
   _path: string,
   _program: ParsedSource,
+  schemeableReferences?: Map<TsType, Schemeable>,
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
   const funcNames = introspect?.funcNames ?? ["default"];
@@ -1083,7 +996,11 @@ export const programToBlockRef = async (
       functionJSDoc: undefined, //func.jsDoc && jsDocToSchema(func.jsDoc),
       functionRef: path,
       outputSchema: includeReturn && retn
-        ? await tsTypeToSchemeable(retn, { path, parsedSource })
+        ? await tsTypeToSchemeable(retn, {
+          path,
+          parsedSource,
+          references: schemeableReferences,
+        })
         : undefined,
     };
     const paramIdx = 0;
@@ -1102,6 +1019,7 @@ export const programToBlockRef = async (
       inputSchema: await tsTypeToSchemeable(typeAnnotation, {
         path,
         parsedSource,
+        references: schemeableReferences,
       }),
     };
   }
