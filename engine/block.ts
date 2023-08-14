@@ -10,7 +10,7 @@ import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index
 import {
   Program,
   TsType,
-} from "https://esm.sh/v130/@swc/core@1.2.212/types.d.ts";
+} from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSX } from "preact";
 import { BlockInvocation } from "./fresh/defaults.ts";
 

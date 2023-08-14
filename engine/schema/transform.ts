@@ -23,7 +23,7 @@ export interface SchemeableBase {
   jsDocSchema?: JSONSchema7;
   friendlyId?: string;
   id?: string; // generated on-demand
-  name?: string;
+  name: string;
   file?: string;
   anchor?: string;
 }

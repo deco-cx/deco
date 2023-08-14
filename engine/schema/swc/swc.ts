@@ -1,5 +1,7 @@
-import { parse } from "https://deno.land/x/swc@0.2.1/mod.ts";
-import { Program } from "https://esm.sh/v130/@swc/core@1.2.212/types.d.ts";
+import {
+  parse,
+  ParsedSource,
+} from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
 
 /** A Deno specific loader function that can be passed to the
  * `createModuleGraph` which will use `Deno.readTextFile` for local files, or
@@ -35,19 +37,20 @@ async function load(
   }
 }
 
-const loadCache: Record<string, Promise<Program | undefined>> = {};
+const loadCache: Record<string, Promise<ParsedSource | undefined>> = {};
 export const parsePath = (path: string) => {
   return loadCache[path] ??= load(path).then((content) => {
     if (!content) {
+      console.log("UNDEFINED", path);
+      throw new Error(`UNDEFINED ${path}`)
       return undefined;
     }
-    return parse(content.replaceAll("satisfies", "as"), {
-      target: "es2022",
-      syntax: "typescript",
-      tsx: true,
-      comments: true,
-      script: true,
-    });
+    try {
+      return parse(content);
+    } catch (err) {
+      console.log(err, path);
+      throw err;
+    }
   });
 };
 
@@ -68,7 +71,8 @@ type Mapped = {
 
 export const s = () => {
 
-}
+} satisfies FRESHCONFIG ;
+// test
 export function ss() {}
 type Omitted = Omit<FreshConfig, "key" | "otherKey">
 interface FCS extends FRESHCONFIG {
@@ -97,13 +101,6 @@ export const isFreshCtx = <TState>(
 };
 
 `,
-      {
-        target: "es2022",
-        syntax: "typescript",
-        tsx: true,
-        comments: true,
-        script: true,
-      },
     )),
   );
 }

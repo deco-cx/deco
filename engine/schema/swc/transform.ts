@@ -2,7 +2,8 @@ import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
 import { BlockModuleRef, IntrospectParams } from "$live/engine/block.ts";
 import { parsePath } from "$live/engine/schema/swc/swc.ts";
 import { Schemeable } from "$live/engine/schema/transform.ts";
-import {
+import type { ParsedSource } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
+import type {
   ArrowFunctionExpression,
   ExportNamedDeclaration,
   FunctionDeclaration,
@@ -11,7 +12,6 @@ import {
   NamedImportSpecifier,
   Param,
   Pattern,
-  Program,
   StringLiteral,
   TsArrayType,
   TsIndexedAccessType,
@@ -27,31 +27,37 @@ import {
   TsTypeAnnotation,
   TsTypeElement,
   TsTypeLiteral,
+  TsTypeParameter,
   TsTypeReference,
   TsUnionType,
-} from "https://esm.sh/v130/@swc/core@1.2.212/types.d.ts";
+} from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
-import { dirname, join } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import { ObjectSchemeable, UnknownSchemable } from "../transform.ts";
 
 export interface SchemeableTransformContext {
   path: string;
-  program: Program;
-  instantiatedTypeParams?: (() => Promise<Schemeable>)[];
+  parsedSource: ParsedSource;
+  instantiatedTypeParams?: Schemeable[];
   tryGetFromInstantiatedParameters?: (
     name: string,
-  ) => Promise<Schemeable> | undefined;
+  ) => Promise<Schemeable | undefined>;
 }
 
 const UNKNOWN: UnknownSchemable = {
+  name: "unknown",
   type: "unknown",
 };
 
 const tsTypeElementsToObjectSchemeable = async (
   tsTypeElements: TsTypeElement[],
-  { path, program, tryGetFromInstantiatedParameters }:
-    SchemeableTransformContext,
-): Promise<ObjectSchemeable> => {
+  {
+    path,
+    parsedSource,
+    instantiatedTypeParams,
+    tryGetFromInstantiatedParameters,
+  }: SchemeableTransformContext,
+): Promise<Omit<ObjectSchemeable, "name">> => {
   const keysPromise: Promise<[string, ObjectSchemeable["value"][string]]>[] =
     [];
   for (const prop of tsTypeElements) {
@@ -68,7 +74,8 @@ const tsTypeElementsToObjectSchemeable = async (
     keysPromise.push(
       tsTypeToSchemeable(prop.typeAnnotation.typeAnnotation, {
         path,
-        program,
+        parsedSource,
+        instantiatedTypeParams,
         tryGetFromInstantiatedParameters,
       })
         .then((
@@ -83,7 +90,7 @@ const tsTypeElementsToObjectSchemeable = async (
     );
   }
   const keys = await Promise.all(keysPromise);
-  const schemeable: ObjectSchemeable = {
+  const schemeable: Omit<ObjectSchemeable, "name"> = {
     type: "object",
     value: {},
   };
@@ -93,19 +100,17 @@ const tsTypeElementsToObjectSchemeable = async (
   return schemeable;
 };
 
-const tsInterfaceDeclarationToSchemeable = async (
-  dec: TsInterfaceDeclaration,
+const getFromParametersFunc = (
+  params: TsTypeParameter[],
   {
-    path,
-    program,
-    instantiatedTypeParams,
     tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
+    path,
+    parsedSource,
+    instantiatedTypeParams,
   }: SchemeableTransformContext,
-): Promise<Schemeable> => {
-  const allOfs: Promise<Schemeable>[] = [];
-  const typeParamNameToIdx: Record<string, { idx: number; default: TsType }> =
+): SchemeableTransformContext["tryGetFromInstantiatedParameters"] => {
+  const typeParamNameToIdx: Record<string, { idx: number; default?: TsType }> =
     {};
-  const params = dec.typeParams?.parameters ?? [];
 
   for (let paramIdx = 0; paramIdx < params.length; paramIdx++) {
     const param = params[paramIdx];
@@ -114,27 +119,50 @@ const tsInterfaceDeclarationToSchemeable = async (
       default: param.default,
     };
   }
-  const tryGetFromInstantiatedParameters = (
+  return async (
     name: string,
-  ): Promise<Schemeable> | undefined => {
+  ): Promise<Schemeable | undefined> => {
     const val = typeParamNameToIdx[name];
     if (!val) {
       return undefined;
     }
-    return instantiatedTypeParams?.[val.idx]?.() ??
-      _tryGetFromInstantiatedParameters?.(name) ??
-      tsTypeToSchemeable(val.default, {
-        path,
-        program,
-        instantiatedTypeParams,
-      });
+    return instantiatedTypeParams?.[val.idx] ??
+      await _tryGetFromInstantiatedParameters?.(name) ??
+      (val.default
+        ? tsTypeToSchemeable(val.default, {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
+        })
+        : undefined);
   };
+};
+const tsInterfaceDeclarationToSchemeable = async (
+  dec: TsInterfaceDeclaration,
+  {
+    path,
+    parsedSource,
+    instantiatedTypeParams,
+    tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
+  }: SchemeableTransformContext,
+): Promise<Schemeable> => {
+  const allOfs: Promise<Schemeable>[] = [];
+  const params = dec.typeParams?.parameters ?? [];
+
+  const tryGetFromInstantiatedParameters = getFromParametersFunc(params, {
+    path,
+    parsedSource,
+    instantiatedTypeParams,
+    tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
+  });
   for (const ext of dec.extends) {
     if (ext.expression.type === "Identifier") {
       allOfs.push(
         typeNameToSchemeable(ext.expression.value, {
           path,
-          program,
+          parsedSource,
+          instantiatedTypeParams,
           tryGetFromInstantiatedParameters,
         }),
       );
@@ -144,22 +172,30 @@ const tsInterfaceDeclarationToSchemeable = async (
     dec.body.body,
     {
       path,
-      program,
+      parsedSource,
+      instantiatedTypeParams,
       tryGetFromInstantiatedParameters,
     },
   );
   return {
     ...objectSchemeable,
+    file: path,
+    name: dec.id.value,
     extends: await Promise.all(allOfs),
   };
 };
 // cannot have typeParams but can have type parameters on context
 const typeNameToSchemeable = async (
   typeName: string,
-  { path, program, instantiatedTypeParams, tryGetFromInstantiatedParameters }:
-    SchemeableTransformContext,
+  {
+    path,
+    parsedSource,
+    instantiatedTypeParams,
+    tryGetFromInstantiatedParameters,
+  }: SchemeableTransformContext,
 ): Promise<Schemeable> => {
-  const val = tryGetFromInstantiatedParameters?.(typeName);
+  const { program } = parsedSource;
+  const val = await tryGetFromInstantiatedParameters?.(typeName);
   if (val) {
     return val;
   }
@@ -192,7 +228,7 @@ const typeNameToSchemeable = async (
           _spec.exported?.value ?? _spec.orig.value,
           {
             path: from,
-            program: newProgram,
+            parsedSource: newProgram,
             instantiatedTypeParams,
             tryGetFromInstantiatedParameters,
           },
@@ -206,7 +242,7 @@ const typeNameToSchemeable = async (
     ) {
       return tsInterfaceDeclarationToSchemeable(item.declaration, {
         path,
-        program,
+        parsedSource,
         instantiatedTypeParams,
         tryGetFromInstantiatedParameters,
       });
@@ -216,11 +252,20 @@ const typeNameToSchemeable = async (
       item.declaration.type === "TsTypeAliasDeclaration" &&
       item.declaration.id.value === typeName
     ) {
+      const _tryGetFromInstantiatedParameters = getFromParametersFunc(
+        item.declaration.typeParams?.parameters ?? [],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
+      );
       return tsTypeToSchemeable(item.declaration.typeAnnotation, {
         path,
-        program,
+        parsedSource,
         instantiatedTypeParams,
-        tryGetFromInstantiatedParameters,
+        tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
       });
     }
     if (
@@ -229,7 +274,7 @@ const typeNameToSchemeable = async (
     ) {
       return tsInterfaceDeclarationToSchemeable(item, {
         path,
-        program,
+        parsedSource,
         instantiatedTypeParams,
         tryGetFromInstantiatedParameters,
       });
@@ -238,11 +283,20 @@ const typeNameToSchemeable = async (
       item.type === "TsTypeAliasDeclaration" &&
       item.id.value === typeName
     ) {
+      const _tryGetFromInstantiatedParameters = getFromParametersFunc(
+        item.typeParams?.parameters ?? [],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
+      );
       return tsTypeToSchemeable(item.typeAnnotation, {
         path,
-        program,
+        parsedSource,
         instantiatedTypeParams,
-        tryGetFromInstantiatedParameters,
+        tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
       });
     }
     if (
@@ -252,22 +306,38 @@ const typeNameToSchemeable = async (
         spec.local.value === typeName
       );
       if (spec) {
-        const from = import.meta.resolve(
-          join(Deno.cwd(), dirname(path), item.source.value),
-        );
-        const newProgram = await parsePath(from);
-        if (!newProgram) {
-          return UNKNOWN;
+        try {
+          const fromTarget = item.source.value.startsWith(".")
+            ? join(
+              dirname(fromFileUrl(import.meta.resolve(
+                path,
+              ))),
+              item.source.value,
+            )
+            : import.meta.resolve(item.source.value);
+          const newProgram = await parsePath(
+            fromTarget.startsWith("http")
+              ? fromTarget
+              : fromTarget.startsWith("file")
+              ? fromTarget
+              : toFileUrl(fromTarget).toString(),
+          );
+          if (!newProgram) {
+            return UNKNOWN;
+          }
+          return typeNameToSchemeable(
+            (spec as NamedImportSpecifier)?.imported?.value ?? spec.local.value,
+            {
+              path: fromTarget,
+              parsedSource: newProgram,
+              instantiatedTypeParams,
+              tryGetFromInstantiatedParameters,
+            },
+          );
+        } catch (err) {
+          console.log(err, item.source.value, path, import.meta.resolve(path));
+          throw err;
         }
-        return typeNameToSchemeable(
-          (spec as NamedImportSpecifier)?.imported?.value ?? spec.local.value,
-          {
-            path: from,
-            program: newProgram,
-            instantiatedTypeParams,
-            tryGetFromInstantiatedParameters,
-          },
-        );
       }
     }
   }
@@ -276,8 +346,12 @@ const typeNameToSchemeable = async (
 
 const wellKnownTypeReferenceToSchemeable = async (
   ref: TsTypeReference,
-  { path, program, tryGetFromInstantiatedParameters }:
-    SchemeableTransformContext,
+  {
+    path,
+    parsedSource,
+    instantiatedTypeParams,
+    tryGetFromInstantiatedParameters,
+  }: SchemeableTransformContext,
 ): Promise<Schemeable | undefined> => {
   const typeName = ref.typeName;
   if (typeName.type !== "Identifier") {
@@ -285,48 +359,61 @@ const wellKnownTypeReferenceToSchemeable = async (
   }
   const name = typeName.value;
 
+  const typeParams = ref.typeParams?.params ?? [];
   switch (name) {
     case "Record": {
-      if (ref.typeParams.params.length !== 2) {
+      if (typeParams.length !== 2) {
         return UNKNOWN;
       }
 
-      const secondParam = ref.typeParams.params[1];
+      const secondParam = typeParams[1];
 
       const recordSchemeable = await tsTypeToSchemeable(
         secondParam,
-        { path, program, tryGetFromInstantiatedParameters },
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
 
       return {
         type: "record",
+        name: `record${recordSchemeable.name}`,
         value: recordSchemeable,
       };
     }
     case "PreactComponent": {
-      if (ref.typeParams.params.length < 1) {
+      if (typeParams.length < 1) {
         return UNKNOWN;
       }
-      const typeRef = ref.typeParams.params[0];
+      const typeRef = typeParams[0];
 
       return tsTypeToSchemeable(
         typeRef,
-        { path, program, tryGetFromInstantiatedParameters },
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
     }
     case "Response": {
       return {
         type: "inline",
+        name: "Handler",
         value: {
           $ref: "#/root/handlers",
         },
       };
     }
     case "InstanceOf": {
-      if (ref.typeParams.params.length < 2) {
+      if (typeParams.length < 2) {
         return undefined;
       }
-      const configName = ref.typeParams.params[1];
+      const configName = typeParams[1];
       if (configName.type !== "TsLiteralType") {
         return undefined;
       }
@@ -336,16 +423,17 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       return {
         type: "inline",
+        name: `InstanceOf@${btoa(literal.value)}`,
         value: {
           $ref: literal.value,
         },
       };
     }
     case "BlockInstance": {
-      if (ref.typeParams.params.length < 1) {
+      if (typeParams.length < 1) {
         return undefined;
       }
-      const configName = ref.typeParams.params[1];
+      const configName = typeParams[1];
       if (configName.type !== "TsLiteralType") {
         return undefined;
       }
@@ -355,34 +443,46 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       return {
         type: "inline",
+        name: `BlockInstance@${btoa(literal.value)}`,
         value: {
           $ref: `#/definitions/${btoa(literal.value)}`,
         },
       };
     }
     case "Resolvable": {
-      if (ref.typeParams.params.length < 1) {
+      if (typeParams.length < 1) {
         return {
           type: "inline",
+          name: "Resolvable",
           value: {
             $ref: "#/definitions/Resolvable",
           },
         };
       }
-      const typeRef = ref.typeParams.params[0];
+      const typeRef = typeParams[0];
 
       return tsTypeToSchemeable(
         typeRef,
-        { path, program, tryGetFromInstantiatedParameters },
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
     }
     case "Partial": {
-      if (ref.typeParams.params.length < 1) {
+      if (typeParams.length < 1) {
         return UNKNOWN;
       }
       const schemeable = await tsTypeToSchemeable(
-        ref.typeParams.params[0],
-        { path, program },
+        typeParams[0],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
       if (schemeable.type !== "object") { // TODO(mcandeia) support arrays, unions and intersections
         return UNKNOWN;
@@ -394,21 +494,28 @@ const wellKnownTypeReferenceToSchemeable = async (
       }
       return {
         ...schemeable,
+        name: `Partial@${schemeable.name}`,
         value: newProperties,
       };
     }
     case "Omit": {
       if (
-        ref.typeParams.params.length < 2
+        typeParams.length < 2
       ) {
         return UNKNOWN;
       }
       const schemeable = await tsTypeToSchemeable(
-        ref.typeParams.params[0],
-        { path, program, tryGetFromInstantiatedParameters },
+        typeParams[0],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
+      const keys: string[] = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
-        const omitKeys = ref.typeParams.params[1] as TsUnionType;
+        const omitKeys = typeParams[1] as TsUnionType;
         if (omitKeys?.types) {
           for (const value of omitKeys?.types) {
             if (
@@ -421,10 +528,11 @@ const wellKnownTypeReferenceToSchemeable = async (
                 .value[
                   val
                 ]);
+              keys.push(val);
             }
           }
         }
-        const omitKeysAsLiteral = ref.typeParams.params[1] as TsLiteralType;
+        const omitKeysAsLiteral = typeParams[1] as TsLiteralType;
         if (
           omitKeysAsLiteral?.type === "TsLiteralType" &&
           (omitKeysAsLiteral?.literal as TsLiteral)?.type === "StringLiteral"
@@ -433,23 +541,36 @@ const wellKnownTypeReferenceToSchemeable = async (
             ((omitKeysAsLiteral as TsLiteralType).literal as StringLiteral)
               .value;
           delete (schemeable.value[val]);
+          keys.push(val);
         }
       }
-      return schemeable;
+      keys.sort();
+      return {
+        ...schemeable,
+        name: schemeable.name && keys.length > 0
+          ? `omit${btoa(keys.join())}${schemeable.name}`
+          : schemeable.name!,
+      };
     }
     case "Pick": {
       if (
-        ref.typeParams.params.length < 2
+        typeParams.length < 2
       ) {
         return UNKNOWN;
       }
       const schemeable = await tsTypeToSchemeable(
-        ref.typeParams.params[0],
-        { path, program, tryGetFromInstantiatedParameters },
+        typeParams[0],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
+      const keys: string[] = [];
       if (schemeable.type === "object") { // TODO(mcandeia) support arrays, unions and intersections
         const newValue: typeof schemeable["value"] = {};
-        const pickKeys = ref.typeParams.params[1] as TsUnionType;
+        const pickKeys = typeParams[1] as TsUnionType;
         if (pickKeys?.types) {
           for (const value of pickKeys?.types) {
             if (
@@ -459,55 +580,78 @@ const wellKnownTypeReferenceToSchemeable = async (
               const val =
                 ((value as TsLiteralType).literal as StringLiteral).value;
               newValue[val] = schemeable.value[val];
+              keys.push(val);
             }
           }
         }
-        const omitKeysAsLiteral = ref.typeParams.params[1] as TsLiteralType;
+        const pickKeysAsLiteral = typeParams[1] as TsLiteralType;
         if (
-          omitKeysAsLiteral?.type === "TsLiteralType" &&
-          (omitKeysAsLiteral?.literal as TsLiteral)?.type === "StringLiteral"
+          pickKeysAsLiteral?.type === "TsLiteralType" &&
+          (pickKeysAsLiteral?.literal as TsLiteral)?.type === "StringLiteral"
         ) {
           const val =
-            ((omitKeysAsLiteral as TsLiteralType).literal as StringLiteral)
+            ((pickKeysAsLiteral as TsLiteralType).literal as StringLiteral)
               .value;
           newValue[val] = schemeable.value[val];
+          keys.push(val);
         }
       }
-      return schemeable;
+      keys.sort();
+      return {
+        ...schemeable,
+        name: `pick${btoa(keys.join())}${schemeable.name}`,
+      };
     }
     case "Array": {
-      if (ref.typeParams.params.length < 1) {
+      if (typeParams.length < 1) {
         return {
+          name: "array@unknown",
           type: "array",
           value: UNKNOWN,
         };
       }
       const typeSchemeable = await tsTypeToSchemeable(
-        ref.typeParams.params[0],
-        { path, program, tryGetFromInstantiatedParameters },
+        typeParams[0],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
 
       return {
         type: "array",
+        name: `array@${typeSchemeable.name}`,
         value: typeSchemeable,
       };
     }
     case "Promise": {
-      if (ref.typeParams.params.length < 1) {
+      if (typeParams.length < 1) {
         return UNKNOWN;
       }
       return tsTypeToSchemeable(
-        ref.typeParams.params[0],
-        { path, program, tryGetFromInstantiatedParameters },
+        typeParams[0],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
     }
     case "LoaderReturnType": {
-      if (ref.typeParams.params.length < 1) {
+      if (typeParams.length < 1) {
         return UNKNOWN;
       }
       return tsTypeToSchemeable(
-        ref.typeParams.params[0],
-        { path, program, tryGetFromInstantiatedParameters },
+        typeParams[0],
+        {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        },
       );
     }
   }
@@ -515,8 +659,12 @@ const wellKnownTypeReferenceToSchemeable = async (
 // cannot have typeParams but can have type parameters on context
 export const tsTypeToSchemeable = async (
   tsType: TsType,
-  { path, program, tryGetFromInstantiatedParameters }:
-    SchemeableTransformContext,
+  {
+    path,
+    parsedSource,
+    instantiatedTypeParams,
+    tryGetFromInstantiatedParameters,
+  }: SchemeableTransformContext,
 ): Promise<Schemeable> => {
   switch (tsType.type) {
     case "TsLiteralType": {
@@ -530,12 +678,16 @@ export const tsTypeToSchemeable = async (
         "BooleanLiteral": "boolean",
       };
       const value = type.literal.value;
+      const constVal = typeof value === "bigint"
+        ? value as unknown as number
+        : value;
       return {
         type: "inline",
+        name: `${constVal}`,
         value: {
           type: literalToJsonSchemaType[type.literal.type], // FIXME(mcandeia) not compliant with JSONSchema
-          const: value,
-          default: value,
+          const: constVal,
+          default: constVal,
         },
       };
     }
@@ -548,13 +700,16 @@ export const tsTypeToSchemeable = async (
       const indexType = (_indexType as TsLiteralType).literal;
       const schemeable = await tsTypeToSchemeable(type.objectType, {
         path,
-        program,
+        parsedSource,
+        instantiatedTypeParams,
         tryGetFromInstantiatedParameters,
       });
       if (schemeable.type === "object" && indexType.type === "StringLiteral") {
         const { [indexType.value]: prop } = schemeable.value;
         return {
           ...schemeable,
+          name: `${schemeable.name}idx${indexType.value}`,
+          file: path,
           value: {
             [indexType.value]: prop,
           },
@@ -564,7 +719,11 @@ export const tsTypeToSchemeable = async (
         const itemSchemeable = Array.isArray(schemeable.value)
           ? schemeable.value[indexType.value]
           : schemeable.value;
-        return itemSchemeable;
+        return {
+          ...itemSchemeable,
+          file: path,
+          name: `${schemeable.name}idx${indexType.value}`,
+        };
       }
       return UNKNOWN;
     }
@@ -572,92 +731,116 @@ export const tsTypeToSchemeable = async (
       const type = tsType as TsParenthesizedType;
       return tsTypeToSchemeable(type.typeAnnotation, {
         path,
-        program,
+        parsedSource,
+        instantiatedTypeParams,
         tryGetFromInstantiatedParameters,
       });
     }
     case "TsIntersectionType": {
       const type = tsType as TsIntersectionType;
-      return {
-        type: "intersection",
-        value: await Promise.all(
-          type.types.map((tp) =>
-            tsTypeToSchemeable(tp, {
-              path,
-              program,
-              tryGetFromInstantiatedParameters,
-            })
-          ),
+      const value = await Promise.all(
+        type.types.map((tp) =>
+          tsTypeToSchemeable(tp, {
+            path,
+            parsedSource,
+            instantiatedTypeParams,
+            tryGetFromInstantiatedParameters,
+          })
         ),
+      );
+      return {
+        file: path,
+        name: value.map((v) => v.name).join("&"),
+        type: "intersection",
+        value,
       };
     }
     case "TsUnionType": {
       const type = tsType as TsUnionType;
-      return {
-        type: "union",
-        value: await Promise.all(
-          type.types.map((tp) =>
-            tsTypeToSchemeable(tp, {
-              path,
-              program,
-              tryGetFromInstantiatedParameters,
-            })
-          ),
+      const value = await Promise.all(
+        type.types.map((tp) =>
+          tsTypeToSchemeable(tp, {
+            path,
+            parsedSource,
+            instantiatedTypeParams,
+            tryGetFromInstantiatedParameters,
+          })
         ),
+      );
+      return {
+        file: path,
+        type: "union",
+        name: value.map((v) => v.name).join("|"),
+        value,
       };
     }
     case "TsOptionalType": {
       const type = tsType as TsOptionalType;
+      const genType = await tsTypeToSchemeable(type.typeAnnotation, {
+        path,
+        parsedSource,
+        instantiatedTypeParams,
+        tryGetFromInstantiatedParameters,
+      });
       return {
         type: "union",
+        name: `union@null|${genType.name}`,
         value: [
           {
+            name: "null",
             type: "inline",
             value: {
               type: "null",
             },
           },
-          await tsTypeToSchemeable(type.typeAnnotation, {
-            path,
-            program,
-            tryGetFromInstantiatedParameters,
-          }),
+          genType,
         ],
       };
     }
     case "TsTupleType": {
       const type = tsType as TsTupleType;
+      const value = await Promise.all(
+        type.elemTypes.map((tp) =>
+          tsTypeToSchemeable(tp.ty, {
+            path,
+            parsedSource,
+            instantiatedTypeParams,
+            tryGetFromInstantiatedParameters,
+          })
+        ),
+      );
       return {
         type: "array",
-        value: await Promise.all(
-          type.elemTypes.map((tp) =>
-            tsTypeToSchemeable(tp, {
-              path,
-              program,
-              tryGetFromInstantiatedParameters,
-            })
-          ),
-        ),
+        name: `tuple@${value.map((v) => v.name).join("|")}`,
+        value,
       };
     }
     case "TsArrayType": {
       const type = tsType as TsArrayType;
+      const value = await tsTypeToSchemeable(type.elemType, {
+        path,
+        parsedSource,
+        instantiatedTypeParams,
+        tryGetFromInstantiatedParameters,
+      });
       return {
         type: "array",
-        value: await tsTypeToSchemeable(type.elemType, {
-          path,
-          program,
-          tryGetFromInstantiatedParameters,
-        }),
+        name: `array@${value.name}`,
+        value,
       };
     }
     case "TsTypeLiteral": {
       const type = tsType as TsTypeLiteral;
-      return tsTypeElementsToObjectSchemeable(type.members, {
-        path,
-        program,
-        tryGetFromInstantiatedParameters,
-      });
+      return {
+        file: path,
+        name: `typeLiteral@${tsType.span.start}-${tsType.span.end}`,
+        ...await tsTypeElementsToObjectSchemeable(type.members, {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        }),
+      };
     }
     case "TsKeywordType": {
       const type = tsType as TsKeywordType;
@@ -675,6 +858,7 @@ export const tsTypeToSchemeable = async (
       const jsonSchemaType = keywordToType[type.kind] ?? type.kind;
       return {
         type: "inline",
+        name: `literal${jsonSchemaType}`,
         value: type
           ? ({
             type: jsonSchemaType,
@@ -689,7 +873,8 @@ export const tsTypeToSchemeable = async (
       }
       const wellKnownType = await wellKnownTypeReferenceToSchemeable(type, {
         path,
-        program,
+        parsedSource,
+        instantiatedTypeParams,
         tryGetFromInstantiatedParameters,
       });
 
@@ -697,21 +882,31 @@ export const tsTypeToSchemeable = async (
         return wellKnownType;
       }
       const typeName = type.typeName.value;
-      const typeParams = type.typeParams?.params?.map((param) => {
-        return () =>
-          tsTypeToSchemeable(param, {
-            path,
-            program,
-            tryGetFromInstantiatedParameters,
-          });
-      });
+      const parameters = type.typeParams?.params ?? [];
+      const typeParams = await Promise.all(parameters.map((param) => {
+        return tsTypeToSchemeable(param, {
+          path,
+          parsedSource,
+          instantiatedTypeParams,
+          tryGetFromInstantiatedParameters,
+        });
+      }));
 
-      return await typeNameToSchemeable(typeName, {
+      const schemeable = await typeNameToSchemeable(typeName, {
         path,
-        program,
+        parsedSource,
         instantiatedTypeParams: typeParams,
         tryGetFromInstantiatedParameters,
       });
+
+      return {
+        ...schemeable,
+        name: `${schemeable.name}${
+          typeParams.length > 0
+            ? `+${typeParams.map((p) => p.name).join("+")}`
+            : ""
+        }`,
+      };
     }
     default:
       return UNKNOWN;
@@ -721,7 +916,7 @@ export const tsTypeToSchemeable = async (
 export interface FunctionCanonicalDeclaration {
   exp: FunctionExpression | FunctionDeclaration | ArrowFunctionExpression;
   path: string;
-  program: Program;
+  parsedSource: ParsedSource;
 }
 const findFuncFromExportNamedDeclaration = async (
   funcName: string,
@@ -762,9 +957,9 @@ const findFuncFromExportNamedDeclaration = async (
 const findFunc = async (
   funcName: string,
   path: string,
-  program: Program,
+  parsedSource: ParsedSource,
 ): Promise<[FunctionCanonicalDeclaration, boolean] | undefined> => {
-  for (const item of program.body) {
+  for (const item of parsedSource.program.body) {
     if (item.type === "ExportNamedDeclaration") {
       const found = await findFuncFromExportNamedDeclaration(
         funcName,
@@ -780,7 +975,7 @@ const findFunc = async (
       item.type === "FunctionDeclaration" &&
       item.identifier.value === funcName
     ) {
-      return [{ path, program, exp: item }, false];
+      return [{ path, parsedSource, exp: item }, false];
     }
 
     if (
@@ -791,7 +986,7 @@ const findFunc = async (
           decl.id.type === "Identifier" && decl.id.value === funcName &&
           decl.init && decl.init.type === "ArrowFunctionExpression"
         ) {
-          return [{ path, program, exp: decl.init }, false];
+          return [{ path, parsedSource, exp: decl.init }, false];
         }
       }
     }
@@ -801,7 +996,7 @@ const findFunc = async (
       item.declaration.type === "FunctionDeclaration" &&
       item.declaration.identifier.value === funcName
     ) {
-      return [{ path, program, exp: item.declaration }, true];
+      return [{ path, parsedSource, exp: item.declaration }, true];
     }
 
     if (
@@ -813,7 +1008,7 @@ const findFunc = async (
           decl.id.type === "Identifier" && decl.id.value === funcName &&
           decl.init && decl.init.type === "ArrowFunctionExpression"
         ) {
-          return [{ path, program, exp: decl.init }, true];
+          return [{ path, parsedSource, exp: decl.init }, true];
         }
       }
     }
@@ -822,7 +1017,7 @@ const findFunc = async (
 const findFuncExport = async (
   funcName: string,
   path: string,
-  program: Program,
+  program: ParsedSource,
 ): Promise<FunctionCanonicalDeclaration | undefined> => {
   const func = await findFunc(funcName, path, program);
   if (!func) {
@@ -832,21 +1027,21 @@ const findFuncExport = async (
 };
 export const findDefaultFuncExport = async (
   path: string,
-  program: Program,
+  parsedSource: ParsedSource,
 ): Promise<FunctionCanonicalDeclaration | undefined> => {
-  for (const item of program.body) {
+  for (const item of parsedSource.program.body) {
     if (
       item.type === "ExportDefaultExpression" &&
       item.expression.type === "Identifier"
     ) {
-      const func = await findFunc(item.expression.value, path, program);
+      const func = await findFunc(item.expression.value, path, parsedSource);
       return func?.[0];
     }
     if (
       item.type === "ExportDefaultDeclaration" &&
       item.decl.type === "FunctionExpression"
     ) {
-      return { exp: item.decl, path, program };
+      return { exp: item.decl, path, parsedSource };
     }
     if (item.type === "ExportNamedDeclaration") {
       const found = await findFuncFromExportNamedDeclaration(
@@ -863,7 +1058,7 @@ export const findDefaultFuncExport = async (
 };
 export const programToBlockRef = async (
   _path: string,
-  _program: Program,
+  _program: ParsedSource,
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
   const funcNames = introspect?.funcNames ?? ["default"];
@@ -876,7 +1071,7 @@ export const programToBlockRef = async (
     }
 
     const includeReturn = introspect?.includeReturn;
-    const { exp: func, path, program } = fn;
+    const { exp: func, path, parsedSource } = fn;
 
     const retn = typeof includeReturn === "function"
       ? func.returnType
@@ -888,7 +1083,7 @@ export const programToBlockRef = async (
       functionJSDoc: undefined, //func.jsDoc && jsDocToSchema(func.jsDoc),
       functionRef: path,
       outputSchema: includeReturn && retn
-        ? await tsTypeToSchemeable(retn, { path, program })
+        ? await tsTypeToSchemeable(retn, { path, parsedSource })
         : undefined,
     };
     const paramIdx = 0;
@@ -904,7 +1099,10 @@ export const programToBlockRef = async (
     }
     return {
       ...baseBlockRef,
-      inputSchema: { ...await tsTypeToSchemeable(typeAnnotation, { path, program }), file: "https://denopkg.com/deco-cx/deco@1.2.3/a.ts", name: `${Math.random()}` },
+      inputSchema: await tsTypeToSchemeable(typeAnnotation, {
+        path,
+        parsedSource,
+      }),
     };
   }
   return undefined;

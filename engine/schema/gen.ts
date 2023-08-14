@@ -65,7 +65,6 @@ export const genSchemasFromManifest = async (
               import.meta.resolve(blockModuleKey),
               blockModuleKey,
             ]);
-
       const programPromise = parsePath(blockPath);
       modulesPromises.push(programPromise.then(async (doc) => {
         if (!doc) {
@@ -106,7 +105,7 @@ export const genSchemasFromManifest = async (
     (builder, mod) => mod ? builder.withBlockSchema(mod) : builder,
     schemaBuilder,
   );
-  console.log(JSON.stringify(schema.build(dir, context.namespace!)))
+  console.log(JSON.stringify(schema.build(dir, context.namespace!)));
   return schema.build(dir, context.namespace!);
 };
 

@@ -4,17 +4,14 @@ import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
 import { isDeferred } from "$live/engine/core/resolver.ts";
 import { context } from "$live/live.ts";
-import {
-  TsType,
-  TsTypeReference,
-} from "https://esm.sh/v130/@swc/core@1.2.212/types.d.ts";
+import { TsType, TsTypeReference } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
-export interface FlagObj<T = unknown> {
+export interface FlagObj<TVariant = unknown> {
   matcher: Matcher;
   name: string;
-  true: T;
-  false: T;
+  true: TVariant;
+  false: TVariant;
 }
 
 /**
