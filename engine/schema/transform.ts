@@ -31,7 +31,6 @@ import type {
   TsUnionType,
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
-import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import { spannableToJsDoc } from "./comments.ts";
 import { parsePath } from "./parser.ts";
 export interface SchemeableBase {
@@ -253,16 +252,12 @@ export const typeNameToSchemeable = async (
       if (spec) {
         const _spec = spec as NamedExportSpecifier;
         const source = (item as ExportNamedDeclaration).source!.value;
-        const fileUrl = source.startsWith(".")
-          ? join(
-            Deno.cwd(),
-            dirname(path),
-            (item as ExportNamedDeclaration).source!.value,
+
+        const from = source.startsWith(".")
+          ? import.meta.resolve(
+            new URL(source, import.meta.resolve(path)).toString(),
           )
-          : source;
-        const from = import.meta.resolve(
-          fileUrl,
-        );
+          : import.meta.resolve(source);
         const newProgram = await parsePath(from);
         if (!newProgram) {
           return UNKNOWN;
@@ -297,14 +292,13 @@ export const typeNameToSchemeable = async (
         item.declaration.typeParams?.parameters ?? [],
         ctx,
       );
+      console.log(item.declaration.typeAnnotation);
       return {
-        file: path,
         jsDocSchema: spannableToJsDoc(item),
         ...await tsTypeToSchemeable(item.declaration.typeAnnotation, {
           ...ctx,
           tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
         }),
-        name: item.declaration.id.value,
       };
     }
     if (
@@ -331,7 +325,6 @@ export const typeNameToSchemeable = async (
           ...ctx,
           tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
         }),
-        name: item.id.value,
       };
     }
     if (
@@ -342,24 +335,13 @@ export const typeNameToSchemeable = async (
       );
       if (spec) {
         try {
-          const pathResolved = import.meta.resolve(
-            path,
-          );
-          const url = pathResolved.startsWith("file")
-            ? fromFileUrl(pathResolved)
-            : pathResolved;
-          const fromTarget = item.source.value.startsWith(".")
-            ? join(
-              dirname(url),
-              item.source.value,
+          const from = item.source.value.startsWith(".")
+            ? import.meta.resolve(
+              new URL(item.source.value, import.meta.resolve(path)).toString(),
             )
             : import.meta.resolve(item.source.value);
           const newProgram = await parsePath(
-            fromTarget.startsWith("http")
-              ? fromTarget
-              : fromTarget.startsWith("file")
-              ? fromTarget
-              : toFileUrl(fromTarget).toString(),
+            from,
           );
           if (!newProgram) {
             return UNKNOWN;
@@ -368,7 +350,7 @@ export const typeNameToSchemeable = async (
             (spec as NamedImportSpecifier)?.imported?.value ?? spec.local.value,
             {
               ...ctx,
-              path: fromTarget,
+              path: from,
               parsedSource: newProgram,
             },
           );
@@ -733,8 +715,10 @@ export const tsTypeToSchemeable = async (
         const value = await Promise.all(
           type.types.map((tp) => tsTypeToSchemeable(tp, ctx)),
         );
+        const files = value.map((f) => f.file).filter(Boolean).join("-");
+        const filePath = files.length === 0 ? undefined : files;
         return {
-          file: path,
+          file: filePath,
           name: value.map((v) => v.name).join("&"),
           type: "intersection",
           value,
@@ -745,8 +729,10 @@ export const tsTypeToSchemeable = async (
         const value = await Promise.all(
           type.types.map((tp) => tsTypeToSchemeable(tp, ctx)),
         );
+        const files = value.map((f) => f.file).filter(Boolean).join("-");
+        const filePath = files.length === 0 ? undefined : files;
         return {
-          file: path,
+          file: filePath,
           type: "union",
           name: value.map((v) => v.name).join("|"),
           value,
@@ -756,6 +742,7 @@ export const tsTypeToSchemeable = async (
         const type = tsType as TsOptionalType;
         const genType = await tsTypeToSchemeable(type.typeAnnotation, ctx);
         return {
+          file: genType.file,
           type: "union",
           name: `union@null|${genType.name}`,
           value: [
@@ -775,16 +762,20 @@ export const tsTypeToSchemeable = async (
         const value = await Promise.all(
           type.elemTypes.map((tp) => tsTypeToSchemeable(tp.ty, ctx)),
         );
+        const files = value.map((f) => f.file).filter(Boolean).join("-");
+        const filePath = files.length === 0 ? undefined : files;
         return {
           type: "array",
           name: `tp@${value.map((v) => v.name).join("|")}`,
           value,
+          file: filePath,
         };
       }
       case "TsArrayType": {
         const type = tsType as TsArrayType;
         const value = await tsTypeToSchemeable(type.elemType, ctx);
         return {
+          file: value.file,
           type: "array",
           name: `${value.name}[]`,
           value,

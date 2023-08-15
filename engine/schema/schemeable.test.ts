@@ -317,7 +317,7 @@ Deno.test("Union types generation", async () => {
         title: "Name",
         required: true,
         schemeable: {
-          file: path,
+          file: undefined,
           name: "string|number",
           value: [
             { type: "inline", value: { type: "string" }, name: "string" },
@@ -355,7 +355,7 @@ Deno.test("Union types generation", async () => {
   assertSpyCall(genId, 1, {
     args: [
       {
-        file: path,
+        file: undefined,
         name: "string|number",
         type: "union",
         value: [
@@ -387,6 +387,7 @@ Deno.test("Array fields generation", async () => {
         jsDocSchema: {},
         title: "Array",
         schemeable: {
+          file: undefined,
           name: "string[]",
           type: "array",
           value: { type: "inline", value: { type: "string" }, name: "string" },
@@ -421,6 +422,7 @@ Deno.test("Array fields generation", async () => {
   assertSpyCall(genId, 1, {
     args: [
       {
+        file: undefined,
         name: "string[]",
         type: "array",
         value: { type: "inline", value: { type: "string" }, name: "string" },

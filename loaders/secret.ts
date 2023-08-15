@@ -25,7 +25,7 @@ export interface Props {
 const cache: Record<string, Promise<string>> = {};
 
 /**
- * @title Secret 2
+ * @title Secret
  */
 export default function Secret(
   props: Props,
