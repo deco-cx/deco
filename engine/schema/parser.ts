@@ -2,6 +2,8 @@ import {
   parse,
   ParsedSource,
 } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
+import { assignComments } from "./comments.ts";
+import { programToBlockRef } from "./transform.ts";
 
 /** A Deno specific loader function that can be passed to the
  * `createModuleGraph` which will use `Deno.readTextFile` for local files, or
@@ -39,12 +41,14 @@ async function load(
 
 const loadCache: Record<string, Promise<ParsedSource | undefined>> = {};
 export const parsePath = (path: string) => {
-  return loadCache[path] ??= load(path).then((content) => {
+  return loadCache[path] ??= load(path).then(async (content) => {
     if (!content) {
       throw new Error(`Path not found ${path}`);
     }
     try {
-      return parse(content);
+      const source = await parse(content);
+      assignComments(source);
+      return source;
     } catch (err) {
       console.log(err, path);
       throw err;
@@ -54,54 +58,28 @@ export const parsePath = (path: string) => {
 
 if (import.meta.main) {
   console.log(
-    JSON.stringify(await parse(
-      `import { HandlerContext } from "$fresh/server.ts";
-import { Page } from "$live/blocks/page.ts";
-import { RouterContext } from "$live/types.ts";
-import { allowCorsFor } from "$live/utils/http.ts";
-import { ConnInfo } from "std/http/server.ts";
-import { FreshConfig as FRESHCONFIG } from "$live/fresh.ts";
-export { default, loader } from "$store/components/ui/CategoryBanner.tsx";
-
-type Mapped = {
-  [key in keyof FreshConfig]?: FreshConfig[key];
-}
-
-export const s = () => {
-
-} satisfies FRESHCONFIG;
-// test
-
-
-export function ss() {}
-type Omitted = Omit<FreshConfig, "key" | "otherKey">
-interface FCS extends FRESHCONFIG {
-  /**
-   * @max 100
-   */
+    JSON.stringify(
+      await parse(
+        `
+const s = 10;
+/**
+ * @title SISIS
+ */
+interface IS {
+  // teste 3
   a: string
-  b: 10
-  c?: string
-  d: {
-    k: number;
-  }
-  sssss: Partial<FRESHCONFIG>;
-  kkkk: Record<string, number>;
-  sss: Promise<string>;
-  kk: string[]
-  kkk: Array<string>
-  x: ConnInfo["abcde"]
-  y: number | string | ConnInfo["abcdef"]
 }
-type FC = FRESHCONFIG
-
-export { FCS };
-export const isFreshCtx = <TState>(
-  ctx: ConnInfo | HandlerContext<unknown, TState>,
-): ctx is HandlerContext<unknown, TState> => {
-  return typeof (ctx as HandlerContext).render === "function";
-};
-`,
-    )),
+/**
+ * @title TESTE
+ */
+export default function TESTE(ts: IS) {
+  // my const
+  const s = 10;
+}
+        `,
+      ).then((s) => {
+        return programToBlockRef("./teste.ts", s);
+      }),
+    ),
   );
 }

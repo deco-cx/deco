@@ -11,13 +11,7 @@ import {
 } from "$live/engine/core/resolver.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { resolversFrom } from "$live/engine/fresh/manifest.ts";
-import {
-  DOC_CACHE_FILE_NAME,
-  hydrateDocCacheWith,
-} from "$live/engine/schema/docCache.ts";
 import { DecoManifest, FnContext } from "$live/types.ts";
-import { once, SyncOnce } from "$live/utils/sync.ts";
-import { fromFileUrl } from "std/path/mod.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 
@@ -244,23 +238,12 @@ const buildApp = (extend: ExtensionFunc) =>
   const runtime = isAppRuntime(appRuntime)
     ? appRuntime
     : buildRuntimeFromApp<TState>(appRuntime);
-  const { name, docCacheFileUrl } = appRuntime;
-  const baseKey = import.meta.resolve(`${name}/`);
-  const fileUrl = docCacheFileUrl ?? `${baseKey}${DOC_CACHE_FILE_NAME}`;
-  hydrateOnce[name] ??= once<void>();
-  hydrateOnce[name].do(() => {
-    return hydrateDocCacheWith(
-      fileUrl.startsWith("file:") ? fromFileUrl(fileUrl) : fileUrl,
-      baseKey,
-    );
-  });
   const dependencies: AppRuntime[] = (runtime.dependencies ?? []).map(
     buildApp(extend),
   );
   extend(runtime);
   return dependencies.reduce(mergeRuntimes, runtime);
 };
-const hydrateOnce: Record<string, SyncOnce<void>> = {};
 const appBlock: Block<AppModule> = {
   type: "apps",
   adapt: <

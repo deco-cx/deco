@@ -57,10 +57,10 @@ export const handler = async (
 ): Promise<Response> => {
   if (req.headers.get("upgrade") != "websocket") {
     const props = await getPropsFromRequest(req);
-    return await render(req.url, await props, req, ctx)
+    return await render(req.url, await props, req, ctx);
   }
   const { socket, response } = Deno.upgradeWebSocket(req);
-  const cache: Record<string, Promise<string>> = {}
+  const cache: Record<string, Promise<string>> = {};
   socket.onopen = () => {
     ctx.state.log("connected to render socket.");
   };
@@ -68,27 +68,34 @@ export const handler = async (
     const data = JSON.parse(e.data);
     const key = data.key;
     const props = JSON.parse(data.props);
-    cache[key] ??= render(data.url, props, req, ctx).then((response) => response.text().then(function (html) {
-      const response = JSON.stringify({
-        html,
-        key,
-      });
-      return response;
-    }));
+    cache[key] ??= render(data.url, props, req, ctx).then((response) =>
+      response.text().then(function (html) {
+        const response = JSON.stringify({
+          html,
+          key,
+        });
+        return response;
+      })
+    );
     socket.send(await cache[key]);
   };
   socket.onclose = () => ctx.state.log("render socket closed.");
   socket.onerror = (e) => ctx.state.log("render socket error:", e);
   return response;
-}
+};
 
-export const render = async (previewUrl: string, props: any, req: Request, ctx: HandlerContext<
-  unknown,
-  LiveConfig<unknown, LiveState>
->) => {
+export const render = async (
+  previewUrl: string,
+  props: any,
+  req: Request,
+  ctx: HandlerContext<
+    unknown,
+    LiveConfig<unknown, LiveState>
+  >,
+) => {
   const { state: { resolve } } = ctx;
   const url = new URL(previewUrl);
-  const block = addLocal(url.pathname.replace(/^\/live\/previews\//, ''))
+  const block = addLocal(url.pathname.replace(/^\/live\/previews\//, ""));
 
   const end = ctx.state?.t.start("load-data");
   const [params, pathname] = paramsFromUrl(url);

@@ -1,24 +1,14 @@
-import { TransformContext } from "$live/engine/schema/transform.ts";
-import { context } from "$live/live.ts";
 import {
-  DocNode,
-  DocNodeFunction,
   JsDoc,
   JsDocTag,
   JsDocTagValued,
-  TsTypeDef,
-  TsTypeFnOrConstructorDef,
 } from "https://deno.land/x/deno_doc@0.59.0/lib/types.d.ts";
-import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
-import { fromFileUrl } from "std/path/mod.ts";
-
-const limit = pLimit(5);
 
 /**
  * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
  * For instance, maxLength and maxItems have to be parsed to number. readOnly should be a boolean etc
  */
-const parseJSDocAttribute = (key: string, value: string) => {
+export const parseJSDocAttribute = (key: string, value: string) => {
   switch (key) {
     case "maximum":
     case "exclusiveMaximum":
@@ -68,20 +58,6 @@ export const jsDocToSchema = (node: JsDoc) =>
     )
     : undefined;
 
-export const findExport = (name: string, root: DocNode[]) => {
-  const node = root.find(
-    (n) => n.name === name && n.declarationKind === "export",
-  );
-
-  if (!node) {
-    console.error(
-      `Could not find export for ${name}. Are you exporting all necessary elements?`,
-    );
-  }
-
-  return node;
-};
-
 /**
  * Transforms myPropName into "My Prop Name" for cases
  * when there's no label specified
@@ -103,7 +79,6 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-export const denoDocLocalCache: Record<string, Promise<DocNode[]>> = {};
 
 export const exec = async (cmd: string[]) => {
   const process = Deno.run({ cmd, stdout: "piped", stderr: "piped" });
@@ -122,189 +97,4 @@ export const exec = async (cmd: string[]) => {
   }
 
   return new TextDecoder().decode(stdout);
-};
-
-const docAsExec = async (
-  path: string,
-  _?: string,
-): Promise<DocNode[]> => {
-  return await limit(async () =>
-    JSON.parse(await exec([Deno.execPath(), "doc", "--json", path]))
-  ); // FIXME(mcandeia) add --private when stable
-};
-
-interface DocCache {
-  docNodes: DocNode[];
-  lastModified: number;
-}
-/**
- * Determines whether an error is a QuotaExceededError.
- *
- * Browsers love throwing slightly different variations of QuotaExceededError
- * (this is especially true for old browsers/versions), so we need to check
- * different fields and values to ensure we cover every edge-case.
- *
- * @param err - The error to check
- * @return Is the error a QuotaExceededError?
- */
-function isQuotaExceededError(err: unknown): boolean {
-  return (
-    err instanceof DOMException &&
-    // everything except Firefox
-    (err.code === 22 ||
-      // Firefox
-      err.code === 1014 ||
-      // test name field too, because code might not be present
-      // everything except Firefox
-      err.name === "QuotaExceededError" ||
-      // Firefox
-      err.name === "NS_ERROR_DOM_QUOTA_REACHED")
-  );
-}
-
-export const denoDoc = async (
-  path: string,
-  _importMap?: string,
-): Promise<DocNode[]> => {
-  try {
-    const docCacheKey = path;
-    if (context.isDeploy) {
-      const cached = denoDocLocalCache[docCacheKey];
-      if (!cached) {
-        throw new Error(
-          `could not resolve ${docCacheKey} on denodoc. Create denodoc cache locally with "deno task start --gen-only" and push the doccache.zst file`,
-        );
-      }
-      return cached;
-    }
-    const isLocal = path.startsWith("file");
-    const lastModified = isLocal
-      ? await Deno.stat(new URL(path)).then((s) =>
-        s.mtime?.getTime() ?? Date.now() // when the platform doesn't support mtime so we should not cache at
-      )
-      : 0; // remote http modules can be cached forever;
-    const current = localStorage.getItem(path);
-    if (current) {
-      const parsed: DocCache = JSON.parse(current);
-      if (parsed.lastModified === lastModified) {
-        return denoDocLocalCache[docCacheKey] ??= Promise.resolve(
-          parsed.docNodes,
-        );
-      }
-    }
-    denoDocLocalCache[docCacheKey] ??= docAsExec(path);
-    denoDocLocalCache[docCacheKey].then((doc) => {
-      try {
-        localStorage.setItem(
-          path,
-          JSON.stringify({ docNodes: doc, lastModified }),
-        );
-      } catch (err) {
-        if (isQuotaExceededError(err)) {
-          localStorage.clear();
-        }
-      }
-    });
-    return denoDocLocalCache[docCacheKey];
-  } catch (err) {
-    console.warn("deno doc error, ignoring", err);
-    return [];
-  }
-};
-
-export interface TypeRef {
-  typeName: string;
-  importUrl: string;
-}
-
-export const isFunctionDef = (node: DocNode): node is DocNodeFunction => {
-  return node.kind === "function";
-};
-
-export interface FunctionTypeDef {
-  name: string;
-  params: TsTypeDef[];
-  return: TsTypeDef;
-}
-
-export const isFnOrConstructor = (
-  tsType: TsTypeDef,
-): tsType is TsTypeFnOrConstructorDef => {
-  return tsType.kind === "fnOrConstructor";
-};
-
-export const fnDefinitionRoot = async (
-  ctx: TransformContext,
-  node: DocNode,
-  currRoot: [string, DocNode[]],
-): Promise<[FunctionTypeDef | undefined, [string, DocNode[]]]> => {
-  const fn = nodeToFunctionDefinition(node);
-  if (!fn) {
-    return [undefined, currRoot];
-  }
-  const fileName = node.location.filename;
-  const importedFrom = fileName.startsWith("file://")
-    ? fromFileUrl(fileName).replace(ctx.base, ".")
-    : fileName;
-  if (importedFrom !== currRoot[0]) {
-    return [fn, [importedFrom, await denoDoc(fileName)]];
-  }
-  return [fn, currRoot];
-};
-
-export const nodeToFunctionDefinition = (
-  node: DocNode,
-): FunctionTypeDef | undefined => {
-  if (isFunctionDef(node) && node.declarationKind === "export") {
-    return {
-      name: node.name,
-      params: node.functionDef.params.map(({ tsType }) => tsType!),
-      return: node.functionDef.returnType!,
-    };
-  }
-  if (node.kind === "variable") {
-    const variableTsType = node.variableDef.tsType;
-    if (!variableTsType) {
-      return undefined;
-    }
-    if (isFnOrConstructor(variableTsType)) {
-      return {
-        name: node.name,
-        params: variableTsType.fnOrConstructor.params.map(
-          ({ tsType }) => tsType!,
-        ),
-        return: variableTsType.fnOrConstructor.tsType,
-      };
-    }
-    if (
-      variableTsType.kind === "typeRef" &&
-      variableTsType.typeRef.typeName === "LoaderFunction"
-    ) {
-      const params = variableTsType.typeRef.typeParams;
-      if (!params || params.length < 2) {
-        return undefined;
-      }
-      return {
-        name: node.name,
-        params: [params[0]],
-        return: params[1],
-      };
-    }
-
-    if (
-      variableTsType.kind === "typeRef" &&
-      variableTsType.typeRef.typeName === "PropsLoader"
-    ) {
-      const params = variableTsType.typeRef.typeParams;
-      if (!params || params.length < 2) {
-        return undefined;
-      }
-      return {
-        name: node.name,
-        params: [params[0], params[1]],
-        return: params[1],
-      };
-    }
-  }
-  return undefined;
 };

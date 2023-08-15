@@ -7,10 +7,7 @@ import type { Manifest } from "$live/live.gen.ts";
 import { DecoManifest } from "$live/types.ts";
 import { TsTypeDef } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import {
-  Program,
-  TsType,
-} from "https://esm.sh/v130/@swc/wasm@1.3.76";
+import { Program, TsType } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSX } from "preact";
 import { BlockInvocation } from "./fresh/defaults.ts";
 
@@ -40,8 +37,8 @@ export type ModuleOf<TBlock> = TBlock extends Block<
   : never;
 
 export interface IntrospectParams {
-    includeReturn?: boolean | ((ts: TsType) => TsType | undefined);
-    funcNames?: string[];
+  includeReturn?: boolean | ((ts: TsType) => TsType | undefined);
+  funcNames?: string[];
 }
 
 export interface Block<

@@ -189,9 +189,12 @@ export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
   return JSON.parse(decodeURIComponent(atob(props)));
 };
 
-export const allowCorsFor = (req?: Request): Record<string, string> => allowCorsForOrigin(req?.headers?.get("origin") ?? "*");
+export const allowCorsFor = (req?: Request): Record<string, string> =>
+  allowCorsForOrigin(req?.headers?.get("origin") ?? "*");
 
-export const allowCorsForOrigin = (...origin: string[]): Record<string, string> => ({
+export const allowCorsForOrigin = (
+  ...origin: string[]
+): Record<string, string> => ({
   "Access-Control-Allow-Origin": origin.join(","),
   "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
