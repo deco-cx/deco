@@ -110,7 +110,7 @@ export const genSchemasFromManifest = async (
     (builder, mod) => mod ? builder.withBlockSchema(mod) : builder,
     schemaBuilder,
   );
-  return schema.build(dir, context.namespace!);
+  return schema.build();
 };
 
 const wellKnownLiveRoutes: Record<string, [string, string, string]> =

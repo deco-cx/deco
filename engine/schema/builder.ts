@@ -2,7 +2,6 @@ import { JSONSchema7 } from "$live/deps.ts";
 import { mergeJSONSchemas } from "$live/engine/schema/merge.ts";
 import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
 import { Schemeable } from "$live/engine/schema/transform.ts";
-import { fileSeparatorToSlash } from "$live/utils/filesystem.ts";
 
 export interface Schemas {
   definitions: Record<string, JSONSchema7>;
@@ -125,50 +124,15 @@ export interface SchemaBuilder {
   data: SchemaData;
   /**
    * Build the final schema.
-   * @param base the current directory.
-   * @param namespace the current repository namespace.
    * @returns the built Schemas.
    */
-  build(base: string, namespace: string): Schemas;
+  build(): Schemas;
   /**
    * Add a new block schema to the schema.
    * @param blockSchema is the refernece to the configuration input and the blockfunction output
    */
   withBlockSchema(blockSchema: BlockModule | EntrypointModule): SchemaBuilder;
 }
-
-/**
- * Best effort function. Trying to guess the organization/repository of a given file.
- * fallsback to the complete file address.
- * @param base is the current directory
- * @param namespace is the current namespace
- * @returns the canonical file representation. e.g deco-sites/std/types.ts
- */
-const canonicalFileWith =
-  (base: string, namespace: string) => (file: string): string => {
-    if (file.startsWith("https://denopkg.com")) {
-      const [url, versionAndFile] = file.split("@");
-      const [_ignoreVersion, ...files] = versionAndFile.split("/");
-      return url.substring("https://denopkg.com".length + 1) + "/" +
-        files.join("/");
-    }
-    if (file.startsWith("https://cdn.jsdelivr.net/gh")) {
-      const [url, versionAndFile] = file.split("@");
-      const [_ignoreVersion, ...files] = versionAndFile.split("/");
-      return url.substring("https://cdn.jsdelivr.net/gh".length + 1) + "/" +
-        files.join("/");
-    }
-    if (file.startsWith(base)) { // file url
-      return `${namespace}${file.replace(base, "")}`;
-    }
-    if (file.startsWith("http")) {
-      const url = new URL(file);
-      // trying to guess, best effort
-      const [_, org, repo, _skipVersion, ...rest] = url.pathname.split("/");
-      return `${org}/${repo}/${rest.join("/")}`;
-    }
-    return file;
-  };
 
 const isEntrypoint = (
   m: BlockModule | EntrypointModule,
@@ -204,16 +168,14 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         blockModules: [...initial.blockModules, schema],
       });
     },
-    build(base: string, namespace: string) {
-      // Utility functions
-      const canonical = canonicalFileWith(
-        fileSeparatorToSlash(base),
-        namespace,
-      );
+    build() {
       const schemeableId = (
         schemeable: Schemeable,
+        resolvePath = true,
       ): [string | undefined, string | undefined] => {
-        const file = schemeable.file ? canonical(schemeable.file) : undefined;
+        const file = schemeable.file
+          ? resolvePath ? import.meta.resolve(schemeable.file) : schemeable.file
+          : undefined;
         if (schemeable.id) {
           return [schemeable.id, file];
         }
@@ -236,9 +198,10 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const addSchemeable = (
         def: Schemas["definitions"],
         schemeable?: Schemeable,
+        resolvePath = true,
       ): [Schemas["definitions"], string | undefined] => {
         if (schemeable) {
-          const [id, file] = schemeableId(schemeable);
+          const [id, file] = schemeableId(schemeable, resolvePath);
           const currSchemeable = {
             friendlyId: file && schemeable.name
               ? `${file}@${schemeable.name}`
@@ -287,7 +250,11 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       const [definitionsWithFuncRefs, root] = functionRefs.reduce(
         ([currentDefinitions, currentRoot], rs) => {
           const schemeable = functionRefToSchemeable(rs);
-          const [nDef, id] = addSchemeable(currentDefinitions, schemeable);
+          const [nDef, id] = addSchemeable(
+            currentDefinitions,
+            schemeable,
+            false,
+          );
           const currAnyOf = currentRoot[rs.blockType]?.anyOf;
           const currAnyOfs = currAnyOf ??
             [resolvableRef];
