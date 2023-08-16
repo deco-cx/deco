@@ -1,6 +1,5 @@
 import { JSONSchema7 } from "$live/deps.ts";
 import { ParsedSource } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
-import { parse as parseComment } from "https://esm.sh/comment-parser@1.4.0";
 import type { HasSpan } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { parseJSDocAttribute } from "./utils.ts";
 
@@ -88,18 +87,16 @@ export const assignComments = (program: ParsedSource) => {
 export const commentsFromSpannable = (item: any) => {
   return (item as unknown as { comments: Comment[] })?.comments ?? [];
 };
-
 const commentsToJsDoc = (comments: Comment[]): JSONSchema7 => {
+  const jsdocRegex = /@(\w+)\s+([^\n@]+)/g;
   const jsDoc: Record<string, number | string | boolean> = {};
 
   for (const comment of comments) {
-    for (const parsed of parseComment(`/*${comment.text}*/`)) {
-      for (const tag of parsed.tags) {
-        const val = `${tag.name}${
-          tag.description.length > 0 ? ` ${tag.description}` : ""
-        }`;
-        jsDoc[tag.tag] = parseJSDocAttribute(tag.tag, val);
-      }
+    let match;
+
+    while ((match = jsdocRegex.exec(comment.text))) {
+      const [, tag, value] = match;
+      jsDoc[tag] = parseJSDocAttribute(tag, value.trim());
     }
   }
   return jsDoc as JSONSchema7;

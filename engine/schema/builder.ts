@@ -84,7 +84,7 @@ const withNotResolveType = (
  * properties: { __resolveType: "deco-sites/std/myBooleanFunction.ts"}
  * }
  */
-const functionRefToSchemeable = ({
+const blockFunctionToSchemeable = ({
   functionKey,
   inputSchemaId,
   functionJSDoc,
@@ -223,6 +223,11 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           ([def, resolvers], mod) => {
             const [defOut, idOut] = addSchemeable(def, mod.outputSchema);
             const [defIn, idIn] = addSchemeable(defOut, mod.inputSchema);
+            if (
+              mod.functionKey === "deco-sites/std/functions/requestToParam.ts"
+            ) {
+              console.log(mod, idOut);
+            }
             return [
               defIn,
               [
@@ -248,14 +253,14 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
 
       // for all function refs add the function schemeable to all schema outputs
       const [definitionsWithFuncRefs, root] = functionRefs.reduce(
-        ([currentDefinitions, currentRoot], rs) => {
-          const schemeable = functionRefToSchemeable(rs);
+        ([currentDefinitions, currentRoot], blockFunction) => {
+          const schemeable = blockFunctionToSchemeable(blockFunction);
           const [nDef, id] = addSchemeable(
             currentDefinitions,
             schemeable,
             false,
           );
-          const currAnyOf = currentRoot[rs.blockType]?.anyOf;
+          const currAnyOf = currentRoot[blockFunction.blockType]?.anyOf;
           const currAnyOfs = currAnyOf ??
             [resolvableRef];
           currAnyOfs.length === 0 && currAnyOfs.push(resolvableRef);
@@ -264,14 +269,14 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
             {
               ...nDef,
               [ResolvableId]: withNotResolveType(
-                rs.functionKey,
+                blockFunction.functionKey,
                 nDef[ResolvableId],
               ),
-              ...rs.outputSchemaId
+              ...blockFunction.outputSchemaId
                 ? {
-                  [rs.outputSchemaId]: mergeJSONSchemas(
+                  [blockFunction.outputSchemaId]: mergeJSONSchemas(
                     resolvableRef,
-                    nDef[rs.outputSchemaId],
+                    nDef[blockFunction.outputSchemaId],
                     nDef[id!]!,
                   ),
                 }
@@ -279,8 +284,8 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
             },
             {
               ...currentRoot,
-              [rs.blockType]: {
-                title: rs.blockType,
+              [blockFunction.blockType]: {
+                title: blockFunction.blockType,
                 anyOf: [...currAnyOfs, { $ref: `#/definitions/${id}` }],
               },
             },

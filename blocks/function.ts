@@ -24,7 +24,11 @@ export interface FunctionModule<
 
 const functionBlock: Block<FunctionModule> = {
   type: "functions",
-  introspect: { includeReturn: true },
+  introspect: {
+    includeReturn: (ts) => {
+      return ts;
+    },
+  },
   adapt: <
     TConfig = any,
     TState = any,

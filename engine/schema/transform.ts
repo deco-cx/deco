@@ -30,6 +30,7 @@ import type {
   TsTypeParameter,
   TsTypeReference,
   TsUnionType,
+  VariableDeclarator,
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
 import { spannableToJsDoc } from "./comments.ts";
@@ -892,17 +893,28 @@ export const tsTypeToSchemeable = async (
   return resolved;
 };
 
-export interface FunctionCanonicalDeclaration {
-  exp: FunctionExpression | FunctionDeclaration | ArrowFunctionExpression;
+export interface CanonicalDeclarationBase {
   path: string;
   parsedSource: ParsedSource;
   jsDoc: JSONSchema7;
 }
+export interface FunctionCanonicalDeclaration extends CanonicalDeclarationBase {
+  exp: FunctionExpression | FunctionDeclaration;
+}
+
+export interface VariableCanonicalDeclaration extends CanonicalDeclarationBase {
+  exp: ArrowFunctionExpression;
+  declarator: VariableDeclarator;
+}
+
+export type CanonicalDeclaration =
+  | VariableCanonicalDeclaration
+  | FunctionCanonicalDeclaration;
 const findFuncFromExportNamedDeclaration = async (
   funcName: string,
   item: ExportNamedDeclaration,
   path: string,
-): Promise<FunctionCanonicalDeclaration | undefined> => {
+): Promise<CanonicalDeclaration | undefined> => {
   for (const spec of item.specifiers) {
     if (
       item.source !== undefined &&
@@ -929,7 +941,7 @@ const findFunc = async (
   funcName: string,
   path: string,
   parsedSource: ParsedSource,
-): Promise<[FunctionCanonicalDeclaration, boolean] | undefined> => {
+): Promise<[CanonicalDeclaration, boolean] | undefined> => {
   for (const item of parsedSource.program.body) {
     if (item.type === "ExportNamedDeclaration") {
       const found = await findFuncFromExportNamedDeclaration(
@@ -963,6 +975,7 @@ const findFunc = async (
           decl.init && decl.init.type === "ArrowFunctionExpression"
         ) {
           return [{
+            declarator: decl,
             path,
             parsedSource,
             exp: decl.init,
@@ -995,6 +1008,7 @@ const findFunc = async (
           decl.init && decl.init.type === "ArrowFunctionExpression"
         ) {
           return [{
+            declarator: decl,
             path,
             parsedSource,
             exp: decl.init,
@@ -1009,7 +1023,7 @@ const findFuncExport = async (
   funcName: string,
   path: string,
   program: ParsedSource,
-): Promise<FunctionCanonicalDeclaration | undefined> => {
+): Promise<CanonicalDeclaration | undefined> => {
   const func = await findFunc(funcName, path, program);
   if (!func) {
     return undefined;
@@ -1020,7 +1034,7 @@ const findFuncExport = async (
 export const findDefaultFuncExport = async (
   path: string,
   parsedSource: ParsedSource,
-): Promise<FunctionCanonicalDeclaration | undefined> => {
+): Promise<CanonicalDeclaration | undefined> => {
   for (const item of parsedSource.program.body) {
     if (
       item.type === "ExportDefaultExpression" &&
@@ -1053,6 +1067,58 @@ export const findDefaultFuncExport = async (
   }
   return undefined;
 };
+const isVariableDeclaration = (
+  canonical: CanonicalDeclaration,
+): canonical is VariableCanonicalDeclaration => {
+  return (canonical as VariableCanonicalDeclaration)?.declarator !== undefined;
+};
+// from legacy functions
+const getWellKnownLoaderType = (
+  declarator: VariableDeclarator,
+): [TsType, TsType] | undefined => {
+  const typeAnnotation = (declarator.id as { typeAnnotation: TsTypeAnnotation })
+    ?.typeAnnotation;
+  if (
+    typeAnnotation &&
+    typeAnnotation.typeAnnotation.type === "TsTypeReference" &&
+    typeAnnotation.typeAnnotation.typeName.type === "Identifier" &&
+    typeAnnotation.typeAnnotation.typeName.value === "LoaderFunction" &&
+    typeAnnotation.typeAnnotation.typeParams &&
+    typeAnnotation.typeAnnotation.typeParams.params.length >= 2
+  ) {
+    return [
+      typeAnnotation.typeAnnotation.typeParams.params[0],
+      typeAnnotation.typeAnnotation.typeParams.params[1],
+    ];
+  }
+  return undefined;
+};
+const returnOf = (canonical: CanonicalDeclaration): TsType | undefined => {
+  if (isVariableDeclaration(canonical)) {
+    const loader = getWellKnownLoaderType(canonical.declarator);
+    if (loader) {
+      return loader[1];
+    }
+  }
+  return canonical.exp.returnType?.typeAnnotation;
+};
+
+const paramsOf = (
+  canonical: CanonicalDeclaration,
+): TsType[] | undefined => {
+  if (isVariableDeclaration(canonical)) {
+    const loader = getWellKnownLoaderType(canonical.declarator);
+    if (loader) {
+      return [loader[0]];
+    }
+  }
+  return canonical.exp.params.map((param) => {
+    const pat = (param as Param)?.pat ?? param as Pattern;
+    const typeAnnotation = (pat as { typeAnnotation?: TsTypeAnnotation })
+      ?.typeAnnotation?.typeAnnotation;
+    return typeAnnotation!;
+  });
+};
 export const programToBlockRef = async (
   _path: string,
   _program: ParsedSource,
@@ -1069,13 +1135,12 @@ export const programToBlockRef = async (
     }
 
     const includeReturn = introspect?.includeReturn;
-    const { exp: func, path, parsedSource } = fn;
+    const fnReturn = returnOf(fn);
+    const { path, parsedSource } = fn;
 
     const retn = typeof includeReturn === "function"
-      ? func.returnType
-        ? includeReturn(func.returnType.typeAnnotation)
-        : undefined
-      : func.returnType?.typeAnnotation;
+      ? fnReturn ? includeReturn(fnReturn) : undefined
+      : fnReturn;
 
     const baseBlockRef = {
       functionJSDoc: fn.jsDoc, //func.jsDoc && jsDocToSchema(func.jsDoc),
@@ -1088,20 +1153,18 @@ export const programToBlockRef = async (
         })
         : undefined,
     };
+    const params = paramsOf(fn);
     const paramIdx = 0;
-    if (func.params.length === 0) {
+    if (!params || params.length === 0) {
       return baseBlockRef;
     }
-    const param = func.params[paramIdx];
-    const pat = (param as Param)?.pat ?? param as Pattern;
-    const typeAnnotation = (pat as { typeAnnotation?: TsTypeAnnotation })
-      ?.typeAnnotation?.typeAnnotation;
-    if (!typeAnnotation) {
+    const param = params[paramIdx];
+    if (!param) {
       return baseBlockRef;
     }
     return {
       ...baseBlockRef,
-      inputSchema: await tsTypeToSchemeable(typeAnnotation, {
+      inputSchema: await tsTypeToSchemeable(param, {
         path,
         parsedSource,
         references: schemeableReferences,
