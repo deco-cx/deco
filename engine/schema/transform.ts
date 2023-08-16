@@ -82,8 +82,8 @@ export interface ArraySchemeable extends SchemeableBase {
 export interface UnknownSchemable extends SchemeableBase {
   type: "unknown";
 }
-export interface SchemeableRef extends SchemeableBase {
-  type: "ref";
+export interface SchemeableAlias extends SchemeableBase {
+  type: "alias";
   value: Schemeable;
 }
 
@@ -95,7 +95,7 @@ export type Schemeable =
   | InlineSchemeable
   | RecordSchemeable
   | UnknownSchemable
-  | SchemeableRef;
+  | SchemeableAlias;
 
 export interface SchemeableTransformContext {
   path: string;
@@ -292,13 +292,16 @@ export const typeNameToSchemeable = async (
         item.declaration.typeParams?.parameters ?? [],
         ctx,
       );
-      console.log(item.declaration.typeAnnotation);
+      const value = await tsTypeToSchemeable(item.declaration.typeAnnotation, {
+        ...ctx,
+        tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
+      });
       return {
+        type: "alias",
         jsDocSchema: spannableToJsDoc(item),
-        ...await tsTypeToSchemeable(item.declaration.typeAnnotation, {
-          ...ctx,
-          tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
-        }),
+        value,
+        file: path,
+        name: typeName,
       };
     }
     if (
@@ -319,12 +322,14 @@ export const typeNameToSchemeable = async (
         ctx,
       );
       return {
-        file: path,
+        type: "alias",
         jsDocSchema: spannableToJsDoc(item),
-        ...await tsTypeToSchemeable(item.typeAnnotation, {
+        value: await tsTypeToSchemeable(item.typeAnnotation, {
           ...ctx,
           tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
         }),
+        file: path,
+        name: typeName,
       };
     }
     if (
@@ -426,9 +431,11 @@ const wellKnownTypeReferenceToSchemeable = async (
       if (literal.type !== "StringLiteral") {
         return undefined;
       }
+      const splitted = literal.value.split("/");
       return {
+        file: ctx.path,
         type: "inline",
-        name: `IF@${btoa(literal.value)}`,
+        name: splitted[splitted.length - 1],
         value: {
           $ref: literal.value,
         },
@@ -603,6 +610,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       return {
         type: "array",
         name: `${typeSchemeable.name}[]`,
+        file: typeSchemeable.file,
         value: typeSchemeable,
       };
     }

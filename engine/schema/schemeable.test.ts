@@ -606,8 +606,8 @@ Deno.test("Type alias generation", async () => {
     file: filePath,
     jsDocSchema: {},
     name: "TypeAlias",
-    type: "inline",
-    value: { type: "string" },
+    type: "alias",
+    value: { type: "inline", name: "string", value: { type: "string" } },
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -615,10 +615,11 @@ Deno.test("Type alias generation", async () => {
 
   const genId = spy((_: Schemeable) => rands[calls++]);
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
+  console.log(definitions, ref)
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
+    $ref: `#/definitions/${rands[1]}`,
     title: "TypeAlias",
-    type: "string",
   });
 
   assertSpyCall(genId, 0, {
@@ -626,7 +627,7 @@ Deno.test("Type alias generation", async () => {
     returned: rands[0],
   });
 
-  assertSpyCalls(genId, 1);
+  assertSpyCalls(genId, 3);
 });
 
 Deno.test("Wellknown in types generation", async () => {

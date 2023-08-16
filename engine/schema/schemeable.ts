@@ -8,8 +8,18 @@ const schemeableToJSONSchemaFunc = (
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const type = schemeable.type;
   switch (type) {
-    case "ref": {
-      return schemeableToJSONSchema(genId, def, schemeable.value, seen);
+    case "alias": {
+      const [newDefs, schema] = schemeableToJSONSchema(
+        genId,
+        def,
+        schemeable.value,
+        seen,
+      );
+      return schemeableToJSONSchema(genId, newDefs, {
+        name: schemeable.name,
+        type: "inline",
+        value: schema,
+      }, seen);
     }
     case "array": {
       if (Array.isArray(schemeable.value)) {
