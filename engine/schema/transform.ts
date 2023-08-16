@@ -1056,7 +1056,7 @@ export const programToBlockRef = async (
 
     const baseBlockRef = {
       functionJSDoc: fn.jsDoc, //func.jsDoc && jsDocToSchema(func.jsDoc),
-      functionRef: path,
+      functionRef: _path,
       outputSchema: includeReturn && retn
         ? await tsTypeToSchemeable(retn, {
           path,

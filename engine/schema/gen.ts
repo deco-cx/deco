@@ -110,7 +110,6 @@ export const genSchemasFromManifest = async (
     (builder, mod) => mod ? builder.withBlockSchema(mod) : builder,
     schemaBuilder,
   );
-  console.log(JSON.stringify(schema.build(dir, context.namespace!)));
   return schema.build(dir, context.namespace!);
 };
 
