@@ -8,8 +8,6 @@ export const genSchemas = async (
   docCachePath?: string,
 ) => {
   const base = docCachePath ? join(Deno.cwd(), docCachePath) : Deno.cwd();
-  console.log(`🌟 live.ts is spinning up some magic for you! ✨ Hold tight!`);
-  const start = performance.now();
   const schema = await genSchemasFromManifest(
     manifest,
     base,
@@ -24,13 +22,5 @@ export const genSchemas = async (
     });
   }
 
-  console.log(
-    `✔️ ready to rock and roll! Your project is live 🤘 - took: ${
-      Math.ceil(
-        performance
-          .now() - start,
-      )
-    }ms`,
-  );
   return schema;
 };

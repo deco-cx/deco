@@ -13,10 +13,7 @@ import {
   updateImportMap,
 } from "$live/utils/namespace.ts";
 import { checkUpdates } from "$live/utils/update.ts";
-import { parse } from "std/flags/mod.ts";
 export { format } from "$live/utils/formatter.ts";
-
-const genOnly = parse(Deno.args)["gen-only"] === true;
 
 /**
  * Ensures that the target function runs only once per `deno task start`, in other words the watcher will not trigger the function again.
@@ -152,19 +149,8 @@ export default async function dev(
   oncePerRun(setupGithooks);
 
   await generate(dir, manifest);
-
-  const genPromise = (async () => {
-    await setManifest(dir);
-    await genSchemas(context.manifest!);
-  })();
-
   onListen?.();
-
-  if (genOnly) {
-    await genPromise;
-  } else {
-    await import(entrypoint);
-  }
+  await import(entrypoint);
 }
 
 function isDyamicImportArray(

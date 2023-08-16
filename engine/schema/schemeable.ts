@@ -193,7 +193,7 @@ const schemeableToJSONSchemaFunc = (
     }
     case "unknown":
     default:
-      return [def, {}];
+      return [def, { type: "object" }];
   }
 };
 export const schemeableToJSONSchema = (

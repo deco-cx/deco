@@ -17,6 +17,7 @@ import type {
   TsInterfaceDeclaration,
   TsIntersectionType,
   TsKeywordType,
+  TsKeywordTypeKind,
   TsLiteral,
   TsLiteralType,
   TsOptionalType,
@@ -283,6 +284,26 @@ export const typeNameToSchemeable = async (
         ...await tsInterfaceDeclarationToSchemeable(item.declaration, ctx),
       };
     }
+    if (item.type === "ExportAllDeclaration") {
+      const from = resolvePath(item.source.value, path);
+      const newProgram = await parsePath(
+        from,
+      );
+      if (!newProgram) {
+        return UNKNOWN;
+      }
+      const type = await typeNameToSchemeable(
+        typeName,
+        {
+          ...ctx,
+          path: from,
+          parsedSource: newProgram,
+        },
+      );
+      if (type !== UNKNOWN) {
+        return type;
+      }
+    }
     if (
       item.type === "ExportDeclaration" &&
       item.declaration.type === "TsTypeAliasDeclaration" &&
@@ -340,11 +361,7 @@ export const typeNameToSchemeable = async (
       );
       if (spec) {
         try {
-          const from = item.source.value.startsWith(".")
-            ? import.meta.resolve(
-              new URL(item.source.value, import.meta.resolve(path)).toString(),
-            )
-            : import.meta.resolve(item.source.value);
+          const from = resolvePath(item.source.value, path);
           const newProgram = await parsePath(
             from,
           );
@@ -799,10 +816,20 @@ export const tsTypeToSchemeable = async (
       }
       case "TsKeywordType": {
         const type = tsType as TsKeywordType;
-        const keywordToType: Record<string, JSONSchema7Type> = {
+        const keywordToType: Record<TsKeywordTypeKind, JSONSchema7Type> = {
           undefined: "null",
           any: "object",
           never: "object",
+          unknown: "object",
+          void: "object",
+          bigint: "number",
+          boolean: "boolean",
+          intrinsic: "object",
+          null: "null",
+          number: "number",
+          object: "object",
+          string: "string",
+          symbol: "string",
         };
 
         if (type.kind === "never") {
@@ -882,11 +909,7 @@ const findFuncFromExportNamedDeclaration = async (
       spec.type === "ExportSpecifier" &&
       (spec.exported?.value ?? spec.orig.value) === funcName
     ) {
-      const url = item.source.value.startsWith(".")
-        ? import.meta.resolve(
-          new URL(item.source.value, import.meta.resolve(path)).toString(),
-        )
-        : import.meta.resolve(item.source.value);
+      const url = resolvePath(item.source.value, path);
       const isFromDefault = spec.orig.value === "default";
       const newProgram = await parsePath(url);
       if (!newProgram) {
@@ -1087,3 +1110,11 @@ export const programToBlockRef = async (
   }
   return undefined;
 };
+
+function resolvePath(source: string, path: string) {
+  return source.startsWith(".")
+    ? import.meta.resolve(
+      new URL(source, import.meta.resolve(path)).toString(),
+    )
+    : import.meta.resolve(source);
+}
