@@ -223,11 +223,6 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           ([def, resolvers], mod) => {
             const [defOut, idOut] = addSchemeable(def, mod.outputSchema);
             const [defIn, idIn] = addSchemeable(defOut, mod.inputSchema);
-            if (
-              mod.functionKey === "deco-sites/std/functions/requestToParam.ts"
-            ) {
-              console.log(mod, idOut);
-            }
             return [
               defIn,
               [
