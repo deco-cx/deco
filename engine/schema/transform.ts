@@ -1072,6 +1072,7 @@ const isVariableDeclaration = (
 ): canonical is VariableCanonicalDeclaration => {
   return (canonical as VariableCanonicalDeclaration)?.declarator !== undefined;
 };
+
 // from legacy functions
 const getWellKnownLoaderType = (
   declarator: VariableDeclarator,
@@ -1082,7 +1083,8 @@ const getWellKnownLoaderType = (
     typeAnnotation &&
     typeAnnotation.typeAnnotation.type === "TsTypeReference" &&
     typeAnnotation.typeAnnotation.typeName.type === "Identifier" &&
-    typeAnnotation.typeAnnotation.typeName.value === "LoaderFunction" &&
+    (typeAnnotation.typeAnnotation.typeName.value === "LoaderFunction" ||
+      typeAnnotation.typeAnnotation.typeName.value === "PropsLoader") &&
     typeAnnotation.typeAnnotation.typeParams &&
     typeAnnotation.typeAnnotation.typeParams.params.length >= 2
   ) {
