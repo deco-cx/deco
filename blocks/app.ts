@@ -17,16 +17,17 @@ export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 
 export type AppManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
 
+export type ManifestOf<TApp extends App> =
+  & TApp["manifest"]
+  & (TApp extends { dependencies?: (infer Depedendency)[] }
+    ? Depedendency extends App ? ManifestOf<Depedendency> : {}
+    : {});
+
 export type AppContext<
   TApp extends App,
-  TDependantManifest = TApp extends
-    { dependencies?: ({ manifest: infer TManifestDependency })[] }
-    ? TManifestDependency extends AppManifest ? TManifestDependency : {}
-    : {},
 > = FnContext<
   TApp["state"],
-  & TApp["manifest"]
-  & TDependantManifest
+  ManifestOf<TApp>
 >;
 
 export type AppFunc<

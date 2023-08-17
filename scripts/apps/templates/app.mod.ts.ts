@@ -4,6 +4,7 @@ import { InitContext } from "../init.ts";
 export default async function Deco(_ctx: InitContext) {
   return await format(
     `
+    import { AppContext as AC } from "$live/blocks/app.ts";
     import manifest, { name } from "./manifest.gen.ts";
     import type { Manifest } from "./manifest.gen.ts";
     import type { App, FnContext } from "../deps.ts";
@@ -11,9 +12,10 @@ export default async function Deco(_ctx: InitContext) {
     export interface State {
       url: string;
     }
+    export type MyApp = App<Manifest, State>;
     export default function App(
       state: State,
-    ): App<Manifest, State> {
+    ): MyApp {
       return {
         name,
         manifest,
@@ -21,7 +23,7 @@ export default async function Deco(_ctx: InitContext) {
       };
     }
     
-    export type AppContext = FnContext<State, Manifest>;
+    export type AppContext = AC<MyApp>;
 `,
   );
 }

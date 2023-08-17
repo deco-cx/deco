@@ -1,6 +1,5 @@
-// deno-lint-ignore-file no-explicit-any ban-types
 import { IS_BROWSER } from "$fresh/runtime.ts";
-import type { App, AppManifest } from "$live/blocks/app.ts";
+import type { App, AppManifest, ManifestOf } from "$live/blocks/app.ts";
 import type {
   AvailableActions,
   AvailableFunctions,
@@ -15,6 +14,7 @@ import { readFromStream } from "$live/utils/http.ts";
 import { DotNestedKeys } from "$live/utils/object.ts";
 import { isStreamProps } from "../utils/invoke.ts";
 
+// deno-lint-ignore no-explicit-any
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
 const fetchWithProps = async (
@@ -184,13 +184,8 @@ export const withManifest = <TManifest extends AppManifest>() => {
 
 export const forApp = <
   TApp extends App,
-  TDependantManifest = TApp extends
-    { dependencies?: ({ manifest: infer TManifestDependency })[] }
-    ? TManifestDependency extends AppManifest ? TManifestDependency : {}
-    : {},
 >() => {
   return withManifest<
-    & TApp["manifest"]
-    & TDependantManifest
+    ManifestOf<TApp>
   >();
 };
