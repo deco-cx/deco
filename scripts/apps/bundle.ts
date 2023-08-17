@@ -1,7 +1,6 @@
 import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
-import { genSchemas } from "$live/engine/schema/reader.ts";
 import * as colors from "std/fmt/colors.ts";
-import { join, toFileUrl } from "std/path/mod.ts";
+import { join } from "std/path/mod.ts";
 import { format } from "../../utils/formatter.ts";
 import { AppConfig, getDecoConfig } from "./config.ts";
 
@@ -20,10 +19,6 @@ const bundleApp = (dir: string) => async (app: AppConfig) => {
   console.log(
     colors.brightBlue(`the manifest of ${app.name} has been generated`),
   );
-
-  const manifestContent =
-    (await import(toFileUrl(manifestFile).toString())).default;
-  await genSchemas(manifestContent, app.dir);
 };
 const bundleApps = async () => {
   const dir = Deno.cwd();
