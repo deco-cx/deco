@@ -39,7 +39,18 @@ const isSpannableArray = (child: any): child is Spannable[] => {
   return Array.isArray(child) && child.length > 0 &&
     child[0].span !== undefined;
 };
-export const assignCommentsForSpannable = (_rootSpan: any) => {
+
+/**
+ * This function allocate comments where it should be placed.
+ * When a program is parsed all comments are ignored meaning that it will not be part of the code AST.
+ * The problem is that we use comments to enrich JSONSchema based on the JsDoc attribute.
+ * As comments are treat as a separate array of strings containing only the information of which characeter it starts and ends (spannable).
+ * This code distribute it based on the span attribute of the comments, matching with the body span attribute.
+ *
+ * So it basically starts with all comments of the module, and then distribute it into body items, it recursively do the same thing inside a body item declaration if it is a TsInterface declaration,
+ * so that we have the comments assigned to the properties as well.
+ */
+const assignCommentsForSpannable = (_rootSpan: any) => {
   const children = getChildren(_rootSpan) ?? [];
   const { comments: rootSpanComments, ...rootSpan } = _rootSpan as Spannable;
   if (rootSpanComments.length === 0) {
@@ -83,7 +94,11 @@ export const assignComments = (program: ParsedSource) => {
 export const commentsFromSpannable = (item: any) => {
   return (item as unknown as { comments: Comment[] })?.comments ?? [];
 };
-const commentsToJsDoc = (comments: Comment[]): JSONSchema7 => {
+
+/**
+ * Parses the JsDoc using the regex pattern below.
+ */
+const commentsToJSONSchema = (comments: Comment[]): JSONSchema7 => {
   const jsdocRegex = /@(\w+)\s+([^\n@]+)/g;
   const jsDoc: Record<string, number | string | boolean> = {};
 
@@ -98,6 +113,11 @@ const commentsToJsDoc = (comments: Comment[]): JSONSchema7 => {
   return jsDoc as JSONSchema7;
 };
 
-export const spannableToJsDoc = (spannable: any): JSONSchema7 => {
-  return commentsToJsDoc(commentsFromSpannable(spannable));
+/**
+ * Parses and builds a JSONSchema based on the JsDoc attributes.
+ * E.g `@title MyTitle` becomes `{ title: "MyTitle" }`
+ * Receives a @param spannable as an argument which is any statement or expression that contains `.span` as a property (inherits from `HasSpan`).
+ */
+export const spannableToJSONSchema = (spannable: any): JSONSchema7 => {
+  return commentsToJSONSchema(commentsFromSpannable(spannable));
 };

@@ -33,7 +33,7 @@ import type {
   VariableDeclarator,
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
-import { spannableToJsDoc } from "./comments.ts";
+import { spannableToJSONSchema } from "./comments.ts";
 import { parsePath } from "./parser.ts";
 export interface SchemeableBase {
   jsDocSchema?: JSONSchema7;
@@ -139,7 +139,7 @@ const tsTypeElementsToObjectSchemeable = async (
           key.value,
           {
             title: beautify(key.value),
-            jsDocSchema: spannableToJsDoc(prop),
+            jsDocSchema: spannableToJSONSchema(prop),
             schemeable,
             required: !prop.optional,
           } as ObjectSchemeable["value"][string],
@@ -280,7 +280,7 @@ export const typeNameToSchemeable = async (
       item.declaration.id.value === typeName
     ) {
       return {
-        jsDocSchema: spannableToJsDoc(item),
+        jsDocSchema: spannableToJSONSchema(item),
         ...await tsInterfaceDeclarationToSchemeable(item.declaration, ctx),
       };
     }
@@ -313,7 +313,7 @@ export const typeNameToSchemeable = async (
         item.declaration.typeParams?.parameters ?? [],
         ctx,
       );
-      const jsDocSchema = spannableToJsDoc(item);
+      const jsDocSchema = spannableToJSONSchema(item);
       const value = await tsTypeToSchemeable(item.declaration.typeAnnotation, {
         ...ctx,
         tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
@@ -339,7 +339,7 @@ export const typeNameToSchemeable = async (
       item.id.value === typeName
     ) {
       return {
-        jsDocSchema: spannableToJsDoc(item),
+        jsDocSchema: spannableToJSONSchema(item),
         ...await tsInterfaceDeclarationToSchemeable(item, ctx),
       };
     }
@@ -353,7 +353,7 @@ export const typeNameToSchemeable = async (
       );
       return {
         type: "alias",
-        jsDocSchema: spannableToJsDoc(item),
+        jsDocSchema: spannableToJSONSchema(item),
         value: await tsTypeToSchemeable(item.typeAnnotation, {
           ...ctx,
           tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
@@ -982,7 +982,7 @@ const findFunc = async (
         path,
         parsedSource,
         exp: item,
-        jsDoc: spannableToJsDoc(item),
+        jsDoc: spannableToJSONSchema(item),
       }, false];
     }
 
@@ -1000,7 +1000,7 @@ const findFunc = async (
             exp: decl.init && decl.init.type === "ArrowFunctionExpression"
               ? decl.init
               : undefined,
-            jsDoc: spannableToJsDoc(item),
+            jsDoc: spannableToJSONSchema(item),
           }, false];
         }
       }
@@ -1015,7 +1015,7 @@ const findFunc = async (
         path,
         parsedSource,
         exp: item.declaration,
-        jsDoc: spannableToJsDoc(item),
+        jsDoc: spannableToJSONSchema(item),
       }, true];
     }
 
@@ -1033,7 +1033,7 @@ const findFunc = async (
             path,
             parsedSource,
             exp: decl.init,
-            jsDoc: spannableToJsDoc(item),
+            jsDoc: spannableToJSONSchema(item),
           }, true];
         }
       }
@@ -1072,7 +1072,7 @@ export const findDefaultFuncExport = async (
         exp: item.decl,
         path,
         parsedSource,
-        jsDoc: spannableToJsDoc(item),
+        jsDoc: spannableToJSONSchema(item),
       };
     }
     if (item.type === "ExportNamedDeclaration") {

@@ -4,11 +4,9 @@ import {
 } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
 import { assignComments } from "./comments.ts";
 
-/** A Deno specific loader function that can be passed to the
- * `createModuleGraph` which will use `Deno.readTextFile` for local files, or
- * use `fetch()` for remote modules.
- *
- * @param specifier The string module specifier from the module graph.
+/**
+ * Loads the content of the given specifier.
+ * @param specifier The string location of the module specifier.
  */
 async function load(
   specifier: string,
@@ -39,6 +37,9 @@ async function load(
 }
 
 const loadCache: Record<string, Promise<ParsedSource | undefined>> = {};
+/**
+ * Parses the given path using the default loader. Caches the result in memory.
+ */
 export const parsePath = (path: string) => {
   return loadCache[path] ??= load(path).then(async (content) => {
     if (!content) {
