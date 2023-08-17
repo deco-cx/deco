@@ -1,4 +1,9 @@
 {
+  "scopes": {
+    "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts": {
+      "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/"
+    }
+  },
   "imports": {
     "$live/": "./",
     "https://deno.land/std@0.147.0": "https://deno.land/std@0.181.0",

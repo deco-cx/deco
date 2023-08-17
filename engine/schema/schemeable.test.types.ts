@@ -1,6 +1,5 @@
 import { InstanceOf, PreactComponent } from "$live/engine/block.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-
 export type SimpleType = {
   name: string;
 };
