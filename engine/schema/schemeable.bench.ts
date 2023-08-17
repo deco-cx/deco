@@ -91,7 +91,7 @@ const getSchemeableDenoDoc = async (
 };
 
 Deno.bench(
-  "transform to schemeable with deno_ast",
+  "transform to schemeable using deno_ast",
   { group: "schema_gen", baseline: true },
   async () => {
     localStorage.clear();
@@ -103,7 +103,7 @@ Deno.bench(
 );
 
 Deno.bench(
-  "transform to schema using denodoc",
+  "transform to schemeable using denodoc",
   { group: "schema_gen" },
   async () => {
     localStorage.clear();
