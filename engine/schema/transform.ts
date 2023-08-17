@@ -695,7 +695,7 @@ export const tsTypeToSchemeable = async (
           : value;
         return {
           type: "inline",
-          name: `${constVal}`,
+          name: `${constVal}`.replaceAll("/", "_"),
           value: {
             type: optional
               ? [literalToJsonSchemaType[type.literal.type], "null"]
@@ -880,9 +880,7 @@ export const tsTypeToSchemeable = async (
           ...schemeable,
           name: `${schemeable.name}${
             typeParams.length > 0
-              ? `+${
-                typeParams.map((p) => p.name.replaceAll("/", "_")).join("+")
-              }`
+              ? `+${typeParams.map((p) => p.name).join("+")}`
               : ""
           }`,
         };
