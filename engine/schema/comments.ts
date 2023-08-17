@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { JSONSchema7 } from "$live/deps.ts";
 import { ParsedSource } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
 import type { HasSpan } from "https://esm.sh/v130/@swc/wasm@1.3.76";
@@ -29,18 +30,15 @@ export type Spannable =
   | ExportNamedDeclarationSpannable;
 
 const getChildren = (s: Spannable) => {
-  // deno-lint-ignore no-explicit-any
   return (s as any)?.declaration?.body?.body ?? (s as any)?.body?.body ??
     (s as ModuleSpannable)?.body ??
     (s as ImportDeclarationSpannable)?.specifiers;
 };
 
-// deno-lint-ignore no-explicit-any
 const isSpannableArray = (child: any): child is Spannable[] => {
   return Array.isArray(child) && child.length > 0 &&
     child[0].span !== undefined;
 };
-// deno-lint-ignore no-explicit-any
 export const assignCommentsForSpannable = (_rootSpan: any) => {
   const children = getChildren(_rootSpan) ?? [];
   const { comments: rootSpanComments, ...rootSpan } = _rootSpan as Spannable;
@@ -78,12 +76,10 @@ export const assignComments = (program: ParsedSource) => {
     comments: program.comments,
     body: program.program.body,
     span: { ...program.program.span, start: 0 },
-    // deno-lint-ignore no-explicit-any
   } as any;
   assignCommentsForSpannable(_rootSpan);
 };
 
-// deno-lint-ignore no-explicit-any
 export const commentsFromSpannable = (item: any) => {
   return (item as unknown as { comments: Comment[] })?.comments ?? [];
 };
@@ -102,7 +98,6 @@ const commentsToJsDoc = (comments: Comment[]): JSONSchema7 => {
   return jsDoc as JSONSchema7;
 };
 
-// deno-lint-ignore no-explicit-any
 export const spannableToJsDoc = (spannable: any): JSONSchema7 => {
   return commentsToJsDoc(commentsFromSpannable(spannable));
 };
