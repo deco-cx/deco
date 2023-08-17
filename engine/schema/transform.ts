@@ -917,14 +917,30 @@ const findFuncFromExportNamedDeclaration = async (
   funcName: string,
   item: ExportNamedDeclaration,
   path: string,
+  parsedSource: ParsedSource,
 ): Promise<CanonicalDeclaration | undefined> => {
   for (const spec of item.specifiers) {
     if (
-      item.source !== undefined &&
       spec.type === "ExportSpecifier" &&
       (spec.exported?.value ?? spec.orig.value) === funcName
     ) {
-      const url = resolvePath(item.source.value, path);
+      let source = item.source?.value;
+      if (!source) {
+        for (const decl of parsedSource.program.body) {
+          if (decl.type === "ImportDeclaration") {
+            for (const spec of decl.specifiers) {
+              if (spec.local.value === funcName) {
+                source = decl.source.value;
+              }
+            }
+          }
+        }
+      }
+
+      if (!source) {
+        return undefined;
+      }
+      const url = resolvePath(source, path);
       const isFromDefault = spec.orig.value === "default";
       const newProgram = await parsePath(url);
       if (!newProgram) {
@@ -951,6 +967,7 @@ const findFunc = async (
         funcName,
         item,
         path,
+        parsedSource,
       );
       if (found) {
         return [found, true];
@@ -1063,6 +1080,7 @@ export const findDefaultFuncExport = async (
         "default",
         item,
         path,
+        parsedSource,
       );
       if (found) {
         return found;
