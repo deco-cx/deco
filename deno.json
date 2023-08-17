@@ -8,8 +8,7 @@
     "cache_clean": "rm deno.lock; deno cache -r live.ts",
     "info_json": "deno info --json live.ts > deps.json",
     "detective": "deno run -A https://deno.land/x/detective/detective.ts deps.json",
-    "deps": "deno task cache_clean && deno task info_json && deno task detective",
-    "doccache": "cat doccache.zst | deno run -A scripts/doc-cache-see-through.ts"
+    "deps": "deno task cache_clean && deno task info_json && deno task detective"
   },
   "githooks": {
     "pre-commit": "check"

@@ -160,8 +160,6 @@ export async function* listBlocks(
   if (!(await exists(dir))) {
     return;
   }
-  // TODO can be improved using a generator that adds the promise entry in the denoDoc cache and yeilds the path of the file
-  // that way the blocks can analyze the AST before needing to fetch all modules first.
   for await (
     const entry of walk(dir, {
       includeDirs: false,

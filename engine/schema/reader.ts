@@ -5,9 +5,9 @@ import { join } from "std/path/mod.ts";
 
 export const genSchemas = async (
   manifest: AppManifest,
-  docCachePath?: string,
+  subDir?: string,
 ) => {
-  const base = docCachePath ? join(Deno.cwd(), docCachePath) : Deno.cwd();
+  const base = subDir ? join(Deno.cwd(), subDir) : Deno.cwd();
   const schema = await genSchemasFromManifest(
     manifest,
     base,
