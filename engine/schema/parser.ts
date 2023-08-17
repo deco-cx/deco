@@ -3,7 +3,6 @@ import {
   ParsedSource,
 } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
 import { assignComments } from "./comments.ts";
-import { programToBlockRef } from "./transform.ts";
 
 /** A Deno specific loader function that can be passed to the
  * `createModuleGraph` which will use `Deno.readTextFile` for local files, or
@@ -55,31 +54,3 @@ export const parsePath = (path: string) => {
     }
   });
 };
-
-if (import.meta.main) {
-  console.log(
-    JSON.stringify(
-      await parse(
-        `
-const s = 10;
-/**
- * @title SISIS
- */
-interface IS {
-  // teste 3
-  a: string
-}
-/**
- * @title TESTE
- */
-export default function TESTE(ts: IS) {
-  // my const
-  const s = 10;
-}
-        `,
-      ).then((s) => {
-        return programToBlockRef("./teste.ts", s);
-      }),
-    ),
-  );
-}

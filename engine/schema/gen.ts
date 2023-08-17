@@ -13,7 +13,7 @@ import { TsType } from "https://esm.sh/v130/@swc/wasm@1.3.76/wasm.js";
 import { AppManifest } from "../../blocks/app.ts";
 import { JSONSchema7 } from "../../deps.ts";
 import { parsePath } from "./parser.ts";
-import { programToBlockRef } from "./transform.ts";
+import { programToBlockRef, resolvePath } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -69,14 +69,16 @@ export const genSchemasFromManifest = async (
               blockModuleKey,
             ]);
 
-      const programPromise = parsePath(blockPath);
-      modulesPromises.push(programPromise.then(async (doc) => {
-        if (!doc) {
+      const pathResolved = resolvePath(blockPath, Deno.cwd());
+      const programPromise = parsePath(pathResolved);
+      modulesPromises.push(programPromise.then(async (program) => {
+        if (!program) {
           return undefined;
         }
         const ref = await programToBlockRef(
+          pathResolved,
           blockKey,
-          doc,
+          program,
           references,
           block.introspect,
         );

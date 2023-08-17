@@ -253,13 +253,12 @@ export const typeNameToSchemeable = async (
       );
       if (spec) {
         const _spec = spec as NamedExportSpecifier;
-        const source = (item as ExportNamedDeclaration).source!.value;
+        const source = (item as ExportNamedDeclaration).source?.value;
+        if (!source) {
+          return UNKNOWN;
+        }
 
-        const from = source.startsWith(".")
-          ? import.meta.resolve(
-            new URL(source, import.meta.resolve(path)).toString(),
-          )
-          : import.meta.resolve(source);
+        const from = resolvePath(source, path);
         const newProgram = await parsePath(from);
         if (!newProgram) {
           return UNKNOWN;
@@ -367,7 +366,7 @@ export const typeNameToSchemeable = async (
       item.type === "ImportDeclaration"
     ) {
       const spec = item.specifiers.find((spec) =>
-        spec.local.value === typeName
+        spec.local.value === typeName && spec.type !== "ImportDefaultSpecifier"
       );
       if (spec) {
         try {
@@ -1128,6 +1127,7 @@ const paramsOf = (
 };
 export const programToBlockRef = async (
   _path: string,
+  blockKey: string,
   _program: ParsedSource,
   schemeableReferences?: Map<TsType, Schemeable>,
   introspect?: IntrospectParams,
@@ -1152,7 +1152,7 @@ export const programToBlockRef = async (
 
     const baseBlockRef = {
       functionJSDoc: fn.jsDoc, //func.jsDoc && jsDocToSchema(func.jsDoc),
-      functionRef: _path,
+      functionRef: blockKey,
       outputSchema: includeReturn && retn
         ? await tsTypeToSchemeable(retn, {
           path,
@@ -1182,10 +1182,20 @@ export const programToBlockRef = async (
   return undefined;
 };
 
-function resolvePath(source: string, path: string) {
-  return source.startsWith(".")
-    ? import.meta.resolve(
+export function resolvePath(source: string, path: string) {
+  // should use origin
+  if (source.startsWith("/")) {
+    const pathUrl = new URL(import.meta.resolve(path));
+    return `${pathUrl.origin}${source}`;
+  }
+
+  // relative import
+  if (source.startsWith(".")) {
+    return import.meta.resolve(
       new URL(source, import.meta.resolve(path)).toString(),
-    )
-    : import.meta.resolve(source);
+    );
+  }
+
+  // import from import_map
+  return import.meta.resolve(source);
 }

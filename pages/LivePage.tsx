@@ -145,7 +145,7 @@ const renderPage = (
   { sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode: Mode = "default",
-  isPreview: boolean = false,
+  isPreview = false,
 ): JSX.Element => {
   const validSections = Array.isArray(maybeSections)
     ? maybeSections?.filter((section) =>
