@@ -880,7 +880,9 @@ export const tsTypeToSchemeable = async (
           ...schemeable,
           name: `${schemeable.name}${
             typeParams.length > 0
-              ? `+${typeParams.map((p) => p.name).join("+")}`
+              ? `+${
+                typeParams.map((p) => p.name.replaceAll("/", "_")).join("+")
+              }`
               : ""
           }`,
         };
