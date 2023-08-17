@@ -45,8 +45,6 @@ export interface AppBase<
   TAppDependencies extends (AppRuntime | App)[] = any,
   TResolvableMap extends ResolvableMap = ResolvableMap,
 > {
-  name: string;
-  docCacheFileUrl?: string;
   resolvables?: TResolvableMap;
   manifest: TAppManifest;
   dependencies?: TAppDependencies;
@@ -99,12 +97,10 @@ export const mergeRuntimes = <TAppRuntime extends AppRuntime = AppRuntime>(
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
-    name,
   }: TAppRuntime,
   { resolvers, manifest, resolvables }: TAppRuntime,
-): Pick<TAppRuntime, "manifest" | "resolvables" | "resolvers" | "name"> => {
+): Pick<TAppRuntime, "manifest" | "resolvables" | "resolvers"> => {
   return {
-    name,
     manifest: mergeManifests(currentManifest, manifest),
     resolvables: {
       ...currentResolvables,
@@ -172,11 +168,10 @@ const buildRuntimeFromApp = <
   TContext extends BaseContext = BaseContext,
   TResolverMap extends ResolverMap = ResolverMap,
 >(
-  { state, manifest, resolvables, dependencies, name }: TApp,
+  { state, manifest, resolvables, dependencies }: TApp,
 ): AppRuntime => {
   const injectedManifest = injectAppStateOnManifest(state, manifest);
   return {
-    name,
     resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
       injectedManifest,
     ),

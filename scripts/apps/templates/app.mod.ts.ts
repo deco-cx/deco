@@ -4,7 +4,7 @@ import { InitContext } from "../init.ts";
 export default async function Deco(_ctx: InitContext) {
   return await format(
     `
-    import manifest, { name } from "./manifest.gen.ts";
+    import manifest from "./manifest.gen.ts";
     import type { Manifest } from "./manifest.gen.ts";
     import type { App, FnContext, AppContext as AC } from "../deps.ts";
 
@@ -16,7 +16,6 @@ export default async function Deco(_ctx: InitContext) {
       state: State,
     ): MyApp {
       return {
-        name,
         manifest,
         state,
       };
