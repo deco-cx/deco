@@ -43,6 +43,18 @@ async (req, _ctx) => {
     `${proxyUrl}${sanitize(path)}?${qs}`,
   );
 
+  // ASK LUCIS FOR A GIFT IF YOU'RE SEEING THIS CODE
+
+  if (path.includes("oms/pvt/orders")) {
+    const headersAsObject: Record<string, string> = {};
+    for (const [key, value] of req.headers.entries()) {
+      headersAsObject[key] = value;
+    }
+
+    console.log("Unsub Request");
+    console.log(JSON.stringify(headersAsObject));
+  }
+
   const headers = new Headers(req.headers);
   HOP_BY_HOP.forEach((h) => headers.delete(h));
 
