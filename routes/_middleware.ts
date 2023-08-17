@@ -80,13 +80,12 @@ export const handler = async (
     }
 
     const response = { headers: new Headers(defaultHeaders) };
-    const state = ctx.state?.$live?.state;
-    if (state) {
-      state.response = response;
-      state.flags = [];
-      Object.assign(ctx.state, state);
-      ctx.state.global = state; // compatibility mode with functions.
-    }
+    const state = ctx.state?.$live?.state ?? {};
+    state.response = response;
+    state.flags = [];
+    Object.assign(ctx.state, state);
+    ctx.state.global = state; // compatibility mode with functions.
+
     const apps = ctx?.state?.$live?.apps;
     ctx.state.manifest = context.manifest!;
     for (const app of Array.isArray(apps) ? apps : []) {
