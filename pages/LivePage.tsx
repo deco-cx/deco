@@ -18,6 +18,7 @@ import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
 
 /**
+ * @mergeDeclarations true
  * @title Sections
  * @label hidden
  * @changeable true

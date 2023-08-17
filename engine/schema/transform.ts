@@ -314,13 +314,22 @@ export const typeNameToSchemeable = async (
         item.declaration.typeParams?.parameters ?? [],
         ctx,
       );
+      const jsDocSchema = spannableToJsDoc(item);
       const value = await tsTypeToSchemeable(item.declaration.typeAnnotation, {
         ...ctx,
         tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
       });
+
+      if ("mergeDeclarations" in jsDocSchema) {
+        delete jsDocSchema["mergeDeclarations"];
+        return {
+          ...value,
+          jsDocSchema: { ...value.jsDocSchema, ...jsDocSchema },
+        };
+      }
       return {
         type: "alias",
-        jsDocSchema: spannableToJsDoc(item),
+        jsDocSchema,
         value,
         file: path,
         name: typeName,
@@ -833,11 +842,6 @@ export const tsTypeToSchemeable = async (
           symbol: "string",
         };
 
-        if (type.kind === "never") {
-          console.warn(
-            `never keyword is being used on ${path}, falling back to object`,
-          );
-        }
         const jsonSchemaType = keywordToType[type.kind] ?? type.kind;
         return {
           type: "inline",
@@ -903,7 +907,7 @@ export interface FunctionCanonicalDeclaration extends CanonicalDeclarationBase {
 }
 
 export interface VariableCanonicalDeclaration extends CanonicalDeclarationBase {
-  exp: ArrowFunctionExpression;
+  exp?: ArrowFunctionExpression;
   declarator: VariableDeclarator;
 }
 
@@ -971,14 +975,15 @@ const findFunc = async (
     ) {
       for (const decl of item.declarations) {
         if (
-          decl.id.type === "Identifier" && decl.id.value === funcName &&
-          decl.init && decl.init.type === "ArrowFunctionExpression"
+          decl.id.type === "Identifier" && decl.id.value === funcName
         ) {
           return [{
             declarator: decl,
             path,
             parsedSource,
-            exp: decl.init,
+            exp: decl.init && decl.init.type === "ArrowFunctionExpression"
+              ? decl.init
+              : undefined,
             jsDoc: spannableToJsDoc(item),
           }, false];
         }
@@ -1102,7 +1107,7 @@ const returnOf = (canonical: CanonicalDeclaration): TsType | undefined => {
       return loader[1];
     }
   }
-  return canonical.exp.returnType?.typeAnnotation;
+  return canonical?.exp?.returnType?.typeAnnotation;
 };
 
 const paramsOf = (
@@ -1114,7 +1119,7 @@ const paramsOf = (
       return [loader[0]];
     }
   }
-  return canonical.exp.params.map((param) => {
+  return canonical?.exp?.params?.map((param) => {
     const pat = (param as Param)?.pat ?? param as Pattern;
     const typeAnnotation = (pat as { typeAnnotation?: TsTypeAnnotation })
       ?.typeAnnotation?.typeAnnotation;
@@ -1128,6 +1133,7 @@ export const programToBlockRef = async (
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
   const funcNames = introspect?.funcNames ?? ["default"];
+
   for (const name of funcNames) {
     const fn = name === "default"
       ? await findDefaultFuncExport(_path, _program)
