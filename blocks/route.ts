@@ -22,6 +22,11 @@ import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
 import { createServerTimings } from "$live/utils/timings.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
+import {
+  formatHeaders,
+  formatIncomingRequest,
+  formatOutgoingFetch,
+} from "../utils/log.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -150,6 +155,7 @@ export const buildDecoState = (resolveKey: string | Resolvable) =>
     context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
   ) {
     const { enabled, action } = debug.fromRequest(request);
+
     if (enabled) {
       const { start, end, printTimings } = createServerTimings();
       context.state.t = { start, end, printTimings };
@@ -158,9 +164,26 @@ export const buildDecoState = (resolveKey: string | Resolvable) =>
     } else {
       context.state.log = () => {}; // stub
     }
+
     context.state.log(
-      `[${liveContext.site}][${request.url}]\n[Headers]:[${request.headers}]`,
+      formatIncomingRequest(request, liveContext.site),
     );
+
+    const isLocalhost = !liveContext.isDeploy;
+
+    const originalFetch = globalThis.fetch;
+
+    // Logs outgoing requests if ?__d is present in localhost
+    if (isLocalhost) {
+      globalThis.fetch = (
+        input: string | Request | URL,
+        init?: RequestInit | undefined,
+      ) => {
+        context.state.log(formatOutgoingFetch(input, init));
+
+        return originalFetch(input, init);
+      };
+    }
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
 
@@ -215,6 +238,8 @@ export const buildDecoState = (resolveKey: string | Resolvable) =>
       return resp;
     }
     debug[action](resp);
+    globalThis.fetch = originalFetch;
+
     return resp;
   };
 const mapMiddleware = (
