@@ -695,7 +695,7 @@ export const tsTypeToSchemeable = async (
           : value;
         return {
           type: "inline",
-          name: `${constVal}`,
+          name: `${constVal}`.replaceAll("/", "_"),
           value: {
             type: optional
               ? [literalToJsonSchemaType[type.literal.type], "null"]
