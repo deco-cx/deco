@@ -63,11 +63,7 @@ export interface SectionModule<TConfig = any, TProps = any> extends
 
 const sectionBlock: Block<SectionModule> = {
   type: "sections",
-  introspect: [{
-    loader: "0",
-  }, {
-    default: "0",
-  }],
+  introspect: { funcNames: ["loader", "default"] },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,

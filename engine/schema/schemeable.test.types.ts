@@ -1,6 +1,5 @@
 import { InstanceOf, PreactComponent } from "$live/engine/block.ts";
 import { Resolvable } from "$live/engine/core/resolver.ts";
-
 export type SimpleType = {
   name: string;
 };
@@ -48,7 +47,7 @@ export interface WellKnown {
   // @ts-ignore: "will work as soon as the new engine is entirely here"
   section: InstanceOf<string, "#/root/sections">;
   promiseValue: Promise<string>;
-  resolvable: Resolvable<string>;
+  resolvable: Resolvable;
   // @ts-ignore: "will work as soon as the new engine is entirely here"
   preactComponent: PreactComponent<InstanceOf<string, "#/root/sections">>;
 }

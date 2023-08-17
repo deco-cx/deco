@@ -94,9 +94,6 @@ export type WorkflowFn<
 
 const workflowBlock: Block<BlockModule<WorkflowFn>> = {
   type: "workflows",
-  introspect: {
-    default: "0",
-  },
   adapt: applyConfigSync,
 };
 

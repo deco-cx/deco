@@ -1,18 +1,19 @@
 import blocks from "$live/blocks/index.ts";
-import { ModuleOf } from "$live/engine/block.ts";
 import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
 import { defaultRoutes } from "$live/engine/fresh/manifestGen.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 import {
   BlockModule,
   EntrypointModule,
   newSchemaBuilder,
   Schemas,
 } from "$live/engine/schema/builder.ts";
-import { denoDoc } from "$live/engine/schema/utils.ts";
+import { Schemeable } from "$live/engine/schema/transform.ts";
 import { context } from "$live/live.ts";
+import { TsType } from "https://esm.sh/v130/@swc/wasm@1.3.76/wasm.js";
 import { AppManifest } from "../../blocks/app.ts";
 import { JSONSchema7 } from "../../deps.ts";
+import { parsePath } from "./parser.ts";
+import { programToBlockRef, resolvePath } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -44,6 +45,7 @@ export const genSchemasFromManifest = async (
   const modulesPromises: Promise<
     (BlockModule | EntrypointModule | undefined)
   >[] = [];
+  const references = new Map<TsType, Schemeable>();
   for (const block of blocks) {
     for (
       const blockModuleKey of Object.keys(
@@ -53,7 +55,7 @@ export const genSchemasFromManifest = async (
         ),
       )
     ) {
-      const [namespace, blockPath, blockKey] =
+      const [_namespace, blockPath, blockKey] =
         wellKnownLiveRoutes[blockModuleKey] ??
           (blockModuleKey.startsWith(".")
             ? [
@@ -67,18 +69,18 @@ export const genSchemasFromManifest = async (
               blockModuleKey,
             ]);
 
-      const docPromise = denoDoc(blockPath);
-      modulesPromises.push(docPromise.then(async (doc) => {
-        const introspectFunc = introspectWith<ModuleOf<typeof block>>(
-          block.introspect,
-        );
-        const ref = await introspectFunc(
-          {
-            base: dir,
-            namespace,
-          },
+      const pathResolved = resolvePath(blockPath, Deno.cwd());
+      const programPromise = parsePath(pathResolved);
+      modulesPromises.push(programPromise.then(async (program) => {
+        if (!program) {
+          return undefined;
+        }
+        const ref = await programToBlockRef(
+          pathResolved,
           blockKey,
-          doc,
+          program,
+          references,
+          block.introspect,
         );
         if (ref) {
           if (block.type === "routes") {
@@ -110,7 +112,7 @@ export const genSchemasFromManifest = async (
     (builder, mod) => mod ? builder.withBlockSchema(mod) : builder,
     schemaBuilder,
   );
-  return schema.build(dir, context.namespace!);
+  return schema.build();
 };
 
 const wellKnownLiveRoutes: Record<string, [string, string, string]> =

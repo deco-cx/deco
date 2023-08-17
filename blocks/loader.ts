@@ -8,7 +8,6 @@ import {
 } from "$live/blocks/utils.tsx";
 import JsonViewer from "$live/components/JsonViewer.tsx";
 import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { introspectWith } from "$live/engine/introspect.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -20,9 +19,7 @@ export interface LoaderModule<
 
 const loaderBlock: Block<LoaderModule> = {
   type: "loaders",
-  introspect: introspectWith<LoaderModule>({
-    "default": "0",
-  }, true),
+  introspect: { includeReturn: true },
   adapt: <
     TProps = any,
   >(

@@ -8,10 +8,39 @@ const schemeableToJSONSchemaFunc = (
 ): [Record<string, JSONSchema7>, JSONSchema7] => {
   const type = schemeable.type;
   switch (type) {
-    case "ref": {
-      return schemeableToJSONSchema(genId, def, schemeable.value, seen);
+    case "alias": {
+      const [newDefs, schema] = schemeableToJSONSchema(
+        genId,
+        def,
+        schemeable.value,
+        seen,
+      );
+      return schemeableToJSONSchema(genId, newDefs, {
+        name: schemeable.name,
+        type: "inline",
+        value: schema,
+      }, seen);
     }
     case "array": {
+      if (Array.isArray(schemeable.value)) {
+        let nDef = def;
+        const items: JSONSchema7[] = [];
+
+        for (const sc of schemeable.value) {
+          const [newDefs, newItems] = schemeableToJSONSchema(
+            genId,
+            nDef,
+            sc,
+            seen,
+          );
+          items.push(newItems);
+          nDef = newDefs;
+        }
+        return [nDef, {
+          type: "array",
+          items,
+        }];
+      }
       const [nDef, items] = schemeableToJSONSchema(
         genId,
         def,
@@ -164,7 +193,7 @@ const schemeableToJSONSchemaFunc = (
     }
     case "unknown":
     default:
-      return [def, {}];
+      return [def, { type: "object" }];
   }
 };
 export const schemeableToJSONSchema = (

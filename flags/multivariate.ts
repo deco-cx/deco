@@ -5,7 +5,9 @@ import { asResolved } from "$live/engine/core/resolver.ts";
 /**
  * @title Multivariate
  */
-export type MultivariateProps<T = Section[]> = MultivariateFlag<T>;
+export type MultivariateProps<MVariant = Section[]> = MultivariateFlag<
+  MVariant
+>;
 
 /**
  * @title Variant

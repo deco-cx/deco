@@ -4,37 +4,33 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { Sha1 } from "https://deno.land/std@0.61.0/hash/sha1.ts";
+import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { assertEquals, assertObjectMatch, fail } from "std/testing/asserts.ts";
 
+import { parsePath } from "$live/engine/schema/parser.ts";
 import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
 import {
-  findSchemeableFromNode,
   Schemeable,
+  typeNameToSchemeable,
 } from "$live/engine/schema/transform.ts";
-import { denoDoc } from "$live/engine/schema/utils.ts";
 import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
-import { fileSeparatorToSlash } from "$live/utils/filesystem.ts";
 import {
   assertSpyCall,
   assertSpyCalls,
   spy,
 } from "https://deno.land/std@0.179.0/testing/mock.ts";
+import { toFileUrl } from "std/path/mod.ts";
 
-const folder = dirname(import.meta.url);
+const folder = dirname(fromFileUrl(import.meta.url));
 const file = "schemeable.test.types.ts";
-const filePath = fileSeparatorToSlash(fromFileUrl(join(folder, file)));
+const path = join(folder, file);
 
 const getSchemeableFor = async (
   name: string,
 ): Promise<Schemeable | undefined> => {
-  const ast = await denoDoc(join(folder, file));
-  const nodeTypeRef = ast.find((node) => node.name === name);
-  if (!nodeTypeRef) {
-    return undefined;
-  }
-  return await findSchemeableFromNode(nodeTypeRef, [filePath, ast], new Map());
+  const ast = await parsePath(toFileUrl(path).toString());
+  return await typeNameToSchemeable(name, { path, parsedSource: ast! });
 };
 Deno.test("Simple type generation", async () => {
   const transformed = await getSchemeableFor("SimpleType");
@@ -42,20 +38,27 @@ Deno.test("Simple type generation", async () => {
     fail("SimpleType should exists");
   }
 
+  const name = Deno.build.os === "windows" ? "tl@157-178" : "tl@155-174";
   assertEquals(transformed, {
-    file: filePath,
-    jsDocSchema: undefined,
+    file: path,
+    type: "alias",
+    jsDocSchema: {},
     name: "SimpleType",
-    type: "object",
     value: {
-      name: {
-        title: "Name",
-        required: true,
-        jsDocSchema: undefined,
-        schemeable: {
-          type: "inline",
-          value: {
-            type: "string",
+      name,
+      file: path,
+      type: "object",
+      value: {
+        name: {
+          title: "Name",
+          required: true,
+          jsDocSchema: {},
+          schemeable: {
+            name: "string",
+            type: "inline",
+            value: {
+              type: "string",
+            },
           },
         },
       },
@@ -69,28 +72,39 @@ Deno.test("Simple type generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
-    allOf: undefined,
-    title: "SimpleType",
-    type: "object",
-    properties: {
-      name: {
-        $ref: `#/definitions/${rands[1]}`,
-        title: "Name",
-      },
-    },
-    required: ["name"],
+    "$ref": `#/definitions/${rands[1]}`,
+    "title": "SimpleType",
   });
 
   assertSpyCall(genId, 0, {
     args: [transformed],
     returned: rands[0],
   });
+
   assertSpyCall(genId, 1, {
-    args: [{ type: "inline", value: { type: "string" } }],
+    args: [{
+      file: path,
+      name,
+      type: "object",
+      value: {
+        name: {
+          jsDocSchema: {},
+          required: true,
+          title: "Name",
+          schemeable: {
+            name: "string",
+            type: "inline",
+            value: {
+              type: "string",
+            },
+          },
+        },
+      },
+    }],
     returned: rands[1],
   });
 
-  assertSpyCalls(genId, 2);
+  assertSpyCalls(genId, 4);
 });
 
 Deno.test("TwoRefsProperties type generation", async () => {
@@ -100,27 +114,77 @@ Deno.test("TwoRefsProperties type generation", async () => {
     fail("TwoRefsProperties should exists");
   }
 
+  const name = Deno.build.os === "windows" ? "tl@720-790" : "tl@682-749";
   assertObjectMatch(transformed, {
-    name: "TwoRefsProperties",
-    type: "object",
-    value: {
-      firstRef: {
-        required: true,
-        schemeable: {
-          name: "SimpleInterface[]",
-          type: "array",
+    "type": "alias",
+    "jsDocSchema": {},
+    "value": {
+      "file": path,
+      name,
+      "type": "object",
+      "value": {
+        "firstRef": {
+          "title": "First Ref",
+          "jsDocSchema": {},
+          "schemeable": {
+            "file": path,
+            "type": "array",
+            "name": "SimpleInterface[]",
+            "value": {
+              "jsDocSchema": {},
+              "type": "object",
+              "value": {
+                "name": {
+                  "title": "Name",
+                  "jsDocSchema": {},
+                  "schemeable": {
+                    "type": "inline",
+                    "name": "string",
+                    "value": { "type": "string" },
+                  },
+                  "required": true,
+                },
+              },
+              "file": path,
+              "name": "SimpleInterface",
+              "extends": [],
+            },
+          },
+          "required": true,
         },
-        title: "First Ref",
-      },
-      anotherRef: {
-        required: true,
-        schemeable: {
-          name: "SimpleInterface[]",
-          type: "array",
+        "anotherRef": {
+          "title": "Another Ref",
+          "jsDocSchema": {},
+          "schemeable": {
+            "file": path,
+            "type": "array",
+            "name": "SimpleInterface[]",
+            "value": {
+              "jsDocSchema": {},
+              "type": "object",
+              "value": {
+                "name": {
+                  "title": "Name",
+                  "jsDocSchema": {},
+                  "schemeable": {
+                    "type": "inline",
+                    "name": "string",
+                    "value": { "type": "string" },
+                  },
+                  "required": true,
+                },
+              },
+              "file": path,
+              "name": "SimpleInterface",
+              "extends": [],
+            },
+          },
+          "required": true,
         },
-        title: "Another Ref",
       },
     },
+    "file": path,
+    "name": "TwoRefsProperties",
   });
 
   const createHash = (input: string) => new Sha1().update(input).hex();
@@ -138,22 +202,11 @@ Deno.test("TwoRefsProperties type generation", async () => {
 
   const [definitions, _] = schemeableToJSONSchema(genId, {}, transformed);
 
-  const schemaId = createHash("object_TwoRefsProperties");
+  const schemaId = createHash("alias_TwoRefsProperties");
 
   assertObjectMatch(definitions[schemaId], {
-    type: "object",
-    properties: {
-      firstRef: {
-        "$ref": "#/definitions/f95016488720b1505d4043413c2a20ab311c47c0",
-        title: "First Ref",
-      },
-      anotherRef: {
-        "$ref": "#/definitions/f95016488720b1505d4043413c2a20ab311c47c0",
-        title: "Another Ref",
-      },
-    },
-    required: ["firstRef", "anotherRef"],
-    title: "TwoRefsProperties",
+    "$ref": "#/definitions/8272a2f269a78239b3844698e701231268da690c",
+    "title": "TwoRefsProperties",
   });
 
   //assertEquals(5, definitions.);
@@ -165,17 +218,18 @@ Deno.test("Simple interface generation", async () => {
     fail("SimpleInterface should exists");
   }
   assertEquals(transformed, {
-    extends: undefined,
-    file: filePath,
-    jsDocSchema: undefined,
+    extends: [],
+    file: path,
+    jsDocSchema: {},
     name: "SimpleInterface",
     type: "object",
     value: {
       name: {
         required: true,
         title: "Name",
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         schemeable: {
+          name: "string",
           type: "inline",
           value: {
             type: "string",
@@ -209,7 +263,7 @@ Deno.test("Simple interface generation", async () => {
     returned: rands[0],
   });
   assertSpyCall(genId, 1, {
-    args: [{ type: "inline", value: { type: "string" } }],
+    args: [{ type: "inline", value: { type: "string" }, name: "string" }],
     returned: rands[1],
   });
 
@@ -222,27 +276,29 @@ Deno.test("Non required fields generation", async () => {
     fail("NonRequiredFields should exists");
   }
   assertEquals(transformed, {
-    extends: undefined,
-    file: filePath,
-    jsDocSchema: undefined,
+    extends: [],
+    file: path,
+    jsDocSchema: {},
     name: "NonRequiredFields",
     type: "object",
     value: {
       name: {
         required: true,
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         title: "Name",
         schemeable: {
           type: "inline",
+          name: "string",
           value: { type: "string" },
         },
       },
       maybeName: {
         required: false,
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         title: "Maybe Name",
         schemeable: {
           type: "inline",
+          name: "string",
           value: { type: ["string", "null"] },
         },
       },
@@ -281,12 +337,16 @@ Deno.test("Non required fields generation", async () => {
     returned: rands[0],
   });
   assertSpyCall(genId, 1, {
-    args: [{ type: "inline", value: { type: "string" } }],
+    args: [{ type: "inline", value: { type: "string" }, name: "string" }],
     returned: rands[1],
   });
 
   assertSpyCall(genId, 2, {
-    args: [{ type: "inline", value: { type: ["string", "null"] } }],
+    args: [{
+      type: "inline",
+      value: { type: ["string", "null"] },
+      name: "string",
+    }],
     returned: rands[2],
   });
 
@@ -300,23 +360,22 @@ Deno.test("Union types generation", async () => {
   }
 
   assertEquals(transformed, {
-    extends: undefined,
-    file: filePath,
-    jsDocSchema: undefined,
+    extends: [],
+    file: path,
+    jsDocSchema: {},
     name: "UnionTypes",
     type: "object",
     value: {
       name: {
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         title: "Name",
         required: true,
         schemeable: {
           file: undefined,
-          name:
-            "47fb2fe93d8a63166d8156d088239aa2|f4e2fa6a639dd0d858a2d18a5c9d2890",
+          name: "string|number",
           value: [
-            { type: "inline", value: { type: "string" } },
-            { type: "inline", value: { type: "number" } },
+            { type: "inline", value: { type: "string" }, name: "string" },
+            { type: "inline", value: { type: "number" }, name: "number" },
           ],
           type: "union",
         },
@@ -351,12 +410,11 @@ Deno.test("Union types generation", async () => {
     args: [
       {
         file: undefined,
-        name:
-          "47fb2fe93d8a63166d8156d088239aa2|f4e2fa6a639dd0d858a2d18a5c9d2890",
+        name: "string|number",
         type: "union",
         value: [
-          { type: "inline", value: { type: "string" } },
-          { type: "inline", value: { type: "number" } },
+          { type: "inline", value: { type: "string" }, name: "string" },
+          { type: "inline", value: { type: "number" }, name: "number" },
         ],
       },
     ],
@@ -372,21 +430,21 @@ Deno.test("Array fields generation", async () => {
     fail("ArrayFields should exists");
   }
   assertEquals(transformed, {
-    extends: undefined,
-    file: filePath,
-    jsDocSchema: undefined,
+    extends: [],
+    file: path,
+    jsDocSchema: {},
     name: "ArrayFields",
     type: "object",
     value: {
       array: {
         required: true,
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         title: "Array",
         schemeable: {
           file: undefined,
-          name: undefined,
+          name: "string[]",
           type: "array",
-          value: { type: "inline", value: { type: "string" } },
+          value: { type: "inline", value: { type: "string" }, name: "string" },
         },
       },
     },
@@ -419,9 +477,9 @@ Deno.test("Array fields generation", async () => {
     args: [
       {
         file: undefined,
-        name: undefined,
+        name: "string[]",
         type: "array",
-        value: { type: "inline", value: { type: "string" } },
+        value: { type: "inline", value: { type: "string" }, name: "string" },
       },
     ],
     returned: rands[1],
@@ -437,29 +495,30 @@ Deno.test("Type reference generation", async () => {
   }
 
   assertEquals(transformed, {
-    extends: undefined,
-    file: filePath,
-    jsDocSchema: undefined,
+    extends: [],
+    file: path,
+    jsDocSchema: {},
     name: "InterfaceWithTypeRef",
     type: "object",
     value: {
       ref: {
         required: true,
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         title: "Ref",
         schemeable: {
-          extends: undefined,
-          file: filePath,
-          jsDocSchema: undefined,
+          extends: [],
+          file: path,
+          jsDocSchema: {},
           name: "SimpleInterface",
           type: "object",
           value: {
             name: {
               required: true,
               title: "Name",
-              jsDocSchema: undefined,
+              jsDocSchema: {},
               schemeable: {
                 type: "inline",
+                name: "string",
                 value: { type: "string" },
               },
             },
@@ -495,17 +554,18 @@ Deno.test("Type reference generation", async () => {
   assertSpyCall(genId, 1, {
     args: [
       {
-        extends: undefined,
-        file: filePath,
-        jsDocSchema: undefined,
+        extends: [],
+        file: path,
+        jsDocSchema: {},
         name: "SimpleInterface",
         type: "object",
         value: {
           name: {
             required: true,
-            jsDocSchema: undefined,
+            jsDocSchema: {},
             title: "Name",
             schemeable: {
+              name: "string",
               type: "inline",
               value: {
                 type: "string",
@@ -528,9 +588,9 @@ Deno.test("JSDoc tags injection", async () => {
   }
   assertEquals(transformed, {
     type: "object",
-    extends: undefined,
-    file: filePath,
-    jsDocSchema: undefined,
+    extends: [],
+    file: path,
+    jsDocSchema: {},
     name: "WithTags",
     value: {
       email: {
@@ -542,6 +602,7 @@ Deno.test("JSDoc tags injection", async () => {
         },
         title: "Email",
         schemeable: {
+          name: "string",
           type: "inline",
           value: {
             type: "string",
@@ -579,6 +640,7 @@ Deno.test("JSDoc tags injection", async () => {
   assertSpyCall(genId, 1, {
     args: [
       {
+        name: "string",
         type: "inline",
         value: { type: "string" },
       },
@@ -595,11 +657,11 @@ Deno.test("Type alias generation", async () => {
     fail("TypeAlias should exists");
   }
   assertEquals(transformed, {
-    file: filePath,
-    jsDocSchema: undefined,
+    file: path,
+    jsDocSchema: {},
     name: "TypeAlias",
-    type: "inline",
-    value: { type: "string" },
+    type: "alias",
+    value: { type: "inline", name: "string", value: { type: "string" } },
   });
 
   const rands = [crypto.randomUUID(), crypto.randomUUID()];
@@ -609,8 +671,8 @@ Deno.test("Type alias generation", async () => {
   const [definitions, ref] = schemeableToJSONSchema(genId, {}, transformed);
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
+    $ref: `#/definitions/${rands[1]}`,
     title: "TypeAlias",
-    type: "string",
   });
 
   assertSpyCall(genId, 0, {
@@ -618,7 +680,7 @@ Deno.test("Type alias generation", async () => {
     returned: rands[0],
   });
 
-  assertSpyCalls(genId, 1);
+  assertSpyCalls(genId, 3);
 });
 
 Deno.test("Wellknown in types generation", async () => {
@@ -629,57 +691,72 @@ Deno.test("Wellknown in types generation", async () => {
 
   assertEquals(transformed, {
     name: "WellKnown",
-    file: filePath,
-    jsDocSchema: undefined,
-    extends: undefined,
+    file: path,
+    jsDocSchema: {},
+    extends: [],
     type: "object",
     value: {
       array: {
         required: true,
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         schemeable: {
-          name: undefined,
+          file: undefined,
+          name: "string[]",
           type: "array",
-          value: { type: "inline", value: { type: "string" } },
+          value: { type: "inline", value: { type: "string" }, name: "string" },
         },
         title: "Array",
       },
       record: {
         required: true,
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         schemeable: {
-          file: undefined,
-          name: undefined,
+          name: "record<string>",
           type: "record",
-          value: { type: "inline", value: { type: "string" } },
+          value: { type: "inline", value: { type: "string" }, name: "string" },
         },
         title: "Record",
       },
       section: {
         required: true,
-        jsDocSchema: undefined,
-        schemeable: { type: "inline", value: { $ref: "#/root/sections" } },
+        jsDocSchema: {},
+        schemeable: {
+          file: path,
+          type: "inline",
+          value: { $ref: "#/root/sections" },
+          name: "sections",
+        },
         title: "Section",
       },
       promiseValue: {
         required: true,
-        jsDocSchema: undefined,
-        schemeable: { type: "inline", value: { type: "string" } },
+        jsDocSchema: {},
+        schemeable: {
+          type: "inline",
+          value: { type: "string" },
+          name: "string",
+        },
         title: "Promise Value",
       },
       resolvable: {
         required: true,
-        jsDocSchema: undefined,
+        jsDocSchema: {},
         schemeable: {
           type: "inline",
+          name: "Resolvable",
           value: { $ref: "#/definitions/Resolvable" },
         },
         title: "Resolvable",
       },
       preactComponent: {
         required: true,
-        jsDocSchema: undefined,
-        schemeable: { type: "inline", value: { $ref: "#/root/sections" } },
+        jsDocSchema: {},
+        schemeable: {
+          file: path,
+          type: "inline",
+          value: { $ref: "#/root/sections" },
+          name: "sections",
+        },
         title: "Preact Component",
       },
     },

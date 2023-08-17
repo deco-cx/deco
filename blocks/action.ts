@@ -11,9 +11,6 @@ export type ActionModule<
 
 const actionBlock: Block<ActionModule> = {
   type: "actions",
-  introspect: {
-    "default": "0",
-  },
   adapt: <
     TProps = any,
   >(

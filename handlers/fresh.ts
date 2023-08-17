@@ -4,6 +4,9 @@ import { RouterContext } from "$live/types.ts";
 import { allowCorsFor } from "$live/utils/http.ts";
 import { ConnInfo } from "std/http/server.ts";
 
+/**
+ * @title Fresh Config
+ */
 export interface FreshConfig {
   page: Page;
 }

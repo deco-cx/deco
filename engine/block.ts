@@ -2,15 +2,12 @@
 import { FieldResolver, Resolver } from "$live/engine/core/resolver.ts";
 import { PromiseOrValue } from "$live/engine/core/utils.ts";
 import { ResolverMiddleware } from "$live/engine/middleware.ts";
-import { Schemeable, TransformContext } from "$live/engine/schema/transform.ts";
+import { Schemeable } from "$live/engine/schema/transform.ts";
 import type { Manifest } from "$live/live.gen.ts";
 import { DecoManifest } from "$live/types.ts";
-import { DotNestedKeys } from "$live/utils/object.ts";
-import {
-  DocNode,
-  TsTypeDef,
-} from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
+import { TsTypeDef } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+import { Program, TsType } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSX } from "preact";
 import { BlockInvocation } from "./fresh/defaults.ts";
 
@@ -34,37 +31,15 @@ export type BlockModule<
   onBeforeResolveProps?: (props: any) => any;
 };
 
-export type IntrospectFunc = (
-  ctx: TransformContext,
-  path: string,
-  ast: DocNode[],
-) => Promise<BlockModuleRef | undefined>;
-
 export type ModuleOf<TBlock> = TBlock extends Block<
   infer TBlockModule
 > ? TBlockModule
   : never;
 
-type ValidParams<
-  Func extends (...args: any[]) => any,
-  N extends keyof Parameters<Func> = keyof Parameters<Func>,
-> = Parameters<Func>[N] extends undefined ? never : N;
-
-export type IntrospectFuncParam<
-  Func extends (...args: any[]) => any,
-  K extends ValidParams<Func> & string = ValidParams<Func> & string,
-> =
-  | K
-  | [K, DotNestedKeys<Parameters<Func>[K]>];
-
-export type IntrospectPath<
-  TModule extends BlockModule = BlockModule,
-> = {
-  [key in keyof TModule]?: Required<TModule>[key] extends
-    (...args: any[]) => any ? IntrospectFuncParam<Required<TModule>[key]>
-    : Required<TModule>[key] extends Record<string, any> ? string | string[]
-    : never;
-};
+export interface IntrospectParams {
+  includeReturn?: boolean | ((ts: TsType) => TsType | undefined);
+  funcNames?: string[];
+}
 
 export interface Block<
   TBlockModule extends BlockModule<
@@ -83,10 +58,7 @@ export interface Block<
   defaultPreview?: Resolver<PreactComponent, TSerializable, any>;
   defaultInvoke?: Resolver<TSerializable, BlockInvocation, any>;
   type: BType;
-  introspect:
-    | IntrospectPath<TBlockModule>
-    | IntrospectPath<TBlockModule>[]
-    | IntrospectFunc;
+  introspect?: IntrospectParams;
   decorate?: <
     TBlockModule extends BlockModule<
       TDefaultExportFunc,
@@ -110,7 +82,7 @@ export interface Block<
     any
   >[];
 }
-export type ModuleAST = [string, string, DocNode[]];
+export type ModuleAST = [string, string, Program];
 
 export type Definitions = Record<string, JSONSchema7>;
 

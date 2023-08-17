@@ -18,6 +18,7 @@ import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
 
 /**
+ * @mergeDeclarations true
  * @title Sections
  * @label hidden
  * @changeable true
@@ -144,7 +145,7 @@ const renderPage = (
   { sections: maybeSections }: Props,
   useSlotsFromChild: Record<string, UseSlotSection> = {},
   editMode: Mode = "default",
-  isPreview: boolean = false,
+  isPreview = false,
 ): JSX.Element => {
   const validSections = Array.isArray(maybeSections)
     ? maybeSections?.filter((section) =>

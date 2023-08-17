@@ -11,28 +11,23 @@ import {
 } from "$live/engine/core/resolver.ts";
 import { mapObjKeys } from "$live/engine/core/utils.ts";
 import { resolversFrom } from "$live/engine/fresh/manifest.ts";
-import {
-  DOC_CACHE_FILE_NAME,
-  hydrateDocCacheWith,
-} from "$live/engine/schema/docCache.ts";
 import { DecoManifest, FnContext } from "$live/types.ts";
-import { once, SyncOnce } from "$live/utils/sync.ts";
-import { fromFileUrl } from "std/path/mod.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 
 export type AppManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
 
+export type ManifestOf<TApp extends App> =
+  & TApp["manifest"]
+  & (TApp extends { dependencies?: (infer Depedendency)[] }
+    ? Depedendency extends App ? ManifestOf<Depedendency> : {}
+    : {});
+
 export type AppContext<
   TApp extends App,
-  TDependantManifest = TApp extends
-    { dependencies?: ({ manifest: infer TManifestDependency })[] }
-    ? TManifestDependency extends AppManifest ? TManifestDependency : {}
-    : {},
 > = FnContext<
   TApp["state"],
-  & TApp["manifest"]
-  & TDependantManifest
+  ManifestOf<TApp>
 >;
 
 export type AppFunc<
@@ -244,28 +239,14 @@ const buildApp = (extend: ExtensionFunc) =>
   const runtime = isAppRuntime(appRuntime)
     ? appRuntime
     : buildRuntimeFromApp<TState>(appRuntime);
-  const { name, docCacheFileUrl } = appRuntime;
-  const baseKey = import.meta.resolve(`${name}/`);
-  const fileUrl = docCacheFileUrl ?? `${baseKey}${DOC_CACHE_FILE_NAME}`;
-  hydrateOnce[name] ??= once<void>();
-  hydrateOnce[name].do(() => {
-    return hydrateDocCacheWith(
-      fileUrl.startsWith("file:") ? fromFileUrl(fileUrl) : fileUrl,
-      baseKey,
-    );
-  });
   const dependencies: AppRuntime[] = (runtime.dependencies ?? []).map(
     buildApp(extend),
   );
   extend(runtime);
   return dependencies.reduce(mergeRuntimes, runtime);
 };
-const hydrateOnce: Record<string, SyncOnce<void>> = {};
 const appBlock: Block<AppModule> = {
   type: "apps",
-  introspect: {
-    default: "0",
-  },
   adapt: <
     TProps = any,
     TState = {},
