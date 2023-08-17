@@ -183,7 +183,7 @@ Deno.test("TwoRefsProperties type generation", async () => {
       },
     },
     "file":
-      "/Users/marcoscandeia/workspace/deco/engine/schema/schemeable.test.types.ts",
+      path,
     "name": "TwoRefsProperties",
   });
 
