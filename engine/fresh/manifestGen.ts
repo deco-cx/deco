@@ -231,7 +231,13 @@ export const decoManifestBuilder = async (
         : initialManifest,
       "DecoManifest",
     ]
-    : [initialManifest, "AppManifest"];
+    : [
+      initialManifest.addManifestValues(["baseUrl", {
+        kind: "js",
+        raw: { identifier: "import.meta.url" },
+      }], ["name", { kind: "js", raw: namespace }]),
+      "AppManifest",
+    ];
   return appManifest
     .addImports({
       from: "$live/types.ts",

@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any ban-types
+import { dirname } from "std/path/mod.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
 import { FnProps } from "../blocks/utils.tsx";
@@ -15,7 +16,9 @@ import { DecoManifest, FnContext } from "../types.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 
-export type AppManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
+export type AppManifest = Omit<DecoManifest, "islands" | "routes"> & {
+  name: string;
+};
 
 export type ManifestOf<TApp extends App> =
   & TApp["manifest"]
@@ -75,16 +78,17 @@ export interface AppRuntime<
   resolvers: TResolverMap;
 }
 
-type BlockKey = keyof AppManifest;
+type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
 export const mergeManifests = (
   appManifest1: AppManifest,
   appManifest2: AppManifest,
 ) => {
   const manifestResult = { ...appManifest2, ...appManifest1 };
-  for (const [key, value] of Object.entries(appManifest2)) {
+  const { baseUrl, name, ...appManifest } = appManifest2;
+  for (const [key, value] of Object.entries(appManifest)) {
     const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
     for (const [blockKey, blockFunc] of Object.entries(value)) {
-      manifestBlocks[blockKey] = blockFunc;
+      manifestBlocks[blockKey.replace(name, dirname(baseUrl))] = blockFunc;
     }
     manifestResult[key as BlockKey] = manifestBlocks as any;
   }
