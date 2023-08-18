@@ -1,6 +1,6 @@
-import { genHints } from "$live/engine/core/hints.ts";
-import { BaseContext, resolve } from "$live/engine/core/resolver.ts";
-import meta from "$live/meta.json" assert { type: "json" };
+import { genHints } from "../../engine/core/hints.ts";
+import { BaseContext, resolve } from "../../engine/core/resolver.ts";
+import meta from "../../meta.json" assert { type: "json" };
 import releaseJSON from "./hints.test.json" assert { type: "json" };
 const danglingRecover = (parent: unknown) => parent;
 

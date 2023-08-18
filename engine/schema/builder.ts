@@ -1,7 +1,7 @@
-import { JSONSchema7 } from "$live/deps.ts";
-import { mergeJSONSchemas } from "$live/engine/schema/merge.ts";
-import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
-import { Schemeable } from "$live/engine/schema/transform.ts";
+import { JSONSchema7 } from "../../deps.ts";
+import { mergeJSONSchemas } from "../../engine/schema/merge.ts";
+import { schemeableToJSONSchema } from "../../engine/schema/schemeable.ts";
+import { Schemeable } from "../../engine/schema/transform.ts";
 
 export interface Schemas {
   definitions: Record<string, JSONSchema7>;

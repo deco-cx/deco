@@ -1,7 +1,6 @@
 /// <reference lib="deno.unstable" />
 
-import { crypto } from "std/crypto/mod.ts";
-import { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
+import { crypto, decodeHex, encodeHex } from "../../deps.ts";
 
 const generateKey = async (): Promise<CryptoKey> => {
   return await crypto.subtle.generateKey(

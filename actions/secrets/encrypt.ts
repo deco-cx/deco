@@ -1,8 +1,8 @@
-import { encryptToHex } from "$live/commons/secrets/keys.ts";
-import { ActionContext } from "$live/types.ts";
-import { allowCorsFor } from "$live/utils/http.ts";
-import { context } from "$live/live.ts";
+import { encryptToHex } from "../../commons/secrets/keys.ts";
 import { badRequest } from "../../engine/errors.ts";
+import { context } from "../../live.ts";
+import { ActionContext } from "../../types.ts";
+import { allowCorsFor } from "../../utils/http.ts";
 
 export interface Props {
   value: string;

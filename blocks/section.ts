@@ -1,23 +1,20 @@
 // deno-lint-ignore-file no-explicit-any
-import { HttpContext } from "$live/blocks/handler.ts";
-import { PropsLoader, propsLoader } from "$live/blocks/propsLoader.ts";
-import {
-  componentWith,
-  fnContextFromHttpContext,
-} from "$live/blocks/utils.tsx";
-import StubSection, { Empty } from "$live/components/StubSection.tsx";
+import { HttpContext } from "../blocks/handler.ts";
+import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
+import { componentWith, fnContextFromHttpContext } from "../blocks/utils.tsx";
+import StubSection, { Empty } from "../components/StubSection.tsx";
+import { JSX } from "../deps.ts";
 import {
   Block,
   BlockModule,
   ComponentFunc,
   InstanceOf,
   PreactComponent,
-} from "$live/engine/block.ts";
-import { Resolver } from "$live/engine/core/resolver.ts";
-import type { Manifest } from "$live/live.gen.ts";
-import { context } from "$live/live.ts";
-import { DecoManifest, FunctionContext } from "$live/types.ts";
-import { JSX } from "preact";
+} from "../engine/block.ts";
+import { Resolver } from "../engine/core/resolver.ts";
+import type { Manifest } from "../live.gen.ts";
+import { context } from "../live.ts";
+import { DecoManifest, FunctionContext } from "../types.ts";
 
 /**
  * @widget none
@@ -28,7 +25,7 @@ export const isSection = <
   K extends keyof TManifest["sections"],
   Sec extends TManifest["sections"][K] extends
     { default: (props: infer Props) => JSX.Element | null } ? PreactComponent<
-      JSX.Element,
+      preact.JSX.Element,
       Props
     >
     : unknown,

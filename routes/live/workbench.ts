@@ -1,8 +1,8 @@
-import { context } from "$live/live.ts";
-import { toManifestBlocks } from "$live/routes/live/_meta.ts";
-import { resolveFilePath } from "$live/utils/filesystem.ts";
 import { basename } from "std/path/mod.ts";
-import { allowCorsFor } from "$live/utils/http.ts";
+import { context } from "../../live.ts";
+import { toManifestBlocks } from "../../routes/live/_meta.ts";
+import { resolveFilePath } from "../../utils/filesystem.ts";
+import { allowCorsFor } from "../../utils/http.ts";
 
 export interface Node {
   label: string;

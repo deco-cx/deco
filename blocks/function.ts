@@ -1,13 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
-import { HandlerContext } from "$fresh/server.ts";
-import { HttpContext } from "$live/blocks/handler.ts";
-import {
-  newSingleFlightGroup,
-  SingleFlightKeyFunc,
-} from "$live/blocks/utils.tsx";
-import JsonViewer from "$live/components/JsonViewer.tsx";
-import { Block, BlockModule } from "$live/engine/block.ts";
-import { LiveConfig, LoaderFunction } from "$live/types.ts";
+import { HttpContext } from "../blocks/handler.ts";
+import { newSingleFlightGroup, SingleFlightKeyFunc } from "../blocks/utils.tsx";
+import JsonViewer from "../components/JsonViewer.tsx";
+import { HandlerContext } from "../deps.ts";
+import { Block, BlockModule } from "../engine/block.ts";
+import { LiveConfig, LoaderFunction } from "../types.ts";
 
 export type Function<TProps = any, TState = any> = LoaderFunction<
   TProps,

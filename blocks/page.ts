@@ -1,5 +1,5 @@
-import section from "$live/blocks/section.ts";
-import { InstanceOf } from "$live/engine/block.ts";
+import section from "../blocks/section.ts";
+import { InstanceOf } from "../engine/block.ts";
 
 export type Page = InstanceOf<typeof page, "#/root/pages">;
 

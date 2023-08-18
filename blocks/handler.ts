@@ -1,10 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { ServeHandler } from "$fresh/src/server/deps.ts";
-import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { BaseContext } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
-import { LiveConfig, StatefulContext } from "$live/types.ts";
-import { Handler as DenoHandler } from "std/http/server.ts";
+import { Handler as DenoHandler, ServeHandler } from "../deps.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { BaseContext } from "../engine/core/resolver.ts";
+import { PromiseOrValue } from "../engine/core/utils.ts";
+import { LiveConfig, StatefulContext } from "../types.ts";
 import { FnContext, fnContextFromHttpContext } from "./utils.tsx";
 
 export interface HttpContext<

@@ -1,16 +1,16 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { JSONSchema7 } from "$live/deps.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
-import { notUndefined, singleFlight } from "$live/engine/core/utils.ts";
-import { Schemas } from "$live/engine/schema/builder.ts";
-import { namespaceOf } from "$live/engine/schema/gen.ts";
-import { genSchemas } from "$live/engine/schema/reader.ts";
-import { context } from "$live/live.ts";
-import meta from "$live/meta.json" assert { type: "json" };
-import { AppManifest, LiveConfig, LiveState } from "$live/types.ts";
-import { resolvable } from "$live/utils/admin.ts";
-import { allowCorsFor } from "$live/utils/http.ts";
 import { major } from "std/semver/mod.ts";
+import { JSONSchema7 } from "../../deps.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
+import { notUndefined, singleFlight } from "../../engine/core/utils.ts";
+import { Schemas } from "../../engine/schema/builder.ts";
+import { namespaceOf } from "../../engine/schema/gen.ts";
+import { genSchemas } from "../../engine/schema/reader.ts";
+import { context } from "../../live.ts";
+import meta from "../../meta.json" assert { type: "json" };
+import { AppManifest, LiveConfig, LiveState } from "../../types.ts";
+import { resolvable } from "../../utils/admin.ts";
+import { allowCorsFor } from "../../utils/http.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {

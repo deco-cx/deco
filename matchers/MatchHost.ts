@@ -1,4 +1,4 @@
-import { MatchContext } from "$live/blocks/matcher.ts";
+import { MatchContext } from "../blocks/matcher.ts";
 
 /**
  * @title {{{includes}}} {{{match}}}

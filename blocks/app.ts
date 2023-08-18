@@ -1,17 +1,17 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import { propsLoader } from "$live/blocks/propsLoader.ts";
-import { SectionModule } from "$live/blocks/section.ts";
-import { FnProps } from "$live/blocks/utils.tsx";
-import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { propsLoader } from "../blocks/propsLoader.ts";
+import { SectionModule } from "../blocks/section.ts";
+import { FnProps } from "../blocks/utils.tsx";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import {
   BaseContext,
   ExtensionFunc,
   ResolvableMap,
   ResolverMap,
-} from "$live/engine/core/resolver.ts";
-import { mapObjKeys } from "$live/engine/core/utils.ts";
-import { resolversFrom } from "$live/engine/fresh/manifest.ts";
-import { DecoManifest, FnContext } from "$live/types.ts";
+} from "../engine/core/resolver.ts";
+import { mapObjKeys } from "../engine/core/utils.ts";
+import { resolversFrom } from "../engine/fresh/manifest.ts";
+import { DecoManifest, FnContext } from "../types.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 

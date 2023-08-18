@@ -1,9 +1,9 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
-import { Page } from "$live/blocks/page.ts";
-import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
-import Render from "$live/routes/[...catchall].tsx";
-import { LiveConfig, LiveState } from "$live/types.ts";
-import { bodyFromUrl } from "$live/utils/http.ts";
+import { Page } from "../../../blocks/page.ts";
+import LiveAnalytics from "../../../components/LiveAnalytics.tsx";
+import Render from "../../../routes/[...catchall].tsx";
+import { LiveConfig, LiveState } from "../../../types.ts";
+import { bodyFromUrl } from "../../../utils/http.ts";
 
 const paramsFromUrl = (
   url: URL,
@@ -86,6 +86,7 @@ export const handler = async (
 
 export const render = async (
   previewUrl: string,
+  // deno-lint-ignore no-explicit-any
   props: any,
   req: Request,
   ctx: HandlerContext<

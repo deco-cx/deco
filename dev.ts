@@ -2,18 +2,15 @@ import { setupGithooks } from "https://deno.land/x/githooks@0.0.4/githooks.ts";
 import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
-import { ResolverMap } from "$live/engine/core/resolver.ts";
-import { ManifestBuilder } from "$live/engine/fresh/manifestBuilder.ts";
-import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
-import { genSchemas } from "$live/engine/schema/reader.ts";
-import { context } from "$live/live.ts";
-import { DecoManifest } from "$live/types.ts";
-import {
-  namespaceFromSiteJson,
-  updateImportMap,
-} from "$live/utils/namespace.ts";
-import { checkUpdates } from "$live/utils/update.ts";
-export { format } from "$live/utils/formatter.ts";
+import { ResolverMap } from "./engine/core/resolver.ts";
+import { ManifestBuilder } from "./engine/fresh/manifestBuilder.ts";
+import { decoManifestBuilder } from "./engine/fresh/manifestGen.ts";
+import { genSchemas } from "./engine/schema/reader.ts";
+import { context } from "./live.ts";
+import { DecoManifest } from "./types.ts";
+import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
+import { checkUpdates } from "./utils/update.ts";
+export { format } from "./utils/formatter.ts";
 
 /**
  * Ensures that the target function runs only once per `deno task start`, in other words the watcher will not trigger the function again.

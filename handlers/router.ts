@@ -1,6 +1,6 @@
-import { Handler } from "$live/blocks/handler.ts";
-import { FnContext } from "$live/types.ts";
+import { Handler } from "../blocks/handler.ts";
 import { Routes } from "../flags/audience.ts";
+import { FnContext } from "../types.ts";
 import { router } from "./routesSelection.ts";
 
 export interface RouterConfig {

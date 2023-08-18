@@ -1,6 +1,3 @@
-import { JSONSchema7, JSONSchema7Type } from "$live/deps.ts";
-import { BlockModuleRef, IntrospectParams } from "$live/engine/block.ts";
-import { beautify } from "$live/engine/schema/utils.ts";
 import type { ParsedSource } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
 import type {
   ArrowFunctionExpression,
@@ -33,6 +30,9 @@ import type {
   VariableDeclarator,
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
+import { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
+import { BlockModuleRef, IntrospectParams } from "../../engine/block.ts";
+import { beautify } from "../../engine/schema/utils.ts";
 import { spannableToJSONSchema } from "./comments.ts";
 import { parsePath } from "./parser.ts";
 export interface SchemeableBase {

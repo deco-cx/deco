@@ -1,4 +1,4 @@
-import { encode } from "https://deno.land/std@0.190.0/encoding/hex.ts";
+import { encode } from "std/encoding/hex.ts";
 
 /**
  * Takes an arbitrary string and converts to its sha256 hex representation.

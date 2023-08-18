@@ -1,10 +1,10 @@
-import { Page } from "$live/blocks/page.ts";
-import { notUndefined } from "$live/engine/core/utils.ts";
+import { Page } from "../blocks/page.ts";
+import { notUndefined } from "../engine/core/utils.ts";
 
 import {
   Props as LivePageProps,
   useLivePageContext,
-} from "$live/pages/LivePage.tsx";
+} from "../pages/LivePage.tsx";
 
 export interface Props {
   page: Page;

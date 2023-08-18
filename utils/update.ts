@@ -3,7 +3,7 @@ import {
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { join } from "std/path/mod.ts";
-import { stringifyForWrite } from "$live/utils/json.ts";
+import { stringifyForWrite } from "../utils/json.ts";
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK = /(\$live)|(deco-sites\/.*\/$)/;

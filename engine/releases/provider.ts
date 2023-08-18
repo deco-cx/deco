@@ -1,8 +1,8 @@
-import { Resolvable } from "$live/engine/core/resolver.ts";
-import { fromPagesTable } from "$live/engine/releases/pages.ts";
-import { fromConfigsTable } from "$live/engine/releases/release.ts";
-import { context } from "$live/live.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
+import { fromPagesTable } from "../../engine/releases/pages.ts";
+import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
+import { context } from "../../live.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
 import { newSupabase } from "./supabaseProvider.ts";

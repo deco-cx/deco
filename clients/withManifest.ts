@@ -1,5 +1,5 @@
-import { IS_BROWSER } from "$fresh/runtime.ts";
-import type { App, AppManifest, ManifestOf } from "$live/blocks/app.ts";
+import type { App, AppManifest, ManifestOf } from "../blocks/app.ts";
+import { IS_BROWSER } from "../deps.ts";
 import type {
   AvailableActions,
   AvailableFunctions,
@@ -9,10 +9,10 @@ import type {
   ManifestAction,
   ManifestFunction,
   ManifestLoader,
-} from "$live/routes/live/invoke/index.ts";
-import { readFromStream } from "$live/utils/http.ts";
-import { DotNestedKeys } from "$live/utils/object.ts";
+} from "../routes/live/invoke/index.ts";
+import { readFromStream } from "../utils/http.ts";
 import { isStreamProps } from "../utils/invoke.ts";
+import { DotNestedKeys } from "../utils/object.ts";
 
 // deno-lint-ignore no-explicit-any
 export type GenericFunction = (...args: any[]) => Promise<any>;

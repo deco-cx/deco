@@ -1,10 +1,10 @@
-import { HttpContext } from "$live/blocks/handler.ts";
-import { Matcher } from "$live/blocks/matcher.ts";
-import JsonViewer from "$live/components/JsonViewer.tsx";
-import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { isDeferred } from "$live/engine/core/resolver.ts";
-import { context } from "$live/live.ts";
-import { TsType, TsTypeReference } from "https://esm.sh/v130/@swc/wasm@1.3.76";
+import { HttpContext } from "../blocks/handler.ts";
+import { Matcher } from "../blocks/matcher.ts";
+import JsonViewer from "../components/JsonViewer.tsx";
+import { TsType, TsTypeReference } from "../deps.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { isDeferred } from "../engine/core/resolver.ts";
+import { context } from "../live.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<TVariant = unknown> {

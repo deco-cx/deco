@@ -1,4 +1,4 @@
-import { cancel } from "$live/commons/workflows/initialize.ts"; // side-effect initialize
+import { cancel } from "../../commons/workflows/initialize.ts"; // side-effect initialize
 
 export interface Props {
   executionId: string;

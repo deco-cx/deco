@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { ResolveHints } from "$live/engine/core/hints.ts";
+import { ResolveHints } from "../../engine/core/hints.ts";
 import {
   BaseContext,
   FieldResolver,
@@ -9,9 +9,9 @@ import {
   ResolveFunc,
   Resolver,
   ResolverMap,
-} from "$live/engine/core/resolver.ts";
-import { Release } from "$live/engine/releases/provider.ts";
-import { once, SyncOnce } from "$live/utils/sync.ts";
+} from "../../engine/core/resolver.ts";
+import { Release } from "../../engine/releases/provider.ts";
+import { once, SyncOnce } from "../../utils/sync.ts";
 import { ResolvableMap } from "./resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {

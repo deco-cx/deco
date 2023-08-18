@@ -1,6 +1,6 @@
-import { decoManifestBuilder } from "$live/engine/fresh/manifestGen.ts";
 import * as colors from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
+import { decoManifestBuilder } from "../../engine/fresh/manifestGen.ts";
 import { format } from "../../utils/formatter.ts";
 import { AppConfig, getDecoConfig } from "./config.ts";
 

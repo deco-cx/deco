@@ -1,16 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
 import { HandlerContext } from "$fresh/src/server/types.ts";
-import { AppManifest } from "$live/blocks/app.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
-import dfs from "$live/engine/fresh/defaults.ts";
-import type { Manifest } from "$live/live.gen.ts";
-import { LiveConfig } from "$live/mod.ts";
-import type { LiveState } from "$live/types.ts";
-import { bodyFromUrl } from "$live/utils/http.ts";
-import { invokeToHttpResponse } from "$live/utils/invoke.ts";
-import { DeepPick, DotNestedKeys } from "$live/utils/object.ts";
-import { UnionToIntersection } from "https://esm.sh/utility-types@3.10.0";
+import { AppManifest } from "../../../blocks/app.ts";
+import { UnionToIntersection } from "../../../deps.ts";
+import { Resolvable } from "../../../engine/core/resolver.ts";
+import { PromiseOrValue } from "../../../engine/core/utils.ts";
+import dfs from "../../../engine/fresh/defaults.ts";
+import type { Manifest } from "../../../live.gen.ts";
+import { LiveConfig } from "../../../mod.ts";
+import type { LiveState } from "../../../types.ts";
+import { bodyFromUrl } from "../../../utils/http.ts";
+import { invokeToHttpResponse } from "../../../utils/invoke.ts";
+import { DeepPick, DotNestedKeys } from "../../../utils/object.ts";
 
 export type AvailableFunctions<TManifest extends AppManifest> =
   & keyof TManifest["functions"]

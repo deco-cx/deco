@@ -1,4 +1,4 @@
-import { Metadata, WorkflowExecution as DurableExecution } from "$live/deps.ts";
+import { Metadata, WorkflowExecution as DurableExecution } from "../../deps.ts";
 export type Arg = readonly unknown[];
 
 // deno-lint-ignore no-explicit-any

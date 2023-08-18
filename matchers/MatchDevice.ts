@@ -1,5 +1,5 @@
-import { MatchContext } from "$live/blocks/matcher.ts";
 import { UAParser } from "https://esm.sh/ua-parser-js@1.0.35";
+import { MatchContext } from "../blocks/matcher.ts";
 
 /**
  * @title {{{.}}}

@@ -1,5 +1,5 @@
-import { pickPaths } from "$live/utils/object.ts";
 import { assertArrayIncludes, assertEquals } from "std/testing/asserts.ts";
+import { pickPaths } from "../utils/object.ts";
 
 Deno.test("pickpaths", async (t) => {
   const testObj = {

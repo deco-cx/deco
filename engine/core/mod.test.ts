@@ -1,11 +1,11 @@
-import { genHints } from "$live/engine/core/hints.ts";
+import { assertEquals, assertRejects } from "std/testing/asserts.ts";
+import { assertSpyCalls, spy } from "std/testing/mock.ts";
+import { genHints } from "../../engine/core/hints.ts";
 import {
   BaseContext,
   resolve,
   ResolverMap,
-} from "$live/engine/core/resolver.ts";
-import { assertEquals, assertRejects } from "std/testing/asserts.ts";
-import { assertSpyCalls, spy } from "std/testing/mock.ts";
+} from "../../engine/core/resolver.ts";
 import defaults from "../fresh/defaults.ts";
 
 Deno.test("resolve", async (t) => {

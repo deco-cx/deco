@@ -1,4 +1,4 @@
-import { signal } from "$live/commons/workflows/initialize.ts"; // side-effect initialize
+import { signal } from "../../commons/workflows/initialize.ts"; // side-effect initialize
 
 export interface Props {
   signal: string;

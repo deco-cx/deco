@@ -1,8 +1,8 @@
-import { Section } from "$live/blocks/section.ts";
-import { renderSection } from "$live/pages/LivePage.tsx";
+import { Section } from "../blocks/section.ts";
+import { renderSection } from "../pages/LivePage.tsx";
 import withConditions, {
   Props as ConditionalProps,
-} from "$live/utils/conditionals.ts";
+} from "../utils/conditionals.ts";
 
 export interface Props {
   sections: Section[];

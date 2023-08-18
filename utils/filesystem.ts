@@ -1,8 +1,4 @@
-import {
-  fromFileUrl,
-  join,
-  sep,
-} from "https://deno.land/std@0.147.0/path/mod.ts";
+import { fromFileUrl, join, sep } from "std/path/mod.ts";
 
 export const resolveFilePath = (path: string) => {
   return join(

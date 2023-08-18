@@ -1,7 +1,6 @@
-import { Head } from "$fresh/runtime.ts";
-import { context } from "$live/live.ts";
-import type { Flag, Site } from "$live/types.ts";
-import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
+import { DomInspectorActivators, Head, inspectVSCode } from "../deps.ts";
+import { context } from "../live.ts";
+import type { Flag, Site } from "../types.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
 

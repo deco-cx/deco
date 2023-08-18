@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { supabase } from "$live/deps.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
-import { singleFlight } from "$live/engine/core/utils.ts";
-import getSupabaseClient from "$live/supabase.ts";
-import { JSONSchema, Site } from "$live/types.ts";
+import { supabase } from "../../deps.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
+import { singleFlight } from "../../engine/core/utils.ts";
+import getSupabaseClient from "../../supabase.ts";
+import { JSONSchema, Site } from "../../types.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import {
   CurrResolvables,

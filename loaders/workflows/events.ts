@@ -1,6 +1,6 @@
-import { history } from "$live/commons/workflows/initialize.ts"; // side-effect initialize
-import type { HistoryEvent, Pagination } from "$live/deps.ts";
-import { StreamProps } from "$live/utils/invoke.ts";
+import { history } from "../../commons/workflows/initialize.ts"; // side-effect initialize
+import type { HistoryEvent, Pagination } from "../../deps.ts";
+import { StreamProps } from "../../utils/invoke.ts";
 
 export interface Props extends StreamProps {
   id: string;

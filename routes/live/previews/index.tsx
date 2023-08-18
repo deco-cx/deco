@@ -1,8 +1,8 @@
 import { PageProps } from "$fresh/server.ts";
-import { Page } from "$live/blocks/page.ts";
-import LiveControls from "$live/components/LiveControls.tsx";
-import { context } from "$live/live.ts";
-import { pageIdFromMetadata } from "$live/pages/LivePage.tsx";
+import { Page } from "../../../blocks/page.ts";
+import LiveControls from "../../../components/LiveControls.tsx";
+import { context } from "../../../live.ts";
+import { pageIdFromMetadata } from "../../../pages/LivePage.tsx";
 
 function Preview(props: PageProps<Page>) {
   const { data } = props;

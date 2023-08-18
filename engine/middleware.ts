@@ -1,8 +1,4 @@
-import {
-  BaseContext,
-  Resolvable,
-  Resolver,
-} from "$live/engine/core/resolver.ts";
+import { BaseContext, Resolvable, Resolver } from "../engine/core/resolver.ts";
 
 export interface ResolverMiddlewareContext<T> extends BaseContext {
   next?(): Promise<T>;

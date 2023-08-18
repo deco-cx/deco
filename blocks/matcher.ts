@@ -1,8 +1,8 @@
-import { HttpContext } from "$live/blocks/handler.ts";
-import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import { Flag } from "$live/types.ts";
 import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
-import { getCookies, setCookie } from "std/http/mod.ts";
+import { HttpContext } from "../blocks/handler.ts";
+import { getCookies, setCookie } from "../deps.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { Flag } from "../types.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 

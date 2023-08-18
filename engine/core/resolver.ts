@@ -3,16 +3,16 @@ import {
   HintNode,
   ResolveHints,
   traverseAny,
-} from "$live/engine/core/hints.ts";
-import { ResolveOptions } from "$live/engine/core/mod.ts";
+} from "../../engine/core/hints.ts";
+import { ResolveOptions } from "../../engine/core/mod.ts";
 import {
   isAwaitable,
   notUndefined,
   PromiseOrValue,
   UnPromisify,
-} from "$live/engine/core/utils.ts";
-import { identity } from "$live/utils/object.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
+} from "../../engine/core/utils.ts";
+import { identity } from "../../utils/object.ts";
+import { createServerTimings } from "../../utils/timings.ts";
 import { ExtensionOptions } from "./mod.ts";
 
 export class DanglingReference extends Error {

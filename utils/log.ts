@@ -1,13 +1,5 @@
-import {
-  blue,
-  bold,
-  cyan,
-  gray,
-  green,
-  red,
-  yellow,
-} from "https://deno.land/std@0.147.0/fmt/colors.ts";
-import { context } from "$live/live.ts";
+import { blue, bold, cyan, gray, green, red, yellow } from "std/fmt/colors.ts";
+import { context } from "../live.ts";
 
 export const formatHeaders = (h: Headers) => {
   const headersAsObject: Record<string, string> = {};

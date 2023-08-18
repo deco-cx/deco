@@ -1,4 +1,4 @@
-import { FlagObj } from "$live/blocks/flag.ts";
+import { FlagObj } from "../blocks/flag.ts";
 export { onBeforeResolveProps } from "./everyone.ts";
 
 export type Props<T> = FlagObj<T>;

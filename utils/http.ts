@@ -1,5 +1,5 @@
-import meta from "$live/meta.json" assert { type: "json" };
-import { adminDomain, isAdmin } from "$live/utils/admin.ts";
+import meta from "../meta.json" assert { type: "json" };
+import { adminDomain, isAdmin } from "../utils/admin.ts";
 import { buildObj } from "./object.ts";
 
 export const DEFAULT_CACHE_CONTROL: CacheControl = {
@@ -176,6 +176,7 @@ export function setCSPHeaders(
  * @param url the url to parse
  * @returns the parsed payload
  */
+// deno-lint-ignore no-explicit-any
 export const bodyFromUrl = (param: string, url: URL): Record<string, any> => {
   const props = url.searchParams.get(param);
   if (!props) {

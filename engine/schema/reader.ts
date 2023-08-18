@@ -1,7 +1,7 @@
-import { genSchemasFromManifest } from "$live/engine/schema/gen.ts";
-import { context } from "$live/live.ts";
-import { AppManifest } from "$live/types.ts";
 import { join } from "std/path/mod.ts";
+import { genSchemasFromManifest } from "../../engine/schema/gen.ts";
+import { context } from "../../live.ts";
+import { AppManifest } from "../../types.ts";
 
 export const genSchemas = async (
   manifest: AppManifest,
