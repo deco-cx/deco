@@ -19,6 +19,9 @@ export interface BlockInvocation<TProps = any> {
   source?: "internal" | "external";
 }
 export default {
+  resolvables: function (_props, { resolvables }) {
+    return resolvables;
+  },
   bootstrap: function (_props, { resolvables, resolve, runOnce, resolvers }) {
     const apps = runOnce("bootstrap", async () => {
       const apps: Resolvable[] = [];
