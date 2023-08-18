@@ -1,6 +1,6 @@
-import { stringifyForWrite } from "$live/utils/json.ts";
 import * as colors from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
+import { stringifyForWrite } from "../../utils/json.ts";
 import { getDecoConfig } from "./config.ts";
 
 const resolveAppLocation = async (appLocation: string) => {

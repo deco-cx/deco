@@ -1,8 +1,8 @@
-import { FlagObj } from "$live/blocks/flag.ts";
-import { Handler } from "$live/blocks/handler.ts";
-import { Matcher } from "$live/blocks/matcher.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
+import { FlagObj } from "../blocks/flag.ts";
+import { Handler } from "../blocks/handler.ts";
+import { Matcher } from "../blocks/matcher.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
+import { Resolvable } from "../engine/core/resolver.ts";
 import { metabasePreview } from "../utils/metabase.tsx";
 import Flag from "./flag.ts";
 export { onBeforeResolveProps } from "./everyone.ts";

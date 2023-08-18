@@ -1,5 +1,5 @@
 import { getSetCookies, Handler, setCookie } from "std/http/mod.ts";
-import { isFreshCtx } from "$live/handlers/fresh.ts";
+import { isFreshCtx } from "../handlers/fresh.ts";
 
 const HOP_BY_HOP = [
   "Keep-Alive",

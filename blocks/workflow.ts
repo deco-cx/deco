@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { applyConfigSync } from "$live/blocks/utils.tsx";
+import { applyConfigSync } from "../blocks/utils.tsx";
 import {
   Arg,
   LocalActivityCommand,
@@ -7,9 +7,9 @@ import {
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
   WorkflowExecution,
-} from "$live/deps.ts";
-import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
-import type { Manifest } from "$live/live.gen.ts";
+} from "../deps.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import type { Manifest } from "../live.gen.ts";
 import {
   AvailableActions,
   AvailableFunctions,
@@ -19,9 +19,9 @@ import {
   ManifestAction,
   ManifestFunction,
   ManifestLoader,
-} from "$live/routes/live/invoke/index.ts";
-import { DecoManifest, LiveConfig, LiveState } from "$live/types.ts";
-import { DotNestedKeys } from "$live/utils/object.ts";
+} from "../routes/live/invoke/index.ts";
+import { DecoManifest, LiveConfig, LiveState } from "../types.ts";
+import { DotNestedKeys } from "../utils/object.ts";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;

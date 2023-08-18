@@ -1,6 +1,6 @@
-import { IslandModule as FreshIsland } from "$fresh/src/server/types.ts";
-import section, { SectionModule } from "$live/blocks/section.ts";
-import { Block, InstanceOf } from "$live/engine/block.ts";
+import section, { SectionModule } from "../blocks/section.ts";
+import { IslandModule as FreshIsland } from "../deps.ts";
+import { Block, InstanceOf } from "../engine/block.ts";
 
 export type Island = InstanceOf<Block, "#/root/islands">;
 

@@ -1,18 +1,18 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { mergeManifests } from "$live/blocks/app.ts";
-import { DECO_MATCHER_HEADER_QS } from "$live/blocks/matcher.ts";
+import { getSetCookies } from "std/http/mod.ts";
+import { mergeManifests } from "../blocks/app.ts";
+import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import {
   getPagePathTemplate,
   redirectTo,
-} from "$live/compatibility/v0/editorData.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
-import { context } from "$live/live.ts";
-import { Apps } from "$live/mod.ts";
-import { LiveConfig, LiveState } from "$live/types.ts";
-import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
-import { formatLog } from "$live/utils/log.ts";
-import { getSetCookies } from "std/http/mod.ts";
-import { isAdmin } from "$live/utils/admin.ts";
+} from "../compatibility/v0/editorData.ts";
+import { Resolvable } from "../engine/core/resolver.ts";
+import { context } from "../live.ts";
+import { Apps } from "../mod.ts";
+import { LiveConfig, LiveState } from "../types.ts";
+import { isAdmin } from "../utils/admin.ts";
+import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
+import { formatLog } from "../utils/log.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);

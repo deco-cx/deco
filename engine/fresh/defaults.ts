@@ -1,12 +1,12 @@
+import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 import {
   BaseContext,
   isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
-} from "$live/engine/core/resolver.ts";
-import { DotNestedKeys, pickPaths } from "$live/utils/object.ts";
-import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
+} from "../../engine/core/resolver.ts";
+import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import { HttpError } from "../errors.ts";
 
 export const PREVIEW_PREFIX_KEY = "Preview@";

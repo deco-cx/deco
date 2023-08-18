@@ -1,5 +1,5 @@
-import { JSONSchema7 } from "$live/deps.ts";
-import { Schemeable } from "$live/engine/schema/transform.ts";
+import { JSONSchema7 } from "../../deps.ts";
+import { Schemeable } from "../../engine/schema/transform.ts";
 const schemeableToJSONSchemaFunc = (
   genId: (s: Schemeable) => string | undefined,
   def: Record<string, JSONSchema7>,

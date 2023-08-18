@@ -1,7 +1,7 @@
-import { Matcher } from "$live/blocks/matcher.ts";
-import { FnProps } from "$live/blocks/utils.tsx";
-import { context } from "$live/live.ts";
-import { LoaderContext } from "$live/mod.ts";
+import { Matcher } from "../blocks/matcher.ts";
+import { FnProps } from "../blocks/utils.tsx";
+import { context } from "../live.ts";
+import { LoaderContext } from "../mod.ts";
 
 /**
  * @title Rule

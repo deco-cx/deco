@@ -1,9 +1,9 @@
-import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
-import { workflowHTTPHandler } from "$live/deps.ts";
-import type { Manifest } from "$live/live.gen.ts";
-import { LiveConfig, LiveState } from "$live/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { Handler } from "../blocks/handler.ts";
+import { Workflow, WorkflowContext } from "../blocks/workflow.ts";
+import { workflowHTTPHandler } from "../deps.ts";
+import type { Manifest } from "../live.gen.ts";
+import { LiveConfig, LiveState } from "../mod.ts";
 import { isFreshCtx } from "./fresh.ts";
 export interface Config {
   workflow: Workflow;

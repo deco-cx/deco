@@ -1,21 +1,18 @@
 import { Head } from "$fresh/runtime.ts";
-import { isSection, Section } from "$live/blocks/section.ts";
-import LiveAnalytics from "$live/components/LiveAnalytics.tsx";
-import LiveControls from "$live/components/LiveControls.tsx";
-import LivePageEditor, {
-  BlockControls,
-} from "$live/components/LivePageEditor.tsx";
-import { ComponentMetadata, PreactComponent } from "$live/engine/block.ts";
-import { context } from "$live/live.ts";
-import {
-  usePageContext,
-  useRouterContext,
-} from "$live/routes/[...catchall].tsx";
-import { isLivePageProps } from "$live/sections/PageInclude.tsx";
-import { CONTENT_SLOT_NAME } from "$live/sections/Slot.tsx";
-import { Props as UseSlotProps } from "$live/sections/UseSlot.tsx";
 import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
+import { isSection, Section } from "../blocks/section.ts";
+import LiveAnalytics from "../components/LiveAnalytics.tsx";
+import LiveControls from "../components/LiveControls.tsx";
+import LivePageEditor, {
+  BlockControls,
+} from "../components/LivePageEditor.tsx";
+import { ComponentMetadata, PreactComponent } from "../engine/block.ts";
+import { context } from "../live.ts";
+import { usePageContext, useRouterContext } from "../routes/[...catchall].tsx";
+import { isLivePageProps } from "../sections/PageInclude.tsx";
+import { CONTENT_SLOT_NAME } from "../sections/Slot.tsx";
+import { Props as UseSlotProps } from "../sections/UseSlot.tsx";
 
 /**
  * @mergeDeclarations true

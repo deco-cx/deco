@@ -1,8 +1,9 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { WorkflowQS } from "$live/actions/workflows/start.ts";
-import { Workflow, WorkflowContext } from "$live/blocks/workflow.ts";
-import { initOnce } from "$live/commons/workflows/initialize.ts";
-import { WorkflowMetadata } from "$live/commons/workflows/types.ts";
+import { ConnInfo } from "std/http/server.ts";
+import { WorkflowQS } from "../../../actions/workflows/start.ts";
+import { Workflow, WorkflowContext } from "../../../blocks/workflow.ts";
+import { initOnce } from "../../../commons/workflows/initialize.ts";
+import { WorkflowMetadata } from "../../../commons/workflows/types.ts";
 import {
   Arg,
   arrToStream,
@@ -11,11 +12,10 @@ import {
   Metadata,
   workflowRemoteRunner,
   workflowWebSocketHandler,
-} from "$live/deps.ts";
-import type { Manifest } from "$live/live.gen.ts";
-import { LiveConfig } from "$live/mod.ts";
-import { LiveState } from "$live/types.ts";
-import { ConnInfo } from "std/http/server.ts";
+} from "../../../deps.ts";
+import type { Manifest } from "../../../live.gen.ts";
+import { LiveConfig } from "../../../mod.ts";
+import { LiveState } from "../../../types.ts";
 
 export type Props = HttpRunRequest<
   Arg,

@@ -1,10 +1,10 @@
-import { get } from "$live/commons/workflows/initialize.ts"; // side-effect initialize
+import { get } from "../../commons/workflows/initialize.ts"; // side-effect initialize
 import {
   toExecution,
   WorkflowExecution,
   WorkflowMetadata,
-} from "$live/commons/workflows/types.ts";
-import { Arg } from "$live/deps.ts";
+} from "../../commons/workflows/types.ts";
+import { Arg } from "../../deps.ts";
 export interface Props {
   id: string;
 }

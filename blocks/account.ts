@@ -1,6 +1,6 @@
-import { applyConfigSync } from "$live/blocks/utils.tsx";
-import JsonViewer from "$live/components/JsonViewer.tsx";
-import { Block, BlockModule, InstanceOf } from "$live/engine/block.ts";
+import { applyConfigSync } from "../blocks/utils.tsx";
+import JsonViewer from "../components/JsonViewer.tsx";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 
 // deno-lint-ignore no-empty-interface
 export interface Account {}

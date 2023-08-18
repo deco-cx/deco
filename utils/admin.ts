@@ -1,4 +1,4 @@
-import { JSONSchema7 } from "$live/deps.ts";
+import { JSONSchema7 } from "../deps.ts";
 
 export const adminDomain = `https://deco.cx`;
 const adminPreviewUrls = "https://deco-sites-admin-";

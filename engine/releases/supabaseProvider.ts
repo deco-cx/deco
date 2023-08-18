@@ -1,12 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
-import { supabase } from "$live/deps.ts";
-import { Resolvable } from "$live/engine/core/resolver.ts";
+import { supabase } from "../../deps.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
 import {
   OnChangeCallback,
   ReadOptions,
   Release,
-} from "$live/engine/releases/provider.ts";
-import { stringToHexSha256 } from "$live/utils/encoding.ts";
+} from "../../engine/releases/provider.ts";
+import { stringToHexSha256 } from "../../utils/encoding.ts";
 export interface SupabaseReleaseProvider {
   /**
    * @returns the current state of the release.

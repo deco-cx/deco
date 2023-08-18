@@ -1,4 +1,4 @@
-import { Head } from "$fresh/runtime.ts";
+import { Head } from "../deps.ts";
 
 export interface Props {
   body: string;

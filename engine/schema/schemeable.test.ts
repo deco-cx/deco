@@ -8,19 +8,18 @@ import { Sha1 } from "https://deno.land/std@0.61.0/hash/sha1.ts";
 import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { assertEquals, assertObjectMatch, fail } from "std/testing/asserts.ts";
 
-import { parsePath } from "$live/engine/schema/parser.ts";
-import { schemeableToJSONSchema } from "$live/engine/schema/schemeable.ts";
-import {
-  Schemeable,
-  typeNameToSchemeable,
-} from "$live/engine/schema/transform.ts";
-import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
 import {
   assertSpyCall,
   assertSpyCalls,
   spy,
 } from "https://deno.land/std@0.179.0/testing/mock.ts";
-import { toFileUrl } from "std/path/mod.ts";
+import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
+import { parsePath } from "../../engine/schema/parser.ts";
+import { schemeableToJSONSchema } from "../../engine/schema/schemeable.ts";
+import {
+  Schemeable,
+  typeNameToSchemeable,
+} from "../../engine/schema/transform.ts";
 
 const folder = dirname(fromFileUrl(import.meta.url));
 const file = "schemeable.test.types.ts";

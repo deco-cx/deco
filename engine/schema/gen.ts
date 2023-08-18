@@ -1,17 +1,16 @@
-import blocks from "$live/blocks/index.ts";
-import { withoutLocalModules } from "$live/engine/fresh/manifest.ts";
-import { defaultRoutes } from "$live/engine/fresh/manifestGen.ts";
+import { AppManifest } from "../../blocks/app.ts";
+import blocks from "../../blocks/index.ts";
+import { JSONSchema7, TsType } from "../../deps.ts";
+import { withoutLocalModules } from "../../engine/fresh/manifest.ts";
+import { defaultRoutes } from "../../engine/fresh/manifestGen.ts";
 import {
   BlockModule,
   EntrypointModule,
   newSchemaBuilder,
   Schemas,
-} from "$live/engine/schema/builder.ts";
-import { Schemeable } from "$live/engine/schema/transform.ts";
-import { context } from "$live/live.ts";
-import { TsType } from "https://esm.sh/v130/@swc/wasm@1.3.76/wasm.js";
-import { AppManifest } from "../../blocks/app.ts";
-import { JSONSchema7 } from "../../deps.ts";
+} from "../../engine/schema/builder.ts";
+import { Schemeable } from "../../engine/schema/transform.ts";
+import { context } from "../../live.ts";
 import { parsePath } from "./parser.ts";
 import { programToBlockRef, resolvePath } from "./transform.ts";
 

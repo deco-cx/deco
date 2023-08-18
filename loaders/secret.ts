@@ -1,5 +1,5 @@
-import { decryptFromHex } from "$live/commons/secrets/keys.ts";
-import { context } from "$live/live.ts";
+import { decryptFromHex } from "../commons/secrets/keys.ts";
+import { context } from "../live.ts";
 
 /**
  * @title Plain Text Secret (use Secret instead)

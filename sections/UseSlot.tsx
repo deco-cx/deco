@@ -1,7 +1,7 @@
-import { Section } from "$live/blocks/section.ts";
-import { notUndefined } from "$live/engine/core/utils.ts";
-import { useLivePageContext } from "$live/pages/LivePage.tsx";
-import { WellKnownSlots } from "$live/sections/Slot.tsx";
+import { Section } from "../blocks/section.ts";
+import { notUndefined } from "../engine/core/utils.ts";
+import { useLivePageContext } from "../pages/LivePage.tsx";
+import { WellKnownSlots } from "../sections/Slot.tsx";
 
 export interface Props {
   name: string | WellKnownSlots;

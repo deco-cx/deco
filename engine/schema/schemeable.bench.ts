@@ -4,20 +4,19 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { dirname, join } from "std/path/mod.ts";
 
-import { parsePath } from "$live/engine/schema/parser.ts";
+import {
+  Schemeable as _Schemeable,
+  findSchemeableFromNode,
+} from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
+import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
+import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
+import { parsePath } from "../../engine/schema/parser.ts";
 import {
   Schemeable,
   typeNameToSchemeable,
-} from "$live/engine/schema/transform.ts";
-import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
-import {
-  findSchemeableFromNode,
-  Schemeable as _Schemeable,
-} from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
-import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
-import { toFileUrl } from "std/path/mod.ts";
+} from "../../engine/schema/transform.ts";
 
 const folder = dirname(fromFileUrl(import.meta.url));
 const file = "schemeable.test.types.ts";

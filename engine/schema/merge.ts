@@ -1,4 +1,4 @@
-import { JSONSchema7 } from "$live/deps.ts";
+import { JSONSchema7 } from "../../deps.ts";
 
 const merge = (
   defObj: JSONSchema7,

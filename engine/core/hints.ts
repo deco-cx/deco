@@ -2,7 +2,7 @@ import {
   isResolvable,
   isResolved,
   Resolvable,
-} from "$live/engine/core/resolver.ts";
+} from "../../engine/core/resolver.ts";
 
 export type HintNode<T> = {
   [key in keyof T]?: HintNode<T[key]> | null;

@@ -6,8 +6,8 @@ import {
   init,
   signal as durableSignal,
   start as durableStart,
-} from "$live/deps.ts";
-import { context } from "$live/live.ts";
+} from "../../deps.ts";
+import { context } from "../../live.ts";
 
 const initializeOnceWhen = <TArgs extends Arg = Arg, TResult = unknown>(
   f: (...args: [...TArgs]) => TResult,

@@ -1,9 +1,9 @@
-import { Page } from "$live/blocks/page.ts";
-import Fresh from "$live/handlers/fresh.ts";
-import { context } from "$live/live.ts";
-import { adminUrlFor, isAdmin } from "$live/utils/admin.ts";
 import { ConnInfo } from "std/http/server.ts";
+import { Page } from "../blocks/page.ts";
+import Fresh from "../handlers/fresh.ts";
+import { context } from "../live.ts";
 import { pageIdFromMetadata } from "../pages/LivePage.tsx";
+import { adminUrlFor, isAdmin } from "../utils/admin.ts";
 
 export interface DevConfig {
   page: Page;

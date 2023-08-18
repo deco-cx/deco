@@ -1,23 +1,23 @@
 // deno-lint-ignore-file no-explicit-any
-import { AppManifest } from "$live/blocks/app.ts";
+import { AppManifest } from "../blocks/app.ts";
+import type { InvocationFunc } from "../clients/withManifest.ts";
+import { Component, JSX } from "../deps.ts";
 import {
   Block,
   BlockModule,
   ComponentFunc,
   PreactComponent,
-} from "$live/engine/block.ts";
+} from "../engine/block.ts";
 import {
   FieldResolver,
   ResolveFunc,
   Resolver,
-} from "$live/engine/core/resolver.ts";
-import { PromiseOrValue, singleFlight } from "$live/engine/core/utils.ts";
-import { HttpError } from "$live/engine/errors.ts";
-import { ResolverMiddlewareContext } from "$live/engine/middleware.ts";
-import { context } from "$live/live.ts";
-import { Component, JSX } from "preact";
-import type { InvocationFunc } from "../clients/withManifest.ts";
+} from "../engine/core/resolver.ts";
+import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
+import { HttpError } from "../engine/errors.ts";
+import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Manifest } from "../live.gen.ts";
+import { context } from "../live.ts";
 import { HttpContext } from "./handler.ts";
 import { ErrorBoundaryComponent } from "./section.ts";
 

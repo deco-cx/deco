@@ -1,14 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
-import { FieldResolver, Resolver } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
-import { ResolverMiddleware } from "$live/engine/middleware.ts";
-import { Schemeable } from "$live/engine/schema/transform.ts";
-import type { Manifest } from "$live/live.gen.ts";
-import { DecoManifest } from "$live/types.ts";
-import { TsTypeDef } from "https://deno.land/x/deno_doc@0.58.0/lib/types.d.ts";
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import { Program, TsType } from "https://esm.sh/v130/@swc/wasm@1.3.76";
-import { JSX } from "preact";
+import { JSX, Program, TsType } from "../deps.ts";
+import { FieldResolver, Resolver } from "../engine/core/resolver.ts";
+import { PromiseOrValue } from "../engine/core/utils.ts";
+import { ResolverMiddleware } from "../engine/middleware.ts";
+import { Schemeable } from "../engine/schema/transform.ts";
+import type { Manifest } from "../live.gen.ts";
+import { DecoManifest } from "../types.ts";
 import { BlockInvocation } from "./fresh/defaults.ts";
 
 export interface BlockModuleRef {
@@ -85,12 +83,6 @@ export interface Block<
 export type ModuleAST = [string, string, Program];
 
 export type Definitions = Record<string, JSONSchema7>;
-
-export interface FunctionBlockDefinition {
-  name: string;
-  input: TsTypeDef | undefined | JSONSchema7;
-  output: TsTypeDef | JSONSchema7;
-}
 
 export type BlockType = string;
 export type ImportString = string;

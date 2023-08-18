@@ -1,6 +1,6 @@
-import { Head } from "$fresh/runtime.ts";
-import { PreactComponent } from "$live/engine/block.ts";
 import { JSX } from "preact";
+import { Head } from "../deps.ts";
+import { PreactComponent } from "../engine/block.ts";
 
 interface PreviewIconProps extends JSX.HTMLAttributes<SVGSVGElement> {
   id:

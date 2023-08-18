@@ -1,6 +1,6 @@
-import { supabase } from "$live/deps.ts";
-import { singleFlight } from "$live/engine/core/utils.ts";
-import getSupabaseClient from "$live/supabase.ts";
+import { supabase } from "../../deps.ts";
+import { singleFlight } from "../../engine/core/utils.ts";
+import getSupabaseClient from "../../supabase.ts";
 import {
   CurrResolvables,
   SupabaseReleaseProvider,

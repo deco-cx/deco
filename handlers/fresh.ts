@@ -1,8 +1,8 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { Page } from "$live/blocks/page.ts";
-import { RouterContext } from "$live/types.ts";
-import { allowCorsFor } from "$live/utils/http.ts";
 import { ConnInfo } from "std/http/server.ts";
+import { Page } from "../blocks/page.ts";
+import { RouterContext } from "../types.ts";
+import { allowCorsFor } from "../utils/http.ts";
 
 /**
  * @title Fresh Config

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file ban-types no-explicit-any
-import { UnionToIntersection } from "https://esm.sh/utility-types";
+import { UnionToIntersection } from "../deps.ts";
 
 export type DotPrefix<T extends string> = T extends "" ? "" : `.${T}`;
 

@@ -1,39 +1,38 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import type { Manifest } from "$fresh/server.ts";
-import accountBlock from "$live/blocks/account.ts";
-import actionBlock from "$live/blocks/action.ts";
-import appBlock from "$live/blocks/app.ts";
-import flagBlock from "$live/blocks/flag.ts";
-import functionBlock from "$live/blocks/function.ts";
-import handlerBlock from "$live/blocks/handler.ts";
-import loaderBlock from "$live/blocks/loader.ts";
-import matcherBlock from "$live/blocks/matcher.ts";
-import pageBlock from "$live/blocks/page.ts";
-import sectionBlock from "$live/blocks/section.ts";
-import { FnContext } from "$live/blocks/utils.tsx";
-import workflowBlock from "$live/blocks/workflow.ts";
-import type { JSONSchema7, JSONSchema7Definition } from "$live/deps.ts";
-import { ModuleOf } from "$live/engine/block.ts";
-import { ResolveFunc } from "$live/engine/core/resolver.ts";
-import { PromiseOrValue } from "$live/engine/core/utils.ts";
-import { Release } from "$live/engine/releases/provider.ts";
-import { Route } from "$live/flags/audience.ts";
-import { createServerTimings } from "$live/utils/timings.ts";
-import {
+import accountBlock from "./blocks/account.ts";
+import actionBlock from "./blocks/action.ts";
+import appBlock, {
   AppContext,
   AppManifest,
   AppModule,
   AppRuntime,
 } from "./blocks/app.ts";
+import flagBlock from "./blocks/flag.ts";
+import functionBlock from "./blocks/function.ts";
+import handlerBlock from "./blocks/handler.ts";
+import loaderBlock from "./blocks/loader.ts";
+import matcherBlock from "./blocks/matcher.ts";
+import pageBlock from "./blocks/page.ts";
+import sectionBlock from "./blocks/section.ts";
+import { FnContext } from "./blocks/utils.tsx";
+import workflowBlock from "./blocks/workflow.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
+import type { JSONSchema7, JSONSchema7Definition } from "./deps.ts";
+import { ModuleOf } from "./engine/block.ts";
+import { ResolveFunc } from "./engine/core/resolver.ts";
+import { PromiseOrValue } from "./engine/core/utils.ts";
+import { Release } from "./engine/releases/provider.ts";
+import { Route } from "./flags/audience.ts";
 import type { Manifest as LiveManifest } from "./live.gen.ts";
+import { createServerTimings } from "./utils/timings.ts";
 export type {
   ErrorBoundaryComponent,
   ErrorBoundaryParams,
-} from "$live/blocks/section.ts";
+} from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 
-export type { App } from "$live/blocks/app.ts";
+export type { App } from "./blocks/app.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
@@ -104,9 +103,9 @@ export type LiveConfig<
     manifest: TManifest;
   };
 
-export type { PropsLoader } from "$live/blocks/propsLoader.ts";
-export type { SectionProps } from "$live/blocks/section.ts";
-export type { FnContext } from "$live/blocks/utils.tsx";
+export type { PropsLoader } from "./blocks/propsLoader.ts";
+export type { SectionProps } from "./blocks/section.ts";
+export type { FnContext } from "./blocks/utils.tsx";
 export type ActionContext<
   TState = {},
   TManifest extends AppManifest = LiveManifest,

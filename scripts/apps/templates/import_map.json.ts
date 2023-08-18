@@ -1,12 +1,11 @@
 import { InitContext } from "../init.ts";
 
 export default function AppLoadersBin(
-  { appName, decoVersion }: InitContext,
+  { decoVersion }: InitContext,
 ) {
   return JSON.stringify(
     {
       "imports": {
-        [`${appName}/`]: "./app/",
         "$live/": `https://denopkg.com/deco-cx/deco@${decoVersion}/`,
         "$fresh/": "https://denopkg.com/deco-cx/fresh@1.3.3/",
         "preact": "https://esm.sh/preact@10.15.1",

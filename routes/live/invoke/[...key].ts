@@ -1,7 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { LiveConfig, LiveState } from "$live/types.ts";
-import { bodyFromUrl } from "$live/utils/http.ts";
-import { invokeToHttpResponse } from "$live/utils/invoke.ts";
+import { LiveConfig, LiveState } from "../../../types.ts";
+import { bodyFromUrl } from "../../../utils/http.ts";
+import { invokeToHttpResponse } from "../../../utils/invoke.ts";
 import { InvokeFunction, payloadToResolvable } from "./index.ts";
 
 export const handler = async (

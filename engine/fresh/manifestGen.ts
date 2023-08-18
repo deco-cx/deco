@@ -1,13 +1,13 @@
-import blocks from "$live/blocks/index.ts";
-import { Block, BlockType } from "$live/engine/block.ts";
-import { shouldBeLocal } from "$live/engine/fresh/manifest.ts";
+import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { walk, WalkEntry } from "std/fs/walk.ts";
+import blocks from "../../blocks/index.ts";
+import { Block, BlockType } from "../../engine/block.ts";
+import { shouldBeLocal } from "../../engine/fresh/manifest.ts";
 import {
   ManifestBuilder,
   newManifestBuilder,
-} from "$live/engine/fresh/manifestBuilder.ts";
-import { exists, fileSeparatorToSlash } from "$live/utils/filesystem.ts";
-import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { walk, WalkEntry } from "std/fs/walk.ts";
+} from "../../engine/fresh/manifestBuilder.ts";
+import { exists, fileSeparatorToSlash } from "../../utils/filesystem.ts";
 
 const withDefinition = (
   man: ManifestBuilder,

@@ -3,24 +3,21 @@
  * This file should be deleted as soon as we have all stores migrated to live major v1 and we have dropped the admin support for the v0 major.
  */
 
-import { Resolvable } from "$live/engine/core/resolver.ts";
+import { JSONSchema7, JSONSchema7TypeName } from "../../deps.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
 import {
   PageFunction,
   PageSection,
   PageState,
-} from "$live/engine/releases/pages.ts";
-import { Schemas } from "$live/engine/schema/builder.ts";
-import { genSchemas } from "$live/engine/schema/reader.ts";
-import { Audience } from "$live/flags/audience.ts";
-import { EveryoneConfig } from "$live/flags/everyone.ts";
-import { context } from "$live/live.ts";
-import { JSONSchema } from "$live/types.ts";
-import { allowCorsFor, defaultHeaders } from "$live/utils/http.ts";
-import { filenameFromPath } from "$live/utils/page.ts";
-import {
-  JSONSchema7,
-  JSONSchema7TypeName,
-} from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+} from "../../engine/releases/pages.ts";
+import { Schemas } from "../../engine/schema/builder.ts";
+import { genSchemas } from "../../engine/schema/reader.ts";
+import { Audience } from "../../flags/audience.ts";
+import { EveryoneConfig } from "../../flags/everyone.ts";
+import { context } from "../../live.ts";
+import { JSONSchema } from "../../types.ts";
+import { allowCorsFor, defaultHeaders } from "../../utils/http.ts";
+import { filenameFromPath } from "../../utils/page.ts";
 import { uniqBy } from "../../utils/unique.ts";
 
 export interface WithSchema {

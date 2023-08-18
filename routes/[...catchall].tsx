@@ -1,12 +1,12 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
-import { Handler } from "$live/blocks/handler.ts";
-import { Page } from "$live/blocks/page.ts";
-import { PageContext } from "$live/engine/block.ts";
-import { LiveConfig, LiveState, RouterContext } from "$live/types.ts";
-import { setCSPHeaders } from "$live/utils/http.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import { ConnInfo } from "std/http/server.ts";
+import { Handler } from "../blocks/handler.ts";
+import { Page } from "../blocks/page.ts";
+import { PageContext } from "../engine/block.ts";
+import { LiveConfig, LiveState, RouterContext } from "../types.ts";
+import { setCSPHeaders } from "../utils/http.ts";
 
 const ctx = createContext<PageContext | undefined>(undefined);
 

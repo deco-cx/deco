@@ -1,30 +1,30 @@
 // deno-lint-ignore-file no-explicit-any
-import { HandlerContext } from "$fresh/server.ts";
-import blocks from "$live/blocks/index.ts";
-import { Block, BlockModule } from "$live/engine/block.ts";
-import { ReleaseResolver } from "$live/engine/core/mod.ts";
+import blocks from "../../blocks/index.ts";
+import { HandlerContext } from "../../deps.ts";
+import { Block, BlockModule } from "../../engine/block.ts";
+import { ReleaseResolver } from "../../engine/core/mod.ts";
 import {
   BaseContext,
   DanglingReference,
   Resolvable,
   Resolver,
   ResolverMap,
-} from "$live/engine/core/resolver.ts";
-import { mapObjKeys, PromiseOrValue } from "$live/engine/core/utils.ts";
+} from "../../engine/core/resolver.ts";
+import { mapObjKeys, PromiseOrValue } from "../../engine/core/utils.ts";
 import defaultResolvers, {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,
-} from "$live/engine/fresh/defaults.ts";
-import { integrityCheck } from "$live/engine/integrity.ts";
-import { compose } from "$live/engine/middleware.ts";
-import { getComposedConfigStore } from "$live/engine/releases/provider.ts";
-import { context } from "$live/live.ts";
-import { LiveConfig } from "$live/types.ts";
+} from "../../engine/fresh/defaults.ts";
+import { integrityCheck } from "../../engine/integrity.ts";
+import { compose } from "../../engine/middleware.ts";
+import { getComposedConfigStore } from "../../engine/releases/provider.ts";
+import { context } from "../../live.ts";
+import { LiveConfig } from "../../types.ts";
 
-import { AppManifest } from "$live/blocks/app.ts";
-import { usePreviewFunc } from "$live/blocks/utils.tsx";
-import { SiteInfo } from "$live/types.ts";
 import { parse } from "std/flags/mod.ts";
+import { AppManifest } from "../../blocks/app.ts";
+import { usePreviewFunc } from "../../blocks/utils.tsx";
+import { SiteInfo } from "../../types.ts";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
