@@ -138,7 +138,7 @@ export const handler = async (
     if (revision !== latestRevision || mschema === null) {
       const endBuildSchema = ctx.state?.t?.start("build-resolvables");
       mschema = buildSchemaWithResolvables(
-        await genSchemas(ctx.state.manifest),
+        await genSchemas(ctx.state.manifest, ctx.state.sourceMap),
         { ...await ctx.state.resolve({ __resolveType: "resolvables" }) },
       );
       latestRevision = revision;

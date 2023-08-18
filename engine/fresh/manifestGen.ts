@@ -235,10 +235,10 @@ export const decoManifestBuilder = async (
       initialManifest.addManifestValues(["baseUrl", {
         kind: "js",
         raw: { identifier: "import.meta.url" },
-      }], ["name", { kind: "js", raw: namespace }]),
+      }]),
       "AppManifest",
     ];
-  return appManifest
+  return appManifest.addManifestValues(["name", { kind: "js", raw: namespace }])
     .addImports({
       from: "$live/types.ts",
       clauses: [{ import: manifestType }],

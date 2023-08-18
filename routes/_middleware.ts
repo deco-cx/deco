@@ -87,10 +87,18 @@ export const handler = async (
     ctx.state.global = state; // compatibility mode with functions.
 
     const apps = ctx?.state?.$live?.apps;
-    ctx.state.manifest = context.manifest!;
+    let [manifest, sourceMap] = mergeManifests(
+      [context.manifest!, {}],
+      context.manifest!,
+    );
     for (const app of Array.isArray(apps) ? apps : []) {
-      ctx.state.manifest = mergeManifests(ctx.state.manifest, app.manifest);
+      [manifest, sourceMap] = mergeManifests(
+        [manifest, sourceMap],
+        app.manifest,
+      );
     }
+    ctx.state.manifest = manifest;
+    ctx.state.sourceMap = sourceMap;
 
     const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
       isAdminOrLocalhost(req);

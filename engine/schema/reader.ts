@@ -2,15 +2,17 @@ import { join } from "std/path/mod.ts";
 import { genSchemasFromManifest } from "../../engine/schema/gen.ts";
 import { context } from "../../live.ts";
 import { AppManifest } from "../../types.ts";
+import { SourceMap } from "../../blocks/app.ts";
 
 export const genSchemas = async (
   manifest: AppManifest,
-  subDir?: string,
+  sourceMap: SourceMap = {},
 ) => {
-  const base = subDir ? join(Deno.cwd(), subDir) : Deno.cwd();
+  const base = Deno.cwd();
   const schema = await genSchemasFromManifest(
     manifest,
     base,
+    sourceMap,
   );
 
   if (!context.isDeploy) {

@@ -1,4 +1,4 @@
-import { AppManifest } from "../../blocks/app.ts";
+import { AppManifest, SourceMap } from "../../blocks/app.ts";
 import blocks from "../../blocks/index.ts";
 import { JSONSchema7, TsType } from "../../deps.ts";
 import { withoutLocalModules } from "../../engine/fresh/manifest.ts";
@@ -21,6 +21,7 @@ export const namespaceOf = (blkType: string, blkKey: string): string => {
 export const genSchemasFromManifest = async (
   manifest: AppManifest,
   baseDir?: string,
+  sourceMap: SourceMap = {},
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
   const dir = baseDir ? baseDir : Deno.cwd();
@@ -64,7 +65,7 @@ export const genSchemasFromManifest = async (
             ]
             : [
               namespaceOf(block.type, blockModuleKey),
-              import.meta.resolve(blockModuleKey),
+              sourceMap[blockModuleKey] ?? import.meta.resolve(blockModuleKey),
               blockModuleKey,
             ]);
 
