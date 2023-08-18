@@ -14,11 +14,12 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import { resolversFrom } from "../engine/fresh/manifest.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 
-export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
-
-export type AppManifest = Omit<DecoManifest, "islands" | "routes"> & {
-  name: string;
-};
+export type Apps = InstanceOf<AppRuntimeWithMeta, "#/root/apps">;
+export type SourceMap = Record<string, string>;
+export interface AppRuntimeWithMeta extends AppRuntime {
+  sourceMap: SourceMap;
+}
+export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 
 export type ManifestOf<TApp extends App> =
   & TApp["manifest"]
@@ -80,32 +81,45 @@ export interface AppRuntime<
 
 type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
 export const mergeManifests = (
-  appManifest1: AppManifest,
-  appManifest2: AppManifest,
-) => {
-  const manifestResult = { ...appManifest2, ...appManifest1 };
-  const { baseUrl, name, ...appManifest } = appManifest2;
+  [current, sourceMap]: [AppManifest, SourceMap],
+  manifest: AppManifest,
+): [AppManifest, SourceMap] => {
+  const manifestResult = { ...manifest, ...current };
+  const { baseUrl, name, ...appManifest } = manifest;
   for (const [key, value] of Object.entries(appManifest)) {
     const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
     for (const [blockKey, blockFunc] of Object.entries(value)) {
-      manifestBlocks[blockKey.replace(name, dirname(baseUrl))] = blockFunc;
+      manifestBlocks[blockKey] = blockFunc;
+      if (baseUrl) {
+        sourceMap[blockKey] = blockKey.replace(name, dirname(baseUrl));
+      }
     }
     manifestResult[key as BlockKey] = manifestBlocks as any;
   }
 
-  return manifestResult;
+  return [manifestResult, sourceMap];
 };
 
-export const mergeRuntimes = <TAppRuntime extends AppRuntime = AppRuntime>(
+export const mergeRuntimes = <
+  TAppRuntime extends AppRuntimeWithMeta = AppRuntimeWithMeta,
+>(
   {
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
+    sourceMap,
   }: TAppRuntime,
-  { resolvers, manifest, resolvables }: TAppRuntime,
-): Pick<TAppRuntime, "manifest" | "resolvables" | "resolvers"> => {
+  { resolvers, manifest, resolvables }: AppRuntime,
+): Pick<
+  TAppRuntime,
+  "manifest" | "resolvables" | "resolvers" | "sourceMap"
+> => {
+  const [mergedManifest, newSourceMap] = mergeManifests([
+    currentManifest,
+    sourceMap,
+  ], manifest);
   return {
-    manifest: mergeManifests(currentManifest, manifest),
+    manifest: mergedManifest,
     resolvables: {
       ...currentResolvables,
       ...resolvables,
@@ -114,6 +128,7 @@ export const mergeRuntimes = <TAppRuntime extends AppRuntime = AppRuntime>(
       ...currentResolvers,
       ...resolvers,
     },
+    sourceMap: newSourceMap,
   };
 };
 
@@ -242,7 +257,10 @@ const buildApp = (extend: ExtensionFunc) =>
     buildApp(extend),
   );
   extend(runtime);
-  return dependencies.reduce(mergeRuntimes, runtime);
+  return [...dependencies, runtime].reduce(
+    mergeRuntimes,
+    { sourceMap: {}, resolvers: {}, manifest: { name: ".", baseUrl: "." } },
+  );
 };
 const appBlock: Block<AppModule> = {
   type: "apps",
