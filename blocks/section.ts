@@ -25,7 +25,7 @@ export const isSection = <
   K extends keyof TManifest["sections"],
   Sec extends TManifest["sections"][K] extends
     { default: (props: infer Props) => JSX.Element | null } ? PreactComponent<
-      preact.JSX.Element,
+      JSX.Element,
       Props
     >
     : unknown,

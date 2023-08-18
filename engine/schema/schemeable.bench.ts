@@ -4,19 +4,18 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
+import { dirname, join } from "std/path/mod.ts";
 
-import { fromFileUrl } from "https://deno.land/std@0.170.0/path/mod.ts";
 import {
-    Schemeable as _Schemeable,
-    findSchemeableFromNode,
+  Schemeable as _Schemeable,
+  findSchemeableFromNode,
 } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
 import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
-import { toFileUrl } from "std/path/mod.ts";
+import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
 import { parsePath } from "../../engine/schema/parser.ts";
 import {
-    Schemeable,
-    typeNameToSchemeable,
+  Schemeable,
+  typeNameToSchemeable,
 } from "../../engine/schema/transform.ts";
 
 const folder = dirname(fromFileUrl(import.meta.url));

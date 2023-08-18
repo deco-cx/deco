@@ -28,11 +28,11 @@ import type { Manifest as LiveManifest } from "./live.gen.ts";
 import { createServerTimings } from "./utils/timings.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams
+  ErrorBoundaryParams,
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 
-  export type { App } from "./blocks/app.ts";
+export type { App } from "./blocks/app.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;

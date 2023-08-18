@@ -9,10 +9,7 @@ import LivePageEditor, {
 } from "../components/LivePageEditor.tsx";
 import { ComponentMetadata, PreactComponent } from "../engine/block.ts";
 import { context } from "../live.ts";
-import {
-  usePageContext,
-  useRouterContext,
-} from "../routes/[...catchall].tsx";
+import { usePageContext, useRouterContext } from "../routes/[...catchall].tsx";
 import { isLivePageProps } from "../sections/PageInclude.tsx";
 import { CONTENT_SLOT_NAME } from "../sections/Slot.tsx";
 import { Props as UseSlotProps } from "../sections/UseSlot.tsx";
@@ -69,7 +66,7 @@ interface UseSlotSection {
   used: boolean;
 }
 
-const USE_SLOT_SECTION_KEY = "../sections/UseSlot.tsx" as const;
+const USE_SLOT_SECTION_KEY = "$live/sections/UseSlot.tsx" as const;
 /**
  * Builds a map which the key is the name of the slot and the value is the slot component itself.
  * For those sections that aren't used inside a slot it is considered the default `content slot`.
@@ -112,7 +109,7 @@ const useSlots = (
   impls: Record<string, UseSlotSection>,
 ) =>
 (sec: Section): Section[] => {
-  if (isSection(sec, "../sections/Slot.tsx")) {
+  if (isSection(sec, "$live/sections/Slot.tsx")) {
     const impl = impls[sec.props.name ?? CONTENT_SLOT_NAME];
     if (impl && !impl.used) {
       impl.used = true;
