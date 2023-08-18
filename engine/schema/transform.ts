@@ -128,7 +128,7 @@ const tsTypeElementsToObjectSchemeable = async (
       continue;
     }
     const key = prop.key;
-    if (key.type !== "Identifier") {
+    if (key.type !== "Identifier" && key.type !== "StringLiteral") {
       continue;
     }
     keysPromise.push(
