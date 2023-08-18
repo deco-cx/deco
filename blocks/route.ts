@@ -146,6 +146,8 @@ const debug = {
   },
 };
 
+const originalFetch = globalThis.fetch;
+
 export const buildDecoState = (resolveKey: string | Resolvable) =>
   async function (
     request: Request,
@@ -167,8 +169,6 @@ export const buildDecoState = (resolveKey: string | Resolvable) =>
     );
 
     const isLocalhost = !liveContext.isDeploy;
-
-    const originalFetch = globalThis.fetch;
 
     // Logs outgoing requests if ?__d is present in localhost
     if (isLocalhost) {
