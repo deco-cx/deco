@@ -1,14 +1,15 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { getSetCookies } from "std/http/mod.ts";
-import { mergeManifests } from "../blocks/app.ts";
+import { mergeManifests, SourceMap } from "../blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import {
   getPagePathTemplate,
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
+import defaults from "../engine/fresh/defaults.ts";
 import { context } from "../live.ts";
-import { Apps } from "../mod.ts";
+import { AppManifest, Apps } from "../mod.ts";
 import { LiveConfig, LiveState } from "../types.ts";
 import { isAdmin } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
@@ -87,16 +88,25 @@ export const handler = async (
     ctx.state.global = state; // compatibility mode with functions.
 
     const apps = ctx?.state?.$live?.apps;
-    let [manifest, sourceMap] = mergeManifests(
-      [context.manifest!, {}],
-      context.manifest!,
-    );
-    for (const app of Array.isArray(apps) ? apps : []) {
-      [manifest, sourceMap] = mergeManifests(
-        [manifest, sourceMap],
-        app.manifest,
+    const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
+      let [manifest, sourceMap] = mergeManifests(
+        [context.manifest!, {}],
+        context.manifest!,
       );
-    }
+      for (const app of Array.isArray(apps) ? apps : []) {
+        [manifest, sourceMap] = mergeManifests(
+          [manifest, sourceMap],
+          app.manifest,
+        );
+      }
+      return [manifest, sourceMap];
+    };
+    const [manifest, sourceMap] = await ctx.state.resolve<
+      [AppManifest, SourceMap]
+    >({
+      func: buildManifest,
+      __resolveType: defaults["once"].name,
+    });
     ctx.state.manifest = manifest;
     ctx.state.sourceMap = sourceMap;
 
