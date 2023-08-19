@@ -17,3 +17,5 @@ export type { App, AppContext, AppModule, AppRuntime } from "./types.ts";
 export type { StreamProps } from "./utils/invoke.ts";
 export { stylesPlugin };
 export { allowCorsFor } from "./utils/http.ts";
+export type { Secret } from "./loaders/secret.ts";
+export * as blocks from "./blocks/index.ts";
