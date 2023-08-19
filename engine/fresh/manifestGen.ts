@@ -222,7 +222,7 @@ export const decoManifestBuilder = async (
     blockIdx++;
   }
 
-  const [appManifest, manifestType] = !appMode
+  const [appManifest, manifestType, typeImports] = !appMode
     ? [
       injectRoutes
         ? defaultLiveRoutes(
@@ -230,17 +230,16 @@ export const decoManifestBuilder = async (
         )
         : initialManifest,
       "DecoManifest",
+      "$live/types.ts",
     ]
     : [
-      initialManifest.addManifestValues(["baseUrl", {
-        kind: "js",
-        raw: { identifier: "import.meta.url" },
-      }]),
+      initialManifest,
       "AppManifest",
+      "./deps.ts",
     ];
   return appManifest.addManifestValues(["name", { kind: "js", raw: namespace }])
     .addImports({
-      from: "$live/types.ts",
+      from: typeImports,
       clauses: [{ import: manifestType }],
     })
     .addExportDefault({
