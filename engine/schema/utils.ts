@@ -20,6 +20,8 @@ export const parseJSDocAttribute = (key: string, value: string) => {
     case "writeOnly":
     case "uniqueItems":
       return Boolean(value);
+    case "default":
+      return !Number.isNaN(+value) ? +value : value;
     default:
       return value;
   }

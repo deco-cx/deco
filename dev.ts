@@ -10,6 +10,7 @@ import { context } from "./live.ts";
 import { DecoManifest } from "./types.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
+import { parse } from "std/flags/mod.ts";
 export { format } from "./utils/formatter.ts";
 
 /**
@@ -166,12 +167,18 @@ function isDyamicImportArray(
 // Generate live own manifest data so that other sites can import native functions and sections.
 export const liveNs = "$live";
 if (import.meta.main) {
+  const flags = parse(Deno.args, {
+    boolean: ["print"],
+  });
   context.namespace = liveNs;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
   await generate(dir, newManifestData).then(async () => {
     await setManifest(dir);
-    await genSchemas(context.manifest!);
+    const schema = await genSchemas(context.manifest!);
+    if (flags.print) {
+      console.log(JSON.stringify(schema, null, 2));
+    }
   });
 }
 
