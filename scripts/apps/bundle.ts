@@ -9,6 +9,7 @@ const bundleApp = (dir: string) => async (app: AppConfig) => {
   const appDir = join(dir, app.dir);
   const manifest = await decoManifestBuilder(appDir, app.name, {
     appMode: true,
+    deps: app.deps,
   });
 
   const manifestFile = join(appDir, "manifest.gen.ts");
