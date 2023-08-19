@@ -10,10 +10,10 @@ export { asResolved, isDeferred } from "./engine/core/resolver.ts";
 export type { Resolved } from "./engine/core/resolver.ts";
 export { badRequest, notFound, redirect } from "./engine/errors.ts";
 export { $live } from "./engine/fresh/manifest.ts";
-export type { Routes, Route } from "./flags/audience.ts";
+export type { Route, Routes } from "./flags/audience.ts";
 export { context } from "./live.ts";
 export * from "./types.ts";
 export type { App, AppContext, AppModule, AppRuntime } from "./types.ts";
 export type { StreamProps } from "./utils/invoke.ts";
 export { stylesPlugin };
-
+export { allowCorsFor } from "./utils/http.ts";
