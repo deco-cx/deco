@@ -179,13 +179,14 @@ const appsBlocks = (blk: Block) => localBlocks[blk.type] !== true;
 
 export interface ManifestOpts {
   appMode?: boolean;
+  deps?: string;
   injectRoutes?: boolean;
 }
 
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
-  { appMode, injectRoutes }: ManifestOpts = {
+  { appMode, injectRoutes, deps }: ManifestOpts = {
     appMode: false,
     injectRoutes: true,
   },
@@ -235,7 +236,7 @@ export const decoManifestBuilder = async (
     : [
       initialManifest,
       "AppManifest",
-      "./deps.ts",
+      deps ?? "../deps.ts",
     ];
   return appManifest.addManifestValues(["name", { kind: "js", raw: namespace }])
     .addImports({
