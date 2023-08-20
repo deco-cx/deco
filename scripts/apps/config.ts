@@ -3,7 +3,6 @@ import { join, toFileUrl } from "std/path/mod.ts";
 export interface AppConfig {
   name: string;
   dir: string;
-  deps?: string;
 }
 export interface DecoConfig {
   apps?: AppConfig[];
@@ -22,7 +21,6 @@ export const getDecoConfig = async (appLocation: string, appName?: string) => {
           apps: [{
             name: appName ?? Deno.args[0] ?? "unknown",
             dir: ".",
-            deps: "./deps.ts",
           }],
         };
       },
