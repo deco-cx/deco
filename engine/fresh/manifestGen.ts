@@ -179,14 +179,13 @@ const appsBlocks = (blk: Block) => localBlocks[blk.type] !== true;
 
 export interface ManifestOpts {
   appMode?: boolean;
-  deps?: string;
   injectRoutes?: boolean;
 }
 
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
-  { appMode, injectRoutes, deps }: ManifestOpts = {
+  { appMode, injectRoutes }: ManifestOpts = {
     appMode: false,
     injectRoutes: true,
   },
@@ -223,26 +222,23 @@ export const decoManifestBuilder = async (
     blockIdx++;
   }
 
-  const [appManifest, manifestType, typeImports] = !appMode
+  const [appManifest, manifestType] = !appMode
     ? [
-      injectRoutes
+      (injectRoutes
         ? defaultLiveRoutes(
           initialManifest,
         )
-        : initialManifest,
+        : initialManifest).addImports({
+          from: "$live/types.ts",
+          clauses: [{ import: "DecoManifest" }],
+        }),
       "DecoManifest",
-      "$live/types.ts",
     ]
     : [
       initialManifest,
-      "AppManifest",
-      deps ?? "../deps.ts",
+      undefined,
     ];
   return appManifest.addManifestValues(["name", { kind: "js", raw: namespace }])
-    .addImports({
-      from: typeImports,
-      clauses: [{ import: manifestType }],
-    })
     .addExportDefault({
       variable: { identifier: "manifest", satisfies: manifestType },
     });

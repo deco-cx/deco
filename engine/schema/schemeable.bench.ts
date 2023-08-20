@@ -7,8 +7,8 @@
 import { dirname, join } from "std/path/mod.ts";
 
 import {
-  Schemeable as _Schemeable,
   findSchemeableFromNode,
+  Schemeable as _Schemeable,
 } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
 import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
 import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
