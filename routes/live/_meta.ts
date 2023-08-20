@@ -29,13 +29,13 @@ export interface MetaInfo {
 
 export const toManifestBlocks = (
   decoManifest: AppManifest & {
-    baseUrl?: string;
     routes?: unknown;
   },
 ): ManifestBlocks => {
   const {
     baseUrl: _ignoreBaseUrl,
     routes: _ignoreRoutes,
+    name: _ignoreName,
     ...blocks
   } = decoManifest;
   const manBlocks: Record<string, BlockMap> = {};
