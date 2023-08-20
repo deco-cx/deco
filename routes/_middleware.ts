@@ -1,6 +1,6 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { getSetCookies } from "std/http/mod.ts";
-import { mergeManifests, SourceMap } from "../blocks/app.ts";
+import { buildSourceMap, mergeManifests, SourceMap } from "../blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import {
   getPagePathTemplate,
@@ -89,13 +89,13 @@ export const handler = async (
 
     const apps = ctx?.state?.$live?.apps;
     const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
-      let [manifest, sourceMap] = mergeManifests(
-        [context.manifest!, {}],
-        context.manifest!,
-      );
-      for (const app of Array.isArray(apps) ? apps : []) {
+      if (!Array.isArray(apps) || apps.length === 0) {
+        return [context.manifest!, buildSourceMap(context.manifest!)];
+      }
+      let { manifest, sourceMap } = apps[0];
+      for (const app of apps.slice(1)) {
         [manifest, sourceMap] = mergeManifests(
-          [manifest, sourceMap],
+          [manifest, { ...sourceMap, ...app.sourceMap }],
           app.manifest,
         );
       }
