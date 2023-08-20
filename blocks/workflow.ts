@@ -1,10 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   Arg,
-  Workflow as DurableWorkflow,
-  WorkflowContext as DurableWorkflowContext,
   LocalActivityCommand,
   Metadata,
+  Workflow as DurableWorkflow,
+  WorkflowContext as DurableWorkflowContext,
   WorkflowExecution,
 } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
@@ -89,14 +89,17 @@ export type WorkflowFn<
   TState = {},
   TArgs extends Arg = any,
   TResp = any,
-  TMetadata extends Metadata = Metadata,
+  TMetadata extends Metadata = any,
   TManifest extends AppManifest = any,
+  TContext extends WorkflowContext<TManifest, TMetadata> = any,
 > = (
   config: TConfig,
   ctx: FnContext<TState, TManifest>,
-) => DurableWorkflow<TArgs, TResp, WorkflowContext<TManifest, TMetadata>>;
+) => DurableWorkflow<TArgs, TResp, TContext>;
 
-const workflowBlock: Block<BlockModule<WorkflowFn>> = {
+const workflowBlock: Block<
+  BlockModule<WorkflowFn>
+> = {
   type: "workflows",
   adapt: <
     TConfig = any,
