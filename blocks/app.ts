@@ -80,6 +80,19 @@ export interface AppRuntime<
 }
 
 type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
+
+export const buildSourceMap = (manifest: AppManifest): SourceMap => {
+  const sourceMap: SourceMap = {};
+  const { baseUrl, name, ...appManifest } = manifest;
+  for (const value of Object.values(appManifest)) {
+    for (const blockKey of Object.keys(value)) {
+      sourceMap[blockKey] = blockKey.replace(name, dirname(baseUrl));
+    }
+  }
+
+  return sourceMap;
+};
+
 export const mergeManifests = (
   [current, sourceMap]: [AppManifest, SourceMap],
   manifest: AppManifest,
@@ -259,7 +272,7 @@ const buildApp = (extend: ExtensionFunc) =>
   extend(runtime);
   return [...dependencies, runtime].reduce(
     mergeRuntimes,
-    { sourceMap: {}, resolvers: {}, manifest: { name: ".", baseUrl: "." } },
+    { ...runtime, sourceMap: {} },
   );
 };
 const appBlock: Block<AppModule> = {
