@@ -97,10 +97,10 @@ export const getWorkbenchTree = (state: Record<string, string>): Node[] => {
 };
 
 export const handler = async (req: Request) => {
-  const state = await context.release!.state();
+  const state = await context.release?.state();
   const stateIndexed: Record<string, string> = {};
 
-  for (const [key, value] of Object.entries(state)) {
+  for (const [key, value] of Object.entries(state ?? {})) {
     try {
       if ((value as { name: string })?.name?.endsWith("global.tsx")) {
         stateIndexed[value.name] = key;
