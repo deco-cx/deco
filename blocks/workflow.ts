@@ -1,11 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
-import { applyConfigSync } from "../blocks/utils.tsx";
 import {
   Arg,
-  LocalActivityCommand,
-  Metadata,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
+  LocalActivityCommand,
+  Metadata,
   WorkflowExecution,
 } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
@@ -20,14 +19,16 @@ import {
   ManifestFunction,
   ManifestLoader,
 } from "../routes/live/invoke/index.ts";
-import { DecoManifest, LiveConfig, LiveState } from "../types.ts";
+import { AppManifest, LiveConfig, LiveState } from "../types.ts";
 import { DotNestedKeys } from "../utils/object.ts";
+import { HttpContext } from "./handler.ts";
+import { FnContext, fnContextFromHttpContext } from "./utils.tsx";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
 }
 export class WorkflowContext<
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
 > extends DurableWorkflowContext<TMetadata> {
   constructor(
@@ -84,17 +85,32 @@ export type Workflow = InstanceOf<typeof workflowBlock, "#/root/workflows">;
 
 export type WorkflowFn<
   TConfig = any,
+  // deno-lint-ignore ban-types
+  TState = {},
   TArgs extends Arg = any,
   TResp = any,
   TMetadata extends Metadata = Metadata,
-  TManifest extends DecoManifest = any,
+  TManifest extends AppManifest = any,
 > = (
-  c: TConfig,
+  config: TConfig,
+  ctx: FnContext<TState, TManifest>,
 ) => DurableWorkflow<TArgs, TResp, WorkflowContext<TManifest, TMetadata>>;
 
 const workflowBlock: Block<BlockModule<WorkflowFn>> = {
   type: "workflows",
-  adapt: applyConfigSync,
+  adapt: <
+    TConfig = any,
+    // deno-lint-ignore ban-types
+    TState = {},
+  >(func: {
+    default: WorkflowFn<TConfig, TState>;
+  }) =>
+  (
+    $live: TConfig,
+    ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+  ) => {
+    return func.default($live, fnContextFromHttpContext(ctx));
+  },
 };
 
 /**
