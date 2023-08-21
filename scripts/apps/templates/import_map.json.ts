@@ -1,6 +1,6 @@
 import { InitContext } from "../init.ts";
 
-export default function AppLoadersBin(
+export default function ImportMapJSON(
   { decoVersion }: InitContext,
 ) {
   return JSON.stringify(

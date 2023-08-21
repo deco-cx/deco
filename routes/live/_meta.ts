@@ -3,6 +3,7 @@ import { major } from "std/semver/mod.ts";
 import { JSONSchema7 } from "../../deps.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { notUndefined, singleFlight } from "../../engine/core/utils.ts";
+import defaults from "../../engine/fresh/defaults.ts";
 import { Schemas } from "../../engine/schema/builder.ts";
 import { namespaceOf } from "../../engine/schema/gen.ts";
 import { genSchemas } from "../../engine/schema/reader.ts";
@@ -28,13 +29,13 @@ export interface MetaInfo {
 
 export const toManifestBlocks = (
   decoManifest: AppManifest & {
-    baseUrl?: string;
     routes?: unknown;
   },
 ): ManifestBlocks => {
   const {
     baseUrl: _ignoreBaseUrl,
     routes: _ignoreRoutes,
+    name: _ignoreName,
     ...blocks
   } = decoManifest;
   const manBlocks: Record<string, BlockMap> = {};
@@ -138,8 +139,12 @@ export const handler = async (
     if (revision !== latestRevision || mschema === null) {
       const endBuildSchema = ctx.state?.t?.start("build-resolvables");
       mschema = buildSchemaWithResolvables(
-        await genSchemas(ctx.state.manifest),
-        { ...await ctx.state.resolve({ __resolveType: "resolvables" }) },
+        await genSchemas(ctx.state.manifest, ctx.state.sourceMap),
+        {
+          ...await ctx.state.resolve({
+            __resolveType: defaults["resolvables"].name,
+          }),
+        },
       );
       latestRevision = revision;
       endBuildSchema?.();

@@ -7,6 +7,7 @@ import appBlock, {
   AppManifest,
   AppModule,
   AppRuntime,
+  SourceMap,
 } from "./blocks/app.ts";
 import flagBlock from "./blocks/flag.ts";
 import functionBlock from "./blocks/function.ts";
@@ -24,7 +25,6 @@ import { ResolveFunc } from "./engine/core/resolver.ts";
 import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { Route } from "./flags/audience.ts";
-import type { Manifest as LiveManifest } from "./live.gen.ts";
 import { createServerTimings } from "./utils/timings.ts";
 export type {
   ErrorBoundaryComponent,
@@ -38,6 +38,7 @@ export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
+  name: string;
   apps?: Record<string, ModuleOf<typeof appBlock>>;
   workflows?: Record<string, ModuleOf<typeof workflowBlock>>;
   actions?: Record<string, ModuleOf<typeof actionBlock>>;
@@ -101,6 +102,7 @@ export type LiveConfig<
     invoke: InvocationFunc<TManifest>;
     routes?: Route[];
     manifest: TManifest;
+    sourceMap: SourceMap;
   };
 
 export type { PropsLoader } from "./blocks/propsLoader.ts";
@@ -108,11 +110,11 @@ export type { SectionProps } from "./blocks/section.ts";
 export type { FnContext } from "./blocks/utils.tsx";
 export type ActionContext<
   TState = {},
-  TManifest extends AppManifest = LiveManifest,
+  TManifest extends AppManifest = AppManifest,
 > = FnContext<TState, TManifest>;
 export type LoaderContext<
   TState = {},
-  TManifest extends AppManifest = LiveManifest,
+  TManifest extends AppManifest = AppManifest,
 > = FnContext<TState, TManifest>;
 
 export type FunctionContext<TProps = any, TState = {}> = StatefulContext<

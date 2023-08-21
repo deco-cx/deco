@@ -119,6 +119,7 @@ const manifest = {
     "$live/actions/workflows/signal.ts": $$$$$$$$$$$3,
     "$live/actions/workflows/start.ts": $$$$$$$$$$$1,
   },
+  "name": "$live",
   "islands": {},
   "baseUrl": import.meta.url,
 };

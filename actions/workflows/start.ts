@@ -34,7 +34,7 @@ export type WorkflowProps<
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 > = key extends BlockKeys<TManifest> & `${string}/workflows/${string}`
   ? BlockFunc<key, TManifest, block> extends
-    WorkflowFn<infer TProps, infer TArgs>
+    WorkflowFn<infer TProps, any, infer TArgs>
     ? TArgs["length"] extends 0 ? { key: key; props: TProps } & CommonProps
     : { args: TArgs; key: key; props: TProps } & CommonProps
   : AnyWorkflow

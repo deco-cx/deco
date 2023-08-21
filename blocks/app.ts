@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any ban-types
+import { dirname } from "std/path/mod.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
 import { FnProps } from "../blocks/utils.tsx";
@@ -13,9 +14,12 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import { resolversFrom } from "../engine/fresh/manifest.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 
-export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
-
-export type AppManifest = Omit<DecoManifest, "baseUrl" | "islands" | "routes">;
+export type Apps = InstanceOf<AppRuntimeWithMeta, "#/root/apps">;
+export type SourceMap = Record<string, string>;
+export interface AppRuntimeWithMeta extends AppRuntime {
+  sourceMap: SourceMap;
+}
+export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 
 export type ManifestOf<TApp extends App> =
   & TApp["manifest"]
@@ -75,33 +79,60 @@ export interface AppRuntime<
   resolvers: TResolverMap;
 }
 
-type BlockKey = keyof AppManifest;
+type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
+
+export const buildSourceMap = (manifest: AppManifest): SourceMap => {
+  const sourceMap: SourceMap = {};
+  const { baseUrl, name, ...appManifest } = manifest;
+  for (const value of Object.values(appManifest)) {
+    for (const blockKey of Object.keys(value)) {
+      sourceMap[blockKey] = blockKey.replace(name, dirname(baseUrl));
+    }
+  }
+
+  return sourceMap;
+};
+
 export const mergeManifests = (
-  appManifest1: AppManifest,
-  appManifest2: AppManifest,
-) => {
-  const manifestResult = { ...appManifest2, ...appManifest1 };
-  for (const [key, value] of Object.entries(appManifest2)) {
+  [current, sourceMap]: [AppManifest, SourceMap],
+  manifest: AppManifest,
+): [AppManifest, SourceMap] => {
+  const manifestResult = { ...manifest, ...current };
+  const { baseUrl, name, ...appManifest } = manifest;
+  for (const [key, value] of Object.entries(appManifest)) {
     const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
     for (const [blockKey, blockFunc] of Object.entries(value)) {
       manifestBlocks[blockKey] = blockFunc;
+      if (baseUrl) {
+        sourceMap[blockKey] = blockKey.replace(name, dirname(baseUrl));
+      }
     }
     manifestResult[key as BlockKey] = manifestBlocks as any;
   }
 
-  return manifestResult;
+  return [manifestResult, sourceMap];
 };
 
-export const mergeRuntimes = <TAppRuntime extends AppRuntime = AppRuntime>(
+export const mergeRuntimes = <
+  TAppRuntime extends AppRuntimeWithMeta = AppRuntimeWithMeta,
+>(
   {
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
+    sourceMap,
   }: TAppRuntime,
-  { resolvers, manifest, resolvables }: TAppRuntime,
-): Pick<TAppRuntime, "manifest" | "resolvables" | "resolvers"> => {
+  { resolvers, manifest, resolvables }: AppRuntime,
+): Pick<
+  TAppRuntime,
+  "manifest" | "resolvables" | "resolvers" | "sourceMap"
+> => {
+  const [mergedManifest, newSourceMap] = mergeManifests([
+    currentManifest,
+    sourceMap,
+  ], manifest);
   return {
-    manifest: mergeManifests(currentManifest, manifest),
+    manifest: mergedManifest,
     resolvables: {
       ...currentResolvables,
       ...resolvables,
@@ -110,6 +141,7 @@ export const mergeRuntimes = <TAppRuntime extends AppRuntime = AppRuntime>(
       ...currentResolvers,
       ...resolvers,
     },
+    sourceMap: newSourceMap,
   };
 };
 
@@ -238,7 +270,10 @@ const buildApp = (extend: ExtensionFunc) =>
     buildApp(extend),
   );
   extend(runtime);
-  return dependencies.reduce(mergeRuntimes, runtime);
+  return [...dependencies, runtime].reduce(
+    mergeRuntimes,
+    { ...runtime, sourceMap: {} },
+  );
 };
 const appBlock: Block<AppModule> = {
   type: "apps",

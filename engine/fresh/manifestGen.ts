@@ -224,19 +224,21 @@ export const decoManifestBuilder = async (
 
   const [appManifest, manifestType] = !appMode
     ? [
-      injectRoutes
+      (injectRoutes
         ? defaultLiveRoutes(
           initialManifest,
         )
-        : initialManifest,
+        : initialManifest).addImports({
+          from: "$live/types.ts",
+          clauses: [{ import: "DecoManifest" }],
+        }),
       "DecoManifest",
     ]
-    : [initialManifest, "AppManifest"];
-  return appManifest
-    .addImports({
-      from: "$live/types.ts",
-      clauses: [{ import: manifestType }],
-    })
+    : [
+      initialManifest,
+      undefined,
+    ];
+  return appManifest.addManifestValues(["name", { kind: "js", raw: namespace }])
     .addExportDefault({
       variable: { identifier: "manifest", satisfies: manifestType },
     });
