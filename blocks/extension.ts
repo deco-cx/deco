@@ -1,10 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "../blocks/handler.ts";
-import { DeepPartial, OptionalKeys, RequiredKeys, TsType, TsTypeReference } from "../deps.ts";
+import {
+  DeepPartial,
+  OptionalKeys,
+  RequiredKeys,
+  TsType,
+  TsTypeReference,
+} from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { deepMergeArr } from "../utils/object.ts";
-import { FnProps, applyProps, fnContextFromHttpContext } from "./utils.tsx";
+import { applyProps, FnProps } from "./utils.tsx";
 
 export type ObjectExtension<T, TBase, IsParentOptional> = {
   [key in keyof T]?: ExtensionOf<
@@ -176,7 +182,7 @@ const extensionBlock: Block<
     ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
   ) => {
     const ext = applyProps(mod);
-    const extension = await ext($live, fnContextFromHttpContext(ctx));
+    const extension = await ext($live, ctx);
     return (data: TData) => {
       return extend(extension, data);
     };
