@@ -82,7 +82,7 @@ const siteName = (): string => {
     return siteNameFromEnv;
   }
   const [_, siteName] = context.namespace!.split("/"); // deco-sites/std best effort
-  return siteName;
+  return siteName ?? context.namespace!;
 };
 
 const asManifest = <TManifest extends AppManifest>(
