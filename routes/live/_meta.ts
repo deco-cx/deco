@@ -72,8 +72,13 @@ const buildSchemaWithResolvables = (
   schema: Schemas,
   release: Record<string, Resolvable>,
 ) => {
-  const { loaders, functions, flags, ...currentRoot } = schema.root;
-  const root: Record<string, JSONSchema7> = { loaders, functions, flags };
+  const { loaders, functions, flags, extensions, ...currentRoot } = schema.root;
+  const root: Record<string, JSONSchema7> = {
+    loaders,
+    functions,
+    flags,
+    extensions,
+  };
   for (const [ref, val] of Object.entries(currentRoot)) {
     root[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
     for (const [key, obj] of Object.entries(release)) {

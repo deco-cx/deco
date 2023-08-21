@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "../blocks/handler.ts";
-import { DeepPartial, OptionalKeys, RequiredKeys } from "../deps.ts";
+import { DeepPartial, OptionalKeys, RequiredKeys, TsType, TsTypeReference } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { deepMergeArr } from "../utils/object.ts";
@@ -162,6 +162,11 @@ const extensionBlock: Block<
   ExtensionModule
 > = {
   type: "extensions",
+  introspect: {
+    includeReturn: (tsType: TsType) => {
+      return (tsType as TsTypeReference)?.typeParams?.params?.[0];
+    },
+  },
   adapt: <
     TConfig = any,
     TData = any,
