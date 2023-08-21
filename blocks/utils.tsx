@@ -70,6 +70,16 @@ export type FnContext<
   invoke: InvocationFunc<TManifest>;
 };
 
+export type SyncFnProps<
+  TProps = any,
+  TResp = any,
+  TState = any,
+> = (
+  props: TProps,
+  request: Request,
+  ctx: FnContext<TState>,
+) => TResp;
+
 export type FnProps<
   TProps = any,
   TResp = any,
@@ -91,6 +101,23 @@ export const fnContextFromHttpContext = <TState = {}>(
     invoke: ctx.context.state.invoke,
   };
 };
+export const applyPropsSync = <
+  TProps = any,
+  TResp = any,
+>(func: {
+  default: SyncFnProps<TProps, TResp>;
+}) =>
+(
+  $live: TProps,
+  ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+) => { // by default use global state
+  return func.default(
+    $live,
+    ctx.request,
+    fnContextFromHttpContext(ctx),
+  );
+};
+
 export const applyProps = <
   TProps = any,
   TResp = any,

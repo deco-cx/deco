@@ -10,7 +10,7 @@ import {
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { deepMergeArr } from "../utils/object.ts";
-import { applyProps, FnProps } from "./utils.tsx";
+import { applyPropsSync, SyncFnProps } from "./utils.tsx";
 
 export type ObjectExtension<T, TBase, IsParentOptional> = {
   [key in keyof T]?: ExtensionOf<
@@ -142,18 +142,19 @@ export const extend = async <TData>(
   extension: ExtensionOf<TData>,
   data: TData,
 ): Promise<Extended<TData>> => {
-  const innerValue = await (Array.isArray(data)
-    ? (Promise.all(
-      data.map((dataElement) => _extend(extension, dataElement, dataElement)),
-    ) as Promise<DeepPartial<TData>>)
-    : _extend(extension, data, data));
+  const innerValue =
+    await (Array.isArray(data) && !isArrayExtension(extension)
+      ? (Promise.all(
+        data.map((dataElement) => _extend(extension, dataElement, dataElement)),
+      ) as Promise<DeepPartial<TData>>)
+      : _extend(extension, data, data));
   return {
     value: innerValue,
     merged: () => innerValue ? deepMergeArr<TData>(data, innerValue) : data,
   };
 };
 
-export type ExtensionFunc<TConfig = any, TData = any> = FnProps<
+export type ExtensionFunc<TConfig = any, TData = any> = SyncFnProps<
   TConfig,
   ExtensionOf<TData>
 >;
@@ -177,12 +178,12 @@ const extensionBlock: Block<
     TConfig = any,
     TData = any,
   >(mod: ExtensionModule) =>
-  async (
+  (
     $live: TConfig,
     ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
   ) => {
-    const ext = applyProps(mod);
-    const extension = await ext($live, ctx);
+    const ext = applyPropsSync(mod);
+    const extension = ext($live, ctx);
     return (data: TData) => {
       return extend(extension, data);
     };
