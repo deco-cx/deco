@@ -19,4 +19,3 @@ export type { App, AppContext, AppModule, AppRuntime } from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
 export { stylesPlugin };
-
