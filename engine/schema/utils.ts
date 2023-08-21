@@ -18,6 +18,8 @@ export const parseJSDocAttribute = (key: string, value: string) => {
       return Number(value);
     case "readOnly":
     case "writeOnly":
+    case "ignore":
+      return true;
     case "uniqueItems":
       return Boolean(value);
     case "default":

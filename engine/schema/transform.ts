@@ -131,6 +131,10 @@ const tsTypeElementsToObjectSchemeable = async (
     if (key.type !== "Identifier" && key.type !== "StringLiteral") {
       continue;
     }
+    const jsDocSchema = spannableToJSONSchema(prop);
+    if ("ignore" in jsDocSchema) {
+      continue;
+    }
     keysPromise.push(
       tsTypeToSchemeable(prop.typeAnnotation.typeAnnotation, ctx, prop.optional)
         .then((
@@ -139,7 +143,7 @@ const tsTypeElementsToObjectSchemeable = async (
           key.value,
           {
             title: beautify(key.value),
-            jsDocSchema: spannableToJSONSchema(prop),
+            jsDocSchema,
             schemeable,
             required: !prop.optional,
           } as ObjectSchemeable["value"][string],
