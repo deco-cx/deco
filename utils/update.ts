@@ -1,7 +1,9 @@
+import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
+import { parse } from "std/flags/mod.ts";
 import { join } from "std/path/mod.ts";
 import { stringifyForWrite } from "../utils/json.ts";
 
@@ -44,7 +46,11 @@ export async function update() {
 
       const versions = await url.all();
       const currentVersion = url.version();
-      const latestVersion = versions[0];
+      const latestVersion = eligibleLatestVersion(versions);
+
+      if (!latestVersion) {
+        return importMap;
+      }
 
       if (currentVersion !== latestVersion) {
         console.info(
@@ -82,13 +88,24 @@ const hasUpdates = async (importMap: ImportMap) => {
 
     const versions = await url.all();
     const currentVersion = url.version();
-    const latestVersion = versions[0];
+    const latestVersion = eligibleLatestVersion(versions);
 
-    if (currentVersion !== latestVersion) return true;
+    if (latestVersion && currentVersion !== latestVersion) return true;
   }
 
   return false;
 };
+
+function eligibleLatestVersion(
+  versions: string[],
+) {
+  const flags = parse(Deno.args, {
+    boolean: ["allow-pre"],
+  });
+  return flags["allow-pre"]
+    ? versions[0]
+    : versions.find((ver) => semver.parse(ver)?.prerelease?.length === 0);
+}
 
 export async function checkUpdates(_dir?: string) {
   const [importMap] = await getImportMap(_dir ?? Deno.cwd());
