@@ -23,6 +23,7 @@ export * as supabase from "https://esm.sh/@supabase/supabase-js@2.7.0";
 export { Component } from "https://esm.sh/preact@10.16.0?pin=102";
 export type { JSX } from "https://esm.sh/preact@10.16.0?pin=102";
 export type {
+  DeepPartial,
   Diff,
   Intersection,
   OptionalKeys,

@@ -6,9 +6,9 @@ import {
   OptionalKeys,
   Overwrite,
   RequiredKeys,
-} from "$live/deps.ts";
-import { Promisified, waitKeys } from "$live/engine/core/utils.ts";
-import { FnContext } from "$live/types.ts";
+} from "../deps.ts";
+import { Promisified, waitKeys } from "../engine/core/utils.ts";
+import { FnContext } from "../types.ts";
 
 export type PropsUnion<
   TLoadProps,

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file ban-types no-explicit-any
-import { DeepPartial, UnionToIntersection } from "$live/deps.ts";
+import { DeepPartial, UnionToIntersection } from "../deps.ts";
 
 export type DotPrefix<T extends string> = T extends "" ? "" : `.${T}`;
 

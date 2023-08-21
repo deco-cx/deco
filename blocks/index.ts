@@ -6,6 +6,7 @@ import functionBlock from "../blocks/function.ts";
 import handlerBlock from "../blocks/handler.ts";
 import islandBlock from "../blocks/island.ts";
 import loaderBlock from "../blocks/loader.ts";
+import extensionBlock from "../blocks/extension.ts";
 import matcherBlock from "../blocks/matcher.ts";
 import pageBlock from "../blocks/page.ts";
 import routeBlock from "../blocks/route.ts";

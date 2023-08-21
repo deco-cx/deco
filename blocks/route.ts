@@ -18,13 +18,11 @@ import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
-import type { Manifest } from "../live.gen.ts";
 import { context as liveContext } from "../live.ts";
 import { InvokeFunction, payloadForFunc } from "../routes/live/invoke/index.ts";
 import { DecoManifest, LiveConfig, LiveState } from "../types.ts";
 import { formatIncomingRequest, formatOutgoingFetch } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
-import { InvocationFunc } from "../clients/withManifest.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;

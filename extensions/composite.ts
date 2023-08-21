@@ -1,7 +1,7 @@
-import { Extended, Extension } from "$live/blocks/extension.ts";
-import { notUndefined } from "$live/engine/core/utils.ts";
-import { deepMergeArr } from "$live/utils/object.ts";
-import { DeepPartial } from "$live/deps.ts";
+import { Extended, Extension } from "../blocks/extension.ts";
+import { notUndefined } from "../engine/core/utils.ts";
+import { deepMergeArr } from "../utils/object.ts";
+import { DeepPartial } from "../deps.ts";
 
 export interface Props {
   extensions: Extension[];

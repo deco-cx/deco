@@ -2,7 +2,7 @@
 import type { Manifest } from "$fresh/server.ts";
 import accountBlock from "./blocks/account.ts";
 import actionBlock from "./blocks/action.ts";
-import extensionBlock from "$live/blocks/extension.ts";
+import extensionBlock from "./blocks/extension.ts";
 import appBlock, {
   AppContext,
   AppManifest,
@@ -13,7 +13,6 @@ import appBlock, {
 import flagBlock from "./blocks/flag.ts";
 import functionBlock from "./blocks/function.ts";
 import handlerBlock from "./blocks/handler.ts";
-import loaderBlock from "./blocks/loader.ts";
 import matcherBlock from "./blocks/matcher.ts";
 import pageBlock from "./blocks/page.ts";
 import sectionBlock from "./blocks/section.ts";
@@ -27,6 +26,7 @@ import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { Route } from "./flags/audience.ts";
 import { createServerTimings } from "./utils/timings.ts";
+import loaderBlock from "./blocks/loader.ts";
 export type {
   ErrorBoundaryComponent,
   ErrorBoundaryParams,
