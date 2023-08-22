@@ -45,7 +45,6 @@ export const genSchemasFromManifest = async (
   const modulesPromises: Promise<
     (BlockModule | EntrypointModule | undefined)
   >[] = [];
-  console.log(sourceMap);
   const references = new Map<TsType, Schemeable>();
   for (const block of blocks) {
     for (

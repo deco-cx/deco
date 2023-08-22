@@ -90,7 +90,13 @@ export const handler = async (
     const apps = ctx?.state?.$live?.apps;
     const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
       if (!Array.isArray(apps) || apps.length === 0) {
-        return [context.manifest!, buildSourceMap(context.manifest!)];
+        return [
+          context.manifest!,
+          {
+            ...buildSourceMap(context.manifest!),
+            ...ctx?.state?.sourceMap ?? {},
+          },
+        ];
       }
       let { manifest, sourceMap } = apps[0];
       for (const app of apps.slice(1)) {
@@ -109,7 +115,7 @@ export const handler = async (
       __resolveType: defaults["once"].name,
     });
     ctx.state.manifest = manifest;
-    ctx.state.sourceMap = sourceMap;
+    ctx.state.sourceMap = { ...sourceMap, ...ctx?.state?.sourceMap ?? {} };
 
     const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
       isAdminOrLocalhost(req);

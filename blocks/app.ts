@@ -126,7 +126,6 @@ export const mergeRuntimes = <
   TAppRuntime,
   "manifest" | "resolvables" | "resolvers" | "sourceMap"
 > => {
-  console.log("sourceMaps", currentSourceMap, sourceMap);
   return {
     manifest: mergeManifests(currentManifest, manifest),
     resolvables: {
