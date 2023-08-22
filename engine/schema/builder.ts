@@ -182,7 +182,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         if (!file) {
           return [undefined, undefined];
         }
-        const fileHash = encodeURIComponent(btoa(file));
+        const fileHash = btoa(file).replaceAll("/", "-");
         const id = schemeable.name
           ? `${fileHash}@${schemeable.name!}`
           : fileHash;
