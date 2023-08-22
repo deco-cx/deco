@@ -129,7 +129,7 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
       <img
         width={0}
         data-fresh-disable-lock
-        src={`/live/invoke/deco-cx/deco/loaders/x/event.gif${path}`}
+        src={`/live/invoke/deco-cx/deco/loaders/x/event.gif?p=${path}`}
       />
     </>
   );
