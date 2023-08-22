@@ -126,6 +126,11 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
           data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
         />
       )}
+      <img
+        width={0}
+        data-fresh-disable-lock
+        src={`/live/invoke/deco-cx/deco/loaders/x/event.gif${path}`}
+      />
     </>
   );
 }
