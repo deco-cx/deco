@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import { dirname } from "std/path/mod.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
 import { FnProps } from "../blocks/utils.tsx";
@@ -85,7 +84,7 @@ export const buildSourceMap = (manifest: AppManifest): SourceMap => {
   const { baseUrl, name, ...appManifest } = manifest;
   for (const value of Object.values(appManifest)) {
     for (const blockKey of Object.keys(value)) {
-      sourceMap[blockKey] = blockKey.replace(name, dirname(baseUrl));
+      sourceMap[blockKey] = blockKey.replace(name, new URL("./", baseUrl).href);
     }
   }
 
@@ -264,7 +263,7 @@ const buildApp = (extend: ExtensionFunc) =>
     buildApp(extend),
   );
   extend(runtime);
-  return [...dependencies, runtime].reduce(
+  return dependencies.reduce(
     mergeRuntimes,
     runtime,
   );
