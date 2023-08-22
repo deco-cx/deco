@@ -46,6 +46,7 @@ export const parsePath = (path: string) => {
       throw new Error(`Path not found ${path}`);
     }
     try {
+      console.log("parsing", content, path);
       const source = await parse(content);
       assignComments(source);
       return source;
@@ -55,3 +56,8 @@ export const parsePath = (path: string) => {
     }
   });
 };
+
+if (import.meta.main) {
+  const file = Deno.args[0];
+  console.log(JSON.stringify(await parsePath(file)));
+}
