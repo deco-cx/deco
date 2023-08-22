@@ -54,7 +54,6 @@ export const router = (
 ): Handler => {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const url = new URL(req.url);
-    const href = `${url.pathname}${url.search || ""}`;
     const route = async (
       handler: Resolvable<Handler>,
       routePath: string,
@@ -95,8 +94,11 @@ export const router = (
         ctx,
       );
     };
-    if (href && hrefRoutes[href]) {
-      return route(hrefRoutes[href], href);
+    if (url.pathname && url.pathname in hrefRoutes) {
+      return route(
+        hrefRoutes[url.pathname],
+        `${url.pathname}${url.search || ""}`,
+      );
     }
     for (const { pathTemplate: routePath, handler } of routes) {
       const pattern = createUrlPatternFromHref(routePath);
