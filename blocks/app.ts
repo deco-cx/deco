@@ -84,7 +84,10 @@ export const buildSourceMap = (manifest: AppManifest): SourceMap => {
   const { baseUrl, name, ...appManifest } = manifest;
   for (const value of Object.values(appManifest)) {
     for (const blockKey of Object.keys(value)) {
-      sourceMap[blockKey] = blockKey.replace(`${name}/`, new URL("./", baseUrl).href);
+      sourceMap[blockKey] = blockKey.replace(
+        `${name}/`,
+        new URL("./", baseUrl).href,
+      );
     }
   }
 
@@ -123,6 +126,7 @@ export const mergeRuntimes = <
   TAppRuntime,
   "manifest" | "resolvables" | "resolvers" | "sourceMap"
 > => {
+  console.log("sourceMaps", currentSourceMap, sourceMap);
   return {
     manifest: mergeManifests(currentManifest, manifest),
     resolvables: {
