@@ -79,19 +79,30 @@ export interface AppRuntime<
 
 type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
 
-export const buildSourceMap = (manifest: AppManifest): SourceMap => {
+export const buildSourceMapWith = (
+  manifest: AppManifest,
+  sourceMapBuilder: (str: string) => string,
+): SourceMap => {
   const sourceMap: SourceMap = {};
-  const { baseUrl, name, ...appManifest } = manifest;
+  const { baseUrl: _ignoreBaseUrl, name: _ignoreName, ...appManifest } =
+    manifest;
   for (const value of Object.values(appManifest)) {
     for (const blockKey of Object.keys(value)) {
-      sourceMap[blockKey] = blockKey.replace(
-        `${name}/`,
-        new URL("./", baseUrl).href,
-      );
+      sourceMap[blockKey] = sourceMapBuilder(blockKey);
     }
   }
 
   return sourceMap;
+};
+
+export const buildSourceMap = (manifest: AppManifest): SourceMap => {
+  const { baseUrl, name } = manifest;
+  const builder = (blockKey: string) =>
+    blockKey.replace(
+      `${name}/`,
+      new URL("./", baseUrl).href,
+    );
+  return buildSourceMapWith(manifest, builder);
 };
 
 export const mergeManifests = (
