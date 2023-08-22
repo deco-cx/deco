@@ -143,7 +143,9 @@ const tsTypeElementsToObjectSchemeable = async (
           key.value,
           {
             title: beautify(key.value),
-            jsDocSchema,
+            jsDocSchema: prop.readonly
+              ? { ...jsDocSchema ?? {}, readOnly: true }
+              : jsDocSchema,
             schemeable,
             required: !prop.optional,
           } as ObjectSchemeable["value"][string],
