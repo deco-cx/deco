@@ -94,10 +94,11 @@ export const handler = async (
       }
       let { manifest, sourceMap } = apps[0];
       for (const app of apps.slice(1)) {
-        [manifest, sourceMap] = mergeManifests(
-          [manifest, { ...sourceMap, ...app.sourceMap }],
+        manifest = mergeManifests(
+          manifest,
           app.manifest,
         );
+        sourceMap = { ...sourceMap, ...app.sourceMap };
       }
       return [manifest, sourceMap];
     };

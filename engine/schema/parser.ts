@@ -46,7 +46,6 @@ export const parsePath = (path: string) => {
       throw new Error(`Path not found ${path}`);
     }
     try {
-      console.log("parsing", content, path);
       const source = await parse(content);
       assignComments(source);
       return source;
