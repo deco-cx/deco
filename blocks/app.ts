@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
-import { FnProps } from "../blocks/utils.tsx";
+import { buildSourceMap, FnProps } from "../blocks/utils.tsx";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import {
   BaseContext,
@@ -78,32 +78,6 @@ export interface AppRuntime<
 }
 
 type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
-
-export const buildSourceMapWith = (
-  manifest: AppManifest,
-  sourceMapBuilder: (str: string) => string,
-): SourceMap => {
-  const sourceMap: SourceMap = {};
-  const { baseUrl: _ignoreBaseUrl, name: _ignoreName, ...appManifest } =
-    manifest;
-  for (const value of Object.values(appManifest)) {
-    for (const blockKey of Object.keys(value)) {
-      sourceMap[blockKey] = sourceMapBuilder(blockKey);
-    }
-  }
-
-  return sourceMap;
-};
-
-export const buildSourceMap = (manifest: AppManifest): SourceMap => {
-  const { baseUrl, name } = manifest;
-  const builder = (blockKey: string) =>
-    blockKey.replace(
-      `${name}/`,
-      new URL("./", baseUrl).href,
-    );
-  return buildSourceMapWith(manifest, builder);
-};
 
 export const mergeManifests = (
   current: AppManifest,

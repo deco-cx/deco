@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { AppManifest } from "../blocks/app.ts";
+import type { AppManifest, SourceMap } from "../blocks/app.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { Component, JSX } from "../deps.ts";
 import {
@@ -213,4 +213,31 @@ export const newSingleFlightGroup = <
       () => ctx.next!(),
     );
   };
+};
+
+
+export const buildSourceMapWith = (
+  manifest: AppManifest,
+  sourceMapBuilder: (str: string) => string,
+): SourceMap => {
+  const sourceMap: SourceMap = {};
+  const { baseUrl: _ignoreBaseUrl, name: _ignoreName, ...appManifest } =
+    manifest;
+  for (const value of Object.values(appManifest)) {
+    for (const blockKey of Object.keys(value)) {
+      sourceMap[blockKey] = sourceMapBuilder(blockKey);
+    }
+  }
+
+  return sourceMap;
+};
+
+export const buildSourceMap = (manifest: AppManifest): SourceMap => {
+  const { baseUrl, name } = manifest;
+  const builder = (blockKey: string) =>
+    blockKey.replace(
+      `${name}/`,
+      new URL("./", baseUrl).href,
+    );
+  return buildSourceMapWith(manifest, builder);
 };
