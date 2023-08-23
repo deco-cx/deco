@@ -1,6 +1,7 @@
 import { JSONSchema7 } from "../deps.ts";
 
 export const adminDomain = `https://deco.cx`;
+export const landingPageDomain = `https://www.deco.cx`;
 const adminPreviewUrls = "https://deco-sites-admin-";
 const adminPreviewDomain = "deno.dev";
 
