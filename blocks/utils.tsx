@@ -215,7 +215,6 @@ export const newSingleFlightGroup = <
   };
 };
 
-
 export const buildSourceMapWith = (
   manifest: AppManifest,
   sourceMapBuilder: (str: string) => string,

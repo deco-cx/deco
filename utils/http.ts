@@ -202,35 +202,4 @@ export const allowCorsForOrigin = (
   "Access-Control-Allow-Headers": "Content-Type, *",
 });
 
-export async function* readFromStream<T>(
-  response: Response,
-): AsyncIterableIterator<T> {
-  if (!response.body) {
-    return;
-  }
-  const reader = response.body
-    .pipeThrough(new TextDecoderStream())
-    .getReader();
-
-  while (true) {
-    let acc = "";
-    const { value, done } = await reader.read();
-    if (done) {
-      break;
-    }
-
-    const parsedValue = value
-      .split("\n")
-      .filter(Boolean);
-
-    for (const chnks of parsedValue) {
-      acc += chnks;
-      try {
-        yield JSON.parse(acc);
-      } catch {
-        continue;
-      }
-      acc = "";
-    }
-  }
-}
+export { readFromStream } from "../clients/withManifest.ts";
