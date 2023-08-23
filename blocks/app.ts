@@ -1,8 +1,7 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import { dirname } from "std/path/mod.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
-import { FnProps } from "../blocks/utils.tsx";
+import { buildSourceMap, FnProps } from "../blocks/utils.tsx";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import {
   BaseContext,
@@ -14,11 +13,8 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import { resolversFrom } from "../engine/fresh/manifest.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 
-export type Apps = InstanceOf<AppRuntimeWithMeta, "#/root/apps">;
+export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 export type SourceMap = Record<string, string>;
-export interface AppRuntimeWithMeta extends AppRuntime {
-  sourceMap: SourceMap;
-}
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 
 export type ManifestOf<TApp extends App> =
@@ -52,6 +48,7 @@ export interface AppBase<
   resolvables?: TResolvableMap;
   manifest: TAppManifest;
   dependencies?: TAppDependencies;
+  sourceMap?: SourceMap;
 }
 
 /**
@@ -77,62 +74,45 @@ export interface AppRuntime<
   TAppManifest extends AppManifest = AppManifest,
 > extends AppBase<TAppManifest, TAppDependencies, TResolvableMap> {
   resolvers: TResolverMap;
+  sourceMap: SourceMap;
 }
 
 type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
 
-export const buildSourceMap = (manifest: AppManifest): SourceMap => {
-  const sourceMap: SourceMap = {};
-  const { baseUrl, name, ...appManifest } = manifest;
-  for (const value of Object.values(appManifest)) {
-    for (const blockKey of Object.keys(value)) {
-      sourceMap[blockKey] = blockKey.replace(name, dirname(baseUrl));
-    }
-  }
-
-  return sourceMap;
-};
-
 export const mergeManifests = (
-  [current, sourceMap]: [AppManifest, SourceMap],
+  current: AppManifest,
   manifest: AppManifest,
-): [AppManifest, SourceMap] => {
+): AppManifest => {
   const manifestResult = { ...manifest, ...current };
-  const { baseUrl, name, ...appManifest } = manifest;
+  const { baseUrl: _ignoreBaseUrl, name: _ignoreName, ...appManifest } =
+    manifest;
   for (const [key, value] of Object.entries(appManifest)) {
     const manifestBlocks = { ...(manifestResult[key as BlockKey] ?? {}) };
     for (const [blockKey, blockFunc] of Object.entries(value)) {
       manifestBlocks[blockKey] = blockFunc;
-      if (baseUrl) {
-        sourceMap[blockKey] = blockKey.replace(name, dirname(baseUrl));
-      }
     }
     manifestResult[key as BlockKey] = manifestBlocks as any;
   }
 
-  return [manifestResult, sourceMap];
+  return manifestResult;
 };
 
 export const mergeRuntimes = <
-  TAppRuntime extends AppRuntimeWithMeta = AppRuntimeWithMeta,
+  TAppRuntime extends AppRuntime = AppRuntime,
 >(
   {
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
-    sourceMap,
+    sourceMap: currentSourceMap,
   }: TAppRuntime,
-  { resolvers, manifest, resolvables }: AppRuntime,
+  { resolvers, manifest, resolvables, sourceMap }: TAppRuntime,
 ): Pick<
   TAppRuntime,
   "manifest" | "resolvables" | "resolvers" | "sourceMap"
 > => {
-  const [mergedManifest, newSourceMap] = mergeManifests([
-    currentManifest,
-    sourceMap,
-  ], manifest);
   return {
-    manifest: mergedManifest,
+    manifest: mergeManifests(currentManifest, manifest),
     resolvables: {
       ...currentResolvables,
       ...resolvables,
@@ -141,7 +121,7 @@ export const mergeRuntimes = <
       ...currentResolvers,
       ...resolvers,
     },
-    sourceMap: newSourceMap,
+    sourceMap: { ...currentSourceMap ?? {}, ...sourceMap ?? {} },
   };
 };
 
@@ -196,11 +176,11 @@ const injectAppStateOnManifest = <
 
 const buildRuntimeFromApp = <
   TState,
-  TApp extends App<any, TState> = App<any, TState>,
+  TApp extends App<AppManifest, TState> = App<AppManifest, TState>,
   TContext extends BaseContext = BaseContext,
   TResolverMap extends ResolverMap = ResolverMap,
 >(
-  { state, manifest, resolvables, dependencies }: TApp,
+  { state, manifest, resolvables, dependencies, sourceMap }: TApp,
 ): AppRuntime => {
   const injectedManifest = injectAppStateOnManifest(state, manifest);
   return {
@@ -210,6 +190,7 @@ const buildRuntimeFromApp = <
     manifest: injectedManifest,
     resolvables,
     dependencies,
+    sourceMap: sourceMap ?? buildSourceMap(manifest),
   };
 };
 
@@ -270,9 +251,9 @@ const buildApp = (extend: ExtensionFunc) =>
     buildApp(extend),
   );
   extend(runtime);
-  return [...dependencies, runtime].reduce(
+  return dependencies.reduce(
     mergeRuntimes,
-    { ...runtime, sourceMap: {} },
+    runtime,
   );
 };
 const appBlock: Block<AppModule> = {

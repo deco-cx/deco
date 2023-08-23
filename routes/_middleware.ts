@@ -1,7 +1,8 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { getSetCookies } from "std/http/mod.ts";
-import { buildSourceMap, mergeManifests, SourceMap } from "../blocks/app.ts";
+import { mergeManifests, SourceMap } from "../blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
+import { buildSourceMap } from '../blocks/utils.tsx';
 import {
   getPagePathTemplate,
   redirectTo,
@@ -90,14 +91,21 @@ export const handler = async (
     const apps = ctx?.state?.$live?.apps;
     const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
       if (!Array.isArray(apps) || apps.length === 0) {
-        return [context.manifest!, buildSourceMap(context.manifest!)];
+        return [
+          context.manifest!,
+          {
+            ...buildSourceMap(context.manifest!),
+            ...ctx?.state?.sourceMap ?? {},
+          },
+        ];
       }
       let { manifest, sourceMap } = apps[0];
       for (const app of apps.slice(1)) {
-        [manifest, sourceMap] = mergeManifests(
-          [manifest, { ...sourceMap, ...app.sourceMap }],
+        manifest = mergeManifests(
+          manifest,
           app.manifest,
         );
+        sourceMap = { ...sourceMap, ...app.sourceMap };
       }
       return [manifest, sourceMap];
     };
@@ -108,7 +116,7 @@ export const handler = async (
       __resolveType: defaults["once"].name,
     });
     ctx.state.manifest = manifest;
-    ctx.state.sourceMap = sourceMap;
+    ctx.state.sourceMap = { ...sourceMap, ...ctx?.state?.sourceMap ?? {} };
 
     const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
       isAdminOrLocalhost(req);

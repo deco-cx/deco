@@ -1,4 +1,5 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
+import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
 import defaults from "../engine/fresh/defaults.ts";
 import { $live, AppManifest, SiteInfo } from "../mod.ts";
@@ -23,6 +24,7 @@ import { handler as workflowHandler } from "../routes/live/workflows/run.ts";
 
 export interface Options<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
+  sourceMap?: SourceMap;
   site: SiteInfo;
   useLocalStorageOnly?: boolean;
 }
@@ -51,6 +53,7 @@ export default function decoPlugin(opt?: Options): Plugin {
                   __resolveType: defaults["bootstrap"].name,
                 }
                 : "./routes/_middleware.ts",
+              opt?.sourceMap,
             ),
             decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],

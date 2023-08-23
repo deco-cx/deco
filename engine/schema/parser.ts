@@ -55,3 +55,8 @@ export const parsePath = (path: string) => {
     }
   });
 };
+
+if (import.meta.main) {
+  const file = Deno.args[0];
+  console.log(JSON.stringify(await parsePath(file)));
+}

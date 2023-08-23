@@ -24,6 +24,7 @@ import { InvokeFunction, payloadForFunc } from "../routes/live/invoke/index.ts";
 import { DecoManifest, LiveConfig, LiveState } from "../types.ts";
 import { formatIncomingRequest, formatOutgoingFetch } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
+import { SourceMap } from "./app.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -148,11 +149,15 @@ const debug = {
 
 const originalFetch = globalThis.fetch;
 
-export const buildDecoState = (resolveKey: string | Resolvable) =>
+export const buildDecoState = (
+  resolveKey: string | Resolvable,
+  sourceMap: SourceMap = {},
+) =>
   async function (
     request: Request,
     context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
   ) {
+    context.state.sourceMap ??= sourceMap;
     const { enabled, action } = debug.fromRequest(request);
 
     if (enabled) {
