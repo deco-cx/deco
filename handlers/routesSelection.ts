@@ -94,9 +94,11 @@ export const router = (
         ctx,
       );
     };
-    if (url.pathname && url.pathname in hrefRoutes) {
+    const handler = hrefRoutes[`${url.pathname}${url.search || ""}`] ??
+      hrefRoutes[url.pathname];
+    if (handler) {
       return route(
-        hrefRoutes[url.pathname],
+        handler,
         `${url.pathname}${url.search || ""}`,
       );
     }
