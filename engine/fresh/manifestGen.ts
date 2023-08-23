@@ -1,6 +1,6 @@
 import { join } from "https://deno.land/std@0.61.0/path/mod.ts";
 import { walk, WalkEntry } from "std/fs/walk.ts";
-import blocks from "../../blocks/index.ts";
+import blocks from "$live/blocks/index.ts";
 import { Block, BlockType } from "../../engine/block.ts";
 import { shouldBeLocal } from "../../engine/fresh/manifest.ts";
 import {
