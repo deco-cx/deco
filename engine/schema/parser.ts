@@ -19,13 +19,25 @@ async function load(
       }
       case "http:":
       case "https:": {
-        const response = await fetch(String(url), { redirect: "follow" });
-        if (response.status !== 200) {
+        const response = await fetch(String(url), { redirect: "follow" }).catch(
+          (err) => {
+            console.log("error when trying fetch from, retrying", url, err);
+            return fetch(String(url), { redirect: "follow" });
+          },
+        );
+        const content = await response.text().catch((err) => {
+          console.log("err parsing text", url, err);
+          return undefined;
+        });
+        if (response.status >= 400) {
           // ensure the body is read as to not leak resources
-          await response.arrayBuffer();
+          console.error(
+            `error fetching ${url}`,
+            response.status,
+            content,
+          );
           return undefined;
         }
-        const content = await response.text();
         return content;
       }
       default:
