@@ -1,5 +1,5 @@
 import { IS_BROWSER } from "$fresh/runtime.ts";
-import type { StreamProps } from "$live/mod.ts";
+import type { StreamProps } from "../mod.ts";
 import type { App, AppManifest, ManifestOf } from "../blocks/app.ts";
 import type {
   AvailableActions,
