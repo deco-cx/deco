@@ -3,11 +3,7 @@ export interface StreamProps {
   stream: true;
 }
 
-export const isStreamProps = <TProps>(
-  props: TProps | TProps & StreamProps,
-): props is TProps & StreamProps => {
-  return Boolean((props as StreamProps)?.stream) === true;
-};
+export { isStreamProps } from "../clients/withManifest.ts";
 
 export const isEventStreamResponse = (
   invokeResponse: unknown | AsyncIterableIterator<unknown>,

@@ -2,7 +2,7 @@ import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { getSetCookies } from "std/http/mod.ts";
 import { mergeManifests, SourceMap } from "../blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { buildSourceMap } from '../blocks/utils.tsx';
+import { buildSourceMap } from "../blocks/utils.tsx";
 import {
   getPagePathTemplate,
   redirectTo,
