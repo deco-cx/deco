@@ -853,7 +853,9 @@ export const tsTypeToSchemeable = async (
           name: `${jsonSchemaType}`,
           value: type
             ? ({
-              type: optional ? [jsonSchemaType, "null"] : jsonSchemaType,
+              type: optional && jsonSchemaType !== "null"
+                ? [jsonSchemaType, "null"]
+                : jsonSchemaType,
             } as JSONSchema7)
             : {},
         };
