@@ -2,7 +2,7 @@ import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { getSetCookies } from "std/http/mod.ts";
 import { mergeManifests, SourceMap } from "../blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { buildSourceMap } from '../blocks/utils.tsx';
+import { buildSourceMap } from "../blocks/utils.tsx";
 import {
   getPagePathTemplate,
   redirectTo,
@@ -128,7 +128,7 @@ export const handler = async (
     if (req.headers.get("upgrade") === "websocket") {
       return initialResponse;
     }
-    const newHeaders = new Headers(initialResponse.headers);
+    const headers = initialResponse.headers;
     if (
       (url.pathname.startsWith("/live/previews") &&
         url.searchParams.has("mode") &&
@@ -136,41 +136,36 @@ export const handler = async (
       url.pathname.startsWith("/_frsh/") || shouldAllowCorsForOptions
     ) {
       Object.entries(allowCorsFor(req)).map(([name, value]) => {
-        newHeaders.set(name, value);
+        headers.set(name, value);
       });
     }
-    response.headers.forEach((value, key) => newHeaders.append(key, value));
+    response.headers.forEach((value, key) => headers.append(key, value));
     const printTimings = ctx?.state?.t?.printTimings;
-    printTimings && newHeaders.set("Server-Timing", printTimings());
+    printTimings && headers.set("Server-Timing", printTimings());
 
     if (
       url.pathname.startsWith("/_frsh/") &&
       [400, 404, 500].includes(initialResponse.status)
     ) {
-      newHeaders.set("Cache-Control", "no-cache, no-store, private");
+      headers.set("Cache-Control", "no-cache, no-store, private");
     }
 
     // if there's no set cookie it means that none unstable matcher was evaluated
     if (
-      Object.keys(getSetCookies(newHeaders)).length === 0 &&
+      Object.keys(getSetCookies(headers)).length === 0 &&
       Deno.env.has("DECO_ANONYMOUS_CACHE")
     ) {
-      newHeaders.set("cache-control", "public, max-age=10");
+      headers.set("cache-control", "public, max-age=10");
     }
 
     for (const flag of state?.flags ?? []) {
-      newHeaders.append(
+      headers.append(
         DECO_MATCHER_HEADER_QS,
         `${flag.name}=${flag.value ? 1 : 0}`,
       );
     }
 
-    const newResponse = new Response(initialResponse.body, {
-      status: initialResponse.status,
-      headers: newHeaders,
-    });
-
-    return newResponse;
+    return initialResponse;
   } finally {
     // TODO: print these on debug mode when there's debug mode.
     if (!url.pathname.startsWith("/_frsh")) {
