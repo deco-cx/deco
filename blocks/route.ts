@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
+import { setLogger } from "$live/fetch/fetch_log.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
-  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
@@ -12,6 +12,7 @@ import {
   PageProps,
   RouteConfig,
   RouteModule,
+  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
@@ -22,7 +23,7 @@ import type { Manifest } from "../live.gen.ts";
 import { context as liveContext } from "../live.ts";
 import { InvokeFunction, payloadForFunc } from "../routes/live/invoke/index.ts";
 import { DecoManifest, LiveConfig, LiveState } from "../types.ts";
-import { formatIncomingRequest, formatOutgoingFetch } from "../utils/log.ts";
+import { formatIncomingRequest } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
 import { SourceMap } from "./app.ts";
 
@@ -147,8 +148,6 @@ const debug = {
   },
 };
 
-const originalFetch = globalThis.fetch;
-
 export const buildDecoState = (
   resolveKey: string | Resolvable,
   sourceMap: SourceMap = {},
@@ -169,23 +168,15 @@ export const buildDecoState = (
       context.state.log = () => {}; // stub
     }
 
+    // Logs  ?__d is present in localhost
     context.state.log(
       formatIncomingRequest(request, liveContext.site),
     );
 
-    const isLocalhost = !liveContext.isDeploy;
-
-    // Logs outgoing requests if ?__d is present in localhost
-    if (isLocalhost) {
-      globalThis.fetch = (
-        input: string | Request | URL,
-        init?: RequestInit | undefined,
-      ) => {
-        context.state.log(formatOutgoingFetch(input, init));
-
-        return originalFetch(input, init);
-      };
+    if (!liveContext.isDeploy) {
+      setLogger(context.state.log);
     }
+
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
 
@@ -240,7 +231,7 @@ export const buildDecoState = (
       return resp;
     }
     debug[action](resp);
-    globalThis.fetch = originalFetch;
+    setLogger(null);
 
     return resp;
   };

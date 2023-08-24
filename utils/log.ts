@@ -19,22 +19,19 @@ export const formatIncomingRequest = (request: Request, site: string) => {
 };
 
 export const formatOutgoingFetch = (
-  input: string | Request | URL,
-  init?: RequestInit | undefined,
+  request: Request,
+  response: Response,
+  duration: number,
 ) => {
-  const method = (input instanceof Request ? input.method : init?.method) ??
-    "GET";
-  const url = (() => {
-    if (input instanceof URL) {
-      return input.href;
-    }
-    if (input instanceof Request) {
-      return input.url;
-    }
-    return input;
-  })();
+  const xcache = response.headers.get("x-cache") ?? "BYPASS";
+  const durationColor = duration < 300 ? green : duration < 700 ? yellow : red;
+  const durationStr = duration > 1e3
+    ? `${(duration / 1e3).toFixed(2)}s`
+    : `${duration.toFixed(0)}ms`;
 
-  return ` -> ${bold(method)} | ${gray(url)}`;
+  return ` -> ${xcache.padEnd(6)} ${durationColor(durationStr)} ${
+    bold(request.method)
+  } | ${gray(request.url)}`;
 };
 
 export const formatLog = (opts: {
