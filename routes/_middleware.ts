@@ -86,7 +86,7 @@ export const handler = async (
     state.response = response;
     state.flags = [];
     Object.assign(ctx.state, state);
-    ctx.state.global = state; // compatibility mode with functions.
+    ctx.state.global = { ...ctx.state.global ?? {}, ...state }; // compatibility mode with functions.
 
     const apps = ctx?.state?.$live?.apps;
     const buildManifest = function buildManifest(): [AppManifest, SourceMap] {

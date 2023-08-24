@@ -213,9 +213,9 @@ const injectAppState = <TState = any>(
   return (
     props: any,
     request: Request,
-    { response, get, invoke }: FnContext,
+    { response, get, invoke, ...rest }: FnContext,
   ) => {
-    return fnProps(props, request, { ...state, response, get, invoke });
+    return fnProps(props, request, { ...rest, ...state, response, get, invoke });
   };
 };
 
@@ -229,9 +229,10 @@ const injectAppStateOnInlineLoader = <TState = any>(
   return (
     props: any,
     request: Request,
-    { response, get, invoke }: FnContext,
+    { response, get, invoke, ...rest }: FnContext,
   ) => {
     return propsLoader(loader, props, request, {
+      ...rest,
       ...state,
       response,
       get,
