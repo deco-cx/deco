@@ -63,9 +63,9 @@
 //   };
 // };
 
-export const getCacheStorage = (): Promise<CacheStorage> => {
+export const getCacheStorage = async (): Promise<CacheStorage> => {
   if (typeof caches !== "undefined") {
-    return Promise.resolve(caches);
+    return caches;
   }
 
   // if (typeof Deno.openKv !== "undefined") {
