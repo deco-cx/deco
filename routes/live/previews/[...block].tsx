@@ -65,19 +65,23 @@ export const handler = async (
     ctx.state.log("connected to render socket.");
   };
   socket.onmessage = async (e) => {
-    const data = JSON.parse(e.data);
-    const key = data.key;
-    const props = JSON.parse(data.props);
-    cache[key] ??= render(data.url, props, req, ctx).then((response) =>
-      response.text().then(function (html) {
-        const response = JSON.stringify({
-          html,
-          key,
-        });
-        return response;
-      })
-    );
-    socket.send(await cache[key]);
+    try {
+      const data = JSON.parse(e.data);
+      const key = data.key;
+      const props = JSON.parse(data.props);
+      cache[key] ??= render(data.url, props, req, ctx).then((response) =>
+        response.text().then(function (html) {
+          const response = JSON.stringify({
+            html,
+            key,
+          });
+          return response;
+        })
+      );
+      socket.send(await cache[key]);
+    } catch (err) {
+      ctx.state.log("failed to render:", err);
+    }
   };
   socket.onclose = () => ctx.state.log("render socket closed.");
   socket.onerror = (e) => ctx.state.log("render socket error:", e);
