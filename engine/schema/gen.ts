@@ -92,6 +92,9 @@ export const genSchemasFromManifest = async (
             }
             return undefined;
           }
+          if ("ignore" in (ref?.functionJSDoc ?? {})) {
+            return undefined;
+          }
           const ignoreGen = (ref?.functionJSDoc as { ignore_gen: string })
             ?.["ignore_gen"] === "true";
           return {
