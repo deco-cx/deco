@@ -6,7 +6,7 @@ import { PromiseOrValue } from "../engine/core/utils.ts";
 import { ResolverMiddleware } from "../engine/middleware.ts";
 import { Schemeable } from "../engine/schema/transform.ts";
 import type { Manifest } from "../live.gen.ts";
-import { DecoManifest } from "../types.ts";
+import { AppManifest } from "../types.ts";
 import { BlockInvocation } from "./fresh/defaults.ts";
 
 export interface BlockModuleRef {
@@ -113,12 +113,12 @@ export type InstanceOf<
 > = T extends Block<BlockModule<any, any, infer TSerializable>> ? TSerializable
   : T;
 
-export type BlockTypes<TManifest extends DecoManifest = Manifest> = keyof Omit<
+export type BlockTypes<TManifest extends AppManifest = Manifest> = keyof Omit<
   TManifest,
   "config" | "baseUrl"
 >;
 
-export type BlockKeys<TManifest extends DecoManifest = Manifest> = {
+export type BlockKeys<TManifest extends AppManifest = Manifest> = {
   [key in keyof Pick<TManifest, BlockTypes<TManifest>>]: keyof Pick<
     TManifest,
     BlockTypes<TManifest>
@@ -128,7 +128,7 @@ export type BlockKeys<TManifest extends DecoManifest = Manifest> = {
 // TODO each block should be specialized on how to get its serialized version.
 export type BlockInstance<
   key extends BlockKeys<TManifest> & string,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 > = BlockFunc<key, TManifest, block> extends
   (...args: infer Props) => PromiseOrValue<infer TReturn>
@@ -139,7 +139,7 @@ export type BlockInstance<
 
 export type BlockFunc<
   key extends BlockKeys<TManifest> & string,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 > = block extends BlockTypes<TManifest>
   ? TManifest[block][key] extends
@@ -150,7 +150,7 @@ export type BlockFunc<
 
 export type BlockFromKey<
   TKey extends string,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
 > = TKey extends `${string}/${infer block}/${infer rest}`
   ? block extends BlockTypes<TManifest> ? block
   : BlockFromKey<`${block}/${rest}`, TManifest>
@@ -159,7 +159,7 @@ export type BlockFromKey<
 export type ResolvableOf<
   key extends BlockKeys<TManifest> & string,
   block extends BlockFromKey<key, TManifest>,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
 > = block extends BlockTypes<TManifest>
   ? TManifest[block][key] extends { default: (...args: infer Props) => any }
     ? Props[0] & { __resolveType: key }
@@ -169,7 +169,7 @@ export type ResolvableOf<
 export const isResolvableOf = <
   key extends BlockKeys<TManifest> & string,
   block extends BlockFromKey<key, TManifest>,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
 >(
   key: key,
   v: ResolvableOf<key, block, TManifest> | unknown,

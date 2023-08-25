@@ -11,7 +11,7 @@ import { BlockFromKey, BlockFunc, BlockKeys } from "../../engine/block.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { Manifest } from "../../live.gen.ts";
 import { context } from "../../live.ts";
-import { DecoManifest } from "../../types.ts";
+import { AppManifest, DecoManifest } from "../../types.ts";
 
 export interface CommonProps<
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
@@ -30,7 +30,7 @@ export interface AnyWorkflow extends CommonProps {
 
 export type WorkflowProps<
   key extends string = string,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = Manifest,
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 > = key extends BlockKeys<TManifest> & `${string}/workflows/${string}`
   ? BlockFunc<key, TManifest, block> extends
