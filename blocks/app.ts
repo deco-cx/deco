@@ -14,7 +14,7 @@ import { resolversFrom } from "../engine/fresh/manifest.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
-export type SourceMap = Record<string, string>;
+export type SourceMap = Record<string, string | null>;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 
 export type ManifestOf<TApp extends App> =
@@ -215,7 +215,13 @@ const injectAppState = <TState = any>(
     request: Request,
     { response, get, invoke, ...rest }: FnContext,
   ) => {
-    return fnProps(props, request, { ...rest, ...state, response, get, invoke });
+    return fnProps(props, request, {
+      ...rest,
+      ...state,
+      response,
+      get,
+      invoke,
+    });
   };
 };
 

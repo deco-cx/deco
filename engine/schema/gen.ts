@@ -55,6 +55,9 @@ export const genSchemasFromManifest = async (
         ),
       )
     ) {
+      if (sourceMap[blockModuleKey] === null) {
+        continue;
+      }
       const [_namespace, blockPath, blockKey] =
         wellKnownLiveRoutes[blockModuleKey] ??
           (blockModuleKey.startsWith(".")
