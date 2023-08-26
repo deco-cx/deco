@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 // deno-lint-ignore-file no-explicit-any
 import { Status } from "std/http/mod.ts";
 import type { AppManifest, SourceMap } from "../blocks/app.ts";

@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { isSection, Section } from "../blocks/section.ts";
 import { Manifest } from "../live.gen.ts";
 

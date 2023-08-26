@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { Section } from "../blocks/section.ts";
 import { notUndefined } from "../engine/core/utils.ts";
 import { useLivePageContext } from "../pages/LivePage.tsx";

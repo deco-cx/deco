@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { Section } from "../blocks/section.ts";
 import { renderSection } from "../pages/LivePage.tsx";
 import withConditions, {

@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { Head } from "../deps.ts";
 
 export interface Props {

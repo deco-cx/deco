@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { DomInspectorActivators, Head, inspectVSCode } from "../deps.ts";
 import { context } from "../live.ts";
 import type { Flag, Site } from "../types.ts";

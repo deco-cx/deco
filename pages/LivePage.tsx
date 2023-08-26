@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { Head } from "$fresh/runtime.ts";
 import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";

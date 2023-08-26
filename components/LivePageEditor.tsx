@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { JSX } from "preact";
 import { Head } from "../deps.ts";
 import { PreactComponent } from "../engine/block.ts";
