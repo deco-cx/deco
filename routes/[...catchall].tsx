@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
