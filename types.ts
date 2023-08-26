@@ -24,7 +24,7 @@ import { ModuleOf } from "./engine/block.ts";
 import { ResolveFunc } from "./engine/core/resolver.ts";
 import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
-import { Route } from "./flags/audience.ts";
+import { Route } from "https://denopkg.com/deco-cx/deco@1.30.5/flags/audience.ts";
 import { createServerTimings } from "./utils/timings.ts";
 export type {
   ErrorBoundaryComponent,

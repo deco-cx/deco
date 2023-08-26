@@ -1,7 +1,7 @@
+import { SelectionConfig } from "https://denopkg.com/deco-cx/deco@1.30.5/handlers/routesSelection.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { fromPagesTable } from "../../engine/releases/pages.ts";
 import { fromConfigsTable } from "../../engine/releases/release.ts";
-import { SelectionConfig } from "../../handlers/routesSelection.ts";
 import { context } from "../../live.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
