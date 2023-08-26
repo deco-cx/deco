@@ -1,6 +1,6 @@
 # deco — deno composable web framework by [deco.cx](https://www.deco.cx/en/dev)
 
-<img align="right" src="/assets/logo.svg" height="150px" alt="The Deco Framework logo: A capybara in its natural habitat">
+<img align="right" src="/assets/logo2.svg" height="150px" alt="The Deco Framework logo: A capybara in its natural habitat">
 
 Every business needs a **fast, reliable website** that empowers its brand. Every website needs a **powerful visual editor and configuration panel** that empowers business people to create and evolve their digital experiences without the need for developers to deploy changes.
 
