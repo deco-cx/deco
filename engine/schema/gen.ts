@@ -1,13 +1,13 @@
-import blocks from "$live/blocks/index.ts";
 import { AppManifest, SourceMap } from "../../blocks/app.ts";
+import blocks from "../../blocks/index.ts";
 import { JSONSchema7, TsType } from "../../deps.ts";
 import { withoutLocalModules } from "../../engine/fresh/manifest.ts";
 import { defaultRoutes } from "../../engine/fresh/manifestGen.ts";
 import {
   BlockModule,
   EntrypointModule,
-  newSchemaBuilder,
   Schemas,
+  newSchemaBuilder,
 } from "../../engine/schema/builder.ts";
 import { Schemeable } from "../../engine/schema/transform.ts";
 import { context } from "../../live.ts";

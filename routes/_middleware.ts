@@ -3,10 +3,6 @@ import { getSetCookies } from "std/http/mod.ts";
 import { mergeManifests, SourceMap } from "../blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { buildSourceMap } from "../blocks/utils.tsx";
-import {
-  getPagePathTemplate,
-  redirectTo,
-} from "../compatibility/v0/editorData.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import defaults from "../engine/fresh/defaults.ts";
 import { context } from "../live.ts";
@@ -15,16 +11,6 @@ import { LiveConfig, LiveState } from "../types.ts";
 import { isAdmin } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
-
-export const redirectToPreviewPage = async (url: URL, pageId: string) => {
-  url.searchParams.append("path", url.pathname);
-  url.searchParams.set("forceFresh", "");
-  if (!url.searchParams.has("pathTemplate")) { // FIXM(mcandeia) compatibility mode only, once migrated pathTemplate is required because there are pages unpublished
-    url.searchParams.append("pathTemplate", await getPagePathTemplate(pageId));
-  }
-  url.pathname = `/live/previews/${pageId}`;
-  return redirectTo(url);
-};
 
 /**
  * @description Global configurations for ./routes/_middleware.ts route
@@ -57,29 +43,6 @@ export const handler = async (
       id: context.siteId,
       name: context.site,
     };
-
-    // FIXME (mcandeia) compatibility only.
-    if (
-      url.searchParams.has("editorData") &&
-      !url.pathname.startsWith("/live/editorData")
-    ) {
-      url.pathname = "/live/editorData";
-      url.searchParams.set("forceFresh", "");
-      return redirectTo(url);
-    }
-
-    if (url.pathname.startsWith("/_live/workbench")) {
-      url.pathname = "/live/workbench";
-      return redirectTo(url);
-    }
-
-    if (
-      !url.pathname.startsWith("/live/previews") &&
-      url.searchParams.has("pageId") &&
-      !url.searchParams.has("editorData")
-    ) {
-      return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
-    }
 
     const response = { headers: new Headers(defaultHeaders) };
     const state = ctx.state?.$live?.state ?? {};
