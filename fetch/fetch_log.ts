@@ -1,4 +1,4 @@
-import { formatOutgoingFetch } from "$live/utils/log.ts";
+import { formatOutgoingFetch } from "../utils/log.ts";
 import { context } from "../live.ts";
 
 let logger: null | ((_: string) => void) = null;

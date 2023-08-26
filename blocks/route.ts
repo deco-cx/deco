@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { setLogger } from "$live/fetch/fetch_log.ts";
+import { setLogger } from "../fetch/fetch_log.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import blocks from "$live/blocks/index.ts";
+import blocks from "../../blocks/index.ts";
 import { HandlerContext } from "../../deps.ts";
 import { Block, BlockModule } from "../../engine/block.ts";
 import { ReleaseResolver } from "../../engine/core/mod.ts";
