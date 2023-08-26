@@ -1,9 +1,9 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { WorkflowQS } from "../../../actions/workflows/start.ts";
+import { WorkflowQS } from "$live/actions/workflows/start.ts";
 import { Workflow, WorkflowContext } from "../../../blocks/workflow.ts";
-import { initOnce } from "../../../commons/workflows/initialize.ts";
-import { WorkflowMetadata } from "../../../commons/workflows/types.ts";
+import { initOnce } from "$live/commons/workflows/initialize.ts";
+import { WorkflowMetadata } from "$live/commons/workflows/types.ts";
 import {
   Arg,
   arrToStream,

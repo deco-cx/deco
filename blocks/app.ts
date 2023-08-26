@@ -11,7 +11,7 @@ import {
 } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { resolversFrom } from "../engine/fresh/manifest.ts";
-import { DecoManifest, FnContext } from "../types.ts";
+import type { DecoManifest, FnContext } from "../types.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 export type SourceMap = Record<string, string | null>;
