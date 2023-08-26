@@ -1,5 +1,7 @@
 # deco live — the edge-native CMS
 
+<img align="right" src="/assets/logo.svg" height="150px" alt="The Deco Framework logo: A capybara in its natural habitat">
+
 O _Live_ é um gerenciador de conteúdo (CMS) para aplicações web feitas com
 [Fresh](https://fresh.deno.dev), especializado para ecommerce. Com o _Live_ é
 possível criar e gerenciar páginas dinâmicas através do https://deco.cx.
@@ -95,7 +97,7 @@ export interface Props {
 const VTEXIntelligentSearch: LoaderFunction<Props, ProductList> = async (
   _req,
   _ctx,
-  { searchQuery, count },
+  { searchQuery, count }
 ) => {
   const data = await vtexClient().search({ query: searchQuery, count });
 
