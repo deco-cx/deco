@@ -11,6 +11,7 @@ export default function DenoJson(_ctx: InitContext) {
           "start": "deno eval 'import \"$live/scripts/apps/bundle.ts\"'",
           "link": "deno eval 'import \"$live/scripts/apps/link.ts\"'",
           "unlink": "deno eval 'import \"$live/scripts/apps/unlink.ts\"'",
+          "serve": "deno eval 'import \"$live/scripts/apps/serve.ts\"'"
         },
         "githooks": {
           "pre-commit": "check",
