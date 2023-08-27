@@ -9,7 +9,6 @@ import type { UnionToIntersection } from "../../../deps.ts";
 import type { Resolvable } from "../../../engine/core/resolver.ts";
 import type { PromiseOrValue } from "../../../engine/core/utils.ts";
 import dfs from "../../../engine/fresh/defaults.ts";
-import type { Manifest } from "../../../live.gen.ts";
 import type { LiveConfig } from "../../../mod.ts";
 import type { LiveState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
@@ -324,8 +323,8 @@ const isInvokeFunc = (
   return (p as InvokeFunction).key !== undefined;
 };
 
-export const payloadForFunc = (
-  func: InvokeFunction<Manifest>,
+export const payloadForFunc = <TManifest extends AppManifest = AppManifest>(
+  func: InvokeFunction<TManifest>,
 ) => ({
   keys: func.select,
   obj: {

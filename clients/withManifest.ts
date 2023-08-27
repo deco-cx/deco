@@ -17,6 +17,7 @@ import type {
 } from "../routes/live/invoke/index.ts";
 import { InvokeAwaiter } from "../routes/live/invoke/index.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
+import { InvocationProxyHandler, newHandler } from "./proxy.ts";
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
@@ -110,7 +111,7 @@ const fetchWithProps = async (
   });
 };
 
-const invokeKey = (
+export const invokeKey = (
   key: string,
   props?: unknown,
   init?: RequestInit | undefined,
@@ -283,45 +284,6 @@ export const withManifest = <TManifest extends AppManifest>() => {
   };
 };
 
-type InvocationProxyHandler = {
-  (props?: any, init?: RequestInit | undefined): Promise<any>;
-  [key: string]: InvocationProxyHandler;
-};
-type InvocationProxyState = Omit<InvocationProxyHandler, "__parts"> | {
-  __parts?: string[] | undefined;
-};
-
-const newHandler = <TManifest extends AppManifest>() => {
-  const handler = {
-    get: function (
-      target: InvocationProxyState,
-      part: string,
-    ): InvocationProxyState {
-      const currentParts = [...(target.__parts as string[]) ?? [], part];
-      const newTarget: InvocationProxyState = function (
-        props?: any,
-        init?: RequestInit | undefined,
-      ): InvokeAwaiter<TManifest, any, any> {
-        const ext = part === "x" ? "tsx" : "ts";
-        return new InvokeAwaiter<TManifest, any, any>(
-          (payload, init) => invokeKey(payload.key, payload.props, init),
-          {
-            key: `${currentParts.join("/")}.${ext}`,
-            props,
-          } as Invoke<TManifest, any, any>,
-          init,
-        );
-      } as InvocationProxyState;
-      newTarget.__parts = currentParts;
-      return new Proxy(
-        newTarget,
-        handler,
-      );
-    },
-  };
-  return handler;
-};
-
 type InvocationProxyWithBatcher<TManifest extends AppManifest> =
   & InvocationProxy<
     TManifest
@@ -338,7 +300,7 @@ export const proxyFor = <TManifest extends AppManifest>(
 > => {
   return new Proxy<InvocationProxyHandler>(
     invoker as InvocationProxyHandler,
-    newHandler<TManifest>(),
+    newHandler<TManifest>((key, props, init) => invoker({ key, props }, init)),
   ) as unknown as InvocationProxyWithBatcher<
     TManifest
   >;
