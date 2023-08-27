@@ -6,29 +6,37 @@
 import { start } from "$fresh/server.ts";
 import decoPlugin from "deco/plugins/deco.ts";
 import { join, toFileUrl } from "std/path/mod.ts";
+import { getDecoConfig } from "./config.ts";
+import { AppManifest, SourceMap } from "deco/blocks/app.ts";
 
-const appFolder = join(Deno.cwd(), Deno.args[0]);
+const { apps = [] } = await getDecoConfig(Deno.cwd());
+
+const runningApps: AppManifest = {
+  baseUrl: toFileUrl(Deno.cwd()).toString(),
+  name: "apps",
+  apps: {},
+};
+
+const sourceMap: SourceMap = {};
+
+for (const app of apps) {
+  const appTs = `${app.name}/apps/mod.ts`;
+  const appFolder = join(Deno.cwd(), app.dir, "mod.ts");
+  runningApps.apps![appTs] = await import(
+    appFolder
+  );
+  sourceMap[appTs] = toFileUrl(appFolder).toString();
+}
 await start({
   islands: {},
   routes: {},
-  baseUrl: toFileUrl(join(appFolder, "fresh.gen.ts")).toString(),
+  baseUrl: toFileUrl(join(Deno.cwd(), "fresh.gen.ts")).toString(),
 }, {
   plugins: [
     decoPlugin({
-      sourceMap: {
-        [`${Deno.args[0]}/apps/mod.ts`]: toFileUrl(join(appFolder, "mod.ts"))
-          .toString(),
-      },
-      manifest: {
-        baseUrl: toFileUrl(join(appFolder, "manifest.gen.ts")).toString(),
-        name: Deno.args[0],
-        apps: {
-          [`${Deno.args[0]}/apps/mod.ts`]: await import(
-            join(appFolder, "mod.ts")
-          ),
-        },
-      },
-      site: { namespace: Deno.args[1] ?? Deno.args[0] },
+      sourceMap,
+      manifest: runningApps,
+      site: { namespace: Deno.args[0] ?? "playground" },
     }),
   ],
 });
