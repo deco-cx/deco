@@ -35,8 +35,8 @@ type PathToDots<
   : { [key in TRest]: InvocationFuncFor<TManifest, `${Current}/${TRest}`> };
 
 type AllTypesOf<TManifest extends AppManifest, App extends string> =
-  AvailableInvocations<TManifest> extends `${App}/${infer type}/${string}`
-    ? type
+  AvailableInvocations<TManifest> & `${App}/${string}` extends
+    `${App}/${infer type}/${string}` ? type
     : never;
 /**
  * Promise.prototype.then onfufilled callback type.

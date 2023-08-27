@@ -317,10 +317,15 @@ export const proxy = <
   return proxyFor(batchInvoke);
 };
 
+/**
+ * Creates a proxy that lets you invoke functions based on the declared actions and loaders. (compatibility with old invoke)
+ */
 export const forApp = <
   TApp extends App,
 >() => {
-  return proxy<
-    ManifestOf<TApp>
-  >();
+  return {
+    invoke: proxy<
+      ManifestOf<TApp>
+    >(),
+  };
 };
