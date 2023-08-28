@@ -3,7 +3,7 @@ import { major } from "std/semver/mod.ts";
 import { JSONSchema7 } from "../../deps.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { notUndefined, singleFlight } from "../../engine/core/utils.ts";
-import defaults from "../../engine/fresh/defaults.ts";
+import defaults from "../../engine/manifest/defaults.ts";
 import { Schemas } from "../../engine/schema/builder.ts";
 import { namespaceOf } from "../../engine/schema/gen.ts";
 import { genSchemas } from "../../engine/schema/reader.ts";

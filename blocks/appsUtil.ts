@@ -4,8 +4,8 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,
-} from "../engine/fresh/defaults.ts";
-import { DanglingRecover } from "../engine/fresh/manifest.ts";
+} from "../engine/manifest/defaults.ts";
+import { DanglingRecover } from "../engine/manifest/manifest.ts";
 import { compose } from "../engine/middleware.ts";
 import { AppManifest } from "../mod.ts";
 import { usePreviewFunc } from "./utils.tsx";

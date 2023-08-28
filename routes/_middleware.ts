@@ -8,7 +8,7 @@ import {
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
-import defaults from "../engine/fresh/defaults.ts";
+import defaults from "../engine/manifest/defaults.ts";
 import { context } from "../live.ts";
 import { AppManifest, Apps } from "../mod.ts";
 import { LiveConfig, LiveState } from "../types.ts";

@@ -10,7 +10,7 @@ export { default as dev } from "./dev.ts";
 export { asResolved, isDeferred } from "./engine/core/resolver.ts";
 export type { Resolved } from "./engine/core/resolver.ts";
 export { badRequest, notFound, redirect } from "./engine/errors.ts";
-export { $live } from "./engine/fresh/manifest.ts";
+export { $live } from "./engine/manifest/manifest.ts";
 export type { Route, Routes } from "./flags/audience.ts";
 export { context } from "./live.ts";
 export type { Secret } from "./loaders/secret.ts";

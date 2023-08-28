@@ -3,7 +3,7 @@ import "../fetch/monkey_patch.ts";
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
-import defaults from "../engine/fresh/defaults.ts";
+import defaults from "../engine/manifest/defaults.ts";
 import { $live, AppManifest, SiteInfo } from "../mod.ts";
 import {
   default as Render,

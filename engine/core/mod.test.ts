@@ -6,7 +6,7 @@ import {
   resolve,
   ResolverMap,
 } from "../../engine/core/resolver.ts";
-import defaults from "../fresh/defaults.ts";
+import defaults from "../manifest/defaults.ts";
 
 Deno.test("resolve", async (t) => {
   const context: BaseContext = {

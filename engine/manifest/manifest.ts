@@ -10,8 +10,8 @@ import {
   ResolverMap,
 } from "../../engine/core/resolver.ts";
 import { PromiseOrValue } from "../../engine/core/utils.ts";
-import defaultResolvers from "../../engine/fresh/defaults.ts";
 import { integrityCheck } from "../../engine/integrity.ts";
+import defaultResolvers from "../../engine/manifest/defaults.ts";
 import { getComposedConfigStore } from "../../engine/releases/provider.ts";
 import { context } from "../../live.ts";
 import { LiveConfig } from "../../types.ts";
