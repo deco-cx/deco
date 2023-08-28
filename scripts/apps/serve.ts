@@ -23,10 +23,11 @@ const sourceMap: SourceMap = {};
 for (const app of apps) {
   const appTs = `${site}/apps/${app.name}.ts`;
   const appFolder = join(Deno.cwd(), app.dir, "mod.ts");
+  const fileUrl = toFileUrl(appFolder).toString();
   runningApps.apps![appTs] = await import(
-    appFolder
+    fileUrl
   );
-  sourceMap[appTs] = toFileUrl(appFolder).toString();
+  sourceMap[appTs] = fileUrl;
 }
 await start({
   islands: {},
