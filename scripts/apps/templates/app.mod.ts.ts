@@ -6,7 +6,7 @@ export default async function AppMod(_ctx: InitContext) {
     `
     import manifest from "./manifest.gen.ts";
     import type { Manifest } from "./manifest.gen.ts";
-    import type { App, AppContext as AC } from "../deps.ts";
+    import type { App, AppContext as AC } from "deco/mod.ts";
 
     export interface State {
       url: string;
