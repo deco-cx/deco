@@ -8,7 +8,7 @@ import type { AppManifest } from "../../../blocks/app.ts";
 import type { UnionToIntersection } from "../../../deps.ts";
 import type { Resolvable } from "../../../engine/core/resolver.ts";
 import type { PromiseOrValue } from "../../../engine/core/utils.ts";
-import dfs from "../../../engine/fresh/defaults.ts";
+import dfs from "../../../engine/manifest/defaults.ts";
 import type { LiveConfig } from "../../../mod.ts";
 import type { LiveState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";

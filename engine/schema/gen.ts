@@ -1,8 +1,8 @@
 import blocks from "$live/blocks/index.ts";
 import { AppManifest, SourceMap } from "../../blocks/app.ts";
+import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import { JSONSchema7, TsType } from "../../deps.ts";
-import { withoutLocalModules } from "../../engine/fresh/manifest.ts";
-import { defaultRoutes } from "../../engine/fresh/manifestGen.ts";
+import { defaultRoutes } from "../../engine/manifest/manifestGen.ts";
 import {
   BlockModule,
   EntrypointModule,

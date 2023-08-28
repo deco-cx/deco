@@ -1,88 +1,19 @@
-// deno-lint-ignore-file no-explicit-any
-import blocks from "$live/blocks/index.ts";
-import { HandlerContext } from "../../deps.ts";
-import { Block, BlockModule } from "../../engine/block.ts";
-import { ReleaseResolver } from "../../engine/core/mod.ts";
+import { Block, BlockModule } from "../engine/block.ts";
+import { BaseContext, Resolver, ResolverMap } from "../engine/core/resolver.ts";
+import { mapObjKeys } from "../engine/core/utils.ts";
 import {
-  BaseContext,
-  DanglingReference,
-  Resolvable,
-  Resolver,
-  ResolverMap,
-} from "../../engine/core/resolver.ts";
-import { mapObjKeys, PromiseOrValue } from "../../engine/core/utils.ts";
-import defaultResolvers, {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,
-} from "../../engine/fresh/defaults.ts";
-import { integrityCheck } from "../../engine/integrity.ts";
-import { compose } from "../../engine/middleware.ts";
-import { getComposedConfigStore } from "../../engine/releases/provider.ts";
-import { context } from "../../live.ts";
-import { LiveConfig } from "../../types.ts";
-
-import { parse } from "std/flags/mod.ts";
-import { AppManifest } from "../../blocks/app.ts";
-import { usePreviewFunc } from "../../blocks/utils.tsx";
-import { SiteInfo } from "../../types.ts";
-const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
-
-const ENV_SITE_NAME = "DECO_SITE_NAME";
-
-export type FreshHandler<
-  TConfig = any,
-  TData = any,
-  TState = any,
-  Resp = Response,
-> = (
-  request: Request,
-  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>,
-) => PromiseOrValue<Resp>;
-
-export interface FreshContext<Data = any, State = any, TConfig = any>
-  extends BaseContext {
-  context: HandlerContext<Data, LiveConfig<State, TConfig>>;
-  request: Request;
-}
-
-export type LiveState<T, TState = unknown> = TState & {
-  $live: T;
-};
-
-export interface DanglingRecover {
-  recoverable: (type: string) => boolean;
-  recover: Resolver;
-}
+} from "../engine/manifest/defaults.ts";
+import { DanglingRecover } from "../engine/manifest/manifest.ts";
+import { compose } from "../engine/middleware.ts";
+import { AppManifest } from "../mod.ts";
+import { usePreviewFunc } from "./utils.tsx";
 
 const resolverIsBlock = (blk: Block) => (resolver: string) => {
   const splitted = resolver.split("/");
   // check if there's any segment on the same name of the block
   return splitted.some((segment) => segment === blk.type); //FIXME (mcandeia) this is not a straightforward solution
-};
-export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
-  return (parent, ctx) => {
-    const curr = ctx.resolveChain.findLast((r) => r.type === "dangling")?.value;
-
-    if (typeof curr !== "string") {
-      throw new Error(`Resolver not found ${JSON.stringify(ctx.resolveChain)}`);
-    }
-
-    for (const { recoverable, recover } of recovers) {
-      if (recoverable(curr)) {
-        return recover(parent, ctx);
-      }
-    }
-    throw new DanglingReference(curr);
-  };
-};
-
-const siteName = (): string => {
-  const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
-  if (siteNameFromEnv) {
-    return siteNameFromEnv;
-  }
-  const [_, siteName] = context.namespace!.split("/"); // deco-sites/std best effort
-  return siteName ?? context.namespace!;
 };
 
 const asManifest = <TManifest extends AppManifest>(
@@ -126,6 +57,7 @@ export const resolversFrom = <
   TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
 >(
   man: T,
+  blocks: Block[],
 ): TResolverMap => {
   const [_, resolvers, __] = (blocks ?? []).reduce(
     (curr, acc) => buildRuntime<AppManifest, TContext, TResolverMap>(curr, acc),
@@ -212,47 +144,4 @@ export const buildRuntime = <
       } as DanglingRecover]
       : recovers,
   ];
-};
-export const $live = <T extends AppManifest>(
-  m: T,
-  { siteId, namespace }: SiteInfo,
-  useLocalStorageOnly = false,
-): T => {
-  context.siteId = siteId ?? -1;
-  context.namespace = namespace;
-  const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
-    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
-    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
-  );
-  context.site = siteName();
-  const provider = getComposedConfigStore(
-    context.namespace!,
-    context.site,
-    context.siteId,
-    useLocalStorageOnly,
-  );
-  context.release = provider;
-  const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
-    release: provider,
-    danglingRecover: recovers.length > 0
-      ? buildDanglingRecover(recovers)
-      : undefined,
-  });
-
-  if (shouldCheckIntegrity) {
-    provider.state().then(
-      (resolvables: Record<string, Resolvable>) => {
-        integrityCheck(resolver.getResolvers(), resolvables);
-      },
-    );
-  }
-  // should be set first
-  context.releaseResolver = resolver;
-  context.manifest = newManifest;
-  console.log(
-    `Starting live: siteId=${context.siteId} site=${context.site}`,
-  );
-
-  return context.manifest as T;
 };

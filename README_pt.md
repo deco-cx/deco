@@ -97,7 +97,7 @@ export interface Props {
 const VTEXIntelligentSearch: LoaderFunction<Props, ProductList> = async (
   _req,
   _ctx,
-  { searchQuery, count }
+  { searchQuery, count },
 ) => {
   const data = await vtexClient().search({ query: searchQuery, count });
 

@@ -7,7 +7,7 @@ import { ResolverMiddleware } from "../engine/middleware.ts";
 import { Schemeable } from "../engine/schema/transform.ts";
 import type { Manifest } from "../live.gen.ts";
 import { AppManifest } from "../types.ts";
-import { BlockInvocation } from "./fresh/defaults.ts";
+import { BlockInvocation } from "./manifest/defaults.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { withoutLocalModules } from "../../engine/fresh/manifest.ts";
+import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import { AppManifest, DecoManifest } from "../../types.ts";
 
 export interface DefaultImport {

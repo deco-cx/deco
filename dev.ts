@@ -2,15 +2,15 @@ import { setupGithooks } from "https://deno.land/x/githooks@0.0.4/githooks.ts";
 import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
+import { parse } from "std/flags/mod.ts";
 import { ResolverMap } from "./engine/core/resolver.ts";
-import { ManifestBuilder } from "./engine/fresh/manifestBuilder.ts";
-import { decoManifestBuilder } from "./engine/fresh/manifestGen.ts";
+import { ManifestBuilder } from "./engine/manifest/manifestBuilder.ts";
+import { decoManifestBuilder } from "./engine/manifest/manifestGen.ts";
 import { genSchemas } from "./engine/schema/reader.ts";
 import { context } from "./live.ts";
 import { DecoManifest } from "./types.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
 import { checkUpdates } from "./utils/update.ts";
-import { parse } from "std/flags/mod.ts";
 export { format } from "./utils/formatter.ts";
 
 /**

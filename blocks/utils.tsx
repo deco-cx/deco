@@ -20,7 +20,7 @@ import type { Manifest } from "../live.gen.ts";
 import { context } from "../live.ts";
 import { HttpContext } from "./handler.ts";
 import { ErrorBoundaryComponent } from "./section.ts";
-import type { InvocationProxy } from '../routes/live/invoke/index.ts';
+import type { InvocationProxy } from "../routes/live/invoke/index.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
