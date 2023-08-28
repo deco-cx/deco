@@ -12,7 +12,7 @@ import {
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
-import blocks from "./index.ts";
+import blocks from "$live/blocks/index.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 export type SourceMap = Record<string, string | null>;
