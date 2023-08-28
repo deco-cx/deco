@@ -22,7 +22,9 @@ const sourceMap: SourceMap = {};
 
 for (const app of apps) {
   const appTs = `${site}/apps/${app.name}.ts`;
+  console.log(Deno.cwd());
   const appFolder = join(Deno.cwd(), app.dir, "mod.ts");
+  console.log(appFolder);
   runningApps.apps![appTs] = await import(
     appFolder
   );
