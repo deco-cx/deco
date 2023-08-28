@@ -16,12 +16,17 @@ import { DecoManifest, FnContext } from "../types.ts";
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 export type SourceMap = Record<string, string | null>;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
-
-export type ManifestOf<TApp extends App> =
-  & TApp["manifest"]
-  & (TApp extends { dependencies?: (infer Depedendency)[] }
-    ? Depedendency extends App ? ManifestOf<Depedendency> : {}
+type MergeAppsManifest<TCurrent extends App, TDeps> =
+  & TCurrent["manifest"]
+  & (TDeps extends [infer TNext, ...infer Rest]
+    ? TNext extends App ? MergeAppsManifest<TNext, Rest>
+    : {}
     : {});
+
+export type ManifestOf<TApp extends App> = MergeAppsManifest<
+  TApp,
+  TApp["dependencies"] extends (infer Deps) | undefined ? Deps : []
+>;
 
 export type AppContext<
   TApp extends App,

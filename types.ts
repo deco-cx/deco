@@ -26,6 +26,7 @@ import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { Route } from "./flags/audience.ts";
 import { createServerTimings } from "./utils/timings.ts";
+import type { InvocationProxy } from "./routes/live/invoke/index.ts";
 export type {
   ErrorBoundaryComponent,
   ErrorBoundaryParams,
@@ -99,7 +100,11 @@ export type LiveConfig<
     $live: TConfig;
     resolve: ResolveFunc;
     release: Release;
-    invoke: InvocationFunc<TManifest>;
+    invoke:
+      & InvocationProxy<
+        TManifest
+      >
+      & InvocationFunc<TManifest>;
     routes?: Route[];
     manifest: TManifest;
     sourceMap: SourceMap;

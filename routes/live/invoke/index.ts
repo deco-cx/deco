@@ -1,16 +1,126 @@
 // deno-lint-ignore-file no-explicit-any
-import { HandlerContext } from "$fresh/src/server/types.ts";
-import { AppManifest } from "../../../blocks/app.ts";
-import { UnionToIntersection } from "../../../deps.ts";
-import { Resolvable } from "../../../engine/core/resolver.ts";
-import { PromiseOrValue } from "../../../engine/core/utils.ts";
+import type { HandlerContext } from "$fresh/src/server/types.ts";
+import {
+  AvailableInvocations,
+  InvocationFuncFor,
+} from "$live/clients/withManifest.ts";
+import type { AppManifest } from "../../../blocks/app.ts";
+import type { UnionToIntersection } from "../../../deps.ts";
+import type { Resolvable } from "../../../engine/core/resolver.ts";
+import type { PromiseOrValue } from "../../../engine/core/utils.ts";
 import dfs from "../../../engine/fresh/defaults.ts";
-import type { Manifest } from "../../../live.gen.ts";
-import { LiveConfig } from "../../../mod.ts";
+import type { LiveConfig } from "../../../mod.ts";
 import type { LiveState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
-import { DeepPick, DotNestedKeys } from "../../../utils/object.ts";
+import type { DeepPick, DotNestedKeys } from "../../../utils/object.ts";
+
+type AppsOf<TManifest extends AppManifest> = (
+  AvailableInvocations<TManifest>
+) extends `${infer app}/${"loaders" | "actions" | "functions"}/${string}` ? app
+  : never;
+type PathToDots<
+  TRest extends string,
+  Current extends string,
+  TManifest extends AppManifest,
+> = TRest extends `${infer part}/${infer rest}`
+  ? { [key in part]: PathToDots<rest, `${Current}/${part}`, TManifest> }
+  : TRest extends `${infer name}.ts`
+    ? { [key in name]: InvocationFuncFor<TManifest, `${Current}/${TRest}`> }
+  : TRest extends `${infer name}.tsx` ? {
+      [key in name]: {
+        "x": InvocationFuncFor<TManifest, `${Current}/${TRest}`>;
+      };
+    }
+  : { [key in TRest]: InvocationFuncFor<TManifest, `${Current}/${TRest}`> };
+
+type AllTypesOf<TManifest extends AppManifest, App extends string> =
+  AvailableInvocations<TManifest> & `${App}/${string}` extends
+    `${App}/${infer type}/${string}` ? type
+    : never;
+/**
+ * Promise.prototype.then onfufilled callback type.
+ */
+type Fulfilled<R, T> = ((result: R) => T | PromiseLike<T>) | null;
+
+/**
+ * Promise.then onrejected callback type.
+ */
+type Rejected<E> = ((reason: any) => E | PromiseLike<E>) | null;
+
+export interface InvokeAsPayload<
+  TManifest extends AppManifest,
+  TInvocableKey extends string,
+  TFuncSelector extends DotNestedKeys<
+    ManifestInvocable<TManifest, TInvocableKey>["return"]
+  >,
+> {
+  payload: Invoke<TManifest, TInvocableKey, TFuncSelector>;
+}
+
+export class InvokeAwaiter<
+  TManifest extends AppManifest,
+  TInvocableKey extends string,
+  TFuncSelector extends DotNestedKeys<
+    ManifestInvocable<TManifest, TInvocableKey>["return"]
+  >,
+> implements
+  PromiseLike<
+    InvokeResult<
+      Invoke<TManifest, TInvocableKey, TFuncSelector>,
+      TManifest
+    >
+  >,
+  InvokeAsPayload<TManifest, TInvocableKey, TFuncSelector> {
+  constructor(
+    protected invoker: (
+      payload: Invoke<TManifest, TInvocableKey, TFuncSelector>,
+      init: RequestInit | undefined,
+    ) => Promise<
+      InvokeResult<Invoke<TManifest, TInvocableKey, TFuncSelector>, TManifest>
+    >,
+    public payload: Invoke<TManifest, TInvocableKey, TFuncSelector>,
+    protected init?: RequestInit | undefined,
+  ) {
+  }
+
+  public get() {
+    return this.payload;
+  }
+
+  then<TResult1, TResult2 = TResult1>(
+    onfufilled?: Fulfilled<
+      InvokeResult<
+        Invoke<TManifest, TInvocableKey, TFuncSelector>,
+        TManifest
+      >,
+      TResult1
+    >,
+    onrejected?: Rejected<TResult2>,
+  ): Promise<TResult1 | TResult2> {
+    return this.invoker(this.payload, this.init).then(onfufilled).catch(
+      onrejected,
+    );
+  }
+}
+type InvocationObj<TManifest extends AppManifest> = {
+  [app in AppsOf<TManifest>]: {
+    [type in AllTypesOf<TManifest, app>]:
+      AvailableInvocations<TManifest> & `${app}/${type}/${string}` extends
+        `${app}/${type}/${infer rest}` ? UnionToIntersection<
+          PathToDots<
+            rest,
+            `${app}/${type}`,
+            TManifest
+          >
+        >
+        : never;
+  };
+};
+
+export type InvocationProxy<TManifest extends AppManifest> = InvocationObj<
+  TManifest
+>;
 
 export type AvailableFunctions<TManifest extends AppManifest> =
   & keyof TManifest["functions"]
@@ -184,16 +294,20 @@ export type DotNestedReturn<
 export type InvokeResult<
   TPayload extends
     | Invoke<TManifest, any, any>
+    | InvokeAsPayload<TManifest, any, any>
     | Record<
       string,
-      Invoke<TManifest, any, any>
+      Invoke<TManifest, any, any> | InvokeAsPayload<TManifest, any, any>
     >,
   TManifest extends AppManifest = AppManifest,
-> = TPayload extends Invoke<TManifest, infer TFunc, any>
+> = TPayload extends
+  | Invoke<TManifest, infer TFunc, any>
+  | InvokeAsPayload<TManifest, infer TFunc, any>
   ? ReturnWith<ManifestInvocable<TManifest, TFunc>["return"], TPayload>
   : TPayload extends Record<string, any> ? {
       [key in keyof TPayload]: TPayload[key] extends
-        Invoke<TManifest, infer TFunc, any> ? ReturnWith<
+        | Invoke<TManifest, infer TFunc, any>
+        | InvokeAsPayload<TManifest, infer TFunc, any> ? ReturnWith<
           ManifestInvocable<TManifest, TFunc>["return"],
           TPayload[key]
         >
@@ -209,8 +323,8 @@ const isInvokeFunc = (
   return (p as InvokeFunction).key !== undefined;
 };
 
-export const payloadForFunc = (
-  func: InvokeFunction<Manifest>,
+export const payloadForFunc = <TManifest extends AppManifest = AppManifest>(
+  func: InvokeFunction<TManifest>,
 ) => ({
   keys: func.select,
   obj: {

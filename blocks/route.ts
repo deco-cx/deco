@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { InvocationProxyHandler, newHandler } from "$live/clients/proxy.ts";
 import { setLogger } from "$live/fetch/fetch_log.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
@@ -19,10 +20,13 @@ import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
-import type { Manifest } from "../live.gen.ts";
 import { context as liveContext } from "../live.ts";
-import { InvokeFunction, payloadForFunc } from "../routes/live/invoke/index.ts";
-import { DecoManifest, LiveConfig, LiveState } from "../types.ts";
+import {
+  InvocationProxy,
+  InvokeFunction,
+  payloadForFunc,
+} from "../routes/live/invoke/index.ts";
+import { AppManifest, DecoManifest, LiveConfig, LiveState } from "../types.ts";
 import { formatIncomingRequest } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
 import { SourceMap } from "./app.ts";
@@ -148,13 +152,13 @@ const debug = {
   },
 };
 
-export const buildDecoState = (
+export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
   resolveKey: string | Resolvable,
   sourceMap: SourceMap = {},
 ) =>
   async function (
     request: Request,
-    context: MiddlewareHandlerContext<LiveConfig<any, LiveState>>,
+    context: MiddlewareHandlerContext<LiveConfig<any, LiveState, TManifest>>,
   ) {
     context.state.sourceMap ??= sourceMap;
     const { enabled, action } = debug.fromRequest(request);
@@ -220,10 +224,22 @@ export const buildDecoState = (
 
     context.state.resolve = ctxResolver;
     context.state.release = liveContext.release!;
-    context.state.invoke = (key, props) =>
-      ctxResolver<Awaited<ReturnType<InvocationFunc<Manifest>>>>(
-        payloadForFunc({ key, props } as unknown as InvokeFunction<Manifest>),
+    const invoker = (
+      key: string,
+      props: unknown,
+    ) =>
+      ctxResolver<Awaited<ReturnType<InvocationFunc<TManifest>>>>(
+        payloadForFunc({ key, props } as InvokeFunction<TManifest>),
       );
+
+    context.state.invoke = new Proxy<InvocationProxyHandler>(
+      invoker as InvocationProxyHandler,
+      newHandler<TManifest>(invoker),
+    ) as unknown as
+      & InvocationProxy<
+        TManifest
+      >
+      & InvocationFunc<TManifest>;
 
     const resp = await context.next();
     // enable or disable debugging

@@ -1,19 +1,24 @@
+// deno-lint-ignore-file no-explicit-any
 import { IS_BROWSER } from "$fresh/runtime.ts";
-import type { StreamProps } from "../mod.ts";
 import type { App, AppManifest, ManifestOf } from "../blocks/app.ts";
+import type { StreamProps } from "../mod.ts";
 import type {
   AvailableActions,
   AvailableFunctions,
   AvailableLoaders,
+  InvocationProxy,
   Invoke,
+  InvokeAsPayload,
   InvokeResult,
   ManifestAction,
   ManifestFunction,
+  ManifestInvocable,
   ManifestLoader,
 } from "../routes/live/invoke/index.ts";
+import { InvokeAwaiter } from "../routes/live/invoke/index.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
+import { InvocationProxyHandler, newHandler } from "./proxy.ts";
 
-// deno-lint-ignore no-explicit-any
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
 export const isStreamProps = <TProps>(
@@ -106,7 +111,7 @@ const fetchWithProps = async (
   });
 };
 
-const invokeKey = (
+export const invokeKey = (
   key: string,
   props?: unknown,
   init?: RequestInit | undefined,
@@ -137,6 +142,47 @@ export type InvocationFunc<TManifest extends AppManifest> = <
     TManifest
   >
 >;
+
+export type AvailableInvocations<TManifest extends AppManifest> =
+  | AvailableFunctions<TManifest>
+  | AvailableActions<TManifest>
+  | AvailableLoaders<TManifest>;
+
+export type InvocationFuncFor<
+  TManifest extends AppManifest,
+  TInvocableKey extends string,
+  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+    ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableActions<TManifest>
+      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never = TInvocableKey extends AvailableFunctions<TManifest>
+      ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+      : TInvocableKey extends AvailableActions<TManifest>
+        ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+      : TInvocableKey extends AvailableLoaders<TManifest>
+        ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+      : never,
+> = (
+  props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+) => InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>;
+
+const isInvokeAwaiter = <
+  TManifest extends AppManifest,
+  TInvocableKey extends string,
+  TFuncSelector extends DotNestedKeys<
+    ManifestInvocable<TManifest, TInvocableKey>["return"]
+  >,
+>(
+  invoke: unknown | InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>,
+): invoke is InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector> => {
+  return (invoke as InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>)
+        ?.then !== undefined &&
+    (invoke as InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>)
+        ?.payload !== undefined;
+};
+
 /**
  * Receives the function id as a parameter (e.g `#FUNC_ID`, the `#` will be ignored)
  * or the function name as a parameter (e.g `deco-sites/std/functions/vtexProductList.ts`) and invoke the target function passing the provided `props` as the partial input for the function.
@@ -159,9 +205,11 @@ export const invoke = <
     : never,
   TPayload extends
     | Invoke<TManifest, TInvocableKey, TFuncSelector>
+    | InvokeAsPayload<TManifest, TInvocableKey, TFuncSelector>
     | Record<
       string,
-      Invoke<TManifest, TInvocableKey, TFuncSelector>
+      | Invoke<TManifest, TInvocableKey, TFuncSelector>
+      | InvokeAsPayload<TManifest, TInvocableKey, TFuncSelector>
     >,
 >(
   payload: TPayload,
@@ -171,7 +219,23 @@ export const invoke = <
     TPayload,
     TManifest
   >
-> => batchInvoke(payload, init);
+> => {
+  if (typeof payload === "object") {
+    const reqs: Record<
+      string,
+      Invoke<TManifest, TInvocableKey, TFuncSelector>
+    > = {};
+    for (const [key, val] of Object.entries(payload)) {
+      if (isInvokeAwaiter(val)) {
+        reqs[key] = val.payload;
+      } else {
+        reqs[key] = val;
+      }
+    }
+    return batchInvoke(reqs, init);
+  }
+  return batchInvoke(payload, init);
+};
 
 export const create = <
   TManifest extends AppManifest,
@@ -220,10 +284,48 @@ export const withManifest = <TManifest extends AppManifest>() => {
   };
 };
 
+type InvocationProxyWithBatcher<TManifest extends AppManifest> =
+  & InvocationProxy<
+    TManifest
+  >
+  & ReturnType<typeof invoke<TManifest>>;
+/**
+ * Creates a proxy that lets you invoke functions based on the declared actions and loaders.
+ * @returns the created proxy.
+ */
+export const proxyFor = <TManifest extends AppManifest>(
+  invoker: typeof batchInvoke,
+): InvocationProxyWithBatcher<
+  TManifest
+> => {
+  return new Proxy<InvocationProxyHandler>(
+    invoker as InvocationProxyHandler,
+    newHandler<TManifest>((key, props, init) => invoker({ key, props }, init)),
+  ) as unknown as InvocationProxyWithBatcher<
+    TManifest
+  >;
+};
+/**
+ * Creates a proxy that lets you invoke functions based on the declared actions and loaders.
+ * @returns the created proxy.
+ */
+export const proxy = <
+  TManifest extends AppManifest,
+>(): InvocationProxyWithBatcher<
+  TManifest
+> => {
+  return proxyFor(batchInvoke);
+};
+
+/**
+ * Creates a proxy that lets you invoke functions based on the declared actions and loaders. (compatibility with old invoke)
+ */
 export const forApp = <
   TApp extends App,
 >() => {
-  return withManifest<
-    ManifestOf<TApp>
-  >();
+  return {
+    invoke: proxy<
+      ManifestOf<TApp>
+    >(),
+  };
 };
