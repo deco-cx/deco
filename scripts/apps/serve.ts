@@ -9,6 +9,7 @@ import { join, toFileUrl } from "std/path/mod.ts";
 import { getDecoConfig } from "./config.ts";
 import { AppManifest, SourceMap } from "deco/blocks/app.ts";
 
+const site = Deno.args[0] ?? "playground";
 const { apps = [] } = await getDecoConfig(Deno.cwd());
 
 const runningApps: AppManifest = {
@@ -20,7 +21,7 @@ const runningApps: AppManifest = {
 const sourceMap: SourceMap = {};
 
 for (const app of apps) {
-  const appTs = `${app.name}/apps/mod.ts`;
+  const appTs = `${site}/apps/${app.name}.ts`;
   const appFolder = join(Deno.cwd(), app.dir, "mod.ts");
   runningApps.apps![appTs] = await import(
     appFolder
@@ -36,7 +37,7 @@ await start({
     decoPlugin({
       sourceMap,
       manifest: runningApps,
-      site: { namespace: Deno.args[0] ?? "playground" },
+      site: { namespace: site },
     }),
   ],
 });
