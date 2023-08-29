@@ -5,7 +5,7 @@ import { format } from "../../utils/formatter.ts";
 import { AppConfig, getDecoConfig } from "./config.ts";
 
 const bundleApp = (dir: string) => async (app: AppConfig) => {
-  console.log(`generating manfiest for ${colors.bgBrightGreen(app.name)}...`);
+  console.log(`generating manifest for ${colors.bgBrightGreen(app.name)}...`);
   const appDir = join(dir, app.dir);
   const manifest = await decoManifestBuilder(appDir, app.name, {
     appMode: true,
