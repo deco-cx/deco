@@ -12,6 +12,7 @@ import { HttpError } from "../errors.ts";
 export const PREVIEW_PREFIX_KEY = "Preview@";
 export const INVOKE_PREFIX_KEY = "Invoke@";
 
+const MAX_SELECT_BLOCK_DEPTH = 10;
 // deno-lint-ignore no-explicit-any
 export interface BlockInvocation<TProps = any> {
   block: string;
@@ -24,6 +25,36 @@ export default {
   },
   once: function once({ key, func }, { runOnce }) {
     return runOnce(func.name ?? key, func);
+  },
+  blockSelector: function blockSelector(
+    { type }: { type: string },
+    { resolvables, runOnce, resolvers },
+  ) {
+    return runOnce(`selector_${type}`, () => {
+      const blocks: Record<string, Resolvable> = {};
+      for (const [key, value] of Object.entries(resolvables)) {
+        if (!isResolvable(value)) {
+          continue;
+        }
+        let resolver: Resolver | undefined = undefined;
+        let currentResolveType = value.__resolveType;
+        for (let i = 0; i < MAX_SELECT_BLOCK_DEPTH; i++) {
+          resolver = resolvers[currentResolveType];
+          if (resolver !== undefined) {
+            break;
+          }
+          const resolvable = resolvables[currentResolveType];
+          if (!resolvable || !isResolvable(resolvable)) {
+            break;
+          }
+          currentResolveType = resolvable.__resolveType;
+        }
+        if (resolver !== undefined && resolver.type === type) {
+          blocks[key] = value;
+        }
+      }
+      return blocks;
+    });
   },
   bootstrap: function bootstrap(
     _props,
