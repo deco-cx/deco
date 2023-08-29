@@ -90,17 +90,11 @@ export const handler = async (
 
     const apps = ctx?.state?.$live?.apps;
     const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
-      if (!Array.isArray(apps) || apps.length === 0) {
-        return [
-          context.manifest!,
-          {
-            ...buildSourceMap(context.manifest!),
-            ...ctx?.state?.sourceMap ?? {},
-          },
-        ];
-      }
-      let { manifest, sourceMap } = apps[0];
-      for (const app of apps.slice(1)) {
+      let [manifest, sourceMap] = [
+        context.manifest!,
+        buildSourceMap(context.manifest!),
+      ];
+      for (const app of Array.isArray(apps) ? apps : []) {
         manifest = mergeManifests(
           manifest,
           app.manifest,
