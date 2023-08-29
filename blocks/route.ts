@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
 import { InvocationProxyHandler, newHandler } from "$live/clients/proxy.ts";
-import { setLogger } from "$live/fetch/fetch_log.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
@@ -26,6 +25,7 @@ import {
   InvokeFunction,
   payloadForFunc,
 } from "../routes/live/invoke/index.ts";
+import { setLogger } from "../runtime/fetch/fetchLog.ts";
 import { AppManifest, DecoManifest, LiveConfig, LiveState } from "../types.ts";
 import { formatIncomingRequest } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
@@ -176,10 +176,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     context.state.log(
       formatIncomingRequest(request, liveContext.site),
     );
-
-    if (!liveContext.isDeploy) {
-      setLogger(context.state.log);
-    }
+    setLogger(context.state.log);
 
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing

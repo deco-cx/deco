@@ -1,5 +1,3 @@
-import "../fetch/monkey_patch.ts";
-
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
