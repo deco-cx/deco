@@ -3,9 +3,10 @@
  *
  * Heavily inspired on: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
  */
-import { getCacheStorage } from "./caches.ts";
+import { sha1 } from "../utils.ts";
+import { caches } from "../caches/mod.ts";
 
-const getCacheKey = async (
+const getCacheKey = (
   input: string | Request | URL,
   init?: DecoRequestInit,
 ) => {
@@ -19,18 +20,7 @@ const getCacheKey = async (
     init?.headers || (input instanceof Request ? input.headers : undefined),
   );
 
-  const buffer = await crypto.subtle.digest(
-    "SHA-1",
-    new TextEncoder().encode(
-      `url:${url},headers:${JSON.stringify([...headers.entries()])}`,
-    ),
-  );
-
-  const hex = Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
-  return hex;
+  return sha1(`url:${url},headers:${JSON.stringify([...headers.entries()])}`);
 };
 
 type CachingMode = "stale-while-revalidate";
@@ -43,15 +33,13 @@ type DecoInit = {
 export type DecoRequestInit = RequestInit & { deco?: DecoInit };
 
 const DEFAULT_TTL_BY_STATUS = [
-  { from: 200, to: 299, ttl: 30 },
+  { from: 200, to: 299, ttl: 180 },
   { from: 400, to: 403, ttl: 1 },
   { from: 404, to: 404, ttl: 10 },
   { from: 500, to: 599, ttl: 0 },
 ] satisfies DecoInit["cacheTtlByStatus"];
 
-const cache = await getCacheStorage()
-  .then((caches) => caches.open("fetch"))
-  .catch(() => null);
+const cache = await caches.open("fetch").catch(() => null);
 
 const inFuture = (maybeDate: string) => {
   try {
@@ -82,7 +70,7 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
       url.searchParams.set("__decoCacheCB", cacheKey);
     }
 
-    const request = new Request(url, { ...init, cache: undefined });
+    const request = new Request(url, init);
 
     const fetchAndCache = async () => {
       const response = await fetcher(request);
@@ -92,29 +80,26 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
       )?.ttl ?? 0;
 
       if (cacheable && maxAge > 0) {
-        const cached = new Response(response.body, response);
-
-        cached.headers.set(
+        const cloned = new Response(response.clone().body, response);
+        cloned.headers.delete("cache-control");
+        cloned.headers.set(
           "expires",
           new Date(Date.now() + (maxAge * 1e3)).toUTCString(),
         );
-        cache?.put(request, cached.clone());
+        cache?.put(request, cloned).catch(console.error);
       }
 
       return response;
     };
 
-    const matched = await cache?.match(request);
+    const matched = await cache?.match(request).catch(() =>
+      null
+    );
 
     if (!matched) {
       const fetched = await fetchAndCache();
 
-      // fixme: Somehow, Deno bugs when tempering with ReadableStream.
-      if (fetched.body instanceof ReadableStream) {
-        return fetched;
-      }
-
-      const response = new Response(fetched.body, fetched);
+      const response = new Response(fetched.clone().body, fetched);
       response.headers.set("x-cache", cacheable ? "MISS" : "DYNAMIC");
       return response;
     }
