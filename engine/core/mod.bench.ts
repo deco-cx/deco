@@ -65,7 +65,7 @@ Deno.bench(
 );
 
 const latestVersion = await import(
-  `https://denopkg.com/deco-cx/live@1.29.0/engine/core/resolver.ts`
+  `https://denopkg.com/deco-cx/live@${meta.version}/engine/core/resolver.ts`
 );
 Deno.bench(
   `resolve ${meta.version} version (with on-demand hints)`,
