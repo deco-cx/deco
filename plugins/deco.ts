@@ -25,7 +25,7 @@ import { handler as workflowHandler } from "../routes/live/workflows/run.ts";
 export interface Options<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
   sourceMap?: SourceMap;
-  site: SiteInfo;
+  site?: SiteInfo;
   useLocalStorageOnly?: boolean;
 }
 export default function decoPlugin(opt?: Options): Plugin {
