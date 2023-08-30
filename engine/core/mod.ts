@@ -140,7 +140,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ...(this.resolvables ?? {}),
     });
     const resolvers = this.getResolvers();
-    const currentOnce = { ...this.runOncePerRelease }; // copy this as this should be used based on the current resolvers.
+    const currentOnce = this.runOncePerRelease;
     const baseCtx: BaseContext<TContext> = {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
