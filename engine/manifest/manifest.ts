@@ -66,10 +66,13 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   };
 };
 
-const siteName = (): string => {
+const siteName = (): string | undefined => {
   const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
   if (siteNameFromEnv) {
     return siteNameFromEnv;
+  }
+  if (!context.namespace) {
+    return undefined;
   }
   const [_, siteName] = context.namespace!.split("/"); // deco-sites/std best effort
   return siteName ?? context.namespace!;
@@ -77,16 +80,22 @@ const siteName = (): string => {
 
 export const $live = <T extends AppManifest>(
   m: T,
-  { siteId, namespace }: SiteInfo,
+  siteInfo?: SiteInfo,
   useLocalStorageOnly = false,
 ): T => {
-  context.siteId = siteId ?? -1;
-  context.namespace = namespace;
+  context.siteId = siteInfo?.siteId ?? -1;
+  const currentSite = siteName();
+  if (!currentSite) {
+    throw new Error(
+      `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
+    );
+  }
+  context.site = currentSite;
+  context.namespace = siteInfo?.namespace ?? `deco-sites/${currentSite}`;
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
-  context.site = siteName();
   const provider = getComposedConfigStore(
     context.namespace!,
     context.site,
