@@ -59,6 +59,10 @@ export const caches: CacheStorage = {
 
         const req = new Request(request);
 
+        if (req.method !== "GET") {
+          return undefined;
+        }
+
         const response = cache.has(req.url)
           ? cache.get(req.url)
           : await fetch(`https://fastly.decocache.com/${req.url}`, req);
