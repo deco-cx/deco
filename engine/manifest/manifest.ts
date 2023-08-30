@@ -84,14 +84,15 @@ export const $live = <T extends AppManifest>(
   useLocalStorageOnly = false,
 ): T => {
   context.siteId = siteInfo?.siteId ?? -1;
+  context.namespace = siteInfo?.namespace;
   const currentSite = siteName();
   if (!currentSite) {
     throw new Error(
       `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
     );
   }
+  context.namespace ??= `deco-sites/${currentSite}`;
   context.site = currentSite;
-  context.namespace = siteInfo?.namespace ?? `deco-sites/${currentSite}`;
   const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
