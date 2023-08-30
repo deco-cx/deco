@@ -1,4 +1,4 @@
-## Detailed implementation
+# Detailed implementation
 
 The config resolution algorithm is based on two basic building blocks:
 **Resolvers** and **Resolvables**, when put together they form the
