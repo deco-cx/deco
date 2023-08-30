@@ -5,3 +5,5 @@ export const fetch = [
   withLogs,
   withCache,
 ].reduceRight((acc, curr) => curr(acc), globalThis.fetch);
+
+export type { DecoRequestInit as RequestInit } from "./fetchCache.ts";
