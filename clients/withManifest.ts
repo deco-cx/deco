@@ -166,6 +166,10 @@ export type InvocationFuncFor<
       : never,
 > = (
   props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+  /**
+   * Used client-side only
+   */
+  init?: RequestInit | undefined,
 ) => InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>;
 
 const isInvokeAwaiter = <
