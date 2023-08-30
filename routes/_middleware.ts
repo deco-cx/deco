@@ -89,28 +89,32 @@ export const handler = async (
     ctx.state.global = { ...ctx.state.global ?? {}, ...state }; // compatibility mode with functions.
 
     const apps = ctx?.state?.$live?.apps;
-    const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
-      let [manifest, sourceMap] = [
-        context.manifest!,
-        buildSourceMap(context.manifest!),
-      ];
-      for (const app of Array.isArray(apps) ? apps : []) {
-        manifest = mergeManifests(
-          manifest,
-          app.manifest,
-        );
-        sourceMap = { ...sourceMap, ...app.sourceMap };
-      }
-      return [manifest, sourceMap];
-    };
-    const [manifest, sourceMap] = await ctx.state.resolve<
-      [AppManifest, SourceMap]
-    >({
-      func: buildManifest,
-      __resolveType: defaults["once"].name,
-    });
-    ctx.state.manifest = manifest;
-    ctx.state.sourceMap = { ...sourceMap, ...ctx?.state?.sourceMap ?? {} };
+    if (Array.isArray(apps)) {
+      const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
+        let [manifest, sourceMap] = [
+          context.manifest!,
+          buildSourceMap(context.manifest!),
+        ];
+        for (const app of apps) {
+          manifest = mergeManifests(
+            manifest,
+            app.manifest,
+          );
+          sourceMap = { ...sourceMap, ...app.sourceMap };
+        }
+        return [manifest, sourceMap];
+      };
+      const [manifest, sourceMap] = await ctx.state.resolve<
+        [AppManifest, SourceMap]
+      >({
+        func: buildManifest,
+        __resolveType: defaults["once"].name,
+      });
+      ctx.state.manifest = manifest;
+      ctx.state.sourceMap = { ...sourceMap, ...ctx?.state?.sourceMap ?? {} };
+    } else {
+      ctx.state.manifest = context.manifest!;
+    }
 
     const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
       isAdminOrLocalhost(req);
