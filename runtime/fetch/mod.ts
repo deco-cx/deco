@@ -3,7 +3,7 @@ import { createFetch as withLogs } from "./fetchLog.ts";
 
 export const fetch = [
   withLogs,
-  // withCache,
+  withCache,
 ].reduceRight((acc, curr) => curr(acc), globalThis.fetch);
 
 export type { DecoRequestInit as RequestInit } from "./fetchCache.ts";

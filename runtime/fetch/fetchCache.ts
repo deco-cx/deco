@@ -56,12 +56,15 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
   ) {
     const original = new Request(input, init);
 
+    const isSpEvent = original.url.includes("sp.vtex");
     const url = new URL(original.url);
     const cacheTtlByStatus = init?.deco?.cacheTtlByStatus ??
       DEFAULT_TTL_BY_STATUS;
     const cacheable = (init?.method === "GET" || !init?.method) &&
       init?.deco?.cache === "stale-while-revalidate";
     const cacheKey = cacheable && await getCacheKey(input, init);
+
+    isSpEvent && console.log({ cacheable, cacheKey });
 
     // Set cache burst key into url so we always vary by url
     // This is ok when the developer filters headers/cookies
@@ -73,6 +76,7 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
     const request = new Request(url, init);
 
     const fetchAndCache = async () => {
+      isSpEvent && console.log({ request });
       const response = await fetcher(request);
 
       const maxAge = cacheTtlByStatus.find((x) =>
@@ -96,6 +100,7 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
       null
     );
 
+    isSpEvent && console.log({ matched });
     if (!matched) {
       const fetched = await fetchAndCache();
 
@@ -106,6 +111,8 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
 
     const expires = matched.headers.get("expires");
     const isStale = !expires || !inFuture(expires);
+
+    isSpEvent && console.log({ isStale });
 
     if (isStale) {
       fetchAndCache();
