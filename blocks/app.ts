@@ -286,9 +286,26 @@ const appBlock: Block<AppModule> = {
     { default: runtimeFn }: AppModule<TState, TProps>,
   ) =>
   (props: TProps, ctx: BaseContext) => {
-    const appRuntime = runtimeFn(props);
-    const buildAppWith = buildApp(ctx.extend);
-    return buildAppWith(appRuntime);
+    try {
+      const appRuntime = runtimeFn(props);
+      const buildAppWith = buildApp(ctx.extend);
+      return buildAppWith(appRuntime);
+    } catch (err) {
+      console.log(
+        "error when building app runtime, falling back to an empty runtime",
+        props,
+        err,
+      );
+      return {
+        resolvers: {},
+        resolvables: {},
+        sourceMap: {},
+        manifest: {
+          baseUrl: import.meta.url,
+          name: "",
+        },
+      };
+    }
   },
 };
 
