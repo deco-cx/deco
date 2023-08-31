@@ -1,3 +1,4 @@
+import { format } from "deco/dev.ts";
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 import { diffLines } from "https://esm.sh/diff@5.1.0";
 import { brightGreen, brightRed, brightYellow, gray } from "std/fmt/colors.ts";
@@ -271,7 +272,209 @@ const v1: UpgradeOption = {
   },
 };
 
-const upgradeVersions: UpgradeOption[] = [v1];
+const createSiteTs = async (): Promise<Patch> => {
+  const siteTs = join(Deno.cwd(), "apps", "site.ts");
+  return {
+    from: {
+      path: siteTs,
+      content: "",
+    },
+    to: {
+      path: siteTs,
+      content: await format(`
+import { AppContext as AC, App } from "$live/mod.ts";
+import std, { Props } from "apps/compat/std/mod.ts";
+
+import manifest, { Manifest } from "../manifest.gen.ts";
+
+type StdApp = ReturnType<typeof std>;
+export default function Site(
+  state: Props,
+): App<Manifest, Props, [
+  StdApp,
+]> {
+  return {
+    state,
+    manifest,
+    dependencies: [
+      std(state),
+    ],
+  };
+}
+
+export type Storefront = ReturnType<typeof Site>;
+export type AppContext = AC<Storefront>;
+export { onBeforeResolveProps } from "apps/compat/$live/mod.ts";
+`),
+    },
+  };
+};
+
+const overrideDevTs = async (): Promise<Patch> => {
+  const devTs = join(Deno.cwd(), "dev.ts");
+  const currentContent = await Deno.readTextFile(devTs);
+  return {
+    from: {
+      path: devTs,
+      content: currentContent,
+    },
+    to: {
+      path: devTs,
+      content: await format(`
+#!/usr/bin/env -S deno run -A --watch=static/
+import dev from "$fresh/dev.ts";
+import "https://deno.land/x/dotenv@v3.2.2/load.ts";
+
+await dev(import.meta.url, "./main.ts");
+`),
+    },
+  };
+};
+const overrideDenoJson = async (): Promise<Patch> => {
+  const denoJson = join(Deno.cwd(), "deno.json");
+  const siteJson = join(Deno.cwd(), "site.json");
+  const { namespace }: { namespace: string } = JSON.parse(
+    await Deno.readTextFile(siteJson),
+  );
+
+  return {
+    from: {
+      path: denoJson,
+      content: await Deno.readTextFile(denoJson),
+    },
+    to: {
+      path: denoJson,
+      content: JSON.stringify(
+        {
+          "tasks": {
+            "start": `deno task bundle && DECO_SITE_NAME=${
+              namespace.split("/")[1]
+            } deno run -A --unstable --watch=static/sw.js,tailwind.css,sections/,functions/,loaders/,actions/,workflows/,accounts/ dev.ts`,
+            "gen": "deno run -A dev.ts --gen-only",
+            "component": "deno eval 'import \"$live/scripts/component.ts\"'",
+            "release": "deno eval 'import \"$live/scripts/release.ts\"'",
+            "update": "deno eval 'import \"$live/scripts/update.ts\"'",
+            "check": "deno fmt && deno lint && deno check dev.ts main.ts",
+            "install": "deno eval 'import \"$live/scripts/apps/install.ts\"'",
+            "uninstall":
+              "deno eval 'import \"$live/scripts/apps/uninstall.ts\"'",
+            "bundle":
+              `deno eval 'import \"$live/scripts/apps/bundle.ts\"' ${namespace}`,
+          },
+          "githooks": {
+            "pre-commit": "check",
+          },
+          "exclude": ["node_modules", "static/", "README.md"],
+          "nodeModulesDir": true,
+          "importMap": "./import_map.json",
+          "compilerOptions": {
+            "jsx": "react-jsx",
+            "jsxImportSource": "preact",
+          },
+        },
+        null,
+        2,
+      ),
+    },
+  };
+};
+const addAppsImportMap = async (): Promise<Patch> => {
+  const importMap = join(Deno.cwd(), "import_map.json");
+  const currentContent = await Deno.readTextFile(importMap);
+
+  const parsed = JSON.parse(currentContent);
+  return {
+    from: {
+      path: importMap,
+      content: currentContent,
+    },
+    to: {
+      path: importMap,
+      content: JSON.stringify(
+        {
+          ...parsed,
+          imports: {
+            ...parsed.imports,
+            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.2.5/",
+          },
+        },
+        null,
+        2,
+      ),
+    },
+  };
+};
+const changeMainTs = async (): Promise<Patch> => {
+  const mainTs = join(Deno.cwd(), "main.ts");
+  const currentContent = await Deno.readTextFile(mainTs);
+
+  return {
+    from: {
+      path: mainTs,
+      content: currentContent,
+    },
+    to: {
+      path: mainTs,
+      content: await format(`
+/// <reference no-default-lib="true"/>
+/// <reference lib="dom" />
+/// <reference lib="deno.ns" />
+/// <reference lib="esnext" />
+
+import { start } from "$fresh/server.ts";
+import plugins from "deco-sites/std/plugins/mod.ts";
+import partytownPlugin from "partytown/mod.ts";
+import manifest from "./fresh.gen.ts";
+import decoManifest from "./manifest.gen.ts";
+
+await start(manifest, {
+  plugins: [
+    ...plugins(
+      {
+        manifest: decoManifest,
+      },
+    ),
+    partytownPlugin(),
+  ],
+});
+`),
+    },
+  };
+};
+const changeRuntimeTs = async (): Promise<Patch> => {
+  const runtimeTs = join(Deno.cwd(), "runtime.ts");
+  const currentContent = await Deno.readTextFile(runtimeTs);
+  return {
+    from: {
+      path: runtimeTs,
+      content: currentContent,
+    },
+    to: {
+      path: runtimeTs,
+      content: await format(`
+import { forApp } from "$live/clients/withManifest.ts";
+import type { Storefront } from "./apps/site.ts";
+
+export const Runtime = forApp<Storefront>();
+`),
+    },
+  };
+};
+const apps: UpgradeOption = {
+  isEligible: async () => (await exists(join(Deno.cwd(), "site.json"))),
+  apply: async () => {
+    return await Promise.all([
+      createSiteTs(),
+      overrideDenoJson(),
+      overrideDevTs(),
+      addAppsImportMap(),
+      changeMainTs(),
+      changeRuntimeTs(),
+    ]);
+  },
+};
+
+const upgradeVersions: UpgradeOption[] = [v1, apps];
 
 const isDelete = (f: FileMod): f is Delete => {
   return (f as Delete).path !== undefined;
