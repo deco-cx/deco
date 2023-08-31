@@ -468,6 +468,12 @@ export const Runtime = forApp<Storefront>();
     },
   };
 };
+
+const deleteSiteJson = (): Delete => {
+  return {
+    path: join(Deno.cwd(), "site.json"),
+  };
+};
 const apps: UpgradeOption = {
   isEligible: async () => (await exists(join(Deno.cwd(), "site.json"))),
   apply: async () => {
@@ -478,6 +484,7 @@ const apps: UpgradeOption = {
       addAppsImportMap(),
       changeMainTs(),
       changeRuntimeTs(),
+      deleteSiteJson(),
     ]);
   },
 };
