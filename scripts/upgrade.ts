@@ -1,10 +1,16 @@
-import { format } from "deco/dev.ts";
+import {
+  brightGreen,
+  brightRed,
+  brightYellow,
+  gray,
+} from "https://deno.land/std@0.190.0/fmt/colors.ts";
+import { ensureDir } from "https://deno.land/std@0.190.0/fs/ensure_dir.ts";
+import { dirname, join } from "https://deno.land/std@0.190.0/path/mod.ts";
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 import { diffLines } from "https://esm.sh/diff@5.1.0";
-import { brightGreen, brightRed, brightYellow, gray } from "std/fmt/colors.ts";
-import { join } from "std/path/mod.ts";
 import deno from "../deno.json" assert { type: "json" };
 import meta from "../meta.json" assert { type: "json" };
+import { format } from "../utils/formatter.ts";
 
 const withSlashAtEnd = (str: string | undefined) =>
   str?.endsWith("/") ? str : `${str}/`;
@@ -488,6 +494,7 @@ const applyPatch = async (p: FileMod): Promise<void> => {
     if (p.from.path !== p.to.path) {
       await Deno.remove(p.from.path);
     }
+    await ensureDir(dirname(p.to.path));
     await Deno.writeTextFile(p.to.path, p.to.content);
   }
 };
