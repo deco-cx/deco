@@ -3,8 +3,9 @@
  *
  * Heavily inspired on: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
  */
-import { sha1 } from "../utils.ts";
+import { bgRed, gray, yellow } from "std/fmt/colors.ts";
 import { caches } from "../caches/mod.ts";
+import { sha1 } from "../utils.ts";
 
 const getCacheKey = (
   input: string | Request | URL,
@@ -56,9 +57,10 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
   ) {
     const original = new Request(input, init);
     const cacheable = original.method === "GET" &&
-      init?.deco?.cache === "stale-while-revalidate";
+      init?.deco?.cache === "stale-while-revalidate" &&
+      /^http(s?):\/\//.test(original.url);
 
-    if (!cacheable) {
+    if (cacheable === false) {
       return fetcher(input, init);
     }
 
@@ -78,6 +80,18 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
 
     const fetchAndCache = async () => {
       const response = await fetcher(request);
+
+      if (response.status === 206) {
+        console.warn(
+          `The server returned an ${bgRed("UNCACHEABLE")} ${
+            yellow("206")
+          } status code. The following URL may harm performance:\n${
+            gray(request.url)
+          }`,
+        );
+
+        return response;
+      }
 
       const maxAge = cacheTtlByStatus.find((x) =>
         x.from <= response.status && response.status <= x.to
