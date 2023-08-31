@@ -1,8 +1,14 @@
 // deno-lint-ignore-file no-explicit-any ban-types
+import blocks from "$live/blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
 import { buildSourceMap, FnProps } from "../blocks/utils.tsx";
-import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import {
+  Block,
+  BlockModule,
+  BlockModuleRef,
+  InstanceOf,
+} from "../engine/block.ts";
 import {
   BaseContext,
   ExtensionFunc,
@@ -12,10 +18,11 @@ import {
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
-import blocks from "$live/blocks/index.ts";
+
+export type SourceMapResolver = () => Promise<BlockModuleRef | undefined>;
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
-export type SourceMap = Record<string, string | null>;
+export type SourceMap = Record<string, string | null | SourceMapResolver>;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 type MergeAppsManifest<TCurrent extends AppManifest, TDeps> =
   & TCurrent
