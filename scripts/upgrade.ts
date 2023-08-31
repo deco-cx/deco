@@ -327,7 +327,7 @@ const overrideDevTs = async (): Promise<Patch> => {
     to: {
       path: devTs,
       content: await format(`
-#!/usr/bin/env -S deno run -A --watch=static/
+// #!/usr/bin/env -S deno run -A --watch=static/
 import dev from "$fresh/dev.ts";
 import "https://deno.land/x/dotenv@v3.2.2/load.ts";
 
@@ -401,6 +401,7 @@ const addAppsImportMap = async (): Promise<Patch> => {
           ...parsed,
           imports: {
             ...parsed.imports,
+            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.32.0/",
             ["apps/"]: "https://denopkg.com/deco-cx/apps@0.2.5/",
           },
         },

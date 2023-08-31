@@ -327,7 +327,9 @@ export const proxy = <
 export const forApp = <
   TApp extends App,
 >() => {
+  const { create } = withManifest<ManifestOf<TApp>>();
   return {
+    create: create,
     invoke: proxy<
       ManifestOf<TApp>
     >(),
