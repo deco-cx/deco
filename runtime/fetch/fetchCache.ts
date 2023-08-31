@@ -55,13 +55,17 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
     init?: DecoRequestInit,
   ) {
     const original = new Request(input, init);
+    const cacheable = original.method === "GET" &&
+      init?.deco?.cache === "stale-while-revalidate";
+
+    if (!cacheable) {
+      return fetcher(input, init);
+    }
 
     const url = new URL(original.url);
+    const cacheKey = cacheable && await getCacheKey(input, init);
     const cacheTtlByStatus = init?.deco?.cacheTtlByStatus ??
       DEFAULT_TTL_BY_STATUS;
-    const cacheable = (init?.method === "GET" || !init?.method) &&
-      init?.deco?.cache === "stale-while-revalidate";
-    const cacheKey = cacheable && await getCacheKey(input, init);
 
     // Set cache burst key into url so we always vary by url
     // This is ok when the developer filters headers/cookies
@@ -105,7 +109,7 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
     }
 
     const expires = matched.headers.get("expires");
-    const isStale = !expires || !inFuture(expires);
+    const isStale = expires ? !inFuture(expires) : false;
 
     if (isStale) {
       fetchAndCache();

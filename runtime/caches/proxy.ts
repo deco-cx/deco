@@ -59,10 +59,6 @@ export const caches: CacheStorage = {
 
         const req = new Request(request);
 
-        if (req.method !== "GET") {
-          return undefined;
-        }
-
         const response = cache.has(req.url)
           ? cache.get(req.url)
           : await fetch(`https://fastly.decocache.com/${req.url}`, req);
@@ -81,6 +77,21 @@ export const caches: CacheStorage = {
         request: RequestInfo | URL,
         response: Response,
       ): Promise<void> => {
+        const req = new Request(request);
+
+        if (!/^http(s?):\/\//.test(req.url)) {
+          throw new TypeError(
+            "Request url protocol must be 'http:' or 'https:'",
+          );
+        }
+        if (req.method !== "GET") {
+          throw new TypeError("Request method must be GET");
+        }
+
+        if (response.status === 206) {
+          throw new TypeError("Response status must not be 206");
+        }
+
         cache.insert(new Request(request).url, response);
       },
     });
