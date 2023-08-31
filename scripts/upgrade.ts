@@ -5,7 +5,9 @@ import {
   gray,
 } from "https://deno.land/std@0.190.0/fmt/colors.ts";
 import { ensureDir } from "https://deno.land/std@0.190.0/fs/ensure_dir.ts";
+import { walk } from "https://deno.land/std@0.190.0/fs/walk.ts";
 import { dirname, join } from "https://deno.land/std@0.190.0/path/mod.ts";
+
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 import { diffLines } from "https://esm.sh/diff@5.1.0";
 import deno from "../deno.json" assert { type: "json" };
@@ -401,9 +403,9 @@ const addAppsImportMap = async (): Promise<Patch> => {
           ...parsed,
           imports: {
             ...parsed.imports,
-            ["deco-sites/std/"]: "https://denopkg.com/deco-sites/std@1.21.4/",
-            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.32.0/",
-            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.2.5/",
+            ["deco-sites/std/"]: "https://denopkg.com/deco-sites/std@1.21.6/",
+            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.33.1/",
+            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.2.10/",
           },
         },
         null,
@@ -477,15 +479,39 @@ const deleteSiteJson = (): Delete => {
 const apps: UpgradeOption = {
   isEligible: async () => (await exists(join(Deno.cwd(), "site.json"))),
   apply: async () => {
-    return await Promise.all([
+    const replaceTypingsImport: Promise<Patch | Delete>[] = [
       createSiteTs(),
       overrideDenoJson(),
       overrideDevTs(),
       addAppsImportMap(),
       changeMainTs(),
       changeRuntimeTs(),
-      deleteSiteJson(),
-    ]);
+      Promise.resolve(deleteSiteJson()),
+    ];
+    const checks: Promise<void>[] = [];
+    for await (const entry of walk(Deno.cwd(), { exts: [".ts", ".tsx"] })) {
+      checks.push(
+        Deno.readTextFile(entry.path).then((content) => {
+          if (content.includes("deco-sites/std/commerce/types.ts")) {
+            replaceTypingsImport.push(Promise.resolve({
+              from: {
+                path: entry.path,
+                content,
+              },
+              to: {
+                path: entry.path,
+                content: content.replaceAll(
+                  "deco-sites/std/commerce/types.ts",
+                  "apps/commerce/types.ts",
+                ),
+              },
+            }));
+          }
+        }),
+      );
+    }
+    await Promise.all(checks);
+    return await Promise.all(replaceTypingsImport);
   },
 };
 
