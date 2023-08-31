@@ -11,11 +11,32 @@ import {
 } from "../../engine/schema/builder.ts";
 import { Schemeable } from "../../engine/schema/transform.ts";
 import { context } from "../../live.ts";
+import { Block, BlockModuleRef } from "../block.ts";
 import { parsePath } from "./parser.ts";
 import { programToBlockRef, resolvePath } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
+};
+
+const resolveForPath = async (
+  introspect: Block["introspect"],
+  blockPath: string,
+  blockKey: string,
+  references: Map<TsType, Schemeable>,
+): Promise<BlockModuleRef | undefined> => {
+  const pathResolved = resolvePath(blockPath, Deno.cwd());
+  const program = await parsePath(pathResolved);
+  if (!program) {
+    return undefined;
+  }
+  return programToBlockRef(
+    pathResolved,
+    blockKey,
+    program,
+    references,
+    introspect,
+  );
 };
 
 export const genSchemasFromManifest = async (
@@ -42,7 +63,7 @@ export const genSchemasFromManifest = async (
     entrypoints: [],
   });
 
-  const modulesPromises: Promise<
+  const refPromises: Promise<
     (BlockModule | EntrypointModule | undefined)
   >[] = [];
   const references = new Map<TsType, Schemeable>();
@@ -55,65 +76,81 @@ export const genSchemasFromManifest = async (
         ),
       )
     ) {
-      if (sourceMap[blockModuleKey] === null) {
+      const sourceMapResolverVal = sourceMap[blockModuleKey];
+      if (sourceMapResolverVal === null) {
         continue;
       }
-      const [_namespace, blockPath, blockKey] =
-        wellKnownLiveRoutes[blockModuleKey] ??
-          (blockModuleKey.startsWith(".")
-            ? [
-              context.namespace!,
-              blockModuleKey.replace(".", `file://${dir}`),
-              blockModuleKey,
-            ]
-            : [
-              namespaceOf(block.type, blockModuleKey),
-              sourceMap[blockModuleKey] ?? import.meta.resolve(blockModuleKey),
-              blockModuleKey,
-            ]);
+      const wellKnown = wellKnownLiveRoutes[blockModuleKey];
+      const wellKnownSourceMapResolver: [
+        string,
+        () => Promise<BlockModuleRef | undefined>,
+      ] | undefined = wellKnown
+        ? [wellKnown[0], () =>
+          resolveForPath(
+            block.introspect,
+            wellKnown[1],
+            blockModuleKey,
+            references,
+          )]
+        : undefined;
+      const [_namespace, blockRefResolver] = wellKnownSourceMapResolver ??
+        (blockModuleKey.startsWith(".")
+          ? [
+            context.namespace!,
+            () =>
+              resolveForPath(
+                block.introspect,
+                blockModuleKey.replace(".", `file://${dir}`),
+                blockModuleKey,
+                references,
+              ),
+          ]
+          : [
+            namespaceOf(block.type, blockModuleKey),
+            () =>
+              typeof sourceMapResolverVal === "string" ||
+                typeof sourceMapResolverVal === "undefined"
+                ? resolveForPath(
+                  block.introspect,
+                  sourceMapResolverVal ?? import.meta.resolve(blockModuleKey),
+                  blockModuleKey,
+                  references,
+                )
+                : sourceMapResolverVal(),
+          ]);
 
-      const pathResolved = resolvePath(blockPath, Deno.cwd());
-      const programPromise = parsePath(pathResolved);
-      modulesPromises.push(programPromise.then(async (program) => {
-        if (!program) {
-          return undefined;
-        }
-        const ref = await programToBlockRef(
-          pathResolved,
-          blockKey,
-          program,
-          references,
-          block.introspect,
-        );
-        if (ref) {
-          if (block.type === "routes") {
-            if (ref.inputSchema) {
-              return {
-                key: ref.functionRef,
-                config: ref.inputSchema,
-              };
+      refPromises.push(
+        blockRefResolver().then((ref) => {
+          if (ref) {
+            if (block.type === "routes") {
+              if (ref.inputSchema) {
+                return {
+                  key: ref.functionRef,
+                  config: ref.inputSchema,
+                };
+              }
+              return undefined;
             }
-            return undefined;
+            if ("ignore" in (ref?.functionJSDoc ?? {})) {
+              return undefined;
+            }
+            const ignoreGen = (ref?.functionJSDoc as { ignore_gen: string })
+              ?.["ignore_gen"] === "true";
+            return {
+              blockType: block.type,
+              functionKey: ref.functionRef,
+              inputSchema: ignoreGen ? undefined : ref.inputSchema,
+              outputSchema: ignoreGen ? undefined : ref.outputSchema,
+              functionJSDoc: ref.functionJSDoc,
+            };
           }
-          if ("ignore" in (ref?.functionJSDoc ?? {})) {
-            return undefined;
-          }
-          const ignoreGen = (ref?.functionJSDoc as { ignore_gen: string })
-            ?.["ignore_gen"] === "true";
-          return {
-            blockType: block.type,
-            functionKey: ref.functionRef,
-            inputSchema: ignoreGen ? undefined : ref.inputSchema,
-            outputSchema: ignoreGen ? undefined : ref.outputSchema,
-            functionJSDoc: ref.functionJSDoc,
-          };
-        }
-        return undefined;
-      }));
+          return undefined;
+        }),
+      );
     }
   }
 
-  const modules = await Promise.all(modulesPromises);
+  const modules = await Promise.all(refPromises);
   const schema = modules.reduce(
     (builder, mod) => mod ? builder.withBlockSchema(mod) : builder,
     schemaBuilder,
