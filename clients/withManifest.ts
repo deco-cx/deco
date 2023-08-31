@@ -318,7 +318,7 @@ export const proxy = <
 >(): InvocationProxyWithBatcher<
   TManifest
 > => {
-  return proxyFor(batchInvoke);
+  return proxyFor(invoke<TManifest>() as typeof batchInvoke);
 };
 
 /**
