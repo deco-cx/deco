@@ -404,8 +404,8 @@ const addAppsImportMap = async (): Promise<Patch> => {
           imports: {
             ...parsed.imports,
             ["deco-sites/std/"]: "https://denopkg.com/deco-sites/std@1.21.6/",
-            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.33.1/",
-            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.2.10/",
+            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.33.3/",
+            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.2.11/",
           },
         },
         null,
