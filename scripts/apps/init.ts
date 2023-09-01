@@ -1,11 +1,9 @@
 import { join } from "https://deno.land/std@0.190.0/path/mod.ts";
-import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
 import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 
-const limit = pLimit(1);
 export interface InitContext {
   appName: string;
   decoVersion: string;
@@ -31,10 +29,9 @@ const createFromTemplate =
   (ctx: InitContext, dir: string, refPrefix: string) =>
     async (ref: TemplateRef) => {
       if (isTemplateName(ref)) {
-        // for some reason deno is not handling well parallel dynamic imports
-        const func: { default: TemplateGenerator } = await limit(async () => await import(
+        const func: { default: TemplateGenerator } = await import(
           `./templates/${refPrefix}${ref}.ts`
-        ));
+        );
         const str = await func.default(ctx);
         const fileDir = join(dir, ref);
         await Deno.writeTextFile(fileDir, str);
@@ -96,4 +93,6 @@ const init = async () => {
   await createFromTemplates(templates, appFolder, initContext);
 };
 
-await init();
+if (import.meta.main) {
+  await init();
+}
