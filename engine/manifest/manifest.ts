@@ -93,7 +93,7 @@ export const $live = <T extends AppManifest>(
   }
   context.namespace ??= `deco-sites/${currentSite}`;
   context.site = currentSite;
-  const [newManifest, resolvers, recovers] = (blocks ?? []).reduce(
+  const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );

@@ -198,7 +198,7 @@ export const decoManifestBuilder = async (
     appMode,
   });
   let blockIdx = 1;
-  for (const blk of (appMode ? blocks.filter(appsBlocks) : blocks)) {
+  for (const blk of (appMode ? blocks().filter(appsBlocks) : blocks())) {
     let totalBlocks = 0;
     for await (
       const entry of listBlocks(dir, blk)
