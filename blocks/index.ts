@@ -13,6 +13,7 @@ import sectionBlock from "../blocks/section.ts";
 import workflowBlock from "../blocks/workflow.ts";
 import { Block } from "../engine/block.ts";
 
+// Keep this as a function to avoid const initialization cycle due to appblock dependency on this module
 export default () =>
   [
     functionBlock, // legacy
