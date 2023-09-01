@@ -2,7 +2,6 @@ import Script from "partytown/Script.tsx";
 import Jitsu from "partytown/integrations/Jitsu.tsx";
 import { context } from "../live.ts";
 import { Flag } from "../types.ts";
-import { usePageContext } from "../routes/[...catchall].tsx";
 
 const main = (
   userData: {
@@ -114,7 +113,6 @@ type Props = Partial<{ id: number | string; path: string }> & {
 const IS_TESTING_JITSU = false;
 
 function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
-  const search = encodeURIComponent(usePageContext()?.url.search ?? "");
   return (
     <>
       <Script
@@ -128,11 +126,6 @@ function LiveAnalytics({ id = -1, path = "defined_on_code", flags }: Props) {
           data-key="js.9wshjdbktbdeqmh282l0th.c354uin379su270joldy2"
         />
       )}
-      <img
-        width={0}
-        data-fresh-disable-lock
-        src={`/live/invoke/deco-cx/deco/loaders/x/event.gif?p=${path}&s=${search}`}
-      />
     </>
   );
 }
