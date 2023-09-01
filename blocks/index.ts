@@ -13,18 +13,20 @@ import sectionBlock from "../blocks/section.ts";
 import workflowBlock from "../blocks/workflow.ts";
 import { Block } from "../engine/block.ts";
 
-export default [
-  functionBlock, // legacy
-  accountBlock,
-  loaderBlock,
-  routeBlock,
-  islandBlock,
-  handlerBlock,
-  pageBlock,
-  sectionBlock,
-  matcherBlock,
-  flagBlock,
-  actionBlock,
-  workflowBlock,
-  appBlock,
-] as Block[];
+// Keep this as a function to avoid const initialization cycle due to appblock dependency on this module
+export default () =>
+  [
+    functionBlock, // legacy
+    accountBlock,
+    loaderBlock,
+    routeBlock,
+    islandBlock,
+    handlerBlock,
+    pageBlock,
+    sectionBlock,
+    matcherBlock,
+    flagBlock,
+    actionBlock,
+    workflowBlock,
+    appBlock,
+  ] as Block[];

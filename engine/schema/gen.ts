@@ -47,7 +47,7 @@ export const genSchemasFromManifest = async (
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
   const dir = baseDir ? baseDir : Deno.cwd();
 
-  const rootWithBlocks: Record<string, JSONSchema7> = blocks.reduce(
+  const rootWithBlocks: Record<string, JSONSchema7> = blocks().reduce(
     (root, blk) => {
       root[blk.type] = {
         title: blk.type,
@@ -67,7 +67,7 @@ export const genSchemasFromManifest = async (
     (BlockModule | EntrypointModule | undefined)
   >[] = [];
   const references = new Map<TsType, Schemeable>();
-  for (const block of blocks) {
+  for (const block of blocks()) {
     for (
       const blockModuleKey of Object.keys(
         withoutLocalModules(

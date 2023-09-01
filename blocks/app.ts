@@ -199,7 +199,7 @@ const buildRuntimeFromApp = <
   return {
     resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
       injectedManifest,
-      blocks,
+      blocks(),
     ),
     manifest: injectedManifest,
     resolvables,
