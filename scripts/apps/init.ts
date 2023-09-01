@@ -63,7 +63,6 @@ const templates: Templates = [
   "import_map.json",
   "deno.json",
   "deco.ts",
-  "deps.ts",
   {
     app: ["mod.ts", { loaders: ["bin.ts"] }],
   },
