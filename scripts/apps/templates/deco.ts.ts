@@ -1,5 +1,5 @@
 import { format } from "../../../utils/formatter.ts";
-import { InitContext } from "../init.ts";
+import type { InitContext } from "../init.ts";
 
 export default async function Deco({ appName }: InitContext) {
   return await format(

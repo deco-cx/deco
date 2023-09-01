@@ -1,4 +1,4 @@
-import { InitContext } from "../init.ts";
+import type { InitContext } from "../init.ts";
 
 export default function ImportMapJSON(
   { decoVersion }: InitContext,
