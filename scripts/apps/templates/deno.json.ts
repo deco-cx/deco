@@ -1,4 +1,4 @@
-import type { InitContext } from "../init.ts";
+import type { InitContext } from "../context.ts";
 
 export default function DenoJson(_ctx: InitContext) {
   return (
