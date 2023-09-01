@@ -1,9 +1,11 @@
 import { join } from "https://deno.land/std@0.190.0/path/mod.ts";
+import { pLimit } from "https://deno.land/x/p_limit@v1.0.0/mod.ts";
 import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 
+const limit = pLimit(1);
 export interface InitContext {
   appName: string;
   decoVersion: string;
@@ -27,40 +29,41 @@ const createFromTemplates = async (
 };
 const createFromTemplate =
   (ctx: InitContext, dir: string, refPrefix: string) =>
-  async (ref: TemplateRef) => {
-    if (isTemplateName(ref)) {
-      const func: { default: TemplateGenerator } = await import(
-        `./templates/${refPrefix}${ref}.ts`
-      );
-      const str = await func.default(ctx);
-      const fileDir = join(dir, ref);
-      await Deno.writeTextFile(fileDir, str);
-      return;
-    }
-    const subTemplates: Promise<void>[] = [];
-    for (const key of Object.keys(ref)) {
-      subTemplates.push((async () => {
-        const subDir = join(dir, key);
-        const newPrefix = `${refPrefix}${key}.`;
-        await Deno.mkdir(subDir);
-        const subTemplateCreate = createFromTemplate(
-          ctx,
-          subDir,
-          newPrefix,
-        );
-        const subTemplates = ref[key];
-        await (Array.isArray(subTemplates)
-          ? createFromTemplates(
-            subTemplates,
-            subDir,
+    async (ref: TemplateRef) => {
+      if (isTemplateName(ref)) {
+        // for some reason deno is not handling well parallel dynamic imports
+        const func: { default: TemplateGenerator } = await limit(async () => await import(
+          `./templates/${refPrefix}${ref}.ts`
+        ));
+        const str = await func.default(ctx);
+        const fileDir = join(dir, ref);
+        await Deno.writeTextFile(fileDir, str);
+        return;
+      }
+      const subTemplates: Promise<void>[] = [];
+      for (const key of Object.keys(ref)) {
+        subTemplates.push((async () => {
+          const subDir = join(dir, key);
+          const newPrefix = `${refPrefix}${key}.`;
+          await Deno.mkdir(subDir);
+          const subTemplateCreate = createFromTemplate(
             ctx,
+            subDir,
             newPrefix,
-          )
-          : subTemplateCreate(subTemplates));
-      })());
-    }
-    await Promise.all(subTemplates);
-  };
+          );
+          const subTemplates = ref[key];
+          await (Array.isArray(subTemplates)
+            ? createFromTemplates(
+              subTemplates,
+              subDir,
+              ctx,
+              newPrefix,
+            )
+            : subTemplateCreate(subTemplates));
+        })());
+      }
+      await Promise.all(subTemplates);
+    };
 
 const templates: Templates = [
   "import_map.json",
