@@ -12,6 +12,7 @@ export default function DenoJson(_ctx: InitContext) {
           "link": "deno eval 'import \"deco/scripts/apps/link.ts\"'",
           "unlink": "deno eval 'import \"deco/scripts/apps/unlink.ts\"'",
           "serve": "deno eval 'import \"deco/scripts/apps/serve.ts\"'",
+          "watcher": "deno eval 'import \"deco/scripts/apps/watcher.ts\"'",
         },
         "githooks": {
           "pre-commit": "check",
