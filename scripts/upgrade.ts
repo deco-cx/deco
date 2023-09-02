@@ -476,6 +476,12 @@ const deleteSiteJson = (): Delete => {
     path: join(Deno.cwd(), "site.json"),
   };
 };
+const deleteLiveGenTs = (): Delete => {
+  return {
+    path: join(Deno.cwd(), "live.gen.ts"),
+  };
+};
+
 const apps: UpgradeOption = {
   isEligible: async () => (await exists(join(Deno.cwd(), "site.json"))),
   apply: async () => {
@@ -487,6 +493,7 @@ const apps: UpgradeOption = {
       changeMainTs(),
       changeRuntimeTs(),
       Promise.resolve(deleteSiteJson()),
+      Promise.resolve(deleteLiveGenTs()),
     ];
     const checks: Promise<void>[] = [];
     for await (const entry of walk(Deno.cwd(), { exts: [".ts", ".tsx"] })) {

@@ -1,4 +1,4 @@
 export interface InitContext {
-    appName: string;
-    decoVersion: string;
+  appName: string;
+  decoVersion: string;
 }

@@ -3,7 +3,7 @@ import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
-import { InitContext } from './context.ts';
+import { InitContext } from "./context.ts";
 
 export type TemplateGenerator = (ctx: InitContext) => Promise<string> | string;
 
@@ -24,40 +24,40 @@ const createFromTemplates = async (
 };
 const createFromTemplate =
   (ctx: InitContext, dir: string, refPrefix: string) =>
-    async (ref: TemplateRef) => {
-      if (isTemplateName(ref)) {
-        const func: { default: TemplateGenerator } = await import(
-          `./templates/${refPrefix}${ref}.ts`
+  async (ref: TemplateRef) => {
+    if (isTemplateName(ref)) {
+      const func: { default: TemplateGenerator } = await import(
+        `./templates/${refPrefix}${ref}.ts`
+      );
+      const str = await func.default(ctx);
+      const fileDir = join(dir, ref);
+      await Deno.writeTextFile(fileDir, str);
+      return;
+    }
+    const subTemplates: Promise<void>[] = [];
+    for (const key of Object.keys(ref)) {
+      subTemplates.push((async () => {
+        const subDir = join(dir, key);
+        const newPrefix = `${refPrefix}${key}.`;
+        await Deno.mkdir(subDir);
+        const subTemplateCreate = createFromTemplate(
+          ctx,
+          subDir,
+          newPrefix,
         );
-        const str = await func.default(ctx);
-        const fileDir = join(dir, ref);
-        await Deno.writeTextFile(fileDir, str);
-        return;
-      }
-      const subTemplates: Promise<void>[] = [];
-      for (const key of Object.keys(ref)) {
-        subTemplates.push((async () => {
-          const subDir = join(dir, key);
-          const newPrefix = `${refPrefix}${key}.`;
-          await Deno.mkdir(subDir);
-          const subTemplateCreate = createFromTemplate(
-            ctx,
+        const subTemplates = ref[key];
+        await (Array.isArray(subTemplates)
+          ? createFromTemplates(
+            subTemplates,
             subDir,
+            ctx,
             newPrefix,
-          );
-          const subTemplates = ref[key];
-          await (Array.isArray(subTemplates)
-            ? createFromTemplates(
-              subTemplates,
-              subDir,
-              ctx,
-              newPrefix,
-            )
-            : subTemplateCreate(subTemplates));
-        })());
-      }
-      await Promise.all(subTemplates);
-    };
+          )
+          : subTemplateCreate(subTemplates));
+      })());
+    }
+    await Promise.all(subTemplates);
+  };
 
 const templates: Templates = [
   "import_map.json",
