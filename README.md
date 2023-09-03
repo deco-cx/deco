@@ -24,7 +24,7 @@ Besides pages, **deco** also lets teams manage **audiences, flags, experiments a
 
 ## Distribution
 
-deco is available on https://deno.land/x/composable using git tags.
+deco is available on https://deno.land/x/deco using git tags.
 
 To release a new version, go through the following steps:
 
