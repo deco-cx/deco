@@ -13,9 +13,16 @@ import sectionBlock from "../blocks/section.ts";
 import workflowBlock from "../blocks/workflow.ts";
 import { Block } from "../engine/block.ts";
 
+const userDefinedBlocks: Block[] = [];
+
+export function defineBlock(block: Block) {
+  userDefinedBlocks.push(block);
+}
+
 // Keep this as a function to avoid const initialization cycle due to appblock dependency on this module
 export default () =>
   [
+    ...userDefinedBlocks,
     functionBlock, // legacy
     accountBlock,
     loaderBlock,

@@ -1,10 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import type { HandlerContext } from "$fresh/src/server/types.ts";
+import type { AppManifest } from "../../../blocks/app.ts";
 import {
   AvailableInvocations,
   InvocationFuncFor,
-} from "$live/clients/withManifest.ts";
-import type { AppManifest } from "../../../blocks/app.ts";
+} from "../../../clients/withManifest.ts";
 import type { UnionToIntersection } from "../../../deps.ts";
 import type { Resolvable } from "../../../engine/core/resolver.ts";
 import type { PromiseOrValue } from "../../../engine/core/utils.ts";

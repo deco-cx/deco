@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { InvocationProxyHandler, newHandler } from "$live/clients/proxy.ts";
+import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {

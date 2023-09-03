@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import blocks from "$live/blocks/index.ts";
+import blocks from "../../blocks/index.ts";
 import { HandlerContext } from "../../deps.ts";
 import { ReleaseResolver } from "../../engine/core/mod.ts";
 import {
@@ -16,9 +16,9 @@ import { getComposedConfigStore } from "../../engine/releases/provider.ts";
 import { context } from "../../live.ts";
 import { LiveConfig } from "../../types.ts";
 
-import { buildRuntime } from "$live/blocks/appsUtil.ts";
 import { parse } from "std/flags/mod.ts";
 import { AppManifest } from "../../blocks/app.ts";
+import { buildRuntime } from "../../blocks/appsUtil.ts";
 import { SiteInfo } from "../../types.ts";
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 

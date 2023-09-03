@@ -1,4 +1,4 @@
-import blocks from "$live/blocks/index.ts";
+import blocks from "../../blocks/index.ts";
 import { AppManifest, SourceMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import { JSONSchema7, TsType } from "../../deps.ts";
