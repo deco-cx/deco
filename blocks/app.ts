@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import blocks from "$live/blocks/index.ts";
+import blocks from "../blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
 import { buildSourceMap, FnProps } from "../blocks/utils.tsx";

@@ -25,7 +25,7 @@ diretório serão imterpretados como seções.
 Aqui um exemplo de uma seção `ProductShelf`:
 
 ```tsx
-import { ProductList } from "$live/std/commerce/types/ProductList.ts";
+import { ProductList } from "deco/std/commerce/types/ProductList.ts";
 import { ProductSummary } from "../components/ProductSummary.tsx";
 import { Slider } from "../components/Slider.tsx";
 
@@ -85,9 +85,9 @@ Aqui o exemplo de uma função `vtexIntelligentSearch`:
 import {
   mapVtexProductToDecoProduct,
   vtexClient,
-} from "$live/std/commerce/clients/vtex.ts";
-import { ProductList } from "$live/std/commerce/types/ProductList.ts";
-import { LoaderFunction } from "$live/types.ts";
+} from "deco/std/commerce/clients/vtex.ts";
+import { ProductList } from "deco/std/commerce/types/ProductList.ts";
+import { LoaderFunction } from "deco/types.ts";
 
 export interface Props {
   searchQuery: string;

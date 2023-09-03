@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { AppManifest } from "$live/mod.ts";
-import { Invoke, InvokeAwaiter } from "$live/routes/live/invoke/index.ts";
+import { AppManifest } from "../mod.ts";
+import { Invoke, InvokeAwaiter } from "../routes/live/invoke/index.ts";
 import { invokeKey } from "./withManifest.ts";
 
 export type InvocationProxyHandler = {
