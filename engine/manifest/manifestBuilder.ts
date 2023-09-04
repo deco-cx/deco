@@ -132,19 +132,17 @@ const stringifyStatement = (st: Statement): string => {
 };
 
 const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
-  return `import ${
-    clauses
-      .map((clause) =>
-        isDefaultClause(clause)
-          ? `* as ${clause.alias}`
-          : (clause as NamedImport).import
-          ? `{ ${(clause as NamedImport).import} ${
-            clause.as ? "as " + clause.as : ""
+  return `import ${clauses
+    .map((clause) =>
+      isDefaultClause(clause)
+        ? `* as ${clause.alias}`
+        : (clause as NamedImport).import
+          ? `{ ${(clause as NamedImport).import} ${clause.as ? "as " + clause.as : ""
           }}`
           : clause.as
-      )
-      .join(",")
-  } from "${from}"`;
+    )
+    .join(",")
+    } from "${from}"`;
 };
 
 const stringifyObj = (obj: JSONObject, sortKeys = true): string => {
@@ -153,13 +151,12 @@ const stringifyObj = (obj: JSONObject, sortKeys = true): string => {
     ? entries.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
     : entries;
   return `{
-    ${
-    entriesOrSorted
+    ${entriesOrSorted
       .map(([key, v]) => {
         return `"${key}": ${stringifyJSONValue(v!)}`;
       })
       .join(",\n")
-  }
+    }
 }
 `;
 };
@@ -182,11 +179,10 @@ const stringifyJS = (js: JS): string => {
     return JSON.stringify(js.raw);
   }
   if (isFunctionCall(js.raw)) {
-    return `${js.raw.identifier}(${
-      js.raw.params
-        .map(stringifyJSONValue)
-        .join(",")
-    })`;
+    return `${js.raw.identifier}(${js.raw.params
+      .map(stringifyJSONValue)
+      .join(",")
+      })`;
   }
 
   return js.raw.identifier;
@@ -234,17 +230,23 @@ export type Manifest = typeof manifest;
 
 ${exports.map(stringifyExport).join("\n")}
 ${statements ? statements.map(stringifyStatement).join("\n") : ""}
-${
-    exportDefault
-      ? `export default ${exportDefault.variable.identifier}${
-        exportDefault.variable.satisfies
-          ? ` satisfies ${exportDefault.variable.satisfies}`
-          : ""
+${exportDefault
+      ? `export default ${exportDefault.variable.identifier}${exportDefault.variable.satisfies
+        ? ` satisfies ${exportDefault.variable.satisfies}`
+        : ""
       }`
       : ""
-  }
+    }
 `;
 };
+
+const tryResolve = (path: string): string | undefined => {
+  try {
+    return import.meta.resolve(path);
+  } catch {
+    return undefined;
+  }
+}
 
 export const newManifestBuilder = <TManifest extends AppManifest = AppManifest>(
   initial: ManifestData,
@@ -282,7 +284,7 @@ export const newManifestBuilder = <TManifest extends AppManifest = AppManifest>(
             blockC++;
             innerBuilder = innerBuilder
               .addImports({
-                from: path,
+                from: path.startsWith("$live") && tryResolve(path) ? path : path.replace("$live/", "deco/"),
                 clauses: [{ alias: ref }],
               })
               .addValuesOnManifestKey(block, [
