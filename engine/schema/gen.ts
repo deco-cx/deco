@@ -55,6 +55,12 @@ export const genSchemasFromManifest = async (
   baseDir?: string,
   sourceMap: SourceMap = {},
 ): Promise<Schemas> => {
+  const wellKnownLiveRoutes: Record<string, [string, string, string]> =
+    defaultRoutes.map(
+      (route) => [route.key, route.from],
+    ).reduce((idx, [key, from]) => {
+      return { ...idx, [key]: ["$live", from, key] };
+    }, {});
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
   const dir = baseDir ? baseDir : Deno.cwd();
 
@@ -169,9 +175,3 @@ export const genSchemasFromManifest = async (
   return schema.build();
 };
 
-const wellKnownLiveRoutes: Record<string, [string, string, string]> =
-  defaultRoutes.map(
-    (route) => [route.key, route.from],
-  ).reduce((idx, [key, from]) => {
-    return { ...idx, [key]: ["$live", from, key] };
-  }, {});

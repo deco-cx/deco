@@ -6,10 +6,10 @@ import {
 } from "../../engine/core/hints.ts";
 import { ResolveOptions } from "../../engine/core/mod.ts";
 import {
-  isAwaitable,
-  notUndefined,
   PromiseOrValue,
   UnPromisify,
+  isAwaitable,
+  notUndefined,
 } from "../../engine/core/utils.ts";
 import { identity } from "../../utils/object.ts";
 import { createServerTimings } from "../../utils/timings.ts";
@@ -28,8 +28,10 @@ export type ResolveFunc = <T = any, TContext extends BaseContext = BaseContext>(
   partialCtx?: Partial<Omit<TContext, keyof BaseContext>>,
 ) => Promise<T>;
 
+export type ObserveFunc = <T>(key: string, func: () => Promise<T>) => Promise<T>
 export interface Monitoring {
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+  observe: ObserveFunc
 }
 
 export type ExtensionFunc<TContext extends BaseContext = BaseContext> = (
@@ -79,29 +81,29 @@ export type ResolvesTo<
   TContext extends BaseContext = BaseContext,
   TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
 > = {
-  [resolver in keyof TResolverMap]: UnPromisify<
-    ReturnType<TResolverMap[resolver]>
-  > extends T ? TResolverMap[resolver]
+    [resolver in keyof TResolverMap]: UnPromisify<
+      ReturnType<TResolverMap[resolver]>
+    > extends T ? TResolverMap[resolver]
     : never;
-};
+  };
 
 export type ResolvableObj<
   T = any,
   TContext extends BaseContext = BaseContext,
   RM extends ResolverMap<TContext> = ResolverMap<TContext>,
 > = {
-  [
+    [
     key in keyof Parameters<
       ResolvesTo<T, TContext, RM>[keyof ResolvesTo<T, TContext, RM>]
     >[0]
-  ]: Resolvable<
-    Parameters<
-      ResolvesTo<T, TContext, RM>[keyof ResolvesTo<T, TContext, RM>]
-    >[0][key],
-    TContext,
-    RM
-  >;
-};
+    ]: Resolvable<
+      Parameters<
+        ResolvesTo<T, TContext, RM>[keyof ResolvesTo<T, TContext, RM>]
+      >[0][key],
+      TContext,
+      RM
+    >;
+  };
 
 type ResolveTypeOf<
   T = any,
@@ -118,14 +120,14 @@ export type ResolvableOf<
     Resolvable<any, TContext, TResolverMap>
   > = Record<string, Resolvable<any, TContext, TResolverMap>>,
 > = {
-  [resolvable in keyof ResolvableMap]: ResolvableMap[resolvable] extends
+    [resolvable in keyof ResolvableMap]: ResolvableMap[resolvable] extends
     Resolvable<
       T,
       TContext,
       TResolverMap
     > ? ResolvableMap[resolvable]
     : never;
-};
+  };
 
 export type Resolvable<
   T = any,
@@ -236,8 +238,8 @@ export const withResolveChainOfType = <
         type: tp in ctx.resolvables
           ? "resolvable"
           : tp in ctx.resolvers
-          ? "resolver"
-          : "dangling",
+            ? "resolver"
+            : "dangling",
         value: tp,
       }))),
     ],
@@ -292,9 +294,9 @@ const resolveTypeOf = <
 >(
   resolvable: Resolvable<T, TContext, TResolverMap, TResolvableMap>,
 ): [
-  Omit<T, "__resolveType">,
-  string | undefined,
-] => {
+    Omit<T, "__resolveType">,
+    string | undefined,
+  ] => {
   if (isResolvable(resolvable)) {
     const { __resolveType, ...rest } = resolvable;
     return [
@@ -344,8 +346,8 @@ const resolvePropsWithHints = async <
   const mutableProps: T = resolvedPropsPromise.length === 0 // if there's no resolved properties so no shallow copy is needed.
     ? props
     : Array.isArray(props)
-    ? [...props] as T
-    : { ...props };
+      ? [...props] as T
+      : { ...props };
 
   const resolvedProps = await Promise.all(resolvedPropsPromise);
   for (const { key, resolved } of resolvedProps.filter(notUndefined)) {
@@ -387,20 +389,22 @@ const invokeResolverWithProps = async <
   if (isAwaitable(respOrPromise)) {
     const timingName = __resolveType.replaceAll("/", ".");
     end = ctx.monitoring?.t?.start(timingName);
-    respOrPromise = await respOrPromise;
+    await ctx.monitoring?.observe?.(__resolveType, async () => {
+      respOrPromise = await respOrPromise;
 
-    // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
-    // in order to achieve the correct result we should wrap the inner function with the timings function.
-    if (typeof respOrPromise === "function") {
-      const original = respOrPromise;
-      respOrPromise = async (...args: any[]) => {
-        const resp = await original(...args);
+      // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+      // in order to achieve the correct result we should wrap the inner function with the timings function.
+      if (typeof respOrPromise === "function") {
+        const original = respOrPromise;
+        respOrPromise = async (...args: any[]) => {
+          const resp = await original(...args);
+          end?.();
+          return resp;
+        };
+      } else {
         end?.();
-        return resp;
-      };
-    } else {
-      end?.();
-    }
+      }
+    })
   }
   return respOrPromise;
 };
