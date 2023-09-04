@@ -1,1 +1,5 @@
-export { register, Registry, default as client } from "https://esm.sh/prom-client@14.2.0";
+export {
+  default as client,
+  register,
+  Registry,
+} from "https://esm.sh/prom-client@14.2.0";

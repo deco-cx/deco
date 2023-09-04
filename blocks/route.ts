@@ -4,6 +4,7 @@ import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
+  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
@@ -12,7 +13,6 @@ import {
   PageProps,
   RouteConfig,
   RouteModule,
-  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
@@ -20,7 +20,7 @@ import { Resolvable } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
-import { observe } from '../observability/observe.ts';
+import { observe } from "../observability/observe.ts";
 import {
   InvocationProxy,
   InvokeFunction,
@@ -116,7 +116,7 @@ const DEBUG_QS = "__d";
 
 type DebugAction = "enable" | "disable" | "none";
 const debug = {
-  none: (_resp: Response) => { },
+  none: (_resp: Response) => {},
   enable: (resp: Response) => {
     setCookie(resp.headers, {
       name: DEBUG_COOKIE,
@@ -170,7 +170,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       context.state.debugEnabled = true;
       context.state.log = console.log;
     } else {
-      context.state.log = () => { }; // stub
+      context.state.log = () => {}; // stub
     }
 
     // Logs  ?__d is present in localhost
@@ -198,7 +198,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
         {
           monitoring: {
             t: context.state.t,
-            observe
+            observe,
           },
         },
       )

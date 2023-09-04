@@ -113,14 +113,14 @@ export default async function dev(
   }: {
     injectRoutes?: boolean;
     imports?:
-      | Array<string>
-      | Array<
-        DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
-      >
-      | Record<
-        string,
-        DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
-      >;
+    | Array<string>
+    | Array<
+      DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+    >
+    | Record<
+      string,
+      DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+    >;
     onListen?: () => void;
   } = {},
 ) {
@@ -141,8 +141,8 @@ export default async function dev(
     isDyamicImportArray(imports)
       ? await importManifests(imports)
       : typeof imports === "object"
-      ? Object.values(imports)
-      : imports,
+        ? Object.values(imports)
+        : imports,
   );
 
   oncePerRun(setupGithooks);
@@ -187,6 +187,10 @@ if (import.meta.main) {
 }
 
 async function setManifest(dir: string) {
-  context.manifest =
-    (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
+  try {
+    context.manifest =
+      (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
+  } catch (err) {
+    console.log(err);
+  }
 }
