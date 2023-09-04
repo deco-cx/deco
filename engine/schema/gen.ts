@@ -6,8 +6,8 @@ import { defaultRoutes } from "../../engine/manifest/manifestGen.ts";
 import {
   BlockModule,
   EntrypointModule,
-  newSchemaBuilder,
   Schemas,
+  newSchemaBuilder,
 } from "../../engine/schema/builder.ts";
 import { Schemeable } from "../../engine/schema/transform.ts";
 import { context } from "../../live.ts";
@@ -38,6 +38,17 @@ const resolveForPath = async (
     introspect,
   );
 };
+
+const resolveImport = (path: string) => {
+  try {
+    return import.meta.resolve(path);
+  } catch (err) {
+    if (path.startsWith("$live")) {
+      return import.meta.resolve(path.replace("$live", "deco"))
+    }
+    throw err;
+  }
+}
 
 export const genSchemasFromManifest = async (
   manifest: AppManifest,
@@ -85,14 +96,14 @@ export const genSchemasFromManifest = async (
         string,
         () => Promise<BlockModuleRef | undefined>,
       ] | undefined = wellKnown
-        ? [wellKnown[0], () =>
-          resolveForPath(
-            block.introspect,
-            wellKnown[1],
-            blockModuleKey,
-            references,
-          )]
-        : undefined;
+          ? [wellKnown[0], () =>
+            resolveForPath(
+              block.introspect,
+              wellKnown[1],
+              blockModuleKey,
+              references,
+            )]
+          : undefined;
       const [_namespace, blockRefResolver] = wellKnownSourceMapResolver ??
         (blockModuleKey.startsWith(".")
           ? [
@@ -112,7 +123,7 @@ export const genSchemasFromManifest = async (
                 typeof sourceMapResolverVal === "undefined"
                 ? resolveForPath(
                   block.introspect,
-                  sourceMapResolverVal ?? import.meta.resolve(blockModuleKey),
+                  sourceMapResolverVal ?? resolveImport(blockModuleKey),
                   blockModuleKey,
                   references,
                 )

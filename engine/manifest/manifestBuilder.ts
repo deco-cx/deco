@@ -240,7 +240,7 @@ ${exportDefault
 `;
 };
 
-const tryResolve = (path: string): string | undefined => {
+const tryResolveDeco = (path: string): string | undefined => {
   try {
     return import.meta.resolve(path);
   } catch {
@@ -284,7 +284,7 @@ export const newManifestBuilder = <TManifest extends AppManifest = AppManifest>(
             blockC++;
             innerBuilder = innerBuilder
               .addImports({
-                from: path.startsWith("$live") && tryResolve(path) ? path : path.replace("$live/", "deco/"),
+                from: path.startsWith("$live") && tryResolveDeco(path) ? path : path.replace("$live/", "deco/"),
                 clauses: [{ alias: ref }],
               })
               .addValuesOnManifestKey(block, [
