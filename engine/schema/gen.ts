@@ -1,6 +1,6 @@
-import blocks from "../../blocks/index.ts";
 import { AppManifest, SourceMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
+import blocks from "../../blocks/index.ts";
 import { JSONSchema7, TsType } from "../../deps.ts";
 import { defaultRoutes } from "../../engine/manifest/manifestGen.ts";
 import {
@@ -162,5 +162,5 @@ const wellKnownLiveRoutes: Record<string, [string, string, string]> =
   defaultRoutes.map(
     (route) => [route.key, route.from],
   ).reduce((idx, [key, from]) => {
-    return { ...idx, [key]: ["$live", import.meta.resolve(from), key] };
+    return { ...idx, [key]: ["$live", from, key] };
   }, {});

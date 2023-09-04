@@ -3,6 +3,7 @@ import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
 import { parse } from "std/flags/mod.ts";
+import { buildSourceMap } from "./blocks/utils.tsx";
 import { ResolverMap } from "./engine/core/resolver.ts";
 import { ManifestBuilder } from "./engine/manifest/manifestBuilder.ts";
 import { decoManifestBuilder } from "./engine/manifest/manifestGen.ts";
@@ -175,7 +176,10 @@ if (import.meta.main) {
   const newManifestData = await decoManifestBuilder(dir, liveNs);
   await generate(dir, newManifestData).then(async () => {
     await setManifest(dir);
-    const schema = await genSchemas(context.manifest!);
+    const schema = await genSchemas(
+      context.manifest!,
+      buildSourceMap(context.manifest!),
+    );
     if (flags.print) {
       console.log(JSON.stringify(schema, null, 2));
     }
