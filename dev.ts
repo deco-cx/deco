@@ -1,13 +1,10 @@
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.4/githooks.ts";
-import { dirname, fromFileUrl, join, toFileUrl } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { gte } from "std/semver/mod.ts";
 
-import { parse } from "std/flags/mod.ts";
-import { buildSourceMap } from "./blocks/utils.tsx";
 import { ResolverMap } from "./engine/core/resolver.ts";
 import { ManifestBuilder } from "./engine/manifest/manifestBuilder.ts";
 import { decoManifestBuilder } from "./engine/manifest/manifestGen.ts";
-import { genSchemas } from "./engine/schema/reader.ts";
 import { context } from "./live.ts";
 import { DecoManifest } from "./types.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
@@ -113,14 +110,14 @@ export default async function dev(
   }: {
     injectRoutes?: boolean;
     imports?:
-    | Array<string>
-    | Array<
-      DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
-    >
-    | Record<
-      string,
-      DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
-    >;
+      | Array<string>
+      | Array<
+        DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+      >
+      | Record<
+        string,
+        DecoManifest | (DecoManifest & Partial<Record<string, ResolverMap>>)
+      >;
     onListen?: () => void;
   } = {},
 ) {
@@ -141,8 +138,8 @@ export default async function dev(
     isDyamicImportArray(imports)
       ? await importManifests(imports)
       : typeof imports === "object"
-        ? Object.values(imports)
-        : imports,
+      ? Object.values(imports)
+      : imports,
   );
 
   oncePerRun(setupGithooks);
@@ -168,29 +165,8 @@ function isDyamicImportArray(
 // Generate live own manifest data so that other sites can import native functions and sections.
 export const liveNs = "$live";
 if (import.meta.main) {
-  const flags = parse(Deno.args, {
-    boolean: ["print"],
-  });
   context.namespace = liveNs;
   const dir = Deno.cwd();
   const newManifestData = await decoManifestBuilder(dir, liveNs);
-  await generate(dir, newManifestData).then(async () => {
-    await setManifest(dir);
-    const schema = await genSchemas(
-      context.manifest!,
-      buildSourceMap(context.manifest!),
-    );
-    if (flags.print) {
-      console.log(JSON.stringify(schema, null, 2));
-    }
-  });
-}
-
-async function setManifest(dir: string) {
-  try {
-    context.manifest =
-      (await import(toFileUrl(join(dir, manifestFile)).toString())).default;
-  } catch (err) {
-    console.log(err);
-  }
+  await generate(dir, newManifestData);
 }
