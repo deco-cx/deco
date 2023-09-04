@@ -120,9 +120,9 @@ export async function checkUpdates(_dir?: string) {
     );
 
     if (Deno.build.os === "windows") {
-      console.log(`deno eval 'import \\"$live/scripts/update.ts\\"'`);
+      console.log(`deno eval 'import \\"deco/scripts/update.ts\\"'`);
     } else {
-      console.log(`deno eval 'import \"$live/scripts/update.ts\"'`);
+      console.log(`deno eval 'import \"deco/scripts/update.ts\"'`);
     }
   }
 }
