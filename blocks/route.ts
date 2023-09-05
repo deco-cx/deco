@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
+import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
@@ -20,6 +20,7 @@ import { Resolvable } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
+import { observe } from "../observability/observe.ts";
 import {
   InvocationProxy,
   InvokeFunction,
@@ -195,7 +196,10 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       .resolverFor(
         { context, request },
         {
-          monitoring: { t: context.state.t },
+          monitoring: {
+            t: context.state.t,
+            observe,
+          },
         },
       )
       .bind(resolver);

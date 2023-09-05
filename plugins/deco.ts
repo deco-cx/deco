@@ -3,6 +3,7 @@ import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
 import defaults from "../engine/manifest/defaults.ts";
 import { $live, AppManifest, SiteInfo } from "../mod.ts";
+import { collectPromMetrics } from "../observability/metrics.ts";
 import {
   default as Render,
   handler as entrypoint,
@@ -29,6 +30,7 @@ export interface Options<TManifest extends AppManifest = AppManifest> {
   useLocalStorageOnly?: boolean;
 }
 export default function decoPlugin(opt?: Options): Plugin {
+  collectPromMetrics();
   if (opt) {
     $live(
       {
