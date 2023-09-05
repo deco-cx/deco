@@ -2,9 +2,9 @@ import { ConnInfo, Handler } from "std/http/server.ts";
 import { ResolveOptions } from "../engine/core/mod.ts";
 import {
   BaseContext,
+  isDeferred,
   Resolvable,
   ResolveFunc,
-  isDeferred,
 } from "../engine/core/resolver.ts";
 import { isAwaitable } from "../engine/core/utils.ts";
 import { Route, Routes } from "../flags/audience.ts";

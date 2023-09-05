@@ -407,6 +407,7 @@ const invokeResolverWithProps = async <
       } else {
         end?.();
       }
+      return respOrPromise;
     });
   }
   return respOrPromise;
