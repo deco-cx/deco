@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { wrapCaughtErrors } from "../blocks/loader.ts";
 import { HttpContext } from "../blocks/handler.ts";
 import { newSingleFlightGroup, SingleFlightKeyFunc } from "../blocks/utils.tsx";
 import JsonViewer from "../components/JsonViewer.tsx";
@@ -30,6 +31,7 @@ const functionBlock: Block<FunctionModule> = {
   >(
     { default: func, singleFlightKey }: FunctionModule<TConfig, TState>,
   ) => [
+    wrapCaughtErrors,
     newSingleFlightGroup(singleFlightKey),
     async (
       $live: TConfig,

@@ -1,4 +1,5 @@
-import { shouldCollectMetrics } from "deco/observability/metrics.ts";
+import { shouldCollectMetrics } from "../observability/metrics.ts";
+import { isWrappedError } from "../blocks/loader.ts";
 import meta from "../meta.json" assert { type: "json" };
 import { context } from "../mod.ts";
 import { client } from "./client.ts";
@@ -44,7 +45,12 @@ export const observe = async <T>(
   const start = performance.now();
   let isError = "false";
   try {
-    return await f();
+    return await f().then((resp) => {
+      if (isWrappedError(resp)) {
+        isError = "true";
+      }
+      return resp;
+    });
   } catch (error) {
     isError = "true";
     throw error;

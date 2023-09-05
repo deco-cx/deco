@@ -2,15 +2,15 @@ import { ConnInfo, Handler } from "std/http/server.ts";
 import { ResolveOptions } from "../engine/core/mod.ts";
 import {
   BaseContext,
-  isDeferred,
   Resolvable,
   ResolveFunc,
+  isDeferred,
 } from "../engine/core/resolver.ts";
 import { isAwaitable } from "../engine/core/utils.ts";
 import { Route, Routes } from "../flags/audience.ts";
 import { isFreshCtx } from "../handlers/fresh.ts";
+import { observe } from "../observability/observe.ts";
 import { Flag, LiveState, RouterContext } from "../types.ts";
-import { observe } from "deco/observability/observe.ts";
 
 export interface SelectionConfig {
   audiences: Routes[];
