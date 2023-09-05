@@ -6,8 +6,8 @@ const runModule = (module: string, ...args: string[]): Deno.Command => {
     args: [
       "run",
       "-A",
-      "--import-map",
-      join(Deno.cwd(), "import_map.json"),
+      "--config",
+      join(Deno.cwd(), "deno.json"),
       import.meta.resolve(module),
       ...args,
     ],
