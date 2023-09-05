@@ -4,12 +4,13 @@ import { context } from "../mod.ts";
 import { client } from "./client.ts";
 
 const defaultLabels = [
+  "op",
+  "is_error",
   "deployment_id",
   "site",
-  "is_error",
-  "op",
   "deco_ver",
   "apps_ver",
+  "fresh_ver",
 ];
 
 const operationDuration = new client.Histogram({
@@ -52,10 +53,10 @@ export const observe = async <T>(
       op,
       is_error: isError,
       deployment_id: context.deploymentId ?? Deno.hostname(),
+      site: context.site,
       deco_ver: meta.version,
       apps_ver,
       fresh_ver,
-      site: context.site,
     }).observe(
       performance.now() - start,
     );
