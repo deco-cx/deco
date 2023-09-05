@@ -1,7 +1,16 @@
 import { shouldCollectMetrics } from "deco/observability/metrics.ts";
+import meta from "../meta.json" assert { type: "json" };
 import { context } from "../mod.ts";
 import { client } from "./client.ts";
-const defaultLabels = ["deploymentId", "site", "isError", "op"];
+
+const defaultLabels = [
+  "deployment_id",
+  "site",
+  "is_error",
+  "op",
+  "deco_ver",
+  "apps_ver",
+];
 
 const operationDuration = new client.Histogram({
   name: "block_op_duration",
@@ -10,6 +19,17 @@ const operationDuration = new client.Histogram({
   labelNames: defaultLabels,
 });
 
+const tryGetVersionOf = (pkg: string) => {
+  try {
+    const [_, ver] = import.meta.resolve(pkg).split("@");
+    return `${pkg}@${ver.substring(0, ver.length - 1)}`;
+  } catch {
+    return undefined;
+  }
+};
+const apps_ver = tryGetVersionOf("apps/") ??
+  tryGetVersionOf("deco-sites/std/") ?? "_";
+const fresh_ver = tryGetVersionOf("$fresh/") ?? "_";
 /**
  * Observe function durations based on the provided labels
  */
@@ -30,8 +50,11 @@ export const observe = async <T>(
   } finally {
     operationDuration.labels({
       op,
-      isError,
-      deploymentId: context.deploymentId ?? Deno.hostname(),
+      is_error: isError,
+      deployment_id: context.deploymentId ?? Deno.hostname(),
+      deco_ver: meta.version,
+      apps_ver,
+      fresh_ver,
       site: context.site,
     }).observe(
       performance.now() - start,
