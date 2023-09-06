@@ -14,6 +14,7 @@ declare global {
     LIVE: {
       page: Page;
       site: Site;
+      flags?: Flag[];
     };
   }
 }
