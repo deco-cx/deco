@@ -105,11 +105,15 @@ export const newSupabase = (
       }
       const resolvables = data ??
         { state: {}, archived: {}, revision: crypto.randomUUID() };
+
+      const currentRevision = currResolvables.then((r) => r.revision).catch(
+        () => "unknown"
+      );
       currResolvables = Promise.resolve(
         resolvables,
       );
       const nextRevision = resolvables.revision;
-      if ((await currResolvables).revision !== nextRevision) {
+      if (await currentRevision !== nextRevision) {
         notify();
       }
     } finally {
