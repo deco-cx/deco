@@ -1,10 +1,10 @@
 import { join } from "std/path/mod.ts";
 import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { exists } from "../../utils/filesystem.ts";
+import { stringifyForWrite } from "../../utils/json.ts";
 import { singleFlight } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
-import { stringifyForWrite } from "../../utils/json.ts";
 
 const sample = {
   "audience-everyone": {

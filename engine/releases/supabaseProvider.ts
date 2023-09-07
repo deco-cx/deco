@@ -6,7 +6,7 @@ import {
   ReadOptions,
   Release,
 } from "../../engine/releases/provider.ts";
-import { stringToHexSha256 } from "../../utils/encoding.ts";
+
 export interface SupabaseReleaseProvider {
   /**
    * @returns the current state of the release.
@@ -38,9 +38,9 @@ const REFETCH_JITTER_MS = 2_000;
 export interface CurrResolvables {
   state: Record<string, Resolvable<any>>;
   archived: Record<string, Resolvable<any>>;
+  revision: string;
 }
 
-let currentRevision = "unknown";
 /**
  * Receives a provider backed by supabase and creates a Releases instance.
  * @param provider the supabase provider.
@@ -103,13 +103,13 @@ export const newSupabase = (
       if (error !== null) {
         return;
       }
-      const resolvables = data ?? { state: {}, archived: {} };
+      const resolvables = data ??
+        { state: {}, archived: {}, revision: crypto.randomUUID() };
       currResolvables = Promise.resolve(
         resolvables,
       );
-      const nextRevision = await stringToHexSha256(JSON.stringify(resolvables));
-      if (currentRevision !== nextRevision) {
-        currentRevision = nextRevision;
+      const nextRevision = resolvables.revision;
+      if ((await currResolvables).revision !== nextRevision) {
         notify();
       }
     } finally {
@@ -127,7 +127,6 @@ export const newSupabase = (
           Object.keys(newResolvables ?? {}),
         );
         currResolvables = Promise.resolve(newResolvables);
-        currentRevision = Date.now().toString();
         notify();
       }, (_status, err) => {
         if (err) {
@@ -160,7 +159,8 @@ export const newSupabase = (
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
     },
-    revision: () => Promise.resolve(currentRevision),
+    revision: () =>
+      currResolvables.then((r) => r.revision).catch(() => "unknown"),
     /**
      * @returns The current state of the release.
      */

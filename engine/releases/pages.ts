@@ -330,7 +330,10 @@ const subscribeForConfigChanges = (
       () =>
         fetcher().then((v) => {
           if (!v.error) {
-            callback(v.data ?? { state: {}, archived: {} });
+            callback(
+              v.data ??
+                { state: {}, archived: {}, revision: crypto.randomUUID() },
+            );
           }
         }),
     ).on(
@@ -344,7 +347,10 @@ const subscribeForConfigChanges = (
       () =>
         fetcher().then((v) => {
           if (!v.error) {
-            callback(v.data ?? { state: {}, archived: {} });
+            callback(
+              v.data ??
+                { state: {}, archived: {}, revision: crypto.randomUUID() },
+            );
           }
         }),
     )
@@ -448,6 +454,7 @@ export const fromPagesTable = (
         data: {
           state: pagesToConfig(data, dataFlags, namespace),
           archived: {},
+          revision: crypto.randomUUID(),
         } as CurrResolvables,
         error: null,
       };
