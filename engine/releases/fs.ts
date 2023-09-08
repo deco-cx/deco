@@ -3,30 +3,17 @@ import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { singleFlight } from "../core/utils.ts";
-import { ENTRYPOINT } from "./constants.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
 
 const sample = {
-  "audience-everyone": {
-    overrides: [],
-    routes: [{
-      pathTemplate: "/*",
-      handler: {
-        value: {
-          url: "https://www.google.com",
-          __resolveType: "$live/handlers/proxy.ts",
-        },
-      },
-    }],
-    __resolveType: "$live/flags/everyone.ts",
+  "decohub": {
+    __resolveType: "deco-sites/storefront/apps/decohub.ts",
   },
-  [ENTRYPOINT]: {
-    audiences: [
-      {
-        __resolveType: "audience-everyone",
-      },
-    ],
-    __resolveType: "$live/handlers/routesSelection.ts",
+  "admin-app": {
+    resolvables: {
+      __resolveType: "deco-sites/admin/loaders/state.ts",
+    },
+    __resolveType: "decohub/apps/admin.ts",
   },
 };
 

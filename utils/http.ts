@@ -198,7 +198,7 @@ export const allowCorsForOrigin = (
 ): Record<string, string> => ({
   "Access-Control-Allow-Origin": origin.join(","),
   "Access-Control-Allow-Credentials": "true",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, If-None-Match, *",
   "Access-Control-Expose-Headers": "ETag",
 });

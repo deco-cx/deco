@@ -6,6 +6,9 @@ const adminPreviewUrls = "https://deco-sites-admin-";
 const adminPreviewDomain = "deno.dev";
 
 export const isAdmin = (url: string): boolean => {
+  if (url.startsWith("http://localhost")) {
+    return true;
+  }
   if (url.startsWith(adminDomain)) {
     return true;
   }
