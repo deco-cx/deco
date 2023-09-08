@@ -11,7 +11,7 @@ import type { PromiseOrValue } from "../../../engine/core/utils.ts";
 import dfs from "../../../engine/manifest/defaults.ts";
 import type { DecoState } from "../../../mod.ts";
 import type { DecoSiteState } from "../../../types.ts";
-import { allowCorsFor, bodyFromUrl } from "../../../utils/http.ts";
+import { bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
 import type { DeepPick, DotNestedKeys } from "../../../utils/object.ts";
 
@@ -363,9 +363,5 @@ export const handler = async (
 
   const result = await resolve(payloadToResolvable(data));
 
-  const resp = invokeToHttpResponse(req, result);
-  Object.entries(allowCorsFor(req)).map(([name, value]) => {
-    resp.headers.set(name, value);
-  });
-  return resp;
+  return invokeToHttpResponse(req, result);
 };
