@@ -19,6 +19,10 @@ import { InvokeAwaiter } from "../routes/live/invoke/index.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import { InvocationProxyHandler, newHandler } from "./proxy.ts";
 
+export interface InvokerRequestInit extends RequestInit {
+  base?: string;
+}
+
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
 export const isStreamProps = <TProps>(
@@ -61,7 +65,7 @@ export async function* readFromStream<T>(
 }
 
 const fetchWithProps = async (
-  url: string,
+  url: URL,
   props: unknown,
   init?: RequestInit | undefined,
 ) => {
@@ -114,11 +118,11 @@ const fetchWithProps = async (
 export const invokeKey = (
   key: string,
   props?: unknown,
-  init?: RequestInit | undefined,
-) => fetchWithProps(`/live/invoke/${key}`, props, init);
+  init?: InvokerRequestInit | undefined,
+) => fetchWithProps(new URL(`/live/invoke/${key}`, init?.base), props, init);
 
-const batchInvoke = (payload: unknown, init?: RequestInit | undefined) =>
-  fetchWithProps(`/live/invoke`, payload, init);
+const batchInvoke = (payload: unknown, init?: InvokerRequestInit | undefined) =>
+  fetchWithProps(new URL(`/live/invoke`, init?.base), payload, init);
 
 export type InvocationFunc<TManifest extends AppManifest> = <
   TInvocableKey extends
@@ -217,7 +221,7 @@ export const invoke = <
     >,
 >(
   payload: TPayload,
-  init?: RequestInit | undefined,
+  init?: InvokerRequestInit | undefined,
 ): Promise<
   InvokeResult<
     TPayload,
@@ -260,7 +264,7 @@ export const create = <
 >(key: TInvocableKey) =>
 (
   props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-  init?: RequestInit | undefined,
+  init?: InvokerRequestInit | undefined,
 ): Promise<
   InvokeResult<
     TPayload,

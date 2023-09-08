@@ -363,7 +363,6 @@ export const handler = async (
 
   const result = await resolve(payloadToResolvable(data));
 
-
   const resp = invokeToHttpResponse(req, result);
   Object.entries(allowCorsFor(req)).map(([name, value]) => {
     resp.headers.set(name, value);
