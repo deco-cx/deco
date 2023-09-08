@@ -10,7 +10,7 @@ const TABLE = "configs";
 const fetchRelease = (
   site: string,
 ): PromiseLike<{ data: CurrResolvables | null; error: unknown }> => {
-  return getSupabaseClient().from(TABLE).select("state, archived").eq(
+  return getSupabaseClient().from(TABLE).select("state, archived, revision").eq(
     "site",
     site,
   ).maybeSingle();
@@ -87,7 +87,11 @@ export const fromConfigsTable = (
       "flight",
       async () => {
         const { data, error } = await fetchRelease(site);
-        return { data: data ?? { state: {}, archived: {} }, error };
+        return {
+          data: data ??
+            { state: {}, archived: {}, revision: crypto.randomUUID() },
+          error,
+        };
       },
     );
   return {

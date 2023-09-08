@@ -127,15 +127,20 @@ const buildSchemaWithResolvables = (
 };
 
 const sf = singleFlight<string>();
+const binaryId = context.deploymentId ?? crypto.randomUUID();
 export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
 ) => {
+  const end = ctx.state.t?.start("fetch-revision");
+  const revision = await ctx.state.release.revision();
+  end?.();
+  const etag = `${revision}@${binaryId}`;
+  const ifNoneMatch = req.headers.get("if-none-match");
+  if (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`) { // weak etags should be tested as well.
+    return new Response(null, { status: 304, headers: allowCorsFor(req) }); // not modified
+  }
   const info = await sf.do("schema", async () => {
-    const end = ctx.state.t?.start("fetch-revision");
-    const revision = await ctx.state.release.revision();
-    end?.();
-
     if (revision !== latestRevision || mschema === null) {
       const endBuildSchema = ctx.state?.t?.start("build-resolvables");
       mschema = buildSchemaWithResolvables(
@@ -167,6 +172,8 @@ export const handler = async (
     {
       headers: {
         "Content-Type": "application/json",
+        "cache-control": "must-revalidate",
+        etag,
         ...allowCorsFor(req),
       },
     },
