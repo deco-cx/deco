@@ -12,7 +12,10 @@ import {
 import { PromiseOrValue } from "../../engine/core/utils.ts";
 import { integrityCheck } from "../../engine/integrity.ts";
 import defaultResolvers from "../../engine/manifest/defaults.ts";
-import { getComposedConfigStore } from "../../engine/releases/provider.ts";
+import {
+  getComposedConfigStore,
+  Release,
+} from "../../engine/releases/provider.ts";
 import { context } from "../../live.ts";
 import { DecoState } from "../../types.ts";
 
@@ -81,7 +84,7 @@ const siteName = (): string | undefined => {
 export const $live = <T extends AppManifest>(
   m: T,
   siteInfo?: SiteInfo,
-  useLocalStorageOnly = false,
+  release: Release | undefined = undefined,
 ): T => {
   context.siteId = siteInfo?.siteId ?? -1;
   context.namespace = siteInfo?.namespace;
@@ -97,11 +100,10 @@ export const $live = <T extends AppManifest>(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
-  const provider = getComposedConfigStore(
+  const provider = release ?? getComposedConfigStore(
     context.namespace!,
     context.site,
     context.siteId,
-    useLocalStorageOnly,
   );
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
