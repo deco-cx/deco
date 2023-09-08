@@ -196,11 +196,11 @@ export const allowCorsFor = (req?: Request): Record<string, string> =>
 export const allowCorsForOrigin = (
   ...origin: string[]
 ): Record<string, string> => ({
-  "Access-Control-Allow-Origin": origin.join(","),
-  "Access-Control-Allow-Credentials": "true",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, If-None-Match, *",
-  "Access-Control-Expose-Headers": "ETag",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Credentials": "*",
+  "Access-Control-Allow-Methods": "*",
+  "Access-Control-Allow-Headers": "*",
+  "Access-Control-Expose-Headers": "*",
 });
 
 export { readFromStream } from "../clients/withManifest.ts";
