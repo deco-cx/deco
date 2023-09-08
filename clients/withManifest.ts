@@ -20,7 +20,7 @@ import type { DotNestedKeys } from "../utils/object.ts";
 import { InvocationProxyHandler, newHandler } from "./proxy.ts";
 
 export interface InvokerRequestInit extends RequestInit {
-  base?: string;
+  fetcher?: typeof fetch;
 }
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
@@ -65,9 +65,9 @@ export async function* readFromStream<T>(
 }
 
 const fetchWithProps = async (
-  url: URL,
+  url: string,
   props: unknown,
-  init?: RequestInit | undefined,
+  init?: InvokerRequestInit | undefined,
 ) => {
   if (!IS_BROWSER) {
     console.warn(
@@ -83,7 +83,7 @@ const fetchWithProps = async (
   );
   headers.set("content-type", "application/json");
 
-  const response = await fetch(url, {
+  const response = await (init?.fetcher ?? fetch)(url, {
     method: "POST",
     body: JSON.stringify(props),
     ...init,
@@ -119,10 +119,10 @@ export const invokeKey = (
   key: string,
   props?: unknown,
   init?: InvokerRequestInit | undefined,
-) => fetchWithProps(new URL(`/live/invoke/${key}`, init?.base), props, init);
+) => fetchWithProps(`/live/invoke/${key}`, props, init);
 
 const batchInvoke = (payload: unknown, init?: InvokerRequestInit | undefined) =>
-  fetchWithProps(new URL(`/live/invoke`, init?.base), payload, init);
+  fetchWithProps(`/live/invoke`, payload, init);
 
 export type InvocationFunc<TManifest extends AppManifest> = <
   TInvocableKey extends
@@ -198,7 +198,7 @@ const isInvokeAwaiter = <
  */
 export const invoke = <
   TManifest extends AppManifest,
->() =>
+>(fetcher?: typeof fetch) =>
 <
   TInvocableKey extends
     | AvailableFunctions<TManifest>
@@ -240,9 +240,9 @@ export const invoke = <
         reqs[key] = val;
       }
     }
-    return batchInvoke(reqs, init);
+    return batchInvoke(reqs, { ...init ?? {}, fetcher });
   }
-  return batchInvoke(payload, init);
+  return batchInvoke(payload, { ...init ?? {}, fetcher });
 };
 
 export const create = <
@@ -319,10 +319,10 @@ export const proxyFor = <TManifest extends AppManifest>(
  */
 export const proxy = <
   TManifest extends AppManifest,
->(): InvocationProxyWithBatcher<
+>(fetcher?: typeof fetch): InvocationProxyWithBatcher<
   TManifest
 > => {
-  return proxyFor(invoke<TManifest>() as typeof batchInvoke);
+  return proxyFor(invoke<TManifest>(fetcher) as typeof batchInvoke);
 };
 
 /**
