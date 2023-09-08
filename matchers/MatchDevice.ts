@@ -1,4 +1,4 @@
-import { UAParser } from "https://esm.sh/ua-parser-js@1.0.35";
+import UAParser from "npm:ua-parser-js@1.0.35";
 import { MatchContext } from "../blocks/matcher.ts";
 
 /**

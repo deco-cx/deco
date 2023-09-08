@@ -28,8 +28,8 @@ import type {
   TsTypeReference,
   TsUnionType,
   VariableDeclarator,
-} from "https://esm.sh/v130/@swc/wasm@1.3.76";
-import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
+} from "npm:@swc/wasm@1.3.76";
+import { JSONSchema7TypeName } from "npm:@types/json-schema@7.0.11/index.d.ts";
 import { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
 import { BlockModuleRef, IntrospectParams } from "../../engine/block.ts";
 import { beautify } from "../../engine/schema/utils.ts";

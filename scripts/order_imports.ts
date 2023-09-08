@@ -7,13 +7,13 @@ export async function orderImports() {
   // Pin all esm deps to same cdn version
   for (const key of Object.keys(importMap.imports)) {
     const value = importMap.imports[key as keyof typeof importMap.imports];
-    const isEsm = value.startsWith("https://esm.sh/");
+    const isEsm = value.startsWith("npm:");
 
     if (isEsm) {
       // Always remove /vXYZ/ from esm.sh imports.
       importMap.imports[key as keyof typeof importMap.imports] = value.replace(
         /https:\/\/esm.sh\/(v.\d*\/)?/,
-        `https://esm.sh/`,
+        `npm:`,
       );
     }
   }

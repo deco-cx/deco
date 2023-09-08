@@ -1,4 +1,4 @@
-import { register, Registry } from "https://esm.sh/prom-client@14.2.0";
+import { register, Registry } from "npm:prom-client@14.2.0";
 
 // required configuration
 const influxUsr = Deno.env.get("OBS_INFLUX_USR");

@@ -9,7 +9,7 @@ import { walk } from "https://deno.land/std@0.190.0/fs/walk.ts";
 import { dirname, join } from "https://deno.land/std@0.190.0/path/mod.ts";
 
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
-import { diffLines } from "https://esm.sh/diff@5.1.0";
+import { diffLines } from "npm:diff@5.1.0";
 import deno from "../deno.json" assert { type: "json" };
 import meta from "../meta.json" assert { type: "json" };
 import { format } from "../utils/formatter.ts";
