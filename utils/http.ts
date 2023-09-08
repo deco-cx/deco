@@ -196,7 +196,7 @@ export const allowCorsFor = (req?: Request): Record<string, string> =>
 export const allowCorsForOrigin = (
   ...origin: string[]
 ): Record<string, string> => ({
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": origin.join(","),
   "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, If-None-Match, *",
