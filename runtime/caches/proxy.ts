@@ -1,5 +1,7 @@
 import { WeakLRUCache } from "https://deno.land/x/weakcache@v1.1.4/index.js";
 
+const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
+
 const assertNoOptions = (
   { ignoreMethod, ignoreSearch, ignoreVary }: CacheQueryOptions = {},
 ) => {
@@ -59,9 +61,10 @@ export const caches: CacheStorage = {
 
         const req = new Request(request);
 
-        const response = cache.has(req.url)
-          ? cache.get(req.url)
-          : await fetch(`https://fastly.decocache.com/${req.url}`, req);
+        const response = cache.has(req.url) ? cache.get(req.url) : await fetch(
+          PROXY_ENABLED ? `https://fastly.decocache.com/${req.url}` : req.url,
+          req,
+        );
 
         return new Response(response.clone().body, response);
       },
