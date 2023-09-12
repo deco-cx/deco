@@ -19,7 +19,7 @@ import {
   ManifestFunction,
   ManifestLoader,
 } from "../routes/live/invoke/index.ts";
-import { AppManifest, LiveConfig, LiveState } from "../types.ts";
+import { AppManifest, DecoState, DecoSiteState } from "../types.ts";
 import { DotNestedKeys } from "../utils/object.ts";
 import { HttpContext } from "./handler.ts";
 import { FnContext, fnContextFromHttpContext } from "./utils.tsx";
@@ -32,7 +32,7 @@ export class WorkflowContext<
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
 > extends DurableWorkflowContext<TMetadata> {
   constructor(
-    protected ctx: LiveConfig<unknown, LiveState, TManifest>,
+    protected ctx: DecoState<unknown, DecoSiteState, TManifest>,
     execution: WorkflowExecution<Arg, unknown, TMetadata>,
   ) {
     super(execution);

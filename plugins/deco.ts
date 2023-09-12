@@ -57,7 +57,7 @@ export default function decoPlugin(opt?: Options): Plugin {
                 : "./routes/_middleware.ts",
               opt?.sourceMap,
             ),
-            decoMiddleware,
+            ...decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],
         },
       },

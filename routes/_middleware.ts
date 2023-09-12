@@ -12,7 +12,7 @@ import defaults from "../engine/manifest/defaults.ts";
 import { context } from "../live.ts";
 import { AppManifest, Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
-import { LiveConfig, LiveState } from "../types.ts";
+import { DecoState, DecoSiteState } from "../types.ts";
 import { isAdmin } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
@@ -48,7 +48,7 @@ const isAdminOrLocalhost = (req: Request): boolean => {
 
 export const handler = [async (
   req: Request,
-  ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
+  ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
 ) => {
   const begin = performance.now();
   const url = new URL(req.url);
@@ -72,7 +72,7 @@ export const handler = [async (
   }
 }, async (
   req: Request,
-  ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
+  ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
 ) => {
   const url = new URL(req.url);
   ctx.state.site = {

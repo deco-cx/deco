@@ -5,7 +5,7 @@ import { ConnInfo } from "std/http/server.ts";
 import { Handler } from "../blocks/handler.ts";
 import { Page } from "../blocks/page.ts";
 import { PageContext } from "../engine/block.ts";
-import { Flag, LiveConfig, LiveState } from "../types.ts";
+import { Flag, DecoState, DecoSiteState } from "../types.ts";
 import { setCSPHeaders } from "../utils/http.ts";
 
 export interface RouterContext {
@@ -61,7 +61,7 @@ export const handler = async (
   req: Request,
   ctx: HandlerContext<
     unknown,
-    LiveConfig<Handler, LiveState>
+    DecoState<Handler, DecoSiteState>
   >,
 ) => {
   const { state: { $live: handler } } = ctx;

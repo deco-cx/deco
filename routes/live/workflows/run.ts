@@ -14,8 +14,8 @@ import {
   workflowWebSocketHandler,
 } from "../../../deps.ts";
 import type { Manifest } from "../../../live.gen.ts";
-import { LiveConfig } from "../../../mod.ts";
-import { LiveState } from "../../../types.ts";
+import { DecoState } from "../../../mod.ts";
+import { DecoSiteState } from "../../../types.ts";
 
 export type Props = HttpRunRequest<
   Arg,
@@ -28,7 +28,7 @@ export type Props = HttpRunRequest<
  */
 async function runWorkflow(
   props: Props,
-  ctx: LiveConfig<unknown, LiveState, Manifest>,
+  ctx: DecoState<unknown, DecoSiteState, Manifest>,
 ): Promise<Command> {
   const { execution: { metadata } } = props;
   const workflow = metadata!.workflow;
@@ -43,7 +43,7 @@ async function runWorkflow(
 
 const handleProps = async (
   props: Props,
-  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState, Manifest>>,
+  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState, Manifest>>,
 ) => {
   const metadata = await ctx.state.resolve<WorkflowMetadata>(
     (props?.execution?.metadata ?? {}) as WorkflowMetadata,
@@ -56,7 +56,7 @@ const handleProps = async (
 
 export const handler = async (
   req: Request,
-  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
+  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
 ): Promise<Response> => {
   initOnce();
   if (req.headers.get("upgrade") === "websocket") {
@@ -69,7 +69,7 @@ export const handler = async (
       workflowFn,
       (execution) =>
         new WorkflowContext(
-          ctx.state as unknown as LiveConfig<unknown, LiveState, Manifest>,
+          ctx.state as unknown as DecoState<unknown, DecoSiteState, Manifest>,
           execution,
         ),
     );
@@ -80,7 +80,7 @@ export const handler = async (
     props,
     ctx as unknown as HandlerContext<
       unknown,
-      LiveConfig<unknown, LiveState, Manifest>
+      DecoState<unknown, DecoSiteState, Manifest>
     >,
   );
   return new Response(
