@@ -19,7 +19,7 @@ import {
   ManifestFunction,
   ManifestLoader,
 } from "../routes/live/invoke/index.ts";
-import { AppManifest, DecoState, DecoSiteState } from "../types.ts";
+import { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import { DotNestedKeys } from "../utils/object.ts";
 import { HttpContext } from "./handler.ts";
 import { FnContext, fnContextFromHttpContext } from "./utils.tsx";

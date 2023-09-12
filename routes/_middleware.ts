@@ -12,7 +12,7 @@ import defaults from "../engine/manifest/defaults.ts";
 import { context } from "../live.ts";
 import { AppManifest, Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
-import { DecoState, DecoSiteState } from "../types.ts";
+import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdmin } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";

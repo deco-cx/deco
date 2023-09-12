@@ -9,7 +9,7 @@ import { namespaceOf } from "../../engine/schema/gen.ts";
 import { genSchemas } from "../../engine/schema/reader.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
-import { AppManifest, DecoState, DecoSiteState } from "../../types.ts";
+import { AppManifest, DecoSiteState, DecoState } from "../../types.ts";
 import { resolvable } from "../../utils/admin.ts";
 import { allowCorsFor } from "../../utils/http.ts";
 
