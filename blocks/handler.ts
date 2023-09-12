@@ -3,15 +3,15 @@ import { Handler as DenoHandler, ServeHandler } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { BaseContext } from "../engine/core/resolver.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
-import { LiveConfig, StatefulContext } from "../types.ts";
+import { DecoState, StatefulContext } from "../types.ts";
 import { FnContext, fnContextFromHttpContext } from "./utils.tsx";
 
 export interface HttpContext<
   // deno-lint-ignore ban-types
   State = {},
   TConfig = any,
-  TCtx extends StatefulContext<LiveConfig<TConfig, State>> = StatefulContext<
-    LiveConfig<TConfig, State>
+  TCtx extends StatefulContext<DecoState<TConfig, State>> = StatefulContext<
+    DecoState<TConfig, State>
   >,
 > extends BaseContext {
   context: TCtx;

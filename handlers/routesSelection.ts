@@ -10,7 +10,7 @@ import { isAwaitable } from "../engine/core/utils.ts";
 import { Route, Routes } from "../flags/audience.ts";
 import { isFreshCtx } from "../handlers/fresh.ts";
 import { observe } from "../observability/observe.ts";
-import { Flag, LiveState, RouterContext } from "../types.ts";
+import { DecoState, DecoSiteState } from "../types.ts";
 
 export interface SelectionConfig {
   audiences: Routes[];
@@ -62,18 +62,11 @@ export const router = (
     ) => {
       const ctx = { ...connInfo, params: (groups ?? {}) } as ConnInfo & {
         params: Record<string, string>;
-        state: {
-          routes: Route[];
-          routerInfo: RouterContext;
-          flags: Flag[];
-        };
+        state: DecoState;
       };
 
       ctx.state.routes = routes;
-      ctx.state.routerInfo = {
-        flags: ctx.state.flags,
-        pagePath: routePath,
-      };
+      ctx.state.pathTemplate = routePath;
 
       const resolvedOrPromise =
         isDeferred<Handler, { context: typeof ctx } & BaseContext>(handler)
@@ -170,7 +163,7 @@ export default function RoutesSelection(
   ctx: { get: ResolveFunc },
 ): Handler {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
-    const t = isFreshCtx<LiveState>(connInfo) ? connInfo.state.t : undefined;
+    const t = isFreshCtx<DecoSiteState>(connInfo) ? connInfo.state.t : undefined;
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
     const [routes, hrefRoutes] = buildRoutes(audiences);

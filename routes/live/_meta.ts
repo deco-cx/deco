@@ -9,7 +9,7 @@ import { namespaceOf } from "../../engine/schema/gen.ts";
 import { genSchemas } from "../../engine/schema/reader.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
-import { AppManifest, LiveConfig, LiveState } from "../../types.ts";
+import { AppManifest, DecoState, DecoSiteState } from "../../types.ts";
 import { resolvable } from "../../utils/admin.ts";
 import { allowCorsFor } from "../../utils/http.ts";
 
@@ -130,7 +130,7 @@ const sf = singleFlight<string>();
 const binaryId = context.deploymentId ?? crypto.randomUUID();
 export const handler = async (
   req: Request,
-  ctx: HandlerContext<unknown, LiveConfig<unknown, LiveState>>,
+  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
 ) => {
   const end = ctx.state.t?.start("fetch-revision");
   const revision = await ctx.state.release.revision();

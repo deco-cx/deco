@@ -9,8 +9,8 @@ import type { UnionToIntersection } from "../../../deps.ts";
 import type { Resolvable } from "../../../engine/core/resolver.ts";
 import type { PromiseOrValue } from "../../../engine/core/utils.ts";
 import dfs from "../../../engine/manifest/defaults.ts";
-import type { LiveConfig } from "../../../mod.ts";
-import type { LiveState } from "../../../types.ts";
+import type { DecoState } from "../../../mod.ts";
+import type { DecoSiteState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
 import type { DeepPick, DotNestedKeys } from "../../../utils/object.ts";
@@ -353,7 +353,7 @@ export const handler = async (
   req: Request,
   ctx: HandlerContext<
     unknown,
-    LiveConfig<unknown, LiveState>
+    DecoState<unknown, DecoSiteState>
   >,
 ): Promise<Response> => {
   const { state: { resolve } } = ctx;

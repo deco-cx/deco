@@ -1,5 +1,5 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { LiveConfig, LiveState } from "../../../types.ts";
+import { DecoState, DecoSiteState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
 import { InvokeFunction, payloadToResolvable } from "./index.ts";
@@ -8,7 +8,7 @@ export const handler = async (
   req: Request,
   ctx: HandlerContext<
     unknown,
-    LiveConfig<unknown, LiveState>
+    DecoState<unknown, DecoSiteState>
   >,
 ): Promise<Response> => {
   const props = req.method === "POST"

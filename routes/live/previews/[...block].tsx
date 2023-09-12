@@ -2,7 +2,7 @@ import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Page } from "../../../blocks/page.ts";
 import LiveAnalytics from "../../../components/LiveAnalytics.tsx";
 import Render from "../../../routes/[...catchall].tsx";
-import { LiveConfig, LiveState } from "../../../types.ts";
+import { DecoState, DecoSiteState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 
 const paramsFromUrl = (
@@ -52,7 +52,7 @@ export const handler = async (
   req: Request,
   ctx: HandlerContext<
     unknown,
-    LiveConfig<unknown, LiveState>
+    DecoState<unknown, DecoSiteState>
   >,
 ): Promise<Response> => {
   if (req.headers.get("upgrade") != "websocket") {
@@ -95,7 +95,7 @@ export const render = async (
   req: Request,
   ctx: HandlerContext<
     unknown,
-    LiveConfig<unknown, LiveState>
+    DecoState<unknown, DecoSiteState>
   >,
 ) => {
   const { state: { resolve } } = ctx;

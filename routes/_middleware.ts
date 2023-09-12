@@ -11,7 +11,8 @@ import { Resolvable } from "../engine/core/resolver.ts";
 import defaults from "../engine/manifest/defaults.ts";
 import { context } from "../live.ts";
 import { AppManifest, Apps } from "../mod.ts";
-import { LiveConfig, LiveState } from "../types.ts";
+import { startObserve } from "../observability/http.ts";
+import { DecoState, DecoSiteState } from "../types.ts";
 import { isAdmin } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
@@ -45,140 +46,149 @@ const isAdminOrLocalhost = (req: Request): boolean => {
   return isOnAdmin || isLocalhost;
 };
 
-export const handler = async (
+export const handler = [async (
   req: Request,
-  ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
+  ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
 ) => {
   const begin = performance.now();
   const url = new URL(req.url);
-  let initialResponse: Response | null = null;
+  const end = startObserve();
+  let response: Response | null = null;
   try {
-    ctx.state.site = {
-      id: context.siteId,
-      name: context.site,
-    };
-
-    // FIXME (mcandeia) compatibility only.
-    if (
-      url.searchParams.has("editorData") &&
-      !url.pathname.startsWith("/live/editorData")
-    ) {
-      url.pathname = "/live/editorData";
-      url.searchParams.set("forceFresh", "");
-      return redirectTo(url);
-    }
-
-    if (url.pathname.startsWith("/_live/workbench")) {
-      url.pathname = "/live/workbench";
-      return redirectTo(url);
-    }
-
-    if (
-      !url.pathname.startsWith("/live/previews") &&
-      url.searchParams.has("pageId") &&
-      !url.searchParams.has("editorData")
-    ) {
-      return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
-    }
-
-    const response = { headers: new Headers(defaultHeaders) };
-    const state = ctx.state?.$live?.state ?? {};
-    state.response = response;
-    state.flags = [];
-    Object.assign(ctx.state, state);
-    ctx.state.global = { ...ctx.state.global ?? {}, ...state }; // compatibility mode with functions.
-
-    const apps = ctx?.state?.$live?.apps;
-    if (Array.isArray(apps)) {
-      const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
-        let [manifest, sourceMap] = [
-          context.manifest!,
-          buildSourceMap(context.manifest!),
-        ];
-        for (const app of apps) {
-          manifest = mergeManifests(
-            manifest,
-            app.manifest,
-          );
-          sourceMap = { ...sourceMap, ...app.sourceMap };
-        }
-        return [manifest, sourceMap];
-      };
-      const [manifest, sourceMap] = await ctx.state.resolve<
-        [AppManifest, SourceMap]
-      >({
-        func: buildManifest,
-        __resolveType: defaults["once"].name,
-      });
-      ctx.state.manifest = manifest;
-      ctx.state.sourceMap = { ...sourceMap, ...ctx?.state?.sourceMap ?? {} };
-    } else {
-      ctx.state.manifest = context.manifest!;
-    }
-
-    const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
-      isAdminOrLocalhost(req);
-    initialResponse = shouldAllowCorsForOptions
-      ? new Response()
-      : await ctx.next();
-
-    // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-    if (req.headers.get("upgrade") === "websocket") {
-      return initialResponse;
-    }
-    const newHeaders = new Headers(initialResponse.headers);
-    if (
-      (url.pathname.startsWith("/live/previews") &&
-        url.searchParams.has("mode") &&
-        url.searchParams.get("mode") == "showcase") ||
-      url.pathname.startsWith("/_frsh/") || shouldAllowCorsForOptions
-    ) {
-      Object.entries(allowCorsFor(req)).map(([name, value]) => {
-        newHeaders.set(name, value);
-      });
-    }
-    response.headers.forEach((value, key) => newHeaders.append(key, value));
-    const printTimings = ctx?.state?.t?.printTimings;
-    printTimings && newHeaders.set("Server-Timing", printTimings());
-
-    if (
-      url.pathname.startsWith("/_frsh/") &&
-      [400, 404, 500].includes(initialResponse.status)
-    ) {
-      newHeaders.set("Cache-Control", "no-cache, no-store, private");
-    }
-
-    // if there's no set cookie it means that none unstable matcher was evaluated
-    if (
-      Object.keys(getSetCookies(newHeaders)).length === 0 &&
-      Deno.env.has("DECO_ANONYMOUS_CACHE")
-    ) {
-      newHeaders.set("cache-control", "public, max-age=10");
-    }
-
-    for (const flag of state?.flags ?? []) {
-      newHeaders.append(
-        DECO_MATCHER_HEADER_QS,
-        `${flag.name}=${flag.value ? 1 : 0}`,
-      );
-    }
-
-    const newResponse = new Response(initialResponse.body, {
-      status: initialResponse.status,
-      headers: newHeaders,
-    });
-
-    return newResponse;
+    return response = await ctx.next();
   } finally {
-    // TODO: print these on debug mode when there's debug mode.
+    if (ctx?.state?.pathTemplate) {
+      end(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
+    }
     if (!url.pathname.startsWith("/_frsh")) {
       console.info(
         formatLog({
-          status: initialResponse?.status ?? 500,
+          status: response?.status ?? 500,
           url,
           begin,
         }),
       );
     }
   }
-};
+}, async (
+  req: Request,
+  ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
+) => {
+  const url = new URL(req.url);
+  ctx.state.site = {
+    id: context.siteId,
+    name: context.site,
+  };
+
+  // FIXME (mcandeia) compatibility only.
+  if (
+    url.searchParams.has("editorData") &&
+    !url.pathname.startsWith("/live/editorData")
+  ) {
+    url.pathname = "/live/editorData";
+    url.searchParams.set("forceFresh", "");
+    return redirectTo(url);
+  }
+
+  if (url.pathname.startsWith("/_live/workbench")) {
+    url.pathname = "/live/workbench";
+    return redirectTo(url);
+  }
+
+  if (
+    !url.pathname.startsWith("/live/previews") &&
+    url.searchParams.has("pageId") &&
+    !url.searchParams.has("editorData")
+  ) {
+    return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
+  }
+
+  const response = { headers: new Headers(defaultHeaders) };
+  const state = ctx.state?.$live?.state ?? {};
+  state.response = response;
+  state.flags = [];
+  Object.assign(ctx.state, state);
+  ctx.state.global = { ...ctx.state.global ?? {}, ...state }; // compatibility mode with functions.
+
+  const apps = ctx?.state?.$live?.apps;
+  if (Array.isArray(apps)) {
+    const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
+      let [manifest, sourceMap] = [
+        context.manifest!,
+        buildSourceMap(context.manifest!),
+      ];
+      for (const app of apps) {
+        manifest = mergeManifests(
+          manifest,
+          app.manifest,
+        );
+        sourceMap = { ...sourceMap, ...app.sourceMap };
+      }
+      return [manifest, sourceMap];
+    };
+    const [manifest, sourceMap] = await ctx.state.resolve<
+      [AppManifest, SourceMap]
+    >({
+      func: buildManifest,
+      __resolveType: defaults["once"].name,
+    });
+    ctx.state.manifest = manifest;
+    ctx.state.sourceMap = { ...sourceMap, ...ctx?.state?.sourceMap ?? {} };
+  } else {
+    ctx.state.manifest = context.manifest!;
+  }
+
+  const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
+    isAdminOrLocalhost(req);
+  const initialResponse = shouldAllowCorsForOptions
+    ? new Response()
+    : await ctx.next();
+
+  // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
+  if (req.headers.get("upgrade") === "websocket") {
+    return initialResponse;
+  }
+  const newHeaders = new Headers(initialResponse.headers);
+  if (
+    (url.pathname.startsWith("/live/previews") &&
+      url.searchParams.has("mode") &&
+      url.searchParams.get("mode") == "showcase") ||
+    url.pathname.startsWith("/_frsh/") || shouldAllowCorsForOptions
+  ) {
+    Object.entries(allowCorsFor(req)).map(([name, value]) => {
+      newHeaders.set(name, value);
+    });
+  }
+  response.headers.forEach((value, key) => newHeaders.append(key, value));
+  const printTimings = ctx?.state?.t?.printTimings;
+  printTimings && newHeaders.set("Server-Timing", printTimings());
+
+  if (
+    url.pathname.startsWith("/_frsh/") &&
+    [400, 404, 500].includes(initialResponse.status)
+  ) {
+    newHeaders.set("Cache-Control", "no-cache, no-store, private");
+  }
+
+  // if there's no set cookie it means that none unstable matcher was evaluated
+  if (
+    Object.keys(getSetCookies(newHeaders)).length === 0 &&
+    Deno.env.has("DECO_ANONYMOUS_CACHE")
+  ) {
+    newHeaders.set("cache-control", "public, max-age=10");
+  }
+
+  for (const flag of state?.flags ?? []) {
+    newHeaders.append(
+      DECO_MATCHER_HEADER_QS,
+      `${flag.name}=${flag.value ? 1 : 0}`,
+    );
+  }
+
+  const newResponse = new Response(initialResponse.body, {
+    status: initialResponse.status,
+    headers: newHeaders,
+  });
+
+  return newResponse;
+}];

@@ -14,7 +14,7 @@ import { integrityCheck } from "../../engine/integrity.ts";
 import defaultResolvers from "../../engine/manifest/defaults.ts";
 import { getComposedConfigStore } from "../../engine/releases/provider.ts";
 import { context } from "../../live.ts";
-import { LiveConfig } from "../../types.ts";
+import { DecoState } from "../../types.ts";
 
 import { parse } from "std/flags/mod.ts";
 import { AppManifest } from "../../blocks/app.ts";
@@ -31,12 +31,12 @@ export type FreshHandler<
   Resp = Response,
 > = (
   request: Request,
-  ctx: HandlerContext<TData, LiveConfig<TState, TConfig>>,
+  ctx: HandlerContext<TData, DecoState<TState, TConfig>>,
 ) => PromiseOrValue<Resp>;
 
 export interface FreshContext<Data = any, State = any, TConfig = any>
   extends BaseContext {
-  context: HandlerContext<Data, LiveConfig<State, TConfig>>;
+  context: HandlerContext<Data, DecoState<State, TConfig>>;
   request: Request;
 }
 

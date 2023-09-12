@@ -1,7 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { Page } from "../blocks/page.ts";
-import { RouterContext } from "../types.ts";
+import { DecoState } from "../types.ts";
 import { allowCorsFor } from "../utils/http.ts";
 
 /**
@@ -27,8 +27,14 @@ export default function Fresh(page: FreshConfig) {
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page, { headers: allowCorsFor(req) });
     }
-    if (isFreshCtx<{ routerInfo: RouterContext }>(ctx)) {
-      return await ctx.render({ ...page, routerInfo: ctx.state.routerInfo });
+    if (isFreshCtx<DecoState>(ctx)) {
+      return await ctx.render({
+        ...page,
+        routerInfo: {
+          flags: ctx.state.flags,
+          pagePath: ctx.state.pathTemplate,
+        },
+      });
     }
     return Response.json({ message: "Fresh is not being used" }, {
       status: 500,

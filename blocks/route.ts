@@ -27,7 +27,7 @@ import {
   payloadForFunc,
 } from "../routes/live/invoke/index.ts";
 import { setLogger } from "../runtime/fetch/fetchLog.ts";
-import { AppManifest, DecoManifest, LiveConfig, LiveState } from "../types.ts";
+import { AppManifest, DecoManifest, DecoState, DecoSiteState } from "../types.ts";
 import { formatIncomingRequest } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
 import { SourceMap } from "./app.ts";
@@ -159,7 +159,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
 ) =>
   async function (
     request: Request,
-    context: MiddlewareHandlerContext<LiveConfig<any, LiveState, TManifest>>,
+    context: MiddlewareHandlerContext<DecoState<any, DecoSiteState, TManifest>>,
   ) {
     context.state.sourceMap ??= sourceMap;
     const { enabled, action } = debug.fromRequest(request);
@@ -253,10 +253,10 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     return resp;
   };
 const mapMiddleware = (
-  mid: MiddlewareHandler<LiveConfig<any, LiveState>> | MiddlewareHandler<
-    LiveConfig<any, LiveState>
+  mid: MiddlewareHandler<DecoState<any, DecoSiteState>> | MiddlewareHandler<
+    DecoState<any, DecoSiteState>
   >[],
-): MiddlewareHandler<LiveConfig<any, LiveState>>[] => {
+): MiddlewareHandler<DecoState<any, DecoSiteState>>[] => {
   return [buildDecoState(middlewareKey), ...Array.isArray(mid) ? mid : [mid]];
 };
 
@@ -268,7 +268,7 @@ export const injectLiveStateForPath = (
     return mapObjKeys(handlers, (val) => {
       return withErrorHandler(path, async function (
         request: Request,
-        context: HandlerContext<any, LiveConfig<any, LiveState>>,
+        context: HandlerContext<any, DecoState<any, DecoSiteState>>,
       ) {
         const $live = await context?.state?.resolve?.(
           indexTsxToCatchAll[path] ?? path,
@@ -282,7 +282,7 @@ export const injectLiveStateForPath = (
   }
   return withErrorHandler(path, async function (
     request: Request,
-    context: HandlerContext<any, LiveConfig<any, LiveState>>,
+    context: HandlerContext<any, DecoState<any, DecoSiteState>>,
   ) {
     const $live = (await context?.state?.resolve?.(
       indexTsxToCatchAll[path] ?? path,
@@ -302,7 +302,7 @@ export type Route<TProps = any> = ComponentFunc<PageProps<TProps>>;
 export interface RouteMod extends BlockModule {
   handler?: (
     request: Request,
-    context: HandlerContext<any, LiveConfig>,
+    context: HandlerContext<any, DecoState>,
   ) => Promise<Response>;
   default: Route;
 }
@@ -316,7 +316,7 @@ const routeBlock: Block<RouteMod> = {
         handler: mapMiddleware(
           (routeModule as unknown as MiddlewareModule)
             .handler as MiddlewareHandler<
-              LiveConfig<any, LiveState>
+              DecoState<any, DecoSiteState>
             >,
         ),
       };

@@ -25,15 +25,15 @@ import { ResolveFunc } from "./engine/core/resolver.ts";
 import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { Route } from "./flags/audience.ts";
-import { createServerTimings } from "./utils/timings.ts";
 import type { InvocationProxy } from "./routes/live/invoke/index.ts";
+import { createServerTimings } from "./utils/timings.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams,
+  ErrorBoundaryParams
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 
-export type { App } from "./blocks/app.ts";
+  export type { App } from "./blocks/app.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
@@ -67,7 +67,7 @@ export interface SiteInfo {
   namespace: string;
 }
 
-export type LiveState<T = unknown> = {
+export type DecoSiteState<T = unknown> = {
   site: Site;
   t: ReturnType<typeof createServerTimings>;
   global: T;
@@ -78,17 +78,12 @@ export interface Flag {
   value: boolean;
 }
 
-export type RouterContext = {
-  flags: Flag[];
-  pagePath: string;
-};
-
 export interface StatefulContext<T> {
   params: Record<string, string>;
   state: T;
 }
 
-export type LiveConfig<
+export type DecoState<
   TConfig = any,
   TState = {},
   TManifest extends AppManifest = AppManifest,
@@ -106,6 +101,8 @@ export type LiveConfig<
       >
       & InvocationFunc<TManifest>;
     routes?: Route[];
+    flags: Flag[];
+    pathTemplate: string;
     manifest: TManifest;
     sourceMap: SourceMap;
   };
@@ -123,7 +120,7 @@ export type LoaderContext<
 > = FnContext<TState, TManifest>;
 
 export type FunctionContext<TProps = any, TState = {}> = StatefulContext<
-  LiveConfig<TProps, TState>
+  DecoState<TProps, TState>
 >;
 
 export type LoaderFunction<Props = any, Data = any, State = any> = (
