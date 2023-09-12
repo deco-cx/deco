@@ -37,11 +37,11 @@ const handlerBlock: Block<BlockModule<HandlerFunc>> = {
   >(func: {
     default: HandlerFunc<TConfig, TState>;
   }) =>
-  (
+  async (
     $live: TConfig,
     ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
   ) => {
-    return func.default($live, fnContextFromHttpContext(ctx));
+    return await func.default($live, fnContextFromHttpContext(ctx));
   },
 };
 

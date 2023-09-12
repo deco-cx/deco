@@ -107,7 +107,7 @@ export const newSupabase = (
         { state: {}, archived: {}, revision: crypto.randomUUID() };
 
       const currentRevision = currResolvables.then((r) => r.revision).catch(
-        () => "unknown"
+        () => "unknown",
       );
       currResolvables = Promise.resolve(
         resolvables,
