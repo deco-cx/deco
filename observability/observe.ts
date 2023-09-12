@@ -1,15 +1,7 @@
 import { isWrappedError } from "../blocks/loader.ts";
-import meta from "../meta.json" assert { type: "json" };
-import { context } from "../mod.ts";
 import { shouldCollectMetrics } from "../observability/metrics.ts";
 import { client } from "./client.ts";
-
-const defaultLabels = [
-  "deployment_id",
-  "site",
-  "deco_ver",
-  "apps_ver",
-];
+import { defaultLabels, defaultLabelsValues } from "./labels.ts";
 
 const opLabels = [
   "op",
@@ -69,17 +61,6 @@ const operationDuration = new client.Histogram({
   labelNames: opLabels,
 });
 
-const tryGetVersionOf = (pkg: string) => {
-  try {
-    const [_, ver] = import.meta.resolve(pkg).split("@");
-    return ver.substring(0, ver.length - 1);
-  } catch {
-    return undefined;
-  }
-};
-const apps_ver = tryGetVersionOf("apps/") ??
-  tryGetVersionOf("deco-sites/std/") ?? "_";
-
 /**
  * TODO (mcandeia) currently Deno deploy does not return valid values for this.
  * Collects the current memory usage.
@@ -89,22 +70,32 @@ export const collectMemoryUsage = () => {
     .systemMemoryInfo();
 
   for (const memKey of systemMemoryToBeCollected) {
-    systemMemoryGauges[memKey]?.set({
-      deployment_id: context.deploymentId,
-      site: context.site,
-      deco_ver: meta.version,
-      apps_ver,
-    }, systemMemoryInfo[memKey]);
+    systemMemoryGauges[memKey]?.set(
+      defaultLabelsValues,
+      systemMemoryInfo[memKey],
+    );
   }
   const memoryUsage = Deno.memoryUsage();
   for (const memKey of memoryInfoToBeCollected) {
-    memoryGauges[memKey]?.set({
-      deployment_id: context.deploymentId,
-      site: context.site,
-      deco_ver: meta.version,
-      apps_ver,
-    }, memoryUsage[memKey]);
+    memoryGauges[memKey]?.set(defaultLabelsValues, memoryUsage[memKey]);
   }
+};
+
+/**
+ * @returns a end function that when gets called observe the duration of the operation.
+ */
+export const startMeasure = () => {
+  const start = performance.now();
+  return (op: string, err: unknown | null) => {
+    observe(
+      op,
+      () =>
+        new Promise<void>((resolve, reject) =>
+          err === null ? resolve() : reject(err)
+        ),
+      start,
+    );
+  };
 };
 /**
  * Observe function durations based on the provided labels
@@ -112,11 +103,12 @@ export const collectMemoryUsage = () => {
 export const observe = async <T>(
   op: string,
   f: () => Promise<T>,
+  optStart?: number,
 ): Promise<T> => {
   if (!shouldCollectMetrics) {
     return f();
   }
-  const start = performance.now();
+  const start = optStart ?? performance.now();
   let isError = "false";
   try {
     return await f().then((resp) => {
@@ -132,10 +124,7 @@ export const observe = async <T>(
     operationDuration.labels({
       op,
       is_error: isError,
-      deployment_id: context.deploymentId ?? Deno.hostname(),
-      site: context.site,
-      deco_ver: meta.version,
-      apps_ver,
+      ...defaultLabelsValues,
     }).observe(
       performance.now() - start,
     );

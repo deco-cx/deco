@@ -11,6 +11,7 @@ import { Resolvable } from "../engine/core/resolver.ts";
 import defaults from "../engine/manifest/defaults.ts";
 import { context } from "../live.ts";
 import { AppManifest, Apps } from "../mod.ts";
+import { startObserve } from "../observability/http.ts";
 import { LiveConfig, LiveState } from "../types.ts";
 import { isAdmin } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
@@ -49,17 +50,16 @@ export const handler = [async (
   req: Request,
   ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
 ) => {
-  return await ctx.next();
-}, async (
-  req: Request,
-  ctx: MiddlewareHandlerContext<LiveConfig<MiddlewareConfig, LiveState>>,
-) => {
   const begin = performance.now();
   const url = new URL(req.url);
+  const end = startObserve();
   let response: Response | null = null;
   try {
     return response = await ctx.next();
   } finally {
+    if (ctx?.state?.pathTemplate) {
+      end(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
+    }
     if (!url.pathname.startsWith("/_frsh")) {
       console.info(
         formatLog({
