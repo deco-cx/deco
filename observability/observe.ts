@@ -82,33 +82,16 @@ export const collectMemoryUsage = () => {
 };
 
 /**
- * @returns a end function that when gets called observe the duration of the operation.
- */
-export const startMeasure = () => {
-  const start = performance.now();
-  return (op: string, err: unknown | null) => {
-    observe(
-      op,
-      () =>
-        new Promise<void>((resolve, reject) =>
-          err === null ? resolve() : reject(err)
-        ),
-      start,
-    );
-  };
-};
-/**
  * Observe function durations based on the provided labels
  */
 export const observe = async <T>(
   op: string,
   f: () => Promise<T>,
-  optStart?: number,
 ): Promise<T> => {
   if (!shouldCollectMetrics) {
     return f();
   }
-  const start = optStart ?? performance.now();
+  const start = performance.now();
   let isError = "false";
   try {
     return await f().then((resp) => {
