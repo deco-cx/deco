@@ -2,15 +2,15 @@ import { ConnInfo, Handler } from "std/http/server.ts";
 import { ResolveOptions } from "../engine/core/mod.ts";
 import {
   BaseContext,
-  isDeferred,
   Resolvable,
   ResolveFunc,
+  isDeferred,
 } from "../engine/core/resolver.ts";
 import { isAwaitable } from "../engine/core/utils.ts";
 import { Route, Routes } from "../flags/audience.ts";
 import { isFreshCtx } from "../handlers/fresh.ts";
 import { observe } from "../observability/observe.ts";
-import { Flag, LiveState, RouterContext } from "../types.ts";
+import { LiveConfig, LiveState } from "../types.ts";
 
 export interface SelectionConfig {
   audiences: Routes[];
@@ -62,18 +62,11 @@ export const router = (
     ) => {
       const ctx = { ...connInfo, params: (groups ?? {}) } as ConnInfo & {
         params: Record<string, string>;
-        state: {
-          routes: Route[];
-          routerInfo: RouterContext;
-          flags: Flag[];
-        };
+        state: LiveConfig;
       };
 
       ctx.state.routes = routes;
-      ctx.state.routerInfo = {
-        flags: ctx.state.flags,
-        pagePath: routePath,
-      };
+      ctx.state.pathTemplate = routePath;
 
       const resolvedOrPromise =
         isDeferred<Handler, { context: typeof ctx } & BaseContext>(handler)

@@ -78,11 +78,6 @@ export interface Flag {
   value: boolean;
 }
 
-export type RouterContext = {
-  flags: Flag[];
-  pagePath: string;
-};
-
 export interface StatefulContext<T> {
   params: Record<string, string>;
   state: T;
@@ -106,6 +101,8 @@ export type LiveConfig<
       >
       & InvocationFunc<TManifest>;
     routes?: Route[];
+    flags: Flag[];
+    pathTemplate: string;
     manifest: TManifest;
     sourceMap: SourceMap;
   };
