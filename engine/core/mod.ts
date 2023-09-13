@@ -15,15 +15,16 @@ import { once, SyncOnce } from "../../utils/sync.ts";
 import { ResolvableMap } from "./resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
-  resolvers: ResolverMap<TContext>;
+  getResolvers: () => Promise<ResolverMap<TContext>>;
   release: Release;
   danglingRecover?: Resolver;
   resolvables?: ResolvableMap;
 }
 
 export interface ExtensionOptions<TContext extends BaseContext = BaseContext>
-  extends Omit<ResolverOptions<TContext>, "release"> {
+  extends Omit<ResolverOptions<TContext>, "release" | "getResolvers"> {
   release?: Release;
+  resolvers?: ResolverMap<TContext>;
 }
 
 export interface ResolveOptions {
@@ -47,6 +48,7 @@ const withOverrides = (
 
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected release: Release;
+  protected _getResolvers: () => Promise<ResolverMap<TContext>>;
   protected resolvers: ResolverMap<TContext>;
   protected resolvables?: ResolvableMap;
   protected danglingRecover?: Resolver;
@@ -57,8 +59,9 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     hints?: ResolveHints,
     oncePerRelease?: Record<string, SyncOnce<any>>,
   ) {
-    this.resolvers = config.resolvers;
+    this._getResolvers = config.getResolvers;
     this.release = config.release;
+    this.resolvers = {};
     this.resolvables = config.resolvables;
     this.danglingRecover = config.danglingRecover;
     this.resolveHints = hints ?? {};
@@ -74,7 +77,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       {
         resolvables: { ...this.resolvables },
         release: this.release,
-        resolvers: { ...this.resolvers },
+        getResolvers: async () => ({ ...await this.getResolvers() }),
         danglingRecover: this.danglingRecover?.bind(this),
       },
       this.resolveHints,
@@ -98,14 +101,18 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     return new ReleaseResolver<TContext>({
       resolvables: { ...this.resolvables, ...resolvables },
       release: this.release,
-      resolvers: { ...this.resolvers, ...resolvers },
+      getResolvers: async () => {
+        const _resolvers = await this.getResolvers();
+        return { ...resolvers, ..._resolvers };
+      },
       danglingRecover: this.danglingRecover?.bind(this),
     }, this.resolveHints);
   };
 
-  public getResolvers(): ResolverMap<BaseContext> {
+  public async getResolvers(): Promise<ResolverMap<BaseContext>> {
     return {
       ...this.resolvers,
+      ...await this._getResolvers(),
       resolve: function _resolve(obj: any, { resolve }: BaseContext) {
         return resolve(obj);
       },
@@ -139,7 +146,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ...resolvables,
       ...(this.resolvables ?? {}),
     });
-    const resolvers = this.getResolvers();
+    const resolvers = await this.getResolvers();
     const currentOnce = this.runOncePerRelease;
     const baseCtx: BaseContext<TContext> = {
       danglingRecover: this.danglingRecover,

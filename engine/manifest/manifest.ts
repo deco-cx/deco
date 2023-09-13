@@ -20,9 +20,19 @@ import { context } from "../../live.ts";
 import { DecoState } from "../../types.ts";
 
 import { parse } from "std/flags/mod.ts";
-import { AppManifest } from "../../blocks/app.ts";
+import {
+  AppManifest,
+  AppRuntime,
+  mergeManifests,
+  mergeRuntimes,
+} from "../../blocks/app.ts";
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import { SiteInfo } from "../../types.ts";
+import defaults from "./defaults.ts";
+import { buildSourceMap } from "../../blocks/utils.tsx";
+import { deferred } from "std/async/deferred.ts";
+import { buildSourceMap } from "../../blocks/utils";
+
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
@@ -81,6 +91,93 @@ const siteName = (): string | undefined => {
   return siteName ?? context.namespace!;
 };
 
+export const installApps = <T extends AppManifest>(
+  m: T,
+  site?: string,
+  release: Release | undefined = undefined,
+): T => {
+  const currentSite = site ?? siteName();
+  if (!currentSite) {
+    throw new Error(
+      `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
+    );
+  }
+  context.namespace ??= `deco-sites/${currentSite}`;
+  context.site = currentSite;
+  const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
+    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
+    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
+  );
+  const provider = release ?? getComposedConfigStore(
+    context.namespace!,
+    context.site,
+    context.siteId,
+  );
+  const manifestPromise = deferred();
+  const sourceMapPromise = deferred();
+  context.release = provider;
+  let currResolvers: Promise<ResolverMap<FreshContext>> = Promise.resolve(
+    resolvers,
+  );
+  const resolver = new ReleaseResolver<FreshContext>({
+    getResolvers: () =>
+      currResolvers.then((current) => ({ ...current, ...defaultResolvers })),
+    release: provider,
+    danglingRecover: recovers.length > 0
+      ? buildDanglingRecover(recovers)
+      : undefined,
+  });
+  provider.onChange(() => {
+    resolver.resolve<{ apps: AppRuntime[] }>({
+      __resolveType: defaults["bootstrap"].name,
+    }, {
+      request: new Request("http://localhost:8000"),
+      context: {
+        state: {},
+        params: {},
+        render: () => new Response(null),
+        renderNotFound: () => new Response(null),
+        remoteAddr: { hostname: "", port: 0, transport: "tcp" },
+      },
+    }).then(({ apps }) => {
+      if (!apps || apps.length === 0) {
+        manifestPromise.resolve(newManifest);
+        sourceMapPromise.resolve(buildSourceMap(newManifest));
+        return;
+      }
+      const { manifest, sourceMap, resolvers, resolvables } = apps
+        .reduce(
+          mergeRuntimes,
+        );
+      // for who is awaiting for the previous promise
+      manifestPromise.resolve(manifest);
+      sourceMapPromise.resolve(sourceMap);
+      resolver.extend({ resolvables, resolvers });
+      currResolvers = Promise.resolve(resolvers);
+      context.manifest = Promise.resolve(manifest);
+      context.sourceMap = Promise.resolve(sourceMap);
+    });
+  });
+
+  if (shouldCheckIntegrity) {
+    provider.state().then(
+      (resolvables: Record<string, Resolvable>) => {
+        resolver.getResolvers().then((resolvers) => {
+          integrityCheck(resolvers, resolvables);
+        });
+      },
+    );
+  }
+  // should be set first
+  context.releaseResolver = resolver;
+  context.manifest = newManifest;
+  console.log(
+    `Starting deco: site=${context.site}`,
+  );
+
+  return context.manifest as T;
+};
+
 export const $live = <T extends AppManifest>(
   m: T,
   siteInfo?: SiteInfo,
@@ -107,7 +204,7 @@ export const $live = <T extends AppManifest>(
   );
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
+    getResolvers: { ...resolvers, ...defaultResolvers },
     release: provider,
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
@@ -125,7 +222,9 @@ export const $live = <T extends AppManifest>(
   context.releaseResolver = resolver;
   context.manifest = newManifest;
   console.log(
-    `Starting live: siteId=${context.siteId} site=${context.site}`,
+    `Starting deco: ${
+      context.siteId === -1 ? "" : `siteId=${context.siteId}`
+    } site=${context.site}`,
   );
 
   return context.manifest as T;
