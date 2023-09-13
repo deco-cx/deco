@@ -57,9 +57,12 @@ const isTSXFile = (section: string) => section.endsWith(".tsx");
 export const isGlobalSection = (section: string) =>
   section.endsWith(".global.tsx");
 
-export const getWorkbenchTree = (state: Record<string, string>): Node[] => {
+export const getWorkbenchTree = async (
+  state: Record<string, string>,
+): Promise<Node[]> => {
+  const manifest = await context.manifest!;
   const { blocks: { sections: _ignore, ...rest } } = toManifestBlocks(
-    context.manifest!,
+    manifest,
   );
 
   const nodes: Node[] = [];
@@ -71,7 +74,7 @@ export const getWorkbenchTree = (state: Record<string, string>): Node[] => {
       children: Object.keys(blockValues).map(mapSectionToNode(state)),
     });
   }
-  const sections = context.manifest?.sections ?? {};
+  const sections = manifest.sections ?? {};
 
   const tsxFileSections = Object
     .keys(sections)
@@ -110,7 +113,7 @@ export const handler = async (req: Request) => {
     }
   }
 
-  return new Response(JSON.stringify(getWorkbenchTree(stateIndexed)), {
+  return new Response(JSON.stringify(await getWorkbenchTree(stateIndexed)), {
     status: 200,
     headers: {
       "content-type": "application/json",

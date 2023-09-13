@@ -13,7 +13,6 @@ import {
 } from "../../engine/core/utils.ts";
 import { identity } from "../../utils/object.ts";
 import { createServerTimings } from "../../utils/timings.ts";
-import { ExtensionOptions } from "./mod.ts";
 
 export class DanglingReference extends Error {
   public resolverType: string;
@@ -37,11 +36,7 @@ export interface Monitoring {
   observe: ObserveFunc;
 }
 
-export type ExtensionFunc<TContext extends BaseContext = BaseContext> = (
-  opts: ExtensionOptions<TContext>,
-) => void;
-
-export interface BaseContext<TContext extends BaseContext = any> {
+export interface BaseContext {
   resolveChain: FieldResolver[];
   resolveId: string;
   resolve: ResolveFunc;
@@ -50,7 +45,6 @@ export interface BaseContext<TContext extends BaseContext = any> {
   resolvers: Record<string, Resolver>;
   danglingRecover?: Resolver;
   resolveHints: ResolveHints;
-  extend: ExtensionFunc<TContext>;
   runOnce: <T>(key: string, f: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
 

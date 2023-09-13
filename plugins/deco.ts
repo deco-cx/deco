@@ -1,10 +1,9 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
-import defaults from "../engine/manifest/defaults.ts";
 import { newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
-import { $live, AppManifest, SiteInfo } from "../mod.ts";
+import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
 import { collectPromMetrics } from "../observability/metrics.ts";
 import {
   default as Render,
@@ -38,13 +37,14 @@ export default function decoPlugin(opt?: Options): Plugin {
     const releaseProvider = opt?.useLocalStorageOnly
       ? newFsProvider()
       : opt.release;
-    $live(
+    createResolver(
       {
         baseUrl: opt.manifest.baseUrl,
         name: opt.manifest.name,
         apps: { ...opt.manifest.apps },
       },
-      opt.site,
+      opt.manifest.name,
+      opt.sourceMap,
       releaseProvider,
     );
   }
@@ -56,12 +56,7 @@ export default function decoPlugin(opt?: Options): Plugin {
         middleware: {
           handler: [
             buildDecoState(
-              opt
-                ? {
-                  __resolveType: defaults["bootstrap"].name,
-                }
-                : "./routes/_middleware.ts",
-              opt?.sourceMap,
+              opt ? undefined : "./routes/_middleware.ts",
             ),
             ...decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],

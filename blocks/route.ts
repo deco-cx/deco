@@ -16,7 +16,6 @@ import {
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
-import { Resolvable } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
@@ -35,7 +34,6 @@ import {
 } from "../types.ts";
 import { formatIncomingRequest } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
-import { SourceMap } from "./app.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -159,14 +157,12 @@ const debug = {
 };
 
 export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
-  resolveKey: string | Resolvable,
-  sourceMap: SourceMap = {},
+  resolveKey: string | undefined,
 ) =>
   async function (
     request: Request,
     context: MiddlewareHandlerContext<DecoState<any, DecoSiteState, TManifest>>,
   ) {
-    context.state.sourceMap ??= sourceMap;
     const { enabled, action } = debug.fromRequest(request);
 
     if (enabled) {
@@ -213,16 +209,18 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       context.destination !== "internal" && context.destination !== "static"
     ) {
       const endTiming = context?.state?.t?.start("load-page");
-      const $live = (await ctxResolver(
-        resolveKey,
-        {
-          forceFresh: !isLiveMeta && (
-            !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
-            url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
-          ),
-          nullIfDangling: true,
-        },
-      )) ?? {};
+      const $live = resolveKey
+        ? (await ctxResolver(
+          resolveKey,
+          {
+            forceFresh: !isLiveMeta && (
+              !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
+              url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+            ),
+            nullIfDangling: true,
+          },
+        )) ?? {}
+        : {};
 
       endTiming?.();
       context.state.$live = $live;

@@ -19,19 +19,19 @@ import {
 import { context } from "../../live.ts";
 import { DecoState } from "../../types.ts";
 
+import { deferred } from "std/async/deferred.ts";
 import { parse } from "std/flags/mod.ts";
 import {
   AppManifest,
   AppRuntime,
-  mergeManifests,
   mergeRuntimes,
+  SourceMap,
 } from "../../blocks/app.ts";
 import { buildRuntime } from "../../blocks/appsUtil.ts";
-import { SiteInfo } from "../../types.ts";
-import defaults from "./defaults.ts";
 import { buildSourceMap } from "../../blocks/utils.tsx";
-import { deferred } from "std/async/deferred.ts";
-import { buildSourceMap } from "../../blocks/utils";
+import { SiteInfo } from "../../types.ts";
+import { ReleaseExtensions } from "../core/mod.ts";
+import defaults from "./defaults.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
@@ -91,12 +91,14 @@ const siteName = (): string | undefined => {
   return siteName ?? context.namespace!;
 };
 
-export const installApps = <T extends AppManifest>(
+export const createResolver = <T extends AppManifest>(
   m: T,
-  site?: string,
+  namespace?: string,
+  currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
-): T => {
-  const currentSite = site ?? siteName();
+) => {
+  context.namespace ??= namespace;
+  const currentSite = siteName();
   if (!currentSite) {
     throw new Error(
       `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
@@ -113,15 +115,23 @@ export const installApps = <T extends AppManifest>(
     context.site,
     context.siteId,
   );
-  const manifestPromise = deferred();
-  const sourceMapPromise = deferred();
+  const manifestPromise = deferred<AppManifest>();
+  context.manifest = manifestPromise;
+
+  const sourceMapPromise = deferred<SourceMap>();
+  context.sourceMap = sourceMapPromise;
+
   context.release = provider;
-  let currResolvers: Promise<ResolverMap<FreshContext>> = Promise.resolve(
-    resolvers,
-  );
+  let currExtensions: Promise<ReleaseExtensions<FreshContext>> = Promise
+    .resolve(
+      { resolvers, resolvables: {} },
+    );
   const resolver = new ReleaseResolver<FreshContext>({
-    getResolvers: () =>
-      currResolvers.then((current) => ({ ...current, ...defaultResolvers })),
+    loadExtensions: () =>
+      currExtensions.then((current) => ({
+        ...current,
+        resolvers: { ...current.resolvers, ...defaultResolvers },
+      })),
     release: provider,
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
@@ -142,20 +152,30 @@ export const installApps = <T extends AppManifest>(
     }).then(({ apps }) => {
       if (!apps || apps.length === 0) {
         manifestPromise.resolve(newManifest);
-        sourceMapPromise.resolve(buildSourceMap(newManifest));
+        sourceMapPromise.resolve({
+          ...buildSourceMap(newManifest),
+          ...currSourceMap ?? {},
+        });
         return;
       }
-      const { manifest, sourceMap, resolvers, resolvables } = apps
+      const { manifest, sourceMap, resolvers, resolvables = {} } = apps
         .reduce(
           mergeRuntimes,
         );
       // for who is awaiting for the previous promise
-      manifestPromise.resolve(manifest);
-      sourceMapPromise.resolve(sourceMap);
-      resolver.extend({ resolvables, resolvers });
-      currResolvers = Promise.resolve(resolvers);
+      const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
+      if (manifestPromise.state !== "fulfilled") {
+        manifestPromise.resolve(manifest);
+      }
+      if (sourceMapPromise.state !== "fulfilled") {
+        sourceMapPromise.resolve(mSourceMap);
+      }
+      currExtensions = Promise.resolve({
+        resolvers,
+        resolvables,
+      });
       context.manifest = Promise.resolve(manifest);
-      context.sourceMap = Promise.resolve(sourceMap);
+      context.sourceMap = Promise.resolve(mSourceMap);
     });
   });
 
@@ -170,12 +190,10 @@ export const installApps = <T extends AppManifest>(
   }
   // should be set first
   context.releaseResolver = resolver;
-  context.manifest = newManifest;
   console.log(
     `Starting deco: site=${context.site}`,
   );
-
-  return context.manifest as T;
+  return resolver;
 };
 
 export const $live = <T extends AppManifest>(
@@ -204,28 +222,25 @@ export const $live = <T extends AppManifest>(
   );
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
-    getResolvers: { ...resolvers, ...defaultResolvers },
+    loadExtensions: () =>
+      Promise.resolve({
+        resolvers: { ...resolvers, ...defaultResolvers },
+        resolvables: {},
+      }),
     release: provider,
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,
   });
 
-  if (shouldCheckIntegrity) {
-    provider.state().then(
-      (resolvables: Record<string, Resolvable>) => {
-        integrityCheck(resolver.getResolvers(), resolvables);
-      },
-    );
-  }
   // should be set first
   context.releaseResolver = resolver;
-  context.manifest = newManifest;
+  context.manifest = Promise.resolve(newManifest);
   console.log(
     `Starting deco: ${
       context.siteId === -1 ? "" : `siteId=${context.siteId}`
     } site=${context.site}`,
   );
 
-  return context.manifest as T;
+  return newManifest as T;
 };

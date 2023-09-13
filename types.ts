@@ -7,7 +7,6 @@ import appBlock, {
   AppManifest,
   AppModule,
   AppRuntime,
-  SourceMap,
 } from "./blocks/app.ts";
 import flagBlock from "./blocks/flag.ts";
 import functionBlock from "./blocks/function.ts";
@@ -103,8 +102,6 @@ export type DecoState<
     routes?: Route[];
     flags: Flag[];
     pathTemplate: string;
-    manifest: TManifest;
-    sourceMap: SourceMap;
   };
 
 export type { PropsLoader } from "./blocks/propsLoader.ts";
