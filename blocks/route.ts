@@ -157,7 +157,7 @@ const debug = {
 };
 
 export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
-  resolveKey: string | undefined,
+  resolveKeyOrInstallPromise: string | Promise<void>,
 ) =>
   async function (
     request: Request,
@@ -209,9 +209,9 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       context.destination !== "internal" && context.destination !== "static"
     ) {
       const endTiming = context?.state?.t?.start("load-page");
-      const $live = resolveKey
+      const $live = typeof resolveKeyOrInstallPromise === "string"
         ? (await ctxResolver(
-          resolveKey,
+          resolveKeyOrInstallPromise,
           {
             forceFresh: !isLiveMeta && (
               !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
@@ -220,7 +220,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
             nullIfDangling: true,
           },
         )) ?? {}
-        : {};
+        : await resolveKeyOrInstallPromise.then(() => ({}));
 
       endTiming?.();
       context.state.$live = $live;

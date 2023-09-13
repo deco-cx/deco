@@ -33,11 +33,12 @@ export interface Options<TManifest extends AppManifest = AppManifest> {
 }
 export default function decoPlugin(opt?: Options): Plugin {
   collectPromMetrics();
+  let buildDecoStateMiddl = buildDecoState("./routes/_middleware.ts");
   if (opt) {
     const releaseProvider = opt?.useLocalStorageOnly
       ? newFsProvider()
       : opt.release;
-    createResolver(
+    buildDecoStateMiddl = buildDecoState(createResolver(
       {
         baseUrl: opt.manifest.baseUrl,
         name: opt.manifest.name,
@@ -46,7 +47,7 @@ export default function decoPlugin(opt?: Options): Plugin {
       opt.manifest.name,
       opt.sourceMap,
       releaseProvider,
-    );
+    ));
   }
   return {
     name: "deco",
@@ -55,9 +56,7 @@ export default function decoPlugin(opt?: Options): Plugin {
         path: "/",
         middleware: {
           handler: [
-            buildDecoState(
-              opt ? undefined : "./routes/_middleware.ts",
-            ),
+            buildDecoStateMiddl,
             ...decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],
         },

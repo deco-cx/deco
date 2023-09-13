@@ -23,6 +23,9 @@ export default {
   resolvables: function resolvables(_props, { resolvables }) {
     return resolvables;
   },
+  resolvers: function resolvers(_props, { resolvers }) {
+    return resolvers;
+  },
   once: function once({ key, func }, { runOnce }) {
     return runOnce(func.name ?? key, func);
   },
@@ -84,7 +87,10 @@ export default {
         }
       }
       // firstPass => nullIfDangling
-      await resolve({ apps }, { nullIfDangling: true, propagateOptions: true });
+      await resolve({ apps }, {
+        nullIfDangling: true,
+        propagateOptions: true,
+      });
 
       return resolve({ apps });
     });

@@ -5,6 +5,7 @@ import { ReleaseResolver } from "../../engine/core/mod.ts";
 import {
   BaseContext,
   DanglingReference,
+  isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
@@ -96,7 +97,7 @@ export const createResolver = <T extends AppManifest>(
   namespace?: string,
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
-) => {
+): Promise<void> => {
   context.namespace ??= namespace;
   const currentSite = siteName();
   if (!currentSite) {
@@ -128,55 +129,125 @@ export const createResolver = <T extends AppManifest>(
     );
   const resolver = new ReleaseResolver<FreshContext>({
     loadExtensions: () =>
-      currExtensions.then((current) => ({
-        ...current,
-        resolvers: { ...current.resolvers, ...defaultResolvers },
-      })),
+      currExtensions.then((current) => {
+        return ({
+          ...current,
+          resolvers: { ...current.resolvers, ...defaultResolvers },
+        });
+      }),
     release: provider,
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
       : undefined,
   });
-  provider.onChange(() => {
-    resolver.resolve<{ apps: AppRuntime[] }>({
-      __resolveType: defaults["bootstrap"].name,
-    }, {
+  const installAppsPromise = deferred<void>();
+  const installApps = async () => {
+    const fakeCtx = {
       request: new Request("http://localhost:8000"),
       context: {
         state: {},
         params: {},
         render: () => new Response(null),
         renderNotFound: () => new Response(null),
-        remoteAddr: { hostname: "", port: 0, transport: "tcp" },
+        remoteAddr: { hostname: "", port: 0, transport: "tcp" as const },
       },
-    }).then(({ apps }) => {
-      if (!apps || apps.length === 0) {
-        manifestPromise.resolve(newManifest);
-        sourceMapPromise.resolve({
-          ...buildSourceMap(newManifest),
-          ...currSourceMap ?? {},
-        });
-        return;
+    };
+    const appsMap: Record<string, Resolvable> = {};
+    let currentResolver = resolver;
+    while (true) {
+      const [currResolvers, currResolvables] = await Promise.all([
+        currentResolver.resolve<ResolverMap>({
+          __resolveType: defaults["resolvers"].name,
+        }, fakeCtx),
+        currentResolver.resolve<ResolverMap>({
+          __resolveType: defaults["resolvables"].name,
+        }, fakeCtx),
+      ]);
+      let atLeastOneNewApp = false;
+      for (const [key, value] of Object.entries(currResolvables)) {
+        if (!isResolvable(value)) {
+          continue;
+        }
+        let resolver: Resolver | undefined = undefined;
+        let currentResolveType = value.__resolveType;
+        while (true) {
+          resolver = currResolvers[currentResolveType];
+          if (resolver !== undefined) {
+            break;
+          }
+          const resolvable = currResolvables[currentResolveType];
+          if (!resolvable || !isResolvable(resolvable)) {
+            break;
+          }
+          currentResolveType = resolvable.__resolveType;
+        }
+        if (
+          resolver !== undefined && resolver.type === "apps" &&
+          !(key in appsMap)
+        ) {
+          appsMap[key] = value;
+          atLeastOneNewApp = true;
+        }
       }
-      const { manifest, sourceMap, resolvers, resolvables = {} } = apps
+      if (!atLeastOneNewApp) {
+        break;
+      }
+
+      const apps = Object.values(appsMap);
+      const { apps: installedApps } = await resolver.resolve<
+        { apps: AppRuntime[] }
+      >({ apps }, fakeCtx, {
+        nullIfDangling: true,
+        propagateOptions: true,
+      });
+      const { resolvers, resolvables = {} } = installedApps.filter(Boolean)
         .reduce(
           mergeRuntimes,
         );
-      // for who is awaiting for the previous promise
-      const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
-      if (manifestPromise.state !== "fulfilled") {
-        manifestPromise.resolve(manifest);
-      }
-      if (sourceMapPromise.state !== "fulfilled") {
-        sourceMapPromise.resolve(mSourceMap);
-      }
-      currExtensions = Promise.resolve({
-        resolvers,
-        resolvables,
+      currentResolver = resolver.with({ resolvers, resolvables });
+    }
+    const apps = Object.values(appsMap);
+    if (!apps || apps.length === 0) {
+      manifestPromise.resolve(newManifest);
+      sourceMapPromise.resolve({
+        ...buildSourceMap(newManifest),
+        ...currSourceMap ?? {},
       });
-      context.manifest = Promise.resolve(manifest);
-      context.sourceMap = Promise.resolve(mSourceMap);
+      return;
+    }
+    // firstPass => nullIfDangling
+    const { apps: installedApps } = await currentResolver.resolve<
+      { apps: AppRuntime[] }
+    >({ apps }, fakeCtx, {
+      nullIfDangling: true,
+      propagateOptions: true,
     });
+    const { manifest, sourceMap, resolvers, resolvables = {} } = installedApps
+      .reduce(
+        mergeRuntimes,
+      );
+    // for who is awaiting for the previous promise
+    const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
+    if (manifestPromise.state !== "fulfilled") {
+      manifestPromise.resolve(manifest);
+    }
+    if (sourceMapPromise.state !== "fulfilled") {
+      sourceMapPromise.resolve(mSourceMap);
+    }
+
+    currExtensions = Promise.resolve({
+      resolvers,
+      resolvables,
+    });
+    context.manifest = Promise.resolve(manifest);
+    context.sourceMap = Promise.resolve(mSourceMap);
+    installAppsPromise.resolve();
+  };
+  provider.onChange(() => {
+    installApps();
+  });
+  provider.state().then(() => {
+    installApps();
   });
 
   if (shouldCheckIntegrity) {
@@ -193,7 +264,7 @@ export const createResolver = <T extends AppManifest>(
   console.log(
     `Starting deco: site=${context.site}`,
   );
-  return resolver;
+  return installAppsPromise;
 };
 
 export const $live = <T extends AppManifest>(

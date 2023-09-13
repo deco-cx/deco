@@ -23,12 +23,16 @@ export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   release: Release;
   danglingRecover?: Resolver;
   resolvables?: ResolvableMap;
+  resolvers?: ResolverMap<TContext>;
 }
 
 export interface ExtensionOptions<TContext extends BaseContext = BaseContext>
-  extends Omit<ResolverOptions<TContext>, "release" | "getResolvers"> {
+  extends
+    Omit<
+      ResolverOptions<TContext>,
+      "release" | "getResolvers" | "loadExtensions"
+    > {
   release?: Release;
-  resolvers?: ResolverMap<TContext>;
 }
 
 export interface ResolveOptions {
@@ -65,7 +69,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   ) {
     this.loadExtensions = config.loadExtensions;
     this.release = config.release;
-    this.resolvers = {};
+    this.resolvers = config.resolvers ?? {};
     this.resolvables = config.resolvables;
     this.danglingRecover = config.danglingRecover;
     this.resolveHints = hints ?? {};
@@ -76,12 +80,22 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     });
   }
 
-  public extend = (
+  public with = (
     { resolvers, resolvables }: ExtensionOptions<TContext>,
-  ) => {
-    this.resolvables = { ...this.resolvables, ...resolvables };
-    this.resolvers = { ...this.resolvers, ...resolvers };
-  };
+  ): ReleaseResolver<TContext> =>
+    new ReleaseResolver<TContext>(
+      {
+        loadExtensions: this.loadExtensions.bind(this),
+        release: this.release,
+        danglingRecover: this.danglingRecover,
+        resolvables: { ...this.resolvables, ...resolvables },
+        resolvers: { ...this.resolvers, ...resolvers },
+      },
+      { ...this.resolveHints },
+      {
+        ...this.runOncePerRelease,
+      },
+    );
 
   public async getResolvers(): Promise<ResolverMap<BaseContext>> {
     const { resolvers } = await this.loadExtensions();
@@ -114,11 +128,14 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
+    const { resolvables: extResolvers } = await this.loadExtensions();
+
     const resolvables = await this.release.state({
       forceFresh: options?.forceFresh,
     });
     const nresolvables = withOverrides(options?.overrides, {
       ...resolvables,
+      ...extResolvers,
       ...(this.resolvables ?? {}),
     });
     const resolvers = await this.getResolvers();
