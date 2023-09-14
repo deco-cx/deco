@@ -237,9 +237,9 @@ export const createResolver = <T extends AppManifest>(
     // limiter to not allow multiple installations in parallel
     Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
       appsInstallationMutex = deferred();
-      installApps().then(appsInstallationMutex.resolve).catch(
-        appsInstallationMutex.reject,
-      );
+      // installApps should never block next install as the first install is the only that really matters.
+      // so we should resolve to let next install happen immediately
+      installApps().finally(appsInstallationMutex.resolve);
     });
   });
   provider.state().then(() => {
