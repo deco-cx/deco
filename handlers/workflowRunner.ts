@@ -3,7 +3,7 @@ import { Handler } from "../blocks/handler.ts";
 import { Workflow, WorkflowContext } from "../blocks/workflow.ts";
 import { workflowHTTPHandler } from "../deps.ts";
 import type { Manifest } from "../live.gen.ts";
-import { DecoState, DecoSiteState } from "../mod.ts";
+import { DecoSiteState, DecoState } from "../mod.ts";
 import { isFreshCtx } from "./fresh.ts";
 export interface Config {
   workflow: Workflow;

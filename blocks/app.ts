@@ -11,7 +11,6 @@ import {
 } from "../engine/block.ts";
 import {
   BaseContext,
-  ExtensionFunc,
   ResolvableMap,
   ResolverMap,
 } from "../engine/core/resolver.ts";
@@ -261,17 +260,15 @@ const injectAppStateOnInlineLoader = <TState = any>(
   };
 };
 
-const buildApp = (extend: ExtensionFunc) =>
-<TState = {}>(
+const buildApp = <TState = {}>(
   appRuntime: AppRuntime | App<any, TState>,
 ): AppRuntime => {
   const runtime = isAppRuntime(appRuntime)
     ? appRuntime
     : buildRuntimeFromApp<TState>(appRuntime);
   const dependencies: AppRuntime[] = (runtime.dependencies ?? []).map(
-    buildApp(extend),
+    buildApp,
   );
-  extend(runtime);
   return dependencies.reduce(
     mergeRuntimes,
     runtime,
@@ -285,11 +282,10 @@ const appBlock: Block<AppModule> = {
   >(
     { default: runtimeFn }: AppModule<TState, TProps>,
   ) =>
-  (props: TProps, ctx: BaseContext) => {
+  (props: TProps) => {
     try {
       const appRuntime = runtimeFn(props);
-      const buildAppWith = buildApp(ctx.extend);
-      return buildAppWith(appRuntime);
+      return buildApp(appRuntime);
     } catch (err) {
       console.log(
         "error when building app runtime, falling back to an empty runtime",

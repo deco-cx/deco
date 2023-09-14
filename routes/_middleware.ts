@@ -1,18 +1,15 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { getSetCookies } from "std/http/mod.ts";
-import { mergeManifests, SourceMap } from "../blocks/app.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { buildSourceMap } from "../blocks/utils.tsx";
 import {
   getPagePathTemplate,
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
-import defaults from "../engine/manifest/defaults.ts";
 import { context } from "../live.ts";
-import { AppManifest, Apps } from "../mod.ts";
+import { Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
-import { DecoState, DecoSiteState } from "../types.ts";
+import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdmin } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
@@ -109,34 +106,6 @@ export const handler = [async (
   state.flags = [];
   Object.assign(ctx.state, state);
   ctx.state.global = { ...ctx.state.global ?? {}, ...state }; // compatibility mode with functions.
-
-  const apps = ctx?.state?.$live?.apps;
-  if (Array.isArray(apps)) {
-    const buildManifest = function buildManifest(): [AppManifest, SourceMap] {
-      let [manifest, sourceMap] = [
-        context.manifest!,
-        buildSourceMap(context.manifest!),
-      ];
-      for (const app of apps) {
-        manifest = mergeManifests(
-          manifest,
-          app.manifest,
-        );
-        sourceMap = { ...sourceMap, ...app.sourceMap };
-      }
-      return [manifest, sourceMap];
-    };
-    const [manifest, sourceMap] = await ctx.state.resolve<
-      [AppManifest, SourceMap]
-    >({
-      func: buildManifest,
-      __resolveType: defaults["once"].name,
-    });
-    ctx.state.manifest = manifest;
-    ctx.state.sourceMap = { ...sourceMap, ...ctx?.state?.sourceMap ?? {} };
-  } else {
-    ctx.state.manifest = context.manifest!;
-  }
 
   const shouldAllowCorsForOptions = (req.method === "OPTIONS") &&
     isAdminOrLocalhost(req);

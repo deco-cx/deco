@@ -7,7 +7,6 @@ import appBlock, {
   AppManifest,
   AppModule,
   AppRuntime,
-  SourceMap,
 } from "./blocks/app.ts";
 import flagBlock from "./blocks/flag.ts";
 import functionBlock from "./blocks/function.ts";
@@ -29,11 +28,11 @@ import type { InvocationProxy } from "./routes/live/invoke/index.ts";
 import { createServerTimings } from "./utils/timings.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams
+  ErrorBoundaryParams,
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 
-  export type { App } from "./blocks/app.ts";
+export type { App } from "./blocks/app.ts";
 
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
@@ -103,8 +102,6 @@ export type DecoState<
     routes?: Route[];
     flags: Flag[];
     pathTemplate: string;
-    manifest: TManifest;
-    sourceMap: SourceMap;
   };
 
 export type { PropsLoader } from "./blocks/propsLoader.ts";

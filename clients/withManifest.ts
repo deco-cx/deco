@@ -19,6 +19,10 @@ import { InvokeAwaiter } from "../routes/live/invoke/index.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import { InvocationProxyHandler, newHandler } from "./proxy.ts";
 
+export interface InvokerRequestInit extends RequestInit {
+  fetcher?: typeof fetch;
+}
+
 export type GenericFunction = (...args: any[]) => Promise<any>;
 
 export const isStreamProps = <TProps>(
@@ -63,7 +67,7 @@ export async function* readFromStream<T>(
 const fetchWithProps = async (
   url: string,
   props: unknown,
-  init?: RequestInit | undefined,
+  init?: InvokerRequestInit | undefined,
 ) => {
   if (!IS_BROWSER) {
     console.warn(
@@ -79,7 +83,7 @@ const fetchWithProps = async (
   );
   headers.set("content-type", "application/json");
 
-  const response = await fetch(url, {
+  const response = await (init?.fetcher ?? fetch)(url, {
     method: "POST",
     body: JSON.stringify(props),
     ...init,
@@ -114,10 +118,10 @@ const fetchWithProps = async (
 export const invokeKey = (
   key: string,
   props?: unknown,
-  init?: RequestInit | undefined,
+  init?: InvokerRequestInit | undefined,
 ) => fetchWithProps(`/live/invoke/${key}`, props, init);
 
-const batchInvoke = (payload: unknown, init?: RequestInit | undefined) =>
+const batchInvoke = (payload: unknown, init?: InvokerRequestInit | undefined) =>
   fetchWithProps(`/live/invoke`, payload, init);
 
 export type InvocationFunc<TManifest extends AppManifest> = <
@@ -194,7 +198,7 @@ const isInvokeAwaiter = <
  */
 export const invoke = <
   TManifest extends AppManifest,
->() =>
+>(fetcher?: typeof fetch) =>
 <
   TInvocableKey extends
     | AvailableFunctions<TManifest>
@@ -217,7 +221,7 @@ export const invoke = <
     >,
 >(
   payload: TPayload,
-  init?: RequestInit | undefined,
+  init?: InvokerRequestInit | undefined,
 ): Promise<
   InvokeResult<
     TPayload,
@@ -236,9 +240,9 @@ export const invoke = <
         reqs[key] = val;
       }
     }
-    return batchInvoke(reqs, init);
+    return batchInvoke(reqs, { ...init ?? {}, fetcher });
   }
-  return batchInvoke(payload, init);
+  return batchInvoke(payload, { ...init ?? {}, fetcher });
 };
 
 export const create = <
@@ -260,7 +264,7 @@ export const create = <
 >(key: TInvocableKey) =>
 (
   props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-  init?: RequestInit | undefined,
+  init?: InvokerRequestInit | undefined,
 ): Promise<
   InvokeResult<
     TPayload,
@@ -315,10 +319,10 @@ export const proxyFor = <TManifest extends AppManifest>(
  */
 export const proxy = <
   TManifest extends AppManifest,
->(): InvocationProxyWithBatcher<
+>(fetcher?: typeof fetch): InvocationProxyWithBatcher<
   TManifest
 > => {
-  return proxyFor(invoke<TManifest>() as typeof batchInvoke);
+  return proxyFor(invoke<TManifest>(fetcher) as typeof batchInvoke);
 };
 
 /**

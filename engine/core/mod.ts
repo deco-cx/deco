@@ -15,14 +15,18 @@ import { once, SyncOnce } from "../../utils/sync.ts";
 import { ResolvableMap } from "./resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
-  resolvers: ResolverMap<TContext>;
   release: Release;
   danglingRecover?: Resolver;
   resolvables?: ResolvableMap;
+  resolvers?: ResolverMap<TContext>;
 }
 
 export interface ExtensionOptions<TContext extends BaseContext = BaseContext>
-  extends Omit<ResolverOptions<TContext>, "release"> {
+  extends
+    Omit<
+      ResolverOptions<TContext>,
+      "release" | "getResolvers" | "loadExtensions"
+    > {
   release?: Release;
 }
 
@@ -57,8 +61,8 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     hints?: ResolveHints,
     oncePerRelease?: Record<string, SyncOnce<any>>,
   ) {
-    this.resolvers = config.resolvers;
     this.release = config.release;
+    this.resolvers = config.resolvers ?? {};
     this.resolvables = config.resolvables;
     this.danglingRecover = config.danglingRecover;
     this.resolveHints = hints ?? {};
@@ -69,39 +73,21 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     });
   }
 
-  public clone = () => {
-    return new ReleaseResolver<TContext>(
-      {
-        resolvables: { ...this.resolvables },
-        release: this.release,
-        resolvers: { ...this.resolvers },
-        danglingRecover: this.danglingRecover?.bind(this),
-      },
-      this.resolveHints,
-      this.runOncePerRelease,
-    );
-  };
-
-  public extend = (
-    { resolvers, resolvables }: ExtensionOptions<TContext>,
-  ) => {
-    this.resolvables = { ...this.resolvables, ...resolvables };
-    this.resolvers = { ...this.resolvers, ...resolvers };
-  };
-
   public with = (
-    { resolvers, resolvables }: {
-      resolvers: ResolverMap<TContext>;
-      resolvables?: ResolvableMap;
-    },
-  ) => {
-    return new ReleaseResolver<TContext>({
-      resolvables: { ...this.resolvables, ...resolvables },
-      release: this.release,
-      resolvers: { ...this.resolvers, ...resolvers },
-      danglingRecover: this.danglingRecover?.bind(this),
-    }, this.resolveHints);
-  };
+    { resolvers, resolvables }: ExtensionOptions<TContext>,
+  ): ReleaseResolver<TContext> =>
+    new ReleaseResolver<TContext>(
+      {
+        release: this.release,
+        danglingRecover: this.danglingRecover,
+        resolvables: { ...this.resolvables, ...resolvables },
+        resolvers: { ...this.resolvers, ...resolvers },
+      },
+      { ...this.resolveHints },
+      {
+        ...this.runOncePerRelease,
+      },
+    );
 
   public getResolvers(): ResolverMap<BaseContext> {
     return {
@@ -141,7 +127,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     });
     const resolvers = this.getResolvers();
     const currentOnce = this.runOncePerRelease;
-    const baseCtx: BaseContext<TContext> = {
+    const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
       resolveId: crypto.randomUUID(),
@@ -150,7 +136,6 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolvables: nresolvables,
       resolvers,
       monitoring: options?.monitoring,
-      extend: this.extend.bind(this),
       runOnce: (key, f) => {
         return (currentOnce[key] ??= once()).do(f);
       },

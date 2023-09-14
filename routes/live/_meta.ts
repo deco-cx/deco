@@ -9,7 +9,7 @@ import { namespaceOf } from "../../engine/schema/gen.ts";
 import { genSchemas } from "../../engine/schema/reader.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
-import { AppManifest, DecoState, DecoSiteState } from "../../types.ts";
+import { AppManifest, DecoSiteState, DecoState } from "../../types.ts";
 import { resolvable } from "../../utils/admin.ts";
 import { allowCorsFor } from "../../utils/http.ts";
 
@@ -142,9 +142,10 @@ export const handler = async (
   }
   const info = await sf.do("schema", async () => {
     if (revision !== latestRevision || mschema === null) {
+      const { manifest, sourceMap } = await context.runtime!;
       const endBuildSchema = ctx.state?.t?.start("build-resolvables");
       mschema = buildSchemaWithResolvables(
-        await genSchemas(ctx.state.manifest, ctx.state.sourceMap),
+        await genSchemas(manifest, sourceMap),
         {
           ...await ctx.state.resolve({
             __resolveType: defaults["resolvables"].name,
@@ -160,7 +161,9 @@ export const handler = async (
       version: meta.version,
       namespace: context.namespace!,
       site: context.site!,
-      manifest: toManifestBlocks(ctx.state.manifest),
+      manifest: toManifestBlocks(
+        await context.runtime!.then((r) => r.manifest),
+      ),
       schema: mschema,
     };
 

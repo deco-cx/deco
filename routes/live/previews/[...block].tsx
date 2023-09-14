@@ -2,7 +2,7 @@ import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { Page } from "../../../blocks/page.ts";
 import LiveAnalytics from "../../../components/LiveAnalytics.tsx";
 import Render from "../../../routes/[...catchall].tsx";
-import { DecoState, DecoSiteState } from "../../../types.ts";
+import { DecoSiteState, DecoState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 
 const paramsFromUrl = (

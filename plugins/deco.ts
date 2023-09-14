@@ -1,8 +1,9 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
-import defaults from "../engine/manifest/defaults.ts";
-import { $live, AppManifest, SiteInfo } from "../mod.ts";
+import { newFsProvider } from "../engine/releases/fs.ts";
+import { Release } from "../engine/releases/provider.ts";
+import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
 import { collectPromMetrics } from "../observability/metrics.ts";
 import {
   default as Render,
@@ -28,19 +29,25 @@ export interface Options<TManifest extends AppManifest = AppManifest> {
   sourceMap?: SourceMap;
   site?: SiteInfo;
   useLocalStorageOnly?: boolean;
+  release?: Release;
 }
 export default function decoPlugin(opt?: Options): Plugin {
   collectPromMetrics();
+  let buildDecoStateMiddl = buildDecoState("./routes/_middleware.ts");
   if (opt) {
-    $live(
+    const releaseProvider = opt?.useLocalStorageOnly
+      ? newFsProvider()
+      : opt.release;
+    buildDecoStateMiddl = buildDecoState(createResolver(
       {
         baseUrl: opt.manifest.baseUrl,
         name: opt.manifest.name,
         apps: { ...opt.manifest.apps },
       },
-      opt.site,
-      opt.useLocalStorageOnly,
-    );
+      opt.manifest.name,
+      opt.sourceMap,
+      releaseProvider,
+    ));
   }
   return {
     name: "deco",
@@ -49,14 +56,7 @@ export default function decoPlugin(opt?: Options): Plugin {
         path: "/",
         middleware: {
           handler: [
-            buildDecoState(
-              opt
-                ? {
-                  __resolveType: defaults["bootstrap"].name,
-                }
-                : "./routes/_middleware.ts",
-              opt?.sourceMap,
-            ),
+            buildDecoStateMiddl,
             ...decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],
         },

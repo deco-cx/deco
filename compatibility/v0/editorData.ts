@@ -86,8 +86,9 @@ export const redirectTo = (url: URL) =>
     },
   );
 
-function generateAvailableEntitiesFromManifest(schemas: Schemas) {
-  const availableSections = Object.keys(context.manifest?.sections || {}).map(
+async function generateAvailableEntitiesFromManifest(schemas: Schemas) {
+  const { manifest } = await context.runtime!;
+  const availableSections = Object.keys(manifest.sections || {}).map(
     (componentKey) => {
       const [input] = getInputAndOutputFromKey(schemas, componentKey);
       const label = filenameFromPath(componentKey);
@@ -104,9 +105,9 @@ function generateAvailableEntitiesFromManifest(schemas: Schemas) {
   );
 
   const availableFunctions = Object.keys({
-    ...context.manifest?.functions ?? {},
-    ...context.manifest?.matchers ?? {},
-    ...context.manifest?.loaders ?? {},
+    ...manifest.functions ?? {},
+    ...manifest.matchers ?? {},
+    ...manifest.loaders ?? {},
   }).map(
     (functionKey) => {
       const key = functionKey.replace("matchers", "functions");
@@ -251,7 +252,8 @@ const labelOf = (resolveType: string): string => {
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
-  const schema = await genSchemas(context.manifest!);
+  const { manifest } = await context.runtime!;
+  const schema = await genSchemas(manifest);
 
   const allPages = await pages();
   const defaultPage: Pick<Page, "sections" | "state" | "name"> = {
@@ -352,7 +354,9 @@ export const generateEditorData = async (
   );
 
   const { availableFunctions, availableSections } =
-    generateAvailableEntitiesFromManifest(schema);
+    await generateAvailableEntitiesFromManifest(
+      schema,
+    );
   return {
     state: page?.state,
     pageName: page.name,

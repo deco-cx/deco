@@ -5,7 +5,7 @@ import { ConnInfo } from "std/http/server.ts";
 import { Handler } from "../blocks/handler.ts";
 import { Page } from "../blocks/page.ts";
 import { PageContext } from "../engine/block.ts";
-import { Flag, DecoState, DecoSiteState } from "../types.ts";
+import { DecoSiteState, DecoState, Flag } from "../types.ts";
 import { setCSPHeaders } from "../utils/http.ts";
 
 export interface RouterContext {
