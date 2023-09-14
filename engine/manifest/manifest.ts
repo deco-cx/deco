@@ -22,7 +22,7 @@ import { DecoState } from "../../types.ts";
 
 import { deferred } from "std/async/deferred.ts";
 import { parse } from "std/flags/mod.ts";
-import { green } from "std/fmt/colors.ts";
+import { gray, green } from "std/fmt/colors.ts";
 import {
   AppManifest,
   AppRuntime,
@@ -143,9 +143,10 @@ export const createResolver = <T extends AppManifest>(
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
     const fakeCtx = newFakeContext();
-    const appsMap: Record<string, Resolvable> = {};
+    const allAppsMap: Record<string, Resolvable> = {};
     let currentResolver = resolver;
     while (true) {
+      const currentApps: Record<string, Resolvable> = {};
       const { resolvers: currResolvers, resolvables: currResolvables } =
         await currentResolver.resolve<
           { resolvers: ResolverMap; resolvables: Record<string, Resolvable> }
@@ -153,7 +154,6 @@ export const createResolver = <T extends AppManifest>(
           __resolveType: defaults["state"].name,
         }, fakeCtx);
 
-      let atLeastOneNewApp = false;
       for (const [key, value] of Object.entries(currResolvables)) {
         if (!isResolvable(value)) {
           continue;
@@ -173,17 +173,17 @@ export const createResolver = <T extends AppManifest>(
         }
         if (
           resolver !== undefined && resolver.type === "apps" &&
-          !(key in appsMap)
+          !(key in allAppsMap)
         ) {
-          appsMap[key] = value;
-          atLeastOneNewApp = true;
+          allAppsMap[key] = value;
+          currentApps[key] = value;
         }
       }
-      if (!atLeastOneNewApp) {
+      if (Object.keys(currentApps).length === 0) {
         break;
       }
 
-      const apps = Object.values(appsMap);
+      const apps = Object.values(currentApps);
       // first pass nullIfDangling
       const { apps: installedApps } = await currentResolver.resolve<
         { apps: AppRuntime[] }
@@ -197,7 +197,7 @@ export const createResolver = <T extends AppManifest>(
         );
       currentResolver = currentResolver.with({ resolvers, resolvables });
     }
-    const apps = Object.values(appsMap);
+    const apps = Object.values(allAppsMap);
     if (!apps || apps.length === 0) {
       runtimePromise.resolve({
         resolver: currentResolver,
@@ -207,6 +207,22 @@ export const createResolver = <T extends AppManifest>(
       firstInstallAppsPromise.resolve();
       return;
     }
+    const appNames = Object.keys(allAppsMap);
+    const longerName = appNames.reduce(
+      (currentLength, name) =>
+        currentLength > name.length ? currentLength : name.length,
+      0,
+    );
+
+    console.log(
+      `[${green(context.site)}]: installing ${
+        green(`${appNames.length}`)
+      } apps: ${
+        appNames.map((name) =>
+          `\n${green(name.padEnd(longerName))} - ${gray(allAppsMap[name].__resolveType)}`
+        ).join("")
+      }`,
+    );
     // firstPass => nullIfDangling
     const { apps: installedApps } = await currentResolver.resolve<
       { apps: AppRuntime[] }
@@ -258,7 +274,7 @@ export const createResolver = <T extends AppManifest>(
   const start = performance.now();
   return firstInstallAppsPromise.then(() => {
     console.log(
-      `[${green(context.site)}]: apps has been installed in ${
+      `[${green(context.site)}]: the apps has been installed in ${
         (performance.now() - start).toFixed(0)
       }ms`,
     );
