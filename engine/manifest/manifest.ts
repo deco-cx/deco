@@ -74,8 +74,8 @@ const newFakeContext = () => {
       renderNotFound: () => new Response(null),
       remoteAddr: { hostname: "", port: 0, transport: "tcp" as const },
     },
-  }
-}
+  };
+};
 export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   return (parent, ctx) => {
     const curr = ctx.resolveChain.findLast((r) => r.type === "dangling")?.value;
@@ -140,7 +140,7 @@ export const createResolver = <T extends AppManifest>(
       ? buildDanglingRecover(recovers)
       : undefined,
   });
-  const installAppsPromise = deferred<void>();
+  const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
     const fakeCtx = newFakeContext();
     const appsMap: Record<string, Resolvable> = {};
@@ -204,7 +204,7 @@ export const createResolver = <T extends AppManifest>(
         manifest: newManifest,
         sourceMap: currSourceMap ?? buildSourceMap(newManifest),
       });
-      installAppsPromise.resolve();
+      firstInstallAppsPromise.resolve();
       return;
     }
     // firstPass => nullIfDangling
@@ -230,14 +230,23 @@ export const createResolver = <T extends AppManifest>(
     }
 
     context.runtime = Promise.resolve(runtime);
-    installAppsPromise.resolve();
   };
+
+  let appsInstallationMutex = deferred();
   provider.onChange(() => {
-    installApps();
+    // limiter to not allow multiple installations in parallel
+    Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
+      appsInstallationMutex = deferred();
+      installApps().then(appsInstallationMutex.resolve).catch(
+        appsInstallationMutex.reject,
+      );
+    });
   });
   provider.state().then(() => {
-    installApps();
-  });
+    installApps().then(firstInstallAppsPromise.resolve).catch(
+      firstInstallAppsPromise.reject,
+    ).then(appsInstallationMutex.resolve);
+  }).catch(firstInstallAppsPromise.reject);
 
   if (shouldCheckIntegrity) {
     provider.state().then(
@@ -247,7 +256,7 @@ export const createResolver = <T extends AppManifest>(
     );
   }
   const start = performance.now();
-  return installAppsPromise.then(() => {
+  return firstInstallAppsPromise.then(() => {
     console.log(
       `[${green(context.site)}]: apps has been installed in ${
         (performance.now() - start).toFixed(0)

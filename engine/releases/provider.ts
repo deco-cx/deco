@@ -2,7 +2,6 @@ import { Resolvable } from "../../engine/core/resolver.ts";
 import { fromPagesTable } from "../../engine/releases/pages.ts";
 import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
-import { context } from "../../live.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
 import { newSupabase } from "./supabaseProvider.ts";
@@ -107,10 +106,10 @@ export const getComposedConfigStore = (
   }
 
   if (siteId > 0) {
-    providers.push(newSupabase(fromPagesTable(siteId, ns), context.isDeploy)); // if not deploy so no background is needed
+    providers.push(newSupabase(fromPagesTable(siteId, ns), true)); // if not deploy so no background is needed
   }
 
-  providers.push(newSupabase(fromConfigsTable(site), context.isDeploy)); // if not deploy so no background is needed
+  providers.push(newSupabase(fromConfigsTable(site), true)); // if not deploy so no background is needed
 
   if (Deno.env.has("USE_LOCAL_STORAGE")) {
     providers.push(newFsProvider());
