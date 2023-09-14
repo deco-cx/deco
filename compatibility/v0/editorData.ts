@@ -87,7 +87,7 @@ export const redirectTo = (url: URL) =>
   );
 
 async function generateAvailableEntitiesFromManifest(schemas: Schemas) {
-  const manifest = await context.manifest!;
+  const { manifest } = await context.runtime!;
   const availableSections = Object.keys(manifest.sections || {}).map(
     (componentKey) => {
       const [input] = getInputAndOutputFromKey(schemas, componentKey);
@@ -252,7 +252,8 @@ const labelOf = (resolveType: string): string => {
 export const generateEditorData = async (
   url: URL,
 ): Promise<EditorData> => {
-  const schema = await genSchemas(await context.manifest!);
+  const { manifest } = await context.runtime!;
+  const schema = await genSchemas(manifest);
 
   const allPages = await pages();
   const defaultPage: Pick<Page, "sections" | "state" | "name"> = {

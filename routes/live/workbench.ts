@@ -60,7 +60,7 @@ export const isGlobalSection = (section: string) =>
 export const getWorkbenchTree = async (
   state: Record<string, string>,
 ): Promise<Node[]> => {
-  const manifest = await context.manifest!;
+  const { manifest } = await context.runtime!;
   const { blocks: { sections: _ignore, ...rest } } = toManifestBlocks(
     manifest,
   );

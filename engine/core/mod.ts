@@ -14,12 +14,7 @@ import { Release } from "../../engine/releases/provider.ts";
 import { once, SyncOnce } from "../../utils/sync.ts";
 import { ResolvableMap } from "./resolver.ts";
 
-export interface ReleaseExtensions<TContext extends BaseContext = BaseContext> {
-  resolvers: ResolverMap<TContext>;
-  resolvables: ResolvableMap;
-}
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
-  loadExtensions: () => Promise<ReleaseExtensions<TContext>>;
   release: Release;
   danglingRecover?: Resolver;
   resolvables?: ResolvableMap;
@@ -56,7 +51,6 @@ const withOverrides = (
 
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected release: Release;
-  protected loadExtensions: () => Promise<ReleaseExtensions<TContext>>;
   protected resolvers: ResolverMap<TContext>;
   protected resolvables?: ResolvableMap;
   protected danglingRecover?: Resolver;
@@ -67,7 +61,6 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     hints?: ResolveHints,
     oncePerRelease?: Record<string, SyncOnce<any>>,
   ) {
-    this.loadExtensions = config.loadExtensions;
     this.release = config.release;
     this.resolvers = config.resolvers ?? {};
     this.resolvables = config.resolvables;
@@ -85,7 +78,6 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   ): ReleaseResolver<TContext> =>
     new ReleaseResolver<TContext>(
       {
-        loadExtensions: this.loadExtensions.bind(this),
         release: this.release,
         danglingRecover: this.danglingRecover,
         resolvables: { ...this.resolvables, ...resolvables },
@@ -97,11 +89,9 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       },
     );
 
-  public async getResolvers(): Promise<ResolverMap<BaseContext>> {
-    const { resolvers } = await this.loadExtensions();
+  public getResolvers(): ResolverMap<BaseContext> {
     return {
       ...this.resolvers,
-      ...resolvers,
       resolve: function _resolve(obj: any, { resolve }: BaseContext) {
         return resolve(obj);
       },
@@ -128,17 +118,14 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const { resolvables: extResolvers } = await this.loadExtensions();
-
     const resolvables = await this.release.state({
       forceFresh: options?.forceFresh,
     });
     const nresolvables = withOverrides(options?.overrides, {
       ...resolvables,
-      ...extResolvers,
       ...(this.resolvables ?? {}),
     });
-    const resolvers = await this.getResolvers();
+    const resolvers = this.getResolvers();
     const currentOnce = this.runOncePerRelease;
     const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,

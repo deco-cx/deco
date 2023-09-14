@@ -20,6 +20,12 @@ export interface BlockInvocation<TProps = any> {
   source?: "internal" | "external";
 }
 export default {
+  state: function state(_props, { resolvables, resolvers }) {
+    return {
+      resolvables,
+      resolvers,
+    };
+  },
   resolvables: function resolvables(_props, { resolvables }) {
     return resolvables;
   },
@@ -58,43 +64,6 @@ export default {
       }
       return blocks;
     });
-  },
-  bootstrap: function bootstrap(
-    _props,
-    { resolvables, resolve, runOnce, resolvers },
-  ) {
-    const apps = runOnce("bootstrap", async () => {
-      const apps: Resolvable[] = [];
-      for (const value of Object.values(resolvables)) {
-        if (!isResolvable(value)) {
-          continue;
-        }
-        let resolver: Resolver | undefined = undefined;
-        let currentResolveType = value.__resolveType;
-        while (true) {
-          resolver = resolvers[currentResolveType];
-          if (resolver !== undefined) {
-            break;
-          }
-          const resolvable = resolvables[currentResolveType];
-          if (!resolvable || !isResolvable(resolvable)) {
-            break;
-          }
-          currentResolveType = resolvable.__resolveType;
-        }
-        if (resolver !== undefined && resolver.type === "apps") {
-          apps.push(value);
-        }
-      }
-      // firstPass => nullIfDangling
-      await resolve({ apps }, {
-        nullIfDangling: true,
-        propagateOptions: true,
-      });
-
-      return resolve({ apps });
-    });
-    return apps;
   },
   selectKeys: function selectKeys<T>(
     { obj, keys }: { obj: T; keys: DotNestedKeys<T>[] },

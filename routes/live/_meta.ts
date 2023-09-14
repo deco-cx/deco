@@ -142,10 +142,7 @@ export const handler = async (
   }
   const info = await sf.do("schema", async () => {
     if (revision !== latestRevision || mschema === null) {
-      const [manifest, sourceMap] = await Promise.all([
-        context.manifest!,
-        context.sourceMap!,
-      ]);
+      const { manifest, sourceMap } = await context.runtime!;
       const endBuildSchema = ctx.state?.t?.start("build-resolvables");
       mschema = buildSchemaWithResolvables(
         await genSchemas(manifest, sourceMap),
@@ -164,7 +161,9 @@ export const handler = async (
       version: meta.version,
       namespace: context.namespace!,
       site: context.site!,
-      manifest: toManifestBlocks(await context.manifest!),
+      manifest: toManifestBlocks(
+        await context.runtime!.then((r) => r.manifest),
+      ),
       schema: mschema,
     };
 

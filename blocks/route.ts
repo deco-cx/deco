@@ -190,9 +190,15 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       });
     }
 
-    const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
+    if (!liveContext.runtime) {
+      console.error(
+        "live runtime is not present, the apps were properly installed?",
+      );
+      return context.next();
+    }
 
-    const resolver = liveContext.releaseResolver!;
+    const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
+    const { resolver } = await liveContext.runtime;
     const ctxResolver = resolver
       .resolverFor(
         { context, request },

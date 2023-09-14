@@ -9,20 +9,23 @@ import { ReleaseResolver } from "./engine/core/mod.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { AppManifest } from "./mod.ts";
 
+export interface DecoRuntimeState {
+  manifest: AppManifest;
+  // deno-lint-ignore no-explicit-any
+  resolver: ReleaseResolver<any>;
+  sourceMap: SourceMap;
+}
 // The global deco context
 export type DecoContext = {
-  manifest?: Promise<AppManifest>;
   deploymentId: string | undefined;
   isDeploy: boolean;
   site: string;
   siteId: number;
   loginUrl?: string;
   base?: string;
-  // deno-lint-ignore no-explicit-any
-  releaseResolver?: ReleaseResolver<any>;
   namespace?: string;
   release?: Release;
-  sourceMap?: Promise<SourceMap>;
+  runtime?: Promise<DecoRuntimeState>;
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
