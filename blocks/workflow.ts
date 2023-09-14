@@ -84,7 +84,7 @@ export class WorkflowContext<
 export type Workflow = InstanceOf<typeof workflowBlock, "#/root/workflows">;
 
 export type WorkflowFn<
-  TConfig = any,
+  TProps = any,
   // deno-lint-ignore ban-types
   TState = {},
   TArgs extends Arg = any,
@@ -93,26 +93,42 @@ export type WorkflowFn<
   TManifest extends AppManifest = any,
   TContext extends WorkflowContext<TManifest, TMetadata> = any,
 > = (
-  config: TConfig,
+  props: TProps,
   ctx: FnContext<TState, TManifest>,
 ) => DurableWorkflow<TArgs, TResp, TContext>;
 
+export type NamedWorkflow<
+  TProps = any,
+  TArgs extends Arg = Arg,
+  TResp = unknown,
+  TCtx extends WorkflowContext = WorkflowContext,
+> = DurableWorkflow<TArgs, TResp, TCtx> & {
+  key: string;
+  props: TProps;
+};
+
 const workflowBlock: Block<
-  BlockModule<WorkflowFn>
+  BlockModule<WorkflowFn, DurableWorkflow, NamedWorkflow>
 > = {
   type: "workflows",
   adapt: <
-    TConfig = any,
+    TProps = any,
     // deno-lint-ignore ban-types
     TState = {},
   >(func: {
-    default: WorkflowFn<TConfig, TState>;
-  }) =>
+    default: WorkflowFn<TProps, TState>;
+  }, key: string) =>
   (
-    $live: TConfig,
+    props: TProps,
     ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
   ) => {
-    return func.default($live, fnContextFromHttpContext(ctx));
+    const durableWorkflow = func.default(
+      props,
+      fnContextFromHttpContext(ctx),
+    ) as NamedWorkflow;
+    durableWorkflow.key = key;
+    durableWorkflow.props = props;
+    return durableWorkflow;
   },
 };
 

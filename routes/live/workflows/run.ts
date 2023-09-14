@@ -5,7 +5,6 @@ import { Workflow, WorkflowContext } from "../../../blocks/workflow.ts";
 import { initOnce } from "../../../commons/workflows/initialize.ts";
 import { WorkflowMetadata } from "../../../commons/workflows/types.ts";
 import {
-  Arg,
   arrToStream,
   Command,
   HttpRunRequest,
@@ -18,7 +17,7 @@ import { DecoState } from "../../../mod.ts";
 import { DecoSiteState } from "../../../types.ts";
 
 export type Props = HttpRunRequest<
-  Arg,
+  unknown[],
   unknown,
   { workflow: Workflow } & Metadata
 >;
