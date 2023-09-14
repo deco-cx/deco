@@ -157,7 +157,7 @@ const debug = {
 };
 
 export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
-  resolveKeyOrInstallPromise: string | Promise<void>,
+  resolveKeyOrInstallPromise: string | Promise<unknown>,
 ) =>
   async function (
     request: Request,

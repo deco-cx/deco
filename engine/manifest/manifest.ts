@@ -22,7 +22,7 @@ import { DecoState } from "../../types.ts";
 
 import { deferred } from "std/async/deferred.ts";
 import { parse } from "std/flags/mod.ts";
-import { gray, green } from "std/fmt/colors.ts";
+import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
 import {
   AppManifest,
   AppRuntime,
@@ -33,11 +33,18 @@ import { buildRuntime } from "../../blocks/appsUtil.ts";
 import { buildSourceMap } from "../../blocks/utils.tsx";
 import { SiteInfo } from "../../types.ts";
 import defaults from "./defaults.ts";
+import {
+  adjectives,
+  animals,
+  NumberDictionary,
+  uniqueNamesGenerator,
+} from "npm:unique-names-generator@4.7.1";
 
+const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
-
+const DECO_COLORS = 0x02f77d;
 export type FreshHandler<
   TConfig = any,
   TData = any,
@@ -105,18 +112,47 @@ const siteName = (): string | undefined => {
   return siteName ?? context.namespace!;
 };
 
-export const createResolver = <T extends AppManifest>(
+export const createResolver = <
+  T extends AppManifest,
+  TContext extends BaseContext = BaseContext,
+>(
   m: T,
-  namespace?: string,
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
-): Promise<void> => {
-  context.namespace ??= namespace;
-  const currentSite = siteName();
+): Promise<ReleaseResolver<TContext>> => {
+  let currentSite = siteName();
   if (!currentSite) {
-    throw new Error(
-      `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
+    if (context.isDeploy) {
+      throw new Error(
+        `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
+      );
+    }
+    currentSite = uniqueNamesGenerator({
+      dictionaries: [animals, adjectives, numberDictionary],
+      length: 3,
+      separator: "-",
+    });
+    console.debug(
+      `\n👋 Hey [${green(currentSite)}] welcome to ${
+        rgb24("deco.cx", DECO_COLORS)
+      }! Let's play?`,
     );
+    console.debug(
+      `📚 Explore our documentation at ${
+        underline(blue("https://deco.cx/docs"))
+      } to get started with deco.`,
+    );
+    console.debug(
+      `💬 Join our Discord community at ${
+        underline(blue("https://deco.cx/discord"))
+      } to connect with other deco enthusiasts.`,
+    );
+    console.debug(`🚀 Enter: ${
+      underline(rgb24(
+        "https://play.deco.cx?domain=http://localhost:8000",
+        DECO_COLORS,
+      ))
+    } and happy coding!\n\n`);
   }
   context.namespace ??= `deco-sites/${currentSite}`;
   context.site = currentSite;
@@ -280,6 +316,7 @@ export const createResolver = <T extends AppManifest>(
         (performance.now() - start).toFixed(0)
       }ms`,
     );
+    return runtimePromise.then((runtime) => runtime.resolver);
   });
 };
 
