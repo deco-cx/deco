@@ -219,7 +219,9 @@ export const createResolver = <T extends AppManifest>(
         green(`${appNames.length}`)
       } apps: ${
         appNames.map((name) =>
-          `\n${green(name.padEnd(longerName))} - ${gray(allAppsMap[name].__resolveType)}`
+          `\n${green(name.padEnd(longerName))} - ${
+            gray(allAppsMap[name].__resolveType)
+          }`
         ).join("")
       }`,
     );
