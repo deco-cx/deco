@@ -163,6 +163,7 @@ export const createResolver = <
       ))
     } and happy coding!\n\n`);
     release ??= newFsProvider(".release.json", m.name);
+    context.play = true;
   }
   context.namespace ??= `deco-sites/${currentSite}`;
   context.site = currentSite;

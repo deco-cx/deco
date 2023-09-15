@@ -26,6 +26,7 @@ export type DecoContext = {
   namespace?: string;
   release?: Release;
   runtime?: Promise<DecoRuntimeState>;
+  play?: boolean;
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -35,4 +36,5 @@ export const context: DecoContext = {
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
   siteId: 0,
+  play: false,
 };
