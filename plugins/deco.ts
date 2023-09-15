@@ -35,16 +35,16 @@ export default function decoPlugin(opt?: Options): Plugin {
   collectPromMetrics();
   let buildDecoStateMiddl = buildDecoState("./routes/_middleware.ts");
   if (opt) {
-    const releaseProvider = opt?.useLocalStorageOnly
-      ? newFsProvider()
-      : opt.release;
+    const releaseProvider =
+      opt?.useLocalStorageOnly || Deno.env.has("USE_LOCAL_STORAGE_ONLY")
+        ? newFsProvider(".release.json", opt.manifest.name)
+        : opt.release;
     buildDecoStateMiddl = buildDecoState(createResolver(
       {
         baseUrl: opt.manifest.baseUrl,
         name: opt.manifest.name,
         apps: { ...opt.manifest.apps },
       },
-      opt.manifest.name,
       opt.sourceMap,
       releaseProvider,
     ));

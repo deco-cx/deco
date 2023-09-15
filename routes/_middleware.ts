@@ -10,7 +10,7 @@ import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
-import { isAdmin } from "../utils/admin.ts";
+import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
 
@@ -34,14 +34,6 @@ export interface MiddlewareConfig {
   state: Record<string, Resolvable>;
   apps?: Apps[];
 }
-
-const isAdminOrLocalhost = (req: Request): boolean => {
-  const referer = req.headers.get("origin") ?? req.headers.get("referer");
-  const isOnAdmin = referer && isAdmin(referer);
-  const url = new URL(req.url);
-  const isLocalhost = ["localhost", "127.0.0.1"].includes(url.hostname);
-  return isOnAdmin || isLocalhost;
-};
 
 export const handler = [async (
   req: Request,

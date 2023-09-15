@@ -1,4 +1,4 @@
-import { JSONSchema7 } from "../deps.ts";
+import type { JSONSchema7 } from "../deps.ts";
 
 export const adminDomain = `https://deco.cx`;
 export const landingPageDomain = `https://www.deco.cx`;
@@ -14,6 +14,14 @@ export const isAdmin = (url: string): boolean => {
     url.startsWith(adminPreviewUrls) &&
     urlObj.host.endsWith(adminPreviewDomain) // previews
   );
+};
+
+export const isAdminOrLocalhost = (req: Request): boolean => {
+  const referer = req.headers.get("origin") ?? req.headers.get("referer");
+  const isOnAdmin = referer && isAdmin(referer);
+  const url = new URL(req.url);
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(url.hostname);
+  return isOnAdmin || isLocalhost;
 };
 
 export const adminUrlFor = (
