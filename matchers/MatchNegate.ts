@@ -1,4 +1,4 @@
-import { MatchContext, Matcher } from "deco/blocks/matcher.ts";
+import { MatchContext, Matcher } from "../blocks/matcher.ts";
 
 export interface Props {
   /**
