@@ -35,7 +35,7 @@ export interface MiddlewareConfig {
   apps?: Apps[];
 }
 
-const isAdminOrLocalhost = (req: Request): boolean => {
+export const isAdminOrLocalhost = (req: Request): boolean => {
   const referer = req.headers.get("origin") ?? req.headers.get("referer");
   const isOnAdmin = referer && isAdmin(referer);
   const url = new URL(req.url);
