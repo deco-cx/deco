@@ -9,7 +9,7 @@ const httpLabels = [
 ];
 
 const httpDuration = new client.Histogram({
-  name: "http_request_duration",
+  name: "http_req_duration",
   help: "http request duration",
   buckets: [100, 500, 1000, 5000],
   labelNames: httpLabels,
