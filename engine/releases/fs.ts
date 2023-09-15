@@ -1,9 +1,8 @@
 import { join } from "std/path/mod.ts";
-import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
-import { singleFlight } from "../core/utils.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
+import { CurrResolvables } from "./supabaseProvider.ts";
 
 const sample = {
   "decohub": {
@@ -17,42 +16,67 @@ const sample = {
   },
 };
 
+const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
+  return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
+    .then((response) => response.json()).catch((_e) => ({}));
+};
+
 export const newFsProvider = (
   path = ".release.json",
+  appName?: string,
 ): Release => {
-  // deno-lint-ignore no-explicit-any
-  const sf = singleFlight<Record<string, any>>();
   const fullPath = join(Deno.cwd(), path);
   const onChangeCbs: OnChangeCallback[] = [];
-  let currentVersion = "unknown";
-
-  const load = async () => {
-    let dataText: string | null = null;
-    try {
-      if (!(await exists(fullPath))) {
-        dataText = stringifyForWrite(sample);
-        await Deno.writeTextFile(fullPath, dataText);
-        return sample;
-      }
-      dataText = await Deno.readTextFile(fullPath);
-      return JSON.parse(dataText);
-    } finally {
-      if (dataText) {
-        stringToHexSha256(dataText).then((version) => {
-          if (version !== currentVersion) {
-            currentVersion = version;
-            onChangeCbs.forEach((cb) => cb());
-          }
+  const copyDecoState = !appName ? Promise.resolve({}) : copyFrom(appName);
+  let currResolvables: Promise<CurrResolvables> = exists(fullPath).then(
+    async (exists) => {
+      if (!exists) {
+        const data = { ...sample, ...await copyDecoState };
+        return Deno.writeTextFile(
+          fullPath,
+          stringifyForWrite(data),
+        ).then(() => {
+          return { state: data, archived: {}, revision: `${Date.now()}` };
         });
       }
-    }
-  };
+      return {
+        state: await Deno.readTextFile(fullPath).then((result) =>
+          JSON.parse(result)
+        ),
+        archived: {},
+        revision: `${Date.now()}`,
+      };
+    },
+  ).then((result) => {
+    (async () => {
+      const watcher = Deno.watchFs(fullPath);
+      for await (const _event of watcher) {
+        const state = await Deno.readTextFile(fullPath).then((result) =>
+          JSON.parse(result)
+        ).catch((_e) => null);
+        if (state === null) {
+          continue;
+        }
+        currResolvables = Promise.resolve({
+          state,
+          archived: {},
+          revision: `${Date.now()}`,
+        });
+        for (const cb of onChangeCbs) {
+          cb();
+        }
+      }
+    })();
+
+    return result;
+  });
+
   return {
-    state: () => sf.do("load", load),
-    archived: () => sf.do("load", load),
+    state: () => currResolvables.then((r) => r.state),
+    archived: () => currResolvables.then((r) => r.archived),
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
     },
-    revision: () => Promise.resolve(currentVersion),
+    revision: () => currResolvables.then((r) => r.revision),
   };
 };
