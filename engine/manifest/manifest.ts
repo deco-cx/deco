@@ -20,6 +20,12 @@ import {
 import { context, DecoRuntimeState } from "../../live.ts";
 import { DecoState } from "../../types.ts";
 
+import {
+  adjectives,
+  animals,
+  NumberDictionary,
+  uniqueNamesGenerator,
+} from "npm:unique-names-generator@4.7.1";
 import { deferred } from "std/async/deferred.ts";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
@@ -32,13 +38,8 @@ import {
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import { buildSourceMap } from "../../blocks/utils.tsx";
 import { SiteInfo } from "../../types.ts";
+import { newFsProvider } from "../releases/fs.ts";
 import defaults from "./defaults.ts";
-import {
-  adjectives,
-  animals,
-  NumberDictionary,
-  uniqueNamesGenerator,
-} from "npm:unique-names-generator@4.7.1";
 
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
@@ -153,6 +154,7 @@ export const createResolver = <
         DECO_COLORS,
       ))
     } and happy coding!\n\n`);
+    release ??= newFsProvider(".release.json", m.name);
   }
   context.namespace ??= `deco-sites/${currentSite}`;
   context.site = currentSite;

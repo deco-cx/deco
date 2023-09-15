@@ -6,10 +6,6 @@ import { OnChangeCallback, Release } from "./provider.ts";
 import { CurrResolvables } from "./supabaseProvider.ts";
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
-  console.log(
-    "url",
-    `https://${appName.replace("/", "-")}.deno.dev/live/release`,
-  );
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
     .then((response) => response.json()).catch((_e) => ({}));
 };

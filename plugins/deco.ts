@@ -3,7 +3,7 @@ import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
 import { newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
-import { AppManifest, SiteInfo, createResolver } from "../mod.ts";
+import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
 import { collectPromMetrics } from "../observability/metrics.ts";
 import {
   default as Render,
