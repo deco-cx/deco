@@ -113,6 +113,14 @@ const siteName = (): string | undefined => {
   return siteName ?? context.namespace!;
 };
 
+const getPlayDomain = (): string => {
+  if (!Deno.env.has("CODESPACE_NAME")) {
+    return "http://localhost:8000";
+  }
+  return `https://${Deno.env.get("CODESPACE_NAME")}-8000.${
+    Deno.env.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
+  }`;
+};
 export const createResolver = <
   T extends AppManifest,
   TContext extends BaseContext = BaseContext,
@@ -150,7 +158,7 @@ export const createResolver = <
     );
     console.debug(`🚀 Enter: ${
       underline(rgb24(
-        "https://play.deco.cx?domain=http://localhost:8000",
+        `https://play.deco.cx?domain=${getPlayDomain()}`,
         DECO_COLORS,
       ))
     } and happy coding!\n\n`);
