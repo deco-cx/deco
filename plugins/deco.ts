@@ -3,7 +3,7 @@ import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
 import { newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
-import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
+import { AppManifest, SiteInfo, createResolver } from "../mod.ts";
 import { collectPromMetrics } from "../observability/metrics.ts";
 import {
   default as Render,
@@ -35,9 +35,10 @@ export default function decoPlugin(opt?: Options): Plugin {
   collectPromMetrics();
   let buildDecoStateMiddl = buildDecoState("./routes/_middleware.ts");
   if (opt) {
-    const releaseProvider = opt?.useLocalStorageOnly
-      ? newFsProvider()
-      : opt.release;
+    const releaseProvider =
+      opt?.useLocalStorageOnly || Deno.env.has("USE_LOCAL_STORAGE_ONLY")
+        ? newFsProvider(".release.json", opt.manifest.name)
+        : opt.release;
     buildDecoStateMiddl = buildDecoState(createResolver(
       {
         baseUrl: opt.manifest.baseUrl,

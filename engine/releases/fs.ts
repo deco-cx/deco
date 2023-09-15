@@ -1,22 +1,15 @@
+import { debounce } from "std/async/debounce.ts";
 import { join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
 import { CurrResolvables } from "./supabaseProvider.ts";
 
-const sample = {
-  "decohub": {
-    __resolveType: "deco-sites/storefront/apps/decohub.ts",
-  },
-  "admin-app": {
-    resolvables: {
-      __resolveType: "deco-sites/admin/loaders/state.ts",
-    },
-    __resolveType: "decohub/apps/admin.ts",
-  },
-};
-
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
+  console.log(
+    "url",
+    `https://${appName.replace("/", "-")}.deno.dev/live/release`,
+  );
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
     .then((response) => response.json()).catch((_e) => ({}));
 };
@@ -31,7 +24,18 @@ export const newFsProvider = (
   let currResolvables: Promise<CurrResolvables> = exists(fullPath).then(
     async (exists) => {
       if (!exists) {
-        const data = { ...sample, ...await copyDecoState };
+        const data = {
+          "decohub": {
+            __resolveType: appName ? `${appName}/apps/decohub.ts` : undefined,
+          },
+          "admin-app": {
+            resolvables: {
+              __resolveType: "deco-sites/admin/loaders/state.ts",
+            },
+            __resolveType: "decohub/apps/admin.ts",
+          },
+          ...await copyDecoState,
+        };
         return Deno.writeTextFile(
           fullPath,
           stringifyForWrite(data),
@@ -50,12 +54,12 @@ export const newFsProvider = (
   ).then((result) => {
     (async () => {
       const watcher = Deno.watchFs(fullPath);
-      for await (const _event of watcher) {
+      const updateState = debounce(async () => {
         const state = await Deno.readTextFile(fullPath).then((result) =>
           JSON.parse(result)
         ).catch((_e) => null);
         if (state === null) {
-          continue;
+          return;
         }
         currResolvables = Promise.resolve({
           state,
@@ -65,6 +69,9 @@ export const newFsProvider = (
         for (const cb of onChangeCbs) {
           cb();
         }
+      }, 300);
+      for await (const _event of watcher) {
+        updateState();
       }
     })();
 
