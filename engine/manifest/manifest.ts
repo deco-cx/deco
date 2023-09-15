@@ -158,7 +158,7 @@ export const createResolver = <
     );
     console.debug(`🚀 Enter: ${
       underline(rgb24(
-        `https://play.deco.cx?domain=${getPlayDomain()}`,
+        `https://deco.cx/play/blocks?domain=${getPlayDomain()}`,
         DECO_COLORS,
       ))
     } and happy coding!\n\n`);
