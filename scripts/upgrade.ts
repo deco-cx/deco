@@ -359,15 +359,15 @@ const overrideDenoJson = async (): Promise<Patch> => {
               namespace.split("/")[1]
             } deno run -A --unstable --watch=static/sw.js,tailwind.css,sections/,functions/,loaders/,actions/,workflows/,accounts/ dev.ts`,
             "gen": "deno run -A dev.ts --gen-only",
-            "component": "deno eval 'import \"$live/scripts/component.ts\"'",
-            "release": "deno eval 'import \"$live/scripts/release.ts\"'",
-            "update": "deno eval 'import \"$live/scripts/update.ts\"'",
+            "component": "deno eval 'import \"deco/scripts/component.ts\"'",
+            "release": "deno eval 'import \"deco/scripts/release.ts\"'",
+            "update": "deno eval 'import \"deco/scripts/update.ts\"'",
             "check": "deno fmt && deno lint && deno check dev.ts main.ts",
-            "install": "deno eval 'import \"$live/scripts/apps/install.ts\"'",
+            "install": "deno eval 'import \"deco/scripts/apps/install.ts\"'",
             "uninstall":
-              "deno eval 'import \"$live/scripts/apps/uninstall.ts\"'",
+              "deno eval 'import \"deco/scripts/apps/uninstall.ts\"'",
             "bundle":
-              `deno eval 'import \"$live/scripts/apps/bundle.ts\"' ${namespace}`,
+              `deno eval 'import \"deco/scripts/apps/bundle.ts\"' ${namespace}`,
           },
           "githooks": {
             "pre-commit": "check",
