@@ -9,7 +9,7 @@ import { walk } from "https://deno.land/std@0.190.0/fs/walk.ts";
 import { dirname, join } from "https://deno.land/std@0.190.0/path/mod.ts";
 
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
-import { diffLines } from "https://esm.sh/diff@5.1.0";
+import { diffLines } from "npm:diff@5.1.0";
 import deno from "../deno.json" assert { type: "json" };
 import meta from "../meta.json" assert { type: "json" };
 import { format } from "../utils/formatter.ts";
@@ -403,9 +403,10 @@ const addAppsImportMap = async (): Promise<Patch> => {
           ...parsed,
           imports: {
             ...parsed.imports,
-            ["deco-sites/std/"]: "https://denopkg.com/deco-sites/std@1.21.6/",
-            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.33.3/",
-            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.2.11/",
+            ["deco-sites/std/"]: "https://denopkg.com/deco-sites/std@1.22.9/",
+            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.36.2/",
+            ["deco/"]: "https://denopkg.com/deco-cx/deco@1.36.2/",
+            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.7.0/",
           },
         },
         null,
@@ -554,22 +555,24 @@ if (import.meta.main) {
               brightYellow(patch.to.path)
             }`,
           );
-          const liensDiff = diffLines(
+          const linesDiff = diffLines(
             patch.from.content,
             patch.to.content,
           );
           const enc = new TextEncoder();
           const promises: Promise<unknown>[] = [];
-          liensDiff.forEach((part) => {
-            // green for additions, red for deletions
-            // grey for common parts
-            const color = part.added
-              ? brightGreen
-              : part.removed
-              ? brightRed
-              : gray;
-            promises.push(Deno.stdout.write(enc.encode(color(part.value))));
-          });
+          linesDiff.forEach(
+            (part: { added: unknown; removed: unknown; value: string }) => {
+              // green for additions, red for deletions
+              // grey for common parts
+              const color = part.added
+                ? brightGreen
+                : part.removed
+                ? brightRed
+                : gray;
+              promises.push(Deno.stdout.write(enc.encode(color(part.value))));
+            },
+          );
           await Promise.all(promises);
         }
       }
