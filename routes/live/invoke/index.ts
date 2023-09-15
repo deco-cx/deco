@@ -11,10 +11,10 @@ import type { PromiseOrValue } from "../../../engine/core/utils.ts";
 import dfs from "../../../engine/manifest/defaults.ts";
 import type { DecoState } from "../../../mod.ts";
 import type { DecoSiteState } from "../../../types.ts";
+import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { allowCorsFor, bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
 import type { DeepPick, DotNestedKeys } from "../../../utils/object.ts";
-import { isAdminOrLocalhost } from "../../_middleware.ts";
 
 type AppsOf<TManifest extends AppManifest> = (
   AvailableInvocations<TManifest>
