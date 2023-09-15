@@ -44,7 +44,6 @@ export default function decoPlugin(opt?: Options): Plugin {
         name: opt.manifest.name,
         apps: { ...opt.manifest.apps },
       },
-      opt.manifest.name,
       opt.sourceMap,
       releaseProvider,
     ));
