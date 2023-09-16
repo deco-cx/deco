@@ -26,7 +26,8 @@ const namespaceFromGit = async (): Promise<string | undefined> => {
     return undefined;
   }
   const fetchUrlLine = lns[0];
-  if (fetchUrlLine.startsWith("http")) { // http clone
+  if (fetchUrlLine.startsWith("http")) {
+    // http clone
     const fetchUrl = new URL(fetchUrlLine);
     return fetchUrl.pathname.substring(1).replace(".git", "").trimEnd(); // remove .git
   }
@@ -95,10 +96,7 @@ const updateDevTsImports = async () => {
     throw new UpgradeError(`${devTs} not found`);
   }
   const devTsContent = await Deno.readTextFile(devTs);
-  const updateFreshGen = devTsContent.replaceAll(
-    "fresh.gen.ts",
-    "live.gen.ts",
-  );
+  const updateFreshGen = devTsContent.replaceAll("fresh.gen.ts", "live.gen.ts");
   return {
     from: {
       path: devTs,
@@ -113,23 +111,22 @@ const updateDevTsImports = async () => {
 
 const updateImportMap = async (
   liveVersion: string,
-  stdVersion: string,
+  stdVersion: string
 ): Promise<Patch> => {
   const importMapFile = (deno.importMap ?? "./import_map.json").replace(
     "./",
-    "",
+    ""
   );
 
   const importMapPath = join(Deno.cwd(), importMapFile);
   if (!(await exists(importMapPath))) {
     throw new UpgradeError(
-      `${importMapPath} is required to upgrade live dependency verson`,
+      `${importMapPath} is required to upgrade live dependency verson`
     );
   }
   const importMapStr = await Deno.readTextFile(importMapPath);
-  const { imports, ...rest }: { imports: Record<string, string> } = JSON.parse(
-    importMapStr,
-  );
+  const { imports, ...rest }: { imports: Record<string, string> } =
+    JSON.parse(importMapStr);
 
   return {
     from: {
@@ -145,12 +142,11 @@ const updateImportMap = async (
             ...imports,
             [ns]: "./",
             "$live/": `https://denopkg.com/deco-cx/live@${liveVersion}/`,
-            "deco-sites/std/":
-              `https://denopkg.com/deco-sites/std@${stdVersion}/`,
+            "deco-sites/std/": `https://denopkg.com/deco-sites/std@${stdVersion}/`,
           },
         },
         null,
-        2,
+        2
       ),
     },
   };
@@ -173,7 +169,7 @@ const createRuntimeTS = async () => {
   const runtimeTsPath = join(Deno.cwd(), "runtime.ts");
   let runtimeTsContent = "";
 
-  if ((await exists(runtimeTsPath))) {
+  if (await exists(runtimeTsPath)) {
     runtimeTsContent = await Deno.readTextFile(runtimeTsPath);
   }
 
@@ -195,7 +191,7 @@ const createSiteJson = async () => {
   }
   const siteJSONPath = join(Deno.cwd(), "site.json");
   let siteJSONContent = "";
-  if ((await exists(siteJSONPath))) {
+  if (await exists(siteJSONPath)) {
     siteJSONContent = await Deno.readTextFile(siteJSONPath);
   }
   const finalContent = JSON.stringify(
@@ -204,7 +200,7 @@ const createSiteJson = async () => {
       namespace: withoutSlashAtEnd(ns),
     },
     null,
-    2,
+    2
   );
 
   return {
@@ -233,10 +229,12 @@ const addMainTsLiveEntrypoint = async () => {
     },
     to: {
       path: mainTs,
-      content: mainTsContent.replace(
-        `import manifest from "./fresh.gen.ts";\n`,
-        `import manifest from "./live.gen.ts";\nimport { $live } from "$live/mod.ts";\nimport site from "./site.json" assert { type: "json" };\n`,
-      ).replace("await start(manifest", "await start($live(manifest, site)"),
+      content: mainTsContent
+        .replace(
+          `import manifest from "./fresh.gen.ts";\n`,
+          `import manifest from "./live.gen.ts";\nimport { $live } from "$live/mod.ts";\nimport site from "./site.json" assert { type: "json" };\n`
+        )
+        .replace("await start(manifest", "await start($live(manifest, site)"),
     },
   };
 };
@@ -258,17 +256,13 @@ const v1: UpgradeOption = {
       runtimeTs,
       devTsImports,
       mainTsLiveEntrypoint,
-    ] = await Promise
-      .all([
-        updateImportMap(
-          meta.version,
-          "1.0.0",
-        ),
-        createSiteJson(),
-        createRuntimeTS(),
-        updateDevTsImports(),
-        addMainTsLiveEntrypoint(),
-      ]);
+    ] = await Promise.all([
+      updateImportMap(meta.version, "1.0.0"),
+      createSiteJson(),
+      createRuntimeTS(),
+      updateDevTsImports(),
+      addMainTsLiveEntrypoint(),
+    ]);
     return [
       ...removeRoutesAndFreshGenTs(),
       importMapPatch,
@@ -290,30 +284,51 @@ const createSiteTs = async (): Promise<Patch> => {
     to: {
       path: siteTs,
       content: await format(`
-import { AppContext as AC, App } from "$live/mod.ts";
-import std, { Props } from "apps/compat/std/mod.ts";
+        import { AppContext as AC, App } from "$live/mod.ts";
+        import std, { Props } from "apps/compat/std/mod.ts";
 
-import manifest, { Manifest } from "../manifest.gen.ts";
+        import manifest, { Manifest } from "../manifest.gen.ts";
 
-type StdApp = ReturnType<typeof std>;
-export default function Site(
-  state: Props,
-): App<Manifest, Props, [
-  StdApp,
-]> {
-  return {
-    state,
-    manifest,
-    dependencies: [
-      std(state),
-    ],
+        type StdApp = ReturnType<typeof std>;
+        export default function Site(
+          state: Props,
+        ): App<Manifest, Props, [
+          StdApp,
+        ]> {
+          return {
+            state,
+            manifest,
+            dependencies: [
+              std(state),
+            ],
+          };
+        }
+
+        export type Storefront = ReturnType<typeof Site>;
+        export type AppContext = AC<Storefront>;
+        export { onBeforeResolveProps } from "apps/compat/$live/mod.ts";
+    `),
+    },
   };
-}
+};
 
-export type Storefront = ReturnType<typeof Site>;
-export type AppContext = AC<Storefront>;
-export { onBeforeResolveProps } from "apps/compat/$live/mod.ts";
-`),
+const createSWJs = async (): Promise<Patch> => {
+  const swJs = join(Deno.cwd(), "static", "sw.js");
+  return {
+    from: {
+      path: swJs,
+      content: "",
+    },
+    to: {
+      path: swJs,
+      content: await format(`
+        importScripts(
+          'https://storage.googleapis.com/workbox-cdn/releases/6.4.1/workbox-sw.js'
+        );
+        
+        workbox.setConfig({ debug: false });
+        workbox.routing.setDefaultHandler(new workbox.strategies.NetworkOnly());
+        workbox.recipes.offlineFallback({ pageFallback: '/offline' });`),
     },
   };
 };
@@ -342,7 +357,7 @@ const overrideDenoJson = async (): Promise<Patch> => {
   const denoJson = join(Deno.cwd(), "deno.json");
   const siteJson = join(Deno.cwd(), "site.json");
   const { namespace }: { namespace: string } = JSON.parse(
-    await Deno.readTextFile(siteJson),
+    await Deno.readTextFile(siteJson)
   );
 
   return {
@@ -354,34 +369,32 @@ const overrideDenoJson = async (): Promise<Patch> => {
       path: denoJson,
       content: JSON.stringify(
         {
-          "tasks": {
-            "start": `deno task bundle && DECO_SITE_NAME=${
+          tasks: {
+            start: `deno task bundle && DECO_SITE_NAME=${
               namespace.split("/")[1]
             } deno run -A --unstable --watch=static/sw.js,tailwind.css,sections/,functions/,loaders/,actions/,workflows/,accounts/ dev.ts`,
-            "gen": "deno run -A dev.ts --gen-only",
-            "component": "deno eval 'import \"deco/scripts/component.ts\"'",
-            "release": "deno eval 'import \"deco/scripts/release.ts\"'",
-            "update": "deno eval 'import \"deco/scripts/update.ts\"'",
-            "check": "deno fmt && deno lint && deno check dev.ts main.ts",
-            "install": "deno eval 'import \"deco/scripts/apps/install.ts\"'",
-            "uninstall":
-              "deno eval 'import \"deco/scripts/apps/uninstall.ts\"'",
-            "bundle":
-              `deno eval 'import \"deco/scripts/apps/bundle.ts\"' ${namespace}`,
+            gen: "deno run -A dev.ts --gen-only",
+            component: "deno eval 'import \"deco/scripts/component.ts\"'",
+            release: "deno eval 'import \"deco/scripts/release.ts\"'",
+            update: "deno eval 'import \"deco/scripts/update.ts\"'",
+            check: "deno fmt && deno lint && deno check dev.ts main.ts",
+            install: "deno eval 'import \"deco/scripts/apps/install.ts\"'",
+            uninstall: "deno eval 'import \"deco/scripts/apps/uninstall.ts\"'",
+            bundle: `deno eval 'import \"deco/scripts/apps/bundle.ts\"' ${namespace}`,
           },
-          "githooks": {
+          githooks: {
             "pre-commit": "check",
           },
-          "exclude": ["node_modules", "static/", "README.md"],
-          "nodeModulesDir": true,
-          "importMap": "./import_map.json",
-          "compilerOptions": {
-            "jsx": "react-jsx",
-            "jsxImportSource": "preact",
+          exclude: ["node_modules", "static/", "README.md"],
+          nodeModulesDir: true,
+          importMap: "./import_map.json",
+          compilerOptions: {
+            jsx: "react-jsx",
+            jsxImportSource: "preact",
           },
         },
         null,
-        2,
+        2
       ),
     },
   };
@@ -410,7 +423,7 @@ const addAppsImportMap = async (): Promise<Patch> => {
           },
         },
         null,
-        2,
+        2
       ),
     },
   };
@@ -484,10 +497,11 @@ const deleteLiveGenTs = (): Delete => {
 };
 
 const apps: UpgradeOption = {
-  isEligible: async () => (await exists(join(Deno.cwd(), "site.json"))),
+  isEligible: async () => await exists(join(Deno.cwd(), "site.json")),
   apply: async () => {
     const replaceTypingsImport: Promise<Patch | Delete>[] = [
       createSiteTs(),
+      createSWJs(),
       overrideDenoJson(),
       overrideDevTs(),
       addAppsImportMap(),
@@ -501,21 +515,23 @@ const apps: UpgradeOption = {
       checks.push(
         Deno.readTextFile(entry.path).then((content) => {
           if (content.includes("deco-sites/std/commerce/types.ts")) {
-            replaceTypingsImport.push(Promise.resolve({
-              from: {
-                path: entry.path,
-                content,
-              },
-              to: {
-                path: entry.path,
-                content: content.replaceAll(
-                  "deco-sites/std/commerce/types.ts",
-                  "apps/commerce/types.ts",
-                ),
-              },
-            }));
+            replaceTypingsImport.push(
+              Promise.resolve({
+                from: {
+                  path: entry.path,
+                  content,
+                },
+                to: {
+                  path: entry.path,
+                  content: content.replaceAll(
+                    "deco-sites/std/commerce/types.ts",
+                    "apps/commerce/types.ts"
+                  ),
+                },
+              })
+            );
           }
-        }),
+        })
       );
     }
     await Promise.all(checks);
@@ -551,14 +567,11 @@ if (import.meta.main) {
           console.log(`🚨 ${brightRed(patch.path)} will be deleted.`);
         } else {
           console.log(
-            `⚠️ ${brightYellow(patch.from.path)} -> ${
-              brightYellow(patch.to.path)
-            }`,
+            `⚠️ ${brightYellow(patch.from.path)} -> ${brightYellow(
+              patch.to.path
+            )}`
           );
-          const linesDiff = diffLines(
-            patch.from.content,
-            patch.to.content,
-          );
+          const linesDiff = diffLines(patch.from.content, patch.to.content);
           const enc = new TextEncoder();
           const promises: Promise<unknown>[] = [];
           linesDiff.forEach(
@@ -571,7 +584,7 @@ if (import.meta.main) {
                 ? brightRed
                 : gray;
               promises.push(Deno.stdout.write(enc.encode(color(part.value))));
-            },
+            }
           );
           await Promise.all(promises);
         }
