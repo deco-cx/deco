@@ -6,6 +6,7 @@ import type {
   FunctionExpression,
   NamedExportSpecifier,
   NamedImportSpecifier,
+  ObjectExpression,
   Param,
   Pattern,
   StringLiteral,
@@ -914,7 +915,7 @@ export interface FunctionCanonicalDeclaration extends CanonicalDeclarationBase {
 }
 
 export interface VariableCanonicalDeclaration extends CanonicalDeclarationBase {
-  exp?: ArrowFunctionExpression;
+  exp?: ArrowFunctionExpression | ObjectExpression;
   declarator: VariableDeclarator;
 }
 
@@ -1034,7 +1035,9 @@ const findFunc = async (
       for (const decl of item.declaration.declarations) {
         if (
           decl.id.type === "Identifier" && decl.id.value === funcName &&
-          decl.init && decl.init.type === "ArrowFunctionExpression"
+          decl.init &&
+          (decl.init.type === "ArrowFunctionExpression" ||
+            decl.init.type === "ObjectExpression")
         ) {
           return [{
             declarator: decl,
@@ -1109,6 +1112,7 @@ const getWellKnownLoaderType = (
 ): [TsType, TsType] | undefined => {
   const typeAnnotation = (declarator.id as { typeAnnotation: TsTypeAnnotation })
     ?.typeAnnotation;
+
   if (
     typeAnnotation &&
     typeAnnotation.typeAnnotation.type === "TsTypeReference" &&
@@ -1132,7 +1136,11 @@ const returnOf = (canonical: CanonicalDeclaration): TsType | undefined => {
       return loader[1];
     }
   }
-  return canonical?.exp?.returnType?.typeAnnotation;
+  const exp = canonical?.exp;
+  if (!exp || !('returnType' in exp)) {
+    return undefined;
+  }
+  return exp?.returnType?.typeAnnotation;
 };
 
 const paramsOf = (
@@ -1144,7 +1152,11 @@ const paramsOf = (
       return [loader[0]];
     }
   }
-  return canonical?.exp?.params?.map((param) => {
+  const exp = canonical?.exp;
+  if (!exp || !('params' in exp)) {
+    return undefined;
+  }
+  return exp.params?.map((param) => {
     const pat = (param as Param)?.pat ?? param as Pattern;
     const typeAnnotation = (pat as { typeAnnotation?: TsTypeAnnotation })
       ?.typeAnnotation?.typeAnnotation;
