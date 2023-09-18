@@ -1,7 +1,7 @@
 import { AppManifest, SourceMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import { JSONSchema7, TsType } from "../../deps.ts";
+import { JSONSchema7 } from "../../deps.ts";
 import { defaultRoutes } from "../../engine/manifest/manifestGen.ts";
 import {
   BlockModule,
@@ -9,7 +9,7 @@ import {
   newSchemaBuilder,
   Schemas,
 } from "../../engine/schema/builder.ts";
-import { Schemeable } from "../../engine/schema/transform.ts";
+import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
 import { context } from "../../live.ts";
 import { Block, BlockModuleRef } from "../block.ts";
 import { parsePath } from "./parser.ts";
@@ -23,7 +23,7 @@ const resolveForPath = async (
   introspect: Block["introspect"],
   blockPath: string,
   blockKey: string,
-  references: Map<TsType, Schemeable>,
+  references: Map<ReferenceKey, Schemeable>,
 ): Promise<BlockModuleRef | undefined> => {
   const pathResolved = resolvePath(blockPath, Deno.cwd());
   const program = await parsePath(pathResolved);
@@ -83,7 +83,7 @@ export const genSchemasFromManifest = async (
   const refPromises: Promise<
     (BlockModule | EntrypointModule | undefined)
   >[] = [];
-  const references = new Map<TsType, Schemeable>();
+  const references = new Map<ReferenceKey, Schemeable>();
   for (const block of blocks()) {
     for (
       const blockModuleKey of Object.keys(
