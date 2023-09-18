@@ -36,6 +36,8 @@ import { BlockModuleRef, IntrospectParams } from "../../engine/block.ts";
 import { beautify } from "../../engine/schema/utils.ts";
 import { spannableToJSONSchema } from "./comments.ts";
 import { parsePath } from "./parser.ts";
+
+export type ReferenceKey = string;
 export interface SchemeableBase {
   jsDocSchema?: JSONSchema7;
   friendlyId?: string;
@@ -103,7 +105,10 @@ export type Schemeable =
 export interface SchemeableTransformContext {
   path: string;
   parsedSource: ParsedSource;
-  references?: Map<TsType, Schemeable>;
+  references?: Map<
+    ReferenceKey,
+    Schemeable
+  >;
   instantiatedTypeParams?: Schemeable[];
   tryGetFromInstantiatedParameters?: (
     name: string,
@@ -677,13 +682,19 @@ export const tsTypeToSchemeable = async (
     path,
     references,
   } = ctx;
-  const schemeable = references?.get?.(tsType);
+
+  const refKey = `${ctx.path}+${tsType.span.start}${tsType.span.end}+${
+    ctx.instantiatedTypeParams?.map?.((param) => param.name)?.sort?.()?.join(
+      "",
+    ) ?? ""
+  }`;
+  const schemeable = references?.get?.(refKey);
 
   if (schemeable !== undefined) {
     return schemeable;
   }
   const ref = { type: "unknown", name: "unknown" } as Schemeable;
-  references?.set?.(tsType, ref);
+  references?.set?.(refKey, ref);
   const resolve = async (): Promise<Schemeable> => {
     switch (tsType.type) {
       case "TsLiteralType": {
@@ -901,7 +912,7 @@ export const tsTypeToSchemeable = async (
 
   const resolved: Schemeable = await resolve();
   Object.assign(ref, resolved);
-  references?.delete?.(tsType);
+  references?.delete?.(refKey);
   return resolved;
 };
 
@@ -1137,7 +1148,7 @@ const returnOf = (canonical: CanonicalDeclaration): TsType | undefined => {
     }
   }
   const exp = canonical?.exp;
-  if (!exp || !('returnType' in exp)) {
+  if (!exp || !("returnType" in exp)) {
     return undefined;
   }
   return exp?.returnType?.typeAnnotation;
@@ -1153,7 +1164,7 @@ const paramsOf = (
     }
   }
   const exp = canonical?.exp;
-  if (!exp || !('params' in exp)) {
+  if (!exp || !("params" in exp)) {
     return undefined;
   }
   return exp.params?.map((param) => {
@@ -1167,7 +1178,10 @@ export const programToBlockRef = async (
   _path: string,
   blockKey: string,
   _program: ParsedSource,
-  schemeableReferences?: Map<TsType, Schemeable>,
+  schemeableReferences?: Map<
+    ReferenceKey,
+    Schemeable
+  >,
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
   const funcNames = introspect?.funcNames ?? ["default"];
