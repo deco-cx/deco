@@ -14,11 +14,9 @@ interface ImportMap {
   imports: Record<string, string>;
 }
 
-const getImportMap = async (dir: string): Promise<
-  [ImportMap, string]
-> => {
+const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
   const denoJSON = await Deno.readTextFile(join(dir, "deno.json")).then(
-    JSON.parse,
+    JSON.parse
   );
   const importMapFile = denoJSON?.importMap ?? "./import_map.json";
   const importMapPath = join(dir, importMapFile.replace("./", ""));
@@ -53,9 +51,7 @@ export async function update() {
       }
 
       if (currentVersion !== latestVersion) {
-        console.info(
-          `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
-        );
+        console.info(`Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`);
 
         upgradeFound = true;
         importMap.imports[pkg] = url.at(latestVersion).url;
@@ -63,18 +59,20 @@ export async function update() {
 
       return importMap;
     },
-    Promise.resolve(Object.assign({ imports: {} }, importMap)),
+    Promise.resolve(Object.assign({ imports: {} }, importMap))
   );
+
+  if (!newImportMap.imports["deco/"] && newImportMap.imports["$live/"]) {
+    console.info("Add deco/ alias");
+    newImportMap.imports["deco/"] = newImportMap.imports["$live/"];
+  }
 
   if (!upgradeFound) {
     console.info("Local website depends on the most recent releases of Live!");
     return;
   }
 
-  await Deno.writeTextFile(
-    importMapPath,
-    stringifyForWrite(newImportMap),
-  );
+  await Deno.writeTextFile(importMapPath, stringifyForWrite(newImportMap));
   console.info("Upgraded successfully");
 }
 
@@ -96,9 +94,7 @@ const hasUpdates = async (importMap: ImportMap) => {
   return false;
 };
 
-function eligibleLatestVersion(
-  versions: string[],
-) {
+function eligibleLatestVersion(versions: string[]) {
   const flags = parse(Deno.args, {
     boolean: ["allow-pre"],
   });
@@ -116,7 +112,7 @@ export async function checkUpdates(_dir?: string) {
     console.log(
       `%c 🐁 Updates available from deco.cx! %c To update, run:`,
       "background-color: #2FD080; color: #003232; font-weight: bold",
-      "",
+      ""
     );
 
     if (Deno.build.os === "windows") {
