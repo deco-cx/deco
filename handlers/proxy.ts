@@ -54,7 +54,7 @@ async (req, _ctx) => {
     _ctx?.state?.log("proxy sent headers", headers);
   }
 
-  headers.set("origin", to.origin);
+  headers.set("origin", req.headers.get("origin") ?? url.origin);
   headers.set("host", hostToUse ?? to.host);
   headers.set("x-forwarded-host", url.host);
 
