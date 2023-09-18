@@ -1,10 +1,8 @@
 import { Resolvable } from "../../engine/core/resolver.ts";
-import { fromPagesTable } from "../../engine/releases/pages.ts";
-import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
-import { newSupabase } from "./supabaseProvider.ts";
+import { newCloudflareProvider } from "./cloudflareProvider.ts";
 
 export type OnChangeCallback = () => void;
 export interface ReadOptions {
@@ -94,9 +92,9 @@ export const compose = (...providers: Release[]): Release => {
  * @returns the config store provider.
  */
 export const getComposedConfigStore = (
-  ns: string,
+  _ns: string,
   site: string,
-  siteId: number,
+  _siteId: number,
   localStorageOnly = false,
 ): Release => {
   const providers = [];
@@ -105,11 +103,7 @@ export const getComposedConfigStore = (
     return newFsProvider();
   }
 
-  if (siteId > 0) {
-    providers.push(newSupabase(fromPagesTable(siteId, ns), true)); // if not deploy so no background is needed
-  }
-
-  providers.push(newSupabase(fromConfigsTable(site), true)); // if not deploy so no background is needed
+  providers.push(newCloudflareProvider(site, true));
 
   if (Deno.env.has("USE_LOCAL_STORAGE")) {
     providers.push(newFsProvider());
