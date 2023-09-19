@@ -20,7 +20,6 @@ export const parseJSDocAttribute = (key: string, value: string) => {
     case "writeOnly":
     case "ignore":
       return true;
-    case "multivariate":
     case "deprecated":
     case "uniqueItems":
       return Boolean(value);

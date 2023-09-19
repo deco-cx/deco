@@ -128,7 +128,7 @@ Deno.test("TwoRefsProperties type generation", async () => {
           "schemeable": {
             "file": path,
             "type": "array",
-            "name": "SimpleInterface[]",
+            "name": "[SimpleInterface]",
             "value": {
               "jsDocSchema": {},
               "type": "object",
@@ -157,7 +157,7 @@ Deno.test("TwoRefsProperties type generation", async () => {
           "schemeable": {
             "file": path,
             "type": "array",
-            "name": "SimpleInterface[]",
+            "name": "[SimpleInterface]",
             "value": {
               "jsDocSchema": {},
               "type": "object",
@@ -441,7 +441,7 @@ Deno.test("Array fields generation", async () => {
         title: "Array",
         schemeable: {
           file: undefined,
-          name: "string[]",
+          name: "[string]",
           type: "array",
           value: { type: "inline", value: { type: "string" }, name: "string" },
         },
@@ -476,7 +476,7 @@ Deno.test("Array fields generation", async () => {
     args: [
       {
         file: undefined,
-        name: "string[]",
+        name: "[string]",
         type: "array",
         value: { type: "inline", value: { type: "string" }, name: "string" },
       },
@@ -700,7 +700,7 @@ Deno.test("Wellknown in types generation", async () => {
         jsDocSchema: {},
         schemeable: {
           file: undefined,
-          name: "string[]",
+          name: "[string]",
           type: "array",
           value: { type: "inline", value: { type: "string" }, name: "string" },
         },

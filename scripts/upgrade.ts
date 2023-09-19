@@ -111,22 +111,23 @@ const updateDevTsImports = async () => {
 
 const updateImportMap = async (
   liveVersion: string,
-  stdVersion: string
+  stdVersion: string,
 ): Promise<Patch> => {
   const importMapFile = (deno.importMap ?? "./import_map.json").replace(
     "./",
-    ""
+    "",
   );
 
   const importMapPath = join(Deno.cwd(), importMapFile);
   if (!(await exists(importMapPath))) {
     throw new UpgradeError(
-      `${importMapPath} is required to upgrade live dependency verson`
+      `${importMapPath} is required to upgrade live dependency verson`,
     );
   }
   const importMapStr = await Deno.readTextFile(importMapPath);
-  const { imports, ...rest }: { imports: Record<string, string> } =
-    JSON.parse(importMapStr);
+  const { imports, ...rest }: { imports: Record<string, string> } = JSON.parse(
+    importMapStr,
+  );
 
   return {
     from: {
@@ -142,11 +143,12 @@ const updateImportMap = async (
             ...imports,
             [ns]: "./",
             "$live/": `https://denopkg.com/deco-cx/live@${liveVersion}/`,
-            "deco-sites/std/": `https://denopkg.com/deco-sites/std@${stdVersion}/`,
+            "deco-sites/std/":
+              `https://denopkg.com/deco-sites/std@${stdVersion}/`,
           },
         },
         null,
-        2
+        2,
       ),
     },
   };
@@ -200,7 +202,7 @@ const createSiteJson = async () => {
       namespace: withoutSlashAtEnd(ns),
     },
     null,
-    2
+    2,
   );
 
   return {
@@ -232,7 +234,7 @@ const addMainTsLiveEntrypoint = async () => {
       content: mainTsContent
         .replace(
           `import manifest from "./fresh.gen.ts";\n`,
-          `import manifest from "./live.gen.ts";\nimport { $live } from "$live/mod.ts";\nimport site from "./site.json" assert { type: "json" };\n`
+          `import manifest from "./live.gen.ts";\nimport { $live } from "$live/mod.ts";\nimport site from "./site.json" assert { type: "json" };\n`,
         )
         .replace("await start(manifest", "await start($live(manifest, site)"),
     },
@@ -357,7 +359,7 @@ const overrideDenoJson = async (): Promise<Patch> => {
   const denoJson = join(Deno.cwd(), "deno.json");
   const siteJson = join(Deno.cwd(), "site.json");
   const { namespace }: { namespace: string } = JSON.parse(
-    await Deno.readTextFile(siteJson)
+    await Deno.readTextFile(siteJson),
   );
 
   return {
@@ -380,7 +382,8 @@ const overrideDenoJson = async (): Promise<Patch> => {
             check: "deno fmt && deno lint && deno check dev.ts main.ts",
             install: "deno eval 'import \"deco/scripts/apps/install.ts\"'",
             uninstall: "deno eval 'import \"deco/scripts/apps/uninstall.ts\"'",
-            bundle: `deno eval 'import \"deco/scripts/apps/bundle.ts\"' ${namespace}`,
+            bundle:
+              `deno eval 'import \"deco/scripts/apps/bundle.ts\"' ${namespace}`,
           },
           githooks: {
             "pre-commit": "check",
@@ -394,7 +397,7 @@ const overrideDenoJson = async (): Promise<Patch> => {
           },
         },
         null,
-        2
+        2,
       ),
     },
   };
@@ -423,7 +426,7 @@ const addAppsImportMap = async (): Promise<Patch> => {
           },
         },
         null,
-        2
+        2,
       ),
     },
   };
@@ -525,13 +528,13 @@ const apps: UpgradeOption = {
                   path: entry.path,
                   content: content.replaceAll(
                     "deco-sites/std/commerce/types.ts",
-                    "apps/commerce/types.ts"
+                    "apps/commerce/types.ts",
                   ),
                 },
-              })
+              }),
             );
           }
-        })
+        }),
       );
     }
     await Promise.all(checks);
@@ -567,9 +570,11 @@ if (import.meta.main) {
           console.log(`🚨 ${brightRed(patch.path)} will be deleted.`);
         } else {
           console.log(
-            `⚠️ ${brightYellow(patch.from.path)} -> ${brightYellow(
-              patch.to.path
-            )}`
+            `⚠️ ${brightYellow(patch.from.path)} -> ${
+              brightYellow(
+                patch.to.path,
+              )
+            }`,
           );
           const linesDiff = diffLines(patch.from.content, patch.to.content);
           const enc = new TextEncoder();
@@ -584,7 +589,7 @@ if (import.meta.main) {
                 ? brightRed
                 : gray;
               promises.push(Deno.stdout.write(enc.encode(color(part.value))));
-            }
+            },
           );
           await Promise.all(promises);
         }
