@@ -270,7 +270,6 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               ...blockFunction.outputSchemaId
                 ? {
                   [blockFunction.outputSchemaId]: mergeJSONSchemas(
-                    resolvableRef,
                     nDef[blockFunction.outputSchemaId],
                     nDef[id!]!,
                   ),
