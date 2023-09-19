@@ -483,7 +483,7 @@ const wellKnownTypeReferenceToSchemeable = async (
       if (typeParams.length < 1) {
         return undefined;
       }
-      const configName = typeParams[1];
+      const configName = typeParams[0];
       if (configName.type !== "TsLiteralType") {
         return undefined;
       }
