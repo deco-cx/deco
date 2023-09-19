@@ -635,7 +635,7 @@ const wellKnownTypeReferenceToSchemeable = async (
     case "Array": {
       if (typeParams.length < 1) {
         return {
-          name: "unknown[]",
+          name: "[unknown]",
           type: "array",
           value: UNKNOWN,
         };
@@ -647,7 +647,7 @@ const wellKnownTypeReferenceToSchemeable = async (
 
       return {
         type: "array",
-        name: `${typeSchemeable.name}[]`,
+        name: `[${typeSchemeable.name}]`,
         file: typeSchemeable.file,
         value: typeSchemeable,
       };
@@ -829,7 +829,7 @@ export const tsTypeToSchemeable = async (
         return {
           file: value.file,
           type: "array",
-          name: `${value.name}[]`,
+          name: `[${value.name}]`,
           value,
         };
       }
