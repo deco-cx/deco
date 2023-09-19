@@ -16,7 +16,7 @@ interface ImportMap {
 
 const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
   const denoJSON = await Deno.readTextFile(join(dir, "deno.json")).then(
-    JSON.parse
+    JSON.parse,
   );
   const importMapFile = denoJSON?.importMap ?? "./import_map.json";
   const importMapPath = join(dir, importMapFile.replace("./", ""));
@@ -59,7 +59,7 @@ export async function update() {
 
       return importMap;
     },
-    Promise.resolve(Object.assign({ imports: {} }, importMap))
+    Promise.resolve(Object.assign({ imports: {} }, importMap)),
   );
 
   if (!newImportMap.imports["deco/"] && newImportMap.imports["$live/"]) {
@@ -112,7 +112,7 @@ export async function checkUpdates(_dir?: string) {
     console.log(
       `%c 🐁 Updates available from deco.cx! %c To update, run:`,
       "background-color: #2FD080; color: #003232; font-weight: bold",
-      ""
+      "",
     );
 
     if (Deno.build.os === "windows") {
