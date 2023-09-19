@@ -99,6 +99,7 @@ const buildSchemaWithResolvables = (
     definitions[ref] = val;
     const first = anyOf && (anyOf[0] as JSONSchema7).$ref;
     if (first === "#/definitions/Resolvable") {
+      anyOf?.splice(0, 1);
       definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
       const availableFunctions = (anyOf?.map((func) =>
         getResolveType(func)
