@@ -51,6 +51,7 @@ export interface BaseContext {
   resolvers: Record<string, Resolver>;
   danglingRecover?: Resolver;
   resolveHints: ResolveHints;
+  resolveCache: Record<string, any>;
   runOnce: <T>(key: string, f: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
 
@@ -482,7 +483,12 @@ const resolveResolvable = <
     resolvableObj,
   ) ?? {};
 
-  return resolveAny(resolvableObj, context, nullIfDangling, hints);
+  return context.resolveCache[resolveType] ??= resolveAny(
+    resolvableObj,
+    context,
+    nullIfDangling,
+    hints,
+  );
 };
 
 export const resolveAny = <
