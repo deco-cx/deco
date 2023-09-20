@@ -499,7 +499,7 @@ export const resolveAny = <
 };
 
 /**
- * Receives a string (pointing to a resolvable or a resolver), a context and optionally dangling and propsIsResolved flag, and returns the resolved object.
+ * Receives a string (pointing to a resolvable or a resolver), a context and optionally dangling and propsAreResolved flag, and returns the resolved object.
  * See readme for more details
  */
 export const resolve = <
@@ -509,10 +509,10 @@ export const resolve = <
   maybeResolvable: string | Resolvable<T, TContext>,
   context: TContext,
   nullIfDangling = false,
-  propsIsResolved = false,
+  propsAreResolved = false,
 ): Promise<T> => {
   if (
-    propsIsResolved && isResolvable(maybeResolvable) &&
+    propsAreResolved && isResolvable(maybeResolvable) &&
     typeof maybeResolvable === "object"
   ) {
     const { __resolveType, ...props } = maybeResolvable;

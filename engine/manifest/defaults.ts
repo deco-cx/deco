@@ -127,15 +127,15 @@ export default {
           __resolveType: __resolveType,
           ...resolvedSavedProps,
           ...props,
-        }, { propsIsResolved: true })),
-      }, { propsIsResolved: true });
+        }, { propsAreResolved: true })),
+      }, { propsAreResolved: true });
     }
     return resolve({
       __resolveType: pvResolver,
       ...(await resolve({ __resolveType: block, ...props }, {
-        propsIsResolved: true,
+        propsAreResolved: true,
       })),
-    }, { propsIsResolved: true });
+    }, { propsAreResolved: true });
   },
   invoke: async function invoke(
     { props, block, source }: BlockInvocation, // wishListVtex deco-sites/std/vtexProductList.ts
@@ -173,7 +173,7 @@ export default {
       return await resolve({
         ...props,
         __resolveType,
-      }, { propsIsResolved: true });
+      }, { propsAreResolved: true });
     } catch (err) {
       if (!(err instanceof HttpError)) {
         throw new HttpError(

@@ -36,7 +36,7 @@ export interface ResolveOptions {
   forceFresh?: boolean;
   nullIfDangling?: boolean;
   propagateOptions?: boolean;
-  propsIsResolved?: boolean;
+  propsAreResolved?: boolean;
   resolveChain?: FieldResolver[];
 }
 
@@ -148,7 +148,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     const innerResolver = this.resolverFor(
       ctx,
       options
-        ? { // null if dangling, force fresh and propsIsResolved should not be reused across inner resolvables calls
+        ? { // null if dangling, force fresh and propsAreResolved should not be reused across inner resolvables calls
           overrides: options?.overrides,
           monitoring: options?.monitoring,
           ...(options?.propagateOptions
@@ -169,7 +169,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       typeOrResolvable,
       ctx as TContext,
       options?.nullIfDangling,
-      options?.propsIsResolved,
+      options?.propsAreResolved,
     );
   };
 }
