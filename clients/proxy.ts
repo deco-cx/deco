@@ -20,6 +20,12 @@ export const newHandler = <TManifest extends AppManifest>(
       target: InvocationProxyState,
       part: string,
     ): InvocationProxyState {
+      if (
+        typeof part === "symbol" &&
+        (part === Symbol.toStringTag || part === Symbol.toPrimitive)
+      ) {
+        return (function invokeFunction() {}) as any as InvocationProxyState;
+      }
       const currentParts = [...(target.__parts as string[]) ?? [], part];
       const newTarget: InvocationProxyState = function (
         props?: any,

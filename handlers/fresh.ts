@@ -6,7 +6,7 @@ import {
   BaseContext,
   isDeferred,
 } from "../engine/core/resolver.ts";
-import { DecoState } from "../types.ts";
+import { DecoState, FnContext } from "../types.ts";
 import { allowCorsFor } from "../utils/http.ts";
 
 /**
@@ -26,27 +26,32 @@ export const isFreshCtx = <TState>(
  * @title Fresh Page
  * @description Renders a fresh page.
  */
-export default function Fresh(freshConfig: FreshConfig) {
+export default function Fresh(freshConfig: FreshConfig, fnContext: FnContext) {
   return async (req: Request, ctx: ConnInfo) => {
     if (req.method === "HEAD") {
       return new Response(null, { status: 200 });
     }
+    const endResolvePage = fnContext?.monitoring?.t?.start?.("load-data");
     const page =
       isDeferred<Page, BaseContext & { context: ConnInfo }>(freshConfig.page)
         ? await freshConfig.page({ context: ctx })
         : freshConfig.page;
+    endResolvePage?.();
     const url = new URL(req.url);
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page, { headers: allowCorsFor(req) });
     }
     if (isFreshCtx<DecoState>(ctx)) {
-      return await ctx.render({
+      const end = fnContext?.monitoring?.t?.start?.("render-to-string");
+      const response = await ctx.render({
         page,
         routerInfo: {
           flags: ctx.state.flags,
           pagePath: ctx.state.pathTemplate,
         },
       });
+      end?.();
+      return response;
     }
     return Response.json({ message: "Fresh is not being used" }, {
       status: 500,

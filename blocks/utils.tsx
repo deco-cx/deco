@@ -10,6 +10,7 @@ import {
 } from "../engine/block.ts";
 import {
   FieldResolver,
+  Monitoring,
   ResolveFunc,
   Resolver,
 } from "../engine/core/resolver.ts";
@@ -18,9 +19,9 @@ import { HttpError } from "../engine/errors.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Manifest } from "../live.gen.ts";
 import { context } from "../live.ts";
+import type { InvocationProxy } from "../routes/live/invoke/index.ts";
 import { HttpContext } from "./handler.ts";
 import { ErrorBoundaryComponent } from "./section.ts";
-import type { InvocationProxy } from "../routes/live/invoke/index.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -66,6 +67,7 @@ export type FnContext<
   TState = {},
   TManifest extends AppManifest = Manifest,
 > = TState & {
+  monitoring?: Monitoring;
   response: { headers: Headers };
   get: ResolveFunc;
   invoke:
@@ -91,6 +93,7 @@ export const fnContextFromHttpContext = <TState = {}>(
 ): FnContext<TState> => {
   return {
     ...ctx?.context?.state?.global,
+    monitoring: ctx.monitoring,
     get: ctx.resolve,
     response: ctx.context.state.response,
     invoke: ctx.context.state.invoke,
