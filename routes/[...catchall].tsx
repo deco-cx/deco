@@ -57,7 +57,7 @@ export default function Render({
   );
 }
 
-export const handler = async (
+const innerHandler = async (
   req: Request,
   ctx: HandlerContext<
     unknown,
@@ -75,4 +75,15 @@ export const handler = async (
     req,
     await handler(req, ctx as ConnInfo),
   );
+};
+
+export const handler = {
+  POST: innerHandler,
+  PUT: innerHandler,
+  PATCH: innerHandler,
+  OPTIONS: innerHandler,
+  DELETE: innerHandler,
+  // since fresh converts HEAD verbs into GET requests we need to explicitly handle it here
+  HEAD: innerHandler,
+  GET: innerHandler,
 };
