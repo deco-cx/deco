@@ -164,7 +164,7 @@ export const isResolvable = <
   return (v as { __resolveType: string })?.__resolveType !== undefined;
 };
 
-export type OnBeforeResolveProps = <T>(props: T) => T;
+export type OnBeforeResolveProps = <T>(props: T, hints: HintNode<T>) => T;
 export type AsyncResolver<
   T = any,
   TParent = any,
@@ -318,7 +318,7 @@ const resolvePropsWithHints = async <
     ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
     : identity;
 
-  const props = onBeforeResolveProps(_thisProps as T);
+  const props = onBeforeResolveProps(_thisProps as T, hints);
   const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 
   const resolvedPropsPromise = Object.entries(hints).map(

@@ -86,11 +86,13 @@ export default {
   ) => {
     if (props?.deferred && props?.data) {
       const deferred = (tCtx: Partial<BaseContext>) =>
-        ctx.resolve(
-          props?.data,
-          { resolveChain: ctx.resolveChain },
-          tCtx ?? {},
-        );
+        typeof props?.data === "object"
+          ? ctx.resolve(
+            props?.data,
+            { resolveChain: ctx.resolveChain },
+            tCtx ?? {},
+          )
+          : props?.data;
       deferred._deferred = true;
       deferred.__resolveType = isResolvable(props?.data)
         ? props?.data?.__resolveType
