@@ -77,7 +77,7 @@ export const router = (
             { context: ctx, request: req },
           );
 
-      const end = configs?.monitoring?.t.start("load-data");
+      const end = configs?.monitoring?.t.start("resolve-handler");
       const hand = isAwaitable(resolvedOrPromise)
         ? await resolvedOrPromise
         : resolvedOrPromise;

@@ -1,4 +1,4 @@
-type Timing = { start: number; end?: number };
+type Timing = { start: number; end?: number; desc?: string };
 
 type TimingKey = string;
 
@@ -8,11 +8,11 @@ export function createServerTimings() {
   const timings: Record<string, Timing> = {};
   const unique: Record<string, number> = {};
 
-  const start = (_key: TimingKey) => {
+  const start = (_key: TimingKey, desc?: string) => {
     unique[_key] ??= 0;
     const count = unique[_key];
     const key = count === 0 ? _key : `${_key}-${count}`;
-    timings[key] = { start: performance.now() };
+    timings[key] = { start: performance.now(), desc };
     unique[_key]++;
     return () => end(key);
   };
@@ -25,7 +25,9 @@ export function createServerTimings() {
     return Object.entries(timings)
       .map(([key, timing]) => {
         const duration = (timing.end! - timing.start).toFixed(0);
-        return `${slugify(key)};dur=${duration}`;
+        return `${slugify(key)};${
+          timing.desc ? `desc=${timing.desc};` : ""
+        }dur=${duration}`;
       })
       .join(", ");
   };
