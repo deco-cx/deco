@@ -35,6 +35,18 @@ export interface MiddlewareConfig {
   apps?: Apps[];
 }
 
+const wellKnownMonitoringRobotsUA = [
+  "Mozilla/5.0 (compatible; monitoring360bot/1.1; +http://www.monitoring360.io/bot.html)",
+  "Mozilla/5.0+(compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)",
+];
+
+const isMonitoringRobots = (req: Request) => {
+  const ua = req.headers.get("user-agent");
+  if (!ua) {
+    return false;
+  }
+  return wellKnownMonitoringRobotsUA.some((robot) => ua.includes(robot));
+};
 export const handler = [async (
   req: Request,
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
@@ -63,6 +75,9 @@ export const handler = [async (
   req: Request,
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
 ) => {
+  if (req.method === "HEAD" && isMonitoringRobots(req)) {
+    return new Response(null, { status: 200 });
+  }
   const url = new URL(req.url);
   ctx.state.site = {
     id: context.siteId,
