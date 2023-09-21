@@ -8,6 +8,7 @@ import { Schemeable } from "../engine/schema/transform.ts";
 import type { Manifest } from "../live.gen.ts";
 import { AppManifest } from "../types.ts";
 import { BlockInvocation } from "./manifest/defaults.ts";
+import { HintNode } from "../engine/core/hints.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;
@@ -26,7 +27,7 @@ export type BlockModule<
   invoke?: Resolver<TSerializable, BlockInvocation, any>;
   preview?: Resolver<PreactComponent, TSerializable, any>;
   Preview?: ComponentFunc;
-  onBeforeResolveProps?: (props: any) => any;
+  onBeforeResolveProps?: (props: any, hints: HintNode<any>) => any;
 };
 
 export type ModuleOf<TBlock> = TBlock extends Block<
