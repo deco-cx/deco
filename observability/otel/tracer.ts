@@ -29,7 +29,8 @@ globalThis.location = {};
 
 const resource = Resource.default().merge(
   new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ?? "deco",
+    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ??
+      "deco",
     [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
       Deno.hostname(),
     "deco.runtime.version": meta.version,
@@ -41,12 +42,14 @@ const tracingSampleRatio = Deno.env.has(OTEL_TRACING_RATIO_ENV_VAR)
   ? +Deno.env.get(OTEL_TRACING_RATIO_ENV_VAR)!
   : 0;
 
+const debugSampler = new DebugSampler();
 const provider = new NodeTracerProvider({
   resource: resource,
   sampler: new ParentBasedSampler(
     {
       root: new TraceIdRatioBasedSampler(tracingSampleRatio),
-      localParentNotSampled: new DebugSampler(),
+      localParentSampled: debugSampler,
+      localParentNotSampled: debugSampler,
     },
   ),
 });
