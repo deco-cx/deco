@@ -8,7 +8,8 @@
     "cache_clean": "rm deno.lock; deno cache -r live.ts",
     "info_json": "deno info --json live.ts > deps.json",
     "detective": "deno run -A https://deno.land/x/detective/detective.ts deps.json",
-    "deps": "deno task cache_clean && deno task info_json && deno task detective"
+    "deps": "deno task cache_clean && deno task info_json && deno task detective",
+    "telemetry": "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=https://api.honeycomb.io/v1/metrics OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://api.honeycomb.io/v1/traces OTEL_EXPORTER_OTLP_ENDPOINT=http://api.honeycomb.io OTEL_EXPORTER_OTLP_HEADERS='x-honeycomb-team=rTEKbRcCJ5ciE0blPh0kGC' deno run -A tracer.ts"
   },
   "githooks": {
     "pre-commit": "check"
