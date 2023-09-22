@@ -62,6 +62,7 @@ export const handler = [async (
     "./routes/_middleware.ts",
     {
       attributes: {
+        "deco.site.name": context.site,
         "http.request.url": req.url,
         "http.request.method": req.method,
         "http.request.body.size": req.headers.get("content-length") ??

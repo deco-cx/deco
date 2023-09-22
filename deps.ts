@@ -8,13 +8,13 @@ export type {
   MiddlewareHandler,
   MiddlewareHandlerContext,
   PageProps,
-  RouteConfig,
+  RouteConfig
 } from "$fresh/server.ts";
 export type { ServeHandler } from "$fresh/src/server/deps.ts";
 export type {
   IslandModule,
   MiddlewareModule,
-  RouteModule,
+  RouteModule
 } from "$fresh/src/server/types.ts";
 export { DomInspectorActivators } from "https://deno.land/x/inspect_vscode@0.2.1/inspector.ts";
 export * as inspectVSCode from "https://deno.land/x/inspect_vscode@0.2.1/mod.ts";
@@ -28,13 +28,13 @@ export type {
   OptionalKeys,
   Overwrite,
   RequiredKeys,
-  UnionToIntersection,
+  UnionToIntersection
 } from "https://esm.sh/utility-types@3.10.0";
 export type {
   JSONSchema7,
   JSONSchema7Definition,
   JSONSchema7Type,
-  JSONSchema7TypeName,
+  JSONSchema7TypeName
 } from "https://esm.sh/v117/@types/json-schema@7.0.11/index.d.ts";
 export type * from "https://esm.sh/v130/@swc/wasm@1.3.76";
 export { crypto } from "std/crypto/mod.ts";

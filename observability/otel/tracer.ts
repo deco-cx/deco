@@ -13,8 +13,7 @@ import {
   SemanticResourceAttributes,
 } from "npm:@opentelemetry/semantic-conventions";
 
-import opentelemetry, { Attributes } from "npm:@opentelemetry/api";
-import { deferred } from "std/async/deferred.ts";
+import opentelemetry from "npm:@opentelemetry/api";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
 import { DebugSampler } from "./samplers/debug.ts";
@@ -28,18 +27,13 @@ registerInstrumentations({
 // @ts-ignore: monkey patching location
 globalThis.location = {};
 
-const attrs = deferred<Attributes>();
-context.sitePromise.then((serviceName) => {
-  attrs.resolve({
-    [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
-  });
-});
 const resource = Resource.default().merge(
   new Resource({
+    [SemanticResourceAttributes.SERVICE_NAME]: "deco",
     [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
       Deno.hostname(),
     "deco.runtime.version": meta.version,
-  }, attrs),
+  }),
 );
 
 const OTEL_TRACING_RATIO_ENV_VAR = "OTEL_SAMPLING_RATIO";
