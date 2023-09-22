@@ -29,7 +29,7 @@ globalThis.location = {};
 
 const resource = Resource.default().merge(
   new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: "deco",
+    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ?? "deco",
     [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
       Deno.hostname(),
     "deco.runtime.version": meta.version,
