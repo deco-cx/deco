@@ -53,7 +53,6 @@ const provider = new NodeTracerProvider({
     },
   ),
 });
-provider.resource.waitForAsyncAttributes;
 
 const traceExporter = new OTLPTraceExporter();
 provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
