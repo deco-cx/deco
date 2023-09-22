@@ -385,12 +385,8 @@ const invokeResolverWithProps = async <
     props,
     ctx,
   );
-  const span = ctx?.monitoring?.tracer?.startSpan?.("resolve", {
-    attributes: {
-      "resolver": __resolveType,
-    },
-  });
   if (isAwaitable(respOrPromise)) {
+    const span = ctx?.monitoring?.tracer?.startSpan?.(__resolveType);
     const timingName = __resolveType.replaceAll("/", ".");
     end = ctx.monitoring?.t?.start(timingName);
     await ctx.monitoring?.observe?.(__resolveType, async () => {
@@ -412,8 +408,6 @@ const invokeResolverWithProps = async <
       }
       return respOrPromise;
     });
-  } else {
-    span?.end?.();
   }
   return respOrPromise;
 };
