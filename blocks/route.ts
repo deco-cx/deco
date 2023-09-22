@@ -20,6 +20,7 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
 import { observe } from "../observability/observe.ts";
+import { tracer } from "../observability/otel/tracer.ts";
 import {
   InvocationProxy,
   InvokeFunction,
@@ -136,7 +137,7 @@ const debug = {
   },
   fromRequest: (
     request: Request,
-  ): { action: DebugAction; enabled: boolean } => {
+  ): { action: DebugAction; enabled: boolean; correlationId: string } => {
     const url = new URL(request.url);
     const debugFromCookies = getCookies(request.headers)[DEBUG_COOKIE];
     const debugFromQS = url.searchParams.has(DEBUG_QS) && DEBUG_ENABLED ||
@@ -152,6 +153,7 @@ const debug = {
         ? (enabled ? "enable" : "disable")
         : "none",
       enabled,
+      correlationId: url.searchParams.get(DEBUG_QS) ?? crypto.randomUUID(),
     };
   },
 };
@@ -163,12 +165,13 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     request: Request,
     context: MiddlewareHandlerContext<DecoState<any, DecoSiteState, TManifest>>,
   ) {
-    const { enabled, action } = debug.fromRequest(request);
+    const { enabled, action, correlationId } = debug.fromRequest(request);
 
     if (enabled) {
       const { start, end, printTimings } = createServerTimings();
       context.state.t = { start, end, printTimings };
       context.state.debugEnabled = true;
+      context.state.correlationId = correlationId;
       context.state.log = console.log;
     } else {
       context.state.log = () => {}; // stub
@@ -205,6 +208,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
         {
           monitoring: {
             t: context.state.t,
+            tracer,
             observe,
           },
         },

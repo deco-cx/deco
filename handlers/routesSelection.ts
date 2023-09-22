@@ -10,6 +10,7 @@ import { isAwaitable } from "../engine/core/utils.ts";
 import { Route, Routes } from "../flags/audience.ts";
 import { isFreshCtx } from "../handlers/fresh.ts";
 import { observe } from "../observability/observe.ts";
+import { tracer } from "../observability/otel/tracer.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 
 export interface SelectionConfig {
@@ -188,7 +189,7 @@ export default function RoutesSelection(
       hrefRoutes,
       ctx.get,
       {
-        monitoring: t ? { t, observe } : undefined,
+        monitoring: t ? { t, observe, tracer } : undefined,
       },
     );
 

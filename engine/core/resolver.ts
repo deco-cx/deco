@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { Tracer } from "npm:@opentelemetry/api";
 import {
   HintNode,
   ResolveHints,
@@ -34,6 +35,7 @@ export type ObserveFunc = <T>(
 export interface Monitoring {
   t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
   observe: ObserveFunc;
+  tracer: Tracer;
 }
 
 export interface BaseContext {
@@ -383,6 +385,11 @@ const invokeResolverWithProps = async <
     props,
     ctx,
   );
+  const span = ctx?.monitoring?.tracer?.startSpan?.("resolve", {
+    attributes: {
+      "resolver": __resolveType,
+    },
+  });
   if (isAwaitable(respOrPromise)) {
     const timingName = __resolveType.replaceAll("/", ".");
     end = ctx.monitoring?.t?.start(timingName);
@@ -396,13 +403,17 @@ const invokeResolverWithProps = async <
         respOrPromise = async (...args: any[]) => {
           const resp = await original(...args);
           end?.();
+          span?.end?.();
           return resp;
         };
       } else {
         end?.();
+        span?.end?.();
       }
       return respOrPromise;
     });
+  } else {
+    span?.end?.();
   }
   return respOrPromise;
 };

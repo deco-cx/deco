@@ -3,16 +3,18 @@ import { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch";
 
 import { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "npm:@opentelemetry/resources";
-import { BatchSpanProcessor } from "npm:@opentelemetry/sdk-trace-base";
+import {
+  BatchSpanProcessor,
+  ParentBasedSampler,
+  TraceIdRatioBasedSampler,
+} from "npm:@opentelemetry/sdk-trace-base";
 import { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node";
 import { SemanticResourceAttributes } from "npm:@opentelemetry/semantic-conventions";
 
 import opentelemetry from "npm:@opentelemetry/api";
-import { serve } from "std/http/server.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
-
-// autoinstrumentation.ts
+import { DebugSampler } from "./samplers/debug.ts";
 
 registerInstrumentations({
   instrumentations: [new FetchInstrumentation()],
@@ -32,8 +34,19 @@ const resource = Resource.default().merge(
   }),
 );
 
+const OTEL_TRACING_RATIO_ENV_VAR = "OTEL_SAMPLING_RATIO";
+const tracingSampleRatio = Deno.env.has(OTEL_TRACING_RATIO_ENV_VAR)
+  ? +Deno.env.get(OTEL_TRACING_RATIO_ENV_VAR)!
+  : 0;
+
 const provider = new NodeTracerProvider({
   resource: resource,
+  sampler: new ParentBasedSampler(
+    {
+      root: new TraceIdRatioBasedSampler(tracingSampleRatio),
+      localParentNotSampled: new DebugSampler(),
+    },
+  ),
 });
 
 const traceExporter = new OTLPTraceExporter();
@@ -41,42 +54,6 @@ provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
 
 provider.register();
 
-// Application code
-
 export const tracer = opentelemetry.trace.getTracer(
   "deco-tracer",
 );
-
-const port = 8080;
-
-const handler = async (request: Request): Promise<Response> => {
-  // This call will be autoinstrumented
-  await fetch("http://www.example.com/123");
-
-  const span = tracer.startSpan(`constructBody`);
-  const body = `Your user-agent is:\n\n${
-    request.headers.get("user-agent") ?? "Unknown"
-  }`;
-  span.end();
-
-  return new Response(body, { status: 200 });
-};
-
-await serve(instrument(handler), { port });
-
-// Helper code
-
-function instrument(handler) {
-  async function instrumentedHandler(request) {
-    let response;
-    await tracer.startActiveSpan("handler", async (span) => {
-      response = await handler(request);
-
-      span.end();
-    });
-
-    return response;
-  }
-
-  return instrumentedHandler;
-}

@@ -89,6 +89,7 @@ export type DecoState<
 > =
   & TState
   & {
+    correlationId?: string;
     debugEnabled?: boolean;
     log: (...args: any[]) => void;
     $live: TConfig;

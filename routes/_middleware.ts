@@ -1,4 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { ROOT_CONTEXT, SpanStatusCode } from "npm:@opentelemetry/api";
 import { getSetCookies } from "std/http/mod.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import {
@@ -9,6 +10,11 @@ import { Resolvable } from "../engine/core/resolver.ts";
 import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
+import {
+  REQUEST_CONTEXT_KEY,
+  STATE_CONTEXT_KEY,
+} from "../observability/otel/context.ts";
+import { tracer } from "../observability/otel/tracer.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
@@ -51,26 +57,56 @@ export const handler = [async (
   req: Request,
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
 ) => {
-  const begin = performance.now();
   const url = new URL(req.url);
-  const end = startObserve();
-  let response: Response | null = null;
-  try {
-    return response = await ctx.next();
-  } finally {
-    if (ctx?.state?.pathTemplate) {
-      end(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
-    }
-    if (!url.pathname.startsWith("/_frsh")) {
-      console.info(
-        formatLog({
-          status: response?.status ?? 500,
-          url,
-          begin,
-        }),
-      );
-    }
-  }
+  return await tracer.startActiveSpan(
+    "./routes/_middleware.ts",
+    {
+      attributes: {
+        "http.request.url": req.url,
+        "http.request.method": req.method,
+        "http.request.body.size": req.headers.get("content-length") ??
+          undefined,
+        "url.scheme": url.protocol,
+        "server.address": url.host,
+        "url.query": url.search,
+        "url.path": url.pathname,
+        "user_agent.original": req.headers.get("user-agent") ?? undefined,
+      },
+    },
+    ROOT_CONTEXT.setValue(REQUEST_CONTEXT_KEY, req).setValue(
+      STATE_CONTEXT_KEY,
+      ctx.state,
+    ),
+    async (span) => {
+      const begin = performance.now();
+      const end = startObserve();
+      let response: Response | null = null;
+      try {
+        return response = await ctx.next();
+      } finally {
+        const status = response?.status ?? 500;
+        const isErr = status >= 500;
+        span.setStatus({
+          code: isErr ? SpanStatusCode.ERROR : SpanStatusCode.OK,
+        });
+        span.setAttribute("http.response.status_code", `${status}`);
+        if (ctx?.state?.pathTemplate) {
+          span.setAttribute("http.route", ctx?.state?.pathTemplate);
+          end(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
+        }
+        span.end();
+        if (!url.pathname.startsWith("/_frsh")) {
+          console.info(
+            formatLog({
+              status: response?.status ?? 500,
+              url,
+              begin,
+            }),
+          );
+        }
+      }
+    },
+  );
 }, async (
   req: Request,
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
