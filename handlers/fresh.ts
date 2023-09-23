@@ -34,7 +34,7 @@ export default function Fresh(
     if (req.method === "HEAD") {
       return new Response(null, { status: 200 });
     }
-    const endResolvePage = appContext?.monitoring?.t?.start?.("load-data");
+    const endResolvePage = appContext?.monitoring?.timings?.start?.("load-data");
     const resolvePageSpan = appContext?.monitoring?.tracer?.startSpan?.(
       "load-data",
     );
@@ -52,7 +52,7 @@ export default function Fresh(
       const renderToStringSpan = appContext?.monitoring?.tracer?.startSpan?.(
         "render-to-string",
       );
-      const end = appContext?.monitoring?.t?.start?.("render-to-string");
+      const end = appContext?.monitoring?.timings?.start?.("render-to-string");
       const response = await ctx.render({
         page,
         routerInfo: {

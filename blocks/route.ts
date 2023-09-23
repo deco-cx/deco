@@ -1,10 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
+import {
+  REQUEST_CONTEXT_KEY,
+  STATE_CONTEXT_KEY,
+} from "deco/observability/otel/context.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
+import { context as otelContext } from "npm:@opentelemetry/api";
 import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
-  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
@@ -13,6 +17,7 @@ import {
   PageProps,
   RouteConfig,
   RouteModule,
+  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
@@ -167,15 +172,24 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
   ) {
     const { enabled, action, correlationId } = debug.fromRequest(request);
 
+    const t = createServerTimings();
     if (enabled) {
-      const { start, end, printTimings } = createServerTimings();
-      context.state.t = { start, end, printTimings };
+      context.state.t = t;
       context.state.debugEnabled = true;
       context.state.correlationId = correlationId;
-      context.state.log = console.log;
-    } else {
-      context.state.log = () => {}; // stub
     }
+
+    context.state.monitoring = {
+      timings: t,
+      mtrics: observe,
+      tracer,
+      context: otelContext.active().setValue(REQUEST_CONTEXT_KEY, request)
+        .setValue(
+          STATE_CONTEXT_KEY,
+          context.state,
+        ),
+      logger: enabled ? console.log : () => {},
+    };
 
     // Logs  ?__d is present in localhost
     context.state.log(
@@ -206,11 +220,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       .resolverFor(
         { context, request },
         {
-          monitoring: {
-            t: context.state.t,
-            tracer,
-            observe,
-          },
+          monitoring: context.state.monitoring,
         },
       )
       .bind(resolver);

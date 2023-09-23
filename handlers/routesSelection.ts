@@ -9,8 +9,6 @@ import {
 import { isAwaitable } from "../engine/core/utils.ts";
 import { Route, Routes } from "../flags/audience.ts";
 import { isFreshCtx } from "../handlers/fresh.ts";
-import { observe } from "../observability/observe.ts";
-import { tracer } from "../observability/otel/tracer.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 
 export interface SelectionConfig {
@@ -78,7 +76,7 @@ export const router = (
             { context: ctx, request: req },
           );
 
-      const end = configs?.monitoring?.t.start("resolve-handler");
+      const end = configs?.monitoring?.timings.start("resolve-handler");
       const hand = isAwaitable(resolvedOrPromise)
         ? await resolvedOrPromise
         : resolvedOrPromise;
@@ -164,8 +162,8 @@ export default function RoutesSelection(
   ctx: { get: ResolveFunc },
 ): Handler {
   return async (req: Request, connInfo: ConnInfo): Promise<Response> => {
-    const t = isFreshCtx<DecoSiteState>(connInfo)
-      ? connInfo.state.t
+    const monitoring = isFreshCtx<DecoSiteState>(connInfo)
+      ? connInfo.state.monitoring
       : undefined;
 
     // everyone should come first in the list given that we override the everyone value with the upcoming flags.
@@ -189,7 +187,7 @@ export default function RoutesSelection(
       hrefRoutes,
       ctx.get,
       {
-        monitoring: t ? { t, observe, tracer } : undefined,
+        monitoring,
       },
     );
 

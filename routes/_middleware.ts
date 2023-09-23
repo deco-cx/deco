@@ -1,5 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { ROOT_CONTEXT, SpanStatusCode } from "npm:@opentelemetry/api";
+import { SpanStatusCode } from "npm:@opentelemetry/api";
 import { getSetCookies } from "std/http/mod.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import {
@@ -10,11 +10,6 @@ import { Resolvable } from "../engine/core/resolver.ts";
 import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
-import {
-  REQUEST_CONTEXT_KEY,
-  STATE_CONTEXT_KEY,
-} from "../observability/otel/context.ts";
-import { tracer } from "../observability/otel/tracer.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
@@ -58,7 +53,7 @@ export const handler = [async (
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
 ) => {
   const url = new URL(req.url);
-  return await tracer.startActiveSpan(
+  return await ctx.state.monitoring.tracer.startActiveSpan(
     "./routes/_middleware.ts",
     {
       attributes: {
@@ -74,10 +69,7 @@ export const handler = [async (
         "user_agent.original": req.headers.get("user-agent") ?? undefined,
       },
     },
-    ROOT_CONTEXT.setValue(REQUEST_CONTEXT_KEY, req).setValue(
-      STATE_CONTEXT_KEY,
-      ctx.state,
-    ),
+    ctx.state.monitoring.context,
     async (span) => {
       const begin = performance.now();
       const end = startObserve();

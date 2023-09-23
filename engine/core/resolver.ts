@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Tracer } from "npm:@opentelemetry/api";
+import { Context, Tracer } from "npm:@opentelemetry/api";
 import {
   HintNode,
   ResolveHints,
@@ -32,10 +32,13 @@ export type ObserveFunc = <T>(
   key: string,
   func: () => Promise<T>,
 ) => Promise<T>;
+
 export interface Monitoring {
-  t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
-  observe: ObserveFunc;
+  timings: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+  mtrics: ObserveFunc;
   tracer: Tracer;
+  context: Context;
+  logger: typeof console.log;
 }
 
 export interface BaseContext {
@@ -390,10 +393,10 @@ const invokeResolverWithProps = async <
       attributes: {
         "block.kind": "resolver",
       },
-    });
+    }, ctx?.monitoring?.context);
     const timingName = __resolveType.replaceAll("/", ".");
-    end = ctx.monitoring?.t?.start(timingName);
-    await ctx.monitoring?.observe?.(__resolveType, async () => {
+    end = ctx.monitoring?.timings?.start(timingName);
+    await ctx.monitoring?.mtrics?.(__resolveType, async () => {
       respOrPromise = await respOrPromise;
 
       // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
