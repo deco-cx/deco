@@ -9,6 +9,7 @@ import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
+  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
@@ -17,7 +18,6 @@ import {
   PageProps,
   RouteConfig,
   RouteModule,
-  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
@@ -188,14 +188,20 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
           STATE_CONTEXT_KEY,
           context.state,
         ),
-      logger: enabled ? console.log : () => {},
+      logger: enabled ? console : {
+        ...console,
+        log: () => {},
+        error: () => {},
+        debug: () => {},
+        info: () => {},
+      },
     };
 
     // Logs  ?__d is present in localhost
-    context.state.log(
+    context.state.monitoring.logger.log(
       formatIncomingRequest(request, liveContext.site),
     );
-    setLogger(context.state.log);
+    setLogger(context.state.monitoring.logger.log);
 
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing

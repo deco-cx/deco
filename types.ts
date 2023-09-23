@@ -92,7 +92,6 @@ export type DecoState<
   & {
     correlationId?: string;
     debugEnabled?: boolean;
-    log: (...args: any[]) => void;
     $live: TConfig;
     resolve: ResolveFunc;
     release: Release;

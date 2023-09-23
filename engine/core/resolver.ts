@@ -38,7 +38,7 @@ export interface Monitoring {
   mtrics: ObserveFunc;
   tracer: Tracer;
   context: Context;
-  logger: typeof console.log;
+  logger: typeof console;
 }
 
 export interface BaseContext {

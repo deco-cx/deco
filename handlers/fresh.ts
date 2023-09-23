@@ -34,7 +34,9 @@ export default function Fresh(
     if (req.method === "HEAD") {
       return new Response(null, { status: 200 });
     }
-    const endResolvePage = appContext?.monitoring?.timings?.start?.("load-data");
+    const endResolvePage = appContext?.monitoring?.timings?.start?.(
+      "load-data",
+    );
     const resolvePageSpan = appContext?.monitoring?.tracer?.startSpan?.(
       "load-data",
     );
