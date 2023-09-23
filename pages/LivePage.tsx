@@ -190,7 +190,8 @@ interface LivePageContext {
 const LivePageContext = createContext<LivePageContext>({
   renderSection: renderSectionFor("default", false),
 });
-export const useLivePageContext = () => useContext(LivePageContext);
+export const useLivePageContext = () =>
+  useContext<LivePageContext>(LivePageContext);
 
 /**
  * @title Page

@@ -17,7 +17,7 @@ const ctx = createContext<PageContext | undefined>(undefined);
 const routerCtx = createContext<RouterContext | undefined>(undefined);
 
 export const usePageContext = () => {
-  const pageCtx = useContext(ctx);
+  const pageCtx = useContext<PageContext | undefined>(ctx);
   if (pageCtx === undefined) {
     console.warn(
       "page metadata requested but not available, are you using inside an island ?",
@@ -27,7 +27,7 @@ export const usePageContext = () => {
 };
 
 export const useRouterContext = () => {
-  const routerCtxImpl = useContext(routerCtx);
+  const routerCtxImpl = useContext<RouterContext | undefined>(routerCtx);
   if (routerCtxImpl === undefined) {
     console.warn(
       "router context requested but not available, are you using inside an island ?",

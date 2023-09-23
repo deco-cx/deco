@@ -56,7 +56,7 @@ const main = (
   onIdle(async () => {
     /* Listen web-vitals */
     const webVitals = await import(
-      "https://esm.sh/v128/web-vitals@3.1.0/es2022/web-vitals.mjs"
+      "npm:web-vitals@3.1.0"
     );
 
     webVitals.onCLS(onWebVitalsReport);
