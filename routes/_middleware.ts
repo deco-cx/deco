@@ -84,10 +84,11 @@ export const handler = [async (
         });
         span.setAttribute("http.response.status_code", `${status}`);
         if (ctx?.state?.pathTemplate) {
-          span.updateName(ctx?.state?.pathTemplate);
+          const route = `${req.method} ${ctx?.state?.pathTemplate}`;
+          span.updateName(route);
           span.setAttribute(
             "http.route",
-            `${req.method} ${ctx?.state?.pathTemplate}`,
+            route,
           );
           end(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
         }
