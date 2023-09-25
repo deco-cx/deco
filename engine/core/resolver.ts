@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Context, Tracer } from "npm:@opentelemetry/api";
+import { Context, Span, Tracer } from "npm:@opentelemetry/api";
 import {
   HintNode,
   ResolveHints,
@@ -39,6 +39,7 @@ export interface Monitoring {
   tracer: Tracer;
   context: Context;
   logger: typeof console;
+  rootSpan?: Span;
 }
 
 export interface BaseContext {
@@ -393,7 +394,7 @@ const invokeResolverWithProps = async <
       attributes: {
         "block.kind": "resolver",
       },
-    }, ctx?.monitoring?.context);
+    });
     const timingName = __resolveType.replaceAll("/", ".");
     end = ctx.monitoring?.timings?.start(timingName);
     await ctx.monitoring?.mtrics?.(__resolveType, async () => {
@@ -406,15 +407,16 @@ const invokeResolverWithProps = async <
         respOrPromise = async (...args: any[]) => {
           const resp = await original(...args);
           end?.();
-          span?.end?.();
+          //span?.end?.();
           return resp;
         };
       } else {
         end?.();
-        span?.end?.();
+        //span?.end?.();
       }
       return respOrPromise;
     });
+    span?.end?.();
   }
   return respOrPromise;
 };

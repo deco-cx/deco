@@ -4,12 +4,11 @@ import {
   STATE_CONTEXT_KEY,
 } from "deco/observability/otel/context.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-import { context as otelContext } from "npm:@opentelemetry/api";
+import { ROOT_CONTEXT } from 'npm:@opentelemetry/api';
 import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
-  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
@@ -18,6 +17,7 @@ import {
   PageProps,
   RouteConfig,
   RouteModule,
+  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
@@ -183,7 +183,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       timings: t,
       mtrics: observe,
       tracer,
-      context: otelContext.active().setValue(REQUEST_CONTEXT_KEY, request)
+      context: ROOT_CONTEXT.setValue(REQUEST_CONTEXT_KEY, request)
         .setValue(
           STATE_CONTEXT_KEY,
           context.state,

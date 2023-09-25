@@ -67,10 +67,12 @@ export const handler = [async (
         "url.query": url.search,
         "url.path": url.pathname,
         "user_agent.original": req.headers.get("user-agent") ?? undefined,
+        "http.route.destination": ctx.destination,
       },
     },
     ctx.state.monitoring.context,
     async (span) => {
+      ctx.state.monitoring.rootSpan = span;
       const begin = performance.now();
       const end = startObserve();
       let response: Response | null = null;
@@ -90,7 +92,9 @@ export const handler = [async (
             "http.route",
             route,
           );
-          end(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
+          end?.(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
+        } else {
+          span.updateName(`${req.method} ${req.url}`);
         }
         span.end();
         if (!url.pathname.startsWith("/_frsh")) {
