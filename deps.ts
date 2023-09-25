@@ -75,8 +75,10 @@ export {
 } from "npm:@opentelemetry/semantic-conventions@1.17.0";
 
 export {
+  ExplicitBucketHistogramAggregation,
   MeterProvider,
   PeriodicExportingMetricReader,
+  View,
 } from "npm:@opentelemetry/sdk-metrics@1.17.0";
 
 export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";

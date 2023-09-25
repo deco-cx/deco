@@ -4,6 +4,7 @@ import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
+  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
@@ -13,7 +14,6 @@ import {
   ROOT_CONTEXT,
   RouteConfig,
   RouteModule,
-  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
