@@ -21,6 +21,7 @@ import opentelemetry, {
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
 import { DebugSampler } from "./samplers/debug.ts";
+export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 const tryGetVersionOf = (pkg: string) => {
@@ -71,10 +72,12 @@ const provider = new NodeTracerProvider({
   ),
 });
 
-const traceExporter = new OTLPTraceExporter();
-provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
+if (OTEL_IS_ENABLED) {
+  const traceExporter = new OTLPTraceExporter();
+  provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
 
-provider.register();
+  provider.register();
+}
 
 export const tracer = opentelemetry.trace.getTracer(
   "deco-tracer",
