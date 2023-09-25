@@ -1,23 +1,21 @@
-import { registerInstrumentations } from "npm:@opentelemetry/instrumentation";
-import { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch";
+import { FetchInstrumentation, registerInstrumentations } from "../../deps.ts";
 
-import { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-proto";
-import { Resource } from "npm:@opentelemetry/resources";
 import {
   BatchSpanProcessor,
+  NodeTracerProvider,
+  OTLPTraceExporter,
   ParentBasedSampler,
-  TraceIdRatioBasedSampler,
-} from "npm:@opentelemetry/sdk-trace-base";
-import { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node";
-import {
+  Resource,
   SemanticResourceAttributes,
-} from "npm:@opentelemetry/semantic-conventions";
+  TraceIdRatioBasedSampler,
+} from "../../deps.ts";
 
-import opentelemetry, {
+import {
   diag,
   DiagConsoleLogger,
   DiagLogLevel,
-} from "npm:@opentelemetry/api";
+  opentelemetry,
+} from "../../deps.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
 import { DebugSampler } from "./samplers/debug.ts";

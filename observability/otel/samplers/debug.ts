@@ -1,9 +1,9 @@
-import { Context } from "npm:@opentelemetry/api";
 import {
+  Context,
   Sampler,
   SamplingDecision,
   SamplingResult,
-} from "npm:@opentelemetry/sdk-trace-base";
+} from "../../../deps.ts";
 import { DecoState } from "../../../types.ts";
 import { REQUEST_CONTEXT_KEY, STATE_CONTEXT_KEY } from "../context.ts";
 

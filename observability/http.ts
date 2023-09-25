@@ -1,4 +1,4 @@
-import { ValueType } from "npm:@opentelemetry/api";
+import { ValueType } from "../deps.ts";
 import { decoMeter } from "./otel/metrics.ts";
 
 const httpDuration = decoMeter.createHistogram("http_request_duration", {

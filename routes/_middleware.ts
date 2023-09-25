@@ -1,11 +1,11 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { SpanStatusCode } from "npm:@opentelemetry/api";
 import { getSetCookies } from "std/http/mod.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import {
   getPagePathTemplate,
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
+import { SpanStatusCode } from "../deps.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
@@ -51,7 +51,7 @@ const isMonitoringRobots = (req: Request) => {
 export const handler = [async (
   req: Request,
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
-) => {
+): Promise<Response> => {
   const url = new URL(req.url);
   return await ctx.state.monitoring.tracer.startActiveSpan(
     "./routes/_middleware.ts",
@@ -81,6 +81,7 @@ export const handler = [async (
         return response = await ctx.next();
       } catch (e) {
         span.recordException(e);
+        throw e;
       } finally {
         const status = response?.status ?? 500;
         const isErr = status >= 500;
@@ -94,6 +95,10 @@ export const handler = [async (
           span.setAttribute(
             "http.route",
             route,
+          );
+          span.setAttribute(
+            "deco.flags",
+            response?.headers.get(DECO_MATCHER_HEADER_QS) ?? "anonymous",
           );
           end?.(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
         } else {

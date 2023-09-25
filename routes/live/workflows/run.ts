@@ -12,8 +12,7 @@ import {
   workflowRemoteRunner,
   workflowWebSocketHandler,
 } from "../../../deps.ts";
-import type { Manifest } from "../../../live.gen.ts";
-import { DecoState } from "../../../mod.ts";
+import { AppManifest, DecoState } from "../../../mod.ts";
 import { DecoSiteState } from "../../../types.ts";
 
 export type Props = HttpRunRequest<
@@ -27,7 +26,7 @@ export type Props = HttpRunRequest<
  */
 async function runWorkflow(
   props: Props,
-  ctx: DecoState<unknown, DecoSiteState, Manifest>,
+  ctx: DecoState<unknown, DecoSiteState, AppManifest>,
 ): Promise<Command> {
   const { execution: { metadata } } = props;
   const workflow = metadata!.workflow;
@@ -42,7 +41,7 @@ async function runWorkflow(
 
 const handleProps = async (
   props: Props,
-  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState, Manifest>>,
+  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState, AppManifest>>,
 ) => {
   const metadata = await ctx.state.resolve<WorkflowMetadata>(
     (props?.execution?.metadata ?? {}) as WorkflowMetadata,
@@ -68,7 +67,11 @@ export const handler = async (
       workflowFn,
       (execution) =>
         new WorkflowContext(
-          ctx.state as unknown as DecoState<unknown, DecoSiteState, Manifest>,
+          ctx.state as unknown as DecoState<
+            unknown,
+            DecoSiteState,
+            AppManifest
+          >,
           execution,
         ),
     );
@@ -79,7 +82,7 @@ export const handler = async (
     props,
     ctx as unknown as HandlerContext<
       unknown,
-      DecoState<unknown, DecoSiteState, Manifest>
+      DecoState<unknown, DecoSiteState, AppManifest>
     >,
   );
   return new Response(

@@ -4,7 +4,6 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { deferred } from "std/async/deferred.ts";
 import { SourceMap } from "./blocks/app.ts";
 import { ReleaseResolver } from "./engine/core/mod.ts";
 import { Release } from "./engine/releases/provider.ts";

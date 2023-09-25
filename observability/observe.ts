@@ -1,5 +1,5 @@
-import { ValueType } from "npm:@opentelemetry/api";
 import { isWrappedError } from "../blocks/loader.ts";
+import { ValueType } from "../deps.ts";
 import { decoMeter } from "./otel/metrics.ts";
 
 const operationDuration = decoMeter.createHistogram("block_op_duration", {

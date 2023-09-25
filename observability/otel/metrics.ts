@@ -1,8 +1,8 @@
-import { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http";
 import {
   MeterProvider,
+  OTLPMetricExporter,
   PeriodicExportingMetricReader,
-} from "npm:@opentelemetry/sdk-metrics";
+} from "../../deps.ts";
 import { OTEL_IS_ENABLED, resource } from "./config.ts";
 // a=b,c=d => {a:b, c:d}
 const headersStringToObject = (headersString: string | undefined | null) => {

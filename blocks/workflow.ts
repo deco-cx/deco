@@ -8,7 +8,6 @@ import {
   WorkflowExecution,
 } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
-import type { Manifest } from "../live.gen.ts";
 import {
   AvailableActions,
   AvailableFunctions,
@@ -28,7 +27,7 @@ export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
 }
 export class WorkflowContext<
-  TManifest extends AppManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
 > extends DurableWorkflowContext<TMetadata> {
   constructor(

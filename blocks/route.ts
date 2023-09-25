@@ -4,20 +4,20 @@ import {
   STATE_CONTEXT_KEY,
 } from "deco/observability/otel/context.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-import { ROOT_CONTEXT } from "npm:@opentelemetry/api";
 import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
+  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
   MiddlewareHandlerContext,
   MiddlewareModule,
   PageProps,
+  ROOT_CONTEXT,
   RouteConfig,
   RouteModule,
-  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";

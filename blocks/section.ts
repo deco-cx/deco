@@ -12,6 +12,7 @@ import {
   PreactComponent,
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
+import { Manifest } from "../live.gen.ts";
 import { context } from "../live.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
 
@@ -21,14 +22,19 @@ import { AppManifest, FunctionContext } from "../types.ts";
 export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
 export const isSection = <
-  K extends keyof TManifest["sections"],
+  TManifest extends AppManifest = Manifest,
+  K extends keyof TManifest["sections"] = keyof TManifest["sections"],
   Sec extends TManifest["sections"][K] extends
     { default: (props: infer Props) => JSX.Element | null } ? PreactComponent<
       JSX.Element,
       Props
     >
-    : unknown,
-  TManifest extends AppManifest = AppManifest,
+    : unknown = TManifest["sections"][K] extends
+      { default: (props: infer Props) => JSX.Element | null } ? PreactComponent<
+        JSX.Element,
+        Props
+      >
+      : unknown,
 >(
   s: Sec | Section,
   section: K,
