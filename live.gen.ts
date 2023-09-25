@@ -38,13 +38,14 @@ import * as $$$$$$$$$2 from "./matchers/MatchSite.ts";
 import * as $$$$$$$$$3 from "./matchers/MatchHost.ts";
 import * as $$$$$$$$$4 from "./matchers/MatchCookies.ts";
 import * as $$$$$$$$$5 from "./matchers/MatchCron.ts";
-import * as $$$$$$$$$6 from "./matchers/MatchMulti.ts";
-import * as $$$$$$$$$7 from "./matchers/MatchRandom.ts";
-import * as $$$$$$$$$8 from "./matchers/MatchDevice.ts";
-import * as $$$$$$$$$9 from "./matchers/MatchNegate.ts";
-import * as $$$$$$$$$10 from "./matchers/MatchEnvironment.ts";
-import * as $$$$$$$$$11 from "./matchers/MatchAlways.ts";
-import * as $$$$$$$$$12 from "./matchers/MatchLocation.ts";
+import * as $$$$$$$$$6 from "./matchers/MatchNever.ts";
+import * as $$$$$$$$$7 from "./matchers/MatchMulti.ts";
+import * as $$$$$$$$$8 from "./matchers/MatchRandom.ts";
+import * as $$$$$$$$$9 from "./matchers/MatchDevice.ts";
+import * as $$$$$$$$$10 from "./matchers/MatchNegate.ts";
+import * as $$$$$$$$$11 from "./matchers/MatchEnvironment.ts";
+import * as $$$$$$$$$12 from "./matchers/MatchAlways.ts";
+import * as $$$$$$$$$13 from "./matchers/MatchLocation.ts";
 import * as $$$$$$$$$$0 from "./flags/audience.ts";
 import * as $$$$$$$$$$1 from "./flags/multivariate.ts";
 import * as $$$$$$$$$$2 from "./flags/everyone.ts";
@@ -96,17 +97,18 @@ const manifest = {
     "$live/sections/UseSlot.tsx": $$$$$$$$0,
   },
   "matchers": {
-    "$live/matchers/MatchAlways.ts": $$$$$$$$$11,
+    "$live/matchers/MatchAlways.ts": $$$$$$$$$12,
     "$live/matchers/MatchCookies.ts": $$$$$$$$$4,
     "$live/matchers/MatchCron.ts": $$$$$$$$$5,
     "$live/matchers/MatchDate.ts": $$$$$$$$$0,
-    "$live/matchers/MatchDevice.ts": $$$$$$$$$8,
-    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$10,
+    "$live/matchers/MatchDevice.ts": $$$$$$$$$9,
+    "$live/matchers/MatchEnvironment.ts": $$$$$$$$$11,
     "$live/matchers/MatchHost.ts": $$$$$$$$$3,
-    "$live/matchers/MatchLocation.ts": $$$$$$$$$12,
-    "$live/matchers/MatchMulti.ts": $$$$$$$$$6,
-    "$live/matchers/MatchNegate.ts": $$$$$$$$$9,
-    "$live/matchers/MatchRandom.ts": $$$$$$$$$7,
+    "$live/matchers/MatchLocation.ts": $$$$$$$$$13,
+    "$live/matchers/MatchMulti.ts": $$$$$$$$$7,
+    "$live/matchers/MatchNegate.ts": $$$$$$$$$10,
+    "$live/matchers/MatchNever.ts": $$$$$$$$$6,
+    "$live/matchers/MatchRandom.ts": $$$$$$$$$8,
     "$live/matchers/MatchSite.ts": $$$$$$$$$2,
     "$live/matchers/MatchUserAgent.ts": $$$$$$$$$1,
   },
