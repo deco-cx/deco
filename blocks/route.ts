@@ -1,14 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import {
-  REQUEST_CONTEXT_KEY,
-  STATE_CONTEXT_KEY,
-} from "deco/observability/otel/context.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   FreshHandler as Handler,
-  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandler,
@@ -18,6 +13,7 @@ import {
   ROOT_CONTEXT,
   RouteConfig,
   RouteModule,
+  getCookies,
   setCookie,
 } from "../deps.ts";
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
@@ -26,6 +22,10 @@ import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
 import { observe } from "../observability/observe.ts";
 import { tracer } from "../observability/otel/config.ts";
+import {
+  REQUEST_CONTEXT_KEY,
+  STATE_CONTEXT_KEY,
+} from "../observability/otel/context.ts";
 import {
   InvocationProxy,
   InvokeFunction,

@@ -1,20 +1,17 @@
-import { FetchInstrumentation, registerInstrumentations } from "../../deps.ts";
-
 import {
   BatchSpanProcessor,
-  NodeTracerProvider,
-  OTLPTraceExporter,
-  ParentBasedSampler,
-  Resource,
-  SemanticResourceAttributes,
-  TraceIdRatioBasedSampler,
-} from "../../deps.ts";
-
-import {
   diag,
   DiagConsoleLogger,
   DiagLogLevel,
+  FetchInstrumentation,
+  NodeTracerProvider,
   opentelemetry,
+  OTLPTraceExporter,
+  ParentBasedSampler,
+  registerInstrumentations,
+  Resource,
+  SemanticResourceAttributes,
+  TraceIdRatioBasedSampler,
 } from "../../deps.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
