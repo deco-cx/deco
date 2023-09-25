@@ -7,10 +7,10 @@ import {
 } from "../../engine/core/hints.ts";
 import { ResolveOptions } from "../../engine/core/mod.ts";
 import {
-  isAwaitable,
-  notUndefined,
   PromiseOrValue,
   UnPromisify,
+  isAwaitable,
+  notUndefined,
 } from "../../engine/core/utils.ts";
 import { identity } from "../../utils/object.ts";
 import { createServerTimings } from "../../utils/timings.ts";
@@ -35,7 +35,7 @@ export type ObserveFunc = <T>(
 
 export interface Monitoring {
   timings: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
-  mtrics: ObserveFunc;
+  metrics: ObserveFunc;
   tracer: Tracer;
   context: Context;
   logger: typeof console;
@@ -390,33 +390,33 @@ const invokeResolverWithProps = async <
     ctx,
   );
   if (isAwaitable(respOrPromise)) {
-    const span = ctx?.monitoring?.tracer?.startSpan?.(__resolveType, {
+    const timingName = __resolveType.replaceAll("/", ".");
+    end = ctx.monitoring?.timings?.start(timingName);
+    await ctx?.monitoring?.tracer?.startActiveSpan?.(__resolveType, {
       attributes: {
         "block.kind": "resolver",
       },
-    });
-    const timingName = __resolveType.replaceAll("/", ".");
-    end = ctx.monitoring?.timings?.start(timingName);
-    await ctx.monitoring?.mtrics?.(__resolveType, async () => {
-      respOrPromise = await respOrPromise;
+    }, async (span) => {
+      await ctx.monitoring?.metrics?.(__resolveType, async () => {
+        respOrPromise = await respOrPromise;
 
-      // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
-      // in order to achieve the correct result we should wrap the inner function with the timings function.
-      if (typeof respOrPromise === "function") {
-        const original = respOrPromise;
-        respOrPromise = async (...args: any[]) => {
-          const resp = await original(...args);
+        // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+        // in order to achieve the correct result we should wrap the inner function with the timings function.
+        if (typeof respOrPromise === "function") {
+          const original = respOrPromise;
+          respOrPromise = async (...args: any[]) => {
+            const resp = await original(...args);
+            end?.();
+            span?.end?.();
+            return resp;
+          };
+        } else {
           end?.();
-          //span?.end?.();
-          return resp;
-        };
-      } else {
-        end?.();
-        //span?.end?.();
-      }
-      return respOrPromise;
+          span?.end?.();
+        }
+        return respOrPromise;
+      });
     });
-    span?.end?.();
   }
   return respOrPromise;
 };

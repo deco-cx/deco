@@ -12,9 +12,8 @@ import {
   PreactComponent,
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
-import type { Manifest } from "../live.gen.ts";
 import { context } from "../live.ts";
-import { DecoManifest, FunctionContext } from "../types.ts";
+import { AppManifest, FunctionContext } from "../types.ts";
 
 /**
  * @widget none
@@ -29,7 +28,7 @@ export const isSection = <
       Props
     >
     : unknown,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
 >(
   s: Sec | Section,
   section: K,

@@ -73,11 +73,14 @@ export const handler = [async (
     ctx.state.monitoring.context,
     async (span) => {
       ctx.state.monitoring.rootSpan = span;
+
       const begin = performance.now();
       const end = startObserve();
       let response: Response | null = null;
       try {
         return response = await ctx.next();
+      } catch (e) {
+        span.recordException(e);
       } finally {
         const status = response?.status ?? 500;
         const isErr = status >= 500;

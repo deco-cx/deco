@@ -16,14 +16,14 @@ export class DebugSampler implements Sampler {
       state?.correlationId;
     if (correlationId) {
       return {
-        decision: SamplingDecision.RECORD,
+        decision: SamplingDecision.RECORD_AND_SAMPLED,
         attributes: {
           "trace.debug.id": correlationId,
         },
       };
     }
     return {
-      decision: SamplingDecision.RECORD_AND_SAMPLED,
+      decision: SamplingDecision.RECORD,
     };
   }
   toString(): string {

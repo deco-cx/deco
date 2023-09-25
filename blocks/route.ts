@@ -4,7 +4,7 @@ import {
   STATE_CONTEXT_KEY,
 } from "deco/observability/otel/context.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-import { ROOT_CONTEXT } from 'npm:@opentelemetry/api';
+import { ROOT_CONTEXT } from "npm:@opentelemetry/api";
 import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
@@ -25,7 +25,7 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
 import { observe } from "../observability/observe.ts";
-import { tracer } from "../observability/otel/tracer.ts";
+import { tracer } from "../observability/otel/config.ts";
 import {
   InvocationProxy,
   InvokeFunction,
@@ -123,7 +123,7 @@ const DEBUG_ENABLED = "enabled";
 
 const DEBUG_QS = "__d";
 
-type DebugAction = "enable" | "disable" | "none";
+type DebugAction = (resp: Response) => void;
 const debug = {
   none: (_resp: Response) => {},
   enable: (resp: Response) => {
@@ -152,13 +152,19 @@ const debug = {
     const enabled = ((debugFromQS ?? debugFromCookies) === DEBUG_ENABLED) ||
       isLivePreview;
 
+    const correlationId = url.searchParams.get(DEBUG_QS) || crypto.randomUUID();
     // querystring forces a setcookie using the querystring value
     return {
       action: hasDebugFromQS || isLivePreview
-        ? (enabled ? "enable" : "disable")
-        : "none",
+        ? (enabled
+          ? (resp) => {
+            debug["enable"](resp);
+            resp.headers.set("x-correlation-id", correlationId);
+          }
+          : debug["disable"])
+        : debug["none"],
       enabled,
-      correlationId: url.searchParams.get(DEBUG_QS) ?? crypto.randomUUID(),
+      correlationId,
     };
   },
 };
@@ -181,7 +187,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
 
     context.state.monitoring = {
       timings: t,
-      mtrics: observe,
+      metrics: observe,
       tracer,
       context: ROOT_CONTEXT.setValue(REQUEST_CONTEXT_KEY, request)
         .setValue(
@@ -276,7 +282,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     if (request.headers.get("upgrade") === "websocket") {
       return resp;
     }
-    debug[action](resp);
+    action(resp);
     setLogger(null);
 
     return resp;

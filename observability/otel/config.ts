@@ -13,10 +13,26 @@ import {
   SemanticResourceAttributes,
 } from "npm:@opentelemetry/semantic-conventions";
 
-import opentelemetry from "npm:@opentelemetry/api";
+import opentelemetry, {
+  diag,
+  DiagConsoleLogger,
+  DiagLogLevel,
+} from "npm:@opentelemetry/api";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
 import { DebugSampler } from "./samplers/debug.ts";
+
+diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
+const tryGetVersionOf = (pkg: string) => {
+  try {
+    const [_, ver] = import.meta.resolve(pkg).split("@");
+    return ver.substring(0, ver.length - 1);
+  } catch {
+    return undefined;
+  }
+};
+const apps_ver = tryGetVersionOf("apps/") ??
+  tryGetVersionOf("deco-sites/std/") ?? "_";
 
 registerInstrumentations({
   instrumentations: [new FetchInstrumentation()],
@@ -27,13 +43,14 @@ registerInstrumentations({
 // @ts-ignore: monkey patching location
 globalThis.location = {};
 
-const resource = Resource.default().merge(
+export const resource = Resource.default().merge(
   new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ??
       "deco",
     [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
       Deno.hostname(),
     "deco.runtime.version": meta.version,
+    "deco.apps.version": apps_ver,
   }),
 );
 
