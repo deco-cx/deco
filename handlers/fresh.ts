@@ -26,31 +26,64 @@ export const isFreshCtx = <TState>(
  * @title Fresh Page
  * @description Renders a fresh page.
  */
-export default function Fresh(freshConfig: FreshConfig, fnContext: FnContext) {
+export default function Fresh(
+  freshConfig: FreshConfig,
+  appContext: Pick<FnContext, "monitoring">,
+) {
   return async (req: Request, ctx: ConnInfo) => {
     if (req.method === "HEAD") {
       return new Response(null, { status: 200 });
     }
-    const endResolvePage = fnContext?.monitoring?.t?.start?.("load-data");
-    const page =
-      isDeferred<Page, BaseContext & { context: ConnInfo }>(freshConfig.page)
-        ? await freshConfig.page({ context: ctx })
-        : freshConfig.page;
+    const endResolvePage = appContext?.monitoring?.timings?.start?.(
+      "load-data",
+    );
+
+    const page = await appContext?.monitoring?.tracer?.startActiveSpan?.(
+      "load-data",
+      async (span) => {
+        try {
+          return isDeferred<Page, BaseContext & { context: ConnInfo }>(
+              freshConfig.page,
+            )
+            ? await freshConfig.page({ context: ctx })
+            : freshConfig.page;
+        } catch (e) {
+          span.recordException(e);
+          throw e;
+        } finally {
+          span.end();
+        }
+      },
+    );
+
     endResolvePage?.();
     const url = new URL(req.url);
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page, { headers: allowCorsFor(req) });
     }
     if (isFreshCtx<DecoState>(ctx)) {
-      const end = fnContext?.monitoring?.t?.start?.("render-to-string");
-      const response = await ctx.render({
-        page,
-        routerInfo: {
-          flags: ctx.state.flags,
-          pagePath: ctx.state.pathTemplate,
+      const end = appContext?.monitoring?.timings?.start?.("render-to-string");
+      const response = await appContext.monitoring!.tracer.startActiveSpan?.(
+        "render-to-string",
+        async (span) => {
+          try {
+            return await ctx.render({
+              page,
+              routerInfo: {
+                flags: ctx.state.flags,
+                pagePath: ctx.state.pathTemplate,
+              },
+            });
+          } catch (err) {
+            span.recordException(err);
+            throw err;
+          } finally {
+            span.end();
+          }
         },
-      });
+      );
       end?.();
+
       return response;
     }
     return Response.json({ message: "Fresh is not being used" }, {

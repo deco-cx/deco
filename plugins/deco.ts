@@ -4,7 +4,6 @@ import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
 import { newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
 import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
-import { collectPromMetrics } from "../observability/metrics.ts";
 import {
   default as Render,
   handler as entrypoint,
@@ -32,7 +31,6 @@ export interface Options<TManifest extends AppManifest = AppManifest> {
   release?: Release;
 }
 export default function decoPlugin(opt?: Options): Plugin {
-  collectPromMetrics();
   let buildDecoStateMiddl = buildDecoState("./routes/_middleware.ts");
   if (opt) {
     const releaseProvider =

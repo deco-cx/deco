@@ -1,18 +1,10 @@
-import { client } from "./client.ts";
-import { defaultLabels, defaultLabelsValues } from "./labels.ts";
+import { ValueType } from "../deps.ts";
+import { decoMeter } from "./otel/metrics.ts";
 
-const httpLabels = [
-  "method",
-  "path",
-  "status",
-  ...defaultLabels,
-];
-
-const httpDuration = new client.Histogram({
-  name: "http_req_duration",
-  help: "http request duration",
-  buckets: [100, 500, 1000, 5000],
-  labelNames: httpLabels,
+const httpDuration = decoMeter.createHistogram("http_request_duration", {
+  description: "http request duration",
+  unit: "ms",
+  valueType: ValueType.DOUBLE,
 });
 
 /**
@@ -21,13 +13,10 @@ const httpDuration = new client.Histogram({
 export const startObserve = () => {
   const start = performance.now();
   return (method: string, path: string, status: number) => {
-    httpDuration.labels({
-      method,
-      path,
-      status: `${status}`,
-      ...defaultLabelsValues,
-    }).observe(
-      performance.now() - start,
-    );
+    httpDuration.record(performance.now() - start, {
+      "http.method": method,
+      "http.route": path,
+      "http.response.status": `${status}`,
+    });
   };
 };

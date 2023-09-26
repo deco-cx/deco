@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { Context, Span, Tracer } from "../../deps.ts";
 import {
   HintNode,
   ResolveHints,
@@ -31,9 +32,14 @@ export type ObserveFunc = <T>(
   key: string,
   func: () => Promise<T>,
 ) => Promise<T>;
+
 export interface Monitoring {
-  t: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
-  observe: ObserveFunc;
+  timings: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+  metrics: ObserveFunc;
+  tracer: Tracer;
+  context: Context;
+  logger: typeof console;
+  rootSpan?: Span;
 }
 
 export interface BaseContext {
@@ -385,23 +391,31 @@ const invokeResolverWithProps = async <
   );
   if (isAwaitable(respOrPromise)) {
     const timingName = __resolveType.replaceAll("/", ".");
-    end = ctx.monitoring?.t?.start(timingName);
-    await ctx.monitoring?.observe?.(__resolveType, async () => {
-      respOrPromise = await respOrPromise;
+    end = ctx.monitoring?.timings?.start(timingName);
+    await ctx?.monitoring?.tracer?.startActiveSpan?.(__resolveType, {
+      attributes: {
+        "block.kind": "resolver",
+      },
+    }, async (span) => {
+      await ctx.monitoring?.metrics?.(__resolveType, async () => {
+        respOrPromise = await respOrPromise;
 
-      // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
-      // in order to achieve the correct result we should wrap the inner function with the timings function.
-      if (typeof respOrPromise === "function") {
-        const original = respOrPromise;
-        respOrPromise = async (...args: any[]) => {
-          const resp = await original(...args);
+        // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+        // in order to achieve the correct result we should wrap the inner function with the timings function.
+        if (typeof respOrPromise === "function") {
+          const original = respOrPromise;
+          respOrPromise = async (...args: any[]) => {
+            const resp = await original(...args);
+            end?.();
+            span?.end?.();
+            return resp;
+          };
+        } else {
           end?.();
-          return resp;
-        };
-      } else {
-        end?.();
-      }
-      return respOrPromise;
+          span?.end?.();
+        }
+        return respOrPromise;
+      });
     });
   }
   return respOrPromise;

@@ -1,4 +1,5 @@
 import { isSection, Section } from "../blocks/section.ts";
+import { Manifest } from "../live.gen.ts";
 
 export type WellKnownSlots =
   | "content"
@@ -22,7 +23,10 @@ export interface Props {
 
 export const CONTENT_SLOT_NAME = "content";
 export const isContentSlot = (s: Section): boolean => {
-  return isSection(s, "$live/sections/Slot.tsx") &&
+  return isSection<Manifest>(
+    s,
+    "$live/sections/Slot.tsx",
+  ) &&
     s?.props?.name === CONTENT_SLOT_NAME;
 };
 

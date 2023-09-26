@@ -37,6 +37,48 @@ export type {
   JSONSchema7TypeName,
 } from "https://esm.sh/v117/@types/json-schema@7.0.11/index.d.ts";
 export type * from "https://esm.sh/v130/@swc/wasm@1.3.76";
+export type { Context, Span, Tracer } from "npm:@opentelemetry/api@1.6.0";
+
+export {
+  createContextKey,
+  default as opentelemetry,
+  diag,
+  DiagConsoleLogger,
+  DiagLogLevel,
+  ROOT_CONTEXT,
+  SpanStatusCode,
+  ValueType,
+} from "npm:@opentelemetry/api@1.6.0";
 export { crypto } from "std/crypto/mod.ts";
 export { getCookies, setCookie } from "std/http/mod.ts";
 export type { Handler } from "std/http/server.ts";
+
+export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0.43.0";
+export { registerInstrumentations } from "npm:@opentelemetry/instrumentation@0.43.0";
+
+export { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-proto@0.43.0";
+export { Resource } from "npm:@opentelemetry/resources@1.17.0";
+export {
+  BatchSpanProcessor,
+  ParentBasedSampler,
+  SamplingDecision,
+  TraceIdRatioBasedSampler,
+} from "npm:@opentelemetry/sdk-trace-base@1.17.0";
+
+export type {
+  Sampler,
+  SamplingResult,
+} from "npm:@opentelemetry/sdk-trace-base@1.17.0";
+export { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node@1.17.0";
+export {
+  SemanticResourceAttributes,
+} from "npm:@opentelemetry/semantic-conventions@1.17.0";
+
+export {
+  ExplicitBucketHistogramAggregation,
+  MeterProvider,
+  PeriodicExportingMetricReader,
+  View,
+} from "npm:@opentelemetry/sdk-metrics@1.17.0";
+
+export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";

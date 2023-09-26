@@ -11,6 +11,7 @@ import {
   MiddlewareHandlerContext,
   MiddlewareModule,
   PageProps,
+  ROOT_CONTEXT,
   RouteConfig,
   RouteModule,
   setCookie,
@@ -20,6 +21,11 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
 import { observe } from "../observability/observe.ts";
+import { tracer } from "../observability/otel/config.ts";
+import {
+  REQUEST_CONTEXT_KEY,
+  STATE_CONTEXT_KEY,
+} from "../observability/otel/context.ts";
 import {
   InvocationProxy,
   InvokeFunction,
@@ -117,7 +123,7 @@ const DEBUG_ENABLED = "enabled";
 
 const DEBUG_QS = "__d";
 
-type DebugAction = "enable" | "disable" | "none";
+type DebugAction = (resp: Response) => void;
 const debug = {
   none: (_resp: Response) => {},
   enable: (resp: Response) => {
@@ -136,7 +142,7 @@ const debug = {
   },
   fromRequest: (
     request: Request,
-  ): { action: DebugAction; enabled: boolean } => {
+  ): { action: DebugAction; enabled: boolean; correlationId: string } => {
     const url = new URL(request.url);
     const debugFromCookies = getCookies(request.headers)[DEBUG_COOKIE];
     const debugFromQS = url.searchParams.has(DEBUG_QS) && DEBUG_ENABLED ||
@@ -146,12 +152,19 @@ const debug = {
     const enabled = ((debugFromQS ?? debugFromCookies) === DEBUG_ENABLED) ||
       isLivePreview;
 
+    const correlationId = url.searchParams.get(DEBUG_QS) || crypto.randomUUID();
     // querystring forces a setcookie using the querystring value
     return {
       action: hasDebugFromQS || isLivePreview
-        ? (enabled ? "enable" : "disable")
-        : "none",
+        ? (enabled
+          ? (resp) => {
+            debug["enable"](resp);
+            resp.headers.set("x-correlation-id", correlationId);
+          }
+          : debug["disable"])
+        : debug["none"],
       enabled,
+      correlationId,
     };
   },
 };
@@ -163,22 +176,38 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     request: Request,
     context: MiddlewareHandlerContext<DecoState<any, DecoSiteState, TManifest>>,
   ) {
-    const { enabled, action } = debug.fromRequest(request);
+    const { enabled, action, correlationId } = debug.fromRequest(request);
 
+    const t = createServerTimings();
     if (enabled) {
-      const { start, end, printTimings } = createServerTimings();
-      context.state.t = { start, end, printTimings };
+      context.state.t = t;
       context.state.debugEnabled = true;
-      context.state.log = console.log;
-    } else {
-      context.state.log = () => {}; // stub
+      context.state.correlationId = correlationId;
     }
 
+    context.state.monitoring = {
+      timings: t,
+      metrics: observe,
+      tracer,
+      context: ROOT_CONTEXT.setValue(REQUEST_CONTEXT_KEY, request)
+        .setValue(
+          STATE_CONTEXT_KEY,
+          context.state,
+        ),
+      logger: enabled ? console : {
+        ...console,
+        log: () => {},
+        error: () => {},
+        debug: () => {},
+        info: () => {},
+      },
+    };
+
     // Logs  ?__d is present in localhost
-    context.state.log(
+    context.state.monitoring.logger.log(
       formatIncomingRequest(request, liveContext.site),
     );
-    setLogger(context.state.log);
+    setLogger(context.state.monitoring.logger.log);
 
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
@@ -203,10 +232,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       .resolverFor(
         { context, request },
         {
-          monitoring: {
-            t: context.state.t,
-            observe,
-          },
+          monitoring: context.state.monitoring,
         },
       )
       .bind(resolver);
@@ -256,7 +282,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     if (request.headers.get("upgrade") === "websocket") {
       return resp;
     }
-    debug[action](resp);
+    action(resp);
     setLogger(null);
 
     return resp;

@@ -2,8 +2,7 @@ import { ConnInfo } from "std/http/server.ts";
 import { Handler } from "../blocks/handler.ts";
 import { Workflow, WorkflowContext } from "../blocks/workflow.ts";
 import { workflowHTTPHandler } from "../deps.ts";
-import type { Manifest } from "../live.gen.ts";
-import { DecoSiteState, DecoState } from "../mod.ts";
+import { AppManifest, DecoSiteState, DecoState } from "../mod.ts";
 import { isFreshCtx } from "./fresh.ts";
 export interface Config {
   workflow: Workflow;
@@ -11,7 +10,7 @@ export interface Config {
 
 export default function WorkflowHandler({ workflow }: Config): Handler {
   return (req: Request, conn: ConnInfo) => {
-    if (isFreshCtx<DecoState<unknown, DecoSiteState, Manifest>>(conn)) {
+    if (isFreshCtx<DecoState<unknown, DecoSiteState, AppManifest>>(conn)) {
       const handler = workflowHTTPHandler(
         workflow,
         (exec) => new WorkflowContext(conn.state, exec),

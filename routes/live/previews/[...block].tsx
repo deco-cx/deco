@@ -62,7 +62,7 @@ export const handler = async (
   const { socket, response } = Deno.upgradeWebSocket(req);
   const cache: Record<string, Promise<string>> = {};
   socket.onopen = () => {
-    ctx.state.log("connected to render socket.");
+    ctx.state.monitoring.logger.log("connected to render socket.");
   };
   socket.onmessage = async (e) => {
     try {
@@ -80,11 +80,13 @@ export const handler = async (
       );
       socket.send(await cache[key]);
     } catch (err) {
-      ctx.state.log("failed to render:", err);
+      ctx.state.monitoring.logger.error("failed to render:", err);
     }
   };
-  socket.onclose = () => ctx.state.log("render socket closed.");
-  socket.onerror = (e) => ctx.state.log("render socket error:", e);
+  socket.onclose = () =>
+    ctx.state.monitoring.logger.log("render socket closed.");
+  socket.onerror = (e) =>
+    ctx.state.monitoring.logger.log("render socket error:", e);
   return response;
 };
 

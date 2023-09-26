@@ -20,7 +20,7 @@ import workflowBlock from "./blocks/workflow.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "./deps.ts";
 import { ModuleOf } from "./engine/block.ts";
-import { ResolveFunc } from "./engine/core/resolver.ts";
+import { Monitoring, ResolveFunc } from "./engine/core/resolver.ts";
 import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { Route } from "./flags/audience.ts";
@@ -69,6 +69,7 @@ export interface SiteInfo {
 export type DecoSiteState<T = unknown> = {
   site: Site;
   t: ReturnType<typeof createServerTimings>;
+  monitoring: Monitoring;
   global: T;
 };
 
@@ -89,8 +90,8 @@ export type DecoState<
 > =
   & TState
   & {
+    correlationId?: string;
     debugEnabled?: boolean;
-    log: (...args: any[]) => void;
     $live: TConfig;
     resolve: ResolveFunc;
     release: Release;

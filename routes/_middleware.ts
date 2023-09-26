@@ -5,6 +5,7 @@ import {
   getPagePathTemplate,
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
+import { SpanStatusCode } from "../deps.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
@@ -50,27 +51,72 @@ const isMonitoringRobots = (req: Request) => {
 export const handler = [async (
   req: Request,
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
-) => {
-  const begin = performance.now();
+): Promise<Response> => {
   const url = new URL(req.url);
-  const end = startObserve();
-  let response: Response | null = null;
-  try {
-    return response = await ctx.next();
-  } finally {
-    if (ctx?.state?.pathTemplate) {
-      end(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
-    }
-    if (!url.pathname.startsWith("/_frsh")) {
-      console.info(
-        formatLog({
-          status: response?.status ?? 500,
-          url,
-          begin,
-        }),
-      );
-    }
-  }
+  return await ctx.state.monitoring.tracer.startActiveSpan(
+    "./routes/_middleware.ts",
+    {
+      attributes: {
+        "deco.site.name": context.site,
+        "http.request.url": req.url,
+        "http.request.method": req.method,
+        "http.request.body.size": req.headers.get("content-length") ??
+          undefined,
+        "url.scheme": url.protocol,
+        "server.address": url.host,
+        "url.query": url.search,
+        "url.path": url.pathname,
+        "user_agent.original": req.headers.get("user-agent") ?? undefined,
+        "http.route.destination": ctx.destination,
+      },
+    },
+    ctx.state.monitoring.context,
+    async (span) => {
+      ctx.state.monitoring.rootSpan = span;
+
+      const begin = performance.now();
+      const end = startObserve();
+      let response: Response | null = null;
+      try {
+        return response = await ctx.next();
+      } catch (e) {
+        span.recordException(e);
+        throw e;
+      } finally {
+        const status = response?.status ?? 500;
+        const isErr = status >= 500;
+        span.setStatus({
+          code: isErr ? SpanStatusCode.ERROR : SpanStatusCode.OK,
+        });
+        span.setAttribute("http.response.status_code", `${status}`);
+        if (ctx?.state?.pathTemplate) {
+          const route = `${req.method} ${ctx?.state?.pathTemplate}`;
+          span.updateName(route);
+          span.setAttribute(
+            "http.route",
+            route,
+          );
+          span.setAttribute(
+            "deco.flags",
+            response?.headers.get(DECO_MATCHER_HEADER_QS) ?? "anonymous",
+          );
+          end?.(req.method, ctx?.state?.pathTemplate, response?.status ?? 500);
+        } else {
+          span.updateName(`${req.method} ${req.url}`);
+        }
+        span.end();
+        if (!url.pathname.startsWith("/_frsh")) {
+          console.info(
+            formatLog({
+              status: response?.status ?? 500,
+              url,
+              begin,
+            }),
+          );
+        }
+      }
+    },
+  );
 }, async (
   req: Request,
   ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
