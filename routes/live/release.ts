@@ -55,5 +55,9 @@ export const handler = async (
     return new Response(null, {
       status: 200,
     });
+  } else {
+    return new Response(null, {
+      status: 405,
+    })
   }
 };
