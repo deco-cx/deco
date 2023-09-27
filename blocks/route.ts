@@ -3,6 +3,7 @@ import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 import { InvocationFunc } from "../clients/withManifest.ts";
 import {
+  context as otelContext,
   FreshHandler as Handler,
   getCookies,
   HandlerContext,
@@ -11,7 +12,6 @@ import {
   MiddlewareHandlerContext,
   MiddlewareModule,
   PageProps,
-  ROOT_CONTEXT,
   RouteConfig,
   RouteModule,
   setCookie,
@@ -160,6 +160,16 @@ const debug = {
           ? (resp) => {
             debug["enable"](resp);
             resp.headers.set("x-correlation-id", correlationId);
+            resp.headers.set("x-deno-os-uptime-seconds", `${Deno.osUptime()}`);
+            resp.headers.set(
+              "x-isolate-started-at",
+              `${liveContext.instance.startedAt.toISOString()}`,
+            );
+            liveContext.instance.readyAt &&
+              resp.headers.set(
+                "x-isolate-ready-at",
+                `${liveContext.instance.readyAt.toISOString()}`,
+              );
           }
           : debug["disable"])
         : debug["none"],
@@ -189,7 +199,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       timings: t,
       metrics: observe,
       tracer,
-      context: ROOT_CONTEXT.setValue(REQUEST_CONTEXT_KEY, request)
+      context: otelContext.active().setValue(REQUEST_CONTEXT_KEY, request)
         .setValue(
           STATE_CONTEXT_KEY,
           context.state,

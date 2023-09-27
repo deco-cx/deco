@@ -69,6 +69,7 @@ const getResolveType = (schema: unknown): string | undefined => {
   return undefined;
 };
 const buildSchemaWithResolvables = (
+  manifestBlocks: ManifestBlocks,
   schema: Schemas,
   release: Record<string, Resolvable>,
 ) => {
@@ -80,7 +81,7 @@ const buildSchemaWithResolvables = (
       const resolveType = (obj as { __resolveType: string })?.__resolveType;
       if (
         resolveType &&
-        resolveType.includes(`/${ref}/`)
+        manifestBlocks.blocks?.[ref]?.[resolveType] !== undefined
       ) {
         root[ref].anyOf!.push(
           resolvable(
@@ -142,10 +143,14 @@ export const handler = async (
     return new Response(null, { status: 304, headers: allowCorsFor(req) }); // not modified
   }
   const info = await sf.do("schema", async () => {
+    const { manifest, sourceMap } = await context.runtime!;
+    const manfiestBlocks = toManifestBlocks(
+      manifest,
+    );
     if (revision !== latestRevision || mschema === null) {
-      const { manifest, sourceMap } = await context.runtime!;
       const endBuildSchema = ctx.state?.t?.start("build-resolvables");
       mschema = buildSchemaWithResolvables(
+        manfiestBlocks,
         await genSchemas(manifest, sourceMap),
         {
           ...await ctx.state.resolve({
@@ -162,9 +167,7 @@ export const handler = async (
       version: meta.version,
       namespace: context.namespace!,
       site: context.site!,
-      manifest: toManifestBlocks(
-        await context.runtime!.then((r) => r.manifest),
-      ),
+      manifest: manfiestBlocks,
       schema: mschema,
     };
 

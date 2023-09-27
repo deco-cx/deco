@@ -15,6 +15,12 @@ export interface DecoRuntimeState {
   resolver: ReleaseResolver<any>;
   sourceMap: SourceMap;
 }
+
+export interface InstanceInfo {
+  startedAt: Date;
+  readyAt?: Date;
+}
+
 // The global deco context
 export type DecoContext = {
   deploymentId: string | undefined;
@@ -27,6 +33,7 @@ export type DecoContext = {
   release?: Release;
   runtime?: Promise<DecoRuntimeState>;
   play?: boolean;
+  instance: InstanceInfo;
 };
 
 // While Fresh doesn't allow for injecting routes and middlewares,
@@ -37,4 +44,7 @@ export const context: DecoContext = {
   site: "",
   siteId: 0,
   play: false,
+  instance: {
+    startedAt: new Date(),
+  },
 };

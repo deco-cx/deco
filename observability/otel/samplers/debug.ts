@@ -1,14 +1,25 @@
 import {
+  Attributes,
   Context,
+  Link,
   Sampler,
   SamplingDecision,
   SamplingResult,
+  SpanKind,
 } from "../../../deps.ts";
 import { DecoState } from "../../../types.ts";
 import { REQUEST_CONTEXT_KEY, STATE_CONTEXT_KEY } from "../context.ts";
 
 export class DebugSampler implements Sampler {
-  shouldSample(context: Context): SamplingResult {
+  constructor(protected inner?: Sampler) {}
+  shouldSample(
+    context: Context,
+    traceId: string,
+    spanName: string,
+    spanKind: SpanKind,
+    attributes: Attributes,
+    links: Link[],
+  ): SamplingResult {
     const req = context.getValue(REQUEST_CONTEXT_KEY) as Request;
     const state = context.getValue(STATE_CONTEXT_KEY) as DecoState;
 
@@ -22,8 +33,18 @@ export class DebugSampler implements Sampler {
         },
       };
     }
+    if (this.inner) {
+      return this.inner.shouldSample(
+        context,
+        traceId,
+        spanName,
+        spanKind,
+        attributes,
+        links,
+      );
+    }
     return {
-      decision: SamplingDecision.RECORD,
+      decision: SamplingDecision.NOT_RECORD,
     };
   }
   toString(): string {
