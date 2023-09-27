@@ -2,9 +2,9 @@ import { ConnInfo, Handler } from "std/http/server.ts";
 import { ResolveOptions } from "../engine/core/mod.ts";
 import {
   BaseContext,
+  isDeferred,
   Resolvable,
   ResolveFunc,
-  isDeferred,
 } from "../engine/core/resolver.ts";
 import { isAwaitable } from "../engine/core/utils.ts";
 import { Route, Routes } from "../flags/audience.ts";
@@ -45,7 +45,10 @@ const createUrlPatternFromHref = (href: string) => {
   const [pathname, searchRaw] = href.split("?");
   const search = searchRaw ? `?${encodeURIComponent(searchRaw)}` : undefined;
 
-  return urlPatternCache[`${pathname}${search}`] ??= new URLPattern({ pathname, search });
+  return urlPatternCache[`${pathname}${search}`] ??= new URLPattern({
+    pathname,
+    search,
+  });
 };
 
 export const router = (
