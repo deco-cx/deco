@@ -177,7 +177,9 @@ export const createResolver = <
     context.siteId,
   );
   const runtimePromise = deferred<DecoRuntimeState>();
-  context.runtime = runtimePromise;
+  context.runtime = runtimePromise.finally(() => {
+    context.instance.readyAt = new Date();
+  });
 
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
@@ -370,6 +372,7 @@ export const $live = <T extends AppManifest>(
     resolver,
     sourceMap: buildSourceMap(newManifest),
   });
+  context.instance.readyAt = new Date();
   console.log(
     `starting deco: ${
       context.siteId === -1 ? "" : `siteId=${context.siteId}`
