@@ -55,16 +55,16 @@ const tracingSampleRatio = Deno.env.has(OTEL_TRACING_RATIO_ENV_VAR)
   ? +Deno.env.get(OTEL_TRACING_RATIO_ENV_VAR)!
   : 0;
 
-const debugSampler = new DebugSampler();
 const traceIdRatioBasedSampler = new TraceIdRatioBasedSampler(
   tracingSampleRatio,
 );
+
+const debugSampler = new DebugSampler(traceIdRatioBasedSampler);
 const provider = new NodeTracerProvider({
   resource: resource,
   sampler: new ParentBasedSampler(
     {
       root: debugSampler,
-      localParentNotSampled: traceIdRatioBasedSampler,
     },
   ),
 });
