@@ -11,11 +11,13 @@ import {
   registerInstrumentations,
   Resource,
   SemanticResourceAttributes,
-  TraceIdRatioBasedSampler,
 } from "../../deps.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
+import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
+import { SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
+
 export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 
 diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
@@ -31,7 +33,10 @@ const apps_ver = tryGetVersionOf("apps/") ??
   tryGetVersionOf("deco-sites/std/") ?? "_";
 
 registerInstrumentations({
-  instrumentations: [new FetchInstrumentation()],
+  instrumentations: [
+    new FetchInstrumentation(),
+    new DenoRuntimeInstrumentation(),
+  ],
 });
 
 // Monkeypatching to get past FetchInstrumentation's dependence on sdk-trace-web, which has runtime dependencies on some browser-only constructs. See https://github.com/open-telemetry/opentelemetry-js/issues/3413#issuecomment-1496834689 for more details
@@ -50,16 +55,22 @@ export const resource = Resource.default().merge(
   }),
 );
 
-const OTEL_TRACING_RATIO_ENV_VAR = "OTEL_SAMPLING_RATIO";
-const tracingSampleRatio = Deno.env.has(OTEL_TRACING_RATIO_ENV_VAR)
-  ? +Deno.env.get(OTEL_TRACING_RATIO_ENV_VAR)!
-  : 0;
+const parseSamplingOptions = (): SamplingOptions | undefined => {
+  const encodedOpts = Deno.env.get("OTEL_SAMPLING_CONFIG");
+  if (!encodedOpts) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(atob(encodedOpts));
+  } catch (err) {
+    console.error("could not parse sampling config", err);
+    return undefined;
+  }
+};
 
-const traceIdRatioBasedSampler = new TraceIdRatioBasedSampler(
-  tracingSampleRatio,
+const debugSampler = new DebugSampler(
+  new URLBasedSampler(parseSamplingOptions()),
 );
-
-const debugSampler = new DebugSampler(traceIdRatioBasedSampler);
 const provider = new NodeTracerProvider({
   resource: resource,
   sampler: new ParentBasedSampler(
