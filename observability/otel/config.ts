@@ -14,7 +14,6 @@ import {
 } from "../../deps.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
-import { DenoKvInstrumentation } from "./instrumentation/deno-kv.ts";
 import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
 import { SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
@@ -37,7 +36,6 @@ registerInstrumentations({
   instrumentations: [
     new FetchInstrumentation(),
     new DenoRuntimeInstrumentation(),
-    ...'Kv' in Deno ? [new DenoKvInstrumentation()]: [],
   ],
 });
 
