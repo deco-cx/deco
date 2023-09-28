@@ -1,10 +1,13 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { DecoState } from "../../mod.ts";
 import { crypto } from "https://deno.land/std@0.201.0/crypto/crypto.ts";
+import { decode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
-interface Signature {
+type Signature = string;
+
+interface Payload {
   site: string,
-  signature: ArrayBuffer
+  signature: Signature,
 }
 
 const algorithm: RsaHashedKeyGenParams = {
@@ -13,6 +16,11 @@ const algorithm: RsaHashedKeyGenParams = {
   publicExponent: new Uint8Array([1, 0, 1]),
   hash: "SHA-256",
 };
+
+const verifyAlg: RsaPssParams = {
+  name: "RSA-PSS",
+  saltLength: 32,
+}
 
 const encoder = new TextEncoder();
 
@@ -23,10 +31,11 @@ const getAdminPublicKey = async (): Promise<CryptoKey> => {
   return await crypto.subtle.importKey(format, jwk, algorithm, true, ['verify']);
 }
 
-const verifySignature = async (signature: Signature): Promise<boolean> => {
-  const data = encoder.encode(signature.site);
+const verifySignature = async (payload: Payload): Promise<boolean> => {
+  const data = encoder.encode(payload.site);
   const key = await getAdminPublicKey();
-  return crypto.subtle.verify(algorithm, key, signature.signature, data);
+  const signature = decode(payload.signature);
+  return crypto.subtle.verify(verifyAlg, key, signature, data);
 }
 
 export const handler = async (
@@ -43,18 +52,24 @@ export const handler = async (
       },
     );
   } else if (_req.method === "POST") {
-    const signature: Signature = await _req.json();
-    const verified = await verifySignature(signature);
-    if (!verified) {
+    try {
+      const payload: Payload = await _req.json();
+      const verified = await verifySignature(payload);
+      if (!verified) {
+        return new Response(null, {
+          status: 401,
+        })
+      }
+      const channel = new BroadcastChannel(payload.site)
+      channel.postMessage({});
       return new Response(null, {
-        status: 401,
-      })
+        status: 200,
+      });
+    } catch {
+      return new Response(null, {
+        status: 500,
+      }) 
     }
-    const channel = new BroadcastChannel(signature.site)
-    channel.postMessage({});
-    return new Response(null, {
-      status: 200,
-    });
   } else {
     return new Response(null, {
       status: 405,
