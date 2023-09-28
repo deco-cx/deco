@@ -14,6 +14,8 @@ import {
 } from "../../deps.ts";
 import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
+import { DenoKvInstrumentation } from "./instrumentation/deno-kv.ts";
+import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
 import { SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
@@ -32,7 +34,11 @@ const apps_ver = tryGetVersionOf("apps/") ??
   tryGetVersionOf("deco-sites/std/") ?? "_";
 
 registerInstrumentations({
-  instrumentations: [new FetchInstrumentation()],
+  instrumentations: [
+    new FetchInstrumentation(),
+    new DenoRuntimeInstrumentation(),
+    ...'Kv' in Deno ? [new DenoKvInstrumentation()]: [],
+  ],
 });
 
 // Monkeypatching to get past FetchInstrumentation's dependence on sdk-trace-web, which has runtime dependencies on some browser-only constructs. See https://github.com/open-telemetry/opentelemetry-js/issues/3413#issuecomment-1496834689 for more details

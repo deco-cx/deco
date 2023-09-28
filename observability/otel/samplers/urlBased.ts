@@ -41,11 +41,15 @@ export class URLBasedSampler implements Sampler {
     context: Context,
   ): SamplingResult {
     const req = context.getValue(REQUEST_CONTEXT_KEY) as Request;
-    const pathnameSegments = new URL(req.url).pathname.split("/");
-    const ratio =
-      this.compiledOptions.find((opt) => opt.matches(pathnameSegments))
+    const pathnameSegments = req?.url
+      ? new URL(req.url).pathname.split("/")
+      : undefined;
+    const defaultRatio = this.options?.defaultRatio ?? 0;
+    const ratio = pathnameSegments
+      ? this.compiledOptions.find((opt) => opt.matches(pathnameSegments))
         ?.ratio ??
-        this.options?.defaultRatio ?? 0;
+        defaultRatio
+      : defaultRatio;
     if (ratio > Math.random()) {
       return {
         decision: SamplingDecision.RECORD_AND_SAMPLED,
