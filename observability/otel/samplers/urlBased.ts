@@ -29,6 +29,9 @@ export class URLBasedSampler implements Sampler {
       return {
         ratio,
         matches(urlSegments: string[]) {
+          if (urlSegments.length !== patternSegments.length) {
+            return false;
+          }
           return urlSegments.every((segment, segmentIdx) =>
             patternSegments[segmentIdx] === "*" ||
             patternSegments[segmentIdx] === segment
