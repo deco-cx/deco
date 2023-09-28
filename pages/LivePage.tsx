@@ -2,7 +2,6 @@ import { Head } from "$fresh/runtime.ts";
 import { createContext, JSX } from "preact";
 import { useContext } from "preact/hooks";
 import { isSection, Section } from "../blocks/section.ts";
-import LiveAnalytics from "../components/LiveAnalytics.tsx";
 import LiveControls from "../components/LiveControls.tsx";
 import LivePageEditor, {
   BlockControls,
@@ -208,11 +207,6 @@ export default function LivePage(
         site={{ id: context.siteId, name: context.site }}
         page={{ id: pageId, pathTemplate: routerCtx?.pagePath }}
         flags={routerCtx?.flags}
-      />
-      <LiveAnalytics
-        id={pageId}
-        flags={routerCtx?.flags}
-        path={routerCtx?.pagePath}
       />
       {renderPage(props)}
     </>
