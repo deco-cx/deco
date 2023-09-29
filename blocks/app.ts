@@ -15,6 +15,7 @@ import {
   ResolverMap,
 } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
+import { ResolverMiddleware } from "../engine/middleware.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
 
@@ -193,12 +194,14 @@ const buildRuntimeFromApp = <
   TResolverMap extends ResolverMap = ResolverMap,
 >(
   { state, manifest, resolvables, dependencies, sourceMap }: TApp,
+  appMiddleware?: ResolverMiddleware,
 ): AppRuntime => {
   const injectedManifest = injectAppStateOnManifest(state, manifest);
   return {
     resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
       injectedManifest,
       blocks(),
+      appMiddleware,
     ),
     manifest: injectedManifest,
     resolvables,
@@ -207,17 +210,20 @@ const buildRuntimeFromApp = <
   };
 };
 
-export type AppModule<
+export interface AppModule<
   TState = {},
   TProps = any,
   TResolverMap extends ResolverMap = ResolverMap,
   TAppManifest extends AppManifest = AppManifest,
   TAppDependencies extends (AppRuntime | App)[] = (AppRuntime | App)[],
-> = BlockModule<
-  AppFunc<TProps, TState, TAppManifest, TAppDependencies, TResolverMap>,
-  App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime,
-  AppRuntime
->;
+> extends
+  BlockModule<
+    AppFunc<TProps, TState, TAppManifest, TAppDependencies, TResolverMap>,
+    App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime,
+    AppRuntime
+  > {
+  middleware?: ResolverMiddleware;
+}
 
 const injectAppState = <TState = any>(
   state: TState,
@@ -262,10 +268,11 @@ const injectAppStateOnInlineLoader = <TState = any>(
 
 const buildApp = <TState = {}>(
   appRuntime: AppRuntime | App<any, TState>,
+  appMiddleware?: ResolverMiddleware,
 ): AppRuntime => {
   const runtime = isAppRuntime(appRuntime)
     ? appRuntime
-    : buildRuntimeFromApp<TState>(appRuntime);
+    : buildRuntimeFromApp<TState>(appRuntime, appMiddleware);
   const dependencies: AppRuntime[] = (runtime.dependencies ?? []).map(
     buildApp,
   );
@@ -280,12 +287,12 @@ const appBlock: Block<AppModule> = {
     TProps = any,
     TState = {},
   >(
-    { default: runtimeFn }: AppModule<TState, TProps>,
+    { default: runtimeFn, middleware }: AppModule<TState, TProps>,
   ) =>
   (props: TProps) => {
     try {
       const appRuntime = runtimeFn(props);
-      return buildApp(appRuntime);
+      return buildApp(appRuntime, middleware);
     } catch (err) {
       console.log(
         "error when building app runtime, falling back to an empty runtime",
