@@ -287,21 +287,27 @@ const createSiteTs = async (): Promise<Patch> => {
       path: siteTs,
       content: await format(`
         import { AppContext as AC, App } from "$live/mod.ts";
-        import std, { Props } from "apps/compat/std/mod.ts";
+        import std, { Props as StdProps } from "apps/compat/std/mod.ts";
 
         import manifest, { Manifest } from "../manifest.gen.ts";
 
+        interface Props extends StdProps {
+          // you can include your own properties here
+          // then you can configure it on admin, save and publish
+          // making it accessible through context in runtime by your loaders/actions/sections and more.
+        }
         type StdApp = ReturnType<typeof std>;
         export default function Site(
           state: Props,
         ): App<Manifest, Props, [
           StdApp,
         ]> {
+          const stdApp = std(state);
           return {
-            state,
+            state: { ...state, ...stdApp.state },
             manifest,
             dependencies: [
-              std(state),
+              stdApp,
             ],
           };
         }
@@ -431,18 +437,9 @@ const addAppsImportMap = async (): Promise<Patch> => {
     },
   };
 };
-const changeMainTs = async (): Promise<Patch> => {
-  const mainTs = join(Deno.cwd(), "main.ts");
-  const currentContent = await Deno.readTextFile(mainTs);
 
-  return {
-    from: {
-      path: mainTs,
-      content: currentContent,
-    },
-    to: {
-      path: mainTs,
-      content: await format(`
+const withPlugins = async (plugins: string[], imports: string[]) =>
+  await format(`
 /// <reference no-default-lib="true"/>
 /// <reference lib="dom" />
 /// <reference lib="deno.ns" />
@@ -453,6 +450,7 @@ import plugins from "deco-sites/std/plugins/mod.ts";
 import partytownPlugin from "partytown/mod.ts";
 import manifest from "./fresh.gen.ts";
 import decoManifest from "./manifest.gen.ts";
+${imports.join("\n")}
 
 await start(manifest, {
   plugins: [
@@ -461,10 +459,43 @@ await start(manifest, {
         manifest: decoManifest,
       },
     ),
-    partytownPlugin(),
+    ${plugins.join(",")}
   ],
 });
-`),
+`);
+const changeMainTs = async (): Promise<Patch> => {
+  const mainTs = join(Deno.cwd(), "main.ts");
+  const currentContent = await Deno.readTextFile(mainTs);
+  const plugins: string[] = [];
+  const imports: string[] = [];
+  if (currentContent.includes("twindPlugin")) {
+    imports.push(`import twindPlugin from "$fresh/plugins/twind.ts";`);
+    imports.push(`import twindConfig from "./twind.config.ts";`);
+    plugins.push(`twindPlugin({
+      ...twindConfig,
+      selfURL: new URL("./twind.config.ts", import.meta.url).href,
+    })`);
+  }
+
+  if (currentContent.includes("proxyUrl:")) {
+    plugins.push(`partytownPlugin({
+      proxyUrl: "/proxy",
+      mainWindowAccessors: [${
+      currentContent.includes("navigator") ? `"navigator",` : ""
+    }${currentContent.includes("scheduler") ? `"scheduler"` : ""}],
+    })`);
+  } else {
+    plugins.push(`partytownPlugin()`);
+  }
+
+  return {
+    from: {
+      path: mainTs,
+      content: currentContent,
+    },
+    to: {
+      path: mainTs,
+      content: await withPlugins(plugins, imports),
     },
   };
 };
