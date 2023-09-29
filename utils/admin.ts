@@ -9,7 +9,7 @@ export const isAdmin = (url: string): boolean => {
   if (url.startsWith(adminDomain)) {
     return true;
   }
-  const urlObj = new URL(url);
+  const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
   return (
     url.startsWith(adminPreviewUrls) &&
     urlObj.host.endsWith(adminPreviewDomain) // previews
