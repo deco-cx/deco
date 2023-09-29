@@ -1,11 +1,12 @@
+// deno-lint-ignore-file no-explicit-any
 import { BaseContext, Resolvable, Resolver } from "../engine/core/resolver.ts";
 
 export interface ResolverMiddlewareContext<T> extends BaseContext {
   next?(): Promise<T>;
 }
 export type ResolverMiddleware<
-  T,
-  TParent = unknown,
+  T = any,
+  TParent = any,
   TContext extends ResolverMiddlewareContext<T> = ResolverMiddlewareContext<T>,
 > = Resolver<T, TParent, TContext>;
 
@@ -23,7 +24,6 @@ export const compose = <
     return await dispatch(0);
     async function dispatch(
       i: number,
-      // deno-lint-ignore no-explicit-any
     ): Promise<Resolvable<T, TContext, any>> {
       if (i <= index) {
         return Promise.reject(new Error("next() called multiple times"));
