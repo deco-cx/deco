@@ -128,13 +128,15 @@ export const buildRuntime = <
     ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
       decorated,
       (mod, key) => {
+        const hasMiddleware = typeof middleware === "function";
         const blockResolver = blk.adapt!(mod, key);
-        const blockResolverMiddleware: ResolverMiddleware[] =
-          Array.isArray(blockResolver) ? blockResolver : [blockResolver];
-        const pipeline = typeof middleware === "function"
-          ? [middleware, ...blockResolverMiddleware]
-          : blockResolverMiddleware;
-        const composed = compose(...pipeline);
+        const composed = Array.isArray(blockResolver)
+          ? compose(
+            ...(hasMiddleware ? [...blockResolver, middleware] : blockResolver),
+          )
+          : hasMiddleware
+          ? compose(blockResolver, middleware)
+          : blockResolver;
         composed.onBeforeResolveProps = mod.onBeforeResolveProps;
         composed.type = blk.type;
         return composed;
