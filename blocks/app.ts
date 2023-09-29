@@ -74,6 +74,7 @@ export interface App<
   TResolvableMap extends ResolvableMap = ResolvableMap,
 > extends AppBase<TAppManifest, TAppDependencies, TResolvableMap> {
   state: TAppState;
+  middleware?: ResolverMiddleware;
 }
 
 export interface AppRuntime<
@@ -193,8 +194,14 @@ const buildRuntimeFromApp = <
   TContext extends BaseContext = BaseContext,
   TResolverMap extends ResolverMap = ResolverMap,
 >(
-  { state, manifest, resolvables, dependencies, sourceMap }: TApp,
-  appMiddleware?: ResolverMiddleware,
+  {
+    state,
+    manifest,
+    resolvables,
+    dependencies,
+    sourceMap,
+    middleware: appMiddleware,
+  }: TApp,
 ): AppRuntime => {
   const injectedManifest = injectAppStateOnManifest(state, manifest);
   return {
@@ -210,20 +217,17 @@ const buildRuntimeFromApp = <
   };
 };
 
-export interface AppModule<
+export type AppModule<
   TState = {},
   TProps = any,
   TResolverMap extends ResolverMap = ResolverMap,
   TAppManifest extends AppManifest = AppManifest,
   TAppDependencies extends (AppRuntime | App)[] = (AppRuntime | App)[],
-> extends
-  BlockModule<
-    AppFunc<TProps, TState, TAppManifest, TAppDependencies, TResolverMap>,
-    App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime,
-    AppRuntime
-  > {
-  middleware?: ResolverMiddleware;
-}
+> = BlockModule<
+  AppFunc<TProps, TState, TAppManifest, TAppDependencies, TResolverMap>,
+  App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime,
+  AppRuntime
+>;
 
 const injectAppState = <TState = any>(
   state: TState,
@@ -268,11 +272,10 @@ const injectAppStateOnInlineLoader = <TState = any>(
 
 const buildApp = <TState = {}>(
   appRuntime: AppRuntime | App<any, TState>,
-  appMiddleware?: ResolverMiddleware,
 ): AppRuntime => {
   const runtime = isAppRuntime(appRuntime)
     ? appRuntime
-    : buildRuntimeFromApp<TState>(appRuntime, appMiddleware);
+    : buildRuntimeFromApp<TState>(appRuntime);
   const dependencies: AppRuntime[] = (runtime.dependencies ?? []).map(
     buildApp,
   );
@@ -287,12 +290,12 @@ const appBlock: Block<AppModule> = {
     TProps = any,
     TState = {},
   >(
-    { default: runtimeFn, middleware }: AppModule<TState, TProps>,
+    { default: runtimeFn }: AppModule<TState, TProps>,
   ) =>
   (props: TProps) => {
     try {
       const appRuntime = runtimeFn(props);
-      return buildApp(appRuntime, middleware);
+      return buildApp(appRuntime);
     } catch (err) {
       console.log(
         "error when building app runtime, falling back to an empty runtime",
