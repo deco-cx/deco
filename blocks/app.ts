@@ -236,6 +236,7 @@ const appMiddlewareToResolverMiddleware = <
         const appCtx = {
           ...fnContextFromHttpContext(appHttpCtx),
           ...state,
+          next: ctx.next?.bind?.(ctx),
         };
         return mid(props, appHttpCtx.request, appCtx);
       } else {
@@ -292,11 +293,12 @@ const injectAppState = <TState = any>(
   return (
     props: any,
     request: Request,
-    { response, get, invoke, ...rest }: FnContext,
+    { response, get, invoke, bag, ...rest }: FnContext,
   ) => {
     return fnProps(props, request, {
       ...rest,
       ...state,
+      bag,
       response,
       get,
       invoke,
@@ -314,11 +316,12 @@ const injectAppStateOnInlineLoader = <TState = any>(
   return (
     props: any,
     request: Request,
-    { response, get, invoke, ...rest }: FnContext,
+    { response, bag, get, invoke, ...rest }: FnContext,
   ) => {
     return propsLoader(loader, props, request, {
       ...rest,
       ...state,
+      bag,
       response,
       get,
       invoke,

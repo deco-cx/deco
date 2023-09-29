@@ -1,7 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "../blocks/handler.ts";
 import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
-import { componentWith, fnContextFromHttpContext } from "../blocks/utils.tsx";
+import {
+  componentWith,
+  fnContextFromHttpContext,
+  RequestState,
+} from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { JSX } from "../deps.ts";
 import {
@@ -70,11 +74,15 @@ const sectionBlock: Block<SectionModule> = {
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
   ):
-    | Resolver<PreactComponent<JSX.Element, TProps>, TProps, HttpContext>
+    | Resolver<
+      PreactComponent<JSX.Element, TProps>,
+      TProps,
+      HttpContext<RequestState>
+    >
     | Resolver<
       PreactComponent<JSX.Element, TProps>,
       TConfig,
-      HttpContext
+      HttpContext<RequestState>
     > => {
     const errBoundary = mod.ErrorBoundary;
     const componentFunc = componentWith(resolver, mod.default, errBoundary);
@@ -82,7 +90,7 @@ const sectionBlock: Block<SectionModule> = {
     if (!loader) {
       return (
         props: TProps,
-        { resolveChain, context }: HttpContext,
+        { resolveChain, context }: HttpContext<RequestState>,
       ): PreactComponent<any, TProps> => {
         return componentFunc(
           props,
@@ -93,7 +101,7 @@ const sectionBlock: Block<SectionModule> = {
     }
     return async (
       props: TConfig,
-      httpCtx: HttpContext,
+      httpCtx: HttpContext<RequestState>,
     ): Promise<PreactComponent<any, TProps>> => {
       const { resolveChain, request, context, resolve } = httpCtx;
       const ctx = {

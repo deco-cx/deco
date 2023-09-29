@@ -20,6 +20,7 @@ import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Manifest } from "../live.gen.ts";
 import { context } from "../live.ts";
 import type { InvocationProxy } from "../routes/live/invoke/index.ts";
+import { Flag } from "../types.ts";
 import { HttpContext } from "./handler.ts";
 import { ErrorBoundaryComponent } from "./section.ts";
 
@@ -62,13 +63,20 @@ async ($live: TConfig) => {
   return typeof resp === "function" ? resp : () => resp;
 };
 
+export interface RequestState {
+  response: {
+    headers: Headers;
+  };
+  bag: WeakMap<any, any>;
+  flags: Flag[];
+}
+
 export type FnContext<
   // deno-lint-ignore ban-types
   TState = {},
   TManifest extends AppManifest = Manifest,
-> = TState & {
+> = TState & RequestState & {
   monitoring?: Monitoring;
-  response: { headers: Headers };
   get: ResolveFunc;
   invoke:
     & InvocationProxy<
@@ -88,7 +96,7 @@ export type FnProps<
 ) => PromiseOrValue<TResp>;
 
 export type AppHttpContext = HttpContext<
-  { global?: any; response?: { headers: Headers } }
+  { global?: any } & RequestState
 >;
 // deno-lint-ignore ban-types
 export const fnContextFromHttpContext = <TState = {}>(
@@ -99,6 +107,7 @@ export const fnContextFromHttpContext = <TState = {}>(
     monitoring: ctx.monitoring,
     get: ctx.resolve,
     response: ctx.context.state.response,
+    bag: ctx.context.state.bag,
     invoke: ctx.context.state.invoke,
   };
 };
@@ -110,7 +119,7 @@ export const applyProps = <
 }) =>
 (
   $live: TProps,
-  ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+  ctx: HttpContext<{ global: any } & RequestState>,
 ) => { // by default use global state
   return func.default(
     $live,

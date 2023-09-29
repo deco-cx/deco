@@ -4,7 +4,7 @@ import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { BaseContext } from "../engine/core/resolver.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { DecoState, StatefulContext } from "../types.ts";
-import { FnContext, fnContextFromHttpContext } from "./utils.tsx";
+import { FnContext, RequestState, fnContextFromHttpContext } from "./utils.tsx";
 
 export interface HttpContext<
   // deno-lint-ignore ban-types
@@ -39,7 +39,7 @@ const handlerBlock: Block<BlockModule<HandlerFunc>> = {
   }) =>
   async (
     $live: TConfig,
-    ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+    ctx: HttpContext<{ global: any } & RequestState>,
   ) => {
     return await func.default($live, fnContextFromHttpContext(ctx));
   },

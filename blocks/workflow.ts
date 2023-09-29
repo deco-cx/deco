@@ -1,10 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   Arg,
-  LocalActivityCommand,
-  Metadata,
   Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
+  LocalActivityCommand,
+  Metadata,
   WorkflowExecution,
 } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
@@ -21,7 +21,7 @@ import {
 import { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import { DotNestedKeys } from "../utils/object.ts";
 import { HttpContext } from "./handler.ts";
-import { FnContext, fnContextFromHttpContext } from "./utils.tsx";
+import { FnContext, RequestState, fnContextFromHttpContext } from "./utils.tsx";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
@@ -119,7 +119,7 @@ const workflowBlock: Block<
   }, key: string) =>
   (
     props: TProps,
-    ctx: HttpContext<{ global: any; response: { headers: Headers } }>,
+    ctx: HttpContext<{ global: any } & RequestState>,
   ) => {
     const durableWorkflow = func.default(
       props,

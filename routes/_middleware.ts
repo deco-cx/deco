@@ -155,7 +155,9 @@ export const handler = [async (
 
   const response = { headers: new Headers(defaultHeaders) };
   const state = ctx.state?.$live?.state ?? {};
+  const stateBag = new WeakMap();
   state.response = response;
+  state.bag = stateBag;
   state.flags = [];
   Object.assign(ctx.state, state);
   ctx.state.global = { ...ctx.state.global ?? {}, ...state }; // compatibility mode with functions.
