@@ -132,10 +132,10 @@ export const buildRuntime = <
         const blockResolver = blk.adapt!(mod, key);
         const composed = Array.isArray(blockResolver)
           ? compose(
-            ...(hasMiddleware ? [...blockResolver, middleware] : blockResolver),
+            ...(hasMiddleware ? [middleware, ...blockResolver] : blockResolver),
           )
           : hasMiddleware
-          ? compose(blockResolver, middleware)
+          ? compose(middleware, blockResolver)
           : blockResolver;
         composed.onBeforeResolveProps = mod.onBeforeResolveProps;
         composed.type = blk.type;
