@@ -2,7 +2,7 @@
 import blocks from "../blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
-import { buildSourceMap, FnProps } from "../blocks/utils.tsx";
+import { AppHttpContext, buildSourceMap, FnProps } from "../blocks/utils.tsx";
 import {
   Block,
   BlockModule,
@@ -15,9 +15,13 @@ import {
   ResolverMap,
 } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
-import { ResolverMiddleware } from "../engine/middleware.ts";
+import {
+  ResolverMiddleware,
+  ResolverMiddlewareContext,
+} from "../engine/middleware.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
+import { fnContextFromHttpContext } from "./utils.tsx";
 
 export type SourceMapResolver = () => Promise<BlockModuleRef | undefined>;
 
@@ -64,6 +68,23 @@ export interface AppBase<
   sourceMap?: SourceMap;
 }
 
+export type AppMiddlewareContext<
+  TApp extends App = App,
+  TResponse = any,
+> = AppContext<TApp> & {
+  next?: () => Promise<TResponse>;
+};
+
+export type AppMiddleware<
+  TApp extends App = any,
+  TProps = any,
+  TResponse = any,
+> = (
+  props: TProps,
+  req: Request,
+  ctx: AppMiddlewareContext<TApp, TResponse>,
+) => Promise<TResponse>;
+
 /**
  * @icon app-window
  */
@@ -74,7 +95,7 @@ export interface App<
   TResolvableMap extends ResolvableMap = ResolvableMap,
 > extends AppBase<TAppManifest, TAppDependencies, TResolvableMap> {
   state: TAppState;
-  middleware?: ResolverMiddleware;
+  middleware?: AppMiddleware | AppMiddleware[];
 }
 
 export interface AppRuntime<
@@ -188,6 +209,41 @@ const injectAppStateOnManifest = <
   };
 };
 
+const isAppHttpContext = (
+  ctx: AppHttpContext | BaseContext,
+): ctx is AppHttpContext => {
+  return (ctx as AppHttpContext)?.request !== undefined &&
+    (ctx as AppHttpContext)?.context?.state?.response !== undefined;
+};
+
+const appMiddlewareToResolverMiddleware = <
+  TState,
+  TContext extends ResolverMiddlewareContext,
+>(
+  state: TState,
+  appMiddleware?: AppMiddleware | AppMiddleware[],
+): ResolverMiddleware<any, any, TContext>[] | undefined => {
+  if (!appMiddleware) {
+    return undefined;
+  }
+  const middlewares = Array.isArray(appMiddleware)
+    ? appMiddleware
+    : [appMiddleware];
+  return middlewares.map((mid) => {
+    return (props, ctx) => {
+      if (isAppHttpContext(ctx)) {
+        const appHttpCtx = ctx;
+        const appCtx = {
+          ...fnContextFromHttpContext(appHttpCtx),
+          ...state,
+        };
+        return mid(props, appHttpCtx.request, appCtx);
+      } else {
+        return ctx.next!();
+      }
+    };
+  });
+};
 const buildRuntimeFromApp = <
   TState,
   TApp extends App<AppManifest, TState> = App<AppManifest, TState>,
@@ -208,7 +264,7 @@ const buildRuntimeFromApp = <
     resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
       injectedManifest,
       blocks(),
-      appMiddleware,
+      appMiddlewareToResolverMiddleware(state, appMiddleware),
     ),
     manifest: injectedManifest,
     resolvables,

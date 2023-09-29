@@ -6,7 +6,7 @@ import {
   PREVIEW_PREFIX_KEY,
 } from "../engine/manifest/defaults.ts";
 import { DanglingRecover } from "../engine/manifest/manifest.ts";
-import { compose, ResolverMiddleware } from "../engine/middleware.ts";
+import { ResolverMiddleware, compose } from "../engine/middleware.ts";
 import { AppManifest } from "../mod.ts";
 import { usePreviewFunc } from "./utils.tsx";
 
@@ -58,7 +58,7 @@ export const resolversFrom = <
 >(
   man: T,
   blocks: Block[],
-  middleware?: ResolverMiddleware,
+  middleware?: ResolverMiddleware<TContext> | ResolverMiddleware<TContext>[],
 ): TResolverMap => {
   const [_, resolvers, __] = (blocks ?? []).reduce(
     (runtime, block) =>
@@ -86,7 +86,7 @@ export const buildRuntime = <
     DanglingRecover[],
   ],
   blk: Block,
-  middleware?: ResolverMiddleware,
+  middleware?: ResolverMiddleware | ResolverMiddleware[],
 ): [
   TManifest,
   TResolverMap,
@@ -128,14 +128,20 @@ export const buildRuntime = <
     ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
       decorated,
       (mod, key) => {
-        const hasMiddleware = typeof middleware === "function";
+        const hasMiddleware = typeof middleware !== "undefined";
+        // create a middleware array or empty if middleware is not defined
+        const middlewares = hasMiddleware
+          ? Array.isArray(middleware) ? middleware : [middleware]
+          : [];
         const blockResolver = blk.adapt!(mod, key);
         const composed = Array.isArray(blockResolver)
           ? compose(
-            ...(hasMiddleware ? [middleware, ...blockResolver] : blockResolver),
+            ...(hasMiddleware
+              ? [...middlewares, ...blockResolver]
+              : blockResolver),
           )
           : hasMiddleware
-          ? compose(middleware, blockResolver)
+          ? compose(...middlewares, blockResolver)
           : blockResolver;
         composed.onBeforeResolveProps = mod.onBeforeResolveProps;
         composed.type = blk.type;
