@@ -63,6 +63,17 @@ async ($live: TConfig) => {
   return typeof resp === "function" ? resp : () => resp;
 };
 
+/**
+ * Creates a unique bag key for the given description
+ * @param description the description of the key
+ * @returns a symbol that can be used as a bag key
+ */
+export const createBagKey = (description: string): symbol =>
+  Symbol(description);
+
+/**
+ * Values that are fulfilled for every request
+ */
 export interface RequestState {
   response: {
     headers: Headers;
