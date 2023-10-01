@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { BaseContext, Resolvable, Resolver } from "../engine/core/resolver.ts";
 
-export interface ResolverMiddlewareContext<T> extends BaseContext {
+export interface ResolverMiddlewareContext<T = any> extends BaseContext {
   next?(): Promise<T>;
 }
 export type ResolverMiddleware<

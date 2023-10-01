@@ -2,7 +2,7 @@ import Murmurhash3 from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 import { HttpContext } from "../blocks/handler.ts";
 import { getCookies, setCookie } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
-import { Flag } from "../types.ts";
+import { RequestState } from "./utils.tsx";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -105,9 +105,7 @@ const matcherBlock: Block<
     httpCtx: HttpContext<
       {
         global: unknown;
-        response: { headers: Headers };
-        flags: Flag[];
-      },
+      } & RequestState,
       unknown
     >,
   ) => {
