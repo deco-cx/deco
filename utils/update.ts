@@ -15,9 +15,13 @@ interface ImportMap {
 }
 
 const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
-  const denoJSON = await Deno.readTextFile(join(dir, "deno.json")).then(
-    JSON.parse,
-  );
+  const denoJSONPath = join(dir, "deno.json");
+  const denoJSON = await Deno.readTextFile(denoJSONPath).then(JSON.parse);
+  // inlined import_map inside deno.json
+  if (denoJSON.imports) {
+    return [denoJSON, denoJSONPath];
+  }
+
   const importMapFile = denoJSON?.importMap ?? "./import_map.json";
   const importMapPath = join(dir, importMapFile.replace("./", ""));
   return [
