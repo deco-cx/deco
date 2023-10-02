@@ -23,7 +23,7 @@ import type { InvocationProxy } from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
 import { HttpContext } from "./handler.ts";
 import { ErrorBoundaryComponent } from "./section.ts";
-
+import { Status } from "std/http/http_status.ts";
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
   ctx: TCtx,
@@ -77,6 +77,7 @@ export const createBagKey = (description: string): symbol =>
 export interface RequestState {
   response: {
     headers: Headers;
+    status: Status;
   };
   bag: WeakMap<any, any>;
   flags: Flag[];
