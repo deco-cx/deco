@@ -24,7 +24,14 @@ export const parseJSDocAttribute = (key: string, value: string) => {
     case "uniqueItems":
       return Boolean(value);
     case "default":
-      return !Number.isNaN(+value) ? +value : value;
+      switch (value) {
+        case "true":
+          return true;
+        case "false":
+          return false;
+        default:
+          return !Number.isNaN(+value) ? +value : value;
+      }
     default:
       return value;
   }
