@@ -224,6 +224,9 @@ export const handler = [
       headers: newHeaders,
     });
 
+  setTimeout(async () => {
+    await initialResponse.body?.pipeTo(stream.writable);
+  }, 10000);
     return newResponse;
   },
 ];
