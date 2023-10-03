@@ -136,6 +136,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolvables: nresolvables,
       resolvers,
       monitoring: options?.monitoring,
+      memo: {},
       runOnce: (key, f) => {
         return (currentOnce[key] ??= once()).do(f);
       },

@@ -15,6 +15,7 @@ Deno.test("resolve", async (t) => {
     resolvables: {},
     resolvers: {},
     resolveHints: {},
+    memo: {},
     runOnce: (_key, f) => f(),
     resolve: <T>(data: unknown) => {
       return data as T;
