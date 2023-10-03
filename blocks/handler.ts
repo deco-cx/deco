@@ -4,7 +4,7 @@ import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { BaseContext } from "../engine/core/resolver.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { DecoState, StatefulContext } from "../types.ts";
-import { FnContext, RequestState, fnContextFromHttpContext } from "./utils.tsx";
+import { FnContext, fnContextFromHttpContext, RequestState } from "./utils.tsx";
 
 export interface HttpContext<
   // deno-lint-ignore ban-types

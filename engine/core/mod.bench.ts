@@ -76,6 +76,7 @@ Deno.bench(
       resolveId: "1",
       resolvables: releaseJSON,
       resolvers: {},
+      memo: {},
       resolveHints,
       danglingRecover,
       resolve: <T>(data: unknown) => {

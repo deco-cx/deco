@@ -6,7 +6,7 @@ import {
   PREVIEW_PREFIX_KEY,
 } from "../engine/manifest/defaults.ts";
 import { DanglingRecover } from "../engine/manifest/manifest.ts";
-import { ResolverMiddleware, compose } from "../engine/middleware.ts";
+import { compose, ResolverMiddleware } from "../engine/middleware.ts";
 import { AppManifest } from "../mod.ts";
 import { usePreviewFunc } from "./utils.tsx";
 

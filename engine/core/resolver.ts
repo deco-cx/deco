@@ -7,10 +7,10 @@ import {
 } from "../../engine/core/hints.ts";
 import { ResolveOptions } from "../../engine/core/mod.ts";
 import {
-  PromiseOrValue,
-  UnPromisify,
   isAwaitable,
   notUndefined,
+  PromiseOrValue,
+  UnPromisify,
 } from "../../engine/core/utils.ts";
 import { identity } from "../../utils/object.ts";
 import { createServerTimings } from "../../utils/timings.ts";

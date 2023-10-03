@@ -1,10 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   Arg,
-  Workflow as DurableWorkflow,
-  WorkflowContext as DurableWorkflowContext,
   LocalActivityCommand,
   Metadata,
+  Workflow as DurableWorkflow,
+  WorkflowContext as DurableWorkflowContext,
   WorkflowExecution,
 } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
@@ -21,7 +21,7 @@ import {
 import { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import { DotNestedKeys } from "../utils/object.ts";
 import { HttpContext } from "./handler.ts";
-import { FnContext, RequestState, fnContextFromHttpContext } from "./utils.tsx";
+import { FnContext, fnContextFromHttpContext, RequestState } from "./utils.tsx";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
