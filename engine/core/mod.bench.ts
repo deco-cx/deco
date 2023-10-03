@@ -14,7 +14,7 @@ Deno.bench(
       resolveId: "1",
       resolvables: releaseJSON,
       resolvers: {},
-      resolveCache: {},
+      memo: {},
       resolveHints,
       danglingRecover,
       runOnce: (_key, f) => f(),
@@ -42,7 +42,7 @@ Deno.bench(
     const context: BaseContext = {
       resolveChain: [],
       resolveId: "1",
-      resolveCache: {},
+      memo: {},
       resolvables: releaseJSON,
       resolvers: {},
       resolveHints: generatedHints,

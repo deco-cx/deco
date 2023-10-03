@@ -7,10 +7,10 @@ import {
 } from "../../engine/core/hints.ts";
 import { ResolveOptions } from "../../engine/core/mod.ts";
 import {
-  isAwaitable,
-  notUndefined,
   PromiseOrValue,
   UnPromisify,
+  isAwaitable,
+  notUndefined,
 } from "../../engine/core/utils.ts";
 import { identity } from "../../utils/object.ts";
 import { createServerTimings } from "../../utils/timings.ts";
@@ -51,7 +51,7 @@ export interface BaseContext {
   resolvers: Record<string, Resolver>;
   danglingRecover?: Resolver;
   resolveHints: ResolveHints;
-  resolveCache: Record<string, any>;
+  memo: Record<string, any>;
   runOnce: <T>(key: string, f: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
 
@@ -483,7 +483,7 @@ const resolveResolvable = <
     resolvableObj,
   ) ?? {};
 
-  return context.resolveCache[resolveType] ??= resolveAny(
+  return context.memo[resolveType] ??= resolveAny(
     resolvableObj,
     context,
     nullIfDangling,
