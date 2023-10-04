@@ -1,8 +1,6 @@
+import * as log from "https://deno.land/std@0.203.0/log/mod.ts";
 import {
   BatchSpanProcessor,
-  diag,
-  DiagConsoleLogger,
-  DiagLogLevel,
   FetchInstrumentation,
   NodeTracerProvider,
   opentelemetry,
@@ -18,9 +16,8 @@ import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
 import { SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
-export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
+import { OpenTelemetryHandler } from "https://denopkg.com/hyperdxio/hyperdx-js@65783e6cd18321461129d82613628dcabfe5f846/packages/deno/logger.ts";
 
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 const tryGetVersionOf = (pkg: string) => {
   try {
     const [_, ver] = import.meta.resolve(pkg).split("@");
@@ -31,6 +28,36 @@ const tryGetVersionOf = (pkg: string) => {
 };
 const apps_ver = tryGetVersionOf("apps/") ??
   tryGetVersionOf("deco-sites/std/") ?? "_";
+
+export const resource = Resource.default().merge(
+  new Resource({
+    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ??
+      "deco",
+    [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
+      Deno.hostname(),
+    "deco.runtime.version": meta.version,
+    "deco.apps.version": apps_ver,
+  }),
+);
+
+const loggerName = "deco-logger";
+log.setup({
+  handlers: {
+    otel: new OpenTelemetryHandler("ERROR", {
+      resourceAttributes: resource.attributes,
+    }),
+  },
+
+  loggers: {
+    [loggerName]: {
+      level: "ERROR",
+      handlers: ["otel"],
+    },
+  },
+});
+
+export const logger = log.getLogger(loggerName);
+export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 
 registerInstrumentations({
   instrumentations: [
@@ -43,17 +70,6 @@ registerInstrumentations({
 // Specifically for this line - https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-sdk-trace-web/src/utils.ts#L310
 // @ts-ignore: monkey patching location
 globalThis.location = {};
-
-export const resource = Resource.default().merge(
-  new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ??
-      "deco",
-    [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
-      Deno.hostname(),
-    "deco.runtime.version": meta.version,
-    "deco.apps.version": apps_ver,
-  }),
-);
 
 const parseSamplingOptions = (): SamplingOptions | undefined => {
   const encodedOpts = Deno.env.get("OTEL_SAMPLING_CONFIG");
