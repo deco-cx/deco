@@ -19,6 +19,7 @@ import { HttpError } from "../engine/errors.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Manifest } from "../live.gen.ts";
 import { context } from "../live.ts";
+import { logger } from "../observability/otel/config.ts";
 import type { InvocationProxy } from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
 import { HttpContext } from "./handler.ts";
@@ -153,9 +154,13 @@ class ErrorBoundary
 
   render() {
     if (this.state.error) {
+      const err = this?.state?.error as Error;
+      const msg = `rendering: ${this.props.component} ${err?.stack}`;
+      logger.error(
+        msg,
+      );
       console.error(
-        `rendering error ${this.props.component}:`,
-        this.state.error,
+        msg,
       );
     }
     return this.state.error

@@ -21,7 +21,7 @@ import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
 import { context as liveContext } from "../live.ts";
 import { observe } from "../observability/observe.ts";
-import { tracer } from "../observability/otel/config.ts";
+import { logger, tracer } from "../observability/otel/config.ts";
 import {
   REQUEST_CONTEXT_KEY,
   STATE_CONTEXT_KEY,
@@ -73,7 +73,8 @@ const withErrorHandler = (
       if (err instanceof HttpError) {
         return err.resp;
       }
-      console.error("an error has occurred", routePath, err);
+      console.error(`route error ${routePath}: ${err}`);
+      logger.error(`route ${routePath}: ${err?.stack}`);
       throw err;
     }
   };
