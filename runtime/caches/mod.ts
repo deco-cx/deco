@@ -8,7 +8,7 @@ const getCacheStorage = (): CacheStorage => {
     return cachesKV;
   }
 
-  if (typeof globalThis.caches !== "undefined") {
+  if (typeof globalThis.caches !== "undefined" && WEB_CACHE_ENGINE === "CACHE_API") {
     return globalThis.caches;
   }
 
