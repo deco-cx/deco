@@ -1,6 +1,6 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { getSetCookies } from "std/http/mod.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
+import { RequestState } from "../blocks/utils.tsx";
 import {
   getPagePathTemplate,
   redirectTo,
@@ -12,9 +12,10 @@ import { Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
+import { etagFor } from "../utils/etag.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
+
 import { formatLog } from "../utils/log.ts";
-import { RequestState } from "../blocks/utils.tsx";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -205,19 +206,17 @@ export const handler = [
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
     }
 
-    // if there's no set cookie it means that none unstable matcher was evaluated
-    if (
-      Object.keys(getSetCookies(newHeaders)).length === 0 &&
-      Deno.env.has("DECO_ANONYMOUS_CACHE")
-    ) {
-      newHeaders.set("cache-control", "public, max-age=10");
-    }
-
-    state?.flags?.sort((flagA, flagB) => flagA.name.localeCompare(flagB.name));
     for (const flag of state?.flags ?? []) {
       newHeaders.append(
         DECO_MATCHER_HEADER_QS,
         `${flag.name}=${flag.value ? 1 : 0}`,
+      );
+    }
+
+    if (req.method === "HEAD") {
+      newHeaders.set(
+        "etag",
+        await etagFor(state, `${url.pathname}${url.search}`),
       );
     }
 
