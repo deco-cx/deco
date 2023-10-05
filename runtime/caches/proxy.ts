@@ -61,6 +61,8 @@ export const caches: CacheStorage = {
 
         const req = new Request(request);
 
+        console.log("CALLING URL...", 
+          PROXY_ENABLED ? `https://fastly.decocache.com/${req.url}` : req.url);
         const response = cache.has(req.url) ? cache.get(req.url) : await fetch(
           PROXY_ENABLED ? `https://fastly.decocache.com/${req.url}` : req.url,
           req,

@@ -11,7 +11,7 @@ const getCacheStorage = (): CacheStorage => {
   if (typeof globalThis.caches !== "undefined" && WEB_CACHE_ENGINE === "CACHE_API") {
     return globalThis.caches;
   }
-
+  console.log("USING CACHES PROXY")
   return cachesProxy;
 };
 
