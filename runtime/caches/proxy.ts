@@ -59,7 +59,22 @@ export const caches: CacheStorage = {
       ): Promise<Response | undefined> => {
         assertNoOptions(options);
 
-        const req = new Request(request);
+        const isURL = (value: unknown): value is URL => {
+          return value instanceof URL;
+        }
+        
+        const prepareRequest = (request: RequestInfo | URL): Request => {
+          if (isURL(request) || typeof request === 'string') {
+            return new Request(request);
+          } else {
+            const { method, headers, body } = request;
+            return new Request(PROXY_ENABLED ? `https://fastly.decocache.com/${request.url}` : request.url,
+              {method, headers, body} 
+            );
+          }
+        }
+
+        const req = prepareRequest(request);
 
         const response = cache.has(req.url) ? cache.get(req.url) : await fetch(
           PROXY_ENABLED ? `https://fastly.decocache.com/${req.url}` : req.url,
