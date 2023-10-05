@@ -14,6 +14,7 @@ import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
+import { RequestState } from "../blocks/utils.tsx";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -161,7 +162,7 @@ export const handler = [
       headers: new Headers(defaultHeaders),
       status: undefined,
     };
-    const state = ctx.state?.$live?.state ?? {};
+    const state: Partial<RequestState> = ctx.state?.$live?.state ?? {};
     const stateBag = new WeakMap();
     state.response = response;
     state.bag = stateBag;
@@ -212,6 +213,7 @@ export const handler = [
       newHeaders.set("cache-control", "public, max-age=10");
     }
 
+    state?.flags?.sort((flagA, flagB) => flagA.name.localeCompare(flagB.name));
     for (const flag of state?.flags ?? []) {
       newHeaders.append(
         DECO_MATCHER_HEADER_QS,

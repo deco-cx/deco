@@ -1,18 +1,19 @@
 // deno-lint-ignore-file no-explicit-any
-import { ResolveHints } from "../../engine/core/hints.ts";
+import { once, SyncOnce } from "../../utils/sync.ts";
+import { Release } from "../releases/provider.ts";
+import { ResolveHints } from "./hints.ts";
 import {
   BaseContext,
   FieldResolver,
   Monitoring,
+  Opts,
   Resolvable,
+  ResolvableMap,
   resolve,
   ResolveFunc,
   Resolver,
   ResolverMap,
-} from "../../engine/core/resolver.ts";
-import { Release } from "../../engine/releases/provider.ts";
-import { once, SyncOnce } from "../../utils/sync.ts";
-import { ResolvableMap } from "./resolver.ts";
+} from "./resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   release: Release;
@@ -30,13 +31,11 @@ export interface ExtensionOptions<TContext extends BaseContext = BaseContext>
   release?: Release;
 }
 
-export interface ResolveOptions {
+export interface ResolveOptions extends Opts {
   overrides?: Record<string, string>;
   monitoring?: Monitoring;
   forceFresh?: boolean;
-  nullIfDangling?: boolean;
   propagateOptions?: boolean;
-  propsAreResolved?: boolean;
   resolveChain?: FieldResolver[];
 }
 
@@ -153,7 +152,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
           overrides: options?.overrides,
           monitoring: options?.monitoring,
           ...(options?.propagateOptions
-            ? { nullIfDangling: options?.nullIfDangling }
+            ? { nullIfDangling: options?.nullIfDangling, hooks: options?.hooks }
             : {}),
         }
         : {},
@@ -169,8 +168,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     return resolve<T, TContext>(
       typeOrResolvable,
       ctx as TContext,
-      options?.nullIfDangling,
-      options?.propsAreResolved,
+      options,
     );
   };
 }

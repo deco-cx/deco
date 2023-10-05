@@ -1,12 +1,13 @@
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
+import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
+import { ResolveOptions } from "../core/mod.ts";
 import {
   BaseContext,
   isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
-} from "../../engine/core/resolver.ts";
-import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
+} from "../core/resolver.ts";
 import { HttpError } from "../errors.ts";
 
 export const PREVIEW_PREFIX_KEY = "Preview@";
@@ -85,11 +86,14 @@ export default {
     ctx: BaseContext,
   ) => {
     if (props?.deferred && props?.data) {
-      const deferred = (tCtx: Partial<BaseContext>) =>
+      const deferred = (
+        tCtx: Partial<BaseContext>,
+        opts?: Partial<ResolveOptions>,
+      ) =>
         typeof props?.data === "object"
           ? ctx.resolve(
             props?.data,
-            { resolveChain: ctx.resolveChain },
+            { resolveChain: ctx.resolveChain, ...opts ?? {} },
             tCtx ?? {},
           )
           : props?.data;

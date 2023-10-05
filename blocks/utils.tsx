@@ -78,7 +78,7 @@ export const createBagKey = (description: string): symbol =>
 export interface RequestState {
   response: {
     headers: Headers;
-    status: Status;
+    status?: Status;
   };
   bag: WeakMap<any, any>;
   flags: Flag[];
