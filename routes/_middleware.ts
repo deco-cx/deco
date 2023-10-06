@@ -5,7 +5,7 @@ import {
   getPagePathTemplate,
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
-import { setCookie, SpanStatusCode } from "../deps.ts";
+import { SpanStatusCode, getCookies, setCookie } from "../deps.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
@@ -27,6 +27,8 @@ export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.pathname = `/live/previews/${pageId}`;
   return redirectTo(url);
 };
+
+const DECO_ETAG = "deco_etag";
 
 /**
  * @description Global configurations for ./routes/_middleware.ts route
@@ -213,8 +215,10 @@ export const handler = [
       );
     }
 
+    const currentCookies = getCookies(req.headers);
     const etag = await etagFor(state, `${url.pathname}${url.search}`);
-    setCookie(newHeaders, { name: "deco_etag", value: etag });
+    etag !== currentCookies[DECO_ETAG] &&
+      setCookie(newHeaders, { name: DECO_ETAG, value: etag });
 
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,
