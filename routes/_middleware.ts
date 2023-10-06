@@ -5,7 +5,7 @@ import {
   getPagePathTemplate,
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
-import { SpanStatusCode } from "../deps.ts";
+import { SpanStatusCode, setCookie } from "../deps.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
@@ -214,10 +214,8 @@ export const handler = [
     }
 
     if (req.method === "HEAD") {
-      newHeaders.set(
-        "etag",
-        await etagFor(state, `${url.pathname}${url.search}`),
-      );
+      const etag = await etagFor(state, `${url.pathname}${url.search}`);
+      setCookie(newHeaders, { name: "deco_etag", value: etag });
     }
 
     const newResponse = new Response(initialResponse.body, {
