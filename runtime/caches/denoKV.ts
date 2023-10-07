@@ -43,7 +43,7 @@
  *    else expire newMeta chunks
  */
 
-import { sha1 } from "../utils.ts";
+import { assertNoOptions, requestURLSHA1 } from "./common.ts";
 
 interface Metadata {
   body?: {
@@ -81,14 +81,6 @@ const createIndex = (
       index.add(key);
     },
   };
-};
-
-const assertNoOptions = (
-  { ignoreMethod, ignoreSearch, ignoreVary }: CacheQueryOptions = {},
-) => {
-  if (ignoreMethod || ignoreSearch || ignoreVary) {
-    throw new Error("Not Implemented");
-  }
 };
 
 const MAX_METAS = 1e3;
@@ -186,13 +178,7 @@ export const caches: CacheStorage = {
     };
 
     const keyForRequest = async (request: RequestInfo | URL) => {
-      const url = typeof request === "string"
-        ? request
-        : request instanceof URL
-        ? request.href
-        : request.url;
-
-      return keyForMetadata(await sha1(url));
+      return keyForMetadata(await requestURLSHA1(request));
     };
 
     const housekeeper = () => {
