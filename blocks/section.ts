@@ -46,7 +46,8 @@ export const isSection = <
   return (s as Section)?.metadata?.component === section;
 };
 
-export type SectionProps<T> = T extends PropsLoader<any, infer Props> ? Props
+export type SectionProps<T> = T extends PropsLoader<any, infer Props>
+  ? Props & { id: string }
   : unknown;
 
 export interface ErrorBoundaryParams<TProps> {
