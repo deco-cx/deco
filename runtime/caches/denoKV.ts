@@ -43,7 +43,11 @@
  *    else expire newMeta chunks
  */
 
-import { assertNoOptions, requestURLSHA1 } from "./common.ts";
+import {
+  assertCanBeCached,
+  assertNoOptions,
+  requestURLSHA1,
+} from "./common.ts";
 
 interface Metadata {
   body?: {
@@ -314,18 +318,7 @@ export const caches: CacheStorage = {
       ): Promise<void> => {
         const req = new Request(request);
 
-        if (!/^http(s?):\/\//.test(req.url)) {
-          throw new TypeError(
-            "Request url protocol must be 'http:' or 'https:'",
-          );
-        }
-        if (req.method !== "GET") {
-          throw new TypeError("Request method must be GET");
-        }
-
-        if (response.status === 206) {
-          throw new TypeError("Response status must not be 206");
-        }
+        assertCanBeCached(req, response);
 
         const metaKey = await keyForRequest(req);
         const oldMeta = await kv.get<Metadata>(metaKey);

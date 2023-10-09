@@ -1,7 +1,11 @@
 import { Redis } from "https://deno.land/x/upstash_redis@v1.22.1/mod.ts";
 
 import { logger } from "../../observability/otel/config.ts";
-import { assertNoOptions, withCacheNamespace } from "./common.ts";
+import {
+  assertCanBeCached,
+  assertNoOptions,
+  withCacheNamespace,
+} from "./common.ts";
 
 const redisUrl = Deno.env.get("UPSTASH_REDIS_REST_URL");
 const redisToken = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
@@ -124,11 +128,14 @@ export const caches: CacheStorage = {
         request: RequestInfo | URL,
         response: Response,
       ): Promise<void> => {
+        const req = new Request(request);
+        assertCanBeCached(req, response);
+
         if (!response.body) {
           return;
         }
         const expires = response.headers.get("expires");
-        if (!expires || response.headers.get("set-cookie") !== null) { // supports only expires for now
+        if (!expires) { // supports only expires for now
           return;
         }
         const expDate = new Date(expires);
