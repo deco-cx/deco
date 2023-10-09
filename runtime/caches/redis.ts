@@ -1,21 +1,24 @@
-import { connect, Redis } from "https://deno.land/x/redis@v0.31.0/mod.ts";
+import { Redis } from "https://deno.land/x/upstash_redis@v1.22.1/mod.ts";
+
 import { logger } from "../../observability/otel/config.ts";
 import { assertNoOptions, withCacheNamespace } from "./common.ts";
 
-const redisHostname = Deno.env.get("REDIS_HOSTNAME");
-const redisPort = Deno.env.get("REDIS_PORT");
+const redisUrl = Deno.env.get("UPSTASH_REDIS_REST_URL");
+const redisToken = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
+
+export const redis = redisUrl && redisToken
+  ? new Redis({
+    url: redisUrl,
+    token: redisToken,
+    enableTelemetry: true,
+  })
+  : null;
 
 interface ResponseMetadata {
+  body: string;
   status: number;
   headers: [string, string][];
 }
-
-export const redis: null | Redis = redisHostname && redisPort
-  ? await connect({
-    hostname: redisHostname,
-    port: redisPort,
-  })
-  : null;
 
 function base64encode(str: string): string {
   return btoa(unescape(encodeURIComponent(str)));
@@ -24,9 +27,6 @@ function base64encode(str: string): string {
 function base64decode(str: string): string {
   return decodeURIComponent(atob(str));
 }
-const keysOf = (canonicalKey: string): [string, string] => {
-  return [`${canonicalKey}@body`, `${canonicalKey}@meta`];
-};
 export const caches: CacheStorage = {
   delete: (_cacheName: string): Promise<boolean> => {
     throw new Error("Not Implemented");
@@ -67,7 +67,7 @@ export const caches: CacheStorage = {
         assertNoOptions(options);
 
         return await redis.del(
-          ...(await requestURLSHA1(request).then(keysOf)),
+          await requestURLSHA1(request),
         ) > 0;
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/keys) */
@@ -83,39 +83,32 @@ export const caches: CacheStorage = {
         options?: CacheQueryOptions,
       ): Promise<Response | undefined> => {
         assertNoOptions(options);
-        const [bodyKey, metaKey] = await requestURLSHA1(request).then(keysOf);
-        const pl = redis.pipeline();
-        pl.get(metaKey);
-        pl.get(bodyKey);
-        const [meta, body] = await pl.flush();
-        if (meta === null || body === null) {
+        const cacheKey = await requestURLSHA1(request);
+        const data = await redis.get(cacheKey);
+        if (data === null) {
           return undefined;
         }
 
-        if (meta instanceof Error || body instanceof Error) {
+        if (data instanceof Error) {
           logger.error(
-            `error when reading from redis, ${meta.toString()} ${body.toString()}`,
+            `error when reading from redis, ${data.toString()}`,
           );
           return undefined;
         }
 
-        if (typeof meta !== "string") {
+        if (typeof data !== "object") {
           logger.error(
-            `meta for ${metaKey} was stored in a invalid format, thus cache will not be used`,
-          );
-          return undefined;
-        }
-        if (typeof body !== "string") {
-          logger.error(
-            `body error for ${bodyKey} was store in a invalid format, thus cache will not be used`,
+            `data for ${cacheKey} was stored in a invalid format, thus cache will not be used`,
           );
           return undefined;
         }
 
-        const parsedMeta: ResponseMetadata = JSON.parse(meta);
-        return new Response(base64decode(body), {
-          status: parsedMeta.status,
-          headers: new Headers(parsedMeta.headers),
+        const parsedData: ResponseMetadata = typeof data === "string"
+          ? JSON.parse(data)
+          : data;
+        return new Response(base64decode(parsedData.body), {
+          status: parsedData.status,
+          headers: new Headers(parsedData.headers),
         });
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
@@ -126,6 +119,7 @@ export const caches: CacheStorage = {
         throw new Error("Not Implemented");
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/put) */
+      // deno-lint-ignore require-await
       put: async (
         request: RequestInfo | URL,
         response: Response,
@@ -133,16 +127,27 @@ export const caches: CacheStorage = {
         if (!response.body) {
           return;
         }
-        const [bodyKey, metaKey] = await requestURLSHA1(request).then(keysOf);
+        const expires = response.headers.get("expires");
+        if (!expires || response.headers.get("set-cookie") !== null) { // supports only expires for now
+          return;
+        }
+        const expDate = new Date(expires);
+        const timeMs = expDate.getTime() - Date.now();
+        if (timeMs <= 0) {
+          return;
+        }
+        requestURLSHA1(request).then(async (cacheKey) => {
+          const newMeta: ResponseMetadata = {
+            body: await response.text().then(base64encode),
+            status: response.status,
+            headers: [...response.headers.entries()],
+          };
 
-        const newMeta: ResponseMetadata = {
-          status: response.status,
-          headers: [...response.headers.entries()],
-        };
-        const tx = redis.tx();
-        tx.set(metaKey, JSON.stringify(newMeta));
-        tx.set(bodyKey, await response.text().then(base64encode));
-        await tx.flush();
+          const options = { px: timeMs };
+          redis.set(cacheKey, JSON.stringify(newMeta), options); // do not await for setting cache
+        }).catch((err) => {
+          logger.error(`error saving to redis ${err?.message}`);
+        });
       },
     });
   },

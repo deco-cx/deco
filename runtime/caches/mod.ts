@@ -1,5 +1,6 @@
 import { caches as cachesKV } from "./denoKV.ts";
 import { caches as cachesProxy } from "./proxy.ts";
+import { caches as redisCache, redis } from "./redis.ts";
 
 const WEB_CACHE_ENGINE = Deno.env.get("WEB_CACHE_ENGINE");
 
@@ -8,7 +9,13 @@ const getCacheStorage = (): CacheStorage => {
     return cachesKV;
   }
 
-  if (typeof globalThis.caches !== "undefined" && WEB_CACHE_ENGINE === "CACHE_API") {
+  if (redis !== null && WEB_CACHE_ENGINE === "REDIS") {
+    return redisCache;
+  }
+
+  if (
+    typeof globalThis.caches !== "undefined" && WEB_CACHE_ENGINE === "CACHE_API"
+  ) {
     return globalThis.caches;
   }
   return cachesProxy;
