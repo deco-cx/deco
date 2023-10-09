@@ -419,10 +419,13 @@ const addAppsImportMap = async (): Promise<Patch> => {
           ...parsed,
           imports: {
             ...parsed.imports,
-            ["deco-sites/std/"]: "https://denopkg.com/deco-sites/std@1.22.9/",
-            ["$live/"]: "https://denopkg.com/deco-cx/deco@1.36.2/",
-            ["deco/"]: "https://denopkg.com/deco-cx/deco@1.36.2/",
-            ["apps/"]: "https://denopkg.com/deco-cx/apps@0.7.0/",
+            "$fresh/": "https://denopkg.com/deco-cx/fresh@1.4.4/",
+            "preact-render-to-string":
+              "https://esm.sh/*preact-render-to-string@6.2.1",
+            "deco-sites/std/": "https://denopkg.com/deco-sites/std@1.22.9/",
+            "$live/": "https://denopkg.com/deco-cx/deco@1.36.2/",
+            "deco/": "https://denopkg.com/deco-cx/deco@1.36.2/",
+            "apps/": "https://denopkg.com/deco-cx/apps@0.7.0/",
           },
         },
         null,
@@ -502,7 +505,7 @@ const deleteLiveGenTs = (): Delete => {
 const apps: UpgradeOption = {
   isEligible: async () => await exists(join(Deno.cwd(), "site.json")),
   apply: async () => {
-    const replaceTypingsImport: Promise<Patch | Delete>[] = [
+    const patches: Promise<Patch | Delete>[] = [
       createSiteTs(),
       createSWJs(),
       overrideDenoJson(),
@@ -518,7 +521,7 @@ const apps: UpgradeOption = {
       checks.push(
         Deno.readTextFile(entry.path).then((content) => {
           if (content.includes("deco-sites/std/commerce/types.ts")) {
-            replaceTypingsImport.push(
+            patches.push(
               Promise.resolve({
                 from: {
                   path: entry.path,
@@ -538,7 +541,7 @@ const apps: UpgradeOption = {
       );
     }
     await Promise.all(checks);
-    return await Promise.all(replaceTypingsImport);
+    return await Promise.all(patches);
   },
 };
 
@@ -597,6 +600,17 @@ if (import.meta.main) {
       const shouldProceed = confirm("Do you want to proceed?");
       if (shouldProceed) {
         await Promise.all(patches.map(applyPatch));
+        const denoTaskUpdate = new Deno.Command(Deno.execPath(), {
+          args: ["task", "update"],
+          stdout: "inherit",
+        });
+        const updateProcess = denoTaskUpdate.spawn();
+        await updateProcess.status;
+        try {
+          updateProcess.kill();
+        } catch (_err) {
+          // ignore
+        }
         const denoTaskStart = new Deno.Command(Deno.execPath(), {
           args: ["task", "start"],
           stdout: "inherit",
