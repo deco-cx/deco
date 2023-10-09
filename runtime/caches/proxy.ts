@@ -61,18 +61,21 @@ export const caches: CacheStorage = {
 
         const isURL = (value: unknown): value is URL => {
           return value instanceof URL;
-        }
-        
+        };
+
         const prepareRequest = (request: RequestInfo | URL): Request => {
-          if (isURL(request) || typeof request === 'string') {
+          if (isURL(request) || typeof request === "string") {
             return new Request(request);
           } else {
             const { method, headers, body } = request;
-            return new Request(PROXY_ENABLED ? `https://fastly.decocache.com/${request.url}` : request.url,
-              {method, headers, body} 
+            return new Request(
+              PROXY_ENABLED
+                ? `https://fastly.decocache.com/${request.url}`
+                : request.url,
+              { method, headers, body },
             );
           }
-        }
+        };
 
         const req = prepareRequest(request);
 
@@ -91,6 +94,7 @@ export const caches: CacheStorage = {
         throw new Error("Not Implemented");
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/put) */
+      // deno-lint-ignore require-await
       put: async (
         request: RequestInfo | URL,
         response: Response,
