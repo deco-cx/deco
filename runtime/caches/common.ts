@@ -16,6 +16,11 @@ export const requestURL = (request: RequestInfo | URL): string => {
     : request.url;
 };
 
+export const withCacheNamespace =
+  (cacheName: string) => (request: RequestInfo | URL): Promise<string> => {
+    return requestURLSHA1(request).then((key) => `${key}${cacheName}`);
+  };
+
 export const requestURLSHA1 = (request: RequestInfo | URL): Promise<string> => {
   return sha1(requestURL(request));
 };

@@ -1,6 +1,6 @@
 import { connect, Redis } from "https://deno.land/x/redis@v0.31.0/mod.ts";
-import { assertNoOptions, requestURLSHA1 } from "./common.ts";
 import { logger } from "../../observability/otel/config.ts";
+import { assertNoOptions, withCacheNamespace } from "./common.ts";
 
 const redisHostname = Deno.env.get("REDIS_HOSTNAME");
 const redisPort = Deno.env.get("REDIS_PORT");
@@ -10,13 +10,20 @@ interface ResponseMetadata {
   headers: [string, string][];
 }
 
-const redis: null | Redis = redisHostname && redisPort
+export const redis: null | Redis = redisHostname && redisPort
   ? await connect({
     hostname: redisHostname,
     port: redisPort,
   })
   : null;
 
+function base64encode(str: string): string {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function base64decode(str: string): string {
+  return decodeURIComponent(atob(str));
+}
 const keysOf = (canonicalKey: string): [string, string] => {
   return [`${canonicalKey}@body`, `${canonicalKey}@meta`];
 };
@@ -36,13 +43,14 @@ export const caches: CacheStorage = {
   ): Promise<Response | undefined> => {
     throw new Error("Not Implemented");
   },
-  open: async (cacheName: string): Promise<Cache> => {
+  open: (cacheName: string): Promise<Cache> => {
     if (!redis) {
       throw new Error(
         "Redis coult not be used due to the lack of credentials.",
       );
     }
-    return {
+    const requestURLSHA1 = withCacheNamespace(cacheName);
+    return Promise.resolve({
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
       add: (_request: RequestInfo | URL): Promise<void> => {
         throw new Error("Not Implemented");
@@ -78,7 +86,7 @@ export const caches: CacheStorage = {
         const [bodyKey, metaKey] = await requestURLSHA1(request).then(keysOf);
         const pl = redis.pipeline();
         pl.get(metaKey);
-        pl.xread([{ key: bodyKey, xid: 0 }]);
+        pl.get(bodyKey);
         const [meta, body] = await pl.flush();
         if (meta === null || body === null) {
           return undefined;
@@ -97,16 +105,15 @@ export const caches: CacheStorage = {
           );
           return undefined;
         }
-
-        if (!(body instanceof Uint8Array)) {
+        if (typeof body !== "string") {
           logger.error(
-            `body for ${bodyKey} was stored in a invalid format, thus cache will not be used`,
+            `body error for ${bodyKey} was store in a invalid format, thus cache will not be used`,
           );
           return undefined;
         }
 
         const parsedMeta: ResponseMetadata = JSON.parse(meta);
-        return new Response(body, {
+        return new Response(base64decode(body), {
           status: parsedMeta.status,
           headers: new Headers(parsedMeta.headers),
         });
@@ -134,9 +141,9 @@ export const caches: CacheStorage = {
         };
         const tx = redis.tx();
         tx.set(metaKey, JSON.stringify(newMeta));
-        tx.xadd(bodyKey, 0, { body: response.body }); // should be converted to a stream
+        tx.set(bodyKey, await response.text().then(base64encode));
         await tx.flush();
       },
-    };
+    });
   },
 };
