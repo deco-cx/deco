@@ -55,6 +55,7 @@ setInterval(() => {
       continue;
     }
     const percentage = hits / total;
+    console.info(`cache@${engine}:${total}:${hits}:${percentage.toFixed(2)}`);
     logger.info(
       `cache@${engine}:${total}:${hits}:${percentage.toFixed(2)}`,
     );

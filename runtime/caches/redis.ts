@@ -1,6 +1,6 @@
 import { Redis } from "https://deno.land/x/upstash_redis@v1.22.1/mod.ts";
 
-import { logger } from "../../observability/otel/config.ts";
+import { logger, tracer } from "../../observability/otel/config.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -25,7 +25,7 @@ interface ResponseMetadata {
 }
 
 function base64encode(str: string): string {
-  return btoa(unescape(encodeURIComponent(str)));
+  return btoa(encodeURIComponent(str));
 }
 
 function base64decode(str: string): string {
@@ -88,33 +88,45 @@ export const caches: CacheStorage = {
       ): Promise<Response | undefined> => {
         assertNoOptions(options);
         const cacheKey = await requestURLSHA1(request);
-        logger.info(`looking for ${cacheKey}`);
-        const data = await redis.get(cacheKey);
-        if (data === null) {
-          return undefined;
-        }
-
-        if (data instanceof Error) {
-          logger.error(
-            `error when reading from redis, ${data.toString()}`,
-          );
-          return undefined;
-        }
-
-        if (typeof data !== "object") {
-          logger.error(
-            `data for ${cacheKey} was stored in a invalid format, thus cache will not be used`,
-          );
-          return undefined;
-        }
-
-        const parsedData: ResponseMetadata = typeof data === "string"
-          ? JSON.parse(data)
-          : data;
-        return new Response(base64decode(parsedData.body), {
-          status: parsedData.status,
-          headers: new Headers(parsedData.headers),
+        const span = tracer.startSpan("redis-get", {
+          attributes: {
+            cacheKey,
+          },
         });
+        try {
+          const data = await redis.get(cacheKey);
+          if (data === null) {
+            span.addEvent("cache-miss");
+            return undefined;
+          }
+          span.addEvent("cache-hit");
+          if (data instanceof Error) {
+            logger.error(
+              `error when reading from redis, ${data.toString()}`,
+            );
+            return undefined;
+          }
+
+          if (typeof data !== "object") {
+            logger.error(
+              `data for ${cacheKey} was stored in a invalid format, thus cache will not be used`,
+            );
+            return undefined;
+          }
+
+          const parsedData: ResponseMetadata = typeof data === "string"
+            ? JSON.parse(data)
+            : data;
+          return new Response(base64decode(parsedData.body), {
+            status: parsedData.status,
+            headers: new Headers(parsedData.headers),
+          });
+        } catch (err) {
+          span.recordException(err);
+          throw err;
+        } finally {
+          span.end();
+        }
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
       matchAll: (
@@ -124,7 +136,6 @@ export const caches: CacheStorage = {
         throw new Error("Not Implemented");
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/put) */
-      // deno-lint-ignore require-await
       put: async (
         request: RequestInfo | URL,
         response: Response,
@@ -135,29 +146,60 @@ export const caches: CacheStorage = {
         if (!response.body) {
           return;
         }
-        const expires = response.headers.get("expires");
-        if (!expires) { // supports only expires for now
-          return;
-        }
-        const expDate = new Date(expires);
-        const timeMs = expDate.getTime() - Date.now();
-        if (timeMs <= 0) {
-          logger.error(`${timeMs} negative`);
-          return;
-        }
-        requestURLSHA1(request).then(async (cacheKey) => {
-          logger.info(`caching ${cacheKey} for ${timeMs}`);
-          const newMeta: ResponseMetadata = {
-            body: await response.text().then(base64encode),
-            status: response.status,
-            headers: [...response.headers.entries()],
-          };
 
-          const options = { px: timeMs };
-          redis.set(cacheKey, JSON.stringify(newMeta), options); // do not await for setting cache
-        }).catch((err) => {
-          logger.error(`error saving to redis ${err?.message}`);
+        const cacheKey = await requestURLSHA1(request);
+        const span = tracer.startSpan("redis-put", {
+          attributes: {
+            cacheKey,
+          },
         });
+
+        try {
+          let expires = response.headers.get("expires");
+          if (!expires && (response.status >= 300 || response.status < 200)) { //cannot be cached
+            span.addEvent("cannot-be-cached", {
+              status: response.status,
+              expires: expires ?? "undefined",
+            });
+            return;
+          }
+          expires ??= new Date(Date.now() + (180_000)).toUTCString();
+
+          const expDate = new Date(expires);
+          const timeMs = expDate.getTime() - Date.now();
+          if (timeMs <= 0) {
+            span.addEvent("negative-time-ms", { timeMs: `${timeMs}` });
+            return;
+          }
+
+          response.text().then(base64encode).then((body) => {
+            const newMeta: ResponseMetadata = {
+              body,
+              status: response.status,
+              headers: [...response.headers.entries()],
+            };
+
+            const options = { px: timeMs };
+            const setSpan = tracer.startSpan("redis-set", {
+              attributes: { cacheKey },
+            });
+            redis.set(cacheKey, JSON.stringify(newMeta), options).catch(
+              (err) => {
+                console.error("redis error", err);
+                setSpan.recordException(err);
+              },
+            ).finally(() => {
+              setSpan.end();
+            }); // do not await for setting cache
+          }).catch((err) => {
+            logger.error(`error saving to redis ${err?.message}`);
+          });
+        } catch (err) {
+          span.recordException(err);
+          throw err;
+        } finally {
+          span.end();
+        }
       },
     });
   },
