@@ -63,6 +63,7 @@ export const compose = (
             request: RequestInfo | URL,
             options?: CacheQueryOptions,
           ): Promise<Response | undefined> => {
+            console.debug("MATCHING REQUEST");
             const fromStoragePromise = st.match(request, options);
             const currentPromise = curr.match(request, options);
 
@@ -72,6 +73,7 @@ export const compose = (
             ]);
 
             if (cached) {
+              console.debug("CACHED REQUEST");
               return cached;
             }
             return await Promise.all([fromStoragePromise, currentPromise]).then(

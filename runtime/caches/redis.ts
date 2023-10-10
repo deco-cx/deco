@@ -88,6 +88,7 @@ export const caches: CacheStorage = {
       ): Promise<Response | undefined> => {
         assertNoOptions(options);
         const cacheKey = await requestURLSHA1(request);
+        console.debug(`looking for ${cacheKey}`);
         logger.info(`looking for ${cacheKey}`);
         const data = await redis.get(cacheKey);
         if (data === null) {
@@ -129,23 +130,34 @@ export const caches: CacheStorage = {
         request: RequestInfo | URL,
         response: Response,
       ): Promise<void> => {
+        console.debug(`caching for redis`);
+
         const req = new Request(request);
         assertCanBeCached(req, response);
+        console.debug(`can be cached for redis`);
 
         if (!response.body) {
           return;
         }
+        console.debug(`has body`);
+
         const expires = response.headers.get("expires");
         if (!expires) { // supports only expires for now
           return;
         }
+        console.debug(`has expires`);
+
         const expDate = new Date(expires);
         const timeMs = expDate.getTime() - Date.now();
         if (timeMs <= 0) {
+          console.error(`${timeMs} negative`);
           logger.error(`${timeMs} negative`);
           return;
         }
+        console.debug(`expires is valid`);
+
         requestURLSHA1(request).then(async (cacheKey) => {
+          console.debug(`caching ${cacheKey} for ${timeMs}`);
           logger.info(`caching ${cacheKey} for ${timeMs}`);
           const newMeta: ResponseMetadata = {
             body: await response.text().then(base64encode),
@@ -154,8 +166,11 @@ export const caches: CacheStorage = {
           };
 
           const options = { px: timeMs };
-          redis.set(cacheKey, JSON.stringify(newMeta), options); // do not await for setting cache
+          redis.set(cacheKey, JSON.stringify(newMeta), options).catch((err) => {
+            console.error("redis error", err);
+          }); // do not await for setting cache
         }).catch((err) => {
+          console.error(`error when caching on redis`,err);
           logger.error(`error saving to redis ${err?.message}`);
         });
       },
