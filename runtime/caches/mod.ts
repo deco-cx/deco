@@ -1,7 +1,8 @@
+import { withInstrumentation } from './common.ts';
 import { compose } from "./compose.ts";
 import { caches as cachesKV } from "./denoKV.ts";
 import { caches as cachesProxy } from "./proxy.ts";
-import { caches as redisCache, redis } from "./redis.ts";
+import { redis, caches as redisCache } from "./redis.ts";
 
 const DEFAULT_CACHE_ENGINE: CacheEngine = "CF_PROXY";
 const WEB_CACHE_ENGINES: CacheEngine[] = Deno.env.has("WEB_CACHE_ENGINE")
@@ -32,6 +33,13 @@ const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
     isAvailable: true,
   },
 };
+
+for (const [engine, cache] of Object.entries(cacheImplByEngine)) {
+  cacheImplByEngine[engine as CacheEngine] = {
+    ...cache,
+    implementation: withInstrumentation(cache.implementation, engine)
+  }
+}
 
 const eligibleCacheImplementations = WEB_CACHE_ENGINES.map((engine) =>
   cacheImplByEngine[engine]

@@ -28,21 +28,6 @@ function base64encode(str: string): string {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-const cacheMetrics = {
-  total: 0,
-  hit: 0,
-};
-
-setInterval(() => {
-  const misses = cacheMetrics.total - cacheMetrics.hit;
-  const percentage = cacheMetrics.hit / cacheMetrics.total;
-  logger.info(
-    `cache:${cacheMetrics.total}:${cacheMetrics.hit}:${misses}:${percentage}`,
-  );
-  cacheMetrics.total = 0;
-  cacheMetrics.hit = 0;
-}, 30 * 1e3);
-
 function base64decode(str: string): string {
   return decodeURIComponent(atob(str));
 }
@@ -105,7 +90,6 @@ export const caches: CacheStorage = {
         const cacheKey = await requestURLSHA1(request);
         logger.info(`looking for ${cacheKey}`);
         const data = await redis.get(cacheKey);
-        cacheMetrics.total++;
         if (data === null) {
           return undefined;
         }
@@ -127,7 +111,6 @@ export const caches: CacheStorage = {
         const parsedData: ResponseMetadata = typeof data === "string"
           ? JSON.parse(data)
           : data;
-        cacheMetrics.hit++;
         return new Response(base64decode(parsedData.body), {
           status: parsedData.status,
           headers: new Headers(parsedData.headers),
