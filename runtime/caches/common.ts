@@ -52,10 +52,10 @@ setInterval(() => {
   for (const cacheMetrics of cachesMetrics) {
     const { total, hits, engine } = cacheMetrics;
     if (total === 0) {
-      console.debug("TOTAL IS ZERO", engine);
       continue;
     }
     const percentage = hits / total;
+    console.info(`cache@${engine}:${total}:${hits}:${percentage.toFixed(2)}`);
     logger.info(
       `cache@${engine}:${total}:${hits}:${percentage.toFixed(2)}`,
     );

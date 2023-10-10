@@ -63,9 +63,23 @@ export const compose = (
             request: RequestInfo | URL,
             options?: CacheQueryOptions,
           ): Promise<Response | undefined> => {
-            console.debug("MATCHING REQUEST");
             const fromStoragePromise = st.match(request, options);
             const currentPromise = curr.match(request, options);
+
+            // in case of one of the caches does not have the value stored, so the other cache should update with the provided cached value
+            const cacheAllWhenNotPresent = Promise.all([
+              fromStoragePromise,
+              currentPromise,
+            ]).then(([responseFromStorage, responseFromCurrent]) => {
+              const hasFromStorage = responseFromStorage !== undefined;
+              const hasFromCurrent = responseFromCurrent !== undefined;
+              if (hasFromStorage && !hasFromCurrent) {
+                curr.put(request, responseFromStorage);
+              } else if (!hasFromStorage && hasFromCurrent) {
+                st.put(request, responseFromCurrent);
+              }
+              return [responseFromStorage, responseFromCurrent];
+            });
 
             const cached = await Promise.race([
               fromStoragePromise,
@@ -73,10 +87,9 @@ export const compose = (
             ]);
 
             if (cached) {
-              console.debug("CACHED REQUEST");
               return cached;
             }
-            return await Promise.all([fromStoragePromise, currentPromise]).then(
+            return await cacheAllWhenNotPresent.then(
               (responses) => responses.filter(Boolean)[0],
             );
           },
