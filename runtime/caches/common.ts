@@ -38,8 +38,4 @@ export const assertCanBeCached = (req: Request, response: Response) => {
   if (response.status === 206) {
     throw new TypeError("Response status must not be 206");
   }
-
-  if (response.headers.get("set-cookie") !== null) {
-    throw new TypeError("Response with `set-cookie` header cannot be cached")
-  }
 };
