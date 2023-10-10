@@ -43,14 +43,14 @@ export const resource = Resource.default().merge(
 const loggerName = "deco-logger";
 log.setup({
   handlers: {
-    otel: new OpenTelemetryHandler("ERROR", {
+    otel: new OpenTelemetryHandler("INFO", {
       resourceAttributes: resource.attributes,
     }),
   },
 
   loggers: {
     [loggerName]: {
-      level: "ERROR",
+      level: "INFO",
       handlers: ["otel"],
     },
   },
