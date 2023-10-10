@@ -13,10 +13,6 @@ export interface CacheStorageOption {
   isAvailable: boolean;
 }
 
-const eligibleCacheImplementations = WEB_CACHE_ENGINES.map((engine) =>
-  cacheImplByEngine[engine]
-).filter((engine) => engine.isAvailable).map((engine) => engine.implementation);
-
 export type CacheEngine = "REDIS" | "KV" | "CACHE_API" | "CF_PROXY";
 const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   REDIS: {
@@ -36,6 +32,10 @@ const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
     isAvailable: true,
   },
 };
+
+const eligibleCacheImplementations = WEB_CACHE_ENGINES.map((engine) =>
+  cacheImplByEngine[engine]
+).filter((engine) => engine.isAvailable).map((engine) => engine.implementation);
 
 const getCacheStorage = (): CacheStorage => {
   if (eligibleCacheImplementations.length === 0) {
