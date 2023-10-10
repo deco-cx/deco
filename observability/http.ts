@@ -1,7 +1,7 @@
 import { ValueType } from "../deps.ts";
-import { decoMeter } from "./otel/metrics.ts";
+import { meter } from "./otel/metrics.ts";
 
-const httpDuration = decoMeter.createHistogram("http_request_duration", {
+const httpDuration = meter.createHistogram("http_request_duration", {
   description: "http request duration",
   unit: "ms",
   valueType: ValueType.DOUBLE,

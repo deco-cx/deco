@@ -1,4 +1,4 @@
-import * as log from "https://deno.land/std@0.203.0/log/mod.ts";
+import * as log from "std/log/mod.ts";
 import {
   BatchSpanProcessor,
   FetchInstrumentation,
@@ -16,7 +16,7 @@ import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
 import { SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
-import { OpenTelemetryHandler } from "https://denopkg.com/hyperdxio/hyperdx-js@65783e6cd18321461129d82613628dcabfe5f846/packages/deno/logger.ts";
+import { OpenTelemetryHandler } from "https://denopkg.com/hyperdxio/hyperdx-js@cc43f5a2ba5f0062f3e01ea3d162d71971dd1f89/packages/deno/mod.ts";
 
 const tryGetVersionOf = (pkg: string) => {
   try {

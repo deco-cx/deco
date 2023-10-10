@@ -1,8 +1,8 @@
 import { isWrappedError } from "../blocks/loader.ts";
 import { ValueType } from "../deps.ts";
-import { decoMeter } from "./otel/metrics.ts";
+import { meter } from "./otel/metrics.ts";
 
-const operationDuration = decoMeter.createHistogram("block_op_duration", {
+const operationDuration = meter.createHistogram("block_op_duration", {
   description: "operation duration",
   unit: "ms",
   valueType: ValueType.DOUBLE,

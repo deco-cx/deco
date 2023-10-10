@@ -50,4 +50,4 @@ if (OTEL_IS_ENABLED) {
   );
 }
 
-export const decoMeter = meterProvider.getMeter("deco");
+export const meter = meterProvider.getMeter("deco");

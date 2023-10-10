@@ -1,4 +1,4 @@
-import { logger } from "../../observability/otel/config.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import { sha1 } from "../utils.ts";
 
 export const assertNoOptions = (
@@ -46,30 +46,12 @@ export interface CacheMetrics {
   total: number;
   hits: number;
 }
-const cachesMetrics: CacheMetrics[] = [];
-
-setInterval(() => {
-  for (const cacheMetrics of cachesMetrics) {
-    const { total, hits, engine } = cacheMetrics;
-    if (total === 0) {
-      continue;
-    }
-    const percentage = hits / total;
-    console.info(`cache@${engine}:${total}:${hits}:${percentage.toFixed(2)}`);
-    logger.info(
-      `cache@${engine}:${total}:${hits}:${percentage.toFixed(2)}`,
-    );
-    cacheMetrics.total = 0;
-    cacheMetrics.hits = 0;
-  }
-}, 30 * 1e3);
+const cacheHit = meter.createCounter("cache_hit");
 
 export const withInstrumentation = (
   cache: CacheStorage,
   engine: string,
 ): CacheStorage => {
-  const metric = { engine, total: 0, hits: 0 };
-  cachesMetrics.push(metric);
   return {
     ...cache,
     open: async (cacheName) => {
@@ -78,8 +60,10 @@ export const withInstrumentation = (
         ...cacheImpl,
         match: async (req, opts) => {
           const isMatch = await cacheImpl.match(req, opts);
-          metric.total++;
-          isMatch && metric.hits++;
+          cacheHit.add(1, {
+            result: isMatch ? "hit" : "miss",
+            engine,
+          });
           return isMatch;
         },
       };

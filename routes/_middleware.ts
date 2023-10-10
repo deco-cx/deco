@@ -52,7 +52,7 @@ const isMonitoringRobots = (req: Request) => {
 export const handler = [
   async (
     req: Request,
-    ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>
+    ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
   ): Promise<Response> => {
     const url = new URL(req.url);
     return await ctx.state.monitoring.tracer.startActiveSpan(
@@ -62,8 +62,8 @@ export const handler = [
           "deco.site.name": context.site,
           "http.request.url": req.url,
           "http.request.method": req.method,
-          "http.request.body.size":
-            req.headers.get("content-length") ?? undefined,
+          "http.request.body.size": req.headers.get("content-length") ??
+            undefined,
           "url.scheme": url.protocol,
           "server.address": url.host,
           "url.query": url.search,
@@ -97,12 +97,12 @@ export const handler = [
             span.setAttribute("http.route", route);
             span.setAttribute(
               "deco.flags",
-              response?.headers.get(DECO_MATCHER_HEADER_QS) ?? "anonymous"
+              response?.headers.get(DECO_MATCHER_HEADER_QS) ?? "anonymous",
             );
             end?.(
               req.method,
               ctx?.state?.pathTemplate,
-              response?.status ?? 500
+              response?.status ?? 500,
             );
           } else {
             span.updateName(`${req.method} ${req.url}`);
@@ -114,16 +114,16 @@ export const handler = [
                 status: response?.status ?? 500,
                 url,
                 begin,
-              })
+              }),
             );
           }
         }
-      }
+      },
     );
   },
   async (
     req: Request,
-    ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>
+    ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
   ) => {
     if (req.method === "HEAD" && isMonitoringRobots(req)) {
       return new Response(null, { status: 200 });
@@ -169,8 +169,8 @@ export const handler = [
     Object.assign(ctx.state, state);
     ctx.state.global = { ...(ctx.state.global ?? {}), ...state }; // compatibility mode with functions.
 
-    const shouldAllowCorsForOptions =
-      req.method === "OPTIONS" && isAdminOrLocalhost(req);
+    const shouldAllowCorsForOptions = req.method === "OPTIONS" &&
+      isAdminOrLocalhost(req);
     const initialResponse = shouldAllowCorsForOptions
       ? new Response()
       : await ctx.next();
@@ -215,7 +215,7 @@ export const handler = [
     for (const flag of state?.flags ?? []) {
       newHeaders.append(
         DECO_MATCHER_HEADER_QS,
-        `${flag.name}=${flag.value ? 1 : 0}`
+        `${flag.name}=${flag.value ? 1 : 0}`,
       );
     }
 

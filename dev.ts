@@ -1,6 +1,6 @@
 import { setupGithooks } from "https://deno.land/x/githooks@0.0.4/githooks.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
-import { gte } from "std/semver/mod.ts";
+import { gte, parse } from "std/semver/mod.ts";
 
 import { ResolverMap } from "./engine/core/resolver.ts";
 import { ManifestBuilder } from "./engine/manifest/manifestBuilder.ts";
@@ -27,10 +27,10 @@ const oncePerRun = (
   });
 };
 
-const MIN_DENO_VERSION = "1.32.2";
+const MIN_DENO_VERSION = parse("1.32.2");
 export function ensureMinDenoVersion() {
   // Check that the minimum supported Deno version is being used.
-  if (!gte(Deno.version.deno, MIN_DENO_VERSION)) {
+  if (!gte(parse(Deno.version.deno), MIN_DENO_VERSION)) {
     let message =
       `Deno version ${MIN_DENO_VERSION} or higher is required. Please update Deno.\n\n`;
 

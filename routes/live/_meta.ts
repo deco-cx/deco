@@ -1,5 +1,5 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { major } from "std/semver/mod.ts";
+import { parse } from "std/semver/mod.ts";
 import { JSONSchema7 } from "../../deps.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { notUndefined, singleFlight } from "../../engine/core/utils.ts";
@@ -163,7 +163,7 @@ export const handler = async (
     }
 
     const info: MetaInfo = {
-      major: major(meta.version),
+      major: parse(meta.version).major,
       version: meta.version,
       namespace: context.namespace!,
       site: context.site!,

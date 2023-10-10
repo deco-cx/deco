@@ -1,4 +1,4 @@
-import { fromFileUrl, join, sep } from "std/path/mod.ts";
+import { fromFileUrl, join, SEP } from "std/path/mod.ts";
 
 export const resolveFilePath = (path: string) => {
   return join(
@@ -25,7 +25,7 @@ export const exists = async (dir: string): Promise<boolean> => {
 };
 
 export const fileSeparatorToSlash = (path: string) => {
-  return path.replaceAll(sep, "/");
+  return path.replaceAll(SEP, "/");
 };
 
 export const fromFileUrlOrNoop = (urlString: string): string => {
