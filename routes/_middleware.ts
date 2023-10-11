@@ -1,6 +1,6 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { getSetCookies } from "std/http/mod.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
+import { RequestState } from "../blocks/utils.tsx";
 import {
   getPagePathTemplate,
   redirectTo,
@@ -13,6 +13,7 @@ import { startObserve } from "../observability/http.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
+
 import { formatLog } from "../utils/log.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
@@ -25,6 +26,8 @@ export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.pathname = `/live/previews/${pageId}`;
   return redirectTo(url);
 };
+
+const DECO_SEGMENT = "deco_segment";
 
 /**
  * @description Global configurations for ./routes/_middleware.ts route
@@ -161,7 +164,7 @@ export const handler = [
       headers: new Headers(defaultHeaders),
       status: undefined,
     };
-    const state = ctx.state?.$live?.state ?? {};
+    const state: Partial<RequestState> = ctx.state?.$live?.state ?? {};
     const stateBag = new WeakMap();
     state.response = response;
     state.bag = stateBag;
@@ -204,20 +207,18 @@ export const handler = [
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
     }
 
-    // if there's no set cookie it means that none unstable matcher was evaluated
-    if (
-      Object.keys(getSetCookies(newHeaders)).length === 0 &&
-      Deno.env.has("DECO_ANONYMOUS_CACHE")
-    ) {
-      newHeaders.set("cache-control", "public, max-age=10");
-    }
-
     for (const flag of state?.flags ?? []) {
       newHeaders.append(
         DECO_MATCHER_HEADER_QS,
         `${flag.name}=${flag.value ? 1 : 0}`,
       );
     }
+
+    // TODO Put this back when segment was calculated once per session
+    // const currentCookies = getCookies(req.headers);
+    // const segment = await segmentFor(state, `${url.pathname}${url.search}`);
+    // segment !== currentCookies[DECO_SEGMENT] &&
+    //   setCookie(newHeaders, { name: DECO_SEGMENT, value: segment });
 
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,

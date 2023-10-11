@@ -100,5 +100,5 @@ export {
 } from "npm:@opentelemetry/sdk-metrics@1.17.0";
 
 export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
-
+export { default as Murmurhash3 } from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";

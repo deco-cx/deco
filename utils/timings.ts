@@ -24,11 +24,14 @@ export function createServerTimings() {
   const printTimings = () => {
     return Object.entries(timings)
       .map(([key, timing]) => {
+        if (!timing.end) {
+          return undefined;
+        }
         const duration = (timing.end! - timing.start).toFixed(0);
         return `${slugify(key)};${
           timing.desc ? `desc=${timing.desc};` : ""
         }dur=${duration}`;
-      })
+      }).filter(Boolean)
       .join(", ");
   };
 

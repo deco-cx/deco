@@ -1,19 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import { Context, Span, Tracer } from "../../deps.ts";
-import {
-  HintNode,
-  ResolveHints,
-  traverseAny,
-} from "../../engine/core/hints.ts";
-import { ResolveOptions } from "../../engine/core/mod.ts";
+import { identity } from "../../utils/object.ts";
+import { createServerTimings } from "../../utils/timings.ts";
+import { HintNode, ResolveHints, traverseAny } from "./hints.ts";
+import { ResolveOptions } from "./mod.ts";
 import {
   isAwaitable,
   notUndefined,
   PromiseOrValue,
   UnPromisify,
-} from "../../engine/core/utils.ts";
-import { identity } from "../../utils/object.ts";
-import { createServerTimings } from "../../utils/timings.ts";
+} from "./utils.ts";
 
 export class DanglingReference extends Error {
   public resolverType: string;
@@ -266,7 +262,10 @@ export const asResolved = <T>(data: T, deferred?: boolean): T => {
 export type Deferred<T, TContext extends BaseContext = BaseContext> = {
   _deferred: true;
   __resolveType?: string;
-  (partialCtx?: Partial<TContext>): PromiseOrValue<T>;
+  (
+    partialCtx?: Partial<TContext>,
+    opts?: Partial<ResolveOptions>,
+  ): PromiseOrValue<T>;
 };
 
 export const isDeferred = <T, TContext extends BaseContext = BaseContext>(
@@ -319,7 +318,7 @@ interface ResolvedKey<T, K extends keyof T> {
 const resolvePropsWithHints = async <
   T,
   TContext extends BaseContext = BaseContext,
->(_props: T, hints: HintNode<T>, _ctx: TContext, nullIfDangling = false) => {
+>(_props: T, hints: HintNode<T>, _ctx: TContext, opts: Opts) => {
   const [_thisProps, type] = resolveTypeOf(_props);
   const onBeforeResolveProps = type && type in _ctx.resolvers
     ? _ctx.resolvers[type]?.onBeforeResolveProps ?? identity
@@ -339,7 +338,7 @@ const resolvePropsWithHints = async <
             type: "prop",
             value: key.toString(),
           }),
-          nullIfDangling,
+          opts,
         );
         return { key, resolved } as ResolvedKey<T, typeof key>;
       }
@@ -366,7 +365,7 @@ const resolvePropsWithHints = async <
     type,
     mutableProps,
     ctx,
-    nullIfDangling,
+    opts,
   );
 };
 /**
@@ -434,19 +433,28 @@ const resolveWithType = <
   resolveType: string,
   props: T,
   context: TContext,
-  nullIfDangling = false,
+  opts: Opts,
 ): Promise<T> => {
   const { resolvers: resolverMap, resolvables } = context;
 
   if (resolveType in resolvables) {
-    return resolveResolvable(resolveType, context, nullIfDangling);
+    return resolveResolvable(resolveType, context, opts);
   } else if (resolveType in resolverMap) {
-    return invokeResolverWithProps(
+    const resolver = resolverMap[resolveType];
+    const proceed = () =>
+      invokeResolverWithProps(
+        props,
+        resolver,
+        resolveType,
+        context,
+      );
+    return opts?.hooks?.onResolveStart?.(
+      proceed,
       props,
-      resolverMap[resolveType],
+      resolver,
       resolveType,
       context,
-    );
+    ) ?? proceed();
   }
 
   const ctx = withResolveChain(context, {
@@ -454,7 +462,7 @@ const resolveWithType = <
     value: resolveType,
   });
 
-  if (nullIfDangling) {
+  if (opts.nullIfDangling) {
     return Promise.resolve(null as T);
   }
 
@@ -473,7 +481,7 @@ const resolveResolvable = <
 >(
   resolveType: string,
   context: TContext,
-  nullIfDangling = false,
+  opts: Opts,
 ): Promise<T> => {
   const {
     resolvables: { [resolveType]: resolvableObj },
@@ -486,7 +494,7 @@ const resolveResolvable = <
   return context.memo[resolveType] ??= resolveAny(
     resolvableObj,
     context,
-    nullIfDangling,
+    opts,
     hints,
   );
 };
@@ -502,7 +510,7 @@ export const resolveAny = <
     >
     | Resolvable<T & { __resolveType: string }, TContext>,
   context: TContext,
-  nullIfDangling = false,
+  opts: Opts,
   hints?: HintNode<T> | null,
 ): Promise<T> => {
   if (!maybeResolvable) {
@@ -514,9 +522,30 @@ export const resolveAny = <
       maybeResolvable,
     ) ?? {},
     context,
-    nullIfDangling,
+    opts,
   );
 };
+
+export interface ResolveHooks {
+  onResolveStart?: <
+    T,
+    TContext extends BaseContext = BaseContext,
+  >(
+    resolve: () => Promise<T>,
+    props: T,
+    resolver: Resolver,
+    __resolveType: string,
+    ctx: TContext,
+  ) => Promise<T>;
+}
+/**
+ * The resolve call options
+ */
+export interface Opts {
+  nullIfDangling?: boolean;
+  propsAreResolved?: boolean;
+  hooks?: ResolveHooks;
+}
 
 /**
  * Receives a string (pointing to a resolvable or a resolver), a context and optionally dangling and propsAreResolved flag, and returns the resolved object.
@@ -528,9 +557,12 @@ export const resolve = <
 >(
   maybeResolvable: string | Resolvable<T, TContext>,
   context: TContext,
-  nullIfDangling = false,
-  propsAreResolved = false,
+  resolveOptions: Opts = {
+    nullIfDangling: false,
+    propsAreResolved: false,
+  },
 ): Promise<T> => {
+  const { propsAreResolved } = resolveOptions;
   if (
     propsAreResolved && isResolvable(maybeResolvable) &&
     typeof maybeResolvable === "object"
@@ -540,7 +572,7 @@ export const resolve = <
       __resolveType,
       props as T,
       context,
-      nullIfDangling,
+      resolveOptions,
     );
   }
   if (
@@ -550,8 +582,8 @@ export const resolve = <
       maybeResolvable,
       {} as T,
       context,
-      nullIfDangling,
+      resolveOptions,
     );
   }
-  return resolveAny<T>(maybeResolvable, context, nullIfDangling);
+  return resolveAny<T>(maybeResolvable, context, resolveOptions);
 };

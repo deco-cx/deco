@@ -1,3 +1,4 @@
+import { ValueType } from "../../deps.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { sha1 } from "../utils.ts";
 
@@ -46,7 +47,10 @@ export interface CacheMetrics {
   total: number;
   hits: number;
 }
-const cacheHit = meter.createCounter("cache_hit");
+const cacheHit = meter.createCounter("cache_hit", {
+  unit: "1",
+  valueType: ValueType.INT,
+});
 
 export const withInstrumentation = (
   cache: CacheStorage,
