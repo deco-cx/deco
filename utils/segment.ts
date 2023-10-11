@@ -9,7 +9,7 @@ const hasher = new Murmurhash3(); // This object cannot be shared across executi
 /**
  * Calculates the etag for the current request.
  */
-export const etagFor = async (
+export const segmentFor = async (
   state: Partial<RequestState>,
   url: string,
 ): Promise<string> => {

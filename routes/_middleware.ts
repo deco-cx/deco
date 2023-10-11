@@ -5,14 +5,13 @@ import {
   getPagePathTemplate,
   redirectTo,
 } from "../compatibility/v0/editorData.ts";
-import { getCookies, setCookie, SpanStatusCode } from "../deps.ts";
+import { SpanStatusCode } from "../deps.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { context } from "../live.ts";
 import { Apps } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
-import { etagFor } from "../utils/etag.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 
 import { formatLog } from "../utils/log.ts";
@@ -215,10 +214,11 @@ export const handler = [
       );
     }
 
-    const currentCookies = getCookies(req.headers);
-    const etag = await etagFor(state, `${url.pathname}${url.search}`);
-    etag !== currentCookies[DECO_SEGMENT] &&
-      setCookie(newHeaders, { name: DECO_SEGMENT, value: etag });
+    // TODO Put this back when segment was calculated once per session
+    // const currentCookies = getCookies(req.headers);
+    // const segment = await segmentFor(state, `${url.pathname}${url.search}`);
+    // segment !== currentCookies[DECO_SEGMENT] &&
+    //   setCookie(newHeaders, { name: DECO_SEGMENT, value: segment });
 
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,

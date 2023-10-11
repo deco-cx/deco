@@ -15,7 +15,7 @@ export type MatchContext<T = {}> = T & {
 // Murmurhash3 was chosen because it is fast
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
-export const DECO_MATCHER_PREFIX = `_dcxf_matchers_`
+export const DECO_MATCHER_PREFIX = `_dcxf_matchers_`;
 export const DECO_MATCHER_HEADER_QS = "x-deco-matchers";
 const DECO_MATCHER_HEADER_QS_OVERRIDE = `${DECO_MATCHER_HEADER_QS}-override`;
 
