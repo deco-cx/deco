@@ -1,28 +1,43 @@
-import { getSetCookies } from "std/http/cookie.ts";
-import { DECO_MATCHER_PREFIX } from "../blocks/matcher.ts";
-import type { RequestState } from "../blocks/utils.tsx";
+import type { RequestState, SegmentBuilder } from "../blocks/utils.tsx";
 import { Murmurhash3 } from "../deps.ts";
 import { context } from "../live.ts";
 
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
 /**
- * Calculates the etag for the current request.
+ * initialize the page cache vary key with empty
  */
-export const segmentFor = async (
+export const builder = async (
   state: Partial<RequestState>,
   url: string,
-): Promise<string> => {
-  const cookies = getSetCookies(state?.response?.headers ?? new Headers());
-  // sort cookie to calculate stable etags
+): Promise<SegmentBuilder> => {
+  const vary: string[] = [];
+  const revision = context.release
+    ? await context.release.revision()
+    : undefined;
+  return {
+    varyWith: (val: string) => {
+      vary.push(val);
+    },
+    build: () => segmentFor(state, url, vary, revision),
+  };
+};
+
+/**
+ * Calculates the etag for the current request.
+ */
+export const segmentFor = (
+  state: Partial<RequestState>,
+  url: string,
+  pageVary: string[],
+  revision?: string,
+): string => {
   for (
-    const cookie of cookies.toSorted((cookieA, cookieB) =>
-      cookieA.name.localeCompare(cookieB.name)
+    const vary of pageVary.toSorted((varyA, varyB) =>
+      varyA.localeCompare(varyB)
     )
   ) {
-    if (!cookie.name.startsWith(DECO_MATCHER_PREFIX)) {
-      hasher.hash(`${cookie.name}${cookie.value}`);
-    }
+    hasher.hash(vary);
   }
   for (
     const flag
@@ -37,9 +52,7 @@ export const segmentFor = async (
     hasher.hash(context.deploymentId);
   }
 
-  if (context.release) {
-    hasher.hash(await context.release.revision());
-  }
+  revision && hasher.hash(revision);
   hasher.hash(url);
 
   const etag = hasher.result();

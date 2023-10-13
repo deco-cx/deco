@@ -15,6 +15,7 @@ import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
 
 import { formatLog } from "../utils/log.ts";
+import { builder as segmentBuilder } from "../utils/segment.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);
@@ -169,6 +170,7 @@ export const handler = [
     state.response = response;
     state.bag = stateBag;
     state.flags = [];
+    state.segment = await segmentBuilder(state, `${url.pathname}${url.search}`);
     Object.assign(ctx.state, state);
     ctx.state.global = { ...(ctx.state.global ?? {}), ...state }; // compatibility mode with functions.
 

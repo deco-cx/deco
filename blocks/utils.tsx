@@ -73,6 +73,13 @@ export const createBagKey = (description: string): symbol =>
   Symbol(description);
 
 /**
+ * Cache Key builder for the current request
+ */
+export interface SegmentBuilder {
+  varyWith: (val: string) => void;
+  build: () => string;
+}
+/**
  * Values that are fulfilled for every request
  */
 export interface RequestState {
@@ -82,6 +89,7 @@ export interface RequestState {
   };
   bag: WeakMap<any, any>;
   flags: Flag[];
+  segment: SegmentBuilder;
 }
 
 export type FnContext<
