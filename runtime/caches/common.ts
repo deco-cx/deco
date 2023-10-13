@@ -1,6 +1,7 @@
 import { ValueType } from "../../deps.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { sha1 } from "../utils.ts";
+import { tracer } from "../../observability/otel/config.ts";
 
 export const assertNoOptions = (
   { ignoreMethod, ignoreSearch, ignoreVary }: CacheQueryOptions = {},
@@ -63,12 +64,24 @@ export const withInstrumentation = (
       return {
         ...cacheImpl,
         match: async (req, opts) => {
-          const isMatch = await cacheImpl.match(req, opts);
-          cacheHit.add(1, {
-            result: isMatch ? "hit" : "miss",
-            engine,
+          const span = tracer.startSpan("cache-match", {
+            attributes: { engine },
           });
-          return isMatch;
+          try {
+            const isMatch = await cacheImpl.match(req, opts);
+            const result = isMatch ? "hit" : "miss";
+            span.addEvent("cache-result", { result });
+            cacheHit.add(1, {
+              result,
+              engine,
+            });
+            return isMatch;
+          } catch (err) {
+            span.recordException(err);
+            throw err;
+          } finally {
+            span.end();
+          }
         },
       };
     },
