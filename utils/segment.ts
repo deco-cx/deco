@@ -5,19 +5,19 @@ import { context } from "../live.ts";
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
 /**
- * initialize the page cache vary key with empty
+ * initialize the segment builder
  */
 export const builder = async (
   state: Partial<RequestState>,
   url: string,
 ): Promise<SegmentBuilder> => {
-  const vary: string[] = [];
+  const vary: Record<string, string> = {};
   const revision = context.release
     ? await context.release.revision()
     : undefined;
   return {
-    varyWith: (val: string) => {
-      vary.push(val);
+    varyWith: (key: string, val: string) => {
+      vary[key] = val;
     },
     build: () => segmentFor(state, url, vary, revision),
   };
@@ -29,15 +29,15 @@ export const builder = async (
 export const segmentFor = (
   state: Partial<RequestState>,
   url: string,
-  pageVary: string[],
+  pageVary: Record<string, string>,
   revision?: string,
 ): string => {
   for (
-    const vary of pageVary.toSorted((varyA, varyB) =>
-      varyA.localeCompare(varyB)
+    const [key, value] of Object.entries(pageVary).toSorted((varyA, varyB) =>
+      varyA[0].localeCompare(varyB[0])
     )
   ) {
-    hasher.hash(vary);
+    hasher.hash(`${key}=${value}`);
   }
   for (
     const flag

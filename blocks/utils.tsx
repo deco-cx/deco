@@ -76,7 +76,7 @@ export const createBagKey = (description: string): symbol =>
  * Cache Key builder for the current request
  */
 export interface SegmentBuilder {
-  varyWith: (val: string) => void;
+  varyWith: (key:string, val: string) => void;
   build: () => string;
 }
 /**
