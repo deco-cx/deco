@@ -27,7 +27,7 @@ export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   return redirectTo(url);
 };
 
-const DECO_SEGMENT = "deco_segment";
+// const DECO_SEGMENT = "deco_segment";
 
 /**
  * @description Global configurations for ./routes/_middleware.ts route
