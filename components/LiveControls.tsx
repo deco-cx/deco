@@ -158,7 +158,7 @@ const main = () => {
   /** Setup global variables */
   window.LIVE = {
     ...window.LIVE,
-    ...JSON.parse(document.getElementById("__DECO_STATE")!.innerText),
+    ...JSON.parse(document.getElementById("__DECO_STATE")!.textContent || ""),
   };
 
   /** Setup listeners */
