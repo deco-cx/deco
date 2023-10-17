@@ -39,6 +39,7 @@ export type JSONSchemaDefinition = JSONSchema7Definition;
 
 export interface DecoManifest extends Manifest {
   name: string;
+  baseUrl: string
   apps?: Record<string, ModuleOf<typeof appBlock>>;
   workflows?: Record<string, ModuleOf<typeof workflowBlock>>;
   actions?: Record<string, ModuleOf<typeof actionBlock>>;

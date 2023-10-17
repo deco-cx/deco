@@ -6,6 +6,7 @@ import {
   ReadOptions,
   Release,
 } from "../../engine/releases/provider.ts";
+import { logger } from "../../observability/otel/config.ts";
 
 export interface SupabaseReleaseProvider {
   /**
@@ -101,6 +102,9 @@ export const newSupabase = (
       singleFlight = true;
       const { data, error } = await provider.get(force === true); // if it is forced so we should include archived
       if (error !== null) {
+        const errMsg = `update internal state error ${error}`;
+        logger.error(errMsg);
+        console.error(errMsg);
         return;
       }
       const resolvables = data ??
@@ -134,10 +138,11 @@ export const newSupabase = (
         notify();
       }, (_status, err) => {
         if (err) {
-          console.error(
-            "error when trying to subscribe to release changes falling back to background updates",
-            err,
-          );
+          const errMsg =
+            `error when trying to subscribe to release changes falling back to background updates, ${err}`;
+          logger.error(errMsg);
+          console.error(errMsg);
+
           updateInternalState().finally(() => {
             const jitter = Math.floor(REFETCH_JITTER_MS * Math.random());
             sleep(refetchIntervalMSDeploy + jitter).then(() => {
