@@ -34,7 +34,7 @@ export default {
     return resolvers;
   },
   once: function once({ key, func }, { runOnce }) {
-    return runOnce(func.name ?? key, func);
+    return runOnce(key ?? func.name, func);
   },
   resolveTypeSelector: function resolveTypeSelector(
     { resolveType }: { resolveType: string },
