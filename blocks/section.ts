@@ -7,7 +7,7 @@ import {
   RequestState,
 } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
-import { JSX } from "../deps.ts";
+import { JSX } from "preact";
 import {
   Block,
   BlockModule,

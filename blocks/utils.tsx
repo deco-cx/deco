@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import type { AppManifest, SourceMap } from "../blocks/app.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
-import { Component, JSX } from "../deps.ts";
+import { Component, JSX } from "preact";
 import {
   Block,
   BlockModule,
