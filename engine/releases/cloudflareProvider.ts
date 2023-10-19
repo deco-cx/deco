@@ -2,12 +2,8 @@
 import { S3Client } from "https://deno.land/x/s3_lite_client@0.6.1/mod.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { singleFlight } from "../../engine/core/utils.ts";
-import {
-  OnChangeCallback,
-  ReadOptions,
-  Release,
-} from "./provider.ts";
 import { stringToHexSha256 } from "../../utils/encoding.ts";
+import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
 
 const CLOUDFLARE_R2_ACCESS_KEY = Deno.env.get("CLOUDFLARE_R2_ACCESS_KEY");
 const CLOUDFLARE_R2_SECRET_KEY = Deno.env.get("CLOUDFLARE_R2_SECRET_KEY");
@@ -37,7 +33,10 @@ function sleep(ms: number) {
 }
 
 let currentRevision = "unknown";
-export const newCloudflareProvider = (site: string, listenForUpdates: boolean): Release => {
+export const newCloudflareProvider = (
+  site: string,
+  release: string,
+): Release => {
   const onChangeCbs: OnChangeCallback[] = [];
   const notify = () => {
     onChangeCbs.forEach((cb) => cb());
@@ -48,19 +47,19 @@ export const newCloudflareProvider = (site: string, listenForUpdates: boolean): 
     sf.do(
       "flight",
       async () => {
-        const response = await s3client.getObject(site);
+        const response = await s3client.getObject(`${site}/${release}.json`);
         if (!response) {
           return undefined;
         }
         const json = await new Response(response.body).text();
         return JSON.parse(json);
-      }
+      },
     );
 
   // the first load retry attempts
   let remainingRetries = 5;
   // the last error based on the retries
-  let lastError: Error
+  let lastError: Error;
 
   // the first load is required as the isolate should not depend on any background behavior to work properly.
   // so this method retries 5 times with a 100ms delay between each attempt otherwise the promise will be rejected.
@@ -79,7 +78,8 @@ export const newCloudflareProvider = (site: string, listenForUpdates: boolean): 
     try {
       const data = await getConfig();
       if (!data) {
-        throw new Error("could not get config from cloudflare");
+        reject("could not get config from cloudflare");
+        return;
       }
       resolve(data);
     } catch (error) {
@@ -119,13 +119,6 @@ export const newCloudflareProvider = (site: string, listenForUpdates: boolean): 
     }
   };
 
-  if (listenForUpdates) {
-    const channel = new BroadcastChannel(site);
-    channel.onmessage = (_: MessageEvent) => {
-      updateInternalState();
-    }
-  }
-
   return {
     archived: async (opts?: ReadOptions) => {
       if (opts?.forceFresh) {
@@ -146,4 +139,4 @@ export const newCloudflareProvider = (site: string, listenForUpdates: boolean): 
       return resolvables.state;
     },
   };
-}
+};
