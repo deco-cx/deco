@@ -1,9 +1,10 @@
 import { Resolvable } from "../../engine/core/resolver.ts";
-import { fromPagesTable } from "../../engine/releases/pages.ts";
-import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
+import { newCloudflareProvider } from "./cloudflareProvider.ts";
+import { fromPagesTable } from "../../engine/releases/pages.ts";
+import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { newSupabase } from "./supabaseProvider.ts";
 
 export type OnChangeCallback = () => void;
@@ -86,6 +87,7 @@ export const compose = (...providers: Release[]): Release => {
   });
 };
 
+const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE"
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
@@ -105,11 +107,16 @@ export const getComposedConfigStore = (
     return newFsProvider();
   }
 
-  if (siteId > 0) {
-    providers.push(newSupabase(fromPagesTable(siteId, ns), true)); // if not deploy so no background is needed
-  }
+  const release = Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
+  if (release) {
+    providers.push(newCloudflareProvider(site, release));
+  } else {
+    if (siteId > 0) {
+      providers.push(newSupabase(fromPagesTable(siteId, ns), true)); // if not deploy so no background is needed
+    }
 
-  providers.push(newSupabase(fromConfigsTable(site), true)); // if not deploy so no background is needed
+    providers.push(newSupabase(fromConfigsTable(site), true)); // if not deploy so no background is needed
+  }
 
   if (Deno.env.has("USE_LOCAL_STORAGE")) {
     providers.push(newFsProvider());
