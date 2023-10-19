@@ -34,7 +34,22 @@ export default {
     return resolvers;
   },
   once: function once({ key, func }, { runOnce }) {
-    return runOnce(func.name ?? key, func);
+    return runOnce(key ?? func.name, func);
+  },
+  resolveTypeSelector: function resolveTypeSelector(
+    { resolveType }: { resolveType: string },
+    { resolvables, runOnce },
+  ) {
+    return runOnce(`resolveTypeSelector_${resolveType}`, () => {
+      const blocks: Resolvable[] = Object.values(resolvables).filter((
+        resolvable,
+      ) =>
+        isResolvable<unknown>(resolvable) &&
+        resolvable.__resolveType === resolveType
+      );
+
+      return blocks;
+    });
   },
   blockSelector: function blockSelector(
     { type }: { type: string },
