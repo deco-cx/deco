@@ -15,7 +15,7 @@ export type MatchContext<T = {}> = T & {
 // Murmurhash3 was chosen because it is fast
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
-export const DECO_MATCHER_PREFIX = `_dcxf_matchers_`;
+export const DECO_MATCHER_PREFIX = `deco_matcher_`;
 export const DECO_MATCHER_HEADER_QS = "x-deco-matchers";
 const DECO_MATCHER_HEADER_QS_OVERRIDE = `${DECO_MATCHER_HEADER_QS}-override`;
 
@@ -151,7 +151,7 @@ const matcherBlock: Block<
         result ??= matcherFunc(ctx);
       } else {
         hasher.hash(uniqueId);
-        const cookieName = `_dcxf_matchers_${hasher.result()}`;
+        const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
         hasher.reset();
         const isMatchFromCookie = isNoCache
           ? undefined
