@@ -1,26 +1,7 @@
-// deno-lint-ignore-file no-explicit-any
-import { S3Client } from "https://deno.land/x/s3_lite_client@0.6.1/mod.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { singleFlight } from "../../engine/core/utils.ts";
 import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
-
-const CLOUDFLARE_R2_ACCESS_KEY = Deno.env.get("CLOUDFLARE_R2_ACCESS_KEY");
-const CLOUDFLARE_R2_SECRET_KEY = Deno.env.get("CLOUDFLARE_R2_SECRET_KEY");
-const CLOUDFLARE_R2_ENDPOINT = Deno.env.get("CLOUDFLARE_R2_ENDPOINT")!;
-
-const CONFIG_BUCKET_NAME = "configs";
-
-const s3client = new S3Client({
-  endPoint: CLOUDFLARE_R2_ENDPOINT ?? "r2.cloudflarestorage.com",
-  port: 443,
-  useSSL: true,
-  region: "us-east-1",
-  bucket: CONFIG_BUCKET_NAME,
-  pathStyle: false,
-  accessKey: CLOUDFLARE_R2_ACCESS_KEY,
-  secretKey: CLOUDFLARE_R2_SECRET_KEY,
-});
 
 interface CurrResolvables {
   state: Record<string, Resolvable<any>>;
@@ -47,12 +28,13 @@ export const newCloudflareProvider = (
     sf.do(
       "flight",
       async () => {
-        const response = await s3client.getObject(`${site}/${release}.json`);
-        if (!response) {
+        const response = await fetch(
+          `https://configs.deco.cx/${site}/${release}.json`,
+        );
+        if (!response.ok) {
           return undefined;
         }
-        const json = await new Response(response.body).text();
-        return JSON.parse(json);
+        return response.json();
       },
     );
 
