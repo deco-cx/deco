@@ -119,7 +119,7 @@ const addHours = function (date: Date, h: number) {
   return date;
 };
 
-const DEBUG_COOKIE = "__dcxf_debug";
+const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
 
 const DEBUG_QS = "__d";
