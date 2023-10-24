@@ -8,7 +8,6 @@ import { decoManifestBuilder } from "./engine/manifest/manifestGen.ts";
 import { context } from "./live.ts";
 import { DecoManifest } from "./types.ts";
 import { namespaceFromSiteJson, updateImportMap } from "./utils/namespace.ts";
-import { checkUpdates } from "./utils/update.ts";
 export { format } from "./utils/formatter.ts";
 
 /**
@@ -122,11 +121,6 @@ export default async function dev(
   } = {},
 ) {
   const dir = dirname(fromFileUrl(base));
-  oncePerRun(async function check() {
-    await checkUpdates(dir).catch((err) =>
-      console.log("error when checking updates", err)
-    );
-  });
   const ns = await getAndUpdateNamespace(dir) ?? base;
   context.namespace = ns;
   ensureMinDenoVersion();
