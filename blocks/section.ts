@@ -1,11 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HttpContext } from "../blocks/handler.ts";
 import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
-import {
-  componentWith,
-  fnContextFromHttpContext,
-  RequestState,
-} from "../blocks/utils.tsx";
+import { fnContextFromHttpContext, RequestState } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { JSX } from "../deps.ts";
 import {
@@ -19,6 +15,7 @@ import { Resolver } from "../engine/core/resolver.ts";
 import { Manifest } from "../live.gen.ts";
 import { context } from "../live.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
+import { withSection } from "../components/section.tsx";
 
 /**
  * @widget none
@@ -67,8 +64,11 @@ export interface SectionModule<TConfig = any, TProps = any> extends
   loader?: PropsLoader<TConfig, TProps>;
 }
 
-const sectionBlock: Block<SectionModule> = {
-  type: "sections",
+export const createSectionBlock = (
+  wrapper: typeof withSection,
+  type: "sections" | "pages",
+): Block<SectionModule> => ({
+  type,
   introspect: { funcNames: ["loader", "default"] },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
@@ -84,26 +84,30 @@ const sectionBlock: Block<SectionModule> = {
       TConfig,
       HttpContext<RequestState>
     > => {
-    const errBoundary = mod.ErrorBoundary;
-    const componentFunc = componentWith(resolver, mod.default, errBoundary);
+    const componentFunc = wrapper(
+      resolver,
+      mod.default,
+      mod.ErrorBoundary,
+    );
     const loader = mod.loader;
     if (!loader) {
       return (
         props: TProps,
-        { resolveChain, context }: HttpContext<RequestState>,
+        ctx: HttpContext<RequestState>,
       ): PreactComponent<any, TProps> => {
-        return componentFunc(
-          props,
-          { resolveChain },
-          context?.state?.debugEnabled,
-        );
+        return componentFunc(props, ctx);
       };
     }
     return async (
       props: TConfig,
       httpCtx: HttpContext<RequestState>,
     ): Promise<PreactComponent<any, TProps>> => {
-      const { resolveChain, request, context, resolve } = httpCtx;
+      const {
+        request,
+        context,
+        resolve,
+      } = httpCtx;
+
       const ctx = {
         ...context,
         state: { ...context.state, $live: props, resolve },
@@ -115,8 +119,7 @@ const sectionBlock: Block<SectionModule> = {
           request,
           fnContextFromHttpContext(httpCtx),
         ),
-        { resolveChain },
-        ctx?.state?.debugEnabled,
+        httpCtx,
       );
     };
   },
@@ -142,7 +145,12 @@ const sectionBlock: Block<SectionModule> = {
     };
   },
   defaultPreview: (comp) => comp,
-};
+});
+
+const sectionBlock: Block<SectionModule> = createSectionBlock(
+  withSection,
+  "sections",
+);
 
 /**
  * (props:TProps) => JSX.Element

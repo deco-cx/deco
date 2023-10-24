@@ -87,6 +87,41 @@ export type ResolvesTo<
     : never;
 };
 
+const RESOLVE_TYPES: FieldResolver["type"][] = [
+  "prop",
+  "resolvable",
+  "resolver",
+  "dangling",
+];
+
+const SCORE_BY_RESOLVE_TYPES = new Map(
+  Object.entries(RESOLVE_TYPES).map(([i, t]) => [t, Number(i)]),
+);
+
+export const minify = (chain: FieldResolver[]) => {
+  const minified = [];
+
+  for (const c of chain) {
+    minified.push(SCORE_BY_RESOLVE_TYPES.get(c.type));
+    minified.push(c.value);
+  }
+
+  return minified;
+};
+
+export const unwind = (minified: string[]) => {
+  const unwinded: FieldResolver[] = [];
+
+  for (let it = 0; it < minified.length; it += 2) {
+    unwinded.push({
+      type: RESOLVE_TYPES[Number(minified[it])],
+      value: minified[it + 1],
+    });
+  }
+
+  return unwinded;
+};
+
 export type ResolvableObj<
   T = any,
   TContext extends BaseContext = BaseContext,

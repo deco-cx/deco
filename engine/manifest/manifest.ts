@@ -71,6 +71,12 @@ export interface DanglingRecover {
   recover: Resolver;
 }
 
+const freshResolvers = {
+  render: function render(props, { context: { render } }) {
+    return render(props);
+  },
+} satisfies ResolverMap<FreshContext>;
+
 // fakeContext is used to allow call resolve outside a request lifecycle
 const newFakeContext = () => {
   return {
@@ -183,7 +189,7 @@ export const createResolver = <
 
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
+    resolvers: { ...resolvers, ...defaultResolvers, ...freshResolvers },
     release: provider,
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)

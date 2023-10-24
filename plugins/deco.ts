@@ -22,6 +22,7 @@ import { default as PreviewsPage } from "../routes/live/previews/index.tsx";
 import { handler as releaseHandler } from "../routes/live/release.ts";
 import { handler as workbenchHandler } from "../routes/live/workbench.ts";
 import { handler as workflowHandler } from "../routes/live/workflows/run.ts";
+import { handler as renderHandler } from "../routes/deco/render.ts";
 
 export interface Options<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
@@ -111,6 +112,11 @@ export default function decoPlugin(opt?: Options): Plugin {
       {
         path: "/live/workflows/run",
         handler: workflowHandler,
+      },
+      {
+        path: "/deco/render",
+        handler: renderHandler,
+        component: Render,
       },
     ].map((route) => {
       if (!route.handler) {

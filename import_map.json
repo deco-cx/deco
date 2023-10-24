@@ -10,7 +10,7 @@
     "preact": "https://esm.sh/preact@10.16.0?pin=102",
     "partytown/": "https://deno.land/x/partytown@0.3.0/",
     "std/": "https://deno.land/std@0.203.0/",
-    "$fresh/": "https://denopkg.com/deco-cx/fresh@1.3.3/",
+    "$fresh/": "https://denopkg.com/denoland/fresh@1.5.2/",
     "deco/": "./"
   }
 }

@@ -1,30 +1,23 @@
 // deno-lint-ignore-file no-explicit-any
+import { Status } from "std/http/mod.ts";
 import type { AppManifest, SourceMap } from "../blocks/app.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
-import { Component, JSX } from "../deps.ts";
+import { withSection } from "../components/section.tsx";
+import { JSX } from "../deps.ts";
 import {
   Block,
   BlockModule,
   ComponentFunc,
   PreactComponent,
 } from "../engine/block.ts";
-import {
-  FieldResolver,
-  Monitoring,
-  ResolveFunc,
-  Resolver,
-} from "../engine/core/resolver.ts";
+import { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
-import { HttpError } from "../engine/errors.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Manifest } from "../live.gen.ts";
-import { context } from "../live.ts";
-import { logger } from "../observability/otel/config.ts";
 import type { InvocationProxy } from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
 import { HttpContext } from "./handler.ts";
-import { ErrorBoundaryComponent } from "./section.ts";
-import { Status } from "std/http/http_status.ts";
+
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
   ctx: TCtx,
@@ -141,74 +134,10 @@ export const applyProps = <
   );
 };
 
-class ErrorBoundary
-  extends Component<{ fallback: ComponentFunc<any>; component: string }> {
-  state = { error: null };
-
-  static getDerivedStateFromError(error: any) {
-    if (error instanceof HttpError) {
-      throw error;
-    }
-    return { error };
-  }
-
-  render() {
-    if (this.state.error) {
-      const err = this?.state?.error as Error;
-      const msg = `rendering: ${this.props.component} ${err?.stack}`;
-      logger.error(
-        msg,
-      );
-      console.error(
-        msg,
-      );
-    }
-    return this.state.error
-      ? this.props.fallback(this.state.error)
-      : this.props.children;
-  }
-}
-
-export const componentWith = <TProps = any>(
-  resolver: string,
-  ComponentFunc: ComponentFunc,
-  errBoundary?: ErrorBoundaryComponent<TProps>,
-) =>
-(
-  props: TProps,
-  { resolveChain }: { resolveChain: FieldResolver[] },
-  debugEnabled?: boolean,
-) => ({
-  Component: (props: TProps) => {
-    return (
-      <ErrorBoundary
-        component={resolver}
-        fallback={(error) =>
-          errBoundary ? errBoundary({ error, props }) : (
-            <p
-              style={context.isDeploy && !debugEnabled
-                ? "display: none"
-                : undefined}
-            >
-              Error happened rendering {resolver}: {error.message}
-            </p>
-          )}
-      >
-        <ComponentFunc {...props} />
-      </ErrorBoundary>
-    );
-  },
-  props,
-  metadata: {
-    component: resolver,
-    resolveChain,
-  },
-});
-
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   { default: Component }: { default: ComponentFunc<TProps> },
   component: string,
-): Resolver => componentWith<TProps>(component, Component);
+) => withSection<TProps>(component, Component);
 
 export const usePreviewFunc = <TProps = any>(
   Component: ComponentFunc<TProps>,
