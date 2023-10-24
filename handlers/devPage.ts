@@ -1,5 +1,5 @@
 import { ConnInfo } from "std/http/server.ts";
-import { Page } from "../blocks/page.ts";
+import { Page } from "../blocks/page.tsx";
 import Fresh from "../handlers/fresh.ts";
 import { context } from "../live.ts";
 import { pageIdFromMetadata } from "../pages/LivePage.tsx";

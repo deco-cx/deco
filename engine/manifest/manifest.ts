@@ -1,25 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import blocks from "../../blocks/index.ts";
-import { HandlerContext } from "../../deps.ts";
-import { ReleaseResolver } from "../../engine/core/mod.ts";
-import {
-  BaseContext,
-  DanglingReference,
-  isResolvable,
-  Resolvable,
-  Resolver,
-  ResolverMap,
-} from "../../engine/core/resolver.ts";
-import { PromiseOrValue } from "../../engine/core/utils.ts";
-import { integrityCheck } from "../../engine/integrity.ts";
-import defaultResolvers from "../../engine/manifest/defaults.ts";
-import {
-  getComposedConfigStore,
-  Release,
-} from "../../engine/releases/provider.ts";
-import { context, DecoRuntimeState } from "../../live.ts";
-import { DecoState } from "../../types.ts";
-
 import {
   adjectives,
   animals,
@@ -36,8 +15,27 @@ import {
   SourceMap,
 } from "../../blocks/app.ts";
 import { buildRuntime } from "../../blocks/appsUtil.ts";
+import blocks from "../../blocks/index.ts";
 import { buildSourceMap } from "../../blocks/utils.tsx";
-import { SiteInfo } from "../../types.ts";
+import { HandlerContext } from "../../deps.ts";
+import { ReleaseResolver } from "../../engine/core/mod.ts";
+import {
+  BaseContext,
+  DanglingReference,
+  isResolvable,
+  Resolvable,
+  Resolver,
+  ResolverMap,
+} from "../../engine/core/resolver.ts";
+import { PromiseOrValue } from "../../engine/core/utils.ts";
+import { integrityCheck } from "../../engine/integrity.ts";
+import defaultResolvers from "../../engine/manifest/fresh.ts";
+import {
+  getComposedConfigStore,
+  Release,
+} from "../../engine/releases/provider.ts";
+import { context, DecoRuntimeState } from "../../live.ts";
+import { DecoState, SiteInfo } from "../../types.ts";
 import { newFsProvider } from "../releases/fs.ts";
 import defaults from "./defaults.ts";
 
