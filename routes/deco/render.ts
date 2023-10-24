@@ -2,7 +2,6 @@ import { HandlerContext } from "$fresh/server.ts";
 import {
   FieldResolver,
   Resolvable,
-  unwind,
 } from "deco/engine/core/resolver.ts";
 import { badRequest } from "deco/engine/errors.ts";
 import { DecoSiteState, DecoState } from "../../types.ts";
@@ -36,7 +35,7 @@ const fromRequest = (req: Request): Options => {
   }
 
   return {
-    resolveChain: unwind(JSON.parse(resolveChain)),
+    resolveChain: FieldResolver.unwind(JSON.parse(resolveChain)),
     props: JSON.parse(props),
     href,
     pathTemplate,

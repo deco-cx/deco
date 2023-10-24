@@ -2,7 +2,7 @@ import { CLIENT_NAV_ATTR, PARTIAL_ATTR } from "$fresh/src/constants.ts";
 import { useContext } from "preact/hooks";
 import { ComponentType } from "preact";
 import { IS_BROWSER } from "deco/deps.ts";
-import { minify } from "deco/engine/core/resolver.ts";
+import { FieldResolver } from "deco/engine/core/resolver.ts";
 import { SectionContext } from "deco/components/section.tsx";
 
 type Options<P> = {
@@ -34,7 +34,7 @@ export const usePartialSection = <P>(
     ["pathTemplate", pathTemplate],
     [
       "resolveChain",
-      JSON.stringify(minify(resolveChain.slice(0, -1))),
+      JSON.stringify(FieldResolver.minify(resolveChain.slice(0, -1))),
     ],
   ]);
 

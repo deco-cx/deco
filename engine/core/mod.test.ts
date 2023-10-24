@@ -1,10 +1,11 @@
+import { freshResolvers } from "deco/engine/manifest/manifest.ts";
 import { assertEquals, assertRejects } from "std/testing/asserts.ts";
 import { assertSpyCalls, spy } from "std/testing/mock.ts";
 import { genHints } from "../../engine/core/hints.ts";
 import {
   BaseContext,
-  resolve,
   ResolverMap,
+  resolve,
 } from "../../engine/core/resolver.ts";
 import defaults from "../manifest/defaults.ts";
 
@@ -44,6 +45,7 @@ Deno.test("resolve", async (t) => {
       };
       const resolverMap = {
         ...defaults,
+        ...freshResolvers,
         resolve: (data: unknown) => context.resolve(data),
         identityResolver,
       };
@@ -90,6 +92,7 @@ Deno.test("resolve", async (t) => {
       };
       const resolverMap = {
         ...defaults,
+        ...freshResolvers,
         resolve: (data: unknown) => context.resolve(data),
         shouldNotBeCalledResolver: spy(shouldNotBeCalledResolver),
       };

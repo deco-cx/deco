@@ -71,7 +71,7 @@ export interface DanglingRecover {
   recover: Resolver;
 }
 
-const freshResolvers = {
+export const freshResolvers = {
   render: function render(props, { context: { render } }) {
     return render(props);
   },
@@ -365,7 +365,7 @@ export const $live = <T extends AppManifest>(
   );
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
+    resolvers: { ...resolvers, ...defaultResolvers, ...freshResolvers },
     release: provider,
     danglingRecover: recovers.length > 0
       ? buildDanglingRecover(recovers)
