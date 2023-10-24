@@ -1,4 +1,4 @@
-import { Page } from "../blocks/page.ts";
+import { Page } from "../blocks/page.tsx";
 import { notUndefined } from "../engine/core/utils.ts";
 
 import {

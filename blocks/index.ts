@@ -7,7 +7,7 @@ import handlerBlock from "../blocks/handler.ts";
 import islandBlock from "../blocks/island.ts";
 import loaderBlock from "../blocks/loader.ts";
 import matcherBlock from "../blocks/matcher.ts";
-import pageBlock from "../blocks/page.ts";
+import pageBlock from "./page.tsx";
 import routeBlock from "../blocks/route.ts";
 import sectionBlock from "../blocks/section.ts";
 import workflowBlock from "../blocks/workflow.ts";

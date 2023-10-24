@@ -1,7 +1,7 @@
 import { Accounts } from "../blocks/account.ts";
 import { Flag } from "../blocks/flag.ts";
 import { Loader } from "../blocks/loader.ts";
-import { Page } from "../blocks/page.ts";
+import { Page } from "../blocks/page.tsx";
 import { Section } from "../blocks/section.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { Apps, LoaderContext } from "../mod.ts";

@@ -1,6 +1,6 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { Page } from "../blocks/page.ts";
+import { Page } from "../blocks/page.tsx";
 import {
   asResolved,
   BaseContext,

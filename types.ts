@@ -13,7 +13,7 @@ import functionBlock from "./blocks/function.ts";
 import handlerBlock from "./blocks/handler.ts";
 import loaderBlock from "./blocks/loader.ts";
 import matcherBlock from "./blocks/matcher.ts";
-import pageBlock from "./blocks/page.ts";
+import pageBlock from "./blocks/page.tsx";
 import sectionBlock from "./blocks/section.ts";
 import { FnContext } from "./blocks/utils.tsx";
 import workflowBlock from "./blocks/workflow.ts";
