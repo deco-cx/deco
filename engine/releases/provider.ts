@@ -87,7 +87,7 @@ export const compose = (...providers: Release[]): Release => {
   });
 };
 
-const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE"
+const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
