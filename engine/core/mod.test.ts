@@ -1,4 +1,3 @@
-import { freshResolvers } from "deco/engine/manifest/manifest.ts";
 import { assertEquals, assertRejects } from "std/testing/asserts.ts";
 import { assertSpyCalls, spy } from "std/testing/mock.ts";
 import { genHints } from "../../engine/core/hints.ts";
@@ -7,6 +6,7 @@ import {
   ResolverMap,
   resolve,
 } from "../../engine/core/resolver.ts";
+import { freshResolvers } from "../../engine/manifest/manifest.ts";
 import defaults from "../manifest/defaults.ts";
 
 Deno.test("resolve", async (t) => {
