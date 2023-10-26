@@ -31,7 +31,7 @@ export class WorkflowContext<
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
 > extends DurableWorkflowContext<TMetadata> {
   constructor(
-    protected ctx: DecoState<unknown, DecoSiteState, TManifest>,
+    public state: DecoState<unknown, DecoSiteState, TManifest>,
     execution: WorkflowExecution<Arg, unknown, TMetadata>,
   ) {
     super(execution);
@@ -60,7 +60,7 @@ export class WorkflowContext<
     >,
     [Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]]
   > {
-    const ctx = this.ctx;
+    const ctx = this.state;
     const fn = function (
       props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
     ): Promise<
