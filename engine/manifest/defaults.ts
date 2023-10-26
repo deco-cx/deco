@@ -159,7 +159,7 @@ export default {
     }, { propsAreResolved: true });
   },
   invoke: async function invoke(
-    { props, block, source }: BlockInvocation, // wishListVtex deco-sites/std/vtexProductList.ts
+    { props, block }: BlockInvocation,
     { resolvables, resolvers, resolve },
   ) {
     try {
@@ -181,20 +181,11 @@ export default {
         }
         const { __resolveType, ...savedprops } = resolvable;
         // recursive call
-        return await resolve({
-          __resolveType: "invoke",
-          props: {
-            props: [{ __resolveType: "resolved", data: props }, savedprops],
-            __resolveType: "mergeProps",
-          },
-          block: __resolveType,
-          source,
-        });
+        return await resolve({ ...props, ...savedprops, __resolveType });
       }
-      return await resolve({
-        ...props,
-        __resolveType,
-      }, { propsAreResolved: true });
+      return await resolve({ ...props, __resolveType }, {
+        propsAreResolved: true,
+      });
     } catch (err) {
       if (!(err instanceof HttpError)) {
         throw new HttpError(
