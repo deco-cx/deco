@@ -72,9 +72,10 @@ const promptAlternatives = <T extends string>(
   alternatives: T[],
   defaultAlternative?: T,
 ) => {
-  const formatted = new Intl.ListFormat(undefined, {
-    type: "disjunction",
-  }).format(alternatives);
+  const formatted = new Intl.ListFormat(undefined, { type: "disjunction" })
+    .format(alternatives);
+
+  console.log();
   let choice = prompt(`${msg} ${formatted}`, defaultAlternative);
   for (
     ;
@@ -208,27 +209,13 @@ const initSite = async (name: string) => {
   logInstructions(root);
 };
 
-const DECO_CX = `Welcome to ${colors.green("deco.cx")!}`;
-
-const HEADER = colors.green(`
-                  .-=.                                                                              
-               :-=====.                                                                             
-                :====--.                                                                            
-          ..   .===-.       ..              ..          ..                     ..                   
-     .-=====-  ====:   .-=======-      :-=======    --======--            .-=======. :====.  .-===. 
-   .-===-:::  -===:  .-==-:..:===-   -====--::-. .-===-:::-====         :====--::-:   -===: -===:   
-  .-==-.     :===-  :===-   .-===- .-===:       .-===.    .====:       -===-           -======-.    
-  -===.     :===-  .-==========-:  -===:        -===:     .====.      -===-             =====:      
-  ===-     .===-   :===-:::..     .====.       .===-      -===-       -===:           .======-      
-  -===:   -===-    .===-:     :.   -===-.   ..  -===-   :-===- .-==-. -====:    .    -===-:===-     
-  .-========-.      :-=========.   .-========:  .-=========-   =====.  -========-  :===-.  -===-.   
-     .::::.            .::::.         .::::.       .::::.      .::.      .::::..  :---:     :----.  
-`);
+const DECO_CX = `Welcome to ${colors.green("deco.cx")}!!`;
 
 const main = () => {
   colors.setColorEnabled(true);
 
-  console.log(HEADER);
+  console.log();
+  console.log(DECO_CX);
 
   const kind = promptAlternatives("What do you want to build?", [
     "app",
