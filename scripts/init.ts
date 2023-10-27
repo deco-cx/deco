@@ -153,16 +153,14 @@ const logInstructions = (root: string) => {
     "Y",
   );
 
-  if (spinServer) {
-    const play = new Deno.Command(Deno.execPath(), {
+  if (spinServer === "Y") {
+    new Deno.Command(Deno.execPath(), {
       args: ["task", "play"],
       cwd: root,
       stdout: "inherit",
       stderr: "inherit",
       stdin: "inherit",
-    });
-
-    const p = play.spawn();
+    }).spawn();
   } else {
     console.log("\n🐁 Happy coding at", green("deco.cx"), "\n");
   }
