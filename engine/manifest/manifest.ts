@@ -128,7 +128,7 @@ export const createResolver = <
   release: Release | undefined = undefined,
 ): Promise<ReleaseResolver<TContext>> => {
   let currentSite = siteName();
-  if (!currentSite) {
+  if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (context.isDeploy) {
       throw new Error(
         `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
