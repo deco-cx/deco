@@ -1,12 +1,20 @@
-import { cyan, green } from "https://deno.land/std@0.204.0/fmt/colors.ts";
+import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
 import {
   ensureDir,
   ensureFile,
   exists,
 } from "https://deno.land/std@0.204.0/fs/mod.ts";
-
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
-import { BlobReader, ZipReader } from "https://deno.land/x/zipjs@v2.7.30/index.js";
+import {
+  Input,
+  Select,
+  Toggle,
+  prompt,
+} from "https://deno.land/x/cliffy@v1.0.0-rc.3/prompt/mod.ts";
+import {
+  BlobReader,
+  ZipReader,
+} from "https://deno.land/x/zipjs@v2.7.30/index.js";
 import { getReleaseJSONFromRelease } from "../engine/releases/json.ts";
 
 interface Config {
@@ -64,24 +72,6 @@ const progress = (msg: string) => {
     );
 };
 
-const promptAlternatives = <T extends string>(
-  msg: string,
-  alternatives: T[],
-  defaultAlternative?: T,
-) => {
-  const formatted = new Intl.ListFormat(undefined, {
-    type: "disjunction",
-  }).format(alternatives);
-  let choice = prompt(`${msg} ${formatted}`, defaultAlternative);
-  for (
-    ;
-    !choice || !alternatives.includes(choice as T);
-    choice = prompt(`Please choose between ${formatted}`)
-  );
-
-  return choice as T;
-};
-
 const initProject = async (name: string, config: Config) => {
   const root = join(Deno.cwd(), name);
 
@@ -104,7 +94,13 @@ const initProject = async (name: string, config: Config) => {
   const zipReader = new ZipReader(new BlobReader(blob));
   const entries = await zipReader.getEntries();
 
-  const { filename: rootFilename } = entries.shift();
+  const entry = entries.shift();
+
+  if (!entry) {
+    return console.error("Failed to unzip project");
+  }
+
+  const { filename: rootFilename } = entry;
 
   for (const { directory, filename, getData } of entries) {
     if (directory) continue;
@@ -113,7 +109,7 @@ const initProject = async (name: string, config: Config) => {
 
     await ensureFile(filepath);
     const file = await Deno.open(filepath, { create: true, write: true });
-    await getData(file.writable);
+    await getData?.(file.writable);
   }
   await zipReader.close();
   await done();
@@ -136,10 +132,10 @@ const initProject = async (name: string, config: Config) => {
   return root;
 };
 
-const logInstructions = (root: string) => {
+const logInstructions = async (root: string) => {
   const base = root.replace(Deno.cwd(), "");
 
-  console.log("The project is setup at", cyan(base));
+  console.log("The project is setup at", colors.cyan(base));
   console.log(
     "For help and insights, join our community at https://deco.cx/discord 🎉",
   );
@@ -147,13 +143,12 @@ const logInstructions = (root: string) => {
 
   console.log("\ncd", base, "&&", "deno task play\n");
 
-  const spinServer = promptAlternatives(
-    "Do you want me to run this command for you?",
-    ["Y", "n"],
-    "Y",
-  );
+  const spinServer = await Toggle.prompt({
+    message: "Do you want me to run this command for you?",
+    default: true,
+  });
 
-  if (spinServer === "Y") {
+  if (spinServer) {
     new Deno.Command(Deno.execPath(), {
       args: ["task", "play"],
       cwd: root,
@@ -162,33 +157,50 @@ const logInstructions = (root: string) => {
       stdin: "inherit",
     }).spawn();
   } else {
-    console.log("\n🐁 Happy coding at", green("deco.cx"), "\n");
+    console.log("\n🐁 Happy coding at", colors.green("deco.cx"), "\n");
   }
 };
 
-const initApp = (name: string) => {
+const initApp = (_: string) => {
   console.log("soon");
 };
 
 const initSite = async (name: string) => {
-  const siteType = promptAlternatives(
-    "What type of site do you want to build?",
-    ["commerce", "start from scratch"],
-    "commerce",
-  );
+  const { kind, platform } = await prompt([
+    {
+      type: Select,
+      name: "kind",
+      message: "What type of site do you want to build?",
+      default: "commerce",
+      options: [
+        { value: "commerce" },
+        { value: "starting from scratch" },
+      ],
+    },
+    {
+      type: Select,
+      name: "platform",
+      message: "What commerce platform are you building for?",
+      options: [
+        { value: "vtex" },
+        { value: "vnda" },
+        { value: "linx" },
+        { value: "wake" },
+        { value: "shopify" },
+      ],
+      before: async ({ kind }, next) => {
+        if (kind === "commerce") {
+          await next();
+        }
+      },
+    },
+  ]);
 
-  const platform = siteType === "commerce" &&
-    promptAlternatives("What commerce platform are you building for?", [
-      "vtex",
-      "vnda",
-      "linx",
-      "wake",
-      "shopify",
-    ]);
-
-  const template = siteType === "commerce" && platform
-    ? TEMPLATES["commerce"][platform]
-    : siteType === "start from scratch"
+  const template = kind === "commerce" && platform
+    ? TEMPLATES["commerce"][
+      platform as "vtex" | "vnda" | "linx" | "wake" | "shopify"
+    ]
+    : kind === "starting from scratch"
     ? TEMPLATES["start from scratch"]
     : null;
 
@@ -205,15 +217,31 @@ const initSite = async (name: string) => {
   logInstructions(root);
 };
 
-const main = () => {
-  console.info(`🐁 Welcome to ${green("deco.cx")!}`);
+const DECO_CX = `Welcome to ${colors.green("deco.cx")}!`;
 
-  const kind = promptAlternatives("What do you want to build?", [
-    "app",
-    "site",
-  ], "site");
+const main = async () => {
+  colors.setColorEnabled(true);
 
-  const name = prompt(`What is the name of your ${kind}?`, "awesome-deco");
+  console.log(DECO_CX);
+
+  const { kind, name } = await prompt([
+    {
+      type: Select,
+      name: "kind",
+      message: "What do you want to build?",
+      default: "site",
+      options: [
+        { value: "site" },
+        { value: "app" },
+      ],
+    },
+    {
+      type: Input,
+      name: "name",
+      message: "What is the name of your project?",
+      default: "awesome-deco",
+    },
+  ]);
 
   if (!name) return;
 
