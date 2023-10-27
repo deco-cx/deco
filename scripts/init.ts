@@ -75,12 +75,11 @@ const promptAlternatives = <T extends string>(
   const formatted = new Intl.ListFormat(undefined, { type: "disjunction" })
     .format(alternatives);
 
-  console.log();
-  let choice = prompt(`${msg} ${formatted}`, defaultAlternative);
+  let choice = prompt(`${msg} ${formatted}`) || defaultAlternative;
   for (
     ;
     !choice || !alternatives.includes(choice as T);
-    choice = prompt(`Please choose between ${formatted}`)
+    choice = prompt(`Please choose between ${formatted}`) ?? undefined
   );
 
   return choice as T;
@@ -177,7 +176,7 @@ const initApp = (name: string) => {
 const initSite = async (name: string) => {
   const siteType = promptAlternatives(
     "What type of site do you want to build?",
-    ["commerce", "start from scratch"],
+    ["commerce", "starting from scratch"],
     "commerce",
   );
 
@@ -192,7 +191,7 @@ const initSite = async (name: string) => {
 
   const template = siteType === "commerce" && platform
     ? TEMPLATES["commerce"][platform]
-    : siteType === "start from scratch"
+    : siteType === "starting from scratch"
     ? TEMPLATES["start from scratch"]
     : null;
 
@@ -209,26 +208,25 @@ const initSite = async (name: string) => {
   logInstructions(root);
 };
 
-const DECO_CX = `Welcome to ${colors.green("deco.cx")}!!`;
+const DECO_CX = `Welcome to ${colors.green("deco.cx")}!`;
 
 const main = () => {
   colors.setColorEnabled(true);
 
-  console.log();
   console.log(DECO_CX);
 
   const kind = promptAlternatives("What do you want to build?", [
     "app",
-    "site",
-  ], "site");
+    "website",
+  ], "website");
 
-  const name = prompt(`What is the name of your ${kind}?`, "awesome-deco");
+  const name = prompt(`What is the name of your ${kind}?`) || "awesome-deco";
 
   if (!name) return;
 
   if (kind === "app") {
     return initApp(name);
-  } else if (kind === "site") {
+  } else if (kind === "website") {
     return initSite(name);
   }
 };
