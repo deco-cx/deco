@@ -225,4 +225,3 @@ const main = () => {
 };
 
 await main();
-// await initProject("awesome-deco", TEMPLATES["commerce"]["vtex"]);
