@@ -6,7 +6,7 @@ import {
 } from "https://deno.land/std@0.204.0/fs/mod.ts";
 
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
-import { BlobReader, ZipReader } from "https://deno.land/x/zipjs/index.js";
+import { BlobReader, ZipReader } from "https://deno.land/x/zipjs@v2.7.30/index.js";
 import { getReleaseJSONFromRelease } from "../engine/releases/json.ts";
 
 interface Config {
