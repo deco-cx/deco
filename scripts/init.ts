@@ -1,4 +1,4 @@
-import { cyan, green } from "https://deno.land/std@0.204.0/fmt/colors.ts";
+import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
 import {
   ensureDir,
   ensureFile,
@@ -6,7 +6,10 @@ import {
 } from "https://deno.land/std@0.204.0/fs/mod.ts";
 
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
-import { BlobReader, ZipReader } from "https://deno.land/x/zipjs@v2.7.30/index.js";
+import {
+  BlobReader,
+  ZipReader,
+} from "https://deno.land/x/zipjs@v2.7.30/index.js";
 import { getReleaseJSONFromRelease } from "../engine/releases/json.ts";
 
 interface Config {
@@ -139,7 +142,7 @@ const initProject = async (name: string, config: Config) => {
 const logInstructions = (root: string) => {
   const base = root.replace(Deno.cwd(), "");
 
-  console.log("The project is setup at", cyan(base));
+  console.log("The project is setup at", colors.cyan(base));
   console.log(
     "For help and insights, join our community at https://deco.cx/discord 🎉",
   );
@@ -162,7 +165,7 @@ const logInstructions = (root: string) => {
       stdin: "inherit",
     }).spawn();
   } else {
-    console.log("\n🐁 Happy coding at", green("deco.cx"), "\n");
+    console.log("\n🐁 Happy coding at", colors.green("deco.cx"), "\n");
   }
 };
 
@@ -205,8 +208,27 @@ const initSite = async (name: string) => {
   logInstructions(root);
 };
 
+const DECO_CX = `Welcome to ${colors.green("deco.cx")!}`;
+
+const HEADER = colors.green(`
+                  .-=.                                                                              
+               :-=====.                                                                             
+                :====--.                                                                            
+          ..   .===-.       ..              ..          ..                     ..                   
+     .-=====-  ====:   .-=======-      :-=======    --======--            .-=======. :====.  .-===. 
+   .-===-:::  -===:  .-==-:..:===-   -====--::-. .-===-:::-====         :====--::-:   -===: -===:   
+  .-==-.     :===-  :===-   .-===- .-===:       .-===.    .====:       -===-           -======-.    
+  -===.     :===-  .-==========-:  -===:        -===:     .====.      -===-             =====:      
+  ===-     .===-   :===-:::..     .====.       .===-      -===-       -===:           .======-      
+  -===:   -===-    .===-:     :.   -===-.   ..  -===-   :-===- .-==-. -====:    .    -===-:===-     
+  .-========-.      :-=========.   .-========:  .-=========-   =====.  -========-  :===-.  -===-.   
+     .::::.            .::::.         .::::.       .::::.      .::.      .::::..  :---:     :----.  
+`);
+
 const main = () => {
-  console.info(`🐁 Welcome to ${green("deco.cx")!}`);
+  colors.setColorEnabled(true);
+
+  console.log(HEADER);
 
   const kind = promptAlternatives("What do you want to build?", [
     "app",
