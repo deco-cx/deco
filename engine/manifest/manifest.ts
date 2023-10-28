@@ -128,7 +128,7 @@ export const createResolver = <
   release: Release | undefined = undefined,
 ): Promise<ReleaseResolver<TContext>> => {
   let currentSite = siteName();
-  if (!currentSite) {
+  if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (context.isDeploy) {
       throw new Error(
         `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
@@ -272,10 +272,22 @@ export const createResolver = <
         ).join("")
       }`,
     );
-    // firstPass => nullIfDangling
+    // second => nullIfDangling
     const { apps: installedApps } = await currentResolver.resolve<
       { apps: AppRuntime[] }
-    >({ apps }, fakeCtx);
+    >({ apps }, fakeCtx).catch((err) => {
+      console.error(
+        "installing apps failed",
+        err,
+        "this will falling back to null references to make it work, you should fix this",
+      );
+      return currentResolver.resolve<
+        { apps: AppRuntime[] }
+      >({ apps }, fakeCtx, {
+        nullIfDangling: true,
+        propagateOptions: true,
+      });
+    });
     const { manifest, sourceMap, resolvers, resolvables = {} } = installedApps
       .reduce(
         mergeRuntimes,

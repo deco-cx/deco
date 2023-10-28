@@ -4,9 +4,10 @@ import { createSectionBlock } from "deco/blocks/section.ts";
 export type Page = InstanceOf<typeof page, "#/root/pages">;
 
 const page = createSectionBlock(
-  (_, ComponentFunc) => (props) => ({
+  (component, ComponentFunc) => (props, { resolveChain }) => ({
     Component: (p) => <ComponentFunc {...p} />,
     props,
+    metadata: { resolveChain, component },
   }),
   "pages",
 );
