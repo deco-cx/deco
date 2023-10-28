@@ -68,17 +68,13 @@ const templates: Templates = [
   },
 ];
 
-const init = async () => {
+export const init = async (name: string) => {
   const latestVersionPromise = lookup(
     "https://denopkg.com/deco-cx/deco@main/",
     REGISTRIES,
   )
     ?.all().then((all) => all[0]);
-  const name = prompt("What's the app name?:");
-  if (!name) {
-    console.error("app name is required");
-    return;
-  }
+
   const appFolder = join(Deno.cwd(), name);
   await Deno.mkdir(appFolder, { recursive: true });
 
@@ -90,5 +86,11 @@ const init = async () => {
 };
 
 if (import.meta.main) {
-  await init();
+  const name = prompt("What's the app name?:");
+
+  if (name) {
+    await init(name);
+  } else {
+    console.error("app name is required");
+  }
 }
