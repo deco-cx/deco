@@ -1,12 +1,14 @@
 # [Deno Compose](https://denocompose.dev) — Open-Source Webflow alternative based on Deno, Tailwind and TypeScript.
 
-* Craft modern web apps with a visual configuration editor for managing APIs, UIs and content — all in the same place. 
-* Compose pre-built applications from a community-driven ecosystem, with one-click installation.
-* Evolve your apps with built-in realtime feature flags, rolling out code or content to specific audiences.
-
-deno-compose in an open-source framework that enables developers to accelerate the creation of web applications significantly by leveraging pre-built UI components (Sections) and API integrations (Loaders and Actions) packaged as Deno Compose Apps. These building blocks are interoperable: one's output can be another's input, based on their matching TypeScript types. 
-
 > Deno Compose is the community-first way to build visually editable apps based on Deno
+
+**deno-compose in an open-source full-stack web framework** that enables developers to accelerate the creation of websites significantly by leveraging pre-built UI components (Sections) and API integrations (Loaders and Actions) from a global community. These building blocks are interoperable: one's output can be another's input, based on their matching TypeScript types. 
+
+With deno-compose you can:
+
+* Craft modern web apps with a **visual configuration editor** for managing APIs, UIs and content — all in the same place. 
+* Compose pre-built features from a **community-driven ecosystem of Apps,** with one-click installation.
+* Evolve your Apps with **built-in realtime feature flags,** rolling out code or content to specific audiences.
 
 For example, a Product Shelf UI component might depend on a `Product[]`. There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like Shopify or VTEX) or a search optimization provider (like Algolia or Typesense). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. Building UIs now can be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy. 
 
