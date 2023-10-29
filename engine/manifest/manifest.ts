@@ -140,7 +140,7 @@ export const createResolver = <
       separator: "-",
     });
     console.debug(
-      `\n👋 Hey [${green(currentSite)}] welcome to ${
+      `\n👋 Hey [${green(currentSite!)}] welcome to ${
         rgb24("deco.cx", DECO_COLORS)
       }! Let's play?`,
     );
@@ -156,7 +156,7 @@ export const createResolver = <
     );
     console.debug(`🚀 Enter: ${
       underline(rgb24(
-        `https://deco.cx/play/blocks?domain=${getPlayDomain()}`,
+        `https://play.deco.cx/?domain=${getPlayDomain()}`,
         DECO_COLORS,
       ))
     } and happy coding!\n\n`);
@@ -164,7 +164,7 @@ export const createResolver = <
     context.play = true;
   }
   context.namespace ??= `deco-sites/${currentSite}`;
-  context.site = currentSite;
+  context.site = currentSite!;
   const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
