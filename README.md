@@ -1,6 +1,6 @@
-# [Deno Compose](https://denocompose.dev) — Open-Source Webflow alternative based on Deno, Tailwind and TypeScript.
+# [Deno Compose](https://denocompose.dev) — Open-Source Webflow alternative based on Deno, Preact, Tailwind and TypeScript.
 
-> Deno Compose is the community-first way to build visually editable apps based on Deno
+> The community-first way to build visually editable apps based on Deno
 
 **deno-compose in an open-source full-stack web framework** that enables developers to accelerate the creation of websites significantly by leveraging pre-built UI components (Sections) and API integrations (Loaders and Actions) from a global community. These building blocks are interoperable: one's output can be another's input, based on their matching TypeScript types. 
 
