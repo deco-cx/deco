@@ -1,4 +1,5 @@
 import type { ParsedSource } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
+import { parse } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
 import type {
   ArrowFunctionExpression,
   ExportNamedDeclaration,
@@ -34,8 +35,9 @@ import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.
 import { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
 import { BlockModuleRef, IntrospectParams } from "../../engine/block.ts";
 import { beautify } from "../../engine/schema/utils.ts";
-import { spannableToJSONSchema } from "./comments.ts";
+import { assignComments, spannableToJSONSchema } from "./comments.ts";
 import { parsePath } from "./parser.ts";
+import { newSchemaBuilder } from "deco/engine/schema/builder.ts";
 
 export type ReferenceKey = string;
 export interface SchemeableBase {
@@ -1250,4 +1252,25 @@ export function resolvePath(source: string, path: string) {
 
   // import from import_map
   return import.meta.resolve(source);
+}
+
+export async function stringToSchema(str: string) {
+  const parsedSource = await parse(str);
+  assignComments(parsedSource);
+  const moduleRef = await programToBlockRef(
+    import.meta.url,
+    `deco-sites/admin/sections/MySection.tsx`,
+    parsedSource,
+  );
+  const schemaBuilder = newSchemaBuilder({
+    schema: { root: {}, definitions: {} },
+    blockModules: [],
+    entrypoints: [],
+  });
+
+  return schemaBuilder.withBlockSchema({
+    blockType: "sections",
+    functionKey: `deco-sites/admin/sections/MySection.tsx`,
+    inputSchema: moduleRef?.inputSchema,
+  }).build();
 }
