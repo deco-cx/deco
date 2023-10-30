@@ -3,10 +3,10 @@ import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import { ResolveOptions } from "../core/mod.ts";
 import {
   BaseContext,
-  isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
+  isResolvable,
 } from "../core/resolver.ts";
 import { HttpError } from "../errors.ts";
 
@@ -190,7 +190,7 @@ export default {
       if (!(err instanceof HttpError)) {
         throw new HttpError(
           new Response(
-            err ? JSON.stringify(err) : JSON.stringify({
+            err ? err : JSON.stringify({
               message: "Something went wrong.",
               code: "SWW",
             }),
