@@ -2,7 +2,13 @@
 
 > Build visually editable apps based on the **PreTTy** stack: **Pre**act, **T**ailwind and **Ty**peScript.
 
-**deno-compose in an open-source full-stack web framework** that enables developers to accelerate the creation of websites significantly by leveraging pre-built UI components (Sections) and API integrations (Loaders and Actions) from a global community. These building blocks are interoperable: one's output can be another's input, based on their matching TypeScript types. 
+**Deno Compose in an open-source full-stack web framework** that enables developers to accelerate the creation of **high-performance websites,** especially in terms of **Core Web Vitals** and **PageSpeed score,** which have been shown to correlate with **better user experience and higher conversion rates.**
+
+It's based on the concept of **Blocks**, which can represent UI components (**Sections**) and API integrations (**Loaders** and **Actions**). **Blocks can be configured visually in a web admin panel with no code.** They can also be packaged and installed with one click as **Apps.** 
+
+Install some data integrations, a high-performance template, build out some pages and perhaps add a few JSX components yourself with Tailwind (which fit perfectly into the design-token-driven themes). There you go: **your new project is ready to deploy as a simple deno program, at a fraction of the time.** 
+
+## Deno Compose combines the best of visual page editing (like Webflow) and the ability for app composition at the admin level (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code.
 
 With deno-compose you can:
 
@@ -10,9 +16,13 @@ With deno-compose you can:
 * Compose pre-built features from a **community-driven ecosystem of Apps,** with one-click installation.
 * Evolve your Apps with **built-in realtime feature flags,** rolling out code or content to specific audiences.
 
-For example, a Product Shelf UI component might depend on a `Product[]`. There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like Shopify or VTEX) or a search optimization provider (like Algolia or Typesense). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. Building UIs now can be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy. 
+**Deno Compose Blocks are interoperable:** one's output can be visually configured as another's input in the visual editor, **based on matching TypeScript types.** 
 
-To try out the deno-compose visual editor, navigate to the [Playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps.
+For example, a Product Shelf UI component might depend on a **`Product[]`.** There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) or [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) or a search optimization provider (like [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) or [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. **Building UIs can now be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy.** 
+
+To try out the deno-compose visual editor, navigate to the [deco.cx playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps. 
+
+> ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
 
 ## Key Features
 
