@@ -12,7 +12,6 @@ import {
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 import { diffLines } from "npm:diff@5.1.0";
-import meta from "../meta.json" assert { type: "json" };
 import { format } from "../utils/formatter.ts";
 
 const getLatestVersion = async (locator: string) => {
@@ -150,10 +149,7 @@ const readImportMap = async () => {
     };
 };
 
-const updateImportMap = async (
-  liveVersion: string,
-  stdVersion: string,
-): Promise<Patch> => {
+const updateImportMap = async (): Promise<Patch> => {
   const { content, path } = await readImportMap();
 
   if (!content?.imports) {
@@ -172,8 +168,8 @@ const updateImportMap = async (
           imports: {
             ...content.imports,
             [ns]: "./",
-            "$live/": `${DECO_CX_DECO}/`,
-            "deco-sites/std/": `${DECO_SITES_STD}/`,
+            "$live/": `${await DECO_CX_DECO}/`,
+            "deco-sites/std/": `${await DECO_SITES_STD}/`,
           },
         },
         null,
@@ -263,7 +259,9 @@ const removeRoutesAndFreshGenTs = (): Delete[] => {
 const v1: UpgradeOption = {
   name: "v1",
   description: "upgrades to deco@v1",
-  isEligible: async () => !(await exists(join(Deno.cwd(), "live.gen.ts"))),
+  isEligible: async () =>
+    !(await exists(join(Deno.cwd(), "live.gen.ts"))) &&
+    !(await exists(join(Deno.cwd(), "manifest.gen.ts"))),
   apply: async () => {
     const [
       importMapPatch,
@@ -272,7 +270,7 @@ const v1: UpgradeOption = {
       devTsImports,
       mainTsLiveEntrypoint,
     ] = await Promise.all([
-      updateImportMap(meta.version, "1.22.11"),
+      updateImportMap(),
       createSiteJson(),
       createRuntimeTS(),
       updateDevTsImports(),
@@ -373,9 +371,8 @@ const overrideDenoJson = async (): Promise<Patch> => {
       content: JSON.stringify(
         {
           tasks: {
-            start: `deno task bundle && DECO_SITE_NAME=${
-              namespace.split("/")[1]
-            } deno run -A --unstable --watch=static/sw.js,tailwind.css,sections/,functions/,loaders/,actions/,workflows/,accounts/ dev.ts`,
+            start:
+              `deno task bundle && deno run -A --unstable --watch=static/sw.js,tailwind.css,sections/,functions/,loaders/,actions/,workflows/,accounts/ dev.ts`,
             gen: "deno run -A dev.ts --gen-only",
             component: "deno eval 'import \"deco/scripts/component.ts\"'",
             release: "deno eval 'import \"deco/scripts/release.ts\"'",
@@ -465,12 +462,13 @@ const changeRuntimeTs = async (): Promise<Patch> => {
     from: runtimeTs,
     to: {
       path: runtimeTs,
-      content: await format(`
-import { forApp } from "$live/clients/withManifest.ts";
+      content: await format(
+        `import { forApp } from "$live/clients/withManifest.ts";
 import type { Storefront } from "./apps/site.ts";
 
 export const Runtime = forApp<Storefront>();
-`),
+`,
+      ),
     },
   };
 };
@@ -532,22 +530,152 @@ const aot: UpgradeOption = {
   name: "ahead-of-time",
   description:
     "enables ahead of time builds for stable assets and better performance: https://fresh.deno.dev/docs/concepts/ahead-of-time-builds",
-  isEligible: () =>
-    exists(join(Deno.cwd(), ".github/workflows/deco-deploy.yaml")),
+  isEligible: async () =>
+    !(await exists(join(Deno.cwd(), ".github/workflows/deco-deploy.yaml"))),
   apply: async () => {
-    const patches: Promise<Patch | Delete>[] = [
-      // createSiteTs(),
-      // createSWJs(),
-      // overrideDenoJson(),
-      // overrideDevTs(),
-      // addAppsImportMap(),
-      // changeMainTs(),
-      // changeRuntimeTs(),
-      // Promise.resolve(deleteSiteJson()),
-      // Promise.resolve(deleteLiveGenTs()),
-    ];
+    const createDecoDeploy = () => ({
+      from: join(Deno.cwd(), ".github/workflows/deco-deploy.yaml"),
+      to: {
+        path: join(Deno.cwd(), ".github/workflows/deco-deploy.yaml"),
+        content: `name: Deploy
 
-    return Promise.all([]);
+concurrency:
+group: environment-\${{ github.head_ref || github.ref }}
+
+on:
+push:
+  branches: [main]
+pull_request:
+  branches: [main]
+
+jobs:
+set_vars:
+  runs-on: ubuntu-latest
+  outputs:
+    site_matrix: \${{ steps.set_vars.outputs.site_matrix }}
+  steps:
+    - name: Set site matrix
+      id: set_vars
+      shell: bash
+      run: |
+        if [ -z \${{ vars.SITES }} ]; then
+          echo "site_matrix={site: [\\"\${{ github.event.repository.name }}\\"] }" >> $GITHUB_OUTPUT
+        else
+          echo "site_matrix={site: \${{ vars.SITES }} }" >> $GITHUB_OUTPUT
+        fi
+deploy:
+  needs: set_vars
+  strategy:
+    matrix: \${{ fromJson(needs.set_vars.outputs.site_matrix) }}
+  name: Deploy
+  runs-on: ubuntu-latest
+
+  permissions:
+    id-token: write # Needed for auth with Deno Deploy
+    contents: read # Needed to clone the repository
+
+  steps:
+    - name: Clone repository
+      uses: actions/checkout@v3
+
+    - name: Deco Deploy
+      id: decoDeployStep
+      continue-on-error: true
+      uses: deco-cx/deploy@v0
+      with:
+        site: \${{ matrix.site }}
+
+    - name: Retry Deco Deploy
+      id: decoDeployRetryStep
+      if: steps.decoDeployStep.outcome == 'failure'
+      uses: deco-cx/deploy@v0
+      with:
+        site: \${{ matrix.site }}
+        `,
+      },
+    });
+
+    const createFreshConfigTs = async () => {
+      const maints = await Deno.readTextFile(
+        join(Deno.cwd(), "main.ts"),
+      )
+        .catch(() => "")
+        .then((src) =>
+          src.replace(
+            "await start(manifest,",
+            `import { defineConfig } from "$fresh/server.ts"\nexport default defineConfig(`,
+          )
+        )
+        .then((src) =>
+          src.replace(
+            "plugins: [",
+            'build: { target: ["chrome99", "firefox99", "safari11"] },\nplugins: [',
+          )
+        );
+
+      return {
+        from: join(Deno.cwd(), "fresh.config.ts"),
+        to: {
+          path: join(Deno.cwd(), "fresh.config.ts"),
+          content: await format(maints),
+        },
+      };
+    };
+
+    const createMainTS = async () => ({
+      from: join(Deno.cwd(), "main.ts"),
+      to: {
+        path: join(Deno.cwd(), "main.ts"),
+        content: await format(`
+        /// <reference no-default-lib="true"/>
+        /// <reference lib="dom" />
+        /// <reference lib="deno.ns" />
+        /// <reference lib="esnext" />
+        
+        import { start } from "$fresh/server.ts";
+        import config from "./fresh.config.ts";
+        import manifest from "./fresh.gen.ts";
+        
+        await start(manifest, config);`),
+      },
+    });
+
+    const createDevTS = async () => ({
+      from: join(Deno.cwd(), "dev.ts"),
+      to: {
+        path: join(Deno.cwd(), "dev.ts"),
+        content: await format(`
+        // #!/usr/bin/env -S deno run -A --watch
+        import "https://deno.land/x/dotenv@v3.2.2/load.ts";
+        
+        import dev from "$fresh/dev.ts";
+        import config from "./fresh.config.ts";
+        
+        // Generate manifest and boot server
+        await dev(import.meta.url, "./main.ts", config);
+        
+        if (Deno.args.includes("build")) {
+          Deno.exit(0);
+        }`),
+      },
+    });
+
+    const createDotEnv = () => ({
+      from: join(Deno.cwd(), ".env"),
+      to: {
+        path: join(Deno.cwd(), ".env"),
+        content: `DECO_SITE_NAME=${ns.split("/")[1]}
+`,
+      },
+    });
+
+    return Promise.all([
+      createDecoDeploy(),
+      createFreshConfigTs(),
+      createMainTS(),
+      createDevTS(),
+      createDotEnv(),
+    ]);
   },
 };
 
@@ -580,7 +708,13 @@ if (import.meta.main) {
         args: ["run", "-Ar", ...cmd.split(" ")],
         stdout: "inherit",
       }).spawn();
-      setTimeout(() => process.kill(), 60 * 1e3);
+      setTimeout(() => {
+        try {
+          process.kill();
+        } catch (error) {
+          console.error(error);
+        }
+      }, 60 * 1e3);
       const s = await process.status;
       if (s.code !== 0) {
         throw new Error(`Process finished with status code ${s.code}`);
@@ -625,16 +759,18 @@ if (import.meta.main) {
       }
 
       const content = await Deno.readTextFile(patch.from).catch(() => "");
+
       const linesDiff = diffLines(content, patch.to.content);
 
       if (linesDiff.length === 1 && patch.from === patch.to.path) {
-        console.log(gray(`✅ ${patch.from} (no changes)`));
+        const change = linesDiff[0].added ? "(new file)" : "(no changes)";
+        console.log(gray(`✅ ${patch.from} ${change}`));
 
         continue;
       }
 
       console.log(
-        `⚠️ ${brightYellow(patch.from)} -> ${brightYellow(patch.to.path)}`,
+        `⚠️  ${brightYellow(patch.from)} -> ${brightYellow(patch.to.path)}`,
       );
 
       for (const { added, removed, value } of linesDiff) {
@@ -657,7 +793,6 @@ if (import.meta.main) {
     args: ["task", "start"],
     stdout: "inherit",
   }).spawn();
-  process.unref();
   await process.status;
 
   console.log("everything is up to date! 🎉");
