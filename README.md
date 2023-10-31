@@ -1,41 +1,53 @@
-# deco — deno composable web framework by [deco.cx](https://www.deco.cx/en/dev)
+# [Deno Compose](https://denocompose.dev) — Open-Source Webflow alternative for modern web developers.
 
-<img align="right" src="/assets/logo.svg" height="150px" alt="The Deco Framework logo: A capybara in its natural habitat">
+> Build visually editable apps based on the **PreTTy** stack: **Pre**act, **T**ailwind and **Ty**peScript.
 
-Every business needs a **fast, reliable website** that empowers its brand. Every website needs a **powerful visual editor and configuration panel** that empowers business people to create and evolve their digital experiences without the need for developers to deploy changes.
+**Deno Compose in an open-source full-stack web framework** that enables developers to accelerate the creation of **high-performance websites,** especially in terms of **Core Web Vitals** and **PageSpeed score,** which have been shown to correlate with **better user experience and higher conversion rates.**
 
-**deco** is a new type of web framework that automatically creates an admin UI for your web app as you build it. It allows developers to create high-performance, edge-native web applications **that can be controlled via a powerful, visual admin UI with no extra effort.**
+It's based on the concept of **Blocks**, which can represent UI components (**Sections**) and API integrations (**Loaders** and **Actions**). **Blocks can be configured visually in a web admin panel with no code.** They can also be packaged and installed with one click as **Apps.** 
 
-Using **deco**, developers can define **Blocks**. They are built on top of [Deno](https://deno.land) to provide reusable, configurable "packaged capabilities" that can be composed together to create and deploy powerful web applications in minutes.
+Install some data integrations, a high-performance template, build out some pages and perhaps add a few JSX components yourself with Tailwind (which fit perfectly into the design-token-driven themes). There you go: **your new project is ready to deploy as a simple deno program, at a fraction of the time.** 
 
-The **deco admin UI** itself is based on blocks, and can be extended and customized to fit your needs. This allows developers to compose their custom, bespoke digital experience admin UIs to serve their business users needs exactly. **With deco, you get everything you need, and nothing you don't.**
+## Deno Compose combines the best of visual page editing (like Webflow) and the ability for app composition at the admin level (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code.
 
-Get started with **deco** today, and build your next web app with the power of Deno composable building blocks and the ease of a visual admin UI. Create and deploy a site at https://deco.cx for free!
+With deno-compose you can:
+
+* Craft modern web apps with a **visual configuration editor** for managing APIs, UIs and content — all in the same place. 
+* Compose pre-built features from a **community-driven ecosystem of Apps,** with one-click installation.
+* Evolve your Apps with **built-in realtime feature flags,** rolling out code or content to specific audiences.
+
+**Deno Compose Blocks are interoperable:** one's output can be visually configured as another's input in the visual editor, **based on matching TypeScript types.** 
+
+For example, a Product Shelf UI component might depend on a **`Product[]`.** There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) or [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) or a search optimization provider (like [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) or [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. **Building UIs can now be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy.** 
+
+To try out the deno-compose visual editor, navigate to the [deco.cx playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps. 
+
+> ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
+
+## Key Features
+
+* Shared Vocabulary: Define the type you need, and deno-compose auto-completes with multiple matching integrations from a global community of apps. It's TypeScript taken a step further, turning types into a shared vocabulary that powers your UI and API integrations.
+
+* Pre-built Implementations: Speed up your development with ready-to-use Sections, Loaders, and Actions. A treasure trove of pre-built implementations awaits to be discovered and utilized in your projects.
+
+* Community-Driven Ecosystem: Engage with a global community of developers on deco.hub. Share, discover, and collaborate to enrich the shared vocabulary that deno-compose thrives on.
+
+* Simplified Development Workflow: Just define your types, and let deno-compose handle the rest. It streamlines the workflow from type definition to UI rendering and API integration.
+
+* Interoperable: deno-compose facilitates seamless interaction between different apps and platforms. It’s about breaking down silos and fostering a more interconnected web development ecosystem.
+
+## Why Deco
+
+deno-compose aims to radically simplify web development — like it was in the 90s, but with all the modern good stuff baked in. We propose that this starts by elevating TypeScript into a globally shared vocabulary of types that bridge the gap between interfaces and APIs. The simplicity of defining a type and getting auto-completions with multiple matching integrations from a community of deno-compose apps is a game-changer for developer productivity — both human and AI. It's a shift towards a more collaborative and efficient web development paradigm, where the community's collective effort translates into individual project success. No more reinventing the wheel, no more silos, no more wasted time. Just focusing on customer needs, **getting the data from wherever you need,** when you need it, and **allowing everyone in the team to create and publish great content** with that data, safely.
 
 ## Documentation
 
-Learn how to use deco today at https://deco.cx/docs.
+Explore the capabilities of deno-compose further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://denocompose.dev/docs).
 
-## How it works
+## Community
 
-**deco** allows developers to create `sections` (UI components), `loaders` (data fetchers), `pages` (composed of sections and loaders), and many other types of **blocks** that can then be **easily configured in a visual editor UI by anyone in the team** with realtime changes.
+Join the community on [deco Discord Server](https://deco.cx/discord). Share your apps, explore others' creations, and contribute to the shared vocabulary that makes deno-compose a thriving ecosystem.
 
-Besides pages, **deco** also lets teams manage **audiences, flags, experiments and campaigns** with an instant, global configuration management service optimized for the edge. Using `matcher` functions, configuration changes can be applied to any specific audience. Every change is instantly available to matched users, from gradual rollout of features, to A/B testing content, to targeting specific users with personalized content.
+## Contribute
 
-## Distribution
-
-deco is available on https://deno.land/x/deco using git tags.
-
-To release a new version, go through the following steps:
-
-1. Squash/Merge your Pull Request after approval.
-2. Get the next tag you want to release.
-3. Run `deno task release` and select the chosen version.
-
-> Please notice that a commit will be automatically in the name of the current user (yours) before generating the tag itself.
-
-# Thanks to all contributors!
-
-<a href="https://github.com/deco-cx/live/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=deco-cx/live" />
-</a>
+We welcome contributions! Whether you’re fixing bugs, improving the documentation, or proposing new features, your efforts are valuable. Check out our contribution guidelines to get started.
