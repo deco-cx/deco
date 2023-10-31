@@ -4,15 +4,39 @@ import {
   brightYellow,
   gray,
 } from "https://deno.land/std@0.190.0/fmt/colors.ts";
-import { ensureDir } from "https://deno.land/std@0.190.0/fs/ensure_dir.ts";
-import { walk } from "https://deno.land/std@0.190.0/fs/walk.ts";
+import { ensureDir, walk } from "https://deno.land/std@0.190.0/fs/mod.ts";
 import { dirname, join } from "https://deno.land/std@0.190.0/path/mod.ts";
-
+import {
+  lookup,
+  REGISTRIES,
+} from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import $ from "https://deno.land/x/dax@0.28.0/mod.ts";
 import { diffLines } from "npm:diff@5.1.0";
-import deno from "../deno.json" assert { type: "json" };
 import meta from "../meta.json" assert { type: "json" };
 import { format } from "../utils/formatter.ts";
+
+const getLatestVersion = async (locator: string) => {
+  const versions = await lookup(locator, REGISTRIES)?.all();
+  const version = versions?.at(0);
+
+  if (version) {
+    const [_, ...tail] = locator.split("@").reverse();
+
+    return `${tail.reverse().join("@")}@${version}`;
+  }
+
+  return locator;
+};
+
+const DECO_SITES_STD = getLatestVersion(
+  "https://denopkg.com/deco-sites/std@master",
+);
+const DECO_CX_DECO = getLatestVersion(
+  "https://denopkg.com/deco-cx/deco@master",
+);
+const DECO_CX_APPS = getLatestVersion(
+  "https://denopkg.com/deco-cx/apps@master",
+);
 
 const withSlashAtEnd = (str: string | undefined) =>
   str?.endsWith("/") ? str : `${str}/`;
@@ -64,17 +88,15 @@ const exists = async (dir: string): Promise<boolean> => {
 };
 
 interface UpgradeOption {
-  version?: string; // if omitted, latest will be used.
+  name: string;
+  description?: string;
   isEligible: () => Promise<boolean>;
   apply(): Promise<FileMod[]>;
 }
 
 // v1 migration code
 interface Patch {
-  from: {
-    path: string;
-    content: string;
-  };
+  from: string;
   to: {
     path: string;
     content: string;
@@ -98,10 +120,7 @@ const updateDevTsImports = async () => {
   const devTsContent = await Deno.readTextFile(devTs);
   const updateFreshGen = devTsContent.replaceAll("fresh.gen.ts", "live.gen.ts");
   return {
-    from: {
-      path: devTs,
-      content: devTsContent,
-    },
+    from: devTs,
     to: {
       path: devTs,
       content: updateFreshGen,
@@ -109,42 +128,52 @@ const updateDevTsImports = async () => {
   };
 };
 
+const readImportMap = async () => {
+  const [importmapPath, denojsonPath] = [
+    "import_map.json",
+    "deno.json",
+  ].map((p) => join(Deno.cwd(), p));
+
+  const [importmap, denojson] = await Promise.all([
+    Deno.readTextFile(importmapPath).then(JSON.parse).catch(() => null),
+    Deno.readTextFile(denojsonPath).then(JSON.parse).catch(() => null),
+  ]);
+
+  return importmap
+    ? {
+      content: importmap,
+      path: importmapPath,
+    }
+    : {
+      content: denojson,
+      path: denojsonPath,
+    };
+};
+
 const updateImportMap = async (
   liveVersion: string,
   stdVersion: string,
 ): Promise<Patch> => {
-  const importMapFile = (deno.importMap ?? "./import_map.json").replace(
-    "./",
-    "",
-  );
+  const { content, path } = await readImportMap();
 
-  const importMapPath = join(Deno.cwd(), importMapFile);
-  if (!(await exists(importMapPath))) {
+  if (!content?.imports) {
     throw new UpgradeError(
-      `${importMapPath} is required to upgrade live dependency verson`,
+      `Could not find "imports" on either import_map.json or deno.json files`,
     );
   }
-  const importMapStr = await Deno.readTextFile(importMapPath);
-  const { imports, ...rest }: { imports: Record<string, string> } = JSON.parse(
-    importMapStr,
-  );
 
   return {
-    from: {
-      path: importMapPath,
-      content: importMapStr,
-    },
+    from: path,
     to: {
-      path: importMapPath,
+      path: path,
       content: JSON.stringify(
         {
-          ...rest,
+          ...content,
           imports: {
-            ...imports,
+            ...content.imports,
             [ns]: "./",
-            "$live/": `https://denopkg.com/deco-cx/live@${liveVersion}/`,
-            "deco-sites/std/":
-              `https://denopkg.com/deco-sites/std@${stdVersion}/`,
+            "$live/": `${DECO_CX_DECO}/`,
+            "deco-sites/std/": `${DECO_SITES_STD}/`,
           },
         },
         null,
@@ -169,17 +198,9 @@ const siteId = async (): Promise<number | undefined> => {
 
 const createRuntimeTS = async () => {
   const runtimeTsPath = join(Deno.cwd(), "runtime.ts");
-  let runtimeTsContent = "";
-
-  if (await exists(runtimeTsPath)) {
-    runtimeTsContent = await Deno.readTextFile(runtimeTsPath);
-  }
 
   return {
-    from: {
-      path: runtimeTsPath,
-      content: runtimeTsContent,
-    },
+    from: runtimeTsPath,
     to: {
       path: runtimeTsPath,
       content: runtimeTS,
@@ -192,10 +213,6 @@ const createSiteJson = async () => {
     console.warn("could not extract siteId from middleware.ts");
   }
   const siteJSONPath = join(Deno.cwd(), "site.json");
-  let siteJSONContent = "";
-  if (await exists(siteJSONPath)) {
-    siteJSONContent = await Deno.readTextFile(siteJSONPath);
-  }
   const finalContent = JSON.stringify(
     {
       siteId: siteFromMiddleware,
@@ -206,10 +223,7 @@ const createSiteJson = async () => {
   );
 
   return {
-    from: {
-      path: siteJSONPath,
-      content: siteJSONContent,
-    },
+    from: siteJSONPath,
     to: {
       path: siteJSONPath,
       content: finalContent,
@@ -225,10 +239,7 @@ const addMainTsLiveEntrypoint = async () => {
   const mainTsContent = await Deno.readTextFile(mainTs);
 
   return {
-    from: {
-      path: mainTs,
-      content: mainTsContent,
-    },
+    from: mainTs,
     to: {
       path: mainTs,
       content: mainTsContent
@@ -250,6 +261,8 @@ const removeRoutesAndFreshGenTs = (): Delete[] => {
   ].map((file) => ({ path: join(Deno.cwd(), ...file) }));
 };
 const v1: UpgradeOption = {
+  name: "v1",
+  description: "upgrades to deco@v1",
   isEligible: async () => !(await exists(join(Deno.cwd(), "live.gen.ts"))),
   apply: async () => {
     const [
@@ -259,7 +272,7 @@ const v1: UpgradeOption = {
       devTsImports,
       mainTsLiveEntrypoint,
     ] = await Promise.all([
-      updateImportMap(meta.version, "1.0.0"),
+      updateImportMap(meta.version, "1.22.11"),
       createSiteJson(),
       createRuntimeTS(),
       updateDevTsImports(),
@@ -279,10 +292,7 @@ const v1: UpgradeOption = {
 const createSiteTs = async (): Promise<Patch> => {
   const siteTs = join(Deno.cwd(), "apps", "site.ts");
   return {
-    from: {
-      path: siteTs,
-      content: "",
-    },
+    from: siteTs,
     to: {
       path: siteTs,
       content: await format(`
@@ -317,10 +327,7 @@ const createSiteTs = async (): Promise<Patch> => {
 const createSWJs = async (): Promise<Patch> => {
   const swJs = join(Deno.cwd(), "static", "sw.js");
   return {
-    from: {
-      path: swJs,
-      content: "",
-    },
+    from: swJs,
     to: {
       path: swJs,
       content: await format(`
@@ -337,12 +344,9 @@ const createSWJs = async (): Promise<Patch> => {
 
 const overrideDevTs = async (): Promise<Patch> => {
   const devTs = join(Deno.cwd(), "dev.ts");
-  const currentContent = await Deno.readTextFile(devTs);
+
   return {
-    from: {
-      path: devTs,
-      content: currentContent,
-    },
+    from: devTs,
     to: {
       path: devTs,
       content: await format(`
@@ -363,10 +367,7 @@ const overrideDenoJson = async (): Promise<Patch> => {
   );
 
   return {
-    from: {
-      path: denoJson,
-      content: await Deno.readTextFile(denoJson),
-    },
+    from: denoJson,
     to: {
       path: denoJson,
       content: JSON.stringify(
@@ -403,29 +404,19 @@ const overrideDenoJson = async (): Promise<Patch> => {
   };
 };
 const addAppsImportMap = async (): Promise<Patch> => {
-  const importMap = join(Deno.cwd(), "import_map.json");
-  const currentContent = await Deno.readTextFile(importMap);
+  const { content, path } = await readImportMap();
 
-  const parsed = JSON.parse(currentContent);
   return {
-    from: {
-      path: importMap,
-      content: currentContent,
-    },
+    from: path,
     to: {
-      path: importMap,
+      path,
       content: JSON.stringify(
         {
-          ...parsed,
+          ...content,
           imports: {
-            ...parsed.imports,
-            "$fresh/": "https://denopkg.com/deco-cx/fresh@1.4.4/",
-            "preact-render-to-string":
-              "https://esm.sh/*preact-render-to-string@6.2.1",
-            "deco-sites/std/": "https://denopkg.com/deco-sites/std@1.22.9/",
-            "$live/": "https://denopkg.com/deco-cx/deco@1.36.2/",
-            "deco/": "https://denopkg.com/deco-cx/deco@1.36.2/",
-            "apps/": "https://denopkg.com/deco-cx/apps@0.7.0/",
+            ...content.imports,
+            "deco/": `${await DECO_CX_DECO}`,
+            "apps/": `${await DECO_CX_APPS}`,
           },
         },
         null,
@@ -436,13 +427,9 @@ const addAppsImportMap = async (): Promise<Patch> => {
 };
 const changeMainTs = async (): Promise<Patch> => {
   const mainTs = join(Deno.cwd(), "main.ts");
-  const currentContent = await Deno.readTextFile(mainTs);
 
   return {
-    from: {
-      path: mainTs,
-      content: currentContent,
-    },
+    from: mainTs,
     to: {
       path: mainTs,
       content: await format(`
@@ -473,12 +460,9 @@ await start(manifest, {
 };
 const changeRuntimeTs = async (): Promise<Patch> => {
   const runtimeTs = join(Deno.cwd(), "runtime.ts");
-  const currentContent = await Deno.readTextFile(runtimeTs);
+
   return {
-    from: {
-      path: runtimeTs,
-      content: currentContent,
-    },
+    from: runtimeTs,
     to: {
       path: runtimeTs,
       content: await format(`
@@ -503,6 +487,8 @@ const deleteLiveGenTs = (): Delete => {
 };
 
 const apps: UpgradeOption = {
+  name: "Apps",
+  description: "enables apps for extending your website",
   isEligible: async () => await exists(join(Deno.cwd(), "site.json")),
   apply: async () => {
     const patches: Promise<Patch | Delete>[] = [
@@ -523,10 +509,7 @@ const apps: UpgradeOption = {
           if (content.includes("deco-sites/std/commerce/types.ts")) {
             patches.push(
               Promise.resolve({
-                from: {
-                  path: entry.path,
-                  content,
-                },
+                from: entry.path,
                 to: {
                   path: entry.path,
                   content: content.replaceAll(
@@ -545,7 +528,30 @@ const apps: UpgradeOption = {
   },
 };
 
-const upgradeVersions: UpgradeOption[] = [v1, apps];
+const aot: UpgradeOption = {
+  name: "ahead-of-time",
+  description:
+    "enables ahead of time builds for stable assets and better performance: https://fresh.deno.dev/docs/concepts/ahead-of-time-builds",
+  isEligible: () =>
+    exists(join(Deno.cwd(), ".github/workflows/deco-deploy.yaml")),
+  apply: async () => {
+    const patches: Promise<Patch | Delete>[] = [
+      // createSiteTs(),
+      // createSWJs(),
+      // overrideDenoJson(),
+      // overrideDevTs(),
+      // addAppsImportMap(),
+      // changeMainTs(),
+      // changeRuntimeTs(),
+      // Promise.resolve(deleteSiteJson()),
+      // Promise.resolve(deleteLiveGenTs()),
+    ];
+
+    return Promise.all([]);
+  },
+};
+
+const UPGRADES: UpgradeOption[] = [v1, apps, aot];
 
 const isDelete = (f: FileMod): f is Delete => {
   return (f as Delete).path !== undefined;
@@ -556,8 +562,8 @@ const applyPatch = async (p: FileMod): Promise<void> => {
       await Deno.remove(p.path);
     }
   } else {
-    if (p.from.path !== p.to.path) {
-      await Deno.remove(p.from.path);
+    if (p.from !== p.to.path) {
+      await Deno.remove(p.from).catch(() => {});
     }
     await ensureDir(dirname(p.to.path));
     await Deno.writeTextFile(p.to.path, p.to.content);
@@ -565,62 +571,94 @@ const applyPatch = async (p: FileMod): Promise<void> => {
 };
 
 if (import.meta.main) {
-  for (const version of upgradeVersions) {
-    if (await version.isEligible()) {
-      const patches = await version.apply();
-      for (const patch of patches) {
-        if (isDelete(patch)) {
-          console.log(`🚨 ${brightRed(patch.path)} will be deleted.`);
-        } else {
-          console.log(
-            `⚠️ ${brightYellow(patch.from.path)} -> ${
-              brightYellow(
-                patch.to.path,
-              )
-            }`,
-          );
-          const linesDiff = diffLines(patch.from.content, patch.to.content);
-          const enc = new TextEncoder();
-          const promises: Promise<unknown>[] = [];
-          linesDiff.forEach(
-            (part: { added: unknown; removed: unknown; value: string }) => {
-              // green for additions, red for deletions
-              // grey for common parts
-              const color = part.added
-                ? brightGreen
-                : part.removed
-                ? brightRed
-                : gray;
-              promises.push(Deno.stdout.write(enc.encode(color(part.value))));
-            },
-          );
-          await Promise.all(promises);
-        }
+  let ok = true;
+  const enc = new TextEncoder();
+
+  const denoRun = async (cmd: string) => {
+    try {
+      const process = new Deno.Command(Deno.execPath(), {
+        args: ["run", "-Ar", ...cmd.split(" ")],
+        stdout: "inherit",
+      }).spawn();
+      setTimeout(() => process.kill(), 60 * 1e3);
+      const s = await process.status;
+      if (s.code !== 0) {
+        throw new Error(`Process finished with status code ${s.code}`);
       }
-      const shouldProceed = confirm("Do you want to proceed?");
-      if (shouldProceed) {
-        await Promise.all(patches.map(applyPatch));
-        const denoTaskUpdate = new Deno.Command(Deno.execPath(), {
-          args: ["task", "update"],
-          stdout: "inherit",
-        });
-        const updateProcess = denoTaskUpdate.spawn();
-        await updateProcess.status;
-        try {
-          updateProcess.kill();
-        } catch (_err) {
-          // ignore
-        }
-        const denoTaskStart = new Deno.Command(Deno.execPath(), {
-          args: ["task", "start"],
-          stdout: "inherit",
-        });
-        const childProcess = denoTaskStart.spawn();
-        await childProcess.status;
-        childProcess.unref();
-      }
-    } else {
-      console.log("everything is up to date!");
+
+      return true;
+    } catch (error) {
+      console.error(`Failed while running ${cmd}\n`, error);
+
+      return false;
     }
+  };
+
+  console.log(
+    "Welcome to deco.cx upgrade tool. First we need to upgrade your dependencies",
+  );
+  ok = confirm("Do you want to proceed?");
+  if (!ok) {
+    console.log("See you later!");
+    Deno.exit(0);
   }
+
+  ok = await denoRun("https://fresh.deno.dev/update .");
+  ok = ok && await denoRun("https://deco.cx/update");
+
+  if (!ok) Deno.exit(1);
+
+  console.log("Dependencies are up to date. Applying migration patches");
+
+  for (const upgrade of UPGRADES) {
+    const run = await upgrade.isEligible();
+
+    if (!run) continue;
+
+    const patches = await upgrade.apply();
+
+    for (const patch of patches) {
+      if (isDelete(patch)) {
+        console.log(`🚨 ${brightRed(patch.path)} will be deleted.`);
+
+        continue;
+      }
+
+      const content = await Deno.readTextFile(patch.from).catch(() => "");
+      const linesDiff = diffLines(content, patch.to.content);
+
+      if (linesDiff.length === 1 && patch.from === patch.to.path) {
+        console.log(gray(`✅ ${patch.from} (no changes)`));
+
+        continue;
+      }
+
+      console.log(
+        `⚠️ ${brightYellow(patch.from)} -> ${brightYellow(patch.to.path)}`,
+      );
+
+      for (const { added, removed, value } of linesDiff) {
+        const color = added ? brightGreen : removed ? brightRed : gray;
+        await Deno.stdout.write(enc.encode(color(value)));
+      }
+      await Deno.stdout.write(enc.encode("\n"));
+    }
+
+    console.log(
+      `These changes ${upgrade.description} applying patch ${upgrade.name}`,
+    );
+    ok = confirm("Do you want to proceed?");
+    if (!ok) continue;
+
+    await Promise.all(patches.map(applyPatch));
+  }
+
+  const process = new Deno.Command(Deno.execPath(), {
+    args: ["task", "start"],
+    stdout: "inherit",
+  }).spawn();
+  process.unref();
+  await process.status;
+
+  console.log("everything is up to date! 🎉");
 }
