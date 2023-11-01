@@ -16,6 +16,7 @@ import { AppManifest, DecoManifest } from "../../types.ts";
 export interface CommonProps<
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
 > {
+  restart?: boolean;
   id?: string;
   metadata?: TMetadata;
   runtimeParameters?: RuntimeParameters;
@@ -117,5 +118,6 @@ export default async function startWorkflow<
       ...(props?.metadata ?? {}),
     },
   };
-  return await start<Arg, unknown, WorkflowMetadata>(payload).then(toExecution);
+  return await start<Arg, unknown, WorkflowMetadata>(payload, props?.restart)
+    .then(toExecution);
 }
