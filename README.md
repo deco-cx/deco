@@ -2,7 +2,7 @@
 
 > Build visually editable apps based on the **PreTTy** stack: **Pre**act, **T**ailwind and **Ty**peScript.
 
-**Deno Compose in an open-source full-stack web framework** that enables developers to accelerate the creation of **high-performance websites,** especially in terms of **Core Web Vitals** and **PageSpeed score,** which have been shown to correlate with **better user experience and higher conversion rates.**
+**Deno Compose in an open-source full-stack web framework and visual editor** that enables developers to accelerate the creation of **high-performance websites,** especially in terms of **Core Web Vitals** and **PageSpeed score,** which have been shown to correlate with **better user experience and higher conversion rates.**
 
 It's based on the concept of **Blocks**, which can represent UI components (**Sections**) and API integrations (**Loaders** and **Actions**). **Blocks can be configured visually in a web admin panel with no code.** They can also be packaged and installed with one click as **Apps.** 
 
