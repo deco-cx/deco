@@ -538,60 +538,27 @@ const aot: UpgradeOption = {
       to: {
         path: join(Deno.cwd(), ".github/workflows/deco-deploy.yaml"),
         content: `name: Deploy
-
-concurrency:
-group: environment-\${{ github.head_ref || github.ref }}
-
 on:
-push:
-  branches: [main]
-pull_request:
-  branches: [main]
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-set_vars:
-  runs-on: ubuntu-latest
-  outputs:
-    site_matrix: \${{ steps.set_vars.outputs.site_matrix }}
-  steps:
-    - name: Set site matrix
-      id: set_vars
-      shell: bash
-      run: |
-        if [ -z \${{ vars.SITES }} ]; then
-          echo "site_matrix={site: [\\"\${{ github.event.repository.name }}\\"] }" >> $GITHUB_OUTPUT
-        else
-          echo "site_matrix={site: \${{ vars.SITES }} }" >> $GITHUB_OUTPUT
-        fi
-deploy:
-  needs: set_vars
-  strategy:
-    matrix: \${{ fromJson(needs.set_vars.outputs.site_matrix) }}
-  name: Deploy
-  runs-on: ubuntu-latest
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
 
-  permissions:
-    id-token: write # Needed for auth with Deno Deploy
-    contents: read # Needed to clone the repository
+    permissions:
+      id-token: write # Needed for auth with Deno Deploy
+      contents: read # Needed to clone the repository
 
-  steps:
-    - name: Clone repository
-      uses: actions/checkout@v3
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
 
-    - name: Deco Deploy
-      id: decoDeployStep
-      continue-on-error: true
-      uses: deco-cx/deploy@v0
-      with:
-        site: \${{ matrix.site }}
-
-    - name: Retry Deco Deploy
-      id: decoDeployRetryStep
-      if: steps.decoDeployStep.outcome == 'failure'
-      uses: deco-cx/deploy@v0
-      with:
-        site: \${{ matrix.site }}
-        `,
+      - name: Deco Deploy
+        uses: deco-cx/deploy@v0`,
       },
     });
 
@@ -699,6 +666,8 @@ const applyPatch = async (p: FileMod): Promise<void> => {
 };
 
 if (import.meta.main) {
+  const yesToAll = Boolean(Deno.args.find((x) => x === "--y"));
+
   let ok = true;
   const enc = new TextEncoder();
 
@@ -731,7 +700,7 @@ if (import.meta.main) {
   console.log(
     "Welcome to deco.cx upgrade tool. First we need to upgrade your dependencies",
   );
-  ok = confirm("Do you want to proceed?");
+  ok = yesToAll || confirm("Do you want to proceed?");
   if (!ok) {
     console.log("See you later!");
     Deno.exit(0);
@@ -773,6 +742,8 @@ if (import.meta.main) {
         `⚠️  ${brightYellow(patch.from)} -> ${brightYellow(patch.to.path)}`,
       );
 
+      if (yesToAll) continue;
+
       for (const { added, removed, value } of linesDiff) {
         const color = added ? brightGreen : removed ? brightRed : gray;
         await Deno.stdout.write(enc.encode(color(value)));
@@ -781,19 +752,14 @@ if (import.meta.main) {
     }
 
     console.log(
-      `These changes ${upgrade.description} applying patch ${upgrade.name}`,
+      `These changes ${upgrade.descripction} applying patch ${upgrade.name}`,
     );
-    ok = confirm("Do you want to proceed?");
+    ok = yesToAll || confirm("Do you want to proceed?");
     if (!ok) continue;
 
     await Promise.all(patches.map(applyPatch));
   }
 
-  const process = new Deno.Command(Deno.execPath(), {
-    args: ["task", "start"],
-    stdout: "inherit",
-  }).spawn();
-  await process.status;
-
   console.log("everything is up to date! 🎉");
+  Deno.exit(0)
 }
