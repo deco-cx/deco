@@ -315,6 +315,16 @@ const apps: UpgradeOption = {
         },
       };
     };
+    const createDecohubTs = async (): Promise<Patch> => {
+      const decohub = join(Deno.cwd(), "apps", "decohub.ts");
+      return {
+        from: decohub,
+        to: {
+          path: decohub,
+          content: await format(`export { default, Preview } from "apps/decohub/mod.ts";`),
+        },
+      };
+    };
     const createSWJs = async (): Promise<Patch> => {
       const swJs = join(Deno.cwd(), "static", "sw.js");
       return {
@@ -467,6 +477,7 @@ const apps: UpgradeOption = {
 
     const patches: Promise<Patch | Delete>[] = [
       createSiteTs(),
+      createDecohubTs(),
       createSWJs(),
       overrideDenoJson(),
       overrideDevTs(),
