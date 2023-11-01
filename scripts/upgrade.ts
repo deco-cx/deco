@@ -412,8 +412,8 @@ const addAppsImportMap = async (): Promise<Patch> => {
           ...content,
           imports: {
             ...content.imports,
-            "deco/": `${await DECO_CX_DECO}`,
-            "apps/": `${await DECO_CX_APPS}`,
+            "deco/": `${await DECO_CX_DECO}/`,
+            "apps/": `${await DECO_CX_APPS}/`,
           },
         },
         null,
@@ -653,9 +653,7 @@ const isDelete = (f: FileMod): f is Delete => {
 };
 const applyPatch = async (p: FileMod): Promise<void> => {
   if (isDelete(p)) {
-    if (await exists(p.path)) {
-      await Deno.remove(p.path);
-    }
+    await Deno.remove(p.path).catch(() => {});
   } else {
     if (p.from !== p.to.path) {
       await Deno.remove(p.from).catch(() => {});
@@ -744,6 +742,7 @@ if (import.meta.main) {
 
       if (yesToAll) continue;
 
+      // Print line diffs
       for (const { added, removed, value } of linesDiff) {
         const color = added ? brightGreen : removed ? brightRed : gray;
         await Deno.stdout.write(enc.encode(color(value)));
@@ -751,15 +750,14 @@ if (import.meta.main) {
       await Deno.stdout.write(enc.encode("\n"));
     }
 
-    console.log(
-      `These changes ${upgrade.descripction} applying patch ${upgrade.name}`,
-    );
+    console.log(`These changes ${upgrade.description}`);
     ok = yesToAll || confirm("Do you want to proceed?");
     if (!ok) continue;
 
+    console.log(`Applying patch ${upgrade.name}`);
     await Promise.all(patches.map(applyPatch));
   }
 
   console.log("everything is up to date! 🎉");
-  Deno.exit(0)
+  Deno.exit(0);
 }
