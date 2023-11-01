@@ -277,6 +277,8 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     ) =>
       ctxResolver<Awaited<ReturnType<InvocationFunc<TManifest>>>>(
         payloadForFunc({ key, props } as InvokeFunction<TManifest>),
+        {},
+        { isInvoke: true },
       );
 
     context.state.invoke = new Proxy<InvocationProxyHandler>(
