@@ -2,7 +2,7 @@ import { debounce } from "std/async/debounce.ts";
 import { join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
-import { OnChangeCallback, Release } from "./provider.ts";
+import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
 import { CurrResolvables } from "./supabaseProvider.ts";
 import { getReleaseJSONFromRelease } from "./json.ts";
 
@@ -64,8 +64,16 @@ export const newFsProvider = (
     return result;
   });
 
+  const state = async (options: ReadOptions | undefined) => {
+    if (options?.forceFresh) {
+      return Deno.readTextFile(fullPath).then(JSON.parse);
+    }
+
+    return await currResolvables.then((r) => r.state);
+  };
+
   return {
-    state: () => currResolvables.then((r) => r.state),
+    state,
     archived: () => currResolvables.then((r) => r.archived),
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
