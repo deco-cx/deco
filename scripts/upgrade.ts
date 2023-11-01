@@ -497,7 +497,6 @@ const apps: UpgradeOption = {
             content.includes("deco-sites/std/packs/vtex/hooks") ||
             content.includes("deco-sites/std/components/Image.tsx") ||
             content.includes("deco-sites/std/components/Picture.tsx") ||
-            content.includes("deco-sites/std/components/types.ts") ||
             content.includes(`${ns}live.gen.ts`) ||
             content.includes(
               "deco-sites/std/commerce/utils/productToAnalyticsItem.ts",
@@ -536,10 +535,6 @@ const apps: UpgradeOption = {
                     .replaceAll(
                       "deco-sites/std/components/Picture.tsx",
                       "apps/website/components/Picture.tsx",
-                    )
-                    .replaceAll(
-                      "deco-sites/std/components/types.ts",
-                      "apps/admin/widgets.ts",
                     ),
                 },
               }),
