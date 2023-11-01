@@ -166,7 +166,7 @@ export const handler = async (
         mschema = {
           definitions: {},
           root: {},
-        }
+        };
       }
     }
 
