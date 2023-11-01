@@ -6,22 +6,19 @@ export const fromHttp = (endpoint: string): Release => {
   const fetchFromEndpoint = (): Promise<Record<string, unknown>> =>
     fetch(endpoint)
       .then(async (response) =>
-        response.ok
-          ? await response.json()
-          : await (async () => {
-              throw new Error(
-                `failed to fetch config from ${endpoint} error ${
-                  response.status
-                } ${await response.text()}`
-              );
-            })()
+        response.ok ? await response.json() : await (async () => {
+          throw new Error(
+            `failed to fetch config from ${endpoint} error ${response.status} ${await response
+              .text()}`,
+          );
+        })()
       )
       .catch((err) => {
         if (retries === 0) {
           throw err;
         }
         console.error(
-          `error fetching from endpoint ${endpoint}, retrying ${retries}`
+          `error fetching from endpoint ${endpoint}, retrying ${retries}`,
         );
         retries--;
         return fetchFromEndpoint();

@@ -134,6 +134,7 @@ export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
 ) => {
+  const skipSchemaGen = new URL(req.url).searchParams.has("skipSchemaGen");
   const end = ctx.state.t?.start("fetch-revision");
   const revision = await ctx.state.release.revision();
   end?.();
@@ -148,18 +149,25 @@ export const handler = async (
       manifest,
     );
     if (revision !== latestRevision || mschema === null) {
-      const endBuildSchema = ctx.state?.t?.start("build-resolvables");
-      mschema = buildSchemaWithResolvables(
-        manfiestBlocks,
-        await genSchemas(manifest, sourceMap),
-        {
-          ...await ctx.state.resolve({
-            __resolveType: defaults["resolvables"].name,
-          }),
-        },
-      );
-      latestRevision = revision;
-      endBuildSchema?.();
+      if (!skipSchemaGen) {
+        const endBuildSchema = ctx.state?.t?.start("build-resolvables");
+        mschema = buildSchemaWithResolvables(
+          manfiestBlocks,
+          await genSchemas(manifest, sourceMap),
+          {
+            ...await ctx.state.resolve({
+              __resolveType: defaults["resolvables"].name,
+            }),
+          },
+        );
+        latestRevision = revision;
+        endBuildSchema?.();
+      } else {
+        mschema = {
+          definitions: {},
+          root: {},
+        }
+      }
     }
 
     const info: MetaInfo = {

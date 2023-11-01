@@ -11,6 +11,7 @@ import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
 import {
   AppManifest,
   AppRuntime,
+  mergeManifests,
   mergeRuntimes,
   SourceMap,
 } from "../../blocks/app.ts";
@@ -298,7 +299,7 @@ export const createResolver = <
     // for who is awaiting for the previous promise
     const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
     const runtime = {
-      manifest,
+      manifest: mergeManifests(newManifest, manifest),
       sourceMap: mSourceMap,
       resolver: currentResolver,
     };
