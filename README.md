@@ -6,6 +6,9 @@
 
 It's based on the concept of **Blocks**, which can represent UI components (**Sections**) and API integrations (**Loaders** and **Actions**). **Blocks can be configured visually in a web admin panel with no code.** They can also be packaged and installed with one click as **Apps.** 
 
+![CleanShot 2023-11-01 at 19 36 20](https://github.com/deco-cx/deco/assets/1633518/bf32f976-7396-46d8-86b0-309966b0e009)
+
+
 Install some data integrations, a high-performance template, build out some pages and perhaps add a few JSX components yourself with Tailwind (which fit perfectly into the design-token-driven themes). There you go: **your new project is ready to deploy as a simple deno program, at a fraction of the time.** 
 
 ## Deno Compose combines the best of visual page editing (like Webflow) and the ability for app composition at the admin level (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code.
@@ -21,6 +24,8 @@ With deno-compose you can:
 For example, a Product Shelf UI component might depend on a **`Product[]`.** There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) or [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) or a search optimization provider (like [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) or [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. **Building UIs can now be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy.** 
 
 To try out the deno-compose visual editor, navigate to the [deco.cx playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps. 
+
+![CleanShot 2023-11-01 at 19 33 52](https://github.com/deco-cx/deco/assets/1633518/979ceb81-ad62-4fda-ac3b-fee08f2b7486)
 
 > ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
 
