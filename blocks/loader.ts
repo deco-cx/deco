@@ -26,12 +26,21 @@ export const isWrappedError = (
   return (err as WrappedError)?.__isErr;
 };
 
+const isInvokeCtx = <TContext extends ResolverMiddlewareContext<any>>(
+  ctx: TContext | TContext & { isInvoke: true },
+): ctx is TContext & { isInvoke: true } => {
+  return (ctx as TContext & { isInvoke: true })?.isInvoke;
+};
+
 export const wrapCaughtErrors = async <
   TConfig = any,
   TContext extends ResolverMiddlewareContext<any> = ResolverMiddlewareContext<
     any
   >,
 >(_props: TConfig, ctx: TContext) => {
+  if (isInvokeCtx(ctx)) { // invoke should not wrap caught errors.
+    return ctx.next!();
+  }
   try {
     return await ctx.next!();
   } catch (err) {
