@@ -8,7 +8,7 @@ export default function ImportMapJSON(
       "imports": {
         "$live/": `https://denopkg.com/deco-cx/deco@${decoVersion}/`,
         "deco/": `https://denopkg.com/deco-cx/deco@${decoVersion}/`,
-        "$fresh/": "https://denopkg.com/deco-cx/fresh@1.3.6/",
+        "$fresh/": "https://denopkg.com/denoland/fresh@1.5.2/",
         "preact": "https://esm.sh/preact@10.15.1",
         "preact/": "https://esm.sh/preact@10.15.1/",
         "preact-render-to-string":
