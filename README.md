@@ -1,4 +1,4 @@
-# [Deno Compose](https://denocompose.dev) — Open-Source Webflow alternative for modern web developers.
+# Deno Compose — an Open-Source Webflow alternative for modern web developers.
 
 > Build visually editable apps based on the **PreTTy** stack: **Pre**act, **T**ailwind and **Ty**peScript.
 
