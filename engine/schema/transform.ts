@@ -457,6 +457,12 @@ const wellKnownTypeReferenceToSchemeable = async (
         },
       };
     }
+    case "Section": {
+      if (typeParams.length === 0) {
+        return undefined;
+      }
+      return tsTypeToSchemeable(typeParams[0], ctx);
+    }
     case "InstanceOf": {
       if (typeParams.length < 2) {
         return undefined;
