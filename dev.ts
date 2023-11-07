@@ -76,6 +76,16 @@ export async function generate(
     `%cthe manifest has been generated.`,
     "color: blue; font-weight: bold",
   );
+
+  const day = new Date().getDay();
+  if (day === 4 || day === 5) {
+    await Deno.writeTextFile(manifestPath, manifestStr);
+    console.log(
+      `%c🚀 Don't miss out! Join our Community Call on deco.cx/discord every Friday at 2 p.m.
+Get tips and network with fellow devs from our community, and turbocharge your projects! 🛠️`,
+      "color: #02F67C; font-weight: bold",
+    );
+  }
 }
 
 export const siteJSON = "site.json";
