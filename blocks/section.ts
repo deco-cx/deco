@@ -20,7 +20,9 @@ import { withSection } from "../components/section.tsx";
 /**
  * @widget none
  */
-export type Section = InstanceOf<typeof sectionBlock, "#/root/sections">;
+export type Section<
+  _TSectionReturn extends JSX.Element | null = JSX.Element | null,
+> = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
 export const isSection = <
   TManifest extends AppManifest = Manifest,
@@ -69,7 +71,7 @@ export const createSectionBlock = (
   type: "sections" | "pages",
 ): Block<SectionModule> => ({
   type,
-  introspect: { funcNames: ["loader", "default"] },
+  introspect: { funcNames: ["loader", "default"], includeReturn: true },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
