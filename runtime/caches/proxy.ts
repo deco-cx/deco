@@ -64,14 +64,17 @@ export const caches: CacheStorage = {
         };
 
         const prepareRequest = (request: RequestInfo | URL): Request => {
-          if (isURL(request) || typeof request === "string") {
+          if (!PROXY_ENABLED) {
             return new Request(request);
+          }
+          if (isURL(request) || typeof request === "string") {
+            return new Request(
+              `https://fastly.decocache.com/${request.toString()}`,
+            );
           } else {
             const { method, headers, body } = request;
             return new Request(
-              PROXY_ENABLED
-                ? `https://fastly.decocache.com/${request.url}`
-                : request.url,
+              `https://fastly.decocache.com/${request.url}`,
               { method, headers, body },
             );
           }
@@ -80,7 +83,6 @@ export const caches: CacheStorage = {
         const req = prepareRequest(request);
 
         const response = cache.has(req.url) ? cache.get(req.url) : await fetch(
-          PROXY_ENABLED ? `https://fastly.decocache.com/${req.url}` : req.url,
           req,
         );
 
