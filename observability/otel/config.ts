@@ -35,6 +35,7 @@ export const resource = Resource.default().merge(
       "deco",
     [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
       Deno.hostname(),
+    [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
     "deco.runtime.version": meta.version,
     "deco.apps.version": apps_ver,
   }),
