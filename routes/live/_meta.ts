@@ -89,6 +89,9 @@ const buildSchemaWithResolvables = (
             key,
           ),
         );
+        if (ref === "sections") { // sections can be used individually so it can be replicated on the loop below.
+          continue;
+        }
         delete release[key];
       }
     }
