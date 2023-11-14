@@ -27,7 +27,29 @@ Deno Compose combines the best of **visual page editing** (like Webflow) and the
 To start building right now, go to https://play.deco.cx and follow the instructions to run a deco project locally.
 &nbsp;
 
-![CleanShot 2023-11-01 at 19 36 20](https://github.com/deco-cx/deco/assets/1633518/bf32f976-7396-46d8-86b0-309966b0e009)
+For example, declaring a ProductShelf JSX component with these `Props`...
+
+```typescript
+import ProductCard, { Layout } from "$store/components/product/ProductCard.tsx";
+import type { Product } from "apps/commerce/types.ts";
+
+export interface Props {
+  products: Product[] | null;
+  title?: string;
+  description?: string;
+  layout?: {
+    headerAlignment?: "center" | "left";
+    headerfontSize?: "Normal" | "Large";
+  };
+  cardLayout?: Layout;
+}
+
+export default function ProductShelf(props: Props) { /** JSX Preact + Tailwind UI Section **/ }
+```
+
+... will automatically generate this admin UI for you:
+
+![CleanShot 2023-11-14 at 16 51 51](https://github.com/deco-cx/deco/assets/1633518/71f08873-8d62-42ec-9732-81dfa83f300c)
 
 
 ## Deploy to your own infrastructure
@@ -36,9 +58,11 @@ The deno project created with Deno Compose is completely standalone — all of t
 
 This means you can deploy a Deno Compose project easily to any hosting platform you want.
 
-## Deploy to the deco.cx edge
+## Deploy to the deco.cx edge - FREE for personal projects
 
-You can also deploy any Deno Compose app to [deco.cx](https://www.deco.cx/en) — the managed infrastructure by the authors of this project. **It's free for unlimited sites up to 5,000 pageviews monthly!**
+You can also deploy any Deno Compose app to [deco.cx](https://www.deco.cx/en) — the managed infrastructure by the authors of this project. 
+
+**It's free for unlimited sites up to 5,000 pageviews monthly!**
 
 With any [deco.cx](https://www.deco.cx/en) subscription, you also get: 
 
@@ -63,9 +87,9 @@ With **Deno Compose** you can:
 
 For example, a Product Shelf UI component might depend on a **`Product[]`.** There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) or [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) or a search optimization provider (like [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) or [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. **Building UIs can now be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy.** 
 
-To try out the deno-compose visual editor, navigate to the [deco.cx playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps. 
+To try out our visual editor, navigate to the [deco.cx playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps. 
 
-![CleanShot 2023-11-01 at 19 33 52](https://github.com/deco-cx/deco/assets/1633518/979ceb81-ad62-4fda-ac3b-fee08f2b7486)
+![CleanShot 2023-11-14 at 20 55 32](https://github.com/deco-cx/deco/assets/1633518/e6f0d232-406d-4a20-8362-bd1cc8018b00)
 
 > ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
 
