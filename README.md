@@ -1,6 +1,10 @@
 # Deno Compose — Open-Source Visual Editor for Preact, Tailwind and TypeScript webapps
 
-<a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da&style=flat-square" /></a>
+<a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
+  &nbsp;
+<a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da" /></a>
+  &nbsp;
+  <a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Deco Twitter" /></a>
 
 **Deno Compose in an open-source full-stack web framework and visual editor** that enables developers to accelerate the creation of **high-performance websites,** especially in terms of **Core Web Vitals** and **PageSpeed score,** which have been shown to correlate with **better user experience and higher conversion rates.**
 
