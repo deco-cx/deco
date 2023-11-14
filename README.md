@@ -7,18 +7,53 @@
   &nbsp;
   <a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Deco Twitter" /></a>
 
-**Deno Compose in an open-source full-stack web framework and visual editor** that enables developers to accelerate the creation of **high-performance websites,** especially in terms of **Core Web Vitals** and **PageSpeed score,** which have been shown to correlate with **better user experience and higher conversion rates.**
+<hr/>
 
-It's based on the concept of **Blocks**, which can represent UI components (**Sections**) and API integrations (**Loaders** and **Actions**). **Blocks can be configured visually in a web admin panel with no code.** They can also be packaged and installed with one click as **Apps.** 
+💻 **Deno Compose in an Open-Source Visual IDE** for building Deno-based apps.
+
+👁️ It turns your **TypeScript code into a visual no-code editor**, right on the web.
+
+⚡ It gives you **visibility over performance both in UI and data fetching,** accelerating the creation of **high-performance websites.**
+
+⚙ It's focused on **reusability and composability** of UI components (**Sections**) and API integrations (**Loaders** and **Actions**). 
+
+📤 Sections, Loaders and Actions can be **packaged and installed with one click as Apps.** 
+
+
+## Get started on our playground
+
+Deno Compose combines the best of **visual page editing** (like Webflow) and the ability for **app composition at the admin level** (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code. 
+
+To start building right now, go to https://play.deco.cx and follow the instructions to run a deco project locally.
+&nbsp;
 
 ![CleanShot 2023-11-01 at 19 36 20](https://github.com/deco-cx/deco/assets/1633518/bf32f976-7396-46d8-86b0-309966b0e009)
 
 
-Install some data integrations, a high-performance template, build out some pages and perhaps add a few JSX components yourself with Tailwind (which fit perfectly into the design-token-driven themes). There you go: **your new project is ready to deploy as a simple deno program, at a fraction of the time.** 
+## Deploy to your own infrastructure
 
-## Deno Compose combines the best of visual page editing (like Webflow) and the ability for app composition at the admin level (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code.
+The deno project created with Deno Compose is completely standalone — all of the CMS information is neatly packed in a JSON file along with the code.
 
-With deno-compose you can:
+This means you can deploy a Deno Compose project easily to any hosting platform you want.
+
+## Deploy to the deco.cx edge
+
+You can also deploy any Deno Compose app to [deco.cx](https://www.deco.cx/en) — the managed infrastructure by the authors of this project. **It's free for unlimited sites up to 5,000 pageviews monthly!**
+
+With any [deco.cx](https://www.deco.cx/en) subscription, you also get: 
+
+- Managed edge infrastructure with 3-second deploy
+- Managed Web Analytics by Plausible
+- Managed Observability with tracing and error logging by HyperDX
+- Access to **ALL** premium deco.hub apps
+- Infinite revision history for all CMS changes
+- Team support with roles and permissions
+- Guest support (for allowing your customers to edit their sites).
+- And a bunch of other features we launch every month :)
+
+## Why use Deno Compose?
+
+With **Deno Compose** you can:
 
 * Craft modern web apps with a **visual configuration editor** for managing APIs, UIs and content — all in the same place. 
 * Compose pre-built features from a **community-driven ecosystem of Apps,** with one-click installation.
