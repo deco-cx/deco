@@ -103,11 +103,10 @@ const fetchWithProps = async (
 
   console.error(init?.body, response);
   const error = await response.text();
-  let errorObj;
   if (response.headers.get("content-type") === "application/json") {
-    errorObj = JSON.parse(error);
+    const errorObj = JSON.parse(error);
     throw new Error(`${response.status}: ${response.statusText}`, {
-      cause: errorObj.message + (errorObj.code ? `(${errorObj.code})` : ""),
+      cause: errorObj,
     });
   }
   throw new Error(`${response.status}: ${response.statusText}`, {
