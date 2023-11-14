@@ -1,6 +1,6 @@
-# Deno Compose — an Open-Source Webflow alternative for modern web developers.
+# Deno Compose — Open-Source Visual Editor for Preact, Tailwind and TypeScript webapps
 
-> Build visually editable apps based on the **PreTTy** stack: **Pre**act, **T**ailwind and **Ty**peScript.
+<a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da&style=flat-square" /></a>
 
 **Deno Compose in an open-source full-stack web framework and visual editor** that enables developers to accelerate the creation of **high-performance websites,** especially in terms of **Core Web Vitals** and **PageSpeed score,** which have been shown to correlate with **better user experience and higher conversion rates.**
 
