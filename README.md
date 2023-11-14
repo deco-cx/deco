@@ -1,4 +1,5 @@
-# Deno Compose — Open-Source Visual Editor for Preact, Tailwind and TypeScript webapps
+![image](https://github.com/deco-cx/deco/assets/1633518/ff2e1b28-8ab8-46cc-bbf2-727c620eda6f)
+<hr/>
 
 <a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
   &nbsp;
