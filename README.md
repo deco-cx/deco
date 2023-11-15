@@ -83,7 +83,7 @@ With any [deco.cx](https://www.deco.cx/en) subscription, you also get:
 
 ## Documentation
 
-Explore the capabilities of deno-compose further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://denocompose.dev/docs).
+Explore the capabilities of deno-compose further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://www.deco.cx/docs/en/overview).
 
 ## Why use Deno Compose?
 
