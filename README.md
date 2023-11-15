@@ -6,6 +6,8 @@
 <a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da" /></a>
   &nbsp;
   <a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Deco Twitter" /></a>
+&nbsp;
+  ![Build Status](https://github.com/deco-cx/deco/workflows/ci/badge.svg?event=push&branch=main)
 
 <hr/>
 
