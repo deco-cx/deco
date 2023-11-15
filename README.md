@@ -29,6 +29,8 @@ Deno Compose combines the best of **visual page editing** (like Webflow) and the
 To start building right now, go to https://play.deco.cx and follow the instructions to run a deco project locally.
 &nbsp;
 
+![CleanShot 2023-11-14 at 20 55 32](https://github.com/deco-cx/deco/assets/1633518/e6f0d232-406d-4a20-8362-bd1cc8018b00)
+
 For example, declaring a ProductShelf JSX component with these `Props`...
 
 ```typescript
@@ -60,6 +62,8 @@ The deno project created with Deno Compose is completely standalone — all of t
 
 This means you can deploy a Deno Compose project easily to any hosting platform you want.
 
+> ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
+
 ## Deploy to the deco.cx edge - FREE for personal projects
 
 You can also deploy any Deno Compose app to [deco.cx](https://www.deco.cx/en) — the managed infrastructure by the authors of this project. 
@@ -77,6 +81,10 @@ With any [deco.cx](https://www.deco.cx/en) subscription, you also get:
 - Guest support (for allowing your customers to edit their sites).
 - And a bunch of other features we launch every month :)
 
+## Documentation
+
+Explore the capabilities of deno-compose further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://denocompose.dev/docs).
+
 ## Why use Deno Compose?
 
 With **Deno Compose** you can:
@@ -91,10 +99,6 @@ For example, a Product Shelf UI component might depend on a **`Product[]`.** The
 
 To try out our visual editor, navigate to the [deco.cx playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps. 
 
-![CleanShot 2023-11-14 at 20 55 32](https://github.com/deco-cx/deco/assets/1633518/e6f0d232-406d-4a20-8362-bd1cc8018b00)
-
-> ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
-
 ## Key Features
 
 * Shared Vocabulary: Define the type you need, and deno-compose auto-completes with multiple matching integrations from a global community of apps. It's TypeScript taken a step further, turning types into a shared vocabulary that powers your UI and API integrations.
@@ -107,13 +111,9 @@ To try out our visual editor, navigate to the [deco.cx playground](https://play.
 
 * Interoperable: deno-compose facilitates seamless interaction between different apps and platforms. It’s about breaking down silos and fostering a more interconnected web development ecosystem.
 
-## Why Deco
+## Motivation
 
 deno-compose aims to radically simplify web development — like it was in the 90s, but with all the modern good stuff baked in. We propose that this starts by elevating TypeScript into a globally shared vocabulary of types that bridge the gap between interfaces and APIs. The simplicity of defining a type and getting auto-completions with multiple matching integrations from a community of deno-compose apps is a game-changer for developer productivity — both human and AI. It's a shift towards a more collaborative and efficient web development paradigm, where the community's collective effort translates into individual project success. No more reinventing the wheel, no more silos, no more wasted time. Just focusing on customer needs, **getting the data from wherever you need,** when you need it, and **allowing everyone in the team to create and publish great content** with that data, safely.
-
-## Documentation
-
-Explore the capabilities of deno-compose further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://denocompose.dev/docs).
 
 ## Community
 
