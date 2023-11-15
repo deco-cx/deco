@@ -1,131 +1,127 @@
-# deco live — the edge-native CMS
+![imagem](https://github.com/deco-cx/deco/assets/1633518/ff2e1b28-8ab8-46cc-bbf2-727c620eda6f)
+<hr/>
 
-<img align="right" src="/assets/logo.svg" height="150px" alt="The Deco Framework logo: A capybara in its natural habitat">
+<a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
+  &nbsp;
+<a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da" /></a>
+  &nbsp;
+<a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Twitter do Deco" /></a>
+&nbsp;
+![Status da Build](https://github.com/deco-cx/deco/workflows/ci/badge.svg?event=push&branch=main)
 
-O _Live_ é um gerenciador de conteúdo (CMS) para aplicações web feitas com
-[Fresh](https://fresh.deno.dev), especializado para ecommerce. Com o _Live_ é
-possível criar e gerenciar páginas dinâmicas através do https://deco.cx.
+<hr/>
 
-_WIP:_ Para criar um site Live, acesse https://deco.cx e crie um novo projeto
-utilizando os templates disponíveis.
+💻 **Deno Compose é uma IDE Visual Open-Source** para construir apps baseados em Deno.
 
-Acesse https://github.com/deco-sites/start e visualize um site de exemplo.
+👁️ Transforma seu código **TypeScript em um editor visual sem código**, diretamente na web.
 
-## Como desenvolver para o Live
+⚡ Proporciona **visibilidade sobre o desempenho tanto na UI quanto na API,** acelerando a criação de **sites de alta performance.**
 
-Existem dois conceitos importantes para entender o _Live_:
+⚙ Focado na **reutilização e composição** de componentes da UI (**Seções**) e integrações de API (**Carregadores** e **Ações**).
 
-### Seções
+📤 Seções, Carregadores e Ações podem ser **empacotados e instalados com um clique como Apps.** 
 
-Seções são componentes _Preact_ que podem ser adicionados em páginas por
-usuários do CMS. Para criar uma seção, basta adicionar um novo arquivo na pasta
-`sections/` do site. Apenas arquivos **diretamente pertencentes** a este
-diretório serão imterpretados como seções.
+## Comece no nosso playground
 
-Aqui um exemplo de uma seção `ProductShelf`:
+Deno Compose combina o melhor da **edição visual de páginas** (como Webflow) com a capacidade de **composição de apps no nível administrativo** (como Wordpress), permitindo instalar e gerenciar novos recursos em poucos minutos, sem código. 
 
-```tsx
-import { ProductList } from "deco/std/commerce/types/ProductList.ts";
-import { ProductSummary } from "../components/ProductSummary.tsx";
-import { Slider } from "../components/Slider.tsx";
+Para começar a construir agora mesmo, acesse https://play.deco.cx e siga as instruções para executar um projeto deco localmente.
 
-export interface Props {
-  title: string;
-  showArrows: boolean;
-  productData: ProductList;
-}
-
-export default function ProductShelf({
-  title,
-  showArrows,
-  productData,
-}: Props) {
-  return (
-    <div class="flex flex-col">
-      <span class="font-bold text-center">{title}</span>
-      <Slider showArrows={showArrows}>
-        {productData.products.map((product) => (
-          <ProductSummary product={product} key={product.id} />
-        ))}
-      </Slider>
-    </div>
-  );
-}
-```
-
-Diferente de projetos tradicionais, as seções não são instanciadas em outro
-arquivo usando algo como `<ProductShelf .../>`, mas sim são **injetadas
-dinamicamente** em páginas criadas por usuários.
-
-Ainda assim, **seções podem declarar Props**, indicando como aquela seção pode
-ser configurada. Essa declaração é usada para renderizar um formulário dentro do
-CMS.
-
-<img width="319" alt="image" src="https://user-images.githubusercontent.com/18706156/201562065-462e591d-9ef7-4fcc-a1e0-34944725613c.png">
-
-Propriedades de tipos comuns como `string`, `boolean` ou
-`Array<{ key: string, value: string}>` são preenchidas pelos usuários
-diretamente através deste formulário. Já propriedades de **tipos complexos**
-como `Product` e `ProductList`, exportados pelo _Live_, indicam que aquele dado
-**deverá ser injetado através de alguma integração**, que são adicionadas a
-páginas e são definidas por funções.
-
-### Funções
-
-Funções no _Live_ são similares a
-[funções convencionais do Typescript](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#functions)
-e servem primariamente para fazer **carregamento de dados através de APIs**.
-Dependendo do **tipo de retorno** dessas funções, o _Live_ permitirá que elas
-possam ser vinculadas com seções. O código das funções é executado no servidor
-da edge, antes da página ser renderizada.
-
-Aqui o exemplo de uma função `vtexIntelligentSearch`:
+Por exemplo, declarar um componente JSX ProductShelf com essas `Props`...
 
 ```typescript
-import {
-  mapVtexProductToDecoProduct,
-  vtexClient,
-} from "deco/std/commerce/clients/vtex.ts";
-import { ProductList } from "deco/std/commerce/types/ProductList.ts";
-import { LoaderFunction } from "deco/types.ts";
+import ProductCard, { Layout } from "$store/components/product/ProductCard.tsx";
+import type { Product } from "apps/commerce/types.ts";
 
 export interface Props {
-  searchQuery: string;
-  count: number;
+  products: Product[] | null;
+  title?: string;
+  description?: string;
+  layout?: {
+    headerAlignment?: "center" | "left";
+    headerfontSize?: "Normal" | "Large";
+  };
+  cardLayout?: Layout;
 }
 
-const VTEXIntelligentSearch: LoaderFunction<Props, ProductList> = async (
-  _req,
-  _ctx,
-  { searchQuery, count },
-) => {
-  const data = await vtexClient().search({ query: searchQuery, count });
-
-  const mappedProducts = data?.products.map(mapVtexProductToDecoProduct);
-
-  return { data: { products: mappedProducts } };
-};
+export default function ProductShelf(props: Props) { /** Seção JSX Preact + Tailwind UI **/ }
 ```
 
-O tipo `LoaderFunction` é usado para indicar que essa função tem papel de
-carregamento de dados em uma página. Esse é um tipo genérico que aceita dois
-outros tipos como parâmetro: o tipo das Props e o tipo de retorno desta função
-(ex: `LoaderFunction<Props, ProductList>`).
+... irá gerar automaticamente esta UI de administração para você:
 
-Funções podem executar qualquer tipo de processamento de dados em seu código,
-porém devem sempre focar em **reduzir o tempo de carregamento**.
+![CleanShot 2023-11-14 at 16 51 51](https://github.com/deco-cx/deco/assets/1633518/71f08873-8d62-42ec-9732-81dfa83f300c)
 
-## Tipos complexos
+## Deploy em sua própria infraestrutura
 
-No exemplo acima podemos observar o uso do tipo `ProductList`, um tipo exportado
-pelo _Live_ que é usado tanto em seções como em funções. Mesmo que os dados
-carregados tenham sido de uma API específica (VTEX), os dados relevantes são
-enviados das funções para as seções em um formato independente e comum,
-observando representar todas as subpropriedades comum em entidades como Produto.
+O projeto deno criado com o Deno Compose é completamente independente — todas as informações do CMS estão organizadas em um arquivo JSON junto com o código.
 
-É através dependência nestes tipos que o _Live_ consegue relacionar seções e
-funções, oferecendo ao usuário final a possibilidade de **escolher quais das
-funções disponíveis será utilizada para carregar os dados**.
+Isso significa que você pode deployar um projeto Deno Compose facilmente em qualquer plataforma de hospedagem que desejar.
 
-> Utilizamos o https://schema.org/Product como referência na definição dos tipos
-> do _Live_.
+## Deploy na edge deco.cx - GRÁTIS para projetos pessoais
+
+Você também pode fazer deploy de qualquer app Deno Compose em [deco.cx](https://www.deco.cx/pt) — a infraestrutura gerenciada pelos autores deste projeto.
+
+**É grátis para sites ilimitados até 5.000 visualizações de página por mês!**
+
+Com qualquer assinatura [deco.cx](https://www.deco.cx/pt), você também obtém:
+
+- Infraestrutura edge gerenciada com implantação em 3 segundos
+- Web Analytics gerenciado pelo Plausible
+- Observabilidade gerenciada com rastreamento e registro de erros pelo HyperDX
+- Acesso a **TODOS** os apps premium deco.hub
+- Histórico de revisões infinitas para todas as mudanças no CMS
+- Suporte a equipe com funções e permissões
+- Suporte para convidados (permitindo que seus clientes editem seus sites).
+- E um monte de outras funcionalidades que lançamos todo mês :)
+
+## Por que usar Deno Compose?
+
+Com **Deno Compose** você pode:
+
+* Criar apps web modernos com um **editor de configuração visual** para gerenciar APIs, UIs e conteúdo — tudo no mesmo lugar.
+* Compor recursos pré-construídos de um **ecossistema comunitário de Apps,** com instalação em um clique.
+* Evoluir seus Apps com **flags de recursos em tempo real embutidos,** implementando código ou conteúdo para públicos específicos.
+
+**Os Blocos do Deno Compose são interoperáveis:** a saída de um pode ser configurada visualmente como entrada de outro no editor visual, **baseado em tipos TypeScript correspondentes.**
+
+Por exemplo, um componente de UI de Prateleira de Produtos pode depender de um **`Product[]`.** Há muitas maneiras de obter um `Product[]`, como buscá-lo de uma plataforma de e-commerce (como [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) ou [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) ou de um provedor de otimização de pesquisa (como [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) ou [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). deno-compose sugerirá automaticamente integrações correspondentes com base no tipo definido de uma ampla gama de apps disponíveis, e o desenvolvedor pode escolher a que melhor se adapta às suas necessidades. **Construir UIs agora pode ser completamente abstraído de suas integrações de dados. Programe contra um tipo conhecido, obtenha toneladas de integrações de primeira classe, prontas para serem implantadas.**
+
+Para experimentar nosso editor visual, navegue até o [playground deco.cx](https://play.deco.cx), escolha um template e experimente uma maneira simplificada, mas poderosa, de construir apps web.
+
+![CleanShot 2023-11-14 at 20 55 32](https://github.com/deco-cx/deco/assets/1633518/e6f0d232-406d-4a20-8362-bd1cc8018b00)
+
+> ⚠️ Hospedar o próprio editor está previsto para o início de 2024. Aguarde enquanto refatoramos alguns componentes internos antes de podermos convidar mais desenvolvedores para estendê-lo! Estamos ansiosos por isso.
+
+## Principais Características
+
+* Vocabulário Compartilhado: Defina o tipo que você precisa, e deno-compose auto-completa com múltiplas integrações correspondentes de uma comunidade global de apps. É TypeScript levado um passo adiante, transformando tipos em um vocabulário compartilhado que impulsiona suas integrações de UI e API.
+
+* Implementações Pré-Construídas: Acelere seu desenvolvimento com Seções, Carregadores e Ações prontos para uso. Um tesouro de implementações pré-construídas espera ser descoberto e utilizado em seus projetos.
+
+* Ecossistema Impulsionado pela Comunidade: Engaje-se com uma comunidade global de desenvolvedores no deco.hub. Compartilhe, descubra e colabore para enriquecer o vocabulário compartilhado em que o deno-compose prospera.
+
+* Fluxo de Trabalho de Desenvolvimento Simplificado: Basta definir seus tipos e deixar o deno-compose cuidar do resto. Ele simplifica o fluxo de trabalho da definição de tipo para a renderização da UI e integração de API.
+
+* Interoperável: deno-compose facilita a interação contínua entre diferentes apps e plataformas. Trata-se de quebrar silos e fomentar um ecossistema de desenvolvimento web mais interconectado.
+
+## Motivação
+
+Deno Compose visa simplificar radicalmente o desenvolvimento web — como era nos anos 90, mas com todo o material moderno incluído. Propomos que isso começa elevando TypeScript a um vocabulário global compartilhado de tipos que preenche a lacuna entre interfaces e APIs. A simplicidade de definir um tipo e obter auto-completações com múltiplas integrações correspondentes de uma comunidade de apps deno-compose é um divisor de águas para a produtividade do desenvolvedor — tanto humano quanto IA. É uma mudança em direção a um paradigma de desenvolvimento web mais colaborativo e eficiente, onde o esforço coletivo da comunidade se traduz em sucesso individual do projeto. Sem mais reinventar a roda, sem mais silos, sem mais tempo desperdiçado. Apenas foco nas necessidades do cliente, **obtendo os dados de onde você precisar,** quando precisar, e **permitindo que todos na equipe criem e publiquem ótimo conteúdo** com esses dados, de forma segura.
+
+## Documentação
+
+Explore as capacidades do deno-compose ainda mais em nossa documentação abrangente. Aprenda como criar Seções, Carregadores, Apps e muito mais. Acesse [https://deco.cx/docs](https://denocompose.dev/docs).
+
+## Comunidade
+
+Junte-se à comunidade no [Servidor Discord do deco](https://deco.cx/discord). Compartilhe seus apps, explore as criações dos outros e contribua para o vocabulário compartilhado que faz o deno-compose prosperar.
+
+## Contribua
+
+Convidamos contribuições! Seja corrigindo bugs, melhorando a documentação ou propondo novos recursos, seus esforços são valiosos. Confira nossas diretrizes de contribuição para começar.
+
+## Agradecimentos a todos os contribuidores
+
+<a href="https://github.com/deco-cx/deco/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=deco-cx/deco" />
+</a>
