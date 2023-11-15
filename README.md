@@ -122,3 +122,9 @@ Join the community on [deco Discord Server](https://deco.cx/discord). Share your
 ## Contribute
 
 We welcome contributions! Whether you’re fixing bugs, improving the documentation, or proposing new features, your efforts are valuable. Check out our contribution guidelines to get started.
+
+## Thanks to all contributors
+
+<a href="https://github.com/deco-cx/deco/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=deco-cx/deco" />
+</a>
