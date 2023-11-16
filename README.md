@@ -1,4 +1,4 @@
-![Deco](https://github.com/deco-cx/deco/assets/1633518/ff2e1b28-8ab8-46cc-bbf2-727c620eda6f)
+![Deco web editor](https://github.com/deco-cx/deco/assets/1633518/67124408-f40f-4e8f-9ccb-4982f0144363)
 <hr/>
 
 <a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
