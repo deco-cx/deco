@@ -1,4 +1,4 @@
-![Deno Compose](https://github.com/deco-cx/deco/assets/1633518/ff2e1b28-8ab8-46cc-bbf2-727c620eda6f)
+![Deco](https://github.com/deco-cx/deco/assets/1633518/ff2e1b28-8ab8-46cc-bbf2-727c620eda6f)
 <hr/>
 
 <a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
@@ -11,7 +11,7 @@
 
 <hr/>
 
-💻 **Deno Compose in an Open-Source Visual IDE** for building Deno-based apps.
+💻 **Deco is the other side of Code: an Open-Source Visual IDE** for building Deno-based apps.
 
 👁️ It turns your **TypeScript code into a visual no-code editor**, right on the web.
 
@@ -24,7 +24,7 @@
 
 ## Get started on our playground
 
-Deno Compose combines the best of **visual page editing** (like Webflow) and the ability for **app composition at the admin level** (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code. 
+Deco combines the best of **visual page editing** (like Webflow) and the ability for **app composition at the admin level** (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code. 
 
 To start building right now, go to https://play.deco.cx and follow the instructions to run a deco project locally.
 &nbsp;
@@ -58,15 +58,15 @@ export default function ProductShelf(props: Props) { /** JSX Preact + Tailwind U
 
 ## Deploy to your own infrastructure
 
-The deno project created with Deno Compose is completely standalone — all of the CMS information is neatly packed in a JSON file along with the code.
+The deno project created with Deco is completely standalone — all of the CMS information is neatly packed in a JSON file along with the code.
 
-This means you can deploy a Deno Compose project easily to any hosting platform you want.
+This means you can deploy a Deco project easily to any hosting platform you want.
 
 > ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
 
 ## Deploy to the deco.cx edge - FREE for personal projects
 
-You can also deploy any Deno Compose app to [deco.cx](https://www.deco.cx/en) — the managed infrastructure by the authors of this project. 
+You can also deploy any Deco app to [deco.cx](https://www.deco.cx/en) — the managed infrastructure by the authors of this project. 
 
 **It's free for unlimited sites up to 5,000 pageviews monthly!**
 
@@ -85,15 +85,15 @@ With any [deco.cx](https://www.deco.cx/en) subscription, you also get:
 
 Explore the capabilities of deno-compose further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://www.deco.cx/docs/en/overview).
 
-## Why use Deno Compose?
+## Why use Deco?
 
-With **Deno Compose** you can:
+With **Deco** you can:
 
 * Craft modern web apps with a **visual configuration editor** for managing APIs, UIs and content — all in the same place. 
 * Compose pre-built features from a **community-driven ecosystem of Apps,** with one-click installation.
 * Evolve your Apps with **built-in realtime feature flags,** rolling out code or content to specific audiences.
 
-**Deno Compose Blocks are interoperable:** one's output can be visually configured as another's input in the visual editor, **based on matching TypeScript types.** 
+**Deco Blocks are interoperable:** one's output can be visually configured as another's input in the visual editor, **based on matching TypeScript types.** 
 
 For example, a Product Shelf UI component might depend on a **`Product[]`.** There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) or [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) or a search optimization provider (like [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) or [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. **Building UIs can now be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy.** 
 
