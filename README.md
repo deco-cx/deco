@@ -26,7 +26,7 @@
 
 Deco combines the best of **visual page editing** (like Webflow) and the ability for **app composition at the admin level** (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code. 
 
-To start building right now, go to https://play.deco.cx and follow the instructions to run a deco project locally.
+To start building right now, go to https://play.deco.cx and follow the instructions to run a Deco project locally.
 &nbsp;
 
 ![CleanShot 2023-11-14 at 20 55 32](https://github.com/deco-cx/deco/assets/1633518/e6f0d232-406d-4a20-8362-bd1cc8018b00)
@@ -83,7 +83,7 @@ With any [deco.cx](https://www.deco.cx/en) subscription, you also get:
 
 ## Documentation
 
-Explore the capabilities of deno-compose further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://www.deco.cx/docs/en/overview).
+Explore the capabilities of Deco further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://www.deco.cx/docs/en/overview).
 
 ## Why use Deco?
 
@@ -95,29 +95,29 @@ With **Deco** you can:
 
 **Deco Blocks are interoperable:** one's output can be visually configured as another's input in the visual editor, **based on matching TypeScript types.** 
 
-For example, a Product Shelf UI component might depend on a **`Product[]`.** There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) or [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) or a search optimization provider (like [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) or [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). deno-compose will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. **Building UIs can now be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy.** 
+For example, a Product Shelf UI component might depend on a **`Product[]`.** There are many ways to get a `Product[]`, such as fetching it from an ecommerce platform (like [**Shopify**](https://github.com/deco-cx/apps/tree/main/shopify) or [**VTEX**](https://github.com/deco-cx/apps/tree/main/vtex)) or a search optimization provider (like [**Algolia**](https://github.com/deco-cx/apps/tree/main/algolia) or [**Typesense**](https://github.com/deco-cx/apps/tree/main/typesense)). Deco will automatically suggest matching integrations based on the defined type from a wide range of available apps, and the developer can choose the one that best fits their needs. **Building UIs can now be abstracted completely from their data integration. Code against a known-type, get tons of first-class integrations, ready-to-deploy.** 
 
 To try out our visual editor, navigate to the [deco.cx playground](https://play.deco.cx), choose a template, and experience a simplified yet powerful way to build web apps. 
 
 ## Key Features
 
-* Shared Vocabulary: Define the type you need, and deno-compose auto-completes with multiple matching integrations from a global community of apps. It's TypeScript taken a step further, turning types into a shared vocabulary that powers your UI and API integrations.
+* Shared Vocabulary: Define the type you need, and Deco auto-completes with multiple matching integrations from a global community of apps. It's TypeScript taken a step further, turning types into a shared vocabulary that powers your UI and API integrations.
 
 * Pre-built Implementations: Speed up your development with ready-to-use Sections, Loaders, and Actions. A treasure trove of pre-built implementations awaits to be discovered and utilized in your projects.
 
-* Community-Driven Ecosystem: Engage with a global community of developers on deco.hub. Share, discover, and collaborate to enrich the shared vocabulary that deno-compose thrives on.
+* Community-Driven Ecosystem: Engage with a global community of developers on deco.hub. Share, discover, and collaborate to enrich the shared vocabulary that Deco thrives on.
 
-* Simplified Development Workflow: Just define your types, and let deno-compose handle the rest. It streamlines the workflow from type definition to UI rendering and API integration.
+* Simplified Development Workflow: Just define your types, and let Deco handle the rest. It streamlines the workflow from type definition to UI rendering and API integration.
 
-* Interoperable: deno-compose facilitates seamless interaction between different apps and platforms. It’s about breaking down silos and fostering a more interconnected web development ecosystem.
+* Interoperable: Deco facilitates seamless interaction between different apps and platforms. It’s about breaking down silos and fostering a more interconnected web development ecosystem.
 
 ## Motivation
 
-deno-compose aims to radically simplify web development — like it was in the 90s, but with all the modern good stuff baked in. We propose that this starts by elevating TypeScript into a globally shared vocabulary of types that bridge the gap between interfaces and APIs. The simplicity of defining a type and getting auto-completions with multiple matching integrations from a community of deno-compose apps is a game-changer for developer productivity — both human and AI. It's a shift towards a more collaborative and efficient web development paradigm, where the community's collective effort translates into individual project success. No more reinventing the wheel, no more silos, no more wasted time. Just focusing on customer needs, **getting the data from wherever you need,** when you need it, and **allowing everyone in the team to create and publish great content** with that data, safely.
+Deco aims to radically simplify web development — like it was in the 90s, but with all the modern good stuff baked in. We propose that this starts by elevating TypeScript into a globally shared vocabulary of types that bridge the gap between interfaces and APIs. The simplicity of defining a type and getting auto-completions with multiple matching integrations from a community of Deco apps is a game-changer for developer productivity — both human and AI. It's a shift towards a more collaborative and efficient web development paradigm, where the community's collective effort translates into individual project success. No more reinventing the wheel, no more silos, no more wasted time. Just focusing on customer needs, **getting the data from wherever you need,** when you need it, and **allowing everyone in the team to create and publish great content** with that data, safely.
 
 ## Community
 
-Join the community on [deco Discord Server](https://deco.cx/discord). Share your apps, explore others' creations, and contribute to the shared vocabulary that makes deno-compose a thriving ecosystem.
+Join the community on [deco.cx Discord Server](https://deco.cx/discord). Share your apps, explore others' creations, and contribute to the shared vocabulary that makes Deco a thriving ecosystem.
 
 ## Contribute
 
