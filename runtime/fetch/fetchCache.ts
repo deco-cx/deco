@@ -114,6 +114,8 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
       null
     );
 
+    console.log("Cf-Cache-Status", matched?.headers.get("Cf-Cache-Status"));
+
     if (!matched) {
       const fetched = await fetchAndCache();
 
