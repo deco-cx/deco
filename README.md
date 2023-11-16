@@ -11,7 +11,7 @@
 
 <hr/>
 
-💻 **Deco is the other side of Code: an Open-Source Visual IDE** for building Deno-based apps.
+💻 **Deco is the other side of Code: an open-source web editor** for building high-performance apps.
 
 👁️ It turns your **TypeScript code into a visual no-code editor**, right on the web.
 
