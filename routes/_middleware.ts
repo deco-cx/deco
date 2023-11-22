@@ -13,7 +13,6 @@ import { startObserve } from "../observability/http.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
-import { getSetCookies } from "../deps.ts";
 
 import { formatLog } from "../utils/log.ts";
 
@@ -221,18 +220,6 @@ export const handler = [
     // segment !== currentCookies[DECO_SEGMENT] &&
     //   setCookie(newHeaders, { name: DECO_SEGMENT, value: segment });
 
-    const setCookies = getSetCookies(newHeaders);
-    const cacheControlEnabled = Deno.env.has("CACHE_CONTROL_ENABLED");
-    const cacheControlMaxAge = Deno.env.get("CACHE_CONTROL_MAX_AGE");
-    const cacheControlStaleWhileRevalidate = Deno.env.get(
-      "CACHE_CONTROL_STALE_WHILE_REVALIDATE",
-    );
-    if (ctx.destination === "route" && cacheControlEnabled && setCookies.length === 0) {
-      newHeaders.set(
-        "Cache-Control",
-        `max-age=${cacheControlMaxAge}, stale-while-revalidate=${cacheControlStaleWhileRevalidate}`,
-      );
-    }
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,
       headers: newHeaders,
