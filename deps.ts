@@ -63,7 +63,7 @@ export {
   ValueType,
 } from "npm:@opentelemetry/api@1.6.0";
 export { crypto } from "std/crypto/mod.ts";
-export { getCookies, setCookie } from "std/http/mod.ts";
+export { getCookies, getSetCookies, setCookie } from "std/http/mod.ts";
 export type { Handler } from "std/http/server.ts";
 
 export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0.43.0";
@@ -99,6 +99,6 @@ export {
   View,
 } from "npm:@opentelemetry/sdk-metrics@1.17.0";
 
-export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
 export { default as Murmurhash3 } from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";
+export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
