@@ -222,9 +222,16 @@ export const handler = [
     //   setCookie(newHeaders, { name: DECO_SEGMENT, value: segment });
 
     const setCookies = getSetCookies(newHeaders);
+    const cacheControlEnabled = Deno.env.has("CACHE_CONTROL_ENABLED");
     const cacheControlMaxAge = Deno.env.get("CACHE_CONTROL_MAX_AGE");
-    if (cacheControlMaxAge && setCookies.length === 0) {
-      newHeaders.set("Cache-Control", `max-age=${cacheControlMaxAge}`);
+    const cacheControlStaleWhileRevalidate = Deno.env.get(
+      "CACHE_CONTROL_STALE_WHILE_REVALIDATE",
+    );
+    if (cacheControlEnabled && setCookies.length === 0) {
+      newHeaders.set(
+        "Cache-Control",
+        `max-age=${cacheControlMaxAge}, stale-while-revalidate=${cacheControlStaleWhileRevalidate}`,
+      );
     }
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,
