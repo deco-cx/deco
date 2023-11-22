@@ -222,8 +222,9 @@ export const handler = [
     //   setCookie(newHeaders, { name: DECO_SEGMENT, value: segment });
 
     const setCookies = getSetCookies(newHeaders);
-    if (Deno.env.has("ENABLE_MAX_AGE") && setCookies.length === 0) {
-      newHeaders.set("Cache-Control", "max-age=30s");
+    const cacheControlMaxAge = Deno.env.get("CACHE_CONTROL_MAX_AGE");
+    if (cacheControlMaxAge && setCookies.length === 0) {
+      newHeaders.set("Cache-Control", `max-age=${cacheControlMaxAge}`);
     }
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,
