@@ -227,7 +227,7 @@ export const handler = [
     const cacheControlStaleWhileRevalidate = Deno.env.get(
       "CACHE_CONTROL_STALE_WHILE_REVALIDATE",
     );
-    if (cacheControlEnabled && setCookies.length === 0) {
+    if (ctx.destination === "route" && cacheControlEnabled && setCookies.length === 0) {
       newHeaders.set(
         "Cache-Control",
         `max-age=${cacheControlMaxAge}, stale-while-revalidate=${cacheControlStaleWhileRevalidate}`,
