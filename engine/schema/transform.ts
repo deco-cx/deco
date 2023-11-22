@@ -1268,9 +1268,11 @@ export async function stringToSchema(str: string) {
     entrypoints: [],
   });
 
-  return schemaBuilder.withBlockSchema({
+  const schema = schemaBuilder.withBlockSchema({
     blockType: "sections",
     functionKey: `deco-sites/admin/sections/MySection.tsx`,
     inputSchema: moduleRef?.inputSchema,
   }).build();
+
+  return schema;
 }
