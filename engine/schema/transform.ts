@@ -1274,5 +1274,7 @@ export async function stringToSchema(str: string) {
     inputSchema: moduleRef?.inputSchema,
   }).build();
 
+  schema.$ref = `#/definitions/${btoa(moduleRef?.inputSchema?.file || "")}@${moduleRef?.inputSchema?.name}`
+
   return schema;
 }
