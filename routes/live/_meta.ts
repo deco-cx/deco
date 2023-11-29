@@ -54,7 +54,7 @@ export const toManifestBlocks = (
   return { blocks: manBlocks };
 };
 
-let mschema: Schemas | null = null;
+export let mschema: Schemas | null = null;
 let latestRevision: string | null = null;
 const getResolveType = (schema: unknown): string | undefined => {
   const asJsonSchema = schema as JSONSchema7;
