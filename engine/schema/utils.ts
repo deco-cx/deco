@@ -4,6 +4,8 @@
  */
 export const parseJSDocAttribute = (key: string, value: string) => {
   switch (key) {
+    case "examples":
+      return value.split("\n").map((example) => example.trim());
     case "maximum":
     case "exclusiveMaximum":
     case "minimum":
