@@ -48,6 +48,33 @@ const withOverrides = (
   }, resolvables);
 };
 
+const charByType = {
+  "resolvable": "@",
+  "prop": ".",
+};
+
+export const resolverIdFromResolveChain = (chain: FieldResolver[]) => {
+  let found = false;
+  let uniqueId = "";
+
+  // from last to first and stop in the first resolvable
+  // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const { type, value } = chain[i];
+    if (type === "prop" || type === "resolvable") {
+      const divider = uniqueId.length > 0 ? charByType[type] : "";
+      uniqueId = `${value}${divider}${uniqueId}`;
+    }
+    // stop on first resolvable
+    if (type === "resolvable") {
+      found = true;
+      break;
+    }
+  }
+
+  return found ? uniqueId : undefined;
+};
+
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected release: Release;
   protected resolvers: ResolverMap<TContext>;
@@ -126,11 +153,13 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     });
     const resolvers = this.getResolvers();
     const currentOnce = this.runOncePerRelease;
+    const resolveChain = options?.resolveChain ?? [];
     const baseCtx: BaseContext = {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
+      resolverId: "unknown",
       resolveId: crypto.randomUUID(),
-      resolveChain: options?.resolveChain ?? [],
+      resolveChain,
       resolveHints: this.resolveHints,
       resolvables: nresolvables,
       resolvers,
@@ -140,10 +169,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
         return (currentOnce[key] ??= once()).do(f);
       },
     };
-    const ctx = {
-      ...context,
-      ...baseCtx,
-    };
+    const ctx = { ...context, ...baseCtx };
 
     const innerResolver = this.resolverFor(
       ctx,

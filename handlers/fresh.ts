@@ -34,7 +34,7 @@ export default function Fresh(
     if (req.method === "HEAD") {
       return new Response(null, { status: 200 });
     }
-    const endResolvePage = appContext?.monitoring?.timings?.start?.(
+    const timing = appContext?.monitoring?.timings?.start?.(
       "load-data",
     );
 
@@ -55,14 +55,16 @@ export default function Fresh(
         }
       },
     );
+    timing?.end();
 
-    endResolvePage?.();
     const url = new URL(req.url);
     if (url.searchParams.get("asJson") !== null) {
       return Response.json(page, { headers: allowCorsFor(req) });
     }
     if (isFreshCtx<DecoState>(ctx)) {
-      const end = appContext?.monitoring?.timings?.start?.("render-to-string");
+      const timing = appContext?.monitoring?.timings?.start?.(
+        "render-to-string",
+      );
       const response = await appContext.monitoring!.tracer.startActiveSpan?.(
         "render-to-string",
         async (span) => {
@@ -79,10 +81,10 @@ export default function Fresh(
             throw err;
           } finally {
             span.end();
+            timing?.end();
           }
         },
       );
-      end?.();
 
       return response;
     }

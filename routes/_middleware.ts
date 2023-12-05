@@ -13,7 +13,6 @@ import { startObserve } from "../observability/http.ts";
 import { DecoSiteState, DecoState } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
-
 import { formatLog } from "../utils/log.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
@@ -117,6 +116,9 @@ export const handler = [
                 status: response?.status ?? 500,
                 url,
                 begin,
+                timings: ctx.state.debugEnabled
+                  ? ctx.state.monitoring.timings.get()
+                  : undefined,
               }),
             );
           }

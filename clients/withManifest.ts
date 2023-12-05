@@ -15,9 +15,8 @@ import type {
   ManifestInvocable,
   ManifestLoader,
 } from "../routes/live/invoke/index.ts";
-import { InvokeAwaiter } from "../routes/live/invoke/index.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
-import { InvocationProxyHandler, newHandler } from "./proxy.ts";
+import { InvocationProxyHandler, InvokeAwaiter, newHandler } from "./proxy.ts";
 
 export interface InvokerRequestInit extends RequestInit {
   fetcher?: typeof fetch;

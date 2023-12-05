@@ -81,11 +81,11 @@ export const router = (
             { context: ctx, request: req },
           );
 
-      const end = configs?.monitoring?.timings.start("resolve-handler");
+      const timing = configs?.monitoring?.timings.start("resolve-handler");
       const hand = isAwaitable(resolvedOrPromise)
         ? await resolvedOrPromise
         : resolvedOrPromise;
-      end?.();
+      timing?.end();
 
       return await hand(
         req,

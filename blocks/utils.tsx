@@ -10,11 +10,16 @@ import {
   ComponentFunc,
   PreactComponent,
 } from "../engine/block.ts";
-import { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
+import {
+  BaseContext,
+  Monitoring,
+  ResolveFunc,
+  Resolver,
+} from "../engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
-import type { Manifest } from "../live.gen.ts";
-import type { InvocationProxy } from "../routes/live/invoke/index.ts";
+import { type Manifest } from "../live.gen.ts";
+import { type InvocationProxy } from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
 import { HttpContext } from "./handler.ts";
 
@@ -82,6 +87,7 @@ export type FnContext<
   TState = {},
   TManifest extends AppManifest = Manifest,
 > = TState & RequestState & {
+  resolverId?: string;
   monitoring?: Monitoring;
   get: ResolveFunc;
   invoke:
@@ -95,9 +101,10 @@ export type FnProps<
   TProps = any,
   TResp = any,
   TState = any,
+  TRequest = Request,
 > = (
   props: TProps,
-  request: Request,
+  request: TRequest,
   ctx: FnContext<TState>,
 ) => PromiseOrValue<TResp>;
 
@@ -110,6 +117,7 @@ export const fnContextFromHttpContext = <TState = {}>(
 ): FnContext<TState> => {
   return {
     ...ctx?.context?.state?.global,
+    resolverId: ctx.resolverId,
     monitoring: ctx.monitoring,
     get: ctx.resolve,
     response: ctx.context.state.response,

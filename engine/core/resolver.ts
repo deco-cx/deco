@@ -3,7 +3,7 @@ import { Context, Span, Tracer } from "../../deps.ts";
 import { identity } from "../../utils/object.ts";
 import { createServerTimings } from "../../utils/timings.ts";
 import { HintNode, ResolveHints, traverseAny } from "./hints.ts";
-import { ResolveOptions } from "./mod.ts";
+import { ResolveOptions, resolverIdFromResolveChain } from "./mod.ts";
 import {
   isAwaitable,
   notUndefined,
@@ -29,18 +29,25 @@ export type ObserveFunc = <T>(
   func: () => Promise<T>,
 ) => Promise<T>;
 
+type ServerTiming = Omit<
+  ReturnType<typeof createServerTimings>,
+  "printTimings"
+>;
+
 export interface Monitoring {
-  timings: Omit<ReturnType<typeof createServerTimings>, "printTimings">;
+  timings: ServerTiming;
   metrics: ObserveFunc;
   tracer: Tracer;
   context: Context;
   logger: typeof console;
   rootSpan?: Span;
+  currentSpan?: ReturnType<ServerTiming["start"]>;
 }
 
 export interface BaseContext {
   resolveChain: FieldResolver[];
   resolveId: string;
+  resolverId: string;
   resolve: ResolveFunc;
   monitoring?: Monitoring;
   resolvables: Record<string, Resolvable<any>>;
@@ -404,6 +411,7 @@ const resolvePropsWithHints = async <
     opts,
   );
 };
+
 /**
  * Invoke the given resolver with the given resolved props, calculate the timings.
  */
@@ -416,18 +424,27 @@ const invokeResolverWithProps = async <
   __resolveType: string,
   ctx: TContext,
 ): Promise<T> => {
-  let end: (() => void) | undefined = undefined;
-
   if (isResolvable(props)) {
     delete (props as Resolvable)["__resolveType"];
   }
+
+  // TODO: (@tlgimenes) create resolverId outside of the request cycle
+  const resolverId = resolverIdFromResolveChain(ctx.resolveChain);
+  const timing = resolverId
+    ? ctx.monitoring?.timings.start(resolverId)
+    : undefined;
+
+  // Shallow copy to avoid resolvers getting the currentSpan from one another
+  const monitoring = ctx.monitoring && {
+    ...ctx.monitoring,
+    currentSpan: timing,
+  };
+
   let respOrPromise = resolver(
     props,
-    ctx,
+    { ...ctx, monitoring, resolverId },
   );
   if (isAwaitable(respOrPromise)) {
-    const timingName = __resolveType.replaceAll("/", ".");
-    end = ctx.monitoring?.timings?.start(timingName);
     await ctx?.monitoring?.tracer?.startActiveSpan?.(__resolveType, {
       attributes: {
         "block.kind": "resolver",
@@ -442,18 +459,20 @@ const invokeResolverWithProps = async <
           const original = respOrPromise;
           respOrPromise = async (...args: any[]) => {
             const resp = await original(...args);
-            end?.();
+            timing?.end();
             span?.end?.();
+
             return resp;
           };
         } else {
-          end?.();
+          timing?.end();
           span?.end?.();
         }
         return respOrPromise;
       });
     });
   }
+
   return respOrPromise;
 };
 

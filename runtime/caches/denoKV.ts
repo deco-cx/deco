@@ -23,8 +23,6 @@
  *    if metadata not exists:
  *      return
  *
- *    lru.touch(key) // update key in lru index used for eviction
- *
  *    etag <- metadata.etag
  *    body <- create stream from etag chunks
  *
@@ -37,12 +35,14 @@
  *    save chunks for response with newMetag.etag on chunks index
  *    res <- atomically replace oldMeta with newMeta
  *
- *    lru.touch(key) // insert key in lru index and evict least recently used if necessary
- *
  *    if (res.ok) expire oldMeta chunks
  *    else expire newMeta chunks
  */
-
+import {
+  compress,
+  decompress,
+  init as initZstd,
+} from "https://deno.land/x/zstd_wasm@0.0.20/deno/zstd.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -50,49 +50,25 @@ import {
 } from "./common.ts";
 
 interface Metadata {
-  body?: {
+  body: {
     etag: string; // body version
     chunks: number; // number of chunks in body
-  } | null;
+    zstd: boolean;
+  };
   status: number;
   headers: [string, string][];
 }
 
-interface Chunk {
-  metadata: string[];
-  expireAt: number;
-  data: Uint8Array;
-}
-
-/** LRU index used for housekeeping KV */
-const createIndex = (
-  { size, onEvict }: { size: number; onEvict?: (keys: string[]) => void },
-) => {
-  const index = new Set<string>();
-
-  return {
-    touch: (keys: string[]) => {
-      const key = keys.at(-1)!;
-      const has = index.has(key);
-
-      if (!has && index.size > size) {
-        const evicted = index.keys().next().value;
-        index.delete(evicted);
-        onEvict?.([...keys.slice(0, -1), evicted]);
-      }
-
-      index.delete(key);
-      index.add(key);
-    },
-  };
-};
-
-const MAX_METAS = 1e3;
 const NAMESPACE = "CACHES";
-const HOUSEKEEPING_INTERVAL_MS = 10 * 60 * 1000; // 10minutes
-
 const SMALL_EXPIRE_MS = 1_000 * 10; // 10seconds
 const LARGE_EXPIRE_MS = 1_000 * 3600 * 24; // 1day
+
+/** KV has a max of 64Kb per chunk */
+const MAX_CHUNK_SIZE = 64512;
+const MAX_CHUNKS_BATCH_SIZE = 10;
+const MAX_UNCOMPRESSED_SIZE = MAX_CHUNK_SIZE * MAX_CHUNKS_BATCH_SIZE;
+
+const zstdPromise = initZstd();
 
 export const caches: CacheStorage = {
   delete: async (cacheName: string): Promise<boolean> => {
@@ -119,24 +95,36 @@ export const caches: CacheStorage = {
     throw new Error("Not Implemented");
   },
   open: async (cacheName: string): Promise<Cache> => {
-    const kv = await Deno.openKv();
-    const lru = createIndex({
-      size: MAX_METAS,
-      onEvict: (key) => remove(key).catch(console.error),
-    });
+    await zstdPromise;
 
-    const keyForMetadata = (sha?: string) =>
-      [NAMESPACE, cacheName, "metas", sha]
-        .filter((x): x is string => typeof x === "string");
+    const kv = await Deno.openKv();
+
+    const keyForMetadata = (sha?: string) => {
+      const key = [NAMESPACE, cacheName, "metas"];
+
+      if (typeof sha === "string") {
+        key.push(sha);
+      }
+
+      return key;
+    };
 
     const keyForBodyChunk = (
       etag?: string,
       chunk?: number,
-    ) =>
-      [NAMESPACE, cacheName, "chunks", etag, chunk]
-        .filter((x): x is string | number =>
-          typeof x === "string" || typeof x === "number"
-        );
+    ) => {
+      const key: Array<string | number> = [NAMESPACE, cacheName, "chunks"];
+
+      if (typeof etag === "string") {
+        key.push(etag);
+
+        if (typeof chunk === "number") {
+          key.push(chunk);
+        }
+      }
+
+      return key;
+    };
 
     const removeBodyChunks = async (meta: Metadata) => {
       const { chunks, etag } = meta.body ?? {};
@@ -147,19 +135,14 @@ export const caches: CacheStorage = {
       for (let it = 0; it < chunks; it++) {
         const key = keyForBodyChunk(etag, it);
 
-        const chunk = await kv.get<Chunk>(key);
+        const chunk = await kv.get<Uint8Array>(key);
 
         if (!chunk.value) continue;
-
-        const newChunk: Chunk = {
-          ...chunk.value,
-          expireAt: Date.now() + SMALL_EXPIRE_MS,
-        };
 
         const res = await kv
           .atomic()
           .check(chunk)
-          .set(key, newChunk)
+          .set(key, chunk, { expireIn: SMALL_EXPIRE_MS })
           .commit();
 
         ok &&= res.ok;
@@ -184,45 +167,6 @@ export const caches: CacheStorage = {
     const keyForRequest = async (request: RequestInfo | URL) => {
       return keyForMetadata(await requestURLSHA1(request));
     };
-
-    const housekeeper = () => {
-      let running = false;
-
-      return async () => {
-        if (running) return;
-
-        running = true;
-
-        try {
-          for await (
-            const { key, value } of kv.list<Chunk>({
-              prefix: keyForBodyChunk(),
-            })
-          ) {
-            if (!value) {
-              await kv.delete(key);
-
-              continue;
-            }
-
-            const etag = key.at(-2);
-            const { metadata, expireAt } = value;
-
-            if (expireAt > Date.now()) continue;
-
-            const meta = await kv.get<Metadata>(metadata);
-
-            if (meta.value?.body?.etag !== etag) {
-              await kv.delete(key);
-            }
-          }
-        } finally {
-          running = false;
-        }
-      };
-    };
-
-    setInterval(housekeeper(), HOUSEKEEPING_INTERVAL_MS);
 
     return {
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
@@ -261,48 +205,54 @@ export const caches: CacheStorage = {
 
         const key = await keyForRequest(request);
 
-        const { value: metadata } = await kv.get<Metadata>(key, {
+        const res = await kv.get<Metadata>(key, {
           consistency: "eventual",
         });
+        const { value: metadata } = res;
 
         if (!metadata) return;
 
         const { body } = metadata;
 
-        lru.touch(key);
+        if (body.chunks === 0) {
+          return new Response(null, metadata);
+        }
 
-        // Stream body from KV
-        let iterator = 0;
-        const MAX_KV_BATCH_SIZE = 10;
-        const stream = body
-          ? new ReadableStream({
-            async pull(controller) {
-              try {
-                const keys = new Array(MAX_KV_BATCH_SIZE)
-                  .fill(0)
-                  .map((_, index) => index + iterator)
-                  .filter((chunk) => chunk < body.chunks)
-                  .map((chunk) => keyForBodyChunk(body.etag, chunk));
+        const many: Promise<Deno.KvEntryMaybe<Uint8Array>[]>[] = [];
+        for (let i = 0; i < body.chunks; i += MAX_CHUNKS_BATCH_SIZE) {
+          const batch = [];
+          for (let j = 0; j < MAX_CHUNKS_BATCH_SIZE; j++) {
+            batch.push(keyForBodyChunk(body.etag, i + j));
+          }
 
-                if (keys.length === 0) return controller.close();
+          many.push(
+            kv.getMany<Uint8Array[]>(batch, { consistency: "eventual" }),
+          );
+        }
 
-                const chunks = await kv.getMany<Chunk[]>(keys, {
-                  consistency: "eventual",
-                });
+        let length = 0;
+        for (const chunks of many) {
+          for (const chunk of await chunks) {
+            length += chunk.value?.length ?? 0;
+          }
+        }
 
-                for (const { value } of chunks) {
-                  value?.data && controller.enqueue(value.data);
-                }
+        const result = new Uint8Array(length);
 
-                iterator += MAX_KV_BATCH_SIZE;
-              } catch (error) {
-                controller.error(error);
-              }
-            },
-          })
-          : null;
+        let bytes = 0;
+        for (const chunks of many) {
+          for (const chunk of await chunks) {
+            if (!chunk.value) continue;
 
-        return new Response(stream, metadata);
+            result.set(chunk.value, bytes);
+            bytes += chunk.value.length ?? 0;
+          }
+        }
+
+        return new Response(
+          body.zstd ? decompress(result) : result,
+          metadata,
+        );
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
       matchAll: (
@@ -323,64 +273,36 @@ export const caches: CacheStorage = {
         const metaKey = await keyForRequest(req);
         const oldMeta = await kv.get<Metadata>(metaKey);
 
-        // Transform 8Kb stream into 64Kb KV stream
-        let accumulator = new Uint8Array();
-        const KV_CHUNK_SIZE = 64512; // 63Kb
-        const kvChunks = new TransformStream({
-          transform(chunk, controller) {
-            if (
-              accumulator.byteLength + chunk.byteLength > KV_CHUNK_SIZE
-            ) {
-              controller.enqueue(accumulator);
-
-              accumulator = new Uint8Array(chunk);
-            } else {
-              accumulator = new Uint8Array([
-                ...accumulator,
-                ...chunk,
-              ]);
-            }
-          },
-          flush(controller) {
-            if (accumulator.byteLength > 0) {
-              controller.enqueue(accumulator);
-            }
-          },
-        });
-        response.body?.pipeThrough(kvChunks);
+        const [buffer, zstd] = await response.arrayBuffer()
+          .then((buffer) => new Uint8Array(buffer))
+          .then((buffer) =>
+            buffer.length > MAX_UNCOMPRESSED_SIZE
+              ? [compress(buffer, 4), true] as const
+              : [buffer, false] as const
+          );
 
         // Orphaned chunks to remove after metadata change
+        let orphaned = oldMeta.value;
+        const chunks = Math.ceil(buffer.length / MAX_CHUNK_SIZE);
         const newMeta: Metadata = {
           status: response.status,
           headers: [...response.headers.entries()],
-          body: response.body && {
-            etag: crypto.randomUUID(),
-            chunks: 0,
-          },
+          body: { etag: crypto.randomUUID(), chunks, zstd },
         };
-        let orphaned = oldMeta.value;
 
         try {
           // Save each file chunk
           // Note that chunks expiration should be higher than metadata
           // to avoid reading a file with missing chunks
-          const reader = kvChunks.readable.getReader();
-
-          for (; newMeta.body && true; newMeta.body.chunks++) {
-            const { value, done } = await reader.read();
-
-            if (done) break;
-
-            const chunkKey = keyForBodyChunk(
-              newMeta.body.etag,
-              newMeta.body.chunks,
+          for (let it = 0; it < chunks; it++) {
+            const res = await kv.set(
+              keyForBodyChunk(newMeta.body.etag, it),
+              buffer.slice(
+                it * MAX_CHUNK_SIZE,
+                (it + 1) * MAX_CHUNK_SIZE,
+              ),
+              { expireIn: LARGE_EXPIRE_MS + SMALL_EXPIRE_MS },
             );
-            const chunk: Chunk = {
-              metadata: metaKey,
-              expireAt: Date.now() + LARGE_EXPIRE_MS + SMALL_EXPIRE_MS,
-              data: value,
-            };
-            const res = await kv.set(chunkKey, chunk);
 
             if (!res.ok) {
               throw new Error("Error while saving chunk to KV");
@@ -388,23 +310,17 @@ export const caches: CacheStorage = {
           }
 
           // Save file metadata
-          const res = await kv
-            .atomic()
-            .check(oldMeta)
-            .set(metaKey, newMeta, {
-              // expireIn: LARGE_EXPIRE_MS,
-            })
-            .commit();
+          const res = await kv.set(metaKey, newMeta, {
+            expireIn: LARGE_EXPIRE_MS,
+          });
 
           if (!res.ok) {
             throw new Error("Could not set our metadata");
           }
-        } catch {
+        } catch (error) {
           orphaned = newMeta;
+          console.error(error);
         }
-
-        // Update LRU index
-        lru.touch(metaKey);
 
         if (orphaned) {
           await removeBodyChunks(orphaned);
