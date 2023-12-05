@@ -126,7 +126,7 @@ const wrapLoader = ({
     ): Promise<ReturnType<typeof handler>> => {
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
-      const skipCache = mode === "no-store" || ENABLE_LOADER_CACHE ||
+      const skipCache = mode === "no-store" || !ENABLE_LOADER_CACHE ||
         !isCache(maybeCache);
 
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
