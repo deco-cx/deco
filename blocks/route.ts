@@ -38,7 +38,6 @@ import {
   DecoSiteState,
   DecoState,
 } from "../types.ts";
-import { formatIncomingRequest } from "../utils/log.ts";
 import { createServerTimings } from "../utils/timings.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
@@ -215,10 +214,9 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     };
 
     // Logs  ?__d is present in localhost
-    context.state.monitoring.logger.log(
-      formatIncomingRequest(request, liveContext.site),
-    );
-    setLogger(context.state.monitoring.logger.log);
+    if (enabled) {
+      setLogger(context.state.monitoring.logger.log);
+    }
 
     const url = new URL(request.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
@@ -251,7 +249,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     if (
       context.destination !== "internal" && context.destination !== "static"
     ) {
-      const endTiming = context?.state?.t?.start("load-page");
+      const timing = context?.state?.t?.start("load-page");
       const $live = typeof resolveKeyOrInstallPromise === "string"
         ? (await ctxResolver(
           resolveKeyOrInstallPromise,
@@ -265,7 +263,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
         )) ?? {}
         : await resolveKeyOrInstallPromise.then(() => ({}));
 
-      endTiming?.();
+      timing?.end();
       context.state.$live = $live;
     }
 

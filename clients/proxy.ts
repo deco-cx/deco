@@ -1,7 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
-import { AppManifest } from "../mod.ts";
-import { Invoke, InvokeAwaiter } from "../routes/live/invoke/index.ts";
-import { invokeKey } from "./withManifest.ts";
+import { type AppManifest } from "../mod.ts";
+import {
+  type Invoke,
+  type InvokeAsPayload,
+  type InvokeResult,
+  type ManifestInvocable,
+} from "../routes/live/invoke/index.ts";
+import { type DotNestedKeys } from "../utils/object.ts";
+import { type invokeKey } from "./withManifest.ts";
 
 export type InvocationProxyHandler = {
   (props?: any, init?: RequestInit | undefined): Promise<any>;
@@ -11,6 +17,62 @@ export type InvocationProxyHandler = {
 export type InvocationProxyState = Omit<InvocationProxyHandler, "__parts"> | {
   __parts?: string[] | undefined;
 };
+
+/**
+ * Promise.prototype.then onfufilled callback type.
+ */
+type Fulfilled<R, T> = ((result: R) => T | PromiseLike<T>) | null;
+
+/**
+ * Promise.then onrejected callback type.
+ */
+type Rejected<E> = ((reason: any) => E | PromiseLike<E>) | null;
+
+export class InvokeAwaiter<
+  TManifest extends AppManifest,
+  TInvocableKey extends string,
+  TFuncSelector extends DotNestedKeys<
+    ManifestInvocable<TManifest, TInvocableKey>["return"]
+  >,
+> implements
+  PromiseLike<
+    InvokeResult<
+      Invoke<TManifest, TInvocableKey, TFuncSelector>,
+      TManifest
+    >
+  >,
+  InvokeAsPayload<TManifest, TInvocableKey, TFuncSelector> {
+  constructor(
+    protected invoker: (
+      payload: Invoke<TManifest, TInvocableKey, TFuncSelector>,
+      init: RequestInit | undefined,
+    ) => Promise<
+      InvokeResult<Invoke<TManifest, TInvocableKey, TFuncSelector>, TManifest>
+    >,
+    public payload: Invoke<TManifest, TInvocableKey, TFuncSelector>,
+    protected init?: RequestInit | undefined,
+  ) {
+  }
+
+  public get() {
+    return this.payload;
+  }
+
+  then<TResult1, TResult2 = TResult1>(
+    onfufilled?: Fulfilled<
+      InvokeResult<
+        Invoke<TManifest, TInvocableKey, TFuncSelector>,
+        TManifest
+      >,
+      TResult1
+    >,
+    onrejected?: Rejected<TResult2>,
+  ): Promise<TResult1 | TResult2> {
+    return this.invoker(this.payload, this.init).then(onfufilled).catch(
+      onrejected,
+    );
+  }
+}
 
 export const newHandler = <TManifest extends AppManifest>(
   invoker: typeof invokeKey,

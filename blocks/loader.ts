@@ -1,22 +1,34 @@
 // deno-lint-ignore-file no-explicit-any
-import { HttpContext } from "../blocks/handler.ts";
+import hash from "npm:object-hash";
+import JsonViewer from "../components/JsonViewer.tsx";
+import { ValueType } from "../deps.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { singleFlight } from "../engine/core/utils.ts";
+import { ResolverMiddlewareContext } from "../engine/middleware.ts";
+import { meter } from "../observability/otel/metrics.ts";
+import { caches } from "../runtime/caches/denoKV.ts";
+import { HttpContext } from "./handler.ts";
 import {
   applyProps,
+  FnContext,
   FnProps,
-  newSingleFlightGroup,
   SingleFlightKeyFunc,
-} from "../blocks/utils.tsx";
-import JsonViewer from "../components/JsonViewer.tsx";
-import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
-import { ResolverMiddlewareContext } from "../engine/middleware.ts";
+} from "./utils.tsx";
+import { logger } from "deco/observability/otel/config.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
 export interface LoaderModule<
   TProps = any,
+  TState = any,
 > extends BlockModule<FnProps<TProps>> {
+  cache?: "no-store" | "stale-while-revalidate";
+  cacheKey?: (req: Request, ctx: FnContext<TState>) => string;
+
+  /** @deprecated use cacheKey instead */
   singleFlightKey?: SingleFlightKeyFunc<TProps, HttpContext>;
 }
+
 export interface WrappedError {
   __isErr: true;
 }
@@ -57,24 +69,158 @@ export const wrapCaughtErrors = async <
     });
   }
 };
+
+export const ENABLE_LOADER_CACHE =
+  Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
+
+const stats = {
+  cache: meter.createCounter("loader_cache", {
+    unit: "1",
+    valueType: ValueType.INT,
+  }),
+  latency: meter.createHistogram("resolver_latency", {
+    description: "resolver latency",
+    unit: "ms",
+    valueType: ValueType.DOUBLE,
+  }),
+};
+
+let maybeCache: Cache | undefined;
+
+caches.open("loader")
+  .then((c) => maybeCache = c)
+  .catch(() => maybeCache = undefined);
+
+const MAX_AGE_S = 60; // 60 seconds
+
+const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
+
+const inFuture = (maybeDate: string) => {
+  try {
+    return new Date(maybeDate) > new Date();
+  } catch {
+    return false;
+  }
+};
+
+const noop = () => "";
+
+/**
+ * Wraps the loader written by the user by adding support for:
+ * 1. Caching
+ * 2. Single Flight
+ * 3. Tracing
+ */
+const wrapLoader = ({
+  default: handler,
+  cache: mode = "no-store",
+  cacheKey = noop,
+  singleFlightKey,
+  ...rest
+}: LoaderModule) => {
+  const flights = singleFlight();
+
+  if (typeof singleFlightKey === "function") {
+    console.warn(
+      "singleFlightKey is deprecated and does not work anymore. Please use cacheKey instead",
+    );
+  }
+
+  return {
+    ...rest,
+    default: async (
+      props: Parameters<typeof handler>[0],
+      req: Request,
+      ctx: FnContext<unknown, any>,
+    ): Promise<ReturnType<typeof handler>> => {
+      const loader = ctx.resolverId || "unknown";
+      const start = performance.now();
+      let status: "bypass" | "miss" | "stale" | "hit" | undefined;
+
+      try {
+        // Should skip cache
+        if (
+          mode === "no-store" ||
+          !ENABLE_LOADER_CACHE ||
+          !isCache(maybeCache)
+        ) {
+          status = "bypass";
+          stats.cache.add(1, { status, loader });
+
+          return await handler(props, req, ctx);
+        }
+
+        const cache = maybeCache;
+
+        const timing = ctx.monitoring?.timings.start("loader-hash");
+        // Web Cache API requires a request. Create an artificial request with the right key
+        // TODO: (@tlgimenes) Resolve props cache key statically
+        const url = new URL("https://localhost");
+        url.searchParams.set("resolver", ctx.resolverId || "unknown");
+        url.searchParams.set("props", hash(props));
+        url.searchParams.set("cacheKey", cacheKey(req, ctx));
+        const request = new Request(url);
+        timing?.end();
+
+        const callHandlerAndCache = async () => {
+          const json = await handler(props, req, ctx);
+
+          cache.put(
+            request,
+            new Response(JSON.stringify(json), {
+              headers: {
+                "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
+                  .toUTCString(),
+              },
+            }),
+          ).catch((error) => logger.error(error));
+
+          return json;
+        };
+
+        const staleWhileRevalidate = async () => {
+          const matched = await cache.match(request).catch(() => null);
+
+          if (!matched) {
+            status = "miss";
+            stats.cache.add(1, { status, loader });
+
+            return await callHandlerAndCache();
+          }
+
+          const expires = matched.headers.get("expires");
+          const isStale = expires ? !inFuture(expires) : false;
+
+          if (isStale) {
+            status = "stale";
+            stats.cache.add(1, { status, loader });
+
+            callHandlerAndCache().catch((error) => logger.error(error));
+          } else {
+            status = "hit";
+            stats.cache.add(1, { status, loader });
+          }
+
+          return await matched.json();
+        };
+
+        return await flights.do(request.url, staleWhileRevalidate);
+      } finally {
+        const dimension = { loader, status };
+        stats.latency.record(performance.now() - start, dimension);
+        ctx.monitoring?.currentSpan?.setDesc(status);
+      }
+    },
+  };
+};
+
 const loaderBlock: Block<LoaderModule> = {
   type: "loaders",
   introspect: { includeReturn: true },
-  adapt: <
-    TProps = any,
-  >(
-    { singleFlightKey, ...mod }: LoaderModule<TProps>,
-  ) =>
-    singleFlightKey
-      ? [
-        wrapCaughtErrors,
-        newSingleFlightGroup(singleFlightKey),
-        applyProps(mod),
-      ]
-      : [
-        wrapCaughtErrors,
-        applyProps(mod),
-      ],
+  adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
+    wrapCaughtErrors,
+    applyProps(wrapLoader(mod)),
+  ],
   defaultPreview: (result) => {
     return {
       Component: JsonViewer,

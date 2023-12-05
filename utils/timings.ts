@@ -1,43 +1,46 @@
-type Timing = { start: number; end?: number; desc?: string };
-
-type TimingKey = string;
-
-const slugify = (key: string) => key.replace(/\//g, ".");
+export interface Timing {
+  name: string;
+  desc?: string;
+  start: number;
+  end?: number;
+}
 
 export function createServerTimings() {
-  const timings: Record<string, Timing> = {};
-  const unique: Record<string, number> = {};
+  const timings: Timing[] = [];
 
-  const start = (_key: TimingKey, desc?: string) => {
-    unique[_key] ??= 0;
-    const count = unique[_key];
-    const key = count === 0 ? _key : `${_key}-${count}`;
-    timings[key] = { start: performance.now(), desc };
-    unique[_key]++;
-    return () => end(key);
+  const start = (name: string, desc?: string, start?: number) => {
+    const t: Timing = { name, desc, start: start || performance.now() };
+
+    timings.push(t);
+
+    return {
+      end: () => {
+        t.end = performance.now();
+      },
+      setDesc: (desc: string | undefined) => {
+        t.desc = desc;
+      },
+      name: () => t.name,
+    };
   };
 
-  const end = (key: TimingKey) => {
-    timings[key].end = performance.now();
-  };
+  const printTimings = () =>
+    timings
+      .map(({ name, desc, start, end }) => {
+        if (!end || !name) return;
 
-  const printTimings = () => {
-    return Object.entries(timings)
-      .map(([key, timing]) => {
-        if (!timing.end) {
-          return undefined;
-        }
-        const duration = (timing.end! - timing.start).toFixed(0);
-        return `${slugify(key)};${
-          timing.desc ? `desc=${timing.desc};` : ""
-        }dur=${duration}`;
-      }).filter(Boolean)
+        return `${encodeURIComponent(name)}${desc ? `;desc=${desc}` : ""};dur=${
+          (end - start).toFixed(0)
+        }`;
+      })
+      .filter(Boolean)
       .join(", ");
-  };
+
+  const get = (): readonly Timing[] => timings;
 
   return {
+    get,
     start,
-    end,
     printTimings,
   };
 }

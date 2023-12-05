@@ -138,9 +138,9 @@ export const handler = async (
   ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
 ) => {
   const skipSchemaGen = new URL(req.url).searchParams.has("skipSchemaGen");
-  const end = ctx.state.t?.start("fetch-revision");
+  const timing = ctx.state.t?.start("fetch-revision");
   const revision = await ctx.state.release.revision();
-  end?.();
+  timing?.end();
   const etag = `${revision}@${binaryId}`;
   const ifNoneMatch = req.headers.get("if-none-match");
   if (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`) { // weak etags should be tested as well.
@@ -153,7 +153,7 @@ export const handler = async (
     );
     if (revision !== latestRevision || mschema === null) {
       if (!skipSchemaGen) {
-        const endBuildSchema = ctx.state?.t?.start("build-resolvables");
+        const timing = ctx.state?.t?.start("build-resolvables");
         mschema = buildSchemaWithResolvables(
           manfiestBlocks,
           await genSchemas(manifest, sourceMap),
@@ -164,7 +164,7 @@ export const handler = async (
           },
         );
         latestRevision = revision;
-        endBuildSchema?.();
+        timing?.end();
       } else {
         mschema = {
           definitions: {},

@@ -97,11 +97,11 @@ export const render = async (
     DecoState<unknown, DecoSiteState>
   >,
 ) => {
-  const { state: { resolve } } = ctx;
+  const { state: { resolve, monitoring } } = ctx;
   const url = new URL(previewUrl);
   const block = addLocal(url.pathname.replace(/^\/live\/previews\//, ""));
 
-  const end = ctx.state?.t.start("load-data");
+  let timing = monitoring?.timings?.start("load-data");
   const [params, pathname] = paramsFromUrl(url);
   const newUrl = new URL(req.url);
   if (pathname) {
@@ -123,7 +123,12 @@ export const render = async (
       request: newReq,
     },
   );
-  end?.();
+  timing?.end();
 
-  return await ctx.render(page);
+  timing = monitoring?.timings?.start("render-to-string");
+  try {
+    return await ctx.render(page);
+  } finally {
+    timing?.end();
+  }
 };

@@ -39,15 +39,6 @@ type AllTypesOf<TManifest extends AppManifest, App extends string> =
   AvailableInvocations<TManifest> & `${App}/${string}` extends
     `${App}/${infer type}/${string}` ? type
     : never;
-/**
- * Promise.prototype.then onfufilled callback type.
- */
-type Fulfilled<R, T> = ((result: R) => T | PromiseLike<T>) | null;
-
-/**
- * Promise.then onrejected callback type.
- */
-type Rejected<E> = ((reason: any) => E | PromiseLike<E>) | null;
 
 export interface InvokeAsPayload<
   TManifest extends AppManifest,
@@ -59,51 +50,6 @@ export interface InvokeAsPayload<
   payload: Invoke<TManifest, TInvocableKey, TFuncSelector>;
 }
 
-export class InvokeAwaiter<
-  TManifest extends AppManifest,
-  TInvocableKey extends string,
-  TFuncSelector extends DotNestedKeys<
-    ManifestInvocable<TManifest, TInvocableKey>["return"]
-  >,
-> implements
-  PromiseLike<
-    InvokeResult<
-      Invoke<TManifest, TInvocableKey, TFuncSelector>,
-      TManifest
-    >
-  >,
-  InvokeAsPayload<TManifest, TInvocableKey, TFuncSelector> {
-  constructor(
-    protected invoker: (
-      payload: Invoke<TManifest, TInvocableKey, TFuncSelector>,
-      init: RequestInit | undefined,
-    ) => Promise<
-      InvokeResult<Invoke<TManifest, TInvocableKey, TFuncSelector>, TManifest>
-    >,
-    public payload: Invoke<TManifest, TInvocableKey, TFuncSelector>,
-    protected init?: RequestInit | undefined,
-  ) {
-  }
-
-  public get() {
-    return this.payload;
-  }
-
-  then<TResult1, TResult2 = TResult1>(
-    onfufilled?: Fulfilled<
-      InvokeResult<
-        Invoke<TManifest, TInvocableKey, TFuncSelector>,
-        TManifest
-      >,
-      TResult1
-    >,
-    onrejected?: Rejected<TResult2>,
-  ): Promise<TResult1 | TResult2> {
-    return this.invoker(this.payload, this.init).then(onfufilled).catch(
-      onrejected,
-    );
-  }
-}
 type InvocationObj<TManifest extends AppManifest> = {
   [app in AppsOf<TManifest>]: {
     [type in AllTypesOf<TManifest, app>]:
