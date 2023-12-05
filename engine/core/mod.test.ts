@@ -12,6 +12,7 @@ Deno.test("resolve", async (t) => {
   const context: BaseContext = {
     resolveChain: [],
     resolveId: "1",
+    resolverId: "unknown",
     resolvables: {},
     resolvers: {},
     resolveHints: {},
