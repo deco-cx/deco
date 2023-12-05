@@ -88,7 +88,7 @@ let maybeCache: Promise<unknown> | Cache | undefined = caches.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
 
-const MAX_AGE_S = 30 * 60; // 30min in seconds
+const MAX_AGE_S = 60; // 60 seconds
 
 const isCache = (c: any): c is Cache => typeof c?.put === "function";
 
