@@ -14,6 +14,7 @@ import {
   FnProps,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
+import { logger } from "deco/observability/otel/config.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -84,13 +85,15 @@ const stats = {
   }),
 };
 
-let maybeCache: Promise<unknown> | Cache | undefined = caches.open("loader")
+let maybeCache: Cache | undefined;
+
+caches.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
 
 const MAX_AGE_S = 60; // 60 seconds
 
-const isCache = (c: any): c is Cache => typeof c?.put === "function";
+const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
 
 const inFuture = (maybeDate: string) => {
   try {
@@ -102,6 +105,12 @@ const inFuture = (maybeDate: string) => {
 
 const noop = () => "";
 
+/**
+ * Wraps the loader written by the user by adding support for:
+ * 1. Caching
+ * 2. Single Flight
+ * 3. Tracing
+ */
 const wrapLoader = ({
   default: handler,
   cache: mode = "no-store",
@@ -126,27 +135,32 @@ const wrapLoader = ({
     ): Promise<ReturnType<typeof handler>> => {
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
-      const skipCache = mode === "no-store" || !ENABLE_LOADER_CACHE ||
-        !isCache(maybeCache);
-
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
       try {
-        if (skipCache) {
+        // Should skip cache
+        if (
+          mode === "no-store" ||
+          !ENABLE_LOADER_CACHE ||
+          !isCache(maybeCache)
+        ) {
           status = "bypass";
           stats.cache.add(1, { status, loader });
 
           return await handler(props, req, ctx);
         }
 
-        // Somehow typescript does not understand maybeCache is Cache
-        const cache = maybeCache as Cache;
+        const cache = maybeCache;
 
-        // TODO: Resolve props cache key statically
-        const key = `${hash(props)}-${cacheKey(req, ctx)}`;
-        const request = new Request(
-          `https://localhost?propsKey=${hash(props)}&requestKey=${key}`,
-        );
+        const timing = ctx.monitoring?.timings.start("loader-hash");
+        // Web Cache API requires a request. Create an artificial request with the right key
+        // TODO: (@tlgimenes) Resolve props cache key statically
+        const url = new URL("https://localhost");
+        url.searchParams.set("resolver", ctx.resolverId || "unknown");
+        url.searchParams.set("props", hash(props));
+        url.searchParams.set("cacheKey", cacheKey(req, ctx));
+        const request = new Request(url);
+        timing?.end();
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
@@ -159,7 +173,7 @@ const wrapLoader = ({
                   .toUTCString(),
               },
             }),
-          ).catch(console.error);
+          ).catch((error) => logger.error(error));
 
           return json;
         };
@@ -181,7 +195,7 @@ const wrapLoader = ({
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            callHandlerAndCache().catch((error) => console.error(error));
+            callHandlerAndCache().catch((error) => logger.error(error));
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
@@ -190,7 +204,7 @@ const wrapLoader = ({
           return await matched.json();
         };
 
-        return await flights.do(key, staleWhileRevalidate);
+        return await flights.do(request.url, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
         stats.latency.record(performance.now() - start, dimension);
