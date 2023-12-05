@@ -69,8 +69,8 @@ export const wrapCaughtErrors = async <
   }
 };
 
-export const DISABLE_LOADER_CACHE =
-  Deno.env.get("DISABLE_LOADER_CACHE") !== undefined;
+export const ENABLE_LOADER_CACHE =
+  Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
 
 const stats = {
   cache: meter.createCounter("loader_cache", {
@@ -126,7 +126,7 @@ const wrapLoader = ({
     ): Promise<ReturnType<typeof handler>> => {
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
-      const skipCache = mode === "no-store" || DISABLE_LOADER_CACHE ||
+      const skipCache = mode === "no-store" || ENABLE_LOADER_CACHE ||
         !isCache(maybeCache);
 
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
