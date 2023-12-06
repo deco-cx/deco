@@ -49,18 +49,26 @@ async function load(
 }
 
 const loadCache: Record<string, Promise<ParsedSource | undefined>> = {};
+
+/**
+ * Parses the given content.
+ */
+export const parseContent = async (content: string) => {
+  const source = await parse(content);
+  assignComments(source);
+  return source;
+};
+
 /**
  * Parses the given path using the default loader. Caches the result in memory.
  */
 export const parsePath = (path: string) => {
-  return loadCache[path] ??= load(path).then(async (content) => {
+  return loadCache[path] ??= load(path).then((content) => {
     if (!content) {
       throw new Error(`Path not found ${path}`);
     }
     try {
-      const source = await parse(content);
-      assignComments(source);
-      return source;
+      return parseContent(content);
     } catch (err) {
       console.log(err, path);
       throw err;

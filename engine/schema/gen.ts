@@ -12,11 +12,31 @@ import {
 import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
 import { context } from "../../live.ts";
 import { Block, BlockModuleRef } from "../block.ts";
-import { parsePath } from "./parser.ts";
+import { parseContent, parsePath } from "./parser.ts";
 import { programToBlockRef, resolvePath } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
+};
+
+const resolveForContent = async (
+  introspect: Block["introspect"],
+  blockPath: string,
+  blockContent: string,
+  blockKey: string,
+  references: Map<ReferenceKey, Schemeable>,
+): Promise<BlockModuleRef | undefined> => {
+  const program = await parseContent(blockContent);
+  if (!program) {
+    return undefined;
+  }
+  return programToBlockRef(
+    resolvePath(blockPath, Deno.cwd()),
+    blockKey,
+    program,
+    references,
+    introspect,
+  );
 };
 
 const resolveForPath = async (
@@ -124,8 +144,17 @@ export const genSchemasFromManifest = async (
           ]
           : [
             namespaceOf(block.type, blockModuleKey),
-            () =>
-              typeof sourceMapResolverVal === "string" ||
+            () => {
+              if (typeof sourceMapResolverVal === "object") {
+                return resolveForContent(
+                  block.introspect,
+                  sourceMapResolverVal.path,
+                  sourceMapResolverVal.content,
+                  blockModuleKey,
+                  references,
+                );
+              }
+              return typeof sourceMapResolverVal === "string" ||
                 typeof sourceMapResolverVal === "undefined"
                 ? resolveForPath(
                   block.introspect,
@@ -133,7 +162,8 @@ export const genSchemasFromManifest = async (
                   blockModuleKey,
                   references,
                 )
-                : sourceMapResolverVal(),
+                : sourceMapResolverVal()
+            },
           ]);
 
       refPromises.push(
