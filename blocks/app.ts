@@ -14,7 +14,7 @@ import {
   ResolvableMap,
   ResolverMap,
 } from "../engine/core/resolver.ts";
-import { mapObjKeys } from "../engine/core/utils.ts";
+import { mapObjKeys, PromiseOrValue } from "../engine/core/utils.ts";
 import {
   ResolverMiddleware,
   ResolverMiddlewareContext,
@@ -24,9 +24,16 @@ import { resolversFrom } from "./appsUtil.ts";
 import { fnContextFromHttpContext } from "./utils.tsx";
 
 export type SourceMapResolver = () => Promise<BlockModuleRef | undefined>;
+export interface SourceContent {
+  path: string;
+  content: string;
+}
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
-export type SourceMap = Record<string, string | null | SourceMapResolver>;
+export type SourceMap = Record<
+  string,
+  string | null | SourceMapResolver | SourceContent
+>;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 type MergeAppsManifest<TCurrent extends AppManifest, TDeps> =
   & TCurrent
@@ -55,7 +62,9 @@ export type AppFunc<
   TResolverMap extends ResolverMap = ResolverMap,
 > = (
   c: TProps,
-) => App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime;
+) => PromiseOrValue<
+  App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime
+>;
 
 export interface AppBase<
   TAppManifest extends AppManifest = AppManifest,
@@ -329,14 +338,16 @@ const injectAppStateOnInlineLoader = <TState = any>(
   };
 };
 
-const buildApp = <TState = {}>(
+const buildApp = async <TState = {}>(
   appRuntime: AppRuntime | App<any, TState>,
-): AppRuntime => {
+): Promise<AppRuntime> => {
   const runtime = isAppRuntime(appRuntime)
     ? appRuntime
     : buildRuntimeFromApp<TState>(appRuntime);
-  const dependencies: AppRuntime[] = (runtime.dependencies ?? []).map(
-    buildApp,
+  const dependencies: AppRuntime[] = await Promise.all(
+    (runtime.dependencies ?? []).map(
+      buildApp,
+    ),
   );
   return dependencies.reduce(
     mergeRuntimes,
@@ -351,10 +362,10 @@ const appBlock: Block<AppModule> = {
   >(
     { default: runtimeFn }: AppModule<TState, TProps>,
   ) =>
-  (props: TProps) => {
+  async (props: TProps) => {
     try {
-      const appRuntime = runtimeFn(props);
-      return buildApp(appRuntime);
+      const appRuntime = await runtimeFn(props);
+      return await buildApp(appRuntime);
     } catch (err) {
       console.log(
         "error when building app runtime, falling back to an empty runtime",
