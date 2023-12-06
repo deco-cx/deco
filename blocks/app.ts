@@ -144,12 +144,13 @@ export const mergeManifests = (
   return manifestResult;
 };
 
-type StatelessAppRuntime = Pick<
+export type MergedAppRuntime = Pick<
   AppRuntime,
   "manifest" | "resolvables" | "resolvers" | "sourceMap"
 >;
+
 export const mergeRuntimes = <
-  TAppRuntime extends StatelessAppRuntime = StatelessAppRuntime,
+  TAppRuntime extends MergedAppRuntime = MergedAppRuntime,
 >(
   {
     resolvers: currentResolvers,

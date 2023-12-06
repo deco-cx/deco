@@ -11,6 +11,7 @@ import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
 import {
   AppManifest,
   AppRuntime,
+  MergedAppRuntime,
   mergeManifests,
   mergeRuntimes,
   SourceMap,
@@ -234,7 +235,7 @@ export const createResolver = <
       const apps = Object.values(currentApps);
       // first pass nullIfDangling
       const { apps: installedApps } = await currentResolver.resolve<
-        { apps: AppRuntime[] }
+        { apps: MergedAppRuntime[] }
       >({ apps }, fakeCtx, {
         nullIfDangling: true,
         propagateOptions: true,
@@ -283,7 +284,7 @@ export const createResolver = <
         "this will falling back to null references to make it work, you should fix this",
       );
       return currentResolver.resolve<
-        { apps: AppRuntime[] }
+        { apps: MergedAppRuntime[] }
       >({ apps }, fakeCtx, {
         nullIfDangling: true,
         propagateOptions: true,

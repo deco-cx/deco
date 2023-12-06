@@ -158,7 +158,7 @@ export default {
       __resolveType: pvResolver,
       ...resolved,
     }, { propsAreResolved: true });
-    return preview
+    return preview;
   },
   invoke: async function invoke(
     { props, block }: BlockInvocation,
