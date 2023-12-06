@@ -151,12 +151,14 @@ export default {
         }, { propsAreResolved: true })),
       }, { propsAreResolved: true });
     }
-    return resolve({
+    const resolved = await resolve({ __resolveType: block, ...props }, {
+      propsAreResolved: true,
+    });
+    const preview = await resolve({
       __resolveType: pvResolver,
-      ...(await resolve({ __resolveType: block, ...props }, {
-        propsAreResolved: true,
-      })),
+      ...resolved,
     }, { propsAreResolved: true });
+    return preview;
   },
   invoke: async function invoke(
     { props, block }: BlockInvocation,

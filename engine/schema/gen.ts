@@ -155,14 +155,14 @@ export const genSchemasFromManifest = async (
                 );
               }
               return typeof sourceMapResolverVal === "string" ||
-                typeof sourceMapResolverVal === "undefined"
+                  typeof sourceMapResolverVal === "undefined"
                 ? resolveForPath(
                   block.introspect,
                   sourceMapResolverVal ?? resolveImport(blockModuleKey),
                   blockModuleKey,
                   references,
                 )
-                : sourceMapResolverVal()
+                : sourceMapResolverVal();
             },
           ]);
 

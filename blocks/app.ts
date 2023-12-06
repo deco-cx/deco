@@ -63,14 +63,17 @@ export type AppFunc<
 > = (
   c: TProps,
 ) => PromiseOrValue<
-  App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime
+  | App<TAppManifest, TState, TAppDependencies, TResolverMap>
+  | AppRuntime<any, TState>
 >;
 
 export interface AppBase<
   TAppManifest extends AppManifest = AppManifest,
+  TAppState = {},
   TAppDependencies extends (AppRuntime | App)[] = any,
   TResolvableMap extends ResolvableMap = ResolvableMap,
 > {
+  state: TAppState;
   resolvables?: TResolvableMap;
   manifest: TAppManifest;
   dependencies?: TAppDependencies;
@@ -102,13 +105,13 @@ export interface App<
   TAppState = {},
   TAppDependencies extends (AppRuntime | App)[] = any,
   TResolvableMap extends ResolvableMap = ResolvableMap,
-> extends AppBase<TAppManifest, TAppDependencies, TResolvableMap> {
-  state: TAppState;
+> extends AppBase<TAppManifest, TAppState, TAppDependencies, TResolvableMap> {
   middleware?: AppMiddleware | AppMiddleware[];
 }
 
 export interface AppRuntime<
   TContext extends BaseContext = BaseContext,
+  TAppState = {},
   TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
   TResolvableMap extends ResolvableMap<TContext, TResolverMap> = Record<
     string,
@@ -116,7 +119,7 @@ export interface AppRuntime<
   >,
   TAppDependencies extends (AppRuntime | App)[] = any,
   TAppManifest extends AppManifest = AppManifest,
-> extends AppBase<TAppManifest, TAppDependencies, TResolvableMap> {
+> extends AppBase<TAppManifest, TAppState, TAppDependencies, TResolvableMap> {
   resolvers: TResolverMap;
   sourceMap: SourceMap;
 }
@@ -141,8 +144,13 @@ export const mergeManifests = (
   return manifestResult;
 };
 
+export type MergedAppRuntime = Pick<
+  AppRuntime,
+  "manifest" | "resolvables" | "resolvers" | "sourceMap"
+>;
+
 export const mergeRuntimes = <
-  TAppRuntime extends AppRuntime = AppRuntime,
+  TAppRuntime extends MergedAppRuntime = MergedAppRuntime,
 >(
   {
     resolvers: currentResolvers,
@@ -268,7 +276,7 @@ const buildRuntimeFromApp = <
     sourceMap,
     middleware: appMiddleware,
   }: TApp,
-): AppRuntime => {
+): AppRuntime<TContext, TState> => {
   const injectedManifest = injectAppStateOnManifest(state, manifest);
   return {
     resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
@@ -276,6 +284,7 @@ const buildRuntimeFromApp = <
       blocks(),
       appMiddlewareToResolverMiddleware(state, appMiddleware),
     ),
+    state,
     manifest: injectedManifest,
     resolvables,
     dependencies,
@@ -291,8 +300,9 @@ export type AppModule<
   TAppDependencies extends (AppRuntime | App)[] = (AppRuntime | App)[],
 > = BlockModule<
   AppFunc<TProps, TState, TAppManifest, TAppDependencies, TResolverMap>,
-  App<TAppManifest, TState, TAppDependencies, TResolverMap> | AppRuntime,
-  AppRuntime
+  | App<TAppManifest, TState, TAppDependencies, TResolverMap>
+  | AppRuntime<any, TState>,
+  AppRuntime<any, TState>
 >;
 
 const injectAppState = <TState = any>(
@@ -339,9 +349,9 @@ const injectAppStateOnInlineLoader = <TState = any>(
 };
 
 const buildApp = async <TState = {}>(
-  appRuntime: AppRuntime | App<any, TState>,
-): Promise<AppRuntime> => {
-  const runtime = isAppRuntime(appRuntime)
+  appRuntime: AppRuntime<any, TState> | App<any, TState>,
+): Promise<AppRuntime<any, TState>> => {
+  const { state, ...runtime } = isAppRuntime(appRuntime)
     ? appRuntime
     : buildRuntimeFromApp<TState>(appRuntime);
   const dependencies: AppRuntime[] = await Promise.all(
@@ -349,10 +359,13 @@ const buildApp = async <TState = {}>(
       buildApp,
     ),
   );
-  return dependencies.reduce(
-    mergeRuntimes,
-    runtime,
-  );
+  return {
+    ...dependencies.reduce(
+      mergeRuntimes,
+      runtime,
+    ),
+    state,
+  };
 };
 const appBlock: Block<AppModule> = {
   type: "apps",
@@ -365,7 +378,7 @@ const appBlock: Block<AppModule> = {
   async (props: TProps) => {
     try {
       const appRuntime = await runtimeFn(props);
-      return await buildApp(appRuntime);
+      return await buildApp<TState>(appRuntime);
     } catch (err) {
       console.log(
         "error when building app runtime, falling back to an empty runtime",
