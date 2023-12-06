@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Block, BlockModule } from "../engine/block.ts";
 import { BaseContext, Resolver, ResolverMap } from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";

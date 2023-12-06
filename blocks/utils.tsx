@@ -147,13 +147,20 @@ export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   component: string,
 ) => withSection<TProps>(component, Component);
 
+const isPreactComponent = (
+  v: unknown | PreactComponent,
+): v is PreactComponent => {
+  return typeof (v as PreactComponent).Component === "function";
+};
 export const usePreviewFunc = <TProps = any>(
   Component: ComponentFunc<TProps>,
 ): Resolver =>
-(component: PreactComponent<any, TProps>): PreactComponent<any, TProps> => ({
-  ...component,
-  Component,
-});
+(component: PreactComponent<any, TProps>): PreactComponent<any, TProps> => {
+  return ({
+    ...isPreactComponent(component) ? component : { props: component },
+    Component,
+  });
+};
 
 export const newComponentBlock = <K extends string>(
   type: K,
