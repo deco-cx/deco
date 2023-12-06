@@ -137,6 +137,10 @@ const tsTypeElementsToObjectSchemeable = async (
     if (key.type !== "Identifier" && key.type !== "StringLiteral") {
       continue;
     }
+    // ignore prop if it starts with "$"
+    if (key.value.startsWith("$")) {
+      continue;
+    }
     const jsDocSchema = spannableToJSONSchema(prop);
     if ("ignore" in jsDocSchema) {
       continue;
