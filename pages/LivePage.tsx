@@ -61,7 +61,7 @@ export const renderSection = renderSectionFor("default", false);
 
 interface UseSlotSection {
   // useSection can be either a `UseSlotSection` or a `Section[]` that is outside a slot.
-  useSection: PreactComponent<JSX.Element, UseSlotProps> | Section[];
+  useSection: PreactComponent<UseSlotProps> | Section[];
   used: boolean;
 }
 

@@ -1,6 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import { JSX, Program, TsType } from "../deps.ts";
+import { FunctionComponent } from "preact";
+import { Program, TsType } from "../deps.ts";
+import { HintNode } from "../engine/core/hints.ts";
 import { FieldResolver, Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue } from "../engine/core/utils.ts";
 import { ResolverMiddleware } from "../engine/middleware.ts";
@@ -8,7 +10,6 @@ import { Schemeable } from "../engine/schema/transform.ts";
 import type { Manifest } from "../live.gen.ts";
 import { AppManifest } from "../types.ts";
 import { BlockInvocation } from "./manifest/defaults.ts";
-import { HintNode } from "../engine/core/hints.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;
@@ -133,8 +134,7 @@ export type BlockInstance<
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 > = BlockFunc<key, TManifest, block> extends
   (...args: infer Props) => PromiseOrValue<infer TReturn>
-  ? TReturn extends (JSX.Element | null)
-    ? PreactComponent<JSX.Element | null, Props[0]>
+  ? TReturn extends ReturnType<ComponentFunc<any>> ? PreactComponent<Props[0]>
   : TReturn
   : unknown;
 
@@ -180,8 +180,7 @@ export const isResolvableOf = <
 
 export type ComponentFunc<
   TProps = any,
-  TReturn extends JSX.Element | null = JSX.Element | null,
-> = (props: TProps) => TReturn;
+> = FunctionComponent<TProps>;
 
 export interface ComponentMetadata {
   resolveChain: FieldResolver[];
@@ -195,10 +194,9 @@ export interface PageContext {
 }
 
 export interface PreactComponent<
-  TReturn extends JSX.Element | null = JSX.Element | null,
   TProps = any,
 > {
-  Component: ComponentFunc<TProps, TReturn>;
+  Component: ComponentFunc<TProps>;
   props: TProps;
   metadata?: ComponentMetadata;
 }

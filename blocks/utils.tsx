@@ -156,7 +156,7 @@ const isPreactComponent = (
 export const usePreviewFunc = <TProps = any>(
   Component: ComponentFunc<TProps>,
 ): Resolver =>
-(component: PreactComponent<any, TProps>): PreactComponent<any, TProps> => {
+(component: PreactComponent<TProps>): PreactComponent<TProps> => {
   return ({
     ...isPreactComponent(component) ? component : { props: component },
     Component,

@@ -28,13 +28,11 @@ export const isSection = <
   TManifest extends AppManifest = Manifest,
   K extends keyof TManifest["sections"] = keyof TManifest["sections"],
   Sec extends TManifest["sections"][K] extends
-    { default: (props: infer Props) => JSX.Element | null } ? PreactComponent<
-      JSX.Element,
+    { default: ComponentFunc<infer Props> } ? PreactComponent<
       Props
     >
     : unknown = TManifest["sections"][K] extends
-      { default: (props: infer Props) => JSX.Element | null } ? PreactComponent<
-        JSX.Element,
+      { default: ComponentFunc<infer Props> } ? PreactComponent<
         Props
       >
       : unknown,
@@ -59,7 +57,7 @@ export type ErrorBoundaryComponent<TProps> = ComponentFunc<
 export interface SectionModule<TConfig = any, TProps = any> extends
   BlockModule<
     ComponentFunc<TProps>,
-    JSX.Element | null,
+    ReturnType<ComponentFunc<TProps>>,
     PreactComponent
   > {
   ErrorBoundary?: ErrorBoundaryComponent<TProps>;
@@ -77,12 +75,12 @@ export const createSectionBlock = (
     resolver: string,
   ):
     | Resolver<
-      PreactComponent<JSX.Element, TProps>,
+      PreactComponent<TProps>,
       TProps,
       HttpContext<RequestState>
     >
     | Resolver<
-      PreactComponent<JSX.Element, TProps>,
+      PreactComponent<TProps>,
       TConfig,
       HttpContext<RequestState>
     > => {
@@ -96,14 +94,14 @@ export const createSectionBlock = (
       return (
         props: TProps,
         ctx: HttpContext<RequestState>,
-      ): PreactComponent<any, TProps> => {
+      ): PreactComponent<TProps> => {
         return componentFunc(props, ctx);
       };
     }
     return async (
       props: TConfig,
       httpCtx: HttpContext<RequestState>,
-    ): Promise<PreactComponent<any, TProps>> => {
+    ): Promise<PreactComponent<TProps>> => {
       const {
         request,
         context,
