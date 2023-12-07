@@ -1,7 +1,5 @@
-import { Partial } from "$fresh/runtime.ts";
 import { HttpContext } from "deco/blocks/handler.ts";
 import { HttpError } from "deco/engine/errors.ts";
-import { usePartialSection } from "deco/hooks/usePartialSection.ts";
 import { Component, createContext } from "preact";
 import { ErrorBoundaryComponent } from "../blocks/section.ts";
 import { RequestState } from "../blocks/utils.tsx";
@@ -84,35 +82,31 @@ export const withSection = <TProps,>(
     props,
     Component: (props: TProps) => (
       <SectionContext.Provider value={ctx}>
-        <Partial name={id}>
-          <ErrorBoundary
-            component={resolver}
-            fallback={(error) =>
-              Fallback ? <Fallback error={error} props={props} /> : (
-                <div
-                  style={context.isDeploy && !debugEnabled
-                    ? "display: none"
-                    : undefined}
-                >
-                  <p>
-                    Error happened rendering {resolver}: {error.message}
-                  </p>
-
-                  <button {...usePartialSection()}>Retry</button>
-                </div>
-              )}
+        <ErrorBoundary
+          component={resolver}
+          fallback={(error) =>
+            Fallback ? <Fallback error={error} props={props} /> : (
+              <div
+                style={context.isDeploy && !debugEnabled
+                  ? "display: none"
+                  : undefined}
+              >
+                <p>
+                  Error happened rendering {resolver}: {error.message}
+                </p>
+              </div>
+            )}
+        >
+          <section
+            id={id}
+            data-manifest-key={resolver}
+            data-resolve-chain={isPreview(ctx.resolveChain)
+              ? JSON.stringify(ctx.resolveChain)
+              : undefined}
           >
-            <section
-              id={id}
-              data-manifest-key={resolver}
-              data-resolve-chain={isPreview(ctx.resolveChain)
-                ? JSON.stringify(ctx.resolveChain)
-                : undefined}
-            >
-              <ComponentFunc {...props} />
-            </section>
-          </ErrorBoundary>
-        </Partial>
+            <ComponentFunc {...props} />
+          </section>
+        </ErrorBoundary>
       </SectionContext.Provider>
     ),
   };
