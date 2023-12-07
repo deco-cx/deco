@@ -1,10 +1,5 @@
-import { UAParser } from "https://esm.sh/ua-parser-js@1.0.35";
 import { MatchContext } from "../blocks/matcher.ts";
-
-/**
- * @title {{{.}}}
- */
-export type Device = "mobile" | "tablet" | "desktop";
+import { Device, deviceOf } from "../utils/device.ts";
 
 /**
  * @title {{#mobile}}Mobile{{/mobile}} {{#tablet}}Tablet{{/tablet}} {{#desktop}}Desktop{{/desktop}}
@@ -29,15 +24,6 @@ interface OldProps {
   devices: Device[];
 }
 
-const ideviceToDevice: Record<string, Device> = {
-  mobile: "mobile",
-  tablet: "tablet",
-  console: "desktop",
-  smarttv: "desktop",
-  wearable: "desktop",
-  embedded: "desktop",
-};
-
 /**
  * @title Device Matcher
  * @description Matches the user based on the used device, options are: mobile, desktop or tablet.
@@ -50,18 +36,8 @@ const MatchDevice = (
   mobile && devices.push("mobile");
   tablet && devices.push("tablet");
   desktop && devices.push("desktop");
-  const url = new URL(request.url);
-  const ua: string | null = request.headers.get("user-agent") || "";
-  // use cf hint at first and then fallback to user-agent parser.
-  const cfDeviceHint: string | null = request.headers.get("cf-device-type") ||
-    "";
 
-  const device = cfDeviceHint ||
-    (ua && new UAParser(ua).getDevice().type) ||
-    url.searchParams.get("deviceHint") ||
-    "desktop"; // console, mobile, tablet, smarttv, wearable, embedded
-
-  const normalizedDevice = ideviceToDevice[device] ?? "desktop";
+  const normalizedDevice = deviceOf(request);
 
   return devices.includes(normalizedDevice);
 };

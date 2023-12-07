@@ -10,17 +10,13 @@ import {
   ComponentFunc,
   PreactComponent,
 } from "../engine/block.ts";
-import {
-  BaseContext,
-  Monitoring,
-  ResolveFunc,
-  Resolver,
-} from "../engine/core/resolver.ts";
+import { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { type Manifest } from "../live.gen.ts";
 import { type InvocationProxy } from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
+import { Device, deviceOf } from "../utils/device.ts";
 import { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
@@ -87,6 +83,7 @@ export type FnContext<
   TState = {},
   TManifest extends AppManifest = Manifest,
 > = TState & RequestState & {
+  device: Device;
   resolverId?: string;
   monitoring?: Monitoring;
   get: ResolveFunc;
@@ -115,6 +112,7 @@ export type AppHttpContext = HttpContext<
 export const fnContextFromHttpContext = <TState = {}>(
   ctx: AppHttpContext,
 ): FnContext<TState> => {
+  let device: Device | null = null;
   return {
     ...ctx?.context?.state?.global,
     resolverId: ctx.resolverId,
@@ -123,6 +121,9 @@ export const fnContextFromHttpContext = <TState = {}>(
     response: ctx.context.state.response,
     bag: ctx.context.state.bag,
     invoke: ctx.context.state.invoke,
+    get device() {
+      return device ??= deviceOf(ctx.request);
+    },
   };
 };
 export const applyProps = <
@@ -155,7 +156,7 @@ const isPreactComponent = (
 export const usePreviewFunc = <TProps = any>(
   Component: ComponentFunc<TProps>,
 ): Resolver =>
-(component: PreactComponent<any, TProps>): PreactComponent<any, TProps> => {
+(component: PreactComponent<TProps>): PreactComponent<TProps> => {
   return ({
     ...isPreactComponent(component) ? component : { props: component },
     Component,
