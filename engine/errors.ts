@@ -2,8 +2,10 @@
  * Escape hatch to allow throwing an http error
  */
 export class HttpError extends Error {
+  public status: number;
   constructor(public resp: Response) {
     super(`http error ${resp.status}`);
+    this.status = resp.status;
   }
 }
 
