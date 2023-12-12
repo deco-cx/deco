@@ -119,6 +119,20 @@ Deco aims to radically simplify web development — like it was in the 90s, but 
 
 Join the community on [deco.cx Discord Server](https://deco.cx/discord). Share your apps, explore others' creations, and contribute to the shared vocabulary that makes Deco a thriving ecosystem.
 
+## 3P Integrations
+
+Here is a table with the integrations that we have built and the statuses of these projects. 
+
+| Integrations                                                                                    | Home   | PLP   | PDP   | Cart   | Checkout proxy   | Order placed proxy   | My account proxy   |
+|:------------------------------------------------------------------------------------------------|:-------|:------|:------|:-------|:-----------------|:---------------------|:-------------------|
+| [VTEX](https://github.com/deco-cx/apps/blob/main/vtex/README.md)                                        | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
+| [VNDA](https://github.com/deco-cx/apps/blob/main/vnda/README.md)                                        | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
+| [Shopify](https://github.com/deco-cx/apps/blob/b072c1fdfab8d5f1647ed42f9dbaae618f28f05f/shopify/README.md) | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
+| [Linx](https://github.com/deco-cx/apps/blob/main/linx/README.md)                                        | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
+| Linx impulse                                                                                    | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
+| [Nuvemshop](https://github.com/deco-cx/apps/blob/main/nuvemshop/README.MD)                                   | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
+| [Wake](https://github.com/deco-cx/apps/blob/main/wake/README.md)                                        | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
+
 ## Contribute
 
 We welcome contributions! Whether you’re fixing bugs, improving the documentation, or proposing new features, your efforts are valuable. Check out our contribution guidelines to get started.
@@ -128,3 +142,4 @@ We welcome contributions! Whether you’re fixing bugs, improving the documentat
 <a href="https://github.com/deco-cx/deco/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=deco-cx/deco" />
 </a>
+
