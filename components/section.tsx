@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { Partial } from "$fresh/runtime.ts";
 import { HttpContext } from "deco/blocks/handler.ts";
 import { HttpError } from "deco/engine/errors.ts";

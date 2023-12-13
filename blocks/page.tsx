@@ -1,3 +1,5 @@
+/** @jsxImportSource preact */
+
 import { InstanceOf } from "../engine/block.ts";
 import { createSectionBlock } from "deco/blocks/section.ts";
 
