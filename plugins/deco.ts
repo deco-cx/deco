@@ -1,14 +1,16 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
+import { PluginRoute } from "$fresh/src/server/types.ts";
 import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
-import { newFsProvider } from "../engine/releases/fs.ts";
+import { DECO_FILE_NAME, newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
-import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
+import { AppManifest, SiteInfo, createResolver } from "../mod.ts";
 import {
   default as Render,
   handler as entrypoint,
 } from "../routes/[...catchall].tsx";
 import { handler as decoMiddleware } from "../routes/_middleware.ts";
+import { handler as renderHandler } from "../routes/deco/render.ts";
 import { handler as metaHandler } from "../routes/live/_meta.ts";
 import { handler as editorDataHandler } from "../routes/live/editorData.ts";
 import { handler as inspectHandler } from "../routes/live/inspect/[...block].ts";
@@ -22,8 +24,6 @@ import { default as PreviewsPage } from "../routes/live/previews/index.tsx";
 import { handler as releaseHandler } from "../routes/live/release.ts";
 import { handler as workbenchHandler } from "../routes/live/workbench.ts";
 import { handler as workflowHandler } from "../routes/live/workflows/run.ts";
-import { handler as renderHandler } from "../routes/deco/render.ts";
-import { PluginRoute } from "$fresh/src/server/types.ts";
 
 export interface Options<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
@@ -37,7 +37,7 @@ export default function decoPlugin(opt?: Options): Plugin {
   if (opt) {
     const releaseProvider =
       opt?.useLocalStorageOnly || Deno.env.has("USE_LOCAL_STORAGE_ONLY")
-        ? newFsProvider(".release.json", opt.manifest.name)
+        ? newFsProvider(DECO_FILE_NAME, opt.manifest.name)
         : opt.release;
     buildDecoStateMiddl = buildDecoState(createResolver(
       {
@@ -57,7 +57,7 @@ export default function decoPlugin(opt?: Options): Plugin {
     }
   > = [
     {
-      paths: ["/live/_meta", "/_deco/meta"],
+      paths: ["/live/_meta", "/deco/meta"],
       handler: metaHandler,
     },
     {
@@ -73,32 +73,32 @@ export default function decoPlugin(opt?: Options): Plugin {
       handler: workbenchHandler,
     },
     {
-      paths: ["/live/inspect/[...block]", "/_deco/inspect/[...block]"],
+      paths: ["/live/inspect/[...block]", "/deco/inspect/[...block]"],
       handler: inspectHandler,
     },
     {
-      paths: ["/live/invoke/index", "/_deco/invoke/index"],
+      paths: ["/live/invoke/index", "/deco/invoke/index"],
       handler: invokeHandler,
     },
     {
-      paths: ["/live/invoke/[...key]", "/_deco/invoke/[...key]"],
+      paths: ["/live/invoke/[...key]", "/deco/invoke/[...key]"],
       handler: invokeKeyHandler,
     },
     {
-      paths: ["/live/previews/index", "/_deco/previews/index"],
+      paths: ["/live/previews/index", "/deco/previews/index"],
       component: PreviewsPage,
     },
     {
-      paths: ["/live/previews/[...block]", "/_deco/previews/[...block]"],
+      paths: ["/live/previews/[...block]", "/deco/previews/[...block]"],
       component: PreviewPage,
       handler: previewHandler,
     },
     {
-      paths: ["/live/workflows/run", "/_deco/workflows/run"],
+      paths: ["/live/workflows/run", "/deco/workflows/run"],
       handler: workflowHandler,
     },
     {
-      paths: ["/deco/render", "/_deco/render"],
+      paths: ["/deco/render", "/deco/render"],
       handler: renderHandler,
       component: Render,
     },

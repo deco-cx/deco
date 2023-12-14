@@ -2,17 +2,18 @@ import { debounce } from "std/async/debounce.ts";
 import { join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
+import { getReleaseJSONFromRelease } from "./json.ts";
 import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
 import { CurrResolvables } from "./supabaseProvider.ts";
-import { getReleaseJSONFromRelease } from "./json.ts";
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
     .then((response) => response.json()).catch((_e) => ({}));
 };
 
+export const DECO_FILE_NAME = ".decofile"
 export const newFsProvider = (
-  path = ".release.json",
+  path = DECO_FILE_NAME,
   appName?: string,
 ): Release => {
   const fullPath = join(Deno.cwd(), path);

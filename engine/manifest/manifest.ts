@@ -38,7 +38,7 @@ import {
 } from "../../engine/releases/provider.ts";
 import { context, DecoRuntimeState } from "../../live.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
-import { newFsProvider } from "../releases/fs.ts";
+import { newFsProvider, DECO_FILE_NAME } from "../releases/fs.ts";
 import defaults from "./defaults.ts";
 
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
@@ -162,7 +162,7 @@ export const createResolver = <
         DECO_COLORS,
       ))
     } and happy coding!\n\n`);
-    release ??= newFsProvider(".release.json", m.name);
+    release ??= newFsProvider(DECO_FILE_NAME, m.name);
     context.play = true;
   }
   context.namespace ??= `deco-sites/${currentSite}`;

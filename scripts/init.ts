@@ -7,14 +7,15 @@ import {
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import {
   Input,
-  prompt,
   Select,
   Toggle,
+  prompt,
 } from "https://deno.land/x/cliffy@v1.0.0-rc.3/prompt/mod.ts";
 import {
   BlobReader,
   ZipReader,
 } from "https://deno.land/x/zipjs@v2.7.30/index.js";
+import { DECO_FILE_NAME } from "../engine/releases/fs.ts";
 import { getReleaseJSONFromRelease } from "../engine/releases/json.ts";
 import { init as initApp } from "./apps/init.ts";
 
@@ -119,7 +120,7 @@ const initProject = async (name: string, config: Config) => {
   const releaseJson = await fetch(config.release).then((res) => res.json());
 
   await Deno.writeTextFile(
-    join(root, ".release.json"),
+    join(root, DECO_FILE_NAME),
     JSON.stringify(
       getReleaseJSONFromRelease(releaseJson, config.appName),
       null,
