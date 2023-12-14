@@ -1,14 +1,16 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
+import { PluginRoute } from "$fresh/src/server/types.ts";
 import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
-import { newFsProvider } from "../engine/releases/fs.ts";
+import { DECO_FILE_NAME, newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
-import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
+import { AppManifest, SiteInfo, createResolver } from "../mod.ts";
 import {
   default as Render,
   handler as entrypoint,
 } from "../routes/[...catchall].tsx";
 import { handler as decoMiddleware } from "../routes/_middleware.ts";
+import { handler as renderHandler } from "../routes/deco/render.ts";
 import { handler as metaHandler } from "../routes/live/_meta.ts";
 import { handler as editorDataHandler } from "../routes/live/editorData.ts";
 import { handler as inspectHandler } from "../routes/live/inspect/[...block].ts";
@@ -22,7 +24,6 @@ import { default as PreviewsPage } from "../routes/live/previews/index.tsx";
 import { handler as releaseHandler } from "../routes/live/release.ts";
 import { handler as workbenchHandler } from "../routes/live/workbench.ts";
 import { handler as workflowHandler } from "../routes/live/workflows/run.ts";
-import { handler as renderHandler } from "../routes/deco/render.ts";
 
 export interface Options<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
@@ -36,7 +37,7 @@ export default function decoPlugin(opt?: Options): Plugin {
   if (opt) {
     const releaseProvider =
       opt?.useLocalStorageOnly || Deno.env.has("USE_LOCAL_STORAGE_ONLY")
-        ? newFsProvider(".release.json", opt.manifest.name)
+        ? newFsProvider(DECO_FILE_NAME, opt.manifest.name)
         : opt.release;
     buildDecoStateMiddl = buildDecoState(createResolver(
       {
@@ -48,6 +49,65 @@ export default function decoPlugin(opt?: Options): Plugin {
       releaseProvider,
     ));
   }
+  const routes: Array<
+    {
+      paths: string[];
+      handler?: PluginRoute["handler"];
+      component?: PluginRoute["component"];
+    }
+  > = [
+    {
+      paths: ["/live/_meta", "/deco/meta"],
+      handler: metaHandler,
+    },
+    {
+      paths: ["/live/editorData"],
+      handler: editorDataHandler,
+    },
+    {
+      paths: ["/live/release", "/.decofile"],
+      handler: releaseHandler,
+    },
+    {
+      paths: ["/live/workbench"],
+      handler: workbenchHandler,
+    },
+    {
+      paths: ["/live/inspect/[...block]", "/deco/inspect/[...block]"],
+      handler: inspectHandler,
+    },
+    {
+      paths: ["/live/invoke/index", "/deco/invoke/index"],
+      handler: invokeHandler,
+    },
+    {
+      paths: ["/live/invoke/[...key]", "/deco/invoke/[...key]"],
+      handler: invokeKeyHandler,
+    },
+    {
+      paths: ["/live/previews/index", "/deco/previews/index"],
+      component: PreviewsPage,
+    },
+    {
+      paths: ["/live/previews/[...block]", "/deco/previews/[...block]"],
+      component: PreviewPage,
+      handler: previewHandler,
+    },
+    {
+      paths: ["/live/workflows/run", "/deco/workflows/run"],
+      handler: workflowHandler,
+    },
+    {
+      paths: ["/deco/render", "/deco/render"],
+      handler: renderHandler,
+      component: Render,
+    },
+    {
+      paths: ["/index", "/[...catchall]"],
+      handler: entrypoint,
+      component: Render,
+    },
+  ];
   return {
     name: "deco",
     middlewares: [
@@ -61,64 +121,9 @@ export default function decoPlugin(opt?: Options): Plugin {
         },
       },
     ],
-    routes: [
-      {
-        path: "/index",
-        handler: entrypoint,
-        component: Render,
-      },
-      {
-        path: "/[...catchall]",
-        handler: entrypoint,
-        component: Render,
-      },
-      {
-        path: "/live/_meta",
-        handler: metaHandler,
-      },
-      {
-        path: "/live/editorData",
-        handler: editorDataHandler,
-      },
-      {
-        path: "/live/release",
-        handler: releaseHandler,
-      },
-      {
-        path: "/live/workbench",
-        handler: workbenchHandler,
-      },
-      {
-        path: "/live/inspect/[...block]",
-        handler: inspectHandler,
-      },
-      {
-        path: "/live/invoke/index",
-        handler: invokeHandler,
-      },
-      {
-        path: "/live/invoke/[...key]",
-        handler: invokeKeyHandler,
-      },
-      {
-        path: "/live/previews/index",
-        component: PreviewsPage,
-      },
-      {
-        path: "/live/previews/[...block]",
-        component: PreviewPage,
-        handler: previewHandler,
-      },
-      {
-        path: "/live/workflows/run",
-        handler: workflowHandler,
-      },
-      {
-        path: "/deco/render",
-        handler: renderHandler,
-        component: Render,
-      },
-    ].map((route) => {
+    routes: routes.flatMap(({ paths, handler, component }) =>
+      paths.map((path) => ({ path, handler, component }))
+    ).map((route) => {
       if (!route.handler) {
         return route;
       }
