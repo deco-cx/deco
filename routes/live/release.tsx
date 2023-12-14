@@ -1,5 +1,6 @@
 import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { DecoState } from "../../mod.ts";
+import { groupObjectBy } from "deco/utils/fn/groupObjectBy.ts";
 
 export const handler = async (
   _req: Request,
@@ -32,6 +33,16 @@ function ReleaseViewer({
     throw new Error("Release not found");
   }
 
+  const grouped = groupObjectBy(release, (key, value) => {
+    if (value?.__resolveType?.contains("/sections/")) {
+      return "section";
+    }
+    if (value?.__resolveType?.contains("/loaders/")) {
+      return "loader";
+    }
+    return "other";
+  });
+
   return (
     <div>
       <div>
@@ -40,6 +51,10 @@ function ReleaseViewer({
       </div>
       <div>
         keys: {Object.keys(release).map((a) => <p>{a}</p>)}
+      </div>
+      <div>
+        <span>Grouped JSON:</span>
+        <pre>{JSON.stringify(grouped, null, 2)}</pre>
       </div>
       <div>
         <span>Raw JSON:</span>
