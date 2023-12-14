@@ -15,7 +15,10 @@
   },
   "fmt": {
     "files": {
-      "exclude": ["static/", "README.md"]
+      "exclude": [
+        "static/",
+        "README.md"
+      ]
     }
   },
   "importMap": "./import_map.json",

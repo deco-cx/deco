@@ -4,7 +4,7 @@ import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
-import { AppManifest, SiteInfo, createResolver } from "../mod.ts";
+import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
 import {
   default as Render,
   handler as entrypoint,
@@ -21,7 +21,10 @@ import {
   handler as previewHandler,
 } from "../routes/live/previews/[...block].tsx";
 import { default as PreviewsPage } from "../routes/live/previews/index.tsx";
-import { handler as releaseHandler } from "../routes/live/release.ts";
+import {
+  default as ReleaseViewer,
+  handler as releaseHandler,
+} from "../routes/live/release.tsx";
 import { handler as workbenchHandler } from "../routes/live/workbench.ts";
 import { handler as workflowHandler } from "../routes/live/workflows/run.ts";
 
@@ -67,6 +70,7 @@ export default function decoPlugin(opt?: Options): Plugin {
     {
       paths: ["/live/release", "/.decofile"],
       handler: releaseHandler,
+      component: ReleaseViewer,
     },
     {
       paths: ["/live/workbench"],

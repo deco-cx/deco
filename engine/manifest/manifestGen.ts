@@ -107,8 +107,8 @@ export const defaultRoutes: {
   },
   {
     block: "routes",
-    from: ["$live/routes/live/release.ts", "deco/routes/live/release.ts"],
-    key: "./routes/live/release.ts",
+    from: ["$live/routes/live/release.tsx", "deco/routes/live/release.tsx"],
+    key: "./routes/live/release.tsx",
     ref: "$live_release",
   },
   {

@@ -17,8 +17,8 @@ import * as $$$$7 from "./routes/live/workflows/run.ts";
 import * as $$$$8 from "./routes/live/workbench.ts";
 import * as $$$$9 from "./routes/live/previews/index.tsx";
 import * as $$$$10 from "./routes/live/previews/[...block].tsx";
-import * as $$$$11 from "./routes/live/release.ts";
-import * as $$$$12 from "./routes/live/_meta.ts";
+import * as $$$$11 from "./routes/live/_meta.ts";
+import * as $$$$12 from "./routes/live/release.tsx";
 import * as $$$$13 from "./routes/[...catchall].tsx";
 import * as $$$$$$0 from "./handlers/routesSelection.ts";
 import * as $$$$$$1 from "./handlers/router.ts";
@@ -68,14 +68,14 @@ const manifest = {
     "./routes/[...catchall].tsx": $$$$13,
     "./routes/deco/render.ts": $$$$2,
     "./routes/index.tsx": $$$$0,
-    "./routes/live/_meta.ts": $$$$12,
+    "./routes/live/_meta.ts": $$$$11,
     "./routes/live/editorData.ts": $$$$6,
     "./routes/live/inspect/[...block].ts": $$$$3,
     "./routes/live/invoke/[...key].ts": $$$$4,
     "./routes/live/invoke/index.ts": $$$$5,
     "./routes/live/previews/[...block].tsx": $$$$10,
     "./routes/live/previews/index.tsx": $$$$9,
-    "./routes/live/release.ts": $$$$11,
+    "./routes/live/release.tsx": $$$$12,
     "./routes/live/workbench.ts": $$$$8,
     "./routes/live/workflows/run.ts": $$$$7,
   },
