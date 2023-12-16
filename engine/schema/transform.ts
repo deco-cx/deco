@@ -1,4 +1,4 @@
-import type { ParsedSource } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
+import type { ParsedSource } from "./deps.ts";
 import type {
   ArrowFunctionExpression,
   ExportNamedDeclaration,
