@@ -1,7 +1,7 @@
 import {
   parse,
   ParsedSource,
-} from "https://denopkg.com/deco-cx/deno_ast_wasm@0.1.0/mod.ts";
+} from "./deps.ts";
 import { assignComments } from "./comments.ts";
 
 /**
