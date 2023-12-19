@@ -1,3 +1,4 @@
+import { isInvokeCtx } from "../../blocks/loader.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import { ResolveOptions } from "../core/mod.ts";
@@ -162,8 +163,9 @@ export default {
   },
   invoke: async function invoke(
     { props, block }: BlockInvocation,
-    { resolvables, resolvers, resolve },
+    ctx,
   ) {
+    const { resolvables, resolvers, resolve } = ctx;
     try {
       const invokeBlock = `${INVOKE_PREFIX_KEY}${block}`;
       const _invokeResolver = resolvers[invokeBlock];
@@ -189,7 +191,7 @@ export default {
         propsAreResolved: true,
       });
     } catch (err) {
-      if (!(err instanceof HttpError)) {
+      if (!(err instanceof HttpError) && !isInvokeCtx(ctx)) {
         throw new HttpError(
           new Response(
             err ? err : JSON.stringify({
