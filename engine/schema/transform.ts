@@ -1,4 +1,3 @@
-import type { ParsedSource } from "./deps.ts";
 import type {
   ArrowFunctionExpression,
   ExportNamedDeclaration,
@@ -35,6 +34,7 @@ import { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
 import { BlockModuleRef, IntrospectParams } from "../../engine/block.ts";
 import { beautify } from "../../engine/schema/utils.ts";
 import { spannableToJSONSchema } from "./comments.ts";
+import type { ParsedSource } from "./deps.ts";
 import { parsePath } from "./parser.ts";
 
 export type ReferenceKey = string;
@@ -208,6 +208,7 @@ const getFromParametersFunc = (
         : undefined);
   };
 };
+
 const tsInterfaceDeclarationToSchemeable = async (
   dec: TsInterfaceDeclaration,
   ctx: SchemeableTransformContext,
@@ -1244,6 +1245,10 @@ export const programToBlockRef = async (
   return undefined;
 };
 
+const useEsm = (npmSpecifier: string) => {
+  const withoutNpm = npmSpecifier.substring("npm:".length);
+  return `https://esm.sh/${withoutNpm}`;
+};
 export function resolvePath(source: string, path: string) {
   // should use origin
   if (source.startsWith("/")) {
@@ -1258,6 +1263,9 @@ export function resolvePath(source: string, path: string) {
     );
   }
 
+  if (source.startsWith("npm:")) {
+    return useEsm(source);
+  }
   // import from import_map
   return import.meta.resolve(source);
 }
