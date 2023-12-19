@@ -2,8 +2,7 @@ import { HandlerContext } from "$fresh/server.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
-import { InvokeFunction, payloadToResolvable } from "./index.ts";
-
+import { InvokeFunction, payloadToResolvable, wrapInvokeErr } from "./index.ts";
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
@@ -24,7 +23,7 @@ export const handler = async (
       (url.searchParams.getAll("select") ?? []) as InvokeFunction["select"],
   };
 
-  const resp = await resolve(payloadToResolvable(invokeFunc));
+  const resp = await resolve(payloadToResolvable(invokeFunc)).catch(wrapInvokeErr);
 
   return invokeToHttpResponse(req, resp);
 };

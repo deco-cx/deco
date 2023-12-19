@@ -1,15 +1,13 @@
-import { isInvokeCtx } from "../../blocks/loader.ts";
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
 import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import { ResolveOptions } from "../core/mod.ts";
 import {
   BaseContext,
-  isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
+  isResolvable,
 } from "../core/resolver.ts";
-import { HttpError } from "../errors.ts";
 
 export const PREVIEW_PREFIX_KEY = "Preview@";
 export const INVOKE_PREFIX_KEY = "Invoke@";
@@ -163,51 +161,30 @@ export default {
   },
   invoke: async function invoke(
     { props, block }: BlockInvocation,
-    ctx,
+    { resolvables, resolvers, resolve },
   ) {
-    const { resolvables, resolvers, resolve } = ctx;
-    try {
-      const invokeBlock = `${INVOKE_PREFIX_KEY}${block}`;
-      const _invokeResolver = resolvers[invokeBlock];
-      const [resolver, __resolveType] = _invokeResolver
-        ? [_invokeResolver, invokeBlock]
-        : [
-          resolvers[block],
-          block,
-        ];
-      if (!resolver) {
-        const resolvable = resolvables[block];
-        if (!resolvable) {
-          return {
-            ...props,
-            __resolveType: block,
-          };
-        }
-        const { __resolveType, ...savedprops } = resolvable;
-        // recursive call
-        return await resolve({ ...props, ...savedprops, __resolveType });
+    const invokeBlock = `${INVOKE_PREFIX_KEY}${block}`;
+    const _invokeResolver = resolvers[invokeBlock];
+    const [resolver, __resolveType] = _invokeResolver
+      ? [_invokeResolver, invokeBlock]
+      : [
+        resolvers[block],
+        block,
+      ];
+    if (!resolver) {
+      const resolvable = resolvables[block];
+      if (!resolvable) {
+        return {
+          ...props,
+          __resolveType: block,
+        };
       }
-      return await resolve({ ...props, __resolveType }, {
-        propsAreResolved: true,
-      });
-    } catch (err) {
-      if (!(err instanceof HttpError) && !isInvokeCtx(ctx)) {
-        throw new HttpError(
-          new Response(
-            err ? err : JSON.stringify({
-              message: "Something went wrong.",
-              code: "SWW",
-            }),
-            {
-              status: 500,
-              headers: {
-                "content-type": "application/json",
-              },
-            },
-          ),
-        );
-      }
-      throw err;
+      const { __resolveType, ...savedprops } = resolvable;
+      // recursive call
+      return await resolve({ ...props, ...savedprops, __resolveType });
     }
+    return await resolve({ ...props, __resolveType }, {
+      propsAreResolved: true,
+    });
   },
 } satisfies ResolverMap<BaseContext>;
