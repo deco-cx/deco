@@ -4,7 +4,7 @@ import { SourceMap } from "../blocks/app.ts";
 import { buildDecoState, injectLiveStateForPath } from "../blocks/route.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../engine/releases/fs.ts";
 import { Release } from "../engine/releases/provider.ts";
-import { AppManifest, SiteInfo, createResolver } from "../mod.ts";
+import { AppManifest, createResolver, SiteInfo } from "../mod.ts";
 import {
   default as Render,
   handler as entrypoint,
@@ -34,7 +34,7 @@ export interface Options<TManifest extends AppManifest = AppManifest> {
 }
 export default function decoPlugin(opt?: Options): Plugin {
   let buildDecoStateMiddl = buildDecoState("./routes/_middleware.ts");
-  if (opt) {
+  if (opt && !Deno.args.includes("build")) { // do not run apps on build
     const releaseProvider =
       opt?.useLocalStorageOnly || Deno.env.has("USE_LOCAL_STORAGE_ONLY")
         ? newFsProvider(DECO_FILE_NAME, opt.manifest.name)

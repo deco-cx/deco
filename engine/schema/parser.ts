@@ -1,7 +1,4 @@
-import {
-  parse,
-  ParsedSource,
-} from "./deps.ts";
+import { parse, ParsedSource } from "./deps.ts";
 import { assignComments } from "./comments.ts";
 
 /**

@@ -38,7 +38,7 @@ import {
 } from "../../engine/releases/provider.ts";
 import { context, DecoRuntimeState } from "../../live.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
-import { newFsProvider, DECO_FILE_NAME } from "../releases/fs.ts";
+import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import defaults from "./defaults.ts";
 
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });

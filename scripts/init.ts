@@ -7,9 +7,9 @@ import {
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import {
   Input,
+  prompt,
   Select,
   Toggle,
-  prompt,
 } from "https://deno.land/x/cliffy@v1.0.0-rc.3/prompt/mod.ts";
 import {
   BlobReader,

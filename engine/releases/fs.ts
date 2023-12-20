@@ -11,7 +11,7 @@ const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
     .then((response) => response.json()).catch((_e) => ({}));
 };
 
-export const DECO_FILE_NAME = ".decofile.json"
+export const DECO_FILE_NAME = ".decofile.json";
 export const newFsProvider = (
   path = DECO_FILE_NAME,
   appName?: string,

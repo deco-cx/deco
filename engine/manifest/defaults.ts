@@ -3,10 +3,10 @@ import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import { ResolveOptions } from "../core/mod.ts";
 import {
   BaseContext,
+  isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
-  isResolvable,
 } from "../core/resolver.ts";
 
 export const PREVIEW_PREFIX_KEY = "Preview@";
