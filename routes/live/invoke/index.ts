@@ -8,6 +8,7 @@ import {
 import type { UnionToIntersection } from "../../../deps.ts";
 import type { Resolvable } from "../../../engine/core/resolver.ts";
 import type { PromiseOrValue } from "../../../engine/core/utils.ts";
+import { HttpError } from "../../../engine/errors.ts";
 import dfs from "../../../engine/manifest/defaults.ts";
 import type { DecoState } from "../../../mod.ts";
 import type { DecoSiteState } from "../../../types.ts";
@@ -264,6 +265,25 @@ export type InvokeResult<
 export const sanitizer = (str: string | `#${string}`) =>
   str.startsWith("#") ? str.substring(1) : str;
 
+export const wrapInvokeErr = (err: any) => {
+  if (!(err instanceof HttpError)) {
+    throw new HttpError(
+      new Response(
+        err ? err : JSON.stringify({
+          message: "Something went wrong.",
+          code: "SWW",
+        }),
+        {
+          status: 500,
+          headers: {
+            "content-type": "application/json",
+          },
+        },
+      ),
+    );
+  }
+  throw err;
+};
 const isInvokeFunc = (
   p: InvokePayload<any> | InvokeFunction,
 ): p is InvokeFunction => {
@@ -308,7 +328,7 @@ export const handler = async (
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url));
 
-  const result = await resolve(payloadToResolvable(data));
+  const result = await resolve(payloadToResolvable(data)).catch(wrapInvokeErr);
 
   const response = invokeToHttpResponse(req, result);
 
