@@ -166,14 +166,14 @@ export const mergeRuntimes = <
   return {
     manifest: mergeManifests(currentManifest, manifest),
     resolvables: {
-      ...currentResolvables,
       ...resolvables,
+      ...currentResolvables,
     },
     resolvers: {
-      ...currentResolvers,
       ...resolvers,
+      ...currentResolvers,
     },
-    sourceMap: { ...currentSourceMap ?? {}, ...sourceMap ?? {} },
+    sourceMap: { ...sourceMap ?? {}, ...currentSourceMap ?? {} },
   };
 };
 
