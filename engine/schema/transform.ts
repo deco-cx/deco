@@ -1246,7 +1246,7 @@ export const programToBlockRef = async (
 };
 
 const useEsm = (npmSpecifier: string) => {
-  const withoutNpm = npmSpecifier.substring("npm:".length);
+  const withoutNpm = npmSpecifier.substring("https://esm.sh/".length);
   return `https://esm.sh/${withoutNpm}`;
 };
 export function resolvePath(source: string, path: string) {
@@ -1263,7 +1263,7 @@ export function resolvePath(source: string, path: string) {
     );
   }
 
-  if (source.startsWith("npm:")) {
+  if (source.startsWith("https://esm.sh/")) {
     return useEsm(source);
   }
   // import from import_map

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import hash from "npm:object-hash";
+import hash from "https://esm.sh/object-hash";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { ValueType } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";

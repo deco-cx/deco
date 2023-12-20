@@ -15,7 +15,7 @@ import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
-import * as diff from "npm:diff@5.1.0";
+import * as diff from "https://esm.sh/diff@5.1.0";
 import { format } from "../utils/formatter.ts";
 
 const getLatestVersion = async (locator: string) => {
