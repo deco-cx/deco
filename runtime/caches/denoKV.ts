@@ -42,7 +42,7 @@ import {
   compress,
   decompress,
   init as initZstd,
-} from "https://denopkg.com/mcandeia/zstd-wasm@0.20.1/deno/zstd.ts";
+} from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
