@@ -4,16 +4,11 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { Sha1 } from "https://deno.land/std@0.61.0/hash/sha1.ts";
-import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { assertEquals, assertObjectMatch, fail } from "std/testing/asserts.ts";
+import { assertEquals, assertObjectMatch, fail } from "std/assert/mod.ts";
+import { dirname, join } from "std/path/mod.ts";
 
-import {
-  assertSpyCall,
-  assertSpyCalls,
-  spy,
-} from "https://deno.land/std@0.179.0/testing/mock.ts";
 import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
+import { assertSpyCall, assertSpyCalls, spy } from "std/testing/mock.ts";
 import { parsePath } from "../../engine/schema/parser.ts";
 import { schemeableToJSONSchema } from "../../engine/schema/schemeable.ts";
 import {
@@ -31,6 +26,51 @@ const getSchemeableFor = async (
   const ast = await parsePath(toFileUrl(path).toString());
   return await typeNameToSchemeable(name, { path, parsedSource: ast! });
 };
+
+Deno.test("TypeWithExtendsOmit type generation", async () => {
+  const transformed = await getSchemeableFor("TypeWithExtendsOmit");
+  if (!transformed) {
+    fail("TypeWithExtendsOmit should exists");
+  }
+
+  assertEquals(transformed, {
+    "jsDocSchema": {},
+    "type": "object",
+    "value": {
+      "page": {
+        "title": "Page",
+        "jsDocSchema": {},
+        "schemeable": {
+          "type": "inline",
+          "name": "number",
+          "value": { "type": "number" },
+        },
+        "required": true,
+      },
+    },
+    "file": path,
+    "name": "TypeWithExtendsOmit",
+    "extends": [{
+      "jsDocSchema": {},
+      "type": "object",
+      "value": {
+        "title": {
+          "title": "Title",
+          "jsDocSchema": {},
+          "schemeable": {
+            "type": "inline",
+            "name": "string",
+            "value": { "type": "string" },
+          },
+          "required": true,
+        },
+      },
+      "file": path,
+      "name": "omitanNvbkxEComplexType",
+      "extends": [],
+    }],
+  });
+});
 Deno.test("Simple type generation", async () => {
   const transformed = await getSchemeableFor("SimpleType");
   if (!transformed) {
@@ -186,7 +226,7 @@ Deno.test("TwoRefsProperties type generation", async () => {
     "name": "TwoRefsProperties",
   });
 
-  const createHash = (input: string) => new Sha1().update(input).hex();
+  const createHash = (input: string) => btoa(input);
 
   /* Types:
   object_TwoRefsProperties
@@ -204,7 +244,7 @@ Deno.test("TwoRefsProperties type generation", async () => {
   const schemaId = createHash("alias_TwoRefsProperties");
 
   assertObjectMatch(definitions[schemaId], {
-    "$ref": "#/definitions/8272a2f269a78239b3844698e701231268da690c",
+    "$ref": "#/definitions/aW5saW5lX1R3b1JlZnNQcm9wZXJ0aWVz",
     "title": "TwoRefsProperties",
   });
 

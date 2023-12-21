@@ -10,6 +10,7 @@ import type {
   Pattern,
   StringLiteral,
   TsArrayType,
+  TsEntityName,
   TsIndexedAccessType,
   TsInterfaceDeclaration,
   TsIntersectionType,
@@ -25,6 +26,7 @@ import type {
   TsTypeElement,
   TsTypeLiteral,
   TsTypeParameter,
+  TsTypeParameterInstantiation,
   TsTypeReference,
   TsUnionType,
   VariableDeclarator,
@@ -222,12 +224,19 @@ const tsInterfaceDeclarationToSchemeable = async (
 
   const tryGetFromInstantiatedParameters = getFromParametersFunc(params, ctx);
   for (const ext of dec.extends) {
-    if (ext.expression.type === "Identifier") {
+    const expression = ext.expression;
+    if (expression.type === "Identifier") {
+      const newCtx = {
+        ...ctx,
+        tryGetFromInstantiatedParameters,
+      };
       allOfs.push(
-        typeNameToSchemeable(ext.expression.value, {
-          ...ctx,
-          tryGetFromInstantiatedParameters,
-        }),
+        wellKnownTypeReferenceToSchemeable({
+          typeName: expression,
+          typeParams: ext.typeArguments,
+        }, ctx).then((schemeable) =>
+          schemeable ?? typeNameToSchemeable(expression.value, newCtx)
+        ),
       );
     }
   }
@@ -412,8 +421,13 @@ export const typeNameToSchemeable = async (
   return UNKNOWN;
 };
 
-const wellKnownTypeReferenceToSchemeable = async (
-  ref: TsTypeReference,
+const wellKnownTypeReferenceToSchemeable = async <
+  TRef extends {
+    typeName: TsEntityName;
+    typeParams?: TsTypeParameterInstantiation;
+  },
+>(
+  ref: TRef,
   ctx: SchemeableTransformContext,
 ): Promise<Schemeable | undefined> => {
   const typeName = ref.typeName;
