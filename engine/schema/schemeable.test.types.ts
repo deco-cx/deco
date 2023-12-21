@@ -51,3 +51,12 @@ export interface WellKnown {
   // @ts-ignore: "will work as soon as the new engine is entirely here"
   preactComponent: PreactComponent<InstanceOf<string, "#/root/sections">>;
 }
+
+export interface ComplexType {
+  title: string;
+  jsonLD: string;
+}
+
+export interface TypeWithExtendsOmit extends Omit<ComplexType, "jsonLD"> {
+  page: number;
+}
