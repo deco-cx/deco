@@ -120,12 +120,16 @@ export const fnContextFromHttpContext = <TState = {}>(
   const invoker = (
     key: string,
     props: unknown,
-  ) =>
-    ctx.resolve<Awaited<ReturnType<InvocationFunc<any>>>>(
+  ) => {
+    return ctx.resolve<Awaited<ReturnType<InvocationFunc<any>>>>(
       payloadForFunc({ key, props } as InvokeFunction<any>),
-      { resolveChain: ctx.resolveChain },
-      { isInvoke: true },
+      {
+        resolveChain: ctx.resolveChain,
+        propagateOptions: true,
+      },
+      { isInvoke: true, resolveChain: ctx.resolveChain,},
     );
+  }
 
   const invoke = new Proxy<InvocationProxyHandler>(
     invoker as unknown as InvocationProxyHandler,
