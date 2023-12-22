@@ -156,7 +156,7 @@ const wrapLoader = ({
         // Web Cache API requires a request. Create an artificial request with the right key
         // TODO: (@tlgimenes) Resolve props cache key statically
         const url = new URL("https://localhost");
-        url.searchParams.set("resolver", ctx.resolverId || "unknown");
+        url.searchParams.set("resolver", loader);
         url.searchParams.set("props", hash(props));
         url.searchParams.set("cacheKey", cacheKey(req, ctx));
         const request = new Request(url);
