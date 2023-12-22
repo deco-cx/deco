@@ -14,10 +14,15 @@ import { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { type Manifest } from "../live.gen.ts";
-import { type InvocationProxy } from "../routes/live/invoke/index.ts";
+import {
+  type InvocationProxy,
+  InvokeFunction,
+  payloadForFunc,
+} from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
 import { Device, deviceOf } from "../utils/device.ts";
 import { HttpContext } from "./handler.ts";
+import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -112,6 +117,25 @@ export type AppHttpContext = HttpContext<
 export const fnContextFromHttpContext = <TState = {}>(
   ctx: AppHttpContext,
 ): FnContext<TState> => {
+  const invoker = (
+    key: string,
+    props: unknown,
+  ) =>
+    ctx.resolve<Awaited<ReturnType<InvocationFunc<any>>>>(
+      payloadForFunc({ key, props } as InvokeFunction<any>),
+      { resolveChain: ctx.resolveChain },
+      { isInvoke: true },
+    );
+
+  const invoke = new Proxy<InvocationProxyHandler>(
+    invoker as unknown as InvocationProxyHandler,
+    newHandler<any>(invoker),
+  ) as unknown as
+    & InvocationProxy<
+      any
+    >
+    & InvocationFunc<any>;
+
   let device: Device | null = null;
   return {
     ...ctx?.context?.state?.global,
@@ -120,7 +144,7 @@ export const fnContextFromHttpContext = <TState = {}>(
     get: ctx.resolve,
     response: ctx.context.state.response,
     bag: ctx.context.state.bag,
-    invoke: ctx.context.state.invoke,
+    invoke,
     get device() {
       return device ??= deviceOf(ctx.request);
     },
