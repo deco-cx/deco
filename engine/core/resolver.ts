@@ -492,8 +492,14 @@ const resolveWithType = <
 ): Promise<T> => {
   const { resolvers: resolverMap, resolvables } = context;
 
-  if (resolveType in resolvables) {
-    return resolveResolvable(resolveType, context, opts);
+  if (resolveType in resolvables && !(resolveType in context.memo)) {
+    return context.memo[resolveType] ??= (() => {
+      const { resolve, reject, promise } = Promise.withResolvers<T>();
+      resolveResolvable<T>(resolveType, context, opts).then(resolve).catch(
+        reject,
+      );
+      return promise;
+    })();
   } else if (resolveType in resolverMap) {
     const resolver = resolverMap[resolveType];
     const proceed = () =>
@@ -546,7 +552,7 @@ const resolveResolvable = <
     resolvableObj,
   ) ?? {};
 
-  return context.memo[resolveType] ??= resolveAny(
+  return resolveAny(
     resolvableObj,
     context,
     opts,
