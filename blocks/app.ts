@@ -37,11 +37,11 @@ export type SourceMap = Record<
 >;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 type MergeAppsManifest<TCurrent extends AppManifest, TDeps> =
-  & TCurrent
   & (TDeps extends [infer TNext, ...infer Rest]
     ? TNext extends App ? MergeAppsManifest<ManifestOf<TNext>, Rest>
     : {}
-    : {});
+    : {})
+  & TCurrent;
 
 export type ManifestOf<TApp extends App> = MergeAppsManifest<
   TApp["manifest"],
