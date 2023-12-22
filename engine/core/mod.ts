@@ -54,7 +54,6 @@ const charByType = {
 };
 
 export const resolverIdFromResolveChain = (chain: FieldResolver[]) => {
-  let found = false;
   let uniqueId = "";
 
   // from last to first and stop in the first resolvable
@@ -66,13 +65,10 @@ export const resolverIdFromResolveChain = (chain: FieldResolver[]) => {
       uniqueId = `${value}${divider}${uniqueId}`;
     }
     // stop on first resolvable
-    if (type === "resolvable") {
-      found = true;
-      break;
-    }
+    if (type === "resolvable") break;
   }
 
-  return found ? uniqueId : undefined;
+  return uniqueId;
 };
 
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
