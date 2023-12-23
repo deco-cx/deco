@@ -17,6 +17,7 @@ import { type Manifest } from "../live.gen.ts";
 import { type InvocationProxy } from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
 import { Device, deviceOf } from "../utils/device.ts";
+import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
@@ -120,7 +121,10 @@ export const fnContextFromHttpContext = <TState = {}>(
     get: ctx.resolve,
     response: ctx.context.state.response,
     bag: ctx.context.state.bag,
-    invoke: ctx.context.state.invoke,
+    invoke: buildInvokeFunc(ctx.resolve, { propagateOptions: true }, {
+      isInvoke: true,
+      resolveChain: ctx.resolveChain,
+    }),
     get device() {
       return device ??= deviceOf(ctx.request);
     },
