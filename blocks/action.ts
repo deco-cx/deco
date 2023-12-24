@@ -7,7 +7,8 @@ export type Action = InstanceOf<typeof actionBlock, "#/root/actions">;
 
 export type ActionModule<
   TProps = any,
-> = BlockModule<FnProps<TProps>>;
+  TResp = any,
+> = BlockModule<FnProps<TProps, TResp>>;
 
 const actionBlock: Block<ActionModule> = {
   type: "actions",
