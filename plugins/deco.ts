@@ -21,7 +21,10 @@ import {
   handler as previewHandler,
 } from "../routes/live/previews/[...block].tsx";
 import { default as PreviewsPage } from "../routes/live/previews/index.tsx";
-import { handler as releaseHandler } from "../routes/live/release.ts";
+import {
+  default as ReleaseViewer,
+  handler as releaseHandler,
+} from "../routes/live/release.tsx";
 import { handler as workbenchHandler } from "../routes/live/workbench.ts";
 import { handler as workflowHandler } from "../routes/live/workflows/run.ts";
 
@@ -67,6 +70,7 @@ export default function decoPlugin(opt?: Options): Plugin {
     {
       paths: ["/live/release", "/.decofile"],
       handler: releaseHandler,
+      component: ReleaseViewer,
     },
     {
       paths: ["/live/workbench"],
