@@ -1,7 +1,7 @@
 import { Octokit } from "https://cdn.skypack.dev/@octokit/rest@19.0.4";
 import { blue, bold } from "https://deno.land/std@0.181.0/fmt/colors.ts";
 import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
-import { Endpoints } from "https://esm.sh/@octokit/types@9.0.0";
+import { Endpoints } from "https://esm.sh/v135/@octokit/types@9.0.0";
 
 const _client = new Octokit();
 
