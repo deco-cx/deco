@@ -1,7 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
-import { InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
-import { InvocationFunc } from "../clients/withManifest.ts";
 import {
   context as otelContext,
   FreshHandler as Handler,
@@ -26,11 +24,6 @@ import {
   REQUEST_CONTEXT_KEY,
   STATE_CONTEXT_KEY,
 } from "../observability/otel/context.ts";
-import {
-  InvocationProxy,
-  InvokeFunction,
-  payloadForFunc,
-} from "../routes/live/invoke/index.ts";
 import { setLogger } from "../runtime/fetch/fetchLog.ts";
 import {
   AppManifest,
@@ -38,6 +31,7 @@ import {
   DecoSiteState,
   DecoState,
 } from "../types.ts";
+import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { createServerTimings } from "../utils/timings.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
@@ -269,24 +263,10 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
 
     context.state.resolve = ctxResolver;
     context.state.release = liveContext.release!;
-    const invoker = (
-      key: string,
-      props: unknown,
-    ) =>
-      ctxResolver<Awaited<ReturnType<InvocationFunc<TManifest>>>>(
-        payloadForFunc({ key, props } as InvokeFunction<TManifest>),
-        {},
-        { isInvoke: true },
-      );
 
-    context.state.invoke = new Proxy<InvocationProxyHandler>(
-      invoker as InvocationProxyHandler,
-      newHandler<TManifest>(invoker),
-    ) as unknown as
-      & InvocationProxy<
-        TManifest
-      >
-      & InvocationFunc<TManifest>;
+    context.state.invoke = buildInvokeFunc<TManifest>(ctxResolver, {}, {
+      isInvoke: true,
+    });
 
     const resp = await context.next();
     // enable or disable debugging

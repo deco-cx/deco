@@ -11,6 +11,7 @@ import {
 } from "../engine/block.ts";
 import {
   BaseContext,
+  FieldResolver,
   ResolvableMap,
   ResolverMap,
 } from "../engine/core/resolver.ts";
@@ -36,11 +37,11 @@ export type SourceMap = Record<
 >;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
 type MergeAppsManifest<TCurrent extends AppManifest, TDeps> =
-  & TCurrent
   & (TDeps extends [infer TNext, ...infer Rest]
     ? TNext extends App ? MergeAppsManifest<ManifestOf<TNext>, Rest>
     : {}
-    : {});
+    : {})
+  & TCurrent;
 
 export type ManifestOf<TApp extends App> = MergeAppsManifest<
   TApp["manifest"],
@@ -84,6 +85,7 @@ export type AppMiddlewareContext<
   TApp extends App = App,
   TResponse = any,
 > = AppContext<TApp> & {
+  resolveChain: FieldResolver[];
   next?: () => Promise<TResponse>;
 };
 
@@ -253,6 +255,7 @@ const appMiddlewareToResolverMiddleware = <
         const appCtx = {
           ...fnContextFromHttpContext(appHttpCtx),
           ...state,
+          resolveChain: ctx.resolveChain,
           next: ctx.next?.bind?.(ctx),
         };
         return mid(props, appHttpCtx.request, appCtx);

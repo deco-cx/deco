@@ -493,7 +493,11 @@ const resolveWithType = <
   const { resolvers: resolverMap, resolvables } = context;
 
   if (resolveType in resolvables) {
-    return resolveResolvable(resolveType, context, opts);
+    return context.memo[resolveType] ??= resolveResolvable<T>(
+      resolveType,
+      context,
+      opts,
+    );
   } else if (resolveType in resolverMap) {
     const resolver = resolverMap[resolveType];
     const proceed = () =>
@@ -546,7 +550,7 @@ const resolveResolvable = <
     resolvableObj,
   ) ?? {};
 
-  return context.memo[resolveType] ??= resolveAny(
+  return resolveAny(
     resolvableObj,
     context,
     opts,

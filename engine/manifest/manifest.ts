@@ -4,7 +4,7 @@ import {
   animals,
   NumberDictionary,
   uniqueNamesGenerator,
-} from "https://esm.sh/unique-names-generator@4.7.1";
+} from "https://esm.sh/v135/unique-names-generator@4.7.1";
 import { deferred } from "std/async/deferred.ts";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
