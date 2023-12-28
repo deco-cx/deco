@@ -15,7 +15,6 @@ import {
   BlobReader,
   ZipReader,
 } from "https://deno.land/x/zipjs@v2.7.30/index.js";
-import { DECO_FILE_NAME } from "../engine/releases/fs.ts";
 import { getReleaseJSONFromRelease } from "../engine/releases/json.ts";
 import { init as initApp } from "./apps/init.ts";
 
