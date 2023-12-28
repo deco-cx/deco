@@ -120,7 +120,7 @@ const initProject = async (name: string, config: Config) => {
   const releaseJson = await fetch(config.release).then((res) => res.json());
 
   await Deno.writeTextFile(
-    join(root, DECO_FILE_NAME),
+    join(root, ".decofile"),
     JSON.stringify(
       getReleaseJSONFromRelease(releaseJson, config.appName),
       null,
