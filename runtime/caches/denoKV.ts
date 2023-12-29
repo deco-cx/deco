@@ -288,21 +288,24 @@ export const caches: CacheStorage = {
         const metaKey = await keyForRequest(req);
         const oldMeta = await kv.get<Metadata>(metaKey);
 
-        const start = performance.now();
         const [buffer, zstd] = await response.arrayBuffer()
           .then((buffer) => new Uint8Array(buffer))
           .then((buffer) => {
-            compressDuration.record(performance.now() - start, {
-              bufferSize: buffer.length,
-            });
             bufferSizeSumObserver.add(buffer.length);
             return buffer;
           })
-          .then((buffer) =>
-            buffer.length > MAX_UNCOMPRESSED_SIZE
-              ? [compress(buffer, 4), true] as const
-              : [buffer, false] as const
-          );
+          .then((buffer) => {
+            if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
+              const start = performance.now();
+              const compressed = compress(buffer, 4);
+              compressDuration.record(performance.now() - start, {
+                bufferSize: buffer.length,
+                compressedSize: compressed.length,
+              });
+              return [compressed, true] as const;
+            }
+            return [buffer, false] as const;
+          });
 
         // Orphaned chunks to remove after metadata change
         let orphaned = oldMeta.value;
