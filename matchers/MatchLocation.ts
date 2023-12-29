@@ -59,8 +59,8 @@ export default function MatchLocation(
 ) {
   const city = request.headers.get("cf-ipcity") ?? undefined;
   const country = request.headers.get("cf-ipcountry") ?? undefined;
-  const postalCode = request.headers.get("cf-postal-code") ?? undefined;
-  const userLocation = { city, country, postalCode };
+  const regionCode = request.headers.get("cf-region-code") ?? undefined;
+  const userLocation = { city, country, regionCode };
   const isLocationExcluded = excludeLocations?.some(
     matchLocation(false, userLocation),
   ) ?? false;
