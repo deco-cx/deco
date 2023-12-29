@@ -68,6 +68,12 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   valueType: ValueType.INT,
 });
 
+const compressDuration = meter.createHistogram("zstd_compress_duration", {
+  description: "compress duration",
+  unit: "ms",
+  valueType: ValueType.DOUBLE,
+});
+
 const NAMESPACE = "CACHES";
 const SMALL_EXPIRE_MS = 1_000 * 10; // 10seconds
 const LARGE_EXPIRE_MS = 1_000 * 3600 * 24; // 1day
@@ -282,9 +288,13 @@ export const caches: CacheStorage = {
         const metaKey = await keyForRequest(req);
         const oldMeta = await kv.get<Metadata>(metaKey);
 
+        const start = performance.now();
         const [buffer, zstd] = await response.arrayBuffer()
           .then((buffer) => new Uint8Array(buffer))
           .then((buffer) => {
+            compressDuration.record(performance.now() - start, {
+              bufferSize: buffer.length,
+            });
             bufferSizeSumObserver.add(buffer.length);
             return buffer;
           })
