@@ -43,6 +43,8 @@ import {
   decompress,
   init as initZstd,
 } from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
+import { ValueType } from "../../deps.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -58,6 +60,19 @@ interface Metadata {
   status: number;
   headers: [string, string][];
 }
+
+// Create an UpDownSumObserver to track the sum of buffer sizes
+const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
+  description: "Sum of buffer sizes",
+  unit: "1",
+  valueType: ValueType.INT,
+});
+
+const compressDuration = meter.createHistogram("zstd_compress_duration", {
+  description: "compress duration",
+  unit: "ms",
+  valueType: ValueType.DOUBLE,
+});
 
 const NAMESPACE = "CACHES";
 const SMALL_EXPIRE_MS = 1_000 * 10; // 10seconds
@@ -275,11 +290,22 @@ export const caches: CacheStorage = {
 
         const [buffer, zstd] = await response.arrayBuffer()
           .then((buffer) => new Uint8Array(buffer))
-          .then((buffer) =>
-            buffer.length > MAX_UNCOMPRESSED_SIZE
-              ? [compress(buffer, 4), true] as const
-              : [buffer, false] as const
-          );
+          .then((buffer) => {
+            bufferSizeSumObserver.add(buffer.length);
+            return buffer;
+          })
+          .then((buffer) => {
+            if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
+              const start = performance.now();
+              const compressed = compress(buffer, 4);
+              compressDuration.record(performance.now() - start, {
+                bufferSize: buffer.length,
+                compressedSize: compressed.length,
+              });
+              return [compressed, true] as const;
+            }
+            return [buffer, false] as const;
+          });
 
         // Orphaned chunks to remove after metadata change
         let orphaned = oldMeta.value;
