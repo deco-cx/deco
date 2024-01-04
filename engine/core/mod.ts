@@ -96,11 +96,11 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   }
 
   public with = (
-    { resolvers, resolvables }: ExtensionOptions<TContext>,
+    { resolvers, resolvables, release }: ExtensionOptions<TContext>,
   ): ReleaseResolver<TContext> =>
     new ReleaseResolver<TContext>(
       {
-        release: this.release,
+        release: release ?? this.release,
         danglingRecover: this.danglingRecover,
         resolvables: { ...this.resolvables, ...resolvables },
         resolvers: { ...this.resolvers, ...resolvers },
