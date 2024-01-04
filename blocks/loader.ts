@@ -23,7 +23,8 @@ export interface LoaderModule<
   TState = any,
 > extends BlockModule<FnProps<TProps>> {
   cache?: "no-store" | "stale-while-revalidate";
-  cacheKey?: (req: Request, ctx: FnContext<TState>) => string;
+  // a null value avoid cache
+  cacheKey?: (req: Request, ctx: FnContext<TState>) => string | null;
 
   /** @deprecated use cacheKey instead */
   singleFlightKey?: SingleFlightKeyFunc<TProps, HttpContext>;
@@ -136,13 +137,14 @@ const wrapLoader = ({
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
-
+      const cacheKeyValue = cacheKey(req, ctx);
       try {
         // Should skip cache
         if (
           mode === "no-store" ||
           !ENABLE_LOADER_CACHE ||
-          !isCache(maybeCache)
+          !isCache(maybeCache) || 
+          cacheKeyValue === null
         ) {
           status = "bypass";
           stats.cache.add(1, { status, loader });
@@ -158,13 +160,12 @@ const wrapLoader = ({
         const url = new URL("https://localhost");
         url.searchParams.set("resolver", loader);
         url.searchParams.set("props", hash(props));
-        url.searchParams.set("cacheKey", cacheKey(req, ctx));
+        url.searchParams.set("cacheKey", cacheKeyValue);
         const request = new Request(url);
         timing?.end();
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
-
           cache.put(
             request,
             new Response(JSON.stringify(json), {
