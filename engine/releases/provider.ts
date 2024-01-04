@@ -4,7 +4,7 @@ import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { newFsProvider } from "./fs.ts";
-import { fromHttp } from "./http.ts";
+import { fromEndpoint } from "./fetcher.ts";
 import { newSupabase } from "./supabaseProvider.ts";
 
 export type OnChangeCallback = () => void;
@@ -109,7 +109,7 @@ export const getComposedConfigStore = (
 
   const endpoint = Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
   if (endpoint) {
-    providers.push(fromHttp(endpoint));
+    providers.push(fromEndpoint(endpoint));
   } else {
     if (siteId > 0) {
       providers.push(newSupabase(fromPagesTable(siteId, ns), true)); // if not deploy so no background is needed

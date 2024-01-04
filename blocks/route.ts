@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { fromEndpoint } from "deco/engine/releases/fetcher.ts";
 import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import {
   context as otelContext,
@@ -229,16 +230,23 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       return context.next();
     }
 
+    const inlineRelease = url.searchParams.get("__r");
     const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
     const { resolver } = await liveContext.runtime;
-    const ctxResolver = resolver
+    const currRelease = inlineRelease
+      ? fromEndpoint(inlineRelease)
+      : liveContext.release!;
+    const _resolver = inlineRelease
+      ? resolver.with({ release: currRelease })
+      : resolver;
+    const ctxResolver = _resolver
       .resolverFor(
         { context, request },
         {
           monitoring: context.state.monitoring,
         },
       )
-      .bind(resolver);
+      .bind(_resolver);
 
     if (
       context.destination !== "internal" && context.destination !== "static"
@@ -262,7 +270,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     }
 
     context.state.resolve = ctxResolver;
-    context.state.release = liveContext.release!;
+    context.state.release = currRelease;
 
     context.state.invoke = buildInvokeFunc<TManifest>(ctxResolver, {}, {
       isInvoke: true,
