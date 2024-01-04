@@ -48,7 +48,7 @@ export type {
   ObservableUpDownCounter,
   Span,
   Tracer,
-} from "https://esm.sh/v135/@opentelemetry/api@1.6.0";
+} from "npm:@opentelemetry/api@1.6.0";
 
 export {
   context,
@@ -61,47 +61,44 @@ export {
   SpanKind,
   SpanStatusCode,
   ValueType,
-} from "https://esm.sh/v135/@opentelemetry/api@1.6.0";
+} from "npm:@opentelemetry/api@1.6.0";
 export { crypto } from "std/crypto/mod.ts";
 export { getCookies, getSetCookies, setCookie } from "std/http/mod.ts";
 export type { Handler } from "std/http/server.ts";
 
-export { FetchInstrumentation } from "https://esm.sh/v135/@opentelemetry/instrumentation-fetch@0.43.0";
+export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0.43.0";
 export {
   InstrumentationBase,
   isWrapped as instrumentationIsWrapped,
   registerInstrumentations,
-} from "https://esm.sh/v135/@opentelemetry/instrumentation@0.43.0";
-export type { InstrumentationConfig } from "https://esm.sh/v135/@opentelemetry/instrumentation@0.43.0";
+} from "npm:@opentelemetry/instrumentation@0.43.0";
+export type { InstrumentationConfig } from "npm:@opentelemetry/instrumentation@0.43.0";
 
-export { OTLPTraceExporter } from "https://esm.sh/v135/@opentelemetry/exporter-trace-otlp-proto@0.43.0";
-export { Resource } from "https://esm.sh/v135/@opentelemetry/resources@1.17.0";
+export { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-proto@0.43.0";
+export { Resource } from "npm:@opentelemetry/resources@1.17.0";
 export {
   BatchSpanProcessor,
   ParentBasedSampler,
   SamplingDecision,
   TraceIdRatioBasedSampler,
-} from "https://esm.sh/v135/@opentelemetry/sdk-trace-base@1.17.0";
+} from "npm:@opentelemetry/sdk-trace-base@1.17.0";
 
 export type {
   Sampler,
   SamplingResult,
-} from "https://esm.sh/v135/@opentelemetry/sdk-trace-base@1.17.0";
-export { NodeTracerProvider } from "https://esm.sh/v135/@opentelemetry/sdk-trace-node@1.17.0";
+} from "npm:@opentelemetry/sdk-trace-base@1.17.0";
+export { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node@1.17.0";
 export {
   SemanticResourceAttributes,
-} from "https://esm.sh/v135/@opentelemetry/semantic-conventions@1.17.0";
+} from "npm:@opentelemetry/semantic-conventions@1.17.0";
 
 export {
   ExplicitBucketHistogramAggregation,
   MeterProvider,
   PeriodicExportingMetricReader,
   View,
-} from "https://esm.sh/v135/@opentelemetry/sdk-metrics@1.17.0";
+} from "npm:@opentelemetry/sdk-metrics@1.17.0";
 
 export { default as Murmurhash3 } from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
-export {
-  logs,
-  SeverityNumber,
-} from "https://esm.sh/v135/@opentelemetry/api-logs@0.43.0";
-export { OTLPMetricExporter } from "https://esm.sh/v135/@opentelemetry/exporter-metrics-otlp-http@0.43.0";
+export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";
+export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
