@@ -78,8 +78,7 @@ export const ENABLE_LOADER_CACHE =
 export const LOADER_CACHE_START_TRESHOLD =
   Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
 
-export const LOADER_CACHE_SIZE =
-  Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
+export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
 
 const stats = {
   cache: meter.createCounter("loader_cache", {
@@ -152,7 +151,7 @@ const wrapLoader = ({
         if (
           mode === "no-store" ||
           !ENABLE_LOADER_CACHE ||
-          !isCache(maybeCache) || 
+          !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
           status = "bypass";

@@ -20,7 +20,7 @@ export { DomInspectorActivators } from "https://deno.land/x/inspect_vscode@0.2.1
 export * as inspectVSCode from "https://deno.land/x/inspect_vscode@0.2.1/mod.ts";
 export * from "https://denopkg.com/deco-cx/durable@0.5.3/sdk/deno/mod.ts";
 export * as supabase from "https://esm.sh/v135/@supabase/supabase-js@2.7.0";
-export  * as weakcache from "https://deno.land/x/weakcache@v1.1.4/index.js";
+export * as weakcache from "https://deno.land/x/weakcache@v1.1.4/index.js";
 export { Component } from "https://esm.sh/v135/preact@10.16.0?pin=102";
 export type { JSX } from "https://esm.sh/v135/preact@10.16.0?pin=102";
 export type {
