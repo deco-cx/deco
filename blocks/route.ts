@@ -18,7 +18,7 @@ import {
 import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
-import { context as liveContext } from "../live.ts";
+import { context as liveContext, getCurrentContext } from "../live.ts";
 import { observe } from "../observability/observe.ts";
 import { logger, tracer } from "../observability/otel/config.ts";
 import {
