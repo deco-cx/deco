@@ -112,7 +112,7 @@ const inFuture = (maybeDate: string) => {
 
 const noop = () => "";
 
-const countCache = new weakcache.WeakLRUCache({ cacheSize: LOADER_CACHE_SIZE });
+let countCache = null as (weakcache.WeakLRUCache | null);
 
 /**
  * Wraps the loader written by the user by adding support for:
@@ -158,6 +158,12 @@ const wrapLoader = ({
           stats.cache.add(1, { status, loader });
 
           return await handler(props, req, ctx);
+        }
+
+        if (countCache === null) {
+          countCache = new weakcache.WeakLRUCache({
+            cacheSize: LOADER_CACHE_SIZE,
+          });
         }
 
         const cc = countCache.get(cacheKeyValue) ?? { count: 0 };
