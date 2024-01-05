@@ -80,7 +80,7 @@ export const LOADER_CACHE_START_TRESHOLD =
 
 export const LOADER_CACHE_SIZE =
   Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
-  1_024
+
 const stats = {
   cache: meter.createCounter("loader_cache", {
     unit: "1",
