@@ -1,9 +1,9 @@
 import { HandlerContext } from "$fresh/server.ts";
+import { Release } from "deco/engine/releases/provider.ts";
 import { parse } from "std/semver/mod.ts";
 import { JSONSchema7 } from "../../deps.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { notUndefined, singleFlight } from "../../engine/core/utils.ts";
-import defaults from "../../engine/manifest/defaults.ts";
 import { Schemas } from "../../engine/schema/builder.ts";
 import { namespaceOf } from "../../engine/schema/gen.ts";
 import { genSchemas } from "../../engine/schema/reader.ts";
@@ -131,13 +131,40 @@ const buildSchemaWithResolvables = (
   return { definitions, root };
 };
 
+export const genMetaInfo = async (release: Release): Promise<MetaInfo> => {
+  const revision = await release.revision();
+
+  const { manifest, sourceMap } = await context.runtime!;
+  const manfiestBlocks = toManifestBlocks(
+    manifest,
+  );
+  if (revision !== latestRevision || mschema === null) {
+    mschema = buildSchemaWithResolvables(
+      manfiestBlocks,
+      await genSchemas(manifest, sourceMap),
+      await release.state(),
+    );
+    latestRevision = revision;
+  }
+
+  const info: MetaInfo = {
+    major: parse(meta.version).major,
+    version: meta.version,
+    namespace: context.namespace!,
+    site: context.site!,
+    manifest: manfiestBlocks,
+    schema: mschema,
+  };
+
+  return info;
+};
+
 const sf = singleFlight<string>();
 const binaryId = context.deploymentId ?? crypto.randomUUID();
 export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
 ) => {
-  const skipSchemaGen = new URL(req.url).searchParams.has("skipSchemaGen");
   const timing = ctx.state.t?.start("fetch-revision");
   const revision = await ctx.state.release.revision();
   timing?.end();
@@ -146,44 +173,10 @@ export const handler = async (
   if (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`) { // weak etags should be tested as well.
     return new Response(null, { status: 304, headers: allowCorsFor(req) }); // not modified
   }
-  const info = await sf.do("schema", async () => {
-    const { manifest, sourceMap } = await context.runtime!;
-    const manfiestBlocks = toManifestBlocks(
-      manifest,
-    );
-    if (revision !== latestRevision || mschema === null) {
-      if (!skipSchemaGen) {
-        const timing = ctx.state?.t?.start("build-resolvables");
-        mschema = buildSchemaWithResolvables(
-          manfiestBlocks,
-          await genSchemas(manifest, sourceMap),
-          {
-            ...await ctx.state.resolve({
-              __resolveType: defaults["resolvables"].name,
-            }),
-          },
-        );
-        latestRevision = revision;
-        timing?.end();
-      } else {
-        mschema = {
-          definitions: {},
-          root: {},
-        };
-      }
-    }
-
-    const info: MetaInfo = {
-      major: parse(meta.version).major,
-      version: meta.version,
-      namespace: context.namespace!,
-      site: context.site!,
-      manifest: manfiestBlocks,
-      schema: mschema,
-    };
-
-    return JSON.stringify(info);
-  });
+  const info = await sf.do(
+    "metaInfo",
+    () => genMetaInfo(ctx.state.release).then(JSON.stringify),
+  );
 
   return new Response(
     info,
