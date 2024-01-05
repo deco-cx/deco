@@ -31,9 +31,7 @@ export const newFsProvider = (
         });
       }
       return {
-        state: await Deno.readTextFile(fullPath).then((result) =>
-          JSON.parse(result)
-        ),
+        state: await Deno.readTextFile(fullPath).then(JSON.parse),
         archived: {},
         revision: `${Date.now()}`,
       };
@@ -42,9 +40,9 @@ export const newFsProvider = (
     (async () => {
       const watcher = Deno.watchFs(fullPath);
       const updateState = debounce(async () => {
-        const state = await Deno.readTextFile(fullPath).then((result) =>
-          JSON.parse(result)
-        ).catch((_e) => null);
+        const state = await Deno.readTextFile(fullPath)
+          .then(JSON.parse)
+          .catch((_e) => null);
         if (state === null) {
           return;
         }
