@@ -15,6 +15,7 @@ import {
   SingleFlightKeyFunc,
 } from "./utils.tsx";
 import { logger } from "deco/observability/otel/config.ts";
+import { weakcache } from "../deps.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -74,6 +75,11 @@ export const wrapCaughtErrors = async <
 export const ENABLE_LOADER_CACHE =
   Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
 
+export const LOADER_CACHE_START_TRESHOLD =
+  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
+
+export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
+
 const stats = {
   cache: meter.createCounter("loader_cache", {
     unit: "1",
@@ -105,6 +111,8 @@ const inFuture = (maybeDate: string) => {
 };
 
 const noop = () => "";
+
+let countCache = null as (weakcache.WeakLRUCache | null);
 
 /**
  * Wraps the loader written by the user by adding support for:
@@ -143,9 +151,31 @@ const wrapLoader = ({
         if (
           mode === "no-store" ||
           !ENABLE_LOADER_CACHE ||
-          !isCache(maybeCache) || 
+          !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
+          status = "bypass";
+          stats.cache.add(1, { status, loader });
+
+          return await handler(props, req, ctx);
+        }
+
+        if (countCache === null) {
+          countCache = new weakcache.WeakLRUCache({
+            cacheSize: LOADER_CACHE_SIZE,
+          });
+        }
+
+        const cc = countCache.get(cacheKeyValue) ?? { count: 0 };
+
+        if (cc.count === 0) {
+          cc.count = 1;
+          countCache.set(cacheKeyValue, cc);
+        } else {
+          cc.count += 1;
+        }
+
+        if (cc.count < LOADER_CACHE_START_TRESHOLD) {
           status = "bypass";
           stats.cache.add(1, { status, loader });
 

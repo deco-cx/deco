@@ -1,4 +1,4 @@
-import { WeakLRUCache } from "https://deno.land/x/weakcache@v1.1.4/index.js";
+import { weakcache } from "../../deps.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
 
@@ -27,7 +27,7 @@ export const caches: CacheStorage = {
     throw new Error("Not Implemented");
   },
   open: (_cacheName: string): Promise<Cache> => {
-    const cache = new WeakLRUCache({ cacheSize: 200 });
+    const cache = new weakcache.WeakLRUCache({ cacheSize: 200 });
 
     return Promise.resolve({
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
