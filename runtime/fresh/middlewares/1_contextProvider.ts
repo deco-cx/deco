@@ -57,7 +57,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
           value: inlineRelease,
           path: "/",
           sameSite: "Strict",
-        })
+        });
       }
       return response;
     }

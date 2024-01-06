@@ -82,5 +82,4 @@ export const Context = {
   },
 };
 
-// Example usage
 export const context = Context.active();
