@@ -6,9 +6,10 @@ import { DecoContext, withContext } from "../../../deco.ts";
 import { initContext, newContext } from "../../../mod.ts";
 import { Options } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
-import { getCookies, setCookie } from "std/http/mod.ts";
+import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
 
 const DECO_RELEASE_COOKIE_NAME = "deco_release";
+const DELETE_MARKER = "$";
 export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   opt: Options<TManifest>,
 ): MiddlewareHandler<DecoState<any, DecoSiteState, TManifest>> => {
@@ -38,6 +39,11 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     const url = new URL(request.url);
     const cookies = getCookies(request.headers);
     const inlineReleaseFromQs = url.searchParams.get("__r");
+    if (inlineReleaseFromQs === DELETE_MARKER) {
+      const response = await context.next();
+      deleteCookie(response.headers, DECO_RELEASE_COOKIE_NAME);
+      return response;
+    }
     const inlineReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
     const [inlineRelease, shouldAddCookie] = inlineReleaseFromQs != null
       ? [inlineReleaseFromQs, inlineReleaseFromQs !== inlineReleaseFromCookie]

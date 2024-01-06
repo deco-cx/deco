@@ -166,6 +166,9 @@ export const newContext = <
   const currentContext = Context.active();
   const ctx: DecoContext = {
     ...currentContext,
+    instance: {
+      startedAt: new Date(),
+    },
   };
   let currentSite = siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
