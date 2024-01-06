@@ -19,6 +19,7 @@ import {
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { buildSourceMap } from "../../blocks/utils.tsx";
+import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
 import { ReleaseResolver } from "../../engine/core/mod.ts";
 import {
@@ -36,11 +37,6 @@ import {
   getComposedConfigStore,
   Release,
 } from "../../engine/releases/provider.ts";
-import {
-  DecoContext,
-  DecoRuntimeState,
-  getCurrentContext,
-} from "../../deco.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import defaults from "./defaults.ts";
@@ -106,7 +102,7 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
 };
 
 const siteName = (): string | undefined => {
-  const context = getCurrentContext();
+  const context = Context.active();
   const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
   if (siteNameFromEnv) {
     return siteNameFromEnv;
@@ -135,7 +131,7 @@ export const createResolver = <
   release: Release | undefined = undefined,
 ): Promise<ReleaseResolver<TContext>> => {
   let currentSite = siteName();
-  const context = getCurrentContext();
+  const context = Context.active();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (context.isDeploy) {
       throw new Error(
@@ -358,8 +354,9 @@ export const newContext = <
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
+  const currentContext = Context.active();
   const ctx: DecoContext = {
-    ...getCurrentContext(),
+    ...currentContext,
   };
   let currentSite = siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
@@ -559,7 +556,6 @@ export const $live = <T extends AppManifest>(
   siteInfo?: SiteInfo,
   release: Release | undefined = undefined,
 ): T => {
-  const context = getCurrentContext();
   context.siteId = siteInfo?.siteId ?? -1;
   context.namespace = siteInfo?.namespace;
   const currentSite = siteName();

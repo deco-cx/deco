@@ -1,6 +1,6 @@
 import { Matcher } from "../blocks/matcher.ts";
 import { FnProps } from "../blocks/utils.tsx";
-import { context } from "../deco.ts";
+import { Context } from "../deco.ts";
 import { LoaderContext } from "../mod.ts";
 
 /**
@@ -38,6 +38,7 @@ export default function Conditionals<TValue>(
   _rule: Props<TValue>,
   req: Request,
 ): TValue {
+  const context = Context.active();
   const { rules, else: otherwise } = _rule;
   if (!Array.isArray(rules)) return otherwise;
   for (

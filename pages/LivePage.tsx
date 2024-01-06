@@ -7,7 +7,7 @@ import LivePageEditor, {
   BlockControls,
 } from "../components/LivePageEditor.tsx";
 import { ComponentMetadata, PreactComponent } from "../engine/block.ts";
-import { context } from "../deco.ts";
+import { Context } from "../deco.ts";
 import {
   usePageContext,
   useRouterContext,
@@ -204,6 +204,7 @@ export default function LivePage(
   const routerCtx = useRouterContext();
   const pageId = pageIdFromMetadata(metadata);
 
+  const context = Context.active();
   return (
     <>
       <LiveControls

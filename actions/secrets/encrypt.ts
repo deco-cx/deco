@@ -1,6 +1,6 @@
 import { encryptToHex } from "../../commons/secrets/keys.ts";
 import { badRequest } from "../../engine/errors.ts";
-import { context } from "../../deco.ts";
+import { getCurrentContext } from "../../deco.ts";
 import { ActionContext } from "../../types.ts";
 import { allowCorsFor } from "../../utils/http.ts";
 
@@ -17,7 +17,7 @@ export default async function Encrypt(
   req: Request,
   ctx: ActionContext,
 ): Promise<SignedMessage> {
-  if (!context.isDeploy) {
+  if (!getCurrentContext().isDeploy) {
     badRequest({
       message: "could not update secrets in development mode",
       code: "SECRET_ON_DEV_MODE_NOT_ALLOWED",

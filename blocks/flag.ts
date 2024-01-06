@@ -1,10 +1,10 @@
 import { HttpContext } from "../blocks/handler.ts";
 import { Matcher } from "../blocks/matcher.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
+import { Context } from "../deco.ts";
 import { TsType, TsTypeReference } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
-import { context } from "../deco.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<TVariant = unknown> {
@@ -65,6 +65,7 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     default: FlagFunc<TConfig>;
   }) =>
   ($live: TConfig, { request }: HttpContext) => {
+    const context = Context.active();
     const flag = func.default($live);
     const ctx = { request, siteId: context.siteId };
     if (isMultivariate(flag)) {

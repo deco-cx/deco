@@ -5,10 +5,10 @@ import { usePartialSection } from "deco/hooks/usePartialSection.ts";
 import { Component, createContext } from "preact";
 import { ErrorBoundaryComponent } from "../blocks/section.ts";
 import { RequestState } from "../blocks/utils.tsx";
+import { Context } from "../deco.ts";
 import { Murmurhash3 } from "../deps.ts";
 import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
-import { context } from "../deco.ts";
 import { logger } from "../observability/otel/config.ts";
 
 interface SectionContext {
@@ -90,7 +90,7 @@ export const withSection = <TProps,>(
             fallback={(error) =>
               Fallback ? <Fallback error={error} props={props} /> : (
                 <div
-                  style={context.isDeploy && !debugEnabled
+                  style={Context.active().isDeploy && !debugEnabled
                     ? "display: none"
                     : undefined}
                 >

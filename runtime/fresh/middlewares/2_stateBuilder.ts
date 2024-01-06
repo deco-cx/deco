@@ -1,18 +1,18 @@
 // deno-lint-ignore-file no-explicit-any
+import { Context } from "../../../deco.ts";
 import {
-  context as otelContext,
   FreshHandler as Handler,
-  getCookies,
   HandlerContext,
   Handlers,
   MiddlewareHandlerContext,
   RouteConfig,
   RouteModule,
+  getCookies,
+  context as otelContext,
   setCookie,
 } from "../../../deps.ts";
 import { mapObjKeys } from "../../../engine/core/utils.ts";
 import { HttpError } from "../../../engine/errors.ts";
-import { getCurrentContext } from "../../../deco.ts";
 import { observe } from "../../../observability/observe.ts";
 import { logger, tracer } from "../../../observability/otel/config.ts";
 import {
@@ -113,7 +113,7 @@ const debug = {
       isLivePreview;
 
     const correlationId = url.searchParams.get(DEBUG_QS) || crypto.randomUUID();
-    const liveContext = getCurrentContext();
+    const liveContext = Context.active();
     // querystring forces a setcookie using the querystring value
     return {
       action: hasDebugFromQS || isLivePreview
@@ -188,7 +188,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       });
     }
 
-    const liveContext = getCurrentContext();
+    const liveContext = Context.active();
     if (!liveContext.runtime) {
       console.error(
         "live runtime is not present, the apps were properly installed?",

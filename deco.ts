@@ -37,7 +37,7 @@ export type DecoContext = {
   instance: InstanceInfo;
 };
 
-const _context: DecoContext = {
+const defaultContext: DecoContext = {
   deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
@@ -69,18 +69,18 @@ export const withContext = <R, TArgs extends unknown[]>(
   };
 };
 
-// Function to retrieve the active context
-export function getCurrentContext() {
-  const asyncId = asyncLocalStorage.getStore() as string;
-  // Get the current async ID
-  console.log({ asyncId });
-  if (typeof asyncId !== "string") {
-    return _context;
-  }
+export const Context = {
+  // Function to retrieve the active context
+  active: () => {
+    const asyncId = asyncLocalStorage.getStore() as string;
+    if (typeof asyncId !== "string") {
+      return defaultContext;
+    }
 
-  // Retrieve the context associated with the async ID
-  return contextMap.get(asyncId) || _context;
-}
+    // Retrieve the context associated with the async ID
+    return contextMap.get(asyncId) || defaultContext;
+  },
+};
 
 // Example usage
-export const context = getCurrentContext();
+export const context = Context.active();

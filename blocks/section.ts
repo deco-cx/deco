@@ -3,6 +3,8 @@ import { HttpContext } from "../blocks/handler.ts";
 import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
 import { fnContextFromHttpContext, RequestState } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
+import { withSection } from "../components/section.tsx";
+import { Context } from "../deco.ts";
 import { JSX } from "../deps.ts";
 import {
   Block,
@@ -12,9 +14,7 @@ import {
   PreactComponent,
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
-import { context } from "../deco.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
-import { withSection } from "../components/section.tsx";
 
 /**
  * @widget none
@@ -128,7 +128,7 @@ export const createSectionBlock = (
       component: ctx.resolveChain.findLast((chain) => chain.type === "resolver")
         ?.value?.toString(),
     };
-    if (context.isDeploy) {
+    if (Context.active().isDeploy) {
       return {
         Component: Empty,
         props: {},

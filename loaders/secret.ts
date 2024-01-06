@@ -1,5 +1,5 @@
 import { decryptFromHex } from "../commons/secrets/keys.ts";
-import { context } from "../deco.ts";
+import { Context } from "../deco.ts";
 
 /**
  * @title Plain Text Secret (use Secret instead)
@@ -32,7 +32,7 @@ export default function Secret(
 ): Secret {
   return {
     get: (): Promise<string | null> => {
-      if (!context.isDeploy) {
+      if (!Context.active().isDeploy) {
         const name = props?.name;
         if (!name) {
           return Promise.resolve(null);
