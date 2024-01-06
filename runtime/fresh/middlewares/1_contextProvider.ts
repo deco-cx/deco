@@ -1,12 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
-import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
+import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
+import { DecoContext, withContext } from "../../../deco.ts";
+import { MiddlewareHandler, MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
-import { DecoContext, withContext } from "../../../deco.ts";
 import { initContext, newContext } from "../../../mod.ts";
 import { Options } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
-import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
+
+let contextCache: weakcache.WeakLRUCache | null = null;
 
 const DECO_RELEASE_COOKIE_NAME = "deco_release";
 const DELETE_MARKER = "$";
@@ -27,7 +29,6 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     opt.sourceMap,
     releaseProvider,
   );
-  const contextCache: Record<string, Promise<DecoContext>> = {};
 
   return async function (
     request: Request,
@@ -49,12 +50,19 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       ? [inlineReleaseFromQs, inlineReleaseFromQs !== inlineReleaseFromCookie]
       : [inlineReleaseFromCookie, false];
     if (typeof inlineRelease === "string") {
-      contextCache[inlineRelease] ??= newContext(
-        rootManifest,
-        opt.sourceMap,
-        fromEndpoint(inlineRelease),
-      );
-      const ctx = await contextCache[inlineRelease];
+      contextCache ??= new weakcache.WeakLRUCache({
+        cacheSize: 7, // 7 is arbitrarily chosen
+      });
+      let contextPromise: Promise<DecoContext> | undefined = contextCache.get(inlineRelease);
+      if (!contextPromise) {
+        contextPromise = newContext(
+          rootManifest,
+          opt.sourceMap,
+          fromEndpoint(inlineRelease),
+        );
+        contextCache.set(inlineRelease, contextPromise);
+      }
+      const ctx = await contextPromise;
       const next = withContext(ctx, context.next.bind(context));
       const response = await next();
       if (shouldAddCookie) {
