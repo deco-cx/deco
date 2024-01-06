@@ -9,7 +9,7 @@ import {
 import { Arg, RuntimeParameters, WorkflowExecutionBase } from "../../deps.ts";
 import { BlockFromKey, BlockFunc, BlockKeys } from "../../engine/block.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
-import { getCurrentContext } from "../../deco.ts";
+import { Context } from "../../deco.ts";
 import { AppManifest } from "../../types.ts";
 
 export interface CommonProps<
@@ -88,7 +88,7 @@ export default async function startWorkflow<
 ): Promise<WorkflowExecution> {
   const { id, args, runtimeParameters } = props;
   const workflow = fromWorkflowProps(props);
-  const context = getCurrentContext();
+  const context = Context.active();
   const service = context.isDeploy
     ? Deno.env.get("MY_DURABLE_URL") ??
       `wss://deco-sites-${context.site}-${context.deploymentId}.deno.dev`
