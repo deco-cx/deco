@@ -6,7 +6,9 @@ import { DecoContext, withContext } from "../../../deco.ts";
 import { createResolver, newContext } from "../../../mod.ts";
 import { Options } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import { getCookies, setCookie } from "std/http/mod.ts";
 
+const DECO_RELEASE_COOKIE_NAME = "deco_release";
 export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   opt: Options<TManifest>,
 ): MiddlewareHandler<DecoState<any, DecoSiteState, TManifest>> => {
@@ -34,7 +36,12 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   ) {
     await globalContextCreation;
     const url = new URL(request.url);
-    const inlineRelease = url.searchParams.get("__r");
+    const cookies = getCookies(request.headers);
+    const inlineReleaseFromQs = url.searchParams.get("__r");
+    const inlineReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
+    const [inlineRelease, shouldAddCookie] = inlineReleaseFromQs != null
+      ? [inlineReleaseFromQs, inlineReleaseFromQs !== inlineReleaseFromCookie]
+      : [inlineReleaseFromCookie, false];
     if (typeof inlineRelease === "string") {
       contextCache[inlineRelease] ??= newContext(
         rootManifest,
@@ -43,7 +50,16 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       );
       const ctx = await contextCache[inlineRelease];
       const next = withContext(ctx, context.next.bind(context));
-      return next();
+      const response = await next();
+      if (shouldAddCookie) {
+        setCookie(response.headers, {
+          name: DECO_RELEASE_COOKIE_NAME,
+          value: inlineRelease,
+          path: "/",
+          sameSite: "Strict",
+        })
+      }
+      return response;
     }
     return context.next();
   };

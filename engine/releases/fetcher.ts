@@ -3,6 +3,10 @@ import { Release } from "./provider.ts";
 
 const endpointCache: Record<string, Promise<Record<string, unknown>>> = {};
 
+const ALLOWED_AUTHORITIES_ENV_VAR_NAME = "DECO_ALLOWED_AUTHORITIES"
+const ALLOWED_AUTHORITIES = Deno.env.has(ALLOWED_AUTHORITIES_ENV_VAR_NAME)
+  ? Deno.env.get(ALLOWED_AUTHORITIES_ENV_VAR_NAME)!.split(",")
+  : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx"];
 async function endpointLoader(
   endpointSpecifier: string,
 ): Promise<string | undefined> {
@@ -14,6 +18,11 @@ async function endpointLoader(
       }
       case "http:":
       case "https:": {
+        if (!ALLOWED_AUTHORITIES.includes(url.hostname)) {
+          throw new Error(
+            `authority ${url.hostname} is not allowed to be fetched from`,
+          );
+        }
         const response = await fetch(String(url), { redirect: "follow" }).catch(
           (err) => {
             console.log("error when trying fetch from, retrying", url, err);
