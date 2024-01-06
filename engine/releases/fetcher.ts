@@ -6,7 +6,7 @@ const endpointCache: Record<string, Promise<Record<string, unknown>>> = {};
 const ALLOWED_AUTHORITIES_ENV_VAR_NAME = "DECO_ALLOWED_AUTHORITIES";
 const ALLOWED_AUTHORITIES = Deno.env.has(ALLOWED_AUTHORITIES_ENV_VAR_NAME)
   ? Deno.env.get(ALLOWED_AUTHORITIES_ENV_VAR_NAME)!.split(",")
-  : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx"];
+  : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx", "localhost"];
 async function endpointLoader(
   endpointSpecifier: string,
 ): Promise<string | undefined> {
