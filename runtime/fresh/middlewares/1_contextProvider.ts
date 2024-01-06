@@ -36,36 +36,55 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     opt?.useLocalStorageOnly || Deno.env.has("USE_LOCAL_STORAGE_ONLY")
       ? newFsProvider(DECO_FILE_NAME, opt.manifest.name)
       : opt.release;
+  // Define root manifest
   const rootManifest = {
     baseUrl: opt.manifest.baseUrl,
     name: opt.manifest.name,
     apps: { ...opt.manifest.apps },
   };
+
+  // Initialize global context
   const globalContextCreation = initContext(
     rootManifest,
     opt.sourceMap,
     releaseProvider,
   );
 
+  // Return an async function to handle requests
   return async function (
     request: Request,
     context: MiddlewareHandlerContext<
       DecoState<any, DecoSiteState, TManifest>
     >,
   ) {
+    // Wait for global context creation
     await globalContextCreation;
+
+    // Parse the URL from the request
     const url = new URL(request.url);
-    const cookies = getCookies(request.headers);
+
+    // Get the inline release from the query string
     const inlineReleaseFromQs = url.searchParams.get("__r");
+
+    // If the inline release is the delete marker, delete the cookie and return the response
     if (inlineReleaseFromQs === DELETE_MARKER) {
       const response = await context.next();
       deleteCookie(response.headers, DECO_RELEASE_COOKIE_NAME);
       return response;
     }
+
+    // Get the cookies from the request headers
+    const cookies = getCookies(request.headers);
+
+    // Get the inline release from the cookie
     const inlineReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
+
+    // Determine the inline release and whether a cookie should be added
     const [inlineRelease, shouldAddCookie] = inlineReleaseFromQs != null
       ? [inlineReleaseFromQs, inlineReleaseFromQs !== inlineReleaseFromCookie]
       : [inlineReleaseFromCookie, false];
+
+    // If the inline release is a string, create a new context cache
     if (typeof inlineRelease === "string") {
       contextCache ??= new ContextCache({
         cacheSize: 7, // 7 is arbitrarily chosen
