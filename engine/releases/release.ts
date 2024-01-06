@@ -3,8 +3,8 @@ import { singleFlight } from "../../engine/core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
 import {
   CurrResolvables,
-  SupabaseReleaseProvider,
-} from "./supabaseProvider.ts";
+  RealtimeReleaseProvider,
+} from "./realtime.ts";
 
 const TABLE = "configs";
 const fetchRelease = (
@@ -80,7 +80,7 @@ const subscribeForReleaseChanges = (
  */
 export const fromConfigsTable = (
   site: string,
-): SupabaseReleaseProvider => {
+): RealtimeReleaseProvider => {
   const sf = singleFlight<{ data: CurrResolvables | null; error: unknown }>();
   const fetcher = () =>
     sf.do(

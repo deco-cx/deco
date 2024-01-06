@@ -4,7 +4,7 @@ import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { getReleaseJSONFromRelease } from "./json.ts";
 import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
-import { CurrResolvables } from "./supabaseProvider.ts";
+import { CurrResolvables } from "./realtime.ts";
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)

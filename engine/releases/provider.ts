@@ -3,9 +3,9 @@ import { fromPagesTable } from "../../engine/releases/pages.ts";
 import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { SelectionConfig } from "../../handlers/routesSelection.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import { newFsProvider } from "./fs.ts";
 import { fromEndpoint } from "./fetcher.ts";
-import { newSupabase } from "./supabaseProvider.ts";
+import { newFsProvider } from "./fs.ts";
+import { newRealtime } from "./realtime.ts";
 
 export type OnChangeCallback = () => void;
 export interface ReadOptions {
@@ -16,6 +16,7 @@ export interface Release {
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   revision(): Promise<string>;
   onChange(callback: OnChangeCallback): void;
+  dispose?: () => void;
 }
 
 interface RoutesSelection extends SelectionConfig {
@@ -58,6 +59,10 @@ export const compose = (...providers: Release[]): Release => {
             currentResolvables[ENTRYPOINT],
           ),
         };
+      },
+      dispose: () => {
+        providers?.dispose?.();
+        current?.dispose?.();
       },
       onChange: (cb) => {
         providers.onChange(cb);
@@ -112,10 +117,10 @@ export const getComposedConfigStore = (
     providers.push(fromEndpoint(endpoint));
   } else {
     if (siteId > 0) {
-      providers.push(newSupabase(fromPagesTable(siteId, ns), true)); // if not deploy so no background is needed
+      providers.push(newRealtime(fromPagesTable(siteId, ns), true)); // if not deploy so no background is needed
     }
 
-    providers.push(newSupabase(fromConfigsTable(site), true)); // if not deploy so no background is needed
+    providers.push(newRealtime(fromConfigsTable(site), true)); // if not deploy so no background is needed
   }
 
   if (Deno.env.has("USE_LOCAL_STORAGE")) {

@@ -1,14 +1,31 @@
 // deno-lint-ignore-file no-explicit-any
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
 import { DecoContext, withContext } from "../../../deco.ts";
-import { MiddlewareHandler, MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
+import {
+  MiddlewareHandler,
+  MiddlewareHandlerContext,
+  weakcache,
+} from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
 import { initContext, newContext } from "../../../mod.ts";
 import { Options } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 
-let contextCache: weakcache.WeakLRUCache | null = null;
+interface Opts {
+  cacheSize?: number;
+}
+class ContextCache extends weakcache.WeakLRUCache {
+  constructor(options: Opts) {
+    super(options);
+  }
+  onRemove(entry: { value: Promise<DecoContext> }): void { // dispose release on remove from cache
+    entry?.value?.then?.((v) => v?.release?.dispose?.());
+    super.onRemove(entry);
+  }
+}
+
+let contextCache: ContextCache | null = null;
 
 const DECO_RELEASE_COOKIE_NAME = "deco_release";
 const DELETE_MARKER = "$";
@@ -50,17 +67,26 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       ? [inlineReleaseFromQs, inlineReleaseFromQs !== inlineReleaseFromCookie]
       : [inlineReleaseFromCookie, false];
     if (typeof inlineRelease === "string") {
-      contextCache ??= new weakcache.WeakLRUCache({
+      contextCache ??= new ContextCache({
         cacheSize: 7, // 7 is arbitrarily chosen
       });
-      let contextPromise: Promise<DecoContext> | undefined = contextCache.get(inlineRelease);
+      let contextPromise: Promise<DecoContext> | undefined = contextCache.get(
+        inlineRelease,
+      );
       if (!contextPromise) {
         contextPromise = newContext(
           rootManifest,
           opt.sourceMap,
           fromEndpoint(inlineRelease),
         );
-        contextCache.set(inlineRelease, contextPromise);
+        contextCache.set(
+          inlineRelease,
+          contextPromise.catch((err) => {
+            console.error("context creation error", err);
+            contextCache?.delete(inlineRelease);
+            throw err;
+          }),
+        );
       }
       const ctx = await contextPromise;
       const next = withContext(ctx, context.next.bind(context));
