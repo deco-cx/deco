@@ -122,29 +122,17 @@ const getPlayDomain = (): string => {
     Deno.env.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
   }`;
 };
-export const createResolver = <
+export const initContext = async <
   T extends AppManifest,
-  TContext extends BaseContext = BaseContext,
 >(
   m: T,
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
-): Promise<ReleaseResolver<TContext>> => {
-  let currentSite = siteName();
-  const context = Context.active();
-  if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
-    if (context.isDeploy) {
-      throw new Error(
-        `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
-      );
-    }
-    currentSite = uniqueNamesGenerator({
-      dictionaries: [animals, adjectives, numberDictionary],
-      length: 3,
-      separator: "-",
-    });
+): Promise<DecoContext> => {
+  Object.assign(context, await newContext(m, currSourceMap, release));
+  if (context.play) {
     console.debug(
-      `\n👋 Hey [${green(currentSite!)}] welcome to ${
+      `\n👋 Hey [${green(context.site)}] welcome to ${
         rgb24("deco.cx", DECO_COLORS)
       }! Let's play?`,
     );
@@ -164,187 +152,8 @@ export const createResolver = <
         DECO_COLORS,
       ))
     } and happy coding!\n\n`);
-    release ??= newFsProvider(DECO_FILE_NAME, m.name);
-    context.play = true;
   }
-  context.namespace ??= `deco-sites/${currentSite}`;
-  context.site = currentSite!;
-  const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
-    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
-    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
-  );
-  const provider = release ?? getComposedConfigStore(
-    context.namespace!,
-    context.site,
-    context.siteId,
-  );
-  const runtimePromise = deferred<DecoRuntimeState>();
-  context.runtime = runtimePromise.finally(() => {
-    context.instance.readyAt = new Date();
-  });
-
-  context.release = provider;
-  const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
-    release: provider,
-    danglingRecover: recovers.length > 0
-      ? buildDanglingRecover(recovers)
-      : undefined,
-  });
-  const firstInstallAppsPromise = deferred<void>();
-  const installApps = async () => {
-    const fakeCtx = newFakeContext();
-    const allAppsMap: Record<string, Resolvable> = {};
-    let currentResolver = resolver;
-    while (true) {
-      const currentApps: Record<string, Resolvable> = {};
-      const { resolvers: currResolvers, resolvables: currResolvables } =
-        await currentResolver.resolve<
-          { resolvers: ResolverMap; resolvables: Record<string, Resolvable> }
-        >({
-          __resolveType: defaults["state"].name,
-        }, fakeCtx);
-
-      for (const [key, value] of Object.entries(currResolvables)) {
-        if (!isResolvable(value)) {
-          continue;
-        }
-        let resolver: Resolver | undefined = undefined;
-        let currentResolveType = value.__resolveType;
-        while (true) {
-          resolver = currResolvers[currentResolveType];
-          if (resolver !== undefined) {
-            break;
-          }
-          const resolvable = currResolvables[currentResolveType];
-          if (!resolvable || !isResolvable(resolvable)) {
-            break;
-          }
-          currentResolveType = resolvable.__resolveType;
-        }
-        if (
-          resolver !== undefined && resolver.type === "apps" &&
-          !(key in allAppsMap)
-        ) {
-          allAppsMap[key] = value;
-          currentApps[key] = value;
-        }
-      }
-      if (Object.keys(currentApps).length === 0) {
-        break;
-      }
-
-      const apps = Object.values(currentApps);
-      // first pass nullIfDangling
-      const { apps: installedApps } = await currentResolver.resolve<
-        { apps: MergedAppRuntime[] }
-      >({ apps }, fakeCtx, {
-        nullIfDangling: true,
-        propagateOptions: true,
-      });
-      const { resolvers, resolvables = {} } = installedApps.filter(Boolean)
-        .reduce(
-          mergeRuntimes,
-        );
-      currentResolver = currentResolver.with({ resolvers, resolvables });
-    }
-    const apps = Object.values(allAppsMap);
-    if (!apps || apps.length === 0) {
-      runtimePromise.resolve({
-        resolver: currentResolver,
-        manifest: newManifest,
-        sourceMap: currSourceMap ?? buildSourceMap(newManifest),
-      });
-      firstInstallAppsPromise.resolve();
-      return;
-    }
-    const appNames = Object.keys(allAppsMap);
-    const longerName = appNames.reduce(
-      (currentLength, name) =>
-        currentLength > name.length ? currentLength : name.length,
-      0,
-    );
-
-    console.log(
-      `[${green(context.site)}]: installing ${
-        green(`${appNames.length}`)
-      } apps: ${
-        appNames.map((name) =>
-          `\n${green(name.padEnd(longerName))} - ${
-            gray(allAppsMap[name].__resolveType)
-          }`
-        ).join("")
-      }`,
-    );
-    // second => nullIfDangling
-    const { apps: installedApps } = await currentResolver.resolve<
-      { apps: AppRuntime[] }
-    >({ apps }, fakeCtx).catch((err) => {
-      console.error(
-        "installing apps failed",
-        err,
-        "this will falling back to null references to make it work, you should fix this",
-      );
-      return currentResolver.resolve<
-        { apps: MergedAppRuntime[] }
-      >({ apps }, fakeCtx, {
-        nullIfDangling: true,
-        propagateOptions: true,
-      });
-    });
-    const { manifest, sourceMap, resolvers, resolvables = {} } = installedApps
-      .reduce(
-        mergeRuntimes,
-      );
-
-    currentResolver = currentResolver.with({ resolvers, resolvables });
-
-    // for who is awaiting for the previous promise
-    const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
-    const runtime = {
-      manifest: mergeManifests(newManifest, manifest),
-      sourceMap: mSourceMap,
-      resolver: currentResolver,
-    };
-    if (runtimePromise.state !== "fulfilled") {
-      runtimePromise.resolve(runtime);
-    }
-
-    context.runtime = Promise.resolve(runtime);
-  };
-
-  let appsInstallationMutex = deferred();
-  provider.onChange(() => {
-    // limiter to not allow multiple installations in parallel
-    Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
-      appsInstallationMutex = deferred();
-      // installApps should never block next install as the first install is the only that really matters.
-      // so we should resolve to let next install happen immediately
-      installApps().finally(appsInstallationMutex.resolve);
-    });
-  });
-  provider.state().then(() => {
-    installApps().then(firstInstallAppsPromise.resolve).catch(
-      firstInstallAppsPromise.reject,
-    ).then(appsInstallationMutex.resolve);
-  }).catch(firstInstallAppsPromise.reject);
-
-  if (shouldCheckIntegrity) {
-    provider.state().then(
-      (resolvables: Record<string, Resolvable>) => {
-        integrityCheck(resolver.getResolvers(), resolvables);
-      },
-    );
-  }
-  const start = performance.now();
-  return firstInstallAppsPromise.then(() => {
-    console.log(
-      `[${green(context.site)}]: the apps has been installed in ${
-        (performance.now() - start).toFixed(0)
-      }ms`,
-    );
-    return runtimePromise.then((runtime) => runtime.resolver);
-  });
+  return context;
 };
 
 export const newContext = <

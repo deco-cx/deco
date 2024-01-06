@@ -3,7 +3,7 @@ import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
 import { DecoContext, withContext } from "../../../deco.ts";
-import { createResolver, newContext } from "../../../mod.ts";
+import { initContext, newContext } from "../../../mod.ts";
 import { Options } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 import { getCookies, setCookie } from "std/http/mod.ts";
@@ -21,7 +21,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     name: opt.manifest.name,
     apps: { ...opt.manifest.apps },
   };
-  const globalContextCreation = createResolver(
+  const globalContextCreation = initContext(
     rootManifest,
     opt.sourceMap,
     releaseProvider,

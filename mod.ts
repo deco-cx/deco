@@ -25,7 +25,7 @@ export type { Resolved } from "./engine/core/resolver.ts";
 export { badRequest, notFound, redirect } from "./engine/errors.ts";
 export {
   $live,
-  createResolver,
+  initContext,
   newContext,
 } from "./engine/manifest/manifest.ts";
 export type { Route, Routes } from "./flags/audience.ts";
