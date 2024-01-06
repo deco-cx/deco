@@ -35,16 +35,6 @@ jobs:
         run: |
           deno cache --lock=deno.lock --lock-write --reload=file: ./mod.ts
 
-      - name: Check if there are changes on ${{ matrix.os }}
-        id: changes
-        shell: bash
-        run: |
-          git status --porcelain
-          if [[ $(git status --porcelain | wc -c) -eq 0 ]]; then
-              echo "uncommitted changes detected"
-              exit 1
-          fi
-
       - run: |
           deno test --lock=deno.lock --lock-write -A .
       - run: |
