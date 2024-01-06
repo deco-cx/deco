@@ -9,9 +9,8 @@ import {
 import { Arg, RuntimeParameters, WorkflowExecutionBase } from "../../deps.ts";
 import { BlockFromKey, BlockFunc, BlockKeys } from "../../engine/block.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
-import { Manifest } from "../../live.gen.ts";
 import { context } from "../../deco.ts";
-import { AppManifest, DecoManifest } from "../../types.ts";
+import { AppManifest } from "../../types.ts";
 
 export interface CommonProps<
   TMetadata extends WorkflowMetadata = WorkflowMetadata,
@@ -31,7 +30,7 @@ export interface AnyWorkflow extends CommonProps {
 
 export type WorkflowProps<
   key extends string = string,
-  TManifest extends AppManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 > = key extends BlockKeys<TManifest> & `${string}/workflows/${string}`
   ? BlockFunc<key, TManifest, block> extends
@@ -43,7 +42,7 @@ export type WorkflowProps<
 
 const fromWorkflowProps = <
   key extends string = string,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 >(
   props: WorkflowProps<key, TManifest, block> | AnyWorkflow,
@@ -82,7 +81,7 @@ export const WorkflowQS = {
  */
 export default async function startWorkflow<
   key extends string = string,
-  TManifest extends DecoManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
   block extends BlockFromKey<key, TManifest> = BlockFromKey<key, TManifest>,
 >(
   props: WorkflowProps<key, TManifest, block> | AnyWorkflow,
