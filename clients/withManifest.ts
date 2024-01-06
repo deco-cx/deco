@@ -14,7 +14,7 @@ import type {
   ManifestFunction,
   ManifestInvocable,
   ManifestLoader,
-} from "../routes/live/invoke/index.ts";
+} from "../utils/invoke.types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import { InvocationProxyHandler, InvokeAwaiter, newHandler } from "./proxy.ts";
 

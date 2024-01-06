@@ -4,7 +4,7 @@ import JsonViewer from "../components/JsonViewer.tsx";
 import { TsType, TsTypeReference } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
-import { context } from "../live.ts";
+import { context } from "../deco.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<TVariant = unknown> {

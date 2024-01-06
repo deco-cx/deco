@@ -1,6 +1,6 @@
 import { Matcher } from "../blocks/matcher.ts";
 import { FnProps } from "../blocks/utils.tsx";
-import { context } from "../live.ts";
+import { context } from "../deco.ts";
 import { LoaderContext } from "../mod.ts";
 
 /**

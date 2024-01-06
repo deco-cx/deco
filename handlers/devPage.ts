@@ -1,7 +1,7 @@
 import { ConnInfo } from "std/http/server.ts";
 import { Page } from "../blocks/page.tsx";
 import Fresh from "../handlers/fresh.ts";
-import { context } from "../live.ts";
+import { context } from "../deco.ts";
 import { pageIdFromMetadata } from "../pages/LivePage.tsx";
 import { FnContext } from "../types.ts";
 import { adminUrlFor, isAdmin } from "../utils/admin.ts";

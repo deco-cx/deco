@@ -1,39 +1,28 @@
 // deno-lint-ignore-file no-explicit-any
-import { fromEndpoint } from "deco/engine/releases/fetcher.ts";
-import { METHODS } from "https://deno.land/x/rutt@0.0.13/mod.ts";
 import {
   context as otelContext,
   FreshHandler as Handler,
   getCookies,
   HandlerContext,
   Handlers,
-  MiddlewareHandler,
   MiddlewareHandlerContext,
-  MiddlewareModule,
-  PageProps,
   RouteConfig,
   RouteModule,
   setCookie,
-} from "../deps.ts";
-import { Block, BlockModule, ComponentFunc } from "../engine/block.ts";
-import { mapObjKeys } from "../engine/core/utils.ts";
-import { HttpError } from "../engine/errors.ts";
-import { context as liveContext, getCurrentContext } from "../live.ts";
-import { observe } from "../observability/observe.ts";
-import { logger, tracer } from "../observability/otel/config.ts";
+} from "../../../deps.ts";
+import { mapObjKeys } from "../../../engine/core/utils.ts";
+import { HttpError } from "../../../engine/errors.ts";
+import { getCurrentContext } from "../../../deco.ts";
+import { observe } from "../../../observability/observe.ts";
+import { logger, tracer } from "../../../observability/otel/config.ts";
 import {
   REQUEST_CONTEXT_KEY,
   STATE_CONTEXT_KEY,
-} from "../observability/otel/context.ts";
-import { setLogger } from "../runtime/fetch/fetchLog.ts";
-import {
-  AppManifest,
-  DecoManifest,
-  DecoSiteState,
-  DecoState,
-} from "../types.ts";
-import { buildInvokeFunc } from "../utils/invoke.server.ts";
-import { createServerTimings } from "../utils/timings.ts";
+} from "../../../observability/otel/context.ts";
+import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
+import { createServerTimings } from "../../../utils/timings.ts";
+import { setLogger } from "../../fetch/fetchLog.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -73,31 +62,7 @@ const withErrorHandler = (
     }
   };
 };
-const hasAnyMethod = (obj: Record<string, any>): boolean => {
-  for (const method of METHODS) {
-    if (obj[method]) {
-      return true;
-    }
-  }
-  return false;
-};
 
-const isConfigurableRoute = (
-  v: DecoManifest["routes"][string] | ConfigurableRoute,
-): v is ConfigurableRoute => {
-  const handler = (v as RouteModule).handler;
-  const defaultIsFunc = typeof (v as RouteModule).default === "function";
-  const handlerIsFunc = typeof handler === "function";
-
-  const handlerIsFuncMap = handler !== undefined &&
-    typeof handler === "object" &&
-    hasAnyMethod(handler);
-
-  return (
-    handlerIsFunc || defaultIsFunc || handlerIsFuncMap
-  );
-};
-const middlewareKey = "./routes/_middleware.ts";
 /**
  * Unfortunately fresh does not accept one route for catching all non-matched routes.
  * It can be done using routeOverride (/*) but the internal fresh sort will break and this route will not be properly sorted.
@@ -148,6 +113,7 @@ const debug = {
       isLivePreview;
 
     const correlationId = url.searchParams.get(DEBUG_QS) || crypto.randomUUID();
+    const liveContext = getCurrentContext();
     // querystring forces a setcookie using the querystring value
     return {
       action: hasDebugFromQS || isLivePreview
@@ -173,9 +139,8 @@ const debug = {
     };
   },
 };
-
 export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
-  resolveKeyOrInstallPromise: string | Promise<unknown>,
+  resolveKey?: string,
 ) =>
   async function (
     request: Request,
@@ -223,6 +188,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       });
     }
 
+    const liveContext = getCurrentContext();
     if (!liveContext.runtime) {
       console.error(
         "live runtime is not present, the apps were properly installed?",
@@ -230,47 +196,39 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       return context.next();
     }
 
-    const inlineRelease = url.searchParams.get("__r");
     const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
     const { resolver } = await liveContext.runtime;
-    const currRelease = inlineRelease
-      ? fromEndpoint(inlineRelease)
-      : liveContext.release!;
-    const _resolver = inlineRelease
-      ? resolver.with({ release: currRelease })
-      : resolver;
-    const ctxResolver = _resolver
+    const ctxResolver = resolver
       .resolverFor(
         { context, request },
         {
           monitoring: context.state.monitoring,
         },
       )
-      .bind(_resolver);
+      .bind(resolver);
 
     if (
-      context.destination !== "internal" && context.destination !== "static"
+      (context.destination !== "internal" &&
+        context.destination !== "static") && resolveKey
     ) {
       const timing = context?.state?.t?.start("load-page");
-      const $live = typeof resolveKeyOrInstallPromise === "string"
-        ? (await ctxResolver(
-          resolveKeyOrInstallPromise,
-          {
-            forceFresh: !isLiveMeta && (
-              !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
-              url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
-            ),
-            nullIfDangling: true,
-          },
-        )) ?? {}
-        : await resolveKeyOrInstallPromise.then(() => ({}));
+      const $live = (await ctxResolver(
+        resolveKey,
+        {
+          forceFresh: !isLiveMeta && (
+            !liveContext.isDeploy || url.searchParams.has("forceFresh") ||
+            url.searchParams.has("pageId") // Force fresh only once per request meaning that only the _middleware will force the fresh to happen the others will reuse the fresh data.
+          ),
+          nullIfDangling: true,
+        },
+      )) ?? {};
 
       timing?.end();
       context.state.$live = $live;
     }
 
     context.state.resolve = ctxResolver;
-    context.state.release = currRelease;
+    context.state.release = liveContext.release!;
 
     context.state.invoke = buildInvokeFunc<TManifest>(ctxResolver, {}, {
       isInvoke: true,
@@ -286,13 +244,6 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
 
     return resp;
   };
-const mapMiddleware = (
-  mid: MiddlewareHandler<DecoState<any, DecoSiteState>> | MiddlewareHandler<
-    DecoState<any, DecoSiteState>
-  >[],
-): MiddlewareHandler<DecoState<any, DecoSiteState>>[] => {
-  return [buildDecoState(middlewareKey), ...Array.isArray(mid) ? mid : [mid]];
-};
 
 export const injectLiveStateForPath = (
   path: string,
@@ -331,48 +282,3 @@ export const injectLiveStateForPath = (
     return await context.render($live);
   });
 };
-export type Route<TProps = any> = ComponentFunc<PageProps<TProps>>;
-
-export interface RouteMod extends BlockModule {
-  handler?: (
-    request: Request,
-    context: HandlerContext<any, DecoState>,
-  ) => Promise<Response>;
-  default: Route;
-}
-
-const blockType = "routes";
-const routeBlock: Block<RouteMod> = {
-  decorate: (routeModule, key) => {
-    if (key === middlewareKey) {
-      return {
-        ...routeModule,
-        handler: mapMiddleware(
-          (routeModule as unknown as MiddlewareModule)
-            .handler as MiddlewareHandler<
-              DecoState<any, DecoSiteState>
-            >,
-        ),
-      };
-    }
-    if (key.endsWith("_middleware.ts")) {
-      return routeModule;
-    }
-
-    if (
-      isConfigurableRoute(routeModule)
-    ) {
-      const configurableRoute = routeModule;
-      const handl = configurableRoute.handler;
-      const liveKey = configurableRoute.config?.liveKey ?? key;
-      return {
-        ...routeModule,
-        handler: injectLiveStateForPath(liveKey, handl),
-      };
-    }
-    return routeModule;
-  },
-  type: blockType,
-};
-
-export default routeBlock;

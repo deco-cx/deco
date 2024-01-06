@@ -1,6 +1,6 @@
 import { join } from "std/path/mod.ts";
 import { genSchemasFromManifest } from "../../engine/schema/gen.ts";
-import { context } from "../../live.ts";
+import { context } from "../../deco.ts";
 import { AppManifest } from "../../types.ts";
 import { SourceMap } from "../../blocks/app.ts";
 

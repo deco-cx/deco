@@ -8,7 +8,7 @@ import { RequestState } from "../blocks/utils.tsx";
 import { Murmurhash3 } from "../deps.ts";
 import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
-import { context } from "../live.ts";
+import { context } from "../deco.ts";
 import { logger } from "../observability/otel/config.ts";
 
 interface SectionContext {

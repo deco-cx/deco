@@ -10,7 +10,7 @@ import { Arg, RuntimeParameters, WorkflowExecutionBase } from "../../deps.ts";
 import { BlockFromKey, BlockFunc, BlockKeys } from "../../engine/block.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { Manifest } from "../../live.gen.ts";
-import { context } from "../../live.ts";
+import { context } from "../../deco.ts";
 import { AppManifest, DecoManifest } from "../../types.ts";
 
 export interface CommonProps<

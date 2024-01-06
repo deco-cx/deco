@@ -1,19 +1,19 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { RequestState } from "../blocks/utils.tsx";
+import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
+import { RequestState } from "../../../blocks/utils.tsx";
 import {
   getPagePathTemplate,
   redirectTo,
-} from "../compatibility/v0/editorData.ts";
-import { SpanStatusCode } from "../deps.ts";
-import { Resolvable } from "../engine/core/resolver.ts";
-import { context } from "../live.ts";
-import { Apps } from "../mod.ts";
-import { startObserve } from "../observability/http.ts";
-import { DecoSiteState, DecoState } from "../types.ts";
-import { isAdminOrLocalhost } from "../utils/admin.ts";
-import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
-import { formatLog } from "../utils/log.ts";
+} from "../../../compatibility/v0/editorData.ts";
+import { SpanStatusCode } from "../../../deps.ts";
+import { Resolvable } from "../../../engine/core/resolver.ts";
+import { context } from "../../../deco.ts";
+import { Apps } from "../../../mod.ts";
+import { startObserve } from "../../../observability/http.ts";
+import { DecoSiteState, DecoState } from "../../../types.ts";
+import { isAdminOrLocalhost } from "../../../utils/admin.ts";
+import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
+import { formatLog } from "../../../utils/log.ts";
 
 export const redirectToPreviewPage = async (url: URL, pageId: string) => {
   url.searchParams.append("path", url.pathname);

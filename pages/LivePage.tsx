@@ -7,8 +7,11 @@ import LivePageEditor, {
   BlockControls,
 } from "../components/LivePageEditor.tsx";
 import { ComponentMetadata, PreactComponent } from "../engine/block.ts";
-import { context } from "../live.ts";
-import { usePageContext, useRouterContext } from "../routes/[...catchall].tsx";
+import { context } from "../deco.ts";
+import {
+  usePageContext,
+  useRouterContext,
+} from "../runtime/fresh/routes/entrypoint.tsx";
 import { isLivePageProps } from "../sections/PageInclude.tsx";
 import { CONTENT_SLOT_NAME } from "../sections/Slot.tsx";
 import { Props as UseSlotProps } from "../sections/UseSlot.tsx";

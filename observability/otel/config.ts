@@ -10,7 +10,7 @@ import {
   Resource,
   SemanticResourceAttributes,
 } from "../../deps.ts";
-import { context } from "../../live.ts";
+import { context } from "../../deco.ts";
 import meta from "../../meta.json" assert { type: "json" };
 import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";

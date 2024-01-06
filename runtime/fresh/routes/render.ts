@@ -1,7 +1,7 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { FieldResolver, Resolvable } from "deco/engine/core/resolver.ts";
-import { badRequest } from "deco/engine/errors.ts";
-import { DecoSiteState, DecoState } from "../../types.ts";
+import { FieldResolver, Resolvable } from "../../../engine/core/resolver.ts";
+import { badRequest } from "../../../engine/errors.ts";
+import { DecoSiteState, DecoState } from "../../../types.ts";
 
 interface Options {
   resolveChain: FieldResolver[];

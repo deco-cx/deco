@@ -2,11 +2,11 @@ import { HandlerContext, PageProps } from "$fresh/server.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import { ConnInfo } from "std/http/server.ts";
-import { Handler } from "../blocks/handler.ts";
-import { Page } from "../blocks/page.tsx";
-import { PageContext } from "../engine/block.ts";
-import { DecoSiteState, DecoState, Flag } from "../types.ts";
-import { setCSPHeaders } from "../utils/http.ts";
+import { Handler } from "../../../blocks/handler.ts";
+import { Page } from "../../../blocks/page.tsx";
+import { PageContext } from "../../../engine/block.ts";
+import { DecoSiteState, DecoState, Flag } from "../../../types.ts";
+import { setCSPHeaders } from "../../../utils/http.ts";
 
 export interface RouterContext {
   pagePath: string;

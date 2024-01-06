@@ -1,5 +1,5 @@
 import { DomInspectorActivators, Head, inspectVSCode } from "../deps.ts";
-import { context } from "../live.ts";
+import { context } from "../deco.ts";
 import type { Flag, Site } from "../types.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;

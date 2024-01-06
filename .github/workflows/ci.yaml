@@ -35,10 +35,6 @@ jobs:
         run: |
           deno cache --lock=deno.lock --lock-write --reload=file: ./mod.ts
 
-      ## Generate updated live.gen.ts
-      - run: |
-          deno run --unstable --lock=deno.lock --lock-write -A dev.ts
-
       - name: Check if there are changes on ${{ matrix.os }}
         id: changes
         shell: bash

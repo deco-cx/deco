@@ -14,7 +14,7 @@ import { Schemas } from "../../engine/schema/builder.ts";
 import { genSchemas } from "../../engine/schema/reader.ts";
 import { Audience } from "../../flags/audience.ts";
 import { EveryoneConfig } from "../../flags/everyone.ts";
-import { context } from "../../live.ts";
+import { context } from "../../deco.ts";
 import { JSONSchema } from "../../types.ts";
 import { allowCorsFor, defaultHeaders } from "../../utils/http.ts";
 import { filenameFromPath } from "../../utils/page.ts";

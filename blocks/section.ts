@@ -12,8 +12,7 @@ import {
   PreactComponent,
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
-import { Manifest } from "../live.gen.ts";
-import { context } from "../live.ts";
+import { context } from "../deco.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
 import { withSection } from "../components/section.tsx";
 
@@ -25,7 +24,7 @@ export type Section<
 > = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
 export const isSection = <
-  TManifest extends AppManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
   K extends keyof TManifest["sections"] = keyof TManifest["sections"],
   Sec extends TManifest["sections"][K] extends
     { default: ComponentFunc<infer Props> } ? PreactComponent<
@@ -38,7 +37,7 @@ export const isSection = <
       : unknown,
 >(
   s: Sec | Section,
-  section: K,
+  section: K | string,
 ): s is Sec => {
   return (s as Section)?.metadata?.component === section;
 };

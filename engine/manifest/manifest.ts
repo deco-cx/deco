@@ -36,7 +36,11 @@ import {
   getComposedConfigStore,
   Release,
 } from "../../engine/releases/provider.ts";
-import { context, DecoRuntimeState } from "../../live.ts";
+import {
+  DecoContext,
+  DecoRuntimeState,
+  getCurrentContext,
+} from "../../deco.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import defaults from "./defaults.ts";
@@ -102,6 +106,7 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
 };
 
 const siteName = (): string | undefined => {
+  const context = getCurrentContext();
   const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
   if (siteNameFromEnv) {
     return siteNameFromEnv;
@@ -130,6 +135,7 @@ export const createResolver = <
   release: Release | undefined = undefined,
 ): Promise<ReleaseResolver<TContext>> => {
   let currentSite = siteName();
+  const context = getCurrentContext();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (context.isDeploy) {
       throw new Error(
@@ -345,11 +351,215 @@ export const createResolver = <
   });
 };
 
+export const newContext = <
+  T extends AppManifest,
+>(
+  m: T,
+  currSourceMap?: SourceMap,
+  release: Release | undefined = undefined,
+): Promise<DecoContext> => {
+  const ctx: DecoContext = {
+    ...getCurrentContext(),
+  };
+  let currentSite = siteName();
+  if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
+    if (ctx.isDeploy) {
+      throw new Error(
+        `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
+      );
+    }
+    currentSite = uniqueNamesGenerator({
+      dictionaries: [animals, adjectives, numberDictionary],
+      length: 3,
+      separator: "-",
+    });
+    release ??= newFsProvider(DECO_FILE_NAME, m.name);
+    ctx.play = true;
+  }
+  ctx.namespace ??= `deco-sites/${currentSite}`;
+  ctx.site = currentSite!;
+  const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
+    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
+    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
+  );
+  const provider = release ?? getComposedConfigStore(
+    ctx.namespace!,
+    ctx.site,
+    ctx.siteId,
+  );
+  const runtimePromise = deferred<DecoRuntimeState>();
+  ctx.runtime = runtimePromise.finally(() => {
+    ctx.instance.readyAt = new Date();
+  });
+
+  ctx.release = provider;
+  const resolver = new ReleaseResolver<FreshContext>({
+    resolvers: { ...resolvers, ...defaultResolvers },
+    release: provider,
+    danglingRecover: recovers.length > 0
+      ? buildDanglingRecover(recovers)
+      : undefined,
+  });
+  const firstInstallAppsPromise = deferred<void>();
+  const installApps = async () => {
+    const fakeCtx = newFakeContext();
+    const allAppsMap: Record<string, Resolvable> = {};
+    let currentResolver = resolver;
+    while (true) {
+      const currentApps: Record<string, Resolvable> = {};
+      const { resolvers: currResolvers, resolvables: currResolvables } =
+        await currentResolver.resolve<
+          { resolvers: ResolverMap; resolvables: Record<string, Resolvable> }
+        >({
+          __resolveType: defaults["state"].name,
+        }, fakeCtx);
+
+      for (const [key, value] of Object.entries(currResolvables)) {
+        if (!isResolvable(value)) {
+          continue;
+        }
+        let resolver: Resolver | undefined = undefined;
+        let currentResolveType = value.__resolveType;
+        while (true) {
+          resolver = currResolvers[currentResolveType];
+          if (resolver !== undefined) {
+            break;
+          }
+          const resolvable = currResolvables[currentResolveType];
+          if (!resolvable || !isResolvable(resolvable)) {
+            break;
+          }
+          currentResolveType = resolvable.__resolveType;
+        }
+        if (
+          resolver !== undefined && resolver.type === "apps" &&
+          !(key in allAppsMap)
+        ) {
+          allAppsMap[key] = value;
+          currentApps[key] = value;
+        }
+      }
+      if (Object.keys(currentApps).length === 0) {
+        break;
+      }
+
+      const apps = Object.values(currentApps);
+      // first pass nullIfDangling
+      const { apps: installedApps } = await currentResolver.resolve<
+        { apps: MergedAppRuntime[] }
+      >({ apps }, fakeCtx, {
+        nullIfDangling: true,
+        propagateOptions: true,
+      });
+      const { resolvers, resolvables = {} } = installedApps.filter(Boolean)
+        .reduce(
+          mergeRuntimes,
+        );
+      currentResolver = currentResolver.with({ resolvers, resolvables });
+    }
+    const apps = Object.values(allAppsMap);
+    if (!apps || apps.length === 0) {
+      runtimePromise.resolve({
+        resolver: currentResolver,
+        manifest: newManifest,
+        sourceMap: currSourceMap ?? buildSourceMap(newManifest),
+      });
+      firstInstallAppsPromise.resolve();
+      return;
+    }
+    const appNames = Object.keys(allAppsMap);
+    const longerName = appNames.reduce(
+      (currentLength, name) =>
+        currentLength > name.length ? currentLength : name.length,
+      0,
+    );
+
+    console.log(
+      `[${green(ctx.site)}]: installing ${green(`${appNames.length}`)} apps: ${
+        appNames.map((name) =>
+          `\n${green(name.padEnd(longerName))} - ${
+            gray(allAppsMap[name].__resolveType)
+          }`
+        ).join("")
+      }`,
+    );
+    // second => nullIfDangling
+    const { apps: installedApps } = await currentResolver.resolve<
+      { apps: AppRuntime[] }
+    >({ apps }, fakeCtx).catch((err) => {
+      console.error(
+        "installing apps failed",
+        err,
+        "this will falling back to null references to make it work, you should fix this",
+      );
+      return currentResolver.resolve<
+        { apps: MergedAppRuntime[] }
+      >({ apps }, fakeCtx, {
+        nullIfDangling: true,
+        propagateOptions: true,
+      });
+    });
+    const { manifest, sourceMap, resolvers, resolvables = {} } = installedApps
+      .reduce(
+        mergeRuntimes,
+      );
+
+    currentResolver = currentResolver.with({ resolvers, resolvables });
+
+    // for who is awaiting for the previous promise
+    const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
+    const runtime = {
+      manifest: mergeManifests(newManifest, manifest),
+      sourceMap: mSourceMap,
+      resolver: currentResolver,
+    };
+    if (runtimePromise.state !== "fulfilled") {
+      runtimePromise.resolve(runtime);
+    }
+
+    ctx.runtime = Promise.resolve(runtime);
+  };
+
+  let appsInstallationMutex = deferred();
+  provider.onChange(() => {
+    // limiter to not allow multiple installations in parallel
+    Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
+      appsInstallationMutex = deferred();
+      // installApps should never block next install as the first install is the only that really matters.
+      // so we should resolve to let next install happen immediately
+      installApps().finally(appsInstallationMutex.resolve);
+    });
+  });
+  provider.state().then(() => {
+    installApps().then(firstInstallAppsPromise.resolve).catch(
+      firstInstallAppsPromise.reject,
+    ).then(appsInstallationMutex.resolve);
+  }).catch(firstInstallAppsPromise.reject);
+
+  if (shouldCheckIntegrity) {
+    provider.state().then(
+      (resolvables: Record<string, Resolvable>) => {
+        integrityCheck(resolver.getResolvers(), resolvables);
+      },
+    );
+  }
+  const start = performance.now();
+  return firstInstallAppsPromise.then(() => {
+    console.log(
+      `[${green(ctx.site)}]: the apps has been installed in ${
+        (performance.now() - start).toFixed(0)
+      }ms`,
+    );
+    return runtimePromise.then((runtime) => runtime.resolver);
+  }).then(() => ctx);
+};
+
 export const $live = <T extends AppManifest>(
   m: T,
   siteInfo?: SiteInfo,
   release: Release | undefined = undefined,
 ): T => {
+  const context = getCurrentContext();
   context.siteId = siteInfo?.siteId ?? -1;
   context.namespace = siteInfo?.namespace;
   const currentSite = siteName();

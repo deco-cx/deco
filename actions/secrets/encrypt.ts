@@ -1,6 +1,6 @@
 import { encryptToHex } from "../../commons/secrets/keys.ts";
 import { badRequest } from "../../engine/errors.ts";
-import { context } from "../../live.ts";
+import { context } from "../../deco.ts";
 import { ActionContext } from "../../types.ts";
 import { allowCorsFor } from "../../utils/http.ts";
 

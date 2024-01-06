@@ -10,7 +10,7 @@ import {
   Schemas,
 } from "../../engine/schema/builder.ts";
 import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
-import { context } from "../../live.ts";
+import { context } from "../../deco.ts";
 import { Block, BlockModuleRef } from "../block.ts";
 import { parseContent, parsePath } from "./parser.ts";
 import { programToBlockRef, resolvePath } from "./transform.ts";
