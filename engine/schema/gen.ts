@@ -2,7 +2,6 @@ import { AppManifest, SourceMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { JSONSchema7 } from "../../deps.ts";
-import { defaultRoutes } from "../../engine/manifest/manifestGen.ts";
 import {
   BlockModule,
   EntrypointModule,
@@ -10,7 +9,7 @@ import {
   Schemas,
 } from "../../engine/schema/builder.ts";
 import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
-import { context } from "../../live.ts";
+import { Context } from "../../deco.ts";
 import { Block, BlockModuleRef } from "../block.ts";
 import { parseContent, parsePath } from "./parser.ts";
 import { programToBlockRef, resolvePath } from "./transform.ts";
@@ -75,12 +74,6 @@ export const genSchemasFromManifest = async (
   baseDir?: string,
   sourceMap: SourceMap = {},
 ): Promise<Schemas> => {
-  const wellKnownLiveRoutes: Record<string, [string, string, string]> =
-    defaultRoutes.map(
-      (route) => [route.key, route.from],
-    ).reduce((idx, [key, from]) => {
-      return { ...idx, [key]: ["$live", from, key] };
-    }, {});
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
   const dir = baseDir ? baseDir : Deno.cwd();
 
@@ -117,54 +110,40 @@ export const genSchemasFromManifest = async (
       if (sourceMapResolverVal === null) {
         continue;
       }
-      const wellKnown = wellKnownLiveRoutes[blockModuleKey];
-      const wellKnownSourceMapResolver: [
-        string,
-        () => Promise<BlockModuleRef | undefined>,
-      ] | undefined = wellKnown
-        ? [wellKnown[0], () =>
-          resolveForPath(
-            block.introspect,
-            wellKnown[1],
-            blockModuleKey,
-            references,
-          )]
-        : undefined;
-      const [_namespace, blockRefResolver] = wellKnownSourceMapResolver ??
-        (blockModuleKey.startsWith(".")
-          ? [
-            context.namespace!,
-            () =>
-              resolveForPath(
+      const [_namespace, blockRefResolver] = blockModuleKey.startsWith(".")
+        ? [
+          Context.active().namespace!,
+          () =>
+            resolveForPath(
+              block.introspect,
+              blockModuleKey.replace(".", `file://${dir}`),
+              blockModuleKey,
+              references,
+            ),
+        ]
+        : [
+          namespaceOf(block.type, blockModuleKey),
+          () => {
+            if (typeof sourceMapResolverVal === "object") {
+              return resolveForContent(
                 block.introspect,
-                blockModuleKey.replace(".", `file://${dir}`),
+                sourceMapResolverVal.path,
+                sourceMapResolverVal.content,
                 blockModuleKey,
                 references,
-              ),
-          ]
-          : [
-            namespaceOf(block.type, blockModuleKey),
-            () => {
-              if (typeof sourceMapResolverVal === "object") {
-                return resolveForContent(
-                  block.introspect,
-                  sourceMapResolverVal.path,
-                  sourceMapResolverVal.content,
-                  blockModuleKey,
-                  references,
-                );
-              }
-              return typeof sourceMapResolverVal === "string" ||
-                  typeof sourceMapResolverVal === "undefined"
-                ? resolveForPath(
-                  block.introspect,
-                  sourceMapResolverVal ?? resolveImport(blockModuleKey),
-                  blockModuleKey,
-                  references,
-                )
-                : sourceMapResolverVal();
-            },
-          ]);
+              );
+            }
+            return typeof sourceMapResolverVal === "string" ||
+                typeof sourceMapResolverVal === "undefined"
+              ? resolveForPath(
+                block.introspect,
+                sourceMapResolverVal ?? resolveImport(blockModuleKey),
+                blockModuleKey,
+                references,
+              )
+              : sourceMapResolverVal();
+          },
+        ];
 
       refPromises.push(
         blockRefResolver().then((ref) => {

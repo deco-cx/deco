@@ -19,6 +19,7 @@ import {
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { buildSourceMap } from "../../blocks/utils.tsx";
+import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
 import { ReleaseResolver } from "../../engine/core/mod.ts";
 import {
@@ -36,7 +37,6 @@ import {
   getComposedConfigStore,
   Release,
 } from "../../engine/releases/provider.ts";
-import { context, DecoRuntimeState } from "../../live.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import defaults from "./defaults.ts";
@@ -102,6 +102,7 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
 };
 
 const siteName = (): string | undefined => {
+  const context = Context.active();
   const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
   if (siteNameFromEnv) {
     return siteNameFromEnv;
@@ -121,28 +122,17 @@ const getPlayDomain = (): string => {
     Deno.env.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
   }`;
 };
-export const createResolver = <
+export const initContext = async <
   T extends AppManifest,
-  TContext extends BaseContext = BaseContext,
 >(
   m: T,
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
-): Promise<ReleaseResolver<TContext>> => {
-  let currentSite = siteName();
-  if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
-    if (context.isDeploy) {
-      throw new Error(
-        `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
-      );
-    }
-    currentSite = uniqueNamesGenerator({
-      dictionaries: [animals, adjectives, numberDictionary],
-      length: 3,
-      separator: "-",
-    });
+): Promise<DecoContext> => {
+  Object.assign(context, await newContext(m, currSourceMap, release));
+  if (context.play) {
     console.debug(
-      `\n👋 Hey [${green(currentSite!)}] welcome to ${
+      `\n👋 Hey [${green(context.site)}] welcome to ${
         rgb24("deco.cx", DECO_COLORS)
       }! Let's play?`,
     );
@@ -162,26 +152,56 @@ export const createResolver = <
         DECO_COLORS,
       ))
     } and happy coding!\n\n`);
-    release ??= newFsProvider(DECO_FILE_NAME, m.name);
-    context.play = true;
   }
-  context.namespace ??= `deco-sites/${currentSite}`;
-  context.site = currentSite!;
+  return context;
+};
+
+export const newContext = <
+  T extends AppManifest,
+>(
+  m: T,
+  currSourceMap?: SourceMap,
+  release: Release | undefined = undefined,
+): Promise<DecoContext> => {
+  const currentContext = Context.active();
+  const ctx: DecoContext = {
+    ...currentContext,
+    instance: {
+      startedAt: new Date(),
+    },
+  };
+  let currentSite = siteName();
+  if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
+    if (ctx.isDeploy) {
+      throw new Error(
+        `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
+      );
+    }
+    currentSite = uniqueNamesGenerator({
+      dictionaries: [animals, adjectives, numberDictionary],
+      length: 3,
+      separator: "-",
+    });
+    release ??= newFsProvider(DECO_FILE_NAME, m.name);
+    ctx.play = true;
+  }
+  ctx.namespace ??= `deco-sites/${currentSite}`;
+  ctx.site = currentSite!;
   const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   const provider = release ?? getComposedConfigStore(
-    context.namespace!,
-    context.site,
-    context.siteId,
+    ctx.namespace!,
+    ctx.site,
+    ctx.siteId,
   );
   const runtimePromise = deferred<DecoRuntimeState>();
-  context.runtime = runtimePromise.finally(() => {
-    context.instance.readyAt = new Date();
+  ctx.runtime = runtimePromise.finally(() => {
+    ctx.instance.readyAt = new Date();
   });
 
-  context.release = provider;
+  ctx.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
     resolvers: { ...resolvers, ...defaultResolvers },
     release: provider,
@@ -264,9 +284,7 @@ export const createResolver = <
     );
 
     console.log(
-      `[${green(context.site)}]: installing ${
-        green(`${appNames.length}`)
-      } apps: ${
+      `[${green(ctx.site)}]: installing ${green(`${appNames.length}`)} apps: ${
         appNames.map((name) =>
           `\n${green(name.padEnd(longerName))} - ${
             gray(allAppsMap[name].__resolveType)
@@ -308,7 +326,7 @@ export const createResolver = <
       runtimePromise.resolve(runtime);
     }
 
-    context.runtime = Promise.resolve(runtime);
+    ctx.runtime = Promise.resolve(runtime);
   };
 
   let appsInstallationMutex = deferred();
@@ -337,12 +355,12 @@ export const createResolver = <
   const start = performance.now();
   return firstInstallAppsPromise.then(() => {
     console.log(
-      `[${green(context.site)}]: the apps has been installed in ${
+      `[${green(ctx.site)}]: the apps has been installed in ${
         (performance.now() - start).toFixed(0)
       }ms`,
     );
     return runtimePromise.then((runtime) => runtime.resolver);
-  });
+  }).then(() => ctx);
 };
 
 export const $live = <T extends AppManifest>(

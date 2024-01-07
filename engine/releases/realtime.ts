@@ -1,20 +1,17 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "../../deps.ts";
-import { Resolvable } from "../../engine/core/resolver.ts";
-import {
-  OnChangeCallback,
-  ReadOptions,
-  Release,
-} from "../../engine/releases/provider.ts";
+import { Resolvable } from "../core/resolver.ts";
+import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
 import { logger } from "../../observability/otel/config.ts";
 
-export interface SupabaseReleaseProvider {
+export interface RealtimeReleaseProvider {
   /**
    * @returns the current state of the release.
    */
   get(
     includeArchived: boolean,
   ): PromiseLike<{ data: CurrResolvables | null; error: any }>;
+  unsubscribe?: () => void;
   /**
    * When called, receives the `onChange` function that will be called when the release has changed,
    * and the `cb` function that will be called when the subscription state change. The cb function can be used to determine if it should fallsback to background updates or not.
@@ -43,13 +40,13 @@ export interface CurrResolvables {
 }
 
 /**
- * Receives a provider backed by supabase and creates a Releases instance.
- * @param provider the supabase provider.
+ * Receives a provider backed by realtime subscription and creates a Releases instance.
+ * @param provider the realtime provider.
  * @param backgroundUpdate if background updates should be performed.
  * @returns
  */
-export const newSupabase = (
-  provider: SupabaseReleaseProvider,
+export const newRealtime = (
+  provider: RealtimeReleaseProvider,
   backgroundUpdate?: boolean,
 ): Release => {
   // callbacks
@@ -179,6 +176,9 @@ export const newSupabase = (
       }
       const resolvables = await currResolvables;
       return resolvables.state;
+    },
+    dispose: () => {
+      provider?.unsubscribe?.();
     },
   };
 };

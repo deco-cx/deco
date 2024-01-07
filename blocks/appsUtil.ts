@@ -36,10 +36,9 @@ export const wellKnownLocalMappings: Record<string, string> = {
 
 const localRef = (blkType: string, ref: string) => `./${blkType}/${ref}`;
 export const shouldBeLocal = (block: string, ref: string): boolean => {
-  return block === "routes" || block === "islands" || // islands and routes are always local
-    wellKnownLocalModules.some((localModule) =>
-      localRef(block, localModule) === ref
-    );
+  return wellKnownLocalModules.some((localModule) =>
+    localRef(block, localModule) === ref
+  );
 };
 
 export const withoutLocalModules = (

@@ -13,7 +13,6 @@ export { WorkflowContext } from "./blocks/workflow.ts";
 export type { Workflow } from "./blocks/workflow.ts";
 export { withManifest } from "./clients/withManifest.ts";
 export type { WorkflowGen } from "./deps.ts";
-export { default as dev } from "./dev.ts";
 export type {
   Block,
   BlockModule,
@@ -24,9 +23,13 @@ export type {
 export { asResolved, isDeferred } from "./engine/core/resolver.ts";
 export type { Resolved } from "./engine/core/resolver.ts";
 export { badRequest, notFound, redirect } from "./engine/errors.ts";
-export { $live, createResolver } from "./engine/manifest/manifest.ts";
+export {
+  $live,
+  initContext,
+  newContext,
+} from "./engine/manifest/manifest.ts";
 export type { Route, Routes } from "./flags/audience.ts";
-export { context } from "./live.ts";
+export { context } from "./deco.ts";
 export type { Secret } from "./loaders/secret.ts";
 export * from "./types.ts";
 export type { App, AppContext, AppModule, AppRuntime } from "./types.ts";

@@ -3,6 +3,8 @@ import { HttpContext } from "../blocks/handler.ts";
 import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
 import { fnContextFromHttpContext, RequestState } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
+import { withSection } from "../components/section.tsx";
+import { Context } from "../deco.ts";
 import { JSX } from "../deps.ts";
 import {
   Block,
@@ -12,10 +14,7 @@ import {
   PreactComponent,
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
-import { Manifest } from "../live.gen.ts";
-import { context } from "../live.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
-import { withSection } from "../components/section.tsx";
 
 /**
  * @widget none
@@ -25,7 +24,7 @@ export type Section<
 > = InstanceOf<typeof sectionBlock, "#/root/sections">;
 
 export const isSection = <
-  TManifest extends AppManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
   K extends keyof TManifest["sections"] = keyof TManifest["sections"],
   Sec extends TManifest["sections"][K] extends
     { default: ComponentFunc<infer Props> } ? PreactComponent<
@@ -38,7 +37,7 @@ export const isSection = <
       : unknown,
 >(
   s: Sec | Section,
-  section: K,
+  section: K | string,
 ): s is Sec => {
   return (s as Section)?.metadata?.component === section;
 };
@@ -129,7 +128,7 @@ export const createSectionBlock = (
       component: ctx.resolveChain.findLast((chain) => chain.type === "resolver")
         ?.value?.toString(),
     };
-    if (context.isDeploy) {
+    if (Context.active().isDeploy) {
       return {
         Component: Empty,
         props: {},

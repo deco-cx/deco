@@ -2,7 +2,7 @@ import { getSetCookies } from "std/http/cookie.ts";
 import { DECO_MATCHER_PREFIX } from "../blocks/matcher.ts";
 import type { RequestState } from "../blocks/utils.tsx";
 import { Murmurhash3 } from "../deps.ts";
-import { context } from "../live.ts";
+import { Context } from "../deco.ts";
 
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 
@@ -13,6 +13,7 @@ export const segmentFor = async (
   state: Partial<RequestState>,
   url: string,
 ): Promise<string> => {
+  const context = Context.active();
   const cookies = getSetCookies(state?.response?.headers ?? new Headers());
   // sort cookie to calculate stable etags
   for (

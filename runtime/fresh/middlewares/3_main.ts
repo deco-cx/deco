@@ -1,30 +1,15 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
-import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { RequestState } from "../blocks/utils.tsx";
-import {
-  getPagePathTemplate,
-  redirectTo,
-} from "../compatibility/v0/editorData.ts";
-import { SpanStatusCode } from "../deps.ts";
-import { Resolvable } from "../engine/core/resolver.ts";
-import { context } from "../live.ts";
-import { Apps } from "../mod.ts";
-import { startObserve } from "../observability/http.ts";
-import { DecoSiteState, DecoState } from "../types.ts";
-import { isAdminOrLocalhost } from "../utils/admin.ts";
-import { allowCorsFor, defaultHeaders } from "../utils/http.ts";
-import { formatLog } from "../utils/log.ts";
-
-export const redirectToPreviewPage = async (url: URL, pageId: string) => {
-  url.searchParams.append("path", url.pathname);
-  url.searchParams.set("forceFresh", "");
-  if (!url.searchParams.has("pathTemplate")) {
-    // FIXM(mcandeia) compatibility mode only, once migrated pathTemplate is required because there are pages unpublished
-    url.searchParams.append("pathTemplate", await getPagePathTemplate(pageId));
-  }
-  url.pathname = `/live/previews/${pageId}`;
-  return redirectTo(url);
-};
+import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
+import { RequestState } from "../../../blocks/utils.tsx";
+import { Context } from "../../../deco.ts";
+import { SpanStatusCode } from "../../../deps.ts";
+import { Resolvable } from "../../../engine/core/resolver.ts";
+import { Apps } from "../../../mod.ts";
+import { startObserve } from "../../../observability/http.ts";
+import { DecoSiteState, DecoState } from "../../../types.ts";
+import { isAdminOrLocalhost } from "../../../utils/admin.ts";
+import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
+import { formatLog } from "../../../utils/log.ts";
 
 // const DECO_SEGMENT = "deco_segment";
 
@@ -57,6 +42,7 @@ export const handler = [
     ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
   ): Promise<Response> => {
     const url = new URL(req.url);
+    const context = Context.active();
     return await ctx.state.monitoring.tracer.startActiveSpan(
       "./routes/_middleware.ts",
       {
@@ -133,34 +119,12 @@ export const handler = [
     if (req.method === "HEAD" && isMonitoringRobots(req)) {
       return new Response(null, { status: 200 });
     }
+    const context = Context.active();
     const url = new URL(req.url);
     ctx.state.site = {
       id: context.siteId,
       name: context.site,
     };
-
-    // FIXME (mcandeia) compatibility only.
-    if (
-      url.searchParams.has("editorData") &&
-      !url.pathname.startsWith("/live/editorData")
-    ) {
-      url.pathname = "/live/editorData";
-      url.searchParams.set("forceFresh", "");
-      return redirectTo(url);
-    }
-
-    if (url.pathname.startsWith("/_live/workbench")) {
-      url.pathname = "/live/workbench";
-      return redirectTo(url);
-    }
-
-    if (
-      !url.pathname.startsWith("/live/previews") &&
-      url.searchParams.has("pageId") &&
-      !url.searchParams.has("editorData")
-    ) {
-      return redirectToPreviewPage(url, url.searchParams.get("pageId")!);
-    }
 
     const response = {
       headers: new Headers(defaultHeaders),

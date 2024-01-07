@@ -5,7 +5,7 @@ import { Page } from "../blocks/page.tsx";
 import { Section } from "../blocks/section.ts";
 import { Resolvable } from "../engine/core/resolver.ts";
 import { Apps, LoaderContext } from "../mod.ts";
-import { MiddlewareConfig } from "../routes/_middleware.ts";
+import { MiddlewareConfig } from "../runtime/fresh/middlewares/3_main.ts";
 
 /**
  * @titleBy key

@@ -24,7 +24,7 @@ import { Monitoring, ResolveFunc } from "./engine/core/resolver.ts";
 import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { Route } from "./flags/audience.ts";
-import type { InvocationProxy } from "./routes/live/invoke/index.ts";
+import type { InvocationProxy } from "./utils/invoke.types.ts";
 import { createServerTimings } from "./utils/timings.ts";
 export type {
   ErrorBoundaryComponent,

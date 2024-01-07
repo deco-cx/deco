@@ -13,11 +13,10 @@ import {
 import { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
-import { type Manifest } from "../live.gen.ts";
-import { type InvocationProxy } from "../routes/live/invoke/index.ts";
 import { Flag } from "../types.ts";
 import { Device, deviceOf } from "../utils/device.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
+import { type InvocationProxy } from "../utils/invoke.types.ts";
 import { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
@@ -82,7 +81,7 @@ export interface RequestState {
 export type FnContext<
   // deno-lint-ignore ban-types
   TState = {},
-  TManifest extends AppManifest = Manifest,
+  TManifest extends AppManifest = AppManifest,
 > = TState & RequestState & {
   device: Device;
   resolverId?: string;

@@ -1,4 +1,5 @@
 import * as log from "std/log/mod.ts";
+import { Context } from "../../deco.ts";
 import {
   BatchSpanProcessor,
   FetchInstrumentation,
@@ -10,7 +11,6 @@ import {
   Resource,
   SemanticResourceAttributes,
 } from "../../deps.ts";
-import { context } from "../../live.ts";
 import meta from "../../meta.json" assert { type: "json" };
 import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
@@ -33,8 +33,9 @@ export const resource = Resource.default().merge(
   new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ??
       "deco",
-    [SemanticResourceAttributes.SERVICE_VERSION]: context.deploymentId ??
-      Deno.hostname(),
+    [SemanticResourceAttributes.SERVICE_VERSION]:
+      Context.active().deploymentId ??
+        Deno.hostname(),
     [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
     "deco.runtime.version": meta.version,
     "deco.apps.version": apps_ver,

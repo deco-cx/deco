@@ -1,17 +1,17 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { parse } from "std/semver/mod.ts";
-import { JSONSchema7 } from "../../deps.ts";
-import { Resolvable } from "../../engine/core/resolver.ts";
-import { notUndefined, singleFlight } from "../../engine/core/utils.ts";
-import defaults from "../../engine/manifest/defaults.ts";
-import { Schemas } from "../../engine/schema/builder.ts";
-import { namespaceOf } from "../../engine/schema/gen.ts";
-import { genSchemas } from "../../engine/schema/reader.ts";
-import { context } from "../../live.ts";
-import meta from "../../meta.json" assert { type: "json" };
-import { AppManifest, DecoSiteState, DecoState } from "../../types.ts";
-import { resolvable } from "../../utils/admin.ts";
-import { allowCorsFor } from "../../utils/http.ts";
+import { JSONSchema7 } from "../../../deps.ts";
+import { Resolvable } from "../../../engine/core/resolver.ts";
+import { notUndefined, singleFlight } from "../../../engine/core/utils.ts";
+import defaults from "../../../engine/manifest/defaults.ts";
+import { Schemas } from "../../../engine/schema/builder.ts";
+import { namespaceOf } from "../../../engine/schema/gen.ts";
+import { genSchemas } from "../../../engine/schema/reader.ts";
+import { Context } from "../../../deco.ts";
+import meta from "../../../meta.json" assert { type: "json" };
+import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import { resolvable } from "../../../utils/admin.ts";
+import { allowCorsFor } from "../../../utils/http.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -46,7 +46,7 @@ export const toManifestBlocks = (
         $ref: `#/definitions/${btoa(blkKey)}`,
         namespace: namespaceOf(blkType, blkKey).replace(
           ".",
-          context.namespace!,
+          Context.active().namespace!,
         ),
       };
     }
@@ -132,11 +132,12 @@ const buildSchemaWithResolvables = (
 };
 
 const sf = singleFlight<string>();
-const binaryId = context.deploymentId ?? crypto.randomUUID();
+const binaryId = Context.active().deploymentId ?? crypto.randomUUID();
 export const handler = async (
   req: Request,
   ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
 ) => {
+  const context = Context.active();
   const skipSchemaGen = new URL(req.url).searchParams.has("skipSchemaGen");
   const timing = ctx.state.t?.start("fetch-revision");
   const revision = await ctx.state.release.revision();

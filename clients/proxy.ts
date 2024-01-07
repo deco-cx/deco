@@ -5,7 +5,7 @@ import {
   type InvokeAsPayload,
   type InvokeResult,
   type ManifestInvocable,
-} from "../routes/live/invoke/index.ts";
+} from "../utils/invoke.types.ts";
 import { type DotNestedKeys } from "../utils/object.ts";
 import { type invokeKey } from "./withManifest.ts";
 

@@ -2,7 +2,10 @@ import { HandlerContext } from "$fresh/server.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
-import { InvokeFunction, payloadToResolvable, wrapInvokeErr } from "./index.ts";
+import type { InvokeFunction } from "../../../utils/invoke.types.ts";
+
+import { payloadToResolvable, wrapInvokeErr } from "./batchInvoke.ts";
+
 export const handler = async (
   req: Request,
   ctx: HandlerContext<
