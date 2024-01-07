@@ -64,10 +64,10 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     const url = new URL(request.url);
 
     // Get the inline release from the query string
-    const inlineReleaseFromQs = url.searchParams.get("__r");
+    const alienReleaseFromQs = url.searchParams.get("__r");
 
     // If the inline release is the delete marker, delete the cookie and return the response
-    if (inlineReleaseFromQs === DELETE_MARKER) {
+    if (alienReleaseFromQs === DELETE_MARKER) {
       const response = await context.next();
       deleteCookie(response.headers, DECO_RELEASE_COOKIE_NAME);
       return response;
@@ -77,32 +77,32 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     const cookies = getCookies(request.headers);
 
     // Get the inline release from the cookie
-    const inlineReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
+    const alienReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
 
     // Determine the inline release and whether a cookie should be added
-    const [inlineRelease, shouldAddCookie] = inlineReleaseFromQs != null
-      ? [inlineReleaseFromQs, inlineReleaseFromQs !== inlineReleaseFromCookie]
-      : [inlineReleaseFromCookie, false];
+    const [alienRelease, shouldAddCookie] = alienReleaseFromQs != null
+      ? [alienReleaseFromQs, alienReleaseFromQs !== alienReleaseFromCookie]
+      : [alienReleaseFromCookie, false];
 
     // If the inline release is a string, create a new context cache
-    if (typeof inlineRelease === "string") {
+    if (typeof alienRelease === "string") {
       contextCache ??= new ContextCache({
         cacheSize: 7, // 7 is arbitrarily chosen
       });
       let contextPromise: Promise<DecoContext> | undefined = contextCache.get(
-        inlineRelease,
+        alienRelease,
       );
       if (!contextPromise) {
         contextPromise = newContext(
           rootManifest,
           opt.sourceMap,
-          fromEndpoint(inlineRelease),
+          fromEndpoint(alienRelease),
         );
         contextCache.set(
-          inlineRelease,
+          alienRelease,
           contextPromise.catch((err) => {
             console.error("context creation error", err);
-            contextCache?.delete(inlineRelease);
+            contextCache?.delete(alienRelease);
             throw err;
           }),
         );
@@ -113,7 +113,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       if (shouldAddCookie) {
         setCookie(response.headers, {
           name: DECO_RELEASE_COOKIE_NAME,
-          value: inlineRelease,
+          value: alienRelease,
           path: "/",
           sameSite: "Strict",
         });
