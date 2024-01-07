@@ -132,7 +132,6 @@ const ctxSchema = new WeakMap();
  * @returns the lazy schema
  */
 export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
-  console.log({ id: ctx.instance.id });
   if (ctxSchema.has(ctx)) {
     return ctxSchema.get(ctx)!;
   }
@@ -143,7 +142,6 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
     get value() {
       return sf.do("schemas", async () => {
         const revision = await ctx.release!.revision();
-        console.log({ revision });
         if (revision !== latestRevision || !_cached) {
           const { manifest, sourceMap } = await ctx.runtime!;
           _cached = incorporateSavedBlocksIntoSchema(

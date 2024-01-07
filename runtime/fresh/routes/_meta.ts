@@ -57,7 +57,6 @@ export const handler = async (
   req: Request,
 ) => {
   const context = Context.active();
-  console.log("active context", context.instance.id);
   const lazySchema = lazySchemaFor(context);
   const revision = lazySchema.revision;
   const etag = `${revision}@${binaryId}`;
