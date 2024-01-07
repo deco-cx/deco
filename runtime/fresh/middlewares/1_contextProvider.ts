@@ -97,6 +97,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
           rootManifest,
           opt.sourceMap,
           fromEndpoint(alienRelease),
+          alienRelease,
         );
         contextCache.set(
           alienRelease,
@@ -108,6 +109,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       }
       const ctx = await contextPromise;
+      console.log("running", ctx.instance.id);
       const next = withContext(ctx, context.next.bind(context));
       const response = await next();
       if (shouldAddCookie) {

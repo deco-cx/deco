@@ -1,16 +1,11 @@
-import { HandlerContext } from "$fresh/server.ts";
 import { parse } from "std/semver/mod.ts";
-import { JSONSchema7 } from "../../../deps.ts";
-import { Resolvable } from "../../../engine/core/resolver.ts";
-import { notUndefined, singleFlight } from "../../../engine/core/utils.ts";
-import defaults from "../../../engine/manifest/defaults.ts";
+import { Context } from "../../../deco.ts";
+import { singleFlight } from "../../../engine/core/utils.ts";
 import { Schemas } from "../../../engine/schema/builder.ts";
 import { namespaceOf } from "../../../engine/schema/gen.ts";
-import { genSchemas } from "../../../engine/schema/reader.ts";
-import { Context } from "../../../deco.ts";
+import { lazySchemaFor } from "../../../engine/schema/lazy.ts";
 import meta from "../../../meta.json" assert { type: "json" };
-import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
-import { resolvable } from "../../../utils/admin.ts";
+import { AppManifest } from "../../../types.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
@@ -30,11 +25,13 @@ export interface MetaInfo {
 export const toManifestBlocks = (
   decoManifest: AppManifest & {
     routes?: unknown;
+    islands?: unknown;
   },
 ): ManifestBlocks => {
   const {
     baseUrl: _ignoreBaseUrl,
     routes: _ignoreRoutes,
+    islands: _ignoreIslands,
     name: _ignoreName,
     ...blocks
   } = decoManifest;
@@ -54,125 +51,26 @@ export const toManifestBlocks = (
   return { blocks: manBlocks };
 };
 
-export let mschema: Schemas | null = null;
-let latestRevision: string | null = null;
-const getResolveType = (schema: unknown): string | undefined => {
-  const asJsonSchema = schema as JSONSchema7;
-  if (
-    asJsonSchema?.required && asJsonSchema?.required.length === 1 &&
-    asJsonSchema?.properties?.["__resolveType"]
-  ) {
-    return (asJsonSchema?.properties?.["__resolveType"] as
-      | JSONSchema7
-      | undefined)?.default as string;
-  }
-  return undefined;
-};
-const buildSchemaWithResolvables = (
-  manifestBlocks: ManifestBlocks,
-  schema: Schemas,
-  release: Record<string, Resolvable>,
-) => {
-  const { loaders, functions, flags, ...currentRoot } = schema.root;
-  const root: Record<string, JSONSchema7> = { loaders, functions, flags };
-  for (const [ref, val] of Object.entries(currentRoot)) {
-    root[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
-    for (const [key, obj] of Object.entries(release)) {
-      const resolveType = (obj as { __resolveType: string })?.__resolveType;
-      if (
-        resolveType &&
-        manifestBlocks.blocks?.[ref]?.[resolveType] !== undefined
-      ) {
-        root[ref].anyOf!.push(
-          resolvable(
-            resolveType,
-            key,
-          ),
-        );
-        if (ref === "sections") { // sections can be used individually so it can be replicated on the loop below.
-          continue;
-        }
-        delete release[key];
-      }
-    }
-  }
-
-  const definitions: Record<string, JSONSchema7> = {};
-  for (const [ref, val] of Object.entries(schema.definitions)) {
-    const anyOf = val.anyOf;
-    definitions[ref] = val;
-    const first = anyOf && (anyOf[0] as JSONSchema7).$ref;
-    if (first === "#/definitions/Resolvable") {
-      anyOf?.splice(0, 1);
-      definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] };
-      const availableFunctions = (anyOf?.map((func) =>
-        getResolveType(func)
-      ) ?? []).filter(notUndefined).reduce((acc, f) => {
-        acc[f] = true;
-        return acc;
-      }, {} as Record<string, boolean>);
-      for (const [key, obj] of Object.entries(release)) {
-        const resolveType = (obj as { __resolveType: string })
-          ?.__resolveType;
-
-        if (
-          resolveType &&
-          availableFunctions[resolveType]
-        ) {
-          definitions[ref].anyOf?.push(resolvable(
-            (obj as { __resolveType: string })?.__resolveType ??
-              "UNKNOWN",
-            key,
-          ));
-        }
-      }
-    }
-  }
-  return { definitions, root };
-};
-
 const sf = singleFlight<string>();
 const binaryId = Context.active().deploymentId ?? crypto.randomUUID();
 export const handler = async (
   req: Request,
-  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
 ) => {
   const context = Context.active();
-  const skipSchemaGen = new URL(req.url).searchParams.has("skipSchemaGen");
-  const timing = ctx.state.t?.start("fetch-revision");
-  const revision = await ctx.state.release.revision();
-  timing?.end();
+  console.log("active context", context.instance.id);
+  const lazySchema = lazySchemaFor(context);
+  const revision = lazySchema.revision;
   const etag = `${revision}@${binaryId}`;
   const ifNoneMatch = req.headers.get("if-none-match");
   if (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`) { // weak etags should be tested as well.
     return new Response(null, { status: 304, headers: allowCorsFor(req) }); // not modified
   }
-  const info = await sf.do("schema", async () => {
-    const { manifest, sourceMap } = await context.runtime!;
+  const info = await sf.do(context.instance.id, async () => {
+    const { manifest } = await context.runtime!;
     const manfiestBlocks = toManifestBlocks(
       manifest,
     );
-    if (revision !== latestRevision || mschema === null) {
-      if (!skipSchemaGen) {
-        const timing = ctx.state?.t?.start("build-resolvables");
-        mschema = buildSchemaWithResolvables(
-          manfiestBlocks,
-          await genSchemas(manifest, sourceMap),
-          {
-            ...await ctx.state.resolve({
-              __resolveType: defaults["resolvables"].name,
-            }),
-          },
-        );
-        latestRevision = revision;
-        timing?.end();
-      } else {
-        mschema = {
-          definitions: {},
-          root: {},
-        };
-      }
-    }
+    const schema = await lazySchema.value;
 
     const info: MetaInfo = {
       major: parse(meta.version).major,
@@ -180,7 +78,7 @@ export const handler = async (
       namespace: context.namespace!,
       site: context.site!,
       manifest: manfiestBlocks,
-      schema: mschema,
+      schema,
     };
 
     return JSON.stringify(info);

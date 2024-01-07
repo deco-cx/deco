@@ -140,6 +140,7 @@ export const handler = [
 
     const shouldAllowCorsForOptions = req.method === "OPTIONS" &&
       isAdminOrLocalhost(req);
+
     const initialResponse = shouldAllowCorsForOptions
       ? new Response()
       : await ctx.next();

@@ -19,6 +19,7 @@ export interface DecoRuntimeState {
 
 export interface InstanceInfo {
   startedAt: Date;
+  id: string;
   readyAt?: Date;
 }
 
@@ -37,13 +38,14 @@ export type DecoContext = {
   instance: InstanceInfo;
 };
 
-const defaultContext: DecoContext = {
+const defaultContext: Omit<DecoContext, "schema"> = {
   deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
   siteId: 0,
   play: false,
   instance: {
+    id: crypto.randomUUID(),
     startedAt: new Date(),
   },
 };
@@ -57,7 +59,7 @@ export const withContext = <R, TArgs extends unknown[]>(
   ctx: DecoContext,
   f: (...args: TArgs) => R,
 ): (...args: TArgs) => R => {
-  const id = crypto.randomUUID();
+  const id = ctx?.instance?.id ?? crypto.randomUUID();
   contextMap.set(id, ctx);
 
   return (...args: TArgs): R => {
