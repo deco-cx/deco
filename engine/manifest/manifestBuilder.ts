@@ -124,7 +124,6 @@ export interface ManifestData {
   exports: Export[];
   statements?: Statement[];
   exportDefault?: ExportDefault;
-  appMode?: boolean;
 }
 
 const stringifyStatement = (st: Statement): string => {
@@ -212,12 +211,7 @@ export const stringify = ({
   statements,
   exports,
   exportDefault,
-  appMode,
 }: ManifestData): string => {
-  if (!appMode) {
-    manifest["routes"] ??= { kind: "obj", value: {} };
-    manifest["islands"] ??= { kind: "obj", value: {} };
-  }
   manifest["baseUrl"] = {
     kind: "js",
     raw: { identifier: "import.meta.url" },

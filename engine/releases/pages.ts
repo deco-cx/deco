@@ -5,10 +5,7 @@ import { singleFlight } from "../../engine/core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
 import { JSONSchema, Site } from "../../types.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import {
-  CurrResolvables,
-  RealtimeReleaseProvider,
-} from "./realtime.ts";
+import { CurrResolvables, RealtimeReleaseProvider } from "./realtime.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;

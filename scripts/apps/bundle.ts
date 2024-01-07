@@ -7,9 +7,7 @@ import { AppConfig, getDecoConfig } from "./config.ts";
 const bundleApp = (dir: string) => async (app: AppConfig) => {
   console.log(`generating manifest for ${colors.bgBrightGreen(app.name)}...`);
   const appDir = join(dir, app.dir);
-  const manifest = await decoManifestBuilder(appDir, app.name, {
-    appMode: true,
-  });
+  const manifest = await decoManifestBuilder(appDir, app.name);
 
   const manifestFile = join(appDir, "manifest.gen.ts");
   await Deno.writeTextFile(

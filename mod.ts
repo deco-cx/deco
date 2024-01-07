@@ -23,11 +23,7 @@ export type {
 export { asResolved, isDeferred } from "./engine/core/resolver.ts";
 export type { Resolved } from "./engine/core/resolver.ts";
 export { badRequest, notFound, redirect } from "./engine/errors.ts";
-export {
-  $live,
-  initContext,
-  newContext,
-} from "./engine/manifest/manifest.ts";
+export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
 export type { Route, Routes } from "./flags/audience.ts";
 export { context } from "./deco.ts";
 export type { Secret } from "./loaders/secret.ts";
