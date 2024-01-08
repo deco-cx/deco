@@ -110,7 +110,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       }
       const ctx = await contextPromise;
 
-      const next = Context.with(ctx, context.next.bind(context));
+      const next = Context.bind(ctx, context.next.bind(context));
       const response = await next();
       if (shouldAddCookie) {
         setCookie(response.headers, {
