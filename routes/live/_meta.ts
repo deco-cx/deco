@@ -142,7 +142,7 @@ export const genMetaInfo = async (release: Release): Promise<MetaInfo> => {
     mschema = buildSchemaWithResolvables(
       manfiestBlocks,
       await genSchemas(manifest, sourceMap),
-      { ...await release.state() },
+      { ...await release.state({ forceFresh: true }) },
     );
     latestRevision = revision;
   }
