@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
-import { DecoContext, withContext } from "../../../deco.ts";
+import { Context, DecoContext } from "../../../deco.ts";
 import {
   MiddlewareHandler,
   MiddlewareHandlerContext,
@@ -109,7 +109,8 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       }
       const ctx = await contextPromise;
-      const next = withContext(ctx, context.next.bind(context));
+
+      const next = Context.with(ctx, context.next.bind(context));
       const response = await next();
       if (shouldAddCookie) {
         setCookie(response.headers, {

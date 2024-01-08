@@ -50,37 +50,21 @@ const defaultContext: Omit<DecoContext, "schema"> = {
   },
 };
 
-// Map to store contexts associated with async IDs
-const contextMap = new Map<string, DecoContext>();
-
 const asyncLocalStorage = new AsyncLocalStorage();
-
-export const withContext = <R, TArgs extends unknown[]>(
-  ctx: DecoContext,
-  f: (...args: TArgs) => R,
-): (...args: TArgs) => R => {
-  const id = ctx?.instance?.id ?? crypto.randomUUID();
-  contextMap.set(id, ctx);
-
-  return (...args: TArgs): R => {
-    try {
-      return asyncLocalStorage.run(id, f, ...args);
-    } finally {
-      contextMap.delete(id);
-    }
-  };
-};
 
 export const Context = {
   // Function to retrieve the active context
-  active: () => {
-    const asyncId = asyncLocalStorage.getStore() as string;
-    if (typeof asyncId !== "string") {
-      return defaultContext;
-    }
-
+  active: (): DecoContext => {
     // Retrieve the context associated with the async ID
-    return contextMap.get(asyncId) || defaultContext;
+    return (asyncLocalStorage.getStore() as DecoContext) ?? defaultContext;
+  },
+  with: <R, TArgs extends unknown[]>(
+    ctx: DecoContext,
+    f: (...args: TArgs) => R,
+  ): (...args: TArgs) => R => {
+    return (...args: TArgs): R => {
+      return asyncLocalStorage.run(ctx, f, ...args);
+    };
   },
 };
 
