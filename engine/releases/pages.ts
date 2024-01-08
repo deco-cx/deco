@@ -434,7 +434,7 @@ export const fromPagesTable = (
 ): RealtimeReleaseProvider => {
   const sf = singleFlight<{ data: CurrResolvables | null; error: any }>();
   const fetcher = (includeArchived = false) =>
-    sf.do("flight", async (): Promise<
+    sf.run(async (): Promise<
       { data: CurrResolvables | null; error: any }
     > => {
       const [{ data, error }, { data: dataFlags, error: errorFlags }] =

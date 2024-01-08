@@ -119,7 +119,13 @@ const incorporateSavedBlocksIntoSchema = <
 };
 
 export interface LazySchema {
+  /**
+   * Calculates the schema when its first accessed. It is thread-safe, so you can call multiple times.
+   */
   value: Promise<Schemas>;
+  /**
+   * The revision of the schema. It is used to invalidate the cache.
+   */
   revision: string;
 }
 const ctxSchema = new WeakMap();
@@ -140,7 +146,7 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
   const sf = singleFlight<Schemas>();
   const ls = {
     get value() {
-      return sf.do("schemas", async () => {
+      return sf.run(async () => {
         const revision = await ctx.release!.revision();
         if (revision !== latestRevision || !_cached) {
           const { manifest, sourceMap } = await ctx.runtime!;
