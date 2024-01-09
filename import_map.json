@@ -2,10 +2,10 @@
   "scopes": {
     "https://denopkg.com/deco-cx/deco@1.26.0/": {
       "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/",
-      "std/": "https://deno.land/std@0.203.0/"
+      "std/": "https://deno.land/std@0.208.0/"
     },
     "https://denopkg.com/hyperdxio/hyperdx-js@cc43f5a2ba5f0062f3e01ea3d162d71971dd1f89/": {
-      "https://deno.land/std@0.203.0/": "https://deno.land/std@0.211.0/"
+      "https://deno.land/std@0.203.0/": "https://deno.land/std@0.208.0/"
     }
   },
   "imports": {
@@ -13,7 +13,7 @@
     "preact/": "https://esm.sh/preact@10.16.0/",
     "preact": "https://esm.sh/preact@10.16.0?pin=102",
     "partytown/": "https://deno.land/x/partytown@0.3.0/",
-    "std/": "https://deno.land/std@0.211.0/",
+    "std/": "https://deno.land/std@0.208.0/",
     "std/async/deferred.ts": "https://deno.land/std@0.203.0/async/deferred.ts",
     "$fresh/": "https://denopkg.com/denoland/fresh@1.5.2/",
     "deco/": "./"

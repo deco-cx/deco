@@ -1,8 +1,8 @@
 import { supabase } from "../../deps.ts";
 import { singleFlight } from "../../engine/core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
+import { randId as ulid } from "../../utils/rand.ts";
 import { CurrResolvables, RealtimeReleaseProvider } from "./realtime.ts";
-import { ulid } from "std/ulid/mod.ts";
 
 const TABLE = "configs";
 const fetchRelease = (

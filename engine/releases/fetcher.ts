@@ -1,5 +1,5 @@
-import { ulid } from "std/ulid/mod.ts";
 import { stringToHexSha256 } from "../../utils/encoding.ts";
+import { randId as ulid } from "../../utils/rand.ts";
 import { Release } from "./provider.ts";
 import { newRealtime, RealtimeReleaseProvider } from "./realtime.ts";
 

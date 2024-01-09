@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { StatusCode } from "std/http/mod.ts";
+import { StatusCode } from "std/http/status.ts";
 import type { AppManifest, SourceMap } from "../blocks/app.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";

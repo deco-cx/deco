@@ -5,11 +5,11 @@
 /// <reference lib="dom.iterable" />
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { ulid } from "std/ulid/mod.ts";
 import { SourceMap } from "./blocks/app.ts";
 import { ReleaseResolver } from "./engine/core/mod.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { AppManifest } from "./mod.ts";
+import { randId } from "./utils/rand.ts";
 
 export interface DecoRuntimeState {
   manifest: AppManifest;
@@ -46,7 +46,7 @@ const defaultContext: Omit<DecoContext, "schema"> = {
   siteId: 0,
   play: false,
   instance: {
-    id: ulid(),
+    id: randId(),
     startedAt: new Date(),
   },
 };

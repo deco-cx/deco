@@ -2,11 +2,11 @@ import { AppManifest } from "../../blocks/app.ts";
 import { DecoContext } from "../../deco.ts";
 import { JSONSchema7 } from "../../deps.ts";
 import { resolvable } from "../../utils/admin.ts";
+import { randId as ulid } from "../../utils/rand.ts";
 import { Resolvable } from "../core/resolver.ts";
 import { notUndefined, singleFlight } from "../core/utils.ts";
 import { Schemas } from "./builder.ts";
 import { genSchemas } from "./reader.ts";
-import { ulid } from "std/ulid/mod.ts";
 
 const getResolveType = (schema: unknown): string | undefined => {
   const asJsonSchema = schema as JSONSchema7;

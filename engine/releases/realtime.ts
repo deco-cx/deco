@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import { ulid } from "std/ulid/mod.ts";
 import { supabase } from "../../deps.ts";
 import { logger } from "../../observability/otel/config.ts";
+import { randId as ulid } from "../../utils/rand.ts";
 import { Resolvable } from "../core/resolver.ts";
 import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
 

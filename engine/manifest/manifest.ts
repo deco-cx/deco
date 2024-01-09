@@ -7,7 +7,6 @@ import {
 } from "https://esm.sh/v135/unique-names-generator@4.7.1";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
-import { ulid } from "std/ulid/mod.ts";
 import {
   AppManifest,
   AppRuntime,
@@ -23,6 +22,7 @@ import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
+import { randId } from "../../utils/rand.ts";
 import { ReleaseResolver } from "../core/mod.ts";
 import {
   BaseContext,
@@ -166,7 +166,7 @@ export const newContext = <
   const ctx: DecoContext = {
     ...currentContext,
     instance: {
-      id: instanceId ?? ulid(),
+      id: instanceId ?? randId(),
       startedAt: new Date(),
     },
   };

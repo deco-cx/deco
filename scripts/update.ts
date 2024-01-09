@@ -9,7 +9,7 @@ import { stringifyForWrite } from "../utils/json.ts";
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
-  /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)|(std)/;
+  /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
 
 interface ImportMap {
   imports: Record<string, string>;
