@@ -269,6 +269,8 @@ export const typeNameToSchemeable = async (
   if (val) {
     return val;
   }
+  // imports should be considered as a last resort since type name and func names can be equal, causing ambiguity
+  let fromImport: (() => Promise<Schemeable>) | undefined;
   for (const item of program.body) {
     if (item.type === "ExportNamedDeclaration") {
       const spec = item.specifiers.find((
@@ -395,30 +397,41 @@ export const typeNameToSchemeable = async (
         spec.local.value === typeName && spec.type !== "ImportDefaultSpecifier"
       );
       if (spec) {
-        try {
-          const from = resolvePath(item.source.value, path);
-          const newProgram = await parsePath(
-            from,
-          );
-          if (!newProgram) {
-            return UNKNOWN;
+        fromImport = async () => {
+          try {
+            const from = resolvePath(item.source.value, path);
+            const newProgram = await parsePath(
+              from,
+            );
+            if (!newProgram) {
+              return UNKNOWN;
+            }
+            return typeNameToSchemeable(
+              (spec as NamedImportSpecifier)?.imported?.value ??
+                spec.local.value,
+              {
+                ...ctx,
+                path: from,
+                parsedSource: newProgram,
+              },
+            );
+          } catch (err) {
+            console.log(
+              err,
+              item.source.value,
+              path,
+              import.meta.resolve(path),
+            );
+            throw err;
           }
-          return typeNameToSchemeable(
-            (spec as NamedImportSpecifier)?.imported?.value ?? spec.local.value,
-            {
-              ...ctx,
-              path: from,
-              parsedSource: newProgram,
-            },
-          );
-        } catch (err) {
-          console.log(err, item.source.value, path, import.meta.resolve(path));
-          throw err;
+        };
+        if (item.typeOnly) {
+          return fromImport();
         }
       }
     }
   }
-  return UNKNOWN;
+  return fromImport?.() ?? UNKNOWN;
 };
 
 const wellKnownTypeReferenceToSchemeable = async <
