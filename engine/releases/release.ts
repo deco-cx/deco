@@ -2,6 +2,7 @@ import { supabase } from "../../deps.ts";
 import { singleFlight } from "../../engine/core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
 import { CurrResolvables, RealtimeReleaseProvider } from "./realtime.ts";
+import { ulid } from "std/ulid/mod.ts";
 
 const TABLE = "configs";
 const fetchRelease = (
@@ -86,7 +87,7 @@ export const fromConfigsTable = (
         const { data, error } = await fetchRelease(site);
         return {
           data: data ??
-            { state: {}, archived: {}, revision: crypto.randomUUID() },
+            { state: {}, archived: {}, revision: ulid() },
           error,
         };
       },

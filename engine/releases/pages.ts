@@ -6,6 +6,7 @@ import getSupabaseClient from "../../supabase.ts";
 import { JSONSchema, Site } from "../../types.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { CurrResolvables, RealtimeReleaseProvider } from "./realtime.ts";
+import { ulid } from "std/ulid/mod.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;
@@ -329,7 +330,7 @@ const subscribeForConfigChanges = (
           if (!v.error) {
             callback(
               v.data ??
-                { state: {}, archived: {}, revision: crypto.randomUUID() },
+                { state: {}, archived: {}, revision: ulid() },
             );
           }
         }),
@@ -346,7 +347,7 @@ const subscribeForConfigChanges = (
           if (!v.error) {
             callback(
               v.data ??
-                { state: {}, archived: {}, revision: crypto.randomUUID() },
+                { state: {}, archived: {}, revision: ulid() },
             );
           }
         }),

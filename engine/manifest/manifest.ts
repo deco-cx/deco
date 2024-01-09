@@ -37,6 +37,8 @@ import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import { getComposedConfigStore, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
+import { ulid } from "std/ulid/mod.ts";
+
 
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
@@ -165,7 +167,7 @@ export const newContext = <
   const ctx: DecoContext = {
     ...currentContext,
     instance: {
-      id: instanceId ?? crypto.randomUUID(),
+      id: instanceId ?? ulid(),
       startedAt: new Date(),
     },
   };

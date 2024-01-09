@@ -6,6 +6,7 @@ import { Resolvable } from "../core/resolver.ts";
 import { notUndefined, singleFlight } from "../core/utils.ts";
 import { Schemas } from "./builder.ts";
 import { genSchemas } from "./reader.ts";
+import { ulid } from "std/ulid/mod.ts";
 
 const getResolveType = (schema: unknown): string | undefined => {
   const asJsonSchema = schema as JSONSchema7;
@@ -141,7 +142,7 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
   if (ctxSchema.has(ctx)) {
     return ctxSchema.get(ctx)!;
   }
-  let latestRevision: string = crypto.randomUUID();
+  let latestRevision: string = ulid();
   let _cached: Schemas | undefined;
   const sf = singleFlight<Schemas>();
   const ls = {
