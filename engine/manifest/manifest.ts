@@ -5,7 +5,6 @@ import {
   NumberDictionary,
   uniqueNamesGenerator,
 } from "https://esm.sh/v135/unique-names-generator@4.7.1";
-import { deferred } from "std/async/deferred.ts";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
 import {
@@ -39,7 +38,7 @@ import { getComposedConfigStore, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 import { ulid } from "std/ulid/mod.ts";
 
-
+const deferred = Promise.withResolvers;
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
@@ -198,7 +197,7 @@ export const newContext = <
     ctx.siteId,
   );
   const runtimePromise = deferred<DecoRuntimeState>();
-  ctx.runtime = runtimePromise.finally(() => {
+  ctx.runtime = runtimePromise.promise.finally(() => {
     ctx.instance.readyAt = new Date();
   });
 
@@ -323,14 +322,11 @@ export const newContext = <
       sourceMap: mSourceMap,
       resolver: currentResolver,
     };
-    if (runtimePromise.state !== "fulfilled") {
-      runtimePromise.resolve(runtime);
-    }
-
+    runtimePromise.resolve(runtime);
     ctx.runtime = Promise.resolve(runtime);
   };
 
-  let appsInstallationMutex = deferred();
+  let appsInstallationMutex = deferred<void>();
   provider.onChange(() => {
     // limiter to not allow multiple installations in parallel
     Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
@@ -354,13 +350,13 @@ export const newContext = <
     );
   }
   const start = performance.now();
-  return firstInstallAppsPromise.then(() => {
+  return firstInstallAppsPromise.promise.then(() => {
     console.log(
       `[${green(ctx.site)}]: the apps has been installed in ${
         (performance.now() - start).toFixed(0)
       }ms`,
     );
-    return runtimePromise.then((runtime) => runtime.resolver);
+    return runtimePromise.promise.then((runtime) => runtime.resolver);
   }).then(() => ctx);
 };
 

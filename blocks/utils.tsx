@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Status } from "std/http/mod.ts";
+import { StatusCode } from "std/http/mod.ts";
 import type { AppManifest, SourceMap } from "../blocks/app.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";
@@ -72,7 +72,7 @@ export const createBagKey = (description: string): symbol =>
 export interface RequestState {
   response: {
     headers: Headers;
-    status?: Status;
+    status?: StatusCode;
   };
   bag: WeakMap<any, any>;
   flags: Flag[];

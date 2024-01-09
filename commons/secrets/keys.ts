@@ -106,7 +106,7 @@ export const encryptToHex = async (value: string): Promise<string> => {
     textEncode(value),
   );
   const encryptedBytes = new Uint8Array(encrypted);
-  return textDecode(encodeHex(encryptedBytes));
+  return encodeHex(encryptedBytes);
 };
 
 export const decryptFromHex = async (encrypted: string) => {
@@ -114,7 +114,7 @@ export const decryptFromHex = async (encrypted: string) => {
   const decrypted = await crypto.subtle.decrypt(
     { name: "AES-CBC", iv },
     key,
-    decodeHex(textEncode(encrypted)),
+    decodeHex(encrypted),
   );
   const decryptedBytes = new Uint8Array(decrypted);
   return { decrypted: textDecode(decryptedBytes) };
