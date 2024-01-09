@@ -1,4 +1,4 @@
-import { encodeHex as encode } from "std/encoding/hex.ts";
+import { encode } from "std/encoding/hex.ts";
 
 /**
  * Takes an arbitrary string and converts to its sha256 hex representation.
@@ -10,5 +10,7 @@ export const stringToHexSha256 = async (str: string): Promise<string> => {
     "SHA-256",
     new TextEncoder().encode(JSON.stringify(str)),
   );
-  return encode(encoded);
+  return new TextDecoder().decode(
+    encode(new Uint8Array(encoded)),
+  );
 };
