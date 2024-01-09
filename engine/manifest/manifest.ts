@@ -5,7 +5,6 @@ import {
   NumberDictionary,
   uniqueNamesGenerator,
 } from "https://esm.sh/v135/unique-names-generator@4.7.1";
-import { deferred } from "std/async/deferred.ts";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
 import {
@@ -21,7 +20,10 @@ import blocks from "../../blocks/index.ts";
 import { buildSourceMap } from "../../blocks/utils.tsx";
 import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
-import { ReleaseResolver } from "../../engine/core/mod.ts";
+import { DecoState, SiteInfo } from "../../types.ts";
+import { deferred } from "../../utils/promise.ts";
+import { randId } from "../../utils/rand.ts";
+import { ReleaseResolver } from "../core/mod.ts";
 import {
   BaseContext,
   DanglingReference,
@@ -29,16 +31,12 @@ import {
   Resolvable,
   Resolver,
   ResolverMap,
-} from "../../engine/core/resolver.ts";
-import { PromiseOrValue } from "../../engine/core/utils.ts";
-import { integrityCheck } from "../../engine/integrity.ts";
-import defaultResolvers from "../../engine/manifest/fresh.ts";
-import {
-  getComposedConfigStore,
-  Release,
-} from "../../engine/releases/provider.ts";
-import { DecoState, SiteInfo } from "../../types.ts";
+} from "../core/resolver.ts";
+import { PromiseOrValue } from "../core/utils.ts";
+import { integrityCheck } from "../integrity.ts";
+import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
+import { getComposedConfigStore, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
@@ -162,11 +160,13 @@ export const newContext = <
   m: T,
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
+  instanceId: string | undefined = undefined,
 ): Promise<DecoContext> => {
   const currentContext = Context.active();
   const ctx: DecoContext = {
     ...currentContext,
     instance: {
+      id: instanceId ?? randId(),
       startedAt: new Date(),
     },
   };
@@ -322,14 +322,13 @@ export const newContext = <
       sourceMap: mSourceMap,
       resolver: currentResolver,
     };
-    if (runtimePromise.state !== "fulfilled") {
+    if (runtimePromise.state === "pending") {
       runtimePromise.resolve(runtime);
     }
-
     ctx.runtime = Promise.resolve(runtime);
   };
 
-  let appsInstallationMutex = deferred();
+  let appsInstallationMutex = deferred<void>();
   provider.onChange(() => {
     // limiter to not allow multiple installations in parallel
     Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {

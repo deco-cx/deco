@@ -4,6 +4,7 @@ import { Resolvable } from "../../engine/core/resolver.ts";
 import { singleFlight } from "../../engine/core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
 import { JSONSchema, Site } from "../../types.ts";
+import { randId as ulid } from "../../utils/rand.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { CurrResolvables, RealtimeReleaseProvider } from "./realtime.ts";
 export interface PageSection {
@@ -329,7 +330,7 @@ const subscribeForConfigChanges = (
           if (!v.error) {
             callback(
               v.data ??
-                { state: {}, archived: {}, revision: crypto.randomUUID() },
+                { state: {}, archived: {}, revision: ulid() },
             );
           }
         }),
@@ -346,7 +347,7 @@ const subscribeForConfigChanges = (
           if (!v.error) {
             callback(
               v.data ??
-                { state: {}, archived: {}, revision: crypto.randomUUID() },
+                { state: {}, archived: {}, revision: ulid() },
             );
           }
         }),
@@ -434,7 +435,7 @@ export const fromPagesTable = (
 ): RealtimeReleaseProvider => {
   const sf = singleFlight<{ data: CurrResolvables | null; error: any }>();
   const fetcher = (includeArchived = false) =>
-    sf.do("flight", async (): Promise<
+    sf.run(async (): Promise<
       { data: CurrResolvables | null; error: any }
     > => {
       const [{ data, error }, { data: dataFlags, error: errorFlags }] =

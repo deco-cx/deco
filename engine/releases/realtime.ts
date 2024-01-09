@@ -1,8 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
 import { supabase } from "../../deps.ts";
+import { logger } from "../../observability/otel/config.ts";
+import { randId as ulid } from "../../utils/rand.ts";
 import { Resolvable } from "../core/resolver.ts";
 import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
-import { logger } from "../../observability/otel/config.ts";
 
 export interface RealtimeReleaseProvider {
   /**
@@ -105,7 +106,7 @@ export const newRealtime = (
         return;
       }
       const resolvables = data ??
-        { state: {}, archived: {}, revision: crypto.randomUUID() };
+        { state: {}, archived: {}, revision: ulid() };
 
       const currentRevision = currResolvables.then((r) => r.revision).catch(
         () => "unknown",

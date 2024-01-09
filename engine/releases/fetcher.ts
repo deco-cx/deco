@@ -1,4 +1,5 @@
 import { stringToHexSha256 } from "../../utils/encoding.ts";
+import { randId as ulid } from "../../utils/rand.ts";
 import { Release } from "./provider.ts";
 import { newRealtime, RealtimeReleaseProvider } from "./realtime.ts";
 
@@ -46,7 +47,7 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     onChange?.({
       state,
       archived: {},
-      revision: crypto.randomUUID(),
+      revision: ulid(),
     });
   });
   es.onerror = (event) => {
@@ -78,7 +79,7 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
           data: {
             state: JSON.parse(content),
             archived: {},
-            revision: crypto.randomUUID(),
+            revision: ulid(),
           },
           error: null,
         };
@@ -97,7 +98,10 @@ const fromString = (
   state: string,
 ): Release => {
   const parsed = JSON.parse(state);
-  const revisionPromise = stringToHexSha256(endpoint);
+  const revisionPromise = stringToHexSha256(endpoint).then((r) => {
+    console.log("REVISION", r);
+    return r;
+  });
   return {
     state: () => Promise.resolve(parsed),
     archived: () => Promise.resolve({}),

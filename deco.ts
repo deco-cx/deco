@@ -9,6 +9,7 @@ import { SourceMap } from "./blocks/app.ts";
 import { ReleaseResolver } from "./engine/core/mod.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { AppManifest } from "./mod.ts";
+import { randId } from "./utils/rand.ts";
 
 export interface DecoRuntimeState {
   manifest: AppManifest;
@@ -19,6 +20,7 @@ export interface DecoRuntimeState {
 
 export interface InstanceInfo {
   startedAt: Date;
+  id: string;
   readyAt?: Date;
 }
 
@@ -37,48 +39,33 @@ export type DecoContext = {
   instance: InstanceInfo;
 };
 
-const defaultContext: DecoContext = {
+const defaultContext: Omit<DecoContext, "schema"> = {
   deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
   siteId: 0,
   play: false,
   instance: {
+    id: randId(),
     startedAt: new Date(),
   },
 };
 
-// Map to store contexts associated with async IDs
-const contextMap = new Map<string, DecoContext>();
-
 const asyncLocalStorage = new AsyncLocalStorage();
-
-export const withContext = <R, TArgs extends unknown[]>(
-  ctx: DecoContext,
-  f: (...args: TArgs) => R,
-): (...args: TArgs) => R => {
-  const id = crypto.randomUUID();
-  contextMap.set(id, ctx);
-
-  return (...args: TArgs): R => {
-    try {
-      return asyncLocalStorage.run(id, f, ...args);
-    } finally {
-      contextMap.delete(id);
-    }
-  };
-};
 
 export const Context = {
   // Function to retrieve the active context
-  active: () => {
-    const asyncId = asyncLocalStorage.getStore() as string;
-    if (typeof asyncId !== "string") {
-      return defaultContext;
-    }
-
+  active: (): DecoContext => {
     // Retrieve the context associated with the async ID
-    return contextMap.get(asyncId) || defaultContext;
+    return (asyncLocalStorage.getStore() as DecoContext) ?? defaultContext;
+  },
+  bind: <R, TArgs extends unknown[]>(
+    ctx: DecoContext,
+    f: (...args: TArgs) => R,
+  ): (...args: TArgs) => R => {
+    return (...args: TArgs): R => {
+      return asyncLocalStorage.run(ctx, f, ...args);
+    };
   },
 };
 

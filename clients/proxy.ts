@@ -7,6 +7,7 @@ import {
   type ManifestInvocable,
 } from "../utils/invoke.types.ts";
 import { type DotNestedKeys } from "../utils/object.ts";
+import { Fulfilled, Rejected } from "../utils/promise.ts";
 import { type invokeKey } from "./withManifest.ts";
 
 export type InvocationProxyHandler = {
@@ -17,16 +18,6 @@ export type InvocationProxyHandler = {
 export type InvocationProxyState = Omit<InvocationProxyHandler, "__parts"> | {
   __parts?: string[] | undefined;
 };
-
-/**
- * Promise.prototype.then onfufilled callback type.
- */
-type Fulfilled<R, T> = ((result: R) => T | PromiseLike<T>) | null;
-
-/**
- * Promise.then onrejected callback type.
- */
-type Rejected<E> = ((reason: any) => E | PromiseLike<E>) | null;
 
 export class InvokeAwaiter<
   TManifest extends AppManifest,

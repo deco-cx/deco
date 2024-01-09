@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
-import { DecoContext, withContext } from "../../../deco.ts";
+import { Context, DecoContext } from "../../../deco.ts";
 import {
   MiddlewareHandler,
   MiddlewareHandlerContext,
@@ -29,6 +29,7 @@ let contextCache: ContextCache | null = null;
 
 const DECO_RELEASE_COOKIE_NAME = "deco_release";
 const DELETE_MARKER = "$";
+const COOKIE_MARKER = "@";
 export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   opt: Options<TManifest>,
 ): MiddlewareHandler<DecoState<any, DecoSiteState, TManifest>> => {
@@ -73,6 +74,11 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       return response;
     }
 
+    const cookable = alienReleaseFromQs?.startsWith(COOKIE_MARKER) ?? false;
+    const alienReleaseQs = cookable
+      ? alienReleaseFromQs!.slice(1) // remove @
+      : alienReleaseFromQs;
+
     // Get the cookies from the request headers
     const cookies = getCookies(request.headers);
 
@@ -80,8 +86,11 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     const alienReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
 
     // Determine the inline release and whether a cookie should be added
-    const [alienRelease, shouldAddCookie] = alienReleaseFromQs != null
-      ? [alienReleaseFromQs, alienReleaseFromQs !== alienReleaseFromCookie]
+    const [alienRelease, shouldAddCookie] = alienReleaseQs != null
+      ? [
+        alienReleaseQs,
+        (alienReleaseQs !== alienReleaseFromCookie) && cookable,
+      ]
       : [alienReleaseFromCookie, false];
 
     // If the inline release is a string, create a new context cache
@@ -97,6 +106,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
           rootManifest,
           opt.sourceMap,
           fromEndpoint(alienRelease),
+          alienRelease,
         );
         contextCache.set(
           alienRelease,
@@ -108,7 +118,8 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       }
       const ctx = await contextPromise;
-      const next = withContext(ctx, context.next.bind(context));
+
+      const next = Context.bind(ctx, context.next.bind(context));
       const response = await next();
       if (shouldAddCookie) {
         setCookie(response.headers, {
