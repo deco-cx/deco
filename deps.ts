@@ -1,5 +1,4 @@
-export { decodeHex, encodeHex } from "std/encoding/hex.ts";
-
+export { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
 export { Head, IS_BROWSER } from "$fresh/runtime.ts";
 export type {
   Handler as FreshHandler,
