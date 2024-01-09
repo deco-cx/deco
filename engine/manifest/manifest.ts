@@ -7,6 +7,7 @@ import {
 } from "https://esm.sh/v135/unique-names-generator@4.7.1";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
+import { ulid } from "std/ulid/mod.ts";
 import {
   AppManifest,
   AppRuntime,
@@ -21,6 +22,7 @@ import { buildSourceMap } from "../../blocks/utils.tsx";
 import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
+import { deferred } from "../../utils/promise.ts";
 import { ReleaseResolver } from "../core/mod.ts";
 import {
   BaseContext,
@@ -36,9 +38,7 @@ import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import { getComposedConfigStore, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
-import { ulid } from "std/ulid/mod.ts";
 
-const deferred = Promise.withResolvers;
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
@@ -197,7 +197,7 @@ export const newContext = <
     ctx.siteId,
   );
   const runtimePromise = deferred<DecoRuntimeState>();
-  ctx.runtime = runtimePromise.promise.finally(() => {
+  ctx.runtime = runtimePromise.finally(() => {
     ctx.instance.readyAt = new Date();
   });
 
@@ -322,7 +322,9 @@ export const newContext = <
       sourceMap: mSourceMap,
       resolver: currentResolver,
     };
-    runtimePromise.resolve(runtime);
+    if (runtimePromise.state === "pending") {
+      runtimePromise.resolve(runtime);
+    }
     ctx.runtime = Promise.resolve(runtime);
   };
 
@@ -350,13 +352,13 @@ export const newContext = <
     );
   }
   const start = performance.now();
-  return firstInstallAppsPromise.promise.then(() => {
+  return firstInstallAppsPromise.then(() => {
     console.log(
       `[${green(ctx.site)}]: the apps has been installed in ${
         (performance.now() - start).toFixed(0)
       }ms`,
     );
-    return runtimePromise.promise.then((runtime) => runtime.resolver);
+    return runtimePromise.then((runtime) => runtime.resolver);
   }).then(() => ctx);
 };
 

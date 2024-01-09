@@ -1,7 +1,7 @@
+import { ulid } from "std/ulid/mod.ts";
 import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { Release } from "./provider.ts";
 import { newRealtime, RealtimeReleaseProvider } from "./realtime.ts";
-import { ulid } from "std/ulid/mod.ts";
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
 
@@ -98,7 +98,10 @@ const fromString = (
   state: string,
 ): Release => {
   const parsed = JSON.parse(state);
-  const revisionPromise = stringToHexSha256(endpoint);
+  const revisionPromise = stringToHexSha256(endpoint).then((r) => {
+    console.log("REVISION", r);
+    return r;
+  });
   return {
     state: () => Promise.resolve(parsed),
     archived: () => Promise.resolve({}),
