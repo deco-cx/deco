@@ -51,6 +51,8 @@ export const toManifestBlocks = (
   return { blocks: manBlocks };
 };
 
+export let mschema: Schemas | null = null; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
+
 const sf = singleFlight<string>();
 const binaryId = Context.active().deploymentId ?? crypto.randomUUID();
 export const handler = async (
@@ -70,6 +72,7 @@ export const handler = async (
       manifest,
     );
     const schema = await lazySchema.value;
+    mschema = schema; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
 
     const info: MetaInfo = {
       major: parse(meta.version).major,
