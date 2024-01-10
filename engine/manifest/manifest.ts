@@ -127,7 +127,8 @@ export const initContext = async <
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
-  Object.assign(context, await newContext(m, currSourceMap, release));
+  await fulfillContext(context, m, currSourceMap, release);
+
   if (context.play) {
     console.debug(
       `\n👋 Hey [${green(context.site)}] welcome to ${
@@ -154,22 +155,14 @@ export const initContext = async <
   return context;
 };
 
-export const newContext = <
+export const fulfillContext = <
   T extends AppManifest,
 >(
+  ctx: DecoContext,
   m: T,
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
-  instanceId: string | undefined = undefined,
 ): Promise<DecoContext> => {
-  const currentContext = Context.active();
-  const ctx: DecoContext = {
-    ...currentContext,
-    instance: {
-      id: instanceId ?? randId(),
-      startedAt: new Date(),
-    },
-  };
   let currentSite = siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (ctx.isDeploy) {
@@ -360,6 +353,26 @@ export const newContext = <
     );
     return runtimePromise.then((runtime) => runtime.resolver);
   }).then(() => ctx);
+};
+
+export const newContext = <
+  T extends AppManifest,
+>(
+  m: T,
+  currSourceMap?: SourceMap,
+  release: Release | undefined = undefined,
+  instanceId: string | undefined = undefined,
+): Promise<DecoContext> => {
+  const currentContext = Context.active();
+  const ctx: DecoContext = {
+    ...currentContext,
+    instance: {
+      id: instanceId ?? randId(),
+      startedAt: new Date(),
+    },
+  };
+
+  return fulfillContext(ctx, m, currSourceMap, release);
 };
 
 export const $live = <T extends AppManifest>(

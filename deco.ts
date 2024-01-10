@@ -44,7 +44,7 @@ const defaultContext: Omit<DecoContext, "schema"> = {
   isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
   site: "",
   siteId: 0,
-  play: false,
+  play: Deno.env.has("USE_LOCAL_STORAGE_ONLY"),
   instance: {
     id: randId(),
     startedAt: new Date(),
