@@ -189,7 +189,18 @@ const wrapLoader = ({
         // TODO: (@tlgimenes) Resolve props cache key statically
         const url = new URL("https://localhost");
         url.searchParams.set("resolver", loader);
-        url.searchParams.set("props", hash(props));
+
+        ctx?.monitoring?.tracer?.startActiveSpan?.("object-hash", (span) => {
+          try {
+            url.searchParams.set("props", hash(props));
+          } catch (e) {
+            span.recordException(e);
+            throw e;
+          } finally {
+            span.end();
+          }
+        });
+
         url.searchParams.set("cacheKey", cacheKeyValue);
         const request = new Request(url);
         timing?.end();
