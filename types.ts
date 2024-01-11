@@ -10,7 +10,7 @@ import appBlock, {
 } from "./blocks/app.ts";
 import flagBlock from "./blocks/flag.ts";
 import functionBlock from "./blocks/function.ts";
-import handlerBlock from "./blocks/handler.ts";
+import handlerBlock, { Handler } from "./blocks/handler.ts";
 import loaderBlock from "./blocks/loader.ts";
 import matcherBlock from "./blocks/matcher.ts";
 import pageBlock from "./blocks/page.tsx";
@@ -20,10 +20,9 @@ import workflowBlock from "./blocks/workflow.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "./deps.ts";
 import { ModuleOf } from "./engine/block.ts";
-import { Monitoring, ResolveFunc } from "./engine/core/resolver.ts";
+import { Monitoring, Resolvable, ResolveFunc } from "./engine/core/resolver.ts";
 import { PromiseOrValue } from "./engine/core/utils.ts";
 import { Release } from "./engine/releases/provider.ts";
-import { Route } from "./flags/audience.ts";
 import type { InvocationProxy } from "./utils/invoke.types.ts";
 import { createServerTimings } from "./utils/timings.ts";
 export type {
@@ -82,6 +81,25 @@ export interface Flag {
 export interface StatefulContext<T> {
   params: Record<string, string>;
   state: T;
+}
+
+/**
+ * @title Site Route
+ * @titleBy pathTemplate
+ */
+export interface Route {
+  pathTemplate: string;
+  /**
+   * @description if true so the path will be checked agaisnt the coming from request instead of using urlpattern.
+   */
+  isHref?: boolean;
+  // FIXME this should be placed at nested level 3 of the object to avoid being resolved before the routeSelection is executed.
+  handler: { value: Resolvable<Handler> };
+  /**
+   * @title Priority
+   * @description higher priority means that this route will be used in favor of other routes with less or none priority
+   */
+  highPriority?: boolean;
 }
 
 export type DecoState<

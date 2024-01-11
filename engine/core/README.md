@@ -150,4 +150,6 @@ resolvable. Those hints are calculated once when the configuration changes and
 its cached all the way long for the entire live of a given release. The idea
 behind the algorithm is the same, but the hints helps to decrease the
 performance burden associated to discover the exact fields that should be
-resolved in runtime. **In other words** the problem mentioned in the previous section does not exists anymore, hints are calculated using topological sort algorithm which avoids resolving an object that is already resolved.
+resolved in runtime. **In other words** the problem mentioned in the previous
+section does not exists anymore, hints are calculated using topological sort
+algorithm which avoids resolving an object that is already resolved.

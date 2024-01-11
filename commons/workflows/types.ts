@@ -1,4 +1,9 @@
-import { Metadata, WorkflowExecution as DurableExecution } from "../../deps.ts";
+import {
+  Metadata,
+  Workflow,
+  WorkflowExecution as DurableExecution,
+} from "../../deps.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
 export type Arg = readonly unknown[];
 
 // deno-lint-ignore no-explicit-any
@@ -21,6 +26,25 @@ export interface WorkflowExecution<
   output?: TResult;
   props?: TProps;
 }
+
+const WORKFLOW_QS = "workflow";
+export const WorkflowQS = {
+  buildFromProps: (workflow: unknown): string => {
+    return `${WORKFLOW_QS}=${
+      encodeURIComponent(btoa(JSON.stringify(workflow)))
+    }`;
+  },
+  extractFromUrl: (
+    urlString: string,
+  ): Resolvable<Workflow> | undefined => {
+    const url = new URL(urlString);
+    const qs = url.searchParams.get(WORKFLOW_QS);
+    if (!qs) {
+      return undefined;
+    }
+    return JSON.parse(atob(decodeURIComponent(qs)));
+  },
+};
 
 const withoutResolveType = <T extends { __resolveType: string }>(
   { __resolveType, ...rest }: T,
