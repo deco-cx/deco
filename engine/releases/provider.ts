@@ -1,11 +1,14 @@
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { fromPagesTable } from "../../engine/releases/pages.ts";
 import { fromConfigsTable } from "../../engine/releases/release.ts";
-import { SelectionConfig } from "../../handlers/routesSelection.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
 import { newRealtime } from "./realtime.ts";
+
+export interface SelectionConfig {
+  audiences: unknown[];
+}
 
 export type OnChangeCallback = () => void;
 export interface ReadOptions {
