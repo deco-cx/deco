@@ -28,39 +28,39 @@ const TEMPLATES = {
   commerce: {
     vtex: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-vtex.deco.site/live/release",
+      release: "https://storefront-vtex.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     vnda: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-vnda.deco.site/live/release",
+      release: "https://storefront-vnda.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     linx: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-linx.deco.site/live/release",
+      release: "https://storefront-linx.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     wake: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-wake.deco.site/live/release",
+      release: "https://storefront-wake.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     shopify: {
       appName: "deco-sites/storefront",
-      release: "https://store-shopify.deco.site/live/release",
+      release: "https://store-shopify.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
   },
   "start from scratch": {
-    appName: "deco-sites/start",
-    release: "https://start.deco.site/live/release",
-    git: "https://github.com/deco-sites/start/archive/refs/heads/main.zip",
+    appName: "deco-sites/storefront",
+    release: "https://start.deco.site/.decofile",
+    git: "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
   },
 } satisfies Record<string, Config | Record<string, Config>>;
 
