@@ -21,46 +21,139 @@ import { init as initApp } from "./apps/init.ts";
 interface Config {
   appName: string;
   git: string;
-  release: string;
+  release: string | Record<string, unknown>;
 }
 
 const TEMPLATES = {
   commerce: {
     vtex: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-vtex.deco.site/live/release",
+      release: "https://storefront-vtex.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     vnda: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-vnda.deco.site/live/release",
+      release: "https://storefront-vnda.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     linx: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-linx.deco.site/live/release",
+      release: "https://storefront-linx.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     wake: {
       appName: "deco-sites/storefront",
-      release: "https://storefront-wake.deco.site/live/release",
+      release: "https://storefront-wake.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
     shopify: {
       appName: "deco-sites/storefront",
-      release: "https://store-shopify.deco.site/live/release",
+      release: "https://store-shopify.deco.site/.decofile",
       git:
         "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
     },
   },
   "start from scratch": {
-    appName: "deco-sites/start",
-    release: "https://start.deco.site/live/release",
-    git: "https://github.com/deco-sites/start/archive/refs/heads/main.zip",
+    appName: "deco-sites/storefront",
+    release: {
+      "site": {
+        "seo": {
+          "type": "website",
+          "image":
+            "https://ozksgdmyrqcxcwhnbepg.supabase.co/storage/v1/object/public/assets/2177/a5d890ba-e5b8-471e-8b77-7412c1d4fa56",
+          "title": "Storefront",
+          "jsonLDs": [],
+          "canonical": "https://fashion.deco.site",
+          "noIndexing": false,
+          "description": "Improve your page performance with deco.cx",
+          "titleTemplate": "%s | deco.cx",
+          "descriptionTemplate": "%s | Deco.cx",
+        },
+        "theme": {
+          "__resolveType": "Theme",
+        },
+        "global": [],
+        "routes": [
+          {
+            "__resolveType": "website/loaders/pages.ts",
+          },
+          {
+            "__resolveType": "website/loaders/redirects.ts",
+          },
+        ],
+        "commerce": {
+          "platform": "other",
+        },
+        "platform": "vtex",
+        "__resolveType": "deco-sites/storefront/apps/site.ts",
+      },
+      "files": {
+        "__resolveType": "decohub/apps/files.ts",
+      },
+      "Theme": {
+        "font": {
+          "fonts": [
+            {
+              "family": "Poppins",
+              "variations": [
+                {
+                  "weight": "400",
+                },
+                {
+                  "weight": "600",
+                },
+                {
+                  "weight": "700",
+                },
+              ],
+            },
+          ],
+          "__resolveType": "website/loaders/fonts/googleFonts.ts",
+        },
+        "fonts": [
+          {
+            "fontFamily": "Poppins",
+          },
+        ],
+        "mainColors": {
+          "neutral": "#f9f9f9",
+          "primary": "#384c53",
+          "warning": "#e08e00",
+          "base-100": "#ffffff",
+          "tertiary": "#ffeaaf",
+          "secondary": "#ffeaaf",
+        },
+        "buttonStyle": {
+          "--border-btn": "1px",
+          "--rounded-btn": "0.2rem",
+          "--animation-btn": "0.25s",
+          "--btn-text-case": "normal-case",
+          "--btn-focus-scale": "0.95",
+        },
+        "colorScheme": "light",
+        "otherStyles": {
+          "--tab-border": "1px",
+          "--tab-radius": "0.5rem",
+          "--rounded-box": "1rem",
+          "--rounded-badge": "1.9rem",
+          "--animation-input": "0.2s",
+        },
+        "__resolveType": "deco-sites/storefront/sections/Theme/Theme.tsx",
+        "complementaryColors": {
+          "primary": {
+            "primary-content": "#ffffff",
+          },
+          "base-200": "#ffffff",
+          "base-300": "#ffffff",
+          "neutral-content": "#f9f9f9",
+        },
+      },
+    },
+    git: "https://github.com/deco-sites/storefront/archive/refs/heads/main.zip",
   },
 } satisfies Record<string, Config | Record<string, Config>>;
 
@@ -116,7 +209,9 @@ const initProject = async (name: string, config: Config) => {
   await done();
 
   done = progress("Using blocks from template");
-  const releaseJson = await fetch(config.release).then((res) => res.json());
+  const releaseJson = typeof config.release === "string"
+    ? await fetch(config.release).then((res) => res.json())
+    : config.release;
 
   await Deno.writeTextFile(
     join(root, ".decofile.json"),
