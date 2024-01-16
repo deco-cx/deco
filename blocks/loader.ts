@@ -194,8 +194,8 @@ const wrapLoader = ({
           try {
             const hashedProps = hash(props);
             span.setAttribute(
-              "hashSize",
-              (new TextEncoder().encode(hashedProps)).length,
+              "hashSizeBytes",
+              hashedProps.length*2,
             );
             url.searchParams.set("props", hashedProps);
           } catch (e) {
