@@ -192,7 +192,12 @@ const wrapLoader = ({
 
         ctx?.monitoring?.tracer?.startActiveSpan?.("object-hash", (span) => {
           try {
-            url.searchParams.set("props", hash(props));
+            const hashedProps = hash(props);
+            span.setAttribute(
+              "hashSize",
+              (new TextEncoder().encode(hashedProps)).length,
+            );
+            url.searchParams.set("props", hashedProps);
           } catch (e) {
             span.recordException(e);
             throw e;
