@@ -46,11 +46,15 @@ export const resolveAny = (importString: string[]): string =>
     }
   })!;
 
-export type TsWalker = (dir: string) => AsyncIterableIterator<WalkEntry>;
+export interface TsWalkerEntry {
+  name: string;
+  path: string;
+}
+export type TsWalker = (dir: string) => AsyncIterableIterator<TsWalkerEntry>;
 
 export async function* defaultWalker(
   dir: string,
-): AsyncIterableIterator<WalkEntry> {
+): AsyncIterableIterator<TsWalkerEntry> {
   if (!(await exists(dir))) {
     return;
   }
