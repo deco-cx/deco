@@ -21,7 +21,11 @@ const withDefinition = (
   const functionRef = fileSeparatorToSlash(funcImportPath);
   const functionKey = shouldBeLocal(block, functionRef)
     ? functionRef
-    : `${namespace}${sanitize(functionRef.substring(1))}`; // add namespace to the functionRef
+    : `${namespace}${
+      functionRef.startsWith(".")
+        ? functionRef.substring(1)
+        : sanitize(functionRef)
+    }`; // add namespace to the functionRef
 
   const ref = `${"$".repeat(blockIdx)}${blkN}`;
   return man
