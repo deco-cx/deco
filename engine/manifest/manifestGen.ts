@@ -2,7 +2,7 @@ import { walk, WalkEntry } from "std/fs/walk.ts";
 import { join } from "std/path/mod.ts";
 import { shouldBeLocal } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import { Block, BlockType } from "../../engine/block.ts";
+import { BlockType } from "../../engine/block.ts";
 import {
   ManifestBuilder,
   newManifestBuilder,
@@ -46,28 +46,24 @@ export const resolveAny = (importString: string[]): string =>
     }
   })!;
 
-export async function* listBlocks(
-  base: string,
-  blk: Block,
-): AsyncGenerator<WalkEntry> {
-  const dir = join(base, blk.type);
+export type TsWalker = (dir: string) => AsyncIterableIterator<WalkEntry>;
+
+export async function* defaultWalker(
+  dir: string,
+): AsyncIterableIterator<WalkEntry> {
   if (!(await exists(dir))) {
     return;
   }
-  for await (
-    const entry of walk(dir, {
-      includeDirs: false,
-      includeFiles: true,
-      exts: ["tsx", "jsx", "ts", "js"],
-    })
-  ) {
-    yield entry;
-  }
+  return yield* walk(dir, {
+    includeDirs: false,
+    includeFiles: true,
+    exts: ["tsx", "jsx", "ts", "js"],
+  });
 }
-
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
+  walker: TsWalker = defaultWalker,
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
     namespace,
@@ -78,8 +74,10 @@ export const decoManifestBuilder = async (
   let blockIdx = 1;
   for (const blk of blocks()) {
     let totalBlocks = 0;
+    const blockDir = join(dir, blk.type);
+
     for await (
-      const entry of listBlocks(dir, blk)
+      const entry of walker(blockDir)
     ) {
       // ignore file name with __NAME__.ts
       if (
