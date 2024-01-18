@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
 import { ValueType } from "../deps.ts";
-import crypto from "node:crypto";
+import hash from "https://esm.sh/v135/object-hash@3.0.0";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
@@ -192,11 +192,16 @@ const wrapLoader = ({
 
         ctx?.monitoring?.tracer?.startActiveSpan?.("object-hash", (span) => {
           try {
-            const hashedProps = crypto.createHash("md5").update(JSON.stringify(props)).digest("hex");
-            span.setAttribute(
-              "hash_size_bytes",
-              hashedProps.length*2,
-            );
+            const hashedProps = hash(props, {
+              ignoreUnknown: true,
+              respectType: false,
+              respectFunctionProperties: false,
+              algorithm: "md5",
+            });
+            span.setAttributes({
+              hash_size_bytes: hashedProps.length * 2,
+              props_length: JSON.stringify(props).length,
+            });
             url.searchParams.set("props", hashedProps);
           } catch (e) {
             span.recordException(e);
