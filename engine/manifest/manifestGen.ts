@@ -97,7 +97,7 @@ export const decoManifestBuilder = async (
       initialManifest = withDefinition(
         initialManifest,
         namespace,
-        entry.path.replace(dir, "."),
+        dir !== "" ? entry.path.replace(dir, ".") : entry.path,
         blk.type,
         blockIdx,
         totalBlocks++,
