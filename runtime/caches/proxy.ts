@@ -117,15 +117,27 @@ export const caches: CacheStorage = {
           throw new TypeError("Response status must not be 206");
         }
 
-        const url = new Request(request).url;
-        const responseClone = response.clone();
+        const getResponseLength = async (
+          response: Response,
+        ): Promise<number> => {
+          const length = response.headers.get("content-length");
+          if (!length) {
+            const responseClone = response.clone();
+            return (await responseClone?.text()).length ?? 0;
+          }
+          return Number(length);
+        };
+
+        const url = req.url;
+        const responseLength = await getResponseLength(response);
 
         const span = tracer.startSpan("put-cache-proxy", {
           attributes: {
             url_size_bytes: url.length * 2,
-            response_size_bytes: (await responseClone?.text()).length * 2 ?? 0,
+            response_size_bytes: responseLength * 2,
           },
         });
+
         try {
           cache.insert(url, response);
         } catch (err) {
