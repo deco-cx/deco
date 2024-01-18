@@ -1,4 +1,4 @@
-import { walk, WalkEntry } from "std/fs/walk.ts";
+import { walk } from "std/fs/walk.ts";
 import { join } from "std/path/mod.ts";
 import { shouldBeLocal } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
@@ -8,7 +8,8 @@ import {
   newManifestBuilder,
 } from "../../engine/manifest/manifestBuilder.ts";
 import { exists, fileSeparatorToSlash } from "../../utils/filesystem.ts";
-
+const sanitize = (functionName: string) =>
+  functionName.startsWith("/") ? functionName : `/${functionName}`;
 const withDefinition = (
   man: ManifestBuilder,
   namespace: string,
@@ -20,7 +21,7 @@ const withDefinition = (
   const functionRef = fileSeparatorToSlash(funcImportPath);
   const functionKey = shouldBeLocal(block, functionRef)
     ? functionRef
-    : `${namespace}${functionRef.substring(1)}`; // add namespace to the functionRef
+    : `${namespace}${sanitize(functionRef.substring(1))}`; // add namespace to the functionRef
 
   const ref = `${"$".repeat(blockIdx)}${blkN}`;
   return man

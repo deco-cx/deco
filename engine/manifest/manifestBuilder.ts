@@ -143,7 +143,7 @@ const stringifyImport = ([from, clauses]: [string, ImportClause[]]): string => {
           : clause.as
       )
       .join(",")
-  } from "${from}"`;
+  } from "${from[0] === "." && from[1] !== "/" ? "./" + from : from}"`;
 };
 
 const stringifyObj = (obj: JSONObject, sortKeys = true): string => {
