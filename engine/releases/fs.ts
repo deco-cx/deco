@@ -73,6 +73,13 @@ export const newFsProvider = (
 
   return {
     state,
+    set: (state, rev) => {
+      currResolvables = Promise.resolve({
+        state,
+        archived: {},
+        revision: rev ?? `${Date.now()}`,
+      });
+    },
     archived: () => currResolvables.then((r) => r.archived),
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
