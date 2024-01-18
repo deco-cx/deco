@@ -79,6 +79,9 @@ export const newFsProvider = (
         archived: {},
         revision: rev ?? `${Date.now()}`,
       });
+      for (const cb of onChangeCbs) {
+        cb();
+      }
     },
     archived: () => currResolvables.then((r) => r.archived),
     onChange: (cb: OnChangeCallback) => {
