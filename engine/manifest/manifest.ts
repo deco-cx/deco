@@ -165,11 +165,6 @@ export const fulfillContext = <
 ): Promise<DecoContext> => {
   let currentSite = siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
-    if (ctx.isDeploy) {
-      throw new Error(
-        `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
-      );
-    }
     currentSite = uniqueNamesGenerator({
       dictionaries: [animals, adjectives, numberDictionary],
       length: 3,
