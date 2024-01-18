@@ -18,14 +18,13 @@ const withDefinition = (
   blockIdx: number,
   blkN: number,
 ): ManifestBuilder => {
-  const functionRef = fileSeparatorToSlash(funcImportPath);
+  const _functionRef = fileSeparatorToSlash(funcImportPath);
+  const functionRef = _functionRef.startsWith(".")
+    ? _functionRef
+    : `.${sanitize(_functionRef)}`;
   const functionKey = shouldBeLocal(block, functionRef)
     ? functionRef
-    : `${namespace}${
-      functionRef.startsWith(".")
-        ? functionRef.substring(1)
-        : sanitize(functionRef)
-    }`; // add namespace to the functionRef
+    : `${namespace}${functionRef.substring(1)}`; // add namespace to the functionRef
 
   const ref = `${"$".repeat(blockIdx)}${blkN}`;
   return man
