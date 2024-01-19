@@ -57,37 +57,3 @@ Deno.bench("hash.MD5", { group: "object-hash" }, () => {
     hash.MD5(test);
   }
 });
-
-// Those options are not valid because they are not stable, so the same object could be hashed differently
-// Deno.bench("crypto.createHash('sha256')", { group: "object-hash" }, () => {
-//     for (const test of tests) {
-//         crypto.createHash("sha256").update(JSON.stringify(test)).digest("hex");
-//     }
-// });
-
-// Deno.bench("crypto.createHash('md5')", { group: "object-hash" }, () => {
-//     for (const test of tests) {
-//         crypto.createHash("md5").update(JSON.stringify(test)).digest("hex");
-//     }
-// });
-
-// Deno.bench("webcrypto.subtle.digest('SHA-256'", { group: "object-hash" }, async () => {
-//     for (const test of tests) {
-//         const msgUint8 = new TextEncoder().encode(JSON.stringify(test));
-//         const hashBuffer = await webcrypto.subtle.digest("SHA-256", msgUint8);
-//         const hashArray = Array.from(new Uint8Array(hashBuffer));
-//         hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-//     }
-// });
-
-// Deno.bench("hash-wasm md5", { group: "object-hash" }, async () => {
-//     for (const test of tests) {
-//         await md5(JSON.stringify(test));
-//     }
-// });
-
-// Deno.bench("hash-wasm sha1", { group: "object-hash" }, async () => {
-//     for (const test of tests) {
-//         await sha1(JSON.stringify(test));
-//     }
-// });
