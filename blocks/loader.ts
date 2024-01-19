@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import hash from "https://esm.sh/v135/object-hash@3.0.0";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { ValueType } from "../deps.ts";
+import hash from "https://esm.sh/v135/object-hash@3.0.0";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
@@ -14,7 +14,7 @@ import {
   FnProps,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
-import { logger } from "deco/observability/otel/config.ts";
+import { logger, tracer } from "deco/observability/otel/config.ts";
 import { weakcache } from "../deps.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
@@ -190,21 +190,29 @@ const wrapLoader = ({
         const url = new URL("https://localhost");
         url.searchParams.set("resolver", loader);
 
-        ctx?.monitoring?.tracer?.startActiveSpan?.("object-hash", (span) => {
-          try {
-            const hashedProps = hash(props);
-            span.setAttribute(
-              "hash_size_bytes",
-              hashedProps.length*2,
-            );
-            url.searchParams.set("props", hashedProps);
-          } catch (e) {
-            span.recordException(e);
-            throw e;
-          } finally {
-            span.end();
-          }
+        const span = tracer.startSpan("object-hash", {
+          attributes: {
+            props_length: JSON.stringify(props).length,
+          },
         });
+
+        try {
+          const hashedProps = hash(props, {
+            ignoreUnknown: true,
+            respectType: false,
+            respectFunctionProperties: false,
+            algorithm: "md5",
+          });
+          url.searchParams.set("props", hashedProps);
+          span.setAttributes({
+            hash_size_bytes: hashedProps.length * 2,
+          });
+        } catch (e) {
+          span.recordException(e);
+          throw e;
+        } finally {
+          span.end();
+        }
 
         url.searchParams.set("cacheKey", cacheKeyValue);
         const request = new Request(url);
