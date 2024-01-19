@@ -1,5 +1,5 @@
 import { weakcache } from "../../deps.ts";
-import { tracer } from "../../observability/otel/config.ts";
+import { tracer, tracerIsRecording } from "deco/observability/otel/config.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
 
@@ -129,7 +129,9 @@ export const caches: CacheStorage = {
         };
 
         const url = req.url;
-        const responseLength = await getResponseLength(response);
+        const responseLength = tracerIsRecording()
+          ? await getResponseLength(response)
+          : 0;
 
         const span = tracer.startSpan("put-cache-proxy", {
           attributes: {

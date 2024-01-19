@@ -108,3 +108,6 @@ if (OTEL_IS_ENABLED) {
 export const tracer = opentelemetry.trace.getTracer(
   "deco-tracer",
 );
+
+export const tracerIsRecording = () =>
+  opentelemetry.trace.getActiveSpan()?.isRecording() ?? false;
