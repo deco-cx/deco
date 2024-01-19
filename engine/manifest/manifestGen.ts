@@ -1,14 +1,15 @@
-import { walk, WalkEntry } from "std/fs/walk.ts";
+import { walk } from "std/fs/walk.ts";
 import { join } from "std/path/mod.ts";
 import { shouldBeLocal } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import { Block, BlockType } from "../../engine/block.ts";
+import { BlockType } from "../../engine/block.ts";
 import {
   ManifestBuilder,
   newManifestBuilder,
 } from "../../engine/manifest/manifestBuilder.ts";
 import { exists, fileSeparatorToSlash } from "../../utils/filesystem.ts";
-
+const sanitize = (functionName: string) =>
+  functionName.startsWith("/") ? functionName : `/${functionName}`;
 const withDefinition = (
   man: ManifestBuilder,
   namespace: string,
@@ -17,7 +18,10 @@ const withDefinition = (
   blockIdx: number,
   blkN: number,
 ): ManifestBuilder => {
-  const functionRef = fileSeparatorToSlash(funcImportPath);
+  const _functionRef = fileSeparatorToSlash(funcImportPath);
+  const functionRef = _functionRef.startsWith(".")
+    ? _functionRef
+    : `.${sanitize(_functionRef)}`;
   const functionKey = shouldBeLocal(block, functionRef)
     ? functionRef
     : `${namespace}${functionRef.substring(1)}`; // add namespace to the functionRef
@@ -46,28 +50,28 @@ export const resolveAny = (importString: string[]): string =>
     }
   })!;
 
-export async function* listBlocks(
-  base: string,
-  blk: Block,
-): AsyncGenerator<WalkEntry> {
-  const dir = join(base, blk.type);
+export interface TsWalkerEntry {
+  name: string;
+  path: string;
+}
+export type TsWalker = (dir: string) => AsyncIterableIterator<TsWalkerEntry>;
+
+export async function* defaultWalker(
+  dir: string,
+): AsyncIterableIterator<TsWalkerEntry> {
   if (!(await exists(dir))) {
     return;
   }
-  for await (
-    const entry of walk(dir, {
-      includeDirs: false,
-      includeFiles: true,
-      exts: ["tsx", "jsx", "ts", "js"],
-    })
-  ) {
-    yield entry;
-  }
+  return yield* walk(dir, {
+    includeDirs: false,
+    includeFiles: true,
+    exts: ["tsx", "jsx", "ts", "js"],
+  });
 }
-
 export const decoManifestBuilder = async (
   dir: string,
   namespace: string,
+  walker: TsWalker = defaultWalker,
 ): Promise<ManifestBuilder> => {
   let initialManifest = newManifestBuilder({
     namespace,
@@ -78,8 +82,10 @@ export const decoManifestBuilder = async (
   let blockIdx = 1;
   for (const blk of blocks()) {
     let totalBlocks = 0;
+    const blockDir = join(dir, blk.type);
+
     for await (
-      const entry of listBlocks(dir, blk)
+      const entry of walker(blockDir)
     ) {
       // ignore file name with __NAME__.ts
       if (
@@ -91,7 +97,7 @@ export const decoManifestBuilder = async (
       initialManifest = withDefinition(
         initialManifest,
         namespace,
-        entry.path.replace(dir, "."),
+        dir !== "" ? entry.path.replace(dir, ".") : entry.path,
         blk.type,
         blockIdx,
         totalBlocks++,
