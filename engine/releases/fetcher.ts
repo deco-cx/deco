@@ -8,7 +8,7 @@ const releaseCache: Record<string, Promise<Release | undefined>> = {};
 const ALLOWED_AUTHORITIES_ENV_VAR_NAME = "DECO_ALLOWED_AUTHORITIES";
 const ALLOWED_AUTHORITIES = Deno.env.has(ALLOWED_AUTHORITIES_ENV_VAR_NAME)
   ? Deno.env.get(ALLOWED_AUTHORITIES_ENV_VAR_NAME)!.split(",")
-  : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx", "localhost"];
+  : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx", "localhost", "raw.githubusercontent.com"];
 
 const fetchFromHttp = async (
   url: string | URL,

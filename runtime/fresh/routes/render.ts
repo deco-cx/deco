@@ -4,10 +4,10 @@ import { badRequest } from "../../../engine/errors.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
 
 interface Options {
-  resolveChain: FieldResolver[];
-  props: Record<string, unknown>;
   href: string;
   pathTemplate: string;
+  resolveChain?: FieldResolver[];
+  props: Record<string, unknown>;
 }
 
 const fromRequest = (req: Request): Options => {
@@ -18,9 +18,6 @@ const fromRequest = (req: Request): Options => {
   const href = params.get("href");
   const pathTemplate = params.get("pathTemplate");
 
-  if (!resolveChain) {
-    throw badRequest({ code: "400", message: "Missing resolve chain" });
-  }
   if (!props) {
     throw badRequest({ code: "400", message: "Missing props" });
   }
@@ -32,10 +29,12 @@ const fromRequest = (req: Request): Options => {
   }
 
   return {
-    resolveChain: FieldResolver.unwind(JSON.parse(resolveChain)),
-    props: JSON.parse(props),
     href,
     pathTemplate,
+    props: JSON.parse(props),
+    resolveChain: resolveChain
+      ? FieldResolver.unwind(JSON.parse(resolveChain))
+      : undefined,
   };
 };
 
@@ -58,14 +57,17 @@ export const handler = async (
     __resolveType: "resolvables",
   }) as Record<string, Resolvable>;
 
-  const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
+  let section;
+  if (resolveChain) {
+    const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
 
-  let section = resolvables[resolveChain[index].value];
-  for (let it = 0; it < resolveChain.length; it++) {
-    const item = resolveChain[it];
-    if (it < index || item.type !== "prop") continue;
+    section = resolvables[resolveChain[index].value];
+    for (let it = 0; it < resolveChain.length; it++) {
+      const item = resolveChain[it];
+      if (it < index || item.type !== "prop") continue;
 
-    section = section[item.value];
+      section = section[item.value];
+    }
   }
 
   const original = {
@@ -79,7 +81,7 @@ export const handler = async (
 
   const page = await ctx.state.resolve(
     { ...section, ...props },
-    { resolveChain },
+    resolveChain ? { resolveChain } : undefined,
     original,
   );
 

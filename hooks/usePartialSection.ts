@@ -11,11 +11,12 @@ type Options<P> = {
 
   /** Path where section is to be found */
   href?: string;
+
+  /** Section name to render. Defaults to current section */
+  resolveType?: string;
 };
 
-export const usePartialSection = <P>(
-  { props = {}, href }: Options<P> = {},
-) => {
+export const useSection = <P>({ props = {}, href }: Options<P> = {}) => {
   const ctx = useContext(SectionContext);
 
   if (IS_BROWSER) {
@@ -26,20 +27,25 @@ export const usePartialSection = <P>(
     throw new Error("Missing context in rendering tree");
   }
 
-  const { resolveChain, request, context: { state: { pathTemplate } } } = ctx;
+  const { request, context: { state: { pathTemplate } } } = ctx;
 
   const params = new URLSearchParams([
     ["props", JSON.stringify(props)],
     ["href", href ?? request.url],
     ["pathTemplate", pathTemplate],
-    [
-      "resolveChain",
-      JSON.stringify(FieldResolver.minify(resolveChain.slice(0, -1))),
-    ],
   ]);
 
-  return {
-    [CLIENT_NAV_ATTR]: true,
-    [PARTIAL_ATTR]: `/deco/render?${params}`,
-  };
+  if ((props as any)?.__resolveType === undefined) {
+    params.set(
+      "resolveChain",
+      JSON.stringify(FieldResolver.minify(ctx.resolveChain.slice(0, -1))),
+    );
+  }
+
+  return `/deco/render?${params}`;
 };
+
+export const usePartialSection = <P>(props: Options<P> = {}) => ({
+  [CLIENT_NAV_ATTR]: true,
+  [PARTIAL_ATTR]: useSection(props),
+});
