@@ -12,11 +12,11 @@ const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
 };
 
 export const DECO_FILE_NAME = ".decofile.json";
-export const newFsProvider = (
-  path = DECO_FILE_NAME,
+
+export const newFsProviderFromPath = (
+  fullPath: string,
   appName?: string,
 ): Release => {
-  const fullPath = join(Deno.cwd(), path);
   const onChangeCbs: OnChangeCallback[] = [];
   const copyDecoState = !appName ? Promise.resolve({}) : copyFrom(appName);
   let currResolvables: Promise<CurrResolvables> = exists(fullPath).then(
@@ -89,4 +89,11 @@ export const newFsProvider = (
     },
     revision: () => currResolvables.then((r) => r.revision),
   };
+};
+export const newFsProvider = (
+  path = DECO_FILE_NAME,
+  appName?: string,
+): Release => {
+  const fullPath = join(Deno.cwd(), path);
+  return newFsProviderFromPath(fullPath, appName);
 };

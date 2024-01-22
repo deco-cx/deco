@@ -8,7 +8,7 @@ export const resolveFilePath = (path: string) => {
   );
 };
 
-export const exists = async (dir: string): Promise<boolean> => {
+export const exists = async (dir: string | URL): Promise<boolean> => {
   try {
     await Deno.stat(dir);
     // successful, file or directory must exist

@@ -1,5 +1,6 @@
 import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { randId as ulid } from "../../utils/rand.ts";
+import { newFsProviderFromPath } from "./fs.ts";
 import { Release } from "./provider.ts";
 import { newRealtime, RealtimeReleaseProvider } from "./realtime.ts";
 
@@ -98,10 +99,7 @@ const fromString = (
   state: string,
 ): Release => {
   const parsed = JSON.parse(state);
-  const revisionPromise = stringToHexSha256(endpoint).then((r) => {
-    console.log("REVISION", r);
-    return r;
-  });
+  const revisionPromise = stringToHexSha256(endpoint);
   return {
     state: () => Promise.resolve(parsed),
     archived: () => Promise.resolve({}),
@@ -123,9 +121,7 @@ async function releaseLoader(
   try {
     switch (url.protocol) {
       case "file:": {
-        return await Deno.readTextFile(url).then((str) =>
-          fromString(endpointSpecifier, str)
-        );
+        return newFsProviderFromPath(url.pathname);
       }
       case "sses:":
       case "sse:": {
@@ -161,6 +157,9 @@ export const fromEndpoint = (endpoint: string): Release => {
     return r;
   });
   return {
+    set(state, revision) {
+      releasePromise.then((r) => r?.set?.(state, revision));
+    },
     state: (options) => releasePromise.then((r) => r.state(options)),
     archived: (options) => releasePromise.then((r) => r.archived(options)),
     onChange: (cb) => {
