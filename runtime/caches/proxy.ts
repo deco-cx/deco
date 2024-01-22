@@ -1,4 +1,5 @@
 import { weakcache } from "../../deps.ts";
+import { tracer, tracerIsRecording } from "deco/observability/otel/config.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
 
@@ -116,7 +117,37 @@ export const caches: CacheStorage = {
           throw new TypeError("Response status must not be 206");
         }
 
-        cache.insert(new Request(request).url, response);
+        const getResponseLength = async (
+          response: Response,
+        ): Promise<number> => {
+          const length = response.headers.get("content-length");
+          if (!length) {
+            const responseClone = response.clone();
+            return (await responseClone?.text()).length ?? 0;
+          }
+          return Number(length);
+        };
+
+        const url = req.url;
+        const responseLength = tracerIsRecording()
+          ? await getResponseLength(response)
+          : 0;
+
+        const span = tracer.startSpan("put-cache-proxy", {
+          attributes: {
+            url_size_bytes: url.length * 2,
+            response_size_bytes: responseLength * 2,
+          },
+        });
+
+        try {
+          cache.insert(url, response);
+        } catch (err) {
+          span.recordException(err);
+          throw err;
+        } finally {
+          span.end();
+        }
       },
     });
   },
