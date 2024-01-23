@@ -3,6 +3,9 @@ import { tracer, tracerIsRecording } from "deco/observability/otel/config.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
 
+const PROXY_DOMAIN = Deno.env.get("DECO_PROXY_DOMAIN") ??
+  "fastly.decocache.com";
+
 const assertNoOptions = (
   { ignoreMethod, ignoreSearch, ignoreVary }: CacheQueryOptions = {},
 ) => {
@@ -70,12 +73,12 @@ export const caches: CacheStorage = {
           }
           if (isURL(request) || typeof request === "string") {
             return new Request(
-              `https://fastly.decocache.com/${request.toString()}`,
+              `https://${PROXY_DOMAIN}/${request.toString()}`,
             );
           } else {
             const { method, headers, body } = request;
             return new Request(
-              `https://fastly.decocache.com/${request.url}`,
+              `https://${PROXY_DOMAIN}/${request.url}`,
               { method, headers, body },
             );
           }
