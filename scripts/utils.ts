@@ -61,7 +61,6 @@ export async function exec(
   // Wait for the last process to complete
   await lastProcess!.status;
   const stdout = new TextDecoder().decode(lastStdout!.stdout);
-  console.log(stdout);
   let stderr: string | null = null;
   if (lastStdout?.stderr) {
     stderr = new TextDecoder().decode(lastStdout!.stderr);
