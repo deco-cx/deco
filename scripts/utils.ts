@@ -1,6 +1,6 @@
 export async function exec(
   command: string,
-): Promise<{ stdout: string; stderr: string }> {
+): Promise<{ stdout: string; stderr: string | null }> {
   const commands = command.split("|").map((cmd) => cmd.trim());
 
   let lastStdout: Deno.CommandOutput | null = null;
@@ -33,9 +33,16 @@ export async function exec(
 
   // Wait for the last process to complete
   await lastProcess!.status;
+  const stdout = new TextDecoder().decode(lastStdout!.stdout);
+  console.log(stdout);
+  let stderr: string | null = null;
+  if (lastStdout?.stderr) {
+    stderr = new TextDecoder().decode(lastStdout!.stderr);
+    console.error(stderr);
+  }
 
   return {
-    stdout: new TextDecoder().decode(lastStdout!.stdout),
-    stderr: new TextDecoder().decode(lastStdout!.stderr),
+    stdout,
+    stderr,
   };
 }
