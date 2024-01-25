@@ -1,5 +1,5 @@
-import { DomInspectorActivators, Head, inspectVSCode } from "../deps.ts";
 import { context } from "../deco.ts";
+import { DomInspectorActivators, Head, inspectVSCode } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
@@ -65,7 +65,7 @@ ${inspectVSCode.DomInspector.toString()}`
 const main = () => {
   const onKeydown = (event: KeyboardEvent) => {
     // in case loaded in iframe, avoid redirecting to editor while in editor
-    if (window !== window.parent) {
+    if (globalThis.window !== globalThis.window.parent) {
       return;
     }
 
@@ -85,9 +85,9 @@ const main = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      const pathname = window.LIVE.play
-        ? `/play/blocks/${window.LIVE.page.id}?domain=${window.location.origin}`
-        : `/admin/sites/${window.LIVE.site.name}/blocks/${window.LIVE.page.id}`;
+      const pathname = globalThis.window.LIVE.play
+        ? `/play/blocks/${globalThis.window.LIVE.page.id}?domain=${globalThis.window.location.origin}`
+        : `/admin/sites/${globalThis.window.LIVE.site.name}/blocks/${globalThis.window.LIVE.page.id}`;
 
       const href = new URL(
         pathname,
@@ -97,14 +97,14 @@ const main = () => {
       href.searchParams.set(
         "path",
         encodeURIComponent(
-          `${window.location.pathname}${window.location.search}`,
+          `${globalThis.window.location.pathname}${globalThis.window.location.search}`,
         ),
       );
       href.searchParams.set(
         "pathTemplate",
-        encodeURIComponent(window.LIVE.page.pathTemplate || "/*"),
+        encodeURIComponent(globalThis.window.LIVE.page.pathTemplate || "/*"),
       );
-      window.location.href = `${href}`;
+      globalThis.window.location.href = `${href}`;
     }
   };
 
@@ -156,8 +156,8 @@ const main = () => {
     });
 
   /** Setup global variables */
-  window.LIVE = {
-    ...window.LIVE,
+  globalThis.window.LIVE = {
+    ...globalThis.window.LIVE,
     ...JSON.parse(document.getElementById("__DECO_STATE")!.textContent || ""),
   };
 
