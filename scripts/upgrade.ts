@@ -48,7 +48,7 @@ const withoutSlashAtEnd = (str: string | undefined) =>
   str?.endsWith("/") ? str.substring(0, str.length - 1) : str;
 
 const namespaceFromGit = async (): Promise<string | undefined> => {
-  const lns = (await exec(`git config --get remote.origin.url`)).split("\n");
+  const lns = (await exec(`git config --get remote.origin.url`)).stdout.split("\n");
   if (lns.length < 1) {
     return undefined;
   }

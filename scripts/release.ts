@@ -22,9 +22,9 @@ const exists = async (dir: string): Promise<boolean> => {
   }
 };
 
-const response = await exec(`bash -c "git tag | sort -V | tail -1"`);
+const response = await exec(`git tag | sort -V | tail -1`);
 
-const latestTag = parse(response);
+const latestTag = parse(response.stdout);
 
 console.log(`Current version is: ${latestTag}`);
 
