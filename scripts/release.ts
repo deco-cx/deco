@@ -1,8 +1,8 @@
 import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
-import { exec, OutputMode } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import { join } from "std/path/mod.ts";
 import { format, increment, parse } from "std/semver/mod.ts";
 import { stringifyForWrite } from "../utils/json.ts";
+import { exec } from "./utils.ts";
 
 await exec("git fetch --tags");
 
@@ -22,11 +22,9 @@ const exists = async (dir: string): Promise<boolean> => {
   }
 };
 
-const response = await exec(`bash -c "git tag | sort -V | tail -1"`, {
-  output: OutputMode.Capture,
-});
+const response = await exec(`bash -c "git tag | sort -V | tail -1"`);
 
-const latestTag = parse(response.output);
+const latestTag = parse(response);
 
 console.log(`Current version is: ${latestTag}`);
 
