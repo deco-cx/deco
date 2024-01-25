@@ -9,15 +9,7 @@ export async function exec(
   for (const cmd of commands) {
     const [cmdName, ...cmdArgs] = cmd.split(" ");
 
-    const cmdOptions: Deno.RunOptions = {
-      cmd: [cmdName, ...cmdArgs],
-      stdout: "piped",
-      stderr: "piped",
-    };
-
     if (lastStdout) {
-      cmdOptions.stdin = "piped";
-
       const cmdProcess = new Deno.Command(cmdName, {
         args: cmdArgs,
         stdin: "piped",
