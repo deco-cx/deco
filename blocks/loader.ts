@@ -74,8 +74,6 @@ export const wrapCaughtErrors = async <
 export const ENABLE_LOADER_CACHE =
   Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
 
-export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
-
 const stats = {
   cache: meter.createCounter("loader_cache", {
     unit: "1",
