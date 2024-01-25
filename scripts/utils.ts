@@ -1,3 +1,30 @@
+function splitCommand(command: string): string[] {
+  const args: string[] = [];
+  let currentArg = "";
+
+  let insideQuotes = false;
+
+  for (let i = 0; i < command.length; i++) {
+    const char = command[i];
+
+    if (char === " " && !insideQuotes) {
+      if (currentArg !== "") {
+        args.push(currentArg);
+        currentArg = "";
+      }
+    } else if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else {
+      currentArg += char;
+    }
+  }
+
+  if (currentArg !== "") {
+    args.push(currentArg);
+  }
+
+  return args;
+}
 export async function exec(
   command: string,
 ): Promise<{ stdout: string; stderr: string | null }> {
@@ -7,7 +34,7 @@ export async function exec(
   let lastProcess: Deno.ChildProcess | null = null;
 
   for (const cmd of commands) {
-    const [cmdName, ...cmdArgs] = cmd.split(" ");
+    const [cmdName, ...cmdArgs] = splitCommand(cmd);
 
     if (lastStdout) {
       const cmdProcess = new Deno.Command(cmdName, {
