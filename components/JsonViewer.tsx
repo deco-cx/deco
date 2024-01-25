@@ -35,7 +35,7 @@ const snippet = (json: string) => {
 
   node?.addEventListener(
     "load",
-    () => (window as any).jQuery("#json-renderer").JSONView(json),
+    () => (globalThis.window as any).jQuery("#json-renderer").JSONView(json),
   );
 };
 
