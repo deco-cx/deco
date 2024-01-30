@@ -1,16 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
-import { Context, DecoContext } from "deco/deco.ts";
+import { Context, DecoContext } from "../../../deco.ts";
 import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
 import { newContext } from "../../../mod.ts";
-import { DecoOptions, OptionsProvider } from "../../../plugins/deco.ts";
+import { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 import { ContextCache } from "./1_alienRelease.ts";
 
 let contextCache: ContextCache | null = null;
 
 export const contextProvider = <TManifest extends AppManifest = AppManifest>(
-  _opt: DecoOptions<TManifest> | OptionsProvider,
+  _opt: InitOptions<TManifest> | OptionsProvider,
 ): MiddlewareHandler<DecoState<any, DecoSiteState, TManifest>> => {
   // Return an async function to handle requests
   return async function (

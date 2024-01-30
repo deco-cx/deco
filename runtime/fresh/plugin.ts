@@ -29,7 +29,7 @@ import { handler as releaseHandler } from "./routes/release.ts";
 import { handler as renderHandler } from "./routes/render.ts";
 import { handler as workflowHandler } from "./routes/workflow.ts";
 
-export interface DecoOptions<TManifest extends AppManifest = AppManifest> {
+export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
   sourceMap?: SourceMap;
   site?: SiteInfo;
@@ -38,12 +38,12 @@ export interface DecoOptions<TManifest extends AppManifest = AppManifest> {
 }
 
 export type Options<TManifest extends AppManifest = AppManifest> =
-  | DecoOptions<TManifest>
+  | InitOptions<TManifest>
   | OptionsProvider<TManifest>;
 
 export type OptionsProvider<TManifest extends AppManifest = AppManifest> = (
   req: Request,
-) => Promise<DecoOptions<TManifest>>;
+) => Promise<InitOptions<TManifest>>;
 const noop: MiddlewareHandler = (_req, ctx) => {
   return ctx.next();
 };
