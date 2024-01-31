@@ -14,8 +14,9 @@ import {
   FnProps,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
-import { logger, tracer } from "deco/observability/otel/config.ts";
+import { logger } from "deco/observability/otel/config.ts";
 import { weakcache } from "../deps.ts";
+import { FieldResolver } from "deco/engine/core/resolver.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -190,13 +191,15 @@ const wrapLoader = ({
         const url = new URL("https://localhost");
         url.searchParams.set("resolver", loader);
 
-        const span = tracer.startSpan("object-hash", {
-          attributes: {
-            props_length: JSON.stringify(props).length,
-          },
-        });
+        const resolveChain = ctx.resolveChain ?? [];
+        const resolveChainString = FieldResolver.minify(resolveChain)
+          .toString();
+        const revisionID = await ctx.release?.revision() ?? undefined;
 
-        try {
+        if (resolveChainString && revisionID) {
+          url.searchParams.set("resolveChain", resolveChainString);
+          url.searchParams.set("revisionID", revisionID);
+        } else {
           const hashedProps = hash(props, {
             ignoreUnknown: true,
             respectType: false,
@@ -204,15 +207,6 @@ const wrapLoader = ({
             algorithm: "md5",
           });
           url.searchParams.set("props", hashedProps);
-          span.setAttributes({
-            hash_size_bytes: hashedProps.length * 2,
-          });
-        } catch (e) {
-          span.recordException(e);
-          throw e;
-        } finally {
-          timing?.end();
-          span.end();
         }
 
         url.searchParams.set("cacheKey", cacheKeyValue);

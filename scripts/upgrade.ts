@@ -11,8 +11,8 @@ import {
 } from "https://deno.land/std@0.190.0/fs/mod.ts";
 import { join } from "https://deno.land/std@0.190.0/path/mod.ts";
 import {
-  REGISTRIES,
   lookup,
+  REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import * as diff from "https://esm.sh/diff@5.1.0";
 import { format } from "../utils/formatter.ts";
@@ -48,7 +48,9 @@ const withoutSlashAtEnd = (str: string | undefined) =>
   str?.endsWith("/") ? str.substring(0, str.length - 1) : str;
 
 const namespaceFromGit = async (): Promise<string | undefined> => {
-  const lns = (await exec(`git config --get remote.origin.url`)).stdout.split("\n");
+  const lns = (await exec(`git config --get remote.origin.url`)).stdout.split(
+    "\n",
+  );
   if (lns.length < 1) {
     return undefined;
   }
