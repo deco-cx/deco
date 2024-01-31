@@ -20,7 +20,7 @@ export interface Release {
   revision(): Promise<string>;
   onChange(callback: OnChangeCallback): void;
   dispose?: () => void;
-  set?(state: Record<string, Resolvable>, revision?: string): void;
+  set?(state: Record<string, Resolvable>, revision?: string): Promise<void>;
 }
 
 interface RoutesSelection extends SelectionConfig {
