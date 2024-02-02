@@ -522,6 +522,7 @@ const resolveWithType = <
   });
 
   if (opts.nullIfDangling) {
+    opts?.hooks?.onDanglingReference?.(resolveType);
     return Promise.resolve(null as T);
   }
 
@@ -596,6 +597,7 @@ export interface ResolveHooks {
     __resolveType: string,
     ctx: TContext,
   ) => Promise<T>;
+  onDanglingReference?: (__resolveType: string) => void;
 }
 /**
  * The resolve call options

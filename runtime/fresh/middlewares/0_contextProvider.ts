@@ -44,6 +44,8 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         rootManifest,
         opt.sourceMap,
         releaseProvider,
+        undefined,
+        rootManifest.name,
       );
       contextCache.set(
         opt,
