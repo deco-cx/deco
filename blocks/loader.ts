@@ -12,11 +12,13 @@ import {
   applyProps,
   FnContext,
   FnProps,
+  RequestState,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
-import { logger } from "deco/observability/otel/config.ts";
+import { logger, tracer } from "deco/observability/otel/config.ts";
 import { weakcache } from "../deps.ts";
 import { FieldResolver } from "deco/engine/core/resolver.ts";
+import { Release } from "deco/engine/releases/provider.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -125,13 +127,17 @@ let countCache = null as (weakcache.WeakLRUCache | null);
  * 2. Single Flight
  * 3. Tracing
  */
-const wrapLoader = ({
-  default: handler,
-  cache: mode = "no-store",
-  cacheKey = noop,
-  singleFlightKey,
-  ...rest
-}: LoaderModule) => {
+const wrapLoader = (
+  {
+    default: handler,
+    cache: mode = "no-store",
+    cacheKey = noop,
+    singleFlightKey,
+    ...rest
+  }: LoaderModule,
+  resolveChain: FieldResolver[],
+  release: Release,
+) => {
   const flights = singleFlight();
 
   if (typeof singleFlightKey === "function") {
@@ -195,22 +201,36 @@ const wrapLoader = ({
         const url = new URL("https://localhost");
         url.searchParams.set("resolver", loader);
 
-        const resolveChain = ctx.resolveChain ?? [];
         const resolveChainString = FieldResolver.minify(resolveChain)
           .toString();
-        const revisionID = await ctx.release?.revision() ?? undefined;
+        const revisionID = await release?.revision() ?? undefined;
 
         if (resolveChainString && revisionID) {
           url.searchParams.set("resolveChain", resolveChainString);
           url.searchParams.set("revisionID", revisionID);
         } else {
-          const hashedProps = hash(props, {
-            ignoreUnknown: true,
-            respectType: false,
-            respectFunctionProperties: false,
-            algorithm: "md5",
+          const span = tracer.startSpan("object-hash", {
+            attributes: {
+              props_length: JSON.stringify(props).length,
+            },
           });
-          url.searchParams.set("props", hashedProps);
+          try {
+            const hashedProps = hash(props, {
+              ignoreUnknown: true,
+              respectType: false,
+              respectFunctionProperties: false,
+              algorithm: "md5",
+            });
+            url.searchParams.set("props", hashedProps);
+            span.setAttributes({
+              hash_size_bytes: hashedProps.length * 2,
+            });
+          } catch (e) {
+            span.recordException(e);
+            throw e;
+          } finally {
+            span.end();
+          }
         }
 
         url.searchParams.set("cacheKey", cacheKeyValue);
@@ -272,7 +292,11 @@ const loaderBlock: Block<LoaderModule> = {
   introspect: { includeReturn: true },
   adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
     wrapCaughtErrors,
-    applyProps(wrapLoader(mod)),
+    (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
+      applyProps(wrapLoader(mod, ctx.resolveChain, ctx.context.state.release))(
+        props,
+        ctx,
+      ),
   ],
   defaultPreview: (result) => {
     return {

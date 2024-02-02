@@ -11,7 +11,6 @@ import {
   PreactComponent,
 } from "../engine/block.ts";
 import {
-  FieldResolver,
   Monitoring,
   ResolveFunc,
   Resolver,
@@ -23,7 +22,6 @@ import { Device, deviceOf } from "../utils/device.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { type InvocationProxy } from "../utils/invoke.types.ts";
 import { HttpContext } from "./handler.ts";
-import { Release } from "deco/engine/releases/provider.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -91,8 +89,6 @@ export type FnContext<
 > = TState & RequestState & {
   device: Device;
   resolverId?: string;
-  resolveChain?: FieldResolver[];
-  release?: Release;
   monitoring?: Monitoring;
   get: ResolveFunc;
   invoke:
@@ -124,8 +120,6 @@ export const fnContextFromHttpContext = <TState = {}>(
   return {
     ...ctx?.context?.state?.global,
     resolverId: ctx.resolverId,
-    resolveChain: ctx.resolveChain,
-    release: ctx.context.state.release,
     monitoring: ctx.monitoring,
     get: ctx.resolve,
     response: ctx.context.state.response,
