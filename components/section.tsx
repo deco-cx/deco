@@ -79,7 +79,6 @@ export const withSection = <TProps,>(
 ) => {
   const id = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
-
   return {
     props,
     Component: (props: TProps) => (
