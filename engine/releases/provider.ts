@@ -107,7 +107,7 @@ const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
 export const getComposedConfigStore = (
   ns: string,
   site: string,
-  siteId: number,
+  siteId = -1,
   localStorageOnly = false,
 ): Release => {
   const providers = [];

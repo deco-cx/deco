@@ -92,11 +92,12 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   };
 };
 
-const siteName = (): string | undefined => {
+export const siteNameFromEnv = () => Deno.env.get(ENV_SITE_NAME);
+export const siteName = (): string | undefined => {
   const context = Context.active();
-  const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
-  if (siteNameFromEnv) {
-    return siteNameFromEnv;
+  const fromEnvSiteName = siteNameFromEnv();
+  if (fromEnvSiteName) {
+    return fromEnvSiteName;
   }
   if (!context.namespace) {
     return undefined;
