@@ -220,19 +220,11 @@ export const fulfillContext = <
         if (!isResolvable(value)) {
           continue;
         }
-        let resolver: Resolver | undefined = undefined;
-        let currentResolveType = value.__resolveType;
-        while (true) {
-          resolver = currResolvers[currentResolveType];
-          if (resolver !== undefined) {
-            break;
-          }
-          const resolvable = currResolvables[currentResolveType];
-          if (!resolvable || !isResolvable(resolvable)) {
-            break;
-          }
-          currentResolveType = resolvable.__resolveType;
-        }
+        const resolver = findResolver(
+          currResolvers,
+          value.__resolveType,
+          currResolvables,
+        );
         if (
           resolver !== undefined && resolver.type === "apps" &&
           !(key in allAppsMap)
@@ -259,7 +251,7 @@ export const fulfillContext = <
         );
       currentResolver = currentResolver.with({ resolvers, resolvables });
     }
-    const apps = Object.values(allAppsMap);
+    const apps: Resolvable[] = Object.values(allAppsMap);
     if (!apps || apps.length === 0) {
       runtimePromise.resolve({
         resolver: currentResolver,
@@ -423,3 +415,23 @@ export const $live = <T extends AppManifest>(
 
   return newManifest as T;
 };
+
+function findResolver(
+  currResolvers: ResolverMap,
+  currentResolveType: string,
+  currResolvables: Record<string, any>,
+) {
+  let resolver: Resolver | undefined = undefined;
+  while (true) {
+    resolver = currResolvers[currentResolveType];
+    if (resolver !== undefined) {
+      break;
+    }
+    const resolvable = currResolvables[currentResolveType];
+    if (!resolvable || !isResolvable(resolvable)) {
+      break;
+    }
+    currentResolveType = resolvable.__resolveType;
+  }
+  return resolver;
+}
