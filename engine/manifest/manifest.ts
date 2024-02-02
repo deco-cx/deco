@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { parse } from "std/flags/mod.ts";
-import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
+import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
 import {
   AppManifest,
   MergedAppRuntime,
@@ -237,6 +237,24 @@ const installAppsForResolver = async (
     }
     await installInstallableApps(newAvailableAppsToInstall);
   } while (true);
+  if (Object.keys(unresolved).length > 0) {
+    console.error(
+      red(
+        "caution! the following apps were installed without fully resolved props",
+      ),
+    );
+    const table: Record<string, string[]> = {};
+    for (const [key, app] of Object.entries(unresolved)) {
+      const type = app.__resolveType;
+      table[type] ??= [];
+      table[type].push(key);
+    }
+    console.table(
+      Object.entries(table).map(([type, keys]) => {
+        return { app: type, resolvers: keys.join(", ") };
+      }),
+    );
+  }
   return { resolver: currentResolver, apps: allAppsMap, manifest, sourceMap };
 };
 export const fulfillContext = <
