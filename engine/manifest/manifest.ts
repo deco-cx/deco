@@ -169,6 +169,10 @@ const installAppsForResolver = async (
     }, fakeCtx);
   };
 
+  /**
+   * Install the given saved apps.
+   * Those apps are always available at that time, but their dependencies can still be pending for installing.
+   */
   const installInstallableApps = async (
     apps: Resolvable[],
   ): Promise<boolean> => {
@@ -180,16 +184,18 @@ const installAppsForResolver = async (
         propagateOptions: true,
         hooks: {
           onDanglingReference: (resolveType) => {
+            // if the app is not resolved, we should keep it for the next round
             unresolved[resolveType] = app;
           },
         },
       });
     }));
+    // if there's no app installed so we should be ok to stop the loop.
     const installedApps = _installedApps.filter(Boolean);
     if (installedApps.length === 0) {
       return false;
-      // first pass nullIfDangling
     }
+    // if there are apps installed so incorporate the current resolver into the resolvables.
     const { resolvers, resolvables = {}, manifest: mManifest, sourceMap: sm } =
       installedApps
         .filter(Boolean)
@@ -207,6 +213,7 @@ const installAppsForResolver = async (
       await getState();
 
     const installableApps: Record<string, Resolvable> = {};
+    // find all installed apps.
     for (const [key, value] of Object.entries(currResolvables)) {
       if (!isResolvable(value) || (key in allAppsMap)) {
         continue;
@@ -229,6 +236,7 @@ const installAppsForResolver = async (
       break;
     }
 
+    // after an installation new resolvers become available so now we can check if we can resolve them.
     const newAvailableAppsToInstall: Resolvable[] = [];
     for (const [key, app] of Object.entries(unresolved)) {
       if (key in currentResolver.getResolvers()) {
@@ -238,6 +246,7 @@ const installAppsForResolver = async (
     }
     await installInstallableApps(newAvailableAppsToInstall);
   } while (true);
+  // warn about unresolved references.
   if (Object.keys(unresolved).length > 0) {
     console.error(
       red(
