@@ -211,12 +211,12 @@ const wrapLoader = ({
           span.recordException(e);
           throw e;
         } finally {
+          timing?.end();
           span.end();
         }
 
         url.searchParams.set("cacheKey", cacheKeyValue);
         const request = new Request(url);
-        timing?.end();
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
