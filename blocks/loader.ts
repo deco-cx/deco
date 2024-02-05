@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
 import { ValueType } from "../deps.ts";
-import hash from "https://esm.sh/v135/object-hash@3.0.0";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
@@ -12,10 +11,13 @@ import {
   applyProps,
   FnContext,
   FnProps,
+  RequestState,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
-import { logger, tracer } from "deco/observability/otel/config.ts";
+import { logger } from "deco/observability/otel/config.ts";
 import { weakcache } from "../deps.ts";
+import { FieldResolver } from "deco/engine/core/resolver.ts";
+import { Release } from "deco/engine/releases/provider.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -25,7 +27,11 @@ export interface LoaderModule<
 > extends BlockModule<FnProps<TProps>> {
   cache?: "no-store" | "stale-while-revalidate";
   // a null value avoid cache
-  cacheKey?: (req: Request, ctx: FnContext<TState>) => string | null;
+  cacheKey?: (
+    props: TProps,
+    req: Request,
+    ctx: FnContext<TState>,
+  ) => string | null;
 
   /** @deprecated use cacheKey instead */
   singleFlightKey?: SingleFlightKeyFunc<TProps, HttpContext>;
@@ -120,13 +126,17 @@ let countCache = null as (weakcache.WeakLRUCache | null);
  * 2. Single Flight
  * 3. Tracing
  */
-const wrapLoader = ({
-  default: handler,
-  cache: mode = "no-store",
-  cacheKey = noop,
-  singleFlightKey,
-  ...rest
-}: LoaderModule) => {
+const wrapLoader = (
+  {
+    default: handler,
+    cache: mode = "no-store",
+    cacheKey = noop,
+    singleFlightKey,
+    ...rest
+  }: LoaderModule,
+  resolveChain: FieldResolver[],
+  release: Release,
+) => {
   const flights = singleFlight();
 
   if (typeof singleFlightKey === "function") {
@@ -145,7 +155,7 @@ const wrapLoader = ({
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
-      const cacheKeyValue = cacheKey(req, ctx);
+      const cacheKeyValue = cacheKey(props, req, ctx);
       try {
         // Should skip cache
         if (
@@ -190,31 +200,18 @@ const wrapLoader = ({
         const url = new URL("https://localhost");
         url.searchParams.set("resolver", loader);
 
-        const span = tracer.startSpan("object-hash", {
-          attributes: {
-            props_length: JSON.stringify(props).length,
-          },
-        });
+        const resolveChainString = FieldResolver.minify(resolveChain)
+          .toString();
+        const revisionID = await release?.revision() ?? undefined;
 
-        try {
-          const hashedProps = hash(props, {
-            ignoreUnknown: true,
-            respectType: false,
-            respectFunctionProperties: false,
-            algorithm: "md5",
-          });
-          url.searchParams.set("props", hashedProps);
-          span.setAttributes({
-            hash_size_bytes: hashedProps.length * 2,
-          });
-        } catch (e) {
-          span.recordException(e);
-          throw e;
-        } finally {
-          timing?.end();
-          span.end();
+        if (resolveChainString && revisionID) {
+          url.searchParams.set("resolveChain", resolveChainString);
+          url.searchParams.set("revisionID", revisionID);
+        } else {
+          logger.error("Could not get revisionID or resolveChain");
         }
 
+        timing?.end();
         url.searchParams.set("cacheKey", cacheKeyValue);
         const request = new Request(url);
 
@@ -274,7 +271,11 @@ const loaderBlock: Block<LoaderModule> = {
   introspect: { includeReturn: true },
   adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
     wrapCaughtErrors,
-    applyProps(wrapLoader(mod)),
+    (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
+      applyProps(wrapLoader(mod, ctx.resolveChain, ctx.context.state.release))(
+        props,
+        ctx,
+      ),
   ],
   defaultPreview: (result) => {
     return {
