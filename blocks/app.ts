@@ -25,6 +25,7 @@ import { resolversFrom } from "./appsUtil.ts";
 import { fnContextFromHttpContext } from "./utils.tsx";
 
 export type SourceMapResolver = () => Promise<BlockModuleRef | undefined>;
+
 export interface SourceContent {
   path: string;
   content: string;

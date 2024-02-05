@@ -286,7 +286,7 @@ export const typeNameToSchemeable = async (
           return UNKNOWN;
         }
 
-        const from = resolvePath(source, path);
+        const from = resolveSpecifier(source, path);
         const newProgram = await parsePath(from);
         if (!newProgram) {
           return UNKNOWN;
@@ -313,7 +313,7 @@ export const typeNameToSchemeable = async (
       };
     }
     if (item.type === "ExportAllDeclaration") {
-      const from = resolvePath(item.source.value, path);
+      const from = resolveSpecifier(item.source.value, path);
       const newProgram = await parsePath(
         from,
       );
@@ -399,7 +399,7 @@ export const typeNameToSchemeable = async (
       if (spec) {
         fromImport = async () => {
           try {
-            const from = resolvePath(item.source.value, path);
+            const from = resolveSpecifier(item.source.value, path);
             const newProgram = await parsePath(
               from,
             );
@@ -998,7 +998,7 @@ const findFuncFromExportNamedDeclaration = async (
       if (!source) {
         return undefined;
       }
-      const url = resolvePath(source, path);
+      const url = resolveSpecifier(source, path);
       const isFromDefault = spec.orig.value === "default";
       const newProgram = await parsePath(url);
       if (!newProgram) {
@@ -1276,23 +1276,23 @@ const useEsm = (npmSpecifier: string) => {
   const withoutNpm = npmSpecifier.substring("https://esm.sh/".length);
   return `https://esm.sh/${withoutNpm}`;
 };
-export function resolvePath(source: string, path: string) {
+export function resolveSpecifier(specifier: string, context: string) {
   // should use origin
-  if (source.startsWith("/")) {
-    const pathUrl = new URL(import.meta.resolve(path));
-    return `${pathUrl.origin}${source}`;
+  if (specifier.startsWith("/")) {
+    const pathUrl = new URL(import.meta.resolve(context));
+    return `${pathUrl.origin}${specifier}`;
   }
 
   // relative import
-  if (source.startsWith(".")) {
+  if (specifier.startsWith(".")) {
     return import.meta.resolve(
-      new URL(source, import.meta.resolve(path)).toString(),
+      new URL(specifier, import.meta.resolve(context)).toString(),
     );
   }
 
-  if (source.startsWith("https://esm.sh/")) {
-    return useEsm(source);
+  if (specifier.startsWith("https://esm.sh/")) {
+    return useEsm(specifier);
   }
   // import from import_map
-  return import.meta.resolve(source);
+  return import.meta.resolve(specifier);
 }

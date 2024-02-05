@@ -11,7 +11,7 @@ import {
 import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
 import { Block, BlockModuleRef } from "../block.ts";
 import { parseContent, parsePath } from "./parser.ts";
-import { programToBlockRef, resolvePath } from "./transform.ts";
+import { programToBlockRef, resolveSpecifier } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -29,7 +29,7 @@ const resolveForContent = async (
     return undefined;
   }
   return programToBlockRef(
-    resolvePath(blockPath, Deno.cwd()),
+    resolveSpecifier(blockPath, Deno.cwd()),
     blockKey,
     program,
     references,
@@ -43,7 +43,7 @@ const resolveForPath = async (
   blockKey: string,
   references: Map<ReferenceKey, Schemeable>,
 ): Promise<BlockModuleRef | undefined> => {
-  const pathResolved = resolvePath(blockPath, Deno.cwd());
+  const pathResolved = resolveSpecifier(blockPath, Deno.cwd());
   const program = await parsePath(pathResolved);
   if (!program) {
     return undefined;
