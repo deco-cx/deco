@@ -1,15 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
-import {
-  adjectives,
-  animals,
-  NumberDictionary,
-  uniqueNamesGenerator,
-} from "https://esm.sh/v135/unique-names-generator@4.7.1";
 import { parse } from "std/flags/mod.ts";
-import { blue, gray, green, rgb24, underline } from "std/fmt/colors.ts";
+import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
 import {
   AppManifest,
-  AppRuntime,
   MergedAppRuntime,
   mergeManifests,
   mergeRuntimes,
@@ -38,8 +31,8 @@ import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import { getComposedConfigStore, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
+import { randomSiteName } from "./utils.ts";
 
-const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
 const ENV_SITE_NAME = "DECO_SITE_NAME";
@@ -99,11 +92,12 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   };
 };
 
-const siteName = (): string | undefined => {
+export const siteNameFromEnv = () => Deno.env.get(ENV_SITE_NAME);
+export const siteName = (): string | undefined => {
   const context = Context.active();
-  const siteNameFromEnv = Deno.env.get(ENV_SITE_NAME);
-  if (siteNameFromEnv) {
-    return siteNameFromEnv;
+  const fromEnvSiteName = siteNameFromEnv();
+  if (fromEnvSiteName) {
+    return fromEnvSiteName;
   }
   if (!context.namespace) {
     return undefined;
@@ -155,6 +149,124 @@ export const initContext = async <
   return context;
 };
 
+const installAppsForResolver = async (
+  resolver: ReleaseResolver<FreshContext>,
+  initialManifest: AppManifest,
+  initialSourceMap?: SourceMap,
+) => {
+  let manifest = initialManifest;
+  let sourceMap = initialSourceMap;
+  const fakeCtx = newFakeContext();
+  const unresolved: Record<string, Resolvable> = {};
+  const allAppsMap: Record<string, Resolvable> = {};
+
+  let currentResolver = resolver;
+  const getState = () => {
+    return currentResolver.resolve<
+      { resolvers: ResolverMap; resolvables: Record<string, Resolvable> }
+    >({
+      __resolveType: defaults["state"].name,
+    }, fakeCtx);
+  };
+
+  /**
+   * Install the given saved apps.
+   * Those apps are always available at that time, but their dependencies can still be pending for installing.
+   */
+  const installInstallableApps = async (
+    apps: Resolvable[],
+  ): Promise<boolean> => {
+    const _installedApps = await Promise.all(apps.map((app) => {
+      return currentResolver.resolve<
+        MergedAppRuntime
+      >(app, fakeCtx, {
+        nullIfDangling: true,
+        propagateOptions: true,
+        hooks: {
+          onDanglingReference: (resolveType) => {
+            // if the app is not resolved, we should keep it for the next round
+            unresolved[resolveType] = app;
+          },
+        },
+      });
+    }));
+    // if there's no app installed so we should be ok to stop the loop.
+    const installedApps = _installedApps.filter(Boolean);
+    if (installedApps.length === 0) {
+      return false;
+    }
+    // if there are apps installed so incorporate the current resolver into the resolvables.
+    const { resolvers, resolvables = {}, manifest: mManifest, sourceMap: sm } =
+      installedApps
+        .filter(Boolean)
+        .reduce(
+          mergeRuntimes,
+        );
+    manifest = mergeManifests(manifest, mManifest);
+    sourceMap = { ...sm, ...sourceMap };
+    currentResolver = currentResolver.with({ resolvers, resolvables });
+    return true;
+  };
+
+  do {
+    const { resolvers: currResolvers, resolvables: currResolvables } =
+      await getState();
+
+    const installableApps: Record<string, Resolvable> = {};
+    // find all installed apps.
+    for (const [key, value] of Object.entries(currResolvables)) {
+      if (!isResolvable(value) || (key in allAppsMap)) {
+        continue;
+      }
+      const resolver = findResolver(
+        currResolvers,
+        value.__resolveType,
+        currResolvables,
+      );
+      if (
+        resolver !== undefined && resolver.type === "apps" &&
+        !(key in installableApps)
+      ) {
+        installableApps[key] = value;
+        allAppsMap[key] = value;
+      }
+    }
+    const apps: Resolvable[] = Object.values(installableApps);
+    if (!(await installInstallableApps(apps))) {
+      break;
+    }
+
+    // after an installation new resolvers become available so now we can check if we can resolve them.
+    const newAvailableAppsToInstall: Resolvable[] = [];
+    for (const [key, app] of Object.entries(unresolved)) {
+      if (key in currentResolver.getResolvers()) {
+        newAvailableAppsToInstall.push(app);
+        delete unresolved[key];
+      }
+    }
+    await installInstallableApps(newAvailableAppsToInstall);
+  } while (true);
+  // warn about unresolved references.
+  if (Object.keys(unresolved).length > 0) {
+    console.error(
+      red(
+        "caution! the following apps were installed without fully resolved props",
+      ),
+    );
+    const table: Record<string, string[]> = {};
+    for (const [key, app] of Object.entries(unresolved)) {
+      const type = app.__resolveType;
+      table[type] ??= [];
+      table[type].push(key);
+    }
+    console.table(
+      Object.entries(table).map(([type, keys]) => {
+        return { app: type, resolvers: keys.join(", ") };
+      }),
+    );
+  }
+  return { resolver: currentResolver, apps: allAppsMap, manifest, sourceMap };
+};
 export const fulfillContext = <
   T extends AppManifest,
 >(
@@ -163,18 +275,14 @@ export const fulfillContext = <
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
-  let currentSite = siteName();
+  let currentSite = ctx.site ?? siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (ctx.isDeploy) {
       throw new Error(
         `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
       );
     }
-    currentSite = uniqueNamesGenerator({
-      dictionaries: [animals, adjectives, numberDictionary],
-      length: 3,
-      separator: "-",
-    });
+    currentSite = randomSiteName();
     release ??= newFsProvider(DECO_FILE_NAME, m.name);
     ctx.play = true;
   }
@@ -204,62 +312,13 @@ export const fulfillContext = <
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
-    const fakeCtx = newFakeContext();
-    const allAppsMap: Record<string, Resolvable> = {};
-    let currentResolver = resolver;
-    while (true) {
-      const currentApps: Record<string, Resolvable> = {};
-      const { resolvers: currResolvers, resolvables: currResolvables } =
-        await currentResolver.resolve<
-          { resolvers: ResolverMap; resolvables: Record<string, Resolvable> }
-        >({
-          __resolveType: defaults["state"].name,
-        }, fakeCtx);
-
-      for (const [key, value] of Object.entries(currResolvables)) {
-        if (!isResolvable(value)) {
-          continue;
-        }
-        let resolver: Resolver | undefined = undefined;
-        let currentResolveType = value.__resolveType;
-        while (true) {
-          resolver = currResolvers[currentResolveType];
-          if (resolver !== undefined) {
-            break;
-          }
-          const resolvable = currResolvables[currentResolveType];
-          if (!resolvable || !isResolvable(resolvable)) {
-            break;
-          }
-          currentResolveType = resolvable.__resolveType;
-        }
-        if (
-          resolver !== undefined && resolver.type === "apps" &&
-          !(key in allAppsMap)
-        ) {
-          allAppsMap[key] = value;
-          currentApps[key] = value;
-        }
-      }
-      if (Object.keys(currentApps).length === 0) {
-        break;
-      }
-
-      const apps = Object.values(currentApps);
-      // first pass nullIfDangling
-      const { apps: installedApps } = await currentResolver.resolve<
-        { apps: MergedAppRuntime[] }
-      >({ apps }, fakeCtx, {
-        nullIfDangling: true,
-        propagateOptions: true,
-      });
-      const { resolvers, resolvables = {} } = installedApps.filter(Boolean)
-        .reduce(
-          mergeRuntimes,
-        );
-      currentResolver = currentResolver.with({ resolvers, resolvables });
-    }
-    const apps = Object.values(allAppsMap);
+    const { resolver: currentResolver, apps: allAppsMap, manifest, sourceMap } =
+      await installAppsForResolver(
+        resolver,
+        newManifest,
+        currSourceMap,
+      );
+    const apps: Resolvable[] = Object.values(allAppsMap);
     if (!apps || apps.length === 0) {
       runtimePromise.resolve({
         resolver: currentResolver,
@@ -285,28 +344,6 @@ export const fulfillContext = <
         ).join("")
       }`,
     );
-    // second => nullIfDangling
-    const { apps: installedApps } = await currentResolver.resolve<
-      { apps: AppRuntime[] }
-    >({ apps }, fakeCtx).catch((err) => {
-      console.error(
-        "installing apps failed",
-        err,
-        "this will falling back to null references to make it work, you should fix this",
-      );
-      return currentResolver.resolve<
-        { apps: MergedAppRuntime[] }
-      >({ apps }, fakeCtx, {
-        nullIfDangling: true,
-        propagateOptions: true,
-      });
-    });
-    const { manifest, sourceMap, resolvers, resolvables = {} } = installedApps
-      .reduce(
-        mergeRuntimes,
-      );
-
-    currentResolver = currentResolver.with({ resolvers, resolvables });
 
     // for who is awaiting for the previous promise
     const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
@@ -362,10 +399,12 @@ export const newContext = <
   currSourceMap?: SourceMap,
   release: Release | undefined = undefined,
   instanceId: string | undefined = undefined,
+  site: string | undefined = undefined,
 ): Promise<DecoContext> => {
   const currentContext = Context.active();
   const ctx: DecoContext = {
     ...currentContext,
+    site: site ?? currentContext.site,
     instance: {
       id: instanceId ?? randId(),
       startedAt: new Date(),
@@ -423,3 +462,23 @@ export const $live = <T extends AppManifest>(
 
   return newManifest as T;
 };
+
+function findResolver(
+  currResolvers: ResolverMap,
+  currentResolveType: string,
+  currResolvables: Record<string, any>,
+) {
+  let resolver: Resolver | undefined = undefined;
+  while (true) {
+    resolver = currResolvers[currentResolveType];
+    if (resolver !== undefined) {
+      break;
+    }
+    const resolvable = currResolvables[currentResolveType];
+    if (!resolvable || !isResolvable(resolvable)) {
+      break;
+    }
+    currentResolveType = resolvable.__resolveType;
+  }
+  return resolver;
+}

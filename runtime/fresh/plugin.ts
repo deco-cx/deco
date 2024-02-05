@@ -8,7 +8,9 @@ import {
 
 import { Release } from "../../engine/releases/provider.ts";
 import { AppManifest, SiteInfo } from "../../mod.ts";
-import { contextProvider } from "./middlewares/1_contextProvider.ts";
+import { contextProvider } from "./middlewares/0_contextProvider.ts";
+import { alienRelease } from "./middlewares/1_alienRelease.ts";
+
 import { handler as decoMiddleware } from "./middlewares/3_main.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
@@ -27,16 +29,25 @@ import { handler as releaseHandler } from "./routes/release.ts";
 import { handler as renderHandler } from "./routes/render.ts";
 import { handler as workflowHandler } from "./routes/workflow.ts";
 
-export interface Options<TManifest extends AppManifest = AppManifest> {
+export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
   sourceMap?: SourceMap;
   site?: SiteInfo;
   useLocalStorageOnly?: boolean;
   release?: Release;
 }
+
+export type Options<TManifest extends AppManifest = AppManifest> =
+  | InitOptions<TManifest>
+  | OptionsProvider<TManifest>;
+
+export type OptionsProvider<TManifest extends AppManifest = AppManifest> = (
+  req: Request,
+) => Promise<InitOptions<TManifest>>;
 const noop: MiddlewareHandler = (_req, ctx) => {
   return ctx.next();
 };
+
 export default function decoPlugin(opt: Options): Plugin {
   const ctxProvider = Deno.args.includes("build") ? noop : contextProvider(opt);
   const routes: Array<
@@ -98,6 +109,7 @@ export default function decoPlugin(opt: Options): Plugin {
         middleware: {
           handler: [
             ctxProvider,
+            alienRelease,
             buildDecoState(),
             ...decoMiddleware,
           ] as MiddlewareHandler<Record<string, unknown>>[],

@@ -82,6 +82,7 @@ export const newFsProviderFromPath = (
       for (const cb of onChangeCbs) {
         cb();
       }
+      return Promise.resolve();
     },
     archived: () => currResolvables.then((r) => r.archived),
     onChange: (cb: OnChangeCallback) => {

@@ -4,7 +4,7 @@ import { singleFlight } from "../../../engine/core/utils.ts";
 import { Schemas } from "../../../engine/schema/builder.ts";
 import { namespaceOf } from "../../../engine/schema/gen.ts";
 import { lazySchemaFor } from "../../../engine/schema/lazy.ts";
-import meta from "../../../meta.json" assert { type: "json" };
+import meta from "../../../meta.json" with { type: "json" };
 import { AppManifest } from "../../../types.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
 

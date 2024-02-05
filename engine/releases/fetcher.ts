@@ -158,7 +158,7 @@ export const fromEndpoint = (endpoint: string): Release => {
   });
   return {
     set(state, revision) {
-      releasePromise.then((r) => r?.set?.(state, revision));
+      return releasePromise.then((r) => r?.set?.(state, revision));
     },
     state: (options) => releasePromise.then((r) => r.state(options)),
     archived: (options) => releasePromise.then((r) => r.archived(options)),

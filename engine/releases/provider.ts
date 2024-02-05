@@ -20,7 +20,7 @@ export interface Release {
   revision(): Promise<string>;
   onChange(callback: OnChangeCallback): void;
   dispose?: () => void;
-  set?(state: Record<string, Resolvable>, revision?: string): void;
+  set?(state: Record<string, Resolvable>, revision?: string): Promise<void>;
 }
 
 interface RoutesSelection extends SelectionConfig {
@@ -107,7 +107,7 @@ const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
 export const getComposedConfigStore = (
   ns: string,
   site: string,
-  siteId: number,
+  siteId = -1,
   localStorageOnly = false,
 ): Release => {
   const providers = [];

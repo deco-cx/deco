@@ -9,7 +9,6 @@ import {
   Schemas,
 } from "../../engine/schema/builder.ts";
 import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
-import { Context } from "../../deco.ts";
 import { Block, BlockModuleRef } from "../block.ts";
 import { parseContent, parsePath } from "./parser.ts";
 import { programToBlockRef, resolvePath } from "./transform.ts";
@@ -110,20 +109,16 @@ export const genSchemasFromManifest = async (
       if (sourceMapResolverVal === null) {
         continue;
       }
-      const [_namespace, blockRefResolver] = blockModuleKey.startsWith(".")
-        ? [
-          Context.active().namespace!,
-          () =>
+      const blockRefResolver: () => Promise<BlockModuleRef | undefined> =
+        blockModuleKey.startsWith(".")
+          ? () =>
             resolveForPath(
               block.introspect,
               blockModuleKey.replace(".", `file://${dir}`),
               blockModuleKey,
               references,
-            ),
-        ]
-        : [
-          namespaceOf(block.type, blockModuleKey),
-          () => {
+            )
+          : () => {
             if (typeof sourceMapResolverVal === "object") {
               return resolveForContent(
                 block.introspect,
@@ -142,8 +137,7 @@ export const genSchemasFromManifest = async (
                 references,
               )
               : sourceMapResolverVal();
-          },
-        ];
+          };
 
       refPromises.push(
         blockRefResolver().then((ref) => {
