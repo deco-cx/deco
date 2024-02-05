@@ -1,5 +1,6 @@
-import { parse, ParsedSource } from "./deps.ts";
+import { createCache } from "https://deno.land/x/deno_cache@0.6.3/mod.ts";
 import { assignComments } from "./comments.ts";
+import { parse, ParsedSource } from "./deps.ts";
 
 /**
  * Loads the content of the given specifier.
@@ -56,11 +57,39 @@ export const parseContent = async (content: string) => {
   return source;
 };
 
+const decoder = new TextDecoder();
+let loader: null | typeof load = null;
+const initLoader = (): typeof load => {
+  if (loader) {
+    return loader;
+  }
+  if (typeof Deno.permissions.querySync !== "undefined") {
+    try {
+      const cache = createCache();
+      return loader = (specifier) =>
+        cache.load(specifier).then((cached) => {
+          const content = (cached as { content: string | Uint8Array }).content;
+          if (!content) {
+            return undefined;
+          }
+          if (typeof content === "string") {
+            return content;
+          }
+          return decoder.decode(content);
+        });
+    } catch {
+      return loader = load;
+    }
+  }
+  return loader = load;
+};
+
 /**
  * Parses the given path using the default loader. Caches the result in memory.
  */
 export const parsePath = (path: string) => {
-  return loadCache[path] ??= load(path).then((content) => {
+  const mLoader = initLoader();
+  return loadCache[path] ??= mLoader(path).then((content) => {
     if (!content) {
       throw new Error(`Path not found ${path}`);
     }
