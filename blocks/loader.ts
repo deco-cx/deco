@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
 import { ValueType } from "../deps.ts";
-import hash from "https://esm.sh/v135/object-hash@3.0.0";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
@@ -15,7 +14,7 @@ import {
   RequestState,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
-import { logger, tracer } from "deco/observability/otel/config.ts";
+import { logger } from "deco/observability/otel/config.ts";
 import { weakcache } from "../deps.ts";
 import { FieldResolver } from "deco/engine/core/resolver.ts";
 import { Release } from "deco/engine/releases/provider.ts";
@@ -209,30 +208,10 @@ const wrapLoader = (
           url.searchParams.set("resolveChain", resolveChainString);
           url.searchParams.set("revisionID", revisionID);
         } else {
-          const span = tracer.startSpan("object-hash", {
-            attributes: {
-              props_length: JSON.stringify(props).length,
-            },
-          });
-          try {
-            const hashedProps = hash(props, {
-              ignoreUnknown: true,
-              respectType: false,
-              respectFunctionProperties: false,
-              algorithm: "md5",
-            });
-            url.searchParams.set("props", hashedProps);
-            span.setAttributes({
-              hash_size_bytes: hashedProps.length * 2,
-            });
-          } catch (e) {
-            span.recordException(e);
-            throw e;
-          } finally {
-            span.end();
-          }
+          logger.error("Could not get revisionID or resolveChainString");
         }
 
+        timing?.end();
         url.searchParams.set("cacheKey", cacheKeyValue);
         const request = new Request(url);
 
