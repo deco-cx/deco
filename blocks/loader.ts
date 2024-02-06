@@ -209,6 +209,9 @@ const wrapLoader = (
           url.searchParams.set("revisionID", revisionID);
         } else {
           logger.error("Could not get revisionID or resolveChain");
+
+          timing?.end();
+          return await handler(props, req, ctx);
         }
 
         timing?.end();
