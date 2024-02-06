@@ -4,7 +4,10 @@ import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
 import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
-import { getComposedConfigStore, Release } from "../../../engine/releases/provider.ts";
+import {
+  getComposedConfigStore,
+  Release,
+} from "../../../engine/releases/provider.ts";
 import { newContext } from "../../../mod.ts";
 import { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
@@ -23,11 +26,12 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     >,
   ) {
     const opt = typeof _opt === "function" ? await _opt(request) : _opt;
-    const shouldUseLocalStorage = opt?.useLocalStorageOnly || Deno.env.has("USE_LOCAL_STORAGE_ONLY");
+    const shouldUseLocalStorage = opt?.useLocalStorageOnly ||
+      Deno.env.has("USE_LOCAL_STORAGE_ONLY");
     let siteName = opt.manifest.name;
     let releaseProvider: Release;
-    if(shouldUseLocalStorage) {
-      releaseProvider = newFsProvider(DECO_FILE_NAME, siteName)
+    if (shouldUseLocalStorage) {
+      releaseProvider = newFsProvider(DECO_FILE_NAME, siteName);
     } else if (opt.release) {
       releaseProvider = opt.release;
     } else {
@@ -40,7 +44,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         opt.manifest.name,
         siteName,
         -1,
-      )
+      );
     }
     // Define root manifest
     const rootManifest = {
