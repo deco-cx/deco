@@ -202,7 +202,7 @@ const installAppsForResolver = async (
         .reduce(
           mergeRuntimes,
         );
-    manifest = mergeManifests(manifest, mManifest);
+    manifest = mergeManifests(mManifest, manifest);
     sourceMap = { ...sm, ...sourceMap };
     currentResolver = currentResolver.with({ resolvers, resolvables });
     return true;
