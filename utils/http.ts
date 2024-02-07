@@ -1,9 +1,5 @@
 import meta from "../meta.json" assert { type: "json" };
-import {
-  adminDomains,
-  isAdmin,
-  landingPageDomain,
-} from "../utils/admin.ts";
+import { adminDomains, isAdmin, landingPageDomain } from "../utils/admin.ts";
 import { buildObj } from "./object.ts";
 
 export const DEFAULT_CACHE_CONTROL: CacheControl = {
@@ -161,7 +157,9 @@ export function setCSPHeaders(
     "127.0.0.1:* localhost:* http://localhost:* http://127.0.0.1:*";
   response.headers.set(
     "Content-Security-Policy",
-    `frame-ancestors 'self' ${landingPageDomain} ${localhost} ${adminDomains.join(" ")} ${
+    `frame-ancestors 'self' ${landingPageDomain} ${localhost} ${
+      adminDomains.join(" ")
+    } ${
       referer && isOnAdmin
         ? "https://" + referer.startsWith("http")
           ? new URL(referer).host

@@ -1,13 +1,16 @@
 import type { JSONSchema7 } from "../deps.ts";
 
-export const adminDomains = ["https://admin.deco.cx/", "https://v0-admin.deco.cx/", "https://play.deco.cx/"];
+export const adminDomains = [
+  "https://admin.deco.cx/",
+  "https://v0-admin.deco.cx/",
+  "https://play.deco.cx/",
+];
 export const landingPageDomain = `https://www.deco.cx`;
 const adminPreviewUrls = "https://deco-sites-admin-";
 const adminPreviewDomain = "deno.dev";
 
 export const isAdmin = (url: string): boolean => {
-
-  if (adminDomains.find((adminDomain) => url.startsWith(adminDomain))){
+  if (adminDomains.find((adminDomain) => url.startsWith(adminDomain))) {
     return true;
   }
   const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
