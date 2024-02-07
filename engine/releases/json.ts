@@ -22,12 +22,14 @@ export const getReleaseJSONFromRelease = (
   },
   ...appName
     ? {
-      routes: [
-        {
-          __resolveType: "website/loaders/pages.ts",
-        },
-      ],
-      __resolveType: `decohub/apps/${appName}.ts`,
+      [appName]: {
+        routes: [
+          {
+            __resolveType: "website/loaders/pages.ts",
+          },
+        ],
+        __resolveType: `decohub/apps/${appName}.ts`,
+      },
     }
     : {},
   ...releaseJson,
