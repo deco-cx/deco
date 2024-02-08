@@ -3,13 +3,8 @@ import {
   resolveModuleSpecifier,
 } from "https://deno.land/x/importmap@0.2.1/mod.ts";
 
-export interface ImportSpecifier {
-  url: string | URL;
-}
-
 export interface ImportMapResolver {
-  resolve(specifier: string, context: string): ImportSpecifier | null;
-  with(resolver: ImportMapResolver): ImportMapResolver;
+  resolve(specifier: string, context: string): string | null;
 }
 
 const useEsm = (npmSpecifier: string) => {
@@ -22,84 +17,60 @@ export interface ImportMap {
 }
 
 class NativeImportMapResolver implements ImportMapResolver {
-  resolve(specifier: string, context: string): ImportSpecifier | null {
+  resolve(specifier: string, context: string): string | null {
     // should use origin
     if (specifier.startsWith("/")) {
       const pathUrl = new URL(import.meta.resolve(context));
-      return { url: `${pathUrl.origin}${specifier}` };
+      return `${pathUrl.origin}${specifier}`;
     }
 
     // relative import
     if (specifier.startsWith(".")) {
-      return {
-        url: import.meta.resolve(
-          new URL(specifier, import.meta.resolve(context)).toString(),
-        ),
-      };
+      return import.meta.resolve(
+        new URL(specifier, import.meta.resolve(context)).toString(),
+      );
     }
 
     if (specifier.startsWith("https://esm.sh/")) {
-      return { url: useEsm(specifier) };
+      return useEsm(specifier);
     }
     // import from import_map
-    return { url: import.meta.resolve(specifier) };
-  }
-
-  with(resolver: ImportMapResolver): ImportMapResolver {
-    return new ChainedImportMapResolver(this, resolver);
-  }
-}
-class InlineImportMapResolver implements ImportMapResolver {
-  private importMap: ImportMap;
-
-  constructor(importMap: ImportMap) {
-    this.importMap = importMap;
-  }
-
-  resolve(specifier: string, _context: string): ImportSpecifier | null {
-    const resolvedUrl = this.importMap.imports[specifier];
-
-    if (resolvedUrl) {
-      return { url: new URL(resolvedUrl) };
-    } else {
-      return null;
-    }
-  }
-
-  with(resolver: ImportMapResolver): ImportMapResolver {
-    return new ChainedImportMapResolver(this, resolver);
-  }
-}
-
-class ChainedImportMapResolver implements ImportMapResolver {
-  private resolvers: ImportMapResolver[];
-
-  constructor(...resolvers: ImportMapResolver[]) {
-    this.resolvers = resolvers;
-  }
-
-  resolve(specifier: string, context: string): ImportSpecifier | null {
-    for (const resolver of this.resolvers) {
-      const result = resolver.resolve(specifier, context);
-
-      if (result !== null) {
-        return result;
-      }
-    }
-
-    return null;
-  }
-
-  with(resolver: ImportMapResolver): ImportMapResolver {
-    return new ChainedImportMapResolver(...this.resolvers, resolver);
+    return import.meta.resolve(specifier);
   }
 }
 
 const NATIVE_RESOLVER = new NativeImportMapResolver();
 export const ImportMapBuilder = {
-  fromImportMap(importMap: ImportMap): ImportMapResolver {
-    return new InlineImportMapResolver(importMap).with(
-      NATIVE_RESOLVER,
-    );
+  new: (...resolvers: ImportMapResolver[]) => {
+    return {
+      mergeWith: (importMap: ImportMap, context: string) => {
+        const resolvedImportMap = resolveImportMap(importMap, new URL(context)); // { imports: { "file:///project/dir/foo/": "file:///project/dir/bar/" }, scopes: {} }
+        return ImportMapBuilder.new(...resolvers, {
+          resolve: (specifier: string, context: string) => {
+            try {
+              return resolveModuleSpecifier(
+                specifier,
+                resolvedImportMap,
+                new URL(context),
+              ) ?? null;
+            } catch (err) {
+              console.warn("error when resolving import", err);
+              return null;
+            }
+          },
+        });
+      },
+      resolve: (specifier: string, context: string) => {
+        for (const resolver of [NATIVE_RESOLVER, ...resolvers]) {
+          const result = resolver.resolve(specifier, context);
+
+          if (result !== null) {
+            return result;
+          }
+        }
+
+        return null;
+      },
+    };
   },
 };

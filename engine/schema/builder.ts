@@ -3,6 +3,7 @@ import { mergeJSONSchemas } from "../../engine/schema/merge.ts";
 import { schemeableToJSONSchema } from "../../engine/schema/schemeable.ts";
 import { Schemeable } from "../../engine/schema/transform.ts";
 
+
 export interface Schemas {
   definitions: Record<string, JSONSchema7>;
   root: Record<string, JSONSchema7>;
@@ -139,6 +140,23 @@ const isEntrypoint = (
 ): m is EntrypointModule => {
   return (m as EntrypointModule).key !== undefined;
 };
+
+async function uniqueIdOfFile(
+  fileUrl: string,
+): Promise<string | undefined> {
+  const url = new URL(fileUrl);
+  try {
+    switch (url.protocol) {
+      case "data:": {
+        return await Deno.readTextFile(url);
+      }
+      default:
+        return btoa(fileUrl);
+    }
+  } catch {
+    return btoa(fileUrl);
+  }
+}
 
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
   return {

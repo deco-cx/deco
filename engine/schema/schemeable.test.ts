@@ -27,6 +27,33 @@ const getSchemeableFor = async (
   return await typeNameToSchemeable(name, { path, parsedSource: ast! });
 };
 
+Deno.test("DataUri type generation", async () => {
+  const transformed = await getSchemeableFor("MyDataUriType");
+  if (!transformed) {
+    fail("MyDataUriType should exists");
+  }
+
+  assertEquals(transformed, {
+    jsDocSchema: {},
+    type: "object",
+    value: {
+      a: {
+        title: "A",
+        jsDocSchema: {},
+        schemeable: {
+          type: "inline",
+          name: "string",
+          value: { type: "string" },
+        },
+        required: true,
+      },
+    },
+    file: "data:text/tsx,export interface MyDataUriType { a: string; };",
+    name: "MyDataUriType",
+    extends: [],
+  });
+});
+
 Deno.test("TypeWithExtendsOmit type generation", async () => {
   const transformed = await getSchemeableFor("TypeWithExtendsOmit");
   if (!transformed) {
@@ -77,7 +104,7 @@ Deno.test("Simple type generation", async () => {
     fail("SimpleType should exists");
   }
 
-  const name = Deno.build.os === "windows" ? "tl@157-178" : "tl@155-174";
+  const name = Deno.build.os === "windows" ? "tl@157-179" : "tl@155-175";
   assertEquals(transformed, {
     file: path,
     type: "alias",

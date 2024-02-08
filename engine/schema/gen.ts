@@ -1,4 +1,4 @@
-import { AppManifest, SourceMap } from "../../blocks/app.ts";
+import { AppManifest, ImportMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { JSONSchema7 } from "../../deps.ts";
@@ -10,31 +10,11 @@ import {
 } from "../../engine/schema/builder.ts";
 import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
 import { Block, BlockModuleRef } from "../block.ts";
-import { parseContent, parsePath } from "./parser.ts";
+import { parsePath } from "./parser.ts";
 import { programToBlockRef, resolveSpecifier } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
-};
-
-const resolveForContent = async (
-  introspect: Block["introspect"],
-  blockPath: string,
-  blockContent: string,
-  blockKey: string,
-  references: Map<ReferenceKey, Schemeable>,
-): Promise<BlockModuleRef | undefined> => {
-  const program = await parseContent(blockContent);
-  if (!program) {
-    return undefined;
-  }
-  return programToBlockRef(
-    resolveSpecifier(blockPath, Deno.cwd()),
-    blockKey,
-    program,
-    references,
-    introspect,
-  );
 };
 
 const resolveForPath = async (
@@ -71,11 +51,12 @@ const resolveImport = (path: string) => {
 export const genSchemasFromManifest = async (
   manifest: AppManifest,
   baseDir?: string,
-  sourceMap: SourceMap = {},
+  importMap: ImportMap = { imports: {} },
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
   const dir = baseDir ? baseDir : Deno.cwd();
 
+  console.log({ importMap });
   const rootWithBlocks: Record<string, JSONSchema7> = blocks().reduce(
     (root, blk) => {
       root[blk.type] = {
@@ -105,42 +86,16 @@ export const genSchemasFromManifest = async (
         ),
       )
     ) {
-      const sourceMapResolverVal = sourceMap[blockModuleKey];
-      if (sourceMapResolverVal === null) {
-        continue;
-      }
-      const blockRefResolver: () => Promise<BlockModuleRef | undefined> =
+      const ref = resolveForPath(
+        block.introspect,
         blockModuleKey.startsWith(".")
-          ? () =>
-            resolveForPath(
-              block.introspect,
-              blockModuleKey.replace(".", `file://${dir}`),
-              blockModuleKey,
-              references,
-            )
-          : () => {
-            if (typeof sourceMapResolverVal === "object") {
-              return resolveForContent(
-                block.introspect,
-                sourceMapResolverVal.path,
-                sourceMapResolverVal.content,
-                blockModuleKey,
-                references,
-              );
-            }
-            return typeof sourceMapResolverVal === "string" ||
-                typeof sourceMapResolverVal === "undefined"
-              ? resolveForPath(
-                block.introspect,
-                sourceMapResolverVal ?? resolveImport(blockModuleKey),
-                blockModuleKey,
-                references,
-              )
-              : sourceMapResolverVal();
-          };
-
+          ? blockModuleKey.replace(".", `file://${dir}`)
+          : importMap?.imports[blockModuleKey] ?? resolveImport(blockModuleKey),
+        blockModuleKey,
+        references,
+      );
       refPromises.push(
-        blockRefResolver().then((ref) => {
+        ref.then((ref) => {
           if (ref) {
             if (block.type === "routes") {
               if (ref.inputSchema) {

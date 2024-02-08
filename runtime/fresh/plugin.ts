@@ -1,6 +1,6 @@
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { PluginRoute } from "$fresh/src/server/types.ts";
-import { SourceMap } from "../../blocks/app.ts";
+import { ImportMap } from "../../blocks/app.ts";
 import {
   buildDecoState,
   injectLiveStateForPath,
@@ -31,7 +31,7 @@ import { handler as workflowHandler } from "./routes/workflow.ts";
 
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
-  sourceMap?: SourceMap;
+  importMap?: ImportMap;
   site?: SiteInfo;
   useLocalStorageOnly?: boolean;
   release?: Release;

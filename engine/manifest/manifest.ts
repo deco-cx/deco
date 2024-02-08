@@ -3,14 +3,14 @@ import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
 import {
   AppManifest,
+  ImportMap,
   MergedAppRuntime,
   mergeManifests,
   mergeRuntimes,
-  SourceMap,
 } from "../../blocks/app.ts";
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import { buildSourceMap } from "../../blocks/utils.tsx";
+import { buildImportMap } from "../../blocks/utils.tsx";
 import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
@@ -118,10 +118,10 @@ export const initContext = async <
   T extends AppManifest,
 >(
   m: T,
-  currSourceMap?: SourceMap,
+  currentImportMap?: ImportMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
-  await fulfillContext(context, m, currSourceMap, release);
+  await fulfillContext(context, m, currentImportMap, release);
 
   if (context.play) {
     console.debug(
@@ -152,10 +152,10 @@ export const initContext = async <
 const installAppsForResolver = async (
   resolver: ReleaseResolver<FreshContext>,
   initialManifest: AppManifest,
-  initialSourceMap?: SourceMap,
+  initialImportMap?: ImportMap,
 ) => {
   let manifest = initialManifest;
-  let sourceMap = initialSourceMap;
+  let importMap = initialImportMap;
   const fakeCtx = newFakeContext();
   const unresolved: Record<string, Resolvable> = {};
   const allAppsMap: Record<string, Resolvable> = {};
@@ -196,14 +196,22 @@ const installAppsForResolver = async (
       return false;
     }
     // if there are apps installed so incorporate the current resolver into the resolvables.
-    const { resolvers, resolvables = {}, manifest: mManifest, sourceMap: sm } =
-      installedApps
-        .filter(Boolean)
-        .reduce(
-          mergeRuntimes,
-        );
+    const {
+      resolvers,
+      resolvables = {},
+      manifest: mManifest,
+      importMap: appImportMap,
+    } = installedApps
+      .filter(Boolean)
+      .reduce(
+        mergeRuntimes,
+      );
     manifest = mergeManifests(mManifest, manifest);
-    sourceMap = { ...sm, ...sourceMap };
+    importMap = {
+      ...appImportMap,
+      ...importMap,
+      imports: { ...appImportMap?.imports, ...importMap?.imports },
+    };
     currentResolver = currentResolver.with({ resolvers, resolvables });
     return true;
   };
@@ -265,14 +273,14 @@ const installAppsForResolver = async (
       }),
     );
   }
-  return { resolver: currentResolver, apps: allAppsMap, manifest, sourceMap };
+  return { resolver: currentResolver, apps: allAppsMap, manifest, importMap };
 };
 export const fulfillContext = <
   T extends AppManifest,
 >(
   ctx: DecoContext,
   m: T,
-  currSourceMap?: SourceMap,
+  currentImportMap?: ImportMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
   let currentSite = ctx.site ?? siteName();
@@ -312,18 +320,18 @@ export const fulfillContext = <
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
-    const { resolver: currentResolver, apps: allAppsMap, manifest, sourceMap } =
+    const { resolver: currentResolver, apps: allAppsMap, manifest, importMap } =
       await installAppsForResolver(
         resolver,
         newManifest,
-        currSourceMap,
+        currentImportMap,
       );
     const apps: Resolvable[] = Object.values(allAppsMap);
     if (!apps || apps.length === 0) {
       runtimePromise.resolve({
         resolver: currentResolver,
         manifest: newManifest,
-        sourceMap: currSourceMap ?? buildSourceMap(newManifest),
+        importMap: currentImportMap ?? buildImportMap(newManifest),
       });
       firstInstallAppsPromise.resolve();
       return;
@@ -346,10 +354,12 @@ export const fulfillContext = <
     );
 
     // for who is awaiting for the previous promise
-    const mSourceMap = { ...sourceMap, ...currSourceMap ?? {} };
+    const mergedImportMap = {
+      imports: { ...importMap?.imports, ...currentImportMap?.imports ?? {} },
+    };
     const runtime = {
       manifest: mergeManifests(newManifest, manifest),
-      sourceMap: mSourceMap,
+      importMap: mergedImportMap,
       resolver: currentResolver,
     };
     if (runtimePromise.state === "pending") {
@@ -396,7 +406,7 @@ export const newContext = <
   T extends AppManifest,
 >(
   m: T,
-  currSourceMap?: SourceMap,
+  currentImportMap?: ImportMap,
   release: Release | undefined = undefined,
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
@@ -411,7 +421,7 @@ export const newContext = <
     },
   };
 
-  return fulfillContext(ctx, m, currSourceMap, release);
+  return fulfillContext(ctx, m, currentImportMap, release);
 };
 
 export const $live = <T extends AppManifest>(
@@ -451,7 +461,7 @@ export const $live = <T extends AppManifest>(
   context.runtime = Promise.resolve({
     manifest: newManifest,
     resolver,
-    sourceMap: buildSourceMap(newManifest),
+    importMap: buildImportMap(newManifest),
   });
   context.instance.readyAt = new Date();
   console.log(

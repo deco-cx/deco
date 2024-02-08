@@ -1,14 +1,10 @@
 // deno-lint-ignore-file no-explicit-any ban-types
+import { ImportMap } from "deco/engine/importmap/builder.ts";
 import blocks from "../blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
-import { AppHttpContext, buildSourceMap, FnProps } from "../blocks/utils.tsx";
-import {
-  Block,
-  BlockModule,
-  BlockModuleRef,
-  InstanceOf,
-} from "../engine/block.ts";
+import { AppHttpContext, buildImportMap, FnProps } from "../blocks/utils.tsx";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import {
   BaseContext,
   FieldResolver,
@@ -24,19 +20,9 @@ import { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
 import { fnContextFromHttpContext } from "./utils.tsx";
 
-export type SourceMapResolver = () => Promise<BlockModuleRef | undefined>;
-
-export interface SourceContent {
-  path: string;
-  content: string;
-}
-
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
-export type SourceMap = Record<
-  string,
-  string | null | SourceMapResolver | SourceContent
->;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
+export { type ImportMap };
 type MergeAppsManifest<TCurrent extends AppManifest, TDeps> =
   & (TDeps extends [infer TNext, ...infer Rest]
     ? TNext extends App ? MergeAppsManifest<ManifestOf<TNext>, Rest>
@@ -79,7 +65,7 @@ export interface AppBase<
   resolvables?: TResolvableMap;
   manifest: TAppManifest;
   dependencies?: TAppDependencies;
-  sourceMap?: SourceMap;
+  importMap?: ImportMap;
 }
 
 export type AppMiddlewareContext<
@@ -124,7 +110,7 @@ export interface AppRuntime<
   TAppManifest extends AppManifest = AppManifest,
 > extends AppBase<TAppManifest, TAppState, TAppDependencies, TResolvableMap> {
   resolvers: TResolverMap;
-  sourceMap: SourceMap;
+  importMap: ImportMap;
 }
 
 type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
@@ -149,7 +135,7 @@ export const mergeManifests = (
 
 export type MergedAppRuntime = Pick<
   AppRuntime,
-  "manifest" | "resolvables" | "resolvers" | "sourceMap"
+  "manifest" | "resolvables" | "resolvers" | "importMap"
 >;
 
 export const mergeRuntimes = <
@@ -159,12 +145,12 @@ export const mergeRuntimes = <
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
-    sourceMap: currentSourceMap,
+    importMap: currentImportMap,
   }: TAppRuntime,
-  { resolvers, manifest, resolvables, sourceMap }: TAppRuntime,
+  { resolvers, manifest, resolvables, importMap }: TAppRuntime,
 ): Pick<
   TAppRuntime,
-  "manifest" | "resolvables" | "resolvers" | "sourceMap"
+  "manifest" | "resolvables" | "resolvers" | "importMap"
 > => {
   return {
     manifest: mergeManifests(currentManifest, manifest),
@@ -176,7 +162,12 @@ export const mergeRuntimes = <
       ...resolvers,
       ...currentResolvers,
     },
-    sourceMap: { ...sourceMap ?? {}, ...currentSourceMap ?? {} },
+    importMap: {
+      imports: {
+        ...importMap?.imports ?? {},
+        ...currentImportMap?.imports ?? {},
+      },
+    },
   };
 };
 
@@ -277,10 +268,13 @@ const buildRuntimeFromApp = <
     manifest,
     resolvables,
     dependencies,
-    sourceMap,
+    importMap,
     middleware: appMiddleware,
   }: TApp,
 ): AppRuntime<TContext, TState> => {
+  const appImportMap = Object.keys(importMap?.imports ?? {}).length === 0
+    ? buildImportMap(manifest)
+    : importMap ?? buildImportMap(manifest);
   const injectedManifest = injectAppStateOnManifest(state, manifest);
   return {
     resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
@@ -292,7 +286,7 @@ const buildRuntimeFromApp = <
     manifest: injectedManifest,
     resolvables,
     dependencies,
-    sourceMap: sourceMap ?? buildSourceMap(manifest),
+    importMap: appImportMap,
   };
 };
 
@@ -392,7 +386,9 @@ const appBlock: Block<AppModule> = {
       return {
         resolvers: {},
         resolvables: {},
-        sourceMap: {},
+        importMap: {
+          imports: {},
+        },
         manifest: {
           baseUrl: import.meta.url,
           name: "",

@@ -150,10 +150,10 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
       return sf.run(async () => {
         const revision = await ctx.release!.revision();
         if (revision !== latestRevision || !_cached) {
-          const { manifest, sourceMap } = await ctx.runtime!;
+          const { manifest, importMap } = await ctx.runtime!;
           _cached = incorporateSavedBlocksIntoSchema(
             manifest,
-            await genSchemas(manifest, sourceMap),
+            await genSchemas(manifest, importMap),
             {
               ...await ctx.release!.state(),
             },

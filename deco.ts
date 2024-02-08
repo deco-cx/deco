@@ -5,7 +5,7 @@
 /// <reference lib="dom.iterable" />
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { SourceMap } from "./blocks/app.ts";
+import { ImportMap } from "./blocks/app.ts";
 import { ReleaseResolver } from "./engine/core/mod.ts";
 import { Release } from "./engine/releases/provider.ts";
 import { AppManifest } from "./mod.ts";
@@ -15,7 +15,7 @@ export interface DecoRuntimeState {
   manifest: AppManifest;
   // deno-lint-ignore no-explicit-any
   resolver: ReleaseResolver<any>;
-  sourceMap: SourceMap;
+  importMap: ImportMap;
 }
 
 export interface InstanceInfo {
