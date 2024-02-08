@@ -139,22 +139,34 @@ const isEntrypoint = (
 ): m is EntrypointModule => {
   return (m as EntrypointModule).key !== undefined;
 };
-
-async function uniqueIdOfFile(
-  fileUrl: string,
-): Promise<string | undefined> {
-  const url = new URL(fileUrl);
-  try {
-    switch (url.protocol) {
-      case "data:": {
-        return await Deno.readTextFile(url);
-      }
-      default:
-        return btoa(fileUrl);
+/**
+ * Parses the mime type of the given dataUri.
+ * it should follows: https://en.wikipedia.org/wiki/Data_URI_scheme
+ * eg: `data:text/tsx;path=${encodeURIComponent(path)};charset=utf-8;base64,${
+    btoa(modData)
+  }`
+ */
+const parseDataUriMimeTypes = (dataUri: string): Record<string, string> => {
+  const mimeTypes: Record<string, string> = {};
+  const [media, _ignoreContent] = dataUri.split(",");
+  const [_ignoreContentTypeAndData, ...mimeTypesArray] = media.split(";");
+  for (const mimeType of mimeTypesArray) {
+    const [key, value] = mimeType.split("=");
+    if (key && value) {
+      mimeTypes[key] = decodeURIComponent(value);
     }
-  } catch {
-    return btoa(fileUrl);
   }
+  return mimeTypes;
+};
+
+function uniqueIdOfFile(
+  fileUrl: string,
+): string {
+  if (fileUrl.startsWith("data:")) {
+    const mimeTypes = parseDataUriMimeTypes(fileUrl);
+    return mimeTypes["path"] ?? crypto.randomUUID();
+  }
+  return btoa(fileUrl);
 }
 
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
@@ -199,7 +211,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         if (!file) {
           return [undefined, undefined];
         }
-        const fileHash = btoa(file).replaceAll("/", "-");
+        const fileHash = uniqueIdOfFile(file).replaceAll("/", "-");
         const id = schemeable.name
           ? `${fileHash}@${schemeable.name!}`
           : fileHash;

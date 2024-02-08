@@ -35,7 +35,11 @@ class NativeImportMapResolver implements ImportMapResolver {
       return useEsm(specifier);
     }
     // import from import_map
-    return import.meta.resolve(specifier);
+    try {
+      return import.meta.resolve(specifier);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -43,7 +47,7 @@ const NATIVE_RESOLVER = new NativeImportMapResolver();
 export const ImportMapBuilder = {
   new: (...resolvers: ImportMapResolver[]) => {
     return {
-      mergeWith: (importMap: ImportMap, context: string) => {
+      mergeWith: (importMap: ImportMap, context: string): ImportMapResolver => {
         const resolvedImportMap = resolveImportMap(importMap, new URL(context)); // { imports: { "file:///project/dir/foo/": "file:///project/dir/bar/" }, scopes: {} }
         return ImportMapBuilder.new(...resolvers, {
           resolve: (specifier: string, context: string) => {
@@ -68,8 +72,8 @@ export const ImportMapBuilder = {
             return result;
           }
         }
-
-        return null;
+        // should never reach here if the import map is valid
+        throw new Error(`${specifier} could not be resolved at ${context}`);
       },
     };
   },

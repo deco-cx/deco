@@ -7,6 +7,7 @@
 import { assertEquals, assertObjectMatch, fail } from "std/assert/mod.ts";
 import { dirname, join } from "std/path/mod.ts";
 
+import { ImportMapBuilder } from "deco/engine/importmap/builder.ts";
 import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
 import { assertSpyCall, assertSpyCalls, spy } from "std/testing/mock.ts";
 import { parsePath } from "../../engine/schema/parser.ts";
@@ -24,7 +25,11 @@ const getSchemeableFor = async (
   name: string,
 ): Promise<Schemeable | undefined> => {
   const ast = await parsePath(toFileUrl(path).toString());
-  return await typeNameToSchemeable(name, { path, parsedSource: ast! });
+  return await typeNameToSchemeable(name, {
+    path,
+    parsedSource: ast!,
+    importMapResolver: ImportMapBuilder.new(),
+  });
 };
 
 Deno.test("DataUri type generation", async () => {

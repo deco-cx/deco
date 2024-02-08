@@ -1,17 +1,18 @@
+import { toFileUrl } from "std/path/mod.ts";
 import { AppManifest, ImportMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { JSONSchema7 } from "../../deps.ts";
+import { Block, BlockModuleRef } from "../block.ts";
+import { ImportMapBuilder, ImportMapResolver } from "../importmap/builder.ts";
 import {
   BlockModule,
   EntrypointModule,
   newSchemaBuilder,
   Schemas,
-} from "../../engine/schema/builder.ts";
-import { ReferenceKey, Schemeable } from "../../engine/schema/transform.ts";
-import { Block, BlockModuleRef } from "../block.ts";
+} from "./builder.ts";
 import { parsePath } from "./parser.ts";
-import { programToBlockRef, resolveSpecifier } from "./transform.ts";
+import { programToBlockRef, ReferenceKey, Schemeable } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
@@ -19,17 +20,23 @@ export const namespaceOf = (blkType: string, blkKey: string): string => {
 
 const resolveForPath = async (
   introspect: Block["introspect"],
-  blockPath: string,
+  importMapResolver: ImportMapResolver,
+  baseDir: string,
   blockKey: string,
   references: Map<ReferenceKey, Schemeable>,
 ): Promise<BlockModuleRef | undefined> => {
-  const pathResolved = resolveSpecifier(blockPath, Deno.cwd());
-  const program = await parsePath(pathResolved);
+  const blockPath = importMapResolver.resolve(blockKey, baseDir) ??
+    resolveImport(blockKey);
+  if (!blockPath) {
+    return undefined;
+  }
+  const program = await parsePath(blockPath);
   if (!program) {
     return undefined;
   }
   return programToBlockRef(
-    pathResolved,
+    importMapResolver,
+    blockPath,
     blockKey,
     program,
     references,
@@ -54,9 +61,9 @@ export const genSchemasFromManifest = async (
   importMap: ImportMap = { imports: {} },
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
-  const dir = baseDir ? baseDir : Deno.cwd();
+  const dir = toFileUrl(baseDir ? baseDir : Deno.cwd()).toString();
+  const importMapResolver = ImportMapBuilder.new().mergeWith(importMap, dir);
 
-  console.log({ importMap });
   const rootWithBlocks: Record<string, JSONSchema7> = blocks().reduce(
     (root, blk) => {
       root[blk.type] = {
@@ -88,9 +95,8 @@ export const genSchemasFromManifest = async (
     ) {
       const ref = resolveForPath(
         block.introspect,
-        blockModuleKey.startsWith(".")
-          ? blockModuleKey.replace(".", `file://${dir}`)
-          : importMap?.imports[blockModuleKey] ?? resolveImport(blockModuleKey),
+        importMapResolver,
+        dir,
         blockModuleKey,
         references,
       );

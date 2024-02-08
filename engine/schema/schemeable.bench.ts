@@ -12,11 +12,9 @@ import {
 } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
 import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
 import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
-import { parsePath } from "../../engine/schema/parser.ts";
-import {
-  Schemeable,
-  typeNameToSchemeable,
-} from "../../engine/schema/transform.ts";
+import { ImportMapBuilder } from "../importmap/builder.ts";
+import { parsePath } from "./parser.ts";
+import { Schemeable, typeNameToSchemeable } from "./transform.ts";
 
 const folder = dirname(fromFileUrl(import.meta.url));
 const file = "schemeable.test.types.ts";
@@ -74,7 +72,11 @@ const getSchemeableDenoAST = async (
   name: string,
 ): Promise<Schemeable | undefined> => {
   const ast = await parsePath(path);
-  return await typeNameToSchemeable(name, { path, parsedSource: ast! });
+  return await typeNameToSchemeable(name, {
+    path,
+    parsedSource: ast!,
+    importMapResolver: ImportMapBuilder.new(),
+  });
 };
 
 const getSchemeableDenoDoc = async (

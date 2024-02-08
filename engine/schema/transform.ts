@@ -33,8 +33,9 @@ import type {
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
 import { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
-import { BlockModuleRef, IntrospectParams } from "../../engine/block.ts";
-import { beautify } from "../../engine/schema/utils.ts";
+import { BlockModuleRef, IntrospectParams } from "../block.ts";
+import { beautify } from "./utils.ts";
+import { ImportMapResolver } from "../importmap/builder.ts";
 import { spannableToJSONSchema } from "./comments.ts";
 import type { ParsedSource } from "./deps.ts";
 import { parsePath } from "./parser.ts";
@@ -106,6 +107,7 @@ export type Schemeable =
 
 export interface SchemeableTransformContext {
   path: string;
+  importMapResolver: ImportMapResolver;
   parsedSource: ParsedSource;
   references?: Map<
     ReferenceKey,
@@ -286,7 +288,10 @@ export const typeNameToSchemeable = async (
           return UNKNOWN;
         }
 
-        const from = resolveSpecifier(source, path);
+        const from = ctx.importMapResolver.resolve(source, path);
+        if (!from) {
+          return UNKNOWN;
+        }
         const newProgram = await parsePath(from);
         if (!newProgram) {
           return UNKNOWN;
@@ -313,7 +318,10 @@ export const typeNameToSchemeable = async (
       };
     }
     if (item.type === "ExportAllDeclaration") {
-      const from = resolveSpecifier(item.source.value, path);
+      const from = ctx.importMapResolver.resolve(item.source.value, path);
+      if (!from) {
+        return UNKNOWN;
+      }
       const newProgram = await parsePath(
         from,
       );
@@ -399,7 +407,10 @@ export const typeNameToSchemeable = async (
       if (spec) {
         fromImport = async () => {
           try {
-            const from = resolveSpecifier(item.source.value, path);
+            const from = ctx.importMapResolver.resolve(item.source.value, path);
+            if (!from) {
+              return UNKNOWN;
+            }
             const newProgram = await parsePath(
               from,
             );
@@ -972,6 +983,7 @@ export type CanonicalDeclaration =
   | VariableCanonicalDeclaration
   | FunctionCanonicalDeclaration;
 const findFuncFromExportNamedDeclaration = async (
+  importMapResolver: ImportMapResolver,
   funcName: string,
   item: ExportNamedDeclaration,
   path: string,
@@ -998,16 +1010,24 @@ const findFuncFromExportNamedDeclaration = async (
       if (!source) {
         return undefined;
       }
-      const url = resolveSpecifier(source, path);
+      const url = importMapResolver.resolve(source, path);
+      if (!url) {
+        return undefined;
+      }
       const isFromDefault = spec.orig.value === "default";
       const newProgram = await parsePath(url);
       if (!newProgram) {
         return undefined;
       }
       if (isFromDefault) {
-        return findDefaultFuncExport(url, newProgram);
+        return findDefaultFuncExport(importMapResolver, url, newProgram);
       } else {
-        return findFuncExport(spec.orig.value, url, newProgram);
+        return findFuncExport(
+          importMapResolver,
+          spec.orig.value,
+          url,
+          newProgram,
+        );
       }
     }
   }
@@ -1015,6 +1035,7 @@ const findFuncFromExportNamedDeclaration = async (
 };
 
 const findFunc = async (
+  importMapResolver: ImportMapResolver,
   funcName: string,
   path: string,
   parsedSource: ParsedSource,
@@ -1022,6 +1043,7 @@ const findFunc = async (
   for (const item of parsedSource.program.body) {
     if (item.type === "ExportNamedDeclaration") {
       const found = await findFuncFromExportNamedDeclaration(
+        importMapResolver,
         funcName,
         item,
         path,
@@ -1101,11 +1123,12 @@ const findFunc = async (
   }
 };
 const findFuncExport = async (
+  importMapResolver: ImportMapResolver,
   funcName: string,
   path: string,
   program: ParsedSource,
 ): Promise<CanonicalDeclaration | undefined> => {
-  const func = await findFunc(funcName, path, program);
+  const func = await findFunc(importMapResolver, funcName, path, program);
   if (!func) {
     return undefined;
   }
@@ -1113,6 +1136,7 @@ const findFuncExport = async (
 };
 
 export const findDefaultFuncExport = async (
+  importMapResolver: ImportMapResolver,
   path: string,
   parsedSource: ParsedSource,
 ): Promise<CanonicalDeclaration | undefined> => {
@@ -1121,7 +1145,12 @@ export const findDefaultFuncExport = async (
       item.type === "ExportDefaultExpression" &&
       item.expression.type === "Identifier"
     ) {
-      const func = await findFunc(item.expression.value, path, parsedSource);
+      const func = await findFunc(
+        importMapResolver,
+        item.expression.value,
+        path,
+        parsedSource,
+      );
       return func?.[0];
     }
     if (
@@ -1137,6 +1166,7 @@ export const findDefaultFuncExport = async (
     }
     if (item.type === "ExportNamedDeclaration") {
       const found = await findFuncFromExportNamedDeclaration(
+        importMapResolver,
         "default",
         item,
         path,
@@ -1213,9 +1243,10 @@ const paramsOf = (
   });
 };
 export const programToBlockRef = async (
-  _path: string,
+  importMapResolver: ImportMapResolver,
+  mPath: string,
   blockKey: string,
-  _program: ParsedSource,
+  mProgram: ParsedSource,
   schemeableReferences?: Map<
     ReferenceKey,
     Schemeable
@@ -1226,8 +1257,8 @@ export const programToBlockRef = async (
 
   for (const name of funcNames) {
     const fn = name === "default"
-      ? await findDefaultFuncExport(_path, _program)
-      : await findFuncExport(name, _path, _program);
+      ? await findDefaultFuncExport(importMapResolver, mPath, mProgram)
+      : await findFuncExport(importMapResolver, name, mPath, mProgram);
     if (!fn) {
       continue;
     }
@@ -1245,6 +1276,7 @@ export const programToBlockRef = async (
       functionRef: blockKey,
       outputSchema: includeReturn && retn
         ? await tsTypeToSchemeable(retn, {
+          importMapResolver,
           path,
           parsedSource,
           references: schemeableReferences,
@@ -1263,6 +1295,7 @@ export const programToBlockRef = async (
     return {
       ...baseBlockRef,
       inputSchema: await tsTypeToSchemeable(param, {
+        importMapResolver,
         path,
         parsedSource,
         references: schemeableReferences,
