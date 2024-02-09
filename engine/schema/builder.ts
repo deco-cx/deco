@@ -159,14 +159,15 @@ const parseDataUriMimeTypes = (dataUri: string): Record<string, string> => {
   return mimeTypes;
 };
 
-function uniqueIdOfFile(
+function fileUniqueId(
   fileUrl: string,
-): string {
+): [string, string] {
   if (fileUrl.startsWith("data:")) {
     const mimeTypes = parseDataUriMimeTypes(fileUrl);
-    return mimeTypes["path"] ?? crypto.randomUUID();
+    const virtualPath = mimeTypes["path"] ?? crypto.randomUUID();
+    return [virtualPath, virtualPath];
   }
-  return btoa(fileUrl);
+  return [btoa(fileUrl), fileUrl];
 }
 
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
@@ -205,17 +206,19 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         const file = schemeable.file
           ? resolvePath ? import.meta.resolve(schemeable.file) : schemeable.file
           : undefined;
+        const friendlyIdFor = (file?: string) =>
+          file && schemeable.name ? `${file}@${schemeable.name}` : undefined;
         if (schemeable.id) {
-          return [schemeable.id, file];
+          return [schemeable.id, friendlyIdFor(file)];
         }
         if (!file) {
           return [undefined, undefined];
         }
-        const fileHash = uniqueIdOfFile(file).replaceAll("/", "-");
+        const [fileHash, actualFileUrl] = fileUniqueId(file);
         const id = schemeable.name
-          ? `${fileHash}@${schemeable.name!}`
+          ? `${fileHash.replaceAll("/", "-")}@${schemeable.name!}`
           : fileHash;
-        return [id, file];
+        return [id, friendlyIdFor(actualFileUrl)];
       };
       const genId = (schemeable: Schemeable) => {
         if (schemeable.name !== undefined) {
@@ -230,11 +233,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         resolvePath = true,
       ): [Schemas["definitions"], string | undefined] => {
         if (schemeable) {
-          const [id, file] = schemeableId(schemeable, resolvePath);
+          const [id, friendlyId] = schemeableId(schemeable, resolvePath);
           const currSchemeable = {
-            friendlyId: file && schemeable.name
-              ? `${file}@${schemeable.name}`
-              : undefined,
+            friendlyId,
             ...schemeable,
             id,
           };
