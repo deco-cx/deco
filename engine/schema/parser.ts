@@ -68,7 +68,7 @@ const initLoader = (): typeof load => {
       const cache = createCache();
       return loader = (specifier) =>
         cache.load(specifier).then((cached) => {
-          const content = (cached as { content: string | Uint8Array }).content;
+          const content = (cached as { content: string | Uint8Array })?.content;
           if (!content) {
             return undefined;
           }

@@ -58,14 +58,19 @@ export const ImportMapBuilder = {
                 new URL(context),
               ) ?? null;
             } catch (err) {
-              console.warn("error when resolving import", err);
+              if (!specifier.startsWith("$live")) { // TODO(mcandeia) we should keep retrocompatbility with $live blocks.
+                console.warn("error when resolving import", err);
+              }
               return null;
             }
           },
         });
       },
       resolve: (specifier: string, context: string) => {
-        for (const resolver of [NATIVE_RESOLVER, ...resolvers]) {
+        const chainedImportResolvers = specifier.startsWith("$live")
+          ? [...resolvers, NATIVE_RESOLVER]
+          : [NATIVE_RESOLVER, ...resolvers];
+        for (const resolver of chainedImportResolvers) {
           const result = resolver.resolve(specifier, context);
 
           if (result !== null) {
