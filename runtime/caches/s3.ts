@@ -11,10 +11,10 @@ import {
     S3Client,
 } from "https://esm.sh/@aws-sdk/client-s3";
 
-const bucketName = Deno.env.get("UPLOAD_BUCKET")!;
-const awsRegion = Deno.env.get("AWS_REGION")!;
-const awsAccessKeyId = Deno.env.get("AWS_ACCESS_KEY_ID")!;
-const awsSecretAccessKey = Deno.env.get("AWS_SECRET_ACCESS_KEY")!;
+const bucketName = Deno.env.get("CACHE_UPLOAD_BUCKET")!;
+const awsRegion = Deno.env.get("CACHE_AWS_REGION")!;
+const awsAccessKeyId = Deno.env.get("CACHE_AWS_ACCESS_KEY_ID")!;
+const awsSecretAccessKey = Deno.env.get("CACHE_AWS_SECRET_ACCESS_KEY")!;
 
 const s3Client = new S3Client({
     region: awsRegion,
