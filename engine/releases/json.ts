@@ -12,6 +12,13 @@ export const getReleaseJSONFromRelease = (
     __resolveType: appName ? `${appName}/apps/decohub.ts` : undefined,
   },
   files: {
+    root: {
+      name: "",
+      nodes: [{
+        name: appName,
+        nodes: [],
+      }],
+    },
     __resolveType: "decohub/apps/files.ts",
   },
   "admin-app": {

@@ -4,10 +4,10 @@
 /// <reference lib="esnext" />
 
 import { start } from "$fresh/server.ts";
+import { AppManifest, ImportMap } from "deco/blocks/app.ts";
 import decoPlugin from "deco/plugins/deco.ts";
 import { join, toFileUrl } from "std/path/mod.ts";
 import { getDecoConfig } from "./config.ts";
-import { AppManifest, SourceMap } from "deco/blocks/app.ts";
 
 const site = Deno.args[0] ?? "playground";
 const { apps = [] } = await getDecoConfig(Deno.cwd());
@@ -18,7 +18,7 @@ const runningApps: AppManifest = {
   apps: {},
 };
 
-const sourceMap: SourceMap = {};
+const importMap: ImportMap = { imports: {} };
 
 for (const app of apps) {
   const appTs = `${site}/apps/${app.name}.ts`;
@@ -27,7 +27,7 @@ for (const app of apps) {
   runningApps.apps![appTs] = await import(
     fileUrl
   );
-  sourceMap[appTs] = fileUrl;
+  importMap.imports[appTs] = fileUrl;
 }
 await start({
   islands: {},
@@ -36,7 +36,7 @@ await start({
 }, {
   plugins: [
     decoPlugin({
-      sourceMap,
+      importMap,
       manifest: runningApps,
       site: { namespace: site },
     }),

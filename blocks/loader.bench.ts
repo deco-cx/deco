@@ -20,9 +20,6 @@ const props = {
   randomBoolean: true,
 };
 
-const smallString = "Hello World";
-const largeString = "Hello World".repeat(1000);
-
 const tests = [props];
 
 Deno.bench("hash", { group: "object-hash" }, () => {

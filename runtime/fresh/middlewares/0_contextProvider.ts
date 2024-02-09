@@ -64,7 +64,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     if (!contextPromise) {
       contextPromise = newContext(
         rootManifest,
-        opt.sourceMap,
+        opt.importMap,
         releaseProvider,
         undefined,
         siteName,

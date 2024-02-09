@@ -1,5 +1,6 @@
 import { InstanceOf, PreactComponent } from "../../engine/block.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
+
 export type SimpleType = {
   name: string;
 };
@@ -60,3 +61,5 @@ export interface ComplexType {
 export interface TypeWithExtendsOmit extends Omit<ComplexType, "jsonLD"> {
   page: number;
 }
+
+export { type MyDataUriType } from "data:text/tsx,export interface MyDataUriType { a: string; };";

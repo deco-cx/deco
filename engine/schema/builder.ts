@@ -139,6 +139,36 @@ const isEntrypoint = (
 ): m is EntrypointModule => {
   return (m as EntrypointModule).key !== undefined;
 };
+/**
+ * Parses the mime type of the given dataUri.
+ * it should follows: https://en.wikipedia.org/wiki/Data_URI_scheme
+ * eg: `data:text/tsx;path=${encodeURIComponent(path)};charset=utf-8;base64,${
+    btoa(modData)
+  }`
+ */
+const parseDataUriMimeTypes = (dataUri: string): Record<string, string> => {
+  const mimeTypes: Record<string, string> = {};
+  const [media, _ignoreContent] = dataUri.split(",");
+  const [_ignoreContentTypeAndData, ...mimeTypesArray] = media.split(";");
+  for (const mimeType of mimeTypesArray) {
+    const [key, value] = mimeType.split("=");
+    if (key && value) {
+      mimeTypes[key] = decodeURIComponent(value);
+    }
+  }
+  return mimeTypes;
+};
+
+function fileUniqueId(
+  fileUrl: string,
+): [string, string] {
+  if (fileUrl.startsWith("data:")) {
+    const mimeTypes = parseDataUriMimeTypes(fileUrl);
+    const virtualPath = mimeTypes["path"] ?? crypto.randomUUID();
+    return [virtualPath, virtualPath];
+  }
+  return [btoa(fileUrl), fileUrl];
+}
 
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
   return {
@@ -176,17 +206,19 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         const file = schemeable.file
           ? resolvePath ? import.meta.resolve(schemeable.file) : schemeable.file
           : undefined;
+        const friendlyIdFor = (file?: string) =>
+          file && schemeable.name ? `${file}@${schemeable.name}` : undefined;
         if (schemeable.id) {
-          return [schemeable.id, file];
+          return [schemeable.id, friendlyIdFor(file)];
         }
         if (!file) {
           return [undefined, undefined];
         }
-        const fileHash = btoa(file).replaceAll("/", "-");
+        const [fileHash, actualFileUrl] = fileUniqueId(file);
         const id = schemeable.name
-          ? `${fileHash}@${schemeable.name!}`
+          ? `${fileHash.replaceAll("/", "-")}@${schemeable.name!}`
           : fileHash;
-        return [id, file];
+        return [id, friendlyIdFor(actualFileUrl)];
       };
       const genId = (schemeable: Schemeable) => {
         if (schemeable.name !== undefined) {
@@ -201,11 +233,9 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         resolvePath = true,
       ): [Schemas["definitions"], string | undefined] => {
         if (schemeable) {
-          const [id, file] = schemeableId(schemeable, resolvePath);
+          const [id, friendlyId] = schemeableId(schemeable, resolvePath);
           const currSchemeable = {
-            friendlyId: file && schemeable.name
-              ? `${file}@${schemeable.name}`
-              : undefined,
+            friendlyId,
             ...schemeable,
             id,
           };

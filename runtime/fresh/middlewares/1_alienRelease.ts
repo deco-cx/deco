@@ -72,10 +72,10 @@ export async function alienRelease(
     );
     if (!contextPromise) {
       const active = Context.active();
-      const { manifest, sourceMap } = await active.runtime!;
+      const { manifest, importMap } = await active.runtime!;
       contextPromise = newContext(
         manifest,
-        sourceMap,
+        importMap,
         fromEndpoint(alienRelease),
         alienRelease,
       );

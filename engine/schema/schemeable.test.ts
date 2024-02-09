@@ -7,6 +7,7 @@
 import { assertEquals, assertObjectMatch, fail } from "std/assert/mod.ts";
 import { dirname, join } from "std/path/mod.ts";
 
+import { ImportMapBuilder } from "deco/engine/importmap/builder.ts";
 import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
 import { assertSpyCall, assertSpyCalls, spy } from "std/testing/mock.ts";
 import { parsePath } from "../../engine/schema/parser.ts";
@@ -24,8 +25,39 @@ const getSchemeableFor = async (
   name: string,
 ): Promise<Schemeable | undefined> => {
   const ast = await parsePath(toFileUrl(path).toString());
-  return await typeNameToSchemeable(name, { path, parsedSource: ast! });
+  return await typeNameToSchemeable(name, {
+    path,
+    parsedSource: ast!,
+    importMapResolver: ImportMapBuilder.new(),
+  });
 };
+
+Deno.test("DataUri type generation", async () => {
+  const transformed = await getSchemeableFor("MyDataUriType");
+  if (!transformed) {
+    fail("MyDataUriType should exists");
+  }
+
+  assertEquals(transformed, {
+    jsDocSchema: {},
+    type: "object",
+    value: {
+      a: {
+        title: "A",
+        jsDocSchema: {},
+        schemeable: {
+          type: "inline",
+          name: "string",
+          value: { type: "string" },
+        },
+        required: true,
+      },
+    },
+    file: "data:text/tsx,export interface MyDataUriType { a: string; };",
+    name: "MyDataUriType",
+    extends: [],
+  });
+});
 
 Deno.test("TypeWithExtendsOmit type generation", async () => {
   const transformed = await getSchemeableFor("TypeWithExtendsOmit");
@@ -77,7 +109,7 @@ Deno.test("Simple type generation", async () => {
     fail("SimpleType should exists");
   }
 
-  const name = Deno.build.os === "windows" ? "tl@157-178" : "tl@155-174";
+  const name = Deno.build.os === "windows" ? "tl@159-180" : "tl@156-175";
   assertEquals(transformed, {
     file: path,
     type: "alias",
@@ -153,7 +185,7 @@ Deno.test("TwoRefsProperties type generation", async () => {
     fail("TwoRefsProperties should exists");
   }
 
-  const name = Deno.build.os === "windows" ? "tl@720-790" : "tl@682-749";
+  const name = Deno.build.os === "windows" ? "tl@722-792" : "tl@683-750";
   assertObjectMatch(transformed, {
     "type": "alias",
     "jsDocSchema": {},
