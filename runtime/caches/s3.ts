@@ -41,10 +41,15 @@ async function putObject(
         Body: JSON.stringify(responseObject),
         Expires: new Date(expiresIn),
     };
+    // console.log(`s3 client: ${JSON.stringify(s3Client)}`);
+    logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
 
     const command = new PutObjectCommand(bucketParams);
+
+    logger.info(`s3 command: ${JSON.stringify(command)}`);
+
     const response = await s3Client.send(command);
-    console.log(
+    logger.info(
         "putobject response status code: ",
         response.$metadata.httpStatusCode,
     );
@@ -57,10 +62,14 @@ async function getObject(key: string) {
         Key: key,
     };
 
+    logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
+
     const command = new GetObjectCommand(bucketParams);
 
+    logger.info(`s3 command: ${JSON.stringify(command)}`);
+
     const response = await s3Client.send(command);
-    console.log(
+    logger.info(
         "getObject response status code: ",
         response.$metadata.httpStatusCode,
     );
@@ -76,7 +85,7 @@ async function deleteObject(key: string) {
     const command = new DeleteObjectCommand(bucketParams);
 
     const response = await s3Client.send(command);
-    console.log(
+    logger.info(
         "deleteObject response status code: ",
         response.$metadata.httpStatusCode,
     );
