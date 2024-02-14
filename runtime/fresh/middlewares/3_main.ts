@@ -83,10 +83,6 @@ export const handler = [
             const route = `${req.method} ${ctx?.state?.pathTemplate}`;
             span.updateName(route);
             span.setAttribute("http.route", route);
-            span.setAttribute(
-              "deco.flags",
-              response?.headers.get(DECO_MATCHER_HEADER_QS) ?? "anonymous",
-            );
             end?.(
               req.method,
               ctx?.state?.pathTemplate,
@@ -174,11 +170,13 @@ export const handler = [
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
     }
 
-    for (const flag of state?.flags ?? []) {
-      newHeaders.append(
-        DECO_MATCHER_HEADER_QS,
-        `${flag.name}=${flag.value ? 1 : 0}`,
-      );
+    if (ctx?.state?.debugEnabled) {
+      for (const flag of state?.flags ?? []) {
+        newHeaders.append(
+          DECO_MATCHER_HEADER_QS,
+          `${flag.name}=${flag.value ? 1 : 0}`,
+        );
+      }
     }
 
     // TODO Put this back when segment was calculated once per session
