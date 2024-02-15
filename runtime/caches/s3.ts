@@ -42,17 +42,17 @@ async function putObject(
         Expires: new Date(expiresIn),
     };
     // console.log(`s3 client: ${JSON.stringify(s3Client)}`);
-    logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
+    // logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
 
     const command = new PutObjectCommand(bucketParams);
 
-    logger.info(`s3 command: ${JSON.stringify(command)}`);
+    // logger.info(`s3 command: ${JSON.stringify(command)}`);
 
     const response = await s3Client.send(command);
-    logger.info(
-        "putobject response status code: ",
-        response.$metadata.httpStatusCode,
-    );
+    // logger.info(
+    //     "putobject response status code: ",
+    //     response.$metadata.httpStatusCode,
+    // );
     return response;
 }
 
@@ -62,17 +62,17 @@ async function getObject(key: string) {
         Key: key,
     };
 
-    logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
+    // logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
 
     const command = new GetObjectCommand(bucketParams);
 
-    logger.info(`s3 command: ${JSON.stringify(command)}`);
+    // logger.info(`s3 command: ${JSON.stringify(command)}`);
 
     const response = await s3Client.send(command);
-    logger.info(
-        "getObject response status code: ",
-        response.$metadata.httpStatusCode,
-    );
+    // logger.info(
+    //     "getObject response status code: ",
+    //     response.$metadata.httpStatusCode,
+    // );
     return response;
 }
 
@@ -85,10 +85,10 @@ async function deleteObject(key: string) {
     const command = new DeleteObjectCommand(bucketParams);
 
     const response = await s3Client.send(command);
-    logger.info(
-        "deleteObject response status code: ",
-        response.$metadata.httpStatusCode,
-    );
+    // logger.info(
+    //     "deleteObject response status code: ",
+    //     response.$metadata.httpStatusCode,
+    // );
     return response;
 }
 
@@ -162,7 +162,10 @@ export const caches: CacheStorage = {
                     },
                 });
                 try {
+                    const startTime = performance.now();
                     const getResponse = await getObject(cacheKey);
+                    logger.info("s3-get execution time: ", performance.now() - startTime, " milliseconds");
+                    span.addEvent("s3-get-response");
                     if (getResponse.Body === undefined) {
                         logger.error(`error when reading from s3, ${getResponse}`);
                         return undefined;
@@ -183,6 +186,7 @@ export const caches: CacheStorage = {
                     const parsedData: ResponseMetadata = typeof data === "string"
                         ? JSON.parse(data)
                         : data;
+                    logger.info("s3-get execution time with parsing: ", performance.now() - startTime, " milliseconds");
                     return new Response(base64decode(parsedData.body), {
                         status: parsedData.status,
                         headers: new Headers(parsedData.headers),
@@ -249,7 +253,7 @@ export const caches: CacheStorage = {
                         const setSpan = tracer.startSpan("s3-set", {
                             attributes: { cacheKey },
                         });
-                        // TODO (@ItamarRocha): change this catch, doesnt suits
+
                         putObject(cacheKey, JSON.stringify(newMeta), expiresIn).catch(
                             (err) => {
                                 console.error("s3 error", err);
