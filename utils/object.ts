@@ -140,9 +140,9 @@ export const buildObj = (
 export const identity = <T>(value: T): T => value;
 
 export const tryOrDefault = <R>(fn: () => R, defaultValue: R) => {
-    try {
-      return fn();
-    } catch {
-      return defaultValue;
-    }
+  try {
+    return fn();
+  } catch {
+    return defaultValue;
+  }
 };

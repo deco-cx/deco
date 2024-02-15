@@ -8,11 +8,11 @@ import { ImportMapBuilder, ImportMapResolver } from "../importmap/builder.ts";
 import {
   BlockModule,
   EntrypointModule,
-  Schemas,
   newSchemaBuilder,
+  Schemas,
 } from "./builder.ts";
 import { parsePath } from "./parser.ts";
-import { ReferenceKey, Schemeable, programToBlockRef } from "./transform.ts";
+import { programToBlockRef, ReferenceKey, Schemeable } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);

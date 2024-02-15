@@ -2,7 +2,7 @@ import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { RequestState } from "../../../blocks/utils.tsx";
 import { Context } from "../../../deco.ts";
-import { SpanStatusCode, getCookies, setCookie } from "../../../deps.ts";
+import { getCookies, setCookie, SpanStatusCode } from "../../../deps.ts";
 import { Resolvable } from "../../../engine/core/resolver.ts";
 import { Apps } from "../../../mod.ts";
 import { startObserve } from "../../../observability/http.ts";
@@ -180,29 +180,35 @@ export const handler = [
       }
     }
 
-    if(state?.flags.length > 0){
+    if (state?.flags.length > 0) {
       const currentCookies = getCookies(req.headers);
-      const segment = currentCookies[DECO_SEGMENT] ? tryOrDefault(() => JSON.parse(decodeURIComponent(atob(currentCookies[DECO_SEGMENT]))), {}) : {};
-      const active = new Set(segment.active || [])
-      const inactiveDrawn = new Set(segment.inactiveDrawn || [])
+      const segment = currentCookies[DECO_SEGMENT]
+        ? tryOrDefault(
+          () =>
+            JSON.parse(decodeURIComponent(atob(currentCookies[DECO_SEGMENT]))),
+          {},
+        )
+        : {};
+      const active = new Set(segment.active || []);
+      const inactiveDrawn = new Set(segment.inactiveDrawn || []);
       for (const flag of state.flags) {
         if (flag.value) {
-          active.add(flag.name)
-          inactiveDrawn.delete(flag.name)
+          active.add(flag.name);
+          inactiveDrawn.delete(flag.name);
         } else {
-          active.delete(flag.name)
-          inactiveDrawn.add(flag.name)
+          active.delete(flag.name);
+          inactiveDrawn.add(flag.name);
         }
       }
       const newSegment = {
         active: [...active].sort(),
         inactiveDrawn: [...inactiveDrawn].sort(),
-      }
-      setCookie(newHeaders, { 
-        name: DECO_SEGMENT, 
+      };
+      setCookie(newHeaders, {
+        name: DECO_SEGMENT,
         value: btoa(encodeURIComponent(JSON.stringify(newSegment))),
-        path: '/',
-      })
+        path: "/",
+      });
     }
 
     const newResponse = new Response(initialResponse.body, {
