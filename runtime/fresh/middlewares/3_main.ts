@@ -2,7 +2,7 @@ import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { RequestState } from "../../../blocks/utils.tsx";
 import { Context } from "../../../deco.ts";
-import { SpanStatusCode } from "../../../deps.ts";
+import { SpanStatusCode, getCookies, setCookie } from "../../../deps.ts";
 import { Resolvable } from "../../../engine/core/resolver.ts";
 import { Apps } from "../../../mod.ts";
 import { startObserve } from "../../../observability/http.ts";
@@ -11,7 +11,7 @@ import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
 
-// const DECO_SEGMENT = "deco_segment";
+const DECO_SEGMENT = "deco_segment";
 
 /**
  * @description Global configurations for ./routes/_middleware.ts route
@@ -179,11 +179,22 @@ export const handler = [
       }
     }
 
-    // TODO Put this back when segment was calculated once per session
-    // const currentCookies = getCookies(req.headers);
-    // const segment = await segmentFor(state, `${url.pathname}${url.search}`);
-    // segment !== currentCookies[DECO_SEGMENT] &&
-    //   setCookie(newHeaders, { name: DECO_SEGMENT, value: segment });
+    if(state?.flags.length > 0){
+      const currentCookies = getCookies(req.headers);
+      const segment = currentCookies[DECO_SEGMENT] ? JSON.parse(decodeURIComponent(currentCookies[DECO_SEGMENT])) : {};
+      const newSegment = {
+        ...segment,
+        [ctx.state.pathTemplate]: state.flags.reduce((acc, flag) => ({
+          ...acc,
+          [flag.name]: flag.value
+        }), {})
+      }
+      setCookie(newHeaders, { 
+        name: DECO_SEGMENT, 
+        value: encodeURIComponent(JSON.stringify(newSegment)),
+        path: '/',
+      })
+    }
 
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,
