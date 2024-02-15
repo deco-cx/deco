@@ -204,11 +204,14 @@ export const handler = [
         active: [...active].sort(),
         inactiveDrawn: [...inactiveDrawn].sort(),
       };
-      setCookie(newHeaders, {
-        name: DECO_SEGMENT,
-        value: btoa(encodeURIComponent(JSON.stringify(newSegment))),
-        path: "/",
-      });
+      const value = btoa(encodeURIComponent(JSON.stringify(newSegment)));
+      if (segment !== value) {
+        setCookie(newHeaders, {
+          name: DECO_SEGMENT,
+          value,
+          path: "/",
+        });
+      }
     }
 
     const newResponse = new Response(initialResponse.body, {
