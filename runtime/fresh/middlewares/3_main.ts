@@ -12,7 +12,7 @@ import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
 import { tryOrDefault } from "deco/utils/object.ts";
 
-const DECO_SEGMENT = "deco_segment";
+export const DECO_SEGMENT = "deco_segment";
 
 /**
  * @description Global configurations for ./routes/_middleware.ts route
