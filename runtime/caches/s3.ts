@@ -164,7 +164,7 @@ export const caches: CacheStorage = {
                 try {
                     const startTime = performance.now();
                     const getResponse = await getObject(cacheKey);
-                    logger.info("s3-get execution time: ", performance.now() - startTime, " milliseconds");
+                    logger.info(`s3-get execution time: ${performance.now() - startTime} milliseconds`);
                     span.addEvent("s3-get-response");
                     if (getResponse.Body === undefined) {
                         logger.error(`error when reading from s3, ${getResponse}`);
@@ -186,7 +186,7 @@ export const caches: CacheStorage = {
                     const parsedData: ResponseMetadata = typeof data === "string"
                         ? JSON.parse(data)
                         : data;
-                    logger.info("s3-get execution time with parsing: ", performance.now() - startTime, " milliseconds");
+                    logger.info(`s3-get execution time with parsing: ${performance.now() - startTime} milliseconds`);
                     return new Response(base64decode(parsedData.body), {
                         status: parsedData.status,
                         headers: new Headers(parsedData.headers),
