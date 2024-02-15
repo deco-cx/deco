@@ -2,7 +2,7 @@ import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { RequestState } from "../../../blocks/utils.tsx";
 import { Context } from "../../../deco.ts";
-import { SpanStatusCode } from "../../../deps.ts";
+import { getCookies, setCookie, SpanStatusCode } from "../../../deps.ts";
 import { Resolvable } from "../../../engine/core/resolver.ts";
 import { Apps } from "../../../mod.ts";
 import { startObserve } from "../../../observability/http.ts";
@@ -10,8 +10,9 @@ import { DecoSiteState, DecoState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
+import { tryOrDefault } from "deco/utils/object.ts";
 
-// const DECO_SEGMENT = "deco_segment";
+const DECO_SEGMENT = "deco_segment";
 
 /**
  * @description Global configurations for ./routes/_middleware.ts route
@@ -179,11 +180,39 @@ export const handler = [
       }
     }
 
-    // TODO Put this back when segment was calculated once per session
-    // const currentCookies = getCookies(req.headers);
-    // const segment = await segmentFor(state, `${url.pathname}${url.search}`);
-    // segment !== currentCookies[DECO_SEGMENT] &&
-    //   setCookie(newHeaders, { name: DECO_SEGMENT, value: segment });
+    if (state?.flags.length > 0) {
+      const currentCookies = getCookies(req.headers);
+      const segment = currentCookies[DECO_SEGMENT]
+        ? tryOrDefault(
+          () =>
+            JSON.parse(decodeURIComponent(atob(currentCookies[DECO_SEGMENT]))),
+          {},
+        )
+        : {};
+      const active = new Set(segment.active || []);
+      const inactiveDrawn = new Set(segment.inactiveDrawn || []);
+      for (const flag of state.flags) {
+        if (flag.value) {
+          active.add(flag.name);
+          inactiveDrawn.delete(flag.name);
+        } else {
+          active.delete(flag.name);
+          inactiveDrawn.add(flag.name);
+        }
+      }
+      const newSegment = {
+        active: [...active].sort(),
+        inactiveDrawn: [...inactiveDrawn].sort(),
+      };
+      const value = btoa(encodeURIComponent(JSON.stringify(newSegment)));
+      if (segment !== value) {
+        setCookie(newHeaders, {
+          name: DECO_SEGMENT,
+          value,
+          path: "/",
+        });
+      }
+    }
 
     const newResponse = new Response(initialResponse.body, {
       status: responseStatus,
