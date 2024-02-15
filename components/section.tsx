@@ -77,43 +77,47 @@ export const withSection = <TProps,>(
   props: TProps,
   ctx: HttpContext<RequestState>,
 ) => {
-  const id = getSectionID(ctx.resolveChain);
+  let renderCount = 0;
+  const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
-
   return {
     props,
-    Component: (props: TProps) => (
-      <SectionContext.Provider value={ctx}>
-        <Partial name={id}>
-          <ErrorBoundary
-            component={resolver}
-            fallback={(error) =>
-              Fallback ? <Fallback error={error} props={props} /> : (
-                <div
-                  style={Context.active().isDeploy && !debugEnabled
-                    ? "display: none"
-                    : undefined}
-                >
-                  <p>
-                    Error happened rendering {resolver}: {error.message}
-                  </p>
+    Component: (props: TProps) => {
+      const id = renderCount === 0 ? idPrefix : `${idPrefix}-${renderCount}`;
+      renderCount++;
+      return (
+        <SectionContext.Provider value={ctx}>
+          <Partial name={id}>
+            <ErrorBoundary
+              component={resolver}
+              fallback={(error) =>
+                Fallback ? <Fallback error={error} props={props} /> : (
+                  <div
+                    style={Context.active().isDeploy && !debugEnabled
+                      ? "display: none"
+                      : undefined}
+                  >
+                    <p>
+                      Error happened rendering {resolver}: {error.message}
+                    </p>
 
-                  <button {...usePartialSection()}>Retry</button>
-                </div>
-              )}
-          >
-            <section
-              id={id}
-              data-manifest-key={resolver}
-              data-resolve-chain={isPreview(ctx.resolveChain)
-                ? JSON.stringify(ctx.resolveChain)
-                : undefined}
+                    <button {...usePartialSection()}>Retry</button>
+                  </div>
+                )}
             >
-              <ComponentFunc {...props} />
-            </section>
-          </ErrorBoundary>
-        </Partial>
-      </SectionContext.Provider>
-    ),
+              <section
+                id={id}
+                data-manifest-key={resolver}
+                data-resolve-chain={isPreview(ctx.resolveChain)
+                  ? JSON.stringify(ctx.resolveChain)
+                  : undefined}
+              >
+                <ComponentFunc {...props} />
+              </section>
+            </ErrorBoundary>
+          </Partial>
+        </SectionContext.Provider>
+      );
+    },
   };
 };
