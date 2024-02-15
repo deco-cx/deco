@@ -10,6 +10,7 @@ import { DecoSiteState, DecoState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
+import { tryOrDefault } from "deco/utils/object.ts";
 
 const DECO_SEGMENT = "deco_segment";
 
@@ -181,17 +182,25 @@ export const handler = [
 
     if(state?.flags.length > 0){
       const currentCookies = getCookies(req.headers);
-      const segment = currentCookies[DECO_SEGMENT] ? JSON.parse(decodeURIComponent(currentCookies[DECO_SEGMENT])) : {};
+      const segment = currentCookies[DECO_SEGMENT] ? tryOrDefault(() => JSON.parse(decodeURIComponent(atob(currentCookies[DECO_SEGMENT]))), {}) : {};
+      const active = new Set(segment.active || [])
+      const inactiveDrawn = new Set(segment.inactiveDrawn || [])
+      for (const flag of state.flags) {
+        if (flag.value) {
+          active.add(flag.name)
+          inactiveDrawn.delete(flag.name)
+        } else {
+          active.delete(flag.name)
+          inactiveDrawn.add(flag.name)
+        }
+      }
       const newSegment = {
-        ...segment,
-        [ctx.state.pathTemplate]: state.flags.reduce((acc, flag) => ({
-          ...acc,
-          [flag.name]: flag.value
-        }), {})
+        active: [...active].sort(),
+        inactiveDrawn: [...inactiveDrawn].sort(),
       }
       setCookie(newHeaders, { 
         name: DECO_SEGMENT, 
-        value: encodeURIComponent(JSON.stringify(newSegment)),
+        value: btoa(encodeURIComponent(JSON.stringify(newSegment))),
         path: '/',
       })
     }
