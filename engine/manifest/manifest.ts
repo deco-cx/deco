@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
+import { dirname } from "std/path/mod.ts";
 import {
   AppManifest,
-  ImportMap,
   MergedAppRuntime,
   mergeManifests,
   mergeRuntimes,
@@ -26,6 +26,7 @@ import {
   ResolverMap,
 } from "../core/resolver.ts";
 import { PromiseOrValue } from "../core/utils.ts";
+import { ImportMapBuilder, ImportMapResolver } from "../importmap/builder.ts";
 import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
@@ -118,10 +119,10 @@ export const initContext = async <
   T extends AppManifest,
 >(
   m: T,
-  currentImportMap?: ImportMap,
+  currentImportMapResolver?: ImportMapResolver,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
-  await fulfillContext(context, m, currentImportMap, release);
+  await fulfillContext(context, m, currentImportMapResolver, release);
 
   if (context.play) {
     console.debug(
@@ -152,10 +153,10 @@ export const initContext = async <
 const installAppsForResolver = async (
   resolver: ReleaseResolver<FreshContext>,
   initialManifest: AppManifest,
-  initialImportMap?: ImportMap,
+  initialImportMap?: ImportMapResolver,
 ) => {
   let manifest = initialManifest;
-  let importMap = initialImportMap;
+  let importMapResolver = initialImportMap ?? ImportMapBuilder.new();
   const fakeCtx = newFakeContext();
   const unresolved: Record<string, Resolvable> = {};
   const allAppsMap: Record<string, Resolvable> = {};
@@ -200,18 +201,17 @@ const installAppsForResolver = async (
       resolvers,
       resolvables = {},
       manifest: mManifest,
-      importMap: appImportMap,
+      importMapResolver: appImportMapResolver,
     } = installedApps
       .filter(Boolean)
       .reduce(
         mergeRuntimes,
       );
     manifest = mergeManifests(mManifest, manifest);
-    importMap = {
-      ...appImportMap,
-      ...importMap,
-      imports: { ...appImportMap?.imports, ...importMap?.imports },
-    };
+    importMapResolver = ImportMapBuilder.new(
+      appImportMapResolver,
+      importMapResolver,
+    );
     currentResolver = currentResolver.with({ resolvers, resolvables });
     return true;
   };
@@ -273,14 +273,19 @@ const installAppsForResolver = async (
       }),
     );
   }
-  return { resolver: currentResolver, apps: allAppsMap, manifest, importMap };
+  return {
+    resolver: currentResolver,
+    apps: allAppsMap,
+    manifest,
+    importMapResolver,
+  };
 };
 export const fulfillContext = <
   T extends AppManifest,
 >(
   ctx: DecoContext,
   m: T,
-  currentImportMap?: ImportMap,
+  currentImportMap?: ImportMapResolver,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
   let currentSite = ctx.site ?? siteName();
@@ -320,18 +325,26 @@ export const fulfillContext = <
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
-    const { resolver: currentResolver, apps: allAppsMap, manifest, importMap } =
-      await installAppsForResolver(
-        resolver,
-        newManifest,
-        currentImportMap,
-      );
+    const {
+      resolver: currentResolver,
+      apps: allAppsMap,
+      manifest,
+      importMapResolver,
+    } = await installAppsForResolver(
+      resolver,
+      newManifest,
+      currentImportMap,
+    );
     const apps: Resolvable[] = Object.values(allAppsMap);
     if (!apps || apps.length === 0) {
       runtimePromise.resolve({
         resolver: currentResolver,
         manifest: newManifest,
-        importMap: currentImportMap ?? buildImportMap(newManifest),
+        importMapResolver: importMapResolver ??
+          ImportMapBuilder.new().mergeWith(
+            buildImportMap(newManifest),
+            dirname(newManifest.baseUrl),
+          ),
       });
       firstInstallAppsPromise.resolve();
       return;
@@ -354,12 +367,9 @@ export const fulfillContext = <
     );
 
     // for who is awaiting for the previous promise
-    const mergedImportMap = {
-      imports: { ...importMap?.imports, ...currentImportMap?.imports ?? {} },
-    };
     const runtime = {
       manifest: mergeManifests(newManifest, manifest),
-      importMap: mergedImportMap,
+      importMapResolver,
       resolver: currentResolver,
     };
     if (runtimePromise.state === "pending") {
@@ -406,7 +416,7 @@ export const newContext = <
   T extends AppManifest,
 >(
   m: T,
-  currentImportMap?: ImportMap,
+  currentImportMapResolver?: ImportMapResolver,
   release: Release | undefined = undefined,
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
@@ -421,7 +431,7 @@ export const newContext = <
     },
   };
 
-  return fulfillContext(ctx, m, currentImportMap, release);
+  return fulfillContext(ctx, m, currentImportMapResolver, release);
 };
 
 export const $live = <T extends AppManifest>(
@@ -461,7 +471,10 @@ export const $live = <T extends AppManifest>(
   context.runtime = Promise.resolve({
     manifest: newManifest,
     resolver,
-    importMap: buildImportMap(newManifest),
+    importMapResolver: ImportMapBuilder.new().mergeWith(
+      buildImportMap(newManifest),
+      dirname(newManifest.baseUrl),
+    ),
   });
   context.instance.readyAt = new Date();
   console.log(

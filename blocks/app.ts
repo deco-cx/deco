@@ -1,5 +1,10 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import { ImportMap } from "deco/engine/importmap/builder.ts";
+import {
+  ImportMap,
+  ImportMapBuilder,
+  ImportMapResolver,
+} from "deco/engine/importmap/builder.ts";
+import { dirname } from "std/path/mod.ts";
 import blocks from "../blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
@@ -22,7 +27,7 @@ import { fnContextFromHttpContext } from "./utils.tsx";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
-export { type ImportMap };
+export { type ImportMap, type ImportMapResolver };
 type MergeAppsManifest<TCurrent extends AppManifest, TDeps> =
   & (TDeps extends [infer TNext, ...infer Rest]
     ? TNext extends App ? MergeAppsManifest<ManifestOf<TNext>, Rest>
@@ -65,7 +70,6 @@ export interface AppBase<
   resolvables?: TResolvableMap;
   manifest: TAppManifest;
   dependencies?: TAppDependencies;
-  importMap?: ImportMap;
 }
 
 export type AppMiddlewareContext<
@@ -96,6 +100,7 @@ export interface App<
   TResolvableMap extends ResolvableMap = ResolvableMap,
 > extends AppBase<TAppManifest, TAppState, TAppDependencies, TResolvableMap> {
   middleware?: AppMiddleware | AppMiddleware[];
+  importMap?: ImportMap;
 }
 
 export interface AppRuntime<
@@ -108,9 +113,13 @@ export interface AppRuntime<
   >,
   TAppDependencies extends (AppRuntime | App)[] = any,
   TAppManifest extends AppManifest = AppManifest,
-> extends AppBase<TAppManifest, TAppState, TAppDependencies, TResolvableMap> {
+> extends
+  Omit<
+    AppBase<TAppManifest, TAppState, TAppDependencies, TResolvableMap>,
+    "importMap"
+  > {
   resolvers: TResolverMap;
-  importMap: ImportMap;
+  importMapResolver: ImportMapResolver;
 }
 
 type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
@@ -135,7 +144,7 @@ export const mergeManifests = (
 
 export type MergedAppRuntime = Pick<
   AppRuntime,
-  "manifest" | "resolvables" | "resolvers" | "importMap"
+  "manifest" | "resolvables" | "resolvers" | "importMapResolver"
 >;
 
 export const mergeRuntimes = <
@@ -145,12 +154,12 @@ export const mergeRuntimes = <
     resolvers: currentResolvers,
     manifest: currentManifest,
     resolvables: currentResolvables,
-    importMap: currentImportMap,
+    importMapResolver: currentImportMapResolver,
   }: TAppRuntime,
-  { resolvers, manifest, resolvables, importMap }: TAppRuntime,
+  { resolvers, manifest, resolvables, importMapResolver }: TAppRuntime,
 ): Pick<
   TAppRuntime,
-  "manifest" | "resolvables" | "resolvers" | "importMap"
+  "manifest" | "resolvables" | "resolvers" | "importMapResolver"
 > => {
   return {
     manifest: mergeManifests(currentManifest, manifest),
@@ -162,12 +171,10 @@ export const mergeRuntimes = <
       ...resolvers,
       ...currentResolvers,
     },
-    importMap: {
-      imports: {
-        ...importMap?.imports ?? {},
-        ...currentImportMap?.imports ?? {},
-      },
-    },
+    importMapResolver: ImportMapBuilder.new(
+      currentImportMapResolver,
+      importMapResolver,
+    ),
   };
 };
 
@@ -286,7 +293,10 @@ const buildRuntimeFromApp = <
     manifest: injectedManifest,
     resolvables,
     dependencies,
-    importMap: appImportMap,
+    importMapResolver: ImportMapBuilder.new().mergeWith(
+      appImportMap,
+      dirname(manifest.baseUrl),
+    ),
   };
 };
 
@@ -386,9 +396,7 @@ const appBlock: Block<AppModule> = {
       return {
         resolvers: {},
         resolvables: {},
-        importMap: {
-          imports: {},
-        },
+        importMapResolver: ImportMapBuilder.new(),
         manifest: {
           baseUrl: import.meta.url,
           name: "",

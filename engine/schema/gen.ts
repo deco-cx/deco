@@ -1,10 +1,10 @@
 import { toFileUrl } from "std/path/mod.ts";
-import { AppManifest, ImportMap } from "../../blocks/app.ts";
+import { AppManifest } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { JSONSchema7 } from "../../deps.ts";
 import { Block, BlockModuleRef } from "../block.ts";
-import { ImportMapBuilder, ImportMapResolver } from "../importmap/builder.ts";
+import { ImportMapResolver } from "../importmap/builder.ts";
 import {
   BlockModule,
   EntrypointModule,
@@ -57,12 +57,11 @@ const resolveImport = (path: string) => {
 
 export const genSchemasFromManifest = async (
   manifest: AppManifest,
+  importMapResolver: ImportMapResolver,
   baseDir?: string,
-  importMap: ImportMap = { imports: {} },
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
   const dir = toFileUrl(baseDir ? baseDir : Deno.cwd()).toString();
-  const importMapResolver = ImportMapBuilder.new().mergeWith(importMap, dir);
 
   const rootWithBlocks: Record<string, JSONSchema7> = blocks().reduce(
     (root, blk) => {

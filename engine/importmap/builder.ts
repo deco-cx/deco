@@ -67,9 +67,7 @@ export const ImportMapBuilder = {
         });
       },
       resolve: (specifier: string, context: string) => {
-        const chainedImportResolvers = specifier.startsWith("$live")
-          ? [...resolvers, NATIVE_RESOLVER]
-          : [NATIVE_RESOLVER, ...resolvers];
+        const chainedImportResolvers = [...resolvers, NATIVE_RESOLVER];
         for (const resolver of chainedImportResolvers) {
           const result = resolver.resolve(specifier, context);
 
@@ -77,6 +75,7 @@ export const ImportMapBuilder = {
             return result;
           }
         }
+        console.log(chainedImportResolvers);
         // should never reach here if the import map is valid
         throw new Error(`${specifier} could not be resolved at ${context}`);
       },
