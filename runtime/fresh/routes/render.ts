@@ -55,8 +55,6 @@ export const handler = async (
   } = fromRequest(req);
 
   const url = new URL(href, req.url);
-  renderSalt !== undefined &&
-    url.searchParams.set("renderSalt", renderSalt);
   const request = new Request(url, req);
   const params = new URLPattern({ pathname: pathTemplate }).exec(url);
 

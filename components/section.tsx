@@ -74,23 +74,22 @@ export const withSection = <TProps,>(
 ) =>
 (
   props: TProps,
-  ctx: HttpContext<RequestState>,
+  ctx: HttpContext<RequestState & { renderSalt?: string }>,
 ) => {
-  const url = new URL(ctx.request.url);
-  const renderSaltFromQS = url.searchParams.get("renderSalt");
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
+  const renderSaltFromState = ctx.context?.state?.renderSalt;
   return {
     props,
     Component: (props: TProps) => {
       // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
       const parentRenderSalt = useContext(SectionContext)?.renderSalt;
-      // if this is the case, so we can use the renderSaltFromQS - which means that we are in a partial rendering phase
+      // if this is the case, so we can use the renderSaltFromState - which means that we are in a partial rendering phase
       const renderSalt = parentRenderSalt === undefined
-        ? renderSaltFromQS ?? ``
-        : `${parentRenderSalt ?? ""}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
-      const id = `${idPrefix}-${renderSalt}${renderCount}`; // all children of the same parent will have the same renderSalt, but different renderCount
+        ? renderSaltFromState ?? `${renderCount}`
+        : `${parentRenderSalt ?? ""}${renderCount}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
+      const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
       renderCount++;
       return (
         <SectionContext.Provider
