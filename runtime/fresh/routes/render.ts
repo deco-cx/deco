@@ -8,6 +8,7 @@ interface Options {
   props: Record<string, unknown>;
   href: string;
   pathTemplate: string;
+  renderCount?: number;
 }
 
 const fromRequest = (req: Request): Options => {
@@ -17,6 +18,7 @@ const fromRequest = (req: Request): Options => {
   const props = params.get("props");
   const href = params.get("href");
   const pathTemplate = params.get("pathTemplate");
+  const renderCount = params.get("renderCount");
 
   if (!resolveChain) {
     throw badRequest({ code: "400", message: "Missing resolve chain" });
@@ -36,6 +38,7 @@ const fromRequest = (req: Request): Options => {
     props: JSON.parse(props),
     href,
     pathTemplate,
+    renderCount: renderCount ? parseInt(renderCount) : undefined,
   };
 };
 
