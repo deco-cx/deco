@@ -29,7 +29,7 @@ export const usePartialSection = <P>(
   const {
     resolveChain,
     request,
-    renderCount,
+    renderSalt,
     context: { state: { pathTemplate } },
   } = ctx;
 
@@ -37,7 +37,7 @@ export const usePartialSection = <P>(
     ["props", JSON.stringify(props)],
     ["href", href ?? request.url],
     ["pathTemplate", pathTemplate],
-    ...renderCount ? [["renderCount", `${renderCount}`]] : [],
+    ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     [
       "resolveChain",
       JSON.stringify(FieldResolver.minify(resolveChain.slice(0, -1))),

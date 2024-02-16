@@ -3,6 +3,7 @@ import { HttpContext } from "deco/blocks/handler.ts";
 import { HttpError } from "deco/engine/errors.ts";
 import { usePartialSection } from "deco/hooks/usePartialSection.ts";
 import { Component, createContext } from "preact";
+import { useContext } from "preact/hooks";
 import { ErrorBoundaryComponent } from "../blocks/section.ts";
 import { RequestState } from "../blocks/utils.tsx";
 import { Context } from "../deco.ts";
@@ -12,7 +13,7 @@ import { FieldResolver } from "../engine/core/resolver.ts";
 import { logger } from "../observability/otel/config.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
-  renderCount?: number;
+  renderSalt?: string;
 }
 
 export const SectionContext = createContext<
@@ -75,16 +76,29 @@ export const withSection = <TProps,>(
   props: TProps,
   ctx: HttpContext<RequestState>,
 ) => {
+  const url = new URL(ctx.request.url);
+  const renderSaltFromQS = url.searchParams.get("renderSalt");
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   return {
     props,
     Component: (props: TProps) => {
-      const id = renderCount === 0 ? idPrefix : `${idPrefix}-${renderCount}`;
+      // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
+      const parentRenderSalt = useContext(SectionContext)?.renderSalt;
+      // if this is the case, so we can use the renderSaltFromQS - which means that we are in a partial rendering phase
+      const renderSalt = parentRenderSalt === undefined
+        ? renderSaltFromQS ?? ``
+        : `${parentRenderSalt ?? ""}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
+      const id = `${idPrefix}-${renderSalt}${renderCount}`; // all children of the same parent will have the same renderSalt, but different renderCount
       renderCount++;
       return (
-        <SectionContext.Provider value={{ ...ctx, renderCount }}>
+        <SectionContext.Provider
+          value={{
+            ...ctx,
+            renderSalt,
+          }}
+        >
           <Partial name={id}>
             <ErrorBoundary
               component={resolver}

@@ -8,7 +8,7 @@ interface Options {
   props: Record<string, unknown>;
   href: string;
   pathTemplate: string;
-  renderCount?: number;
+  renderSalt?: string;
 }
 
 const fromRequest = (req: Request): Options => {
@@ -18,7 +18,7 @@ const fromRequest = (req: Request): Options => {
   const props = params.get("props");
   const href = params.get("href");
   const pathTemplate = params.get("pathTemplate");
-  const renderCount = params.get("renderCount");
+  const renderSalt = params.get("renderSalt");
 
   if (!resolveChain) {
     throw badRequest({ code: "400", message: "Missing resolve chain" });
@@ -38,7 +38,7 @@ const fromRequest = (req: Request): Options => {
     props: JSON.parse(props),
     href,
     pathTemplate,
-    renderCount: renderCount ? parseInt(renderCount) : undefined,
+    renderSalt: renderSalt ?? undefined,
   };
 };
 
@@ -51,9 +51,12 @@ export const handler = async (
     props,
     resolveChain,
     pathTemplate,
+    renderSalt,
   } = fromRequest(req);
 
   const url = new URL(href, req.url);
+  renderSalt !== undefined &&
+    url.searchParams.set("renderSalt", renderSalt);
   const request = new Request(url, req);
   const params = new URLPattern({ pathname: pathTemplate }).exec(url);
 
@@ -75,7 +78,7 @@ export const handler = async (
     request,
     context: {
       ...ctx,
-      state: { ...ctx.state, pathTemplate },
+      state: { ...ctx.state, pathTemplate, renderSalt },
       params: params?.pathname.groups,
     },
   };
