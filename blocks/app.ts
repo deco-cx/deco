@@ -65,7 +65,7 @@ export interface AppBase<
   resolvables?: TResolvableMap;
   manifest: TAppManifest;
   dependencies?: TAppDependencies;
-  importMap?: ImportMap;
+  importMap?: ImportMap | null;
 }
 
 export type AppMiddlewareContext<
@@ -272,9 +272,12 @@ const buildRuntimeFromApp = <
     middleware: appMiddleware,
   }: TApp,
 ): AppRuntime<TContext, TState> => {
-  const appImportMap = Object.keys(importMap?.imports ?? {}).length === 0
-    ? buildImportMap(manifest)
-    : importMap ?? buildImportMap(manifest);
+  let appImportMap = importMap;
+  if (appImportMap === undefined) {
+    appImportMap = buildImportMap(manifest);
+  } else if (appImportMap === null) { // null means explicitly ignore import map generation.
+    appImportMap = { imports: {} };
+  }
   const injectedManifest = injectAppStateOnManifest(state, manifest);
   return {
     resolvers: resolversFrom<AppManifest, TContext, TResolverMap>(
@@ -386,9 +389,7 @@ const appBlock: Block<AppModule> = {
       return {
         resolvers: {},
         resolvables: {},
-        importMap: {
-          imports: {},
-        },
+        importMap: null,
         manifest: {
           baseUrl: import.meta.url,
           name: "",
