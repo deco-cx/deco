@@ -61,7 +61,7 @@ export interface SectionModule<TConfig = any, TProps = any> extends
     PreactComponent
   > {
   Loading?: ComponentType;
-  Error?: ComponentType;
+  Error?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TProps>;
 }
 

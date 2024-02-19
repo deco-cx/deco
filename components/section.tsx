@@ -107,7 +107,7 @@ export const withSection = <TProps,>(
   resolver: string,
   ComponentFunc: ComponentFunc,
   LoadingWrapper?: ComponentType,
-  ErrorWrapper?: ComponentType,
+  ErrorWrapper?: ComponentType<{ error?: Error }>,
 ) =>
 (
   props: TProps,
@@ -137,47 +137,53 @@ export const withSection = <TProps,>(
           }}
         >
           <Partial name={id}>
-            <ErrorBoundary
-              component={resolver}
-              loading={() => (
-                <>
-                  {LoadingWrapper ? <LoadingWrapper /> : <></>}
-                  <button
-                    {...usePartialSection()}
-                    id={id}
-                    style={{ display: "none" }}
-                  />
-                  <script
-                    defer
-                    src={`data:text/javascript;base64,${dataURI(script, id)}`}
-                  />
-                </>
-              )}
-              error={(error) =>
-                ErrorWrapper ? <ErrorWrapper /> : (
-                  <div
-                    style={Context.active().isDeploy && !debugEnabled
-                      ? "display: none"
-                      : undefined}
-                  >
-                    <p>
-                      Error happened rendering {resolver}: {error.message}
-                    </p>
-
-                    <button {...usePartialSection()}>Retry</button>
-                  </div>
-                )}
+            <section
+              id={id}
+              data-manifest-key={resolver}
+              data-resolve-chain={isPreview(ctx.resolveChain)
+                ? JSON.stringify(ctx.resolveChain)
+                : undefined}
             >
-              <section
-                id={id}
-                data-manifest-key={resolver}
-                data-resolve-chain={isPreview(ctx.resolveChain)
-                  ? JSON.stringify(ctx.resolveChain)
-                  : undefined}
+              <ErrorBoundary
+                component={resolver}
+                loading={() => {
+                  const btnId = `${id}-partial-onload`;
+
+                  return (
+                    <>
+                      {LoadingWrapper ? <LoadingWrapper /> : <></>}
+                      <button
+                        {...usePartialSection()}
+                        id={btnId}
+                        style={{ display: "none" }}
+                      />
+                      <script
+                        defer
+                        src={`data:text/javascript;base64,${
+                          dataURI(script, btnId)
+                        }`}
+                      />
+                    </>
+                  );
+                }}
+                error={({ error }) =>
+                  ErrorWrapper ? <ErrorWrapper error={error} /> : (
+                    <div
+                      style={Context.active().isDeploy && !debugEnabled
+                        ? "display: none"
+                        : undefined}
+                    >
+                      <p>
+                        Error happened rendering {resolver}: {error.message}
+                      </p>
+
+                      <button {...usePartialSection()}>Retry</button>
+                    </div>
+                  )}
               >
                 <ComponentFunc {...props} />
-              </section>
-            </ErrorBoundary>
+              </ErrorBoundary>
+            </section>
           </Partial>
         </SectionContext.Provider>
       );
