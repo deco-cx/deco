@@ -1,9 +1,9 @@
 import { CLIENT_NAV_ATTR, PARTIAL_ATTR } from "$fresh/src/constants.ts";
-import { useContext } from "preact/hooks";
-import { ComponentType } from "preact";
+import { SectionContext } from "deco/components/section.tsx";
 import { IS_BROWSER } from "deco/deps.ts";
 import { FieldResolver } from "deco/engine/core/resolver.ts";
-import { SectionContext } from "deco/components/section.tsx";
+import { ComponentType } from "preact";
+import { useContext } from "preact/hooks";
 
 type Options<P> = {
   /** Section props partially applied */
@@ -26,12 +26,18 @@ export const usePartialSection = <P>(
     throw new Error("Missing context in rendering tree");
   }
 
-  const { resolveChain, request, context: { state: { pathTemplate } } } = ctx;
+  const {
+    resolveChain,
+    request,
+    renderSalt,
+    context: { state: { pathTemplate } },
+  } = ctx;
 
   const params = new URLSearchParams([
     ["props", JSON.stringify(props)],
     ["href", href ?? request.url],
     ["pathTemplate", pathTemplate],
+    ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     [
       "resolveChain",
       JSON.stringify(FieldResolver.minify(resolveChain.slice(0, -1))),
