@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { ComponentType } from "preact";
 import { HttpContext } from "../blocks/handler.ts";
 import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
 import { fnContextFromHttpContext, RequestState } from "../blocks/utils.tsx";
@@ -59,9 +60,39 @@ export interface SectionModule<TConfig = any, TProps = any> extends
     ReturnType<ComponentFunc<TProps>>,
     PreactComponent
   > {
-  ErrorBoundary?: ErrorBoundaryComponent<TProps>;
+  LoadingFallback?: ComponentType;
+  ErrorFallback?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TProps>;
 }
+
+const wrapCaughtErrors = async <TProps>(
+  cb: () => Promise<TProps>,
+  props: any,
+) => {
+  try {
+    return await cb();
+  } catch (err) {
+    return Object.fromEntries(
+      Object.keys(props).map((p) => [
+        p,
+        new Proxy({}, {
+          get: (_target, prop) => {
+            if (prop === "__resolveType") {
+              return undefined;
+            }
+            if (prop === "constructor") {
+              return undefined;
+            }
+            if (prop === "__isErr") {
+              return true;
+            }
+            throw err;
+          },
+        }),
+      ]),
+    ) as TProps;
+  }
+};
 
 export const createSectionBlock = (
   wrapper: typeof withSection,
@@ -83,10 +114,11 @@ export const createSectionBlock = (
       TConfig,
       HttpContext<RequestState>
     > => {
-    const componentFunc = wrapper(
+    const componentFunc = wrapper<TProps>(
       resolver,
       mod.default,
-      mod.ErrorBoundary,
+      mod.LoadingFallback,
+      mod.ErrorFallback,
     );
     const loader = mod.loader;
     if (!loader) {
@@ -111,15 +143,16 @@ export const createSectionBlock = (
         ...context,
         state: { ...context.state, $live: props, resolve },
       } as FunctionContext;
-      return componentFunc(
-        await propsLoader(
+
+      const p = await wrapCaughtErrors(() =>
+        propsLoader(
           loader,
           ctx.state.$live,
           request,
           fnContextFromHttpContext(httpCtx),
-        ),
-        httpCtx,
-      );
+        ), props ?? {});
+
+      return componentFunc(p, httpCtx);
     };
   },
   defaultDanglingRecover: (_, ctx) => {

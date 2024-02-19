@@ -64,7 +64,7 @@ export const wrapCaughtErrors = async <
   try {
     return await ctx.next!();
   } catch (err) {
-    return new Proxy(err, {
+    return new Proxy({}, {
       get: (_target, prop) => {
         if (prop === "then") {
           return undefined;
