@@ -60,8 +60,8 @@ export interface SectionModule<TConfig = any, TProps = any> extends
     ReturnType<ComponentFunc<TProps>>,
     PreactComponent
   > {
-  Loading?: ComponentType;
-  Error?: ComponentType<{ error?: Error }>;
+  LoadingFallback?: ComponentType;
+  ErrorFallback?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TProps>;
 }
 
@@ -71,16 +71,23 @@ const wrapCaughtErrors = async <TProps>(
 ) => {
   try {
     return await cb();
-  } catch (e) {
+  } catch (err) {
+    console.log({ err });
     return Object.fromEntries(
       Object.keys(props).map((p) => [
         p,
-        new Proxy(e, {
+        new Proxy({}, {
           get: (_target, prop) => {
+            if (prop === "__resolveType") {
+              return undefined;
+            }
+            if (prop === "constructor") {
+              return undefined;
+            }
             if (prop === "__isErr") {
               return true;
             }
-            throw e;
+            throw err;
           },
         }),
       ]),
@@ -111,8 +118,8 @@ export const createSectionBlock = (
     const componentFunc = wrapper<TProps>(
       resolver,
       mod.default,
-      mod.Loading,
-      mod.Error,
+      mod.LoadingFallback,
+      mod.ErrorFallback,
     );
     const loader = mod.loader;
     if (!loader) {

@@ -106,8 +106,8 @@ const dataURI = (fn: typeof script, id: string) =>
 export const withSection = <TProps,>(
   resolver: string,
   ComponentFunc: ComponentFunc,
-  LoadingWrapper?: ComponentType,
-  ErrorWrapper?: ComponentType<{ error?: Error }>,
+  LoadingFallback?: ComponentType,
+  ErrorFallback?: ComponentType<{ error?: Error }>,
 ) =>
 (
   props: TProps,
@@ -151,7 +151,7 @@ export const withSection = <TProps,>(
 
                   return (
                     <>
-                      {LoadingWrapper ? <LoadingWrapper /> : <></>}
+                      {LoadingFallback ? <LoadingFallback /> : <></>}
                       <button
                         {...usePartialSection()}
                         id={btnId}
@@ -167,7 +167,7 @@ export const withSection = <TProps,>(
                   );
                 }}
                 error={({ error }) =>
-                  ErrorWrapper ? <ErrorWrapper error={error} /> : (
+                  ErrorFallback ? <ErrorFallback error={error} /> : (
                     <div
                       style={Context.active().isDeploy && !debugEnabled
                         ? "display: none"
