@@ -103,6 +103,7 @@ const dataURI = (fn: typeof script, id: string) =>
     }))`,
   );
 
+const MAX_RENDER_COUNT = 5_00; // for saved sections this number should mark a restart.
 export const withSection = <TProps,>(
   resolver: string,
   ComponentFunc: ComponentFunc,
@@ -127,7 +128,7 @@ export const withSection = <TProps,>(
         ? renderSaltFromState ?? `${renderCount}`
         : `${parentRenderSalt ?? ""}${renderCount}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
       const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
-      renderCount++;
+      renderCount = ++renderCount % MAX_RENDER_COUNT;
 
       return (
         <SectionContext.Provider
