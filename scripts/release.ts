@@ -4,6 +4,11 @@ import { format, increment, parse } from "std/semver/mod.ts";
 import { stringifyForWrite } from "../utils/json.ts";
 import { exec } from "./utils.ts";
 
+/**
+ * This script is used to release a new version of the project.
+ * It will bump the version in the `meta.json` file and create a new tag.
+ */
+
 await exec("git fetch --tags");
 
 const exists = async (dir: string): Promise<boolean> => {
