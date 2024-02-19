@@ -84,7 +84,7 @@ export const decoManifestBuilder = async (
     let totalBlocks = 0;
     const blockDir = join(dir, blk.type);
 
-    // for stabilizy purposes we need to sort paths first.
+    // for stability purposes we need to sort paths first.
     const paths: string[] = [];
     for await (
       const entry of walker(blockDir)
