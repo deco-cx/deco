@@ -220,7 +220,11 @@ export const stringify = ({
 // This file SHOULD be checked into source version control.
 // This file is automatically updated during development when running \`dev.ts\`.
 
-${Object.entries(imports).map(stringifyImport).join("\n")}
+${
+    Object.entries(imports).toSorted(([fromA], [fromB]) =>
+      fromA.localeCompare(fromB)
+    ).map(stringifyImport).join("\n")
+  }
 
 const manifest = ${stringifyObj(manifest, false)}
 
