@@ -2,9 +2,8 @@ import { Partial } from "$fresh/runtime.ts";
 import { HttpContext } from "deco/blocks/handler.ts";
 import { HttpError } from "deco/engine/errors.ts";
 import { usePartialSection } from "deco/hooks/usePartialSection.ts";
-import { Component, createContext } from "preact";
+import { Component, ComponentType, createContext } from "preact";
 import { useContext } from "preact/hooks";
-import { ErrorBoundaryComponent } from "../blocks/section.ts";
 import { RequestState } from "../blocks/utils.tsx";
 import { Context } from "../deco.ts";
 import { Murmurhash3 } from "../deps.ts";
@@ -39,11 +38,20 @@ export const getSectionID = (resolveChain: FieldResolver[]) => {
 const isPreview = ([head]: FieldResolver[]) =>
   head?.type === "resolver" && head?.value === "preview";
 
-export class ErrorBoundary
-  extends Component<{ fallback: ComponentFunc<any>; component: string }> {
+interface BoundaryProps {
+  error: ComponentFunc<{ error: Error }>;
+  loading: ComponentFunc;
+  component: string;
+}
+
+interface BoundaryState {
+  error: Promise<Error> | Error | null;
+}
+
+export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   state = { error: null };
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: Error) {
     if (error instanceof HttpError) {
       throw error;
     }
@@ -51,26 +59,55 @@ export class ErrorBoundary
   }
 
   render() {
-    if (this.state.error) {
-      const err = this?.state?.error as Error;
-      const msg = `rendering: ${this.props.component} ${err?.stack}`;
-      logger.error(
-        msg,
-      );
-      console.error(
-        msg,
-      );
+    const error = this.state.error as any;
+    const { loading: Loading, error: Error, children } = this.props;
+
+    const mode = error?.name === "AbortError"
+      ? "loading"
+      : error
+      ? "error"
+      : "children";
+
+    if (mode === "error") {
+      const msg = `rendering: ${this.props.component} ${
+        (error as Error)?.stack
+      }`;
+      logger.error(msg);
+      console.error(msg);
     }
-    return this.state.error
-      ? this.props.fallback(this.state.error)
-      : this.props.children;
+
+    if (mode === "loading") {
+      return <Loading />;
+    }
+
+    if (mode === "error") {
+      return <Error error={error} />;
+    }
+
+    return <>{children}</>;
   }
 }
+
+const script = (id: string) => {
+  if (document.readyState === "complete") {
+    document.getElementById(id)?.click();
+  } else {
+    addEventListener("load", () => document.getElementById(id)?.click());
+  }
+};
+
+const dataURI = (fn: typeof script, id: string) =>
+  btoa(
+    `decodeURIComponent(escape(${
+      unescape(encodeURIComponent(`((${fn})("${id}"))`))
+    }))`,
+  );
 
 export const withSection = <TProps,>(
   resolver: string,
   ComponentFunc: ComponentFunc,
-  Fallback?: ErrorBoundaryComponent<TProps>,
+  LoadingWrapper?: ComponentType,
+  ErrorWrapper?: ComponentType,
 ) =>
 (
   props: TProps,
@@ -91,6 +128,7 @@ export const withSection = <TProps,>(
         : `${parentRenderSalt ?? ""}${renderCount}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
       const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
       renderCount++;
+
       return (
         <SectionContext.Provider
           value={{
@@ -101,8 +139,22 @@ export const withSection = <TProps,>(
           <Partial name={id}>
             <ErrorBoundary
               component={resolver}
-              fallback={(error) =>
-                Fallback ? <Fallback error={error} props={props} /> : (
+              loading={() => (
+                <>
+                  {LoadingWrapper ? <LoadingWrapper /> : <></>}
+                  <button
+                    {...usePartialSection()}
+                    id={id}
+                    style={{ display: "none" }}
+                  />
+                  <script
+                    defer
+                    src={`data:text/javascript;base64,${dataURI(script, id)}`}
+                  />
+                </>
+              )}
+              error={(error) =>
+                ErrorWrapper ? <ErrorWrapper /> : (
                   <div
                     style={Context.active().isDeploy && !debugEnabled
                       ? "display: none"

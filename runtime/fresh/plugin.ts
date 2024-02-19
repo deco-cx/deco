@@ -1,3 +1,5 @@
+import "../../utils/fetch.ts";
+
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { PluginRoute } from "$fresh/src/server/types.ts";
 import { ImportMap } from "../../blocks/app.ts";

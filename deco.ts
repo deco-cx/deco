@@ -4,6 +4,8 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
+import "./utils/fetch.ts";
+
 import { AsyncLocalStorage } from "node:async_hooks";
 import { ImportMap } from "./blocks/app.ts";
 import { ReleaseResolver } from "./engine/core/mod.ts";
@@ -24,6 +26,11 @@ export interface InstanceInfo {
   readyAt?: Date;
 }
 
+export type RequestContext = {
+  /** Cancelation token used for early processing halt */
+  signal?: AbortSignal;
+};
+
 // The global deco context
 export type DecoContext = {
   deploymentId: string | undefined;
@@ -37,6 +44,7 @@ export type DecoContext = {
   runtime?: Promise<DecoRuntimeState>;
   play?: boolean;
   instance: InstanceInfo;
+  request?: RequestContext;
 };
 
 const defaultContext: Omit<DecoContext, "schema"> = {
@@ -51,13 +59,13 @@ const defaultContext: Omit<DecoContext, "schema"> = {
   },
 };
 
-const asyncLocalStorage = new AsyncLocalStorage();
+const asyncLocalStorage = new AsyncLocalStorage<DecoContext>();
 
 export const Context = {
   // Function to retrieve the active context
   active: (): DecoContext => {
     // Retrieve the context associated with the async ID
-    return (asyncLocalStorage.getStore() as DecoContext) ?? defaultContext;
+    return asyncLocalStorage.getStore() ?? defaultContext;
   },
   bind: <R, TArgs extends unknown[]>(
     ctx: DecoContext,
@@ -66,6 +74,19 @@ export const Context = {
     return (...args: TArgs): R => {
       return asyncLocalStorage.run(ctx, f, ...args);
     };
+  },
+};
+
+export const RequestContext = {
+  active: () => Context.active().request,
+  bind: <R, TArgs extends unknown[]>(
+    request: RequestContext,
+    f: (...args: TArgs) => R,
+  ): (...args: TArgs) => R => {
+    return Context.bind({ ...Context.active(), request }, f);
+  },
+  get signal() {
+    return Context.active().request?.signal;
   },
 };
 
