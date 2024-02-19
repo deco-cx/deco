@@ -1,4 +1,6 @@
 import { logger, tracer } from "../../observability/otel/config.ts";
+import { meter } from "../../observability/otel/metrics.ts";
+import { ValueType } from "../../deps.ts";
 import {
     assertCanBeCached,
     assertNoOptions,
@@ -10,6 +12,17 @@ import {
     PutObjectCommand,
     S3Client,
 } from "https://esm.sh/@aws-sdk/client-s3";
+import {
+    compress,
+    decompress,
+    init as initZstd,
+} from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
+
+const MAX_CHUNK_SIZE = 64512; // need to change later on
+const MAX_CHUNKS_BATCH_SIZE = 10;
+const MAX_UNCOMPRESSED_SIZE = MAX_CHUNK_SIZE * MAX_CHUNKS_BATCH_SIZE;
+
+const zstdPromise = initZstd();
 
 const bucketName = Deno.env.get("CACHE_UPLOAD_BUCKET")!;
 const awsRegion = Deno.env.get("CACHE_AWS_REGION")!;
@@ -24,15 +37,50 @@ const s3Client = new S3Client({
     },
 });
 
-interface ResponseMetadata {
-    body: string;
+const downloadDuration = meter.createHistogram("s3_download_duration", {
+    description: "s3 download duration",
+    unit: "ms",
+    valueType: ValueType.DOUBLE,
+});
+
+const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
+    description: "Sum of buffer sizes",
+    unit: "1",
+    valueType: ValueType.INT,
+});
+
+const compressDuration = meter.createHistogram("zstd_compress_duration", {
+    description: "compress duration",
+    unit: "ms",
+    valueType: ValueType.DOUBLE,
+});
+
+interface Metadata {
+    body: {
+        etag: string; // body version
+        buffer: Uint8Array; // buffer with compressed data
+        zstd: boolean;
+    };
     status: number;
     headers: [string, string][];
 }
 
+function bufferToObject(buffer: { [key: string]: number } | Uint8Array): Uint8Array {
+    if (buffer instanceof Uint8Array) {
+        return buffer;
+    }
+
+    const length = Object.keys(buffer).length;
+    const array = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+        array[i] = buffer[i.toString()];
+    }
+    return array;
+}
+
 async function putObject(
     key: string,
-    responseObject: string,
+    responseObject: Metadata,
     expiresIn: number,
 ) {
     const bucketParams = {
@@ -115,8 +163,10 @@ export const caches: CacheStorage = {
     ): Promise<Response | undefined> => {
         throw new Error("Not Implemented");
     },
-    open: (cacheName: string): Promise<Cache> => {
+    open: async (cacheName: string): Promise<Cache> => {
+        await zstdPromise;
         const requestURLSHA1 = withCacheNamespace(cacheName);
+
         return Promise.resolve({
             /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
             add: (_request: RequestInfo | URL): Promise<void> => {
@@ -164,33 +214,36 @@ export const caches: CacheStorage = {
                 try {
                     const startTime = performance.now();
                     const getResponse = await getObject(cacheKey);
+
                     logger.info(`s3-get execution time: ${performance.now() - startTime} milliseconds`);
                     span.addEvent("s3-get-response");
                     if (getResponse.Body === undefined) {
                         logger.error(`error when reading from s3, ${getResponse}`);
                         return undefined;
                     }
-                    const data = JSON.parse(await getResponse.Body.transformToString());
+                    const data = await getResponse.Body.transformToString();
+                    downloadDuration.record(performance.now() - startTime, {
+                        bufferSize: data.length,
+                    });
+                    logger.info(`s3-get execution after transformToString: ${performance.now() - startTime} milliseconds`);
+
                     if (data === null) {
                         span.addEvent("cache-miss");
                         return undefined;
                     }
                     span.addEvent("cache-hit");
-                    if (data instanceof Error) {
-                        logger.error(
-                            `error when reading from s3, ${data.toString()}`,
-                        );
-                        return undefined;
-                    }
 
-                    const parsedData: ResponseMetadata = typeof data === "string"
+                    const parsedData: Metadata = typeof data === "string"
                         ? JSON.parse(data)
                         : data;
+                    parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
                     logger.info(`s3-get execution time with parsing: ${performance.now() - startTime} milliseconds`);
-                    return new Response(base64decode(parsedData.body), {
-                        status: parsedData.status,
-                        headers: new Headers(parsedData.headers),
-                    });
+                    // console.log(`data: ${JSON.stringify(parsedData)}`);
+                    // console.log(`data buffer len: ${Object.keys(parsedData.body.buffer).length}`);
+                    // console.log(`decompressed string: ${JSON.stringify(parsedData.body.buffer)}`);
+
+                    return new Response(parsedData.body.zstd ? decompress(parsedData.body.buffer) : parsedData.body.buffer, parsedData
+                    );
                 } catch (err) {
                     span.recordException(err);
                     throw err;
@@ -218,6 +271,27 @@ export const caches: CacheStorage = {
                 }
 
                 const cacheKey = await requestURLSHA1(request);
+                const [buffer, zstd] = await response.arrayBuffer()
+                    .then((buffer) => new Uint8Array(buffer))
+                    .then((buffer) => {
+                        // bufferSizeSumObserver.add(buffer.length);
+                        return buffer;
+                    })
+                    .then((buffer) => {
+                        console.log('buffer length: ', buffer.length);
+                        if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
+                            const start = performance.now();
+                            const compressed = compress(buffer, 4);
+                            compressDuration.record(performance.now() - start, {
+                                bufferSize: buffer.length,
+                                compressedSize: compressed.length,
+                            });
+                            console.log('compressed time: ', performance.now() - start);
+                            return [compressed, true] as const;
+                        }
+                        return [buffer, false] as const;
+                    });
+
                 const span = tracer.startSpan("s3-put", {
                     attributes: {
                         cacheKey,
@@ -242,9 +316,9 @@ export const caches: CacheStorage = {
                         return;
                     }
 
-                    response.text().then(base64encode).then((body) => {
-                        const newMeta: ResponseMetadata = {
-                            body,
+                    try {
+                        const newMeta: Metadata = {
+                            body: { etag: crypto.randomUUID(), buffer, zstd },
                             status: response.status,
                             headers: [...response.headers.entries()],
                         };
@@ -254,7 +328,7 @@ export const caches: CacheStorage = {
                             attributes: { cacheKey },
                         });
 
-                        putObject(cacheKey, JSON.stringify(newMeta), expiresIn).catch(
+                        putObject(cacheKey, newMeta, expiresIn).catch(
                             (err) => {
                                 console.error("s3 error", err);
                                 setSpan.recordException(err);
@@ -262,9 +336,9 @@ export const caches: CacheStorage = {
                         ).finally(() => {
                             setSpan.end();
                         }); // do not await for setting cache
-                    }).catch((err) => {
-                        logger.error(`error saving to s3 ${err?.message}`);
-                    });
+                    } catch (error) {
+                        logger.error(`error saving to s3 ${error?.message}`);
+                    }
                 } catch (err) {
                     span.recordException(err);
                     throw err;
