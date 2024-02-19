@@ -1,4 +1,5 @@
-import { UAParser } from "https://esm.sh/ua-parser-js@1.0.35";
+import { UAParser } from "https://esm.sh/ua-parser-js@2.0.0-beta.2";
+import { Bots } from "https://esm.sh/ua-parser-js@2.0.0-beta.2/extensions";
 
 /**
  * @title {{{.}}}
@@ -29,4 +30,20 @@ export const deviceOf = (request: Request) => {
   const normalizedDevice = ideviceToDevice[device] ?? "desktop";
 
   return normalizedDevice;
+};
+
+const UABotParser = new UAParser(Bots);
+
+export const isBot = (req: Request) => {
+  const fromCloudFlare = req.headers.get("cf-verified-bot");
+
+  if (fromCloudFlare === "true") {
+    return true;
+  }
+
+  const ua = req.headers.get("user-agent") || "";
+  const browser = UABotParser.setUA(ua).getBrowser() as unknown as {
+    type: string;
+  };
+  return browser.type === "bot";
 };

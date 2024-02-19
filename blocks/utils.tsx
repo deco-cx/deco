@@ -14,7 +14,7 @@ import { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
 import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { Flag } from "../types.ts";
-import { Device, deviceOf } from "../utils/device.ts";
+import { Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { type InvocationProxy } from "../utils/invoke.types.ts";
 import { HttpContext } from "./handler.ts";
@@ -84,6 +84,7 @@ export type FnContext<
   TManifest extends AppManifest = AppManifest,
 > = TState & RequestState & {
   device: Device;
+  isBot: boolean;
   resolverId?: string;
   monitoring?: Monitoring;
   get: ResolveFunc;
@@ -113,6 +114,7 @@ export const fnContextFromHttpContext = <TState = {}>(
   ctx: AppHttpContext,
 ): FnContext<TState> => {
   let device: Device | null = null;
+  let isBot: boolean | null = null;
   return {
     ...ctx?.context?.state?.global,
     resolverId: ctx.resolverId,
@@ -126,6 +128,9 @@ export const fnContextFromHttpContext = <TState = {}>(
     }),
     get device() {
       return device ??= deviceOf(ctx.request);
+    },
+    get isBot() {
+      return isBot ??= isUABot(ctx.request);
     },
   };
 };
