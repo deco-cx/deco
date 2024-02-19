@@ -72,7 +72,6 @@ const wrapCaughtErrors = async <TProps>(
   try {
     return await cb();
   } catch (err) {
-    console.log({ err });
     return Object.fromEntries(
       Object.keys(props).map((p) => [
         p,
