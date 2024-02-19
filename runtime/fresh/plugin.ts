@@ -1,4 +1,4 @@
-import "../../utils/fetch.ts";
+import "../../utils/patched_fetch.ts";
 
 import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
 import { PluginRoute } from "$fresh/src/server/types.ts";

@@ -4,7 +4,7 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import "./utils/fetch.ts";
+import "./utils/patched_fetch.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import { ImportMap } from "./blocks/app.ts";
