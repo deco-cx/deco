@@ -35,6 +35,7 @@ const s3Client = new S3Client({
         accessKeyId: awsAccessKeyId,
         secretAccessKey: awsSecretAccessKey,
     },
+    useAccelerateEndpoint: true,
 });
 
 const downloadDuration = meter.createHistogram("s3_download_duration", {
