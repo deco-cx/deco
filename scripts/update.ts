@@ -1,10 +1,10 @@
+import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
+import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
-import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
-import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import { stringifyForWrite } from "../utils/json.ts";
 
 // map of `packageAlias` to `packageRepo`
@@ -59,6 +59,13 @@ async function update() {
         const latestVersion = eligibleLatestVersion(versions);
 
         if (!latestVersion) {
+          return;
+        }
+
+        if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
+          console.log(
+            `Skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
+          );
           return;
         }
 
