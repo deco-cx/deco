@@ -104,6 +104,12 @@ const main = () => {
         "pathTemplate",
         encodeURIComponent(globalThis.window.LIVE.page.pathTemplate || "/*"),
       );
+      
+      if (event.ctrlKey && event.key === ".") {
+        globalThis.window.open(href, "_blank");
+        return;
+      }
+      
       globalThis.window.location.href = `${href}`;
     }
   };
