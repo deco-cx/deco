@@ -65,6 +65,13 @@ async function update() {
           return;
         }
 
+        if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
+          console.log(
+            `Skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
+          );
+          return;
+        }
+
         if (currentVersion !== latestVersion) {
           console.info(
             `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
