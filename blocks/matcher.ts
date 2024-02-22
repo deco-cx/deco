@@ -1,7 +1,7 @@
 import { HttpContext } from "../blocks/handler.ts";
-import { Murmurhash3, getCookies, setCookie } from "../deps.ts";
+import { getCookies, Murmurhash3, setCookie } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
-import { type Device } from '../utils/userAgent.ts';
+import { type Device } from "../utils/userAgent.ts";
 import { RequestState } from "./utils.tsx";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;

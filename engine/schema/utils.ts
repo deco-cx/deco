@@ -31,6 +31,8 @@ export const parseJSDocAttribute = (key: string, value: string) => {
           return true;
         case "false":
           return false;
+        case "null":
+          return null;
         default:
           return !Number.isNaN(+value) ? +value : value;
       }
