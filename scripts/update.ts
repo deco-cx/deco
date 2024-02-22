@@ -1,4 +1,5 @@
 import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
+import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
@@ -6,6 +7,7 @@ import {
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { stringifyForWrite } from "../utils/json.ts";
+
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
@@ -64,7 +66,7 @@ async function update() {
 
         if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
           console.log(
-            `Skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
+            colors.yellow(`skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`),
           );
           return;
         }
