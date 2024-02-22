@@ -206,3 +206,13 @@ export const allowCorsForOrigin = (
 });
 
 export { readFromStream } from "../clients/withManifest.ts";
+
+export const forceHttps = (req: Request) => {
+  let httpsReq = req;
+  if (req.url.startsWith("http:") && !req.url.includes("localhost")) {
+    const url = new URL(req.url);
+    url.protocol = "https:";
+    httpsReq = new Request(url, req);
+  }
+  return httpsReq;
+};
