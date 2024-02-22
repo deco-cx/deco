@@ -5,7 +5,7 @@ import { Context } from "../deco.ts";
 import { TsType, TsTypeReference } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
-import { Device, deviceOf } from '../utils/userAgent.ts';
+import { Device, deviceOf } from "../utils/userAgent.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<TVariant = unknown> {

@@ -100,7 +100,7 @@ export const commentsFromSpannable = (item: any) => {
  */
 const commentsToJSONSchema = (comments: Comment[]): JSONSchema7 => {
   const jsdocRegex = /@(\w+)\s+([^\n@]+)/g;
-  const jsDoc: Record<string, number | string | boolean | string[]> = {};
+  const jsDoc: Record<string, null | number | string | boolean | string[]> = {};
 
   for (const comment of comments) {
     let match;
