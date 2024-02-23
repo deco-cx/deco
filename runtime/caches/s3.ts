@@ -24,8 +24,8 @@ const MAX_UNCOMPRESSED_SIZE = MAX_CHUNK_SIZE * MAX_CHUNKS_BATCH_SIZE;
 
 const zstdPromise = initZstd();
 
-const bucketName = "s3-express-cache-deco--use1-az4--x-s3";
-const awsRegion = "us-east-1";
+const bucketName = Deno.env.get("CACHE_UPLOAD_BUCKET");
+const awsRegion = Deno.env.get("CACHE_AWS_REGION");
 const awsAccessKeyId = Deno.env.get("CACHE_AWS_ACCESS_KEY_ID")!;
 const awsSecretAccessKey = Deno.env.get("CACHE_AWS_SECRET_ACCESS_KEY")!;
 
