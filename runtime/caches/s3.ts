@@ -89,18 +89,10 @@ async function putObject(
         Body: JSON.stringify(responseObject),
         Expires: new Date(expiresIn),
     };
-    // console.log(`s3 client: ${JSON.stringify(s3Client)}`);
-    // logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
 
     const command = new PutObjectCommand(bucketParams);
-
-    // logger.info(`s3 command: ${JSON.stringify(command)}`);
-
     const response = await s3Client.send(command);
-    // logger.info(
-    //     "putobject response status code: ",
-    //     response.$metadata.httpStatusCode,
-    // );
+
     return response;
 }
 
@@ -110,17 +102,9 @@ async function getObject(key: string) {
         Key: key,
     };
 
-    // logger.info(`s3 bucketName: ${bucketName}\nawsRegion: ${awsRegion}\nawsAccessKeyId: ${Boolean(awsAccessKeyId)}\nawsSecretAccessKey: ${Boolean(awsSecretAccessKey)}`)
-
     const command = new GetObjectCommand(bucketParams);
-
-    // logger.info(`s3 command: ${JSON.stringify(command)}`);
-
     const response = await s3Client.send(command);
-    // logger.info(
-    //     "getObject response status code: ",
-    //     response.$metadata.httpStatusCode,
-    // );
+
     return response;
 }
 
@@ -131,22 +115,11 @@ async function deleteObject(key: string) {
     };
 
     const command = new DeleteObjectCommand(bucketParams);
-
     const response = await s3Client.send(command);
-    // logger.info(
-    //     "deleteObject response status code: ",
-    //     response.$metadata.httpStatusCode,
-    // );
+
     return response;
 }
 
-function base64encode(str: string): string {
-    return btoa(encodeURIComponent(str));
-}
-
-function base64decode(str: string): string {
-    return decodeURIComponent(atob(str));
-}
 export const caches: CacheStorage = {
     delete: (_cacheName: string): Promise<boolean> => {
         throw new Error("Not Implemented");
@@ -241,7 +214,7 @@ export const caches: CacheStorage = {
                     // console.log(`data: ${JSON.stringify(parsedData)}`);
                     // console.log(`data buffer len: ${Object.keys(parsedData.body.buffer).length}`);
                     // console.log(`decompressed string: ${JSON.stringify(parsedData.body.buffer)}`);
-
+                    console.log("parseddata zstd: ", parsedData.body.zstd);
                     return new Response(parsedData.body.zstd ? decompress(parsedData.body.buffer) : parsedData.body.buffer, parsedData
                     );
                 } catch (err) {
@@ -274,7 +247,7 @@ export const caches: CacheStorage = {
                 const [buffer, zstd] = await response.arrayBuffer()
                     .then((buffer) => new Uint8Array(buffer))
                     .then((buffer) => {
-                        // bufferSizeSumObserver.add(buffer.length);
+                        bufferSizeSumObserver.add(buffer.length);
                         return buffer;
                     })
                     .then((buffer) => {
