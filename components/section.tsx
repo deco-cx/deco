@@ -91,33 +91,25 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 const script = (id: string) => {
   function init() {
     const elem = document.getElementById(id);
+    const parent = elem?.parentElement;
 
-    if (elem == null) {
+    if (elem == null || parent == null) {
+      console.error(
+        `Missing element of id ${id} or its parent element. Async rendering will NOT work properly`,
+      );
       return;
     }
-
-    function click() {
-      const elem = document.getElementById(id);
-
-      if (elem == null) {
-        return;
-      }
-
-      elem.click();
-    }
-
-    addEventListener("scroll", click, { once: true });
 
     const observeAndClose = (e: IntersectionObserverEntry[]) => {
       e.forEach((entry) => {
         if (entry.isIntersecting) {
-          click();
+          elem.click();
           observer.disconnect();
         }
       });
     };
     const observer = new IntersectionObserver(observeAndClose);
-    observer.observe(elem.parentElement!);
+    observer.observe(parent);
     observeAndClose(observer.takeRecords());
   }
 
