@@ -26,6 +26,7 @@ const bucketName = Deno.env.get("CACHE_UPLOAD_BUCKET");
 const awsRegion = Deno.env.get("CACHE_AWS_REGION");
 const awsAccessKeyId = Deno.env.get("CACHE_AWS_ACCESS_KEY_ID")!;
 const awsSecretAccessKey = Deno.env.get("CACHE_AWS_SECRET_ACCESS_KEY")!;
+const awsEndpoint = Deno.env.get("CACHE_AWS_ENDPOINT");
 
 const s3Client = new S3Client({
   region: awsRegion,
@@ -34,6 +35,7 @@ const s3Client = new S3Client({
     secretAccessKey: awsSecretAccessKey,
   },
   useAccelerateEndpoint: true,
+  endpoint: awsEndpoint,
 });
 
 const downloadDuration = meter.createHistogram("s3_download_duration", {
