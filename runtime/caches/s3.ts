@@ -121,185 +121,193 @@ async function deleteObject(key: string) {
   return response;
 }
 
-export const caches: CacheStorage = {
-  delete: (_cacheName: string): Promise<boolean> => {
-    throw new Error("Not Implemented");
-  },
-  has: (_cacheName: string): Promise<boolean> => {
-    throw new Error("Not Implemented");
-  },
-  keys: (): Promise<string[]> => {
-    throw new Error("Not Implemented");
-  },
-  match: (
-    _request: URL | RequestInfo,
-    _options?: MultiCacheQueryOptions | undefined,
-  ): Promise<Response | undefined> => {
-    throw new Error("Not Implemented");
-  },
-  open: async (cacheName: string): Promise<Cache> => {
-    await zstdPromise;
-    const requestURLSHA1 = withCacheNamespace(cacheName);
+function createS3Caches(): CacheStorage {
+  const caches: CacheStorage = {
+    delete: (_cacheName: string): Promise<boolean> => {
+      throw new Error("Not Implemented");
+    },
+    has: (_cacheName: string): Promise<boolean> => {
+      throw new Error("Not Implemented");
+    },
+    keys: (): Promise<string[]> => {
+      throw new Error("Not Implemented");
+    },
+    match: (
+      _request: URL | RequestInfo,
+      _options?: MultiCacheQueryOptions | undefined,
+    ): Promise<Response | undefined> => {
+      throw new Error("Not Implemented");
+    },
+    open: async (cacheName: string): Promise<Cache> => {
+      await zstdPromise;
+      const requestURLSHA1 = withCacheNamespace(cacheName);
 
-    return Promise.resolve({
-      /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
-      add: (_request: RequestInfo | URL): Promise<void> => {
-        throw new Error("Not Implemented");
-      },
-      /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/addAll) */
-      addAll: (_requests: RequestInfo[]): Promise<void> => {
-        throw new Error("Not Implemented");
-      },
-      /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/delete) */
-      delete: async (
-        request: RequestInfo | URL,
-        options?: CacheQueryOptions,
-      ): Promise<boolean> => {
-        assertNoOptions(options);
+      return Promise.resolve({
+        /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
+        add: (_request: RequestInfo | URL): Promise<void> => {
+          throw new Error("Not Implemented");
+        },
+        /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/addAll) */
+        addAll: (_requests: RequestInfo[]): Promise<void> => {
+          throw new Error("Not Implemented");
+        },
+        /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/delete) */
+        delete: async (
+          request: RequestInfo | URL,
+          options?: CacheQueryOptions,
+        ): Promise<boolean> => {
+          assertNoOptions(options);
 
-        const deleteResponse = await deleteObject(
-          await requestURLSHA1(request),
-        );
-        if (deleteResponse.$metadata.httpStatusCode === undefined) {
-          return false;
-        }
-        return deleteResponse.$metadata.httpStatusCode == 204;
-      },
-      /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/keys) */
-      keys: (
-        _request?: RequestInfo | URL,
-        _options?: CacheQueryOptions,
-      ): Promise<ReadonlyArray<Request>> => {
-        throw new Error("Not Implemented");
-      },
-      /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/match) */
-      match: async (
-        request: RequestInfo | URL,
-        options?: CacheQueryOptions,
-      ): Promise<Response | undefined> => {
-        assertNoOptions(options);
-        const cacheKey = await requestURLSHA1(request);
-        const span = tracer.startSpan("s3-get", {
-          attributes: {
-            cacheKey,
-          },
-        });
-        try {
-          const startTime = performance.now();
-          const getResponse = await getObject(cacheKey);
-
-          span.addEvent("s3-get-response");
-          if (getResponse.Body === undefined) {
-            logger.error(`error when reading from s3, ${getResponse}`);
-            return undefined;
-          }
-          const data = await getResponse.Body.transformToString();
-          const downloadDurationTime = performance.now() - startTime;
-
-          if (data === null) {
-            span.addEvent("cache-miss");
-            return undefined;
-          }
-          span.addEvent("cache-hit");
-
-          const parsedData: Metadata = typeof data === "string"
-            ? JSON.parse(data)
-            : data;
-          parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
-
-          downloadDuration.record(downloadDurationTime, {
-            bufferSize: data.length,
-            compressed: parsedData.body.zstd,
-          });
-  
-          return new Response(
-            parsedData.body.zstd
-              ? decompress(parsedData.body.buffer)
-              : parsedData.body.buffer,
-            parsedData,
+          const deleteResponse = await deleteObject(
+            await requestURLSHA1(request),
           );
-        } catch (err) {
-          span.recordException(err);
-          throw err;
-        } finally {
-          span.end();
-        }
-      },
-      /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
-      matchAll: (
-        _request?: RequestInfo | URL,
-        _options?: CacheQueryOptions,
-      ): Promise<ReadonlyArray<Response>> => {
-        throw new Error("Not Implemented");
-      },
-      /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/put) */
-      put: async (
-        request: RequestInfo | URL,
-        response: Response,
-      ): Promise<void> => {
-        const req = new Request(request);
-        assertCanBeCached(req, response);
-
-        if (!response.body) {
-          return;
-        }
-
-        const cacheKey = await requestURLSHA1(request);
-        const [buffer, zstd] = await response.arrayBuffer()
-          .then((buffer) => new Uint8Array(buffer))
-          .then((buffer) => {
-            bufferSizeSumObserver.add(buffer.length);
-            return buffer;
-          })
-          .then((buffer) => {
-            if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
-              const start = performance.now();
-              const compressed = compress(buffer, 4);
-              compressDuration.record(performance.now() - start, {
-                bufferSize: buffer.length,
-                compressedSize: compressed.length,
-              });
-              return [compressed, true] as const;
-            }
-            return [buffer, false] as const;
+          if (deleteResponse.$metadata.httpStatusCode === undefined) {
+            return false;
+          }
+          return deleteResponse.$metadata.httpStatusCode == 204;
+        },
+        /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/keys) */
+        keys: (
+          _request?: RequestInfo | URL,
+          _options?: CacheQueryOptions,
+        ): Promise<ReadonlyArray<Request>> => {
+          throw new Error("Not Implemented");
+        },
+        /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/match) */
+        match: async (
+          request: RequestInfo | URL,
+          options?: CacheQueryOptions,
+        ): Promise<Response | undefined> => {
+          assertNoOptions(options);
+          const cacheKey = await requestURLSHA1(request);
+          const span = tracer.startSpan("s3-get", {
+            attributes: {
+              cacheKey,
+            },
           });
-
-        const span = tracer.startSpan("s3-put", {
-          attributes: {
-            cacheKey,
-          },
-        });
-
-        try {
           try {
-            const newMeta: Metadata = {
-              body: { etag: crypto.randomUUID(), buffer, zstd },
-              status: response.status,
-              headers: [...response.headers.entries()],
-            };
+            const startTime = performance.now();
+            const getResponse = await getObject(cacheKey);
 
-            const setSpan = tracer.startSpan("s3-set", {
-              attributes: { cacheKey },
+            span.addEvent("s3-get-response");
+            if (getResponse.Body === undefined) {
+              logger.error(`error when reading from s3, ${getResponse}`);
+              return undefined;
+            }
+            const data = await getResponse.Body.transformToString();
+            const downloadDurationTime = performance.now() - startTime;
+
+            if (data === null) {
+              span.addEvent("cache-miss");
+              return undefined;
+            }
+            span.addEvent("cache-hit");
+
+            const parsedData: Metadata = typeof data === "string"
+              ? JSON.parse(data)
+              : data;
+            parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
+
+            downloadDuration.record(downloadDurationTime, {
+              bufferSize: data.length,
+              compressed: parsedData.body.zstd,
             });
 
-            putObject(cacheKey, newMeta).catch(
-              (err) => {
-                console.error("s3 error", err);
-                setSpan.recordException(err);
-              },
-            ).finally(() => {
-              setSpan.end();
-            }); // do not await for setting cache
-          } catch (error) {
-            logger.error(`error saving to s3 ${error?.message}`);
+            return new Response(
+              parsedData.body.zstd
+                ? decompress(parsedData.body.buffer)
+                : parsedData.body.buffer,
+              parsedData,
+            );
+          } catch (err) {
+            span.recordException(err);
+            throw err;
+          } finally {
+            span.end();
           }
-        } catch (err) {
-          span.recordException(err);
-          throw err;
-        } finally {
-          span.end();
-        }
-      },
-    });
-  },
-};
+        },
+        /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
+        matchAll: (
+          _request?: RequestInfo | URL,
+          _options?: CacheQueryOptions,
+        ): Promise<ReadonlyArray<Response>> => {
+          throw new Error("Not Implemented");
+        },
+        /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/put) */
+        put: async (
+          request: RequestInfo | URL,
+          response: Response,
+        ): Promise<void> => {
+          const req = new Request(request);
+          assertCanBeCached(req, response);
+
+          if (!response.body) {
+            return;
+          }
+
+          const cacheKey = await requestURLSHA1(request);
+          const [buffer, zstd] = await response.arrayBuffer()
+            .then((buffer) => new Uint8Array(buffer))
+            .then((buffer) => {
+              bufferSizeSumObserver.add(buffer.length);
+              return buffer;
+            })
+            .then((buffer) => {
+              if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
+                const start = performance.now();
+                const compressed = compress(buffer, 4);
+                compressDuration.record(performance.now() - start, {
+                  bufferSize: buffer.length,
+                  compressedSize: compressed.length,
+                });
+                return [compressed, true] as const;
+              }
+              return [buffer, false] as const;
+            });
+
+          const span = tracer.startSpan("s3-put", {
+            attributes: {
+              cacheKey,
+            },
+          });
+
+          try {
+            try {
+              const newMeta: Metadata = {
+                body: { etag: crypto.randomUUID(), buffer, zstd },
+                status: response.status,
+                headers: [...response.headers.entries()],
+              };
+
+              const setSpan = tracer.startSpan("s3-set", {
+                attributes: { cacheKey },
+              });
+              putObject(cacheKey, newMeta).catch(
+                (err) => {
+                  console.error("s3 error", err);
+                  setSpan.recordException(err);
+                },
+              ).finally(() => {
+                setSpan.end();
+              }); // do not await for setting cache
+            } catch (error) {
+              logger.error(`error saving to s3 ${error?.message}`);
+            }
+          } catch (err) {
+            span.recordException(err);
+            throw err;
+          } finally {
+            span.end();
+          }
+        },
+      });
+    },
+  };
+  return caches;
+}
+
+export const caches =
+  (((bucketName && awsRegion) || awsEndpoint) && awsAccessKeyId &&
+      awsSecretAccessKey)
+    ? createS3Caches()
+    : undefined;
