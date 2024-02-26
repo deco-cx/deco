@@ -82,13 +82,11 @@ function bufferToObject(
 async function putObject(
   key: string,
   responseObject: Metadata,
-  expiresIn: number,
 ) {
   const bucketParams = {
     Bucket: bucketName,
     Key: key,
     Body: JSON.stringify(responseObject),
-    Expires: new Date(expiresIn),
   };
 
   const command = new PutObjectCommand(bucketParams);
@@ -268,23 +266,6 @@ export const caches: CacheStorage = {
         });
 
         try {
-          let expires = response.headers.get("expires");
-          if (!expires && (response.status >= 300 || response.status < 200)) { //cannot be cached
-            span.addEvent("cannot-be-cached", {
-              status: response.status,
-              expires: expires ?? "undefined",
-            });
-            return;
-          }
-          expires ??= new Date(Date.now() + (180_000)).toUTCString();
-
-          const expDate = new Date(expires);
-          const timeMs = expDate.getTime() - Date.now();
-          if (timeMs <= 0) {
-            span.addEvent("negative-time-ms", { timeMs: `${timeMs}` });
-            return;
-          }
-
           try {
             const newMeta: Metadata = {
               body: { etag: crypto.randomUUID(), buffer, zstd },
@@ -292,12 +273,11 @@ export const caches: CacheStorage = {
               headers: [...response.headers.entries()],
             };
 
-            const expiresIn = timeMs;
             const setSpan = tracer.startSpan("s3-set", {
               attributes: { cacheKey },
             });
 
-            putObject(cacheKey, newMeta, expiresIn).catch(
+            putObject(cacheKey, newMeta).catch(
               (err) => {
                 console.error("s3 error", err);
                 setSpan.recordException(err);
