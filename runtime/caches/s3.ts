@@ -18,7 +18,8 @@ import {
   init as initZstd,
 } from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
 
-const MAX_UNCOMPRESSED_SIZE = parseInt(Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")!) ?? 645120;
+const MAX_UNCOMPRESSED_SIZE =
+  parseInt(Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")!) ?? 645120;
 
 const zstdPromise = initZstd();
 
@@ -89,34 +90,34 @@ function createS3Caches(): CacheStorage {
       Key: key,
       Body: JSON.stringify(responseObject),
     };
-  
+
     const command = new PutObjectCommand(bucketParams);
     const response = await s3Client.send(command);
-  
+
     return response;
   }
-  
+
   async function getObject(key: string) {
     const bucketParams = {
       Bucket: bucketName,
       Key: key,
     };
-  
+
     const command = new GetObjectCommand(bucketParams);
     const response = await s3Client.send(command);
-  
+
     return response;
   }
-  
+
   async function deleteObject(key: string) {
     const bucketParams = {
       Bucket: bucketName,
       Key: key,
     };
-  
+
     const command = new DeleteObjectCommand(bucketParams);
     const response = await s3Client.send(command);
-  
+
     return response;
   }
 
@@ -301,8 +302,8 @@ function createS3Caches(): CacheStorage {
   return caches;
 }
 
-export const caches =
-  (((bucketName && awsRegion) || awsEndpoint) && awsAccessKeyId &&
-      awsSecretAccessKey)
-    ? createS3Caches()
-    : undefined;
+const isEndpointSet = (bucketName && awsRegion) || awsEndpoint;
+const areCredentialsSet = awsAccessKeyId && awsSecretAccessKey;
+export const caches = (isEndpointSet && areCredentialsSet)
+  ? createS3Caches()
+  : undefined;
