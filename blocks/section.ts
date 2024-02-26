@@ -16,6 +16,7 @@ import {
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
+import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 
 /**
  * @widget none
@@ -63,6 +64,7 @@ export interface SectionModule<TConfig = any, TProps = any> extends
   LoadingFallback?: ComponentType;
   ErrorFallback?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TProps>;
+  partialMode?: PartialProps["mode"];
 }
 
 const wrapCaughtErrors = async <TProps>(
@@ -119,6 +121,7 @@ export const createSectionBlock = (
       mod.default,
       mod.LoadingFallback,
       mod.ErrorFallback,
+      mod.partialMode,
     );
     const loader = mod.loader;
     if (!loader) {

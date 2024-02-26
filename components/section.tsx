@@ -10,6 +10,7 @@ import { Murmurhash3 } from "../deps.ts";
 import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { logger } from "../observability/otel/config.ts";
+import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
@@ -133,6 +134,7 @@ export const withSection = <TProps,>(
   ComponentFunc: ComponentFunc,
   LoadingFallback?: ComponentType,
   ErrorFallback?: ComponentType<{ error?: Error }>,
+  partialMode: PartialProps["mode"] = "replace",
 ) =>
 (
   props: TProps,
@@ -161,7 +163,7 @@ export const withSection = <TProps,>(
             renderSalt,
           }}
         >
-          <Partial name={id}>
+          <Partial name={id} mode={partialMode}>
             <section
               id={id}
               data-manifest-key={resolver}
