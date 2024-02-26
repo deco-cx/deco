@@ -1,4 +1,4 @@
-import { Partial } from "$fresh/runtime.ts";
+import { Head, Partial } from "$fresh/runtime.ts";
 import { HttpContext } from "deco/blocks/handler.ts";
 import { HttpError } from "deco/engine/errors.ts";
 import { usePartialSection } from "deco/hooks/usePartialSection.ts";
@@ -89,10 +89,42 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 }
 
 const script = (id: string) => {
+  function init() {
+    const elem = document.getElementById(id);
+
+    if (elem == null) {
+      return;
+    }
+
+    function click() {
+      const elem = document.getElementById(id);
+
+      if (elem == null) {
+        return;
+      }
+
+      elem.click();
+    }
+
+    addEventListener("scroll", click, { once: true });
+
+    const observeAndClose = (e: IntersectionObserverEntry[]) => {
+      e.forEach((entry) => {
+        if (entry.isIntersecting) {
+          click();
+          observer.disconnect();
+        }
+      });
+    };
+    const observer = new IntersectionObserver(observeAndClose);
+    observer.observe(elem.parentElement!);
+    observeAndClose(observer.takeRecords());
+  }
+
   if (document.readyState === "complete") {
-    document.getElementById(id)?.click();
+    init();
   } else {
-    addEventListener("load", () => document.getElementById(id)?.click());
+    addEventListener("load", init);
   }
 };
 
@@ -149,12 +181,16 @@ export const withSection = <TProps,>(
                 component={resolver}
                 loading={() => {
                   const btnId = `${id}-partial-onload`;
+                  const partial = usePartialSection();
 
                   return (
                     <>
                       {LoadingFallback ? <LoadingFallback /> : <></>}
+                      <Head>
+                        <link rel="prefetch" href={partial["f-partial"]} />
+                      </Head>
                       <button
-                        {...usePartialSection()}
+                        {...partial}
                         id={btnId}
                         style={{ display: "none" }}
                       />
