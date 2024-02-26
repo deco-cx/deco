@@ -192,9 +192,7 @@ export const caches: CacheStorage = {
             return undefined;
           }
           const data = await getResponse.Body.transformToString();
-          downloadDuration.record(performance.now() - startTime, {
-            bufferSize: data.length,
-          });
+          const downloadDurationTime = performance.now() - startTime;
 
           if (data === null) {
             span.addEvent("cache-miss");
@@ -207,6 +205,11 @@ export const caches: CacheStorage = {
             : data;
           parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
 
+          downloadDuration.record(downloadDurationTime, {
+            bufferSize: data.length,
+            compressed: parsedData.body.zstd,
+          });
+  
           return new Response(
             parsedData.body.zstd
               ? decompress(parsedData.body.buffer)
