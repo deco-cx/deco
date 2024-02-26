@@ -26,7 +26,7 @@ export type HttpHandler = <State = any, TConfig = any>(
 type HandlerFunc<TConfig = any, TState = any> = (
   config: TConfig,
   ctx: FnContext<TState>,
-) => DenoHandler | ServeHandler;
+) => PromiseOrValue<DenoHandler | ServeHandler>;
 
 const handlerBlock: Block<BlockModule<HandlerFunc>> = {
   type: "handlers",
