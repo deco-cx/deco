@@ -6,27 +6,60 @@ import {
 import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import { stringifyForWrite } from "../utils/json.ts";
+import { parse as jsoncParse } from "https://deno.land/std@0.204.0/jsonc/mod.ts";
+
+async function exists(path: string) {
+  try {
+    await Deno.stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
   /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
 
-interface ImportMap {
-  imports: Record<string, string>;
-}
+type ImportMap = Record<string, string>;
+type ImportMapFile = { imports: ImportMap };
+type DenoJson = {
+  imports?: ImportMap;
+  importMap?: string;
+};
 
-const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
-  const denoJSONPath = join(dir, "deno.json");
-  const denoJSON = await Deno.readTextFile(denoJSONPath).then(JSON.parse);
-  // inlined import_map inside deno.json
-  if (denoJSON.imports) {
-    return [denoJSON, denoJSONPath];
+const getImportMap = async (dir: string): Promise<[ImportMapFile, string]> => {
+  let denoJsonFile = "";
+
+  const jsonPath = join(dir, "deno.json");
+  const jsoncPath = join(dir, "deno.jsonc");
+
+  if (await exists(jsonPath)) {
+    denoJsonFile = jsonPath;
+  } else if (await exists(jsoncPath)) {
+    denoJsonFile = jsoncPath;
+  } else {
+    throw new Error("No deno.json found");
   }
 
-  const importMapFile = denoJSON?.importMap ?? "./import_map.json";
-  const importMapPath = join(dir, importMapFile.replace("./", ""));
+  const denoJSON = (await Deno.readTextFile(denoJsonFile).then(
+    jsoncParse
+  )) as DenoJson;
+
+  // inlined import_map inside deno.json
+  if (denoJSON.imports) {
+    return [denoJSON as Required<Omit<DenoJson, "importMap">>, denoJsonFile];
+  }
+
+  const importMapFile = join(dir, denoJSON.importMap ?? "./import_map.json");
+
+  if (!(await exists(importMapFile))) {
+    throw new Error("No import_map found");
+  }
+
+  const importMapPath = importMapFile.replace("./", "");
   return [
-    await Deno.readTextFile(importMapPath).then(JSON.parse),
+    (await Deno.readTextFile(importMapPath).then(jsoncParse)) as ImportMapFile,
     importMapPath,
   ];
 };
@@ -64,13 +97,13 @@ async function update() {
 
         if (currentVersion !== latestVersion) {
           console.info(
-            `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
+            `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`
           );
 
           upgradeFound = true;
           importMap.imports[pkg] = url.at(latestVersion).url;
         }
-      }),
+      })
   );
 
   if (!importMap.imports["deco/"] && importMap.imports["$live/"]) {
