@@ -5,7 +5,7 @@ import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { meter } from "../observability/otel/metrics.ts";
-import { caches } from "../runtime/caches/s3.ts";
+import { caches } from "../runtime/caches/denoKV.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -78,12 +78,9 @@ export const wrapCaughtErrors = async <
   }
 };
 
-export const ENABLE_LOADER_CACHE = true;
+export const ENABLE_LOADER_CACHE = Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
 
-// Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
-
-export const LOADER_CACHE_START_TRESHOLD = 0;
-// Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
+export const LOADER_CACHE_START_TRESHOLD = Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
 
 export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
 
