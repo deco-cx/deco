@@ -5,7 +5,7 @@ import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { meter } from "../observability/otel/metrics.ts";
-import { caches } from "../runtime/caches/denoKV.ts";
+import { caches } from "../runtime/caches/s3.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -64,7 +64,7 @@ export const wrapCaughtErrors = async <
   try {
     return await ctx.next!();
   } catch (err) {
-    return new Proxy({}, {
+    return new Proxy(err, {
       get: (_target, prop) => {
         if (prop === "then") {
           return undefined;
@@ -78,11 +78,12 @@ export const wrapCaughtErrors = async <
   }
 };
 
-export const ENABLE_LOADER_CACHE =
-  Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
+export const ENABLE_LOADER_CACHE = true;
 
-export const LOADER_CACHE_START_TRESHOLD =
-  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
+// Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
+
+export const LOADER_CACHE_START_TRESHOLD = 0;
+// Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
 
 export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
 
@@ -208,19 +209,7 @@ const wrapLoader = (
           url.searchParams.set("resolveChain", resolveChainString);
           url.searchParams.set("revisionID", revisionID);
         } else {
-          if (!resolveChainString && !revisionID) {
-            logger.warning(`Could not get revisionID nor resolveChain`);
-          }
-          if (!revisionID) {
-            logger.warning(
-              `Could not get revisionID for resolveChain ${resolveChainString}`,
-            );
-          }
-          if (!resolveChainString) {
-            logger.warning(
-              `Could not get resolveChain for revisionID ${revisionID}`,
-            );
-          }
+          logger.error("Could not get revisionID or resolveChain");
 
           timing?.end();
           return await handler(props, req, ctx);
