@@ -18,7 +18,7 @@ import {
   init as initZstd,
 } from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
 
-const MAX_UNCOMPRESSED_SIZE = 645120; // Same as denoKV
+const MAX_UNCOMPRESSED_SIZE = parseInt(Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")!) ?? 645120;
 
 const zstdPromise = initZstd();
 
@@ -27,16 +27,6 @@ const awsRegion = Deno.env.get("CACHE_AWS_REGION");
 const awsAccessKeyId = Deno.env.get("CACHE_AWS_ACCESS_KEY_ID")!;
 const awsSecretAccessKey = Deno.env.get("CACHE_AWS_SECRET_ACCESS_KEY")!;
 const awsEndpoint = Deno.env.get("CACHE_AWS_ENDPOINT");
-
-const s3Client = new S3Client({
-  region: awsRegion,
-  credentials: {
-    accessKeyId: awsAccessKeyId,
-    secretAccessKey: awsSecretAccessKey,
-  },
-  useAccelerateEndpoint: true,
-  endpoint: awsEndpoint,
-});
 
 const downloadDuration = meter.createHistogram("s3_download_duration", {
   description: "s3 download duration",
@@ -62,8 +52,6 @@ interface Metadata {
     buffer: Uint8Array; // buffer with compressed data
     zstd: boolean;
   };
-  status: number;
-  headers: [string, string][];
 }
 
 function bufferToObject(
@@ -81,47 +69,57 @@ function bufferToObject(
   return array;
 }
 
-async function putObject(
-  key: string,
-  responseObject: Metadata,
-) {
-  const bucketParams = {
-    Bucket: bucketName,
-    Key: key,
-    Body: JSON.stringify(responseObject),
-  };
-
-  const command = new PutObjectCommand(bucketParams);
-  const response = await s3Client.send(command);
-
-  return response;
-}
-
-async function getObject(key: string) {
-  const bucketParams = {
-    Bucket: bucketName,
-    Key: key,
-  };
-
-  const command = new GetObjectCommand(bucketParams);
-  const response = await s3Client.send(command);
-
-  return response;
-}
-
-async function deleteObject(key: string) {
-  const bucketParams = {
-    Bucket: bucketName,
-    Key: key,
-  };
-
-  const command = new DeleteObjectCommand(bucketParams);
-  const response = await s3Client.send(command);
-
-  return response;
-}
-
 function createS3Caches(): CacheStorage {
+  const s3Client = new S3Client({
+    region: awsRegion,
+    credentials: {
+      accessKeyId: awsAccessKeyId,
+      secretAccessKey: awsSecretAccessKey,
+    },
+    useAccelerateEndpoint: true,
+    endpoint: awsEndpoint,
+  });
+
+  async function putObject(
+    key: string,
+    responseObject: Metadata,
+  ) {
+    const bucketParams = {
+      Bucket: bucketName,
+      Key: key,
+      Body: JSON.stringify(responseObject),
+    };
+  
+    const command = new PutObjectCommand(bucketParams);
+    const response = await s3Client.send(command);
+  
+    return response;
+  }
+  
+  async function getObject(key: string) {
+    const bucketParams = {
+      Bucket: bucketName,
+      Key: key,
+    };
+  
+    const command = new GetObjectCommand(bucketParams);
+    const response = await s3Client.send(command);
+  
+    return response;
+  }
+  
+  async function deleteObject(key: string) {
+    const bucketParams = {
+      Bucket: bucketName,
+      Key: key,
+    };
+  
+    const command = new DeleteObjectCommand(bucketParams);
+    const response = await s3Client.send(command);
+  
+    return response;
+  }
+
   const caches: CacheStorage = {
     delete: (_cacheName: string): Promise<boolean> => {
       throw new Error("Not Implemented");
@@ -217,7 +215,6 @@ function createS3Caches(): CacheStorage {
               parsedData.body.zstd
                 ? decompress(parsedData.body.buffer)
                 : parsedData.body.buffer,
-              parsedData,
             );
           } catch (err) {
             span.recordException(err);
@@ -275,8 +272,6 @@ function createS3Caches(): CacheStorage {
             try {
               const newMeta: Metadata = {
                 body: { etag: crypto.randomUUID(), buffer, zstd },
-                status: response.status,
-                headers: [...response.headers.entries()],
               };
 
               const setSpan = tracer.startSpan("s3-set", {
