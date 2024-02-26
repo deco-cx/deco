@@ -42,6 +42,7 @@ export const usePartialSection = <P>(
       "resolveChain",
       JSON.stringify(FieldResolver.minify(resolveChain.slice(0, -1))),
     ],
+    ["fresh-partial", "true"],
   ]);
 
   return {
