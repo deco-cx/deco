@@ -3,7 +3,7 @@ import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { ComponentType } from "preact";
 import { HttpContext } from "../blocks/handler.ts";
 import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
-import { fnContextFromHttpContext, RequestState } from "../blocks/utils.tsx";
+import { RequestState, fnContextFromHttpContext } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";
@@ -44,8 +44,12 @@ export const isSection = <
   return (s as Section)?.metadata?.component === section;
 };
 
-export type SectionProps<T> = T extends PropsLoader<any, infer Props> ? Props
+type ReturnProps<TFunc> = TFunc extends PropsLoader<any, infer Props> ? Props
   : unknown;
+
+export type SectionProps<LoaderFunc, ActionFunc = LoaderFunc> =
+  | ReturnProps<LoaderFunc>
+  | ReturnProps<ActionFunc>;
 
 export interface ErrorBoundaryParams<TProps> {
   error: any;
@@ -59,7 +63,7 @@ export interface SectionModule<
   TConfig = any,
   TProps = any,
   TLoaderProps = TProps,
-  TActionProps = TProps,
+  TActionProps = TLoaderProps,
 > extends
   BlockModule<
     ComponentFunc<TLoaderProps | TActionProps>,
