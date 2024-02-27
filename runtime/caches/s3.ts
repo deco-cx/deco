@@ -26,6 +26,7 @@ const bucketName = Deno.env.get("CACHE_UPLOAD_BUCKET");
 const awsRegion = Deno.env.get("CACHE_AWS_REGION");
 const awsAccessKeyId = Deno.env.get("CACHE_AWS_ACCESS_KEY_ID")!;
 const awsSecretAccessKey = Deno.env.get("CACHE_AWS_SECRET_ACCESS_KEY")!;
+const awsEndpoint = Deno.env.get("CACHE_AWS_ENDPOINT");
 
 const s3Client = new S3Client({
   region: awsRegion,
@@ -34,6 +35,7 @@ const s3Client = new S3Client({
     secretAccessKey: awsSecretAccessKey,
   },
   useAccelerateEndpoint: true,
+  endpoint: awsEndpoint,
 });
 
 const downloadDuration = meter.createHistogram("s3_download_duration", {
@@ -82,13 +84,11 @@ function bufferToObject(
 async function putObject(
   key: string,
   responseObject: Metadata,
-  expiresIn: number,
 ) {
   const bucketParams = {
     Bucket: bucketName,
     Key: key,
     Body: JSON.stringify(responseObject),
-    Expires: new Date(expiresIn),
   };
 
   const command = new PutObjectCommand(bucketParams);
@@ -194,9 +194,7 @@ export const caches: CacheStorage = {
             return undefined;
           }
           const data = await getResponse.Body.transformToString();
-          downloadDuration.record(performance.now() - startTime, {
-            bufferSize: data.length,
-          });
+          const downloadDurationTime = performance.now() - startTime;
 
           if (data === null) {
             span.addEvent("cache-miss");
@@ -209,6 +207,11 @@ export const caches: CacheStorage = {
             : data;
           parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
 
+          downloadDuration.record(downloadDurationTime, {
+            bufferSize: data.length,
+            compressed: parsedData.body.zstd,
+          });
+  
           return new Response(
             parsedData.body.zstd
               ? decompress(parsedData.body.buffer)
@@ -268,23 +271,6 @@ export const caches: CacheStorage = {
         });
 
         try {
-          let expires = response.headers.get("expires");
-          if (!expires && (response.status >= 300 || response.status < 200)) { //cannot be cached
-            span.addEvent("cannot-be-cached", {
-              status: response.status,
-              expires: expires ?? "undefined",
-            });
-            return;
-          }
-          expires ??= new Date(Date.now() + (180_000)).toUTCString();
-
-          const expDate = new Date(expires);
-          const timeMs = expDate.getTime() - Date.now();
-          if (timeMs <= 0) {
-            span.addEvent("negative-time-ms", { timeMs: `${timeMs}` });
-            return;
-          }
-
           try {
             const newMeta: Metadata = {
               body: { etag: crypto.randomUUID(), buffer, zstd },
@@ -292,12 +278,11 @@ export const caches: CacheStorage = {
               headers: [...response.headers.entries()],
             };
 
-            const expiresIn = timeMs;
             const setSpan = tracer.startSpan("s3-set", {
               attributes: { cacheKey },
             });
 
-            putObject(cacheKey, newMeta, expiresIn).catch(
+            putObject(cacheKey, newMeta).catch(
               (err) => {
                 console.error("s3 error", err);
                 setSpan.recordException(err);
