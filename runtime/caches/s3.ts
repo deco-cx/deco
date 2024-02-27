@@ -11,16 +11,14 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
-} from "https://esm.sh/@aws-sdk/client-s3";
+} from "https://esm.sh/@aws-sdk/client-s3@3.513.0";
 import {
   compress,
   decompress,
   init as initZstd,
 } from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
 
-const MAX_CHUNK_SIZE = 64512; // need to change later on
-const MAX_CHUNKS_BATCH_SIZE = 10;
-const MAX_UNCOMPRESSED_SIZE = MAX_CHUNK_SIZE * MAX_CHUNKS_BATCH_SIZE;
+const MAX_UNCOMPRESSED_SIZE = 645120; // Same as denoKV
 
 const zstdPromise = initZstd();
 
@@ -162,7 +160,6 @@ export const caches: CacheStorage = {
         const deleteResponse = await deleteObject(
           await requestURLSHA1(request),
         );
-        // TODO(@ItamarRocha): check why need the > 0
         if (deleteResponse.$metadata.httpStatusCode === undefined) {
           return false;
         }
@@ -191,11 +188,6 @@ export const caches: CacheStorage = {
           const startTime = performance.now();
           const getResponse = await getObject(cacheKey);
 
-          logger.info(
-            `s3-get execution time: ${
-              performance.now() - startTime
-            } milliseconds`,
-          );
           span.addEvent("s3-get-response");
           if (getResponse.Body === undefined) {
             logger.error(`error when reading from s3, ${getResponse}`);
@@ -205,11 +197,6 @@ export const caches: CacheStorage = {
           downloadDuration.record(performance.now() - startTime, {
             bufferSize: data.length,
           });
-          logger.info(
-            `s3-get execution after transformToString: ${
-              performance.now() - startTime
-            } milliseconds`,
-          );
 
           if (data === null) {
             span.addEvent("cache-miss");
@@ -221,15 +208,7 @@ export const caches: CacheStorage = {
             ? JSON.parse(data)
             : data;
           parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
-          logger.info(
-            `s3-get execution time with parsing: ${
-              performance.now() - startTime
-            } milliseconds`,
-          );
-          // console.log(`data: ${JSON.stringify(parsedData)}`);
-          // console.log(`data buffer len: ${Object.keys(parsedData.body.buffer).length}`);
-          // console.log(`decompressed string: ${JSON.stringify(parsedData.body.buffer)}`);
-          console.log("parseddata zstd: ", parsedData.body.zstd);
+
           return new Response(
             parsedData.body.zstd
               ? decompress(parsedData.body.buffer)
@@ -270,7 +249,6 @@ export const caches: CacheStorage = {
             return buffer;
           })
           .then((buffer) => {
-            console.log("buffer length: ", buffer.length);
             if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
               const start = performance.now();
               const compressed = compress(buffer, 4);
@@ -278,7 +256,6 @@ export const caches: CacheStorage = {
                 bufferSize: buffer.length,
                 compressedSize: compressed.length,
               });
-              console.log("compressed time: ", performance.now() - start);
               return [compressed, true] as const;
             }
             return [buffer, false] as const;
