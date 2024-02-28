@@ -8,8 +8,7 @@ import {
 } from "./common.ts";
 import {existsSync} from "https://deno.land/std/fs/mod.ts";
 
-const ENABLE_FILE_SYSTEM_CACHE = Deno.env.get("ENABLE_FILE_SYSTEM_CACHE") ?? true;
-const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/home/deno/.cache";
+const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
 
 const downloadDuration = meter.createHistogram("file_system_cache_download_duration", {
   description: "file system cache download duration",
@@ -202,15 +201,12 @@ function createFileSystemCache(): CacheStorage {
   };
 
   // Check if the cache directory exists, if not, create it
-  if (!existsSync(FILE_SYSTEM_CACHE_DIRECTORY)) {
+  if (FILE_SYSTEM_CACHE_DIRECTORY && !existsSync(FILE_SYSTEM_CACHE_DIRECTORY)) {
     Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
   }
-  logger.info(`dir exists? : ${existsSync(FILE_SYSTEM_CACHE_DIRECTORY)}`);
-  logger.info(`dir exists? : ${Deno.statSync(FILE_SYSTEM_CACHE_DIRECTORY).isDirectory}`);
-  
   return caches;
 }
 
-export const caches = ENABLE_FILE_SYSTEM_CACHE
+export const caches = FILE_SYSTEM_CACHE_DIRECTORY
   ? createFileSystemCache()
   : undefined;
