@@ -237,8 +237,8 @@ function createFileSystemCache(): CacheStorage {
   if (!existsSync(FILE_SYSTEM_CACHE_DIRECTORY)) {
     Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
   }
-  logger.info("dir exists? : ", existsSync(FILE_SYSTEM_CACHE_DIRECTORY));
-  logger.info("dir exists? : ", Deno.statSync(FILE_SYSTEM_CACHE_DIRECTORY).isDirectory);
+  logger.info(`dir exists? : ${existsSync(FILE_SYSTEM_CACHE_DIRECTORY)}`);
+  logger.info(`dir exists? : ${Deno.statSync(FILE_SYSTEM_CACHE_DIRECTORY).isDirectory}`);
   
   return caches;
 }
