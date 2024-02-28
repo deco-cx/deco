@@ -6,6 +6,7 @@ import {
   assertNoOptions,
   withCacheNamespace,
 } from "./common.ts";
+import {existsSync} from "https://deno.land/std/fs/mod.ts";
 
 const ENABLE_FILE_SYSTEM_CACHE = Deno.env.get("ENABLE_FILE_SYSTEM_CACHE") ?? true;
 const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "~/.cache";
@@ -231,6 +232,11 @@ function createFileSystemCache(): CacheStorage {
       });
     },
   };
+
+  // Check if the cache directory exists, if not, create it
+  if (!existsSync(FILE_SYSTEM_CACHE_DIRECTORY)) {
+    Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
+  }
   return caches;
 }
 
