@@ -20,6 +20,7 @@ import {
   STATE_CONTEXT_KEY,
 } from "../../../observability/otel/context.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import { forceHttps } from "deco/utils/http.ts";
 import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
 import { createServerTimings } from "../../../utils/timings.ts";
 import { setLogger } from "../../fetch/fetchLog.ts";
@@ -200,7 +201,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     const { resolver } = await liveContext.runtime;
     const ctxResolver = resolver
       .resolverFor(
-        { context, request },
+        { context, request: forceHttps(request) },
         {
           monitoring: context.state.monitoring,
         },
