@@ -7,20 +7,9 @@ import {
   withCacheNamespace,
 } from "./common.ts";
 import {existsSync} from "https://deno.land/std/fs/mod.ts";
-import {
-  compress,
-  decompress,
-  init as initZstd,
-} from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
-
-const MAX_UNCOMPRESSED_SIZE =
-  parseInt(Deno.env.get("FILE_SYSTEM_MAX_UNCOMPRESSED_SIZE")! ?? "645120");
 
 const ENABLE_FILE_SYSTEM_CACHE = Deno.env.get("ENABLE_FILE_SYSTEM_CACHE") ?? true;
 const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/home/deno/.cache";
-const ENABLE_COMPRESSION = Deno.env.get("ENABLE_COMPRESSION") ?? true;
-
-const zstdPromise = initZstd();
 
 const downloadDuration = meter.createHistogram("file_system_cache_download_duration", {
   description: "file system cache download duration",
@@ -34,50 +23,20 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   valueType: ValueType.INT,
 });
 
-const compressDuration = meter.createHistogram("zstd_compress_duration", {
-  description: "compress duration",
-  unit: "ms",
-  valueType: ValueType.DOUBLE,
-});
-
-interface Metadata {
-  body: {
-    etag: string; // body version
-    buffer: Uint8Array; // buffer with compressed data
-    zstd: boolean;
-  };
-}
-
-function bufferToObject(
-  buffer: { [key: string]: number } | Uint8Array,
-): Uint8Array {
-  if (buffer instanceof Uint8Array) {
-    return buffer;
-  }
-
-  const length = Object.keys(buffer).length;
-  const array = new Uint8Array(length);
-  for (let i = 0; i < length; i++) {
-    array[i] = buffer[i.toString()];
-  }
-  return array;
-}
-
 function createFileSystemCache(): CacheStorage {
   async function putFile(
     key: string,
-    responseObject: Metadata,
+    responseArray: Uint8Array,
   ) {
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-    const fileContent = JSON.stringify(responseObject);
-    await Deno.writeTextFile(filePath, fileContent);
+    await Deno.writeFile(filePath, responseArray);
     return;
   }
 
   async function getFile(key: string) {
     try {
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-      const fileContent = await Deno.readTextFile(filePath);
+      const fileContent = await Deno.readFile(filePath);
       return fileContent;
     } catch (err) {
       logger.error(`error when reading from file system, ${err}`);
@@ -112,8 +71,7 @@ function createFileSystemCache(): CacheStorage {
     ): Promise<Response | undefined> => {
       throw new Error("Not Implemented");
     },
-    open: async (cacheName: string): Promise<Cache> => {
-      await zstdPromise;
+    open: (cacheName: string): Promise<Cache> => {
       const requestURLSHA1 = withCacheNamespace(cacheName);
 
       return Promise.resolve({
@@ -169,20 +127,12 @@ function createFileSystemCache(): CacheStorage {
             }
             span.addEvent("cache-hit");
 
-            const parsedData: Metadata = typeof data === "string"
-              ? JSON.parse(data)
-              : data;
-            parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
-
             downloadDuration.record(downloadDurationTime, {
-              bufferSize: parsedData.body.buffer.length,
-              compressed: parsedData.body.zstd,
+              bufferSize: data.length,
             });
 
             return new Response(
-              parsedData.body.zstd
-                ? decompress(parsedData.body.buffer)
-                : parsedData.body.buffer,
+              data,
             );
           } catch (err) {
             span.recordException(err);
@@ -211,23 +161,11 @@ function createFileSystemCache(): CacheStorage {
           }
 
           const cacheKey = await requestURLSHA1(request);
-          const [buffer, zstd] = await response.arrayBuffer()
+          const buffer = await response.arrayBuffer()
             .then((buffer) => new Uint8Array(buffer))
             .then((buffer) => {
               bufferSizeSumObserver.add(buffer.length);
               return buffer;
-            })
-            .then((buffer) => {
-              if (ENABLE_COMPRESSION && buffer.length > MAX_UNCOMPRESSED_SIZE) {
-                const start = performance.now();
-                const compressed = compress(buffer, 4);
-                compressDuration.record(performance.now() - start, {
-                  bufferSize: buffer.length,
-                  compressedSize: compressed.length,
-                });
-                return [compressed, true] as const;
-              }
-              return [buffer, false] as const;
             });
 
           const span = tracer.startSpan("file-system-put", {
@@ -238,14 +176,10 @@ function createFileSystemCache(): CacheStorage {
 
           try {
             try {
-              const newMeta: Metadata = {
-                body: { etag: crypto.randomUUID(), buffer, zstd },
-              };
-
               const setSpan = tracer.startSpan("file-system-set", {
                 attributes: { cacheKey },
               });
-              putFile(cacheKey, newMeta).catch(
+              putFile(cacheKey, buffer).catch(
                 (err) => {
                   console.error("file system error", err);
                   setSpan.recordException(err);
