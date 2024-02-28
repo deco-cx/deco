@@ -9,7 +9,7 @@ import {
 import {existsSync} from "https://deno.land/std/fs/mod.ts";
 
 const ENABLE_FILE_SYSTEM_CACHE = Deno.env.get("ENABLE_FILE_SYSTEM_CACHE") ?? true;
-const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/home/deno";
+const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/home/deno/.cache";
 
 const downloadDuration = meter.createHistogram("file_system_cache_download_duration", {
   description: "file system cache download duration",
