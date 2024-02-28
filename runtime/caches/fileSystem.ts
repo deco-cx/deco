@@ -15,8 +15,8 @@ import {
 const MAX_UNCOMPRESSED_SIZE =
   parseInt(Deno.env.get("FILE_SYSTEM_MAX_UNCOMPRESSED_SIZE")! ?? "645120");
 
-const ENABLE_FILE_SYSTEM_CACHE = Deno.env.get("ENABLE_FILE_SYSTEM_CACHE") !== undefined;
-const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "cache";
+const ENABLE_FILE_SYSTEM_CACHE = Deno.env.get("ENABLE_FILE_SYSTEM_CACHE") ?? true;
+const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "~/.cache";
 
 const zstdPromise = initZstd();
 
