@@ -4,6 +4,7 @@ export interface StreamProps {
 }
 
 export { isStreamProps } from "../clients/withManifest.ts";
+import { ServerSentEventStream } from "https://deno.land/std@0.210.0/http/server_sent_event_stream.ts";
 
 export const isEventStreamResponse = (
   invokeResponse: unknown | AsyncIterableIterator<unknown>,
@@ -31,32 +32,28 @@ export const invokeToHttpResponse = (
     req.signal.onabort = () => {
       invokeResponse?.return?.();
     };
-    const { readable, writable } = new TransformStream();
-    (async () => {
-      const encoder = new TextEncoder();
-      const writer = writable.getWriter();
 
-      try {
-        for await (const content of invokeResponse) {
-          await writer.write(encoder.encode(JSON.stringify(content) + "\n"));
-        }
-      } finally {
-        try {
-          await writer.close();
-        } catch (err) {
-          console.log("closing err", err);
-        }
-      }
-    })();
-
-    return new Response(readable, {
-      status: 200,
-      headers: {
-        "content-type": "text/event-stream",
-        "connection": "keep-alive",
-        "cache-control": "no-cache",
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          for await (const content of invokeResponse) {
+            controller.enqueue({
+              data: JSON.stringify(content),
+              id: Date.now(),
+              event: "message",
+            });
+          }
+        },
+        cancel() {
+          invokeResponse?.return?.();
+        },
+      }).pipeThrough(new ServerSentEventStream()),
+      {
+        headers: {
+          "Content-Type": "text/event-stream",
+        },
       },
-    });
+    );
   }
   // otherwise convert invoke response to json
   return Response.json(invokeResponse);
