@@ -41,25 +41,13 @@ export async function* readFromStream<T>(
     .getReader();
 
   while (true) {
-    let acc = "";
     const { value, done } = await reader.read();
     if (done) {
       break;
     }
 
-    const parsedValue = value
-      .split("\n")
-      .filter(Boolean);
-
-    for (const chnks of parsedValue) {
-      acc += chnks;
-      try {
-        yield JSON.parse(acc);
-      } catch {
-        continue;
-      }
-      acc = "";
-    }
+    const [, data] = value.split("\n");
+    yield JSON.parse(data.replace("data:", ""));
   }
 }
 
