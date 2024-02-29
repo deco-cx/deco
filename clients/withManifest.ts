@@ -47,7 +47,12 @@ export async function* readFromStream<T>(
     }
 
     const [, data] = value.split("\n");
-    yield JSON.parse(data.replace("data:", ""));
+    try {
+      yield JSON.parse(data.replace("data:", ""));
+    } catch (_err) {
+      console.log("error parsing data", _err, data);
+      continue;
+    }
   }
 }
 
