@@ -1,8 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
+import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { ComponentType } from "preact";
 import { HttpContext } from "../blocks/handler.ts";
 import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
-import { fnContextFromHttpContext, RequestState } from "../blocks/utils.tsx";
+import { RequestState, fnContextFromHttpContext } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";
@@ -16,7 +17,6 @@ import {
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
-import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 
 /**
  * @widget none
@@ -44,8 +44,12 @@ export const isSection = <
   return (s as Section)?.metadata?.component === section;
 };
 
-export type SectionProps<T> = T extends PropsLoader<any, infer Props> ? Props
+type ReturnProps<TFunc> = TFunc extends PropsLoader<any, infer Props> ? Props
   : unknown;
+
+export type SectionProps<LoaderFunc, ActionFunc = LoaderFunc> =
+  | ReturnProps<LoaderFunc>
+  | ReturnProps<ActionFunc>;
 
 export interface ErrorBoundaryParams<TProps> {
   error: any;
@@ -55,15 +59,21 @@ export interface ErrorBoundaryParams<TProps> {
 export type ErrorBoundaryComponent<TProps> = ComponentFunc<
   ErrorBoundaryParams<TProps>
 >;
-export interface SectionModule<TConfig = any, TProps = any> extends
+export interface SectionModule<
+  TConfig = any,
+  TProps = any,
+  TLoaderProps = TProps,
+  TActionProps = TLoaderProps,
+> extends
   BlockModule<
-    ComponentFunc<TProps>,
-    ReturnType<ComponentFunc<TProps>>,
+    ComponentFunc<TLoaderProps | TActionProps>,
+    ReturnType<ComponentFunc<TLoaderProps | TActionProps>>,
     PreactComponent
   > {
   LoadingFallback?: ComponentType;
   ErrorFallback?: ComponentType<{ error?: Error }>;
-  loader?: PropsLoader<TConfig, TProps>;
+  loader?: PropsLoader<TConfig, TLoaderProps>;
+  action?: PropsLoader<TConfig, TActionProps>;
   partialMode?: PartialProps["mode"];
 }
 
@@ -101,7 +111,10 @@ export const createSectionBlock = (
   type: "sections" | "pages",
 ): Block<SectionModule> => ({
   type,
-  introspect: { funcNames: ["loader", "default"], includeReturn: true },
+  introspect: {
+    funcNames: ["loader", "action", "default"],
+    includeReturn: true,
+  },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
@@ -123,8 +136,8 @@ export const createSectionBlock = (
       mod.ErrorFallback,
       mod.partialMode,
     );
-    const loader = mod.loader;
-    if (!loader) {
+
+    if (!mod.action && !mod.loader) {
       return (
         props: TProps,
         ctx: HttpContext<RequestState>,
@@ -142,17 +155,26 @@ export const createSectionBlock = (
         resolve,
       } = httpCtx;
 
+      const loaderSectionProps = request.method === "POST"
+        ? mod.action ?? mod.loader
+        : mod.loader;
+
+      if (!loaderSectionProps) {
+        return componentFunc(props as unknown as TProps, httpCtx);
+      }
+
       const ctx = {
         ...context,
         state: { ...context.state, $live: props, resolve },
       } as FunctionContext;
 
+      const fnContext = fnContextFromHttpContext(httpCtx);
       const p = await wrapCaughtErrors(() =>
         propsLoader(
-          loader,
+          loaderSectionProps,
           ctx.state.$live,
           request,
-          fnContextFromHttpContext(httpCtx),
+          fnContext,
         ), props ?? {});
 
       return componentFunc(p, httpCtx);
