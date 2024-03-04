@@ -6,7 +6,7 @@ import {
   assertNoOptions,
   withCacheNamespace,
 } from "./common.ts";
-import { existsSync } from "https://deno.land/std/fs/mod.ts";
+import { existsSync } from "std/fs/mod.ts";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
