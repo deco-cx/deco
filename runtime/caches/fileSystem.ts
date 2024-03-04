@@ -27,16 +27,36 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
 });
 
 function createFileSystemCache(): CacheStorage {
+  let isCacheInitialized = false;
+  async function assertCacheDirectory() {
+    try {
+      if (
+        FILE_SYSTEM_CACHE_DIRECTORY && !existsSync(FILE_SYSTEM_CACHE_DIRECTORY)
+      ) {
+        await Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
+      }
+      isCacheInitialized = true;
+    } catch (err) {
+      console.error("Unable to initialize file system cache directory", err);
+    }
+  }
+
   async function putFile(
     key: string,
     responseArray: Uint8Array,
   ) {
+    if (!isCacheInitialized) {
+      await assertCacheDirectory();
+    }
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
     await Deno.writeFile(filePath, responseArray);
     return;
   }
 
   async function getFile(key: string) {
+    if (!isCacheInitialized) {
+      await assertCacheDirectory();
+    }
     try {
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
       const fileContent = await Deno.readFile(filePath);
@@ -48,6 +68,9 @@ function createFileSystemCache(): CacheStorage {
   }
 
   async function deleteFile(key: string) {
+    if (!isCacheInitialized) {
+      await assertCacheDirectory();
+    }
     try {
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
       await Deno.remove(filePath);
@@ -182,7 +205,7 @@ function createFileSystemCache(): CacheStorage {
               const setSpan = tracer.startSpan("file-system-set", {
                 attributes: { cacheKey },
               });
-              putFile(cacheKey, buffer).catch(
+              await putFile(cacheKey, buffer).catch(
                 (err) => {
                   console.error("file system error", err);
                   setSpan.recordException(err);
@@ -204,13 +227,15 @@ function createFileSystemCache(): CacheStorage {
     },
   };
 
-  // Check if the cache directory exists, if not, create it
-  if (FILE_SYSTEM_CACHE_DIRECTORY && !existsSync(FILE_SYSTEM_CACHE_DIRECTORY)) {
-    Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
-  }
   return caches;
 }
 
-export const caches = FILE_SYSTEM_CACHE_DIRECTORY
+const hasWritePerm = async (): Promise<boolean> => {
+  return await Deno.permissions.query(
+    { name: "write", path: FILE_SYSTEM_CACHE_DIRECTORY } as const,
+  ).then((status) => status.state === "granted");
+};
+
+export const caches = await hasWritePerm() && FILE_SYSTEM_CACHE_DIRECTORY
   ? createFileSystemCache()
   : undefined;
