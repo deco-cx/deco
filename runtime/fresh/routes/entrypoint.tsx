@@ -6,7 +6,7 @@ import { Handler } from "../../../blocks/handler.ts";
 import { Page } from "../../../blocks/page.tsx";
 import { PageContext } from "../../../engine/block.ts";
 import { DecoSiteState, DecoState, Flag } from "../../../types.ts";
-import { setCSPHeaders } from "../../../utils/http.ts";
+import { forceHttps, setCSPHeaders } from "../../../utils/http.ts";
 
 export interface RouterContext {
   pagePath: string;
@@ -73,7 +73,7 @@ const innerHandler = async (
 
   return setCSPHeaders(
     req,
-    await handler(req, ctx as ConnInfo),
+    await handler(forceHttps(req), ctx as ConnInfo),
   );
 };
 

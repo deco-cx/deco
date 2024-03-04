@@ -1,5 +1,6 @@
-import { parse } from "https://deno.land/std@0.208.0/flags/mod.ts";
-import { join } from "https://deno.land/std@0.208.0/path/mod.ts";
+import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
+import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
+import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
 import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
@@ -62,6 +63,15 @@ async function update() {
         const latestVersion = eligibleLatestVersion(versions);
 
         if (!latestVersion) {
+          return;
+        }
+
+        if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
+          console.log(
+            colors.yellow(
+              `skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
+            ),
+          );
           return;
         }
 

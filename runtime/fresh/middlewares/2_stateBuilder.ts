@@ -23,6 +23,7 @@ import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
 import { createServerTimings } from "../../../utils/timings.ts";
 import { setLogger } from "../../fetch/fetchLog.ts";
+import { forceHttps } from "../../../utils/http.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;
@@ -31,12 +32,6 @@ export interface LiveRouteConfig extends RouteConfig {
 export interface LiveRouteModule extends RouteModule {
   config?: LiveRouteConfig;
 }
-
-type HandlerLike = Handler<any, any> | Handlers<any, any>;
-type ConfigurableRoute = {
-  handler?: HandlerLike;
-  config: LiveRouteConfig;
-};
 
 /**
  * Wraps any route with an error handler that catches http-errors and returns the response accordingly.
@@ -200,7 +195,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     const { resolver } = await liveContext.runtime;
     const ctxResolver = resolver
       .resolverFor(
-        { context, request },
+        { context, request: forceHttps(request) },
         {
           monitoring: context.state.monitoring,
         },
