@@ -18,8 +18,9 @@ import {
   init as initZstd,
 } from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
 
-const MAX_UNCOMPRESSED_SIZE =
-  parseInt(Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")! ?? "645120");
+const MAX_UNCOMPRESSED_SIZE = parseInt(
+  Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")! ?? "645120",
+);
 
 const zstdPromise = initZstd();
 

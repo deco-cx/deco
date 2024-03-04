@@ -6,15 +6,19 @@ import {
   assertNoOptions,
   withCacheNamespace,
 } from "./common.ts";
-import {existsSync} from "https://deno.land/std/fs/mod.ts";
+import { existsSync } from "https://deno.land/std/fs/mod.ts";
 
-const FILE_SYSTEM_CACHE_DIRECTORY = Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
+const FILE_SYSTEM_CACHE_DIRECTORY =
+  Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
 
-const downloadDuration = meter.createHistogram("file_system_cache_download_duration", {
-  description: "file system cache download duration",
-  unit: "ms",
-  valueType: ValueType.DOUBLE,
-});
+const downloadDuration = meter.createHistogram(
+  "file_system_cache_download_duration",
+  {
+    description: "file system cache download duration",
+    unit: "ms",
+    valueType: ValueType.DOUBLE,
+  },
+);
 
 const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   description: "Sum of buffer sizes",
@@ -119,7 +123,7 @@ function createFileSystemCache(): CacheStorage {
             const downloadDurationTime = performance.now() - startTime;
 
             span.addEvent("file-system-get-data");
-            
+
             if (data === null) {
               span.addEvent("cache-miss");
               return undefined;
