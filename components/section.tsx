@@ -141,14 +141,14 @@ export const withSection = <TProps,>(
   props: TProps,
   ctx: HttpContext<RequestState & { renderSalt?: string }>,
 ) => {
-
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
   const url = new URL(ctx.request.url);
-  const partialMode = _partialMode || url.searchParams.get("partial-mode") as PartialProps["mode"] || "replace";
-  
+  const partialMode = _partialMode ||
+    url.searchParams.get("partial-mode") as PartialProps["mode"] || "replace";
+
   return {
     props,
     Component: (props: TProps) => {
