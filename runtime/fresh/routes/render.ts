@@ -58,7 +58,7 @@ export const handler = async (
     resolveChain,
     pathTemplate,
     renderSalt,
-    partialMode
+    partialMode,
   } = fromRequest(req);
 
   const url = new URL(href, req.url);
