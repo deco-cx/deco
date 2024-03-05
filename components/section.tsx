@@ -15,6 +15,7 @@ import { Device, deviceOf } from "deco/utils/userAgent.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
+  device: Device;
 }
 
 export const SectionContext = createContext<
@@ -147,15 +148,9 @@ export const withSection = <TProps,>(
   const renderSaltFromState = ctx.context?.state?.renderSalt;
   const req = ctx.request;
   let device: Device | null = null;
-  
+
   return {
-    props: {
-      req,
-      get device() {
-        return device ??= deviceOf(ctx.request);
-      },
-      ...props,
-    },
+    props,
     Component: (props: TProps) => {
       // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
       const parentRenderSalt = useContext(SectionContext)?.renderSalt;
@@ -170,6 +165,9 @@ export const withSection = <TProps,>(
         <SectionContext.Provider
           value={{
             ...ctx,
+            get device() {
+              return device ??= deviceOf(ctx.request);
+            },
             renderSalt,
           }}
         >
