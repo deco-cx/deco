@@ -134,19 +134,17 @@ export const withSection = <TProps,>(
   ComponentFunc: ComponentFunc,
   LoadingFallback?: ComponentType,
   ErrorFallback?: ComponentType<{ error?: Error }>,
-  _partialMode: PartialProps["mode"] = undefined,
+  partialMode: PartialProps["mode"] = undefined,
 ) =>
 (
   props: TProps,
-  ctx: HttpContext<RequestState & { renderSalt?: string }>,
+  ctx: HttpContext<RequestState & { renderSalt?: string; partialMode?: PartialProps["mode"] }>,
 ) => {
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
-  const url = new URL(ctx.request.url);
-  const partialMode = _partialMode ||
-    url.searchParams.get("partial-mode") as PartialProps["mode"] || "replace";
+  const _partialMode = partialMode || ctx.context.state.partialMode || "replace";
 
   return {
     props,
@@ -167,7 +165,7 @@ export const withSection = <TProps,>(
             renderSalt,
           }}
         >
-          <Partial name={id} mode={partialMode}>
+          <Partial name={id} mode={_partialMode}>
             <section
               id={id}
               data-manifest-key={resolver}
