@@ -11,6 +11,7 @@ import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { logger } from "../observability/otel/config.ts";
 import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import { REQUEST_CONTEXT_KEY } from "deco/observability/otel/context.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
@@ -134,16 +135,20 @@ export const withSection = <TProps,>(
   ComponentFunc: ComponentFunc,
   LoadingFallback?: ComponentType,
   ErrorFallback?: ComponentType<{ error?: Error }>,
-  partialMode: PartialProps["mode"] = "replace",
+  _partialMode: PartialProps["mode"] = undefined,
 ) =>
 (
   props: TProps,
   ctx: HttpContext<RequestState & { renderSalt?: string }>,
 ) => {
+
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
+  const url = new URL(ctx.request.url);
+  const partialMode = _partialMode || url.searchParams.get("partial-mode") as PartialProps["mode"] || "replace";
+  
   return {
     props,
     Component: (props: TProps) => {
