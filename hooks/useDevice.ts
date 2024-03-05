@@ -2,7 +2,7 @@ import { useContext } from "preact/hooks";
 import { SectionContext } from "deco/components/section.tsx";
 
 export const useDevice = () => {
-    const ctx = useContext(SectionContext);
+  const ctx = useContext(SectionContext);
 
-    return ctx?.device;
-}
+  return ctx?.device;
+};
