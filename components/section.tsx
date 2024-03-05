@@ -164,10 +164,10 @@ export const withSection = <TProps,>(
         <SectionContext.Provider
           value={{
             ...ctx,
+            renderSalt,
             get device() {
               return device ??= deviceOf(ctx.request);
             },
-            renderSalt,
           }}
         >
           <Partial name={id} mode={partialMode}>
