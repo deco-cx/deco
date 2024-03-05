@@ -146,7 +146,6 @@ export const withSection = <TProps,>(
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
-  const req = ctx.request;
   let device: Device | null = null;
 
   return {
