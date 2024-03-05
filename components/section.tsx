@@ -11,7 +11,6 @@ import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { logger } from "../observability/otel/config.ts";
 import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
-import { REQUEST_CONTEXT_KEY } from "deco/observability/otel/context.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
