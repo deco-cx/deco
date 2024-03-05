@@ -11,6 +11,7 @@ import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { logger } from "../observability/otel/config.ts";
 import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import { Device, deviceOf } from "deco/utils/userAgent.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
@@ -144,8 +145,17 @@ export const withSection = <TProps,>(
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
+  const req = ctx.request;
+  let device: Device | null = null;
+  
   return {
-    props,
+    props: {
+      req,
+      get device() {
+        return device ??= deviceOf(ctx.request);
+      },
+      ...props,
+    },
     Component: (props: TProps) => {
       // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
       const parentRenderSalt = useContext(SectionContext)?.renderSalt;
