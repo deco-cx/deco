@@ -138,13 +138,16 @@ export const withSection = <TProps,>(
 ) =>
 (
   props: TProps,
-  ctx: HttpContext<RequestState & { renderSalt?: string; partialMode?: PartialProps["mode"] }>,
+  ctx: HttpContext<
+    RequestState & { renderSalt?: string; partialMode?: PartialProps["mode"] }
+  >,
 ) => {
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
-  const _partialMode = partialMode || ctx.context.state.partialMode || "replace";
+  const _partialMode = partialMode || ctx.context.state.partialMode ||
+    "replace";
 
   return {
     props,

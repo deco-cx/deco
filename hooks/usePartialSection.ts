@@ -11,10 +11,12 @@ type Options<P> = {
 
   /** Path where section is to be found */
   href?: string;
+
+  partialMode?: "replace" | "append" | "prepend";
 };
 
 export const usePartialSection = <P>(
-  { props = {}, href }: Options<P> = {},
+  { props = {}, href, partialMode = "replace" }: Options<P> = {},
 ) => {
   const ctx = useContext(SectionContext);
 
@@ -43,6 +45,7 @@ export const usePartialSection = <P>(
       JSON.stringify(FieldResolver.minify(resolveChain.slice(0, -1))),
     ],
     ["fresh-partial", "true"],
+    ["partialMode", partialMode],
   ]);
 
   return {

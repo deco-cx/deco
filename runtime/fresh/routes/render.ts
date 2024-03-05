@@ -21,7 +21,9 @@ const fromRequest = (req: Request): Options => {
   const href = params.get("href");
   const pathTemplate = params.get("pathTemplate");
   const renderSalt = params.get("renderSalt");
-  const partialMode = params.get("partialMode") as PartialProps["mode"] | undefined;
+  const partialMode = params.get("partialMode") as
+    | PartialProps["mode"]
+    | undefined;
 
   if (!resolveChain) {
     throw badRequest({ code: "400", message: "Missing resolve chain" });
@@ -56,6 +58,7 @@ export const handler = async (
     resolveChain,
     pathTemplate,
     renderSalt,
+    partialMode
   } = fromRequest(req);
 
   const url = new URL(href, req.url);
@@ -80,7 +83,7 @@ export const handler = async (
     request,
     context: {
       ...ctx,
-      state: { ...ctx.state, pathTemplate, renderSalt },
+      state: { ...ctx.state, pathTemplate, renderSalt, partialMode },
       params: params?.pathname.groups,
     },
   };
