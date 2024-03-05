@@ -121,7 +121,7 @@ export const createSectionBlock = (
       TConfig,
       HttpContext<RequestState>
     > => {
-    const componentFunc = wrapper<TProps & { req: Request; device: Device }>(
+    const componentFunc = wrapper<TProps>(
       resolver,
       mod.default,
       mod.LoadingFallback,
