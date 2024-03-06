@@ -16,7 +16,6 @@ import {
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
 import { AppManifest, FunctionContext } from "../types.ts";
-import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { HttpError } from "../engine/errors.ts";
 
 /**
