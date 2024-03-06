@@ -11,9 +11,11 @@ import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { logger } from "../observability/otel/config.ts";
 import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import { Device, deviceOf } from "deco/utils/userAgent.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
+  device: Device;
 }
 
 export const SectionContext = createContext<
@@ -144,6 +146,8 @@ export const withSection = <TProps,>(
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
+  let device: Device | null = null;
+
   return {
     props,
     Component: (props: TProps) => {
@@ -161,6 +165,9 @@ export const withSection = <TProps,>(
           value={{
             ...ctx,
             renderSalt,
+            get device() {
+              return device ??= deviceOf(ctx.request);
+            },
           }}
         >
           <Partial name={id} mode={partialMode}>
