@@ -49,25 +49,21 @@ const compressDuration = meter.createHistogram("zstd_compress_duration", {
 
 interface Metadata {
   body: {
-    etag: string; // body version
     buffer: Uint8Array; // buffer with compressed data
     zstd: boolean;
   };
 }
 
-function bufferToObject(
-  buffer: { [key: string]: number } | Uint8Array,
-): Uint8Array {
-  if (buffer instanceof Uint8Array) {
-    return buffer;
-  }
-
-  const length = Object.keys(buffer).length;
-  const array = new Uint8Array(length);
-  for (let i = 0; i < length; i++) {
-    array[i] = buffer[i.toString()];
-  }
-  return array;
+function metadataToUint8Array(metadata: Metadata): Uint8Array {
+  const { buffer, zstd } = metadata.body;
+  const zstdArray = new Uint8Array([zstd ? 1 : 0]);
+  const result = new Uint8Array(buffer.length + zstdArray.length);
+  // Deno.writeFileSync("/Users/itamar/Desktop/Development/Deco/deco/runtime/caches/osklencache/beforebuffer", result);
+  result.set(zstdArray);
+  // Deno.writeFileSync("/Users/itamar/Desktop/Development/Deco/deco/runtime/caches/osklencache/afterzstd", result);
+  result.set(buffer, zstdArray.length);
+  // Deno.writeFileSync("/Users/itamar/Desktop/Development/Deco/deco/runtime/caches/osklencache/afterbuffer", result);
+  return result;
 }
 
 function createS3Caches(): CacheStorage {
@@ -77,7 +73,7 @@ function createS3Caches(): CacheStorage {
       accessKeyId: awsAccessKeyId,
       secretAccessKey: awsSecretAccessKey,
     },
-    useAccelerateEndpoint: true,
+    // useAccelerateEndpoint: true,
     endpoint: awsEndpoint,
   });
 
@@ -85,10 +81,12 @@ function createS3Caches(): CacheStorage {
     key: string,
     responseObject: Metadata,
   ) {
+    const result = metadataToUint8Array(responseObject);
+  
     const bucketParams = {
       Bucket: bucketName,
       Key: key,
-      Body: JSON.stringify(responseObject),
+      Body: result,
     };
 
     const command = new PutObjectCommand(bucketParams);
@@ -193,7 +191,7 @@ function createS3Caches(): CacheStorage {
               logger.error(`error when reading from s3, ${getResponse}`);
               return undefined;
             }
-            const data = await getResponse.Body.transformToString();
+            const data = await getResponse.Body.transformToByteArray();
             const downloadDurationTime = performance.now() - startTime;
 
             if (data === null) {
@@ -202,20 +200,18 @@ function createS3Caches(): CacheStorage {
             }
             span.addEvent("cache-hit");
 
-            const parsedData: Metadata = typeof data === "string"
-              ? JSON.parse(data)
-              : data;
-            parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
+            const zstd = data[0] === 1;
+            const buffer = data.slice(1);
 
             downloadDuration.record(downloadDurationTime, {
-              bufferSize: data.length,
-              compressed: parsedData.body.zstd,
+              bufferSize: buffer.length,
+              compressed: zstd,
             });
 
             return new Response(
-              parsedData.body.zstd
-                ? decompress(parsedData.body.buffer)
-                : parsedData.body.buffer,
+              zstd
+                ? decompress(buffer)
+                : buffer,
             );
           } catch (err) {
             span.recordException(err);
@@ -236,6 +232,7 @@ function createS3Caches(): CacheStorage {
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
+          // TODO(@ItamarRocha): Add compression threshold? only compress if size > 1MB and if it actually compresses.
           const req = new Request(request);
           assertCanBeCached(req, response);
 
@@ -251,6 +248,7 @@ function createS3Caches(): CacheStorage {
               return buffer;
             })
             .then((buffer) => {
+              logger.info("buffer length: ", buffer.length)
               if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
                 const start = performance.now();
                 const compressed = compress(buffer, 4);
@@ -272,7 +270,7 @@ function createS3Caches(): CacheStorage {
           try {
             try {
               const newMeta: Metadata = {
-                body: { etag: crypto.randomUUID(), buffer, zstd },
+                body: { buffer, zstd },
               };
 
               const setSpan = tracer.startSpan("s3-set", {

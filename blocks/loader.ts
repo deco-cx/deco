@@ -5,9 +5,9 @@ import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { meter } from "../observability/otel/metrics.ts";
-import { caches as cachesS3 } from "../runtime/caches/s3.ts";
 import { caches as cachesKV } from "../runtime/caches/denoKV.ts";
-import { caches as cachesFileSystem } from "../runtime/caches/fileSystem.ts";
+import { caches as cachesFileSystem } from "../runtime/caches/fileSystem.ts"
+import { caches as cachesS3 } from "../runtime/caches/s3.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -102,8 +102,8 @@ const stats = {
 
 let maybeCache: Cache | undefined;
 
-// Fallback to cachesKV if S3 is not available
-const caches = cachesS3 ?? cachesKV;
+// Fallback to S3 if file system not available and to cachesKV if S3 is not available
+const caches = cachesFileSystem ?? cachesS3 ?? cachesKV;
 caches.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
