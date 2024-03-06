@@ -65,7 +65,6 @@ export interface SectionModule<TConfig = any, TProps = any> extends
   LoadingFallback?: ComponentType;
   ErrorFallback?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TProps>;
-  partialMode?: PartialProps["mode"];
 }
 
 const wrapCaughtErrors = async <TProps>(
@@ -125,7 +124,6 @@ export const createSectionBlock = (
       mod.default,
       mod.LoadingFallback,
       mod.ErrorFallback,
-      mod.partialMode,
     );
     const loader = mod.loader;
     if (!loader) {
