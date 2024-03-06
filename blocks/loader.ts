@@ -7,6 +7,7 @@ import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { meter } from "../observability/otel/metrics.ts";
 import { caches as cachesS3 } from "../runtime/caches/s3.ts";
 import { caches as cachesKV } from "../runtime/caches/denoKV.ts";
+import { caches as cachesFileSystem } from "../runtime/caches/fileSystem.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,

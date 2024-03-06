@@ -41,24 +41,17 @@ export async function* readFromStream<T>(
     .getReader();
 
   while (true) {
-    let acc = "";
     const { value, done } = await reader.read();
     if (done) {
       break;
     }
 
-    const parsedValue = value
-      .split("\n")
-      .filter(Boolean);
-
-    for (const chnks of parsedValue) {
-      acc += chnks;
-      try {
-        yield JSON.parse(acc);
-      } catch {
-        continue;
-      }
-      acc = "";
+    const [, data] = value.split("\n");
+    try {
+      yield JSON.parse(data.replace("data:", ""));
+    } catch (_err) {
+      console.log("error parsing data", _err, data);
+      continue;
     }
   }
 }
@@ -74,12 +67,8 @@ const fetchWithProps = async (
     );
   }
   const headers = new Headers(init?.headers);
-  const isStream = isStreamProps(props) && props.stream;
 
-  headers.set(
-    "accept",
-    `application/json, ${isStream ? "text/event-stream" : ""}`,
-  );
+  headers.set("accept", `application/json, text/event-stream`);
   headers.set("content-type", "application/json");
 
   const response = await (init?.fetcher ?? fetch)(url, {
@@ -94,7 +83,7 @@ const fetchWithProps = async (
   }
 
   if (response.ok) {
-    if (isStream) {
+    if (response.headers.get("content-type") === "text/event-stream") {
       return readFromStream(response);
     }
     return response.json();

@@ -1,4 +1,4 @@
-import { Partial } from "$fresh/runtime.ts";
+import { Head, Partial } from "$fresh/runtime.ts";
 import { HttpContext } from "deco/blocks/handler.ts";
 import { HttpError } from "deco/engine/errors.ts";
 import { usePartialSection } from "deco/hooks/usePartialSection.ts";
@@ -10,6 +10,7 @@ import { Murmurhash3 } from "../deps.ts";
 import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { logger } from "../observability/otel/config.ts";
+import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
@@ -89,10 +90,34 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 }
 
 const script = (id: string) => {
+  function init() {
+    const elem = document.getElementById(id);
+    const parent = elem?.parentElement;
+
+    if (elem == null || parent == null) {
+      console.error(
+        `Missing element of id ${id} or its parent element. Async rendering will NOT work properly`,
+      );
+      return;
+    }
+
+    const observeAndClose = (e: IntersectionObserverEntry[]) => {
+      e.forEach((entry) => {
+        if (entry.isIntersecting) {
+          elem.click();
+          observer.disconnect();
+        }
+      });
+    };
+    const observer = new IntersectionObserver(observeAndClose);
+    observer.observe(parent);
+    observeAndClose(observer.takeRecords());
+  }
+
   if (document.readyState === "complete") {
-    document.getElementById(id)?.click();
+    init();
   } else {
-    addEventListener("load", () => document.getElementById(id)?.click());
+    addEventListener("load", init);
   }
 };
 
@@ -109,6 +134,7 @@ export const withSection = <TProps,>(
   ComponentFunc: ComponentFunc,
   LoadingFallback?: ComponentType,
   ErrorFallback?: ComponentType<{ error?: Error }>,
+  partialMode: PartialProps["mode"] = "replace",
 ) =>
 (
   props: TProps,
@@ -137,7 +163,7 @@ export const withSection = <TProps,>(
             renderSalt,
           }}
         >
-          <Partial name={id}>
+          <Partial name={id} mode={partialMode}>
             <section
               id={id}
               data-manifest-key={resolver}
@@ -149,12 +175,16 @@ export const withSection = <TProps,>(
                 component={resolver}
                 loading={() => {
                   const btnId = `${id}-partial-onload`;
+                  const partial = usePartialSection();
 
                   return (
                     <>
                       {LoadingFallback ? <LoadingFallback /> : <></>}
+                      <Head>
+                        <link rel="prefetch" href={partial["f-partial"]} />
+                      </Head>
                       <button
-                        {...usePartialSection()}
+                        {...partial}
                         id={btnId}
                         style={{ display: "none" }}
                       />

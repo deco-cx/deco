@@ -34,11 +34,17 @@ export const deviceOf = (request: Request) => {
 
 const UABotParser = new UAParser(Bots);
 
+const KNOWN_BOTS = ["Google-InspectionTool"]
+
 export const isBot = (req: Request) => {
   const fromCloudFlare = req.headers.get("cf-verified-bot");
 
   if (fromCloudFlare === "true") {
     return true;
+  }
+
+  if(KNOWN_BOTS.some(bot => req.headers.get("user-agent")?.includes(bot))) {
+    return true
   }
 
   const ua = req.headers.get("user-agent") || "";

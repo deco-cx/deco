@@ -13,6 +13,9 @@ import { stringifyForWrite } from "../utils/json.ts";
 const PACKAGES_TO_CHECK =
   /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
 
+const requiredMinVersion: Record<string, string> = {
+  // "std/": "0.208.0",
+};
 interface ImportMap {
   imports: Record<string, string>;
 }
@@ -66,7 +69,9 @@ async function update() {
 
         if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
           console.log(
-            colors.yellow(`skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`),
+            colors.yellow(
+              `skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
+            ),
           );
           return;
         }
@@ -85,6 +90,21 @@ async function update() {
   if (!importMap.imports["deco/"] && importMap.imports["$live/"]) {
     console.info("Add deco/ alias");
     importMap.imports["deco/"] = importMap.imports["$live/"];
+  }
+
+  for (const [pkg, minVer] of Object.entries(requiredMinVersion)) {
+    if (importMap.imports[pkg]) {
+      const url = lookup(importMap.imports[pkg], REGISTRIES);
+      const currentVersion = url?.version();
+      if (!currentVersion || semver.lt(currentVersion, minVer)) {
+        console.info(
+          `Upgrading ${pkg} ${currentVersion} -> ${minVer}.`,
+        );
+
+        upgradeFound = true;
+        importMap.imports[pkg] = url?.at(minVer).url ?? importMap.imports[pkg];
+      }
+    }
   }
 
   if (!upgradeFound) {
