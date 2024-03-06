@@ -228,7 +228,6 @@ function createS3Caches(): CacheStorage {
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
-          // TODO(@ItamarRocha): Add compression threshold? only compress if size > 1MB and if it actually compresses.
           const req = new Request(request);
           assertCanBeCached(req, response);
 
