@@ -134,7 +134,6 @@ export const withSection = <TProps,>(
   ComponentFunc: ComponentFunc,
   LoadingFallback?: ComponentType,
   ErrorFallback?: ComponentType<{ error?: Error }>,
-  partialMode: PartialProps["mode"] = undefined,
 ) =>
 (
   props: TProps,
@@ -146,7 +145,7 @@ export const withSection = <TProps,>(
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
-  const _partialMode = partialMode || ctx.context.state.partialMode ||
+  const partialMode = ctx.context.state.partialMode ||
     "replace";
 
   return {
@@ -168,7 +167,7 @@ export const withSection = <TProps,>(
             renderSalt,
           }}
         >
-          <Partial name={id} mode={_partialMode}>
+          <Partial name={id} mode={partialMode}>
             <section
               id={id}
               data-manifest-key={resolver}
