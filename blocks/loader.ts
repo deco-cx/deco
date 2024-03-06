@@ -102,9 +102,8 @@ const stats = {
 
 let maybeCache: Cache | undefined;
 
-// Fallback to S3 if file system not available and to cachesKV if S3 is not available
-// const caches = cachesFileSystem ?? cachesS3 ?? cachesKV;
-const caches = cachesS3 ?? cachesKV;
+// Fallback to cachesKV if file system not available
+const caches = cachesFileSystem ?? cachesKV;
 caches.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
