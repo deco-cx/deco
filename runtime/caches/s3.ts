@@ -18,8 +18,9 @@ import {
   init as initZstd,
 } from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
 
-const MAX_UNCOMPRESSED_SIZE =
-  parseInt(Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")! ?? "645120");
+const MAX_UNCOMPRESSED_SIZE = parseInt(
+  Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")! ?? "645120",
+);
 
 const zstdPromise = initZstd();
 
@@ -58,11 +59,8 @@ function metadataToUint8Array(metadata: Metadata): Uint8Array {
   const { buffer, zstd } = metadata.body;
   const zstdArray = new Uint8Array([zstd ? 1 : 0]);
   const result = new Uint8Array(buffer.length + zstdArray.length);
-  // Deno.writeFileSync("/Users/itamar/Desktop/Development/Deco/deco/runtime/caches/osklencache/beforebuffer", result);
   result.set(zstdArray);
-  // Deno.writeFileSync("/Users/itamar/Desktop/Development/Deco/deco/runtime/caches/osklencache/afterzstd", result);
   result.set(buffer, zstdArray.length);
-  // Deno.writeFileSync("/Users/itamar/Desktop/Development/Deco/deco/runtime/caches/osklencache/afterbuffer", result);
   return result;
 }
 
@@ -82,7 +80,7 @@ function createS3Caches(): CacheStorage {
     responseObject: Metadata,
   ) {
     const result = metadataToUint8Array(responseObject);
-  
+
     const bucketParams = {
       Bucket: bucketName,
       Key: key,
@@ -209,9 +207,7 @@ function createS3Caches(): CacheStorage {
             });
 
             return new Response(
-              zstd
-                ? decompress(buffer)
-                : buffer,
+              zstd ? decompress(buffer) : buffer,
             );
           } catch (err) {
             span.recordException(err);
@@ -248,7 +244,6 @@ function createS3Caches(): CacheStorage {
               return buffer;
             })
             .then((buffer) => {
-              logger.info("buffer length: ", buffer.length)
               if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
                 const start = performance.now();
                 const compressed = compress(buffer, 4);
