@@ -103,7 +103,7 @@ export const createSectionBlock = (
   type: "sections" | "pages",
 ): Block<SectionModule> => ({
   type,
-  introspect: { funcNames: ["loader", "default"], includeReturn: true },
+  introspect: { funcNames: ["loader", "default"], includeReturn: ["default"] },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,

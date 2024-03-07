@@ -1242,6 +1242,22 @@ const paramsOf = (
     return typeAnnotation!;
   });
 };
+
+const getReturnFnFunction = async (
+  funcNames: string[],
+  importMapResolver: ImportMapResolver,
+  mPath: string,
+  mProgram: ParsedSource,
+) => {
+  for (const name of funcNames) {
+    const fn = name === "default"
+      ? await findDefaultFuncExport(importMapResolver, mPath, mProgram)
+      : await findFuncExport(importMapResolver, name, mPath, mProgram);
+
+    if (fn) return returnOf(fn);
+  }
+};
+
 export const programToBlockRef = async (
   importMapResolver: ImportMapResolver,
   mPath: string,
@@ -1264,7 +1280,14 @@ export const programToBlockRef = async (
     }
 
     const includeReturn = introspect?.includeReturn;
-    const fnReturn = returnOf(fn);
+    const fnReturn = Array.isArray(includeReturn)
+      ? await getReturnFnFunction(
+        includeReturn,
+        importMapResolver,
+        mPath,
+        mProgram,
+      )
+      : returnOf(fn);
     const { path, parsedSource } = fn;
 
     const retn = typeof includeReturn === "function"
