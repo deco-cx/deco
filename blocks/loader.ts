@@ -8,6 +8,7 @@ import { meter } from "../observability/otel/metrics.ts";
 import { caches as cachesKV } from "../runtime/caches/denoKV.ts";
 import { caches as cachesFileSystem } from "../runtime/caches/fileSystem.ts";
 import { caches as cachesS3 } from "../runtime/caches/s3.ts";
+import { caches as tieredCaches } from "../runtime/caches/tiered.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -103,8 +104,8 @@ const stats = {
 let maybeCache: Cache | undefined;
 
 // Fallback to S3 if cachesFileSystem not available and to DenoKV if S3 not available.
-const caches = cachesFileSystem ?? cachesS3 ?? cachesKV;
-caches.open("loader")
+const caches = tieredCaches;
+await caches.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
 
@@ -162,6 +163,7 @@ const wrapLoader = (
       const cacheKeyValue = cacheKey(props, req, ctx);
       try {
         // Should skip cache
+        console.log("IS CACHE", isCache(maybeCache));
         if (
           mode === "no-store" ||
           !ENABLE_LOADER_CACHE ||
