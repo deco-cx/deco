@@ -1,18 +1,11 @@
-import { trace, weakcache } from "../../deps.ts";
 import { tracer, tracerIsRecording } from "deco/observability/otel/config.ts";
+import { weakcache } from "../../deps.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
 
 const PROXY_DOMAIN = Deno.env.get("DECO_PROXY_DOMAIN") ??
   "fastly.decocache.com";
 
-const trackCfHeaders = [
-  "Cf-Ray",
-  "Cf-Cache-Status",
-  "X-Origin-Cf-Cache-Status",
-  "X-Vtex-Io-Cluster-Id",
-  "X-Edge-Cache-Status",
-];
 const assertNoOptions = (
   { ignoreMethod, ignoreSearch, ignoreVary }: CacheQueryOptions = {},
 ) => {
@@ -95,18 +88,7 @@ export const caches: CacheStorage = {
 
         const response = cache.has(req.url) ? cache.get(req.url) : await fetch(
           req,
-        ).then((response) => {
-          trackCfHeaders.forEach((header) => {
-            const responseHeader = response.headers.get(header);
-            if (responseHeader) {
-              trace.getActiveSpan()?.setAttribute(
-                `http.response.header.${header.toLowerCase()}`,
-                responseHeader,
-              );
-            }
-          });
-          return response;
-        });
+        );
 
         return new Response(response.clone().body, response);
       },
