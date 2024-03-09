@@ -39,6 +39,8 @@ export const resource = Resource.default().merge(
     [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
     "deco.runtime.version": meta.version,
     "deco.apps.version": apps_ver,
+    [SemanticResourceAttributes.CLOUD_REGION]: Deno.env.get("DENO_REGION") ??
+      "unknown",
   }),
 );
 
