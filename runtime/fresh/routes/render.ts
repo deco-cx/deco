@@ -1,4 +1,5 @@
 import { HandlerContext } from "$fresh/server.ts";
+import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { FieldResolver, Resolvable } from "../../../engine/core/resolver.ts";
 import { badRequest } from "../../../engine/errors.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
@@ -9,6 +10,7 @@ interface Options {
   href: string;
   pathTemplate: string;
   renderSalt?: string;
+  partialMode?: PartialProps["mode"];
 }
 
 const fromRequest = (req: Request): Options => {
@@ -19,6 +21,9 @@ const fromRequest = (req: Request): Options => {
   const href = params.get("href");
   const pathTemplate = params.get("pathTemplate");
   const renderSalt = params.get("renderSalt");
+  const partialMode = params.get("partialMode") as
+    | PartialProps["mode"]
+    | undefined;
 
   if (!resolveChain) {
     throw badRequest({ code: "400", message: "Missing resolve chain" });
@@ -39,6 +44,7 @@ const fromRequest = (req: Request): Options => {
     href,
     pathTemplate,
     renderSalt: renderSalt ?? undefined,
+    partialMode: partialMode ?? undefined,
   };
 };
 
@@ -52,6 +58,7 @@ export const handler = async (
     resolveChain,
     pathTemplate,
     renderSalt,
+    partialMode,
   } = fromRequest(req);
 
   const url = new URL(href, req.url);
@@ -76,7 +83,7 @@ export const handler = async (
     request,
     context: {
       ...ctx,
-      state: { ...ctx.state, pathTemplate, renderSalt },
+      state: { ...ctx.state, pathTemplate, renderSalt, partialMode },
       params: params?.pathname.groups,
     },
   };

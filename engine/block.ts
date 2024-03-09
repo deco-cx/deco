@@ -36,7 +36,7 @@ export type ModuleOf<TBlock> = TBlock extends Block<
   : never;
 
 export interface IntrospectParams {
-  includeReturn?: boolean | ((ts: TsType) => TsType | undefined);
+  includeReturn?: boolean | string[] | ((ts: TsType) => TsType | undefined);
   funcNames?: string[];
 }
 

@@ -134,16 +134,20 @@ export const withSection = <TProps,>(
   ComponentFunc: ComponentFunc,
   LoadingFallback?: ComponentType,
   ErrorFallback?: ComponentType<{ error?: Error }>,
-  partialMode: PartialProps["mode"] = "replace",
 ) =>
 (
   props: TProps,
-  ctx: HttpContext<RequestState & { renderSalt?: string }>,
+  ctx: HttpContext<
+    RequestState & { renderSalt?: string; partialMode?: PartialProps["mode"] }
+  >,
 ) => {
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
+  const partialMode = ctx.context.state.partialMode ||
+    "replace";
+
   return {
     props,
     Component: (props: TProps) => {
