@@ -1,4 +1,3 @@
-import accountBlock from "../blocks/account.ts";
 import actionBlock from "../blocks/action.ts";
 import appBlock from "../blocks/app.ts";
 import flagBlock from "../blocks/flag.ts";
@@ -22,7 +21,6 @@ export default () =>
   [
     ...userDefinedBlocks,
     functionBlock, // legacy
-    accountBlock,
     loaderBlock,
     handlerBlock,
     pageBlock,

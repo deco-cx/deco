@@ -18,7 +18,8 @@ export interface BlockModuleRef {
 }
 
 export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
-export type BlockModule<
+
+export type JSModule<
   TDefaultExportFunc extends ResolverLike<T> = ResolverLike,
   T = TDefaultExportFunc extends ResolverLike<infer TValue> ? TValue : any,
   TSerializable = T,
@@ -29,6 +30,12 @@ export type BlockModule<
   Preview?: ComponentFunc;
   onBeforeResolveProps?: (props: any, hints: HintNode<any>) => any;
 };
+
+export type BlockModule<
+  TDefaultExportFunc extends ResolverLike<T> = ResolverLike,
+  T = TDefaultExportFunc extends ResolverLike<infer TValue> ? TValue : any,
+  TSerializable = T,
+> = JSModule<TDefaultExportFunc, T, TSerializable>;
 
 export type ModuleOf<TBlock> = TBlock extends Block<
   infer TBlockModule
@@ -58,20 +65,6 @@ export interface Block<
   defaultInvoke?: Resolver<TSerializable, BlockInvocation, any>;
   type: BType;
   introspect?: IntrospectParams;
-  decorate?: <
-    TBlockModule extends BlockModule<
-      TDefaultExportFunc,
-      TProvides,
-      TSerializable
-    > = BlockModule<
-      TDefaultExportFunc,
-      TProvides,
-      TSerializable
-    >,
-  >(
-    blockModule: TBlockModule,
-    key: string,
-  ) => TBlockModule;
   adapt?: <TConfig = any>(
     blockModule: TBlockModule,
     key: string,

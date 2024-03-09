@@ -93,14 +93,8 @@ export const buildRuntime = <
   DanglingRecover[],
 ] => {
   const blocks = asManifest(currMan)[blk.type] ?? {};
-  const decorated: Record<string, BlockModule> = blk.decorate
-    ? mapObjKeys<Record<string, BlockModule>, Record<string, BlockModule>>(
-      blocks,
-      blk.decorate,
-    )
-    : blocks;
 
-  const previews = Object.entries(decorated).reduce((prv, [key, mod]) => {
+  const previews = Object.entries(blocks).reduce((prv, [key, mod]) => {
     const previewFunc = mod.preview ??
       (mod.Preview ? usePreviewFunc(mod.Preview) : blk.defaultPreview);
     if (previewFunc) {
@@ -111,7 +105,7 @@ export const buildRuntime = <
     return prv;
   }, {} as TResolverMap);
 
-  const invocations = Object.entries(decorated).reduce(
+  const invocations = Object.entries(blocks).reduce(
     (invk, [key, mod]) => {
       const invokeFunc = mod.invoke ?? blk.defaultInvoke;
       if (invokeFunc) {
@@ -126,7 +120,7 @@ export const buildRuntime = <
 
   const adapted = blk.adapt
     ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
-      decorated,
+      blocks,
       (mod, key) => {
         const hasMiddleware = typeof middleware !== "undefined";
         // create a middleware array or empty if middleware is not defined
@@ -153,7 +147,7 @@ export const buildRuntime = <
     adapted[localRef(blk.type, danglingModuleTSX)] ??
     blk.defaultDanglingRecover;
   return [
-    { ...currMan, [blk.type]: decorated },
+    { ...currMan, [blk.type]: blocks },
     { ...currMap, ...adapted, ...previews, ...invocations },
     (recover as Resolver | undefined)
       ? [...recovers, {
