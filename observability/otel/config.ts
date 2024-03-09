@@ -29,6 +29,16 @@ const tryGetVersionOf = (pkg: string) => {
 const apps_ver = tryGetVersionOf("apps/") ??
   tryGetVersionOf("deco-sites/std/") ?? "_";
 
+const getCloudProvider = () => {
+  const kService = Deno.env.get("K_SERVICE") !== undefined 
+
+  if (kService) {
+    return "AWS";
+  } else{
+    return "local or Deno Deploy"
+  }
+}
+
 export const resource = Resource.default().merge(
   new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ??
@@ -37,6 +47,7 @@ export const resource = Resource.default().merge(
       Context.active().deploymentId ??
         Deno.hostname(),
     [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
+    [SemanticResourceAttributes.CLOUD_PROVIDER]: getCloudProvider(),
     "deco.runtime.version": meta.version,
     "deco.apps.version": apps_ver,
   }),
