@@ -1,5 +1,4 @@
 import { logger, tracer } from "../../observability/otel/config.ts";
-import { caches as cachesKV } from "./denoKV.ts";
 import { caches as cachesFileSystem } from "./fileSystem.ts";
 import { caches as cachesS3 } from "./s3.ts";
 
@@ -19,7 +18,7 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
     request: RequestInfo | URL,
     matched: Response,
   ) {
-    const putPromises = indexOfCachesToUpdate.map((index) => openedCaches[index].put(request, matched));
+    const putPromises = indexOfCachesToUpdate.map((index) => openedCaches[index].put(request, matched.clone()));
     await Promise.all(putPromises);
   }
 
@@ -139,7 +138,7 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
-            const putPromises = openedCaches.map((caches) => caches.put(request, response));
+            const putPromises = openedCaches.map((caches) => caches.put(request, response.clone()));
             await Promise.all(putPromises);
         },
       });
@@ -150,4 +149,4 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
 return caches;
 }
 
-export const caches = createTieredCache(cachesFileSystem, cachesS3, cachesKV);
+export const caches = createTieredCache(cachesFileSystem, cachesS3);
