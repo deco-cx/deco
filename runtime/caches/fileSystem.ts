@@ -63,9 +63,9 @@ function createFileSystemCache(): CacheStorage {
       const fileContent = await Deno.readFile(filePath);
       return fileContent;
     } catch (err) {
-      if (err.code === "ENOENT") {
-        logger.warning(`file not found when reading from file system, path: ${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`);
-      }else {
+      // Error code different for file/dir not found
+      // The file won't be found in cases where it's not cached
+      if (err.code !== "ENOENT") {
         logger.error(`error when reading from file system, ${err}`);
       }
       return null;
