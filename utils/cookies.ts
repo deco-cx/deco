@@ -1,4 +1,4 @@
-import { Cookie, setCookie as DenoSetCookie } from "std/http/cookie.ts";
+import { Cookie, setCookie as stdSetCookie } from "std/http/cookie.ts";
 
 export const MAX_COOKIE_SIZE = 4096; // 4KB
 
@@ -24,15 +24,19 @@ export function setCookie(
   const { encode = false, dangerouslySetBigCookies = false } = cookieOptions ??
     {};
 
+  const newCookie = {
+    ...cookie,
+  };
+
   if (encode) {
-    cookie.value = btoa(encodeURIComponent(cookie.value));
+    newCookie.value = btoa(encodeURIComponent(cookie.value));
   }
 
   // could have an error range, because deno's cookie uses their own toString function
-  const cookieString = JSON.stringify(cookie);
+  const stringLength = newCookie.name.length + newCookie.value.length;
 
   if (!dangerouslySetBigCookies) {
-    const sizeInBytes = new TextEncoder().encode(cookieString).length;
+    const sizeInBytes = stringLength * 2;
     if (sizeInBytes > MAX_COOKIE_SIZE) {
       console.warn(
         `Cookie '${cookie.name}' exceeds the size limit of 4KB and will not be set.`,
@@ -41,7 +45,7 @@ export function setCookie(
     }
   }
 
-  DenoSetCookie(headers, cookie);
+  stdSetCookie(headers, newCookie);
 }
 
 export function decodeCookie(cookie: string): string {

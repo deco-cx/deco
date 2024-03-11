@@ -192,10 +192,7 @@ export const handler = [
       const active = new Set(segment.active || []);
       const inactiveDrawn = new Set(segment.inactiveDrawn || []);
       for (const flag of state.flags) {
-        // non-saved matcher includes ".rule" eg: "deco.matchers.1.rule"
-        // to avoid large cookies we only set saved matchers
-        const isSavedMatcher = !flag.name.includes(".rule");
-        if (isSavedMatcher) {
+        if (flag.isSegment) {
           if (flag.value) {
             active.add(flag.name);
             inactiveDrawn.delete(flag.name);
@@ -212,7 +209,7 @@ export const handler = [
       const value = JSON.stringify(newSegment);
       const hasFlags = active.size > 0 || inactiveDrawn.size > 0;
 
-      if (cookieSegment !== value && hasFlags) {
+      if (hasFlags && cookieSegment !== value) {
         setCookie(newHeaders, {
           name: DECO_SEGMENT,
           value,
