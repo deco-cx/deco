@@ -192,9 +192,10 @@ export const handler = [
       const active = new Set(segment.active || []);
       const inactiveDrawn = new Set(segment.inactiveDrawn || []);
       for (const flag of state.flags) {
-        // non-saved matcher includes "".rule" eg: "deco.matchers.1.rule"
+        // non-saved matcher includes ".rule" eg: "deco.matchers.1.rule"
         // to avoid large cookies we only set saved matchers
-        if (!flag.name.includes(".rule")) {
+        const isSavedMatcher = !flag.name.includes(".rule");
+        if (isSavedMatcher) {
           if (flag.value) {
             active.add(flag.name);
             inactiveDrawn.delete(flag.name);
