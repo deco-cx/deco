@@ -8,7 +8,6 @@ import {
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { stringifyForWrite } from "../utils/json.ts";
 
-
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
   /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
