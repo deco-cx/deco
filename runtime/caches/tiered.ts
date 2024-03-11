@@ -11,14 +11,18 @@ const inFuture = (maybeDate: string) => {
 };
 const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
 
-function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): CacheStorage {
-    const openedCaches: Cache[] = [];
+function createTieredCache(
+  ...tieredCaches: (CacheStorage | undefined)[]
+): CacheStorage {
+  const openedCaches: Cache[] = [];
   async function updateTieredCaches(
     indexOfCachesToUpdate: Array<number>,
     request: RequestInfo | URL,
     matched: Response,
   ) {
-    const putPromises = indexOfCachesToUpdate.map((index) => openedCaches[index].put(request, matched.clone()));
+    const putPromises = indexOfCachesToUpdate.map((index) =>
+      openedCaches[index].put(request, matched.clone())
+    );
     await Promise.all(putPromises);
   }
 
@@ -39,27 +43,23 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
       throw new Error("Not Implemented");
     },
     open: async (cacheName: string): Promise<Cache> => {
-        console.log("Openning cache!! ",cacheName);
-        let maybeCache: Cache | undefined;
-        for (const caches of tieredCaches) {
-            if (caches) {
-                console.log("IS CACHE");
-                await caches.open(cacheName)
-                    .then((c) => maybeCache = c)
-                    .catch((error) => {
-                        console.error("Error caught:", error);
-                        maybeCache = undefined;
-                    });
-                console.log("MAYBE CACHE: ", isCache(maybeCache))
-                if (isCache(maybeCache)) {
-                    console.log("PUSHHHHH")
-                    openedCaches.push(maybeCache);
-                }
-            } else {
-                console.log("IS NOT CACHE");
-            }
+      let maybeCache: Cache | undefined;
+      for (const caches of tieredCaches) {
+        if (caches) {
+          await caches.open(cacheName)
+            .then((c) => maybeCache = c)
+            .catch((error) => {
+              console.error("Error caught:", error);
+              maybeCache = undefined;
+            });
+          if (isCache(maybeCache)) {
+            openedCaches.push(maybeCache);
+          }
+        } else {
+          logger.error("No Cache available");
         }
-        console.log("openedCaches length: ", openedCaches.length);
+      }
+      logger.info(`Tiered cache opened ${openedCaches.length} caches`);
       return Promise.resolve({
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
         add: (_request: RequestInfo | URL): Promise<void> => {
@@ -92,14 +92,11 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
           request: RequestInfo | URL,
           options?: CacheQueryOptions,
         ): Promise<Response | undefined> => {
-            console.log("entering tiered match")
           let matched;
           const indexOfCachesToUpdate = [];
           for (const [index, caches] of openedCaches.entries()) {
-            console.log("match: ", index);
             matched = await caches.match(request, options).catch(() => null);
             if (!matched) {
-                console.log("- not matched: ", index);
               indexOfCachesToUpdate.push(index);
               continue;
             }
@@ -108,21 +105,16 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
             const isStale = expires ? !inFuture(expires) : false;
 
             if (isStale) {
-                console.log("- is stale: ", index);
               indexOfCachesToUpdate.push(index);
             } else {
               // found a match, no need to check the rest
-              console.log("- matched: ", index);
               break;
             }
           }
-          console.log("indexOfCachesToUpdate: ", indexOfCachesToUpdate);
           if (matched) {
             updateTieredCaches(indexOfCachesToUpdate, request, matched);
-            console.log("- returning match\n\n")
             return matched;
           } else {
-            console.log("- returning undefined\n\n")
             return undefined;
           }
         },
@@ -138,15 +130,16 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
-            const putPromises = openedCaches.map((caches) => caches.put(request, response.clone()));
-            await Promise.all(putPromises);
+          const putPromises = openedCaches.map((caches) =>
+            caches.put(request, response.clone())
+          );
+          await Promise.all(putPromises);
         },
       });
     },
   };
 
-//   return tieredCaches.length > 0 ? caches : undefined;
-return caches;
+  return caches;
 }
 
 export const caches = createTieredCache(cachesFileSystem, cachesS3);
