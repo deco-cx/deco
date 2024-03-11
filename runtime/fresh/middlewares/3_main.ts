@@ -206,11 +206,11 @@ export const handler = [
       };
       const value = btoa(encodeURIComponent(JSON.stringify(newSegment)));
       if (segment !== value) {
-        setCookie(newHeaders, {
-          name: DECO_SEGMENT,
-          value,
-          path: "/",
-        });
+        // setCookie(newHeaders, {
+        //   name: DECO_SEGMENT,
+        //   value,
+        //   path: "/",
+        // });
       }
     }
 
