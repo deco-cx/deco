@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { Context } from "../../deco.ts";
+import { context, Context } from "../../deco.ts";
 import {
   BatchSpanProcessor,
   FetchInstrumentation,
@@ -33,9 +33,11 @@ const getCloudProvider = () => {
   const kService = Deno.env.get("K_SERVICE") !== undefined 
 
   if (kService) {
-    return "AWS";
+    return "kubernetes";
+  } else if (context.isDeploy) {
+    return "deno_deploy"
   } else{
-    return "local or Deno Deploy"
+    return "local_host"
   }
 }
 
