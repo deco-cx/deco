@@ -44,7 +44,7 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     SubscribeParameters[1] | undefined,
   ] = [undefined, undefined];
   es.addEventListener("message", (event) => {
-    const state = JSON.parse(decodeURIComponent(atob(event.data)));
+    const state = JSON.parse(event.data);
     onChange?.({
       state,
       archived: {},

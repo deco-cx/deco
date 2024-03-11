@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { Context } from "../../deco.ts";
+import { context, Context } from "../../deco.ts";
 import {
   BatchSpanProcessor,
   FetchInstrumentation,
@@ -37,6 +37,7 @@ export const resource = Resource.default().merge(
       Context.active().deploymentId ??
         Deno.hostname(),
     [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
+    [SemanticResourceAttributes.CLOUD_PROVIDER]: context.platform,
     "deco.runtime.version": meta.version,
     "deco.apps.version": apps_ver,
     [SemanticResourceAttributes.CLOUD_REGION]: Deno.env.get("DENO_REGION") ??
