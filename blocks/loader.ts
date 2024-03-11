@@ -81,7 +81,7 @@ export const wrapCaughtErrors = async <
 };
 
 export const ENABLE_LOADER_CACHE =
-  Deno.env.get("ENABLE_LOADER_CACHE") !== undefined;
+  Deno.env.get("ENABLE_LOADER_CACHE") === "true";
 
 export const LOADER_CACHE_START_TRESHOLD =
   Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;

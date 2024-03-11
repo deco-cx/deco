@@ -60,6 +60,7 @@ export {
   ROOT_CONTEXT,
   SpanKind,
   SpanStatusCode,
+  trace,
   ValueType,
 } from "npm:@opentelemetry/api@1.6.0";
 export { crypto } from "std/crypto/mod.ts";

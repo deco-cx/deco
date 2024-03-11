@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { Context } from "../../deco.ts";
+import { context, Context } from "../../deco.ts";
 import {
   BatchSpanProcessor,
   FetchInstrumentation,
@@ -37,8 +37,11 @@ export const resource = Resource.default().merge(
       Context.active().deploymentId ??
         Deno.hostname(),
     [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
+    [SemanticResourceAttributes.CLOUD_PROVIDER]: context.platform,
     "deco.runtime.version": meta.version,
     "deco.apps.version": apps_ver,
+    [SemanticResourceAttributes.CLOUD_REGION]: Deno.env.get("DENO_REGION") ??
+      "unknown",
   }),
 );
 
@@ -61,9 +64,33 @@ log.setup({
 export const logger = log.getLogger(loggerName);
 export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 
+const trackCfHeaders = [
+  "Cf-Ray",
+  "Cf-Cache-Status",
+  "X-Origin-Cf-Cache-Status",
+  "X-Vtex-Io-Cluster-Id",
+  "X-Edge-Cache-Status",
+];
+
 registerInstrumentations({
   instrumentations: [
-    new FetchInstrumentation(),
+    new FetchInstrumentation(
+      {
+        applyCustomAttributesOnSpan: (span, _req, response) => {
+          if (span && response instanceof Response) {
+            trackCfHeaders.forEach((header) => {
+              const val = response.headers.get(header);
+              if (val) {
+                span.setAttribute(
+                  `http.response.header.${header.toLocaleLowerCase()}`,
+                  val,
+                );
+              }
+            });
+          }
+        },
+      },
+    ),
     new DenoRuntimeInstrumentation(),
   ],
 });

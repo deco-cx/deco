@@ -1,5 +1,5 @@
-import { weakcache } from "../../deps.ts";
 import { tracer, tracerIsRecording } from "deco/observability/otel/config.ts";
+import { weakcache } from "../../deps.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
 
