@@ -1,6 +1,7 @@
 import { logger, tracer } from "../../observability/otel/config.ts";
 import { caches as cachesFileSystem } from "./fileSystem.ts";
 import { caches as cachesS3 } from "./s3.ts";
+import { caches as cachesMemory } from "./memory.ts";
 
 const inFuture = (maybeDate: string) => {
   try {
@@ -149,4 +150,4 @@ function createTieredCache(...tieredCaches: (CacheStorage | undefined)[]): Cache
 return caches;
 }
 
-export const caches = createTieredCache(cachesFileSystem, cachesS3);
+export const caches = createTieredCache(cachesMemory, cachesFileSystem, cachesS3);
