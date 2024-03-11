@@ -35,6 +35,7 @@ export type RequestContext = {
 export type DecoContext = {
   deploymentId: string | undefined;
   isDeploy: boolean;
+  platform: string;
   site: string;
   siteId: number;
   loginUrl?: string;
@@ -47,9 +48,24 @@ export type DecoContext = {
   request?: RequestContext;
 };
 
+const isDeploy = Boolean(Deno.env.get("DENO_DEPLOYMENT_ID"));
+
+const getCloudProvider = () => {
+  const kService = Deno.env.get("K_SERVICE") !== undefined 
+  
+  if (kService) {
+    return "kubernetes";
+  } else if (isDeploy) {
+    return "deno_deploy"
+  } else{
+    return "localhost"
+  }
+}
+
 const defaultContext: Omit<DecoContext, "schema"> = {
   deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
-  isDeploy: Boolean(Deno.env.get("DENO_DEPLOYMENT_ID")),
+  isDeploy: isDeploy,
+  platform: getCloudProvider(),
   site: "",
   siteId: 0,
   play: Deno.env.has("USE_LOCAL_STORAGE_ONLY"),
