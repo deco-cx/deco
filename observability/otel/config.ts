@@ -37,7 +37,7 @@ const getCloudProvider = () => {
   } else if (context.isDeploy) {
     return "deno_deploy"
   } else{
-    return "local_host"
+    return "localhost"
   }
 }
 
