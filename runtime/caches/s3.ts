@@ -72,7 +72,6 @@ function createS3Caches(): CacheStorage {
       accessKeyId: awsAccessKeyId,
       secretAccessKey: awsSecretAccessKey,
     },
-    // useAccelerateEndpoint: true,
     endpoint: awsEndpoint,
   });
 
@@ -197,6 +196,8 @@ function createS3Caches(): CacheStorage {
               return undefined;
             }
 
+            // first byte is a flag to indicate if the buffer is compressed
+            // check function metadataToUint8Array
             const zstd = data[0] === 1;
             const buffer = data.slice(1);
 
@@ -295,9 +296,4 @@ function createS3Caches(): CacheStorage {
   return caches;
 }
 
-const isEndpointSet = (bucketName !== undefined && awsRegion !== undefined) ||
-  awsEndpoint !== undefined;
-const areCredentialsSet = awsAccessKeyId !== undefined &&
-  awsSecretAccessKey !== undefined;
-export const isS3Available = isEndpointSet && areCredentialsSet;
 export const caches = createS3Caches();

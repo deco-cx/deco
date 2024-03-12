@@ -1,5 +1,3 @@
-import { logger } from "../../observability/otel/config.ts";
-
 const inFuture = (maybeDate: string) => {
   try {
     return new Date(maybeDate) > new Date();
@@ -7,7 +5,6 @@ const inFuture = (maybeDate: string) => {
     return false;
   }
 };
-const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
 
 export function createTieredCache(
   ...tieredCaches: (CacheStorage | undefined)[]
@@ -41,23 +38,13 @@ export function createTieredCache(
       throw new Error("Not Implemented");
     },
     open: async (cacheName: string): Promise<Cache> => {
-      let maybeCache: Cache | undefined;
-      for (const caches of tieredCaches) {
-        if (caches) {
-          await caches.open(cacheName)
-            .then((c) => maybeCache = c)
-            .catch((error) => {
-              console.error("Error caught:", error);
-              maybeCache = undefined;
-            });
-          if (isCache(maybeCache)) {
-            openedCaches.push(maybeCache);
+      await Promise.all(
+        tieredCaches.filter(Boolean).map(async (cache) => {
+          if (cache) {
+            openedCaches.push(await cache.open(cacheName));
           }
-        } else {
-          logger.error("No Cache available");
-        }
-      }
-      logger.info(`Tiered cache opened ${openedCaches.length} caches`);
+        }),
+      );
       return Promise.resolve({
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
         add: (_request: RequestInfo | URL): Promise<void> => {
@@ -93,7 +80,9 @@ export function createTieredCache(
           let matched;
           const indexOfCachesToUpdate = [];
           for (const [index, caches] of openedCaches.entries()) {
-            matched = await caches.match(request, options).catch(() => null);
+            matched = await caches.match(request, options).catch(() =>
+              undefined
+            );
             if (!matched) {
               indexOfCachesToUpdate.push(index);
               continue;
@@ -109,12 +98,9 @@ export function createTieredCache(
               break;
             }
           }
-          if (matched) {
+          matched &&
             updateTieredCaches(indexOfCachesToUpdate, request, matched);
-            return matched;
-          } else {
-            return undefined;
-          }
+          return matched;
         },
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
         matchAll: (
