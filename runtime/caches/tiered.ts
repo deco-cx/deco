@@ -1,4 +1,5 @@
-import { logger, tracer } from "../../observability/otel/config.ts";
+import { logger } from "../../observability/otel/config.ts";
+import { withInstrumentation } from "./common.ts";
 import { caches as cachesFileSystem } from "./fileSystem.ts";
 import { caches as cachesS3 } from "./s3.ts";
 
@@ -11,9 +12,18 @@ const inFuture = (maybeDate: string) => {
 };
 const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
 
+export interface NamedCacheStorage extends CacheStorage {
+  name: string;
+}
+
 function createTieredCache(
-  ...tieredCaches: (CacheStorage | undefined)[]
+  ..._tieredCaches: (NamedCacheStorage | undefined)[]
 ): CacheStorage {
+  const tieredCaches = _tieredCaches.filter(Boolean).map((cache) => {
+    return withInstrumentation(cache!, cache!.name)
+  });
+
+  // named cachestorage que extends cachestorage
   const openedCaches: Cache[] = [];
   async function updateTieredCaches(
     indexOfCachesToUpdate: Array<number>,
@@ -142,4 +152,7 @@ function createTieredCache(
   return caches;
 }
 
-export const caches = createTieredCache(cachesFileSystem, cachesS3);
+export const caches = createTieredCache(
+  { ...cachesFileSystem, name: "FileSystem" } as NamedCacheStorage,
+  { ...cachesS3, name: "S3" } as NamedCacheStorage
+);

@@ -151,10 +151,8 @@ function createFileSystemCache(): CacheStorage {
             span.addEvent("file-system-get-data");
 
             if (data === null) {
-              span.addEvent("cache-miss");
               return undefined;
             }
-            span.addEvent("cache-hit");
 
             downloadDuration.record(downloadDurationTime, {
               bufferSize: data.length,
@@ -164,7 +162,6 @@ function createFileSystemCache(): CacheStorage {
               data,
             );
           } catch (err) {
-            span.recordException(err);
             throw err;
           } finally {
             span.end();

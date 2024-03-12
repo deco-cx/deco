@@ -11,6 +11,7 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
+  NoSuchKey,
 } from "https://esm.sh/@aws-sdk/client-s3@3.513.0";
 import {
   compress,
@@ -193,10 +194,8 @@ function createS3Caches(): CacheStorage {
             const downloadDurationTime = performance.now() - startTime;
 
             if (data === null) {
-              span.addEvent("cache-miss");
               return undefined;
             }
-            span.addEvent("cache-hit");
 
             const zstd = data[0] === 1;
             const buffer = data.slice(1);
@@ -210,7 +209,9 @@ function createS3Caches(): CacheStorage {
               zstd ? decompress(buffer) : buffer,
             );
           } catch (err) {
-            span.recordException(err);
+            if (err instanceof NoSuchKey) {
+              return undefined;
+            }
             throw err;
           } finally {
             span.end();
