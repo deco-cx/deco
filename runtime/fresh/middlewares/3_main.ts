@@ -1,4 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { tryOrDefault } from "deco/utils/object.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { RequestState } from "../../../blocks/utils.tsx";
 import { Context } from "../../../deco.ts";
@@ -10,7 +11,6 @@ import { DecoSiteState, DecoState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
-import { tryOrDefault } from "deco/utils/object.ts";
 
 export const DECO_SEGMENT = "deco_segment";
 
@@ -128,7 +128,7 @@ export const handler = [
       status: undefined,
     };
     const state: Partial<RequestState> = ctx.state?.$live?.state ?? {};
-    const stateBag = new WeakMap();
+    const stateBag = new Map();
     state.response = response;
     state.bag = stateBag;
     state.flags = [];
