@@ -9,9 +9,9 @@ import {
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  NoSuchKey,
   PutObjectCommand,
   S3Client,
-  NoSuchKey,
 } from "https://esm.sh/@aws-sdk/client-s3@3.513.0";
 import {
   compress,
@@ -295,8 +295,9 @@ function createS3Caches(): CacheStorage {
   return caches;
 }
 
-const isEndpointSet = (bucketName && awsRegion) || awsEndpoint;
-const areCredentialsSet = awsAccessKeyId && awsSecretAccessKey;
-export const caches = (isEndpointSet && areCredentialsSet)
-  ? createS3Caches()
-  : undefined;
+const isEndpointSet = (bucketName !== undefined && awsRegion !== undefined) ||
+  awsEndpoint !== undefined;
+const areCredentialsSet = awsAccessKeyId !== undefined &&
+  awsSecretAccessKey !== undefined;
+export const isS3Available = isEndpointSet && areCredentialsSet;
+export const caches = createS3Caches();

@@ -236,6 +236,6 @@ const hasWritePerm = async (): Promise<boolean> => {
   ).then((status) => status.state === "granted");
 };
 
-export const caches = await hasWritePerm() && FILE_SYSTEM_CACHE_DIRECTORY
-  ? createFileSystemCache()
-  : undefined;
+export const isFileSystemAvailable = await hasWritePerm() &&
+  FILE_SYSTEM_CACHE_DIRECTORY !== undefined;
+export const caches = createFileSystemCache();

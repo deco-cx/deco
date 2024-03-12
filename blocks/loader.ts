@@ -5,7 +5,7 @@ import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { meter } from "../observability/otel/metrics.ts";
-import { caches as tieredCaches } from "../runtime/caches/tiered.ts";
+import { caches } from "../runtime/caches/mod.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -100,8 +100,6 @@ const stats = {
 
 let maybeCache: Cache | undefined;
 
-// Fallback to S3 if cachesFileSystem not available and to DenoKV if S3 not available.
-const caches = tieredCaches;
 await caches.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
