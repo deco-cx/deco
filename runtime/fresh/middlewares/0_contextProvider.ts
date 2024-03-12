@@ -4,10 +4,7 @@ import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
 import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
-import {
-  getComposedConfigStore,
-  Release,
-} from "../../../engine/releases/provider.ts";
+import { getRelease, Release } from "../../../engine/releases/provider.ts";
 import { newContext } from "../../../mod.ts";
 import { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
@@ -40,7 +37,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         throw new Error("DECO_SITE_NAME env var not defined.");
       }
       siteName = fromEnvSiteName ?? randomSiteName();
-      releaseProvider = getComposedConfigStore(
+      releaseProvider = await getRelease(
         opt.manifest.name,
         siteName,
         -1,

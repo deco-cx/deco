@@ -1,3 +1,5 @@
+import { exists } from "std/fs/mod.ts";
+import { join } from "std/path/mod.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { fromPagesTable } from "../../engine/releases/pages.ts";
 import { fromConfigsTable } from "../../engine/releases/release.ts";
@@ -97,6 +99,27 @@ export const compose = (...providers: Release[]): Release => {
 };
 
 const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
+const defaultDecofileBuildPath = (site: string) =>
+  join(Deno.cwd(), ".deco", `${site}.json`);
+
+const existsCache: Map<string, Promise<boolean>> = new Map();
+const getDecofileEndpoint = async (site: string) => {
+  const filepath = defaultDecofileBuildPath(site);
+  const existsFlight = existsCache.get(site);
+  if (!existsFlight) {
+    existsCache.set(
+      site,
+      exists(filepath, { isFile: true, isReadable: true }).catch((err) => {
+        existsCache.delete(site);
+        throw err;
+      }),
+    );
+  }
+  if (await existsCache.get(site)) {
+    return `file://${filepath}`;
+  }
+  return Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
+};
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
@@ -104,19 +127,19 @@ const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
  * @param siteId the site Id (if exists)
  * @returns the config store provider.
  */
-export const getComposedConfigStore = (
+export const getRelease = async (
   ns: string,
   site: string,
   siteId = -1,
   localStorageOnly = false,
-): Release => {
+): Promise<Release> => {
   const providers = [];
 
   if (Deno.env.has("USE_LOCAL_STORAGE_ONLY") || localStorageOnly) {
     return newFsProvider();
   }
 
-  const endpoint = Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
+  const endpoint = await getDecofileEndpoint(site);
   if (endpoint) {
     providers.push(fromEndpoint(endpoint));
   } else {
