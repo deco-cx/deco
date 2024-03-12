@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { context, Context } from "../../deco.ts";
+import { Context, context } from "../../deco.ts";
 import {
   BatchSpanProcessor,
   FetchInstrumentation,

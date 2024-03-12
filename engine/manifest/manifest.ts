@@ -29,7 +29,7 @@ import { PromiseOrValue } from "../core/utils.ts";
 import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
-import { getComposedConfigStore, Release } from "../releases/provider.ts";
+import { getRelease, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
 
@@ -275,7 +275,7 @@ const installAppsForResolver = async (
   }
   return { resolver: currentResolver, apps: allAppsMap, manifest, importMap };
 };
-export const fulfillContext = <
+export const fulfillContext = async <
   T extends AppManifest,
 >(
   ctx: DecoContext,
@@ -300,7 +300,7 @@ export const fulfillContext = <
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
-  const provider = release ?? getComposedConfigStore(
+  const provider = release ?? await getRelease(
     ctx.namespace!,
     ctx.site,
     ctx.siteId,
@@ -424,11 +424,11 @@ export const newContext = <
   return fulfillContext(ctx, m, currentImportMap, release);
 };
 
-export const $live = <T extends AppManifest>(
+export const $live = async <T extends AppManifest>(
   m: T,
   siteInfo?: SiteInfo,
   release: Release | undefined = undefined,
-): T => {
+): Promise<T> => {
   context.siteId = siteInfo?.siteId ?? -1;
   context.namespace = siteInfo?.namespace;
   const currentSite = siteName();
@@ -443,7 +443,7 @@ export const $live = <T extends AppManifest>(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
-  const provider = release ?? getComposedConfigStore(
+  const provider = release ?? await getRelease(
     context.namespace!,
     context.site,
     context.siteId,
