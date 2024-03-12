@@ -160,7 +160,6 @@ const wrapLoader = (
       const cacheKeyValue = cacheKey(props, req, ctx);
       try {
         // Should skip cache
-        console.log("IS CACHE", isCache(maybeCache));
         if (
           mode === "no-store" ||
           !ENABLE_LOADER_CACHE ||

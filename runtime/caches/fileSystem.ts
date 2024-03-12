@@ -27,7 +27,6 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
 });
 
 function createFileSystemCache(): CacheStorage {
-  console.log("file system cache");
   let isCacheInitialized = false;
   async function assertCacheDirectory() {
     try {
@@ -104,7 +103,6 @@ function createFileSystemCache(): CacheStorage {
     },
     open: (cacheName: string): Promise<Cache> => {
       const requestURLSHA1 = withCacheNamespace(cacheName);
-      console.log("open file system");
       return Promise.resolve({
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
         add: (_request: RequestInfo | URL): Promise<void> => {
