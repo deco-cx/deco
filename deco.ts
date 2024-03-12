@@ -51,16 +51,16 @@ export type DecoContext = {
 const isDeploy = Boolean(Deno.env.get("DENO_DEPLOYMENT_ID"));
 
 const getCloudProvider = () => {
-  const kService = Deno.env.get("K_SERVICE") !== undefined 
-  
+  const kService = Deno.env.get("K_SERVICE") !== undefined;
+
   if (kService) {
     return "kubernetes";
   } else if (isDeploy) {
-    return "deno_deploy"
-  } else{
-    return "localhost"
+    return "deno_deploy";
+  } else {
+    return "localhost";
   }
-}
+};
 
 const defaultContext: Omit<DecoContext, "schema"> = {
   deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
