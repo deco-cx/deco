@@ -1,3 +1,4 @@
+import * as colors from "std/fmt/colors.ts";
 import { exists } from "std/fs/mod.ts";
 import { join } from "std/path/mod.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
@@ -104,7 +105,7 @@ const defaultDecofileBuildPath = (site: string) =>
 
 const existsCache: Map<string, Promise<boolean>> = new Map();
 const getDecofileEndpoint = async (site: string) => {
-  const filepath = defaultDecofileBuildPath(site);
+  const filepath = defaultDecofileBuildPath(site); // default location should be prioritized
   const existsFlight = existsCache.get(site);
   if (!existsFlight) {
     existsCache.set(
@@ -141,6 +142,13 @@ export const getRelease = async (
 
   const endpoint = await getDecofileEndpoint(site);
   if (endpoint) {
+    console.info(
+      colors.brightCyan(
+        `    ${
+          colors.brightGreen("decofile")
+        } has been loaded from ${endpoint}`,
+      ),
+    );
     providers.push(fromEndpoint(endpoint));
   } else {
     if (siteId > 0) {

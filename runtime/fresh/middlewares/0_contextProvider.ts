@@ -23,48 +23,50 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     >,
   ) {
     const opt = typeof _opt === "function" ? await _opt(request) : _opt;
-    const shouldUseLocalStorage = opt?.useLocalStorageOnly ||
-      Deno.env.has("USE_LOCAL_STORAGE_ONLY");
-    let siteName = opt.manifest.name;
-    let releaseProvider: Release;
-    if (shouldUseLocalStorage) {
-      releaseProvider = newFsProvider(DECO_FILE_NAME, siteName);
-    } else if (opt.release) {
-      releaseProvider = opt.release;
-    } else {
-      const fromEnvSiteName = siteNameFromEnv();
-      if (!fromEnvSiteName && Context.active().isDeploy) {
-        throw new Error("DECO_SITE_NAME env var not defined.");
-      }
-      siteName = fromEnvSiteName ?? randomSiteName();
-      releaseProvider = await getRelease(
-        opt.manifest.name,
-        siteName,
-        -1,
-      );
-    }
-    // Define root manifest
-    const rootManifest = {
-      baseUrl: opt.manifest.baseUrl,
-      name: opt.manifest.name,
-      apps: { ...opt.manifest.apps },
-    };
-
     contextCache ??= new ContextCache({
       cacheSize: 7, // 7 is arbitrarily chosen
     });
-
     let contextPromise: Promise<DecoContext> | undefined = contextCache.get(
       opt,
     );
-
     if (!contextPromise) {
-      contextPromise = newContext(
-        rootManifest,
-        opt.importMap,
-        releaseProvider,
-        undefined,
-        siteName,
+      const shouldUseLocalStorage = opt?.useLocalStorageOnly ||
+        Deno.env.has("USE_LOCAL_STORAGE_ONLY");
+      let siteName = opt.manifest.name;
+      let releaseProviderPromise: Promise<Release>;
+      if (shouldUseLocalStorage) {
+        releaseProviderPromise = Promise.resolve(
+          newFsProvider(DECO_FILE_NAME, siteName),
+        );
+      } else if (opt.release) {
+        releaseProviderPromise = Promise.resolve(opt.release);
+      } else {
+        const fromEnvSiteName = siteNameFromEnv();
+        if (!fromEnvSiteName && Context.active().isDeploy) {
+          throw new Error("DECO_SITE_NAME env var not defined.");
+        }
+        siteName = fromEnvSiteName ?? randomSiteName();
+        releaseProviderPromise = getRelease(
+          opt.manifest.name,
+          siteName,
+          -1,
+        );
+      }
+      // Define root manifest
+      const rootManifest = {
+        baseUrl: opt.manifest.baseUrl,
+        name: opt.manifest.name,
+        apps: { ...opt.manifest.apps },
+      };
+
+      contextPromise = releaseProviderPromise.then((releaseProvider) =>
+        newContext(
+          rootManifest,
+          opt.importMap,
+          releaseProvider,
+          undefined,
+          siteName,
+        )
       );
       contextCache.set(
         opt,
