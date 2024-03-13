@@ -92,21 +92,16 @@ export function createTieredCache(
             matched = await caches.match(request, options).catch(() =>
               undefined
             );
-            if (!matched) {
-              indexOfCachesToUpdate.push(index);
-              continue;
-            }
 
-            const expires = matched.headers.get("expires");
+            const expires = matched!.headers.get("expires");
             const isStale = expires ? !inFuture(expires) : false;
 
-            if (isStale) {
-              indexOfCachesToUpdate.push(index);
-            } else {
-              // found a match, no need to check the rest
+            if (matched && !isStale) {
               break;
             }
+            indexOfCachesToUpdate.push(index);
           }
+
           matched &&
             updateTieredCaches(indexOfCachesToUpdate, request, matched);
           return matched;

@@ -2,7 +2,10 @@ import { withInstrumentation } from "./common.ts";
 import { caches as cachesKV } from "./denoKV.ts";
 import { caches as cachesProxy } from "./proxy.ts";
 import { caches as redisCache, redis } from "./redis.ts";
-import { caches as cachesFileSystem, isFileSystemAvailable } from "./fileSystem.ts";
+import {
+  caches as cachesFileSystem,
+  isFileSystemAvailable,
+} from "./fileSystem.ts";
 import { caches as cachesS3, isS3Available } from "./s3.ts";
 import { createTieredCache } from "./tiered.ts";
 
