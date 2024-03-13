@@ -64,9 +64,7 @@ export const handler = async (
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url));
 
-  const result = await resolve(payloadToResolvable(data), {
-    resolveChain: [{ type: "resolver", value: "invoke" }],
-  }).catch(wrapInvokeErr);
+  const result = await resolve(payloadToResolvable(data)).catch(wrapInvokeErr);
 
   const response = invokeToHttpResponse(req, result);
 
