@@ -127,6 +127,7 @@ const matcherBlock: Block<
     const shouldStickyOnSession = sticky === "session";
     return (ctx: MatchContext) => {
       let uniqueId = "";
+      let isSegment = true;
 
       // from last to first and stop in the first resolvable
       // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
@@ -139,6 +140,7 @@ const matcherBlock: Block<
         }
         // stop on first resolvable
         if (type === "resolvable") {
+          isSegment = uniqueId === value;
           break;
         }
       }
@@ -169,7 +171,11 @@ const matcherBlock: Block<
         }
       }
 
-      httpCtx.context.state.flags.push({ name: uniqueId, value: result });
+      httpCtx.context.state.flags.push({
+        name: uniqueId,
+        value: result,
+        isSegment,
+      });
 
       return result;
     };
