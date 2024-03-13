@@ -137,7 +137,6 @@ const wrapLoader = (
     singleFlightKey,
     ...rest
   }: LoaderModule,
-  resolveChain: FieldResolver[],
   release: Release,
 ) => {
   const flights = singleFlight();
@@ -203,27 +202,14 @@ const wrapLoader = (
         const url = new URL("https://localhost");
         url.searchParams.set("resolver", loader);
 
-        const resolveChainString = FieldResolver.minify(resolveChain)
-          .toString();
         const revisionID = await release?.revision() ?? undefined;
 
-        if (resolveChainString && revisionID) {
-          url.searchParams.set("resolveChain", resolveChainString);
+        if (revisionID) {
           url.searchParams.set("revisionID", revisionID);
         } else {
-          if (!resolveChainString && !revisionID) {
-            logger.warning(`Could not get revisionID nor resolveChain`);
-          }
-          if (!revisionID) {
-            logger.warning(
-              `Could not get revisionID for resolveChain ${resolveChainString}`,
-            );
-          }
-          if (!resolveChainString) {
-            logger.warning(
-              `Could not get resolveChain for revisionID ${revisionID}`,
-            );
-          }
+          logger.warning(
+            `Could not get revisionID`,
+          );
 
           timing?.end();
           return await handler(props, req, ctx);
@@ -290,7 +276,7 @@ const loaderBlock: Block<LoaderModule> = {
   adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
     wrapCaughtErrors,
     (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
-      applyProps(wrapLoader(mod, ctx.resolveChain, ctx.context.state.release))(
+      applyProps(wrapLoader(mod, ctx.context.state.release))(
         props,
         ctx,
       ),
