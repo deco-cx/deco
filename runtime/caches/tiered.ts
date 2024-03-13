@@ -6,6 +6,15 @@ const inFuture = (maybeDate: string) => {
   }
 };
 
+/**
+ * Creates a tiered cache that combines multiple cache storages into a single cache storage.
+ * The tiered cache will prioritize the caches in the order they are provided.
+ * When a request is made to the tiered cache, it will first check if the request is available in any of the caches.
+ * If a match is found, the response will be returned and the caches will be updated based on the cache priority.
+ * If no match is found, the request will be fetched and stored in the caches based on the cache priority.
+ * @param tieredCaches The cache storages to be combined into the tiered cache.
+ * @returns The tiered cache storage.
+ */
 export function createTieredCache(
   ...tieredCaches: (CacheStorage | undefined)[]
 ): CacheStorage {
