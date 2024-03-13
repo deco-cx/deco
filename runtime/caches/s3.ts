@@ -295,5 +295,10 @@ function createS3Caches(): CacheStorage {
   };
   return caches;
 }
+const isEndpointSet = (bucketName !== undefined && awsRegion !== undefined) ||
+  awsEndpoint !== undefined;
+const areCredentialsSet = awsAccessKeyId !== undefined &&
+  awsSecretAccessKey !== undefined;
+export const isS3Available = isEndpointSet && areCredentialsSet;
 
 export const caches = createS3Caches();

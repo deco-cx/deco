@@ -234,4 +234,13 @@ function createFileSystemCache(): CacheStorage {
   return caches;
 }
 
+const hasWritePerm = async (): Promise<boolean> => {
+  return await Deno.permissions.query(
+    { name: "write", path: FILE_SYSTEM_CACHE_DIRECTORY } as const,
+  ).then((status) => status.state === "granted");
+};
+
+export const isFileSystemAvailable = await hasWritePerm() &&
+  FILE_SYSTEM_CACHE_DIRECTORY !== undefined;
+
 export const caches = createFileSystemCache();
