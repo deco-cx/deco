@@ -76,6 +76,7 @@ export type DecoSiteState<T = unknown> = {
 export interface Flag {
   name: string;
   value: boolean;
+  isSegment?: boolean;
 }
 
 export interface StatefulContext<T> {
