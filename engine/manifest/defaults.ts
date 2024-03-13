@@ -181,16 +181,10 @@ export default {
       }
       const { __resolveType, ...savedprops } = resolvable;
       // recursive call
-      return await resolve({ ...props, ...savedprops, __resolveType }, {
-        resolveChain: [{ type: "resolvable", value: block }, {
-          type: "resolver",
-          value: __resolveType,
-        }],
-      });
+      return await resolve({ ...props, ...savedprops, __resolveType });
     }
     return await resolve({ ...props, __resolveType }, {
       propsAreResolved: true,
-      resolveChain: [{ type: "resolver", value: __resolveType }],
     });
   },
 } satisfies ResolverMap<BaseContext>;
