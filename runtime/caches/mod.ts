@@ -9,8 +9,8 @@ import {
 import { caches as cachesS3, isS3Available } from "./s3.ts";
 import { createTieredCache } from "./tiered.ts";
 
-const ENABLE_LOADER_CACHE = Deno.env.get("ENABLE_LOADER_CACHE") === "true";
-const DEFAULT_CACHE_ENGINE = ENABLE_LOADER_CACHE ? "KV" : "CF_PROXY";
+const ENABLE_LOADER_CACHE = Deno.env.get("ENABLE_LOADER_CACHE") ?? "true";
+const DEFAULT_CACHE_ENGINE = ENABLE_LOADER_CACHE ? "S3" : "CF_PROXY";
 const WEB_CACHE_ENGINES: CacheEngine[] = Deno.env.has("WEB_CACHE_ENGINE")
   ? Deno.env.get("WEB_CACHE_ENGINE")!.split(",") as CacheEngine[]
   : DEFAULT_CACHE_ENGINE.split(",") as CacheEngine[];
