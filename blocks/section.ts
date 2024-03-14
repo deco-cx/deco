@@ -15,8 +15,8 @@ import {
   PreactComponent,
 } from "../engine/block.ts";
 import { Resolver } from "../engine/core/resolver.ts";
-import { AppManifest, FunctionContext } from "../types.ts";
 import { HttpError } from "../engine/errors.ts";
+import { AppManifest, FunctionContext } from "../types.ts";
 
 /**
  * @widget none
@@ -103,6 +103,23 @@ export const createSectionBlock = (
   type: "sections" | "pages",
 ): Block<SectionModule> => ({
   type,
+  codegen: ({ __resolveType, ...props }) => {
+    const [importModule, importName] = type === "sections"
+      ? ["section", "Section"]
+      : ["page", "Page"];
+    return `
+import { FnContext } from "deco/types.ts";
+import { ${importName} } from "deco/blocks/${importModule}.ts";
+
+export const loader = (_props: unknown, _req: Request, ctx: FnContext<any, any>): Promise<${importName}> => {
+  return ctx.invoke("${__resolveType}", ${JSON.stringify(props)});
+}
+
+export default function ({ Component, props }: ${importName}) {
+  return <Component {...props}/>;
+}
+`;
+  },
   introspect: { funcNames: ["loader", "default"], includeReturn: ["default"] },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,

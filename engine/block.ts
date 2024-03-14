@@ -50,6 +50,8 @@ export interface Block<
   BType extends BlockType = BlockType,
   TProvides = any,
   TSerializable = any,
+  TProps = TDefaultExportFunc extends
+    (props: infer Props, ...args: any[]) => any ? Props : any,
 > {
   defaultDanglingRecover?: Resolver<TSerializable> | ResolverMiddleware<
     TSerializable
@@ -58,6 +60,7 @@ export interface Block<
   defaultInvoke?: Resolver<TSerializable, BlockInvocation, any>;
   type: BType;
   introspect?: IntrospectParams;
+  codegen?: (props: TProps & { __resolveType: string }) => string;
   decorate?: <
     TBlockModule extends BlockModule<
       TDefaultExportFunc,

@@ -65,7 +65,7 @@ export async function* defaultWalker(
   return yield* walk(dir, {
     includeDirs: false,
     includeFiles: true,
-    exts: ["tsx", "jsx", "ts", "js"],
+    exts: ["tsx", "jsx", "ts", "js", "json"],
   });
 }
 export const decoManifestBuilder = async (
@@ -85,10 +85,19 @@ export const decoManifestBuilder = async (
     const blockDir = join(dir, blk.type);
 
     // for stability purposes we need to sort paths first.
+    const genFiles: Array<Promise<void>> = [];
     const paths: string[] = [];
     for await (
       const entry of walker(blockDir)
     ) {
+      if (blk.codegen && entry.name.endsWith(".json")) {
+        const generated = `${entry.path}.tsx`;
+        genFiles.push(Deno.readTextFile(entry.path).then(async (content) => {
+          await Deno.writeTextFile(generated, blk.codegen!(JSON.parse(content)));
+        }))
+        paths.push(generated);
+        continue;
+      }
       // ignore file name with __NAME__.ts
       if (
         entry.name.startsWith("__") &&
@@ -98,6 +107,7 @@ export const decoManifestBuilder = async (
       }
       paths.push(entry.path);
     }
+    await Promise.all(genFiles);
 
     for (const path of paths.sort()) {
       initialManifest = withDefinition(
