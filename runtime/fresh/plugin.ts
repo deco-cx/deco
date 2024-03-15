@@ -28,7 +28,7 @@ import { handler as inspectHandler } from "./routes/inspect.ts";
 import { handler as invokeKeyHandler } from "./routes/invoke.ts";
 import { default as PreviewsPage } from "./routes/previews.tsx";
 import { handler as releaseHandler } from "./routes/release.ts";
-import { handler as renderHandler } from "./routes/render.ts";
+import { handler as renderHandler } from "./routes/render.tsx";
 import { handler as workflowHandler } from "./routes/workflow.ts";
 
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {

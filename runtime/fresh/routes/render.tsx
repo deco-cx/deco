@@ -1,9 +1,10 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import { Partial, PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { getSectionID } from "../../../components/section.tsx";
 import { FieldResolver, Resolvable } from "../../../engine/core/resolver.ts";
 import { badRequest, HttpError } from "../../../engine/errors.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
+import { scriptAsDataURI } from "deco/utils/dataURI.ts";
 
 interface Options {
   resolveChain: FieldResolver[];
@@ -13,6 +14,14 @@ interface Options {
   renderSalt?: string;
   partialMode?: PartialProps["mode"];
 }
+
+export interface Props {
+  url: string;
+}
+
+const snippet = (url: string) => {
+  window.location.href = url;
+};
 
 const fromRequest = (req: Request): Options => {
   const params = new URL(req.url).searchParams;
@@ -105,24 +114,36 @@ export const handler = async (
     );
   } catch (err) {
     if (err instanceof HttpError) {
-      // it is used to redirect url client side
-      const renderSection = {
-        "url": err.resp.headers.get("Location"),
-        "__resolveType": "website/sections/redirect.tsx",
-      };
+      // we are creating a section with client side redirect
+      // and inserting the same partialId from old section
+      // to replace it and do the redirect
       const newResolveChain = [...resolveChain, {
         type: "resolver",
         value: section.__resolveType,
       }];
-      original.context.state.forceId = getSectionID(
+      const id = getSectionID(
         newResolveChain as FieldResolver[],
       );
+      const partialId = `${id}-${renderSalt}`;
 
-      page = await ctx.state.resolve(
-        { ...renderSection, ...props },
-        { resolveChain },
-        original,
-      );
+      page = {
+        props: {
+          url: err.resp.headers.get("location"),
+        },
+        Component: (props: Props) => {
+          return (
+            <Partial name={partialId}>
+              <div>
+                <script
+                  type="text/javascript"
+                  defer
+                  src={scriptAsDataURI(snippet, props.url)}
+                />
+              </div>
+            </Partial>
+          );
+        },
+      };
     }
   }
 

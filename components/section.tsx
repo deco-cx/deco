@@ -141,12 +141,11 @@ export const withSection = <TProps,>(
     RequestState & {
       renderSalt?: string;
       partialMode?: PartialProps["mode"];
-      forceId?: string | undefined;
     }
   >,
 ) => {
   let renderCount = 0;
-  const idPrefix = ctx.context?.state.forceId || getSectionID(ctx.resolveChain);
+  const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
   const partialMode = ctx.context.state.partialMode ||
