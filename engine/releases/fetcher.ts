@@ -43,13 +43,41 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     SubscribeParameters[0] | undefined,
     SubscribeParameters[1] | undefined,
   ] = [undefined, undefined];
-  es.addEventListener("message", (event) => {
-    const state = JSON.parse(event.data);
-    onChange?.({
-      state,
-      archived: {},
-      revision: ulid(),
-    });
+
+  const esURL = new URL(es.url);
+  esURL.searchParams.set("stream", "false");
+
+  const fetchLastState = () => {
+    return fetchFromHttp(esURL).then((content) => {
+      if (!content) {
+        return {
+          data: null,
+          error: null,
+        };
+      }
+      return {
+        data: {
+          state: JSON.parse(content),
+          archived: {},
+          revision: ulid(),
+        },
+        error: null,
+      };
+    }).catch((error) => {
+      console.log("error when fetching from", esURL, error);
+      return {
+        data: null,
+        error,
+      };
+    })
+  }
+  es.addEventListener("message", async (_event) => {
+    const {data,error} = await fetchLastState();
+    if (!data || error) {
+      return;
+    }
+
+    onChange?.(data);
   });
   es.onerror = (event) => {
     onError?.("CLOSED", {
@@ -58,8 +86,6 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
       name: "SEE CLOSED",
     });
   };
-  const esURL = new URL(es.url);
-  esURL.searchParams.set("stream", "false");
 
   return {
     unsubscribe: () => {
@@ -68,29 +94,8 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     subscribe: (change, err) => {
       onChange = change, onError = err;
     },
-    get: async () => {
-      return await fetchFromHttp(esURL).then((content) => {
-        if (!content) {
-          return {
-            data: null,
-            error: null,
-          };
-        }
-        return {
-          data: {
-            state: JSON.parse(content),
-            archived: {},
-            revision: ulid(),
-          },
-          error: null,
-        };
-      }).catch((error) => {
-        console.log("error when fetching from", esURL, error);
-        return {
-          data: null,
-          error,
-        };
-      });
+    get: () => {
+      return fetchLastState();
     },
   };
 };
