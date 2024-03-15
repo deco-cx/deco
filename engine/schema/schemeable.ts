@@ -221,6 +221,7 @@ export const schemeableToJSONSchema = (
     seen,
   );
   const jsonSchema = {
+    $id: crypto.randomUUID(),
     ...curr,
     ...ischemeable.jsDocSchema ?? {},
     title: ischemeable?.jsDocSchema?.title ?? schemeable.friendlyId ??
