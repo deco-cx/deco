@@ -2,7 +2,11 @@ import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { newFsProviderFromPath } from "./fs.ts";
 import { Release } from "./provider.ts";
-import { newRealtime, RealtimeReleaseProvider } from "./realtime.ts";
+import {
+  CurrResolvables,
+  newRealtime,
+  RealtimeReleaseProvider,
+} from "./realtime.ts";
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
 
@@ -71,13 +75,19 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
       };
     });
   };
-  es.addEventListener("message", async (_event) => {
-    const { data, error } = await fetchLastState();
-    if (!data || error) {
-      return;
+  es.addEventListener("message", async (event) => {
+    let data: null | CurrResolvables = null;
+    try {
+      data = { state: JSON.parse(decodeURIComponent(event.data)), archived: {}, revision: ulid() };
+    } catch {
+      const { data: mdata, error } = await fetchLastState();
+      if (!data || error) {
+        return;
+      }
+      data = mdata;
     }
 
-    onChange?.(data);
+    onChange?.(data!);
   });
   es.onerror = (event) => {
     onError?.("CLOSED", {
