@@ -69,10 +69,10 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
         data: null,
         error,
       };
-    })
-  }
+    });
+  };
   es.addEventListener("message", async (_event) => {
-    const {data,error} = await fetchLastState();
+    const { data, error } = await fetchLastState();
     if (!data || error) {
       return;
     }
