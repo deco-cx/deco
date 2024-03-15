@@ -93,13 +93,7 @@ export const handler = async (
     request,
     context: {
       ...ctx,
-      state: {
-        ...ctx.state,
-        pathTemplate,
-        renderSalt,
-        partialMode,
-        forceId: "",
-      },
+      state: { ...ctx.state, pathTemplate, renderSalt, partialMode },
       params: params?.pathname.groups,
     },
   };

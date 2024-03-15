@@ -138,10 +138,7 @@ export const withSection = <TProps,>(
 (
   props: TProps,
   ctx: HttpContext<
-    RequestState & {
-      renderSalt?: string;
-      partialMode?: PartialProps["mode"];
-    }
+    RequestState & { renderSalt?: string; partialMode?: PartialProps["mode"] }
   >,
 ) => {
   let renderCount = 0;
