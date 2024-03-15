@@ -19,6 +19,7 @@ import { logger } from "deco/observability/otel/config.ts";
 import { weakcache } from "../deps.ts";
 import { FieldResolver } from "deco/engine/core/resolver.ts";
 import { Release } from "deco/engine/releases/provider.ts";
+import { HttpError } from "deco/engine/errors.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -65,6 +66,9 @@ export const wrapCaughtErrors = async <
   try {
     return await ctx.next!();
   } catch (err) {
+    if (err instanceof HttpError) {
+      throw err;
+    }
     return new Proxy({}, {
       get: (_target, prop) => {
         if (prop === "then") {

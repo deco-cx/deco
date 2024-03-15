@@ -1,7 +1,8 @@
 import { HandlerContext } from "$fresh/server.ts";
 import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import { getSectionID } from "../../../components/section.tsx";
 import { FieldResolver, Resolvable } from "../../../engine/core/resolver.ts";
-import { badRequest } from "../../../engine/errors.ts";
+import { badRequest, HttpError } from "../../../engine/errors.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
 
 interface Options {
@@ -83,16 +84,47 @@ export const handler = async (
     request,
     context: {
       ...ctx,
-      state: { ...ctx.state, pathTemplate, renderSalt, partialMode },
+      state: {
+        ...ctx.state,
+        pathTemplate,
+        renderSalt,
+        partialMode,
+        forceId: "",
+      },
       params: params?.pathname.groups,
     },
   };
 
-  const page = await ctx.state.resolve(
-    { ...section, ...props },
-    { resolveChain },
-    original,
-  );
+  let page;
+
+  try {
+    page = await ctx.state.resolve(
+      { ...section, ...props },
+      { resolveChain },
+      original,
+    );
+  } catch (err) {
+    if (err instanceof HttpError) {
+      // it is used to redirect url client side
+      const renderSection = {
+        "url": err.resp.headers.get("Location"),
+        "__resolveType": "website/sections/redirect.tsx",
+      };
+      const newResolveChain = [...resolveChain, {
+        type: "resolver",
+        value: section.__resolveType,
+      }];
+      original.context.state.forceId = getSectionID(
+        newResolveChain as FieldResolver[],
+      );
+
+      page = await ctx.state.resolve(
+        { ...renderSection, ...props },
+        { resolveChain },
+        original,
+      );
+    }
+  }
 
   return ctx.state.resolve(
     { page, __resolveType: "render" },
