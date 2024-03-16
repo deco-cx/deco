@@ -113,7 +113,7 @@ export interface AppRuntime<
   importMap: ImportMap;
 }
 
-type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
+export type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
 
 export const mergeManifests = (
   current: AppManifest,

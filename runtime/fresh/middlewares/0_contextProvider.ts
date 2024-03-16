@@ -40,6 +40,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       } else if (opt.release) {
         releaseProviderPromise = Promise.resolve(opt.release);
+        siteName = siteNameFromEnv() ?? siteName;
       } else {
         const fromEnvSiteName = siteNameFromEnv();
         if (!fromEnvSiteName && Context.active().isDeploy) {
@@ -53,15 +54,10 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       }
       // Define root manifest
-      const rootManifest = {
-        baseUrl: opt.manifest.baseUrl,
-        name: opt.manifest.name,
-        apps: { ...opt.manifest.apps },
-      };
 
       contextPromise = releaseProviderPromise.then((releaseProvider) =>
         newContext(
-          rootManifest,
+          opt.manifest,
           opt.importMap,
           releaseProvider,
           undefined,

@@ -34,7 +34,7 @@ export async function alienRelease(
   const url = new URL(request.url);
 
   // Get the inline release from the query string
-  const alienReleaseFromQs = url.searchParams.get("__r");
+  const alienReleaseFromQs = url.searchParams.get("___r"); // TODO(mcandeia) rollbck
 
   // If the inline release is the delete marker, delete the cookie and return the response
   if (alienReleaseFromQs === DELETE_MARKER) {

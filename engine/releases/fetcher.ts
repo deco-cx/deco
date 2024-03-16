@@ -1,7 +1,6 @@
-import { stringToHexSha256 } from "../../utils/encoding.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { newFsProviderFromPath } from "./fs.ts";
-import { Release } from "./provider.ts";
+import { OnChangeCallback, Release } from "./provider.ts";
 import {
   CurrResolvables,
   newRealtime,
@@ -113,17 +112,34 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     },
   };
 };
-const fromString = (
-  endpoint: string,
+export const fromString = (
   state: string,
 ): Release => {
-  const parsed = JSON.parse(state);
-  const revisionPromise = stringToHexSha256(endpoint);
+  return fromJSON(JSON.parse(state));
+};
+
+export const fromJSON = (
+  parsed: Record<string, unknown>,
+): Release => {
+  const cbs: Array<OnChangeCallback> = [];
+  let state = parsed;
+  let currentRevision: string = crypto.randomUUID();
   return {
-    state: () => Promise.resolve(parsed),
+    state: () => Promise.resolve(state),
     archived: () => Promise.resolve({}),
-    onChange: () => {},
-    revision: () => revisionPromise,
+    onChange: (cb) => {
+      cbs.push(cb);
+    },
+    notify: () => {
+      cbs.forEach((cb) => cb());
+    },
+    revision: () => Promise.resolve(currentRevision),
+    set(newState, revision) {
+      state = newState;
+      currentRevision = revision ?? crypto.randomUUID();
+      cbs.forEach((cb) => cb());
+      return Promise.resolve();
+    },
   };
 };
 async function releaseLoader(
@@ -156,7 +172,7 @@ async function releaseLoader(
       case "https:": {
         assertAllowedAuthority();
         const content = await fetchFromHttp(url);
-        return content ? fromString(endpointSpecifier, content) : undefined;
+        return content ? fromString(content) : undefined;
       }
       default:
         return undefined;

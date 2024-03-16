@@ -11,7 +11,7 @@ import {
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { buildImportMap } from "../../blocks/utils.tsx";
-import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
+import { Context, DecoContext, DecoRuntimeState, context } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
@@ -20,16 +20,16 @@ import { ReleaseResolver } from "../core/mod.ts";
 import {
   BaseContext,
   DanglingReference,
-  isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
+  isResolvable,
 } from "../core/resolver.ts";
 import { PromiseOrValue } from "../core/utils.ts";
 import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
-import { getRelease, Release } from "../releases/provider.ts";
+import { Release, getRelease } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
 
@@ -279,7 +279,7 @@ export const fulfillContext = async <
   T extends AppManifest,
 >(
   ctx: DecoContext,
-  m: T,
+  initialManifest: T,
   currentImportMap?: ImportMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
@@ -291,15 +291,11 @@ export const fulfillContext = async <
       );
     }
     currentSite = randomSiteName();
-    release ??= newFsProvider(DECO_FILE_NAME, m.name);
+    release ??= newFsProvider(DECO_FILE_NAME, initialManifest.name);
     ctx.play = true;
   }
   ctx.namespace ??= `deco-sites/${currentSite}`;
   ctx.site = currentSite!;
-  const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
-    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
-    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
-  );
   const provider = release ?? await getRelease(
     ctx.namespace!,
     ctx.site,
@@ -312,17 +308,22 @@ export const fulfillContext = async <
 
   ctx.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
+    resolvers: defaultResolvers,
     release: provider,
-    danglingRecover: recovers.length > 0
-      ? buildDanglingRecover(recovers)
-      : undefined,
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
+    const [newManifest, resolvers] = (blocks() ?? []).reduce(
+      (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
+      [initialManifest, {}, []] as [
+        AppManifest,
+        ResolverMap<FreshContext>,
+        DanglingRecover[],
+      ],
+    );
     const { resolver: currentResolver, apps: allAppsMap, manifest, importMap } =
       await installAppsForResolver(
-        resolver,
+        resolver.with({ resolvers }),
         newManifest,
         currentImportMap,
       );
