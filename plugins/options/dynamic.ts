@@ -1,6 +1,7 @@
+import { updateLoadCache } from "deco/engine/schema/parser.ts";
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
 import { debounce } from "std/async/debounce.ts";
-import { dirname, join } from "std/path/mod.ts";
+import { dirname, join, toFileUrl } from "std/path/mod.ts";
 import { BlockKey } from "../../blocks/app.ts";
 import { buildImportMap } from "../../blocks/utils.tsx";
 import { randomSiteName } from "../../engine/manifest/utils.ts";
@@ -176,6 +177,8 @@ export const dynamicOptions = <
       write: async (path, content) => {
         inMemoryFS[path] = { content };
         await underlyingFs.write(path, content);
+        isCodeFile(path) &&
+          updateLoadCache(toFileUrl(join(Deno.cwd(), path)).href, content);
         isCodeFile(path) && rebuild(updateManifest);
         isDecofilePath(path) && updateRelease();
       },

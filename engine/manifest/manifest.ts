@@ -315,7 +315,15 @@ export const fulfillContext = async <
   const installApps = async () => {
     const [newManifest, resolvers] = (blocks() ?? []).reduce(
       (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
-      [initialManifest, {}, []] as [
+      [
+        {
+          baseUrl: initialManifest.baseUrl,
+          name: initialManifest.name,
+          apps: initialManifest.apps,
+        },
+        {},
+        [],
+      ] as [
         AppManifest,
         ResolverMap<FreshContext>,
         DanglingRecover[],

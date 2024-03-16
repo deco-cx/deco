@@ -3,8 +3,8 @@ import { newFsProviderFromPath } from "./fs.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
 import {
   CurrResolvables,
-  newRealtime,
   RealtimeReleaseProvider,
+  newRealtime,
 } from "./realtime.ts";
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
@@ -131,6 +131,7 @@ export const fromJSON = (
       cbs.push(cb);
     },
     notify: () => {
+      currentRevision = crypto.randomUUID();
       cbs.forEach((cb) => cb());
     },
     revision: () => Promise.resolve(currentRevision),
