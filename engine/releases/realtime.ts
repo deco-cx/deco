@@ -166,6 +166,9 @@ export const newRealtime = (
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
     },
+    notify() {
+      notify();
+    },
     revision: () =>
       currResolvables.then((r) => r.revision).catch(() => "unknown"),
     /**

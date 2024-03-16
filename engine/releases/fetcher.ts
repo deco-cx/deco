@@ -78,7 +78,11 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
   es.addEventListener("message", async (event) => {
     let data: null | CurrResolvables = null;
     try {
-      data = { state: JSON.parse(decodeURIComponent(event.data)), archived: {}, revision: ulid() };
+      data = {
+        state: JSON.parse(decodeURIComponent(event.data)),
+        archived: {},
+        revision: ulid(),
+      };
     } catch {
       const { data: mdata, error } = await fetchLastState();
       if (!data || error) {
@@ -174,6 +178,9 @@ export const fromEndpoint = (endpoint: string): Release => {
   return {
     set(state, revision) {
       return releasePromise.then((r) => r?.set?.(state, revision));
+    },
+    notify() {
+      releasePromise.then((r) => r?.notify?.());
     },
     state: (options) => releasePromise.then((r) => r.state(options)),
     archived: (options) => releasePromise.then((r) => r.archived(options)),

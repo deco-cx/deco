@@ -4,8 +4,8 @@ import { ensureDir } from "std/fs/ensure_dir.ts";
 import { dirname, join } from "std/path/mod.ts";
 
 export interface MountParams {
-  vol: string;
-  fs: {
+  vol?: string;
+  fs?: {
     rm: (path: string) => Promise<void>;
     write: (path: string, content: string) => Promise<void>;
   };
@@ -17,9 +17,18 @@ export interface File {
 
 export type FS = Record<string, File>;
 
-export const mount = (params: MountParams) => {
-  console.info(colors.green(`connecting ${params.vol}`));
-  const eventSource = new EventSource(params.vol);
+export const mount = (params: MountParams): Disposable => {
+  const { vol: codeVol, dir } = parse(Deno.args, {
+    string: ["vol", "dir"],
+  });
+  const fs = params?.fs ?? defaultFs(dir);
+  const vol = params?.vol ?? codeVol;
+  if (!vol) {
+    console.error(colors.red("--vol arg is required"));
+    Deno.exit(1);
+  }
+  console.info(colors.green(`connecting ${vol}`));
+  const eventSource = new EventSource(vol);
 
   eventSource.onopen = () => {
     console.log(colors.green(`mount server succesfully connected!`));
@@ -32,18 +41,28 @@ export const mount = (params: MountParams) => {
   eventSource.onmessage = async (event) => {
     const data: FS = JSON.parse(decodeURIComponent(event.data));
     for (const [path, { content }] of Object.entries(data)) {
+      if (["/deno.json", "/fresh.config.ts"].includes(path)) {
+        continue;
+      }
       if (!content) {
         console.log(colors.brightRed(`[d]~ ${path}`));
-        await params.fs.rm(path);
+        await fs.rm(path);
       } else {
         console.log(colors.brightBlue(`[w]~ ${path}`));
-        await params.fs.write(path, content);
+        await fs.write(path, content);
       }
     }
   };
+  return {
+    [Symbol.dispose]() {
+      eventSource.close();
+    },
+  };
 };
 
-export const defaultFs = (target = Deno.cwd()): MountParams["fs"] => ({
+export const defaultFs = (
+  target = Deno.cwd(),
+): Required<MountParams>["fs"] => ({
   rm: (path) => Deno.remove(join(target, path)),
   write: async (path, content) => {
     const fullPath = join(target, path);
@@ -52,17 +71,5 @@ export const defaultFs = (target = Deno.cwd()): MountParams["fs"] => ({
   },
 });
 if (import.meta.main) {
-  const { vol, ...args } = parse(Deno.args, {
-    string: ["vol", "dir"],
-  });
-
-  if (!vol) {
-    console.error(colors.red("--vol arg is required"));
-    Deno.exit(1);
-  }
-
-  mount({
-    vol,
-    fs: defaultFs(args.dir),
-  });
+  mount({});
 }

@@ -22,6 +22,7 @@ export interface Release {
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   revision(): Promise<string>;
   onChange(callback: OnChangeCallback): void;
+  notify?(): void;
   dispose?: () => void;
   set?(state: Record<string, Resolvable>, revision?: string): Promise<void>;
 }

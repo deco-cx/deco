@@ -228,5 +228,11 @@ export const buildImportMap = (manifest: AppManifest): ImportMap => {
       `${name}/`,
       new URL("./", baseUrl).href,
     );
-  return buildImportMapWith(manifest, builder);
+  try {
+    return buildImportMapWith(manifest, builder);
+  } catch {
+    return {
+      imports: {},
+    };
+  }
 };
