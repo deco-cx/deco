@@ -223,16 +223,15 @@ export const buildImportMapWith = (
 
 export const buildImportMap = (manifest: AppManifest): ImportMap => {
   const { baseUrl, name } = manifest;
+  if (!URL.canParse("./", baseUrl)) {
+    return {
+      imports: {},
+    };
+  }
   const builder = (blockKey: string) =>
     blockKey.replace(
       `${name}/`,
       new URL("./", baseUrl).href,
     );
-  try {
-    return buildImportMapWith(manifest, builder);
-  } catch {
-    return {
-      imports: {},
-    };
-  }
+  return buildImportMapWith(manifest, builder);
 };
