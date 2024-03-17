@@ -114,7 +114,7 @@ export const contextFromVolume = async <
   const { manifest: initialManifest } = await currentContext.runtime!;
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FS = {};
-  const rebuildInner = async (onEnd?: (m: AppManifest) => void) => {
+  const rebuild = async (onEnd?: (m: AppManifest) => void) => {
     const contents = await bundle(inMemoryFS);
     const module = await import(
       `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
@@ -123,12 +123,12 @@ export const contextFromVolume = async <
   };
 
   let queue = Promise.resolve();
-  const rebuild = debounce((onEnd?: (m: AppManifest) => void) => {
+  const debRebuild = debounce((onEnd?: (m: AppManifest) => void) => {
     queue = queue.catch((_err) => null).then(() =>
-      rebuildInner(onEnd).catch((_err) => {})
+      rebuild(onEnd).catch((_err) => {})
     );
     return queue;
-  }, 500);
+  }, 200);
 
   const decofilePath = decofilePathFor(siteFromVolUrl);
   const isDecofilePath = (path: string) => decofilePath === path;
@@ -167,7 +167,7 @@ export const contextFromVolume = async <
     fs: {
       rm: (path) => {
         delete inMemoryFS[path];
-        isCodeFile(path) && rebuild(updateManifest);
+        isCodeFile(path) && debRebuild(updateManifest);
         isDecofilePath(path) && updateRelease();
         return Promise.resolve();
       },
@@ -175,7 +175,7 @@ export const contextFromVolume = async <
         inMemoryFS[path] = { content };
         isCodeFile(path) &&
           updateLoadCache(new URL(path.slice(1), baseDir).href, content);
-        isCodeFile(path) && rebuild(updateManifest);
+        isCodeFile(path) && debRebuild(updateManifest);
         isDecofilePath(path) && updateRelease();
         return Promise.resolve();
       },
