@@ -4,11 +4,12 @@ import { debounce } from "std/async/debounce.ts";
 import { dirname, join, toFileUrl } from "std/path/mod.ts";
 import { BlockKey } from "../../blocks/app.ts";
 import { buildImportMap } from "../../blocks/utils.tsx";
+import { Context, DecoContext } from "../../deco.ts";
 import { randomSiteName } from "../../engine/manifest/utils.ts";
 import { fromJSON } from "../../engine/releases/fetcher.ts";
-import { AppManifest } from "../../mod.ts";
-import { defaultFs, FS, mount } from "../../scripts/mount.ts";
-import { InitOptions, OptionsProvider } from "../deco.ts";
+import { AppManifest, newContext } from "../../mod.ts";
+import { FS, mount } from "../../scripts/mount.ts";
+import { InitOptions } from "../deco.ts";
 
 let initializePromise: Promise<void> | null = null;
 
@@ -79,24 +80,6 @@ async function bundle(
   return outputFiles[0].text;
 }
 
-const underlyingFs = defaultFs();
-const inMemoryFS: FS = {};
-const rebuildInner = async (onEnd?: (m: AppManifest) => void) => {
-  const contents = await bundle(inMemoryFS);
-  const module = await import(
-    `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
-  );
-  onEnd?.(module.default);
-};
-
-let queue = Promise.resolve();
-const rebuild = debounce((onEnd?: (m: AppManifest) => void) => {
-  queue = queue.catch((_err) => null).then(() =>
-    rebuildInner(onEnd).catch((_err) => {})
-  );
-  return queue;
-}, 500);
-
 const isCodeFile = (path: string) =>
   path.endsWith(".tsx") || path.endsWith(".ts");
 
@@ -133,9 +116,28 @@ const mergeManifests = (
 
 let prev: Disposable | null = null;
 
-export const dynamicOptions = <
+export const contextFromVolume = async <
   TManifest extends AppManifest = AppManifest,
->(initialManifest: TManifest): OptionsProvider<TManifest> => {
+>(vol: string): Promise<DecoContext> => {
+  const currentContext = Context.active();
+  const { manifest:initialManifest } = await currentContext.runtime!;
+  const inMemoryFS: FS = {};
+  const rebuildInner = async (onEnd?: (m: AppManifest) => void) => {
+    const contents = await bundle(inMemoryFS);
+    const module = await import(
+      `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
+    );
+    onEnd?.(module.default);
+  };
+
+  let queue = Promise.resolve();
+  const rebuild = debounce((onEnd?: (m: AppManifest) => void) => {
+    queue = queue.catch((_err) => null).then(() =>
+      rebuildInner(onEnd).catch((_err) => {})
+    );
+    return queue;
+  }, 500);
+
   const decofilePath = decofilePathFor("storefront-vtex");
   const isDecofilePath = (path: string) => decofilePath === path;
   const { promise, resolve } = Promise.withResolvers<
@@ -147,8 +149,12 @@ export const dynamicOptions = <
 
   manifestPromise.then((manifest) => {
     resolve({
-      manifest: mergeManifests(initialManifest, manifest) as TManifest,
+      manifest: mergeManifests({
+        name: initialManifest.name,
+        baseUrl: initialManifest.baseUrl,
+      }, manifest) as TManifest,
       release,
+      importMap: { imports: {} },
     });
   });
 
@@ -161,30 +167,36 @@ export const dynamicOptions = <
     promise.then((opts) => {
       opts.manifest = mergeManifests(opts.manifest, m) as TManifest;
       opts.release?.notify?.();
-      opts.importMap = buildImportMap(opts.manifest);
+      opts.importMap!.imports = buildImportMap(opts.manifest).imports;
     });
   };
   prev?.[Symbol.dispose]();
-  queue = Promise.resolve();
   prev = mount({
+    vol,
     fs: {
-      rm: async (path) => {
+      rm: (path) => {
         delete inMemoryFS[path];
-        await underlyingFs.rm(path);
         isCodeFile(path) && rebuild(updateManifest);
         isDecofilePath(path) && updateRelease();
+        return Promise.resolve();
       },
-      write: async (path, content) => {
+      write: (path, content) => {
         inMemoryFS[path] = { content };
-        await underlyingFs.write(path, content);
         isCodeFile(path) &&
           updateLoadCache(toFileUrl(join(Deno.cwd(), path)).href, content);
         isCodeFile(path) && rebuild(updateManifest);
         isDecofilePath(path) && updateRelease();
+        return Promise.resolve();
       },
     },
   });
-  return (_req) => {
-    return promise;
-  };
+  return promise.then((opts) => {
+    return newContext(
+      opts.manifest,
+      opts.importMap,
+      opts.release,
+      undefined,
+      currentContext.site,
+    );
+  });
 };
