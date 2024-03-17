@@ -41,10 +41,7 @@ export const buildInvokeFunc = <
       payloadForFunc({ key, props } as InvokeFunction<TManifest>),
       {
         ...options,
-        resolveChain: [...options?.resolveChain ?? [], {
-          type: "resolver" as const,
-          value: key,
-        }],
+        resolveChain: options?.resolveChain ?? [],
       },
       partialCtx,
     );

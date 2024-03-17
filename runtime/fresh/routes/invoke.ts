@@ -26,7 +26,9 @@ export const handler = async (
       (url.searchParams.getAll("select") ?? []) as InvokeFunction["select"],
   };
 
-  const resp = await resolve(payloadToResolvable(invokeFunc)).catch(
+  const resp = await resolve(payloadToResolvable(invokeFunc), {
+    resolveChain: [{ type: "resolver", value: "invoke" }],
+  }).catch(
     wrapInvokeErr,
   );
 
