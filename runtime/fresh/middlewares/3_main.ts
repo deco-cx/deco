@@ -43,7 +43,7 @@ export const handler = [
     req: Request,
     ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
   ): Promise<Response> => {
-    const url = new URL(req.url);
+    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
     const context = Context.active();
     return await ctx.state.monitoring.tracer.startActiveSpan(
       "./routes/_middleware.ts",
@@ -118,7 +118,7 @@ export const handler = [
       return new Response(null, { status: 200 });
     }
     const context = Context.active();
-    const url = new URL(req.url);
+    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
     ctx.state.site = {
       id: context.siteId,
       name: context.site,

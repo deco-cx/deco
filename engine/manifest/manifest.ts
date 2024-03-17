@@ -11,7 +11,7 @@ import {
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { buildImportMap } from "../../blocks/utils.tsx";
-import { Context, DecoContext, DecoRuntimeState, context } from "../../deco.ts";
+import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
 import { HandlerContext } from "../../deps.ts";
 import { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
@@ -20,16 +20,16 @@ import { ReleaseResolver } from "../core/mod.ts";
 import {
   BaseContext,
   DanglingReference,
+  isResolvable,
   Resolvable,
   Resolver,
   ResolverMap,
-  isResolvable,
 } from "../core/resolver.ts";
 import { PromiseOrValue } from "../core/utils.ts";
 import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
-import { Release, getRelease } from "../releases/provider.ts";
+import { getRelease, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
 
@@ -67,12 +67,21 @@ const newFakeContext = () => {
   return {
     request: new Request("http://localhost:8000"),
     context: {
+      url: new URL("http://localhost:8000"),
+      basePath: "/",
+      route: "/[...catchall]",
+      pattern: "/[...catchall]",
+      isPartial: false,
+      config: {} as FreshContext["context"]["config"],
       state: {},
       params: {},
+      destination: "route",
+      data: {},
+      next: () => Promise.resolve(new Response(null)),
       render: () => new Response(null),
       renderNotFound: () => new Response(null),
       remoteAddr: { hostname: "", port: 0, transport: "tcp" as const },
-    },
+    } as FreshContext["context"],
   };
 };
 export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
