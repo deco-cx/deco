@@ -129,7 +129,7 @@ export const contextFromVolume = async <
     return queue;
   }, 500);
 
-  const decofilePath = decofilePathFor("storefront-vtex");
+  const decofilePath = decofilePathFor(siteFromVolUrl);
   const isDecofilePath = (path: string) => decofilePath === path;
   const { promise, resolve } = Promise.withResolvers<
     InitOptions<TManifest>
