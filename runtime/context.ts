@@ -1,15 +1,15 @@
-import { updateLoadCache } from "deco/engine/schema/parser.ts";
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
 import { debounce } from "std/async/debounce.ts";
 import { dirname, join, toFileUrl } from "std/path/mod.ts";
-import { BlockKey } from "../../blocks/app.ts";
-import { buildImportMap } from "../../blocks/utils.tsx";
-import { Context, DecoContext } from "../../deco.ts";
-import { randomSiteName } from "../../engine/manifest/utils.ts";
-import { fromJSON } from "../../engine/releases/fetcher.ts";
-import { AppManifest, newContext } from "../../mod.ts";
-import { FS, mount } from "../../scripts/mount.ts";
-import { InitOptions } from "../deco.ts";
+import { BlockKey } from "../blocks/app.ts";
+import { buildImportMap } from "../blocks/utils.tsx";
+import { Context, DecoContext } from "../deco.ts";
+import { fromJSON } from "../engine/releases/fetcher.ts";
+import { updateLoadCache } from "../engine/schema/parser.ts";
+import { assertAllowedAuthority } from "../engine/trustedAuthority.ts";
+import { AppManifest, newContext } from "../mod.ts";
+import { InitOptions } from "../plugins/deco.ts";
+import { FS, mount } from "../scripts/mount.ts";
 
 let initializePromise: Promise<void> | null = null;
 
@@ -83,19 +83,6 @@ async function bundle(
 const isCodeFile = (path: string) =>
   path.endsWith(".tsx") || path.endsWith(".ts");
 
-let localhostSite: string;
-const _siteNameOf = (req: Request) => {
-  const url = new URL(req.url);
-  const hostname = url.searchParams.get("__host") ?? url.hostname; // format => {site}.deco.site
-  let siteName: undefined | string;
-  if (hostname === "localhost") {
-    siteName = localhostSite ??= randomSiteName();
-  } else {
-    siteName = hostname.split(".")?.[0] ?? randomSiteName();
-  }
-  return siteName;
-};
-
 const mergeManifests = (
   target: AppManifest,
   manifest: AppManifest,
@@ -114,13 +101,17 @@ const mergeManifests = (
   return target;
 };
 
-let prev: Disposable | null = null;
-
 export const contextFromVolume = async <
   TManifest extends AppManifest = AppManifest,
 >(vol: string): Promise<DecoContext> => {
+  const volUrl = new URL(vol);
+  assertAllowedAuthority(volUrl);
   const currentContext = Context.active();
-  const { manifest:initialManifest } = await currentContext.runtime!;
+  const siteFromVolUrl = volUrl.searchParams.get("site");
+  if (siteFromVolUrl !== currentContext.site) {
+    throw new Error(`${siteFromVolUrl} does not match ${currentContext.site}`);
+  }
+  const { manifest: initialManifest } = await currentContext.runtime!;
   const inMemoryFS: FS = {};
   const rebuildInner = async (onEnd?: (m: AppManifest) => void) => {
     const contents = await bundle(inMemoryFS);
@@ -170,8 +161,7 @@ export const contextFromVolume = async <
       opts.importMap!.imports = buildImportMap(opts.manifest).imports;
     });
   };
-  prev?.[Symbol.dispose]();
-  prev = mount({
+  const mountPoint = mount({
     vol,
     fs: {
       rm: (path) => {
@@ -190,6 +180,11 @@ export const contextFromVolume = async <
       },
     },
   });
+  const currentDispose = release?.dispose;
+  release.dispose = () => {
+    currentDispose?.();
+    mountPoint[Symbol.dispose]();
+  };
   return promise.then((opts) => {
     return newContext(
       opts.manifest,

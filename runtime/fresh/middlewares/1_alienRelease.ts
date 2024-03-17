@@ -5,7 +5,7 @@ import { MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
 import { newContext } from "../../../mod.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
-import { contextFromVolume } from "deco/plugins/options/dynamic.ts";
+import { contextFromVolume } from "../../context.ts";
 
 interface Opts {
   cacheSize?: number;

@@ -1,18 +1,14 @@
 import { randId as ulid } from "../../utils/rand.ts";
+import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
 import { newFsProviderFromPath } from "./fs.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
 import {
   CurrResolvables,
-  RealtimeReleaseProvider,
   newRealtime,
+  RealtimeReleaseProvider,
 } from "./realtime.ts";
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
-
-const ALLOWED_AUTHORITIES_ENV_VAR_NAME = "DECO_ALLOWED_AUTHORITIES";
-const ALLOWED_AUTHORITIES = Deno.env.has(ALLOWED_AUTHORITIES_ENV_VAR_NAME)
-  ? Deno.env.get(ALLOWED_AUTHORITIES_ENV_VAR_NAME)!.split(",")
-  : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx", "localhost"];
 
 const fetchFromHttp = async (
   url: string | URL,
@@ -148,11 +144,7 @@ async function releaseLoader(
 ): Promise<Release | undefined> {
   const url = new URL(endpointSpecifier);
   const assertAllowedAuthority = () => {
-    if (!ALLOWED_AUTHORITIES.includes(url.hostname)) {
-      throw new Error(
-        `authority ${url.hostname} is not allowed to be fetched from`,
-      );
-    }
+    assertAllowedAuthorityFor(url);
   };
   try {
     switch (url.protocol) {
