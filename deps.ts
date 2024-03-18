@@ -4,8 +4,15 @@ export type {
   HandlerContext,
   Handlers,
   MiddlewareHandler,
+<<<<<<< HEAD
   MiddlewareHandlerContext, PageProps,
   RouteConfig
+=======
+  MiddlewareHandlerContext,
+  FreshContext,
+  PageProps,
+  RouteConfig,
+>>>>>>> 977276c (Update fresh type)
 } from "$fresh/server.ts";
 export type { ServeHandler } from "$fresh/src/server/deps.ts";
 export type {
