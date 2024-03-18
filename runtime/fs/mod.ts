@@ -83,6 +83,9 @@ export class VFS implements IVFS {
       ? new TextDecoder().decode(data)
       : null;
     this.fileSystem[filePath] = { content };
+    const current = this.watchers[filePath] ?? [];
+    this.watchers[filePath] = [];
+    current.forEach((cb) => cb());
     return Promise.resolve();
   }
 
