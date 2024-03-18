@@ -101,27 +101,15 @@ export const compose = (...providers: Release[]): Release => {
 };
 
 const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
-const defaultDecofileBuildPath = (site: string) =>
-  join(Deno.cwd(), ".deco", `${site}.json`);
 
-const existsCache: Map<string, Promise<boolean>> = new Map();
-const getDecofileEndpoint = async (site: string) => {
-  const filepath = defaultDecofileBuildPath(site); // default location should be prioritized
-  const existsFlight = existsCache.get(site);
-  if (!existsFlight) {
-    existsCache.set(
-      site,
-      exists(filepath, { isFile: true, isReadable: true }).catch((err) => {
-        existsCache.delete(site);
-        throw err;
-      }),
-    );
-  }
-  if (await existsCache.get(site)) {
-    return `file://${filepath}`;
-  }
-  return Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
-};
+export const DECOFILE_REL_PATH = ".deco/decofile.json";
+const DECOFILE_PATH_DEFAULT = join(Deno.cwd(), DECOFILE_REL_PATH);
+const decofileExistsPromise = exists(DECOFILE_PATH_DEFAULT, {
+  isFile: true,
+  isReadable: true,
+});
+const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
+
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
@@ -141,7 +129,9 @@ export const getRelease = async (
     return newFsProvider();
   }
 
-  const endpoint = await getDecofileEndpoint(site);
+  const endpoint = await decofileExistsPromise
+    ? `file://${DECOFILE_PATH_DEFAULT}`
+    : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {
     console.info(
       colors.brightCyan(

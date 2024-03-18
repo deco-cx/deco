@@ -5,6 +5,7 @@ import { BlockKey } from "../blocks/app.ts";
 import { buildImportMap } from "../blocks/utils.tsx";
 import { Context, DecoContext } from "../deco.ts";
 import { fromJSON } from "../engine/releases/fetcher.ts";
+import { DECOFILE_REL_PATH } from "../engine/releases/provider.ts";
 import { updateLoadCache } from "../engine/schema/parser.ts";
 import { assertAllowedAuthority } from "../engine/trustedAuthority.ts";
 import { AppManifest, newContext } from "../mod.ts";
@@ -13,7 +14,7 @@ import { FS, mount } from "../scripts/mount.ts";
 
 let initializePromise: Promise<void> | null = null;
 
-const DECOFILE_PATH = `/.deco/decofile.json`;
+const DECOFILE_PATH = `/${DECOFILE_REL_PATH}`;
 export const contentToDataUri = (
   modData: string,
   mimeType = "text/tsx",

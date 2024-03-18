@@ -62,7 +62,7 @@ export const handler = async (
   const { state: { resolve } } = ctx;
   const data = req.method === "POST"
     ? await req.json()
-    : bodyFromUrl("body", new URL(req.url));// TODO(mcandeia) check if ctx.url can be used here
+    : bodyFromUrl("body", new URL(req.url)); // TODO(mcandeia) check if ctx.url can be used here
 
   const result = await resolve(payloadToResolvable(data)).catch(wrapInvokeErr);
 
