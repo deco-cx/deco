@@ -15,7 +15,7 @@ export interface File {
   content: string | null;
 }
 
-export type FS = Record<string, File>;
+export type FileSystem = Record<string, File>;
 
 export const mount = (params: MountParams): Disposable => {
   const { vol: codeVol, dir } = parse(Deno.args, {
@@ -39,7 +39,7 @@ export const mount = (params: MountParams): Disposable => {
   };
 
   eventSource.onmessage = async (event) => {
-    const data: FS = JSON.parse(decodeURIComponent(event.data));
+    const data: FileSystem = JSON.parse(decodeURIComponent(event.data));
     for (const [path, { content }] of Object.entries(data)) {
       if (["/deno.json", "/fresh.config.ts"].includes(path)) {
         continue;

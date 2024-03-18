@@ -10,7 +10,7 @@ import { updateLoadCache } from "../engine/schema/parser.ts";
 import { assertAllowedAuthority } from "../engine/trustedAuthority.ts";
 import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
-import { FS, mount } from "../scripts/mount.ts";
+import { FileSystem, mount } from "../scripts/mount.ts";
 
 let initializePromise: Promise<void> | null = null;
 
@@ -21,7 +21,7 @@ export const contentToDataUri = (
 ) => `data:${mimeType};charset=utf-8;${modData}`;
 
 async function bundle(
-  fs: FS,
+  fs: FileSystem,
 ): Promise<string> {
   const manifest = fs["/manifest.gen.ts"]?.content;
   if (!manifest) {
@@ -114,7 +114,7 @@ export const contextFromVolume = async <
   }
   const { manifest: initialManifest } = await currentContext.runtime!;
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
-  const inMemoryFS: FS = {};
+  const inMemoryFS: FileSystem = {};
   const rebuild = async (onEnd?: (m: AppManifest) => void) => {
     const contents = await bundle(inMemoryFS);
     const module = await import(

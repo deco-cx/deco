@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { Context, DecoContext } from "../../../deco.ts";
-import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
+import { FreshContext, MiddlewareHandler } from "../../../deps.ts";
 import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
@@ -18,7 +18,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   // Return an async function to handle requests
   return async function (
     request: Request,
-    context: MiddlewareHandlerContext<
+    context: FreshContext<
       DecoState<any, DecoSiteState, TManifest>
     >,
   ) {
@@ -78,3 +78,5 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     return next();
   };
 };
+
+Deno.readDir;
