@@ -13,7 +13,7 @@ import { FS, mount } from "../scripts/mount.ts";
 
 let initializePromise: Promise<void> | null = null;
 
-const decofilePathFor = (site: string) => `/.deco/${site}.json`;
+const DECOFILE_PATH = `/.deco/decofile.json`;
 export const contentToDataUri = (
   modData: string,
   mimeType = "text/tsx",
@@ -130,8 +130,7 @@ export const contextFromVolume = async <
     return queue;
   }, 200);
 
-  const decofilePath = decofilePathFor(siteFromVolUrl);
-  const isDecofilePath = (path: string) => decofilePath === path;
+  const isDecofilePath = (path: string) => DECOFILE_PATH === path;
   const { promise, resolve } = Promise.withResolvers<
     InitOptions<TManifest>
   >();
@@ -151,7 +150,7 @@ export const contextFromVolume = async <
   });
 
   const updateRelease = () => {
-    const decofile = inMemoryFS[decofilePath]?.content;
+    const decofile = inMemoryFS[DECOFILE_PATH]?.content;
     decofile && release?.set?.(JSON.parse(decofile));
   };
   const updateManifest = (m: AppManifest) => {
