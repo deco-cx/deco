@@ -67,12 +67,21 @@ const newFakeContext = () => {
   return {
     request: new Request("http://localhost:8000"),
     context: {
+      url: new URL("http://localhost:8000"),
+      basePath: "/",
+      route: "/[...catchall]",
+      pattern: "/[...catchall]",
+      isPartial: false,
+      config: {} as FreshContext["context"]["config"],
       state: {},
       params: {},
+      destination: "route",
+      data: {},
+      next: () => Promise.resolve(new Response(null)),
       render: () => new Response(null),
       renderNotFound: () => new Response(null),
       remoteAddr: { hostname: "", port: 0, transport: "tcp" as const },
-    },
+    } as FreshContext["context"],
   };
 };
 export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
@@ -279,7 +288,7 @@ export const fulfillContext = async <
   T extends AppManifest,
 >(
   ctx: DecoContext,
-  m: T,
+  initialManifest: T,
   currentImportMap?: ImportMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
@@ -291,15 +300,11 @@ export const fulfillContext = async <
       );
     }
     currentSite = randomSiteName();
-    release ??= newFsProvider(DECO_FILE_NAME, m.name);
+    release ??= newFsProvider(DECO_FILE_NAME, initialManifest.name);
     ctx.play = true;
   }
   ctx.namespace ??= `deco-sites/${currentSite}`;
   ctx.site = currentSite!;
-  const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
-    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
-    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
-  );
   const provider = release ?? await getRelease(
     ctx.namespace!,
     ctx.site,
@@ -312,17 +317,30 @@ export const fulfillContext = async <
 
   ctx.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
+    resolvers: defaultResolvers,
     release: provider,
-    danglingRecover: recovers.length > 0
-      ? buildDanglingRecover(recovers)
-      : undefined,
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
+    const [newManifest, resolvers] = (blocks() ?? []).reduce(
+      (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
+      [
+        {
+          baseUrl: initialManifest.baseUrl,
+          name: initialManifest.name,
+          apps: initialManifest.apps,
+        },
+        {},
+        [],
+      ] as [
+        AppManifest,
+        ResolverMap<FreshContext>,
+        DanglingRecover[],
+      ],
+    );
     const { resolver: currentResolver, apps: allAppsMap, manifest, importMap } =
       await installAppsForResolver(
-        resolver,
+        resolver.with({ resolvers }),
         newManifest,
         currentImportMap,
       );

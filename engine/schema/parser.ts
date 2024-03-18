@@ -84,6 +84,13 @@ const initLoader = (): typeof load => {
   return loader = load;
 };
 
+export const updateLoadCache = (path: string, content: string) => {
+  if (!loadCache[path]) {
+    return;
+  }
+  loadCache[path] = parseContent(content);
+};
+
 /**
  * Parses the given path using the default loader. Caches the result in memory.
  */

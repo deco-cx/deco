@@ -60,7 +60,7 @@ export const handler = async (
 ) => {
   const context = Context.active();
   const lazySchema = lazySchemaFor(context);
-  const revision = lazySchema.revision;
+  const revision = await lazySchema.revision;
   const etag = `${revision}@${binaryId}`;
   const ifNoneMatch = req.headers.get("if-none-match");
   if (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`) { // weak etags should be tested as well.

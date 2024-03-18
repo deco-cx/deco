@@ -5,6 +5,7 @@ import { MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
 import { newContext } from "../../../mod.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
+import { contextFromVolume } from "../../context.ts";
 
 interface Opts {
   cacheSize?: number;
@@ -71,14 +72,19 @@ export async function alienRelease(
       alienRelease,
     );
     if (!contextPromise) {
-      const active = Context.active();
-      const { manifest, importMap } = await active.runtime!;
-      contextPromise = newContext(
-        manifest,
-        importMap,
-        fromEndpoint(alienRelease),
-        alienRelease,
-      );
+      const isVolumeKind = alienRelease.includes("watch.ts");
+      if (!isVolumeKind) {
+        const active = Context.active();
+        const { manifest, importMap } = await active.runtime!;
+        contextPromise = newContext(
+          manifest,
+          importMap,
+          fromEndpoint(alienRelease),
+          alienRelease,
+        );
+      } else {
+        contextPromise = contextFromVolume(alienRelease);
+      }
       contextCache.set(
         alienRelease,
         contextPromise.catch((err) => {

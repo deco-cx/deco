@@ -4,7 +4,7 @@ import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
 import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
-import { getRelease, Release } from "../../../engine/releases/provider.ts";
+import { Release, getRelease } from "../../../engine/releases/provider.ts";
 import { newContext } from "../../../mod.ts";
 import { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
 import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
@@ -40,6 +40,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       } else if (opt.release) {
         releaseProviderPromise = Promise.resolve(opt.release);
+        siteName = opt.site?.name ?? siteNameFromEnv() ?? siteName;
       } else {
         const fromEnvSiteName = siteNameFromEnv();
         if (!fromEnvSiteName && Context.active().isDeploy) {
@@ -53,15 +54,10 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       }
       // Define root manifest
-      const rootManifest = {
-        baseUrl: opt.manifest.baseUrl,
-        name: opt.manifest.name,
-        apps: { ...opt.manifest.apps },
-      };
 
       contextPromise = releaseProviderPromise.then((releaseProvider) =>
         newContext(
-          rootManifest,
+          opt.manifest,
           opt.importMap,
           releaseProvider,
           undefined,
