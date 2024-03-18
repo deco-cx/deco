@@ -47,7 +47,7 @@ export type DecoContext = {
   play?: boolean;
   instance: InstanceInfo;
   request?: RequestContext;
-  fs?: IVFS
+  fs?: IVFS;
 };
 
 const isDeploy = Boolean(Deno.env.get("DENO_DEPLOYMENT_ID"));
