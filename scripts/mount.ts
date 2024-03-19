@@ -39,7 +39,6 @@ export const mount = (params: MountParams): Disposable => {
 
     let timeoutNumber: null | number = null;
     eventSource.onmessage = async (event) => {
-      console.log("message received");
       const data: FileSystem = JSON.parse(decodeURIComponent(event.data));
       for (const [path, { content }] of Object.entries(data)) {
         if (["/deno.json"].includes(path)) {
