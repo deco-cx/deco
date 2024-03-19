@@ -131,7 +131,7 @@ export const contextFromVolume = async <
       rebuild(onEnd).catch((_err) => {})
     );
     return queue;
-  }, 200);
+  }, 50);
 
   const isDecofilePath = (path: string) => DECOFILE_PATH === path;
   const { promise, resolve } = Promise.withResolvers<
