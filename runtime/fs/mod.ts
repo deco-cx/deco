@@ -1,3 +1,4 @@
+import { Queue } from "https://deno.land/x/async@v2.1.0/queue.ts";
 import { Context } from "../../deco.ts";
 import { FileSystem } from "../../scripts/mount.ts";
 
@@ -8,19 +9,25 @@ export interface IVFS {
   writeFile: typeof Deno.writeFile;
   mkdir: typeof Deno.mkdir;
   readDir: typeof Deno.readDir;
+  remove: typeof Deno.remove;
+  writeTextFile: typeof Deno.writeTextFile;
+  readTextFile: typeof Deno.readTextFile;
 }
 
-const base: IVFS = {
+export const DenoFs: IVFS = {
   readFile: Deno.readFile,
   cwd: Deno.cwd,
   watchFs: Deno.watchFs,
   writeFile: Deno.writeFile,
   mkdir: Deno.mkdir,
   readDir: Deno.readDir,
+  remove: Deno.remove,
+  writeTextFile: Deno.writeTextFile,
+  readTextFile: Deno.readTextFile,
 };
 
-for (const [func, impl] of Object.entries(base)) {
-  const funcKey = func as keyof typeof base;
+for (const [func, impl] of Object.entries(DenoFs)) {
+  const funcKey = func as keyof typeof DenoFs;
   // @ts-ignore: trust-me
   Deno[funcKey] = (...args) => {
     const fs = Context.active().fs;
@@ -30,11 +37,36 @@ for (const [func, impl] of Object.entries(base)) {
 }
 
 const textEncoder = new TextEncoder();
-type WatcherMap = Record<string, Array<() => void>>;
+const textDecoder = new TextDecoder();
+type WatcherMap = Record<string, Record<string, Queue<string>>>;
 
 export class VFS implements IVFS {
   protected watchers: WatcherMap = {};
-  constructor(protected fileSystem: FileSystem) {}
+  constructor(public fileSystem: FileSystem) {}
+  writeTextFile(
+    path: string | URL,
+    data: string | ReadableStream<string>,
+    options?: Deno.WriteFileOptions | undefined,
+  ): Promise<void> {
+    // Convert text data to Uint8Array
+    const encoder = new TextEncoder();
+    const encodedData = typeof data === "string" ? encoder.encode(data) : null;
+    if (!encodedData) {
+      return Promise.resolve();
+    }
+
+    // Call writeFile with converted data
+    return this.writeFile(path, encodedData, options);
+  }
+  remove(
+    path: string | URL,
+    _options?: Deno.RemoveOptions | undefined,
+  ): Promise<void> {
+    const filePath = path.toString();
+    delete this.fileSystem[filePath];
+    this.notifyForPath(filePath);
+    return Promise.resolve();
+  }
   readDir(path: string | URL): AsyncIterable<Deno.DirEntry> {
     const entries: Deno.DirEntry[] = [];
     const directoryPath = path.toString();
@@ -83,10 +115,16 @@ export class VFS implements IVFS {
       ? new TextDecoder().decode(data)
       : null;
     this.fileSystem[filePath] = { content };
-    const current = this.watchers[filePath] ?? [];
-    this.watchers[filePath] = [];
-    current.forEach((cb) => cb());
+    this.notifyForPath(filePath);
     return Promise.resolve();
+  }
+
+  private notifyForPath(filePath: string) {
+    for (const [prefix, watchers] of Object.entries(this.watchers)) {
+      if (filePath.startsWith(prefix)) {
+        Object.values(watchers).forEach((watcher) => watcher.push(filePath));
+      }
+    }
   }
 
   mkdir(
@@ -100,26 +138,26 @@ export class VFS implements IVFS {
     paths: string | string[],
     _options?: { recursive: boolean },
   ): Deno.FsWatcher {
+    const subscriptionId = crypto.randomUUID();
     const pathsArray = Array.isArray(paths) ? paths : [paths];
     const watchers = this.watchers;
+    const q = new Queue<string>();
+
+    pathsArray.forEach((path) => {
+      watchers[path] ??= {};
+      watchers[path][subscriptionId] = q;
+    });
 
     const { promise: closedPromise, resolve: resolveClosePromise } = Promise
       .withResolvers<void>();
 
     const generator = function () {
-      const subscribe = (path: string) => {
-        if (!watchers[path]) {
-          watchers[path] = [];
-        }
-        return new Promise<string>((resolve) => {
-          watchers[path].push(() => resolve(path));
-        });
-      };
-
       const inner = async function* () {
+        const ctrl = new AbortController();
+        closedPromise.finally(() => ctrl.abort());
         while (true) {
           const triggeredPath: string | void = await Promise.race([
-            Promise.any(pathsArray.map(subscribe)),
+            q.pop({ signal: ctrl.signal }),
             closedPromise,
           ]);
 
@@ -129,35 +167,49 @@ export class VFS implements IVFS {
           }
 
           // Yield the event for the triggered path
-          yield { path: triggeredPath, kind: "modify" };
+          yield { paths: [triggeredPath], kind: "modify" as const };
         }
       };
 
-      return {
-        ...inner(),
-        close: () => {
-          resolveClosePromise();
-        },
-        [Symbol.dispose]() {
-          resolveClosePromise();
-        },
-        rid: (Math.random() * 100) + 1,
+      const iterator: Partial<Deno.FsWatcher> = inner();
+      const dispose = () => {
+        resolveClosePromise();
+        pathsArray.map((path) => {
+          delete watchers[path][subscriptionId];
+        });
       };
+      iterator.close = dispose;
+      iterator[Symbol.dispose] = dispose;
+      // @ts-ignore: trust me
+      iterator.rid = (Math.random() * 100) + 1;
+      return iterator as Deno.FsWatcher;
     };
 
-    const fsWatcher = generator() as Deno.FsWatcher;
+    const fsWatcher = generator();
     return fsWatcher;
   }
+
   cwd(): string {
     return "/";
+  }
+
+  readTextFile(
+    path: string | URL,
+    _options?: Deno.ReadFileOptions | undefined,
+  ): Promise<string> {
+    return this.readFile(path, _options).then((data) =>
+      textDecoder.decode(data)
+    );
   }
   readFile(
     path: string | URL,
     _options?: Deno.ReadFileOptions | undefined,
   ): Promise<Uint8Array> {
-    const file = this.fileSystem[path.toString()];
+    const filePath = path.toString().replace(DenoFs.cwd(), "");
+    const file = this.fileSystem[filePath];
     if (!file || file.content === null) {
-      throw new Deno.errors.NotFound(`File not found: ${path}`);
+      return DenoFs.readFile(path, _options);
+      // TODO(mcandeia) create tiered fs throw new Deno.errors.NotFound(`File not found: ${path}`);
     }
     return Promise.resolve(textEncoder.encode(file.content));
   }

@@ -2,13 +2,11 @@ import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
 import { dirname, join } from "std/path/mod.ts";
+import { DenoFs, IVFS } from "../runtime/fs/mod.ts";
 
 export interface MountParams {
   vol?: string;
-  fs?: {
-    rm: (path: string) => Promise<void>;
-    write: (path: string, content: string) => Promise<void>;
-  };
+  fs?: IVFS;
 }
 
 export interface File {
@@ -41,15 +39,15 @@ export const mount = (params: MountParams): Disposable => {
   eventSource.onmessage = async (event) => {
     const data: FileSystem = JSON.parse(decodeURIComponent(event.data));
     for (const [path, { content }] of Object.entries(data)) {
-      if (["/deno.json", "/fresh.config.ts"].includes(path)) {
+      if (["/deno.json"].includes(path)) {
         continue;
       }
       if (!content) {
         console.log(colors.brightRed(`[d]~ ${path}`));
-        await fs.rm(path);
+        await fs.remove(path);
       } else {
         console.log(colors.brightBlue(`[w]~ ${path}`));
-        await fs.write(path, content);
+        await fs.writeTextFile(path, content);
       }
     }
   };
@@ -63,11 +61,14 @@ export const mount = (params: MountParams): Disposable => {
 export const defaultFs = (
   target = Deno.cwd(),
 ): Required<MountParams>["fs"] => ({
-  rm: (path) => Deno.remove(join(target, path)),
-  write: async (path, content) => {
-    const fullPath = join(target, path);
+  ...DenoFs,
+  mkdir: (path) =>
+    DenoFs.mkdir(join(target, path.toString()), { recursive: true }),
+  remove: (path) => DenoFs.remove(join(target, path.toString())),
+  writeTextFile: async (path, content) => {
+    const fullPath = join(target, path.toString());
     await ensureDir(dirname(fullPath));
-    await Deno.writeTextFile(fullPath, content);
+    await DenoFs.writeTextFile(fullPath, content);
   },
 });
 if (import.meta.main) {

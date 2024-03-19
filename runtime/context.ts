@@ -11,6 +11,7 @@ import { assertAllowedAuthority } from "../engine/trustedAuthority.ts";
 import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
 import { FileSystem, mount } from "../scripts/mount.ts";
+import { VFS } from "./fs/mod.ts";
 
 let initializePromise: Promise<void> | null = null;
 
@@ -115,6 +116,7 @@ export const contextFromVolume = async <
   const { manifest: initialManifest } = await currentContext.runtime!;
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FileSystem = {};
+  const fs = new VFS(inMemoryFS);
   const rebuild = async (onEnd?: (m: AppManifest) => void) => {
     const contents = await bundle(inMemoryFS);
     const module = await import(
@@ -162,37 +164,37 @@ export const contextFromVolume = async <
       opts.importMap!.imports = buildImportMap(opts.manifest).imports;
     });
   };
+  (async () => {
+    for await (const event of fs.watchFs("/", { recursive: true })) {
+      event.paths.map((path) => {
+        isCodeFile(path) && debRebuild(updateManifest);
+        isCodeFile(path) && inMemoryFS[path]?.content &&
+          updateLoadCache(
+            new URL(path.slice(1), baseDir).href,
+            inMemoryFS[path]!.content!,
+          );
+        isDecofilePath(path) && updateRelease();
+      });
+    }
+  })();
   const mountPoint = mount({
     vol,
-    fs: {
-      rm: (path) => {
-        delete inMemoryFS[path];
-        isCodeFile(path) && debRebuild(updateManifest);
-        isDecofilePath(path) && updateRelease();
-        return Promise.resolve();
-      },
-      write: (path, content) => {
-        inMemoryFS[path] = { content };
-        isCodeFile(path) &&
-          updateLoadCache(new URL(path.slice(1), baseDir).href, content);
-        isCodeFile(path) && debRebuild(updateManifest);
-        isDecofilePath(path) && updateRelease();
-        return Promise.resolve();
-      },
-    },
+    fs,
   });
   const currentDispose = release?.dispose;
   release.dispose = () => {
     currentDispose?.();
     mountPoint[Symbol.dispose]();
   };
-  return promise.then((opts) => {
-    return newContext(
+  return promise.then(async (opts) => {
+    const ctx = await newContext(
       opts.manifest,
       opts.importMap,
       opts.release,
       undefined,
       currentContext.site,
     );
+    ctx.fs = fs;
+    return ctx;
   });
 };
