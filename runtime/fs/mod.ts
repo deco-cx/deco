@@ -12,7 +12,6 @@ export interface IVFS {
   remove: typeof Deno.remove;
   writeTextFile: typeof Deno.writeTextFile;
   readTextFile: typeof Deno.readTextFile;
-  fileSystem: FileSystem;
 }
 
 export const DenoFs: IVFS = {
@@ -210,7 +209,7 @@ export class VFS implements IVFS {
     const file = this.fileSystem[filePath];
     if (!file || file.content === null) {
       return DenoFs.readFile(path, _options);
-      //throw new Deno.errors.NotFound(`File not found: ${path}`);
+      // TODO(mcandeia) create tiered fs throw new Deno.errors.NotFound(`File not found: ${path}`);
     }
     return Promise.resolve(textEncoder.encode(file.content));
   }
