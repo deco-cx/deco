@@ -79,4 +79,3 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   };
 };
 
-Deno.readDir;
