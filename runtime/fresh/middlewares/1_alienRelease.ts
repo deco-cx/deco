@@ -36,18 +36,22 @@ export async function alienRelease(
 
   // Get the inline release from the query string
   const alienReleaseFromQs = url.searchParams.get("__r");
+  const ref = request.headers.get("referer");
 
+  const referer = ref && URL.canParse(ref) ? new URL(ref) : null;
+  const alienReleaseFromRef = referer?.searchParams.get("__r");
+  const requesterAlienRelease = alienReleaseFromQs ?? alienReleaseFromRef;
   // If the inline release is the delete marker, delete the cookie and return the response
-  if (alienReleaseFromQs === DELETE_MARKER) {
+  if (requesterAlienRelease === DELETE_MARKER) {
     const response = await context.next();
     deleteCookie(response.headers, DECO_RELEASE_COOKIE_NAME);
     return response;
   }
 
-  const cookable = alienReleaseFromQs?.startsWith(COOKIE_MARKER) ?? false;
+  const cookable = requesterAlienRelease?.startsWith(COOKIE_MARKER) ?? false;
   const alienReleaseQs = cookable
-    ? alienReleaseFromQs!.slice(1) // remove @
-    : alienReleaseFromQs;
+    ? requesterAlienRelease!.slice(1) // remove @
+    : requesterAlienRelease;
 
   // Get the cookies from the request headers
   const cookies = getCookies(request.headers);
