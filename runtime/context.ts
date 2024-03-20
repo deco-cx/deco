@@ -112,6 +112,9 @@ export const contextFromVolume = async <
   if (siteFromVolUrl !== currentContext.site) {
     throw new Error(`${siteFromVolUrl} does not match ${currentContext.site}`);
   }
+  currentContext.platform === "deno_deploy" &&
+    volUrl.searchParams.set("path", DECOFILE_PATH); // watch only decofile changes
+
   const { manifest: initialManifest } = await currentContext.runtime!;
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FileSystem = {};
