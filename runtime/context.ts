@@ -148,9 +148,13 @@ export const contextFromVolume = async <
     });
   });
 
+  const { promise: firstLoadPromise, resolve: firstLoadResolve } = Promise
+    .withResolvers<void>();
+
   const updateRelease = () => {
     const decofile = inMemoryFS[DECOFILE_PATH]?.content;
     decofile && release?.set?.(JSON.parse(decofile));
+    decofile && firstLoadResolve();
   };
   const updateManifest = (m: AppManifest) => {
     manifestResolvers.resolve(m as TManifest);
@@ -199,6 +203,7 @@ export const contextFromVolume = async <
     mountPoint[Symbol.dispose]();
   };
   return init.promise.then(async (opts) => {
+    await firstLoadPromise;
     const ctx = await newContext(
       opts.manifest,
       opts.importMap,
