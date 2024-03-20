@@ -197,7 +197,7 @@ export const contextFromVolume = async <
     }
   })();
   const mountPoint = mount({
-    vol,
+    vol: volUrl.href,
     fs,
   });
   const currentDispose = release?.dispose;
