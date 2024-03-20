@@ -156,18 +156,22 @@ export class VFS implements IVFS {
         const ctrl = new AbortController();
         closedPromise.finally(() => ctrl.abort());
         while (true) {
-          const triggeredPath: string | void = await Promise.race([
-            q.pop({ signal: ctrl.signal }),
-            closedPromise,
-          ]);
+          const paths = [];
+          do {
+            const triggeredPath: string | void = await Promise.race([
+              q.pop({ signal: ctrl.signal }),
+              closedPromise,
+            ]);
 
-          // If closed, return
-          if (typeof triggeredPath !== "string") {
-            return;
-          }
+            // If closed, return
+            if (typeof triggeredPath !== "string") {
+              return;
+            }
+            paths.push(triggeredPath);
+          } while (q.size > 0);
 
           // Yield the event for the triggered path
-          yield { paths: [triggeredPath], kind: "modify" as const };
+          yield { paths, kind: "modify" as const };
         }
       };
 

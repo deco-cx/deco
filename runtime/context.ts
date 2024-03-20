@@ -1,5 +1,4 @@
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
-import { debounce } from "std/async/debounce.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { BlockKey } from "../blocks/app.ts";
 import { buildImportMap } from "../blocks/utils.tsx";
@@ -126,23 +125,23 @@ export const contextFromVolume = async <
   };
 
   let queue = Promise.resolve();
-  const debRebuild = debounce((onEnd?: (m: AppManifest) => void) => {
+  const rebuildQueue = (onEnd?: (m: AppManifest) => void) => {
     queue = queue.catch((_err) => null).then(() =>
       rebuild(onEnd).catch((_err) => {})
     );
     return queue;
-  }, 50);
+  };
 
   const isDecofilePath = (path: string) => DECOFILE_PATH === path;
-  const { promise, resolve } = Promise.withResolvers<
+  const init = Promise.withResolvers<
     InitOptions<TManifest>
   >();
   const release = fromJSON({});
-  const { promise: manifestPromise, resolve: manifestResolve } = Promise
+  const manifestResolvers = Promise
     .withResolvers<TManifest>();
 
-  manifestPromise.then((manifest) => {
-    resolve({
+  manifestResolvers.promise.then((manifest) => {
+    init.resolve({
       manifest: mergeManifests({
         name: initialManifest.name,
         baseUrl: initialManifest.baseUrl,
@@ -157,8 +156,8 @@ export const contextFromVolume = async <
     decofile && release?.set?.(JSON.parse(decofile));
   };
   const updateManifest = (m: AppManifest) => {
-    manifestResolve(m as TManifest);
-    promise.then((opts) => {
+    manifestResolvers.resolve(m as TManifest);
+    init.promise.then((opts) => {
       opts.manifest = mergeManifests(opts.manifest, m) as TManifest;
       opts.release?.notify?.();
       opts.importMap!.imports = buildImportMap(opts.manifest).imports;
@@ -166,15 +165,26 @@ export const contextFromVolume = async <
   };
   (async () => {
     for await (const event of fs.watchFs("/", { recursive: true })) {
-      event.paths.map((path) => {
-        isCodeFile(path) && debRebuild(updateManifest);
-        isCodeFile(path) && inMemoryFS[path]?.content &&
+      let hasCodeChange = false;
+      let hasDecofileChange = false;
+      for (const path of event.paths) {
+        const pathIsCode = isCodeFile(path);
+        hasCodeChange ||= pathIsCode;
+        hasDecofileChange ||= isDecofilePath(path);
+        pathIsCode && inMemoryFS[path]?.content &&
           updateLoadCache(
             new URL(path.slice(1), baseDir).href,
             inMemoryFS[path]!.content!,
           );
-        isDecofilePath(path) && updateRelease();
-      });
+      }
+      if (hasCodeChange) {
+        rebuildQueue(updateManifest);
+        updateRelease();
+      } else if (hasDecofileChange) {
+        updateRelease();
+      }
+      hasCodeChange && rebuildQueue(updateManifest);
+      hasDecofileChange && updateRelease();
     }
   })();
   const mountPoint = mount({
@@ -186,7 +196,8 @@ export const contextFromVolume = async <
     currentDispose?.();
     mountPoint[Symbol.dispose]();
   };
-  return promise.then(async (opts) => {
+  await queue;
+  return init.promise.then(async (opts) => {
     const ctx = await newContext(
       opts.manifest,
       opts.importMap,
