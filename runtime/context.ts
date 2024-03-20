@@ -112,7 +112,8 @@ export const contextFromVolume = async <
   if (siteFromVolUrl !== currentContext.site) {
     throw new Error(`${siteFromVolUrl} does not match ${currentContext.site}`);
   }
-  currentContext.platform === "deno_deploy" &&
+  const isDD = currentContext.platform === "deno_deploy";
+  isDD &&
     volUrl.searchParams.set("path", DECOFILE_PATH); // watch only decofile changes
 
   const { manifest: initialManifest } = await currentContext.runtime!;
@@ -205,6 +206,9 @@ export const contextFromVolume = async <
     currentDispose?.();
     mountPoint[Symbol.dispose]();
   };
+  if (isDD) {
+    updateManifest(initialManifest);
+  }
   return init.promise.then(async (opts) => {
     await firstLoadPromise;
     const ctx = await newContext(
