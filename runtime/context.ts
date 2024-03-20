@@ -116,20 +116,17 @@ export const contextFromVolume = async <
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FileSystem = {};
   const fs = new VFS(inMemoryFS);
-  const rebuild = async (onEnd?: (m: AppManifest) => void) => {
+  const rebuild = async () => {
     const contents = await bundle(inMemoryFS);
-    const module = await import(
-      `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
-    );
-    onEnd?.(module.default);
-  };
-
-  let queue = Promise.resolve();
-  const rebuildQueue = (onEnd?: (m: AppManifest) => void) => {
-    queue = queue.catch((_err) => null).then(() =>
-      rebuild(onEnd).catch((_err) => {})
-    );
-    return queue;
+    try {
+      const module = await import(
+        `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
+      );
+      return module.default;
+    } catch (err) {
+      console.log("ignoring dynamic import error", err);
+    }
+    return undefined;
   };
 
   const isDecofilePath = (path: string) => DECOFILE_PATH === path;
@@ -157,10 +154,11 @@ export const contextFromVolume = async <
   };
   const updateManifest = (m: AppManifest) => {
     manifestResolvers.resolve(m as TManifest);
-    init.promise.then((opts) => {
+    return init.promise.then(async (opts) => {
       opts.manifest = mergeManifests(opts.manifest, m) as TManifest;
-      opts.release?.notify?.();
       opts.importMap!.imports = buildImportMap(opts.manifest).imports;
+      const p = opts.release?.notify?.() ?? Promise.resolve();
+      return await p;
     });
   };
   (async () => {
@@ -178,13 +176,17 @@ export const contextFromVolume = async <
           );
       }
       if (hasCodeChange) {
-        rebuildQueue(updateManifest);
-        updateRelease();
+        await rebuild().then((m) => {
+          if (!m) {
+            return Promise.resolve();
+          }
+          return updateManifest(m).then(() => {
+            hasDecofileChange && updateRelease();
+          });
+        }).catch((_err) => {});
       } else if (hasDecofileChange) {
         updateRelease();
       }
-      hasCodeChange && rebuildQueue(updateManifest);
-      hasDecofileChange && updateRelease();
     }
   })();
   const mountPoint = mount({
@@ -196,7 +198,6 @@ export const contextFromVolume = async <
     currentDispose?.();
     mountPoint[Symbol.dispose]();
   };
-  await queue;
   return init.promise.then(async (opts) => {
     const ctx = await newContext(
       opts.manifest,

@@ -53,7 +53,7 @@ export const newRealtime = (
   // callbacks
   const onChangeCbs: OnChangeCallback[] = [];
   const notify = () => {
-    onChangeCbs.forEach((cb) => cb());
+    return Promise.all(onChangeCbs.map((cb) => cb())).then(() => {});
   };
   // the first load retry attempts
   let remainingRetries = 5;
@@ -167,7 +167,7 @@ export const newRealtime = (
       onChangeCbs.push(cb);
     },
     notify() {
-      notify();
+      return notify();
     },
     revision: () =>
       currResolvables.then((r) => r.revision).catch(() => "unknown"),

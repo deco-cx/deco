@@ -389,11 +389,11 @@ export const fulfillContext = async <
   let appsInstallationMutex = deferred<void>();
   provider.onChange(() => {
     // limiter to not allow multiple installations in parallel
-    Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
+    return Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
       appsInstallationMutex = deferred();
       // installApps should never block next install as the first install is the only that really matters.
       // so we should resolve to let next install happen immediately
-      installApps().finally(appsInstallationMutex.resolve);
+      return installApps().finally(appsInstallationMutex.resolve);
     });
   });
   provider.state().then(() => {
