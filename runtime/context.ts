@@ -207,7 +207,10 @@ export const contextFromVolume = async <
     mountPoint[Symbol.dispose]();
   };
   if (isDD) {
-    updateManifest(initialManifest);
+    init.resolve({
+      manifest: initialManifest as TManifest,
+      release,
+    });
   }
   return init.promise.then(async (opts) => {
     await firstLoadPromise;
@@ -218,7 +221,9 @@ export const contextFromVolume = async <
       undefined,
       currentContext.site,
     );
-    ctx.fs = fs;
+    if (!isDD) {
+      ctx.fs = fs;
+    }
     return ctx;
   });
 };
