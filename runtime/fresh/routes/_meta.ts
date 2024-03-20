@@ -20,6 +20,7 @@ export interface MetaInfo {
   schema: Schemas;
   manifest: ManifestBlocks;
   site: string;
+  platform: string;
 }
 
 export const toManifestBlocks = (
@@ -81,6 +82,7 @@ export const handler = async (
       site: context.site!,
       manifest: manfiestBlocks,
       schema,
+      platform: context.platform,
     };
 
     return JSON.stringify(info);
