@@ -2,6 +2,7 @@ import * as colors from "std/fmt/colors.ts";
 import { exists } from "std/fs/mod.ts";
 import { join } from "std/path/mod.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
+import { PromiseOrValue } from "../../engine/core/utils.ts";
 import { fromPagesTable } from "../../engine/releases/pages.ts";
 import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { ENTRYPOINT } from "./constants.ts";
@@ -13,7 +14,7 @@ export interface SelectionConfig {
   audiences: unknown[];
 }
 
-export type OnChangeCallback = () => void;
+export type OnChangeCallback = () => PromiseOrValue<void>;
 export interface ReadOptions {
   forceFresh?: boolean;
 }
@@ -22,7 +23,7 @@ export interface Release {
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   revision(): Promise<string>;
   onChange(callback: OnChangeCallback): void;
-  notify?(): void;
+  notify?(): Promise<void>;
   dispose?: () => void;
   set?(state: Record<string, Resolvable>, revision?: string): Promise<void>;
 }

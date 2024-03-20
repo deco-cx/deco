@@ -4,8 +4,8 @@ import { newFsProviderFromPath } from "./fs.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
 import {
   CurrResolvables,
-  newRealtime,
   RealtimeReleaseProvider,
+  newRealtime,
 } from "./realtime.ts";
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
@@ -128,7 +128,7 @@ export const fromJSON = (
     },
     notify: () => {
       currentRevision = crypto.randomUUID();
-      cbs.forEach((cb) => cb());
+      return Promise.all(cbs.map((cb) => cb())).then(() => {});
     },
     revision: () => Promise.resolve(currentRevision),
     set(newState, revision) {
@@ -189,7 +189,7 @@ export const fromEndpoint = (endpoint: string): Release => {
       return releasePromise.then((r) => r?.set?.(state, revision));
     },
     notify() {
-      releasePromise.then((r) => r?.notify?.());
+      return releasePromise.then((r) => r?.notify?.() ?? Promise.resolve());
     },
     state: (options) => releasePromise.then((r) => r.state(options)),
     archived: (options) => releasePromise.then((r) => r.archived(options)),
