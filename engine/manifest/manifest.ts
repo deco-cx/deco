@@ -322,7 +322,7 @@ export const fulfillContext = async <
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
-    const [newManifest, resolvers] = (blocks() ?? []).reduce(
+    const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
       (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
       [
         {
@@ -340,7 +340,12 @@ export const fulfillContext = async <
     );
     const { resolver: currentResolver, apps: allAppsMap, manifest, importMap } =
       await installAppsForResolver(
-        resolver.with({ resolvers }),
+        resolver.with({
+          resolvers,
+          danglingRecover: recovers.length > 0
+            ? buildDanglingRecover(recovers)
+            : undefined,
+        }),
         newManifest,
         currentImportMap,
       );
@@ -389,12 +394,14 @@ export const fulfillContext = async <
   let appsInstallationMutex = deferred<void>();
   provider.onChange(() => {
     // limiter to not allow multiple installations in parallel
-    return Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
-      appsInstallationMutex = deferred();
-      // installApps should never block next install as the first install is the only that really matters.
-      // so we should resolve to let next install happen immediately
-      return installApps().finally(appsInstallationMutex.resolve);
-    });
+    return Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(
+      () => {
+        appsInstallationMutex = deferred();
+        // installApps should never block next install as the first install is the only that really matters.
+        // so we should resolve to let next install happen immediately
+        return installApps().finally(appsInstallationMutex.resolve);
+      },
+    );
   });
   provider.state().then(() => {
     installApps().then(firstInstallAppsPromise.resolve).catch(
