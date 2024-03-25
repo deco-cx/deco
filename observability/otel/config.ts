@@ -125,12 +125,23 @@ const provider = new NodeTracerProvider({
   ),
 });
 
-setTimeout(() => {
-  console.log("resources", Deno.resources());
-  console.log("memory", Deno.memoryUsage());
-  console.log("memoryInfo", Deno.systemMemoryInfo());
-}, 30_000);
+if (context.isDeploy) {
+  setInterval(() => {
+    const resourceUsage: Record<string, string> = {};
+    // deno-lint-ignore no-deprecated-deno-api
+    for (const [rid, resc] of Object.entries(Deno.resources())) {
+      resourceUsage[`rid.${rid}`] = resc.toString();
+    }
+    for (const [mem, usage] of Object.entries(Deno.memoryUsage())) {
+      resourceUsage[`mem.${mem}`] = `${(+usage / (2 ** 20)).toFixed(2)} MB`;
+    }
+    for (const [mem, usage] of Object.entries(Deno.systemMemoryInfo())) {
+      resourceUsage[`sys.${mem}`] = `${(+usage / (2 ** 20)).toFixed(2)} MB`;
+    }
 
+    console.table(resourceUsage);
+  }, 30_000);
+}
 if (OTEL_IS_ENABLED) {
   const traceExporter = new OTLPTraceExporter();
   provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
