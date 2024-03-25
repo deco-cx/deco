@@ -125,6 +125,12 @@ const provider = new NodeTracerProvider({
   ),
 });
 
+setTimeout(() => {
+  console.log("resources", Deno.resources());
+  console.log("memory", Deno.memoryUsage());
+  console.log("memoryInfo", Deno.systemMemoryInfo());
+}, 30_000);
+
 if (OTEL_IS_ENABLED) {
   const traceExporter = new OTLPTraceExporter();
   provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
