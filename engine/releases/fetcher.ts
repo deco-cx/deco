@@ -4,8 +4,8 @@ import { newFsProviderFromPath } from "./fs.ts";
 import { OnChangeCallback, Release } from "./provider.ts";
 import {
   CurrResolvables,
-  RealtimeReleaseProvider,
   newRealtime,
+  RealtimeReleaseProvider,
 } from "./realtime.ts";
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
