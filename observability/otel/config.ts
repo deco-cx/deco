@@ -125,7 +125,7 @@ const provider = new NodeTracerProvider({
   ),
 });
 
-if (context.isDeploy) {
+if (context.isDeploy && context.platform === "kubernetes") {
   setInterval(() => {
     const resourceUsage: Record<string, string> = {};
     // deno-lint-ignore no-deprecated-deno-api
