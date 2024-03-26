@@ -1,4 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import { tryOrDefault } from "deco/utils/object.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { RequestState } from "../../../blocks/utils.tsx";
 import { Context } from "../../../deco.ts";
@@ -129,7 +130,7 @@ export const handler = [
       status: undefined,
     };
     const state: Partial<RequestState> = ctx.state?.$live?.state ?? {};
-    const stateBag = new WeakMap();
+    const stateBag = new Map();
     state.response = response;
     state.bag = stateBag;
     state.flags = [];
