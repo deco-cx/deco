@@ -224,6 +224,7 @@ export const contextFromVolume = async <
     if (!isDD) {
       ctx.fs = fs;
     }
+    ctx.namespace = currentContext.namespace;
     return ctx;
   });
 };
