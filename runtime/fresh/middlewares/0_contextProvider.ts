@@ -33,6 +33,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       const shouldUseLocalStorage = opt?.useLocalStorageOnly ||
         Deno.env.has("USE_LOCAL_STORAGE_ONLY");
       let siteName = opt.manifest.name;
+      let namespace: string | undefined = undefined;
       let releaseProviderPromise: Promise<Release>;
       if (shouldUseLocalStorage) {
         releaseProviderPromise = Promise.resolve(
@@ -41,6 +42,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       } else if (opt.release) {
         releaseProviderPromise = Promise.resolve(opt.release);
         siteName = opt.site?.name ?? siteNameFromEnv() ?? siteName;
+        namespace = opt?.site?.namespace;
       } else {
         const fromEnvSiteName = siteNameFromEnv();
         if (!fromEnvSiteName && Context.active().isDeploy) {
@@ -62,6 +64,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
           releaseProvider,
           undefined,
           siteName,
+          namespace
         )
       );
       contextCache.set(

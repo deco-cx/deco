@@ -435,11 +435,13 @@ export const newContext = <
   release: Release | undefined = undefined,
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
+  namespace: string | undefined = undefined,
 ): Promise<DecoContext> => {
   const currentContext = Context.active();
   const ctx: DecoContext = {
     ...currentContext,
     site: site ?? currentContext.site,
+    namespace: namespace ?? currentContext.namespace,
     instance: {
       id: instanceId ?? randId(),
       startedAt: new Date(),
