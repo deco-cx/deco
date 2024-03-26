@@ -3,6 +3,7 @@ import * as colors from "std/fmt/colors.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { DenoFs, IVFS } from "../runtime/fs/mod.ts";
+
 export interface MountParams {
   vol?: string;
   fs?: IVFS;
@@ -14,7 +15,6 @@ export interface File {
 
 export type FileSystem = Record<string, File>;
 
-const RECONNECT_ON_IDLE_MS = 50_000;
 export const mount = (params: MountParams): Disposable => {
   const { vol: codeVol, dir } = parse(Deno.args, {
     string: ["vol", "dir"],
@@ -26,20 +26,31 @@ export const mount = (params: MountParams): Disposable => {
     Deno.exit(1);
   }
   console.info(colors.green(`connecting ${vol}`));
-  let eventSource = new EventSource(vol);
+  let disposed = false;
+  let websocket = new WebSocket(vol);
 
   const connect = () => {
-    eventSource.onopen = () => {
-      console.log(colors.green(`mount server ${vol} succesfully connected!`));
+    websocket.onopen = () => {
+      console.log(colors.green(`mount server ${vol} successfully connected!`));
     };
 
-    eventSource.onerror = (error) => {
+    websocket.onerror = (error) => {
       console.error(colors.red(`mount server error`), error);
     };
 
-    let timeoutNumber: null | number = null;
-    eventSource.onmessage = async (event) => {
-      const data: FileSystem = JSON.parse(decodeURIComponent(event.data));
+    websocket.onclose = () => {
+      console.log(
+        colors.yellow(`mount server ${vol} closed, disposed: ${disposed}`),
+      );
+      if (disposed) {
+        return;
+      }
+      websocket = new WebSocket(vol);
+      setTimeout(connect, 1000);
+    };
+
+    websocket.onmessage = async (event) => {
+      const data: FileSystem = JSON.parse(event.data);
       for (const [path, { content }] of Object.entries(data)) {
         if (["/deno.json"].includes(path)) {
           continue;
@@ -52,12 +63,6 @@ export const mount = (params: MountParams): Disposable => {
           await fs.writeTextFile(path, content);
         }
       }
-      timeoutNumber && clearTimeout(timeoutNumber);
-      timeoutNumber = setTimeout(() => {
-        eventSource.close();
-        eventSource = new EventSource(vol);
-        connect();
-      }, RECONNECT_ON_IDLE_MS);
     };
   };
 
@@ -65,7 +70,8 @@ export const mount = (params: MountParams): Disposable => {
 
   return {
     [Symbol.dispose]() {
-      eventSource.close();
+      disposed = true;
+      websocket.close();
     },
   };
 };
@@ -83,6 +89,7 @@ export const defaultFs = (
     await DenoFs.writeTextFile(fullPath, content);
   },
 });
+
 if (import.meta.main) {
   mount({});
 }
