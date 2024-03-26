@@ -14,18 +14,7 @@ export interface File {
 }
 
 export type FileSystem = Record<string, File>;
-
-export const mount = (params: MountParams): Disposable => {
-  const { vol: codeVol, dir } = parse(Deno.args, {
-    string: ["vol", "dir"],
-  });
-  const fs = params?.fs ?? defaultFs(dir);
-  const vol = params?.vol ?? codeVol;
-  if (!vol) {
-    console.error(colors.red("--vol arg is required"));
-    Deno.exit(1);
-  }
-  console.info(colors.green(`connecting ${vol}`));
+const mountWS = (vol: string, fs: IVFS): Disposable => {
   let disposed = false;
   let websocket = new WebSocket(vol);
 
@@ -74,6 +63,69 @@ export const mount = (params: MountParams): Disposable => {
       websocket.close();
     },
   };
+};
+
+const mountES = (vol: string, fs: IVFS): Disposable => {
+  let disposed = false;
+  let es = new EventSource(vol);
+
+  const connect = () => {
+    es.onopen = () => {
+      console.log(colors.green(`mount server ${vol} successfully connected!`));
+    };
+
+    es.onerror = (error) => {
+      console.error(
+        colors.red(`mount server error trying to reconnect`),
+        error,
+      );
+      if (disposed) {
+        return;
+      }
+      es = new EventSource(vol);
+      setTimeout(connect, 1000);
+    };
+
+    es.onmessage = async (event) => {
+      const data: FileSystem = JSON.parse(decodeURIComponent(event.data));
+      for (const [path, { content }] of Object.entries(data)) {
+        if (["/deno.json"].includes(path)) {
+          continue;
+        }
+        if (!content) {
+          console.log(colors.brightRed(`[d]~ ${path}`));
+          await fs.remove(path);
+        } else {
+          console.log(colors.brightBlue(`[w]~ ${path}`));
+          await fs.writeTextFile(path, content);
+        }
+      }
+    };
+  };
+
+  connect();
+
+  return {
+    [Symbol.dispose]() {
+      disposed = true;
+      es.close();
+    },
+  };
+};
+
+export const mount = (params: MountParams): Disposable => {
+  const { vol: codeVol, dir } = parse(Deno.args, {
+    string: ["vol", "dir"],
+  });
+  const fs = params?.fs ?? defaultFs(dir);
+  const vol = params?.vol ?? codeVol;
+  if (!vol) {
+    console.error(colors.red("--vol arg is required"));
+    Deno.exit(1);
+  }
+  console.info(colors.green(`connecting ${vol}`));
+  const mountPoint = vol.startsWith("http") ? mountES : mountWS;
+  return mountPoint(vol, fs);
 };
 
 export const defaultFs = (
