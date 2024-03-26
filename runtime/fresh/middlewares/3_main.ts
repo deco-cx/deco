@@ -145,6 +145,7 @@ export const handler = [
 
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
     if (req.headers.get("upgrade") === "websocket") {
+      console.log("middleware returning");
       return initialResponse;
     }
     const newHeaders = new Headers(initialResponse.headers);

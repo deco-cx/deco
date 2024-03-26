@@ -29,6 +29,10 @@ export const handler = async (
   const resp = await resolve(payloadToResolvable(invokeFunc)).catch(
     wrapInvokeErr,
   );
+  console.log("receiving", resp);
 
-  return invokeToHttpResponse(req, resp);
+  const respN = invokeToHttpResponse(req, resp);
+  
+  console.log("responding", respN);
+  return respN;
 };

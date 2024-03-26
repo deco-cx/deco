@@ -46,7 +46,9 @@ const withErrorHandler = (
 ): Handler<any, any> => {
   return async (req: Request, ctx: HandlerContext<any>) => {
     try {
-      return await handler(req, ctx);
+      const response = await handler(req, ctx);
+      console.log("responding", response, routePath);
+      return response;
     } catch (err) {
       if (err instanceof HttpError) {
         return err.resp;
