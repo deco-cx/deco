@@ -43,7 +43,7 @@ for (const [engine, cache] of Object.entries(cacheImplByEngine)) {
 
 const eligibleCacheImplementations = WEB_CACHE_ENGINES.map((engine) =>
   cacheImplByEngine[engine]
-).filter((engine) => engine.isAvailable).map((engine) => engine.implementation);
+).filter((engine) => engine?.isAvailable ?? false).map((engine) => engine.implementation);
 
 const getCacheStorage = (): CacheStorage => {
   if (eligibleCacheImplementations.length === 0) {
