@@ -62,6 +62,8 @@ function createFileSystemCache(): CacheStorage {
       const fileContent = await Deno.readFile(filePath);
       return fileContent;
     } catch (err) {
+      // Error code different for file/dir not found
+      // The file won't be found in cases where it's not cached
       if (err.code === "ENOENT") {
         logger.warning(
           `file not found when reading from file system, path: ${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`,
@@ -105,7 +107,6 @@ function createFileSystemCache(): CacheStorage {
     },
     open: (cacheName: string): Promise<Cache> => {
       const requestURLSHA1 = withCacheNamespace(cacheName);
-
       return Promise.resolve({
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
         add: (_request: RequestInfo | URL): Promise<void> => {
@@ -154,10 +155,8 @@ function createFileSystemCache(): CacheStorage {
             span.addEvent("file-system-get-data");
 
             if (data === null) {
-              span.addEvent("cache-miss");
               return undefined;
             }
-            span.addEvent("cache-hit");
 
             downloadDuration.record(downloadDurationTime, {
               bufferSize: data.length,
@@ -167,7 +166,6 @@ function createFileSystemCache(): CacheStorage {
               data,
             );
           } catch (err) {
-            span.recordException(err);
             throw err;
           } finally {
             span.end();
@@ -242,6 +240,7 @@ const hasWritePerm = async (): Promise<boolean> => {
   ).then((status) => status.state === "granted");
 };
 
-export const caches = await hasWritePerm() && FILE_SYSTEM_CACHE_DIRECTORY
-  ? createFileSystemCache()
-  : undefined;
+export const isFileSystemAvailable = await hasWritePerm() &&
+  FILE_SYSTEM_CACHE_DIRECTORY !== undefined;
+
+export const caches = createFileSystemCache();
