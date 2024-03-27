@@ -7,6 +7,7 @@ import {
   withCacheNamespace,
 } from "./common.ts";
 import { existsSync } from "std/fs/mod.ts";
+import {LRUCache} from "https://esm.sh/lru-cache@10.2.0";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
@@ -25,6 +26,22 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   unit: "1",
   valueType: ValueType.INT,
 });
+
+const cacheOptions = {
+  max: 10000, // maximum number of items in the cache
+  maxSize: 1024 * 1024 * 1024, // 1 GB max size of cache
+  ttl: 1000 * 60, // items expire after 1 minute
+  ttlAutopurge: true, // automatically delete expired items
+  ttlResolution: 1000, // check for expired items every second
+  sizeCalculation: (value: Uint8Array, key: string) => {
+    return value.length;
+  },
+  dispose: (value: Uint8Array, key: string) => {
+    Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch(err => console.error(`Failed to delete ${key}:`, err));
+  },
+};
+
+const fileCache = new LRUCache(cacheOptions);
 
 function createFileSystemCache(): CacheStorage {
   let isCacheInitialized = false;
@@ -50,6 +67,7 @@ function createFileSystemCache(): CacheStorage {
     }
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
     await Deno.writeFile(filePath, responseArray);
+    fileCache.set(key, responseArray); // Add to cache, which may trigger disposal of old item
     return;
   }
 
@@ -58,6 +76,10 @@ function createFileSystemCache(): CacheStorage {
       await assertCacheDirectory();
     }
     try {
+      if (fileCache.has(key)) {
+        // Update the access time in the cache
+        fileCache.get(key);
+      }
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
       const fileContent = await Deno.readFile(filePath);
       return fileContent;
