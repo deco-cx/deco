@@ -46,6 +46,7 @@ export const invokeToHttpResponse = (
               event: "message",
             });
           }
+          controller.close();
         },
         cancel() {
           invokeResponse?.return?.();
