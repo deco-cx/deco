@@ -1,4 +1,4 @@
-import { createCache } from "https://deno.land/x/deno_cache@0.6.3/mod.ts";
+import { createCache } from "jsr:@deno/cache-dir@0.8.0";
 import { assignComments } from "./comments.ts";
 import { parse, ParsedSource } from "./deps.ts";
 
