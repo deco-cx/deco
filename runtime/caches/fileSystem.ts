@@ -12,9 +12,6 @@ import { LRUCache } from "https://esm.sh/lru-cache@10.2.0";
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
 
-const MAX_NUMBER_OF_ITEMS = parseInt(
-  Deno.env.get("MAX_NUMBER_OF_ITEMS") ?? "10000",
-); // maximum number of items in the cache
 const MAX_CACHE_SIZE = parseInt(Deno.env.get("MAX_CACHE_SIZE") ?? "1073741824"); // 1 GB max size of cache
 const TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
 const TTL_RESOLUTION = parseInt(Deno.env.get("TTL_RESOLUTION") ?? "30000"); // check for expired items every 30 seconds
@@ -52,7 +49,6 @@ function uint8ArrayToNum(arr: Uint8Array) {
 }
 
 const cacheOptions = {
-  max: MAX_NUMBER_OF_ITEMS,
   maxSize: MAX_CACHE_SIZE,
   ttlAutopurge: TTL_AUTOPURGE,
   ttlResolution: TTL_RESOLUTION,
