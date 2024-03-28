@@ -7,9 +7,14 @@ import {
   withCacheNamespace,
 } from "./common.ts";
 import { existsSync } from "std/fs/mod.ts";
+import { LRUCache } from "https://esm.sh/lru-cache@10.2.0";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
+
+const MAX_CACHE_SIZE = parseInt(Deno.env.get("MAX_CACHE_SIZE") ?? "1073741824"); // 1 GB max size of cache
+const TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
+const TTL_RESOLUTION = parseInt(Deno.env.get("TTL_RESOLUTION") ?? "30000"); // check for expired items every 30 seconds
 
 const downloadDuration = meter.createHistogram(
   "file_system_cache_download_duration",
@@ -25,6 +30,41 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   unit: "1",
   valueType: ValueType.INT,
 });
+
+function numToUint8Array(num: number) {
+  const arr = new Uint8Array(8);
+  for (let i = 0; i < 8; i++) {
+    arr[i] = num % 256;
+    num = Math.floor(num / 256);
+  }
+  return arr;
+}
+
+function uint8ArrayToNum(arr: Uint8Array) {
+  let num = 0;
+  for (let i = 0; i < 8; i++) {
+    num += Math.pow(256, i) * arr[i];
+  }
+  return num;
+}
+
+const cacheOptions = {
+  maxSize: MAX_CACHE_SIZE,
+  ttlAutopurge: TTL_AUTOPURGE,
+  ttlResolution: TTL_RESOLUTION,
+  // deno-lint-ignore no-unused-vars
+  sizeCalculation: (value: Uint8Array, key: string) => {
+    return uint8ArrayToNum(value); // return the length of the array
+  },
+  // deno-lint-ignore no-unused-vars
+  dispose: (value: Uint8Array, key: string) => {
+    Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
+      console.error(`Failed to delete ${key}:`, err)
+    );
+  },
+};
+
+const fileCache = new LRUCache(cacheOptions);
 
 function createFileSystemCache(): CacheStorage {
   let isCacheInitialized = false;
@@ -44,12 +84,18 @@ function createFileSystemCache(): CacheStorage {
   async function putFile(
     key: string,
     responseArray: Uint8Array,
+    expires: string,
   ) {
     if (!isCacheInitialized) {
       await assertCacheDirectory();
     }
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
     await Deno.writeFile(filePath, responseArray);
+
+    const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
+    fileCache.set(key, numToUint8Array(responseArray.length), {
+      ttl: expirationTimestamp, // ttl of file added
+    }); // Add to cache, which may trigger disposal of old item
     return;
   }
 
@@ -58,6 +104,10 @@ function createFileSystemCache(): CacheStorage {
       await assertCacheDirectory();
     }
     try {
+      if (fileCache.has(key)) {
+        // Update the access time in the cache
+        fileCache.get(key);
+      }
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
       const fileContent = await Deno.readFile(filePath);
       return fileContent;
@@ -209,7 +259,11 @@ function createFileSystemCache(): CacheStorage {
               const setSpan = tracer.startSpan("file-system-set", {
                 attributes: { cacheKey },
               });
-              await putFile(cacheKey, buffer).catch(
+              await putFile(
+                cacheKey,
+                buffer,
+                response.headers.get("expires") ?? "",
+              ).catch(
                 (err) => {
                   console.error("file system error", err);
                   setSpan.recordException(err);
