@@ -1,3 +1,4 @@
+import { EventSourcePolyfill } from "npm:event-source-polyfill@1.0.31";
 import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
@@ -67,7 +68,7 @@ const mountWS = (vol: string, fs: IVFS): Disposable => {
 
 const mountES = (vol: string, fs: IVFS): Disposable => {
   let disposed = false;
-  let es: EventSource = new EventSource(vol);
+  let es: EventSource = new EventSourcePolyfill(vol);
 
   const connect = () => {
     es.onopen = () => {
@@ -82,7 +83,7 @@ const mountES = (vol: string, fs: IVFS): Disposable => {
       if (disposed) {
         return;
       }
-      es = new EventSource(vol);
+      es = new EventSourcePolyfill(vol);
       setTimeout(connect, 1000);
     };
 
