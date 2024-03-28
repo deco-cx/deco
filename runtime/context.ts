@@ -179,7 +179,6 @@ export const contextFromVolume = async <
         hasCodeChange ||= pathIsCode;
         hasDecofileChange ||= isDecofilePath(path);
         const filePath = new URL(path.slice(1), baseDir).href;
-        console.log({ filePath });
         pathIsCode && inMemoryFS[path]?.content &&
           updateLoadCache(
             filePath,
