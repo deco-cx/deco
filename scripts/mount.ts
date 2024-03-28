@@ -1,16 +1,8 @@
-import { EventSourcePolyfill } from "npm:event-source-polyfill@1.0.31";
 import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
 import { dirname, join } from "std/path/mod.ts";
-import { gte, parse as parseVer } from "std/semver/mod.ts";
 import { DenoFs, IVFS } from "../runtime/fs/mod.ts";
-
-const MIN_DENO_VERSION = parseVer("1.42.0");
-const EventSourceImpl: new (url: string | URL) => EventSource =
-  gte(parseVer(Deno.version.deno), MIN_DENO_VERSION)
-    ? EventSource
-    : EventSourcePolyfill;
 
 export interface MountParams {
   vol?: string;
@@ -80,7 +72,7 @@ const mountWS = (vol: string, fs: IVFS): MountPoint => {
 
 const mountES = (vol: string, fs: IVFS): MountPoint => {
   let disposed = false;
-  let es: EventSource = new EventSourceImpl(vol);
+  let es: EventSource = new EventSource(vol);
   let currentConnectTimeout: number | undefined = undefined;
   let retries = MAX_RETRIES_NO_RECONNECT;
 
@@ -106,7 +98,7 @@ const mountES = (vol: string, fs: IVFS): MountPoint => {
       console.log("retrying, remaining:", retries);
       es.close();
       currentConnectTimeout && clearTimeout(currentConnectTimeout);
-      es = new EventSourceImpl(vol);
+      es = new EventSource(vol);
       currentConnectTimeout = setTimeout(connect, 1000);
     };
 
