@@ -5,7 +5,6 @@ import { buildImportMap } from "../blocks/utils.tsx";
 import { Context, DecoContext } from "../deco.ts";
 import { fromJSON } from "../engine/releases/fetcher.ts";
 import { DECOFILE_REL_PATH } from "../engine/releases/provider.ts";
-import { updateLoadCache } from "../engine/schema/parser.ts";
 import { assertAllowedAuthority } from "../engine/trustedAuthority.ts";
 import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
@@ -117,7 +116,7 @@ export const contextFromVolume = async <
     volUrl.searchParams.set("path", DECOFILE_PATH); // watch only decofile changes
 
   const { manifest: initialManifest } = await currentContext.runtime!;
-  const baseDir = join(dirname(initialManifest.baseUrl), "/");
+  const _baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FileSystem = {};
   const fs = new VFS(inMemoryFS);
   const rebuild = async () => {
@@ -178,11 +177,9 @@ export const contextFromVolume = async <
         const pathIsCode = isCodeFile(path);
         hasCodeChange ||= pathIsCode;
         hasDecofileChange ||= isDecofilePath(path);
-        pathIsCode && inMemoryFS[path]?.content &&
-          updateLoadCache(
-            new URL(path.slice(1), baseDir).href,
-            inMemoryFS[path]!.content!,
-          );
+        if (pathIsCode) {
+          console.log(path, inMemoryFS[path]?.content);
+        }
       }
       if (hasCodeChange) {
         await rebuild().then((m) => {
