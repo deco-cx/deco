@@ -7,7 +7,7 @@ export { isStreamProps } from "../clients/withManifest.ts";
 import {
   ServerSentEventMessage,
   ServerSentEventStream,
-} from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
+} from "https://deno.land/std@0.221.0/http/server_sent_event_stream.ts";
 
 export const isEventStreamResponse = (
   invokeResponse: unknown | AsyncIterableIterator<unknown>,
