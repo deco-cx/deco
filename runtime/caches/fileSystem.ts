@@ -34,6 +34,23 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   valueType: ValueType.INT,
 });
 
+function numToUint8Array(num: number) {
+  const arr = new Uint8Array(8);
+  for (let i = 0; i < 8; i++) {
+    arr[i] = num % 256;
+    num = Math.floor(num / 256);
+  }
+  return arr;
+}
+
+function uint8ArrayToNum(arr: Uint8Array) {
+  let num = 0;
+  for (let i = 0; i < 8; i++) {
+    num += Math.pow(256, i) * arr[i];
+  }
+  return num;
+}
+
 const cacheOptions = {
   max: MAX_NUMBER_OF_ITEMS,
   maxSize: MAX_CACHE_SIZE,
@@ -41,7 +58,7 @@ const cacheOptions = {
   ttlResolution: TTL_RESOLUTION,
   // deno-lint-ignore no-unused-vars
   sizeCalculation: (value: Uint8Array, key: string) => {
-    return value[0]; // return the length of the array
+    return uint8ArrayToNum(value); // return the length of the array
   },
   // deno-lint-ignore no-unused-vars
   dispose: (value: Uint8Array, key: string) => {
@@ -80,7 +97,9 @@ function createFileSystemCache(): CacheStorage {
     await Deno.writeFile(filePath, responseArray);
 
     const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
-    fileCache.set(key, new Uint8Array([responseArray.length]), { ttl: expirationTimestamp }); // Add to cache, which may trigger disposal of old item
+    fileCache.set(key, numToUint8Array(responseArray.length), {
+      ttl: expirationTimestamp, // ttl of file added
+    }); // Add to cache, which may trigger disposal of old item
     return;
   }
 
@@ -244,7 +263,11 @@ function createFileSystemCache(): CacheStorage {
               const setSpan = tracer.startSpan("file-system-set", {
                 attributes: { cacheKey },
               });
-              await putFile(cacheKey, buffer, response.headers.get("expires") ?? "").catch(
+              await putFile(
+                cacheKey,
+                buffer,
+                response.headers.get("expires") ?? "",
+              ).catch(
                 (err) => {
                   console.error("file system error", err);
                   setSpan.recordException(err);
