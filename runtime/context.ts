@@ -121,8 +121,8 @@ export const contextFromVolume = async <
   const inMemoryFS: FileSystem = {};
   const fs = new VFS(inMemoryFS);
   const rebuild = async () => {
-    const contents = await bundle(inMemoryFS);
     try {
+      const contents = await bundle(inMemoryFS);
       const module = await import(
         `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
       );
