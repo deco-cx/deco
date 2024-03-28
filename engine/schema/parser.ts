@@ -90,7 +90,7 @@ export const updateLoadCache = (path: string, content: string) => {
   }
   const prev = loadCache[path];
   loadCache[path] = parseContent(content).catch((err) => {
-    console.log("error parsing content", err);
+    console.log("error parsing content", err, path);
     return prev;
   });
 };
