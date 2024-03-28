@@ -3,12 +3,20 @@ import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
 import { dirname, join } from "std/path/mod.ts";
+import { gte, parse as parseVer } from "std/semver/mod.ts";
 import { DenoFs, IVFS } from "../runtime/fs/mod.ts";
+
+const MIN_DENO_VERSION = parseVer("1.42.0");
+const EventSourceImpl: new (url: string | URL) => EventSource =
+  gte(parseVer(Deno.version.deno), MIN_DENO_VERSION)
+    ? EventSource
+    : EventSourcePolyfill;
 
 export interface MountParams {
   vol?: string;
   fs?: IVFS;
 }
+Deno.version.deno;
 
 export interface File {
   content: string | null;
@@ -68,7 +76,7 @@ const mountWS = (vol: string, fs: IVFS): Disposable => {
 
 const mountES = (vol: string, fs: IVFS): Disposable => {
   let disposed = false;
-  let es: EventSource = new EventSourcePolyfill(vol);
+  let es: EventSource = new EventSourceImpl(vol);
 
   const connect = () => {
     es.onopen = () => {
@@ -83,7 +91,7 @@ const mountES = (vol: string, fs: IVFS): Disposable => {
       if (disposed) {
         return;
       }
-      es = new EventSourcePolyfill(vol);
+      es = new EventSourceImpl(vol);
       setTimeout(connect, 1000);
     };
 
