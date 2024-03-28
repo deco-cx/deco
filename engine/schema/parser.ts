@@ -88,7 +88,11 @@ export const updateLoadCache = (path: string, content: string) => {
   if (!loadCache[path]) {
     return;
   }
-  loadCache[path] = parseContent(content);
+  const prev = loadCache[path];
+  loadCache[path] = parseContent(content).catch((err) => {
+    console.log("error parsing content", err);
+    return prev;
+  });
 };
 
 /**
@@ -106,6 +110,9 @@ export const parsePath = (path: string) => {
       console.log(err, path);
       throw err;
     }
+  }).catch((err) => {
+    delete loadCache[path];
+    throw err;
   });
 };
 
