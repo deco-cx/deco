@@ -178,9 +178,10 @@ export const contextFromVolume = async <
         const pathIsCode = isCodeFile(path);
         hasCodeChange ||= pathIsCode;
         hasDecofileChange ||= isDecofilePath(path);
+        const filePath = new URL(path.slice(1), baseDir).href;
         pathIsCode && inMemoryFS[path]?.content &&
           updateLoadCache(
-            new URL(path.slice(1), baseDir).href,
+            filePath,
             inMemoryFS[path]!.content!,
           );
       }
