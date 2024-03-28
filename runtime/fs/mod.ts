@@ -4,7 +4,6 @@ import { FileSystem } from "../../scripts/mount.ts";
 
 export interface IVFS {
   readFile: typeof Deno.readFile;
-  cwd: typeof Deno.cwd;
   watchFs: typeof Deno.watchFs;
   writeFile: typeof Deno.writeFile;
   mkdir: typeof Deno.mkdir;
@@ -16,7 +15,6 @@ export interface IVFS {
 
 export const DenoFs: IVFS = {
   readFile: Deno.readFile,
-  cwd: Deno.cwd,
   watchFs: Deno.watchFs,
   writeFile: Deno.writeFile,
   mkdir: Deno.mkdir,
@@ -193,10 +191,6 @@ export class VFS implements IVFS {
     return fsWatcher;
   }
 
-  cwd(): string {
-    return "/";
-  }
-
   readTextFile(
     path: string | URL,
     _options?: Deno.ReadFileOptions | undefined,
@@ -209,7 +203,7 @@ export class VFS implements IVFS {
     path: string | URL,
     _options?: Deno.ReadFileOptions | undefined,
   ): Promise<Uint8Array> {
-    const filePath = path.toString().replace(DenoFs.cwd(), "");
+    const filePath = path.toString().replace(Deno.cwd(), "");
     const file = this.fileSystem[filePath];
     if (!file || file.content === null) {
       return DenoFs.readFile(path, _options);
