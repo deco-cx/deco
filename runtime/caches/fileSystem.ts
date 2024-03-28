@@ -41,7 +41,7 @@ const cacheOptions = {
   ttlResolution: TTL_RESOLUTION,
   // deno-lint-ignore no-unused-vars
   sizeCalculation: (value: Uint8Array, key: string) => {
-    return value.length;
+    return value[0]; // return the length of the array
   },
   // deno-lint-ignore no-unused-vars
   dispose: (value: Uint8Array, key: string) => {
@@ -80,7 +80,7 @@ function createFileSystemCache(): CacheStorage {
     await Deno.writeFile(filePath, responseArray);
 
     const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
-    fileCache.set(key, responseArray, { ttl: expirationTimestamp }); // Add to cache, which may trigger disposal of old item
+    fileCache.set(key, new Uint8Array([responseArray.length]), { ttl: expirationTimestamp }); // Add to cache, which may trigger disposal of old item
     return;
   }
 
