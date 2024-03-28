@@ -16,14 +16,18 @@ export interface MountParams {
   vol?: string;
   fs?: IVFS;
 }
-Deno.version.deno;
 
+export interface MountPoint {
+  unmount: () => void;
+  onUnmount?: () => void;
+}
 export interface File {
   content: string | null;
 }
 
+const MAX_RETRIES_NO_RECONNECT = 10;
 export type FileSystem = Record<string, File>;
-const mountWS = (vol: string, fs: IVFS): Disposable => {
+const mountWS = (vol: string, fs: IVFS): MountPoint => {
   let disposed = false;
   let websocket = new WebSocket(vol);
 
@@ -67,23 +71,24 @@ const mountWS = (vol: string, fs: IVFS): Disposable => {
   connect();
 
   return {
-    [Symbol.dispose]() {
+    unmount() {
       disposed = true;
       websocket.close();
     },
   };
 };
 
-const mountES = (vol: string, fs: IVFS): Disposable => {
+const mountES = (vol: string, fs: IVFS): MountPoint => {
   let disposed = false;
   let es: EventSource = new EventSourceImpl(vol);
-
   let currentConnectTimeout: number | undefined = undefined;
+  let retries = MAX_RETRIES_NO_RECONNECT;
+
   const connect = () => {
     es.onopen = () => {
+      retries = MAX_RETRIES_NO_RECONNECT;
       console.log(colors.green(`mount server ${vol} successfully connected!`));
     };
-
     es.onerror = (error) => {
       console.error(
         colors.red(`mount server error trying to reconnect`),
@@ -92,6 +97,13 @@ const mountES = (vol: string, fs: IVFS): Disposable => {
       if (disposed) {
         return;
       }
+      if (retries <= 0) {
+        unmount();
+        console.log("retries exhausted, closing connection");
+        return;
+      }
+      retries--;
+      console.log("retrying, remaining:", retries);
       es.close();
       currentConnectTimeout && clearTimeout(currentConnectTimeout);
       es = new EventSourceImpl(vol);
@@ -117,15 +129,27 @@ const mountES = (vol: string, fs: IVFS): Disposable => {
 
   connect();
 
+  let onUnmount: undefined | (() => void) = undefined;
+  function unmount() {
+    disposed = true;
+    es.close();
+    onUnmount?.();
+  }
   return {
-    [Symbol.dispose]() {
-      disposed = true;
-      es.close();
+    set onUnmount(value) {
+      onUnmount = value;
+      if (disposed) {
+        value?.();
+      }
     },
+    get onUnmount() {
+      return onUnmount;
+    },
+    unmount,
   };
 };
 
-export const mount = (params: MountParams): Disposable => {
+export const mount = (params: MountParams): MountPoint => {
   const { vol: codeVol, dir } = parse(Deno.args, {
     string: ["vol", "dir"],
   });

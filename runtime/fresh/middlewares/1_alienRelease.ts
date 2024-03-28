@@ -87,7 +87,9 @@ export async function alienRelease(
           alienRelease,
         );
       } else {
-        contextPromise = contextFromVolume(alienRelease);
+        contextPromise = contextFromVolume(alienRelease, () => {
+          contextCache?.delete(alienRelease);
+        });
       }
       contextCache.set(
         alienRelease,

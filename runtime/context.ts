@@ -104,7 +104,7 @@ const mergeManifests = (
 
 export const contextFromVolume = async <
   TManifest extends AppManifest = AppManifest,
->(vol: string): Promise<DecoContext> => {
+>(vol: string, onUnmount?: () => void): Promise<DecoContext> => {
   const volUrl = new URL(vol);
   assertAllowedAuthority(volUrl);
   const currentContext = Context.active();
@@ -169,8 +169,9 @@ export const contextFromVolume = async <
       return await p;
     });
   };
+  const fsWatcher = fs.watchFs("/", { recursive: true });
   (async () => {
-    for await (const event of fs.watchFs("/", { recursive: true })) {
+    for await (const event of fsWatcher) {
       let hasCodeChange = false;
       let hasDecofileChange = false;
       for (const path of event.paths) {
@@ -196,15 +197,19 @@ export const contextFromVolume = async <
         updateRelease();
       }
     }
+    onUnmount?.();
   })();
   const mountPoint = mount({
     vol: volUrl.href,
     fs,
   });
+  mountPoint.onUnmount = () => {
+    fsWatcher.close();
+  };
   const currentDispose = release?.dispose;
   release.dispose = () => {
     currentDispose?.();
-    mountPoint[Symbol.dispose]();
+    mountPoint.unmount();
   };
   if (isDD) {
     init.resolve({
