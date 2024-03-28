@@ -78,6 +78,7 @@ const mountES = (vol: string, fs: IVFS): Disposable => {
   let disposed = false;
   let es: EventSource = new EventSourceImpl(vol);
 
+  let currentConnectTimeout: number | undefined = undefined;
   const connect = () => {
     es.onopen = () => {
       console.log(colors.green(`mount server ${vol} successfully connected!`));
@@ -91,8 +92,10 @@ const mountES = (vol: string, fs: IVFS): Disposable => {
       if (disposed) {
         return;
       }
+      es.close();
+      currentConnectTimeout && clearTimeout(currentConnectTimeout);
       es = new EventSourceImpl(vol);
-      setTimeout(connect, 1000);
+      currentConnectTimeout = setTimeout(connect, 1000);
     };
 
     es.onmessage = async (event) => {
