@@ -125,7 +125,11 @@ export const contextFromVolume = async <
     try {
       const start = performance.now();
       const contents = await bundle(inMemoryFS);
-      console.log(colors.green(`[esbuild] took: ${performance.now() - start}`));
+      console.log(
+        `~[${colors.green("esbuild")}]: took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      );
       const module = await import(
         `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
       );

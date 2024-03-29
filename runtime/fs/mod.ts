@@ -32,7 +32,7 @@ for (const [func, impl] of Object.entries(DenoFs)) {
   Deno[funcKey] = (...args) => {
     const fs = Context.active().fs;
     // @ts-ignore: trust-me
-    const fsMk = fs?.[funcKey];
+    const fsMk = fs?.[funcKey]?.bind(fs);
     if (typeof fsMk !== "function") {
       return impl(...args);
     }
