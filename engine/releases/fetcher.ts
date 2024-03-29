@@ -127,15 +127,13 @@ export const fromJSON = (
       cbs.push(cb);
     },
     notify: () => {
-      currentRevision = crypto.randomUUID();
       return Promise.all(cbs.map((cb) => cb())).then(() => {});
     },
     revision: () => Promise.resolve(currentRevision),
     set(newState, revision) {
       state = newState;
       currentRevision = revision ?? crypto.randomUUID();
-      cbs.forEach((cb) => cb());
-      return Promise.resolve();
+      return Promise.all(cbs.map((cb) => cb())).then(() => {});
     },
   };
 };

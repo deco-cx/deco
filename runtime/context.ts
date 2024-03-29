@@ -157,16 +157,19 @@ export const contextFromVolume = async <
 
   const updateRelease = () => {
     const decofile = inMemoryFS[DECOFILE_PATH]?.content;
-    decofile && release?.set?.(JSON.parse(decofile));
+    const awaiter = decofile
+      ? release?.set?.(JSON.parse(decofile), `${fs.lastWrite}`) ??
+        Promise.resolve()
+      : Promise.resolve();
     decofile && firstLoadResolve();
+    return awaiter;
   };
   const updateManifest = (m: AppManifest) => {
     manifestResolvers.resolve(m as TManifest);
     return init.promise.then(async (opts) => {
       opts.manifest = mergeManifests(opts.manifest, m) as TManifest;
       opts.importMap!.imports = buildImportMap(opts.manifest).imports;
-      const p = opts.release?.notify?.() ?? Promise.resolve();
-      return await p;
+      return await updateRelease();
     });
   };
   const fsWatcher = fs.watchFs("/", { recursive: true });
@@ -190,9 +193,7 @@ export const contextFromVolume = async <
           if (!m) {
             return Promise.resolve();
           }
-          return updateManifest(m).then(() => {
-            hasDecofileChange && updateRelease();
-          });
+          return updateManifest(m);
         }).catch((_err) => {});
       } else if (hasDecofileChange) {
         updateRelease();

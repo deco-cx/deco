@@ -11,9 +11,11 @@ export interface IVFS {
   remove: typeof Deno.remove;
   writeTextFile: typeof Deno.writeTextFile;
   readTextFile: typeof Deno.readTextFile;
+  lastWrite: number;
 }
 
 export const DenoFs: IVFS = {
+  lastWrite: Date.now(),
   readFile: Deno.readFile,
   watchFs: Deno.watchFs,
   writeFile: Deno.writeFile,
@@ -40,6 +42,7 @@ type WatcherMap = Record<string, Record<string, Queue<string>>>;
 
 export class VFS implements IVFS {
   protected watchers: WatcherMap = {};
+  public lastWrite = Date.now();
   constructor(public fileSystem: FileSystem) {}
   writeTextFile(
     path: string | URL,
