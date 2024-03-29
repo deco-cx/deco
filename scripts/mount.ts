@@ -44,19 +44,8 @@ const mountWS = (vol: string, fs: IVFS): MountPoint => {
     };
 
     websocket.onmessage = async (event) => {
-      const data: FileSystem = JSON.parse(event.data);
-      for (const [path, { content }] of Object.entries(data)) {
-        if (["/deno.json"].includes(path)) {
-          continue;
-        }
-        if (!content) {
-          console.log(colors.brightRed(`[d]~ ${path}`));
-          await fs.remove(path);
-        } else {
-          console.log(colors.brightBlue(`[w]~ ${path}`));
-          await fs.writeTextFile(path, content);
-        }
-      }
+      const data: FileSystemEvent = JSON.parse(event.data);
+      await sync(data, fs);
     };
   };
 
@@ -103,19 +92,8 @@ const mountES = (vol: string, fs: IVFS): MountPoint => {
     };
 
     es.onmessage = async (event) => {
-      const data: FileSystem = JSON.parse(decodeURIComponent(event.data));
-      for (const [path, { content }] of Object.entries(data)) {
-        if (["/deno.json"].includes(path)) {
-          continue;
-        }
-        if (!content) {
-          console.log(colors.brightRed(`[d]~ ${path}`));
-          await fs.remove(path);
-        } else {
-          console.log(colors.brightBlue(`[w]~ ${path}`));
-          await fs.writeTextFile(path, content);
-        }
-      }
+      const data: FileSystemEvent = JSON.parse(decodeURIComponent(event.data));
+      await sync(data, fs);
     };
   };
 
@@ -169,6 +147,34 @@ export const defaultFs = (
     await DenoFs.writeTextFile(fullPath, content);
   },
 });
+
+export interface FileSystemResponse {
+  fs: FileSystem;
+  timestamp: number;
+}
+export type FileSystemEvent = FileSystem | FileSystemResponse;
+
+const isFsResponse = (fs: FileSystemEvent): fs is FileSystemResponse => {
+  return (fs as FileSystemResponse).timestamp !== undefined;
+};
+async function sync(data: FileSystemEvent, fs: IVFS) {
+  const [fileSystem, ts] = isFsResponse(data)
+    ? [data.fs, data.timestamp]
+    : [data, Date.now()];
+  for (const [path, { content }] of Object.entries(fileSystem)) {
+    if (["/deno.json"].includes(path)) {
+      continue;
+    }
+    if (!content) {
+      console.log(colors.brightRed(`[d]~ ${path}`));
+      await fs.remove(path);
+    } else {
+      console.log(colors.brightBlue(`[w]~ ${path}`));
+      await fs.writeTextFile(path, content);
+    }
+  }
+  fs.lastWrite = ts;
+}
 
 if (import.meta.main) {
   mount({});
