@@ -9,6 +9,12 @@ globalThis.fetch = (input, init) => {
   if (signal?.aborted) {
     throw new DOMException(signal.reason, "AbortError");
   }
+  if (
+    input instanceof URL ||
+    typeof input === "string" && (input.toString().startsWith("file:"))
+  ) {
+    console.log("requesting file", input);
+  }
 
   return fetcher(input, { signal, ...init });
 };
