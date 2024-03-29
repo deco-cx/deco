@@ -26,16 +26,29 @@ export const DenoFs: IVFS = {
   readTextFile: Deno.readTextFile,
 };
 
-// TODO (@mcandeia) put this back when necessary
-// for (const [func, impl] of Object.entries(DenoFs)) {
-//   const funcKey = func as keyof typeof DenoFs;
-//   // @ts-ignore: trust-me
-//   Deno[funcKey] = (...args) => {
-//     const fs = Context.active().fs;
-//     // @ts-ignore: trust-me
-//     return fs?.[func]?.(...args) ?? impl(...args);
-//   };
-// }
+for (const [func, impl] of Object.entries(DenoFs)) {
+  const funcKey = func as keyof typeof DenoFs;
+  // @ts-ignore: trust-me
+  Deno[funcKey] = (...args) => {
+    const fs = Context.active().fs;
+    // @ts-ignore: trust-me
+    const fsMk = fs?.[funcKey];
+    if (typeof fsMk !== "function") {
+      return impl(...args);
+    }
+    const [arg0, ...rest] = args ?? []; // always should be path
+    if (arg0 instanceof URL || typeof arg0 === "string") {
+      const path = arg0.toString();
+      if (path.startsWith(Deno.cwd())) {
+        // @ts-ignore: trust-me
+        return fsMk(...[path.replace(Deno.cwd(), ""), ...rest]);
+      }
+      return impl(...args);
+    }
+    // @ts-ignore: trust-me
+    return fsMk(...args);
+  };
+}
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
