@@ -32,21 +32,7 @@ for (const [func, impl] of Object.entries(DenoFs)) {
   Deno[funcKey] = (...args) => {
     const fs = Context.active().fs;
     // @ts-ignore: trust-me
-    const fsMk = fs?.[funcKey];
-    if (typeof fsMk !== "function") {
-      return impl(...args);
-    }
-    const [arg0, ...rest] = args ?? []; // always should be path
-    if (arg0 instanceof URL || typeof arg0 === "string") {
-      const path = arg0.toString();
-      if (path.startsWith(Deno.cwd())) {
-        // @ts-ignore: trust-me
-        return fsMk(...[path.replace(Deno.cwd(), ""), ...rest]);
-      }
-      return impl(...args);
-    }
-    // @ts-ignore: trust-me
-    return fsMk(...args);
+    return fs?.[func]?.(...args) ?? impl(...args);
   };
 }
 
@@ -220,7 +206,7 @@ export class VFS implements IVFS {
     path: string | URL,
     _options?: Deno.ReadFileOptions | undefined,
   ): Promise<Uint8Array> {
-    const filePath = path.toString();
+    const filePath = path.toString().replace(Deno.cwd(), "");
     const file = this.fileSystem[filePath];
     if (!file || file.content === null) {
       return DenoFs.readFile(path, _options);

@@ -11,7 +11,6 @@ import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
 import { FileSystem, mount } from "../scripts/mount.ts";
 import { VFS } from "./fs/mod.ts";
-import * as colors from "std/fmt/colors.ts";
 
 let initializePromise: Promise<void> | null = null;
 
@@ -123,9 +122,7 @@ export const contextFromVolume = async <
   const fs = new VFS(inMemoryFS);
   const rebuild = async () => {
     try {
-      const start = performance.now();
       const contents = await bundle(inMemoryFS);
-      console.log(colors.green(`[esbuild] took: ${performance.now() - start}`));
       const module = await import(
         `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
       );
