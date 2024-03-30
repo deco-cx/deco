@@ -1,16 +1,16 @@
 import { Head, Partial } from "$fresh/runtime.ts";
-import { HttpContext } from "deco/blocks/handler.ts";
-import { HttpError } from "deco/engine/errors.ts";
-import { usePartialSection } from "deco/hooks/usePartialSection.ts";
+import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { Component, ComponentType, createContext } from "preact";
 import { useContext } from "preact/hooks";
+import { HttpContext } from "../blocks/handler.ts";
 import { RequestState } from "../blocks/utils.tsx";
 import { Context } from "../deco.ts";
 import { Murmurhash3 } from "../deps.ts";
 import { ComponentFunc } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
+import { HttpError } from "../engine/errors.ts";
+import { usePartialSection } from "../hooks/usePartialSection.ts";
 import { logger } from "../observability/otel/config.ts";
-import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;

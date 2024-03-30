@@ -1,4 +1,4 @@
-import { RequestContext } from "deco/deco.ts";
+import { RequestContext } from "../deco.ts";
 
 // Monkey patch fetch so we can have global cancelation token
 const fetcher = globalThis.fetch;

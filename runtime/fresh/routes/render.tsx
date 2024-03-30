@@ -4,7 +4,7 @@ import { getSectionID } from "../../../components/section.tsx";
 import { FieldResolver, Resolvable } from "../../../engine/core/resolver.ts";
 import { badRequest, HttpError } from "../../../engine/errors.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
-import { scriptAsDataURI } from "deco/utils/dataURI.ts";
+import { scriptAsDataURI } from "../../../utils/dataURI.ts";
 
 interface Options {
   resolveChain: FieldResolver[];

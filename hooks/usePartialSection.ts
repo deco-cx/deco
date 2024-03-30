@@ -1,9 +1,9 @@
 import { CLIENT_NAV_ATTR, PARTIAL_ATTR } from "$fresh/src/constants.ts";
-import { SectionContext } from "deco/components/section.tsx";
-import { IS_BROWSER } from "deco/deps.ts";
-import { FieldResolver } from "deco/engine/core/resolver.ts";
 import { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
+import { SectionContext } from "../components/section.tsx";
+import { IS_BROWSER } from "../deps.ts";
+import { FieldResolver } from "../engine/core/resolver.ts";
 
 type Options<P> = {
   /** Section props partially applied */

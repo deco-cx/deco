@@ -1,11 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
-import { ValueType } from "../deps.ts";
+import { ValueType, weakcache } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
+import { HttpError } from "../engine/errors.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
+import { Release } from "../engine/releases/provider.ts";
+import { logger } from "../observability/otel/config.ts";
 import { meter } from "../observability/otel/metrics.ts";
-import { caches } from "../runtime/caches/mod.ts";
+import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -14,12 +18,6 @@ import {
   RequestState,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
-import { logger } from "deco/observability/otel/config.ts";
-import { weakcache } from "../deps.ts";
-import { FieldResolver } from "deco/engine/core/resolver.ts";
-import { Release } from "deco/engine/releases/provider.ts";
-import { ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
-import { HttpError } from "deco/engine/errors.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
