@@ -203,6 +203,9 @@ export const allowCorsForOrigin = (
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, If-None-Match, *",
   "Access-Control-Expose-Headers": "ETag",
+  "Access-Control-Max-Age": "86400",
+  "Cache-Control": "public, max-age=86400",
+  "Vary": "origin",
 });
 
 export { readFromStream } from "../clients/withManifest.ts";
