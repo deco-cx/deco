@@ -1,4 +1,5 @@
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
+import * as colors from "std/fmt/colors.ts";
 import { dirname, join } from "std/path/mod.ts";
 import { BlockKey } from "../blocks/app.ts";
 import { buildImportMap } from "../blocks/utils.tsx";
@@ -10,8 +11,8 @@ import { assertAllowedAuthority } from "../engine/trustedAuthority.ts";
 import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
 import { FileSystem, mount } from "../scripts/mount.ts";
+import { stringToHexSha256 } from "../utils/encoding.ts";
 import { VFS } from "./fs/mod.ts";
-import * as colors from "std/fmt/colors.ts";
 
 let initializePromise: Promise<void> | null = null;
 
@@ -162,10 +163,13 @@ export const contextFromVolume = async <
   const { promise: firstLoadPromise, resolve: firstLoadResolve } = Promise
     .withResolvers<void>();
 
-  const updateRelease = () => {
+  const updateRelease = async () => {
     const decofile = inMemoryFS[DECOFILE_PATH]?.content;
     const awaiter = decofile
-      ? release?.set?.(JSON.parse(decofile), `${fs.lastWrite}`) ??
+      ? release?.set?.(
+        JSON.parse(decofile),
+        await stringToHexSha256(decofile),
+      ) ??
         Promise.resolve()
       : Promise.resolve();
     decofile && firstLoadResolve();
