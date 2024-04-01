@@ -100,7 +100,7 @@ try {
   // Specifically for this line - https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-sdk-trace-web/src/utils.ts#L310
   // @ts-ignore: monkey patching location
   globalThis.location = {};
-// deno-lint-ignore no-empty
+  // deno-lint-ignore no-empty
 } catch {}
 const parseSamplingOptions = (): SamplingOptions | undefined => {
   const encodedOpts = Deno.env.get("OTEL_SAMPLING_CONFIG");
