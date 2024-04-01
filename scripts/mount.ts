@@ -12,6 +12,7 @@ export interface MountParams {
 export interface MountPoint {
   unmount: () => void;
   onUnmount?: () => void;
+  onReady?: () => void;
 }
 export interface File {
   content: string | null;
@@ -64,8 +65,10 @@ const mountES = (vol: string, fs: IVFS): MountPoint => {
   let es: EventSource = new EventSource(vol);
   let currentConnectTimeout: number | undefined = undefined;
   let retries = MAX_RETRIES_NO_RECONNECT;
+  let ready: undefined | (() => void) = undefined;
 
   const connect = () => {
+    let firstMount = true;
     es.onopen = () => {
       retries = MAX_RETRIES_NO_RECONNECT;
       console.log(colors.green(`mount server ${vol} successfully connected!`));
@@ -94,6 +97,7 @@ const mountES = (vol: string, fs: IVFS): MountPoint => {
     es.onmessage = async (event) => {
       const data: FileSystemEvent = JSON.parse(decodeURIComponent(event.data));
       await sync(data, fs);
+      firstMount ? ready?.() : (firstMount = false);
     };
   };
 
@@ -112,8 +116,14 @@ const mountES = (vol: string, fs: IVFS): MountPoint => {
         value?.();
       }
     },
+    set onReady(value) {
+      ready = value;
+    },
     get onUnmount() {
       return onUnmount;
+    },
+    get onReady() {
+      return ready;
     },
     unmount,
   };
