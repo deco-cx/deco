@@ -163,12 +163,14 @@ export const contextFromVolume = async <
   const { promise: firstLoadPromise, resolve: firstLoadResolve } = Promise
     .withResolvers<void>();
 
-  const updateRelease = async () => {
+  const updateRelease = async (revisionId?: string) => {
     const decofile = inMemoryFS[DECOFILE_PATH]?.content;
+    const hash = revisionId ??
+      (decofile ? await stringToHexSha256(decofile) : undefined);
     const awaiter = decofile
       ? release?.set?.(
         JSON.parse(decofile),
-        await stringToHexSha256(decofile),
+        hash,
       ) ??
         Promise.resolve()
       : Promise.resolve();
@@ -180,7 +182,7 @@ export const contextFromVolume = async <
     return init.promise.then(async (opts) => {
       opts.manifest = mergeManifests(opts.manifest, m) as TManifest;
       opts.importMap!.imports = buildImportMap(opts.manifest).imports;
-      return await updateRelease();
+      return await updateRelease(crypto.randomUUID());
     });
   };
   const fsWatcher = fs.watchFs("/", { recursive: true });
