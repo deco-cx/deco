@@ -8,6 +8,7 @@ import {
 } from "./common.ts";
 import { existsSync } from "std/fs/mod.ts";
 import { LRUCache } from "https://esm.sh/lru-cache@10.2.0";
+import { numToUint8Array, uint8ArrayToNum } from "../utils.ts";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
@@ -31,33 +32,14 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   valueType: ValueType.INT,
 });
 
-function numToUint8Array(num: number) {
-  const arr = new Uint8Array(8);
-  for (let i = 0; i < 8; i++) {
-    arr[i] = num % 256;
-    num = Math.floor(num / 256);
-  }
-  return arr;
-}
-
-function uint8ArrayToNum(arr: Uint8Array) {
-  let num = 0;
-  for (let i = 0; i < 8; i++) {
-    num += Math.pow(256, i) * arr[i];
-  }
-  return num;
-}
-
 const cacheOptions = {
   maxSize: MAX_CACHE_SIZE,
   ttlAutopurge: TTL_AUTOPURGE,
   ttlResolution: TTL_RESOLUTION,
-  // deno-lint-ignore no-unused-vars
-  sizeCalculation: (value: Uint8Array, key: string) => {
+  sizeCalculation: (value: Uint8Array) => {
     return uint8ArrayToNum(value); // return the length of the array
   },
-  // deno-lint-ignore no-unused-vars
-  dispose: (value: Uint8Array, key: string) => {
+  dispose: (_value: Uint8Array, key: string) => {
     Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
       console.error(`Failed to delete ${key}:`, err)
     );
