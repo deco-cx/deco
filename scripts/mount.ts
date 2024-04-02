@@ -172,9 +172,6 @@ async function sync(data: FileSystemEvent, fs: IVFS) {
     ? [data.fs, data.timestamp]
     : [data, Date.now()];
   for (const [path, { content }] of Object.entries(fileSystem)) {
-    if (["/deno.json"].includes(path)) {
-      continue;
-    }
     if (!content) {
       console.log(colors.brightRed(`[d]~ ${path}`));
       await fs.remove(path);
