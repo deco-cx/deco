@@ -133,6 +133,22 @@ Here is a table with the integrations that we have built and the statuses of the
 | [Nuvemshop](https://github.com/deco-cx/apps/blob/main/nuvemshop/README.MD)                                   | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
 | [Wake](https://github.com/deco-cx/apps/blob/main/wake/README.md)                                        | ✅     | ✅    | ✅    | ✅     | ✅               | ✅                   | ✅                 |
 
+## Cache env vars (WIP)
+| Environment Variable              | Description                                             | Example Value                                          |
+|-----------------------------------|---------------------------------------------------------|--------------------------------------------------------|
+| `CACHE_UPLOAD_BUCKET`             | The AWS S3 bucket name for cache uploads                | `BUCKET-NAME`                                       |
+| `CACHE_AWS_REGION`                | AWS region where the cache bucket is located            | `sa-east-1`                                            |
+| `CACHE_AWS_ACCESS_KEY_ID`         | AWS access key ID for authentication                    | ``                                 |
+| `CACHE_AWS_SECRET_ACCESS_KEY`     | AWS secret access key for authentication                | ``             |
+| `ENABLE_LOADER_CACHE`             | Flag to enable or disable the loader cache              | `true`                                                 |
+| `LOADER_CACHE_START_TRESHOLD`     | Cache start threshold                                   | `0`                                                    |
+| `WEB_CACHE_ENGINE`                | Defines the cache engine(s) to use                      | `"FILE_SYSTEM,S3"`                                     |
+| `FILE_SYSTEM_CACHE_DIRECTORY`     | Directory path for file system cache                    | `` |
+| `MAX_CACHE_SIZE`                  | Maximum size of the file system cache (in bytes)                    | `1073741824` (1 GB)                                    |
+| `TTL_AUTOPURGE`                   | Flag to automatically delete expired items from the file system cache | `true` or `false`                                     |
+| `TTL_RESOLUTION`                  | Time interval to check for expired items in the file system cache (in milliseconds) | `30000` (30 seconds)                               |
+
+
 ## Contribute
 
 We welcome contributions! Whether you’re fixing bugs, improving the documentation, or proposing new features, your efforts are valuable. Check out our contribution guidelines to get started.
