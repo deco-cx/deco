@@ -84,7 +84,7 @@ function createS3Caches(): CacheStorage {
 
     const bucketParams = {
       Bucket: bucketName,
-      Key: `${Context.active().site}/${key}`,
+      Key: `${key}-${Context.active().site}`,
       Body: result,
     };
 
@@ -97,7 +97,7 @@ function createS3Caches(): CacheStorage {
   async function getObject(key: string) {
     const bucketParams = {
       Bucket: bucketName,
-      Key: `${Context.active().site}/${key}`,
+      Key: `${key}-${Context.active().site}`,
     };
 
     const command = new GetObjectCommand(bucketParams);
@@ -109,7 +109,7 @@ function createS3Caches(): CacheStorage {
   async function deleteObject(key: string) {
     const bucketParams = {
       Bucket: bucketName,
-      Key: `${Context.active().site}/${key}`,
+      Key: `${key}-${Context.active().site}`,
     };
 
     const command = new DeleteObjectCommand(bucketParams);
