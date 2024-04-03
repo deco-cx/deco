@@ -1,12 +1,6 @@
 import { withInstrumentation } from "./common.ts";
 import { caches as cachesKV } from "./denoKV.ts";
-import {
-  caches as cachesFileSystem,
-  isFileSystemAvailable,
-} from "./fileSystem.ts";
 import { caches as redisCache, redis } from "./redis.ts";
-import { caches as cachesS3, isS3Available } from "./s3.ts";
-import { createTieredCache } from "./tiered.ts";
 
 export const ENABLE_LOADER_CACHE =
   Deno.env.get("ENABLE_LOADER_CACHE") === "true";
@@ -23,9 +17,7 @@ export interface CacheStorageOption {
 export type CacheEngine =
   | "REDIS"
   | "KV"
-  | "CACHE_API"
-  | "FILE_SYSTEM"
-  | "S3";
+  | "CACHE_API";
 
 const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   REDIS: {
@@ -39,14 +31,6 @@ const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   CACHE_API: {
     implementation: globalThis.caches,
     isAvailable: typeof globalThis.caches !== "undefined",
-  },
-  FILE_SYSTEM: {
-    implementation: cachesFileSystem,
-    isAvailable: isFileSystemAvailable,
-  },
-  S3: {
-    implementation: cachesS3,
-    isAvailable: isS3Available,
   },
 };
 
@@ -67,7 +51,7 @@ const getCacheStorage = (): CacheStorage | undefined => {
     return cacheImplByEngine[DEFAULT_CACHE_ENGINE].implementation;
   }
 
-  return createTieredCache(...eligibleCacheImplementations);
+  return undefined;
 };
 
 export const caches = getCacheStorage();

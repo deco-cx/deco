@@ -105,6 +105,7 @@ const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
 
 export const DECOFILE_REL_PATH = join(".deco", "decofile.json");
 const DECOFILE_PATH_DEFAULT = join(Deno.cwd(), DECOFILE_REL_PATH);
+console.log({PATH: DECOFILE_PATH_DEFAULT});
 const decofileExistsPromise = exists(DECOFILE_PATH_DEFAULT, {
   isFile: true,
   isReadable: true,
