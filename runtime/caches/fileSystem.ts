@@ -46,6 +46,52 @@ const cacheOptions = {
   },
 };
 
+// Function to convert headers object to a Uint8Array
+function headersToUint8Array(headers: [string, string][]) {
+  const headersStr = JSON.stringify(headers);
+  return new TextEncoder().encode(headersStr);
+}
+
+// Function to combine the body and headers into a single buffer
+function generateCombinedBuffer(body: Uint8Array, headers: Uint8Array) {
+  // This prepends the header length to the combined buffer. As it has 4 bytes in size,
+  // it can store up to 2^32 - 1 bytes of headers (4GB). This should be enough for all deco use cases.
+  const headerLength = new Uint8Array(new Uint32Array([headers.length]).buffer);
+
+  // Concatenate length, headers, and body into one Uint8Array
+  const combinedBuffer = new Uint8Array(headerLength.length + headers.length + body.length);
+  combinedBuffer.set(headerLength, 0);
+  combinedBuffer.set(headers, headerLength.length);
+  combinedBuffer.set(body, headerLength.length + headers.length);
+  return combinedBuffer;
+}
+
+// Function to extract the headers and body from a combined buffer
+function extractCombinedBuffer(combinedBuffer: Uint8Array) {
+  // Extract the header length from the combined buffer
+  const headerLengthArray = combinedBuffer.slice(0, 4);
+  const headerLength = new Uint32Array(headerLengthArray.buffer)[0];
+
+  // Extract the headers and body from the combined buffer
+  const headers = combinedBuffer.slice(4, 4 + headerLength);
+  const body = combinedBuffer.slice(4 + headerLength);
+  return { headers, body };
+}
+
+function getIterableHeaders(headers: Uint8Array) {
+  const headersStr = new TextDecoder().decode(headers);
+  // console.log("headersStr: ", headersStr);
+
+  // Directly parse the string as an array of [key, value] pairs
+  const headerPairs: [string, string][] = JSON.parse(headersStr);
+
+  // Filter out any pairs with empty key or value
+  const filteredHeaders = headerPairs.filter(([key, value]) => key !== "" && value !== "");
+
+  // console.log("iterableHeaders: ", filteredHeaders);
+  return filteredHeaders;
+}
+
 const fileCache = new LRUCache(cacheOptions);
 
 function createFileSystemCache(): CacheStorage {
@@ -193,11 +239,19 @@ function createFileSystemCache(): CacheStorage {
             downloadDuration.record(downloadDurationTime, {
               bufferSize: data.length,
             });
+            const { headers, body } = extractCombinedBuffer(data);
 
-            return new Response(
-              data,
+            const iterableHeaders = getIterableHeaders(headers);
+            const responseHeaders = new Headers(iterableHeaders);
+            // console.log("response headers expire before response: ", JSON.stringify(responseHeaders.get("expires")));
+            const response = new Response(
+              body,
+              { headers: responseHeaders }
             );
+            // console.log("fs response headers match: ", JSON.stringify(response.headers.get("expires")));
+            return response; 
           } catch (err) {
+            // console.log("file system error: ", err);
             throw err;
           } finally {
             span.end();
@@ -215,6 +269,10 @@ function createFileSystemCache(): CacheStorage {
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
+          // console.log(
+          //   "fs response headers put: ",
+          //   JSON.stringify(response.headers.get("expires")),
+          // );
           const req = new Request(request);
           assertCanBeCached(req, response);
 
@@ -223,12 +281,14 @@ function createFileSystemCache(): CacheStorage {
           }
 
           const cacheKey = await requestURLSHA1(request);
-          const buffer = await response.arrayBuffer()
+          const bodyBuffer = await response.arrayBuffer()
             .then((buffer) => new Uint8Array(buffer))
             .then((buffer) => {
               bufferSizeSumObserver.add(buffer.length);
               return buffer;
             });
+          const headersBuffer = headersToUint8Array([...response.headers.entries()]);
+          const buffer = generateCombinedBuffer(bodyBuffer, headersBuffer);
 
           const span = tracer.startSpan("file-system-put", {
             attributes: {
