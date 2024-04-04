@@ -39,11 +39,6 @@ const cacheOptions = {
   sizeCalculation: (value: Uint8Array) => {
     return uint8ArrayToNum(value); // return the length of the array
   },
-  dispose: (_value: Uint8Array, key: string) => {
-    Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
-      console.error(`Failed to delete ${key}:`, err)
-    );
-  },
 };
 
 // Function to convert headers object to a Uint8Array
@@ -117,13 +112,18 @@ function createFileSystemCache(): CacheStorage {
     if (!isCacheInitialized) {
       await assertCacheDirectory();
     }
+    // console.log("file system cache put: ", key);
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
     await Deno.writeFile(filePath, responseArray);
-
+    // console.log("response array length: ", responseArray.length);
+    // console.log("file system cache put expires: ", expires);
     const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
+    const ttl = expirationTimestamp - Date.now(); // Calculate the time to live (ttl) by subtracting the current timestamp from the expiration timestamp
+    // console.log("file system cache put ttl: ", ttl);
     fileCache.set(key, numToUint8Array(responseArray.length), {
-      ttl: expirationTimestamp, // ttl of file added
+      ttl: ttl, // Set the ttl of the file added
     }); // Add to cache, which may trigger disposal of old item
+    // console.log("file system put seems to have worked");
     return;
   }
 
@@ -233,9 +233,10 @@ function createFileSystemCache(): CacheStorage {
             span.addEvent("file-system-get-data");
 
             if (data === null) {
+              // console.log("data is null");
               return undefined;
             }
-
+            // console.log("file system cache hit: ", cacheKey);
             downloadDuration.record(downloadDurationTime, {
               bufferSize: data.length,
             });
@@ -307,7 +308,7 @@ function createFileSystemCache(): CacheStorage {
                 response.headers.get("expires") ?? "",
               ).catch(
                 (err) => {
-                  console.error("file system error", err);
+                  // console.log("file system error", err);
                   setSpan.recordException(err);
                 },
               ).finally(() => {
@@ -317,6 +318,7 @@ function createFileSystemCache(): CacheStorage {
               logger.error(`error saving to file system ${error?.message}`);
             }
           } catch (err) {
+            // console.log("file system put error: ", err);
             span.recordException(err);
             throw err;
           } finally {
