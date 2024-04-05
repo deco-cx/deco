@@ -232,18 +232,18 @@ function createFileSystemCache(): CacheStorage {
             if (data === null) {
               return undefined;
             }
+
             downloadDuration.record(downloadDurationTime, {
               bufferSize: data.length,
             });
-            const { headers, body } = extractCombinedBuffer(data);
 
+            const { headers, body } = extractCombinedBuffer(data);
             const iterableHeaders = getIterableHeaders(headers);
             const responseHeaders = new Headers(iterableHeaders);
-            const response = new Response(
+            return new Response(
               body,
               { headers: responseHeaders },
             );
-            return response;
           } catch (err) {
             throw err;
           } finally {
@@ -262,9 +262,6 @@ function createFileSystemCache(): CacheStorage {
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
-          //   "fs response headers put: ",
-          //   JSON.stringify(response.headers.get("expires")),
-          // );
           const req = new Request(request);
           assertCanBeCached(req, response);
 
@@ -301,6 +298,7 @@ function createFileSystemCache(): CacheStorage {
                 response.headers.get("expires") ?? "",
               ).catch(
                 (err) => {
+                  console.error("file system error", err);
                   setSpan.recordException(err);
                 },
               ).finally(() => {
