@@ -54,7 +54,9 @@ function generateCombinedBuffer(body: Uint8Array, headers: Uint8Array) {
   const headerLength = new Uint8Array(new Uint32Array([headers.length]).buffer);
 
   // Concatenate length, headers, and body into one Uint8Array
-  const combinedBuffer = new Uint8Array(headerLength.length + headers.length + body.length);
+  const combinedBuffer = new Uint8Array(
+    headerLength.length + headers.length + body.length,
+  );
   combinedBuffer.set(headerLength, 0);
   combinedBuffer.set(headers, headerLength.length);
   combinedBuffer.set(body, headerLength.length + headers.length);
@@ -75,15 +77,14 @@ function extractCombinedBuffer(combinedBuffer: Uint8Array) {
 
 function getIterableHeaders(headers: Uint8Array) {
   const headersStr = new TextDecoder().decode(headers);
-  // console.log("headersStr: ", headersStr);
 
   // Directly parse the string as an array of [key, value] pairs
   const headerPairs: [string, string][] = JSON.parse(headersStr);
 
   // Filter out any pairs with empty key or value
-  const filteredHeaders = headerPairs.filter(([key, value]) => key !== "" && value !== "");
-
-  // console.log("iterableHeaders: ", filteredHeaders);
+  const filteredHeaders = headerPairs.filter(([key, value]) =>
+    key !== "" && value !== ""
+  );
   return filteredHeaders;
 }
 
@@ -112,18 +113,14 @@ function createFileSystemCache(): CacheStorage {
     if (!isCacheInitialized) {
       await assertCacheDirectory();
     }
-    // console.log("file system cache put: ", key);
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
     await Deno.writeFile(filePath, responseArray);
-    // console.log("response array length: ", responseArray.length);
-    // console.log("file system cache put expires: ", expires);
+
     const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
     const ttl = expirationTimestamp - Date.now(); // Calculate the time to live (ttl) by subtracting the current timestamp from the expiration timestamp
-    // console.log("file system cache put ttl: ", ttl);
     fileCache.set(key, numToUint8Array(responseArray.length), {
       ttl: ttl, // Set the ttl of the file added
     }); // Add to cache, which may trigger disposal of old item
-    // console.log("file system put seems to have worked");
     return;
   }
 
@@ -233,10 +230,8 @@ function createFileSystemCache(): CacheStorage {
             span.addEvent("file-system-get-data");
 
             if (data === null) {
-              // console.log("data is null");
               return undefined;
             }
-            // console.log("file system cache hit: ", cacheKey);
             downloadDuration.record(downloadDurationTime, {
               bufferSize: data.length,
             });
@@ -244,15 +239,12 @@ function createFileSystemCache(): CacheStorage {
 
             const iterableHeaders = getIterableHeaders(headers);
             const responseHeaders = new Headers(iterableHeaders);
-            // console.log("response headers expire before response: ", JSON.stringify(responseHeaders.get("expires")));
             const response = new Response(
               body,
-              { headers: responseHeaders }
+              { headers: responseHeaders },
             );
-            // console.log("fs response headers match: ", JSON.stringify(response.headers.get("expires")));
-            return response; 
+            return response;
           } catch (err) {
-            // console.log("file system error: ", err);
             throw err;
           } finally {
             span.end();
@@ -270,7 +262,6 @@ function createFileSystemCache(): CacheStorage {
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
-          // console.log(
           //   "fs response headers put: ",
           //   JSON.stringify(response.headers.get("expires")),
           // );
@@ -288,7 +279,9 @@ function createFileSystemCache(): CacheStorage {
               bufferSizeSumObserver.add(buffer.length);
               return buffer;
             });
-          const headersBuffer = headersToUint8Array([...response.headers.entries()]);
+          const headersBuffer = headersToUint8Array([
+            ...response.headers.entries(),
+          ]);
           const buffer = generateCombinedBuffer(bodyBuffer, headersBuffer);
 
           const span = tracer.startSpan("file-system-put", {
@@ -308,7 +301,6 @@ function createFileSystemCache(): CacheStorage {
                 response.headers.get("expires") ?? "",
               ).catch(
                 (err) => {
-                  // console.log("file system error", err);
                   setSpan.recordException(err);
                 },
               ).finally(() => {
@@ -318,7 +310,6 @@ function createFileSystemCache(): CacheStorage {
               logger.error(`error saving to file system ${error?.message}`);
             }
           } catch (err) {
-            // console.log("file system put error: ", err);
             span.recordException(err);
             throw err;
           } finally {
