@@ -231,6 +231,7 @@ const wrapLoader = (
         const request = new Request(url);
 
         const callHandlerAndCache = async () => {
+          console.log("callHandlerAndCache")
           const json = await handler(props, req, ctx);
           cache.put(
             request,
@@ -240,23 +241,25 @@ const wrapLoader = (
                   .toUTCString(),
               },
             }),
-          ).catch((error) => logger.error(error));
+          ).catch((error) => console.log(error));
 
           return json;
         };
 
         const staleWhileRevalidate = async () => {
           const matched = await cache.match(request).catch(() => null);
-
+          // console.log("matched: ", matched);
           if (!matched) {
             status = "miss";
             stats.cache.add(1, { status, loader });
 
             return await callHandlerAndCache();
           }
-
+          // console.log("matched expires: ", JSON.stringify(matched.headers.get("expires")));
           const expires = matched.headers.get("expires");
           const isStale = expires ? !inFuture(expires) : false;
+          // console.log("expires: ", expires);
+          // console.log("isStale: ", isStale);
 
           if (isStale) {
             status = "stale";
