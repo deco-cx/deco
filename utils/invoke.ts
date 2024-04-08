@@ -38,7 +38,7 @@ export const invokeToHttpResponse = (
 
     return new Response(
       new ReadableStream<ServerSentEventMessage>({
-        async start(controller) {
+        async pull(controller) {
           for await (const content of invokeResponse) {
             controller.enqueue({
               data: encodeURIComponent(JSON.stringify(content)),
