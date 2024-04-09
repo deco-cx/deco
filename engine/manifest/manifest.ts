@@ -199,6 +199,7 @@ const installAppsForResolver = async (
         },
       });
     }));
+
     // if there's no app installed so we should be ok to stop the loop.
     const installedApps = _installedApps.filter(Boolean);
     if (installedApps.length === 0) {
@@ -254,14 +255,14 @@ const installAppsForResolver = async (
     }
 
     // after an installation new resolvers become available so now we can check if we can resolve them.
-    const newAvailableAppsToInstall: Resolvable[] = [];
+    const newAvailableAppsToInstall: Set<Resolvable> = new Set<Resolvable>();
     for (const [key, app] of Object.entries(unresolved)) {
       if (key in currentResolver.getResolvers()) {
-        newAvailableAppsToInstall.push(app);
+        newAvailableAppsToInstall.add(app);
         delete unresolved[key];
       }
     }
-    await installInstallableApps(newAvailableAppsToInstall);
+    await installInstallableApps([...newAvailableAppsToInstall]);
   } while (true);
   // warn about unresolved references.
   if (Object.keys(unresolved).length > 0) {

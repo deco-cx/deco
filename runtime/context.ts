@@ -1,6 +1,7 @@
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
 import * as colors from "std/fmt/colors.ts";
 import { dirname, join } from "std/path/mod.ts";
+import { dirname as posixDirname, join as posixJoin } from "std/path/posix.ts";
 import { BlockKey } from "../blocks/app.ts";
 import { buildImportMap } from "../blocks/utils.tsx";
 import { Context, DecoContext } from "../deco.ts";
@@ -52,10 +53,10 @@ async function bundle(
         setup(build) {
           build.onResolve({ filter: /^\.\.?.*$/ }, (args) => {
             const realPath = args.importer === "<stdin>"
-              ? join("/", args.path)
-              : join("/", dirname(args.importer), args.path);
+              ? posixJoin("/", args.path)
+              : posixJoin("/", posixDirname(args.importer), args.path);
             return {
-              path: realPath,
+              path: realPath.startsWith(".") ? realPath.slice(1) : realPath,
               namespace: "code-inline",
             };
           }),
@@ -150,11 +151,12 @@ export const contextFromVolume = async <
     .withResolvers<TManifest>();
 
   manifestResolvers.promise.then((manifest) => {
+    const mergedManifest = mergeManifests({
+      name: initialManifest.name,
+      baseUrl: initialManifest.baseUrl,
+    }, manifest) as TManifest;
     init.resolve({
-      manifest: mergeManifests({
-        name: initialManifest.name,
-        baseUrl: initialManifest.baseUrl,
-      }, manifest) as TManifest,
+      manifest: mergedManifest,
       release,
       importMap: { imports: {} },
     });
