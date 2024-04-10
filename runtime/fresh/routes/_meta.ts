@@ -60,8 +60,8 @@ const binaryId = Context.active().deploymentId ?? crypto.randomUUID();
 const etagFor = async (lazySchema: LazySchema) =>
   `${await lazySchema.revision}@${binaryId}`;
 
-const waitForChanges = async (ifNoneMatch: string) => {
-  while (true) {
+const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
+  while (!signal.aborted) {
     const context = Context.active();
     const lazySchema = lazySchemaFor(context);
     const etag = await etagFor(lazySchema);
@@ -98,15 +98,25 @@ const waitForChanges = async (ifNoneMatch: string) => {
 export const handler = async (req: Request) => {
   const url = new URL(req.url);
 
+  const ctrl = new AbortController();
+
+  req.signal.onabort = () => ctrl.abort();
+  setTimeout(() => ctrl.abort(), 20 * 60 * 1e3); // 20 minutes in ms
+
   const context = Context.active();
   const lazySchema = lazySchemaFor(context);
-  const { info, etag } = await waitForChanges(
+  const res = await waitForChanges(
     url.searchParams.get("waitForChanges") === "true"
       ? await etagFor(lazySchema)
       : "",
+    ctrl.signal,
   );
 
-  console.log({ waitForChanges: url.searchParams.get("waitForChanges") });
+  if (!res) {
+    return new Response(null, { status: 408, headers: allowCorsFor(req) });
+  }
+
+  const { info, etag } = res;
 
   return new Response(info, {
     headers: {
