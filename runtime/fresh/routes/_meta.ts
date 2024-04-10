@@ -3,7 +3,7 @@ import { Context } from "../../../deco.ts";
 import { singleFlight } from "../../../engine/core/utils.ts";
 import { Schemas } from "../../../engine/schema/builder.ts";
 import { namespaceOf } from "../../../engine/schema/gen.ts";
-import { lazySchemaFor } from "../../../engine/schema/lazy.ts";
+import { type LazySchema, lazySchemaFor } from "../../../engine/schema/lazy.ts";
 import meta from "../../../meta.json" with { type: "json" };
 import { AppManifest } from "../../../types.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
@@ -56,47 +56,64 @@ export let mschema: Schemas | null = null; // compatibility mode only, it should
 
 const sf = singleFlight<string>();
 const binaryId = Context.active().deploymentId ?? crypto.randomUUID();
-export const handler = async (
-  req: Request,
-) => {
+
+const etagFor = async (lazySchema: LazySchema) =>
+  `${await lazySchema.revision}@${binaryId}`;
+
+const waitForChanges = async (ifNoneMatch: string) => {
+  while (true) {
+    const context = Context.active();
+    const lazySchema = lazySchemaFor(context);
+    const etag = await etagFor(lazySchema);
+
+    if (etag !== ifNoneMatch) {
+      const info = await sf.do(context.instance.id, async () => {
+        const { manifest } = await context.runtime!;
+        const manfiestBlocks = toManifestBlocks(
+          manifest,
+        );
+        const schema = await lazySchema.value;
+        mschema = schema; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
+
+        const info: MetaInfo = {
+          major: parse(meta.version).major,
+          version: meta.version,
+          namespace: context.namespace!,
+          site: context.site!,
+          manifest: manfiestBlocks,
+          schema,
+          platform: context.platform,
+        };
+
+        return JSON.stringify(info);
+      });
+
+      return { etag, info };
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+};
+
+export const handler = async (req: Request) => {
+  const url = new URL(req.url);
+
   const context = Context.active();
   const lazySchema = lazySchemaFor(context);
-  const revision = await lazySchema.revision;
-  const etag = `${revision}@${binaryId}`;
-  const ifNoneMatch = req.headers.get("if-none-match");
-  if (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`) { // weak etags should be tested as well.
-    return new Response(null, { status: 304, headers: allowCorsFor(req) }); // not modified
-  }
-  const info = await sf.do(context.instance.id, async () => {
-    const { manifest } = await context.runtime!;
-    const manfiestBlocks = toManifestBlocks(
-      manifest,
-    );
-    const schema = await lazySchema.value;
-    mschema = schema; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
-
-    const info: MetaInfo = {
-      major: parse(meta.version).major,
-      version: meta.version,
-      namespace: context.namespace!,
-      site: context.site!,
-      manifest: manfiestBlocks,
-      schema,
-      platform: context.platform,
-    };
-
-    return JSON.stringify(info);
-  });
-
-  return new Response(
-    info,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "cache-control": "must-revalidate",
-        etag,
-        ...allowCorsFor(req),
-      },
-    },
+  const { info, etag } = await waitForChanges(
+    url.searchParams.get("waitForChanges") === "true"
+      ? await etagFor(lazySchema)
+      : "",
   );
+
+  console.log({ waitForChanges: url.searchParams.get("waitForChanges") });
+
+  return new Response(info, {
+    headers: {
+      "Content-Type": "application/json",
+      "cache-control": "must-revalidate",
+      etag,
+      ...allowCorsFor(req),
+    },
+  });
 };
