@@ -1,6 +1,6 @@
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
 import * as colors from "std/fmt/colors.ts";
-import { dirname, join } from "std/path/mod.ts";
+import { dirname, join, toFileUrl } from "std/path/mod.ts";
 import { dirname as posixDirname, join as posixJoin } from "std/path/posix.ts";
 import { BlockKey } from "../blocks/app.ts";
 import { buildImportMap } from "../blocks/utils.tsx";
@@ -58,7 +58,13 @@ async function bundle(
             if (realPath.startsWith("/islands/")) {
               return {
                 path: import.meta.resolve(
-                  posixJoin(Deno.cwd(), posixDirname(args.importer), args.path),
+                  toFileUrl(
+                    posixJoin(
+                      Deno.cwd(),
+                      posixDirname(args.importer),
+                      args.path,
+                    ),
+                  ).href,
                 ),
                 external: true,
               };
