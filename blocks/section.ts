@@ -90,6 +90,18 @@ const wrapCaughtErrors = async <TProps>(
             if (prop === "__isErr") {
               return true;
             }
+
+            /**
+             * This proxy may be used inside islands.
+             * Islands props are serialized by fresh's serializer.
+             * This code makes it behave well with fresh's serializer
+             */
+            if (prop === "peek") {
+              return undefined;
+            }
+            if (prop === "toJSON") {
+              return () => null;
+            }
             throw err;
           },
         }),

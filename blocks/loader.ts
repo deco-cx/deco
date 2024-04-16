@@ -75,6 +75,23 @@ export const wrapCaughtErrors = async <
         if (prop === "__isErr") {
           return true;
         }
+
+        /**
+         * This proxy may be used inside islands.
+         * Islands props are serialized by fresh's serializer.
+         * This code makes it behave well with fresh's serializer
+         */
+        if (prop === "peek") {
+          return undefined;
+        }
+        if (prop === "toJSON") {
+          return () => null;
+        }
+
+        /**
+         * No special case found, throw and hope to be catch by the
+         * section's ErrorFallback
+         */
         throw err;
       },
     });
