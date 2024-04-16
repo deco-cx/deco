@@ -32,6 +32,7 @@ import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import { getRelease, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
+import { initializeState } from "deco/runtime/utils.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
@@ -73,7 +74,7 @@ const newFakeContext = () => {
       pattern: "/[...catchall]",
       isPartial: false,
       config: {} as FreshContext["context"]["config"],
-      state: {},
+      state: initializeState(),
       params: {},
       destination: "route",
       data: {},
