@@ -1,3 +1,7 @@
+import { Context } from "deco/deco.ts";
+import { defaultHeaders } from "deco/utils/http.ts";
+import { RequestState } from "deco/blocks/utils.tsx";
+
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle
     .digest("SHA-1", new TextEncoder().encode(text));
@@ -24,4 +28,25 @@ export function uint8ArrayToNum(arr: Uint8Array) {
     num += Math.pow(256, i) * arr[i];
   }
   return num;
+}
+
+export function initializeState(baseState?: Partial<RequestState>) {
+  const context = Context.active();
+
+  const response = {
+    headers: new Headers(defaultHeaders),
+    status: undefined,
+  };
+  const state = baseState ?? {};
+  state.response = response;
+  state.bag = new WeakMap();
+  state.flags = [];
+
+  return {
+    ...state,
+    site: {
+      id: context.siteId,
+      name: context.site,
+    },
+  } as RequestState;
 }
