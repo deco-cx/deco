@@ -55,6 +55,15 @@ async function bundle(
             const realPath = args.importer === "<stdin>"
               ? posixJoin("/", args.path)
               : posixJoin("/", posixDirname(args.importer), args.path);
+            if (realPath.startsWith("/islands/")) {
+              return {
+                path: import.meta.resolve(
+                  posixJoin(Deno.cwd(), posixDirname(args.importer), args.path),
+                ),
+                external: true,
+              };
+            }
+
             return {
               path: realPath.startsWith(".") ? realPath.slice(1) : realPath,
               namespace: "code-inline",
