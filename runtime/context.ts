@@ -1,4 +1,5 @@
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
+import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { dirname, join, toFileUrl } from "std/path/mod.ts";
 import { dirname as posixDirname, join as posixJoin } from "std/path/posix.ts";
@@ -138,7 +139,7 @@ export const contextFromVolume = async <
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FileSystem = {};
   const fs = new VFS(inMemoryFS);
-  const rebuild = async () => {
+  const rebuild = debounce(async (onEnd?: (manifest: AppManifest) => void) => {
     try {
       const start = performance.now();
       const contents = await bundle(inMemoryFS);
@@ -150,12 +151,12 @@ export const contextFromVolume = async <
       const module = await import(
         `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
       );
-      return module.default;
+      onEnd?.(module.default);
     } catch (err) {
       console.log("ignoring dynamic import error", err);
     }
     return undefined;
-  };
+  }, 200);
 
   const isDecofilePath = (path: string) => DECOFILE_PATH === path;
   const init = Promise.withResolvers<
@@ -219,12 +220,12 @@ export const contextFromVolume = async <
           );
       }
       if (hasCodeChange) {
-        await rebuild().then((m) => {
+        rebuild((m) => {
           if (!m) {
             return Promise.resolve();
           }
           return updateManifest(m);
-        }).catch((_err) => {});
+        });
       } else if (hasDecofileChange) {
         updateRelease();
       }
