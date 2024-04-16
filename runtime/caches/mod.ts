@@ -5,7 +5,7 @@ import {
   isFileSystemAvailable,
 } from "./fileSystem.ts";
 import { caches as redisCache, redis } from "./redis.ts";
-import { caches as cachesS3, isS3Available } from "./s3.ts";
+//import { caches as cachesS3, isS3Available } from "./s3.ts";
 import { createTieredCache } from "./tiered.ts";
 
 export const ENABLE_LOADER_CACHE =
@@ -24,8 +24,7 @@ export type CacheEngine =
   | "REDIS"
   | "KV"
   | "CACHE_API"
-  | "FILE_SYSTEM"
-  | "S3";
+  | "FILE_SYSTEM";
 
 const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   REDIS: {
@@ -43,10 +42,6 @@ const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   FILE_SYSTEM: {
     implementation: cachesFileSystem,
     isAvailable: isFileSystemAvailable,
-  },
-  S3: {
-    implementation: cachesS3,
-    isAvailable: isS3Available,
   },
 };
 
