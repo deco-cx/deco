@@ -3,7 +3,6 @@ import { Context } from "../../deco.ts";
 import { FileSystem } from "../../scripts/mount.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 
-
 export interface IVFS {
   readFile: typeof Deno.readFile;
   watchFs: typeof Deno.watchFs;
@@ -43,7 +42,10 @@ for (const [func, impl] of Object.entries(DenoFs)) {
       const path = arg0.toString();
       if (path.startsWith(Deno.cwd())) {
         // @ts-ignore: trust-me
-        return fsMk(...[fileSeparatorToSlash(path.replace(Deno.cwd(), "")), ...rest]);
+        return fsMk(...[
+          fileSeparatorToSlash(path.replace(Deno.cwd(), "")),
+          ...rest,
+        ]);
       }
       return impl(...args);
     }
