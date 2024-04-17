@@ -140,7 +140,10 @@ export const contextFromVolume = async <
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FileSystem = {};
   const fs = new VFS(inMemoryFS);
+  let nextBuild = Promise.withResolvers<void>();
+  nextBuild.resolve();
   const rebuild = debounce(async (onEnd?: (manifest: AppManifest) => void) => {
+    nextBuild = Promise.withResolvers<void>();
     try {
       const start = performance.now();
       const contents = await bundle(inMemoryFS);
@@ -155,6 +158,8 @@ export const contextFromVolume = async <
       onEnd?.(module.default);
     } catch (err) {
       console.log("ignoring dynamic import error", err);
+    } finally {
+      nextBuild.resolve();
     }
     return undefined;
   }, 200);
@@ -227,6 +232,7 @@ export const contextFromVolume = async <
           }
           return updateManifest(m);
         });
+        await nextBuild.promise;
       } else if (hasDecofileChange) {
         updateRelease();
       }
