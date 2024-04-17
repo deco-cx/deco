@@ -135,7 +135,7 @@ export const contextFromVolume = async <
   const shouldMountDecofileOnly = currentContext.platform === "deno_deploy" ||
     Deno.env.get("VFS_WATCH_DECOFILE_ONLY") === "true";
   if (shouldMountDecofileOnly) {
-    volUrl.searchParams.set("path", DECOFILE_PATH);
+    volUrl.searchParams.set("path", "/.deco/**/*.json");
   }
 
   const { manifest: initialManifest } = await currentContext.runtime!;
