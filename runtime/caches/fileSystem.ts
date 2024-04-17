@@ -119,13 +119,14 @@ function createFileSystemCache(): CacheStorage {
       await assertCacheDirectory();
     }
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-    await Deno.writeFile(filePath, responseArray);
 
     const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
     const ttl = expirationTimestamp - Date.now(); // Calculate the time to live (ttl) by subtracting the current timestamp from the expiration timestamp
+    
     fileCache.set(key, numToUint8Array(responseArray.length), {
       ttl: ttl, // Set the ttl of the file added
     }); // Add to cache, which may trigger disposal of old item
+    await Deno.writeFile(filePath, responseArray);
     return;
   }
 
