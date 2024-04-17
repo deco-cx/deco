@@ -13,11 +13,11 @@ export const handler = async (
     DecoState<unknown, DecoSiteState>
   >,
 ): Promise<Response> => {
+  const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
   const props = req.method === "POST"
     ? await req.json()
-    : bodyFromUrl("props", new URL(req.url));
+    : bodyFromUrl("props", url);
 
-  const url = new URL(req.url);
   const { state: { resolve } } = ctx;
   const invokeFunc: InvokeFunction = {
     key: ctx.params.key as InvokeFunction["key"],

@@ -1,19 +1,23 @@
-import { stringToHexSha256 } from "../../utils/encoding.ts";
+import { fromFileUrl } from "std/path/mod.ts";
 import { randId as ulid } from "../../utils/rand.ts";
+import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
 import { newFsProviderFromPath } from "./fs.ts";
-import { Release } from "./provider.ts";
-import { newRealtime, RealtimeReleaseProvider } from "./realtime.ts";
+import { OnChangeCallback, Release } from "./provider.ts";
+import {
+  CurrResolvables,
+  newRealtime,
+  RealtimeReleaseProvider,
+} from "./realtime.ts";
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
 
-const ALLOWED_AUTHORITIES_ENV_VAR_NAME = "DECO_ALLOWED_AUTHORITIES";
-const ALLOWED_AUTHORITIES = Deno.env.has(ALLOWED_AUTHORITIES_ENV_VAR_NAME)
-  ? Deno.env.get(ALLOWED_AUTHORITIES_ENV_VAR_NAME)!.split(",")
-  : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx", "localhost"];
-
+export interface HttpContent {
+  text: string;
+  etag?: string;
+}
 const fetchFromHttp = async (
   url: string | URL,
-): Promise<string | undefined> => {
+): Promise<HttpContent | undefined> => {
   const response = await fetch(String(url), { redirect: "follow" })
     .catch(
       (err) => {
@@ -34,7 +38,9 @@ const fetchFromHttp = async (
     );
     return undefined;
   }
-  return content;
+  return content
+    ? { text: content, etag: response.headers.get("etag")?.replaceAll(`"`, "") }
+    : undefined;
 };
 
 type SubscribeParameters = Parameters<RealtimeReleaseProvider["subscribe"]>;
@@ -43,13 +49,51 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     SubscribeParameters[0] | undefined,
     SubscribeParameters[1] | undefined,
   ] = [undefined, undefined];
-  es.addEventListener("message", (event) => {
-    const state = JSON.parse(event.data);
-    onChange?.({
-      state,
-      archived: {},
-      revision: ulid(),
+
+  const esURL = new URL(es.url);
+  esURL.searchParams.set("stream", "false");
+
+  const fetchLastState = () => {
+    return fetchFromHttp(esURL).then((httpContent) => {
+      if (!httpContent) {
+        return {
+          data: null,
+          error: null,
+        };
+      }
+      return {
+        data: {
+          state: JSON.parse(httpContent.text),
+          archived: {},
+          revision: httpContent.etag ?? ulid(),
+        },
+        error: null,
+      };
+    }).catch((error) => {
+      console.log("error when fetching from", esURL, error);
+      return {
+        data: null,
+        error,
+      };
     });
+  };
+  es.addEventListener("message", async (event) => {
+    let data: null | CurrResolvables = null;
+    try {
+      data = {
+        state: JSON.parse(decodeURIComponent(event.data)),
+        archived: {},
+        revision: ulid(),
+      };
+    } catch {
+      const { data: mdata, error } = await fetchLastState();
+      if (!data || error) {
+        return;
+      }
+      data = mdata;
+    }
+
+    onChange?.(data!);
   });
   es.onerror = (event) => {
     onError?.("CLOSED", {
@@ -58,8 +102,6 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
       name: "SEE CLOSED",
     });
   };
-  const esURL = new URL(es.url);
-  esURL.searchParams.set("stream", "false");
 
   return {
     unsubscribe: () => {
@@ -68,43 +110,39 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     subscribe: (change, err) => {
       onChange = change, onError = err;
     },
-    get: async () => {
-      return await fetchFromHttp(esURL).then((content) => {
-        if (!content) {
-          return {
-            data: null,
-            error: null,
-          };
-        }
-        return {
-          data: {
-            state: JSON.parse(content),
-            archived: {},
-            revision: ulid(),
-          },
-          error: null,
-        };
-      }).catch((error) => {
-        console.log("error when fetching from", esURL, error);
-        return {
-          data: null,
-          error,
-        };
-      });
+    get: () => {
+      return fetchLastState();
     },
   };
 };
-const fromString = (
-  endpoint: string,
-  state: string,
+export const fromHttpContent = (
+  state: HttpContent,
 ): Release => {
-  const parsed = JSON.parse(state);
-  const revisionPromise = stringToHexSha256(endpoint);
+  return fromJSON(JSON.parse(state.text), state.etag);
+};
+
+export const fromJSON = (
+  parsed: Record<string, unknown>,
+  revision?: string,
+): Release => {
+  const cbs: Array<OnChangeCallback> = [];
+  let state = parsed;
+  let currentRevision: string = revision ?? crypto.randomUUID();
   return {
-    state: () => Promise.resolve(parsed),
+    state: () => Promise.resolve(state),
     archived: () => Promise.resolve({}),
-    onChange: () => {},
-    revision: () => revisionPromise,
+    onChange: (cb) => {
+      cbs.push(cb);
+    },
+    notify: () => {
+      return Promise.all(cbs.map((cb) => cb())).then(() => {});
+    },
+    revision: () => Promise.resolve(currentRevision),
+    set(newState, revision) {
+      state = newState;
+      currentRevision = revision ?? crypto.randomUUID();
+      return Promise.all(cbs.map((cb) => cb())).then(() => {});
+    },
   };
 };
 async function releaseLoader(
@@ -112,16 +150,12 @@ async function releaseLoader(
 ): Promise<Release | undefined> {
   const url = new URL(endpointSpecifier);
   const assertAllowedAuthority = () => {
-    if (!ALLOWED_AUTHORITIES.includes(url.hostname)) {
-      throw new Error(
-        `authority ${url.hostname} is not allowed to be fetched from`,
-      );
-    }
+    assertAllowedAuthorityFor(url);
   };
   try {
     switch (url.protocol) {
       case "file:": {
-        return newFsProviderFromPath(url.pathname);
+        return newFsProviderFromPath(fromFileUrl(url));
       }
       case "sses:":
       case "sse:": {
@@ -137,7 +171,7 @@ async function releaseLoader(
       case "https:": {
         assertAllowedAuthority();
         const content = await fetchFromHttp(url);
-        return content ? fromString(endpointSpecifier, content) : undefined;
+        return content ? fromHttpContent(content) : undefined;
       }
       default:
         return undefined;
@@ -159,6 +193,9 @@ export const fromEndpoint = (endpoint: string): Release => {
   return {
     set(state, revision) {
       return releasePromise.then((r) => r?.set?.(state, revision));
+    },
+    notify() {
+      return releasePromise.then((r) => r?.notify?.() ?? Promise.resolve());
     },
     state: (options) => releasePromise.then((r) => r.state(options)),
     archived: (options) => releasePromise.then((r) => r.archived(options)),

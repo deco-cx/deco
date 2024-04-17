@@ -1,12 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
-import { ValueType } from "../deps.ts";
+import { ValueType, weakcache } from "../deps.ts";
 import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
+import { HttpError } from "../engine/errors.ts";
 import { ResolverMiddlewareContext } from "../engine/middleware.ts";
+import { Release } from "../engine/releases/provider.ts";
+import { logger } from "../observability/otel/config.ts";
 import { meter } from "../observability/otel/metrics.ts";
-import { caches as cachesKV } from "../runtime/caches/denoKV.ts";
-import { caches as cachesFileSystem } from "../runtime/caches/fileSystem.ts";
+import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
 import { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -15,10 +18,6 @@ import {
   RequestState,
   SingleFlightKeyFunc,
 } from "./utils.tsx";
-import { logger } from "deco/observability/otel/config.ts";
-import { weakcache } from "../deps.ts";
-import { FieldResolver } from "deco/engine/core/resolver.ts";
-import { Release } from "deco/engine/releases/provider.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
@@ -65,6 +64,9 @@ export const wrapCaughtErrors = async <
   try {
     return await ctx.next!();
   } catch (err) {
+    if (err instanceof HttpError) {
+      throw err;
+    }
     return new Proxy({}, {
       get: (_target, prop) => {
         if (prop === "then") {
@@ -73,14 +75,28 @@ export const wrapCaughtErrors = async <
         if (prop === "__isErr") {
           return true;
         }
+
+        /**
+         * This proxy may be used inside islands.
+         * Islands props are serialized by fresh's serializer.
+         * This code makes it behave well with fresh's serializer
+         */
+        if (prop === "peek") {
+          return undefined;
+        }
+        if (prop === "toJSON") {
+          return () => null;
+        }
+
+        /**
+         * No special case found, throw and hope to be catch by the
+         * section's ErrorFallback
+         */
         throw err;
       },
     });
   }
 };
-
-export const ENABLE_LOADER_CACHE =
-  Deno.env.get("ENABLE_LOADER_CACHE") === "true";
 
 export const LOADER_CACHE_START_TRESHOLD =
   Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
@@ -101,9 +117,7 @@ const stats = {
 
 let maybeCache: Cache | undefined;
 
-// Fallback to DenoKV if cachesFileSystem not available.
-const caches = cachesFileSystem ?? cachesKV;
-caches.open("loader")
+caches?.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
 

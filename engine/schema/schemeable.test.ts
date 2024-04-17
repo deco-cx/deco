@@ -7,7 +7,6 @@
 import { assertEquals, assertObjectMatch, fail } from "std/assert/mod.ts";
 import { dirname, join } from "std/path/mod.ts";
 
-import { ImportMapBuilder } from "deco/engine/importmap/builder.ts";
 import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
 import { assertSpyCall, assertSpyCalls, spy } from "std/testing/mock.ts";
 import { parsePath } from "../../engine/schema/parser.ts";
@@ -16,6 +15,7 @@ import {
   Schemeable,
   typeNameToSchemeable,
 } from "../../engine/schema/transform.ts";
+import { ImportMapBuilder } from "../importmap/builder.ts";
 
 const folder = dirname(fromFileUrl(import.meta.url));
 const file = "schemeable.test.types.ts";

@@ -1,7 +1,8 @@
 import * as colors from "std/fmt/colors.ts";
 import { exists } from "std/fs/mod.ts";
-import { join } from "std/path/mod.ts";
+import { join, toFileUrl } from "std/path/mod.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
+import { PromiseOrValue } from "../../engine/core/utils.ts";
 import { fromPagesTable } from "../../engine/releases/pages.ts";
 import { fromConfigsTable } from "../../engine/releases/release.ts";
 import { ENTRYPOINT } from "./constants.ts";
@@ -13,7 +14,7 @@ export interface SelectionConfig {
   audiences: unknown[];
 }
 
-export type OnChangeCallback = () => void;
+export type OnChangeCallback = () => PromiseOrValue<void>;
 export interface ReadOptions {
   forceFresh?: boolean;
 }
@@ -22,6 +23,7 @@ export interface Release {
   archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
   revision(): Promise<string>;
   onChange(callback: OnChangeCallback): void;
+  notify?(): Promise<void>;
   dispose?: () => void;
   set?(state: Record<string, Resolvable>, revision?: string): Promise<void>;
 }
@@ -100,27 +102,15 @@ export const compose = (...providers: Release[]): Release => {
 };
 
 const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
-const defaultDecofileBuildPath = (site: string) =>
-  join(Deno.cwd(), ".deco", `${site}.json`);
 
-const existsCache: Map<string, Promise<boolean>> = new Map();
-const getDecofileEndpoint = async (site: string) => {
-  const filepath = defaultDecofileBuildPath(site); // default location should be prioritized
-  const existsFlight = existsCache.get(site);
-  if (!existsFlight) {
-    existsCache.set(
-      site,
-      exists(filepath, { isFile: true, isReadable: true }).catch((err) => {
-        existsCache.delete(site);
-        throw err;
-      }),
-    );
-  }
-  if (await existsCache.get(site)) {
-    return `file://${filepath}`;
-  }
-  return Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
-};
+export const DECOFILE_REL_PATH = join(".deco", "decofile.json");
+const DECOFILE_PATH_DEFAULT = join(Deno.cwd(), DECOFILE_REL_PATH);
+const decofileExistsPromise = exists(DECOFILE_PATH_DEFAULT, {
+  isFile: true,
+  isReadable: true,
+});
+const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
+
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
@@ -140,7 +130,9 @@ export const getRelease = async (
     return newFsProvider();
   }
 
-  const endpoint = await getDecofileEndpoint(site);
+  const endpoint = await decofileExistsPromise
+    ? `${toFileUrl(DECOFILE_PATH_DEFAULT)}`
+    : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {
     console.info(
       colors.brightCyan(

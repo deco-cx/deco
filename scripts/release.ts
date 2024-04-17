@@ -31,7 +31,9 @@ const response = await exec(`git tag | sort -V | tail -1`);
 
 const latestTag = parse(response.stdout);
 
-console.log(`Current version is: ${latestTag}`);
+console.log(
+  `Current version is: ${latestTag.major}.${latestTag.minor}.${latestTag.patch}`,
+);
 
 // TODO: Only allow releases in main branch
 

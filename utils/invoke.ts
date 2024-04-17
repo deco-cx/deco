@@ -4,7 +4,10 @@ export interface StreamProps {
 }
 
 export { isStreamProps } from "../clients/withManifest.ts";
-import { ServerSentEventStream } from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
+import {
+  ServerSentEventMessage,
+  ServerSentEventStream,
+} from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
 
 export const isEventStreamResponse = (
   invokeResponse: unknown | AsyncIterableIterator<unknown>,
@@ -34,15 +37,16 @@ export const invokeToHttpResponse = (
     };
 
     return new Response(
-      new ReadableStream({
-        async start(controller) {
+      new ReadableStream<ServerSentEventMessage>({
+        async pull(controller) {
           for await (const content of invokeResponse) {
             controller.enqueue({
-              data: JSON.stringify(content),
+              data: encodeURIComponent(JSON.stringify(content)),
               id: Date.now(),
               event: "message",
             });
           }
+          controller.close();
         },
         cancel() {
           invokeResponse?.return?.();

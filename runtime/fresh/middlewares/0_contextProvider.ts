@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { Context, DecoContext } from "../../../deco.ts";
-import { MiddlewareHandler, MiddlewareHandlerContext } from "../../../deps.ts";
+import { FreshContext, MiddlewareHandler } from "../../../deps.ts";
 import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
@@ -18,7 +18,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   // Return an async function to handle requests
   return async function (
     request: Request,
-    context: MiddlewareHandlerContext<
+    context: FreshContext<
       DecoState<any, DecoSiteState, TManifest>
     >,
   ) {
@@ -33,6 +33,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       const shouldUseLocalStorage = opt?.useLocalStorageOnly ||
         Deno.env.has("USE_LOCAL_STORAGE_ONLY");
       let siteName = opt.manifest.name;
+      let namespace: string | undefined = opt.manifest.name;
       let releaseProviderPromise: Promise<Release>;
       if (shouldUseLocalStorage) {
         releaseProviderPromise = Promise.resolve(
@@ -40,6 +41,8 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       } else if (opt.release) {
         releaseProviderPromise = Promise.resolve(opt.release);
+        siteName = opt.site?.name ?? siteNameFromEnv() ?? siteName;
+        namespace = opt?.site?.namespace;
       } else {
         const fromEnvSiteName = siteNameFromEnv();
         if (!fromEnvSiteName && Context.active().isDeploy) {
@@ -53,19 +56,15 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         );
       }
       // Define root manifest
-      const rootManifest = {
-        baseUrl: opt.manifest.baseUrl,
-        name: opt.manifest.name,
-        apps: { ...opt.manifest.apps },
-      };
 
       contextPromise = releaseProviderPromise.then((releaseProvider) =>
         newContext(
-          rootManifest,
+          opt.manifest,
           opt.importMap,
           releaseProvider,
           undefined,
           siteName,
+          namespace,
         )
       );
       contextCache.set(

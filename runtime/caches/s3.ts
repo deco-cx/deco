@@ -1,25 +1,27 @@
-import { logger, tracer } from "../../observability/otel/config.ts";
-import { meter } from "../../observability/otel/metrics.ts";
-import { ValueType } from "../../deps.ts";
-import {
-  assertCanBeCached,
-  assertNoOptions,
-  withCacheNamespace,
-} from "./common.ts";
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "https://esm.sh/@aws-sdk/client-s3@3.513.0";
 import {
   compress,
   decompress,
   init as initZstd,
 } from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  NoSuchKey,
+  PutObjectCommand,
+  S3Client,
+} from "https://esm.sh/@aws-sdk/client-s3@3.513.0";
+import { Context } from "../../deco.ts";
+import { ValueType } from "../../deps.ts";
+import { logger, tracer } from "../../observability/otel/config.ts";
+import { meter } from "../../observability/otel/metrics.ts";
+import {
+  assertCanBeCached,
+  assertNoOptions,
+  withCacheNamespace,
+} from "./common.ts";
 
 const MAX_UNCOMPRESSED_SIZE = parseInt(
-  Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")! ?? "645120",
+  Deno.env.get("CACHE_AWS_MAX_UNCOMPRESSED_SIZE")!,
 );
 
 const zstdPromise = initZstd();
@@ -50,25 +52,18 @@ const compressDuration = meter.createHistogram("zstd_compress_duration", {
 
 interface Metadata {
   body: {
-    etag: string; // body version
     buffer: Uint8Array; // buffer with compressed data
     zstd: boolean;
   };
 }
 
-function bufferToObject(
-  buffer: { [key: string]: number } | Uint8Array,
-): Uint8Array {
-  if (buffer instanceof Uint8Array) {
-    return buffer;
-  }
-
-  const length = Object.keys(buffer).length;
-  const array = new Uint8Array(length);
-  for (let i = 0; i < length; i++) {
-    array[i] = buffer[i.toString()];
-  }
-  return array;
+function metadataToUint8Array(metadata: Metadata): Uint8Array {
+  const { buffer, zstd } = metadata.body;
+  const zstdArray = new Uint8Array([zstd ? 1 : 0]);
+  const result = new Uint8Array(buffer.length + zstdArray.length);
+  result.set(zstdArray);
+  result.set(buffer, zstdArray.length);
+  return result;
 }
 
 function createS3Caches(): CacheStorage {
@@ -78,7 +73,6 @@ function createS3Caches(): CacheStorage {
       accessKeyId: awsAccessKeyId,
       secretAccessKey: awsSecretAccessKey,
     },
-    useAccelerateEndpoint: true,
     endpoint: awsEndpoint,
   });
 
@@ -86,10 +80,12 @@ function createS3Caches(): CacheStorage {
     key: string,
     responseObject: Metadata,
   ) {
+    const result = metadataToUint8Array(responseObject);
+
     const bucketParams = {
       Bucket: bucketName,
-      Key: key,
-      Body: JSON.stringify(responseObject),
+      Key: `${key}-${Context.active().site}`,
+      Body: result,
     };
 
     const command = new PutObjectCommand(bucketParams);
@@ -101,7 +97,7 @@ function createS3Caches(): CacheStorage {
   async function getObject(key: string) {
     const bucketParams = {
       Bucket: bucketName,
-      Key: key,
+      Key: `${key}-${Context.active().site}`,
     };
 
     const command = new GetObjectCommand(bucketParams);
@@ -113,7 +109,7 @@ function createS3Caches(): CacheStorage {
   async function deleteObject(key: string) {
     const bucketParams = {
       Bucket: bucketName,
-      Key: key,
+      Key: `${key}-${Context.active().site}`,
     };
 
     const command = new DeleteObjectCommand(bucketParams);
@@ -194,32 +190,30 @@ function createS3Caches(): CacheStorage {
               logger.error(`error when reading from s3, ${getResponse}`);
               return undefined;
             }
-            const data = await getResponse.Body.transformToString();
+            const data = await getResponse.Body.transformToByteArray();
             const downloadDurationTime = performance.now() - startTime;
 
             if (data === null) {
-              span.addEvent("cache-miss");
               return undefined;
             }
-            span.addEvent("cache-hit");
 
-            const parsedData: Metadata = typeof data === "string"
-              ? JSON.parse(data)
-              : data;
-            parsedData.body.buffer = bufferToObject(parsedData.body.buffer);
+            // first byte is a flag to indicate if the buffer is compressed
+            // check function metadataToUint8Array
+            const zstd = data[0] === 1;
+            const buffer = data.slice(1);
 
             downloadDuration.record(downloadDurationTime, {
-              bufferSize: data.length,
-              compressed: parsedData.body.zstd,
+              bufferSize: buffer.length,
+              compressed: zstd,
             });
 
             return new Response(
-              parsedData.body.zstd
-                ? decompress(parsedData.body.buffer)
-                : parsedData.body.buffer,
+              zstd ? decompress(buffer) : buffer,
             );
           } catch (err) {
-            span.recordException(err);
+            if (err instanceof NoSuchKey) {
+              return undefined;
+            }
             throw err;
           } finally {
             span.end();
@@ -252,7 +246,9 @@ function createS3Caches(): CacheStorage {
               return buffer;
             })
             .then((buffer) => {
-              if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
+              if (
+                MAX_UNCOMPRESSED_SIZE && buffer.length > MAX_UNCOMPRESSED_SIZE
+              ) {
                 const start = performance.now();
                 const compressed = compress(buffer, 4);
                 compressDuration.record(performance.now() - start, {
@@ -273,7 +269,7 @@ function createS3Caches(): CacheStorage {
           try {
             try {
               const newMeta: Metadata = {
-                body: { etag: crypto.randomUUID(), buffer, zstd },
+                body: { buffer, zstd },
               };
 
               const setSpan = tracer.startSpan("s3-set", {
@@ -302,9 +298,10 @@ function createS3Caches(): CacheStorage {
   };
   return caches;
 }
+const isEndpointSet = (bucketName !== undefined && awsRegion !== undefined) ||
+  awsEndpoint !== undefined;
+const areCredentialsSet = awsAccessKeyId !== undefined &&
+  awsSecretAccessKey !== undefined;
+export const isS3Available = isEndpointSet && areCredentialsSet;
 
-const isEndpointSet = (bucketName && awsRegion) || awsEndpoint;
-const areCredentialsSet = awsAccessKeyId && awsSecretAccessKey;
-export const caches = (isEndpointSet && areCredentialsSet)
-  ? createS3Caches()
-  : undefined;
+export const caches = createS3Caches();

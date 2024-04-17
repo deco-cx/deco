@@ -1,16 +1,17 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
-import { RequestState } from "../../../blocks/utils.tsx";
 import { Context } from "../../../deco.ts";
-import { getCookies, setCookie, SpanStatusCode } from "../../../deps.ts";
+import { getCookies, SpanStatusCode } from "../../../deps.ts";
 import { Resolvable } from "../../../engine/core/resolver.ts";
 import { Apps } from "../../../mod.ts";
 import { startObserve } from "../../../observability/http.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
-import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
+import { decodeCookie, setCookie } from "../../../utils/cookies.ts";
+import { allowCorsFor } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
-import { tryOrDefault } from "deco/utils/object.ts";
+import { tryOrDefault } from "../../../utils/object.ts";
+import { initializeState } from "../../utils.ts";
 
 export const DECO_SEGMENT = "deco_segment";
 
@@ -42,7 +43,7 @@ export const handler = [
     req: Request,
     ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
   ): Promise<Response> => {
-    const url = new URL(req.url);
+    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
     const context = Context.active();
     return await ctx.state.monitoring.tracer.startActiveSpan(
       "./routes/_middleware.ts",
@@ -116,22 +117,10 @@ export const handler = [
     if (req.method === "HEAD" && isMonitoringRobots(req)) {
       return new Response(null, { status: 200 });
     }
-    const context = Context.active();
-    const url = new URL(req.url);
-    ctx.state.site = {
-      id: context.siteId,
-      name: context.site,
-    };
 
-    const response = {
-      headers: new Headers(defaultHeaders),
-      status: undefined,
-    };
-    const state: Partial<RequestState> = ctx.state?.$live?.state ?? {};
-    const stateBag = new WeakMap();
-    state.response = response;
-    state.bag = stateBag;
-    state.flags = [];
+    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
+
+    const state = initializeState(ctx.state?.$live?.state);
     Object.assign(ctx.state, state);
     ctx.state.global = { ...(ctx.state.global ?? {}), ...state }; // compatibility mode with functions.
 
@@ -158,11 +147,13 @@ export const handler = [
         newHeaders.set(name, value);
       });
     }
-    response.headers.forEach((value, key) => newHeaders.append(key, value));
+    state.response.headers.forEach((value, key) =>
+      newHeaders.append(key, value)
+    );
     const printTimings = ctx?.state?.t?.printTimings;
     printTimings && newHeaders.set("Server-Timing", printTimings());
 
-    const responseStatus = response.status ?? initialResponse.status;
+    const responseStatus = state.response.status ?? initialResponse.status;
 
     if (
       url.pathname.startsWith("/_frsh/") &&
@@ -182,35 +173,38 @@ export const handler = [
 
     if (state?.flags.length > 0) {
       const currentCookies = getCookies(req.headers);
-      const segment = currentCookies[DECO_SEGMENT]
-        ? tryOrDefault(
-          () =>
-            JSON.parse(decodeURIComponent(atob(currentCookies[DECO_SEGMENT]))),
-          {},
-        )
-        : {};
+      const cookieSegment = tryOrDefault(
+        () => decodeCookie(currentCookies[DECO_SEGMENT]),
+        "",
+      );
+      const segment = tryOrDefault(() => JSON.parse(cookieSegment), {});
+
       const active = new Set(segment.active || []);
       const inactiveDrawn = new Set(segment.inactiveDrawn || []);
       for (const flag of state.flags) {
-        if (flag.value) {
-          active.add(flag.name);
-          inactiveDrawn.delete(flag.name);
-        } else {
-          active.delete(flag.name);
-          inactiveDrawn.add(flag.name);
+        if (flag.isSegment) {
+          if (flag.value) {
+            active.add(flag.name);
+            inactiveDrawn.delete(flag.name);
+          } else {
+            active.delete(flag.name);
+            inactiveDrawn.add(flag.name);
+          }
         }
       }
       const newSegment = {
         active: [...active].sort(),
         inactiveDrawn: [...inactiveDrawn].sort(),
       };
-      const value = btoa(encodeURIComponent(JSON.stringify(newSegment)));
-      if (segment !== value) {
+      const value = JSON.stringify(newSegment);
+      const hasFlags = active.size > 0 || inactiveDrawn.size > 0;
+
+      if (hasFlags && cookieSegment !== value) {
         setCookie(newHeaders, {
           name: DECO_SEGMENT,
           value,
           path: "/",
-        });
+        }, { encode: true });
       }
     }
 

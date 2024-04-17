@@ -1,8 +1,10 @@
 import { HandlerContext } from "$fresh/server.ts";
-import { PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import { Partial, PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import { getSectionID } from "../../../components/section.tsx";
 import { FieldResolver, Resolvable } from "../../../engine/core/resolver.ts";
-import { badRequest } from "../../../engine/errors.ts";
+import { badRequest, HttpError } from "../../../engine/errors.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
+import { scriptAsDataURI } from "../../../utils/dataURI.ts";
 
 interface Options {
   resolveChain: FieldResolver[];
@@ -12,6 +14,14 @@ interface Options {
   renderSalt?: string;
   partialMode?: PartialProps["mode"];
 }
+
+export interface Props {
+  url: string;
+}
+
+const snippet = (url: string) => {
+  window.location.href = url;
+};
 
 const fromRequest = (req: Request): Options => {
   const params = new URL(req.url).searchParams;
@@ -88,11 +98,48 @@ export const handler = async (
     },
   };
 
-  const page = await ctx.state.resolve(
-    { ...section, ...props },
-    { resolveChain },
-    original,
-  );
+  let page;
+
+  try {
+    page = await ctx.state.resolve(
+      { ...section, ...props },
+      { resolveChain },
+      original,
+    );
+  } catch (err) {
+    if (err instanceof HttpError) {
+      // we are creating a section with client side redirect
+      // and inserting the same partialId from old section
+      // to replace it and do the redirect
+      const newResolveChain = [...resolveChain, {
+        type: "resolver",
+        value: section.__resolveType,
+      }];
+      const id = getSectionID(
+        newResolveChain as FieldResolver[],
+      );
+      const partialId = `${id}-${renderSalt}`;
+
+      page = {
+        props: {
+          url: err.resp.headers.get("location"),
+        },
+        Component: (props: Props) => {
+          return (
+            <Partial name={partialId}>
+              <div>
+                <script
+                  type="text/javascript"
+                  defer
+                  src={scriptAsDataURI(snippet, props.url)}
+                />
+              </div>
+            </Partial>
+          );
+        },
+      };
+    }
+  }
 
   return ctx.state.resolve(
     { page, __resolveType: "render" },

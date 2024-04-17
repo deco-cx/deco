@@ -63,6 +63,7 @@ export interface Site {
 
 export interface SiteInfo {
   siteId?: number;
+  name?: string;
   namespace: string;
 }
 
@@ -76,6 +77,7 @@ export type DecoSiteState<T = unknown> = {
 export interface Flag {
   name: string;
   value: boolean;
+  isSegment?: boolean;
 }
 
 export interface StatefulContext<T> {

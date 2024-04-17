@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import { ImportMap } from "deco/engine/importmap/builder.ts";
 import blocks from "../blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import { SectionModule } from "../blocks/section.ts";
@@ -12,6 +11,7 @@ import {
   ResolverMap,
 } from "../engine/core/resolver.ts";
 import { mapObjKeys, PromiseOrValue } from "../engine/core/utils.ts";
+import { ImportMap } from "../engine/importmap/builder.ts";
 import {
   ResolverMiddleware,
   ResolverMiddlewareContext,
@@ -115,7 +115,7 @@ export interface AppRuntime<
   importMap: ImportMap;
 }
 
-type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
+export type BlockKey = keyof Omit<AppManifest, "baseUrl" | "name">;
 
 export const mergeManifests = (
   current: AppManifest,

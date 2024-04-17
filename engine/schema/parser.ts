@@ -1,4 +1,4 @@
-import { createCache } from "https://deno.land/x/deno_cache@0.6.3/mod.ts";
+import { createCache } from "jsr:@deno/cache-dir@0.8.0";
 import { assignComments } from "./comments.ts";
 import { parse, ParsedSource } from "./deps.ts";
 
@@ -84,21 +84,35 @@ const initLoader = (): typeof load => {
   return loader = load;
 };
 
+export const updateLoadCache = (path: string, content: string) => {
+  if (!loadCache[path]) {
+    return;
+  }
+  const prev = loadCache[path];
+  loadCache[path] = parseContent(content).catch((err) => {
+    console.log("error parsing content", err, path);
+    return prev;
+  });
+};
+
 /**
  * Parses the given path using the default loader. Caches the result in memory.
  */
 export const parsePath = (path: string) => {
   const mLoader = initLoader();
-  return loadCache[path] ??= mLoader(path).then((content) => {
+  return loadCache[path] ??= mLoader(path).then(async (content) => {
     if (!content) {
       throw new Error(`Path not found ${path}`);
     }
     try {
-      return parseContent(content);
+      return await parseContent(content);
     } catch (err) {
       console.log(err, path);
       throw err;
     }
+  }).catch((err) => {
+    delete loadCache[path];
+    throw err;
   });
 };
 

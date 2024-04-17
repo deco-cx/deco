@@ -95,11 +95,13 @@ registerInstrumentations({
   ],
 });
 
-// Monkeypatching to get past FetchInstrumentation's dependence on sdk-trace-web, which has runtime dependencies on some browser-only constructs. See https://github.com/open-telemetry/opentelemetry-js/issues/3413#issuecomment-1496834689 for more details
-// Specifically for this line - https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-sdk-trace-web/src/utils.ts#L310
-// @ts-ignore: monkey patching location
-globalThis.location = {};
-
+try {
+  // Monkeypatching to get past FetchInstrumentation's dependence on sdk-trace-web, which has runtime dependencies on some browser-only constructs. See https://github.com/open-telemetry/opentelemetry-js/issues/3413#issuecomment-1496834689 for more details
+  // Specifically for this line - https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/opentelemetry-sdk-trace-web/src/utils.ts#L310
+  // @ts-ignore: monkey patching location
+  globalThis.location = {};
+  // deno-lint-ignore no-empty
+} catch {}
 const parseSamplingOptions = (): SamplingOptions | undefined => {
   const encodedOpts = Deno.env.get("OTEL_SAMPLING_CONFIG");
   if (!encodedOpts) {

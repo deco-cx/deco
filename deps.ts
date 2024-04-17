@@ -1,6 +1,6 @@
-export { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
 export { Head, IS_BROWSER } from "$fresh/runtime.ts";
 export type {
+  FreshContext,
   Handler as FreshHandler,
   HandlerContext,
   Handlers,
@@ -49,6 +49,7 @@ export type {
   Span,
   Tracer,
 } from "npm:@opentelemetry/api@1.6.0";
+export { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
 
 export {
   context,

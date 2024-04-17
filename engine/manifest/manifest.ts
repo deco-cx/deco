@@ -32,6 +32,7 @@ import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
 import { getRelease, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
+import { initializeState } from "deco/runtime/utils.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
@@ -67,12 +68,21 @@ const newFakeContext = () => {
   return {
     request: new Request("http://localhost:8000"),
     context: {
-      state: {},
+      url: new URL("http://localhost:8000"),
+      basePath: "/",
+      route: "/[...catchall]",
+      pattern: "/[...catchall]",
+      isPartial: false,
+      config: {} as FreshContext["context"]["config"],
+      state: initializeState(),
       params: {},
+      destination: "route",
+      data: {},
+      next: () => Promise.resolve(new Response(null)),
       render: () => new Response(null),
       renderNotFound: () => new Response(null),
       remoteAddr: { hostname: "", port: 0, transport: "tcp" as const },
-    },
+    } as FreshContext["context"],
   };
 };
 export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
@@ -190,6 +200,7 @@ const installAppsForResolver = async (
         },
       });
     }));
+
     // if there's no app installed so we should be ok to stop the loop.
     const installedApps = _installedApps.filter(Boolean);
     if (installedApps.length === 0) {
@@ -245,14 +256,14 @@ const installAppsForResolver = async (
     }
 
     // after an installation new resolvers become available so now we can check if we can resolve them.
-    const newAvailableAppsToInstall: Resolvable[] = [];
+    const newAvailableAppsToInstall: Set<Resolvable> = new Set<Resolvable>();
     for (const [key, app] of Object.entries(unresolved)) {
       if (key in currentResolver.getResolvers()) {
-        newAvailableAppsToInstall.push(app);
+        newAvailableAppsToInstall.add(app);
         delete unresolved[key];
       }
     }
-    await installInstallableApps(newAvailableAppsToInstall);
+    await installInstallableApps([...newAvailableAppsToInstall]);
   } while (true);
   // warn about unresolved references.
   if (Object.keys(unresolved).length > 0) {
@@ -279,7 +290,7 @@ export const fulfillContext = async <
   T extends AppManifest,
 >(
   ctx: DecoContext,
-  m: T,
+  initialManifest: T,
   currentImportMap?: ImportMap,
   release: Release | undefined = undefined,
 ): Promise<DecoContext> => {
@@ -291,15 +302,11 @@ export const fulfillContext = async <
       );
     }
     currentSite = randomSiteName();
-    release ??= newFsProvider(DECO_FILE_NAME, m.name);
+    release ??= newFsProvider(DECO_FILE_NAME, initialManifest.name);
     ctx.play = true;
   }
   ctx.namespace ??= `deco-sites/${currentSite}`;
   ctx.site = currentSite!;
-  const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
-    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
-    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
-  );
   const provider = release ?? await getRelease(
     ctx.namespace!,
     ctx.site,
@@ -312,17 +319,35 @@ export const fulfillContext = async <
 
   ctx.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
-    resolvers: { ...resolvers, ...defaultResolvers },
+    resolvers: defaultResolvers,
     release: provider,
-    danglingRecover: recovers.length > 0
-      ? buildDanglingRecover(recovers)
-      : undefined,
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
+    const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
+      (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
+      [
+        {
+          baseUrl: initialManifest.baseUrl,
+          name: initialManifest.name,
+          apps: initialManifest.apps,
+        },
+        {},
+        [],
+      ] as [
+        AppManifest,
+        ResolverMap<FreshContext>,
+        DanglingRecover[],
+      ],
+    );
     const { resolver: currentResolver, apps: allAppsMap, manifest, importMap } =
       await installAppsForResolver(
-        resolver,
+        resolver.with({
+          resolvers,
+          danglingRecover: recovers.length > 0
+            ? buildDanglingRecover(recovers)
+            : undefined,
+        }),
         newManifest,
         currentImportMap,
       );
@@ -371,12 +396,14 @@ export const fulfillContext = async <
   let appsInstallationMutex = deferred<void>();
   provider.onChange(() => {
     // limiter to not allow multiple installations in parallel
-    Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(() => {
-      appsInstallationMutex = deferred();
-      // installApps should never block next install as the first install is the only that really matters.
-      // so we should resolve to let next install happen immediately
-      installApps().finally(appsInstallationMutex.resolve);
-    });
+    return Promise.all([appsInstallationMutex, firstInstallAppsPromise]).then(
+      () => {
+        appsInstallationMutex = deferred();
+        // installApps should never block next install as the first install is the only that really matters.
+        // so we should resolve to let next install happen immediately
+        return installApps().finally(appsInstallationMutex.resolve);
+      },
+    );
   });
   provider.state().then(() => {
     installApps().then(firstInstallAppsPromise.resolve).catch(
@@ -410,11 +437,13 @@ export const newContext = <
   release: Release | undefined = undefined,
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
+  namespace: string | undefined = undefined,
 ): Promise<DecoContext> => {
   const currentContext = Context.active();
   const ctx: DecoContext = {
     ...currentContext,
     site: site ?? currentContext.site,
+    namespace: namespace ?? currentContext.namespace,
     instance: {
       id: instanceId ?? randId(),
       startedAt: new Date(),

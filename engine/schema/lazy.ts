@@ -127,7 +127,7 @@ export interface LazySchema {
   /**
    * The revision of the schema. It is used to invalidate the cache.
    */
-  revision: string;
+  revision: Promise<string>;
 }
 const ctxSchema = new WeakMap();
 
@@ -164,7 +164,7 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
       });
     },
     get revision() {
-      return latestRevision;
+      return ctx.release!.revision();
     },
   };
   ctxSchema.set(ctx, ls);
