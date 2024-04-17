@@ -39,8 +39,8 @@ const cacheOptions = {
   sizeCalculation: (value: Uint8Array) => {
     return uint8ArrayToNum(value); // return the length of the array
   },
-  dispose: (_value: Uint8Array, key: string) => {
-    Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
+  dispose: async (_value: Uint8Array, key: string) => {
+    await Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
       logger.warning(`Failed to delete ${key}:`, err)
     );
   },
