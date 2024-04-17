@@ -133,8 +133,11 @@ export const contextFromVolume = async <
     throw new Error(`${siteFromVolUrl} does not match ${currentContext.site}`);
   }
   const isDD = currentContext.platform === "deno_deploy";
-  isDD &&
-    volUrl.searchParams.set("path", DECOFILE_PATH); // watch only decofile changes
+  let pathToMount = Deno.env.get("VFS_MOUNT_GLOB");
+  if (isDD) {
+    pathToMount ??= DECOFILE_PATH;
+  }
+  pathToMount && volUrl.searchParams.set("path", DECOFILE_PATH);
 
   const { manifest: initialManifest } = await currentContext.runtime!;
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
