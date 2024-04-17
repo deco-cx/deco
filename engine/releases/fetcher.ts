@@ -1,3 +1,4 @@
+import { fromFileUrl } from "std/path/mod.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
 import { newFsProviderFromPath } from "./fs.ts";
@@ -147,7 +148,7 @@ async function releaseLoader(
   try {
     switch (url.protocol) {
       case "file:": {
-        return newFsProviderFromPath(url.pathname);
+        return newFsProviderFromPath(fromFileUrl(url));
       }
       case "sses:":
       case "sse:": {

@@ -14,11 +14,12 @@ import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
 import { FileSystem, mount } from "../scripts/mount.ts";
 import { stringToHexSha256 } from "../utils/encoding.ts";
+import { fileSeparatorToSlash } from "../utils/filesystem.ts";
 import { VFS } from "./fs/mod.ts";
 
 let initializePromise: Promise<void> | null = null;
 
-const DECOFILE_PATH = `/${DECOFILE_REL_PATH}`;
+const DECOFILE_PATH = `/${fileSeparatorToSlash(DECOFILE_REL_PATH)}`;
 export const contentToDataUri = (
   modData: string,
   mimeType = "text/tsx",
