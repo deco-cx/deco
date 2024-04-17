@@ -11,9 +11,13 @@ import {
 
 const releaseCache: Record<string, Promise<Release | undefined>> = {};
 
+export interface HttpContent {
+  text: string;
+  etag?: string;
+}
 const fetchFromHttp = async (
   url: string | URL,
-): Promise<string | undefined> => {
+): Promise<HttpContent | undefined> => {
   const response = await fetch(String(url), { redirect: "follow" })
     .catch(
       (err) => {
@@ -34,7 +38,9 @@ const fetchFromHttp = async (
     );
     return undefined;
   }
-  return content;
+  return content
+    ? { text: content, etag: response.headers.get("etag")?.replaceAll(`"`, "") }
+    : undefined;
 };
 
 type SubscribeParameters = Parameters<RealtimeReleaseProvider["subscribe"]>;
@@ -48,8 +54,8 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
   esURL.searchParams.set("stream", "false");
 
   const fetchLastState = () => {
-    return fetchFromHttp(esURL).then((content) => {
-      if (!content) {
+    return fetchFromHttp(esURL).then((httpContent) => {
+      if (!httpContent) {
         return {
           data: null,
           error: null,
@@ -57,9 +63,9 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
       }
       return {
         data: {
-          state: JSON.parse(content),
+          state: JSON.parse(httpContent.text),
           archived: {},
-          revision: ulid(),
+          revision: httpContent.etag ?? ulid(),
         },
         error: null,
       };
@@ -109,18 +115,19 @@ const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
     },
   };
 };
-export const fromString = (
-  state: string,
+export const fromHttpContent = (
+  state: HttpContent,
 ): Release => {
-  return fromJSON(JSON.parse(state));
+  return fromJSON(JSON.parse(state.text), state.etag);
 };
 
 export const fromJSON = (
   parsed: Record<string, unknown>,
+  revision?: string,
 ): Release => {
   const cbs: Array<OnChangeCallback> = [];
   let state = parsed;
-  let currentRevision: string = crypto.randomUUID();
+  let currentRevision: string = revision ?? crypto.randomUUID();
   return {
     state: () => Promise.resolve(state),
     archived: () => Promise.resolve({}),
@@ -164,7 +171,7 @@ async function releaseLoader(
       case "https:": {
         assertAllowedAuthority();
         const content = await fetchFromHttp(url);
-        return content ? fromString(content) : undefined;
+        return content ? fromHttpContent(content) : undefined;
       }
       default:
         return undefined;
