@@ -11,7 +11,7 @@ import { decodeCookie, setCookie } from "../../../utils/cookies.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
 import { tryOrDefault } from "../../../utils/object.ts";
-import { initializeState } from "deco/runtime/utils.ts";
+import { initializeState } from "../../utils.ts";
 
 export const DECO_SEGMENT = "deco_segment";
 
