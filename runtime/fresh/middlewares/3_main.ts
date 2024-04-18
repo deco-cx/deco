@@ -1,6 +1,5 @@
 import { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
-import { RequestState } from "../../../blocks/utils.tsx";
 import { Context } from "../../../deco.ts";
 import { getCookies, SpanStatusCode } from "../../../deps.ts";
 import { Resolvable } from "../../../engine/core/resolver.ts";
@@ -9,9 +8,10 @@ import { startObserve } from "../../../observability/http.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { decodeCookie, setCookie } from "../../../utils/cookies.ts";
-import { allowCorsFor, defaultHeaders } from "../../../utils/http.ts";
+import { allowCorsFor } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
 import { tryOrDefault } from "../../../utils/object.ts";
+import { initializeState } from "../../utils.ts";
 
 export const DECO_SEGMENT = "deco_segment";
 
@@ -117,22 +117,10 @@ export const handler = [
     if (req.method === "HEAD" && isMonitoringRobots(req)) {
       return new Response(null, { status: 200 });
     }
-    const context = Context.active();
-    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
-    ctx.state.site = {
-      id: context.siteId,
-      name: context.site,
-    };
 
-    const response = {
-      headers: new Headers(defaultHeaders),
-      status: undefined,
-    };
-    const state: Partial<RequestState> = ctx.state?.$live?.state ?? {};
-    const stateBag = new WeakMap();
-    state.response = response;
-    state.bag = stateBag;
-    state.flags = [];
+    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
+
+    const state = initializeState(ctx.state?.$live?.state);
     Object.assign(ctx.state, state);
     ctx.state.global = { ...(ctx.state.global ?? {}), ...state }; // compatibility mode with functions.
 
@@ -159,11 +147,13 @@ export const handler = [
         newHeaders.set(name, value);
       });
     }
-    response.headers.forEach((value, key) => newHeaders.append(key, value));
+    state.response.headers.forEach((value, key) =>
+      newHeaders.append(key, value)
+    );
     const printTimings = ctx?.state?.t?.printTimings;
     printTimings && newHeaders.set("Server-Timing", printTimings());
 
-    const responseStatus = response.status ?? initialResponse.status;
+    const responseStatus = state.response.status ?? initialResponse.status;
 
     if (
       url.pathname.startsWith("/_frsh/") &&

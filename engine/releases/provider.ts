@@ -1,6 +1,6 @@
 import * as colors from "std/fmt/colors.ts";
 import { exists } from "std/fs/mod.ts";
-import { join } from "std/path/mod.ts";
+import { join, toFileUrl } from "std/path/mod.ts";
 import { Resolvable } from "../../engine/core/resolver.ts";
 import { PromiseOrValue } from "../../engine/core/utils.ts";
 import { fromPagesTable } from "../../engine/releases/pages.ts";
@@ -103,7 +103,7 @@ export const compose = (...providers: Release[]): Release => {
 
 const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
 
-export const DECOFILE_REL_PATH = ".deco/decofile.json";
+export const DECOFILE_REL_PATH = join(".deco", "decofile.json");
 const DECOFILE_PATH_DEFAULT = join(Deno.cwd(), DECOFILE_REL_PATH);
 const decofileExistsPromise = exists(DECOFILE_PATH_DEFAULT, {
   isFile: true,
@@ -131,7 +131,7 @@ export const getRelease = async (
   }
 
   const endpoint = await decofileExistsPromise
-    ? `file://${DECOFILE_PATH_DEFAULT}`
+    ? `${toFileUrl(DECOFILE_PATH_DEFAULT)}`
     : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {
     console.info(

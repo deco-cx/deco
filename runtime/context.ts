@@ -1,6 +1,8 @@
 import { build, initialize } from "https://deno.land/x/esbuild@v0.20.2/wasm.js";
+import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
-import { dirname, join } from "std/path/mod.ts";
+import { dirname, join, toFileUrl } from "std/path/mod.ts";
+import { dirname as posixDirname, join as posixJoin } from "std/path/posix.ts";
 import { BlockKey } from "../blocks/app.ts";
 import { buildImportMap } from "../blocks/utils.tsx";
 import { Context, DecoContext } from "../deco.ts";
@@ -12,11 +14,12 @@ import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
 import { FileSystem, mount } from "../scripts/mount.ts";
 import { stringToHexSha256 } from "../utils/encoding.ts";
+import { fileSeparatorToSlash } from "../utils/filesystem.ts";
 import { VFS } from "./fs/mod.ts";
 
 let initializePromise: Promise<void> | null = null;
 
-const DECOFILE_PATH = `/${DECOFILE_REL_PATH}`;
+const DECOFILE_PATH = `/${fileSeparatorToSlash(DECOFILE_REL_PATH)}`;
 export const contentToDataUri = (
   modData: string,
   mimeType = "text/tsx",
@@ -52,10 +55,25 @@ async function bundle(
         setup(build) {
           build.onResolve({ filter: /^\.\.?.*$/ }, (args) => {
             const realPath = args.importer === "<stdin>"
-              ? join("/", args.path)
-              : join("/", dirname(args.importer), args.path);
+              ? posixJoin("/", args.path)
+              : posixJoin("/", posixDirname(args.importer), args.path);
+            if (realPath.startsWith("/islands/")) {
+              return {
+                path: import.meta.resolve(
+                  toFileUrl(
+                    posixJoin(
+                      Deno.cwd(),
+                      posixDirname(args.importer),
+                      args.path,
+                    ),
+                  ).href,
+                ),
+                external: true,
+              };
+            }
+
             return {
-              path: realPath,
+              path: realPath.startsWith(".") ? realPath.slice(1) : realPath,
               namespace: "code-inline",
             };
           }),
@@ -114,15 +132,20 @@ export const contextFromVolume = async <
   if (siteFromVolUrl !== currentContext.site) {
     throw new Error(`${siteFromVolUrl} does not match ${currentContext.site}`);
   }
-  const isDD = currentContext.platform === "deno_deploy";
-  isDD &&
-    volUrl.searchParams.set("path", DECOFILE_PATH); // watch only decofile changes
+  const shouldMountDecofileOnly = currentContext.platform === "deno_deploy" ||
+    Deno.env.get("VFS_WATCH_DECOFILE_ONLY") === "true";
+  if (shouldMountDecofileOnly) {
+    volUrl.searchParams.set("path", "/.deco/**/*.json");
+  }
 
   const { manifest: initialManifest } = await currentContext.runtime!;
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
   const inMemoryFS: FileSystem = {};
   const fs = new VFS(inMemoryFS);
-  const rebuild = async () => {
+  let nextBuild = Promise.withResolvers<void>();
+  nextBuild.resolve();
+  const rebuild = debounce(async (onEnd?: (manifest: AppManifest) => void) => {
+    nextBuild = Promise.withResolvers<void>();
     try {
       const start = performance.now();
       const contents = await bundle(inMemoryFS);
@@ -134,12 +157,14 @@ export const contextFromVolume = async <
       const module = await import(
         `data:text/tsx,${encodeURIComponent(contents)}#manifest.gen.ts`
       );
-      return module.default;
+      onEnd?.(module.default);
     } catch (err) {
       console.log("ignoring dynamic import error", err);
+    } finally {
+      nextBuild.resolve();
     }
     return undefined;
-  };
+  }, 200);
 
   const isDecofilePath = (path: string) => DECOFILE_PATH === path;
   const init = Promise.withResolvers<
@@ -150,11 +175,12 @@ export const contextFromVolume = async <
     .withResolvers<TManifest>();
 
   manifestResolvers.promise.then((manifest) => {
+    const mergedManifest = mergeManifests({
+      name: initialManifest.name,
+      baseUrl: initialManifest.baseUrl,
+    }, manifest) as TManifest;
     init.resolve({
-      manifest: mergeManifests({
-        name: initialManifest.name,
-        baseUrl: initialManifest.baseUrl,
-      }, manifest) as TManifest,
+      manifest: mergedManifest,
       release,
       importMap: { imports: {} },
     });
@@ -202,12 +228,13 @@ export const contextFromVolume = async <
           );
       }
       if (hasCodeChange) {
-        await rebuild().then((m) => {
+        rebuild((m) => {
           if (!m) {
             return Promise.resolve();
           }
           return updateManifest(m);
-        }).catch((_err) => {});
+        });
+        await nextBuild.promise;
       } else if (hasDecofileChange) {
         updateRelease();
       }
@@ -226,7 +253,7 @@ export const contextFromVolume = async <
     currentDispose?.();
     mountPoint.unmount();
   };
-  if (isDD) {
+  if (shouldMountDecofileOnly) {
     init.resolve({
       manifest: initialManifest as TManifest,
       release,
@@ -241,7 +268,7 @@ export const contextFromVolume = async <
       undefined,
       currentContext.site,
     );
-    if (!isDD) {
+    if (!shouldMountDecofileOnly) {
       ctx.fs = fs;
     }
     ctx.namespace = currentContext.namespace;

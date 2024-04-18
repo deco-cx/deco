@@ -42,16 +42,22 @@ export async function* readFromStream<T>(
 
   while (true) {
     const { value, done } = await reader.read();
+
     if (done) {
       break;
     }
 
-    const [, data] = value.split("\n");
-    try {
-      yield JSON.parse(decodeURIComponent(data.replace("data:", "")));
-    } catch (_err) {
-      console.log("error parsing data", _err, data);
-      continue;
+    for (const data of value.split("\n")) {
+      if (!data.startsWith("data:")) {
+        continue;
+      }
+
+      try {
+        yield JSON.parse(decodeURIComponent(data.replace("data:", "")));
+      } catch (_err) {
+        console.log("error parsing data", _err, data);
+        continue;
+      }
     }
   }
 }
