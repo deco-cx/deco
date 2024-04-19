@@ -122,7 +122,7 @@ function createFileSystemCache(): CacheStorage {
 
     const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
     const ttl = expirationTimestamp - Date.now(); // Calculate the time to live (ttl) by subtracting the current timestamp from the expiration timestamp
-    
+
     fileCache.set(key, numToUint8Array(responseArray.length), {
       ttl: ttl, // Set the ttl of the file added
     }); // Add to cache, which may trigger disposal of old item

@@ -147,7 +147,11 @@ export const withSection = <TProps,>(
   const renderSaltFromState = ctx.context?.state?.renderSalt;
   const partialMode = ctx.context.state.partialMode ||
     "replace";
-
+  const metadata = {
+    resolveChain: ctx.resolveChain,
+    component: ctx.resolveChain.findLast((chain) => chain.type === "resolver")
+      ?.value?.toString()!,
+  };
   return {
     props,
     Component: (props: TProps) => {
@@ -223,5 +227,6 @@ export const withSection = <TProps,>(
         </SectionContext.Provider>
       );
     },
+    metadata,
   };
 };
