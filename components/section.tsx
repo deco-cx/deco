@@ -150,7 +150,7 @@ export const withSection = <TProps,>(
   const metadata = {
     resolveChain: ctx.resolveChain,
     component: ctx.resolveChain.findLast((chain) => chain.type === "resolver")
-      ?.value?.toString(),
+      ?.value?.toString()!,
   };
   return {
     props,
