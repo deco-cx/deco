@@ -107,7 +107,7 @@ export const handler = async (req: Request) => {
   const lazySchema = lazySchemaFor(context);
   const res = await waitForChanges(
     url.searchParams.get("waitForChanges") === "true"
-      ? await etagFor(lazySchema)
+      ? req.headers.get("if-none-match") ?? await etagFor(lazySchema)
       : "",
     ctrl.signal,
   );
