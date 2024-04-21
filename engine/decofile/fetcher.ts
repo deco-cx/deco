@@ -2,6 +2,7 @@ import { fromFileUrl } from "std/path/mod.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
 import { newFsProviderFromPath } from "./fs.ts";
+import { newFsFolderProviderFromPath } from "./fsFolder.ts";
 import { DecofileProvider, OnChangeCallback } from "./provider.ts";
 import {
   newRealtime,
@@ -152,7 +153,9 @@ async function decofileLoader(
   try {
     switch (url.protocol) {
       case "folder:": {
-        return newFsProviderFromPath(url.toString().replace("folder://", ""));
+        return newFsFolderProviderFromPath(
+          url.toString().replace("folder://", ""),
+        );
       }
       case "file:": {
         return newFsProviderFromPath(fromFileUrl(url));
