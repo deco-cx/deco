@@ -48,6 +48,7 @@ export const newFsFolderProviderFromPath = (
       let filesChangedBatch: string[] = [];
       const updateState = debounce(async () => {
         using _ = await limiter.acquire();
+
         // for each filesChangedBatch read them all
         // and update the state
         // make filesChangedBatch empty

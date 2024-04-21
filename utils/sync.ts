@@ -14,7 +14,7 @@ export class Mutex {
   acquire(): Promise<Disposable> {
     const disposable = {
       [Symbol.dispose]: () => {
-        return this.release.bind(this);
+        return this.release();
       },
     };
     if (!this.locked) {
