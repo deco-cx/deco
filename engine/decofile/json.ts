@@ -1,5 +1,5 @@
-export const getReleaseJSONFromRelease = (
-  releaseJson: Record<string, unknown>,
+export const getDecofileJSONFromDecofile = (
+  decofile: Record<string, unknown>,
   appName?: string,
 ) => ({
   decohub: {
@@ -39,5 +39,5 @@ export const getReleaseJSONFromRelease = (
       },
     }
     : {},
-  ...releaseJson,
+  ...decofile,
 });

@@ -2,9 +2,9 @@ import { debounce } from "std/async/debounce.ts";
 import { join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
-import { getReleaseJSONFromRelease } from "./json.ts";
-import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
-import { CurrResolvables } from "./realtime.ts";
+import { getDecofileJSONFromDecofile } from "./json.ts";
+import { DecofileProvider, OnChangeCallback, ReadOptions } from "./provider.ts";
+import { VersionedDecofile } from "./realtime.ts";
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
@@ -16,23 +16,25 @@ export const DECO_FILE_NAME = ".decofile.json";
 export const newFsProviderFromPath = (
   fullPath: string,
   appName?: string,
-): Release => {
+): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
   const copyDecoState = !appName ? Promise.resolve({}) : copyFrom(appName);
-  let currResolvables: Promise<CurrResolvables> = exists(fullPath).then(
+  let decofile: Promise<VersionedDecofile> = exists(fullPath, {
+    isFile: true,
+    isReadable: true,
+  }).then(
     async (exists) => {
       if (!exists) {
-        const data = getReleaseJSONFromRelease(await copyDecoState, appName);
+        const data = getDecofileJSONFromDecofile(await copyDecoState, appName);
         return Deno.writeTextFile(
           fullPath,
           stringifyForWrite(data),
         ).then(() => {
-          return { state: data, archived: {}, revision: `${Date.now()}` };
+          return { state: data, revision: `${Date.now()}` };
         });
       }
       return {
         state: await Deno.readTextFile(fullPath).then(JSON.parse),
-        archived: {},
         revision: `${Date.now()}`,
       };
     },
@@ -46,9 +48,8 @@ export const newFsProviderFromPath = (
         if (state === null) {
           return;
         }
-        currResolvables = Promise.resolve({
+        decofile = Promise.resolve({
           state,
-          archived: {},
           revision: `${Date.now()}`,
         });
         for (const cb of onChangeCbs) {
@@ -68,15 +69,14 @@ export const newFsProviderFromPath = (
       return Deno.readTextFile(fullPath).then(JSON.parse);
     }
 
-    return await currResolvables.then((r) => r.state);
+    return await decofile.then((r) => r.state);
   };
 
   return {
     state,
     set: (state, rev) => {
-      currResolvables = Promise.resolve({
+      decofile = Promise.resolve({
         state,
-        archived: {},
         revision: rev ?? `${Date.now()}`,
       });
       for (const cb of onChangeCbs) {
@@ -84,17 +84,16 @@ export const newFsProviderFromPath = (
       }
       return Promise.resolve();
     },
-    archived: () => currResolvables.then((r) => r.archived),
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
     },
-    revision: () => currResolvables.then((r) => r.revision),
+    revision: () => decofile.then((r) => r.revision),
   };
 };
 export const newFsProvider = (
   path = DECO_FILE_NAME,
   appName?: string,
-): Release => {
+): DecofileProvider => {
   const fullPath = join(Deno.cwd(), path);
   return newFsProviderFromPath(fullPath, appName);
 };

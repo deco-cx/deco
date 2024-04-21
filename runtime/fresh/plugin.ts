@@ -8,7 +8,7 @@ import {
   injectLiveStateForPath,
 } from "./middlewares/2_stateBuilder.ts";
 
-import { Release } from "../../engine/releases/provider.ts";
+import { DecofileProvider } from "../../engine/decofile/provider.ts";
 import { AppManifest, SiteInfo } from "../../mod.ts";
 import { contextProvider } from "./middlewares/0_contextProvider.ts";
 import { alienRelease } from "./middlewares/1_alienRelease.ts";
@@ -36,7 +36,7 @@ export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   importMap?: ImportMap;
   site?: SiteInfo;
   useLocalStorageOnly?: boolean;
-  release?: Release;
+  release?: DecofileProvider;
 }
 
 export type Options<TManifest extends AppManifest = AppManifest> =

@@ -2,7 +2,7 @@
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
 import { Context, DecoContext } from "../../../deco.ts";
 import { MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
-import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
+import { fromEndpoint } from "../../../engine/decofile/fetcher.ts";
 import { newContext } from "../../../mod.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
 import { contextFromVolume } from "../../context.ts";

@@ -15,7 +15,7 @@ import {
   BlobReader,
   ZipReader,
 } from "https://deno.land/x/zipjs@v2.7.30/index.js";
-import { getReleaseJSONFromRelease } from "../engine/releases/json.ts";
+import { getDecofileJSONFromDecofile } from "../engine/decofile/json.ts";
 import { init as initApp } from "./apps/init.ts";
 
 interface Config {
@@ -121,7 +121,7 @@ const initProject = async (name: string, config: Config) => {
   await Deno.writeTextFile(
     join(root, ".decofile.json"),
     JSON.stringify(
-      getReleaseJSONFromRelease(releaseJson, config.appName),
+      getDecofileJSONFromDecofile(releaseJson, config.appName),
       null,
       2,
     ),

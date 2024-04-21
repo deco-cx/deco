@@ -3,24 +3,22 @@ import { supabase } from "../../deps.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { Resolvable } from "../core/resolver.ts";
-import { OnChangeCallback, ReadOptions, Release } from "./provider.ts";
+import { DecofileProvider, OnChangeCallback, ReadOptions } from "./provider.ts";
 
-export interface RealtimeReleaseProvider {
+export interface RealtimeDecofileProvider {
   /**
-   * @returns the current state of the release.
+   * @returns the current state of the decofile.
    */
-  get(
-    includeArchived: boolean,
-  ): PromiseLike<{ data: CurrResolvables | null; error: any }>;
+  get(): PromiseLike<{ data: VersionedDecofile | null; error: any }>;
   unsubscribe?: () => void;
   /**
-   * When called, receives the `onChange` function that will be called when the release has changed,
+   * When called, receives the `onChange` function that will be called when the decofile has changed,
    * and the `cb` function that will be called when the subscription state change. The cb function can be used to determine if it should fallsback to background updates or not.
    * @param onChange
    * @param cb
    */
   subscribe(
-    onChange: (arg: CurrResolvables) => void,
+    onChange: (arg: VersionedDecofile) => void,
     cb: (
       status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
       err?: Error,
@@ -34,22 +32,21 @@ const sleepBetweenRetriesMS = 100;
 const refetchIntervalMSDeploy = 30_000;
 const REFETCH_JITTER_MS = 2_000;
 
-export interface CurrResolvables {
+export interface VersionedDecofile {
   state: Record<string, Resolvable<any>>;
-  archived: Record<string, Resolvable<any>>;
   revision: string;
 }
 
 /**
- * Receives a provider backed by realtime subscription and creates a Releases instance.
+ * Receives a provider backed by realtime subscription and creates a DecofileProvider instance.
  * @param provider the realtime provider.
  * @param backgroundUpdate if background updates should be performed.
  * @returns
  */
 export const newRealtime = (
-  provider: RealtimeReleaseProvider,
+  provider: RealtimeDecofileProvider,
   backgroundUpdate?: boolean,
-): Release => {
+): DecofileProvider => {
   // callbacks
   const onChangeCbs: OnChangeCallback[] = [];
   const notify = () => {
@@ -65,8 +62,8 @@ export const newRealtime = (
   const tryResolveFirstLoad = async (
     resolve: (
       value:
-        | CurrResolvables
-        | PromiseLike<CurrResolvables>,
+        | VersionedDecofile
+        | PromiseLike<VersionedDecofile>,
     ) => void,
     reject: (reason: unknown) => void,
   ) => {
@@ -74,7 +71,7 @@ export const newRealtime = (
       reject(lastError); // TODO @author Marcos V. Candeia should we panic? and exit? Deno.exit(1)
       return;
     }
-    const { data, error } = await provider.get(false);
+    const { data, error } = await provider.get();
     if (error !== null || data === null) {
       remainingRetries--;
       lastError = error;
@@ -85,8 +82,8 @@ export const newRealtime = (
     resolve(data);
   };
 
-  let currResolvables: Promise<CurrResolvables> = new Promise<
-    CurrResolvables
+  let currResolvables: Promise<VersionedDecofile> = new Promise<
+    VersionedDecofile
   >(tryResolveFirstLoad);
 
   let singleFlight = false;
@@ -98,7 +95,7 @@ export const newRealtime = (
     }
     try {
       singleFlight = true;
-      const { data, error } = await provider.get(force === true); // if it is forced so we should include archived
+      const { data, error } = await provider.get();
       if (error !== null) {
         const errMsg = `update internal state error ${error}`;
         logger.error(errMsg);
@@ -106,7 +103,7 @@ export const newRealtime = (
         return;
       }
       const resolvables = data ??
-        { state: {}, archived: {}, revision: ulid() };
+        { state: {}, revision: ulid() };
 
       const currentRevision = currResolvables.then((r) => r.revision).catch(
         () => "unknown",
@@ -137,7 +134,7 @@ export const newRealtime = (
       }, (_status, err) => {
         if (err) {
           const errMsg =
-            `error when trying to subscribe to release changes falling back to background updates, ${err}`;
+            `error when trying to subscribe to decofile changes falling back to background updates, ${err}`;
           logger.error(errMsg);
           console.error(errMsg);
 
@@ -153,16 +150,6 @@ export const newRealtime = (
     currResolvables.then(trySubscribeOrFetch);
   }
   return {
-    /**
-     * @returns Return the archived pages.
-     */
-    archived: async (opts?: ReadOptions) => {
-      if (opts?.forceFresh) {
-        await updateInternalState(true);
-      }
-      const resolvables = await currResolvables;
-      return resolvables.archived;
-    },
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
     },
@@ -172,7 +159,7 @@ export const newRealtime = (
     revision: () =>
       currResolvables.then((r) => r.revision).catch(() => "unknown"),
     /**
-     * @returns The current state of the release.
+     * @returns The current state of the decofile.
      */
     state: async (opts?: ReadOptions) => {
       if (opts?.forceFresh) {

@@ -28,8 +28,8 @@ import {
 import { PromiseOrValue } from "../core/utils.ts";
 import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
-import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
-import { getRelease, Release } from "../releases/provider.ts";
+import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
+import { DecofileProvider, getProvider } from "../decofile/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
 import { initializeState } from "deco/runtime/utils.ts";
@@ -129,7 +129,7 @@ export const initContext = async <
 >(
   m: T,
   currentImportMap?: ImportMap,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
 ): Promise<DecoContext> => {
   await fulfillContext(context, m, currentImportMap, release);
 
@@ -292,7 +292,7 @@ export const fulfillContext = async <
   ctx: DecoContext,
   initialManifest: T,
   currentImportMap?: ImportMap,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
 ): Promise<DecoContext> => {
   let currentSite = ctx.site ?? siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
@@ -307,7 +307,7 @@ export const fulfillContext = async <
   }
   ctx.namespace ??= `deco-sites/${currentSite}`;
   ctx.site = currentSite!;
-  const provider = release ?? await getRelease(
+  const provider = release ?? await getProvider(
     ctx.namespace!,
     ctx.site,
     ctx.siteId,
@@ -434,7 +434,7 @@ export const newContext = <
 >(
   m: T,
   currentImportMap?: ImportMap,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
   namespace: string | undefined = undefined,
@@ -456,7 +456,7 @@ export const newContext = <
 export const $live = async <T extends AppManifest>(
   m: T,
   siteInfo?: SiteInfo,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
 ): Promise<T> => {
   context.siteId = siteInfo?.siteId ?? -1;
   context.namespace = siteInfo?.namespace;
@@ -472,7 +472,7 @@ export const $live = async <T extends AppManifest>(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
-  const provider = release ?? await getRelease(
+  const provider = release ?? await getProvider(
     context.namespace!,
     context.site,
     context.siteId,

@@ -6,20 +6,18 @@ import { dirname as posixDirname, join as posixJoin } from "std/path/posix.ts";
 import { BlockKey } from "../blocks/app.ts";
 import { buildImportMap } from "../blocks/utils.tsx";
 import { Context, DecoContext } from "../deco.ts";
-import { fromJSON } from "../engine/releases/fetcher.ts";
-import { DECOFILE_REL_PATH } from "../engine/releases/provider.ts";
+import { fromJSON } from "../engine/decofile/fetcher.ts";
 import { updateLoadCache } from "../engine/schema/parser.ts";
 import { assertAllowedAuthority } from "../engine/trustedAuthority.ts";
 import { AppManifest, newContext } from "../mod.ts";
 import { InitOptions } from "../plugins/deco.ts";
 import { FileSystem, mount } from "../scripts/mount.ts";
 import { stringToHexSha256 } from "../utils/encoding.ts";
-import { fileSeparatorToSlash } from "../utils/filesystem.ts";
 import { VFS } from "./fs/mod.ts";
 
 let initializePromise: Promise<void> | null = null;
 
-const DECOFILE_PATH = `/${fileSeparatorToSlash(DECOFILE_REL_PATH)}`;
+const DECOFILE_PATH = `/.deco/decofile.json`;
 export const contentToDataUri = (
   modData: string,
   mimeType = "text/tsx",
@@ -44,6 +42,7 @@ async function bundle(
       loader: "tsx",
     },
     platform: "browser",
+    target: [],
     jsxImportSource: "preact",
     jsx: "automatic",
     format: "esm", // Set output format to ESM

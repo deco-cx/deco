@@ -22,7 +22,7 @@ import type { JSONSchema7, JSONSchema7Definition } from "./deps.ts";
 import { ModuleOf } from "./engine/block.ts";
 import { Monitoring, Resolvable, ResolveFunc } from "./engine/core/resolver.ts";
 import { PromiseOrValue } from "./engine/core/utils.ts";
-import { Release } from "./engine/releases/provider.ts";
+import { DecofileProvider } from "./engine/decofile/provider.ts";
 import type { InvocationProxy } from "./utils/invoke.types.ts";
 import { createServerTimings } from "./utils/timings.ts";
 export type {
@@ -115,7 +115,7 @@ export type DecoState<
     debugEnabled?: boolean;
     $live: TConfig;
     resolve: ResolveFunc;
-    release: Release;
+    release: DecofileProvider;
     invoke:
       & InvocationProxy<
         TManifest
