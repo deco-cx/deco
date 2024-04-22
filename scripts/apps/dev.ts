@@ -30,7 +30,7 @@ export const dev = async (
     return;
   }
   const appLocation = await resolveAppLocation(_appLocation);
-  const importMap = join(target, "import_map.json");
+  const importMap = join(target, "deno.json");
   const exists = await Deno.stat(importMap).then((s) => !s.isDirectory).catch(
     (_err) => false,
   );
