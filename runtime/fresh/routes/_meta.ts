@@ -105,9 +105,11 @@ export const handler = async (req: Request) => {
 
   const context = Context.active();
   const lazySchema = lazySchemaFor(context);
+  const ifNoneMatch = req.headers.get("if-none-match");
   const res = await waitForChanges(
-    url.searchParams.get("waitForChanges") === "true"
-      ? req.headers.get("if-none-match") ?? await etagFor(lazySchema)
+    url.searchParams.get("waitForChanges") === "true" &&
+      ifNoneMatch && ifNoneMatch === await etagFor(lazySchema)
+      ? ifNoneMatch
       : "",
     ctrl.signal,
   );
