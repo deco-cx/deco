@@ -5,7 +5,6 @@ import { MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
 import { newContext } from "../../../mod.ts";
 import { DecoSiteState, DecoState } from "../../../types.ts";
-import { contextFromVolume } from "../../context.ts";
 
 interface Opts {
   cacheSize?: number;
@@ -68,7 +67,7 @@ export async function alienRelease(
     : [alienReleaseFromCookie, false];
 
   // If the inline release is a string, create a new context cache
-  if (typeof alienRelease === "string") {
+  if (typeof alienRelease === "string" && !alienRelease.includes("watch.ts")) {
     contextCache ??= new ContextCache({
       cacheSize: 7, // 7 is arbitrarily chosen
     });
@@ -76,30 +75,23 @@ export async function alienRelease(
       alienRelease,
     );
     if (!contextPromise) {
-      const isVolumeKind = alienRelease.includes("watch.ts");
-      if (!isVolumeKind) {
-        const active = Context.active();
-        const { manifest, importMap } = await active.runtime!;
-        contextPromise = newContext(
-          manifest,
-          importMap,
-          fromEndpoint(alienRelease),
-          alienRelease,
-        );
-      } else {
-        contextPromise = contextFromVolume(alienRelease, () => {
-          contextCache?.delete(alienRelease);
-        });
-      }
-      contextCache.set(
+      const active = Context.active();
+      const { manifest, importMap } = await active.runtime!;
+      contextPromise = newContext(
+        manifest,
+        importMap,
+        fromEndpoint(alienRelease),
         alienRelease,
-        contextPromise.catch((err) => {
-          console.error("context creation error", err);
-          contextCache?.delete(alienRelease);
-          throw err;
-        }),
       );
     }
+    contextCache.set(
+      alienRelease,
+      contextPromise.catch((err) => {
+        console.error("context creation error", err);
+        contextCache?.delete(alienRelease);
+        throw err;
+      }),
+    );
     const ctx = await contextPromise;
 
     const next = Context.bind(ctx, context.next.bind(context));
