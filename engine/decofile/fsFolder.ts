@@ -55,7 +55,7 @@ export const newFsFolderProviderFromPath = (
         if (filesChangedBatch.length === 0) {
           return;
         }
-        const copied = [...filesChangedBatch];
+        const copied = [...new Set(filesChangedBatch)];
         filesChangedBatch.length = 0;
         filesChangedBatch = [];
         const { state: prevState } = await decofile;
