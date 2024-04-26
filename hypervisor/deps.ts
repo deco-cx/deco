@@ -1,6 +1,6 @@
 export {
   FSError,
   realtimeFor,
-} from "https://denopkg.com/deco-cx/realtime@b98e0a8a756ed625af3987aeb75898fa93d80cd2/mod.ts";
-export type { RealtimeState } from "https://denopkg.com/deco-cx/realtime@b98e0a8a756ed625af3987aeb75898fa93d80cd2/mod.ts";
+} from "https://denopkg.com/deco-cx/realtime@2a8c7d16fbf94785577d9e29d6d3374386940f70/mod.ts";
+export type { RealtimeState } from "https://denopkg.com/deco-cx/realtime@2a8c7d16fbf94785577d9e29d6d3374386940f70/mod.ts";
 export * as gitIgnore from "npm:ignore@5.3.1";
