@@ -7,7 +7,8 @@ import {
 } from "./realtime/object.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 import { Isolate } from "./workers/isolate.ts";
-const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS);
+import fjp from "npm:fast-json-patch@3.1.1";
+const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
 export interface AppOptions {
