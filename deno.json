@@ -36,7 +36,8 @@
     "partytown/": "https://deno.land/x/partytown@0.3.0/",
     "std/": "https://deno.land/std@0.203.0/",
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.5/",
-    "deco/": "./"
+    "deco/": "./",
+    "fast-json-patch": "npm:fast-json-patch@3.1.1"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
