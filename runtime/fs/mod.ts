@@ -27,31 +27,33 @@ export const DenoFs: IVFS = {
   readTextFile: Deno.readTextFile,
 };
 
-for (const [func, impl] of Object.entries(DenoFs)) {
-  const funcKey = func as keyof typeof DenoFs;
-  // @ts-ignore: trust-me
-  Deno[funcKey] = (...args) => {
-    const fs = Context.active().fs;
+if (!Deno.env.has("AVOID_OVERRIDE_DENO_FS")) {
+  for (const [func, impl] of Object.entries(DenoFs)) {
+    const funcKey = func as keyof typeof DenoFs;
     // @ts-ignore: trust-me
-    const fsMk = fs?.[funcKey]?.bind(fs);
-    if (typeof fsMk !== "function") {
-      return impl(...args);
-    }
-    const [arg0, ...rest] = args ?? []; // always should be path
-    if (arg0 instanceof URL || typeof arg0 === "string") {
-      const path = arg0.toString();
-      if (path.startsWith(Deno.cwd())) {
-        // @ts-ignore: trust-me
+    Deno[funcKey] = (...args) => {
+      const fs = Context.active().fs;
+      // @ts-ignore: trust-me
+      const fsMk = fs?.[funcKey]?.bind(fs);
+      if (typeof fsMk !== "function") {
+        return impl(...args);
+      }
+      const [arg0, ...rest] = args ?? []; // always should be path
+      if (arg0 instanceof URL || typeof arg0 === "string") {
+        const path = arg0.toString();
+        if (path.startsWith(Deno.cwd())) {
+          // @ts-ignore: trust-me
         return fsMk(...[
           fileSeparatorToSlash(path.replace(Deno.cwd(), "")),
           ...rest,
         ]);
+        }
+        return impl(...args);
       }
-      return impl(...args);
-    }
-    // @ts-ignore: trust-me
-    return fsMk(...args);
-  };
+      // @ts-ignore: trust-me
+      return fsMk(...args);
+    };
+  }
 }
 
 const textEncoder = new TextEncoder();

@@ -38,25 +38,27 @@ export const newFsProviderFromPath = (
     },
   ).then((result) => {
     (async () => {
-      const watcher = Deno.watchFs(fullPath);
-      const updateState = debounce(async () => {
-        const state = await Deno.readTextFile(fullPath)
-          .then(JSON.parse)
-          .catch((_e) => null);
-        if (state === null) {
-          return;
+      if (Deno.watchFs) {
+        const watcher = Deno.watchFs(fullPath);
+        const updateState = debounce(async () => {
+          const state = await Deno.readTextFile(fullPath)
+            .then(JSON.parse)
+            .catch((_e) => null);
+          if (state === null) {
+            return;
+          }
+          currResolvables = Promise.resolve({
+            state,
+            archived: {},
+            revision: `${Date.now()}`,
+          });
+          for (const cb of onChangeCbs) {
+            cb();
+          }
+        }, 300);
+        for await (const _event of watcher) {
+          updateState();
         }
-        currResolvables = Promise.resolve({
-          state,
-          archived: {},
-          revision: `${Date.now()}`,
-        });
-        for (const cb of onChangeCbs) {
-          cb();
-        }
-      }, 300);
-      for await (const _event of watcher) {
-        updateState();
       }
     })();
 
