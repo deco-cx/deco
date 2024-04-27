@@ -1,4 +1,7 @@
 {
+  "name": "@deco-cx/deco",
+  "version": "1.62.0",
+  "exports": "./mod.ts",
   "tasks": {
     "start": "deno task check",
     "component": "deno eval 'import \"deco/scripts/component.ts\"'",
