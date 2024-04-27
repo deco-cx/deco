@@ -1,19 +1,19 @@
 // deno-lint-ignore-file no-explicit-any
-import { once, SyncOnce } from "../../utils/sync.ts";
-import { DecofileProvider } from "../decofile/provider.ts";
-import { ResolveHints } from "./hints.ts";
-import {
+import { once, type SyncOnce } from "../../utils/sync.ts";
+import type { DecofileProvider } from "../decofile/provider.ts";
+import type { ResolveHints } from "./hints.ts";
+import type {
   BaseContext,
   FieldResolver,
   Monitoring,
   Opts,
   Resolvable,
   ResolvableMap,
-  resolve,
   ResolveFunc,
   Resolver,
   ResolverMap,
 } from "./resolver.ts";
+import { resolve } from "./resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
   release: DecofileProvider;

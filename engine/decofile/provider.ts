@@ -1,8 +1,8 @@
 import * as colors from "std/fmt/colors.ts";
 import { exists } from "std/fs/mod.ts";
 import { join } from "std/path/mod.ts";
-import { Resolvable } from "../core/resolver.ts";
-import { PromiseOrValue } from "../core/utils.ts";
+import type { Resolvable } from "../core/resolver.ts";
+import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";

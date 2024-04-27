@@ -2,9 +2,9 @@ import { assertEquals, assertRejects } from "std/testing/asserts.ts";
 import { assertSpyCalls, spy } from "std/testing/mock.ts";
 import { genHints } from "../../engine/core/hints.ts";
 import {
-  BaseContext,
+  type BaseContext,
   resolve,
-  ResolverMap,
+  type ResolverMap,
 } from "../../engine/core/resolver.ts";
 import defaults from "../manifest/fresh.ts";
 

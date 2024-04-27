@@ -2,7 +2,7 @@ import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
 import { dirname, join } from "std/path/mod.ts";
-import { DenoFs, IVFS } from "../runtime/fs/mod.ts";
+import { DenoFs, type IVFS } from "../runtime/fs/mod.ts";
 
 export interface MountParams {
   vol?: string;

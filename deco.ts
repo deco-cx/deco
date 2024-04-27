@@ -4,14 +4,14 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { IVFS } from "./runtime/fs/mod.ts";
+import type { IVFS } from "./runtime/fs/mod.ts";
 import "./utils/patched_fetch.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { ImportMap } from "./blocks/app.ts";
-import { ReleaseResolver } from "./engine/core/mod.ts";
-import { DecofileProvider } from "./engine/decofile/provider.ts";
-import { AppManifest } from "./mod.ts";
+import type { ImportMap } from "./blocks/app.ts";
+import type { ReleaseResolver } from "./engine/core/mod.ts";
+import type { DecofileProvider } from "./engine/decofile/provider.ts";
+import type { AppManifest } from "./mod.ts";
 import { randId } from "./utils/rand.ts";
 
 export interface DecoRuntimeState {

@@ -1,9 +1,9 @@
-import { HandlerContext } from "$fresh/server.ts";
-import { Partial, PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import type { HandlerContext } from "$fresh/server.ts";
+import { Partial, type PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { getSectionID } from "../../../components/section.tsx";
-import { FieldResolver, Resolvable } from "../../../engine/core/resolver.ts";
+import { FieldResolver, type Resolvable } from "../../../engine/core/resolver.ts";
 import { badRequest, HttpError } from "../../../engine/errors.ts";
-import { DecoSiteState, DecoState } from "../../../types.ts";
+import type { DecoSiteState, DecoState } from "../../../types.ts";
 import { scriptAsDataURI } from "../../../utils/dataURI.ts";
 
 interface Options {

@@ -1,10 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
-import { Context, DecoContext } from "../../../deco.ts";
-import { MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
+import { Context, type DecoContext } from "../../../deco.ts";
+import { type MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/decofile/fetcher.ts";
 import { newContext } from "../../../mod.ts";
-import { DecoSiteState, DecoState } from "../../../types.ts";
+import type { DecoSiteState, DecoState } from "../../../types.ts";
 
 interface Opts {
   cacheSize?: number;

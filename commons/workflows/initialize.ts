@@ -1,6 +1,6 @@
 import { Context } from "../../deco.ts";
 import {
-  Arg,
+  type Arg,
   cancel as durableCancel,
   get as durableGet,
   history as durableHistory,

@@ -1,38 +1,43 @@
 // deno-lint-ignore-file no-explicit-any
+import { initializeState } from "deco/runtime/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
 import {
-  AppManifest,
-  ImportMap,
-  MergedAppRuntime,
+  type AppManifest,
+  type ImportMap,
+  type MergedAppRuntime,
   mergeManifests,
   mergeRuntimes,
 } from "../../blocks/app.ts";
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { buildImportMap } from "../../blocks/utils.tsx";
-import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
-import { HandlerContext } from "../../deps.ts";
-import { DecoState, SiteInfo } from "../../types.ts";
+import {
+  Context,
+  context,
+  type DecoContext,
+  type DecoRuntimeState,
+} from "../../deco.ts";
+import type { HandlerContext } from "../../deps.ts";
+import type { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
 import { randId } from "../../utils/rand.ts";
 import { ReleaseResolver } from "../core/mod.ts";
 import {
-  BaseContext,
+  type BaseContext,
   DanglingReference,
   isResolvable,
-  Resolvable,
-  Resolver,
-  ResolverMap,
+  type Resolvable,
+  type Resolver,
+  type ResolverMap,
 } from "../core/resolver.ts";
-import { PromiseOrValue } from "../core/utils.ts";
+import type { PromiseOrValue } from "../core/utils.ts";
+import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
+import { type DecofileProvider, getProvider } from "../decofile/provider.ts";
 import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
-import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
-import { DecofileProvider, getProvider } from "../decofile/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
-import { initializeState } from "deco/runtime/utils.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 

@@ -3,8 +3,8 @@ import { join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { getDecofileJSONFromDecofile } from "./json.ts";
-import { DecofileProvider, OnChangeCallback, ReadOptions } from "./provider.ts";
-import { VersionedDecofile } from "./realtime.ts";
+import type { DecofileProvider, OnChangeCallback, ReadOptions } from "./provider.ts";
+import type { VersionedDecofile } from "./realtime.ts";
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)

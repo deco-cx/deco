@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import type { AppManifest } from "../blocks/app.ts";
-import {
+import type {
   AvailableInvocations,
   InvocationFuncFor,
 } from "../clients/withManifest.ts";

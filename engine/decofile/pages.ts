@@ -1,12 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
-import { supabase } from "../../deps.ts";
-import { Resolvable } from "../core/resolver.ts";
+import type { supabase } from "../../deps.ts";
+import type { Resolvable } from "../core/resolver.ts";
 import { singleFlight } from "../core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
-import { JSONSchema, Site } from "../../types.ts";
+import type { JSONSchema, Site } from "../../types.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import { RealtimeDecofileProvider, VersionedDecofile } from "./realtime.ts";
+import type { RealtimeDecofileProvider, VersionedDecofile } from "./realtime.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;

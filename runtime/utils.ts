@@ -1,6 +1,6 @@
 import { Context } from "deco/deco.ts";
 import { defaultHeaders } from "deco/utils/http.ts";
-import { RequestState } from "deco/blocks/utils.tsx";
+import type { RequestState } from "deco/blocks/utils.tsx";
 
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle

@@ -3,7 +3,7 @@ import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
-import { InitContext } from "./context.ts";
+import type { InitContext } from "./context.ts";
 
 export type TemplateGenerator = (ctx: InitContext) => Promise<string> | string;
 

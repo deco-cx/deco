@@ -1,5 +1,5 @@
 import {
-  checkedPort,
+  type checkedPort,
   makeRange,
   max,
   min,

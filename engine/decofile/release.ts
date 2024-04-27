@@ -1,8 +1,8 @@
-import { supabase } from "../../deps.ts";
+import type { supabase } from "../../deps.ts";
 import { singleFlight } from "../core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
 import { randId as ulid } from "../../utils/rand.ts";
-import { RealtimeDecofileProvider, VersionedDecofile } from "./realtime.ts";
+import type { RealtimeDecofileProvider, VersionedDecofile } from "./realtime.ts";
 
 const TABLE = "configs";
 const fetchDecofile = (

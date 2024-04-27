@@ -1,8 +1,8 @@
-import { PageProps } from "$fresh/server.ts";
-import { Page } from "../../../blocks/page.tsx";
+import type { PageProps } from "$fresh/server.ts";
+import type { Page } from "../../../blocks/page.tsx";
 import LiveControls from "../../../components/LiveControls.tsx";
 import { Context } from "../../../deco.ts";
-import { ComponentMetadata } from "../../../engine/block.ts";
+import type { ComponentMetadata } from "../../../engine/block.ts";
 
 const PAGE_NOT_FOUND = -1;
 export const pageIdFromMetadata = (

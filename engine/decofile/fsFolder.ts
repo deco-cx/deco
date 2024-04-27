@@ -2,13 +2,13 @@ import { debounce } from "std/async/debounce.ts";
 import { basename, join } from "std/path/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
-import {
+import type {
   Decofile,
   DecofileProvider,
   OnChangeCallback,
   ReadOptions,
 } from "./provider.ts";
-import { VersionedDecofile } from "./realtime.ts";
+import type { VersionedDecofile } from "./realtime.ts";
 
 export const BLOCKS_FOLDER = "blocks";
 

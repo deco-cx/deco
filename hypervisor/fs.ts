@@ -1,4 +1,4 @@
-import { FSError, RealtimeState } from "./deps.ts";
+import { FSError, type RealtimeState } from "./deps.ts";
 
 export const createDurableFS = (state: RealtimeState) => {
   const storage = state.storage;

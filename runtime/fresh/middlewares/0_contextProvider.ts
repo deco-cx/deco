@@ -1,16 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
-import { Context, DecoContext } from "../../../deco.ts";
-import { FreshContext, MiddlewareHandler } from "../../../deps.ts";
+import { Context, type DecoContext } from "../../../deco.ts";
+import type { FreshContext, MiddlewareHandler } from "../../../deps.ts";
 import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/decofile/fs.ts";
 import {
-  DecofileProvider,
+  type DecofileProvider,
   getProvider,
 } from "../../../engine/decofile/provider.ts";
 import { newContext } from "../../../mod.ts";
-import { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
-import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import type { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
+import type { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 import { ContextCache } from "./1_alienRelease.ts";
 
 let contextCache: ContextCache | null = null;

@@ -1,8 +1,8 @@
 import { join } from "std/path/mod.ts";
-import { ImportMap } from "../../blocks/app.ts";
+import type { ImportMap } from "../../blocks/app.ts";
 import { context } from "../../deco.ts";
 import { genSchemasFromManifest } from "../../engine/schema/gen.ts";
-import { AppManifest } from "../../types.ts";
+import type { AppManifest } from "../../types.ts";
 
 export const genSchemas = async (
   manifest: AppManifest,

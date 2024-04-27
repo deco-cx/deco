@@ -1,7 +1,7 @@
 import {
   isResolvable,
   isResolved,
-  Resolvable,
+  type Resolvable,
 } from "../../engine/core/resolver.ts";
 
 export type HintNode<T> = {

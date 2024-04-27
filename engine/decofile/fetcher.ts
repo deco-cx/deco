@@ -3,11 +3,11 @@ import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
 import { newFsProviderFromPath } from "./fs.ts";
 import { newFsFolderProviderFromPath } from "./fsFolder.ts";
-import { DecofileProvider, OnChangeCallback } from "./provider.ts";
+import type { DecofileProvider, OnChangeCallback } from "./provider.ts";
 import {
   newRealtime,
-  RealtimeDecofileProvider,
-  VersionedDecofile,
+  type RealtimeDecofileProvider,
+  type VersionedDecofile,
 } from "./realtime.ts";
 
 const decofileCache: Record<string, Promise<DecofileProvider | undefined>> = {};

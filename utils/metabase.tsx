@@ -1,4 +1,4 @@
-import { PreactComponent } from "../engine/block.ts";
+import type { PreactComponent } from "../engine/block.ts";
 
 export type MetabaseProps = {
   url: string;

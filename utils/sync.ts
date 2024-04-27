@@ -1,4 +1,4 @@
-import { isAwaitable, PromiseOrValue } from "../engine/core/utils.ts";
+import { isAwaitable, type PromiseOrValue } from "../engine/core/utils.ts";
 
 export interface SyncOnce<T> {
   do: (cb: () => PromiseOrValue<T>) => PromiseOrValue<T>;

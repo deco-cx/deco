@@ -5,7 +5,7 @@ export interface StreamProps {
 
 export { isStreamProps } from "../clients/withManifest.ts";
 import {
-  ServerSentEventMessage,
+  type ServerSentEventMessage,
   ServerSentEventStream,
 } from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
 

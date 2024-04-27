@@ -1,15 +1,15 @@
 import "../../utils/patched_fetch.ts";
 
-import { MiddlewareHandler, Plugin } from "$fresh/server.ts";
-import { PluginRoute } from "$fresh/src/server/types.ts";
-import { ImportMap } from "../../blocks/app.ts";
+import type { MiddlewareHandler, Plugin } from "$fresh/server.ts";
+import type { PluginRoute } from "$fresh/src/server/types.ts";
+import type { ImportMap } from "../../blocks/app.ts";
 import {
   buildDecoState,
   injectLiveStateForPath,
 } from "./middlewares/2_stateBuilder.ts";
 
-import { DecofileProvider } from "../../engine/decofile/provider.ts";
-import { AppManifest, SiteInfo } from "../../mod.ts";
+import type { DecofileProvider } from "../../engine/decofile/provider.ts";
+import type { AppManifest, SiteInfo } from "../../mod.ts";
 import { contextProvider } from "./middlewares/0_contextProvider.ts";
 import { alienRelease } from "./middlewares/1_alienRelease.ts";
 

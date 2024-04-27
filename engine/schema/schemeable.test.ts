@@ -12,7 +12,7 @@ import { assertSpyCall, assertSpyCalls, spy } from "std/testing/mock.ts";
 import { parsePath } from "../../engine/schema/parser.ts";
 import { schemeableToJSONSchema } from "../../engine/schema/schemeable.ts";
 import {
-  Schemeable,
+  type Schemeable,
   typeNameToSchemeable,
 } from "../../engine/schema/transform.ts";
 import { ImportMapBuilder } from "../importmap/builder.ts";

@@ -1,18 +1,18 @@
 import { toFileUrl } from "std/path/mod.ts";
-import { AppManifest, ImportMap } from "../../blocks/app.ts";
+import type { AppManifest, ImportMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import { JSONSchema7 } from "../../deps.ts";
-import { Block, BlockModuleRef } from "../block.ts";
-import { ImportMapBuilder, ImportMapResolver } from "../importmap/builder.ts";
+import type { JSONSchema7 } from "../../deps.ts";
+import type { Block, BlockModuleRef } from "../block.ts";
+import { ImportMapBuilder, type ImportMapResolver } from "../importmap/builder.ts";
 import {
-  BlockModule,
-  EntrypointModule,
+  type BlockModule,
+  type EntrypointModule,
   newSchemaBuilder,
-  Schemas,
+  type Schemas,
 } from "./builder.ts";
 import { parsePath } from "./parser.ts";
-import { programToBlockRef, ReferenceKey, Schemeable } from "./transform.ts";
+import { programToBlockRef, type ReferenceKey, type Schemeable } from "./transform.ts";
 
 export const namespaceOf = (blkType: string, blkKey: string): string => {
   return blkKey.substring(0, blkKey.indexOf(blkType) - 1);
