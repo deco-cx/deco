@@ -1,3 +1,4 @@
+import fjp from "npm:fast-json-patch@3.1.1";
 import * as colors from "std/fmt/colors.ts";
 import { realtimeFor } from "./deps.ts";
 import { createDurableFS } from "./fs.ts";
@@ -6,8 +7,7 @@ import {
   HypervisorRealtimeState,
 } from "./realtime/object.ts";
 import { DenoRun } from "./workers/denoRun.ts";
-import { Isolate } from "./workers/isolate.ts";
-import fjp from "npm:fast-json-patch@3.1.1";
+import type { Isolate } from "./workers/isolate.ts";
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
