@@ -1,6 +1,6 @@
 {
   "name": "@deco-cx/deco",
-  "version": "1.62.0",
+  "version": "1.62.1",
   "exports": "./mod.ts",
   "tasks": {
     "start": "deno task check",
@@ -18,7 +18,10 @@
   },
   "fmt": {
     "files": {
-      "exclude": ["static/", "README.md"]
+      "exclude": [
+        "static/",
+        "README.md"
+      ]
     }
   },
   "importMap": "./import_map.json",
