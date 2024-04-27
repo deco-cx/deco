@@ -1,4 +1,4 @@
-import meta from "../meta.json" assert { type: "json" };
+import denoJSON from "../deno.json" with { type: "json" };
 import { adminDomains, isAdmin, landingPageDomain } from "../utils/admin.ts";
 import { buildObj } from "./object.ts";
 
@@ -140,7 +140,7 @@ export const mergeCacheControl = (
 };
 
 export const defaultHeaders = {
-  ["x-powered-by"]: `deco@${meta.version}`,
+  ["x-powered-by"]: `deco@${denoJSON.version}`,
 };
 
 export function setCSPHeaders(

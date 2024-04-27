@@ -1,5 +1,6 @@
 import * as log from "std/log/mod.ts";
 import { Context, context } from "../../deco.ts";
+import denoJSON from "../../deno.json" with { type: "json" };
 import {
   BatchSpanProcessor,
   FetchInstrumentation,
@@ -11,10 +12,9 @@ import {
   Resource,
   SemanticResourceAttributes,
 } from "../../deps.ts";
-import meta from "../../meta.json" assert { type: "json" };
 import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
-import { SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
+import { type SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
 import { OpenTelemetryHandler } from "https://denopkg.com/hyperdxio/hyperdx-js@cc43f5a2ba5f0062f3e01ea3d162d71971dd1f89/packages/deno/mod.ts";
 
@@ -38,7 +38,7 @@ export const resource = Resource.default().merge(
         Deno.hostname(),
     [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
     [SemanticResourceAttributes.CLOUD_PROVIDER]: context.platform,
-    "deco.runtime.version": meta.version,
+    "deco.runtime.version": denoJSON.version,
     "deco.apps.version": apps_ver,
     [SemanticResourceAttributes.CLOUD_REGION]: Deno.env.get("DENO_REGION") ??
       "unknown",

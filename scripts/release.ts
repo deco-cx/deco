@@ -6,7 +6,7 @@ import { exec } from "./utils.ts";
 
 /**
  * This script is used to release a new version of the project.
- * It will bump the version in the `meta.json` file and create a new tag.
+ * It will bump the version in the `deno.json` file and create a new tag.
  */
 
 await exec("git fetch --tags");
@@ -65,14 +65,14 @@ const newVersion = newVersionByUser === "custom"
   : newVersionByUser;
 
 let shouldCommit = false;
-const metaJSONFilePath = join(Deno.cwd(), "meta.json");
+const metaJSONFilePath = join(Deno.cwd(), "deno.json");
 if (await exists(metaJSONFilePath)) {
   const meta: { version: string } = await Deno.readTextFile(
     metaJSONFilePath,
   ).then(
     JSON.parse,
   );
-  console.log(`Bumping meta.json`);
+  console.log(`Bumping deno.json`);
 
   await Deno.writeTextFile(
     metaJSONFilePath,
