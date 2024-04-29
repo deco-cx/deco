@@ -31,14 +31,13 @@ import type { PromiseOrValue } from "./engine/core/utils.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
 import type { InvocationProxy } from "./utils/invoke.types.ts";
 import type { createServerTimings } from "./utils/timings.ts";
-export type {
-  ErrorBoundaryComponent,
-  ErrorBoundaryParams,
-} from "./blocks/section.ts";
-export type { AppContext, AppManifest, AppModule, AppRuntime };
 
 export type { App } from "./blocks/app.ts";
-
+export type {
+  ErrorBoundaryComponent,
+  ErrorBoundaryParams
+} from "./blocks/section.ts";
+export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
