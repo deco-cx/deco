@@ -2,7 +2,10 @@
 import type { ComponentType } from "preact";
 import type { HttpContext } from "../blocks/handler.ts";
 import { type PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
-import { fnContextFromHttpContext, type RequestState } from "../blocks/utils.tsx";
+import {
+  fnContextFromHttpContext,
+  type RequestState,
+} from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";

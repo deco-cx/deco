@@ -16,7 +16,11 @@ import type {
   ManifestLoader,
 } from "../utils/invoke.types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
-import { type InvocationProxyHandler, type InvokeAwaiter, newHandler } from "./proxy.ts";
+import {
+  type InvocationProxyHandler,
+  type InvokeAwaiter,
+  newHandler,
+} from "./proxy.ts";
 
 export interface InvokerRequestInit extends RequestInit {
   fetcher?: typeof fetch;

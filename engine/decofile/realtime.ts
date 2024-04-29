@@ -3,7 +3,11 @@ import type { supabase } from "../../deps.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import type { Resolvable } from "../core/resolver.ts";
-import type { DecofileProvider, OnChangeCallback, ReadOptions } from "./provider.ts";
+import type {
+  DecofileProvider,
+  OnChangeCallback,
+  ReadOptions,
+} from "./provider.ts";
 
 export interface RealtimeDecofileProvider {
   /**

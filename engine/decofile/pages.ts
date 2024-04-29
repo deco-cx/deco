@@ -6,7 +6,10 @@ import getSupabaseClient from "../../supabase.ts";
 import type { JSONSchema, Site } from "../../types.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import type { RealtimeDecofileProvider, VersionedDecofile } from "./realtime.ts";
+import type {
+  RealtimeDecofileProvider,
+  VersionedDecofile,
+} from "./realtime.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;

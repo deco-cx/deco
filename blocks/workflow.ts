@@ -21,7 +21,11 @@ import type {
 import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import type { HttpContext } from "./handler.ts";
-import { type FnContext, fnContextFromHttpContext, type RequestState } from "./utils.tsx";
+import {
+  type FnContext,
+  fnContextFromHttpContext,
+  type RequestState,
+} from "./utils.tsx";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;

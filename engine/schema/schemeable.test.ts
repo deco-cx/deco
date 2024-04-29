@@ -109,7 +109,7 @@ Deno.test("Simple type generation", async () => {
     fail("SimpleType should exists");
   }
 
-  const name = Deno.build.os === "windows" ? "tl@159-180" : "tl@156-175";
+  const name = Deno.build.os === "windows" ? "tl@169-190" : "tl@166-185";
   assertEquals(transformed, {
     file: path,
     type: "alias",
@@ -185,7 +185,7 @@ Deno.test("TwoRefsProperties type generation", async () => {
     fail("TwoRefsProperties should exists");
   }
 
-  const name = Deno.build.os === "windows" ? "tl@722-792" : "tl@683-750";
+  const name = Deno.build.os === "windows" ? "tl@732-802" : "tl@693-760";
   assertObjectMatch(transformed, {
     "type": "alias",
     "jsDocSchema": {},

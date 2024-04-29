@@ -10,7 +10,11 @@ import type {
   ComponentFunc,
   PreactComponent,
 } from "../engine/block.ts";
-import type { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
+import type {
+  Monitoring,
+  ResolveFunc,
+  Resolver,
+} from "../engine/core/resolver.ts";
 import { type PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Flag } from "../types.ts";

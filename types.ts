@@ -1,8 +1,10 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import type { Manifest } from "$fresh/server.ts";
+import type handlerBlock from "deco/blocks/handler.ts";
 import type accountBlock from "./blocks/account.ts";
 import type actionBlock from "./blocks/action.ts";
-import type appBlock, {
+import type appBlock from "./blocks/app.ts";
+import type {
   AppContext,
   AppManifest,
   AppModule,
@@ -10,7 +12,7 @@ import type appBlock, {
 } from "./blocks/app.ts";
 import type flagBlock from "./blocks/flag.ts";
 import type functionBlock from "./blocks/function.ts";
-import type handlerBlock, { Handler } from "./blocks/handler.ts";
+import type { Handler } from "./blocks/handler.ts";
 import type loaderBlock from "./blocks/loader.ts";
 import type matcherBlock from "./blocks/matcher.ts";
 import type pageBlock from "./blocks/page.tsx";
@@ -20,7 +22,11 @@ import type workflowBlock from "./blocks/workflow.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "./deps.ts";
 import type { ModuleOf } from "./engine/block.ts";
-import type { Monitoring, Resolvable, ResolveFunc } from "./engine/core/resolver.ts";
+import type {
+  Monitoring,
+  Resolvable,
+  ResolveFunc,
+} from "./engine/core/resolver.ts";
 import type { PromiseOrValue } from "./engine/core/utils.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
 import type { InvocationProxy } from "./utils/invoke.types.ts";
