@@ -64,14 +64,30 @@ export class Hypervisor {
     const url = new URL(req.url);
     const isHypervisorApi = (req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(HYPERVISOR_API_SPECIFIER)) === "true";
-    if (isHypervisorApi && url.pathname.startsWith("/volumes")) {
-      return this.realtimeFsState.wait().then(() => this.realtimeFs.fetch(req))
-        .catch(
-          (err) => {
-            console.error("error when fetching realtimeFs", url.pathname, err);
-            return new Response(null, { status: 500 });
-          },
-        );
+    if (isHypervisorApi) {
+      if (url.pathname.startsWith("/volumes")) {
+        return this.realtimeFsState.wait().then(() =>
+          this.realtimeFs.fetch(req)
+        )
+          .catch(
+            (err) => {
+              console.error(
+                "error when fetching realtimeFs",
+                url.pathname,
+                err,
+              );
+              return new Response(null, { status: 500 });
+            },
+          );
+      }
+      if (url.pathname.startsWith("/.well-known/deco-validate/")) {
+        const token = url.pathname.split("/").pop();
+        const decoValidateEnvVar = Deno.env.get("DECO_VALIDATE_TOKEN");
+        if (decoValidateEnvVar && token === decoValidateEnvVar) {
+          return new Response(decoValidateEnvVar, { status: 200 });
+        }
+        return new Response(null, { status: 403 });
+      }
     }
 
     if (!this.isolate.isRunning()) {
