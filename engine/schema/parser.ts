@@ -59,7 +59,7 @@ export const parseContent = async (content: string) => {
 
 const decoder = new TextDecoder();
 let loader: null | typeof load = null;
-const initLoader = (): typeof load => {
+export const initLoader = (): typeof load => {
   if (loader) {
     return loader;
   }
