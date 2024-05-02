@@ -70,6 +70,14 @@ export class Hypervisor {
     const isHypervisorApi = (req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(HYPERVISOR_API_SPECIFIER)) === "true";
     if (isHypervisorApi) {
+      if (url.pathname.startsWith("/.well-known/deco-validate/")) {
+        const token = url.pathname.split("/").pop();
+        const decoValidateEnvVar = Deno.env.get("DECO_VALIDATE_TOKEN");
+        if (decoValidateEnvVar && token === decoValidateEnvVar) {
+          return new Response(decoValidateEnvVar, { status: 200 });
+        }
+        return new Response(null, { status: 403 });
+      }
       const jwt = await getVerifiedJWT(req);
       if (!jwt) {
         return new Response(null, { status: 401 });
@@ -91,14 +99,6 @@ export class Hypervisor {
               return new Response(null, { status: 500 });
             },
           );
-      }
-      if (url.pathname.startsWith("/.well-known/deco-validate/")) {
-        const token = url.pathname.split("/").pop();
-        const decoValidateEnvVar = Deno.env.get("DECO_VALIDATE_TOKEN");
-        if (decoValidateEnvVar && token === decoValidateEnvVar) {
-          return new Response(decoValidateEnvVar, { status: 200 });
-        }
-        return new Response(null, { status: 403 });
       }
     }
 
