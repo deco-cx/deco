@@ -132,9 +132,11 @@ export const contextFromVolume = async <
   if (siteFromVolUrl !== currentContext.site) {
     throw new Error(`${siteFromVolUrl} does not match ${currentContext.site}`);
   }
-  const isDD = currentContext.platform === "deno_deploy";
-  isDD &&
-    volUrl.searchParams.set("path", DECOFILE_PATH); // watch only decofile changes
+  const shouldMountDecofileOnly = currentContext.platform === "deno_deploy" ||
+    Deno.env.get("VFS_WATCH_DECOFILE_ONLY") === "true";
+  if (shouldMountDecofileOnly) {
+    volUrl.searchParams.set("path", "/.deco/**/*.json");
+  }
 
   const { manifest: initialManifest } = await currentContext.runtime!;
   const baseDir = join(dirname(initialManifest.baseUrl), "/");
@@ -251,7 +253,7 @@ export const contextFromVolume = async <
     currentDispose?.();
     mountPoint.unmount();
   };
-  if (isDD) {
+  if (shouldMountDecofileOnly) {
     init.resolve({
       manifest: initialManifest as TManifest,
       release,
@@ -266,7 +268,7 @@ export const contextFromVolume = async <
       undefined,
       currentContext.site,
     );
-    if (!isDD) {
+    if (!shouldMountDecofileOnly) {
       ctx.fs = fs;
     }
     ctx.namespace = currentContext.namespace;

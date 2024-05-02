@@ -147,6 +147,7 @@ Here is a table with the integrations that we have built and the statuses of the
 | `MAX_CACHE_SIZE`                  | Maximum size of the file system cache (in bytes)                    | `1073741824` (1 GB)                                    |
 | `TTL_AUTOPURGE`                   | Flag to automatically delete expired items from the file system cache | `true` or `false`                                     |
 | `TTL_RESOLUTION`                  | Time interval to check for expired items in the file system cache (in milliseconds) | `30000` (30 seconds)                               |
+| `CACHE_MAX_AGE_S`                  | Time for cache to become stale | `60` (60 seconds)                              |
 
 
 ## Contribute

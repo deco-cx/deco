@@ -121,7 +121,7 @@ caches?.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
 
-const MAX_AGE_S = 60; // 60 seconds
+const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
 
 const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
 

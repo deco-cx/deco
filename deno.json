@@ -1,4 +1,7 @@
 {
+  "name": "@deco-cx/deco",
+  "version": "1.62.2",
+  "exports": "./mod.ts",
   "tasks": {
     "start": "deno task check",
     "component": "deno eval 'import \"deco/scripts/component.ts\"'",
@@ -15,7 +18,10 @@
   },
   "fmt": {
     "files": {
-      "exclude": ["static/", "README.md"]
+      "exclude": [
+        "static/",
+        "README.md"
+      ]
     }
   },
   "importMap": "./import_map.json",

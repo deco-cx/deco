@@ -1,11 +1,11 @@
 import { parse } from "std/semver/mod.ts";
 import { Context } from "../../../deco.ts";
+import denoJSON from "../../../deno.json" with { type: "json" };
 import { singleFlight } from "../../../engine/core/utils.ts";
-import { Schemas } from "../../../engine/schema/builder.ts";
+import type { Schemas } from "../../../engine/schema/builder.ts";
 import { namespaceOf } from "../../../engine/schema/gen.ts";
 import { type LazySchema, lazySchemaFor } from "../../../engine/schema/lazy.ts";
-import meta from "../../../meta.json" with { type: "json" };
-import { AppManifest } from "../../../types.ts";
+import type { AppManifest } from "../../../types.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
@@ -76,8 +76,8 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
         mschema = schema; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
 
         const info: MetaInfo = {
-          major: parse(meta.version).major,
-          version: meta.version,
+          major: parse(denoJSON.version).major,
+          version: denoJSON.version,
           namespace: context.namespace!,
           site: context.site!,
           manifest: manfiestBlocks,

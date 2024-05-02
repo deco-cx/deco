@@ -39,12 +39,59 @@ const cacheOptions = {
   sizeCalculation: (value: Uint8Array) => {
     return uint8ArrayToNum(value); // return the length of the array
   },
-  dispose: (_value: Uint8Array, key: string) => {
-    Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
-      console.error(`Failed to delete ${key}:`, err)
+  dispose: async (_value: Uint8Array, key: string) => {
+    await Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
+      logger.warning(`Failed to delete ${key}:`, err)
     );
   },
 };
+
+// Function to convert headers object to a Uint8Array
+function headersToUint8Array(headers: [string, string][]) {
+  const headersStr = JSON.stringify(headers);
+  return new TextEncoder().encode(headersStr);
+}
+
+// Function to combine the body and headers into a single buffer
+function generateCombinedBuffer(body: Uint8Array, headers: Uint8Array) {
+  // This prepends the header length to the combined buffer. As it has 4 bytes in size,
+  // it can store up to 2^32 - 1 bytes of headers (4GB). This should be enough for all deco use cases.
+  const headerLength = new Uint8Array(new Uint32Array([headers.length]).buffer);
+
+  // Concatenate length, headers, and body into one Uint8Array
+  const combinedBuffer = new Uint8Array(
+    headerLength.length + headers.length + body.length,
+  );
+  combinedBuffer.set(headerLength, 0);
+  combinedBuffer.set(headers, headerLength.length);
+  combinedBuffer.set(body, headerLength.length + headers.length);
+  return combinedBuffer;
+}
+
+// Function to extract the headers and body from a combined buffer
+function extractCombinedBuffer(combinedBuffer: Uint8Array) {
+  // Extract the header length from the combined buffer
+  const headerLengthArray = combinedBuffer.slice(0, 4);
+  const headerLength = new Uint32Array(headerLengthArray.buffer)[0];
+
+  // Extract the headers and body from the combined buffer
+  const headers = combinedBuffer.slice(4, 4 + headerLength);
+  const body = combinedBuffer.slice(4 + headerLength);
+  return { headers, body };
+}
+
+function getIterableHeaders(headers: Uint8Array) {
+  const headersStr = new TextDecoder().decode(headers);
+
+  // Directly parse the string as an array of [key, value] pairs
+  const headerPairs: [string, string][] = JSON.parse(headersStr);
+
+  // Filter out any pairs with empty key or value
+  const filteredHeaders = headerPairs.filter(([key, value]) =>
+    key !== "" && value !== ""
+  );
+  return filteredHeaders;
+}
 
 const fileCache = new LRUCache(cacheOptions);
 
@@ -72,12 +119,14 @@ function createFileSystemCache(): CacheStorage {
       await assertCacheDirectory();
     }
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-    await Deno.writeFile(filePath, responseArray);
 
     const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
+    const ttl = expirationTimestamp - Date.now(); // Calculate the time to live (ttl) by subtracting the current timestamp from the expiration timestamp
+
     fileCache.set(key, numToUint8Array(responseArray.length), {
-      ttl: expirationTimestamp, // ttl of file added
+      ttl: ttl, // Set the ttl of the file added
     }); // Add to cache, which may trigger disposal of old item
+    await Deno.writeFile(filePath, responseArray);
     return;
   }
 
@@ -96,11 +145,7 @@ function createFileSystemCache(): CacheStorage {
     } catch (err) {
       // Error code different for file/dir not found
       // The file won't be found in cases where it's not cached
-      if (err.code === "ENOENT") {
-        logger.warning(
-          `file not found when reading from file system, path: ${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`,
-        );
-      } else {
+      if (err.code !== "ENOENT") {
         logger.error(`error when reading from file system, ${err}`);
       }
       return null;
@@ -194,8 +239,12 @@ function createFileSystemCache(): CacheStorage {
               bufferSize: data.length,
             });
 
+            const { headers, body } = extractCombinedBuffer(data);
+            const iterableHeaders = getIterableHeaders(headers);
+            const responseHeaders = new Headers(iterableHeaders);
             return new Response(
-              data,
+              body,
+              { headers: responseHeaders },
             );
           } catch (err) {
             throw err;
@@ -223,12 +272,16 @@ function createFileSystemCache(): CacheStorage {
           }
 
           const cacheKey = await requestURLSHA1(request);
-          const buffer = await response.arrayBuffer()
+          const bodyBuffer = await response.arrayBuffer()
             .then((buffer) => new Uint8Array(buffer))
             .then((buffer) => {
               bufferSizeSumObserver.add(buffer.length);
               return buffer;
             });
+          const headersBuffer = headersToUint8Array([
+            ...response.headers.entries(),
+          ]);
+          const buffer = generateCombinedBuffer(bodyBuffer, headersBuffer);
 
           const span = tracer.startSpan("file-system-put", {
             attributes: {

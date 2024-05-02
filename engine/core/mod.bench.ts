@@ -1,7 +1,7 @@
 import { genHints } from "../../engine/core/hints.ts";
-import { BaseContext, resolve } from "../../engine/core/resolver.ts";
-import meta from "../../meta.json" assert { type: "json" };
-import releaseJSON from "./hints.test.json" assert { type: "json" };
+import { type BaseContext, resolve } from "../../engine/core/resolver.ts";
+import denoJSON from "../../deno.json" with { type: "json" };
+import releaseJSON from "./hints.test.json" with { type: "json" };
 const danglingRecover = (parent: unknown) => parent;
 
 const resolveHints = {}; //on-demand hints
@@ -67,10 +67,10 @@ Deno.bench(
 );
 
 const latestVersion = await import(
-  `https://denopkg.com/deco-cx/deco@${meta.version}/engine/core/resolver.ts`
+  `https://denopkg.com/deco-cx/deco@${denoJSON.version}/engine/core/resolver.ts`
 );
 Deno.bench(
-  `resolve ${meta.version} version (with on-demand hints)`,
+  `resolve ${denoJSON.version} version (with on-demand hints)`,
   { group: "resolve" },
   async () => {
     const context = {
