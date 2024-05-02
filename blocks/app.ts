@@ -18,6 +18,7 @@ import {
 } from "../engine/middleware.ts";
 import { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
+import { isInvokeCtx } from "./loader.ts";
 import { fnContextFromHttpContext } from "./utils.tsx";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
@@ -72,6 +73,7 @@ export type AppMiddlewareContext<
   TApp extends App = App,
   TResponse = any,
 > = AppContext<TApp> & {
+  isInvoke: boolean;
   resolveChain: FieldResolver[];
   next?: () => Promise<TResponse>;
 };
@@ -247,6 +249,7 @@ const appMiddlewareToResolverMiddleware = <
         const appCtx = {
           ...fnContextFromHttpContext(appHttpCtx),
           ...state,
+          isInvoke: isInvokeCtx(ctx),
           resolveChain: ctx.resolveChain,
           next: ctx.next?.bind?.(ctx),
         };

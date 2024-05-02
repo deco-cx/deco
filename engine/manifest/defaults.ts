@@ -161,7 +161,7 @@ export default {
   },
   invoke: async function invoke(
     { props, block }: BlockInvocation,
-    { resolvables, resolvers, resolve },
+    { resolvables, resolvers, resolve, ...ctx },
   ) {
     const invokeBlock = `${INVOKE_PREFIX_KEY}${block}`;
     const _invokeResolver = resolvers[invokeBlock];
@@ -181,10 +181,22 @@ export default {
       }
       const { __resolveType, ...savedprops } = resolvable;
       // recursive call
-      return await resolve({ ...props, ...savedprops, __resolveType });
+      return await resolve({ ...props, ...savedprops, __resolveType }, {
+        resolveChain: [...ctx?.resolveChain ?? [], {
+          type: "resolvable",
+          value: block,
+        }, {
+          type: "resolver",
+          value: __resolveType,
+        }],
+      });
     }
     return await resolve({ ...props, __resolveType }, {
       propsAreResolved: true,
+      resolveChain: [...ctx?.resolveChain ?? [], {
+        type: "resolver",
+        value: __resolveType,
+      }],
     });
   },
 } satisfies ResolverMap<BaseContext>;
