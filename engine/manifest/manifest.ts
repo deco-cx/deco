@@ -32,6 +32,7 @@ import {
   type ResolverMap,
 } from "../core/resolver.ts";
 import type { PromiseOrValue } from "../core/utils.ts";
+import { ENV_SITE_NAME } from "../decofile/constants.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
 import { type DecofileProvider, getProvider } from "../decofile/provider.ts";
 import { integrityCheck } from "../integrity.ts";
@@ -41,7 +42,6 @@ import { randomSiteName } from "./utils.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
-const ENV_SITE_NAME = "DECO_SITE_NAME";
 const DECO_COLORS = 0x02f77d;
 export type FreshHandler<
   TConfig = any,

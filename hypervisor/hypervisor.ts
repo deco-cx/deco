@@ -1,6 +1,7 @@
-import { isAuthenticated } from "deco/hypervisor/auth/checker.ts";
 import fjp from "npm:fast-json-patch@3.1.1";
 import * as colors from "std/fmt/colors.ts";
+import { tokenIsValid } from "../commons/jwt/engine.ts";
+import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
 import { createDurableFS } from "./realtime/fs.ts";
 import {
@@ -9,6 +10,7 @@ import {
 } from "./realtime/object.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 import type { Isolate } from "./workers/isolate.ts";
+
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
@@ -16,7 +18,9 @@ export interface AppOptions {
   run: Deno.Command;
   build?: Deno.Command;
   port: number;
+  site: string;
 }
+
 export class Hypervisor {
   private realtimeFsState: HypervisorRealtimeState;
   private realtimeFs: InstanceType<typeof Realtime>;
@@ -66,8 +70,12 @@ export class Hypervisor {
     const isHypervisorApi = (req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(HYPERVISOR_API_SPECIFIER)) === "true";
     if (isHypervisorApi) {
-      if (!await isAuthenticated(req)) {
+      const jwt = await getVerifiedJWT(req);
+      if (!jwt) {
         return new Response(null, { status: 401 });
+      }
+      if (!tokenIsValid(this.options.site, jwt)) {
+        return new Response(null, { status: 403 });
       }
       if (url.pathname.startsWith("/volumes")) {
         return this.realtimeFsState.wait().then(() =>

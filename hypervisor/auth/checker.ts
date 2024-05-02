@@ -1,25 +1,30 @@
-import type { JwtVerifier } from "deco/deps.ts";
+import type { JwtVerifier } from "../../commons/jwt/jwt.ts";
 import { getTrustedVerifierOf } from "../../commons/jwt/trusted.ts";
 
 let adminVerifier: Promise<JwtVerifier | undefined> | null = null;
-export const isAuthenticated = async (req: Request) => {
+export const getVerifiedJWT = async (req: Request) => {
   adminVerifier ??= getTrustedVerifierOf("https://admin.deco.cx");
   const verifier = await adminVerifier;
   if (!verifier) {
-    return false;
+    return undefined;
   }
-  const credentials = req.headers.get("authorization");
+  const url = new URL(req.url);
+  const tokenFromUrl = url.searchParams.get("token");
+  const credentials = req.headers.get("authorization") ??
+      tokenFromUrl
+    ? `Bearer ${tokenFromUrl}`
+    : undefined;
   if (!credentials) {
-    return false;
+    return undefined;
   }
   const parts = credentials.split(/\s+/);
 
   if (parts.length !== 2) {
-    return false;
+    return undefined;
   }
-  return verifier.verify(parts[1]).then(() => {
-    return true;
+  return verifier.verify(parts[1]).then((token) => {
+    return token;
   }).catch(() => {
-    return false;
+    return undefined;
   });
 };
