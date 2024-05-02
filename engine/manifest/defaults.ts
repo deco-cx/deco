@@ -191,10 +191,6 @@ export default {
         }],
       });
     }
-    console.log(...ctx?.resolveChain ?? [], {
-      type: "resolver",
-      value: __resolveType,
-    })
     return await resolve({ ...props, __resolveType }, {
       propsAreResolved: true,
       resolveChain: [...ctx?.resolveChain ?? [], {
