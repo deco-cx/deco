@@ -1,7 +1,8 @@
+import { isAuthenticated } from "deco/hypervisor/auth/checker.ts";
 import fjp from "npm:fast-json-patch@3.1.1";
 import * as colors from "std/fmt/colors.ts";
 import { realtimeFor } from "./deps.ts";
-import { createDurableFS } from "./fs.ts";
+import { createDurableFS } from "./realtime/fs.ts";
 import {
   HypervisorDiskStorage,
   HypervisorRealtimeState,
@@ -65,6 +66,9 @@ export class Hypervisor {
     const isHypervisorApi = (req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(HYPERVISOR_API_SPECIFIER)) === "true";
     if (isHypervisorApi) {
+      if (!await isAuthenticated(req)) {
+        return new Response(null, { status: 401 });
+      }
       if (url.pathname.startsWith("/volumes")) {
         return this.realtimeFsState.wait().then(() =>
           this.realtimeFs.fetch(req)
