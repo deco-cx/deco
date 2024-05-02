@@ -79,7 +79,7 @@ const importKey = (
 
 export const newJwtIssuer = async (
   { private: privkey, public: pubkey }: JwtIssuerKeyPair,
-  issuer?: string,
+  iss?: string,
 ): Promise<JwtIssuer> => {
   const [verifier, priv] = await Promise.all([
     newJwtVerifierWithJWK(pubkey),
@@ -88,7 +88,7 @@ export const newJwtIssuer = async (
   return {
     ...verifier,
     issue: (payload) => {
-      return create({ alg: "RS256", typ: "JWT" }, { ...payload, issuer }, priv);
+      return create({ alg: "RS256", typ: "JWT" }, { ...payload, iss }, priv);
     },
   };
 };

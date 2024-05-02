@@ -11,9 +11,7 @@ export const getVerifiedJWT = async (req: Request) => {
   const url = new URL(req.url);
   const tokenFromUrl = url.searchParams.get("token");
   const credentials = req.headers.get("authorization") ??
-      tokenFromUrl
-    ? `Bearer ${tokenFromUrl}`
-    : undefined;
+    (tokenFromUrl !== null ? `Bearer ${tokenFromUrl}` : undefined);
   if (!credentials) {
     return undefined;
   }

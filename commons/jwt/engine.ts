@@ -24,6 +24,7 @@ const siteUrn = (site: string) => `urn:deco:site:*:${site}:deployment/*`;
 
 export const tokenIsValid = (site: string, jwt: JwtPayload): boolean => {
   const { iss, sub, exp } = jwt;
+  console.log({ iss, sub, exp });
   if (!iss || !sub) {
     return false;
   }
