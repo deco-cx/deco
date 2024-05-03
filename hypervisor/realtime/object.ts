@@ -46,9 +46,11 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     const ignore = gitIgnore.default();
     globs && ignore.add(globs);
     this.ignore = {
-      includes: (str) =>
-        buildFilesRegExp?.test(str) === false &&
-        ignore.ignores(str.slice(1)),
+      includes: (str) => {
+        const isBuildFile = buildFilesRegExp &&
+          buildFilesRegExp?.test(str) === true;
+        return !isBuildFile && ignore.ignores(str.slice(1));
+      },
     };
   }
   /**
