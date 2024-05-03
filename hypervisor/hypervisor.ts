@@ -1,4 +1,5 @@
 import fjp from "npm:fast-json-patch@3.1.1";
+import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
@@ -14,9 +15,12 @@ import type { Isolate } from "./workers/isolate.ts";
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
+const COMMIT_DEFAULT_ENDPOINT = "/volumes/default/commit";
+
 export interface AppOptions {
   run: Deno.Command;
   build?: Deno.Command;
+  buildFiles?: string;
   port: number;
   site: string;
 }
@@ -28,24 +32,29 @@ export class Hypervisor {
   constructor(protected options: AppOptions) {
     let lastBuildCmd = Promise.resolve();
     const buildCmd = options.build;
+    const debouncedBuild = buildCmd
+      ? debounce(() => {
+        lastBuildCmd = lastBuildCmd.catch((_err) => {}).then(() => {
+          const child = buildCmd.spawn();
+          return child.output().then(() => {});
+        });
+      }, 200)
+      : undefined;
     const storage = new HypervisorDiskStorage({
       dir: Deno.cwd(),
-      onChange: buildCmd
+      buildFiles: options.buildFiles,
+      onChange: debouncedBuild
         ? (events) => {
           const hasAnyCreationOrDeletion = events.some((evt) =>
             evt.type !== "modify" && evt.path.endsWith(".ts") ||
             evt.path.endsWith(".tsx")
           );
           if (hasAnyCreationOrDeletion) {
-            lastBuildCmd = lastBuildCmd.catch((_err) => {}).then(() => {
-              const child = buildCmd.spawn();
-              return child.output().then(() => {});
-            });
+            debouncedBuild();
           }
         }
         : undefined,
     });
-    // TODO (@mcandeia) Deal with ephemeral volumes like presence
     this.realtimeFsState = new HypervisorRealtimeState({
       storage,
     });
@@ -70,8 +79,9 @@ export class Hypervisor {
     const isHypervisorApi = (req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(HYPERVISOR_API_SPECIFIER)) === "true";
     if (isHypervisorApi) {
-      if (url.pathname.startsWith("/.well-known/deco-validate/")) {
-        const token = url.pathname.split("/").pop();
+      const pathname = url.pathname;
+      if (pathname.startsWith("/.well-known/deco-validate/")) {
+        const token = pathname.split("/").pop();
         const decoValidateEnvVar = Deno.env.get("DECO_VALIDATE_TOKEN");
         if (decoValidateEnvVar && token === decoValidateEnvVar) {
           return new Response(decoValidateEnvVar, { status: 200 });
@@ -85,10 +95,21 @@ export class Hypervisor {
       if (!tokenIsValid(this.options.site, jwt)) {
         return new Response(null, { status: 403 });
       }
-      if (url.pathname.startsWith("/volumes")) {
-        return this.realtimeFsState.wait().then(() =>
-          this.realtimeFs.fetch(req)
-        )
+      if (pathname.startsWith("/volumes")) {
+        return this.realtimeFsState.wait().then(async () => {
+          if (pathname === COMMIT_DEFAULT_ENDPOINT) {
+            const { commitSha } = await req.json<{ commitSha: string }>();
+            if (!commitSha) {
+              return new Response(
+                JSON.stringify({ message: "commit sha is missing" }),
+                { status: 400 },
+              );
+            }
+            await this.realtimeFsState.persist(commitSha);
+            return new Response(null, { status: 204 });
+          }
+          return this.realtimeFs.fetch(req);
+        })
           .catch(
             (err) => {
               console.error(

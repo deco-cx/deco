@@ -12,7 +12,9 @@ import type { VersionedDecofile } from "./realtime.ts";
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
-    .then((response) => response.json()).catch((_e) => ({}));
+    .then((response) => response.json<Record<string, unknown>>()).catch((
+      _e,
+    ) => ({} as Record<string, unknown>));
 };
 
 export const DECO_FILE_NAME = ".decofile.json";

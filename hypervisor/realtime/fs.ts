@@ -1,8 +1,15 @@
 import { FSError, type RealtimeState } from "../deps.ts";
+import { HypervisorDiskStorage } from "./object.ts";
 
 export const createDurableFS = (state: RealtimeState) => {
   const storage = state.storage;
+  const addMethods: Partial<HypervisorDiskStorage> = {};
+  if (state.storage instanceof HypervisorDiskStorage) {
+    addMethods.watch = state.storage.watch.bind(state.storage);
+  }
+
   return {
+    ...addMethods,
     readFile: async (filepath: string): Promise<string> => {
       const fileContent = await storage.get(filepath);
       if (!fileContent) {

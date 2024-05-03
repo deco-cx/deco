@@ -6,7 +6,7 @@ import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { Hypervisor } from "./hypervisor.ts";
 import { portPool } from "./workers/portpool.ts";
 const parsedArgs = parse(Deno.args, {
-  string: ["build-cmd"],
+  string: ["build-cmd", "build-files"],
   boolean: ["expose"],
 });
 const runCommand = parsedArgs["_"];
@@ -43,6 +43,7 @@ if (!DECO_SITE_NAME) {
 const hypervisor = new Hypervisor({
   run: runCmd,
   build: buildCmd,
+  buildFiles: parsedArgs["build-files"],
   port: APP_PORT,
   site: DECO_SITE_NAME,
 });

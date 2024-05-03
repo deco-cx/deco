@@ -1,78 +1,17 @@
-// deno-lint-ignore-file no-explicit-any require-await
+import { Tar } from "std/archive/tar.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
 import { exists } from "std/fs/exists.ts";
 import { walk } from "std/fs/walk.ts";
-import { dirname, join } from "std/path/mod.ts";
-import { gitIgnore, RealtimeState } from "../deps.ts";
+import { Buffer } from "std/io/buffer.ts";
+import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
+import { copy } from "std/streams/copy.ts";
+import { type File, gitIgnore, RealtimeState } from "../deps.ts";
 
+const encoder = new TextEncoder();
+const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
+const CHANGESET_FILE = "/.metadata/changeset.json";
 const IGNORE_FILES_GLOB = [".git/**"];
 type RealtimeStorage = RealtimeState["storage"];
-export class HypervisorMemStorage implements RealtimeStorage {
-  private data: Map<string, any>;
-
-  constructor() {
-    this.data = new Map<string, any>();
-  }
-
-  async get<T = unknown>(key: string): Promise<T | undefined>;
-  async get<T = unknown>(keys: string[]): Promise<Map<string, T>>;
-  async get<T = unknown>(
-    keys: string | string[],
-  ): Promise<T | undefined | Map<string, T>> {
-    if (Array.isArray(keys)) {
-      const data = new Map<string, T>();
-      keys.forEach((k) => {
-        const value = this.data.get(k);
-        if (value !== undefined) {
-          data.set(k, value as T);
-        }
-      });
-      return data;
-    } else {
-      const value = this.data.get(keys);
-      return value !== undefined ? (value as T) : undefined;
-    }
-  }
-
-  async delete(key: string): Promise<boolean>;
-  async delete(keys: string[]): Promise<number>;
-  async delete(keys: string | string[]): Promise<boolean | number> {
-    if (Array.isArray(keys)) {
-      let deletedCount = 0;
-      keys.forEach((k) => {
-        if (this.data.delete(k)) {
-          deletedCount++;
-        }
-      });
-      return deletedCount;
-    } else {
-      return this.data.delete(keys) ? true : false;
-    }
-  }
-
-  async put<T>(key: string, value: T): Promise<void>;
-  async put<T>(entries: Record<string, T>): Promise<void>;
-  async put(
-    key: string | Record<string, unknown>,
-    value?: unknown,
-  ): Promise<void> {
-    if (typeof key === "string") {
-      this.data.set(key, value as string);
-    } else {
-      for (const [entryKey, entryValue] of Object.entries(key)) {
-        this.data.set(entryKey, entryValue as string);
-      }
-    }
-  }
-
-  async deleteAll(): Promise<void> {
-    this.data.clear();
-  }
-
-  async list<T = unknown>(): Promise<Map<string, T>> {
-    return new Map(this.data);
-  }
-}
 
 export interface FsEvent {
   type: "create" | "delete" | "modify";
@@ -81,7 +20,10 @@ export interface FsEvent {
 export interface DiskStorageOptions {
   dir: string;
   onChange?: (events: FsEvent[]) => void;
+  buildFiles?: string;
 }
+
+// create sync back from disk to memory
 export class HypervisorDiskStorage implements RealtimeStorage {
   private ignore: { includes: (str: string) => boolean } = {
     includes: () => true,
@@ -89,6 +31,9 @@ export class HypervisorDiskStorage implements RealtimeStorage {
   private dir: string;
   constructor(private opts: DiskStorageOptions) {
     this.dir = opts.dir;
+    const buildFilesRegExp = opts.buildFiles
+      ? globToRegExp(opts.buildFiles)
+      : undefined;
     let ignoreContent = null;
     try {
       ignoreContent = Deno.readTextFileSync(
@@ -101,8 +46,46 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     const ignore = gitIgnore.default();
     globs && ignore.add(globs);
     this.ignore = {
-      includes: (str) => ignore.ignores(str.slice(1)),
+      includes: (str) =>
+        buildFilesRegExp?.test(str) === false &&
+        ignore.ignores(str.slice(1)),
     };
+  }
+  /**
+   * this is different from "onChange" this this is triggered by filesystem and avoid being triggered by itself.
+   */
+  async *watch() {
+    const watchKinds: Deno.FsEvent["kind"][] = [
+      "create",
+      "modify",
+      "remove",
+    ];
+    for await (const event of Deno.watchFs(this.dir, { recursive: true })) {
+      const { kind, paths } = event;
+      if (!watchKinds.includes(kind)) {
+        continue;
+      }
+      const changedFiles: Record<string, File> = {};
+      const updatePath = async (path: string) => {
+        const virtualPath = path.replace(this.dir, "");
+
+        if (kind === "remove") {
+          changedFiles[virtualPath] = { content: null as unknown as string };
+          return;
+        }
+        const isFile = await exists(path, { isFile: true, isReadable: true });
+        if (!isFile) return;
+        if (this.ignore.includes(virtualPath)) {
+          return;
+        }
+        const fileContent = await Deno.readTextFile(
+          path,
+        );
+        changedFiles[virtualPath] = { content: fileContent };
+      };
+      await Promise.all(paths.map(updatePath));
+      yield changedFiles;
+    }
   }
 
   async get<T = unknown>(key: string): Promise<T | undefined>;
@@ -228,11 +211,44 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
   }
 
   blockConcurrencyWhile(cb: () => Promise<T>): Promise<T> {
-    this.blockConcurrencyWhilePromise = cb();
+    this.blockConcurrencyWhilePromise = this.blockConcurrencyWhilePromise
+      ? this.blockConcurrencyWhilePromise.then(() => cb())
+      : cb();
     return this.blockConcurrencyWhilePromise;
   }
 
-  public async wait() {
+  public wait() {
     return this?.blockConcurrencyWhilePromise ?? Promise.resolve();
+  }
+
+  public async persist(commitSha: string) {
+    if (!SOURCE_PATH) {
+      return;
+    }
+    const outfile = join(
+      SOURCE_PATH,
+      "..",
+      "..",
+      commitSha,
+      basename(SOURCE_PATH),
+    );
+    const tar = new Tar();
+    const allFiles = await this.storage.list<string>();
+    const tasks: Promise<void>[] = [];
+    for (const [path, content] of allFiles.entries()) {
+      if (!content || path === CHANGESET_FILE) {
+        continue;
+      }
+      const encoded = encoder.encode(content);
+      tasks.push(tar.append(path, {
+        reader: new Buffer(encoded),
+        contentSize: encoded.byteLength,
+      }));
+    }
+    await ensureDir(dirname(outfile));
+    const writer = await Deno.open(outfile, { write: true, create: true });
+    await copy(tar.getReader(), writer);
+    writer.close();
+    await this.storage.delete(CHANGESET_FILE);
   }
 }
