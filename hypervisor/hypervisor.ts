@@ -35,8 +35,6 @@ export class Hypervisor {
     const debouncedBuild = buildCmd
       ? debounce(() => {
         lastBuildCmd = lastBuildCmd.catch((_err) => {}).then(() => {
-          const child = buildCmd.spawn();
-          return child.output().then(() => {});
         });
       }, 200)
       : undefined;
