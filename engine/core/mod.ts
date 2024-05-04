@@ -1,22 +1,22 @@
 // deno-lint-ignore-file no-explicit-any
-import { once, type SyncOnce } from "../../utils/sync.ts";
-import type { DecofileProvider } from "../decofile/provider.ts";
-import type { ResolveHints } from "./hints.ts";
-import type {
+import { once, SyncOnce } from "../../utils/sync.ts";
+import { Release } from "../releases/provider.ts";
+import { ResolveHints } from "./hints.ts";
+import {
   BaseContext,
   FieldResolver,
   Monitoring,
   Opts,
   Resolvable,
   ResolvableMap,
+  resolve,
   ResolveFunc,
   Resolver,
   ResolverMap,
 } from "./resolver.ts";
-import { resolve } from "./resolver.ts";
 
 export interface ResolverOptions<TContext extends BaseContext = BaseContext> {
-  release: DecofileProvider;
+  release: Release;
   danglingRecover?: Resolver;
   resolvables?: ResolvableMap;
   resolvers?: ResolverMap<TContext>;
@@ -28,7 +28,7 @@ export interface ExtensionOptions<TContext extends BaseContext = BaseContext>
       ResolverOptions<TContext>,
       "release" | "getResolvers" | "loadExtensions"
     > {
-  release?: DecofileProvider;
+  release?: Release;
 }
 
 export interface ResolveOptions extends Opts {
@@ -72,7 +72,7 @@ export const resolverIdFromResolveChain = (chain: FieldResolver[]) => {
 };
 
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
-  protected release: DecofileProvider;
+  protected release: Release;
   protected resolvers: ResolverMap<TContext>;
   protected resolvables?: ResolvableMap;
   protected danglingRecover?: Resolver;

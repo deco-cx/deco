@@ -1,4 +1,4 @@
-import type { Plugin } from "$fresh/server.ts";
+import { Plugin } from "$fresh/server.ts";
 
 export const STYLE_ELEMENT_ID = "__DECO_GLOBAL_STYLES__";
 

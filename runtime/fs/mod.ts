@@ -1,6 +1,6 @@
 import { Queue } from "https://deno.land/x/async@v2.1.0/queue.ts";
 import { Context } from "../../deco.ts";
-import type { FileSystem } from "../../scripts/mount.ts";
+import { FileSystem } from "../../scripts/mount.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 
 export interface IVFS {

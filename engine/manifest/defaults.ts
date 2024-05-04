@@ -1,12 +1,12 @@
 import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
-import { type DotNestedKeys, pickPaths } from "../../utils/object.ts";
-import type { ResolveOptions } from "../core/mod.ts";
+import { DotNestedKeys, pickPaths } from "../../utils/object.ts";
+import { ResolveOptions } from "../core/mod.ts";
 import {
-  type BaseContext,
+  BaseContext,
   isResolvable,
-  type Resolvable,
-  type Resolver,
-  type ResolverMap,
+  Resolvable,
+  Resolver,
+  ResolverMap,
 } from "../core/resolver.ts";
 
 export const PREVIEW_PREFIX_KEY = "Preview@";

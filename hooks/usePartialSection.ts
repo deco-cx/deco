@@ -1,5 +1,5 @@
 import { CLIENT_NAV_ATTR, PARTIAL_ATTR } from "$fresh/src/constants.ts";
-import type { ComponentType } from "preact";
+import { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
 import { SectionContext } from "../components/section.tsx";
 import { IS_BROWSER } from "../deps.ts";

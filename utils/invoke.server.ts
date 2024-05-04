@@ -1,6 +1,6 @@
 import { type InvocationProxyHandler, newHandler } from "../clients/proxy.ts";
-import type { InvocationFunc } from "../clients/withManifest.ts";
-import type { ResolveOptions } from "../engine/core/mod.ts";
+import { InvocationFunc } from "../clients/withManifest.ts";
+import { ResolveOptions } from "../engine/core/mod.ts";
 import type { BaseContext, ResolveFunc } from "../engine/core/resolver.ts";
 import dfs from "../engine/manifest/defaults.ts";
 import type { AppManifest } from "../mod.ts";

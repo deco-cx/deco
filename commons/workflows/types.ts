@@ -1,9 +1,9 @@
-import type {
+import {
   Metadata,
   Workflow,
   WorkflowExecution as DurableExecution,
 } from "../../deps.ts";
-import type { Resolvable } from "../../engine/core/resolver.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
 export type Arg = readonly unknown[];
 
 // deno-lint-ignore no-explicit-any

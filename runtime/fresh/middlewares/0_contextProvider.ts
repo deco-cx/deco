@@ -1,16 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
-import { Context, type DecoContext } from "../../../deco.ts";
-import type { FreshContext, MiddlewareHandler } from "../../../deps.ts";
+import { Context, DecoContext } from "../../../deco.ts";
+import { FreshContext, MiddlewareHandler } from "../../../deps.ts";
 import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
-import { DECO_FILE_NAME, newFsProvider } from "../../../engine/decofile/fs.ts";
-import {
-  type DecofileProvider,
-  getProvider,
-} from "../../../engine/decofile/provider.ts";
+import { DECO_FILE_NAME, newFsProvider } from "../../../engine/releases/fs.ts";
+import { getRelease, Release } from "../../../engine/releases/provider.ts";
 import { newContext } from "../../../mod.ts";
-import type { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
-import type { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
+import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 import { ContextCache } from "./1_alienRelease.ts";
 
 let contextCache: ContextCache | null = null;
@@ -37,7 +34,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         Deno.env.has("USE_LOCAL_STORAGE_ONLY");
       let siteName = opt.manifest.name;
       let namespace: string | undefined = opt.manifest.name;
-      let releaseProviderPromise: Promise<DecofileProvider>;
+      let releaseProviderPromise: Promise<Release>;
       if (shouldUseLocalStorage) {
         releaseProviderPromise = Promise.resolve(
           newFsProvider(DECO_FILE_NAME, siteName),
@@ -52,7 +49,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
           throw new Error("DECO_SITE_NAME env var not defined.");
         }
         siteName = fromEnvSiteName ?? randomSiteName();
-        releaseProviderPromise = getProvider(
+        releaseProviderPromise = getRelease(
           opt.manifest.name,
           siteName,
           -1,

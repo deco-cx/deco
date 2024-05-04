@@ -1,14 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
-import type { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
-import type { FunctionComponent } from "preact";
-import type { Program, TsType } from "../deps.ts";
-import type { HintNode } from "../engine/core/hints.ts";
-import type { FieldResolver, Resolver } from "../engine/core/resolver.ts";
-import type { PromiseOrValue } from "../engine/core/utils.ts";
-import type { ResolverMiddleware } from "../engine/middleware.ts";
-import type { Schemeable } from "../engine/schema/transform.ts";
-import type { AppManifest } from "../types.ts";
-import type { BlockInvocation } from "./manifest/defaults.ts";
+import { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
+import { FunctionComponent } from "preact";
+import { Program, TsType } from "../deps.ts";
+import { HintNode } from "../engine/core/hints.ts";
+import { FieldResolver, Resolver } from "../engine/core/resolver.ts";
+import { PromiseOrValue } from "../engine/core/utils.ts";
+import { ResolverMiddleware } from "../engine/middleware.ts";
+import { Schemeable } from "../engine/schema/transform.ts";
+import { AppManifest } from "../types.ts";
+import { BlockInvocation } from "./manifest/defaults.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;

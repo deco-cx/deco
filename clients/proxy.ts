@@ -1,14 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
-import type { AppManifest } from "../mod.ts";
-import type {
-  Invoke,
-  InvokeAsPayload,
-  InvokeResult,
-  ManifestInvocable,
+import { type AppManifest } from "../mod.ts";
+import {
+  type Invoke,
+  type InvokeAsPayload,
+  type InvokeResult,
+  type ManifestInvocable,
 } from "../utils/invoke.types.ts";
-import type { DotNestedKeys } from "../utils/object.ts";
-import type { Fulfilled, Rejected } from "../utils/promise.ts";
-import type { invokeKey } from "./withManifest.ts";
+import { type DotNestedKeys } from "../utils/object.ts";
+import { Fulfilled, Rejected } from "../utils/promise.ts";
+import { type invokeKey } from "./withManifest.ts";
 
 export type InvocationProxyHandler = {
   (props?: any, init?: RequestInit | undefined): Promise<any>;

@@ -17,7 +17,6 @@ import { DebugSampler } from "./samplers/debug.ts";
 import { type SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
 import { OpenTelemetryHandler } from "https://denopkg.com/hyperdxio/hyperdx-js@cc43f5a2ba5f0062f3e01ea3d162d71971dd1f89/packages/deno/mod.ts";
-import { ENV_SITE_NAME } from "../../engine/decofile/constants.ts";
 
 const tryGetVersionOf = (pkg: string) => {
   try {
@@ -32,7 +31,7 @@ const apps_ver = tryGetVersionOf("apps/") ??
 
 export const resource = Resource.default().merge(
   new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get(ENV_SITE_NAME) ??
+    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get("DECO_SITE_NAME") ??
       "deco",
     [SemanticResourceAttributes.SERVICE_VERSION]:
       Context.active().deploymentId ??

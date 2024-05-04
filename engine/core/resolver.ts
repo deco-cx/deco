@@ -1,14 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
-import type { Context, Span, Tracer } from "../../deps.ts";
+import { Context, Span, Tracer } from "../../deps.ts";
 import { identity } from "../../utils/object.ts";
-import type { createServerTimings } from "../../utils/timings.ts";
-import { type HintNode, type ResolveHints, traverseAny } from "./hints.ts";
-import { type ResolveOptions, resolverIdFromResolveChain } from "./mod.ts";
+import { createServerTimings } from "../../utils/timings.ts";
+import { HintNode, ResolveHints, traverseAny } from "./hints.ts";
+import { ResolveOptions, resolverIdFromResolveChain } from "./mod.ts";
 import {
   isAwaitable,
   notUndefined,
-  type PromiseOrValue,
-  type UnPromisify,
+  PromiseOrValue,
+  UnPromisify,
 } from "./utils.ts";
 
 export class DanglingReference extends Error {

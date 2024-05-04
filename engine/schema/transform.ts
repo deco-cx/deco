@@ -31,11 +31,11 @@ import type {
   TsUnionType,
   VariableDeclarator,
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
-import type { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
-import type { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
-import type { BlockModuleRef, IntrospectParams } from "../block.ts";
+import { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
+import { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
+import { BlockModuleRef, IntrospectParams } from "../block.ts";
 import { beautify } from "./utils.ts";
-import type { ImportMapResolver } from "../importmap/builder.ts";
+import { ImportMapResolver } from "../importmap/builder.ts";
 import { spannableToJSONSchema } from "./comments.ts";
 import type { ParsedSource } from "./deps.ts";
 import { parsePath } from "./parser.ts";

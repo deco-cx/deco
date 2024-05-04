@@ -1,22 +1,22 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
 import { ValueType, weakcache } from "../deps.ts";
-import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
 import { HttpError } from "../engine/errors.ts";
-import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
-import type { DecofileProvider } from "../engine/decofile/provider.ts";
+import { ResolverMiddlewareContext } from "../engine/middleware.ts";
+import { Release } from "../engine/releases/provider.ts";
 import { logger } from "../observability/otel/config.ts";
 import { meter } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
-import type { HttpContext } from "./handler.ts";
+import { HttpContext } from "./handler.ts";
 import {
   applyProps,
-  type FnContext,
-  type FnProps,
-  type RequestState,
-  type SingleFlightKeyFunc,
+  FnContext,
+  FnProps,
+  RequestState,
+  SingleFlightKeyFunc,
 } from "./utils.tsx";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
@@ -152,7 +152,7 @@ const wrapLoader = (
     ...rest
   }: LoaderModule,
   resolveChain: FieldResolver[],
-  release: DecofileProvider,
+  release: Release,
 ) => {
   const flights = singleFlight();
 

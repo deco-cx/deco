@@ -1,14 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
-import type { FnProps } from "../blocks/utils.tsx";
-import type {
+import { FnProps } from "../blocks/utils.tsx";
+import {
   Diff,
   Intersection,
   OptionalKeys,
   Overwrite,
   RequiredKeys,
 } from "../deps.ts";
-import { type Promisified, waitKeys } from "../engine/core/utils.ts";
-import type { FnContext } from "../types.ts";
+import { Promisified, waitKeys } from "../engine/core/utils.ts";
+import { FnContext } from "../types.ts";
 
 export type PropsUnion<
   TLoadProps,

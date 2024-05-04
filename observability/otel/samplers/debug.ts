@@ -1,13 +1,13 @@
 import {
-  type Attributes,
-  type Context,
-  type Link,
+  Attributes,
+  Context,
+  Link,
   Sampler,
   SamplingDecision,
-  type SamplingResult,
-  type SpanKind,
+  SamplingResult,
+  SpanKind,
 } from "../../../deps.ts";
-import type { DecoState } from "../../../types.ts";
+import { DecoState } from "../../../types.ts";
 import { REQUEST_CONTEXT_KEY, STATE_CONTEXT_KEY } from "../context.ts";
 
 export class DebugSampler implements Sampler {

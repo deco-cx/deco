@@ -1,4 +1,4 @@
-import { type Cookie, setCookie as stdSetCookie } from "std/http/cookie.ts";
+import { Cookie, setCookie as stdSetCookie } from "std/http/cookie.ts";
 
 export const MAX_COOKIE_SIZE = 4096; // 4KB
 

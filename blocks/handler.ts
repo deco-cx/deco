@@ -1,14 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
-import type { Handler as DenoHandler, ServeHandler } from "../deps.ts";
-import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
-import type { BaseContext } from "../engine/core/resolver.ts";
-import type { PromiseOrValue } from "../engine/core/utils.ts";
-import type { DecoState, StatefulContext } from "../types.ts";
-import {
-  type FnContext,
-  fnContextFromHttpContext,
-  type RequestState,
-} from "./utils.tsx";
+import { Handler as DenoHandler, ServeHandler } from "../deps.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { BaseContext } from "../engine/core/resolver.ts";
+import { PromiseOrValue } from "../engine/core/utils.ts";
+import { DecoState, StatefulContext } from "../types.ts";
+import { FnContext, fnContextFromHttpContext, RequestState } from "./utils.tsx";
 
 export interface HttpContext<
   // deno-lint-ignore ban-types

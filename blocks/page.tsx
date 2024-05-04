@@ -1,4 +1,4 @@
-import type { InstanceOf } from "../engine/block.ts";
+import { InstanceOf } from "../engine/block.ts";
 import { createSectionBlock } from "./section.ts";
 
 export type Page = InstanceOf<typeof page, "#/root/pages">;

@@ -1,31 +1,28 @@
-import type { supabase } from "../../deps.ts";
-import { singleFlight } from "../core/utils.ts";
+import { supabase } from "../../deps.ts";
+import { singleFlight } from "../../engine/core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
 import { randId as ulid } from "../../utils/rand.ts";
-import type {
-  RealtimeDecofileProvider,
-  VersionedDecofile,
-} from "./realtime.ts";
+import { CurrResolvables, RealtimeReleaseProvider } from "./realtime.ts";
 
 const TABLE = "configs";
-const fetchDecofile = (
+const fetchRelease = (
   site: string,
-): PromiseLike<{ data: VersionedDecofile | null; error: unknown }> => {
-  return getSupabaseClient().from(TABLE).select("state, revision").eq(
+): PromiseLike<{ data: CurrResolvables | null; error: unknown }> => {
+  return getSupabaseClient().from(TABLE).select("state, archived, revision").eq(
     "site",
     site,
   ).maybeSingle();
 };
 
 const JITTER_TIME_MS = 2000;
-type Fetcher = () => ReturnType<typeof fetchDecofile>;
+type Fetcher = () => ReturnType<typeof fetchRelease>;
 // Supabase client setup
-const subscribeForDecofileChanges = (
+const subscribeForReleaseChanges = (
   site: string,
   fetcher: Fetcher,
 ) =>
 (
-  callback: (res: VersionedDecofile) => unknown,
+  callback: (res: CurrResolvables) => unknown,
   subscriptionCallback: (
     status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
     err?: Error,
@@ -42,7 +39,7 @@ const subscribeForDecofileChanges = (
         filter: `site=eq.${site}`,
       },
       (payload) => {
-        const newPayload = payload.new as VersionedDecofile;
+        const newPayload = payload.new as CurrResolvables;
         if (newPayload?.state === undefined) {
           console.warn("state is too big, fetching from supabase");
           // we have added a jitter of 2s to prevent too many requests being issued at same time.
@@ -75,28 +72,28 @@ const subscribeForDecofileChanges = (
 };
 
 /**
- * Create a supabase decofile provider based on `configs` table.
+ * Create a supabase release provider based on `configs` table.
  * @param site the site name
- * @returns the supabaseDecofileProvider.
+ * @returns the supabaseReleaseProvider.
  */
 export const fromConfigsTable = (
   site: string,
-): RealtimeDecofileProvider => {
-  const sf = singleFlight<{ data: VersionedDecofile | null; error: unknown }>();
+): RealtimeReleaseProvider => {
+  const sf = singleFlight<{ data: CurrResolvables | null; error: unknown }>();
   const fetcher = () =>
     sf.do(
       "flight",
       async () => {
-        const { data, error } = await fetchDecofile(site);
+        const { data, error } = await fetchRelease(site);
         return {
           data: data ??
-            { state: {}, revision: ulid() },
+            { state: {}, archived: {}, revision: ulid() },
           error,
         };
       },
     );
   return {
     get: fetcher,
-    subscribe: subscribeForDecofileChanges(site, fetcher),
+    subscribe: subscribeForReleaseChanges(site, fetcher),
   };
 };

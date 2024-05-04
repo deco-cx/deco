@@ -1,8 +1,8 @@
 import {
-  type Context,
+  Context,
   Sampler,
   SamplingDecision,
-  type SamplingResult,
+  SamplingResult,
 } from "../../../deps.ts";
 import { REQUEST_CONTEXT_KEY } from "../context.ts";
 

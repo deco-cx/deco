@@ -1,5 +1,5 @@
-import type { ResolverMap } from "../../engine/core/resolver.ts";
-import type { FreshContext } from "../../engine/manifest/manifest.ts";
+import { ResolverMap } from "../../engine/core/resolver.ts";
+import { FreshContext } from "../../engine/manifest/manifest.ts";
 import defaultResolvers from "../../engine/manifest/defaults.ts";
 
 const freshResolvers = {

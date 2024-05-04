@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import { applyProps, type FnProps } from "../blocks/utils.tsx";
+import { applyProps, FnProps } from "../blocks/utils.tsx";
 import JsonViewer from "../components/JsonViewer.tsx";
-import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 
 export type Action = InstanceOf<typeof actionBlock, "#/root/actions">;
 

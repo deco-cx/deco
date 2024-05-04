@@ -1,5 +1,5 @@
-import type { InstanceOf, PreactComponent } from "../../engine/block.ts";
-import type { Resolvable } from "../../engine/core/resolver.ts";
+import { InstanceOf, PreactComponent } from "../../engine/block.ts";
+import { Resolvable } from "../../engine/core/resolver.ts";
 
 export type SimpleType = {
   name: string;

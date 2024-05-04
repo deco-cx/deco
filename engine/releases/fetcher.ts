@@ -2,15 +2,14 @@ import { fromFileUrl } from "std/path/mod.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
 import { newFsProviderFromPath } from "./fs.ts";
-import { newFsFolderProviderFromPath } from "./fsFolder.ts";
-import type { DecofileProvider, OnChangeCallback } from "./provider.ts";
+import { OnChangeCallback, Release } from "./provider.ts";
 import {
+  CurrResolvables,
   newRealtime,
-  type RealtimeDecofileProvider,
-  type VersionedDecofile,
+  RealtimeReleaseProvider,
 } from "./realtime.ts";
 
-const decofileCache: Record<string, Promise<DecofileProvider | undefined>> = {};
+const releaseCache: Record<string, Promise<Release | undefined>> = {};
 
 export interface HttpContent {
   text: string;
@@ -44,8 +43,8 @@ const fetchFromHttp = async (
     : undefined;
 };
 
-type SubscribeParameters = Parameters<RealtimeDecofileProvider["subscribe"]>;
-const fromEventSource = (es: EventSource): RealtimeDecofileProvider => {
+type SubscribeParameters = Parameters<RealtimeReleaseProvider["subscribe"]>;
+const fromEventSource = (es: EventSource): RealtimeReleaseProvider => {
   let [onChange, onError]: [
     SubscribeParameters[0] | undefined,
     SubscribeParameters[1] | undefined,
@@ -65,6 +64,7 @@ const fromEventSource = (es: EventSource): RealtimeDecofileProvider => {
       return {
         data: {
           state: JSON.parse(httpContent.text),
+          archived: {},
           revision: httpContent.etag ?? ulid(),
         },
         error: null,
@@ -78,10 +78,11 @@ const fromEventSource = (es: EventSource): RealtimeDecofileProvider => {
     });
   };
   es.addEventListener("message", async (event) => {
-    let data: null | VersionedDecofile = null;
+    let data: null | CurrResolvables = null;
     try {
       data = {
         state: JSON.parse(decodeURIComponent(event.data)),
+        archived: {},
         revision: ulid(),
       };
     } catch {
@@ -116,19 +117,20 @@ const fromEventSource = (es: EventSource): RealtimeDecofileProvider => {
 };
 export const fromHttpContent = (
   state: HttpContent,
-): DecofileProvider => {
+): Release => {
   return fromJSON(JSON.parse(state.text), state.etag);
 };
 
 export const fromJSON = (
   parsed: Record<string, unknown>,
   revision?: string,
-): DecofileProvider => {
+): Release => {
   const cbs: Array<OnChangeCallback> = [];
   let state = parsed;
   let currentRevision: string = revision ?? crypto.randomUUID();
   return {
     state: () => Promise.resolve(state),
+    archived: () => Promise.resolve({}),
     onChange: (cb) => {
       cbs.push(cb);
     },
@@ -143,20 +145,15 @@ export const fromJSON = (
     },
   };
 };
-async function decofileLoader(
+async function releaseLoader(
   endpointSpecifier: string,
-): Promise<DecofileProvider | undefined> {
+): Promise<Release | undefined> {
   const url = new URL(endpointSpecifier);
   const assertAllowedAuthority = () => {
     assertAllowedAuthorityFor(url);
   };
   try {
     switch (url.protocol) {
-      case "folder:": {
-        return newFsFolderProviderFromPath(
-          url.toString().replace("folder://", ""),
-        );
-      }
       case "file:": {
         return newFsProviderFromPath(fromFileUrl(url));
       }
@@ -180,40 +177,35 @@ async function decofileLoader(
         return undefined;
     }
   } catch (err) {
-    console.error("error creating decofile from", url, err);
+    console.error("error creating release from", url, err);
     return undefined;
   }
 }
 
-export const fromEndpoint = (endpoint: string): DecofileProvider => {
-  decofileCache[endpoint] ??= decofileLoader(endpoint);
-  const decofileProviderPromise: Promise<DecofileProvider> =
-    decofileCache[endpoint]
-      .then(
-        (r) => {
-          if (!r) {
-            throw new Error("decofile not defined");
-          }
-          return r;
-        },
-      );
+export const fromEndpoint = (endpoint: string): Release => {
+  releaseCache[endpoint] ??= releaseLoader(endpoint);
+  const releasePromise: Promise<Release> = releaseCache[endpoint].then((r) => {
+    if (!r) {
+      throw new Error("release not defined");
+    }
+    return r;
+  });
   return {
     set(state, revision) {
-      return decofileProviderPromise.then((r) => r?.set?.(state, revision));
+      return releasePromise.then((r) => r?.set?.(state, revision));
     },
     notify() {
-      return decofileProviderPromise.then((r) =>
-        r?.notify?.() ?? Promise.resolve()
-      );
+      return releasePromise.then((r) => r?.notify?.() ?? Promise.resolve());
     },
-    state: (options) => decofileProviderPromise.then((r) => r.state(options)),
+    state: (options) => releasePromise.then((r) => r.state(options)),
+    archived: (options) => releasePromise.then((r) => r.archived(options)),
     onChange: (cb) => {
-      decofileProviderPromise.then((r) => r.onChange(cb));
+      releasePromise.then((r) => r.onChange(cb));
     },
-    revision: () => decofileProviderPromise.then((r) => r.revision()),
+    revision: () => releasePromise.then((r) => r.revision()),
     dispose: () => {
-      decofileProviderPromise.then((r) => r?.dispose?.());
-      delete decofileCache[endpoint];
+      releasePromise.then((r) => r?.dispose?.());
+      delete releaseCache[endpoint];
     },
   };
 };

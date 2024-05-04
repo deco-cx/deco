@@ -1,24 +1,21 @@
 // deno-lint-ignore-file no-explicit-any
-import type { ComponentType } from "preact";
-import type { HttpContext } from "../blocks/handler.ts";
-import { type PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
-import {
-  fnContextFromHttpContext,
-  type RequestState,
-} from "../blocks/utils.tsx";
+import { ComponentType } from "preact";
+import { HttpContext } from "../blocks/handler.ts";
+import { PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
+import { fnContextFromHttpContext, RequestState } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";
-import type { JSX } from "../deps.ts";
-import type {
+import { JSX } from "../deps.ts";
+import {
   Block,
   BlockModule,
   ComponentFunc,
   InstanceOf,
   PreactComponent,
 } from "../engine/block.ts";
-import type { Resolver } from "../engine/core/resolver.ts";
-import type { AppManifest, FunctionContext } from "../types.ts";
+import { Resolver } from "../engine/core/resolver.ts";
+import { AppManifest, FunctionContext } from "../types.ts";
 import { HttpError } from "../engine/errors.ts";
 
 /**

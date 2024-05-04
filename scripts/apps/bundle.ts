@@ -2,7 +2,7 @@ import * as colors from "std/fmt/colors.ts";
 import { join } from "std/path/mod.ts";
 import { decoManifestBuilder } from "../../engine/manifest/manifestGen.ts";
 import { format } from "../../utils/formatter.ts";
-import { type AppConfig, getDecoConfig } from "./config.ts";
+import { AppConfig, getDecoConfig } from "./config.ts";
 
 const bundleApp = (dir: string) => async (app: AppConfig) => {
   console.log(`generating manifest for ${colors.bgBrightGreen(app.name)}...`);

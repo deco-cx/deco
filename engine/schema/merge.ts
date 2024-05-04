@@ -1,4 +1,4 @@
-import type { JSONSchema7 } from "../../deps.ts";
+import { JSONSchema7 } from "../../deps.ts";
 
 const merge = (
   defObj: JSONSchema7,
