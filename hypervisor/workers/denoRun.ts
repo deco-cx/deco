@@ -113,7 +113,7 @@ export class DenoRun implements Isolate {
     this.inflightRequests++;
     const url = new URL(req.url);
     url.port = `${this.port}`;
-    url.hostname = "0.0.0.0";
+    url.hostname = Deno.build.os === "windows" ? "localhost" : "0.0.0.0";
 
     if (req.headers.get("upgrade") === "websocket") {
       return proxyWebSocket(url, req);

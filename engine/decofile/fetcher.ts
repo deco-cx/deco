@@ -154,7 +154,7 @@ async function decofileLoader(
     switch (url.protocol) {
       case "folder:": {
         return newFsFolderProviderFromPath(
-          url.toString().replace("folder://", ""),
+          endpointSpecifier.replace("folder://", ""),
         );
       }
       case "file:": {
