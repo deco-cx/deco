@@ -707,6 +707,16 @@ const environments: UpgradeOption = {
     return Promise.resolve(true);
   },
   apply: async () => {
+    const gitIgnorePath = join(Deno.cwd(), ".gitignore");
+    const initialGitIgnoreContent = await Deno.readTextFile(gitIgnorePath)
+      .catch(() => {
+        return "";
+      });
+    let gitignore = initialGitIgnoreContent;
+    if (!gitignore.includes(".metadata/changeset.json")) {
+      gitignore =
+        `${gitignore}\n\n# Deco files\n\n_docker_deps.ts\n.metadata/changeset.json`;
+    }
     const addNewTasks = async (): Promise<Patch> => {
       const [denoJSONPath, denoJSON] = await getDenoJson();
       const envExists = await exists(join(Deno.cwd(), ".env"), {
@@ -739,7 +749,18 @@ const environments: UpgradeOption = {
         },
       };
     };
-    return [await addNewTasks()];
+    return [
+      ...initialGitIgnoreContent !== gitignore
+        ? [{
+          from: gitIgnorePath,
+          to: {
+            path: gitIgnorePath,
+            content: gitignore,
+          },
+        }]
+        : [],
+      await addNewTasks(),
+    ];
   },
 };
 
