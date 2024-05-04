@@ -1,6 +1,6 @@
 {
   "name": "@deco-cx/deco",
-  "version": "1.63.1",
+  "version": "1.63.2",
   "exports": "./mod.ts",
   "tasks": {
     "start": "deno task check",
