@@ -1,12 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
-import { supabase } from "../../deps.ts";
-import { Resolvable } from "../../engine/core/resolver.ts";
-import { singleFlight } from "../../engine/core/utils.ts";
+import type { supabase } from "../../deps.ts";
+import type { Resolvable } from "../core/resolver.ts";
+import { singleFlight } from "../core/utils.ts";
 import getSupabaseClient from "../../supabase.ts";
-import { JSONSchema, Site } from "../../types.ts";
+import type { JSONSchema, Site } from "../../types.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { ENTRYPOINT } from "./constants.ts";
-import { CurrResolvables, RealtimeReleaseProvider } from "./realtime.ts";
+import type {
+  RealtimeDecofileProvider,
+  VersionedDecofile,
+} from "./realtime.ts";
 export interface PageSection {
   // Identifies the component uniquely in the project (e.g: "./sections/Header.tsx")
   key: string;
@@ -306,10 +309,10 @@ const fetchSiteData = async (
 // Supabase client setup
 const subscribeForConfigChanges = (
   siteId: number,
-  fetcher: () => Promise<{ data: CurrResolvables | null; error: any }>,
+  fetcher: () => Promise<{ data: VersionedDecofile | null; error: any }>,
 ) =>
 (
-  callback: (res: CurrResolvables) => unknown,
+  callback: (res: VersionedDecofile) => unknown,
   subscriptionCallback: (
     status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
     err?: Error,
@@ -330,7 +333,7 @@ const subscribeForConfigChanges = (
           if (!v.error) {
             callback(
               v.data ??
-                { state: {}, archived: {}, revision: ulid() },
+                { state: {}, revision: ulid() },
             );
           }
         }),
@@ -347,7 +350,7 @@ const subscribeForConfigChanges = (
           if (!v.error) {
             callback(
               v.data ??
-                { state: {}, archived: {}, revision: ulid() },
+                { state: {}, revision: ulid() },
             );
           }
         }),
@@ -432,11 +435,11 @@ const pagesToConfig = (
 export const fromPagesTable = (
   siteId: number,
   namespace: string,
-): RealtimeReleaseProvider => {
-  const sf = singleFlight<{ data: CurrResolvables | null; error: any }>();
+): RealtimeDecofileProvider => {
+  const sf = singleFlight<{ data: VersionedDecofile | null; error: any }>();
   const fetcher = (includeArchived = false) =>
     sf.run(async (): Promise<
-      { data: CurrResolvables | null; error: any }
+      { data: VersionedDecofile | null; error: any }
     > => {
       const [{ data, error }, { data: dataFlags, error: errorFlags }] =
         await fetchSiteData(siteId, includeArchived);
@@ -451,9 +454,8 @@ export const fromPagesTable = (
       return {
         data: {
           state: pagesToConfig(data, dataFlags, namespace),
-          archived: {},
           revision: crypto.randomUUID(),
-        } as CurrResolvables,
+        } as VersionedDecofile,
         error: null,
       };
     });

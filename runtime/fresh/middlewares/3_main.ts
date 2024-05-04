@@ -1,11 +1,11 @@
-import { MiddlewareHandlerContext } from "$fresh/server.ts";
+import type { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { Context } from "../../../deco.ts";
 import { getCookies, SpanStatusCode } from "../../../deps.ts";
-import { Resolvable } from "../../../engine/core/resolver.ts";
-import { Apps } from "../../../mod.ts";
+import type { Resolvable } from "../../../engine/core/resolver.ts";
+import type { Apps } from "../../../mod.ts";
 import { startObserve } from "../../../observability/http.ts";
-import { DecoSiteState, DecoState } from "../../../types.ts";
+import type { DecoSiteState, DecoState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { decodeCookie, setCookie } from "../../../utils/cookies.ts";
 import { allowCorsFor } from "../../../utils/http.ts";

@@ -1,11 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
-import { Context, DecoContext } from "../../../deco.ts";
-import { MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
-import { fromEndpoint } from "../../../engine/releases/fetcher.ts";
+import { Context, type DecoContext } from "../../../deco.ts";
+import { type MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
+import { fromEndpoint } from "../../../engine/decofile/fetcher.ts";
 import { newContext } from "../../../mod.ts";
-import { DecoSiteState, DecoState } from "../../../types.ts";
-import { contextFromVolume } from "../../context.ts";
+import type { DecoSiteState, DecoState } from "../../../types.ts";
 
 interface Opts {
   cacheSize?: number;
@@ -76,21 +75,14 @@ export async function alienRelease(
       alienRelease,
     );
     if (!contextPromise) {
-      const isVolumeKind = alienRelease.includes("watch.ts");
-      if (!isVolumeKind) {
-        const active = Context.active();
-        const { manifest, importMap } = await active.runtime!;
-        contextPromise = newContext(
-          manifest,
-          importMap,
-          fromEndpoint(alienRelease),
-          alienRelease,
-        );
-      } else {
-        contextPromise = contextFromVolume(alienRelease, () => {
-          contextCache?.delete(alienRelease);
-        });
-      }
+      const active = Context.active();
+      const { manifest, importMap } = await active.runtime!;
+      contextPromise = newContext(
+        manifest,
+        importMap,
+        fromEndpoint(alienRelease),
+        alienRelease,
+      );
       contextCache.set(
         alienRelease,
         contextPromise.catch((err) => {

@@ -1,21 +1,21 @@
-import { HandlerContext } from "$fresh/server.ts";
-import { ConnInfo } from "std/http/server.ts";
-import { Workflow, WorkflowContext } from "../../../blocks/workflow.ts";
+import type { HandlerContext } from "$fresh/server.ts";
+import type { ConnInfo } from "std/http/server.ts";
+import { type Workflow, WorkflowContext } from "../../../blocks/workflow.ts";
 import { initOnce } from "../../../commons/workflows/initialize.ts";
 import {
-  WorkflowMetadata,
+  type WorkflowMetadata,
   WorkflowQS,
 } from "../../../commons/workflows/types.ts";
 import {
   arrToStream,
-  Command,
-  HttpRunRequest,
-  Metadata,
+  type Command,
+  type HttpRunRequest,
+  type Metadata,
   workflowRemoteRunner,
   workflowWebSocketHandler,
 } from "../../../deps.ts";
-import { AppManifest, DecoState } from "../../../mod.ts";
-import { DecoSiteState } from "../../../types.ts";
+import type { AppManifest, DecoState } from "../../../mod.ts";
+import type { DecoSiteState } from "../../../types.ts";
 
 export type Props = HttpRunRequest<
   unknown[],

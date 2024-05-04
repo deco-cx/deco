@@ -1,42 +1,47 @@
 // deno-lint-ignore-file no-explicit-any
+import { initializeState } from "deco/runtime/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
 import {
-  AppManifest,
-  ImportMap,
-  MergedAppRuntime,
+  type AppManifest,
+  type ImportMap,
+  type MergedAppRuntime,
   mergeManifests,
   mergeRuntimes,
 } from "../../blocks/app.ts";
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { buildImportMap } from "../../blocks/utils.tsx";
-import { Context, context, DecoContext, DecoRuntimeState } from "../../deco.ts";
-import { HandlerContext } from "../../deps.ts";
-import { DecoState, SiteInfo } from "../../types.ts";
+import {
+  Context,
+  context,
+  type DecoContext,
+  type DecoRuntimeState,
+} from "../../deco.ts";
+import type { HandlerContext } from "../../deps.ts";
+import type { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
 import { randId } from "../../utils/rand.ts";
 import { ReleaseResolver } from "../core/mod.ts";
 import {
-  BaseContext,
+  type BaseContext,
   DanglingReference,
   isResolvable,
-  Resolvable,
-  Resolver,
-  ResolverMap,
+  type Resolvable,
+  type Resolver,
+  type ResolverMap,
 } from "../core/resolver.ts";
-import { PromiseOrValue } from "../core/utils.ts";
+import type { PromiseOrValue } from "../core/utils.ts";
+import { ENV_SITE_NAME } from "../decofile/constants.ts";
+import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
+import { type DecofileProvider, getProvider } from "../decofile/provider.ts";
 import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
-import { DECO_FILE_NAME, newFsProvider } from "../releases/fs.ts";
-import { getRelease, Release } from "../releases/provider.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
-import { initializeState } from "deco/runtime/utils.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
-const ENV_SITE_NAME = "DECO_SITE_NAME";
 const DECO_COLORS = 0x02f77d;
 export type FreshHandler<
   TConfig = any,
@@ -129,7 +134,7 @@ export const initContext = async <
 >(
   m: T,
   currentImportMap?: ImportMap,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
 ): Promise<DecoContext> => {
   await fulfillContext(context, m, currentImportMap, release);
 
@@ -292,7 +297,7 @@ export const fulfillContext = async <
   ctx: DecoContext,
   initialManifest: T,
   currentImportMap?: ImportMap,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
 ): Promise<DecoContext> => {
   let currentSite = ctx.site ?? siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
@@ -307,7 +312,7 @@ export const fulfillContext = async <
   }
   ctx.namespace ??= `deco-sites/${currentSite}`;
   ctx.site = currentSite!;
-  const provider = release ?? await getRelease(
+  const provider = release ?? await getProvider(
     ctx.namespace!,
     ctx.site,
     ctx.siteId,
@@ -434,7 +439,7 @@ export const newContext = <
 >(
   m: T,
   currentImportMap?: ImportMap,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
   namespace: string | undefined = undefined,
@@ -456,7 +461,7 @@ export const newContext = <
 export const $live = async <T extends AppManifest>(
   m: T,
   siteInfo?: SiteInfo,
-  release: Release | undefined = undefined,
+  release: DecofileProvider | undefined = undefined,
 ): Promise<T> => {
   context.siteId = siteInfo?.siteId ?? -1;
   context.namespace = siteInfo?.namespace;
@@ -472,7 +477,7 @@ export const $live = async <T extends AppManifest>(
     (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
-  const provider = release ?? await getRelease(
+  const provider = release ?? await getProvider(
     context.namespace!,
     context.site,
     context.siteId,

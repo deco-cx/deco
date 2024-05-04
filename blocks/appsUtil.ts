@@ -1,14 +1,18 @@
 // deno-lint-ignore-file no-explicit-any
-import { Block, BlockModule } from "../engine/block.ts";
-import { BaseContext, Resolver, ResolverMap } from "../engine/core/resolver.ts";
+import type { Block, BlockModule } from "../engine/block.ts";
+import type {
+  BaseContext,
+  Resolver,
+  ResolverMap,
+} from "../engine/core/resolver.ts";
 import { mapObjKeys } from "../engine/core/utils.ts";
 import {
   INVOKE_PREFIX_KEY,
   PREVIEW_PREFIX_KEY,
 } from "../engine/manifest/defaults.ts";
-import { DanglingRecover } from "../engine/manifest/manifest.ts";
-import { compose, ResolverMiddleware } from "../engine/middleware.ts";
-import { AppManifest } from "../mod.ts";
+import type { DanglingRecover } from "../engine/manifest/manifest.ts";
+import { compose, type ResolverMiddleware } from "../engine/middleware.ts";
+import type { AppManifest } from "../mod.ts";
 import { usePreviewFunc } from "./utils.tsx";
 
 const resolverIsBlock = (blk: Block) => (resolver: string) => {

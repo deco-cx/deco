@@ -1,6 +1,6 @@
-import { HandlerContext, PageProps } from "$fresh/server.ts";
-import { Page } from "../../../blocks/page.tsx";
-import { DecoSiteState, DecoState } from "../../../types.ts";
+import type { HandlerContext, PageProps } from "$fresh/server.ts";
+import type { Page } from "../../../blocks/page.tsx";
+import type { DecoSiteState, DecoState } from "../../../types.ts";
 import { bodyFromUrl } from "../../../utils/http.ts";
 import Render from "./entrypoint.tsx";
 

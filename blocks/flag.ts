@@ -1,11 +1,11 @@
-import { HttpContext } from "../blocks/handler.ts";
-import { Matcher } from "../blocks/matcher.ts";
+import type { HttpContext } from "../blocks/handler.ts";
+import type { Matcher } from "../blocks/matcher.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { Context } from "../deco.ts";
-import { TsType, TsTypeReference } from "../deps.ts";
-import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import type { TsType, TsTypeReference } from "../deps.ts";
+import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
-import { Device, deviceOf } from "../utils/userAgent.ts";
+import { type Device, deviceOf } from "../utils/userAgent.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<TVariant = unknown> {

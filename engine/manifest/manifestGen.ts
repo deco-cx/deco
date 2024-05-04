@@ -2,9 +2,9 @@ import { walk } from "std/fs/walk.ts";
 import { join } from "std/path/mod.ts";
 import { shouldBeLocal } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import { BlockType } from "../../engine/block.ts";
+import type { BlockType } from "../../engine/block.ts";
 import {
-  ManifestBuilder,
+  type ManifestBuilder,
   newManifestBuilder,
 } from "../../engine/manifest/manifestBuilder.ts";
 import { exists, fileSeparatorToSlash } from "../../utils/filesystem.ts";

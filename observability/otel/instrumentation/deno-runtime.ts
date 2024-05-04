@@ -2,14 +2,14 @@
  * Heavily inspired from unlicense code: https://github.com/cloudydeno/deno-observability/blob/main/instrumentation/deno-runtime.ts
  */
 import {
-  Attributes,
-  BatchObservableResult,
+  type Attributes,
+  type BatchObservableResult,
   InstrumentationBase,
-  InstrumentationConfig,
-  ObservableCounter,
-  ObservableGauge,
-  ObservableResult,
-  ObservableUpDownCounter,
+  type InstrumentationConfig,
+  type ObservableCounter,
+  type ObservableGauge,
+  type ObservableResult,
+  type ObservableUpDownCounter,
   ValueType,
 } from "../../../deps.ts";
 

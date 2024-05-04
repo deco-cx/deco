@@ -1,23 +1,27 @@
 // deno-lint-ignore-file no-explicit-any
-import { Status } from "std/http/mod.ts";
+import type { Status } from "std/http/mod.ts";
 import type { AppManifest, ImportMap } from "../blocks/app.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";
-import { JSX } from "../deps.ts";
-import {
+import type { JSX } from "../deps.ts";
+import type {
   Block,
   BlockModule,
   ComponentFunc,
   PreactComponent,
 } from "../engine/block.ts";
-import { Monitoring, ResolveFunc, Resolver } from "../engine/core/resolver.ts";
-import { PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
-import { ResolverMiddlewareContext } from "../engine/middleware.ts";
-import { Flag } from "../types.ts";
-import { Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
+import type {
+  Monitoring,
+  ResolveFunc,
+  Resolver,
+} from "../engine/core/resolver.ts";
+import { type PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
+import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
+import type { Flag } from "../types.ts";
+import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
-import { type InvocationProxy } from "../utils/invoke.types.ts";
-import { HttpContext } from "./handler.ts";
+import type { InvocationProxy } from "../utils/invoke.types.ts";
+import type { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,

@@ -1,31 +1,31 @@
 import * as colors from "std/fmt/colors.ts";
 import { exists } from "std/fs/mod.ts";
-import { join, toFileUrl } from "std/path/mod.ts";
-import { Resolvable } from "../../engine/core/resolver.ts";
-import { PromiseOrValue } from "../../engine/core/utils.ts";
-import { fromPagesTable } from "../../engine/releases/pages.ts";
-import { fromConfigsTable } from "../../engine/releases/release.ts";
+import { join } from "std/path/mod.ts";
+import type { Resolvable } from "../core/resolver.ts";
+import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
+import { fromPagesTable } from "./pages.ts";
 import { newRealtime } from "./realtime.ts";
+import { fromConfigsTable } from "./release.ts";
 
 export interface SelectionConfig {
   audiences: unknown[];
 }
 
+export type Decofile = Record<string, Resolvable>;
 export type OnChangeCallback = () => PromiseOrValue<void>;
 export interface ReadOptions {
   forceFresh?: boolean;
 }
-export interface Release {
-  state(options?: ReadOptions): Promise<Record<string, Resolvable>>;
-  archived(options?: ReadOptions): Promise<Record<string, Resolvable>>;
+export interface DecofileProvider {
+  state(options?: ReadOptions): Promise<Decofile>;
   revision(): Promise<string>;
   onChange(callback: OnChangeCallback): void;
   notify?(): Promise<void>;
   dispose?: () => void;
-  set?(state: Record<string, Resolvable>, revision?: string): Promise<void>;
+  set?(state: Decofile, revision?: string): Promise<void>;
 }
 
 interface RoutesSelection extends SelectionConfig {
@@ -52,23 +52,9 @@ const mergeEntrypoints = (
   return other ?? config;
 };
 
-export const compose = (...providers: Release[]): Release => {
+export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
   return providers.reduce((providers, current) => {
     return {
-      archived: async (options) => {
-        const [providersResolvables, currentResolvables] = await Promise.all([
-          providers.archived(options),
-          current.archived(options),
-        ]);
-        return {
-          ...providersResolvables,
-          ...currentResolvables,
-          [ENTRYPOINT]: mergeEntrypoints(
-            providersResolvables[ENTRYPOINT],
-            currentResolvables[ENTRYPOINT],
-          ),
-        };
-      },
       dispose: () => {
         providers?.dispose?.();
         current?.dispose?.();
@@ -101,15 +87,16 @@ export const compose = (...providers: Release[]): Release => {
   });
 };
 
-const DECO_RELEASE_VERSION_ENV_VAR = "DECO_RELEASE";
+const DECOFILE_RELEASE_ENV_VAR = "DECO_RELEASE";
 
-export const DECOFILE_REL_PATH = join(".deco", "decofile.json");
-const DECOFILE_PATH_DEFAULT = join(Deno.cwd(), DECOFILE_REL_PATH);
-const decofileExistsPromise = exists(DECOFILE_PATH_DEFAULT, {
-  isFile: true,
+const DECO_FOLDER = ".deco";
+// if decofile does not exists but blocks exists so it should be lazy
+const BLOCKS_FOLDER = join(Deno.cwd(), DECO_FOLDER, "blocks");
+const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
+  isDirectory: true,
   isReadable: true,
 });
-const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
+const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
 
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
@@ -118,20 +105,20 @@ const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECO_RELEASE_VERSION_ENV_VAR);
  * @param siteId the site Id (if exists)
  * @returns the config store provider.
  */
-export const getRelease = async (
+export const getProvider = async (
   ns: string,
   site: string,
   siteId = -1,
   localStorageOnly = false,
-): Promise<Release> => {
+): Promise<DecofileProvider> => {
   const providers = [];
 
   if (Deno.env.has("USE_LOCAL_STORAGE_ONLY") || localStorageOnly) {
     return newFsProvider();
   }
 
-  const endpoint = await decofileExistsPromise
-    ? `${toFileUrl(DECOFILE_PATH_DEFAULT)}`
+  const endpoint = await blocksFolderExistsPromise
+    ? `folder://${BLOCKS_FOLDER}`
     : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {
     console.info(

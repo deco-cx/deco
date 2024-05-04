@@ -1,5 +1,5 @@
-import { HandlerContext } from "$fresh/server.ts";
-import { DecoState } from "../../../mod.ts";
+import type { HandlerContext } from "$fresh/server.ts";
+import type { DecoState } from "../../../mod.ts";
 
 export const handler = async (
   _req: Request,

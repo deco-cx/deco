@@ -8,7 +8,7 @@ import loaderBlock from "../blocks/loader.ts";
 import matcherBlock from "../blocks/matcher.ts";
 import sectionBlock from "../blocks/section.ts";
 import workflowBlock from "../blocks/workflow.ts";
-import { Block } from "../engine/block.ts";
+import type { Block } from "../engine/block.ts";
 import pageBlock from "./page.tsx";
 
 const userDefinedBlocks: Block[] = [];

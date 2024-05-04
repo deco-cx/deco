@@ -1,29 +1,33 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import blocks from "../blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
-import { SectionModule } from "../blocks/section.ts";
-import { AppHttpContext, buildImportMap, FnProps } from "../blocks/utils.tsx";
-import { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import type { SectionModule } from "../blocks/section.ts";
 import {
+  type AppHttpContext,
+  buildImportMap,
+  type FnProps,
+} from "../blocks/utils.tsx";
+import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import type {
   BaseContext,
   FieldResolver,
   ResolvableMap,
   ResolverMap,
 } from "../engine/core/resolver.ts";
-import { mapObjKeys, PromiseOrValue } from "../engine/core/utils.ts";
-import { ImportMap } from "../engine/importmap/builder.ts";
-import {
+import { mapObjKeys, type PromiseOrValue } from "../engine/core/utils.ts";
+import type { ImportMap } from "../engine/importmap/builder.ts";
+import type {
   ResolverMiddleware,
   ResolverMiddlewareContext,
 } from "../engine/middleware.ts";
-import { DecoManifest, FnContext } from "../types.ts";
+import type { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
 import { isInvokeCtx } from "./loader.ts";
 import { fnContextFromHttpContext } from "./utils.tsx";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;
-export { type ImportMap };
+export type { ImportMap };
 type MergeAppsManifest<TCurrent extends AppManifest, TDeps> =
   & (TDeps extends [infer TNext, ...infer Rest]
     ? TNext extends App ? MergeAppsManifest<ManifestOf<TNext>, Rest>

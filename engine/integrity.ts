@@ -1,5 +1,5 @@
 import { bgBrightRed, brightYellow } from "std/fmt/colors.ts";
-import { Resolvable, ResolverMap } from "../engine/core/resolver.ts";
+import type { Resolvable, ResolverMap } from "../engine/core/resolver.ts";
 
 const integrityCheckRec = (
   resolvers: ResolverMap,

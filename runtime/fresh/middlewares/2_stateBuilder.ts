@@ -2,13 +2,13 @@
 import { Context } from "../../../deco.ts";
 import {
   context as otelContext,
-  FreshHandler as Handler,
+  type FreshHandler as Handler,
   getCookies,
-  HandlerContext,
-  Handlers,
-  MiddlewareHandlerContext,
-  RouteConfig,
-  RouteModule,
+  type HandlerContext,
+  type Handlers,
+  type MiddlewareHandlerContext,
+  type RouteConfig,
+  type RouteModule,
   setCookie,
 } from "../../../deps.ts";
 import { mapObjKeys } from "../../../engine/core/utils.ts";
@@ -19,7 +19,7 @@ import {
   REQUEST_CONTEXT_KEY,
   STATE_CONTEXT_KEY,
 } from "../../../observability/otel/context.ts";
-import { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import type { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
 import { createServerTimings } from "../../../utils/timings.ts";
 import { setLogger } from "../../fetch/fetchLog.ts";
