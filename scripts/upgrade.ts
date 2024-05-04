@@ -555,7 +555,7 @@ const apps: UpgradeOption = {
   },
 };
 
-const aot: UpgradeOption = {
+const _aot: UpgradeOption = {
   name: "ahead-of-time",
   description:
     "enables ahead of time builds for stable assets and better performance: https://fresh.deno.dev/docs/concepts/ahead-of-time-builds",
@@ -743,7 +743,7 @@ const environments: UpgradeOption = {
   },
 };
 
-const UPGRADES: UpgradeOption[] = [v1, apps, aot, environments];
+const UPGRADES: UpgradeOption[] = [v1, apps, environments];
 
 const isDelete = (f: FileMod): f is Delete => {
   return (f as Delete).path !== undefined;
