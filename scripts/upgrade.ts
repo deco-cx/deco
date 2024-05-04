@@ -684,7 +684,7 @@ const getDenoJson = (): Promise<[string, DenoJSON]> => {
     return [join(Deno.cwd(), paths[idx]), denoJSONs[idx]] as [string, DenoJSON];
   });
 };
-const requiresMinDecoVer = (ver: string) => {
+const _requiresMinDecoVer = (ver: string) => {
   return async () => {
     const [_denoJSONPath, denoJSON] = await getDenoJson();
     const decoVersion = denoJSON?.imports?.["deco/"];
@@ -703,7 +703,9 @@ const requiresMinDecoVer = (ver: string) => {
 const environments: UpgradeOption = {
   name: "wm-environments",
   description: "enables environments for better development",
-  isEligible: requiresMinDecoVer("1.63.0"),
+  isEligible: () => {
+    return Promise.resolve(true);
+  },
   apply: async () => {
     const addNewTasks = async (): Promise<Patch> => {
       const [denoJSONPath, denoJSON] = await getDenoJson();
@@ -713,7 +715,8 @@ const environments: UpgradeOption = {
       const envArg = envExists ? "--env" : "";
       const dev = `deno run -A ${envArg} --unstable --unstable-hmr dev.ts`;
       const start =
-        `deno task bundle && deno run -A --env --config=deno.json $(deno eval 'console.log(import.meta.resolve("deco/hypervisor/main.ts"))') --build-cmd 'deno task build' -- deno task dev`;
+        `deno task bundle && deno run -A ${envArg} --config=deno.json $(deno eval 'console.log(import.meta.resolve("deco/hypervisor/main.ts"))') --build-cmd 'deno task build' -- deno task dev`;
+
       return {
         from: denoJSONPath,
         to: {
