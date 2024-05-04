@@ -12,7 +12,8 @@ import type { VersionedDecofile } from "./realtime.ts";
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
-    .then((response) => response.json<Record<string, unknown>>()).catch((
+    .then((response) => response.json() as Promise<Record<string, unknown>>)
+    .catch((
       _e,
     ) => ({} as Record<string, unknown>));
 };
