@@ -3,13 +3,14 @@ import {
   brightRed,
   brightYellow,
   gray,
-} from "https://deno.land/std@0.190.0/fmt/colors.ts";
+} from "https://deno.land/std@0.204.0/fmt/colors.ts";
 import {
   ensureFile,
   exists,
   walk,
-} from "https://deno.land/std@0.190.0/fs/mod.ts";
-import { join } from "https://deno.land/std@0.190.0/path/mod.ts";
+} from "https://deno.land/std@0.204.0/fs/mod.ts";
+import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
+import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
@@ -17,6 +18,10 @@ import {
 import * as diff from "https://esm.sh/diff@5.1.0";
 import { format } from "../utils/formatter.ts";
 import { exec } from "./utils.ts";
+// deno-lint-ignore verbatim-module-syntax
+import denoJSON from "../deno.json" with { type: "json" };
+
+type DenoJSON = typeof denoJSON;
 
 const getLatestVersion = async (locator: string) => {
   const versions = await lookup(locator, REGISTRIES)?.all();
@@ -666,7 +671,76 @@ jobs:
   },
 };
 
-const UPGRADES: UpgradeOption[] = [v1, apps, aot];
+const getDenoJson = (): Promise<[string, DenoJSON]> => {
+  const paths = ["deno.json", "deno.jsonc"];
+  return Promise.all(
+    paths.map((path) =>
+      Deno.readTextFile(join(Deno.cwd(), path)).then(JSON.parse).catch(() =>
+        null
+      )
+    ),
+  ).then((denoJSONs) => {
+    const idx = denoJSONs.findIndex(Boolean);
+    return [join(Deno.cwd(), paths[idx]), denoJSONs[idx]] as [string, DenoJSON];
+  });
+};
+const requiresMinDecoVer = (ver: string) => {
+  return async () => {
+    const [_denoJSONPath, denoJSON] = await getDenoJson();
+    const decoVersion = denoJSON?.imports?.["deco/"];
+    if (!decoVersion) {
+      return true;
+    }
+    const url = lookup(decoVersion, REGISTRIES);
+    const decoVer = url?.version?.();
+    if (!decoVer) {
+      return true;
+    }
+
+    return semver.lt(decoVer, ver);
+  };
+};
+const environments: UpgradeOption = {
+  name: "wm-environments",
+  description: "enables environments for better development",
+  isEligible: requiresMinDecoVer("1.63.0"),
+  apply: async () => {
+    const addNewTasks = async (): Promise<Patch> => {
+      const [denoJSONPath, denoJSON] = await getDenoJson();
+      const envExists = await exists(join(Deno.cwd(), ".env"), {
+        isFile: true,
+      });
+      const envArg = envExists ? "--env" : "";
+      const dev = `deno run -A ${envArg} --unstable --unstable-hmr dev.ts`;
+      const start =
+        `deno task bundle && deno run -A --env --config=deno.json $(deno eval 'console.log(import.meta.resolve("deco/hypervisor/main.ts"))') --build-cmd 'deno task build' -- deno task dev`;
+      return {
+        from: denoJSONPath,
+        to: {
+          path: denoJSONPath,
+          content: JSON.stringify(
+            {
+              ...denoJSON,
+              imports: {
+                ...denoJSON.imports,
+              },
+              tasks: {
+                ...denoJSON?.tasks,
+                dev,
+                start,
+              },
+            },
+            null,
+            2,
+          ),
+        },
+      };
+    };
+    return [await addNewTasks()];
+  },
+};
+
+const UPGRADES: UpgradeOption[] = [v1, apps, aot, environments];
 
 const isDelete = (f: FileMod): f is Delete => {
   return (f as Delete).path !== undefined;
