@@ -5,6 +5,7 @@ import { walk } from "std/fs/walk.ts";
 import { Buffer } from "std/io/buffer.ts";
 import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
+import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 import { type File, gitIgnore, RealtimeState } from "../deps.ts";
 
 const encoder = new TextEncoder();
@@ -53,6 +54,9 @@ export class HypervisorDiskStorage implements RealtimeStorage {
       },
     };
   }
+  normalizePath(path: string) {
+    return fileSeparatorToSlash(path);
+  }
   /**
    * this is different from "onChange" this this is triggered by filesystem and avoid being triggered by itself.
    */
@@ -69,7 +73,7 @@ export class HypervisorDiskStorage implements RealtimeStorage {
       }
       const changedFiles: Record<string, File> = {};
       const updatePath = async (path: string) => {
-        const virtualPath = path.replace(this.dir, "");
+        const virtualPath = this.normalizePath(path.replace(this.dir, ""));
 
         if (kind === "remove") {
           changedFiles[virtualPath] = { content: null as unknown as string };
@@ -182,7 +186,9 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     try {
       for await (const walkEntry of walk(this.dir)) {
         if (walkEntry.isDirectory) continue;
-        const virtualPath = walkEntry.path.replace(this.dir, "");
+        const virtualPath = this.normalizePath(
+          walkEntry.path.replace(this.dir, ""),
+        );
         if (this.ignore.includes(virtualPath)) {
           continue;
         }
