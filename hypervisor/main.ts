@@ -104,12 +104,16 @@ const signals: Partial<Record<Deno.Signal, boolean>> = {
 
 for (const [_signal, shouldExit] of Object.entries(signals)) {
   const signal = _signal as Deno.Signal;
-  Deno.addSignalListener(signal, () => {
-    hypervisor.proxySignal(signal);
-    if (shouldExit) {
-      // shutdown?.();
-      hypervisor.shutdown?.();
-      Deno.exit(0);
-    }
-  });
+  try {
+    Deno.addSignalListener(signal, () => {
+      hypervisor.proxySignal(signal);
+      if (shouldExit) {
+        // shutdown?.();
+        hypervisor.shutdown?.();
+        Deno.exit(0);
+      }
+    });
+  } catch (_err) {
+    // ignore
+  }
 }
