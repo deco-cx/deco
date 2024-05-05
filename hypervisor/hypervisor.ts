@@ -39,7 +39,7 @@ export class Hypervisor {
     const debouncedBuild = buildCmd
       ? debounce(async () => {
         if (buildMutex.freeOrNext()) {
-          const _ = await buildMutex.acquire();
+          using _ = await buildMutex.acquire();
           const child = buildCmd.spawn();
           return await child.output().then(() => {}).catch((err) => {
             console.error("build err", err);
