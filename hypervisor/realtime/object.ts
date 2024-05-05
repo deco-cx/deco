@@ -264,6 +264,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     } else {
       await this.storage.delete(CHANGESET_FILE);
     }
+    await Promise.all(tasks);
     await ensureDir(dirname(outfile));
     const writer = await Deno.open(outfile, {
       write: true,
