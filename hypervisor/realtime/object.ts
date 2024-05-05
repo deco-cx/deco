@@ -267,8 +267,6 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
           contentSize: encoded.byteLength,
         }));
       }
-    } else { // is a commit persistence so we should delete changeset
-      await this.storage.delete(CHANGESET_FILE);
     }
     await Promise.all(tasks);
     await ensureDir(dirname(outfile));
@@ -311,5 +309,6 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
       basename(SOURCE_PATH),
     );
     await Promise.all([this.persist(outfile), this.persistState()]);
+    await this.storage.delete(CHANGESET_FILE);
   }
 }
