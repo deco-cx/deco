@@ -106,6 +106,7 @@ for (const [_signal, shouldExit] of Object.entries(signals)) {
   const signal = _signal as Deno.Signal;
   try {
     Deno.addSignalListener(signal, () => {
+      console.log(`Received ${signal}`);
       hypervisor.proxySignal(signal);
       if (shouldExit) {
         // shutdown?.();
