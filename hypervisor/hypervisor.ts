@@ -152,10 +152,10 @@ export class Hypervisor {
     });
   }
   public proxySignal(signal: Deno.Signal) {
-    this.realtimeFsState.persistState().catch((err) => {
+    this.isolate?.signal(signal);
+    return this.realtimeFsState.persistState().catch((err) => {
       console.log("error when trying to persist state", err);
     });
-    this.isolate?.signal(signal);
   }
   public async shutdown() {
     await this.isolate?.[Symbol.asyncDispose]();

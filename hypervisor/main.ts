@@ -49,6 +49,30 @@ const hypervisor = new Hypervisor({
 });
 
 const appPort = Deno.env.get("APP_PORT");
+
+const signals: Partial<Record<Deno.Signal, boolean>> = {
+  SIGINT: true, //
+  SIGTERM: true, //
+};
+
+for (const [_signal, shouldExit] of Object.entries(signals)) {
+  const signal = _signal as Deno.Signal;
+  try {
+    Deno.addSignalListener(signal, () => {
+      console.log(`Received ${signal}`);
+      const p = hypervisor.proxySignal(signal);
+      if (shouldExit) {
+        // shutdown?.();
+        hypervisor.shutdown?.();
+        p.finally(() => {
+          Deno.exit(0);
+        });
+      }
+    });
+  } catch (_err) {
+    // ignore
+  }
+}
 Deno.serve(
   {
     port: appPort ? +appPort : 8000,
@@ -96,25 +120,3 @@ Deno.serve(
     }
   },
 );
-
-const signals: Partial<Record<Deno.Signal, boolean>> = {
-  SIGINT: true, //
-  SIGTERM: true, //
-};
-
-for (const [_signal, shouldExit] of Object.entries(signals)) {
-  const signal = _signal as Deno.Signal;
-  try {
-    Deno.addSignalListener(signal, () => {
-      console.log(`Received ${signal}`);
-      hypervisor.proxySignal(signal);
-      if (shouldExit) {
-        // shutdown?.();
-        hypervisor.shutdown?.();
-        Deno.exit(0);
-      }
-    });
-  } catch (_err) {
-    // ignore
-  }
-}
