@@ -236,8 +236,11 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     const tar = new Tar();
     const allFiles = await this.storage.list<string>();
     const tasks: Promise<void>[] = [];
-    for (const [path, content] of allFiles.entries()) {
-      if (!content || (path === CHANGESET_FILE && !includeChangeSet)) {
+    for (const [path, content] of allFiles.entries()) { // sometimes change set is not listed because it is being ignored.
+      if (
+        !content && content !== "" ||
+        (path === CHANGESET_FILE)
+      ) {
         continue;
       }
       const encoded = encoder.encode(content);
@@ -246,6 +249,21 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
         contentSize: encoded.byteLength,
       }));
     }
+    if (includeChangeSet) {
+      const changeSetContent = await this.storage.get<string>(CHANGESET_FILE)
+        .catch(() => {
+          return undefined;
+        });
+      if (changeSetContent) {
+        const encoded = encoder.encode(changeSetContent);
+        tasks.push(tar.append(CHANGESET_FILE, {
+          reader: new Buffer(encoded),
+          contentSize: encoded.byteLength,
+        }));
+      }
+    } else {
+      await this.storage.delete(CHANGESET_FILE);
+    }
     await ensureDir(dirname(outfile));
     const writer = await Deno.open(outfile, {
       write: true,
@@ -253,7 +271,6 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     });
     await copy(tar.getReader(), writer);
     writer.close();
-    !includeChangeSet && await this.storage.delete(CHANGESET_FILE);
   }
   public shouldPersistState() {
     return SHOULD_PERSIST_STATE;
