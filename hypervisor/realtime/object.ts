@@ -309,6 +309,8 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
       basename(SOURCE_PATH),
     );
     await Promise.all([this.persist(outfile), this.persistState()]);
-    await this.storage.delete(CHANGESET_FILE);
+    await this.storage.delete(CHANGESET_FILE).catch((err) => {
+      console.log("ignoring delete error", err);
+    });
   }
 }
