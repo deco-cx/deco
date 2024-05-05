@@ -285,7 +285,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     await ensureDirPromise;
     const startCopy = performance.now();
     console.log("copying file", outtempFile, "=>", outfile);
-    await Deno.copyFile(outtempFile, outfile);
+    await Deno.rename(outtempFile, outfile);
     console.log("copy file done", performance.now() - startCopy);
   }
   public shouldPersistState() {
