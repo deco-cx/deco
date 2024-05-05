@@ -6,10 +6,14 @@ import { Buffer } from "std/io/buffer.ts";
 import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
+import { Mutex } from "../../utils/sync.ts";
 import { type File, gitIgnore, RealtimeState } from "../deps.ts";
 
 const encoder = new TextEncoder();
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
+const DEPLOYMENT_ID = Deno.env.get("DENO_DEPLOYMENT_ID");
+const SHOULD_PERSIST_STATE = SOURCE_PATH !== undefined &&
+  DEPLOYMENT_ID !== undefined;
 const CHANGESET_FILE = "/.metadata/changeset.json";
 const IGNORE_FILES_GLOB = [".git/**"];
 type RealtimeStorage = RealtimeState["storage"];
@@ -20,9 +24,10 @@ export interface FsEvent {
 }
 export interface DiskStorageOptions {
   dir: string;
-  onChange?: (events: FsEvent[]) => void;
   buildFiles?: string;
 }
+
+const persistStateLimiter = new Mutex();
 
 // create sync back from disk to memory
 export class HypervisorDiskStorage implements RealtimeStorage {
@@ -30,7 +35,8 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     includes: () => true,
   };
   private dir: string;
-  constructor(private opts: DiskStorageOptions) {
+  public onChange?: (events: FsEvent[]) => void;
+  constructor(opts: DiskStorageOptions) {
     this.dir = opts.dir;
     const buildFilesRegExp = opts.buildFiles
       ? globToRegExp(opts.buildFiles)
@@ -48,6 +54,9 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     globs && ignore.add(globs);
     this.ignore = {
       includes: (str) => {
+        if (str === CHANGESET_FILE) {
+          return false;
+        }
         const isBuildFile = buildFilesRegExp &&
           buildFilesRegExp?.test(str) === true;
         return !isBuildFile && ignore.ignores(str.slice(1));
@@ -132,7 +141,7 @@ export class HypervisorDiskStorage implements RealtimeStorage {
         await Deno.remove(filePath);
         deletedCount++;
       }
-      this.opts?.onChange?.(
+      this.onChange?.(
         filePaths.map((path) => ({ type: "delete", path })),
       );
       return Array.isArray(keys) ? deletedCount : true;
@@ -161,7 +170,7 @@ export class HypervisorDiskStorage implements RealtimeStorage {
       !fileExists && await ensureDir(dirname(filePath));
       await Deno.writeTextFile(filePath, entryValue as string);
     }
-    this.opts?.onChange?.(events);
+    this.onChange?.(events);
   }
 
   async deleteAll(): Promise<void> {
@@ -229,7 +238,66 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     return this?.blockConcurrencyWhilePromise ?? Promise.resolve();
   }
 
-  public async persist(commitSha: string) {
+  public async persist(outfile: string, isEnvironmentPersistence?: boolean) {
+    const tar = new Tar();
+    const allFiles = await this.storage.list<string>();
+    const tasks: Promise<void>[] = [];
+    for (const [path, content] of allFiles.entries()) {
+      if (
+        !content && content !== "" ||
+        (path === CHANGESET_FILE)
+      ) {
+        continue;
+      }
+      const encoded = encoder.encode(content);
+      tasks.push(tar.append(path, {
+        reader: new Buffer(encoded),
+        contentSize: encoded.byteLength,
+      }));
+    }
+    if (isEnvironmentPersistence) {
+      const changeSetContent = await this.storage.get<string>(CHANGESET_FILE)
+        .catch(() => {
+          return undefined;
+        });
+      if (changeSetContent) {
+        const encoded = encoder.encode(changeSetContent);
+        tasks.push(tar.append(CHANGESET_FILE, {
+          reader: new Buffer(encoded),
+          contentSize: encoded.byteLength,
+        }));
+      }
+    }
+    await Promise.all(tasks);
+    await ensureDir(dirname(outfile));
+    const writer = await Deno.open(outfile, {
+      write: true,
+      create: true,
+    });
+    await copy(tar.getReader(), writer);
+    writer.close();
+  }
+  public shouldPersistState() {
+    return SHOULD_PERSIST_STATE;
+  }
+  public async persistState() {
+    if (!this.shouldPersistState()) {
+      return;
+    }
+    if (!persistStateLimiter.freeOrNext()) { //once per time having the limit of 1 waiting
+      return;
+    }
+    using _ = await persistStateLimiter.acquire();
+    const outfile = join(
+      dirname(SOURCE_PATH!),
+      `${DEPLOYMENT_ID}.tar`,
+    );
+    console.log(`persisting state at ${outfile}`);
+    await this.persist(outfile, true).catch((err) => {
+      console.error(`could not persist state at ${outfile}`, err);
+    });
+  }
+  public async persistNext(commitSha: string) {
     if (!SOURCE_PATH) {
       return;
     }
@@ -240,23 +308,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
       commitSha,
       basename(SOURCE_PATH),
     );
-    const tar = new Tar();
-    const allFiles = await this.storage.list<string>();
-    const tasks: Promise<void>[] = [];
-    for (const [path, content] of allFiles.entries()) {
-      if (!content || path === CHANGESET_FILE) {
-        continue;
-      }
-      const encoded = encoder.encode(content);
-      tasks.push(tar.append(path, {
-        reader: new Buffer(encoded),
-        contentSize: encoded.byteLength,
-      }));
-    }
-    await ensureDir(dirname(outfile));
-    const writer = await Deno.open(outfile, { write: true, create: true });
-    await copy(tar.getReader(), writer);
-    writer.close();
+    await Promise.all([this.persist(outfile), this.persistState()]);
     await this.storage.delete(CHANGESET_FILE);
   }
 }

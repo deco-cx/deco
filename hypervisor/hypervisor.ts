@@ -2,6 +2,7 @@ import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
+import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
 import { createDurableFS } from "./realtime/fs.ts";
@@ -11,6 +12,9 @@ import {
 } from "./realtime/object.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 import type { Isolate } from "./workers/isolate.ts";
+
+const SECONDS = 1_000;
+const MINUTE = 60 * SECONDS;
 
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
@@ -30,34 +34,46 @@ export class Hypervisor {
   private realtimeFs: InstanceType<typeof Realtime>;
   private isolate: Isolate;
   constructor(protected options: AppOptions) {
-    let lastBuildCmd = Promise.resolve();
+    const buildMutex = new Mutex();
     const buildCmd = options.build;
     const debouncedBuild = buildCmd
-      ? debounce(() => {
-        lastBuildCmd = lastBuildCmd.catch((_err) => {}).then(() => {
+      ? debounce(async () => {
+        if (buildMutex.freeOrNext()) {
+          using _ = await buildMutex.acquire();
           const child = buildCmd.spawn();
-          return child.output().then(() => {});
-        });
+          return await child.output().then(() => {}).catch((err) => {
+            console.error("build err", err);
+          });
+        }
       }, 200)
       : undefined;
     const storage = new HypervisorDiskStorage({
       dir: Deno.cwd(),
       buildFiles: options.buildFiles,
-      onChange: debouncedBuild
-        ? (events) => {
-          const hasAnyCreationOrDeletion = events.some((evt) =>
-            evt.type !== "modify" && evt.path.endsWith(".ts") ||
-            evt.path.endsWith(".tsx")
-          );
-          if (hasAnyCreationOrDeletion) {
-            debouncedBuild();
-          }
-        }
-        : undefined,
     });
     this.realtimeFsState = new HypervisorRealtimeState({
       storage,
     });
+    let lastPersist = Promise.resolve();
+    const debouncedPersist = this.realtimeFsState.shouldPersistState()
+      ? debounce(() => {
+        lastPersist = lastPersist.catch((_err) => {}).then(() => {
+          return this.realtimeFsState.persistState();
+        });
+      }, 10 * MINUTE)
+      : undefined; // 10m
+    storage.onChange = (events) => {
+      if (debouncedBuild) {
+        const hasAnyCreationOrDeletion = events.some((evt) =>
+          evt.type !== "modify" && evt.path.endsWith(".ts") ||
+          evt.path.endsWith(".tsx")
+        );
+        if (hasAnyCreationOrDeletion) {
+          debouncedBuild();
+        }
+      }
+      debouncedPersist?.();
+    };
     // deno-lint-ignore no-explicit-any
     this.realtimeFs = new Realtime(this.realtimeFsState, {} as any);
     this.isolate = new DenoRun({
@@ -105,7 +121,7 @@ export class Hypervisor {
                 { status: 400 },
               );
             }
-            await this.realtimeFsState.persist(commitSha);
+            await this.realtimeFsState.persistNext(commitSha);
             return new Response(null, { status: 204 });
           }
           return this.realtimeFs.fetch(req);
@@ -137,6 +153,9 @@ export class Hypervisor {
   }
   public proxySignal(signal: Deno.Signal) {
     this.isolate?.signal(signal);
+    return this.realtimeFsState.persistState().catch((err) => {
+      console.log("error when trying to persist state", err);
+    });
   }
   public async shutdown() {
     await this.isolate?.[Symbol.asyncDispose]();
