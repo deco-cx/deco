@@ -56,7 +56,6 @@ export class Hypervisor {
       }, 10_000)
       : undefined; // 10s
     storage.onChange = (events) => {
-      console.log("EVENT!", { events });
       if (debouncedBuild) {
         const hasAnyCreationOrDeletion = events.some((evt) =>
           evt.type !== "modify" && evt.path.endsWith(".ts") ||
@@ -66,7 +65,6 @@ export class Hypervisor {
           debouncedBuild();
         }
       }
-      console.log("INVOKING DEBOUNCED", { debouncedPersist });
       debouncedPersist?.();
     };
     // deno-lint-ignore no-explicit-any

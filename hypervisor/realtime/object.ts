@@ -256,11 +256,10 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     !includeChangeSet && await this.storage.delete(CHANGESET_FILE);
   }
   public shouldPersistState() {
-    console.log("SHOULD", SOURCE_PATH, DEPLOYMENT_ID);
     return SHOULD_PERSIST_STATE;
   }
   public async persistState() {
-    if (this.shouldPersistState()) {
+    if (!this.shouldPersistState()) {
       return;
     }
     const outfile = join(
