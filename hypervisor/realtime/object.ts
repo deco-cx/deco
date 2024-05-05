@@ -249,15 +249,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
       ) {
         continue;
       }
-      console.log("appending", path);
-      const start = performance.now();
       const encoded = encoder.encode(content);
-      console.log(
-        "encode time",
-        path,
-        performance.now() - start,
-        encoded.byteLength,
-      );
       tasks.push(tar.append(path, {
         reader: new Buffer(encoded),
         contentSize: encoded.byteLength,
@@ -276,20 +268,25 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
         }));
       }
     }
-    const start = performance.now();
-    console.log("waiting for all tasks");
     await Promise.all(tasks);
-    console.log("all tasks done", performance.now() - start);
-    await ensureDir(dirname(outfile));
-    console.log("writing file", outfile);
+    const ensureDirPromise = ensureDir(dirname(outfile));
     const startOut = performance.now();
-    const writer = await Deno.open(outfile, {
+    const outtempFile = await Deno.makeTempFile({
+      prefix: "assets_",
+      suffix: ".tar",
+    });
+    const writer = await Deno.open(outtempFile, {
       write: true,
       create: true,
     });
     await copy(tar.getReader(), writer);
     writer.close();
     console.log("writing file done", performance.now() - startOut);
+    await ensureDirPromise;
+    const startCopy = performance.now();
+    console.log("copying file", outtempFile, "=>", outfile);
+    await Deno.copyFile(outtempFile, outfile);
+    console.log("copy file done", performance.now() - startCopy);
   }
   public shouldPersistState() {
     return SHOULD_PERSIST_STATE;
