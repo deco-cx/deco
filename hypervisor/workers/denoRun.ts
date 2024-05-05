@@ -50,6 +50,7 @@ export class DenoRun implements Isolate {
   protected disposed:
     | ReturnType<typeof Promise.withResolvers<void>>
     | undefined;
+  protected proxyUrl: string;
   constructor(options: IsolateOptions | CommandIsolate) {
     if (isCmdIsolate(options)) {
       this.port = options.port;
@@ -71,6 +72,8 @@ export class DenoRun implements Isolate {
         env: { ...options.envVars, PORT: `${this.port}` },
       });
     }
+    const hostname = Deno.build.os === "windows" ? "localhost" : "0.0.0.0";
+    this.proxyUrl = `http://${hostname}:${this.port}`;
   }
   signal(sig: Deno.Signal) {
     try {
@@ -109,17 +112,25 @@ export class DenoRun implements Isolate {
     portPool.free(this.port);
     this.disposed?.resolve();
   }
-  fetch(req: Request): Promise<Response> {
+  fetch(request: Request): Promise<Response> {
     this.inflightRequests++;
-    const url = new URL(req.url);
-    url.port = `${this.port}`;
-    url.hostname = Deno.build.os === "windows" ? "localhost" : "0.0.0.0";
+    const { pathname, search } = new URL(request.url);
+    const url = new URL("." + pathname, this.proxyUrl);
+    url.search = search;
 
-    if (req.headers.get("upgrade") === "websocket") {
-      return proxyWebSocket(url, req);
+    if (request.headers.get("upgrade") === "websocket") {
+      return proxyWebSocket(url, request);
     }
-    const nReq = new Request(url.toString(), req.clone());
-    return fetch(nReq).finally(() => {
+
+    const headers = new Headers(request.headers);
+    headers.set("Host", url.hostname);
+
+    return fetch(url, {
+      method: request.method,
+      headers,
+      body: request.body,
+      redirect: "manual",
+    }).finally(() => {
       this.inflightRequests--;
       if (this.inflightRequests === 0) {
         this.inflightZeroEmitter.emit("zero");
