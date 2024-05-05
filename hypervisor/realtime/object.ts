@@ -6,6 +6,7 @@ import { Buffer } from "std/io/buffer.ts";
 import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
+import { Mutex } from "../../utils/sync.ts";
 import { type File, gitIgnore, RealtimeState } from "../deps.ts";
 
 const encoder = new TextEncoder();
@@ -26,6 +27,8 @@ export interface DiskStorageOptions {
   buildFiles?: string;
 }
 
+const persistStateLimiter = new Mutex();
+
 // create sync back from disk to memory
 export class HypervisorDiskStorage implements RealtimeStorage {
   private ignore: { includes: (str: string) => boolean } = {
@@ -33,7 +36,7 @@ export class HypervisorDiskStorage implements RealtimeStorage {
   };
   private dir: string;
   public onChange?: (events: FsEvent[]) => void;
-  constructor(private opts: DiskStorageOptions) {
+  constructor(opts: DiskStorageOptions) {
     this.dir = opts.dir;
     const buildFilesRegExp = opts.buildFiles
       ? globToRegExp(opts.buildFiles)
@@ -283,6 +286,10 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     if (!this.shouldPersistState()) {
       return;
     }
+    if (!persistStateLimiter.freeOrNext()) { //once per time having the limit of 1 waiting
+      return;
+    }
+    using _ = await persistStateLimiter.acquire();
     const outfile = join(
       dirname(SOURCE_PATH!),
       `${DEPLOYMENT_ID}.tar`,
@@ -303,6 +310,6 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
       commitSha,
       basename(SOURCE_PATH),
     );
-    await this.persist(outfile);
+    await Promise.all([this.persist(outfile), this.persistState()]);
   }
 }

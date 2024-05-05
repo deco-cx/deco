@@ -4,8 +4,8 @@ export interface SyncOnce<T> {
   do: (cb: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
 export class Mutex {
-  locked: boolean;
-  queue: Array<ReturnType<typeof Promise.withResolvers<void>>>;
+  public locked: boolean;
+  public queue: Array<ReturnType<typeof Promise.withResolvers<void>>>;
   constructor() {
     this.locked = false;
     this.queue = [];
@@ -26,6 +26,10 @@ export class Mutex {
     return promise.promise.then(() => {
       return disposable;
     });
+  }
+
+  freeOrNext(): boolean {
+    return !this.locked || this.queue.length === 0;
   }
 
   release() {
