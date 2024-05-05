@@ -232,12 +232,12 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     return this?.blockConcurrencyWhilePromise ?? Promise.resolve();
   }
 
-  public async persist(outfile: string) {
+  public async persist(outfile: string, includeChangeSet?: boolean) {
     const tar = new Tar();
     const allFiles = await this.storage.list<string>();
     const tasks: Promise<void>[] = [];
     for (const [path, content] of allFiles.entries()) {
-      if (!content || path === CHANGESET_FILE) {
+      if (!content || (path === CHANGESET_FILE && !includeChangeSet)) {
         continue;
       }
       const encoded = encoder.encode(content);
@@ -253,7 +253,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     });
     await copy(tar.getReader(), writer);
     writer.close();
-    await this.storage.delete(CHANGESET_FILE);
+    !includeChangeSet && await this.storage.delete(CHANGESET_FILE);
   }
   public shouldPersistState() {
     return SHOULD_PERSIST_STATE;
@@ -266,7 +266,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
       dirname(SOURCE_PATH!),
       `${DEPLOYMENT_ID}.tar`,
     );
-    await this.persistNext(outfile).catch((err) => {
+    await this.persist(outfile, true).catch((err) => {
       console.error(`could not persist state at ${outfile}`, err);
     });
   }
