@@ -43,21 +43,30 @@ export class Hypervisor {
     const storage = new HypervisorDiskStorage({
       dir: Deno.cwd(),
       buildFiles: options.buildFiles,
-      onChange: debouncedBuild
-        ? (events) => {
-          const hasAnyCreationOrDeletion = events.some((evt) =>
-            evt.type !== "modify" && evt.path.endsWith(".ts") ||
-            evt.path.endsWith(".tsx")
-          );
-          if (hasAnyCreationOrDeletion) {
-            debouncedBuild();
-          }
-        }
-        : undefined,
     });
     this.realtimeFsState = new HypervisorRealtimeState({
       storage,
     });
+    let lastPersist = Promise.resolve();
+    const debouncedPersist = this.realtimeFsState.shouldPersistState()
+      ? debounce(() => {
+        lastPersist = lastPersist.catch((_err) => {}).then(() => {
+          return this.realtimeFsState.persistState();
+        });
+      }, 10_000)
+      : undefined; // 10s
+    storage.onChange = (events) => {
+      if (debouncedBuild) {
+        const hasAnyCreationOrDeletion = events.some((evt) =>
+          evt.type !== "modify" && evt.path.endsWith(".ts") ||
+          evt.path.endsWith(".tsx")
+        );
+        if (hasAnyCreationOrDeletion) {
+          debouncedBuild();
+        }
+      }
+      debouncedPersist?.();
+    };
     // deno-lint-ignore no-explicit-any
     this.realtimeFs = new Realtime(this.realtimeFsState, {} as any);
     this.isolate = new DenoRun({
@@ -105,7 +114,7 @@ export class Hypervisor {
                 { status: 400 },
               );
             }
-            await this.realtimeFsState.persist(commitSha);
+            await this.realtimeFsState.persistNext(commitSha);
             return new Response(null, { status: 204 });
           }
           return this.realtimeFs.fetch(req);
