@@ -51,6 +51,9 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     globs && ignore.add(globs);
     this.ignore = {
       includes: (str) => {
+        if (str === CHANGESET_FILE) {
+          return false;
+        }
         const isBuildFile = buildFilesRegExp &&
           buildFilesRegExp?.test(str) === true;
         return !isBuildFile && ignore.ignores(str.slice(1));
@@ -232,11 +235,11 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     return this?.blockConcurrencyWhilePromise ?? Promise.resolve();
   }
 
-  public async persist(outfile: string, includeChangeSet?: boolean) {
+  public async persist(outfile: string, isEnvironmentPersistence?: boolean) {
     const tar = new Tar();
     const allFiles = await this.storage.list<string>();
     const tasks: Promise<void>[] = [];
-    for (const [path, content] of allFiles.entries()) { // sometimes change set is not listed because it is being ignored.
+    for (const [path, content] of allFiles.entries()) {
       if (
         !content && content !== "" ||
         (path === CHANGESET_FILE)
@@ -249,7 +252,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
         contentSize: encoded.byteLength,
       }));
     }
-    if (includeChangeSet) {
+    if (isEnvironmentPersistence) {
       const changeSetContent = await this.storage.get<string>(CHANGESET_FILE)
         .catch(() => {
           return undefined;
@@ -261,7 +264,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
           contentSize: encoded.byteLength,
         }));
       }
-    } else {
+    } else { // is a commit persistence so we should delete changeset
       await this.storage.delete(CHANGESET_FILE);
     }
     await Promise.all(tasks);
