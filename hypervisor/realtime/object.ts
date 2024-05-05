@@ -259,13 +259,14 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     return SHOULD_PERSIST_STATE;
   }
   public async persistState() {
-    if (SHOULD_PERSIST_STATE) {
+    if (this.shouldPersistState()) {
       return;
     }
     const outfile = join(
       dirname(SOURCE_PATH!),
       `${DEPLOYMENT_ID}.tar`,
     );
+    console.log(`persisting state at ${outfile}`);
     await this.persist(outfile, true).catch((err) => {
       console.error(`could not persist state at ${outfile}`, err);
     });
