@@ -43,7 +43,7 @@ function eligibleLatestVersion(versions: string[]) {
     ? versions[0]
     : versions.find((ver) => semver.parse(ver)?.prerelease?.length === 0);
 }
-export async function updateDeps(importMap: ImportMap, logs = true) {
+export async function upgradeDeps(importMap: ImportMap, logs = true) {
   let upgradeFound = false;
   logs && console.info("Looking up latest versions");
 
@@ -108,13 +108,16 @@ export async function updateDeps(importMap: ImportMap, logs = true) {
       console.info(
         "Local website depends on the most recent releases of Live!",
       );
-    return;
   }
+  return upgradeFound;
 }
 
 export async function updatedImportMap(logs = true) {
   const [importMap, importMapPath] = await getImportMap(Deno.cwd());
-  await updateDeps(importMap, logs);
+  const upgradeFound = await upgradeDeps(importMap, logs);
+  if (!upgradeFound) {
+    return undefined;
+  }
   return [importMap, importMapPath] as [ImportMap, string];
 }
 async function update() {
