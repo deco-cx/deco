@@ -43,13 +43,17 @@ function eligibleLatestVersion(versions: string[]) {
     ? versions[0]
     : versions.find((ver) => semver.parse(ver)?.prerelease?.length === 0);
 }
-export async function upgradeDeps(importMap: ImportMap, logs = true) {
+export async function upgradeDeps(
+  importMap: ImportMap,
+  logs = true,
+  deps = PACKAGES_TO_CHECK,
+) {
   let upgradeFound = false;
   logs && console.info("Looking up latest versions");
 
   await Promise.all(
     Object.keys(importMap.imports ?? {})
-      .filter((pkg) => PACKAGES_TO_CHECK.test(pkg))
+      .filter((pkg) => deps.test(pkg))
       .map(async (pkg) => {
         const url = lookup(importMap.imports[pkg], REGISTRIES);
 
