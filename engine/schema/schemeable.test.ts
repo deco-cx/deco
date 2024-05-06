@@ -319,6 +319,7 @@ Deno.test("Simple interface generation", async () => {
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
     title: "SimpleInterface",
+    default: undefined,
     type: "object",
     properties: {
       name: {
@@ -388,6 +389,7 @@ Deno.test("Non required fields generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
+    default: undefined,
     type: "object",
     title: "NonRequiredFields",
     properties: {
@@ -462,6 +464,7 @@ Deno.test("Union types generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
+    default: undefined,
     title: "UnionTypes",
     type: "object",
     properties: {
@@ -529,6 +532,7 @@ Deno.test("Array fields generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
+    default: undefined,
     title: "ArrayFields",
     type: "object",
     properties: {
@@ -607,6 +611,7 @@ Deno.test("Type reference generation", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
+    default: undefined,
     title: "InterfaceWithTypeRef",
     type: "object",
     properties: {
@@ -691,6 +696,7 @@ Deno.test("JSDoc tags injection", async () => {
   assertEquals(ref.$ref, `#/definitions/${rands[0]}`);
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
+    default: undefined,
     title: "WithTags",
     type: "object",
     properties: {
@@ -842,6 +848,7 @@ Deno.test("Wellknown in types generation", async () => {
   assertEquals(definitions[rands[0]], {
     allOf: undefined,
     title: "WellKnown",
+    default: undefined,
     type: "object",
     properties: {
       array: {

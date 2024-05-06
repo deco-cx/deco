@@ -32,13 +32,20 @@ import type {
   VariableDeclarator,
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
 import type { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
-import type { JSONSchema7, JSONSchema7Type } from "../../deps.ts";
+import type {
+  ArrayExpression,
+  AssignmentPattern,
+  Expression,
+  JSONSchema7,
+  JSONSchema7Type,
+  ObjectPattern,
+} from "../../deps.ts";
 import type { BlockModuleRef, IntrospectParams } from "../block.ts";
-import { beautify } from "./utils.ts";
 import type { ImportMapResolver } from "../importmap/builder.ts";
 import { spannableToJSONSchema } from "./comments.ts";
 import type { ParsedSource } from "./deps.ts";
 import { parsePath } from "./parser.ts";
+import { beautify } from "./utils.ts";
 
 export type ReferenceKey = string;
 export interface SchemeableBase {
@@ -57,6 +64,7 @@ export interface ObjectSchemeable extends SchemeableBase {
   type: "object";
   extends?: Schemeable[];
   title?: string;
+  default?: JSONSchema7Type;
   value: Record<
     string,
     {
@@ -1222,24 +1230,69 @@ const returnOf = (canonical: CanonicalDeclaration): TsType | undefined => {
   return exp?.returnType?.typeAnnotation;
 };
 
+export interface TsTypeWithDefaults {
+  default?: JSONSchema7Type;
+  type?: TsType;
+}
+/**
+ * Generates a javascript object based on the AST expressions.
+ */
+function generateObject(
+  obj: ObjectExpression | ArrayExpression | Expression,
+): JSONSchema7Type {
+  if (obj.type === "ObjectExpression") {
+    const result: JSONSchema7Type = {};
+    for (const prop of obj.properties) {
+      if (prop.type !== "KeyValueProperty") {
+        continue;
+      }
+      if (prop.key.type !== "Identifier") {
+        continue;
+      }
+      result[prop.key.value] = generateObject(prop.value)!;
+    }
+    return result;
+  } else if (obj.type === "ArrayExpression") {
+    return obj.elements.map((element) =>
+      element ? generateObject(element.expression) : null
+    );
+  } else if (obj.type === "StringLiteral" || obj.type === "NumericLiteral") {
+    return obj.value;
+  }
+  return null;
+}
 const paramsOf = (
   canonical: CanonicalDeclaration,
-): TsType[] | undefined => {
+): TsTypeWithDefaults[] | undefined => {
   if (isVariableDeclaration(canonical)) {
     const loader = getWellKnownLoaderType(canonical.declarator);
     if (loader) {
-      return [loader[0]];
+      return [{ type: loader[0] }];
     }
   }
   const exp = canonical?.exp;
   if (!exp || !("params" in exp)) {
     return undefined;
   }
+
   return exp.params?.map((param) => {
+    if (param.type === "Parameter") {
+      if ((param as Param).pat.type === "AssignmentPattern") {
+        if ((param.pat as AssignmentPattern).left.type === "ObjectPattern") {
+          const tp = ((param.pat as AssignmentPattern).left as ObjectPattern)
+            .typeAnnotation
+            ?.typeAnnotation!;
+          return {
+            type: tp,
+            default: generateObject((param.pat as AssignmentPattern).right),
+          };
+        }
+      }
+    }
     const pat = (param as Param)?.pat ?? param as Pattern;
     const typeAnnotation = (pat as { typeAnnotation?: TsTypeAnnotation })
       ?.typeAnnotation?.typeAnnotation;
-    return typeAnnotation!;
+    return { type: typeAnnotation };
   });
 };
 
@@ -1315,14 +1368,22 @@ export const programToBlockRef = async (
     if (!param) {
       return baseBlockRef;
     }
+    const [type, defaultValue] = [param.type, param.default];
+    if (!type) {
+      return baseBlockRef;
+    }
+    const inputSchema = await tsTypeToSchemeable(type, {
+      importMapResolver,
+      path,
+      parsedSource,
+      references: schemeableReferences,
+    });
+    if (inputSchema.type === "object") {
+      inputSchema.default = defaultValue;
+    }
     return {
       ...baseBlockRef,
-      inputSchema: await tsTypeToSchemeable(param, {
-        importMapResolver,
-        path,
-        parsedSource,
-        references: schemeableReferences,
-      }),
+      inputSchema,
     };
   }
   return undefined;
