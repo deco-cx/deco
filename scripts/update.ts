@@ -43,12 +43,9 @@ function eligibleLatestVersion(versions: string[]) {
     ? versions[0]
     : versions.find((ver) => semver.parse(ver)?.prerelease?.length === 0);
 }
-
-async function update() {
+export async function updateDeps(importMap: ImportMap, logs = true) {
   let upgradeFound = false;
-  const [importMap, importMapPath] = await getImportMap(Deno.cwd());
-
-  console.info("Looking up latest versions");
+  logs && console.info("Looking up latest versions");
 
   await Promise.all(
     Object.keys(importMap.imports ?? {})
@@ -67,7 +64,7 @@ async function update() {
         }
 
         if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
-          console.log(
+          logs && console.log(
             colors.yellow(
               `skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
             ),
@@ -76,7 +73,7 @@ async function update() {
         }
 
         if (currentVersion !== latestVersion) {
-          console.info(
+          logs && console.info(
             `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
           );
 
@@ -87,7 +84,7 @@ async function update() {
   );
 
   if (!importMap.imports["deco/"] && importMap.imports["$live/"]) {
-    console.info("Add deco/ alias");
+    logs && console.info("Add deco/ alias");
     importMap.imports["deco/"] = importMap.imports["$live/"];
   }
 
@@ -96,7 +93,7 @@ async function update() {
       const url = lookup(importMap.imports[pkg], REGISTRIES);
       const currentVersion = url?.version();
       if (!currentVersion || semver.lt(currentVersion, minVer)) {
-        console.info(
+        logs && console.info(
           `Upgrading ${pkg} ${currentVersion} -> ${minVer}.`,
         );
 
@@ -107,12 +104,29 @@ async function update() {
   }
 
   if (!upgradeFound) {
-    console.info("Local website depends on the most recent releases of Live!");
+    logs &&
+      console.info(
+        "Local website depends on the most recent releases of Live!",
+      );
     return;
   }
+}
 
+export async function updatedImportMap(logs = true) {
+  const [importMap, importMapPath] = await getImportMap(Deno.cwd());
+  await updateDeps(importMap, logs);
+  return [importMap, importMapPath] as [ImportMap, string];
+}
+async function update() {
+  const updates = await updatedImportMap();
+  if (!updates) {
+    return;
+  }
+  const [importMap, importMapPath] = updates;
   await Deno.writeTextFile(importMapPath, stringifyForWrite(importMap));
   console.info("Upgraded successfully");
 }
 
-await update();
+if (import.meta.main) {
+  await update();
+}
