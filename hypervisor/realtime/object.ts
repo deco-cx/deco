@@ -95,8 +95,15 @@ export class HypervisorDiskStorage implements RealtimeStorage {
         }
         const fileContent = await Deno.readTextFile(
           path,
-        );
-        changedFiles[virtualPath] = { content: fileContent };
+        ).catch((err) => {
+          if (err instanceof Deno.errors.NotFound) {
+            return null;
+          }
+          throw err;
+        });
+        if (fileContent) {
+          changedFiles[virtualPath] = { content: fileContent };
+        }
       };
       await Promise.all(paths.map(updatePath));
       yield changedFiles;
