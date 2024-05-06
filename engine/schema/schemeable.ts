@@ -166,6 +166,7 @@ const schemeableToJSONSchemaFunc = (
         allOf: allOf && allOf.length > 0 ? allOf : undefined,
         properties,
         required,
+        default: schemeable.default,
         title: schemeable.title ?? schemeable.name,
       };
       return [
