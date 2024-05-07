@@ -91,6 +91,10 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 
 const script = (id: string) => {
   function init() {
+    // If htmx is found, htmx lazy-loading capabilities
+    const htmx = (globalThis as any).htmx;
+    const lazyLoading = htmx !== "undefined" ? "htmx" : "fresh";
+
     const elem = document.getElementById(id);
     const parent = elem?.parentElement;
 
@@ -101,17 +105,24 @@ const script = (id: string) => {
       return;
     }
 
-    const observeAndClose = (e: IntersectionObserverEntry[]) => {
-      e.forEach((entry) => {
-        if (entry.isIntersecting) {
-          elem.click();
-          observer.disconnect();
-        }
-      });
-    };
-    const observer = new IntersectionObserver(observeAndClose);
-    observer.observe(parent);
-    observeAndClose(observer.takeRecords());
+    if (lazyLoading === "htmx") {
+      parent.setAttribute("hx-get", elem.getAttribute("f-partial")!);
+      parent.setAttribute("hx-trigger", "intersect once");
+
+      htmx.process(parent);
+    } else {
+      const observeAndClose = (e: IntersectionObserverEntry[]) => {
+        e.forEach((entry) => {
+          if (entry.isIntersecting) {
+            elem.click();
+            observer.disconnect();
+          }
+        });
+      };
+      const observer = new IntersectionObserver(observeAndClose);
+      observer.observe(parent);
+      observeAndClose(observer.takeRecords());
+    }
   }
 
   if (document.readyState === "complete") {
@@ -195,6 +206,8 @@ export const withSection = <TProps,>(
                         {...partial}
                         id={btnId}
                         style={{ display: "none" }}
+                        // hx-get={partial["f-partial"]}
+                        // hx-trigger="intersect once"
                       />
                       <script
                         defer
