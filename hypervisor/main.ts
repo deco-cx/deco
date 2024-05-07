@@ -7,7 +7,6 @@ import { Hypervisor } from "./hypervisor.ts";
 import { portPool } from "./workers/portpool.ts";
 const parsedArgs = parse(Deno.args, {
   string: ["build-cmd", "build-files"],
-  boolean: ["expose"],
 });
 const runCommand = parsedArgs["_"];
 if (import.meta.main && !runCommand || runCommand.length === 0) {
@@ -16,6 +15,8 @@ if (import.meta.main && !runCommand || runCommand.length === 0) {
 }
 
 const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
+const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
+const EXTERNAL_DOMAIN = `${DECO_ENV_NAME}--${DECO_SITE_NAME}.deco.site`;
 
 const APP_PORT = portPool.get();
 
@@ -73,24 +74,36 @@ for (const [_signal, shouldExit] of Object.entries(signals)) {
     // ignore
   }
 }
+const port = appPort ? +appPort : 8000;
 Deno.serve(
   {
-    port: appPort ? +appPort : 8000,
-    onListen: (addr) => {
+    port,
+    onListen: async (addr) => {
       const address = `http://${addr.hostname}:${addr.port}`;
       try {
-        if (parsedArgs["expose"]) {
-          //   await cloudflared.install(cloudflared.bin);
-          //   const { url, connections, stop } = cloudflared.tunnel({
-          //     "--url": address,
-          //   });
+        if (DECO_ENV_NAME && DECO_SITE_NAME) {
+          const { PunchmoleClient } = await import("npm:punchmole");
 
-          //   // wait for the all 4 connections to be established
-          //   await Promise.all(connections);
-          //   console.log(
-          //     colors.green(`Server running on ${await url} -> ${address}`),
-          //   );
-          //   shutdown = stop;
+          const punchmoleEvents = PunchmoleClient(
+            Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
+              "c309424a-2dc4-46fe-bfc7-a7c10df59477", // this is a key and it should be ok to expose it since it is just a reverse proxy through a websocket.
+            EXTERNAL_DOMAIN,
+            `http://localhost:${port}`,
+            "wss://simpletunnel.deco.site/_punchmole",
+            {
+              info: () => {},
+              debug: () => {},
+              warn: () => {},
+              error: console.error,
+            },
+          );
+          punchmoleEvents.addListener(
+            "registered",
+            (_result: unknown) =>
+              console.log(colors.green(
+                `Server running on https://${EXTERNAL_DOMAIN} -> ${address}`,
+              )),
+          );
         } else {
           console.log(
             colors.green(`Server running on ${address}`),
