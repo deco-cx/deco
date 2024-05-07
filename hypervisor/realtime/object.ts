@@ -7,7 +7,7 @@ import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
-import { type File, gitIgnore, RealtimeState } from "../deps.ts";
+import { type File, gitIgnore, type RealtimeState } from "../deps.ts";
 
 const encoder = new TextEncoder();
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
