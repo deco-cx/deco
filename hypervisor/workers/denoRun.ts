@@ -1,9 +1,13 @@
 import EventEmitter from "node:events";
 import { delay } from "std/async/delay.ts";
-import { Isolate, type IsolateOptions } from "./isolate.ts";
+import type { Isolate, IsolateOptions } from "./isolate.ts";
 import { portPool } from "./portpool.ts";
 import { waitForPort } from "./utils.ts";
 
+const PORT_WAIT_TIMEOUT_STR = Deno.env.get("PORT_TIMEOUT");
+const PORT_WAIT_TIMEOUT = PORT_WAIT_TIMEOUT_STR
+  ? +PORT_WAIT_TIMEOUT_STR
+  : 60_000;
 const permCache: Record<string, Deno.PermissionState> = {};
 const buildPermissionsArgs = (
   perm?: Deno.PermissionOptionsObject,
@@ -150,7 +154,7 @@ export class DenoRun implements Isolate {
   }
   async waitUntilReady(timeoutMs?: number): Promise<void> {
     await waitForPort(this.port, {
-      timeout: timeoutMs ?? 30_000,
+      timeout: timeoutMs ?? PORT_WAIT_TIMEOUT,
       listening: true,
       signal: this.ctrl?.signal,
     });
