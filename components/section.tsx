@@ -206,8 +206,6 @@ export const withSection = <TProps,>(
                         {...partial}
                         id={btnId}
                         style={{ display: "none" }}
-                        // hx-get={partial["f-partial"]}
-                        // hx-trigger="intersect once"
                       />
                       <script
                         defer
