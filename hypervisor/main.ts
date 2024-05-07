@@ -84,19 +84,32 @@ Deno.serve(
         if (DECO_ENV_NAME && DECO_SITE_NAME) {
           const { PunchmoleClient } = await import("npm:punchmole");
 
-          const punchmoleEvents = PunchmoleClient(
-            Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
-              "c309424a-2dc4-46fe-bfc7-a7c10df59477", // this is a key and it should be ok to expose it since it is just a reverse proxy through a websocket.
-            EXTERNAL_DOMAIN,
-            `http://localhost:${port}`,
-            "wss://simpletunnel.deco.site/_punchmole",
-            {
-              info: () => {},
-              debug: () => {},
-              warn: () => {},
-              error: console.error,
-            },
-          );
+          const register = () => {
+            let timeout: undefined | ReturnType<typeof setTimeout> = undefined;
+            const punchmoleEvents = PunchmoleClient(
+              Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
+                "c309424a-2dc4-46fe-bfc7-a7c10df59477", // this is a key and it should be ok to expose it since it is just a reverse proxy through a websocket.
+              EXTERNAL_DOMAIN,
+              `http://localhost:${port}`,
+              "wss://simpletunnel.deco.site/_punchmole",
+              {
+                info: () => {},
+                debug: () => {},
+                warn: () => {},
+                error: console.error,
+              },
+            );
+            punchmoleEvents.addListener("close", () => {
+              console.log("connectiong close, connecting again in 500ms...");
+              timeout && clearTimeout(timeout);
+              timeout = setTimeout(() => {
+                register();
+              }, 500);
+            });
+            return punchmoleEvents;
+          };
+          const punchmoleEvents = register();
+
           punchmoleEvents.addListener(
             "registered",
             (_result: unknown) =>
