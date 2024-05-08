@@ -93,7 +93,7 @@ const script = (id: string) => {
   function init() {
     // If htmx is found, htmx lazy-loading capabilities
     const htmx = (globalThis as any).htmx;
-    const lazyLoading = htmx !== "undefined" ? "htmx" : "fresh";
+    const lazyLoading = typeof htmx !== "undefined" ? "htmx" : "fresh";
 
     const elem = document.getElementById(id);
     const parent = elem?.parentElement;
