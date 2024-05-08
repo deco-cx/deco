@@ -370,32 +370,45 @@ const resolvePropsWithHints = async <
   const props = onBeforeResolveProps(_thisProps as T, hints);
   const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 
-  const resolvedPropsPromise = Object.entries(hints).map(
-    async ([_key, hint]) => {
-      const key = _key as keyof T;
-      if (props[key]) {
-        const resolved = await resolvePropsWithHints(
-          props[key],
-          hint as HintNode<T[typeof key]>,
-          withResolveChain(ctx, {
-            type: "prop",
-            value: key.toString(),
-          }),
-          opts,
-        );
-        return { key, resolved } as ResolvedKey<T, typeof key>;
-      }
-      return undefined;
-    },
-  );
+  const proceed = () => {
+    return Promise.all(
+      Object.entries(hints).map(
+        async ([_key, hint]) => {
+          const key = _key as keyof T;
+          if (props[key]) {
+            const resolved = await resolvePropsWithHints(
+              props[key],
+              hint as HintNode<T[typeof key]>,
+              withResolveChain(ctx, {
+                type: "prop",
+                value: key.toString(),
+              }),
+              opts,
+            );
+            return { key, resolved } as ResolvedKey<T, typeof key>;
+          }
+          return undefined;
+        },
+      ),
+    );
+  };
+  const hintsEntries = Object.entries(hints);
 
-  const mutableProps: T = resolvedPropsPromise.length === 0 // if there's no resolved properties so no shallow copy is needed.
+  const mutableProps: T = hintsEntries.length === 0 // if there's no resolved properties so no shallow copy is needed.
     ? props
     : Array.isArray(props)
     ? [...props] as T
     : { ...props };
 
-  const resolvedProps = await Promise.all(resolvedPropsPromise);
+  const resolvedProps = await (type
+    ? opts.hooks?.onPropsResolveStart?.(
+      proceed,
+      mutableProps,
+      _ctx.resolvers[type],
+      type,
+      ctx,
+    ) ?? proceed()
+    : proceed());
   for (const { key, resolved } of resolvedProps.filter(notUndefined)) {
     mutableProps[key] = resolved;
   }
@@ -587,6 +600,16 @@ export const resolveAny = <
 };
 
 export interface ResolveHooks {
+  onPropsResolveStart?: <
+    T,
+    TContext extends BaseContext = BaseContext,
+  >(
+    resolve: () => Promise<Array<ResolvedKey<T, keyof T> | undefined>>,
+    props: T,
+    resolver: Resolver,
+    __resolveType: string,
+    ctx: TContext,
+  ) => Promise<Array<ResolvedKey<T, keyof T> | undefined>>;
   onResolveStart?: <
     T,
     TContext extends BaseContext = BaseContext,
