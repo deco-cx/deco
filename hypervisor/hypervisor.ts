@@ -2,6 +2,7 @@ import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
+import { bundleApp } from "../scripts/apps/bundle.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
@@ -36,14 +37,26 @@ export class Hypervisor {
   constructor(protected options: AppOptions) {
     const buildMutex = new Mutex();
     const buildCmd = options.build;
+    const appBundle = bundleApp(Deno.cwd());
+    const genManifest = () => {
+      return appBundle({
+        dir: ".",
+        name: "site",
+      });
+    };
     const debouncedBuild = buildCmd
       ? debounce(async () => {
         if (buildMutex.freeOrNext()) {
           using _ = await buildMutex.acquire();
           const child = buildCmd.spawn();
-          return await child.output().then(() => {}).catch((err) => {
-            console.error("build err", err);
-          });
+          return await Promise.all([
+            child.output().then(() => {}),
+            genManifest(),
+          ]).catch(
+            (err) => {
+              console.error("build err", err);
+            },
+          );
         }
       }, 200)
       : undefined;

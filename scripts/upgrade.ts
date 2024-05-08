@@ -724,6 +724,7 @@ const environments: UpgradeOption = {
       });
       const envArg = envExists ? "--env" : "";
       const dev = `deno run -A ${envArg} --unstable --unstable-hmr dev.ts`;
+
       const start =
         `deno task bundle && deno run -A ${envArg} --config=deno.json $(deno eval 'console.log(import.meta.resolve("deco/hypervisor/main.ts"))') --build-cmd 'deno task build' -- deno task dev`;
 

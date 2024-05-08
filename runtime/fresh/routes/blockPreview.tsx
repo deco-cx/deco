@@ -63,7 +63,15 @@ export const handler = async (
   };
   socket.onmessage = async (e) => {
     try {
-      const data = JSON.parse(e.data);
+      let eventData = e.data;
+      const target = e?.target;
+      if (
+        target && "binaryType" in target &&
+        target.binaryType === "blob" && "text" in eventData
+      ) {
+        eventData = await eventData.text();
+      }
+      const data = JSON.parse(eventData);
       const key = data.key;
       const props = JSON.parse(data.props);
       cache[key] ??= render(data.url, props, req, ctx).then((response) =>
