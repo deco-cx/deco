@@ -101,7 +101,7 @@ export const updateLoadCache = (path: string, content: string) => {
 export const parsePath = (path: string) => {
   const mLoader = initLoader();
   return loadCache[path] ??= mLoader(path).then(async (content) => {
-    if (!content) {
+    if (!content && content !== "") {
       throw new Error(`Path not found ${path}`);
     }
     try {
