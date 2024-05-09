@@ -131,6 +131,9 @@ Deno.serve(
     let response: Promise<Response> | null = null;
     const begin = performance.now();
     try {
+      if (req.url.endsWith("/_healthcheck")) {
+        return new Response("OK", { status: 200 });
+      }
       return response = hypervisor.fetch(req);
     } finally {
       response?.then((resp) => {

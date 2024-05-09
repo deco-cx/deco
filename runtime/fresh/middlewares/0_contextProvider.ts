@@ -1,13 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
 import { Context, type DecoContext } from "../../../deco.ts";
 import type { FreshContext, MiddlewareHandler } from "../../../deps.ts";
-import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
-import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/decofile/fs.ts";
 import {
   type DecofileProvider,
   getProvider,
 } from "../../../engine/decofile/provider.ts";
+import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
+import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { newContext } from "../../../mod.ts";
 import type { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
 import type { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
@@ -25,6 +25,9 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       DecoState<any, DecoSiteState, TManifest>
     >,
   ) {
+    if (request.url.endsWith("/_healthcheck")) {
+      return new Response("OK", { status: 200 });
+    }
     const opt = typeof _opt === "function" ? await _opt(request) : _opt;
     contextCache ??= new ContextCache({
       cacheSize: 7, // 7 is arbitrarily chosen
