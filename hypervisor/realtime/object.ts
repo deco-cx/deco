@@ -251,7 +251,7 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     const tasks: Promise<void>[] = [];
     for (const [path, content] of allFiles.entries()) {
       if (
-        !content && content !== "" ||
+        !content ||
         (path === CHANGESET_FILE)
       ) {
         continue;
