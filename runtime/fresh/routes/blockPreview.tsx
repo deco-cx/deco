@@ -67,7 +67,8 @@ export const handler = async (
       const target = e?.target;
       if (
         target && "binaryType" in target &&
-        target.binaryType === "blob" && "text" in eventData
+        target.binaryType === "blob" && typeof eventData === "object" &&
+        "text" in eventData
       ) {
         eventData = await eventData.text();
       }
