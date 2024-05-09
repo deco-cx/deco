@@ -21,7 +21,12 @@ export const shortcircuit = (resp: Response) => {
  * Redirect using the specified @param url.
  */
 export const redirect = (url: string | URL, status?: number) => {
-  shortcircuit(Response.redirect(url, status));
+  shortcircuit(
+    new Response(null, {
+      status: status ?? 307,
+      headers: { location: url.toString() },
+    }),
+  );
 };
 
 /**
