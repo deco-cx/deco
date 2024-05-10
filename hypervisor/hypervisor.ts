@@ -6,6 +6,7 @@ import { bundleApp } from "../scripts/apps/bundle.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
+import { cacheStaleMeta } from "./meta/cache.ts";
 import { createDurableFS } from "./realtime/fs.ts";
 import {
   HypervisorDiskStorage,
@@ -156,7 +157,11 @@ export class Hypervisor {
       this.isolate.start();
       await this.isolate.waitUntilReady();
     }
-    return this.isolate.fetch(req).catch(async (err) => {
+    const { then: updateMetaStaleCache, catch: useMetaStaleCache } =
+      cacheStaleMeta(url);
+    return this.isolate.fetch(req).then(updateMetaStaleCache).catch(
+      useMetaStaleCache,
+    ).catch(async (err) => {
       if (this.isolate.isRunning()) {
         await this.isolate.waitUntilReady().catch((_err) => {});
         return this.isolate.fetch(req).catch(this.errAs500);
