@@ -145,7 +145,7 @@ Here is a table with the integrations that we have built and the statuses of the
 | `WEB_CACHE_ENGINE`                | Defines the cache engine(s) to use                      | `"FILE_SYSTEM,S3"`                                     |
 | `FILE_SYSTEM_CACHE_DIRECTORY`     | Directory path for file system cache                    | `` |
 | `MAX_CACHE_SIZE`                  | Maximum size of the file system cache (in bytes)                    | `1073741824` (1 GB)                                    |
-| `TTL_AUTOPURGE`                   | Flag to automatically delete expired items from the file system cache | `true` or `false`                                     |
+| `TTL_AUTOPURGE`                   | Flag to automatically delete expired items from the file system cache (cpu intensive) | `false`                                      |
 | `TTL_RESOLUTION`                  | Time interval to check for expired items in the file system cache (in milliseconds) | `30000` (30 seconds)                               |
 | `CACHE_MAX_AGE_S`                  | Time for cache to become stale | `60` (60 seconds)                              |
 
