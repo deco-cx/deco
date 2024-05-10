@@ -31,7 +31,3 @@ export const bundleApps = async () => {
 
   await Promise.all((decoConfig?.apps ?? []).map(bundleApp(dir)));
 };
-
-if (import.meta.main) {
-  await bundleApps();
-}
