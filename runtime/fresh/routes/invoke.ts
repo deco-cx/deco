@@ -21,7 +21,7 @@ export const handler = async (
   const { state: { resolve } } = ctx;
   const invokeFunc: InvokeFunction = {
     key: ctx.params.key as InvokeFunction["key"],
-    props,
+    props: props as InvokeFunction["props"],
     select:
       (url.searchParams.getAll("select") ?? []) as InvokeFunction["select"],
   };
@@ -29,7 +29,7 @@ export const handler = async (
   const resp = await resolve(payloadToResolvable(invokeFunc), {
     resolveChain: [{ type: "resolver", value: "invoke" }],
   }).catch(
-    wrapInvokeErr,
+    wrapInvokeErr(ctx.params.key),
   );
 
   return invokeToHttpResponse(req, resp);

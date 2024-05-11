@@ -20,10 +20,10 @@ import {
   STATE_CONTEXT_KEY,
 } from "../../../observability/otel/context.ts";
 import type { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
+import { forceHttps } from "../../../utils/http.ts";
 import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
 import { createServerTimings } from "../../../utils/timings.ts";
 import { setLogger } from "../../fetch/fetchLog.ts";
-import { forceHttps } from "../../../utils/http.ts";
 
 export interface LiveRouteConfig extends RouteConfig {
   liveKey?: string;

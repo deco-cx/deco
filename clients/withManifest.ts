@@ -226,6 +226,12 @@ export const invoke = <
   >
 > => {
   if (typeof payload === "object") {
+    if ("key" in payload && "props" in payload) {
+      return invokeKey((payload as any).key, (payload as any).props, {
+        ...init ?? {},
+        fetcher,
+      });
+    }
     const reqs: Record<
       string,
       Invoke<TManifest, TInvocableKey, TFuncSelector>

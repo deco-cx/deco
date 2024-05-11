@@ -2,7 +2,8 @@
 import type { HandlerContext } from "$fresh/src/server/types.ts";
 import type { Resolvable } from "../../../engine/core/resolver.ts";
 import { HttpError } from "../../../engine/errors.ts";
-import type { DecoState } from "../../../mod.ts";
+import { context } from "../../../live.ts";
+import { type DecoState, logger } from "../../../mod.ts";
 import type { DecoSiteState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { allowCorsFor, bodyFromUrl } from "../../../utils/http.ts";
@@ -13,8 +14,13 @@ import type {
   InvokePayload,
 } from "../../../utils/invoke.types.ts";
 
-export const wrapInvokeErr = (err: any) => {
+export const wrapInvokeErr = (path?: string) => (err: any) => {
   if (!(err instanceof HttpError)) {
+    if (context.isDeploy) {
+      logger.error(`invoke error ${path}: ${err?.stack} ${err?.message}`);
+    } else {
+      console.error(`invoke error ${path}`, err);
+    }
     throw new HttpError(
       new Response(
         err ? err : JSON.stringify({
@@ -64,9 +70,12 @@ export const handler = async (
     ? await req.json()
     : bodyFromUrl("body", new URL(req.url)); // TODO(mcandeia) check if ctx.url can be used here
 
-  const result = await resolve(payloadToResolvable(data), {
-    resolveChain: [{ type: "resolver", value: "invoke" }],
-  }).catch(wrapInvokeErr);
+  const result = await resolve(
+    payloadToResolvable(data as Record<string, any>),
+    {
+      resolveChain: [{ type: "resolver", value: "invoke" }],
+    },
+  ).catch(wrapInvokeErr());
 
   const response = invokeToHttpResponse(req, result);
 
