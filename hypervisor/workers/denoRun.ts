@@ -55,6 +55,7 @@ export class DenoRun implements Isolate {
     | ReturnType<typeof Promise.withResolvers<void>>
     | undefined;
   protected proxyUrl: string;
+  protected client: Deno.HttpClient;
   constructor(options: IsolateOptions | CommandIsolate) {
     if (isCmdIsolate(options)) {
       this.port = options.port;
@@ -78,6 +79,12 @@ export class DenoRun implements Isolate {
     }
     const hostname = Deno.build.os === "windows" ? "localhost" : "0.0.0.0";
     this.proxyUrl = `http://${hostname}:${this.port}`;
+    this.client = Deno.createHttpClient({
+      allowHost: true,
+      proxy: {
+        url: this.proxyUrl,
+      },
+    });
   }
   signal(sig: Deno.Signal) {
     try {
@@ -127,13 +134,14 @@ export class DenoRun implements Isolate {
     }
 
     const headers = new Headers(request.headers);
-    headers.set("Host", url.hostname);
+    headers.set("host", url.hostname);
 
-    return fetch(url, {
+    return fetch(request.url, {
       method: request.method,
       headers,
       body: request.body,
       redirect: "manual",
+      client: this.client,
     }).finally(() => {
       this.inflightRequests--;
       if (this.inflightRequests === 0) {
