@@ -4,7 +4,6 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import type { IVFS } from "./runtime/fs/mod.ts";
 import "./utils/patched_fetch.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -47,7 +46,6 @@ export type DecoContext = {
   play?: boolean;
   instance: InstanceInfo;
   request?: RequestContext;
-  fs?: IVFS;
 };
 
 const isDeploy = Boolean(Deno.env.get("DENO_DEPLOYMENT_ID"));
