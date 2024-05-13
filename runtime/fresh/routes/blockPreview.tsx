@@ -18,6 +18,7 @@ const paramsFromUrl = (
   return [params, pathname];
 };
 
+const decoder = new TextDecoder();
 export default function Preview(props: PageProps<Page>) {
   const renderProps = {
     ...props,
@@ -71,6 +72,9 @@ export const handler = async (
         "text" in eventData
       ) {
         eventData = await eventData.text();
+      }
+      if (eventData instanceof ArrayBuffer) {
+        eventData = decoder.decode(eventData);
       }
       const data = JSON.parse(eventData);
       const key = data.key;
