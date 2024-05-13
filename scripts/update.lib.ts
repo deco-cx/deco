@@ -1,3 +1,4 @@
+import { pkgInfo } from "deco/utils/pkg.ts";
 import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
 import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
@@ -19,6 +20,10 @@ interface ImportMap {
   imports: Record<string, string>;
 }
 
+const flags = parse(Deno.args, {
+  boolean: ["allow-pre"],
+});
+
 const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
   const denoJSONPath = join(dir, "deno.json");
   const denoJSON = await Deno.readTextFile(denoJSONPath).then(JSON.parse);
@@ -35,14 +40,6 @@ const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
   ];
 };
 
-function eligibleLatestVersion(versions: string[]) {
-  const flags = parse(Deno.args, {
-    boolean: ["allow-pre"],
-  });
-  return flags["allow-pre"]
-    ? versions[0]
-    : versions.find((ver) => semver.parse(ver)?.prerelease?.length === 0);
-}
 export async function upgradeDeps(
   importMap: ImportMap,
   logs = true,
@@ -55,17 +52,14 @@ export async function upgradeDeps(
     Object.keys(importMap.imports ?? {})
       .filter((pkg) => deps.test(pkg))
       .map(async (pkg) => {
-        const url = lookup(importMap.imports[pkg], REGISTRIES);
+        const info = await pkgInfo(importMap.imports[pkg], flags["allow-pre"]);
 
-        if (!url) return;
+        if (!info?.versions?.latest) return;
 
-        const versions = await url.all();
-        const currentVersion = url.version();
-        const latestVersion = eligibleLatestVersion(versions);
-
-        if (!latestVersion) {
-          return;
-        }
+        const {
+          url,
+          versions: { latest: latestVersion, current: currentVersion },
+        } = info;
 
         if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
           logs && console.log(
