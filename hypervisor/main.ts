@@ -100,7 +100,7 @@ Deno.serve(
               },
             );
             punchmoleEvents.addListener("close", () => {
-              console.log("connectiong close, connecting again in 500ms...");
+              console.log("connection close, connecting again in 500ms...");
               timeout && clearTimeout(timeout);
               timeout = setTimeout(() => {
                 register();
