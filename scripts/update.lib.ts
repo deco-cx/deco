@@ -1,4 +1,3 @@
-import { pkgInfo } from "deco/utils/pkg.ts";
 import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
 import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
 import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
@@ -8,6 +7,7 @@ import {
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
 import { stringifyForWrite } from "../utils/json.ts";
+import { pkgInfo } from "../utils/pkg.ts";
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
