@@ -15,7 +15,7 @@ export const handler = async (
 ): Promise<Response> => {
   const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
   const props = req.method === "POST"
-    ? await req.json()
+    ? req.headers.get("content-length") === "0" ? {} : await req.json()
     : bodyFromUrl("props", url);
 
   const { state: { resolve } } = ctx;

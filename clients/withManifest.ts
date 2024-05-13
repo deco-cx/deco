@@ -116,7 +116,7 @@ export const invokeKey = (
   key: string,
   props?: unknown,
   init?: InvokerRequestInit | undefined,
-) => fetchWithProps(`/live/invoke/${key}`, props, init);
+) => fetchWithProps(`/live/invoke/${key}`, props ?? {}, init);
 
 const batchInvoke = (payload: unknown, init?: InvokerRequestInit | undefined) =>
   fetchWithProps(`/live/invoke`, payload, init);
