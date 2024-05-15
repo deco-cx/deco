@@ -133,9 +133,7 @@ Deno.serve(
     try {
       if (req.url.endsWith("/_healthcheck")) {
         return new Response(
-          JSON.stringify({
-            resources: Deno.resources(),
-          }),
+          "OK",
           { status: 200 },
         );
       }

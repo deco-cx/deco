@@ -27,8 +27,17 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   ) {
     if (request.url.endsWith("/_healthcheck")) {
       return new Response(
+        "OK",
+        { status: 200 },
+      );
+    }
+    if (request.url.endsWith("/_resources")) {
+      return new Response(
         JSON.stringify({
+          // deno-lint-ignore no-deprecated-deno-api
           resources: Deno.resources(),
+          mem: Deno.memoryUsage(),
+          sys: Deno.systemMemoryInfo(),
         }),
         { status: 200 },
       );
