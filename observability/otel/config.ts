@@ -1,4 +1,5 @@
-import * as log from "std/log/mod.ts";
+import { Logger } from "std/log/logger.ts";
+
 import { Context, context } from "../../deco.ts";
 import denoJSON from "../../deno.json" with { type: "json" };
 import {
@@ -47,22 +48,14 @@ export const resource = Resource.default().merge(
 );
 
 const loggerName = "deco-logger";
-log.setup({
-  handlers: {
-    otel: new OpenTelemetryHandler("INFO", {
+
+export const logger = new Logger(loggerName, "INFO", {
+  handlers: [
+    new OpenTelemetryHandler("INFO", {
       resourceAttributes: resource.attributes,
     }),
-  },
-
-  loggers: {
-    [loggerName]: {
-      level: "INFO",
-      handlers: ["otel"],
-    },
-  },
+  ],
 });
-
-export const logger = log.getLogger(loggerName);
 export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 
 const trackCfHeaders = [
