@@ -4,26 +4,24 @@ import * as log from "std/log/mod.ts";
 import { type LevelName, LogLevels } from "std/log/levels.ts";
 import type { LogRecord } from "std/log/logger.ts";
 
-import { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";
-import { OTLPLogExporter } from "npm:@opentelemetry/exporter-logs-otlp-http@0.43.0";
-import type { OTLPExporterNodeConfigBase } from "npm:@opentelemetry/otlp-exporter-base@0.43.0";
 import {
-    detectResourcesSync,
-    envDetectorSync,
-    hostDetectorSync,
-    osDetectorSync,
-    processDetector,
-    Resource,
-} from "npm:@opentelemetry/resources@1.17.0";
-import {
-    BatchLogRecordProcessor,
-    type BufferConfig,
-    ConsoleLogRecordExporter,
-    LoggerProvider,
-} from "npm:@opentelemetry/sdk-logs@0.43.0";
-
-import type { Logger } from "npm:@opentelemetry/api-logs@0.43.0";
-import type { Attributes } from "npm:@opentelemetry/api@1.6.0";
+  type Attributes,
+  BatchLogRecordProcessor,
+  type BufferConfig,
+  ConsoleLogRecordExporter,
+  detectResourcesSync,
+  envDetectorSync,
+  hostDetectorSync,
+  type Logger,
+  LoggerProvider,
+  logs,
+  osDetectorSync,
+  type OTLPExporterNodeConfigBase,
+  OTLPLogExporter,
+  processDetector,
+  Resource,
+  SeverityNumber,
+} from "../../deps.ts";
 
 const UNSPECIFIED_SEVERITY_TEXT = "";
 

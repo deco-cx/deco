@@ -103,4 +103,20 @@ export {
 
 export { default as Murmurhash3 } from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";
+export type { Logger } from "npm:@opentelemetry/api-logs@0.43.0";
+export { OTLPLogExporter } from "npm:@opentelemetry/exporter-logs-otlp-http@0.43.0";
 export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
+export type { OTLPExporterNodeConfigBase } from "npm:@opentelemetry/otlp-exporter-base@0.43.0";
+export {
+  detectResourcesSync,
+  envDetectorSync,
+  hostDetectorSync,
+  osDetectorSync,
+  processDetector,
+} from "npm:@opentelemetry/resources@1.17.0";
+export {
+  BatchLogRecordProcessor,
+  ConsoleLogRecordExporter,
+  LoggerProvider,
+} from "npm:@opentelemetry/sdk-logs@0.43.0";
+export type { BufferConfig } from "npm:@opentelemetry/sdk-logs@0.43.0";
