@@ -1,5 +1,5 @@
 import type { HandlerContext } from "$fresh/server.ts";
-import type { ConnInfo } from "std/http/server.ts";
+import type { ConnInfo } from "@std/http/server";
 import { type Workflow, WorkflowContext } from "../../../blocks/workflow.ts";
 import { initOnce } from "../../../commons/workflows/initialize.ts";
 import {

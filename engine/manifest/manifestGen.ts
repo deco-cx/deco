@@ -1,5 +1,5 @@
-import { walk } from "std/fs/walk.ts";
-import { join } from "std/path/mod.ts";
+import { walk } from "@std/fs/walk";
+import { join } from "@std/path";
 import { shouldBeLocal } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import type { BlockType } from "../../engine/block.ts";
@@ -8,6 +8,7 @@ import {
   newManifestBuilder,
 } from "../../engine/manifest/manifestBuilder.ts";
 import { exists, fileSeparatorToSlash } from "../../utils/filesystem.ts";
+
 const sanitize = (functionName: string) =>
   functionName.startsWith("/") ? functionName : `/${functionName}`;
 const withDefinition = (

@@ -1,5 +1,6 @@
 import type { HandlerContext } from "$fresh/server.ts";
-import type { ConnInfo } from "std/http/server.ts";
+import type { ConnInfo } from "@std/http/server";
+
 export const isFreshCtx = <TState>(
   ctx: ConnInfo | HandlerContext<unknown, TState>,
 ): ctx is HandlerContext<unknown, TState> => {

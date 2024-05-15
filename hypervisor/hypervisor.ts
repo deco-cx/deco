@@ -1,6 +1,6 @@
+import { debounce } from "@std/async/debounce";
+import * as colors from "@std/fmt/colors";
 import fjp from "npm:fast-json-patch@3.1.1";
-import { debounce } from "std/async/debounce.ts";
-import * as colors from "std/fmt/colors.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";

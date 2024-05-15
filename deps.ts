@@ -37,6 +37,7 @@ export type {
   RequiredKeys,
   UnionToIntersection,
 } from "https://esm.sh/v135/utility-types@3.10.0";
+export { decodeHex, encodeHex } from "jsr:@std/encoding/hex";
 export type {
   Attributes,
   BatchObservableResult,
@@ -49,8 +50,10 @@ export type {
   Span,
   Tracer,
 } from "npm:@opentelemetry/api@1.6.0";
-export { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
 
+export { crypto } from "@std/crypto";
+export { getCookies, getSetCookies, setCookie } from "@std/http/cookie";
+export type { Handler } from "@std/http/server";
 export {
   context,
   createContextKey,
@@ -64,9 +67,6 @@ export {
   trace,
   ValueType,
 } from "npm:@opentelemetry/api@1.6.0";
-export { crypto } from "std/crypto/mod.ts";
-export { getCookies, getSetCookies, setCookie } from "std/http/mod.ts";
-export type { Handler } from "std/http/server.ts";
 
 export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0.43.0";
 export {
@@ -103,4 +103,20 @@ export {
 
 export { default as Murmurhash3 } from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
 export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";
+export type { Logger } from "npm:@opentelemetry/api-logs@0.43.0";
+export { OTLPLogExporter } from "npm:@opentelemetry/exporter-logs-otlp-http@0.43.0";
 export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
+export type { OTLPExporterNodeConfigBase } from "npm:@opentelemetry/otlp-exporter-base@0.43.0";
+export {
+  detectResourcesSync,
+  envDetectorSync,
+  hostDetectorSync,
+  osDetectorSync,
+  processDetector,
+} from "npm:@opentelemetry/resources@1.17.0";
+export {
+  BatchLogRecordProcessor,
+  ConsoleLogRecordExporter,
+  LoggerProvider,
+} from "npm:@opentelemetry/sdk-logs@0.43.0";
+export type { BufferConfig } from "npm:@opentelemetry/sdk-logs@0.43.0";

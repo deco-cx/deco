@@ -1,10 +1,10 @@
-import { Tar } from "std/archive/tar.ts";
-import { ensureDir } from "std/fs/ensure_dir.ts";
-import { exists } from "std/fs/exists.ts";
-import { walk } from "std/fs/walk.ts";
-import { Buffer } from "std/io/buffer.ts";
-import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
-import { copy } from "std/streams/copy.ts";
+import { Tar } from "@std/archive/tar";
+import { ensureDir } from "@std/fs/ensure_dir";
+import { exists } from "@std/fs/exists";
+import { walk } from "@std/fs/walk";
+import { Buffer } from "@std/io/buffer";
+import { basename, dirname, globToRegExp, join } from "@std/path";
+import { copy } from "@std/streams/copy";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
 import { type File, gitIgnore, type RealtimeState } from "../deps.ts";

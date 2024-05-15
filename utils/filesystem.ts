@@ -1,5 +1,5 @@
-import { fromFileUrl, join, SEP } from "std/path/mod.ts";
-export { exists } from "std/fs/mod.ts";
+import { fromFileUrl, join, SEPARATOR as SEP } from "@std/path";
+export { exists } from "@std/fs";
 
 export const resolveFilePath = (path: string) => {
   return join(

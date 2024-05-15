@@ -1,7 +1,7 @@
 import type { HandlerContext, PageProps } from "$fresh/server.ts";
+import type { ConnInfo } from "@std/http/server";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
-import type { ConnInfo } from "std/http/server.ts";
 import type { Handler } from "../../../blocks/handler.ts";
 import type { Page } from "../../../blocks/page.tsx";
 import type { PageContext } from "../../../engine/block.ts";

@@ -1,6 +1,7 @@
-import { parse } from "std/flags/mod.ts";
-import * as colors from "std/fmt/colors.ts";
+import { parse } from "@std/flags";
+import * as colors from "@std/fmt/colors";
 import { formatLog } from "../utils/log.ts";
+
 // import { cloudflared } from "./deps.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { Hypervisor } from "./hypervisor.ts";

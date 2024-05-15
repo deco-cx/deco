@@ -1,5 +1,5 @@
-import * as colors from "std/fmt/colors.ts";
-import { join } from "std/path/mod.ts";
+import * as colors from "@std/fmt/colors";
+import { join } from "@std/path";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { getDecoConfig } from "./config.ts";
 

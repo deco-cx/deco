@@ -1,5 +1,5 @@
-import { debounce } from "std/async/debounce.ts";
-import { basename, join } from "std/path/mod.ts";
+import { debounce } from "@std/async/debounce";
+import { basename, join } from "@std/path";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
 import type {

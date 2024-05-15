@@ -1,4 +1,4 @@
-import { blue, bold, cyan, gray, green, red, yellow } from "std/fmt/colors.ts";
+import { blue, bold, cyan, gray, green, red, yellow } from "@std/fmt/colors";
 import type { Timing } from "./timings.ts";
 
 export const formatOutgoingFetch = (

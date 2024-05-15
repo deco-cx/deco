@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
+import { deleteCookie, getCookies, setCookie } from "@std/http";
 import { Context, type DecoContext } from "../../../deco.ts";
 import { type MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/decofile/fetcher.ts";

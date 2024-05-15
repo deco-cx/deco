@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import type { Status } from "std/http/mod.ts";
+import type { StatusCode as Status } from "@std/http/status";
 import type { AppManifest, ImportMap } from "../blocks/app.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";
@@ -18,9 +18,9 @@ import type {
 import { type PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Flag } from "../types.ts";
-import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import type { InvocationProxy } from "../utils/invoke.types.ts";
+import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (

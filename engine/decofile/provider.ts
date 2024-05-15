@@ -1,6 +1,6 @@
-import * as colors from "std/fmt/colors.ts";
-import { exists } from "std/fs/mod.ts";
-import { join } from "std/path/mod.ts";
+import * as colors from "@std/fmt/colors";
+import { exists } from "@std/fs";
+import { join } from "@std/path";
 import type { Resolvable } from "../core/resolver.ts";
 import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";

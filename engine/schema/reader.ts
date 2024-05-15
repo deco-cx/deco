@@ -1,4 +1,4 @@
-import { join } from "std/path/mod.ts";
+import { join } from "@std/path";
 import type { ImportMap } from "../../blocks/app.ts";
 import { context } from "../../deco.ts";
 import { genSchemasFromManifest } from "../../engine/schema/gen.ts";

@@ -1,5 +1,5 @@
+import { delay } from "@std/async/delay";
 import EventEmitter from "node:events";
-import { delay } from "std/async/delay.ts";
 import type { Isolate, IsolateOptions } from "./isolate.ts";
 import { portPool } from "./portpool.ts";
 import { waitForPort } from "./utils.ts";

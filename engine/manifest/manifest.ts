@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
+import { parse } from "@std/flags";
+import { blue, gray, green, red, rgb24, underline } from "@std/fmt/colors";
 import { initializeState } from "deco/runtime/utils.ts";
-import { parse } from "std/flags/mod.ts";
-import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
 import {
   type AppManifest,
   type ImportMap,
