@@ -79,8 +79,8 @@ export class Hypervisor {
     storage.onChange = (events) => {
       if (debouncedBuild) {
         const hasAnyCreationOrDeletion = events.some((evt) =>
-          evt.type !== "modify" && evt.path.endsWith(".ts") ||
-          evt.path.endsWith(".tsx")
+          evt.type !== "modify" && (evt.path.endsWith(".ts") ||
+            evt.path.endsWith(".tsx"))
         );
         if (hasAnyCreationOrDeletion) {
           debouncedBuild();
