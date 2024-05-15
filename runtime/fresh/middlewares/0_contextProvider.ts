@@ -26,7 +26,12 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
     >,
   ) {
     if (request.url.endsWith("/_healthcheck")) {
-      return new Response("OK", { status: 200 });
+      return new Response(
+        JSON.stringify({
+          resources: Deno.resources(),
+        }),
+        { status: 200 },
+      );
     }
     const opt = typeof _opt === "function" ? await _opt(request) : _opt;
     contextCache ??= new ContextCache({

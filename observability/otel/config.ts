@@ -17,8 +17,8 @@ import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
 import { type SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
-import { OpenTelemetryHandler } from "https://denopkg.com/hyperdxio/hyperdx-js@cc43f5a2ba5f0062f3e01ea3d162d71971dd1f89/packages/deno/mod.ts";
 import { ENV_SITE_NAME } from "../../engine/decofile/constants.ts";
+import { OpenTelemetryHandler } from "./logger.ts";
 
 const tryGetVersionOf = (pkg: string) => {
   try {
