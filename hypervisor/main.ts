@@ -132,7 +132,12 @@ Deno.serve(
     const begin = performance.now();
     try {
       if (req.url.endsWith("/_healthcheck")) {
-        return new Response("OK", { status: 200 });
+        return new Response(
+          JSON.stringify({
+            resources: Deno.resources(),
+          }),
+          { status: 200 },
+        );
       }
       return response = hypervisor.fetch(req);
     } finally {
