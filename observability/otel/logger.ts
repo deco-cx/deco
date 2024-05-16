@@ -99,9 +99,8 @@ export class OpenTelemetryHandler extends log.handlers.BaseHandler {
         new Resource({ ...options.resourceAttributes }),
       ),
     });
-
     loggerProvider.addLogRecordProcessor(processor);
-
+    logs.setGlobalLoggerProvider(loggerProvider);
     const logger = logs.getLogger("deno-logger");
     this._logger = logger;
   }

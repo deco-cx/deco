@@ -48,7 +48,6 @@ export const resource = Resource.default().merge(
 );
 
 const loggerName = "deco-logger";
-
 export const logger = new Logger(loggerName, "INFO", {
   handlers: [
     new OpenTelemetryHandler("INFO", {
