@@ -48,15 +48,18 @@ export const resource = Resource.default().merge(
 );
 
 const loggerName = "deco-logger";
-
+export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 export const logger = new Logger(loggerName, "INFO", {
   handlers: [
-    new OpenTelemetryHandler("INFO", {
-      resourceAttributes: resource.attributes,
-    }),
+    ...OTEL_IS_ENABLED
+      ? [
+        new OpenTelemetryHandler("INFO", {
+          resourceAttributes: resource.attributes,
+        }),
+      ]
+      : [],
   ],
 });
-export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 
 const trackCfHeaders = [
   "Cf-Ray",
