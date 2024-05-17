@@ -142,9 +142,12 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     context: Omit<TContext, keyof BaseContext>,
     options?: ResolveOptions,
   ): Promise<T> => {
-    const resolvables = await this.release.state({
-      forceFresh: options?.forceFresh,
-    });
+    const [resolvables, revision] = await Promise.all([
+      this.release.state({
+        forceFresh: options?.forceFresh,
+      }),
+      this.release.revision(),
+    ]);
     const nresolvables = withOverrides(options?.overrides, {
       ...resolvables,
       ...(this.resolvables ?? {}),
@@ -153,6 +156,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     const currentOnce = this.runOncePerRelease;
     const resolveChain = options?.resolveChain ?? [];
     const baseCtx: BaseContext = {
+      revision,
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
       resolverId: "unknown",

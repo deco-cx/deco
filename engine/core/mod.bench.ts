@@ -1,6 +1,6 @@
+import denoJSON from "../../deno.json" with { type: "json" };
 import { genHints } from "../../engine/core/hints.ts";
 import { type BaseContext, resolve } from "../../engine/core/resolver.ts";
-import denoJSON from "../../deno.json" with { type: "json" };
 import releaseJSON from "./hints.test.json" with { type: "json" };
 const danglingRecover = (parent: unknown) => parent;
 
@@ -10,6 +10,7 @@ Deno.bench(
   { group: "resolve", baseline: true },
   async () => {
     const context: BaseContext = {
+      revision: "",
       resolveChain: [],
       resolveId: "1",
       resolverId: "unknown",
@@ -41,6 +42,7 @@ Deno.bench(
   { group: "resolve" },
   async () => {
     const context: BaseContext = {
+      revision: "",
       resolveChain: [],
       resolveId: "1",
       resolverId: "unknown",

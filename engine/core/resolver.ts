@@ -45,6 +45,7 @@ export interface Monitoring {
 }
 
 export interface BaseContext {
+  revision: string;
   resolveChain: FieldResolver[];
   resolveId: string;
   resolverId: string;

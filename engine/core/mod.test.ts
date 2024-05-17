@@ -10,6 +10,7 @@ import defaults from "../manifest/fresh.ts";
 
 Deno.test("resolve", async (t) => {
   const context: BaseContext = {
+    revision: "",
     resolveChain: [],
     resolveId: "1",
     resolverId: "unknown",

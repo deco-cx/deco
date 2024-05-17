@@ -18,9 +18,9 @@ import type {
 import { type PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { Flag } from "../types.ts";
-import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import type { InvocationProxy } from "../utils/invoke.types.ts";
+import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
@@ -87,6 +87,7 @@ export type FnContext<
   TState = {},
   TManifest extends AppManifest = AppManifest,
 > = TState & RequestState & {
+  revision: string;
   device: Device;
   isBot: boolean;
   resolverId?: string;
@@ -121,6 +122,7 @@ export const fnContextFromHttpContext = <TState = {}>(
   let isBot: boolean | null = null;
   return {
     ...ctx?.context?.state?.global,
+    revision: ctx.revision,
     resolverId: ctx.resolverId,
     monitoring: ctx.monitoring,
     get: ctx.resolve,
