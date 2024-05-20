@@ -1,5 +1,5 @@
 import type { HandlerContext } from "$fresh/server.ts";
-import { Partial, type PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import { bindings, getSectionID } from "../../../components/section.tsx";
 import {
   FieldResolver,
@@ -136,7 +136,7 @@ export const handler = async (
       // we are creating a section with client side redirect
       // and inserting the same partialId from old section
       // to replace it and do the redirect
-      const newResolveChain = [...resolveChain, {
+      const newResolveChain = [...resolveChain ?? [], {
         type: "resolver",
         value: section.__resolveType,
       }];
