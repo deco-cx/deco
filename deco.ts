@@ -29,7 +29,7 @@ export interface InstanceInfo {
 export type RequestContext = {
   /** Cancelation token used for early processing halt */
   signal?: AbortSignal;
-  framework: "fresh" | "htmx";
+  framework?: "fresh" | "htmx";
 };
 
 // The global deco context
