@@ -1,5 +1,5 @@
 import { CLIENT_NAV_ATTR, PARTIAL_ATTR } from "$fresh/src/constants.ts";
-import { useSection, type Options as SO } from "./useSection.ts";
+import { type Options as SO, useSection } from "./useSection.ts";
 
 interface Options<P> extends SO<P> {
   mode?: "replace" | "append" | "prepend";

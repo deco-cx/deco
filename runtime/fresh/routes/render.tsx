@@ -47,7 +47,10 @@ const fromRequest = (req: Request): Options => {
   const parsedProps = JSON.parse(props);
 
   if (!resolveChain && !parsedProps.__resolveType) {
-    throw badRequest({ code: "400", message: "Missing resolve chain or __resolveType on props root" });
+    throw badRequest({
+      code: "400",
+      message: "Missing resolve chain or __resolveType on props root",
+    });
   }
   if (!href) {
     throw badRequest({ code: "400", message: "Missing href" });
