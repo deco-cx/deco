@@ -1,6 +1,5 @@
-import { Head, Partial } from "$fresh/runtime.ts";
 import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
-import { Component, type ComponentType, createContext } from "preact";
+import { Component, type ComponentType, createContext, Fragment } from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
@@ -9,16 +8,18 @@ import { Murmurhash3 } from "../deps.ts";
 import type { ComponentFunc } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
-import { usePartialSection } from "../hooks/usePartialSection.ts";
 import { logger } from "../observability/otel/config.ts";
+import FreshBindings from "../runtime/fresh/Bindings.tsx";
+import HTMXBindings from "../runtime/htmx/Bindings.tsx";
+import { type Device, deviceOf } from "../utils/userAgent.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
+  device: Device;
+  framework: "fresh" | "htmx";
 }
 
-export const SectionContext = createContext<
-  SectionContext | undefined
->(
+export const SectionContext = createContext<SectionContext | undefined>(
   undefined,
 );
 
@@ -89,73 +90,48 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   }
 }
 
-const script = (id: string) => {
-  function init() {
-    // If htmx is found, htmx lazy-loading capabilities
-    const htmx = (globalThis as any).htmx;
-    const lazyLoading = typeof htmx !== "undefined" ? "htmx" : "fresh";
+export interface Framework {
+  Wrapper: ComponentType<
+    { id: string; partialMode?: "replace" | "append" | "prepend" }
+  >;
+  ErrorFallback: ComponentType<{
+    id: string;
+    name: string;
+    debugEnabled?: boolean;
+    isDeploy: boolean;
+    error: Error;
+  }>;
+  LoadingFallback: ComponentType<{ id: string }>;
+}
 
-    const elem = document.getElementById(id);
-    const parent = elem?.parentElement;
-
-    if (elem == null || parent == null) {
-      console.error(
-        `Missing element of id ${id} or its parent element. Async rendering will NOT work properly`,
-      );
-      return;
-    }
-
-    if (lazyLoading === "htmx") {
-      parent.setAttribute("hx-get", elem.getAttribute("f-partial")!);
-      parent.setAttribute("hx-trigger", "intersect once");
-
-      htmx.process(parent);
-    } else {
-      const observeAndClose = (e: IntersectionObserverEntry[]) => {
-        e.forEach((entry) => {
-          if (entry.isIntersecting) {
-            elem.click();
-            observer.disconnect();
-          }
-        });
-      };
-      const observer = new IntersectionObserver(observeAndClose);
-      observer.observe(parent);
-      observeAndClose(observer.takeRecords());
-    }
-  }
-
-  if (document.readyState === "complete") {
-    init();
-  } else {
-    addEventListener("load", init);
-  }
+export const bindings = {
+  fresh: FreshBindings,
+  htmx: HTMXBindings,
 };
-
-const dataURI = (fn: typeof script, id: string) =>
-  btoa(
-    `decodeURIComponent(escape(${
-      unescape(encodeURIComponent(`((${fn})("${id}"))`))
-    }))`,
-  );
 
 const MAX_RENDER_COUNT = 5_00; // for saved sections this number should mark a restart.
 export const withSection = <TProps,>(
   resolver: string,
   ComponentFunc: ComponentFunc,
-  LoadingFallback?: ComponentType,
+  LoadingFallback: ComponentType = Fragment,
   ErrorFallback?: ComponentType<{ error?: Error }>,
 ) =>
 (
   props: TProps,
   ctx: HttpContext<
-    RequestState & { renderSalt?: string; partialMode?: PartialProps["mode"] }
+    RequestState & {
+      renderSalt?: string;
+      partialMode?: PartialProps["mode"];
+      framework?: "fresh" | "htmx";
+    }
   >,
 ) => {
   let renderCount = 0;
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
+  const frameworkFromState = ctx.context?.state?.framework;
+  // TODO @gimenes This is a fresh thing only. We need to remove it on other framework bindings
   const partialMode = ctx.context.state.partialMode ||
     "replace";
   const metadata = {
@@ -163,9 +139,15 @@ export const withSection = <TProps,>(
     component: ctx.resolveChain.findLast((chain) => chain.type === "resolver")
       ?.value?.toString()!,
   };
+  let device: Device | null = null;
+
   return {
     props,
     Component: (props: TProps) => {
+      const { isDeploy, request } = Context.active();
+      const framework = frameworkFromState ?? request?.framework ?? "fresh";
+      const binding = bindings[framework];
+
       // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
       const parentRenderSalt = useContext(SectionContext)?.renderSalt;
       // if this is the case, so we can use the renderSaltFromState - which means that we are in a partial rendering phase
@@ -180,9 +162,13 @@ export const withSection = <TProps,>(
           value={{
             ...ctx,
             renderSalt,
+            framework,
+            get device() {
+              return device ??= deviceOf(ctx.request);
+            },
           }}
         >
-          <Partial name={id} mode={partialMode}>
+          <binding.Wrapper id={id} partialMode={partialMode}>
             <section
               id={id}
               data-manifest-key={resolver}
@@ -192,49 +178,30 @@ export const withSection = <TProps,>(
             >
               <ErrorBoundary
                 component={resolver}
-                loading={() => {
-                  const btnId = `${id}-partial-onload`;
-                  const partial = usePartialSection();
-
-                  return (
-                    <>
-                      {LoadingFallback ? <LoadingFallback /> : <></>}
-                      <Head>
-                        <link rel="prefetch" href={partial["f-partial"]} />
-                      </Head>
-                      <button
-                        {...partial}
-                        id={btnId}
-                        style={{ display: "none" }}
+                loading={() => (
+                  <binding.LoadingFallback id={id}>
+                    {/* @ts-ignore difficult typing this */}
+                    <LoadingFallback {...props} />
+                  </binding.LoadingFallback>
+                )}
+                error={({ error }) => (
+                  ErrorFallback
+                    ? <ErrorFallback error={error} />
+                    : (
+                      <binding.ErrorFallback
+                        id={id}
+                        name={resolver}
+                        error={error}
+                        isDeploy={isDeploy}
+                        debugEnabled={debugEnabled}
                       />
-                      <script
-                        defer
-                        src={`data:text/javascript;base64,${
-                          dataURI(script, btnId)
-                        }`}
-                      />
-                    </>
-                  );
-                }}
-                error={({ error }) =>
-                  ErrorFallback ? <ErrorFallback error={error} /> : (
-                    <div
-                      style={Context.active().isDeploy && !debugEnabled
-                        ? "display: none"
-                        : undefined}
-                    >
-                      <p>
-                        Error happened rendering {resolver}: {error.message}
-                      </p>
-
-                      <button {...usePartialSection()}>Retry</button>
-                    </div>
-                  )}
+                    )
+                )}
               >
                 <ComponentFunc {...props} />
               </ErrorBoundary>
             </section>
-          </Partial>
+          </binding.Wrapper>
         </SectionContext.Provider>
       );
     },

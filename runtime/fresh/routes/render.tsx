@@ -1,6 +1,6 @@
 import type { HandlerContext } from "$fresh/server.ts";
 import { Partial, type PartialProps } from "$fresh/src/runtime/Partial.tsx";
-import { getSectionID } from "../../../components/section.tsx";
+import { bindings, getSectionID } from "../../../components/section.tsx";
 import {
   FieldResolver,
   type Resolvable,
@@ -10,12 +10,13 @@ import type { DecoSiteState, DecoState } from "../../../types.ts";
 import { scriptAsDataURI } from "../../../utils/dataURI.ts";
 
 interface Options {
-  resolveChain: FieldResolver[];
+  resolveChain?: FieldResolver[];
   props: Record<string, unknown>;
   href: string;
   pathTemplate: string;
   renderSalt?: string;
   partialMode?: PartialProps["mode"];
+  framework: "fresh" | "htmx";
 }
 
 export interface Props {
@@ -34,15 +35,22 @@ const fromRequest = (req: Request): Options => {
   const href = params.get("href");
   const pathTemplate = params.get("pathTemplate");
   const renderSalt = params.get("renderSalt");
+  const framework = params.get("framework") ?? "fresh";
   const partialMode = params.get("partialMode") as
     | PartialProps["mode"]
     | undefined;
 
-  if (!resolveChain) {
-    throw badRequest({ code: "400", message: "Missing resolve chain" });
-  }
   if (!props) {
     throw badRequest({ code: "400", message: "Missing props" });
+  }
+
+  const parsedProps = JSON.parse(props);
+
+  if (!resolveChain && !parsedProps.__resolveType) {
+    throw badRequest({
+      code: "400",
+      message: "Missing resolve chain or __resolveType on props root",
+    });
   }
   if (!href) {
     throw badRequest({ code: "400", message: "Missing href" });
@@ -52,12 +60,15 @@ const fromRequest = (req: Request): Options => {
   }
 
   return {
-    resolveChain: FieldResolver.unwind(JSON.parse(resolveChain)),
-    props: JSON.parse(props),
+    props: parsedProps,
     href,
+    framework: framework as "fresh" | "htmx",
     pathTemplate,
     renderSalt: renderSalt ?? undefined,
     partialMode: partialMode ?? undefined,
+    resolveChain: resolveChain
+      ? FieldResolver.unwind(JSON.parse(resolveChain))
+      : undefined,
   };
 };
 
@@ -72,6 +83,7 @@ export const handler = async (
     pathTemplate,
     renderSalt,
     partialMode,
+    framework,
   } = fromRequest(req);
 
   const url = new URL(href, req.url);
@@ -82,21 +94,31 @@ export const handler = async (
     __resolveType: "resolvables",
   }) as Record<string, Resolvable>;
 
-  const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
+  let section;
 
-  let section = resolvables[resolveChain[index].value];
-  for (let it = 0; it < resolveChain.length; it++) {
-    const item = resolveChain[it];
-    if (it < index || item.type !== "prop") continue;
+  if (resolveChain) {
+    const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
+    section = resolvables[resolveChain[index].value];
 
-    section = section[item.value];
+    for (let it = 0; it < resolveChain.length; it++) {
+      const item = resolveChain[it];
+      if (it < index || item.type !== "prop") continue;
+
+      section = section[item.value];
+    }
   }
 
   const original = {
     request,
     context: {
       ...ctx,
-      state: { ...ctx.state, pathTemplate, renderSalt, partialMode },
+      state: {
+        ...ctx.state,
+        pathTemplate,
+        renderSalt,
+        partialMode,
+        framework,
+      },
       params: params?.pathname.groups,
     },
   };
@@ -106,7 +128,7 @@ export const handler = async (
   try {
     page = await ctx.state.resolve(
       { ...section, ...props },
-      { resolveChain },
+      resolveChain ? { resolveChain } : undefined,
       original,
     );
   } catch (err) {
@@ -123,13 +145,15 @@ export const handler = async (
       );
       const partialId = `${id}-${renderSalt}`;
 
+      const binding = bindings[framework];
+
       page = {
         props: {
           url: err.resp.headers.get("location"),
         },
         Component: (props: Props) => {
           return (
-            <Partial name={partialId}>
+            <binding.Wrapper id={partialId}>
               <div>
                 <script
                   type="text/javascript"
@@ -137,7 +161,7 @@ export const handler = async (
                   src={scriptAsDataURI(snippet, props.url)}
                 />
               </div>
-            </Partial>
+            </binding.Wrapper>
           );
         },
       };

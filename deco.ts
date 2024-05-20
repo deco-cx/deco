@@ -29,6 +29,7 @@ export interface InstanceInfo {
 export type RequestContext = {
   /** Cancelation token used for early processing halt */
   signal?: AbortSignal;
+  framework: "fresh" | "htmx";
 };
 
 // The global deco context
@@ -103,6 +104,9 @@ export const RequestContext = {
   },
   get signal() {
     return Context.active().request?.signal;
+  },
+  get framework() {
+    return Context.active().request?.framework ?? "fresh";
   },
 };
 
