@@ -122,7 +122,7 @@ export const withSection = <TProps,>(
     RequestState & {
       renderSalt?: string;
       partialMode?: PartialProps["mode"];
-      framework: "fresh" | "htmx";
+      framework?: "fresh" | "htmx";
     }
   >,
 ) => {
