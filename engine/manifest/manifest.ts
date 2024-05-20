@@ -516,6 +516,9 @@ function findResolver(
   const seen = new Set<string>();
   while (true) {
     if (seen.has(currentResolveType)) {
+      console.warn(
+        `a loop was detected when trying to resolve ${currentResolveType}`,
+      );
       break;
     }
     seen.add(currentResolveType);
