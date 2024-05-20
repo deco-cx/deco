@@ -1,55 +1,13 @@
 import { CLIENT_NAV_ATTR, PARTIAL_ATTR } from "$fresh/src/constants.ts";
-import type { ComponentType } from "preact";
-import { useContext } from "preact/hooks";
-import { SectionContext } from "../components/section.tsx";
-import { IS_BROWSER } from "../deps.ts";
-import { FieldResolver } from "../engine/core/resolver.ts";
+import { useSection, type Options as SO } from "./useSection.ts";
 
-type Options<P> = {
-  /** Section props partially applied */
-  props?: Partial<P extends ComponentType<infer K> ? K : P>;
-
-  /** Path where section is to be found */
-  href?: string;
-
+interface Options<P> extends SO<P> {
   mode?: "replace" | "append" | "prepend";
-};
+}
 
-export const usePartialSection = <P>(
-  { props = {}, href, mode = "replace" }: Options<P> = {},
-) => {
-  const ctx = useContext(SectionContext);
-
-  if (IS_BROWSER) {
-    throw new Error("Partials cannot be used inside an Island!");
-  }
-
-  if (!ctx) {
-    throw new Error("Missing context in rendering tree");
-  }
-
-  const {
-    resolveChain,
-    request,
-    renderSalt,
-    context: { state: { pathTemplate } },
-  } = ctx;
-
-  const params = new URLSearchParams([
-    ["props", JSON.stringify(props)],
-    ["href", href ?? request.url],
-    ["pathTemplate", pathTemplate],
-    ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
-    [
-      "resolveChain",
-      JSON.stringify(FieldResolver.minify(resolveChain.slice(0, -1))),
-    ],
-    ["fresh-partial", "true"],
-    ["partialMode", mode],
-  ]);
-
-  return {
-    [CLIENT_NAV_ATTR]: true,
-    [PARTIAL_ATTR]: `/deco/render?${params}`,
-  };
-};
+export const usePartialSection = <P>(props: Options<P> = {}) => ({
+  [CLIENT_NAV_ATTR]: true,
+  [PARTIAL_ATTR]: `${useSection(props)}&fresh-partial=true&partialMode=${
+    props.mode || "replace"
+  }`,
+});
