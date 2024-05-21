@@ -4,9 +4,9 @@ import { ValueType, weakcache } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
+import type { DecofileProvider } from "../engine/decofile/provider.ts";
 import { HttpError } from "../engine/errors.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
-import type { DecofileProvider } from "../engine/decofile/provider.ts";
 import { logger } from "../observability/otel/config.ts";
 import { meter } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
@@ -257,7 +257,7 @@ const wrapLoader = (
                   .toUTCString(),
               },
             }),
-          ).catch((error) => logger.error(error));
+          ).catch((error) => logger.error(`loader error ${error}`));
 
           return json;
         };
@@ -279,7 +279,9 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            callHandlerAndCache().catch((error) => logger.error(error));
+            callHandlerAndCache().catch((error) =>
+              logger.error(`loader error ${error}`)
+            );
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });

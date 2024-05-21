@@ -1,5 +1,5 @@
 import { Logger } from "std/log/logger.ts";
-
+import * as log from "std/log/mod.ts";
 import { Context, context } from "../../deco.ts";
 import denoJSON from "../../deno.json" with { type: "json" };
 import {
@@ -57,7 +57,7 @@ export const logger = new Logger(loggerName, "INFO", {
           resourceAttributes: resource.attributes,
         }),
       ]
-      : [],
+      : [new log.handlers.ConsoleHandler("INFO")],
   ],
 });
 
@@ -73,7 +73,11 @@ registerInstrumentations({
   instrumentations: [
     new FetchInstrumentation(
       {
-        applyCustomAttributesOnSpan: (span, _req, response) => {
+        applyCustomAttributesOnSpan: (
+          span,
+          _req,
+          response,
+        ) => {
           if (span && response instanceof Response) {
             trackCfHeaders.forEach((header) => {
               const val = response.headers.get(header);

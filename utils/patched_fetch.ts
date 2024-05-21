@@ -6,9 +6,7 @@ const fetcher = globalThis.fetch;
 globalThis.fetch = (input, init) => {
   const signal = init?.signal || RequestContext.signal;
 
-  if (signal?.aborted) {
-    throw new DOMException(signal.reason, "AbortError");
-  }
+  signal?.throwIfAborted?.();
 
   return fetcher(input, { signal, ...init });
 };
