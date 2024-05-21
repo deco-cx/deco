@@ -10,9 +10,6 @@ export type Options<P> = {
 
   /** Path where section is to be found */
   href?: string;
-
-  /** Section name to render. Defaults to current section */
-  resolveType?: string;
 };
 
 export const useSection = <P>(
