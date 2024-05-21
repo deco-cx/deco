@@ -454,41 +454,45 @@ const invokeResolverWithProps = async <
     currentSpan: timing,
   };
 
-  let respOrPromise = resolver(
-    props,
-    { ...ctx, monitoring, resolverId },
-  );
-  if (isAwaitable(respOrPromise)) {
-    await ctx?.monitoring?.tracer?.startActiveSpan?.(__resolveType, {
-      attributes: {
-        "block.kind": "resolver",
-      },
-    }, async (span) => {
-      await ctx.monitoring?.metrics?.(__resolveType, async () => {
-        respOrPromise = await respOrPromise;
+  try {
+    let respOrPromise = resolver(
+      props,
+      { ...ctx, monitoring, resolverId },
+    );
+    if (isAwaitable(respOrPromise)) {
+      await ctx?.monitoring?.tracer?.startActiveSpan?.(__resolveType, {
+        attributes: {
+          "block.kind": "resolver",
+        },
+      }, async (span) => {
+        await ctx.monitoring?.metrics?.(__resolveType, async () => {
+          respOrPromise = await respOrPromise;
 
-        // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
-        // in order to achieve the correct result we should wrap the inner function with the timings function.
-        if (typeof respOrPromise === "function") {
-          const original = respOrPromise;
-          respOrPromise = async (...args: any[]) => {
-            try {
-              return await original(...args);
-            } finally {
-              timing?.end();
-              span?.end?.();
-            }
-          };
-        } else {
-          timing?.end();
-          span?.end?.();
-        }
-        return respOrPromise;
+          // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+          // in order to achieve the correct result we should wrap the inner function with the timings function.
+          if (typeof respOrPromise === "function") {
+            const original = respOrPromise;
+            respOrPromise = async (...args: any[]) => {
+              try {
+                return await original(...args);
+              } finally {
+                timing?.end();
+                span?.end?.();
+              }
+            };
+          } else {
+            timing?.end();
+            span?.end?.();
+          }
+          return respOrPromise;
+        });
       });
-    });
+    }
+    return respOrPromise;
+  } catch (err) {
+    timing?.end();
+    throw err;
   }
-
-  return respOrPromise;
 };
 
 /**

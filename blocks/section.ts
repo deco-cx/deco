@@ -19,6 +19,7 @@ import type {
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
 import type { AppManifest, FunctionContext } from "../types.ts";
+import { HttpError } from "../engine/errors.ts";
 
 /**
  * @widget none
@@ -149,6 +150,9 @@ export const createSectionBlock = (
       ).then((props) => {
         return useExportDefaultComponent(props, httpCtx);
       }).catch((err) => {
+        if (err instanceof HttpError) {
+          throw err;
+        }
         const allowErrorBoundary = withMainComponent(alwaysThrow(err));
         return allowErrorBoundary(
           ctx.state.$live as unknown as TProps,
