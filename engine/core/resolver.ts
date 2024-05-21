@@ -472,11 +472,12 @@ const invokeResolverWithProps = async <
         if (typeof respOrPromise === "function") {
           const original = respOrPromise;
           respOrPromise = async (...args: any[]) => {
-            const resp = await original(...args);
-            timing?.end();
-            span?.end?.();
-
-            return resp;
+            try {
+              return await original(...args);
+            } finally {
+              timing?.end();
+              span?.end?.();
+            }
           };
         } else {
           timing?.end();
