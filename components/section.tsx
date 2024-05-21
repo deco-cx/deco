@@ -109,6 +109,10 @@ export const bindings = {
   htmx: HTMXBindings,
 };
 
+export const alwaysThrow =
+  (err: unknown): ComponentFunc => (props: unknown) => {
+    throw err;
+  };
 const MAX_RENDER_COUNT = 5_00; // for saved sections this number should mark a restart.
 export const withSection = <TProps,>(
   resolver: string,
