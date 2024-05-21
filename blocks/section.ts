@@ -7,7 +7,7 @@ import {
   type RequestState,
 } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
-import { withSection } from "../components/section.tsx";
+import { alwaysThrow, withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";
 import type { JSX } from "../deps.ts";
 import type {
@@ -19,7 +19,6 @@ import type {
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
 import type { AppManifest, FunctionContext } from "../types.ts";
-import { HttpError } from "../engine/errors.ts";
 
 /**
  * @widget none
@@ -79,50 +78,6 @@ export interface SectionModule<
   action?: PropsLoader<TConfig, TActionProps>;
 }
 
-const wrapCaughtErrors = async <TProps>(
-  cb: () => Promise<TProps>,
-  props: any,
-) => {
-  try {
-    return await cb();
-  } catch (err) {
-    if (err instanceof HttpError) {
-      throw err;
-    }
-    return Object.fromEntries(
-      Object.keys(props).map((p) => [
-        p,
-        new Proxy({}, {
-          get: (_target, prop) => {
-            if (prop === "__resolveType") {
-              return undefined;
-            }
-            if (prop === "constructor") {
-              return undefined;
-            }
-            if (prop === "__isErr") {
-              return true;
-            }
-
-            /**
-             * This proxy may be used inside islands.
-             * Islands props are serialized by fresh's serializer.
-             * This code makes it behave well with fresh's serializer
-             */
-            if (prop === "peek") {
-              return undefined;
-            }
-            if (prop === "toJSON") {
-              return () => null;
-            }
-            throw err;
-          },
-        }),
-      ]),
-    ) as TProps;
-  }
-};
-
 export const createSectionBlock = (
   wrapper: typeof withSection,
   type: "sections" | "pages",
@@ -146,18 +101,20 @@ export const createSectionBlock = (
       TConfig,
       HttpContext<RequestState>
     > => {
-    const componentFunc = wrapper<TProps>(
-      resolver,
-      mod.default,
-      mod.LoadingFallback,
-      mod.ErrorFallback,
-    );
+    const withMainComponent = (mainComponent: ComponentFunc) =>
+      wrapper<TProps>(
+        resolver,
+        mainComponent,
+        mod.LoadingFallback,
+        mod.ErrorFallback,
+      );
+    const useExportDefaultComponent = withMainComponent(mod.default);
     if (!mod.action && !mod.loader) {
       return (
         props: TProps,
         ctx: HttpContext<RequestState>,
       ): PreactComponent<TProps> => {
-        return componentFunc(props, ctx);
+        return useExportDefaultComponent(props, ctx);
       };
     }
     return async (
@@ -175,7 +132,7 @@ export const createSectionBlock = (
         : mod.action ?? mod.loader;
 
       if (!loaderSectionProps) {
-        return componentFunc(props as unknown as TProps, httpCtx);
+        return useExportDefaultComponent(props as unknown as TProps, httpCtx);
       }
 
       const ctx = {
@@ -184,15 +141,20 @@ export const createSectionBlock = (
       } as FunctionContext;
 
       const fnContext = fnContextFromHttpContext(httpCtx);
-      const p = await wrapCaughtErrors(() =>
-        propsLoader(
-          loaderSectionProps,
-          ctx.state.$live,
-          request,
-          fnContext,
-        ), props ?? {});
-
-      return componentFunc(p, httpCtx);
+      return await propsLoader(
+        loaderSectionProps,
+        ctx.state.$live,
+        request,
+        fnContext,
+      ).then((props) => {
+        return useExportDefaultComponent(props, httpCtx);
+      }).catch((err) => {
+        const allowErrorBoundary = withMainComponent(alwaysThrow(err));
+        return allowErrorBoundary(
+          ctx.state.$live as unknown as TProps,
+          httpCtx,
+        );
+      });
     };
   },
   defaultDanglingRecover: (_, ctx) => {
