@@ -23,6 +23,9 @@ const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
 const COMMIT_DEFAULT_ENDPOINT = "/volumes/default/commit";
 
+const BYPASS_JWT_VERIFICATION =
+  Deno.env.get("BYPASS_JWT_VERIFICATION") === "true";
+
 export interface AppOptions {
   run: Deno.Command;
   build?: Deno.Command;
@@ -119,12 +122,14 @@ export class Hypervisor {
         }
         return new Response(null, { status: 403 });
       }
-      const jwt = await getVerifiedJWT(req);
-      if (!jwt) {
-        return new Response(null, { status: 401 });
-      }
-      if (!tokenIsValid(this.options.site, jwt)) {
-        return new Response(null, { status: 403 });
+      if (!BYPASS_JWT_VERIFICATION) {
+        const jwt = await getVerifiedJWT(req);
+        if (!jwt) {
+          return new Response(null, { status: 401 });
+        }
+        if (!tokenIsValid(this.options.site, jwt)) {
+          return new Response(null, { status: 403 });
+        }
       }
       if (pathname.startsWith("/volumes")) {
         return this.realtimeFsState.wait().then(async () => {
