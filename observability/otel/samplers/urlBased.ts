@@ -1,6 +1,6 @@
 import {
   type Context,
-  Sampler,
+  type Sampler,
   SamplingDecision,
   type SamplingResult,
 } from "../../../deps.ts";

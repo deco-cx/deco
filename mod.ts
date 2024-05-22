@@ -33,10 +33,15 @@ export { asResolved, isDeferred } from "./engine/core/resolver.ts";
 export type { Resolvable, Resolved } from "./engine/core/resolver.ts";
 export {
   badRequest,
+  forbidden,
+  HttpError,
   notFound,
   redirect,
   shortcircuit,
+  status,
+  unauthorized,
 } from "./engine/errors.ts";
+export type { HttpErrorMessage } from "./engine/errors.ts";
 export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
 export { Context } from "./live.ts";
 export { logger } from "./observability/otel/config.ts";

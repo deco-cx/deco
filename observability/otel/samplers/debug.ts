@@ -2,7 +2,7 @@ import {
   type Attributes,
   type Context,
   type Link,
-  Sampler,
+  type Sampler,
   SamplingDecision,
   type SamplingResult,
   type SpanKind,

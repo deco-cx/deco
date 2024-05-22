@@ -9,6 +9,51 @@ export class HttpError extends Error {
   }
 }
 
+export interface HttpErrorMessage {
+  message: string;
+  code?: string;
+}
+
+/**
+ * Returns a response with given status and formatted error message if provided.
+ */
+export const status = (status: number) =>
+(
+  err?: HttpErrorMessage,
+  headers?: Headers,
+) => {
+  const mHeaders = headers ?? new Headers();
+  if (err) {
+    mHeaders.set("content-type", "application/json");
+  }
+  shortcircuit(
+    new Response(err ? JSON.stringify(err) : null, {
+      status,
+      headers: mHeaders,
+    }),
+  );
+};
+
+/**
+ * Returns a forbidden error.
+ */
+export const forbidden = status(403);
+
+/**
+ * Returns a unauthorized error.
+ */
+export const unauthorized = status(401);
+
+/**
+ * Returns not found error.
+ */
+export const notFound = status(404);
+
+/**
+ * Returns a bad request error
+ */
+export const badRequest = status(400);
+
 /**
  * Stop any config resolution and throw an exception that should be returned to the main handler.
  * @param resp
@@ -25,25 +70,6 @@ export const redirect = (url: string | URL, status?: number) => {
     new Response(null, {
       status: status ?? 307,
       headers: { location: url.toString() },
-    }),
-  );
-};
-
-/**
- * Returns not found error.
- */
-export const notFound = () => {
-  shortcircuit(new Response(null, { status: 404 }));
-};
-
-/**
- * Returns a bad request error
- */
-export const badRequest = (err: { message: string; code?: string }) => {
-  shortcircuit(
-    new Response(JSON.stringify(err), {
-      status: 400,
-      headers: { "content-type": "application/json" },
     }),
   );
 };
