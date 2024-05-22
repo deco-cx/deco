@@ -24,7 +24,7 @@ const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 const COMMIT_DEFAULT_ENDPOINT = "/volumes/default/commit";
 
 const BYPASS_JWT_VERIFICATION =
-  Deno.env.get("BYPASS_JWT_VERIFICATION") === "true";
+  Deno.env.get("DANGEROUSLY_ALLOW_PUBLIC_ACCESS") === "true";
 
 export interface AppOptions {
   run: Deno.Command;
