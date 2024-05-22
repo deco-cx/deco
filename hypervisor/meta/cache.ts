@@ -4,7 +4,8 @@ export interface CacheStaleMetaCallbacks {
   catch: (err: unknown) => Response;
 }
 export const cacheStaleMeta = (reqUrl: URL): CacheStaleMetaCallbacks => {
-  const isMeta = reqUrl.pathname.endsWith("/live/_meta");
+  const isMeta = reqUrl.pathname.endsWith("/live/_meta") ||
+    reqUrl.pathname.endsWith("/deco/meta");
   if (
     !isMeta || (isMeta && reqUrl.searchParams.get("waitForChanges") === "true")
   ) {

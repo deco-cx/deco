@@ -1,15 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import { Context } from "../../../deco.ts";
 import {
-  context as otelContext,
-  type FreshHandler as Handler,
   getCookies,
+  context as otelContext,
+  setCookie,
+  type FreshHandler as Handler,
   type HandlerContext,
   type Handlers,
   type MiddlewareHandlerContext,
   type RouteConfig,
   type RouteModule,
-  setCookie,
 } from "../../../deps.ts";
 import { mapObjKeys } from "../../../engine/core/utils.ts";
 import { HttpError } from "../../../engine/errors.ts";
@@ -191,7 +191,8 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       return context.next();
     }
 
-    const isLiveMeta = url.pathname.startsWith("/live/_meta"); // live-meta
+    const isLiveMeta = url.pathname.startsWith("/live/_meta") ||
+      url.pathname.startsWith("/deco/meta"); // live-meta
     const { resolver } = await liveContext.runtime;
     const ctxResolver = resolver
       .resolverFor(
