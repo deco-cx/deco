@@ -1,3 +1,7 @@
+import {
+  type ServerSentEventMessage,
+  ServerSentEventStream,
+} from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
 import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
@@ -22,6 +26,7 @@ const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
 const COMMIT_DEFAULT_ENDPOINT = "/volumes/default/commit";
+const DEFAULT_LOGS_ENDPOINT = "/volumes/default/logs";
 
 const BYPASS_JWT_VERIFICATION =
   Deno.env.get("DANGEROUSLY_ALLOW_PUBLIC_ACCESS") === "true";
@@ -38,6 +43,7 @@ export class Hypervisor {
   private realtimeFsState: HypervisorRealtimeState;
   private realtimeFs: InstanceType<typeof Realtime>;
   private isolate: Isolate;
+  private logsStreamStarted = false;
   constructor(protected options: AppOptions) {
     const buildMutex = new Mutex();
     const buildCmd = options.build;
@@ -54,7 +60,7 @@ export class Hypervisor {
           using _ = await buildMutex.acquire();
           const child = buildCmd.spawn();
           return await Promise.all([
-            child.output().then(() => {}),
+            child.output().then(() => { }),
             genManifest(),
           ]).catch(
             (err) => {
@@ -74,7 +80,7 @@ export class Hypervisor {
     let lastPersist = Promise.resolve();
     const debouncedPersist = this.realtimeFsState.shouldPersistState()
       ? debounce(() => {
-        lastPersist = lastPersist.catch((_err) => {}).then(() => {
+        lastPersist = lastPersist.catch((_err) => { }).then(() => {
           return this.realtimeFsState.persistState();
         });
       }, 10 * MINUTE)
@@ -113,6 +119,18 @@ export class Hypervisor {
     return new Response(null, { status: 500 });
   }
 
+
+  startLogsStream() {
+    if (!this.logsStreamStarted) {
+      this.logsStreamStarted = true;
+      (async () => {
+        for await (const log of this?.isolate?.logs?.() ?? []) {
+          const logger = log.level === "error" ? console.error : console.log;
+          logger(log.message.slice(0, -1));
+        }
+      })()
+    }
+  }
   public async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const isHypervisorApi = (req.headers.get(HYPERVISOR_API_SPECIFIER) ??
@@ -136,7 +154,35 @@ export class Hypervisor {
           return new Response(null, { status: 403 });
         }
       }
+
       if (pathname.startsWith("/volumes")) {
+        if (pathname === DEFAULT_LOGS_ENDPOINT) {
+          const logs = this.isolate.logs();
+          if (!logs) {
+            return new Response(null, { status: 404 })
+          }
+          return new Response(
+            new ReadableStream<ServerSentEventMessage>({
+              async pull(controller) {
+                for await (const content of logs) {
+                  controller.enqueue({
+                    data: encodeURIComponent(JSON.stringify(content)),
+                    id: Date.now(),
+                    event: "message",
+                  });
+                }
+                controller.close();
+              },
+              cancel() {
+              },
+            }).pipeThrough(new ServerSentEventStream()),
+            {
+              headers: {
+                "Content-Type": "text/event-stream",
+              },
+            },
+          );
+        }
         return this.realtimeFsState.wait().then(async () => {
           if (pathname === COMMIT_DEFAULT_ENDPOINT) {
             const { commitSha } = await req.json<{ commitSha: string }>();
@@ -166,6 +212,7 @@ export class Hypervisor {
 
     if (!this.isolate.isRunning()) {
       this.isolate.start();
+      this.startLogsStream();
       await this.isolate.waitUntilReady();
     }
     const { then: updateMetaStaleCache, catch: useMetaStaleCache } =
@@ -174,7 +221,7 @@ export class Hypervisor {
       useMetaStaleCache,
     ).catch(async (err) => {
       if (this.isolate.isRunning()) {
-        await this.isolate.waitUntilReady().catch((_err) => {});
+        await this.isolate.waitUntilReady().catch((_err) => { });
         return this.isolate.fetch(req).catch(this.errAs500);
       }
       return this.errAs500(err);

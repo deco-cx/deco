@@ -29,10 +29,10 @@ const buildCmd = new Deno.Command(buildCmdStr, {
   stdout: "inherit",
   stderr: "inherit",
 });
-const runCmd = new Deno.Command(cmd, {
+const runCmd = new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
   args,
-  stdout: "inherit",
-  stderr: "inherit",
+  stdout: "piped",
+  stderr: "piped",
   env: { PORT: `${APP_PORT}` },
 });
 if (!DECO_SITE_NAME) {
@@ -88,14 +88,14 @@ Deno.serve(
             let timeout: undefined | ReturnType<typeof setTimeout> = undefined;
             const punchmoleEvents = PunchmoleClient(
               Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
-                "c309424a-2dc4-46fe-bfc7-a7c10df59477", // this is a key and it should be ok to expose it since it is just a reverse proxy through a websocket.
+              "c309424a-2dc4-46fe-bfc7-a7c10df59477", // this is a key and it should be ok to expose it since it is just a reverse proxy through a websocket.
               EXTERNAL_DOMAIN,
               `http://localhost:${port}`,
               "wss://simpletunnel.deco.site/_punchmole",
               {
-                info: () => {},
-                debug: () => {},
-                warn: () => {},
+                info: () => { },
+                debug: () => { },
+                warn: () => { },
                 error: console.error,
               },
             );
