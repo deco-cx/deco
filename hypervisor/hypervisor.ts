@@ -124,7 +124,8 @@ export class Hypervisor {
       this.logsStreamStarted = true;
       (async () => {
         for await (const log of this?.isolate?.logs?.() ?? []) {
-          console.log(log.text.slice(0, -1));
+          const logger = log.level === "error" ? console.error : console.log;
+          logger(log.text.slice(0, -1));
         }
       })()
     }
