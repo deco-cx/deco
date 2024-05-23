@@ -1,5 +1,7 @@
 import EventEmitter from "node:events";
 import { delay } from "std/async/delay.ts";
+import { type StreamMultiplexer, multiplexer } from "../loggings/mux.ts";
+import { type LogLine, streamLogsFrom } from "../loggings/stream.ts";
 import type { Isolate, IsolateOptions } from "./isolate.ts";
 import { portPool } from "./portpool.ts";
 import { waitForPort } from "./utils.ts";
@@ -56,6 +58,7 @@ export class DenoRun implements Isolate {
     | undefined;
   protected proxyUrl: string;
   protected client?: Deno.HttpClient;
+  protected _logs: StreamMultiplexer<LogLine> | undefined;
   constructor(options: IsolateOptions | CommandIsolate) {
     if (isCmdIsolate(options)) {
       this.port = options.port;
@@ -72,8 +75,8 @@ export class DenoRun implements Isolate {
           "main.ts",
         ],
         cwd: options.cwd,
-        stdout: "inherit",
-        stderr: "inherit",
+        stdout: "piped",
+        stderr: "piped",
         env: { ...options.envVars, PORT: `${this.port}` },
       });
     }
@@ -87,6 +90,9 @@ export class DenoRun implements Isolate {
         },
       })
       : undefined;
+  }
+  logs(): AsyncIterableIterator<LogLine> | undefined {
+    return this._logs?.read();
   }
   signal(sig: Deno.Signal) {
     try {
@@ -103,9 +109,11 @@ export class DenoRun implements Isolate {
     this.disposed = Promise.withResolvers<void>();
     this.ctrl.signal.onabort = this.dispose.bind(this);
     const [child, cleanUpPromises] = this.spawn();
+    this._logs = multiplexer(streamLogsFrom(child));
     this.child = child;
     this.cleanUpPromises = cleanUpPromises;
   }
+
   async dispose() {
     this.cleanUpPromises && await this.cleanUpPromises;
     const inflightZero = Promise.withResolvers<void>();
@@ -125,6 +133,7 @@ export class DenoRun implements Isolate {
     portPool.free(this.port);
     this.disposed?.resolve();
   }
+
   fetch(request: Request): Promise<Response> {
     this.inflightRequests++;
     const { pathname, search } = new URL(request.url);
@@ -245,6 +254,8 @@ function proxyWebSocket(url: URL, nReq: Request) {
       msg && proxySocket.send(msg);
     }
   }
+
+
 
   return Promise.resolve(response);
 }

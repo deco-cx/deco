@@ -15,10 +15,18 @@ export function streamLogsFrom(process: Deno.ChildProcess): AsyncIterableIterato
 
     const reader = combinedStream.getReader();
 
+    const end = Promise.withResolvers<void>();
     return (async function* () {
+        process.status.finally(() => {
+            end.resolve();
+        })
         try {
             while (true) {
-                const { done, value } = await reader.read();
+                const resp = await Promise.race([reader.read(), end.promise]);
+                if (typeof resp !== "object") {
+                    return;
+                }
+                const { value, done } = resp as ReadableStreamReadResult<string>;
                 if (done) break;
                 yield { text: value, timestamp: Date.now() };
             }
