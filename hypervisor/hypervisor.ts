@@ -92,8 +92,13 @@ export class Hypervisor {
       }
       debouncedPersist?.();
     };
-    // deno-lint-ignore no-explicit-any
-    this.realtimeFs = new Realtime(this.realtimeFsState, {} as any);
+    this.realtimeFs = new Realtime(
+      this.realtimeFsState,
+      // deno-lint-ignore no-explicit-any
+      {} as any,
+      false,
+      true,
+    );
     this.isolate = new DenoRun({
       command: options.run,
       port: options.port,
