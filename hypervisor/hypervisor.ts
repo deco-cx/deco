@@ -26,6 +26,7 @@ const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
 const COMMIT_DEFAULT_ENDPOINT = "/volumes/default/commit";
+const DEFAULT_LOGS_ENDPOINT = "/volumes/default/logs";
 
 const BYPASS_JWT_VERIFICATION =
   Deno.env.get("DANGEROUSLY_ALLOW_PUBLIC_ACCESS") === "true";
@@ -125,7 +126,7 @@ export class Hypervisor {
       (async () => {
         for await (const log of this?.isolate?.logs?.() ?? []) {
           const logger = log.level === "error" ? console.error : console.log;
-          logger(log.text.slice(0, -1));
+          logger(log.message.slice(0, -1));
         }
       })()
     }
@@ -153,35 +154,35 @@ export class Hypervisor {
           return new Response(null, { status: 403 });
         }
       }
-      if (pathname.startsWith("/logs")) {
-        const logs = this.isolate.logs();
-        if (!logs) {
-          return new Response(null, { status: 404 })
-        }
-        return new Response(
-          new ReadableStream<ServerSentEventMessage>({
-            async pull(controller) {
-              for await (const content of logs) {
-                controller.enqueue({
-                  data: encodeURIComponent(JSON.stringify(content)),
-                  id: Date.now(),
-                  event: "message",
-                });
-              }
-              controller.close();
-            },
-            cancel() {
-            },
-          }).pipeThrough(new ServerSentEventStream()),
-          {
-            headers: {
-              "Content-Type": "text/event-stream",
-            },
-          },
-        );
-      }
 
       if (pathname.startsWith("/volumes")) {
+        if (pathname === DEFAULT_LOGS_ENDPOINT) {
+          const logs = this.isolate.logs();
+          if (!logs) {
+            return new Response(null, { status: 404 })
+          }
+          return new Response(
+            new ReadableStream<ServerSentEventMessage>({
+              async pull(controller) {
+                for await (const content of logs) {
+                  controller.enqueue({
+                    data: encodeURIComponent(JSON.stringify(content)),
+                    id: Date.now(),
+                    event: "message",
+                  });
+                }
+                controller.close();
+              },
+              cancel() {
+              },
+            }).pipeThrough(new ServerSentEventStream()),
+            {
+              headers: {
+                "Content-Type": "text/event-stream",
+              },
+            },
+          );
+        }
         return this.realtimeFsState.wait().then(async () => {
           if (pathname === COMMIT_DEFAULT_ENDPOINT) {
             const { commitSha } = await req.json<{ commitSha: string }>();

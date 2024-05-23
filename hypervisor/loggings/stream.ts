@@ -1,7 +1,7 @@
 import { mergeReadableStreams } from "std/streams/merge_readable_streams.ts";
 
 export interface LogLine {
-    text: string;
+    message: string;
     timestamp: number;
     level: "info" | "error";
 }
@@ -10,7 +10,7 @@ export function streamLogsFrom(process: Deno.ChildProcess): AsyncIterableIterato
     const stdoutStream = process.stdout.pipeThrough(new TextDecoderStream()).pipeThrough(
         new TransformStream<string, LogLine>({
             transform(chunk, controller) {
-                controller.enqueue({ text: chunk, timestamp: Date.now(), level: "info" });
+                controller.enqueue({ message: chunk, timestamp: Date.now(), level: "info" });
             },
         })
     );
@@ -18,7 +18,7 @@ export function streamLogsFrom(process: Deno.ChildProcess): AsyncIterableIterato
     const stderrStream = process.stderr.pipeThrough(new TextDecoderStream()).pipeThrough(
         new TransformStream<string, LogLine>({
             transform(chunk, controller) {
-                controller.enqueue({ text: chunk, timestamp: Date.now(), level: "error" });
+                controller.enqueue({ message: chunk, timestamp: Date.now(), level: "error" });
             },
         })
     );
