@@ -21,6 +21,7 @@ import type { Isolate } from "./workers/isolate.ts";
 
 const SECONDS = 1_000;
 const MINUTE = 60 * SECONDS;
+const MAX_LENGTH = 10_000;
 
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
@@ -38,8 +39,6 @@ export interface AppOptions {
   port: number;
   site: string;
 }
-
-const MAX_LENGTH = 1000;
 
 export class Hypervisor {
   private realtimeFsState: HypervisorRealtimeState;
