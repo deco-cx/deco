@@ -39,6 +39,8 @@ export interface AppOptions {
   site: string;
 }
 
+const MAX_LENGTH = 1000;
+
 export class Hypervisor {
   private realtimeFsState: HypervisorRealtimeState;
   private realtimeFs: InstanceType<typeof Realtime>;
@@ -60,7 +62,7 @@ export class Hypervisor {
           using _ = await buildMutex.acquire();
           const child = buildCmd.spawn();
           return await Promise.all([
-            child.output().then(() => { }),
+            child.output().then(() => {}),
             genManifest(),
           ]).catch(
             (err) => {
@@ -80,7 +82,7 @@ export class Hypervisor {
     let lastPersist = Promise.resolve();
     const debouncedPersist = this.realtimeFsState.shouldPersistState()
       ? debounce(() => {
-        lastPersist = lastPersist.catch((_err) => { }).then(() => {
+        lastPersist = lastPersist.catch((_err) => {}).then(() => {
           return this.realtimeFsState.persistState();
         });
       }, 10 * MINUTE)
@@ -119,7 +121,6 @@ export class Hypervisor {
     return new Response(null, { status: 500 });
   }
 
-
   startLogsStream() {
     if (!this.logsStreamStarted) {
       this.logsStreamStarted = true;
@@ -128,7 +129,7 @@ export class Hypervisor {
           const logger = log.level === "error" ? console.error : console.log;
           logger(log.message.slice(0, -1));
         }
-      })()
+      })();
     }
   }
   public async fetch(req: Request): Promise<Response> {
@@ -159,14 +160,19 @@ export class Hypervisor {
         if (pathname === DEFAULT_LOGS_ENDPOINT) {
           const logs = this.isolate.logs();
           if (!logs) {
-            return new Response(null, { status: 404 })
+            return new Response(null, { status: 404 });
           }
           return new Response(
             new ReadableStream<ServerSentEventMessage>({
               async pull(controller) {
                 for await (const content of logs) {
                   controller.enqueue({
-                    data: encodeURIComponent(JSON.stringify(content)),
+                    data: encodeURIComponent(JSON.stringify({
+                      ...content,
+                      message: content.message.length > MAX_LENGTH
+                        ? `${content.message.slice(0, MAX_LENGTH)}...`
+                        : content.message,
+                    })),
                     id: Date.now(),
                     event: "message",
                   });
@@ -221,7 +227,7 @@ export class Hypervisor {
       useMetaStaleCache,
     ).catch(async (err) => {
       if (this.isolate.isRunning()) {
-        await this.isolate.waitUntilReady().catch((_err) => { });
+        await this.isolate.waitUntilReady().catch((_err) => {});
         return this.isolate.fetch(req).catch(this.errAs500);
       }
       return this.errAs500(err);
