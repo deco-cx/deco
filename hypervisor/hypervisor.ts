@@ -21,6 +21,7 @@ import type { Isolate } from "./workers/isolate.ts";
 
 const SECONDS = 1_000;
 const MINUTE = 60 * SECONDS;
+const MAX_LENGTH = 10_000;
 
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
@@ -165,7 +166,12 @@ export class Hypervisor {
               async pull(controller) {
                 for await (const content of logs) {
                   controller.enqueue({
-                    data: encodeURIComponent(JSON.stringify(content)),
+                    data: encodeURIComponent(JSON.stringify({
+                      ...content,
+                      message: content.message.length > MAX_LENGTH
+                        ? `${content.message.slice(0, MAX_LENGTH)}...`
+                        : content.message,
+                    })),
                     id: Date.now(),
                     event: "message",
                   });
