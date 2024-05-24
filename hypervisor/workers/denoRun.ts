@@ -1,6 +1,6 @@
 import EventEmitter from "node:events";
 import { delay } from "std/async/delay.ts";
-import { type StreamMultiplexer, multiplexer } from "../loggings/mux.ts";
+import { multiplexer, type StreamMultiplexer } from "../loggings/mux.ts";
 import { type LogLine, streamLogsFrom } from "../loggings/stream.ts";
 import type { Isolate, IsolateOptions } from "./isolate.ts";
 import { portPool } from "./portpool.ts";
@@ -254,8 +254,6 @@ function proxyWebSocket(url: URL, nReq: Request) {
       msg && proxySocket.send(msg);
     }
   }
-
-
 
   return Promise.resolve(response);
 }
