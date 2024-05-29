@@ -82,7 +82,7 @@ Deno.serve(
       const address = `http://${addr.hostname}:${addr.port}`;
       try {
         if (DECO_ENV_NAME && DECO_SITE_NAME) {
-          const { connect } = await import("jsr:@mcandeia/warp@0.1.3");
+          const { connect } = await import("jsr:@deco/warp@0.1.1");
 
           const register = async () => {
             await connect({
