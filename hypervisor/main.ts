@@ -82,41 +82,33 @@ Deno.serve(
       const address = `http://${addr.hostname}:${addr.port}`;
       try {
         if (DECO_ENV_NAME && DECO_SITE_NAME) {
-          const { PunchmoleClient } = await import("npm:punchmole");
+          const { connect } = await import("jsr:@mcandeia/warp@0.1.1");
 
-          const register = () => {
-            let timeout: undefined | ReturnType<typeof setTimeout> = undefined;
-            const punchmoleEvents = PunchmoleClient(
-              Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
-                "c309424a-2dc4-46fe-bfc7-a7c10df59477", // this is a key and it should be ok to expose it since it is just a reverse proxy through a websocket.
-              EXTERNAL_DOMAIN,
-              `http://localhost:${port}`,
-              "wss://simpletunnel.deco.site/_punchmole",
-              {
-                info: () => {},
-                debug: () => {},
-                warn: () => {},
-                error: console.error,
-              },
-            );
-            punchmoleEvents.addListener("close", () => {
-              console.log("connection close, connecting again in 500ms...");
-              timeout && clearTimeout(timeout);
-              timeout = setTimeout(() => {
-                register();
-              }, 500);
+          const register = async () => {
+            await connect({
+              domain: EXTERNAL_DOMAIN,
+              localAddr: `http://localhost:${port}`,
+              server: "wss://simpletunnel.deco.site",
+              token: Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
+                "c309424a-2dc4-46fe-bfc7-a7c10df59477"
+            }).then(r => {
+              r.registered.then(() => {
+                console.log(colors.green(
+                  `Server running on https://${EXTERNAL_DOMAIN} -> ${address}`,
+                ));
+              })
+              return r.closed.then(async () => {
+                console.log("tunnel connection error retrying in 500ms...");
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return register()
+              })
+            }).catch(async _err => {
+              console.log("tunnel connection error retrying in 500ms...");
+              await new Promise(resolve => setTimeout(resolve, 500));
+              return register();
             });
-            return punchmoleEvents;
           };
-          const punchmoleEvents = register();
-
-          punchmoleEvents.addListener(
-            "registered",
-            (_result: unknown) =>
-              console.log(colors.green(
-                `Server running on https://${EXTERNAL_DOMAIN} -> ${address}`,
-              )),
-          );
+          await register();
         } else {
           console.log(
             colors.green(`Server running on ${address}`),
