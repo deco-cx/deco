@@ -43,7 +43,7 @@ export const traverseAny = <T>(
   value: unknown,
 ): HintNode<T> | null => {
   if (isResolved(value)) {
-    return {};
+    return null;
   }
   const node = isResolvable(value) ? {} : null;
   if (Array.isArray(value)) {
