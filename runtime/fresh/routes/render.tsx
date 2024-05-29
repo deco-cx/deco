@@ -170,7 +170,7 @@ export const handler = async (
 
   return ctx.state.resolve(
     { page, __resolveType: "render" },
-    undefined,
+    { propsAreResolved: true },
     original,
   ) as unknown as Promise<Response>;
 };
