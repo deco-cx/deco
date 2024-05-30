@@ -82,14 +82,14 @@ Deno.serve(
       const address = `http://${addr.hostname}:${addr.port}`;
       try {
         if (DECO_ENV_NAME && DECO_SITE_NAME) {
-          const { connect } = await import("jsr:@deco/warp@0.1.3");
+          const { connect } = await import("jsr:@deco/warp@0.1.4");
 
           const register = async () => {
             await connect({
               domain: EXTERNAL_DOMAIN,
               localAddr: `http://localhost:${port}`,
               server: "wss://simpletunnel.deco.site",
-              token: Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
+              apiKey: Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
                 "c309424a-2dc4-46fe-bfc7-a7c10df59477"
             }).then(r => {
               r.registered.then(() => {
