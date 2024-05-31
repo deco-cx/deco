@@ -5,6 +5,7 @@ import { walk } from "std/fs/walk.ts";
 import { Buffer } from "std/io/buffer.ts";
 import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
+import { logger } from "../../observability/otel/config.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
 import { type File, gitIgnore, type RealtimeState } from "../deps.ts";
@@ -316,6 +317,11 @@ export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
     console.log(`persisting state at ${outfile}`);
     await this.persist(outfile, true).catch((err) => {
       console.error(`could not persist state at ${outfile}`, err);
+      logger.error(
+        `could not persist state at ${outfile} ${err?.message} ${
+          JSON.stringify(err)
+        }`,
+      );
     });
   }
   public async persistNext(commitSha: string) {

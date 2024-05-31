@@ -21,7 +21,7 @@ import {
   type InvokeAwaiter,
   newHandler,
 } from "./proxy.ts";
-export interface InvokerRequestInit extends Omit<RequestInit, 'fetcher'> {
+export interface InvokerRequestInit extends Omit<RequestInit, "fetcher"> {
   fetcher?: typeof fetch;
 }
 
@@ -138,16 +138,16 @@ const batchInvoke = (payload: unknown, init?: InvokerRequestInit | undefined) =>
 
 export type InvocationFunc<TManifest extends AppManifest> = <
   TInvocableKey extends
-  | AvailableFunctions<TManifest>
-  | AvailableLoaders<TManifest>
-  | AvailableActions<TManifest>,
+    | AvailableFunctions<TManifest>
+    | AvailableLoaders<TManifest>
+    | AvailableActions<TManifest>,
   TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
-  ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
-  : TInvocableKey extends AvailableActions<TManifest>
-  ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-  : TInvocableKey extends AvailableLoaders<TManifest>
-  ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
-  : never,
+    ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableActions<TManifest>
+      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never,
   TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
 >(
   key: TInvocableKey,
@@ -168,18 +168,18 @@ export type InvocationFuncFor<
   TManifest extends AppManifest,
   TInvocableKey extends string,
   TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
-  ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
-  : TInvocableKey extends AvailableActions<TManifest>
-  ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-  : TInvocableKey extends AvailableLoaders<TManifest>
-  ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
-  : never = TInvocableKey extends AvailableFunctions<TManifest>
-  ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
-  : TInvocableKey extends AvailableActions<TManifest>
-  ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-  : TInvocableKey extends AvailableLoaders<TManifest>
-  ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
-  : never,
+    ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableActions<TManifest>
+      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+    : TInvocableKey extends AvailableLoaders<TManifest>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+    : never = TInvocableKey extends AvailableFunctions<TManifest>
+      ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+      : TInvocableKey extends AvailableActions<TManifest>
+        ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+      : TInvocableKey extends AvailableLoaders<TManifest>
+        ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+      : never,
 > = (
   props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
   /**
@@ -198,9 +198,9 @@ const isInvokeAwaiter = <
   invoke: unknown | InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>,
 ): invoke is InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector> => {
   return (invoke as InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>)
-    ?.then !== undefined &&
+        ?.then !== undefined &&
     (invoke as InvokeAwaiter<TManifest, TInvocableKey, TFuncSelector>)
-      ?.payload !== undefined;
+        ?.payload !== undefined;
 };
 
 /**
@@ -211,19 +211,19 @@ const isInvokeAwaiter = <
 export const invoke = <
   TManifest extends AppManifest,
 >(fetcher?: typeof fetch) =>
-  <
-    TInvocableKey extends
+<
+  TInvocableKey extends
     | AvailableFunctions<TManifest>
     | AvailableLoaders<TManifest>
     | AvailableActions<TManifest>,
-    TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
     ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableActions<TManifest>
-    ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableLoaders<TManifest>
-    ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
     : never,
-    TPayload extends
+  TPayload extends
     | Invoke<TManifest, TInvocableKey, TFuncSelector>
     | InvokeAsPayload<TManifest, TInvocableKey, TFuncSelector>
     | Record<
@@ -231,64 +231,64 @@ export const invoke = <
       | Invoke<TManifest, TInvocableKey, TFuncSelector>
       | InvokeAsPayload<TManifest, TInvocableKey, TFuncSelector>
     >,
-  >(
-    payload: TPayload,
-    init?: InvokerRequestInit | undefined,
-  ): Promise<
-    InvokeResult<
-      TPayload,
-      TManifest
-    >
-  > => {
-    if (typeof payload === "object") {
-      if ("key" in payload && "props" in payload) {
-        return invokeKey((payload as any).key, (payload as any).props, {
-          ...init ?? {},
-          fetcher,
-        });
-      }
-      const reqs: Record<
-        string,
-        Invoke<TManifest, TInvocableKey, TFuncSelector>
-      > = {};
-      for (const [key, val] of Object.entries(payload)) {
-        if (isInvokeAwaiter(val)) {
-          reqs[key] = val.payload;
-        } else {
-          reqs[key] = val;
-        }
-      }
-      return batchInvoke(reqs, { ...init ?? {}, fetcher });
+>(
+  payload: TPayload,
+  init?: InvokerRequestInit | undefined,
+): Promise<
+  InvokeResult<
+    TPayload,
+    TManifest
+  >
+> => {
+  if (typeof payload === "object") {
+    if ("key" in payload && "props" in payload) {
+      return invokeKey((payload as any).key, (payload as any).props, {
+        ...init ?? {},
+        fetcher,
+      });
     }
-    return batchInvoke(payload, { ...init ?? {}, fetcher });
-  };
+    const reqs: Record<
+      string,
+      Invoke<TManifest, TInvocableKey, TFuncSelector>
+    > = {};
+    for (const [key, val] of Object.entries(payload)) {
+      if (isInvokeAwaiter(val)) {
+        reqs[key] = val.payload;
+      } else {
+        reqs[key] = val;
+      }
+    }
+    return batchInvoke(reqs, { ...init ?? {}, fetcher });
+  }
+  return batchInvoke(payload, { ...init ?? {}, fetcher });
+};
 
 export const create = <
   TManifest extends AppManifest,
 >() =>
-  <
-    TInvocableKey extends
+<
+  TInvocableKey extends
     | AvailableFunctions<TManifest>
     | AvailableLoaders<TManifest>
     | AvailableActions<TManifest>,
-    TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+  TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
     ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableActions<TManifest>
-    ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+      ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
     : TInvocableKey extends AvailableLoaders<TManifest>
-    ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+      ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
     : never,
-    TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
-  >(key: TInvocableKey) =>
-    (
-      props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-      init?: InvokerRequestInit | undefined,
-    ): Promise<
-      InvokeResult<
-        TPayload,
-        TManifest
-      >
-    > => invokeKey(key, props, init);
+  TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
+>(key: TInvocableKey) =>
+(
+  props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+  init?: InvokerRequestInit | undefined,
+): Promise<
+  InvokeResult<
+    TPayload,
+    TManifest
+  >
+> => invokeKey(key, props, init);
 
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.

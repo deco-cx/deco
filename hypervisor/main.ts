@@ -1,8 +1,7 @@
 import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
-import { formatLog } from "../utils/log.ts";
-// import { cloudflared } from "./deps.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
+import { formatLog } from "../utils/log.ts";
 import { Hypervisor } from "./hypervisor.ts";
 import { portPool } from "./workers/portpool.ts";
 const parsedArgs = parse(Deno.args, {
