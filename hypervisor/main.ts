@@ -50,11 +50,19 @@ const hypervisor = new Hypervisor({
 });
 
 // unhandledrejection.js
-globalThis.addEventListener("unhandledrejection", (e: { promise: Promise<unknown>, reason: unknown; preventDefault: () => void }) => {
-  hypervisor.persistState();
-  console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
-});
-
+globalThis.addEventListener(
+  "unhandledrejection",
+  (
+    e: {
+      promise: Promise<unknown>;
+      reason: unknown;
+      preventDefault: () => void;
+    },
+  ) => {
+    hypervisor.persistState();
+    console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
+  },
+);
 
 const appPort = Deno.env.get("APP_PORT");
 
@@ -89,7 +97,7 @@ Deno.serve(
       const address = `http://${addr.hostname}:${addr.port}`;
       try {
         if (DECO_ENV_NAME && DECO_SITE_NAME) {
-          const { connect } = await import("jsr:@deco/warp@0.1.4");
+          const { connect } = await import("jsr:@deco/warp@0.2.0");
 
           const register = async () => {
             await connect({
@@ -97,21 +105,21 @@ Deno.serve(
               localAddr: `http://localhost:${port}`,
               server: "wss://simpletunnel.deco.site",
               apiKey: Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
-                "c309424a-2dc4-46fe-bfc7-a7c10df59477"
-            }).then(r => {
+                "c309424a-2dc4-46fe-bfc7-a7c10df59477",
+            }).then((r) => {
               r.registered.then(() => {
                 console.log(colors.green(
                   `Server running on https://${EXTERNAL_DOMAIN} -> ${address}`,
                 ));
-              })
+              });
               return r.closed.then(async () => {
                 console.log("tunnel connection error retrying in 500ms...");
-                await new Promise(resolve => setTimeout(resolve, 500));
-                return register()
-              })
-            }).catch(async _err => {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                return register();
+              });
+            }).catch(async (_err) => {
               console.log("tunnel connection error retrying in 500ms...");
-              await new Promise(resolve => setTimeout(resolve, 500));
+              await new Promise((resolve) => setTimeout(resolve, 500));
               return register();
             });
           };
