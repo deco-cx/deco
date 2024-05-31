@@ -61,7 +61,7 @@ export class Hypervisor {
           using _ = await buildMutex.acquire();
           const child = buildCmd.spawn();
           return await Promise.all([
-            child.output().then(() => {}),
+            child.output().then(() => { }),
             genManifest(),
           ]).catch(
             (err) => {
@@ -81,7 +81,7 @@ export class Hypervisor {
     let lastPersist = Promise.resolve();
     const debouncedPersist = this.realtimeFsState.shouldPersistState()
       ? debounce(() => {
-        lastPersist = lastPersist.catch((_err) => {}).then(() => {
+        lastPersist = lastPersist.catch((_err) => { }).then(() => {
           return this.realtimeFsState.persistState();
         });
       }, 10 * MINUTE)
@@ -226,17 +226,20 @@ export class Hypervisor {
       useMetaStaleCache,
     ).catch(async (err) => {
       if (this.isolate.isRunning()) {
-        await this.isolate.waitUntilReady().catch((_err) => {});
+        await this.isolate.waitUntilReady().catch((_err) => { });
         return this.isolate.fetch(req).catch(this.errAs500);
       }
       return this.errAs500(err);
     });
   }
-  public proxySignal(signal: Deno.Signal) {
-    this.isolate?.signal(signal);
+  public persistState() {
     return this.realtimeFsState.persistState().catch((err) => {
       console.log("error when trying to persist state", err);
     });
+  }
+  public proxySignal(signal: Deno.Signal) {
+    this.isolate?.signal(signal);
+    return this.persistState();
   }
   public async shutdown() {
     await this.isolate?.[Symbol.asyncDispose]();

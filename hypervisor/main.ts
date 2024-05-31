@@ -49,6 +49,13 @@ const hypervisor = new Hypervisor({
   site: DECO_SITE_NAME,
 });
 
+// unhandledrejection.js
+globalThis.addEventListener("unhandledrejection", (e: { promise: Promise<unknown>, reason: unknown; preventDefault: () => void }) => {
+  hypervisor.persistState();
+  console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
+});
+
+
 const appPort = Deno.env.get("APP_PORT");
 
 const signals: Partial<Record<Deno.Signal, boolean>> = {
