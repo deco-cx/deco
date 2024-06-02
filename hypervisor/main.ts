@@ -96,7 +96,7 @@ Deno.serve(
       const address = `http://${addr.hostname}:${addr.port}`;
       try {
         if (DECO_ENV_NAME && DECO_SITE_NAME) {
-          const { connect } = await import("jsr:@deco/warp@0.2.4");
+          const { connect } = await import("jsr:@deco/warp@0.2.6");
 
           const register = async () => {
             await connect({
