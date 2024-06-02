@@ -63,7 +63,7 @@
 
 Now, to get to production, install any of the Hosting apps available in `deco.store` by clicking on "Create new production environment".
   
-<hr/>
+# TypeScript Props to Visual Content Editor
 
 Deco's core feature is generating a content editor UI from your TypeScript interface `Props`.
 For example, declaring a ProductShelf JSX component with these `Props`...
@@ -90,37 +90,21 @@ export default function ProductShelf(props: Props) { /** JSX Preact + Tailwind U
 
 ![CleanShot 2023-11-14 at 16 51 51](https://github.com/deco-cx/deco/assets/1633518/71f08873-8d62-42ec-9732-81dfa83f300c)
 
-
-## Deploy to your own infrastructure
-
-The deno project created with Deco is completely standalone — all of the CMS information is neatly packed in JSON files along with the code. Deco is merely a git-based editor.
-
-This means you can deploy a Deco project easily to any hosting platform you want. By using our integrated hosting partners, you get full first-class environment support an observability inside Deco.
-
-> [!WARNING]
-> Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
-
-## Deploy to the deco.cx edge - FREE for personal projects
-
-You can also deploy any Deco app to [deco.cx](https://deco.cx/) — the managed infrastructure by the authors of this project. 
-
-
-With any [deco.cx subscription](https://deco.cx/en/pricing), you also get: 
-
-- Managed edge infrastructure
-- Realtime Web Analytics based on Clickhouse
-- Observability with tracing and error logging by HyperDX
-- Access to all [deco.store](https://deco.store) apps
-- Infinite revision history for all CMS changes
-- Team support with roles and permissions
-- Guest support (for allowing your customers to edit their sites).
-- And a bunch of other features we launch every month :)
-
 ## Documentation
 
 Explore the capabilities of Deco further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [deco.cx/docs/en](https://deco.cx/docs/en).
 
-## Why use Deco?
+## Motivation
+
+Deco aims to radically simplify web development — like it was in the 90s, but with all the modern good stuff baked in. We propose that this starts by elevating TypeScript into a globally shared vocabulary of types that bridge the gap between interfaces and APIs. The simplicity of defining a type and getting auto-completions with multiple matching integrations from a community of Deco apps is a game-changer for developer productivity — both human and AI. It's a shift towards a more collaborative and efficient web development paradigm, where the community's collective effort translates into individual project success. No more reinventing the wheel, no more silos, no more wasted time. Just focusing on customer needs, **getting the data from wherever you need,** when you need it, and **allowing everyone in the team to create and publish great content** with that data, safely.
+
+To learn more about why we built deco, visit our [Why We Web](https://deco.cx/why) manifest at https://deco.cx/why.
+
+## Community
+
+Join the community on [deco.cx Discord Server](https://deco.cx/discord). Share your apps, explore others' creations, and contribute to the shared vocabulary that makes Deco a thriving ecosystem.
+
+## Deco's advantages
 
 With **Deco** you can:
 
@@ -146,13 +130,29 @@ To try out our visual editor, navigate to the [deco.cx playground](https://play.
 
 * Interoperable: Deco facilitates seamless interaction between different apps and platforms. It’s about breaking down silos and fostering a more interconnected web development ecosystem.
 
-## Motivation
+## Deploy to your own infrastructure
 
-Deco aims to radically simplify web development — like it was in the 90s, but with all the modern good stuff baked in. We propose that this starts by elevating TypeScript into a globally shared vocabulary of types that bridge the gap between interfaces and APIs. The simplicity of defining a type and getting auto-completions with multiple matching integrations from a community of Deco apps is a game-changer for developer productivity — both human and AI. It's a shift towards a more collaborative and efficient web development paradigm, where the community's collective effort translates into individual project success. No more reinventing the wheel, no more silos, no more wasted time. Just focusing on customer needs, **getting the data from wherever you need,** when you need it, and **allowing everyone in the team to create and publish great content** with that data, safely.
+The deno project created with Deco is completely standalone — all of the CMS information is neatly packed in JSON files along with the code. Deco is merely a git-based editor.
 
-## Community
+This means you can deploy a Deco project easily to any hosting platform you want. By using our integrated hosting partners, you get full first-class environment support an observability inside Deco.
 
-Join the community on [deco.cx Discord Server](https://deco.cx/discord). Share your apps, explore others' creations, and contribute to the shared vocabulary that makes Deco a thriving ecosystem.
+> [!WARNING]
+> Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
+
+## Deploy to the deco.cx PRO edge
+
+You can also deploy any Deco app to [deco.cx](https://deco.cx/) — the managed infrastructure by the authors of this project. 
+
+With any [deco.cx subscription](https://deco.cx/en/pricing), you also get: 
+
+- Managed edge infrastructure
+- Realtime Web Analytics based on Clickhouse
+- Observability with tracing and error logging by HyperDX
+- Access to all [deco.store](https://deco.store) apps
+- Infinite revision history for all CMS changes
+- Team support with roles and permissions
+- Guest support (for allowing your customers to edit their sites).
+- And a bunch of other features we launch every month :)
 
 ## 3P Integrations
 
