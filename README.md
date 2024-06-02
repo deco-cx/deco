@@ -1,37 +1,34 @@
 <p align="center">
-  <img src="https://github.com/deco-cx/deco/assets/1633518/ba714da8-514e-4b48-bbec-b7d86377b273" alt="deco"></img>
-  <p align="center">
-    <h3 align="center">
-    <bold>Git-based Visual CMS</bold> for Deno, HTMX and Tailwind Apps.
-    </h3>
-    <div align="center">
-      <br/>
-    <a href="https://deco.cx">deco.cx</a>
-    ·
-    <a href="https://deco.cx/docs/en">docs</a>
-    ·
-    <a href="https://admin.deco.cx">login</a>
-    ·
-    <a href="https://deco.cx/discord">join our discord</a>
-    ·
-    <a href="https://x.com/deco_frontend">X</a>
-    </div>
-  </p>
-  <p align="center">
-    <a href="https://jsr.io/@deco/warp" target="_blank"><img alt="jsr" src="https://jsr.io/badges/@deco/warp" /></a>
-    &nbsp;
-    <a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
-    &nbsp;
-    <a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da" /></a>
-    &nbsp;
-    <a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Deco Twitter" /></a>
-    &nbsp;
-    <a href="https://github.com/deco-cx/deco/workflows/ci" target="_blank"><img src="https://github.com/deco-cx/deco/workflows/ci/badge.svg?event=push&branch=main" alt="Build Status" /></a>
-  </p>
-  <br />
+  <img src="https://github.com/deco-cx/deco/assets/1633518/ba714da8-514e-4b48-bbec-b7d86377b273" alt="deco" width="210px"/>
 </p>
+<p align="center">
+  <strong>Git-based Visual CMS for Deno, &lt;/>htmx and Tailwind Apps.</strong>
+</p>
+<p align="center">
+  <a href="https://deco.cx">deco.cx</a>
+  ·
+  <a href="https://deco.cx/docs/en">docs</a>
+  ·
+  <a href="https://admin.deco.cx">login</a>
+  ·
+  <a href="https://deco.cx/discord">join our discord</a>
+  ·
+  <a href="https://x.com/deco_frontend">X</a>
+</p>
+<p align="center">
+  <a href="https://jsr.io/@deco/warp" target="_blank"><img alt="jsr" src="https://jsr.io/badges/@deco/warp" /></a>
+  &nbsp;
+  <a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
+  &nbsp;
+  <a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da" /></a>
+  &nbsp;
+  <a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Deco Twitter" /></a>
+  &nbsp;
+  <a href="https://github.com/deco-cx/deco/workflows/ci" target="_blank"><img src="https://github.com/deco-cx/deco/workflows/ci/badge.svg?event=push&branch=main" alt="Build Status" /></a>
+</p>
+<br />
 
-![Deco web editor](https://github.com/deco-cx/deco/assets/1633518/67124408-f40f-4e8f-9ccb-4982f0144363)
+![Deco web editor](https://github.com/deco-cx/deco/assets/1633518/b7599207-07dc-40d3-b124-1e73fbb75d10)
 
 <br />
 
@@ -55,11 +52,12 @@
 
 # Getting Started
 
-It takes less than 1 minute to get up and running with Deco.
+> [!TIP]
+> It takes less than 1 minute to get up and running with Deco.
 
 1. Visit [deco.new](https://deco.new) and choose a template.
 2. Choose a name and create a site. This gives you a free [`deco-sites`](https://github.com/deco-sites/) GitHub repository and your very own `*.deco.site` domain.
-3. Finally, follow the instructions to clone your repo and run your development server locally, or deploy to Deno Deploy with one click for free. 
+3. Follow the instructions to clone your repo and run your development server locally, _or_ deploy to Deno Deploy with one click for free. 
 
 **Your site is now ready** to edit with our beautiful visual CMS. All changes will be saved to git!
 
@@ -99,7 +97,8 @@ The deno project created with Deco is completely standalone — all of the CMS i
 
 This means you can deploy a Deco project easily to any hosting platform you want. By using our integrated hosting partners, you get full first-class environment support an observability inside Deco.
 
-> ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
+> [!WARNING]
+> Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
 
 ## Deploy to the deco.cx edge - FREE for personal projects
 
