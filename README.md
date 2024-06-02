@@ -8,7 +8,7 @@
       <br/>
     <a href="https://deco.cx">deco.cx</a>
     ·
-    <a href="https://deco.cx/en/docs">docs</a>
+    <a href="https://deco.cx/docs/en">docs</a>
     ·
     <a href="https://admin.deco.cx">login</a>
     ·
