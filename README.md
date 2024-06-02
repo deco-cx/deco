@@ -1,36 +1,73 @@
+<p align="center">
+  <img src="https://github.com/deco-cx/deco/assets/1633518/ba714da8-514e-4b48-bbec-b7d86377b273" alt="deco"></img>
+  <p align="center">
+    <h3 align="center">
+    A <bold>Git-based Visual CMS</bold> for Deno, HTMX and Tailwind Apps.
+    </h3>
+    <div align="center">
+      <br/>
+    <a href="https://deco.cx">deco.cx</a>
+    ·
+    <a href="https://deco.cx/en/docs">docs</a>
+    ·
+    <a href="https://admin.deco.cx">login</a>
+    ·
+    <a href="https://deco.cx/discord">join our discord</a>
+    ·
+    <a href="https://x.com/deco_frontend">X</a>
+    </div>
+  </p>
+  <p align="center">
+    <a href="https://jsr.io/@deco/warp" target="_blank"><img alt="jsr" src="https://jsr.io/badges/@deco/warp" /></a>
+    &nbsp;
+    <a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
+    &nbsp;
+    <a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da" /></a>
+    &nbsp;
+    <a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Deco Twitter" /></a>
+    &nbsp;
+    <a href="https://github.com/deco-cx/deco/workflows/ci" target="_blank"><img src="https://github.com/deco-cx/deco/workflows/ci/badge.svg?event=push&branch=main" alt="Build Status" /></a>
+  </p>
+  <br />
+</p>
+
 ![Deco web editor](https://github.com/deco-cx/deco/assets/1633518/67124408-f40f-4e8f-9ccb-4982f0144363)
+
+<br />
+
+- **Modern stack focused on performance and JavaScript-independence**
+  - Server-side JSX templates
+  - ⁠Client-side HTMX interactivity
+  - Local development with HTTPS tunnel — edit on the web, commit on your local git.
+  - ⁠Native Tailwind Theme Support with multiple Component Libraries supported: DaisyUI, Preline, FloatUI, Shadcn UI
+- **Easy for business users and content editors**
+  - TypeScript Props to Content Editor UI generator
+  - Asset manager with multimedia support
+  - Publishing workflow with staging area, immutable releases and immediate rollbacks
+  - Roles and permissions for content-only editors **(invite 1 content-editor member for free per site!)**
+- **⁠Deploy with one click to any Deno-compatible host**
+  - Deno Deploy (Preferred Partner) — Global platform with generous free tier
+  - Azion Edge _(Coming soon)_
+  - Fly.io _(Coming soon)_
+  - Nirvana Cloud _(Coming soon)_
+  - Digital Ocean _(Coming soon)_
+  - deco.cx PRO hosting: $99 USD/mo for always-on multi-zone deployment on our Enterprise-scale managed infrastructure.
+
+# Getting Started
+
+It takes less than 1 minute to get up and running with Deco.
+
+1. Visit [deco.new](https://deco.new) and choose a template.
+2. Choose a name and create a site. This gives you a free [`deco-sites`](https://github.com/deco-sites/) GitHub repository and your very own `*.deco.site` domain.
+3. Finally, follow the instructions to clone your repo and run your development server locally, or deploy to Deno Deploy with one click for free. 
+
+**Your site is now ready** to edit with our beautiful visual CMS. All changes will be saved to git!
+
+Now, to get to production, install any of the Hosting apps available in `deco.store` by clicking on "Create new production environment".
+  
 <hr/>
 
-<a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
-  &nbsp;
-<a href="https://deco.cx/discord" target="_blank"><img alt="Discord" src="https://img.shields.io/discord/985687648595243068?label=Discord&color=7289da" /></a>
-  &nbsp;
-  <a href="https://x.com/deco_frontend" target="_blank"><img src="https://img.shields.io/twitter/follow/deco_frontend" alt="Deco Twitter" /></a>
-&nbsp;
-  ![Build Status](https://github.com/deco-cx/deco/workflows/ci/badge.svg?event=push&branch=main)
-
-<hr/>
-
-💻 **Deco is the other side of Code: an open-source web editor** for building high-performance apps.
-
-👁️ It turns your **TypeScript code into a visual no-code editor**, right on the web.
-
-⚡ It gives you **visibility over performance both in UI and data fetching,** accelerating the creation of **high-performance websites.**
-
-⚙ It's focused on **reusability and composability** of UI components (**Sections**) and API integrations (**Loaders** and **Actions**). 
-
-📤 Sections, Loaders and Actions can be **packaged and installed with one click as Apps.** 
-
-
-## Get started on our playground
-
-Deco combines the best of **visual page editing** (like Webflow) and the ability for **app composition at the admin level** (like Wordpress), allowing for new features to be installed and managed in a few minutes, with no code. 
-
-To start building right now, go to https://play.deco.cx and follow the instructions to run a Deco project locally.
-&nbsp;
-
-![CleanShot 2023-11-14 at 20 55 32](https://github.com/deco-cx/deco/assets/1633518/e6f0d232-406d-4a20-8362-bd1cc8018b00)
-
+Deco's core feature is generating a content editor UI from your TypeScript interface `Props`.
 For example, declaring a ProductShelf JSX component with these `Props`...
 
 ```typescript
@@ -58,24 +95,23 @@ export default function ProductShelf(props: Props) { /** JSX Preact + Tailwind U
 
 ## Deploy to your own infrastructure
 
-The deno project created with Deco is completely standalone — all of the CMS information is neatly packed in a JSON file along with the code.
+The deno project created with Deco is completely standalone — all of the CMS information is neatly packed in JSON files along with the code. Deco is merely a git-based editor.
 
-This means you can deploy a Deco project easily to any hosting platform you want.
+This means you can deploy a Deco project easily to any hosting platform you want. By using our integrated hosting partners, you get full first-class environment support an observability inside Deco.
 
 > ⚠️ Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
 
 ## Deploy to the deco.cx edge - FREE for personal projects
 
-You can also deploy any Deco app to [deco.cx](https://www.deco.cx/en) — the managed infrastructure by the authors of this project. 
+You can also deploy any Deco app to [deco.cx](https://deco.cx/) — the managed infrastructure by the authors of this project. 
 
-**It's free for unlimited sites up to 5,000 pageviews monthly!**
 
-With any [deco.cx](https://www.deco.cx/en) subscription, you also get: 
+With any [deco.cx subscription](https://deco.cx/en/pricing), you also get: 
 
-- Managed edge infrastructure with 3-second deploy
-- Managed Web Analytics by Plausible
-- Managed Observability with tracing and error logging by HyperDX
-- Access to **ALL** premium deco.hub apps
+- Managed edge infrastructure
+- Realtime Web Analytics based on Clickhouse
+- Observability with tracing and error logging by HyperDX
+- Access to all [deco.store](https://deco.store) apps
 - Infinite revision history for all CMS changes
 - Team support with roles and permissions
 - Guest support (for allowing your customers to edit their sites).
@@ -83,7 +119,7 @@ With any [deco.cx](https://www.deco.cx/en) subscription, you also get:
 
 ## Documentation
 
-Explore the capabilities of Deco further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [https://deco.cx/docs](https://www.deco.cx/docs/en/overview).
+Explore the capabilities of Deco further in our comprehensive documentation. Learn how to craft Sections, Loaders, Apps and much more. Go to [deco.cx/docs/en](https://deco.cx/docs/en).
 
 ## Why use Deco?
 
