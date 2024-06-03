@@ -6,7 +6,6 @@ const httpDuration = meter.createHistogram("http_request_duration", {
   unit: "ms",
   valueType: ValueType.DOUBLE,
 });
-
 /**
  * @returns a end function that when gets called observe the duration of the operation.
  */

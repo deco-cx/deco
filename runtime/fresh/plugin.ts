@@ -6,14 +6,15 @@ import type { ImportMap } from "../../blocks/app.ts";
 import {
   buildDecoState,
   injectLiveStateForPath,
-} from "./middlewares/2_stateBuilder.ts";
+} from "./middlewares/3_stateBuilder.ts";
 
 import type { DecofileProvider } from "../../engine/decofile/provider.ts";
 import type { AppManifest, SiteInfo } from "../../mod.ts";
-import { contextProvider } from "./middlewares/0_contextProvider.ts";
-import { alienRelease } from "./middlewares/1_alienRelease.ts";
+import { liveness } from "./middlewares/0_liveness.ts";
+import { contextProvider } from "./middlewares/1_contextProvider.ts";
+import { alienRelease } from "./middlewares/2_alienRelease.ts";
 
-import { handler as decoMiddleware } from "./middlewares/3_main.ts";
+import { handler as decoMiddleware } from "./middlewares/4_main.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
 import {
@@ -110,6 +111,7 @@ export default function decoPlugin(opt: Options): Plugin {
         path: "/",
         middleware: {
           handler: [
+            liveness,
             ctxProvider,
             alienRelease,
             buildDecoState(),

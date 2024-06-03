@@ -11,7 +11,7 @@ import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { newContext } from "../../../mod.ts";
 import type { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
 import type { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
-import { ContextCache } from "./1_alienRelease.ts";
+import { ContextCache } from "./2_alienRelease.ts";
 
 let contextCache: ContextCache | null = null;
 
