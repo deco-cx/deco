@@ -165,7 +165,8 @@ const matcherBlock: Block<
             name: cookieName,
             value: cookieValue.build(uniqueId, result),
             path: "/",
-            sameSite: "Strict",
+            secure: true,
+            sameSite: "None",
           });
           respHeaders.append("vary", "cookie");
         }

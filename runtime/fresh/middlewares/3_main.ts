@@ -204,6 +204,8 @@ export const handler = [
           name: DECO_SEGMENT,
           value,
           path: "/",
+          secure: true,
+          sameSite: "None",
         }, { encode: true });
       }
     }
