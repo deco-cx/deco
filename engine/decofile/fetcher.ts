@@ -1,3 +1,4 @@
+import { context } from "deco/live.ts";
 import { fromFileUrl } from "std/path/mod.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
@@ -20,6 +21,17 @@ const fetchFromHttp = async (
   url: string | URL,
 ): Promise<HttpContent | undefined> => {
   const response = await fetch(String(url), { redirect: "follow" })
+    .then((response) => {
+      if (!response.ok) {
+        console.log(
+          "error when trying fetch from, retrying",
+          url,
+          response.status,
+        );
+        return fetch(String(url), { redirect: "follow" });
+      }
+      return response;
+    })
     .catch(
       (err) => {
         console.log("error when trying fetch from, retrying", url, err);
@@ -37,6 +49,10 @@ const fetchFromHttp = async (
       response.status,
       content,
     );
+    if (context.isDeploy) {
+      console.error("exiting due to the lack of decofile");
+      Deno.exit(1);
+    }
     return undefined;
   }
   return content
