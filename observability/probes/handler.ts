@@ -25,7 +25,7 @@ const envObj = Deno.env.toObject();
 
 const DRY_RUN = envObj.PROBE_DRY_RUN === "true";
 
-const probe = meter.createCounter("failed_probe", {
+const probe = meter.createCounter("probe_failed", {
   unit: "1",
   valueType: ValueType.INT,
 });
@@ -68,14 +68,15 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
         }),
       );
       const failedCheck = results.find(({ check }) => !check);
+      const checks = JSON.stringify(results, null, 2);
       if (failedCheck) {
         const status = DRY_RUN ? 200 : 503;
         probe.add(1, {
           name: failedCheck.name,
         });
-        return new Response(`${failedCheck.name} is failing`, { status });
+        return new Response(checks, { status });
       }
-      return new Response("OK", { status: 200 });
+      return new Response(checks, { status: 200 });
     }
     reqCount++;
     const start = performance.now();
