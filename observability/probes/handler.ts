@@ -7,6 +7,8 @@ export interface Metrics {
 }
 
 import type { MiddlewareHandler } from "$fresh/server.ts";
+import { ValueType } from "deco/deps.ts";
+import { meter } from "../otel/metrics.ts";
 import { avgLatencyChecker } from "./avgLatency.ts";
 import { memoryChecker } from "./memory.ts";
 import { reqCountChecker } from "./reqCount.ts";
@@ -20,6 +22,13 @@ export interface LiveChecker {
 }
 
 const envObj = Deno.env.toObject();
+
+const DRY_RUN = envObj.PROBE_DRY_RUN === "true";
+
+const probe = meter.createCounter("failed_probe", {
+  unit: "1",
+  valueType: ValueType.INT,
+});
 
 export const getProbeThresholdAsNum = (
   checkerName: string,
@@ -60,7 +69,11 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
       );
       const failedCheck = results.find(({ check }) => !check);
       if (failedCheck) {
-        return new Response(`${failedCheck.name} is failing`, { status: 503 });
+        const status = DRY_RUN ? 200 : 503;
+        probe.add(1, {
+          name: failedCheck.name,
+        });
+        return new Response(`${failedCheck.name} is failing`, { status });
       }
       return new Response("OK", { status: 200 });
     }
