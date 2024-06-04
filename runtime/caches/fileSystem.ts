@@ -32,6 +32,15 @@ const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
   valueType: ValueType.INT,
 });
 
+const failedToDisposeFromCache = meter.createCounter(
+  "failed_to_delete_from_fs_cache",
+  {
+    description: "Counter of failed attempts to delete from file system cache",
+    unit: "1",
+    valueType: ValueType.INT,
+  },
+);
+
 const cacheOptions = {
   maxSize: MAX_CACHE_SIZE,
   ttlAutopurge: TTL_AUTOPURGE,
@@ -41,7 +50,7 @@ const cacheOptions = {
   },
   dispose: async (_value: Uint8Array, key: string) => {
     await Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
-      logger.warning(`Failed to delete ${key}:`, err)
+      failedToDisposeFromCache.add(1, { err })
     );
   },
 };
