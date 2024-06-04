@@ -31,17 +31,6 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         { status: 200 },
       );
     }
-    if (request.url.endsWith("/_resources")) {
-      return new Response(
-        JSON.stringify({
-          // deno-lint-ignore no-deprecated-deno-api
-          resources: Deno.resources(),
-          mem: Deno.memoryUsage(),
-          sys: Deno.systemMemoryInfo(),
-        }),
-        { status: 200 },
-      );
-    }
     const opt = typeof _opt === "function" ? await _opt(request) : _opt;
     contextCache ??= new ContextCache({
       cacheSize: 7, // 7 is arbitrarily chosen

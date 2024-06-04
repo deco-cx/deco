@@ -18,6 +18,9 @@ export interface Metrics {
   latency: {
     median: number;
   };
+  mem: Deno.MemoryUsage;
+  sys: Deno.SystemMemoryInfo;
+  resources: Deno.ResourceMap;
 }
 
 export interface LiveChecker {
@@ -46,7 +49,7 @@ const livenessPath = "/_liveness";
 const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
   let reqCount = 0; // int should be fine as long as we don't have more than 2^53 requests for a single instance.
   let reqInflights = 0;
-  const medianLatency = new Median();
+  const latMedian = new Median();
   const metrics: Metrics = {
     get uptime() {
       return Deno.osUptime();
@@ -59,9 +62,19 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
         return reqInflights;
       },
     },
+    get mem() {
+      return Deno.memoryUsage();
+    },
+    get sys() {
+      return Deno.systemMemoryInfo();
+    },
+    get resources() {
+      // deno-lint-ignore no-deprecated-deno-api
+      return Deno.resources();
+    },
     latency: {
       get median() {
-        return medianLatency.get();
+        return latMedian.get();
       },
     },
   };
@@ -84,7 +97,7 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
         }),
       );
       const failedCheck = results.find(({ check }) => !check);
-      const checks = JSON.stringify(results, null, 2);
+      const checks = JSON.stringify({ checks: results, metrics }, null, 2);
       if (failedCheck) {
         const status = DRY_RUN ? 200 : 503;
         probe.add(1, {
@@ -99,7 +112,7 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
     const start = performance.now();
     return ctx.next().finally(() => {
       const latency = performance.now() - start;
-      medianLatency.add(latency);
+      latMedian.add(latency);
       reqInflights--;
     });
   };
