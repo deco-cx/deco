@@ -27,21 +27,19 @@ export interface LiveChecker {
   ) => Promise<boolean> | boolean;
 }
 
-const envObj = Deno.env.toObject();
-
-const DRY_RUN = envObj.PROBE_DRY_RUN === "true";
+const DRY_RUN = Deno.env.get("PROBE_DRY_RUN") === "true";
 
 const probe = meter.createCounter("probe_failed", {
   unit: "1",
   valueType: ValueType.INT,
 });
 
-export const getProbeThresholdAsNum = (
+export function getProbeThresholdAsNum(
   checkerName: string,
-): number | undefined => {
-  const fromEnv = envObj[`PROBE_${checkerName}_THRESHOLD`];
+): number | undefined {
+  const fromEnv = Deno.env.get(`PROBE_${checkerName}_THRESHOLD`);
   return fromEnv ? +fromEnv : undefined;
-};
+}
 
 const livenessPath = "/_liveness";
 
