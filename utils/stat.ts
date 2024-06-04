@@ -175,12 +175,13 @@ export class Median {
   private minHeap = new MinHeap();
   private removeCount: { [key: number]: number } = {};
   private values: number[] = [];
+  constructor(protected maxSize: number = 500) {}
 
   public add(value: number): void {
     this.values.push(value);
     this.addValue(value);
 
-    if (this.values.length > 500) {
+    if (this.values.length > this.maxSize) {
       const oldValue = this.values.shift();
       if (oldValue !== undefined) {
         this.removeValue(oldValue);
