@@ -13,6 +13,6 @@ export const reqCountChecker: LiveChecker = {
     if (!MAX_REQ_THRESHOLD) {
       return true;
     }
-    return metrics.requestCount < MAX_REQ_THRESHOLD;
+    return metrics.requests.count < MAX_REQ_THRESHOLD;
   },
 };

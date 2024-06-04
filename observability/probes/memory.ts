@@ -1,18 +1,18 @@
 import { getProbeThresholdAsNum, type LiveChecker } from "./handler.ts";
 
-const HEALTHY_RATIO = Deno.env.get("PROBE_MEMORY_HEALTHY_RATIO");
+const MAX_MEMORY_MB = Deno.env.get("MAX_MEMORY_MB");
 
-const healthyRatio = HEALTHY_RATIO ? parseFloat(HEALTHY_RATIO) : 0.81;
-
-const NAME = "MEMORY";
-const MAX_MEM_THRESHOLD_MB = getProbeThresholdAsNum(NAME);
-
+const NAME = "MEMORY_RATIO";
+const MAX_MEM_RATIO = getProbeThresholdAsNum(NAME);
+const MAX_MEMORY_MB_AS_INT = MAX_MEMORY_MB ? +MAX_MEMORY_MB : undefined;
 export const memoryChecker: LiveChecker = {
   name: NAME,
   checker: () => {
-    const available = Deno.systemMemoryInfo().available / 1024;
+    if (!MAX_MEMORY_MB_AS_INT || !MAX_MEM_RATIO) {
+      return true;
+    }
     const usage = Deno.memoryUsage();
     const rssUsageMb = usage.rss / 1024;
-    return rssUsageMb < (healthyRatio * (MAX_MEM_THRESHOLD_MB ?? available));
+    return rssUsageMb < (MAX_MEMORY_MB_AS_INT * MAX_MEM_RATIO);
   },
 };

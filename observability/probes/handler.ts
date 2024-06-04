@@ -1,18 +1,24 @@
-export interface Metrics {
-  uptime: number;
-  requestCount: number;
-  latency: {
-    avg: number;
-  };
-}
-
 import type { MiddlewareHandler } from "$fresh/server.ts";
-import { ValueType } from "deco/deps.ts";
+import { ValueType } from "../../deps.ts";
+import { Median } from "../../utils/stat.ts";
 import { meter } from "../otel/metrics.ts";
-import { avgLatencyChecker } from "./avgLatency.ts";
+import { medianLatencyChecker } from "./medianLatency.ts";
 import { memoryChecker } from "./memory.ts";
 import { reqCountChecker } from "./reqCount.ts";
+import { reqInflightChecker } from "./reqInflight.ts";
+import { resourcesChecker } from "./resources.ts";
 import { upTimeChecker } from "./uptime.ts";
+
+export interface Metrics {
+  uptime: number;
+  requests: {
+    inflight: number;
+    count: number;
+  };
+  latency: {
+    median: number;
+  };
+}
 
 export interface LiveChecker {
   name: string;
@@ -41,17 +47,23 @@ const livenessPath = "/_liveness";
 
 const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
   let reqCount = 0; // int should be fine as long as we don't have more than 2^53 requests for a single instance.
-  let avgLatency = 0;
+  let reqInflights = 0;
+  const medianLatency = new Median();
   const metrics: Metrics = {
     get uptime() {
       return Deno.osUptime();
     },
-    get requestCount() {
-      return reqCount;
+    requests: {
+      get count() {
+        return reqCount;
+      },
+      get inflight() {
+        return reqInflights;
+      },
     },
     latency: {
-      get avg() {
-        return avgLatency;
+      get median() {
+        return medianLatency.get();
       },
     },
   };
@@ -64,7 +76,13 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
     ) {
       const results = await Promise.all(
         checkers.map(async ({ checker, name }) => {
-          return { check: await checker(metrics), name };
+          try {
+            return { check: await checker(metrics), name };
+          } catch (_err) {
+            console.error(`error while checking ${name}`);
+            // does not consider as check false since it could be a bug
+            return { check: true, name } as { check: boolean; name: string };
+          }
         }),
       );
       const failedCheck = results.find(({ check }) => !check);
@@ -79,10 +97,12 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
       return new Response(checks, { status: 200 });
     }
     reqCount++;
+    reqInflights++;
     const start = performance.now();
     return ctx.next().finally(() => {
-      avgLatency = (avgLatency * (reqCount - 1) + performance.now() - start) /
-        reqCount;
+      const latency = performance.now() - start;
+      medianLatency.add(latency);
+      reqInflights--;
     });
   };
 };
@@ -91,5 +111,7 @@ export const liveness = buildHandler(
   memoryChecker,
   upTimeChecker,
   reqCountChecker,
-  avgLatencyChecker,
+  medianLatencyChecker,
+  reqInflightChecker,
+  resourcesChecker,
 );
