@@ -1,6 +1,5 @@
 import type { MiddlewareHandler } from "$fresh/server.ts";
 import { logger } from "deco/mod.ts";
-import { isWindows } from "std/path/_os.ts";
 import { ValueType } from "../../deps.ts";
 import { meter } from "../otel/metrics.ts";
 import { medianLatencyChecker } from "./medianLatency.ts";
@@ -69,7 +68,6 @@ const buildHandler = (
       }
     });
   };
-  isWindows;
   try {
     if (Deno.build.os !== "windows") {
       Deno.addSignalListener("SIGTERM", () => {
