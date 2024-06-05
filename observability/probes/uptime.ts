@@ -17,7 +17,7 @@ export const uptimeChecker: LiveChecker = {
   name: NAME,
   get: () => {
     const startedAtSeconds = context.instance.startedAt.getTime() / 1000;
-    const nowSeconds = Date.now();
+    const nowSeconds = Date.now() / 1000;
     return nowSeconds - startedAtSeconds;
   },
   print: (uptime) => {
