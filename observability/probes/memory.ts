@@ -7,11 +7,19 @@ const MAX_MEM_RATIO = getProbeThresholdAsNum(NAME);
 const MAX_MEMORY_MB_AS_INT = MAX_MEMORY_MB ? +MAX_MEMORY_MB : undefined;
 export const memoryChecker: LiveChecker = {
   name: NAME,
-  checker: ({ mem: { rss } }) => {
+  observed: () => Deno.memoryUsage().rss / 1024,
+  beautify: (rss) => {
+    return {
+      ratio: MAX_MEM_RATIO,
+      max: MAX_MEMORY_MB,
+      usage: rss / (Deno.systemMemoryInfo().total / 1024),
+      rss,
+    };
+  },
+  check: (rss) => {
     if (!MAX_MEMORY_MB_AS_INT || !MAX_MEM_RATIO) {
       return true;
     }
-    const rssUsageMb = rss / 1024;
-    return rssUsageMb < (MAX_MEMORY_MB_AS_INT * MAX_MEM_RATIO);
+    return rss < (MAX_MEMORY_MB_AS_INT * MAX_MEM_RATIO);
   },
 };

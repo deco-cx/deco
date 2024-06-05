@@ -1,6 +1,5 @@
 import type { MiddlewareHandler } from "$fresh/server.ts";
 import { ValueType } from "../../deps.ts";
-import { Median } from "../../utils/stat.ts";
 import { meter } from "../otel/metrics.ts";
 import { medianLatencyChecker } from "./medianLatency.ts";
 import { memoryChecker } from "./memory.ts";
@@ -23,12 +22,17 @@ export interface Metrics {
   resources: Deno.ResourceMap;
 }
 
-export interface LiveChecker {
+export interface LiveChecker<TValue = number> {
   name: string;
-  checker: (
-    metrics: Metrics,
-  ) => Promise<boolean> | boolean;
+  observed: () => TValue;
+  observe?: (
+    req: Request,
+  ) => { end: (response?: Response) => void } | void;
+  beautify(val: TValue): unknown;
+  check: (val: TValue) => Promise<boolean> | boolean;
 }
+
+export const NOOP = { end: () => {} };
 
 const DRY_RUN = Deno.env.get("PROBE_DRY_RUN") === "true";
 
@@ -46,38 +50,10 @@ export function getProbeThresholdAsNum(
 
 const livenessPath = "/_liveness";
 
-const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
-  let reqCount = 0; // int should be fine as long as we don't have more than 2^53 requests for a single instance.
-  let reqInflights = 0;
-  const latMedian = new Median();
-  const metrics: Metrics = {
-    get uptime() {
-      return Deno.osUptime();
-    },
-    requests: {
-      get count() {
-        return reqCount;
-      },
-      get inflight() {
-        return reqInflights;
-      },
-    },
-    get mem() {
-      return Deno.memoryUsage();
-    },
-    get sys() {
-      return Deno.systemMemoryInfo();
-    },
-    get resources() {
-      // deno-lint-ignore no-deprecated-deno-api
-      return Deno.resources();
-    },
-    latency: {
-      get median() {
-        return latMedian.get();
-      },
-    },
-  };
+const buildHandler = (
+  // deno-lint-ignore no-explicit-any
+  ...checkers: LiveChecker<any>[]
+): MiddlewareHandler => {
   return async (
     req,
     ctx,
@@ -86,18 +62,22 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
       ctx?.url?.pathname === livenessPath || req.url.endsWith(livenessPath)
     ) {
       const results = await Promise.all(
-        checkers.map(async ({ checker, name }) => {
+        checkers.map(async ({ check, name, observed, beautify }) => {
           try {
-            return { check: await checker(metrics), name };
+            const val = observed();
+            return { check: await check(val), name, probe: beautify(val) };
           } catch (_err) {
             console.error(`error while checking ${name}`);
             // does not consider as check false since it could be a bug
-            return { check: true, name } as { check: boolean; name: string };
+            return { check: true, name, probe: undefined } as {
+              check: boolean;
+              name: string;
+            };
           }
         }),
       );
       const failedCheck = results.find(({ check }) => !check);
-      const checks = JSON.stringify({ checks: results, metrics }, null, 2);
+      const checks = JSON.stringify({ checks: results }, null, 2);
       if (failedCheck) {
         const status = DRY_RUN ? 200 : 503;
         probe.add(1, {
@@ -107,13 +87,13 @@ const buildHandler = (...checkers: LiveChecker[]): MiddlewareHandler => {
       }
       return new Response(checks, { status: 200 });
     }
-    reqCount++;
-    reqInflights++;
-    const start = performance.now();
-    return ctx.next().finally(() => {
-      const latency = performance.now() - start;
-      latMedian.add(latency);
-      reqInflights--;
+
+    const end = checkers.map(({ observe }) => {
+      return observe?.(req);
+    });
+    let response: Response | undefined = undefined;
+    return ctx.next().then((resp) => response = resp).finally(() => {
+      end.forEach((e) => e?.end(response));
     });
   };
 };

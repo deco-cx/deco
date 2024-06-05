@@ -1,18 +1,25 @@
-import {
-    getProbeThresholdAsNum,
-    type LiveChecker,
-    type Metrics,
-} from "./handler.ts";
+import { getProbeThresholdAsNum, type LiveChecker } from "./handler.ts";
 
 const NAME = "MAX_REQUEST_COUNT";
 const MAX_REQ_THRESHOLD = getProbeThresholdAsNum(NAME);
 
+let reqCount = 0;
 export const reqCountChecker: LiveChecker = {
   name: NAME,
-  checker: ({ requests: { count } }: Metrics) => {
+  observed: () => reqCount,
+  beautify: (value) => {
+    return {
+      value,
+      threshold: MAX_REQ_THRESHOLD,
+    };
+  },
+  check: (value) => {
     if (!MAX_REQ_THRESHOLD) {
       return true;
     }
-    return count < MAX_REQ_THRESHOLD;
+    return value < MAX_REQ_THRESHOLD!;
+  },
+  observe: () => {
+    reqCount++;
   },
 };

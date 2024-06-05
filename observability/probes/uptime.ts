@@ -1,15 +1,18 @@
-import {
-  getProbeThresholdAsNum,
-  type LiveChecker,
-  type Metrics,
-} from "./handler.ts";
+import { getProbeThresholdAsNum, type LiveChecker } from "./handler.ts";
 
 const NAME = "UPTIME";
 const MAX_UPTIME_THRESHOLD = getProbeThresholdAsNum(NAME);
 
 export const upTimeChecker: LiveChecker = {
   name: NAME,
-  checker: ({ uptime }: Metrics) => {
+  observed: () => Deno.osUptime(),
+  beautify: (value) => {
+    return {
+      value,
+      threshold: MAX_UPTIME_THRESHOLD,
+    };
+  },
+  check: (uptime) => {
     if (!MAX_UPTIME_THRESHOLD) {
       return true;
     }
