@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from "$fresh/server.ts";
+import { logger } from "deco/mod.ts";
 import { ValueType } from "../../deps.ts";
 import { meter } from "../otel/metrics.ts";
 import { medianLatencyChecker } from "./medianLatency.ts";
@@ -46,7 +47,7 @@ export function getProbeThresholdAsNum(
   return fromEnv ? +fromEnv : undefined;
 }
 
-const livenessPath = "/_liveness";
+const livenessPath = "/deco/_liveness";
 
 const buildHandler = (
   // deno-lint-ignore no-explicit-any
@@ -68,7 +69,8 @@ const buildHandler = (
     });
   };
   Deno.addSignalListener("SIGTERM", () => {
-    console.log(runChecks());
+    const checks = runChecks();
+    console.log(checks);
     self.close();
   });
   return (
@@ -87,6 +89,14 @@ const buildHandler = (
         probe.add(1, {
           name: failedCheck.name,
         });
+        const msg = `liveness probe failed: ${failedCheck.name}`;
+        logger.error(msg, {
+          probe_failed: true,
+          failed_check: failedCheck.name,
+          dry_run: DRY_RUN,
+          probe: checks,
+        });
+        console.error(msg, checks);
         return new Response(checks, { status });
       }
       return new Response(checks, { status: 200 });

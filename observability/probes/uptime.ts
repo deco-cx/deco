@@ -1,8 +1,9 @@
 import { getProbeThresholdAsNum, type LiveChecker } from "./handler.ts";
 
+const MINUTE = 60;
 // a jitter is used to avoid multiple probes failing at the same time
-const UP_TIME_JITTER_MAX_SECONDS = 5;
-const UP_TIME_JITTER_MIN_SECONDS = 1;
+const UP_TIME_JITTER_MAX_SECONDS = 5 * MINUTE;
+const UP_TIME_JITTER_MIN_SECONDS = 1 * MINUTE;
 
 const uptimeJitterSeconds =
   Math.random() * (UP_TIME_JITTER_MAX_SECONDS - UP_TIME_JITTER_MIN_SECONDS) +

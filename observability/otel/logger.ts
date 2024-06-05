@@ -128,6 +128,7 @@ export class OpenTelemetryHandler extends log.handlers.BaseHandler {
 
   override handle(logRecord: LogRecord) {
     if (this.level > logRecord.level) return;
+    const firstArg = logRecord?.args?.[0];
 
     const otelSeverityNumber = this.toOtelSeverityNumber(logRecord.level);
 
@@ -137,6 +138,7 @@ export class OpenTelemetryHandler extends log.handlers.BaseHandler {
         UNSPECIFIED_SEVERITY_TEXT,
       body: logRecord.msg,
       attributes: {
+        ...typeof firstArg === "object" ? firstArg : {},
         loggerName: logRecord.loggerName,
       },
     });
