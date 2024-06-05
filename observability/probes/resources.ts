@@ -1,12 +1,12 @@
 // deno-lint-ignore-file no-deprecated-deno-api
 import { getProbeThresholdAsNum, type LiveChecker } from "./handler.ts";
 
-const NAME = "OPENED_RESOURCES";
+const NAME = "MAX_OPENED_RESOURCES";
 const MAX_RESOURCES_OPENED = getProbeThresholdAsNum(NAME);
 export const resourcesChecker: LiveChecker<Deno.ResourceMap> = {
   name: NAME,
   observed: () => Deno.resources(),
-  beautify: (resources) => {
+  print: (resources) => {
     return {
       opened: Object.keys(resources).length,
       max: MAX_RESOURCES_OPENED,

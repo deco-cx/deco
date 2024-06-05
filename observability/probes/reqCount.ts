@@ -7,9 +7,9 @@ let reqCount = 0;
 export const reqCountChecker: LiveChecker = {
   name: NAME,
   observed: () => reqCount,
-  beautify: (value) => {
+  print: (count) => {
     return {
-      value,
+      count,
       threshold: MAX_REQ_THRESHOLD,
     };
   },

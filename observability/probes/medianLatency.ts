@@ -1,7 +1,7 @@
 import { Median } from "../../utils/stat.ts";
 import { getProbeThresholdAsNum, type LiveChecker, NOOP } from "./handler.ts";
 
-const NAME = "MEDIAN_LATENCY";
+const NAME = "MAX_MEDIAN_LATENCY";
 const MEDIAN_LATENCY_THRESHOLD = getProbeThresholdAsNum(NAME);
 
 const latMedian = new Median();
@@ -9,8 +9,8 @@ const latMedian = new Median();
 export const medianLatencyChecker: LiveChecker = {
   name: NAME,
   observed: () => latMedian.get(),
-  beautify: (value) => ({
-    value,
+  print: (latency) => ({
+    latency,
     threshold: MEDIAN_LATENCY_THRESHOLD,
   }),
   check: (value) => {

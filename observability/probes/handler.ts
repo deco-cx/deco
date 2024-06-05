@@ -6,7 +6,7 @@ import { memoryChecker } from "./memory.ts";
 import { reqCountChecker } from "./reqCount.ts";
 import { reqInflightChecker } from "./reqInflight.ts";
 import { resourcesChecker } from "./resources.ts";
-import { upTimeChecker } from "./uptime.ts";
+import { uptimeChecker } from "./uptime.ts";
 
 export interface Metrics {
   uptime: number;
@@ -28,7 +28,7 @@ export interface LiveChecker<TValue = number> {
   observe?: (
     req: Request,
   ) => { end: (response?: Response) => void } | void;
-  beautify(val: TValue): unknown;
+  print: (val: TValue) => unknown;
   check: (val: TValue) => Promise<boolean> | boolean;
 }
 
@@ -62,10 +62,10 @@ const buildHandler = (
       ctx?.url?.pathname === livenessPath || req.url.endsWith(livenessPath)
     ) {
       const results = await Promise.all(
-        checkers.map(async ({ check, name, observed, beautify }) => {
+        checkers.map(async ({ check, name, observed, print }) => {
           try {
             const val = observed();
-            return { check: await check(val), name, probe: beautify(val) };
+            return { check: await check(val), name, probe: print(val) };
           } catch (_err) {
             console.error(`error while checking ${name}`);
             // does not consider as check false since it could be a bug
@@ -100,7 +100,7 @@ const buildHandler = (
 
 export const liveness = buildHandler(
   memoryChecker,
-  upTimeChecker,
+  uptimeChecker,
   reqCountChecker,
   medianLatencyChecker,
   reqInflightChecker,

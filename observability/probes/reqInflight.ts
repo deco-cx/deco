@@ -6,7 +6,7 @@ let inflightCount = 0;
 export const reqInflightChecker: LiveChecker = {
   name: NAME,
   observed: () => inflightCount,
-  beautify: (inflight) => {
+  print: (inflight) => {
     return {
       inflight,
       threshold: MAX_REQ_INFLIGHT,
