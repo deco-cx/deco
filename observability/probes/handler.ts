@@ -32,8 +32,6 @@ export interface LiveChecker<TValue = number> {
   check: (val: TValue) => Promise<boolean> | boolean;
 }
 
-export const NOOP = { end: () => {} };
-
 const DRY_RUN = Deno.env.get("PROBE_DRY_RUN") === "true";
 
 const probe = meter.createCounter("probe_failed", {
