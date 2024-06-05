@@ -13,7 +13,7 @@ const MAX_UPTIME_THRESHOLD = getProbeThresholdAsNum(NAME);
 
 export const uptimeChecker: LiveChecker = {
   name: NAME,
-  observed: () => Deno.osUptime(),
+  get: () => Deno.osUptime(),
   print: (uptime) => {
     return {
       uptime,

@@ -8,7 +8,7 @@ const latMedian = new Median();
 
 export const medianLatencyChecker: LiveChecker = {
   name: NAME,
-  observed: () => latMedian.get(),
+  get: () => latMedian.get(),
   print: (latency) => ({
     latency,
     threshold: MEDIAN_LATENCY_THRESHOLD,

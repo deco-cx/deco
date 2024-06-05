@@ -6,7 +6,7 @@ const MAX_REQ_THRESHOLD = getProbeThresholdAsNum(NAME);
 let reqCount = 0;
 export const reqCountChecker: LiveChecker = {
   name: NAME,
-  observed: () => reqCount,
+  get: () => reqCount,
   print: (count) => {
     return {
       count,

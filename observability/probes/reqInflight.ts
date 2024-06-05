@@ -5,7 +5,7 @@ const MAX_REQ_INFLIGHT = getProbeThresholdAsNum(NAME);
 let inflightCount = 0;
 export const reqInflightChecker: LiveChecker = {
   name: NAME,
-  observed: () => inflightCount,
+  get: () => inflightCount,
   print: (inflight) => {
     return {
       inflight,

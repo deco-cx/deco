@@ -5,7 +5,7 @@ const NAME = "MAX_OPENED_RESOURCES";
 const MAX_RESOURCES_OPENED = getProbeThresholdAsNum(NAME);
 export const resourcesChecker: LiveChecker<Deno.ResourceMap> = {
   name: NAME,
-  observed: () => Deno.resources(),
+  get: () => Deno.resources(),
   print: (resources) => {
     return {
       opened: Object.keys(resources).length,

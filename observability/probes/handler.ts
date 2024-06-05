@@ -24,7 +24,7 @@ export interface Metrics {
 
 export interface LiveChecker<TValue = number> {
   name: string;
-  observed: () => TValue;
+  get: () => TValue;
   observe?: (
     req: Request,
   ) => { end: (response?: Response) => void } | void;
@@ -62,9 +62,9 @@ const buildHandler = (
       ctx?.url?.pathname === livenessPath || req.url.endsWith(livenessPath)
     ) {
       const results = await Promise.all(
-        checkers.map(async ({ check, name, observed, print }) => {
+        checkers.map(async ({ check, name, get, print }) => {
           try {
-            const val = observed();
+            const val = get();
             return { check: await check(val), name, probe: print(val) };
           } catch (_err) {
             console.error(`error while checking ${name}`);
