@@ -1,3 +1,4 @@
+import { context } from "../../live.ts";
 import { getProbeThresholdAsNum, type LiveChecker } from "./handler.ts";
 
 const MINUTE = 60;
@@ -14,7 +15,11 @@ const MAX_UPTIME_THRESHOLD = getProbeThresholdAsNum(NAME);
 
 export const uptimeChecker: LiveChecker = {
   name: NAME,
-  get: () => Deno.osUptime(),
+  get: () => {
+    const startedAtSeconds = context.instance.startedAt.getTime() / 1000;
+    const nowSeconds = Date.now();
+    return nowSeconds - startedAtSeconds;
+  },
   print: (uptime) => {
     return {
       uptime,
