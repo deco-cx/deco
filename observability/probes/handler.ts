@@ -69,16 +69,17 @@ const buildHandler = (
       }
     });
   };
-  if (!isWindows) {
-    try {
+  isWindows;
+  try {
+    if (Deno.build.os !== "windows") {
       Deno.addSignalListener("SIGTERM", () => {
         const checks = runChecks();
         console.log(checks);
         self.close();
       });
-    } catch (err) {
-      console.error(`could not add signal handler ${err}`);
     }
+  } catch (err) {
+    console.error(`could not add signal handler ${err}`);
   }
   return (
     req,
