@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from "$fresh/server.ts";
 import { logger } from "deco/mod.ts";
+import { isWindows } from "std/path/_os.ts";
 import { ValueType } from "../../deps.ts";
 import { meter } from "../otel/metrics.ts";
 import { medianLatencyChecker } from "./medianLatency.ts";
@@ -68,11 +69,17 @@ const buildHandler = (
       }
     });
   };
-  Deno.addSignalListener("SIGTERM", () => {
-    const checks = runChecks();
-    console.log(checks);
-    self.close();
-  });
+  if (!isWindows) {
+    try {
+      Deno.addSignalListener("SIGTERM", () => {
+        const checks = runChecks();
+        console.log(checks);
+        self.close();
+      });
+    } catch (err) {
+      console.error(`could not add signal handler ${err}`);
+    }
+  }
   return (
     req,
     ctx,
