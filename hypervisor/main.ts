@@ -80,7 +80,7 @@ for (const [_signal, shouldExit] of Object.entries(signals)) {
         // shutdown?.();
         hypervisor.shutdown?.();
         p.finally(() => {
-          Deno.exit(0);
+          self.close();
         });
       }
     });

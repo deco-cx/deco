@@ -29,7 +29,7 @@ export interface LiveChecker<TValue = number> {
     req: Request,
   ) => { end: (response?: Response) => void } | void;
   print: (val: TValue) => unknown;
-  check: (val: TValue) => Promise<boolean> | boolean;
+  check: (val: TValue) => boolean;
 }
 
 const DRY_RUN = Deno.env.get("PROBE_DRY_RUN") === "true";
@@ -52,28 +52,34 @@ const buildHandler = (
   // deno-lint-ignore no-explicit-any
   ...checkers: LiveChecker<any>[]
 ): MiddlewareHandler => {
-  return async (
+  const runChecks = () => {
+    return checkers.map(({ check, name, get, print }) => {
+      try {
+        const val = get();
+        return { check: check(val), name, probe: print(val) };
+      } catch (_err) {
+        console.error(`error while checking ${name}`);
+        // does not consider as check false since it could be a bug
+        return { check: true, name, probe: undefined } as {
+          check: boolean;
+          name: string;
+        };
+      }
+    });
+  };
+  Deno.addSignalListener("SIGTERM", () => {
+    console.log(runChecks());
+    self.close();
+  });
+  return (
     req,
     ctx,
   ) => {
     if (
       ctx?.url?.pathname === livenessPath || req.url.endsWith(livenessPath)
     ) {
-      const results = await Promise.all(
-        checkers.map(async ({ check, name, get, print }) => {
-          try {
-            const val = get();
-            return { check: await check(val), name, probe: print(val) };
-          } catch (_err) {
-            console.error(`error while checking ${name}`);
-            // does not consider as check false since it could be a bug
-            return { check: true, name, probe: undefined } as {
-              check: boolean;
-              name: string;
-            };
-          }
-        }),
-      );
+      const results = runChecks();
+
       const failedCheck = results.find(({ check }) => !check);
       const checks = JSON.stringify({ checks: results }, null, 2);
       if (failedCheck) {
