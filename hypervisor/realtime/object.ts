@@ -13,8 +13,9 @@ import { type File, gitIgnore, type RealtimeState } from "../deps.ts";
 const encoder = new TextEncoder();
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEPLOYMENT_ID = Deno.env.get("DENO_DEPLOYMENT_ID");
+const TRANSIENT_ENVIRONMENT = Deno.env.get("DECO_TRANSIENT_ENV") === "true";
 const SHOULD_PERSIST_STATE = SOURCE_PATH !== undefined &&
-  DEPLOYMENT_ID !== undefined;
+  DEPLOYMENT_ID !== undefined && !TRANSIENT_ENVIRONMENT;
 const CHANGESET_FILE = "/.metadata/changeset.json";
 const IGNORE_FILES_GLOB = [".git/**"];
 type RealtimeStorage = RealtimeState["storage"];
