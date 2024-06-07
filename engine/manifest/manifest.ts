@@ -513,7 +513,15 @@ function findResolver(
   currResolvables: Record<string, any>,
 ) {
   let resolver: Resolver | undefined = undefined;
+  const seen = new Set<string>();
   while (true) {
+    if (seen.has(currentResolveType)) {
+      console.warn(
+        `a loop was detected when trying to resolve ${currentResolveType}`,
+      );
+      break;
+    }
+    seen.add(currentResolveType);
     resolver = currResolvers[currentResolveType];
     if (resolver !== undefined) {
       break;
