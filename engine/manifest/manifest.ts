@@ -172,7 +172,7 @@ const installAppsForResolver = async (
   let manifest = initialManifest;
   let importMap = initialImportMap;
   const fakeCtx = newFakeContext();
-  const unresolved: Record<string, Resolvable> = {};
+  const unresolved: Record<string, Set<Resolvable>> = {};
   const allAppsMap: Record<string, Resolvable> = {};
 
   let currentResolver = resolver;
@@ -200,7 +200,8 @@ const installAppsForResolver = async (
         hooks: {
           onDanglingReference: (resolveType) => {
             // if the app is not resolved, we should keep it for the next round
-            unresolved[resolveType] = app;
+            unresolved[resolveType] ??= new Set([]);
+            unresolved[resolveType].add(app);
           },
         },
       });
@@ -262,11 +263,14 @@ const installAppsForResolver = async (
 
     // after an installation new resolvers become available so now we can check if we can resolve them.
     const newAvailableAppsToInstall: Set<Resolvable> = new Set<Resolvable>();
-    for (const [key, app] of Object.entries(unresolved)) {
-      if (key in currentResolver.getResolvers()) {
-        newAvailableAppsToInstall.add(app);
-        delete unresolved[key];
+    for (const [key, apps] of Object.entries(unresolved)) {
+      for (const app of apps) {
+        if (key in currentResolver.getResolvers()) {
+          newAvailableAppsToInstall.add(app);
+        }
       }
+
+      delete unresolved[key];
     }
     await installInstallableApps([...newAvailableAppsToInstall]);
   } while (true);
@@ -278,10 +282,12 @@ const installAppsForResolver = async (
       ),
     );
     const table: Record<string, string[]> = {};
-    for (const [key, app] of Object.entries(unresolved)) {
-      const type = app.__resolveType;
-      table[type] ??= [];
-      table[type].push(key);
+    for (const [key, apps] of Object.entries(unresolved)) {
+      for (const app of apps) {
+        const type = app.__resolveType;
+        table[type] ??= [];
+        table[type].push(key);
+      }
     }
     console.table(
       Object.entries(table).map(([type, keys]) => {
