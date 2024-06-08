@@ -14,7 +14,7 @@ export const memoryChecker: LiveChecker = {
     return {
       ratio: MAX_MEM_RATIO,
       max: MAX_MEMORY_MB,
-      usage: rss / (Deno.systemMemoryInfo().total / MB),
+      usage: rss / (MAX_MEMORY_MB_AS_INT ?? (Deno.systemMemoryInfo().total / MB)),
       rss,
     };
   },
