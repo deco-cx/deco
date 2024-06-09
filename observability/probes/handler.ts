@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "$fresh/server.ts";
-import { logger } from "deco/mod.ts";
 import { ValueType } from "../../deps.ts";
+import { logger } from "../otel/config.ts";
 import { meter } from "../otel/metrics.ts";
 import { medianLatencyChecker } from "./medianLatency.ts";
 import { memoryChecker } from "./memory.ts";
