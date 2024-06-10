@@ -124,6 +124,7 @@ export const handler = async (
   };
 
   let page;
+  let shouldCache = false;
 
   try {
     page = await ctx.state.resolve(
@@ -131,6 +132,8 @@ export const handler = async (
       resolveChain ? { resolveChain } : undefined,
       original,
     );
+
+    shouldCache = req.method === "GET";
   } catch (err) {
     if (err instanceof HttpError) {
       // we are creating a section with client side redirect
@@ -168,9 +171,26 @@ export const handler = async (
     }
   }
 
-  return ctx.state.resolve(
+  const response = await ctx.state.resolve(
     { page, __resolveType: "render" },
     { propsAreResolved: true },
     original,
-  ) as unknown as Promise<Response>;
+  ) as unknown as Response;
+
+  const etag = (ctx.url || new URL(req.url)).searchParams.get("__cb");
+
+  const ifNoneMatch = req.headers.get("if-none-match");
+  if (etag && (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`)) {
+    return new Response(null, { status: 304, headers: { etag } });
+  }
+
+  if (shouldCache && etag) {
+    response.headers.set("etag", etag);
+    response.headers.set(
+      "cache-control",
+      "public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400",
+    );
+  }
+
+  return response;
 };

@@ -9,6 +9,7 @@ import type {
   ReadOptions,
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
+import { Context } from "deco/live.ts";
 
 export const BLOCKS_FOLDER = "blocks";
 
@@ -38,7 +39,7 @@ export const newFsFolderProviderFromPath = (
       }
       return {
         state: decofile,
-        revision: `${Date.now()}`,
+        revision: Context.active().deploymentId ?? `${Date.now()}`,
       };
     },
   ).then((result) => {
