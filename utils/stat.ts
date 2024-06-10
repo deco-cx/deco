@@ -175,7 +175,7 @@ export class Median {
   private minHeap = new MinHeap();
   private removeCount: { [key: number]: number } = {};
   private values: number[] = [];
-  constructor(protected maxSize: number = 500) {}
+  constructor(protected maxSize: number = 100) {}
 
   public add(value: number): void {
     this.values.push(value);
