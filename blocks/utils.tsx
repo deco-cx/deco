@@ -74,6 +74,7 @@ export const createBagKey = (description: string): symbol =>
  * Values that are fulfilled for every request
  */
 export interface RequestState {
+  vary: string[];
   response: {
     headers: Headers;
     status?: Status;

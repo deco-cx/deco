@@ -1,6 +1,6 @@
+import type { RequestState } from "deco/blocks/utils.tsx";
 import { Context } from "deco/deco.ts";
 import { defaultHeaders } from "deco/utils/http.ts";
-import type { RequestState } from "deco/blocks/utils.tsx";
 
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle
@@ -40,6 +40,7 @@ export function initializeState(baseState?: Partial<RequestState>) {
   const state = baseState ?? {};
   state.response = response;
   state.bag = new WeakMap();
+  state.vary = [];
   state.flags = [];
 
   return {
