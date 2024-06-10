@@ -186,6 +186,9 @@ export const handler = async (
 
   if (shouldCache && etag) {
     response.headers.set("etag", etag);
+
+    // Stale cache on CDN, but make the browser fetch every single time.
+    // We can test if caching on the browser helps too.
     response.headers.set(
       "cache-control",
       "public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400",
