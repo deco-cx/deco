@@ -1,5 +1,6 @@
 import { debounce } from "std/async/debounce.ts";
 import { basename, join } from "std/path/mod.ts";
+import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
 import type {
@@ -9,7 +10,6 @@ import type {
   ReadOptions,
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
-import { Context } from "deco/live.ts";
 
 export const BLOCKS_FOLDER = "blocks";
 
