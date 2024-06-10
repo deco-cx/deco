@@ -187,6 +187,7 @@ const wrapLoader = (
           return await handler(props, req, ctx);
         }
 
+        ctx.vary && ctx.vary.push(loader, cacheKeyValue);
         if (countCache === null) {
           countCache = new weakcache.WeakLRUCache({
             cacheSize: LOADER_CACHE_SIZE,

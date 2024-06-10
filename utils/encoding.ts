@@ -1,5 +1,4 @@
 import { encode } from "std/encoding/hex.ts";
-
 /**
  * Takes an arbitrary string and converts to its sha256 hex representation.
  * @param str the string that will be converted

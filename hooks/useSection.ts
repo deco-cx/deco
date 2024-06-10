@@ -4,6 +4,10 @@ import { SectionContext } from "../components/section.tsx";
 import { IS_BROWSER } from "../deps.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 
+import { Murmurhash3 } from "../deps.ts";
+
+const hasher = new Murmurhash3();
+
 export type Options<P> = {
   /** Section props partially applied */
   props?: Partial<P extends ComponentType<infer K> ? K : P>;
@@ -16,6 +20,13 @@ export const useSection = <P>(
   { props = {}, href }: Pick<Options<P>, "href" | "props"> = {},
 ) => {
   const ctx = useContext(SectionContext);
+  const revisionId = ctx?.revision;
+  const cbString = `${revisionId}|${ctx?.context.state.vary.sort().join()}`;
+  hasher.hash(
+    cbString,
+  );
+  const cb = hasher.result();
+  hasher.reset();
 
   if (IS_BROWSER) {
     throw new Error("Partials cannot be used inside an Island!");
@@ -33,6 +44,7 @@ export const useSection = <P>(
     ["pathTemplate", pathTemplate],
     ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     ["framework", ctx.framework],
+    ["__cb", `${cb}`],
   ]);
 
   if ((props as any)?.__resolveType === undefined) {

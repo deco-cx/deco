@@ -1,5 +1,6 @@
 import { debounce } from "std/async/debounce.ts";
 import { basename, join } from "std/path/mod.ts";
+import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
 import type {
@@ -38,7 +39,7 @@ export const newFsFolderProviderFromPath = (
       }
       return {
         state: decofile,
-        revision: `${Date.now()}`,
+        revision: Context.active().deploymentId ?? `${Date.now()}`,
       };
     },
   ).then((result) => {
