@@ -10,7 +10,7 @@ const bindings: Framework = {
         <button
           hx-get={useSection()}
           hx-target="closest section"
-          hx-swap="outerHTML"
+          hx-swap="outerHTML transition:true"
         >
           Retry
         </button>
@@ -23,7 +23,7 @@ const bindings: Framework = {
         hx-get={useSection()}
         hx-trigger="intersect once"
         hx-target="closest section"
-        hx-swap="outerHTML"
+        hx-swap="outerHTML transition:true"
       >
         {children}
       </div>
