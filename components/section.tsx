@@ -12,6 +12,7 @@ import { logger } from "../observability/otel/config.ts";
 import FreshBindings from "../runtime/fresh/Bindings.tsx";
 import HTMXBindings from "../runtime/htmx/Bindings.tsx";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
+import { useSection } from "deco/hooks/useSection.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
@@ -161,6 +162,17 @@ export const withSection = <TProps,>(
       const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
       renderCount = ++renderCount % MAX_RENDER_COUNT;
 
+      const Alter = () => (
+        <div
+          hx-get={useSection({ props: { ...props, $$r: true } })}
+          hx-trigger="load"
+          hx-target="closest section"
+          hx-swap="outerHTML"
+        />
+      );
+
+      const comp = <ComponentFunc {...props} />;
+
       return (
         <SectionContext.Provider
           value={{
@@ -202,7 +214,9 @@ export const withSection = <TProps,>(
                     )
                 )}
               >
-                <ComponentFunc {...props} />
+                {!props?.$$r && resolver !== "htmx/sections/htmx.tsx"
+                  ? <Alter />
+                  : comp}
               </ErrorBoundary>
             </section>
           </binding.Wrapper>
