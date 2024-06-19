@@ -190,7 +190,8 @@ export class Median {
   }
 
   public get(): number {
-    return this.calculateMedian();
+    const median = this.calculateMedian();
+    return isNaN(median) ? 0 : median;
   }
 
   private addValue(value: number): void {
