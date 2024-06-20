@@ -6,8 +6,8 @@ import {
   type Resolvable,
 } from "../../../engine/core/resolver.ts";
 import { badRequest, HttpError } from "../../../engine/errors.ts";
+import { useScriptAsDataURI } from "deco/hooks/useScript.ts";
 import type { DecoSiteState, DecoState } from "../../../types.ts";
-import { scriptAsDataURI } from "../../../utils/dataURI.ts";
 
 interface Options {
   resolveChain?: FieldResolver[];
@@ -161,7 +161,7 @@ export const handler = async (
                 <script
                   type="text/javascript"
                   defer
-                  src={scriptAsDataURI(snippet, props.url)}
+                  src={useScriptAsDataURI(snippet, props.url)}
                 />
               </div>
             </binding.Wrapper>
