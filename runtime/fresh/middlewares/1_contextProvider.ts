@@ -55,7 +55,9 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       } else {
         const fromEnvSiteName = siteNameFromEnv();
         if (!fromEnvSiteName && Context.active().isDeploy) {
-          throw new Error("DECO_SITE_NAME env var not defined.");
+          console.warn(
+            "DECO_SITE_NAME env var not defined. A random site name will be used, be aware that logs and metrics will not be collected properly.",
+          );
         }
         siteName = fromEnvSiteName ?? randomSiteName();
         releaseProviderPromise = getProvider(
