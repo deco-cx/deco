@@ -4,8 +4,9 @@ import {
   caches as cachesFileSystem,
   isFileSystemAvailable,
 } from "./fileSystem.ts";
-import { caches as redisCache, redis } from "./redis.ts";
-import { caches as cachesS3, isS3Available } from "./s3.ts";
+// TODO(mcandeia) s3 and redis is not being used and together they are 30% of the bundle size of deco, so we should remove them for now and add it dinamically later.
+// import { caches as redisCache, redis } from "./redis.ts";
+// import { caches as cachesS3, isS3Available } from "./s3.ts";
 import { createTieredCache } from "./tiered.ts";
 
 export const ENABLE_LOADER_CACHE =
@@ -21,17 +22,23 @@ export interface CacheStorageOption {
 }
 
 export type CacheEngine =
-  | "REDIS"
+  // TODO (mcandeia) see line 7.
+  // | "REDIS"
+  // | "S3";
   | "KV"
   | "CACHE_API"
-  | "FILE_SYSTEM"
-  | "S3";
+  | "FILE_SYSTEM";
 
 const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
-  REDIS: {
-    implementation: redisCache,
-    isAvailable: redis !== null,
-  },
+  // TODO (mcandeia) see line 7
+  // REDIS: {
+  //   implementation: redisCache,
+  //   isAvailable: redis !== null,
+  // },
+  // S3: {
+  //   implementation: cachesS3,
+  //   isAvailable: isS3Available,
+  // },
   KV: {
     implementation: cachesKV,
     isAvailable: typeof Deno.openKv === "function",
@@ -43,10 +50,6 @@ const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   FILE_SYSTEM: {
     implementation: cachesFileSystem,
     isAvailable: isFileSystemAvailable,
-  },
-  S3: {
-    implementation: cachesS3,
-    isAvailable: isS3Available,
   },
 };
 
