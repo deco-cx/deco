@@ -13,8 +13,9 @@ import type { AppManifest, SiteInfo } from "../../mod.ts";
 import { liveness } from "./middlewares/0_liveness.ts";
 import { contextProvider } from "./middlewares/1_contextProvider.ts";
 import { alienRelease } from "./middlewares/2_alienRelease.ts";
-
+import { handler as decodMiddleware } from "./middlewares/2_daemon.ts";
 import { handler as decoMiddleware } from "./middlewares/4_main.ts";
+
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
 import {
@@ -113,6 +114,7 @@ export default function decoPlugin(opt: Options): Plugin {
           handler: [
             liveness,
             ctxProvider,
+            decodMiddleware,
             alienRelease,
             buildDecoState(),
             ...decoMiddleware,

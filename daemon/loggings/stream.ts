@@ -5,9 +5,14 @@ export interface LogLine {
   timestamp: number;
   level: "info" | "error";
 }
+export interface StdStreamable {
+  stdout: ReadableStream<Uint8Array>;
+  stderr: ReadableStream<Uint8Array>;
+  status: Promise<unknown>;
+}
 
 export function streamLogsFrom(
-  process: Deno.ChildProcess,
+  process: StdStreamable,
 ): AsyncIterableIterator<LogLine> {
   const stdoutStream = process.stdout.pipeThrough(new TextDecoderStream())
     .pipeThrough(

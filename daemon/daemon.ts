@@ -6,16 +6,14 @@ import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
+import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
 import { cacheStaleMeta } from "./meta/cache.ts";
 import { createDurableFS } from "./realtime/fs.ts";
-import {
-  HypervisorDiskStorage,
-  HypervisorRealtimeState,
-} from "./realtime/object.ts";
+import { DaemonDiskStorage, DaemonRealtimeState } from "./realtime/object.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 import type { Isolate } from "./workers/isolate.ts";
 
@@ -23,7 +21,10 @@ const SECONDS = 1_000;
 const MINUTE = 60 * SECONDS;
 const MAX_LENGTH = 10_000;
 
+export const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
+
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
+const DAEMON_API_SPECIFIER = "x-daemon-api";
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
 const COMMIT_DEFAULT_ENDPOINT = "/volumes/default/commit";
@@ -32,20 +33,34 @@ const DEFAULT_LOGS_ENDPOINT = "/volumes/default/logs";
 const BYPASS_JWT_VERIFICATION =
   Deno.env.get("DANGEROUSLY_ALLOW_PUBLIC_ACCESS") === "true";
 
-export interface AppOptions {
-  run: Deno.Command;
+export interface DaemonBaseOptions {
   build?: Deno.Command;
   buildFiles?: string;
-  port: number;
-  site: string;
 }
 
-export class Hypervisor {
-  private realtimeFsState: HypervisorRealtimeState;
+export interface DaemonIsolateOptions extends DaemonBaseOptions {
+  isolate?: Isolate;
+}
+
+export interface DaemonExternalProcessOptions extends DaemonBaseOptions {
+  run: Deno.Command;
+  port: number;
+}
+
+export type DaemonOptions = DaemonIsolateOptions | DaemonExternalProcessOptions;
+
+const isIsolateOptions = (
+  options: DaemonOptions,
+): options is DaemonIsolateOptions => {
+  return (options as DaemonExternalProcessOptions).run === undefined;
+};
+
+export class Daemon {
+  private realtimeFsState: DaemonRealtimeState;
   private realtimeFs: InstanceType<typeof Realtime>;
-  private isolate: Isolate;
+  private isolate?: Isolate;
   private logsStreamStarted = false;
-  constructor(protected options: AppOptions) {
+  constructor(protected options: DaemonOptions) {
     const buildMutex = new Mutex();
     const buildCmd = options.build;
     const appBundle = bundleApp(Deno.cwd());
@@ -71,11 +86,11 @@ export class Hypervisor {
         }
       }, 200)
       : undefined;
-    const storage = new HypervisorDiskStorage({
+    const storage = new DaemonDiskStorage({
       dir: Deno.cwd(),
       buildFiles: options.buildFiles,
     });
-    this.realtimeFsState = new HypervisorRealtimeState({
+    this.realtimeFsState = new DaemonRealtimeState({
       storage,
     });
     let lastPersist = Promise.resolve();
@@ -106,7 +121,7 @@ export class Hypervisor {
       false,
       true,
     );
-    this.isolate = new DenoRun({
+    this.isolate = isIsolateOptions(options) ? options.isolate : new DenoRun({
       command: options.run,
       port: options.port,
     });
@@ -131,11 +146,18 @@ export class Hypervisor {
       })();
     }
   }
-  public async fetch(req: Request): Promise<Response> {
+  public async fetch(req: Request, maybeIsolate?: Isolate): Promise<Response> {
+    const isolate = maybeIsolate ?? this.isolate;
+    if (isolate === undefined) {
+      return this.errAs500(
+        "isolate is not defined neither inline or via params",
+      );
+    }
     const url = new URL(req.url);
-    const isHypervisorApi = (req.headers.get(HYPERVISOR_API_SPECIFIER) ??
-      url.searchParams.get(HYPERVISOR_API_SPECIFIER)) === "true";
-    if (isHypervisorApi) {
+    const isDaemonAPI = (req.headers.get(DAEMON_API_SPECIFIER) ??
+      req.headers.get(HYPERVISOR_API_SPECIFIER) ??
+      url.searchParams.get(DAEMON_API_SPECIFIER)) === "true";
+    if (isDaemonAPI) {
       const pathname = url.pathname;
       if (pathname.startsWith("/.well-known/deco-validate/")) {
         const token = pathname.split("/").pop();
@@ -150,14 +172,14 @@ export class Hypervisor {
         if (!jwt) {
           return new Response(null, { status: 401 });
         }
-        if (!tokenIsValid(this.options.site, jwt)) {
+        if (DECO_SITE_NAME && !tokenIsValid(DECO_SITE_NAME, jwt)) {
           return new Response(null, { status: 403 });
         }
       }
 
       if (pathname.startsWith("/volumes")) {
         if (pathname === DEFAULT_LOGS_ENDPOINT) {
-          const logs = this.isolate.logs();
+          const logs = isolate.logs?.();
           if (!logs) {
             return new Response(null, { status: 404 });
           }
@@ -215,19 +237,19 @@ export class Hypervisor {
       }
     }
 
-    if (!this.isolate.isRunning()) {
-      this.isolate.start();
+    if (isolate.isRunning?.() === false) {
+      isolate.start?.();
       this.startLogsStream();
-      await this.isolate.waitUntilReady();
+      await isolate.waitUntilReady?.();
     }
     const { then: updateMetaStaleCache, catch: useMetaStaleCache } =
       cacheStaleMeta(url);
-    return this.isolate.fetch(req).then(updateMetaStaleCache).catch(
+    return isolate.fetch(req).then(updateMetaStaleCache).catch(
       useMetaStaleCache,
     ).catch(async (err) => {
-      if (this.isolate.isRunning()) {
-        await this.isolate.waitUntilReady().catch((_err) => {});
-        return this.isolate.fetch(req).catch(this.errAs500);
+      if (isolate.isRunning?.()) {
+        await isolate.waitUntilReady?.().catch((_err) => {});
+        return isolate.fetch(req).catch(this.errAs500);
       }
       return this.errAs500(err);
     });
@@ -238,10 +260,10 @@ export class Hypervisor {
     });
   }
   public proxySignal(signal: Deno.Signal) {
-    this.isolate?.signal(signal);
+    this.isolate?.signal?.(signal);
     return this.persistState();
   }
   public async shutdown() {
-    await this.isolate?.[Symbol.asyncDispose]();
+    await this.isolate?.[Symbol.asyncDispose]?.();
   }
 }

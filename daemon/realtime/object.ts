@@ -32,7 +32,7 @@ export interface DiskStorageOptions {
 const persistStateLimiter = new Mutex();
 
 // create sync back from disk to memory
-export class HypervisorDiskStorage implements RealtimeStorage {
+export class DaemonDiskStorage implements RealtimeStorage {
   private ignore: { includes: (str: string) => boolean } = {
     includes: () => true,
   };
@@ -226,13 +226,13 @@ export class HypervisorDiskStorage implements RealtimeStorage {
   }
 }
 
-export interface HypervisorRealtimeStateOptions {
+export interface DaemonRealtimeStateOptions {
   storage: RealtimeStorage;
 }
-export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
+export class DaemonRealtimeState<T = unknown> implements RealtimeState {
   private blockConcurrencyWhilePromise: Promise<T> | undefined;
   public storage: RealtimeStorage;
-  constructor(options: HypervisorRealtimeStateOptions) {
+  constructor(options: DaemonRealtimeStateOptions) {
     this.storage = options.storage;
   }
 
