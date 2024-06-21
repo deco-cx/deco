@@ -1,4 +1,4 @@
-import { createCache } from "jsr:@deno/cache-dir@0.8.0";
+import { createCache } from "jsr:@deno/cache-dir@0.10.1";
 import { assignComments } from "./comments.ts";
 import { parse, type ParsedSource } from "./deps.ts";
 
