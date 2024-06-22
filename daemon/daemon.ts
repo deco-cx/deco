@@ -50,9 +50,9 @@ export interface DaemonExternalProcessOptions extends DaemonBaseOptions {
 export type DaemonOptions = DaemonIsolateOptions | DaemonExternalProcessOptions;
 
 const isIsolateOptions = (
-  options: DaemonOptions,
+  options?: DaemonOptions,
 ): options is DaemonIsolateOptions => {
-  return (options as DaemonExternalProcessOptions).run === undefined;
+  return (options as DaemonExternalProcessOptions)?.run === undefined;
 };
 
 export class Daemon {
@@ -60,9 +60,9 @@ export class Daemon {
   private realtimeFs: InstanceType<typeof Realtime>;
   private isolate?: Isolate;
   private logsStreamStarted = false;
-  constructor(protected options: DaemonOptions) {
+  constructor(protected options?: DaemonOptions) {
     const buildMutex = new Mutex();
-    const buildCmd = options.build;
+    const buildCmd = options?.build;
     const appBundle = bundleApp(Deno.cwd());
     const genManifest = () => {
       return appBundle({
@@ -88,7 +88,7 @@ export class Daemon {
       : undefined;
     const storage = new DaemonDiskStorage({
       dir: Deno.cwd(),
-      buildFiles: options.buildFiles,
+      buildFiles: options?.buildFiles,
     });
     this.realtimeFsState = new DaemonRealtimeState({
       storage,
@@ -121,10 +121,10 @@ export class Daemon {
       false,
       true,
     );
-    this.isolate = isIsolateOptions(options) ? options.isolate : new DenoRun({
+    this.isolate = isIsolateOptions(options) ? options.isolate : options ? new DenoRun({
       command: options.run,
       port: options.port,
-    });
+    }): undefined;
   }
 
   errAs500(err: unknown) {
