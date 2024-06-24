@@ -1,10 +1,10 @@
 import { FSError, type RealtimeState } from "../deps.ts";
-import { HypervisorDiskStorage } from "./object.ts";
+import { DaemonDiskStorage } from "./object.ts";
 
 export const createDurableFS = (state: RealtimeState) => {
   const storage = state.storage;
-  const addMethods: Partial<HypervisorDiskStorage> = {};
-  if (state.storage instanceof HypervisorDiskStorage) {
+  const addMethods: Partial<DaemonDiskStorage> = {};
+  if (state.storage instanceof DaemonDiskStorage) {
     addMethods.watch = state.storage.watch.bind(state.storage);
   }
 

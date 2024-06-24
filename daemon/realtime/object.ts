@@ -1,6 +1,6 @@
 import { Tar } from "std/archive/tar.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
-import { exists } from "std/fs/exists.ts";
+import type { ExistsOptions } from "std/fs/mod.ts";
 import { walk } from "std/fs/walk.ts";
 import { Buffer } from "std/io/buffer.ts";
 import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
@@ -18,6 +18,29 @@ const SHOULD_PERSIST_STATE = SOURCE_PATH !== undefined &&
   DEPLOYMENT_ID !== undefined && !TRANSIENT_ENVIRONMENT;
 const CHANGESET_FILE = "/.metadata/changeset.json";
 const IGNORE_FILES_GLOB = [".git/**"];
+
+export interface FileSystemApi {
+  ensureDir(dir: string | URL): Promise<void>;
+  exists(
+    path: string | URL,
+    options?: ExistsOptions,
+  ): Promise<boolean>;
+  readDir(path: string | URL): AsyncIterable<Deno.DirEntry>;
+  remove(
+    path: string | URL,
+    options?: { recursive: boolean },
+  ): Promise<void>;
+  readTextFile: (path: string) => Promise<string>;
+  watchFs(
+    paths: string | string[],
+    options?: { recursive: boolean },
+  ): AsyncIterable<Deno.FsEvent>;
+  writeTextFile(
+    path: string | URL,
+    data: string,
+  ): Promise<void>;
+}
+
 type RealtimeStorage = RealtimeState["storage"];
 
 export interface FsEvent {
@@ -27,43 +50,43 @@ export interface FsEvent {
 export interface DiskStorageOptions {
   dir: string;
   buildFiles?: string;
+  fsApi: FileSystemApi;
 }
 
 const persistStateLimiter = new Mutex();
 
 // create sync back from disk to memory
-export class HypervisorDiskStorage implements RealtimeStorage {
-  private ignore: { includes: (str: string) => boolean } = {
-    includes: () => true,
-  };
+export class DaemonDiskStorage implements RealtimeStorage {
+  private ignore: Promise<{ includes: (str: string) => boolean }> = Promise
+    .resolve({
+      includes: () => true,
+    });
   private dir: string;
   public onChange?: (events: FsEvent[]) => void;
+  protected fs: FileSystemApi;
   constructor(opts: DiskStorageOptions) {
     this.dir = opts.dir;
+    this.fs = opts.fsApi;
     const buildFilesRegExp = opts.buildFiles
       ? globToRegExp(opts.buildFiles)
       : undefined;
-    let ignoreContent = null;
-    try {
-      ignoreContent = Deno.readTextFileSync(
-        join(this.dir, ".gitignore"),
-      );
-    } catch (_err) {
-      // ignore in case of does not exists
-    }
-    const globs = [...ignoreContent?.split("\n") ?? [], ...IGNORE_FILES_GLOB];
-    const ignore = gitIgnore.default();
-    globs && ignore.add(globs);
-    this.ignore = {
-      includes: (str) => {
-        if (str === CHANGESET_FILE) {
-          return false;
-        }
-        const isBuildFile = buildFilesRegExp &&
-          buildFilesRegExp?.test(str) === true;
-        return !isBuildFile && ignore.ignores(str.slice(1));
-      },
-    };
+    this.ignore = this.fs.readTextFile(
+      join(this.dir, ".gitignore"),
+    ).catch((_err) => null).then((ignoreContent) => {
+      const globs = [...ignoreContent?.split("\n") ?? [], ...IGNORE_FILES_GLOB];
+      const ignore = gitIgnore.default();
+      globs && ignore.add(globs);
+      return {
+        includes: (str) => {
+          if (str === CHANGESET_FILE) {
+            return false;
+          }
+          const isBuildFile = buildFilesRegExp &&
+            buildFilesRegExp?.test(str) === true;
+          return !isBuildFile && ignore.ignores(str.slice(1));
+        },
+      };
+    });
   }
   normalizePath(path: string) {
     return fileSeparatorToSlash(path);
@@ -90,12 +113,15 @@ export class HypervisorDiskStorage implements RealtimeStorage {
           changedFiles[virtualPath] = { content: null as unknown as string };
           return;
         }
-        const isFile = await exists(path, { isFile: true, isReadable: true });
+        const isFile = await this.fs.exists(path, {
+          isFile: true,
+          isReadable: true,
+        });
         if (!isFile) return;
-        if (this.ignore.includes(virtualPath)) {
+        if ((await this.ignore).includes(virtualPath)) {
           return;
         }
-        const fileContent = await Deno.readTextFile(
+        const fileContent = await this.fs.readTextFile(
           path,
         ).catch((err) => {
           if (err instanceof Deno.errors.NotFound) {
@@ -124,12 +150,12 @@ export class HypervisorDiskStorage implements RealtimeStorage {
       if (Array.isArray(keys)) {
         const data = new Map<string, T>();
         for (const filePath of filePaths) {
-          const fileContent = await Deno.readTextFile(filePath);
+          const fileContent = await this.fs.readTextFile(filePath);
           data.set(filePath.split("/").pop()!, fileContent as T);
         }
         return data;
       } else {
-        const fileContent = await Deno.readTextFile(filePaths as string);
+        const fileContent = await this.fs.readTextFile(filePaths as string);
         return fileContent as T;
       }
     } catch (_error) {
@@ -147,7 +173,7 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     try {
       let deletedCount = 0;
       for (const filePath of filePaths) {
-        await Deno.remove(filePath);
+        await this.fs.remove(filePath);
         deletedCount++;
       }
       this.onChange?.(
@@ -171,22 +197,22 @@ export class HypervisorDiskStorage implements RealtimeStorage {
     const events: FsEvent[] = [];
     for (const [entryKey, entryValue] of Object.entries(entries)) {
       const filePath = join(this.dir, entryKey);
-      const fileExists = await exists(filePath, { isFile: true });
+      const fileExists = await this.fs.exists(filePath, { isFile: true });
       events.push({
         type: fileExists ? "modify" : "create",
         path: filePath,
       });
-      !fileExists && await ensureDir(dirname(filePath));
-      await Deno.writeTextFile(filePath, entryValue as string);
+      !fileExists && await this.fs.ensureDir(dirname(filePath));
+      await this.fs.writeTextFile(filePath, entryValue as string);
     }
     this.onChange?.(events);
   }
 
   async deleteAll(): Promise<void> {
-    const dirEntries = Deno.readDir(this.dir);
+    const dirEntries = this.fs.readDir(this.dir);
     try {
       for await (const dirEntry of dirEntries) {
-        await Deno.remove(join(this.dir, dirEntry.name), { recursive: true })
+        await this.fs.remove(join(this.dir, dirEntry.name), { recursive: true })
           .catch((err) => {
             console.log("ignoring", err);
           });
@@ -207,10 +233,10 @@ export class HypervisorDiskStorage implements RealtimeStorage {
         const virtualPath = this.normalizePath(
           walkEntry.path.replace(this.dir, ""),
         );
-        if (this.ignore.includes(virtualPath)) {
+        if ((await this.ignore).includes(virtualPath)) {
           continue;
         }
-        const fileContent = await Deno.readTextFile(
+        const fileContent = await this.fs.readTextFile(
           walkEntry.path,
         );
         data.set(virtualPath, fileContent as T);
@@ -226,13 +252,13 @@ export class HypervisorDiskStorage implements RealtimeStorage {
   }
 }
 
-export interface HypervisorRealtimeStateOptions {
+export interface DaemonRealtimeStateOptions {
   storage: RealtimeStorage;
 }
-export class HypervisorRealtimeState<T = unknown> implements RealtimeState {
+export class DaemonRealtimeState<T = unknown> implements RealtimeState {
   private blockConcurrencyWhilePromise: Promise<T> | undefined;
   public storage: RealtimeStorage;
-  constructor(options: HypervisorRealtimeStateOptions) {
+  constructor(options: DaemonRealtimeStateOptions) {
     this.storage = options.storage;
   }
 

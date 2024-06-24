@@ -32,44 +32,55 @@ export type RequestContext = {
   framework?: "fresh" | "htmx";
 };
 
+export type WellKnownHostingPlatform =
+  | "kubernetes"
+  | "denodeploy"
+  | "localhost";
+
+export type DecodMode = "sidecar" | "embedded";
+
+export const DaemonMode = {
+  Sidecar: "sidecar" as DecodMode,
+  Embedded: "embedded" as DecodMode,
+};
+
 // The global deco context
-export type DecoContext = {
+export interface DecoContext {
   deploymentId: string | undefined;
   isDeploy: boolean;
-  platform: string;
+  decodMode?: DecodMode;
+  platform: WellKnownHostingPlatform;
   site: string;
-  siteId: number;
   loginUrl?: string;
   base?: string;
   namespace?: string;
   release?: DecofileProvider;
   runtime?: Promise<DecoRuntimeState>;
-  play?: boolean;
   instance: InstanceInfo;
   request?: RequestContext;
-};
+}
 
-const isDeploy = Boolean(Deno.env.get("DENO_DEPLOYMENT_ID"));
+const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+const isDeploy = Boolean(deploymentId);
 
-const getCloudProvider = () => {
+const getHostingPlatform = (): WellKnownHostingPlatform => {
   const kService = Deno.env.get("K_SERVICE") !== undefined;
 
   if (kService) {
     return "kubernetes";
   } else if (isDeploy) {
-    return "deno_deploy";
+    return "denodeploy";
   } else {
     return "localhost";
   }
 };
 
 const defaultContext: Omit<DecoContext, "schema"> = {
-  deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
+  deploymentId,
   isDeploy: isDeploy,
-  platform: getCloudProvider(),
+  decodMode: Deno.env.get("DECOD_MODE") as DecodMode | undefined,
+  platform: getHostingPlatform(),
   site: "",
-  siteId: 0,
-  play: Deno.env.has("USE_LOCAL_STORAGE_ONLY"),
   instance: {
     id: randId(),
     startedAt: new Date(),

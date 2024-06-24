@@ -6,7 +6,7 @@ import {
   type Resolvable,
 } from "../../../engine/core/resolver.ts";
 import { badRequest, HttpError } from "../../../engine/errors.ts";
-import { useScriptAsDataURI } from "deco/hooks/useScript.ts";
+import { useScriptAsDataURI } from "../../../hooks/useScript.ts";
 import type { DecoSiteState, DecoState } from "../../../types.ts";
 
 interface Options {

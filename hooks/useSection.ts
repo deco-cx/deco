@@ -47,7 +47,7 @@ export const useSection = <P>(
     ["__cb", `${cb}`],
   ]);
 
-  if ((props as any)?.__resolveType === undefined) {
+  if ((props as { __resolveType?: string })?.__resolveType === undefined) {
     params.set(
       "resolveChain",
       JSON.stringify(FieldResolver.minify(ctx.resolveChain.slice(0, -1))),

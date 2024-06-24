@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { initializeState } from "deco/runtime/utils.ts";
 import { parse } from "std/flags/mod.ts";
-import { blue, gray, green, red, rgb24, underline } from "std/fmt/colors.ts";
+import { gray, green, red } from "std/fmt/colors.ts";
 import {
   type AppManifest,
   type ImportMap,
@@ -42,7 +42,6 @@ import { randomSiteName } from "./utils.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
-const DECO_COLORS = 0x02f77d;
 export type FreshHandler<
   TConfig = any,
   TData = any,
@@ -121,14 +120,6 @@ export const siteName = (): string | undefined => {
   return siteName ?? context.namespace!;
 };
 
-const getPlayDomain = (): string => {
-  if (!Deno.env.has("CODESPACE_NAME")) {
-    return "http://localhost:8000";
-  }
-  return `https://${Deno.env.get("CODESPACE_NAME")}-8000.${
-    Deno.env.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
-  }`;
-};
 export const initContext = async <
   T extends AppManifest,
 >(
@@ -137,30 +128,6 @@ export const initContext = async <
   release: DecofileProvider | undefined = undefined,
 ): Promise<DecoContext> => {
   await fulfillContext(context, m, currentImportMap, release);
-
-  if (context.play) {
-    console.debug(
-      `\n👋 Hey [${green(context.site)}] welcome to ${
-        rgb24("deco.cx", DECO_COLORS)
-      }! Let's play?`,
-    );
-    console.debug(
-      `📚 Explore our documentation at ${
-        underline(blue("https://deco.cx/docs"))
-      } to get started with deco.`,
-    );
-    console.debug(
-      `💬 Join our Discord community at ${
-        underline(blue("https://deco.cx/discord"))
-      } to connect with other deco enthusiasts.`,
-    );
-    console.debug(`🚀 Enter: ${
-      underline(rgb24(
-        `https://play.deco.cx/?domain=${getPlayDomain()}`,
-        DECO_COLORS,
-      ))
-    } and happy coding!\n\n`);
-  }
   return context;
 };
 
@@ -314,14 +281,11 @@ export const fulfillContext = async <
     }
     currentSite = randomSiteName();
     release ??= newFsProvider(DECO_FILE_NAME, initialManifest.name);
-    ctx.play = true;
   }
   ctx.namespace ??= `deco-sites/${currentSite}`;
   ctx.site = currentSite!;
   const provider = release ?? await getProvider(
-    ctx.namespace!,
     ctx.site,
-    ctx.siteId,
   );
   const runtimePromise = deferred<DecoRuntimeState>();
   ctx.runtime = runtimePromise.finally(() => {
@@ -469,7 +433,6 @@ export const $live = async <T extends AppManifest>(
   siteInfo?: SiteInfo,
   release: DecofileProvider | undefined = undefined,
 ): Promise<T> => {
-  context.siteId = siteInfo?.siteId ?? -1;
   context.namespace = siteInfo?.namespace;
   const currentSite = siteName();
   if (!currentSite) {
@@ -484,9 +447,7 @@ export const $live = async <T extends AppManifest>(
     [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
   );
   const provider = release ?? await getProvider(
-    context.namespace!,
     context.site,
-    context.siteId,
   );
   context.release = provider;
   const resolver = new ReleaseResolver<FreshContext>({
@@ -505,9 +466,7 @@ export const $live = async <T extends AppManifest>(
   });
   context.instance.readyAt = new Date();
   console.log(
-    `starting deco: ${
-      context.siteId === -1 ? "" : `siteId=${context.siteId}`
-    } site=${context.site}`,
+    `starting deco: site=${context.site}`,
   );
 
   return newManifest as T;
