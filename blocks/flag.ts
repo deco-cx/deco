@@ -1,7 +1,6 @@
 import type { HttpContext } from "../blocks/handler.ts";
 import type { Matcher } from "../blocks/matcher.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
-import { Context } from "../deco.ts";
 import type { TsType, TsTypeReference } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
@@ -66,12 +65,10 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     default: FlagFunc<TConfig>;
   }) =>
   ($live: TConfig, { request }: HttpContext) => {
-    const context = Context.active();
     const flag = func.default($live);
     let device: Device | null = null;
     const ctx = {
       request,
-      siteId: context.siteId,
       get device() {
         return device ??= deviceOf(ctx.request);
       },

@@ -5,6 +5,7 @@ import {
 import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
+import { ensureDir, exists } from "std/fs/mod.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
@@ -13,7 +14,11 @@ import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
 import { cacheStaleMeta } from "./meta/cache.ts";
 import { createDurableFS } from "./realtime/fs.ts";
-import { DaemonDiskStorage, DaemonRealtimeState } from "./realtime/object.ts";
+import {
+  DaemonDiskStorage,
+  DaemonRealtimeState,
+  type FileSystemApi,
+} from "./realtime/object.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 import type { Isolate } from "./workers/isolate.ts";
 
@@ -23,6 +28,7 @@ const MAX_LENGTH = 10_000;
 
 export const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
 
+export const DENO_FS_APIS = { ...Deno, exists, ensureDir };
 const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const DAEMON_API_SPECIFIER = "x-daemon-api";
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
@@ -36,6 +42,7 @@ const BYPASS_JWT_VERIFICATION =
 export interface DaemonBaseOptions {
   build?: Deno.Command;
   buildFiles?: string;
+  fsApi?: FileSystemApi;
 }
 
 export interface DaemonIsolateOptions extends DaemonBaseOptions {
@@ -89,6 +96,7 @@ export class Daemon {
     const storage = new DaemonDiskStorage({
       dir: Deno.cwd(),
       buildFiles: options?.buildFiles,
+      fsApi: options?.fsApi ?? DENO_FS_APIS,
     });
     this.realtimeFsState = new DaemonRealtimeState({
       storage,
@@ -121,10 +129,14 @@ export class Daemon {
       false,
       true,
     );
-    this.isolate = isIsolateOptions(options) ? options.isolate : options ? new DenoRun({
-      command: options.run,
-      port: options.port,
-    }): undefined;
+    this.isolate = isIsolateOptions(options)
+      ? options.isolate
+      : options
+      ? new DenoRun({
+        command: options.run,
+        port: options.port,
+      })
+      : undefined;
   }
 
   errAs500(err: unknown) {

@@ -1,6 +1,5 @@
 import { Tar } from "std/archive/tar.ts";
 import { ensureDir } from "std/fs/ensure_dir.ts";
-import { exists } from "std/fs/exists.ts";
 import type { ExistsOptions } from "std/fs/mod.ts";
 import { walk } from "std/fs/walk.ts";
 import { Buffer } from "std/io/buffer.ts";
@@ -20,7 +19,7 @@ const SHOULD_PERSIST_STATE = SOURCE_PATH !== undefined &&
 const CHANGESET_FILE = "/.metadata/changeset.json";
 const IGNORE_FILES_GLOB = [".git/**"];
 
-export interface FSApi {
+export interface FileSystemApi {
   ensureDir(dir: string | URL): Promise<void>;
   exists(
     path: string | URL,
@@ -51,7 +50,7 @@ export interface FsEvent {
 export interface DiskStorageOptions {
   dir: string;
   buildFiles?: string;
-  fsApi?: FSApi;
+  fsApi: FileSystemApi;
 }
 
 const persistStateLimiter = new Mutex();
@@ -64,10 +63,10 @@ export class DaemonDiskStorage implements RealtimeStorage {
     });
   private dir: string;
   public onChange?: (events: FsEvent[]) => void;
-  protected fs: FSApi;
+  protected fs: FileSystemApi;
   constructor(opts: DiskStorageOptions) {
     this.dir = opts.dir;
-    this.fs = opts.fsApi ?? { ...Deno, exists, ensureDir };
+    this.fs = opts.fsApi;
     const buildFilesRegExp = opts.buildFiles
       ? globToRegExp(opts.buildFiles)
       : undefined;

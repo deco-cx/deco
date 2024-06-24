@@ -77,7 +77,7 @@ export class DenoRun implements Isolate {
         cwd: options.cwd,
         stdout: "piped",
         stderr: "piped",
-        env: { ...options.envVars, PORT: `${this.port}` },
+        env: { ...options.envVars, PORT: `${this.port}`, DECO_PREVIEW: "true" },
       });
     }
     const hostname = Deno.build.os === "windows" ? "localhost" : "0.0.0.0";

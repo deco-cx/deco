@@ -61,9 +61,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         }
         siteName = fromEnvSiteName ?? randomSiteName();
         releaseProviderPromise = getProvider(
-          opt.manifest.name,
           siteName,
-          -1,
         );
       }
       // Define root manifest

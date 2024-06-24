@@ -61,7 +61,7 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
   }
 
   render() {
-    const error = this.state.error as any;
+    const error = this.state.error as Error | null;
     const { loading: Loading, error: Error, children } = this.props;
 
     const mode = error?.name === "AbortError"
@@ -83,7 +83,7 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
     }
 
     if (mode === "error") {
-      return <Error error={error} />;
+      return <Error error={error!} />;
     }
 
     return <>{children}</>;
@@ -110,7 +110,7 @@ export const bindings = {
 };
 
 export const alwaysThrow =
-  (err: unknown): ComponentFunc => (props: unknown) => {
+  (err: unknown): ComponentFunc => (_props: unknown) => {
     throw err;
   };
 const MAX_RENDER_COUNT = 5_00; // for saved sections this number should mark a restart.

@@ -177,7 +177,7 @@ function LiveControls({ site, page, flags }: Props) {
           type="application/json"
           id="__DECO_STATE"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({ page, site, flags, play: context.play }),
+            __html: JSON.stringify({ page, site, flags }),
           }}
         />
         <script

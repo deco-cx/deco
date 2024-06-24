@@ -46,7 +46,6 @@ export function initializeState(baseState?: Partial<RequestState>) {
   return {
     ...state,
     site: {
-      id: context.siteId,
       name: context.site,
     },
   } as RequestState;

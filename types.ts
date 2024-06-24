@@ -67,7 +67,6 @@ export interface Site {
 }
 
 export interface SiteInfo {
-  siteId?: number;
   name?: string;
   namespace: string;
 }
