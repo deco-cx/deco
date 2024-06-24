@@ -1,11 +1,12 @@
 import type { MiddlewareHandler } from "$fresh/server.ts";
 import { context } from "deco/deco.ts";
-import { Daemon } from "../../../daemon/daemon.ts";
-import { KvFs } from "../../../daemon/realtime/kvfs.ts";
+import { Daemon, DENO_FS_APIS } from "../../../daemon/daemon.ts";
 import type { Isolate } from "../../../daemon/workers/isolate.ts";
 
 const decod = context.platform === "denodeploy" && !context.isPreview
-  ? new Daemon({ fsApi: await KvFs.New(context.deploymentId!) })
+  ? new Daemon({
+    fsApi: { ...DENO_FS_APIS, writeTextFile: async () => {} },
+  })
   : undefined;
 export const handler: MiddlewareHandler = (req, ctx) => {
   if (!decod) {

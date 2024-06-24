@@ -130,7 +130,7 @@ export class Daemon {
       true,
     );
     this.isolate = isIsolateOptions(options)
-      ? options.isolate
+      ? options?.isolate
       : options
       ? new DenoRun({
         command: options.run,
