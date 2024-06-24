@@ -39,7 +39,7 @@ export type WellKnownHostingPlatform =
 
 export type DecodMode = "sidecar" | "embedded";
 
-export const DecoDaemonMode = {
+export const DaemonMode = {
   Sidecar: "sidecar" as DecodMode,
   Embedded: "embedded" as DecodMode,
 };
