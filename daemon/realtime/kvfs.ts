@@ -114,7 +114,6 @@ export class KvFs implements FileSystemApi {
 
     const chunks: Uint8Array[] = [];
 
-    // Should print an array with length 90788 (5x 16384 + 8868 your source arrays)
     for await (const chunk of this.kv.list<Uint8Array>({ prefix: filepath })) {
       chunks.push(chunk.value);
     }

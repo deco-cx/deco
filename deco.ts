@@ -37,11 +37,18 @@ export type WellKnownHostingPlatform =
   | "denodeploy"
   | "localhost";
 
+export type DecodMode = "sidecar" | "embedded";
+
+export const DecoDaemonMode = {
+  Sidecar: "sidecar" as DecodMode,
+  Embedded: "embedded" as DecodMode,
+};
+
 // The global deco context
 export interface DecoContext {
   deploymentId: string | undefined;
   isDeploy: boolean;
-  isPreview: boolean;
+  decodMode?: DecodMode;
   platform: WellKnownHostingPlatform;
   site: string;
   loginUrl?: string;
@@ -53,7 +60,8 @@ export interface DecoContext {
   request?: RequestContext;
 }
 
-const isDeploy = Boolean(Deno.env.get("DENO_DEPLOYMENT_ID"));
+const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+const isDeploy = Boolean(deploymentId);
 
 const getHostingPlatform = (): WellKnownHostingPlatform => {
   const kService = Deno.env.get("K_SERVICE") !== undefined;
@@ -68,9 +76,9 @@ const getHostingPlatform = (): WellKnownHostingPlatform => {
 };
 
 const defaultContext: Omit<DecoContext, "schema"> = {
-  deploymentId: Deno.env.get("DENO_DEPLOYMENT_ID"),
+  deploymentId,
   isDeploy: isDeploy,
-  isPreview: Boolean(Deno.env.get("DECO_PREVIEW")),
+  decodMode: Deno.env.get("DECOD_MODE") as DecodMode | undefined,
   platform: getHostingPlatform(),
   site: "",
   instance: {
