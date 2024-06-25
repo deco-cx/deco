@@ -12,9 +12,10 @@ import { createTieredCache } from "./tiered.ts";
 export const ENABLE_LOADER_CACHE =
   Deno.env.get("ENABLE_LOADER_CACHE") === "true";
 const DEFAULT_CACHE_ENGINE = "CACHE_API";
-const WEB_CACHE_ENGINES: CacheEngine[] = Deno.env.has("WEB_CACHE_ENGINE")
-  ? Deno.env.get("WEB_CACHE_ENGINE")!.split(",") as CacheEngine[]
-  : [DEFAULT_CACHE_ENGINE];
+const WEB_CACHE_ENGINES: CacheEngine[] = [DEFAULT_CACHE_ENGINE];
+// Deno.env.has("WEB_CACHE_ENGINE")
+//   ? Deno.env.get("WEB_CACHE_ENGINE")!.split(",") as CacheEngine[]
+//   : [DEFAULT_CACHE_ENGINE];
 
 export interface CacheStorageOption {
   implementation: CacheStorage;
