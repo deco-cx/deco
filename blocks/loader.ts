@@ -99,9 +99,9 @@ export const wrapCaughtErrors = async <
 };
 
 export const LOADER_CACHE_START_TRESHOLD =
-  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
+  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 0;
 
-export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
+export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024_000;
 
 const stats = {
   cache: meter.createCounter("loader_cache", {
