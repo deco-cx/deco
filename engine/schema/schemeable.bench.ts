@@ -9,8 +9,8 @@ import { dirname, join } from "std/path/mod.ts";
 import {
   findSchemeableFromNode,
   type Schemeable as _Schemeable,
-} from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
-import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
+} from "https://denopkg.com/deco-cx/deco@1.75.1/engine/schema/transform.ts";
+import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.75.1/engine/schema/utils.ts";
 import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
 import { ImportMapBuilder } from "../importmap/builder.ts";
 import { parsePath } from "./parser.ts";

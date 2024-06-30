@@ -3,19 +3,19 @@ import {
   brightRed,
   brightYellow,
   gray,
-} from "https://deno.land/std@0.204.0/fmt/colors.ts";
+} from "https://deno.land/std@0.224.0/fmt/colors.ts";
 import {
   ensureFile,
   exists,
   walk,
-} from "https://deno.land/std@0.204.0/fs/mod.ts";
-import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
+} from "https://deno.land/std@0.224.0/fs/mod.ts";
+import { join } from "https://deno.land/std@0.224.0/path/mod.ts";
 import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
-import * as diff from "https://esm.sh/diff@5.1.0";
+import * as diff from "https://esm.sh/diff@5.2.0";
 import { format } from "../utils/formatter.ts";
 import { exec } from "./utils.ts";
 // deno-lint-ignore verbatim-module-syntax

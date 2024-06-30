@@ -9,7 +9,7 @@ import {
   NoSuchKey,
   PutObjectCommand,
   S3Client,
-} from "https://esm.sh/@aws-sdk/client-s3@3.513.0";
+} from "https://esm.sh/@aws-sdk/client-s3@3.606.0";
 import { Context } from "../../deco.ts";
 import { ValueType } from "../../deps.ts";
 import { logger, tracer } from "../../observability/otel/config.ts";

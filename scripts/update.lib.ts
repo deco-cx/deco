@@ -1,6 +1,6 @@
-import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
-import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
-import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
+import { parse } from "https://deno.land/std@0.224.0/flags/mod.ts";
+import * as colors from "https://deno.land/std@0.224.0/fmt/colors.ts";
+import { join } from "https://deno.land/std@0.224.0/path/mod.ts";
 import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 import {
   lookup,
