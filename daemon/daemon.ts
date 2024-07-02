@@ -1,7 +1,7 @@
 import {
   type ServerSentEventMessage,
   ServerSentEventStream,
-} from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
+} from "https://deno.land/std@0.224.0/http/server_sent_event_stream.ts";
 import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";

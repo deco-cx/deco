@@ -7,7 +7,7 @@ import {
   withCacheNamespace,
 } from "./common.ts";
 import { existsSync } from "std/fs/mod.ts";
-import { LRUCache } from "https://esm.sh/lru-cache@10.2.0";
+import { LRUCache } from "https://esm.sh/lru-cache@10.3.0";
 import { numToUint8Array, uint8ArrayToNum } from "../utils.ts";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =

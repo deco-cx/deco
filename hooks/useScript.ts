@@ -8,8 +8,8 @@
 
 import initSwc, {
   transform,
-} from "https://cdn.jsdelivr.net/npm/@swc/wasm-web@1.5.25/wasm-web.js";
-import { LRUCache } from "https://esm.sh/lru-cache@10.2.0";
+} from "https://cdn.jsdelivr.net/npm/@swc/wasm-web@1.6.6/wasm-web.js";
+import { LRUCache } from "https://esm.sh/lru-cache@10.3.0";
 
 const swcPromise = initSwc(
   "https://cdn.jsdelivr.net/npm/@swc/wasm-web@1.5.25/wasm-web_bg.wasm",

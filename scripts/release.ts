@@ -1,4 +1,4 @@
-import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
+import { Select } from "https://deno.land/x/cliffy@v0.25.7/prompt/mod.ts";
 import { join } from "std/path/mod.ts";
 import { format, increment, parse } from "std/semver/mod.ts";
 import { stringifyForWrite } from "../utils/json.ts";
