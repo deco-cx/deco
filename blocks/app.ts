@@ -221,7 +221,11 @@ const injectAppStateOnManifest = <
     ),
     loaders: mapObjKeys(
       manifest.loaders ?? {},
-      (mod) => ({ ...mod, default: injectAppState(state, mod.default) }),
+      (mod) => ({
+        ...mod,
+        default: injectAppState(state, mod.default),
+        cacheKey: mod.cacheKey && injectAppState(state, mod.cacheKey),
+      }),
     ),
   };
 };
