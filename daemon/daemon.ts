@@ -21,6 +21,8 @@ import {
 } from "./realtime/object.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 import type { Isolate } from "./workers/isolate.ts";
+import * as git from "npm:isomorphic-git@1.25.6";
+import * as nodefs from "node:fs";
 
 const SECONDS = 1_000;
 const MINUTE = 60 * SECONDS;
@@ -35,6 +37,7 @@ const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
 const COMMIT_DEFAULT_ENDPOINT = "/volumes/default/commit";
 const DEFAULT_LOGS_ENDPOINT = "/volumes/default/logs";
+const DIFF_DEFAULT_ENDPOINT = "/volumes/default/diff";
 
 const BYPASS_JWT_VERIFICATION =
   Deno.env.get("DANGEROUSLY_ALLOW_PUBLIC_ACCESS") === "true";
@@ -61,6 +64,15 @@ const isIsolateOptions = (
 ): options is DaemonIsolateOptions => {
   return (options as DaemonExternalProcessOptions)?.run === undefined;
 };
+
+export interface Diff {
+  from: string | null;
+  to: string | null;
+  status: string;
+}
+export interface DiffResult {
+  diffs: Record<string, Diff>;
+}
 
 export class Daemon {
   private realtimeFsState: DaemonRealtimeState;
@@ -93,6 +105,13 @@ export class Daemon {
         }
       }, 200)
       : undefined;
+    git.init({ fs: nodefs, dir: Deno.cwd() })
+      .then(() => {
+        console.log("Repository initialized");
+      })
+      .catch((err) => {
+        console.error("Error initializing repository", err);
+      });
     const storage = new DaemonDiskStorage({
       dir: Deno.cwd(),
       buildFiles: options?.buildFiles,
@@ -158,8 +177,87 @@ export class Daemon {
       })();
     }
   }
+  private async diff(): Promise<DiffResult> {
+    const result = await git.statusMatrix({ fs: nodefs, dir: Deno.cwd() });
+
+    const diffs: Record<string, Diff> = {};
+    const fileCache: Record<string, string> = {};
+    const decoder = new TextDecoder();
+  
+    const readFileContent = async (filepath: string | null): Promise<string | null> => {
+      if (!filepath) return null;
+      if (fileCache[filepath] !== undefined) return fileCache[filepath];
+      try {
+        const content = decoder.decode(await Deno.readFile(filepath));
+        fileCache[filepath] = content;
+        return content;
+      } catch (error) {
+        console.error(`Error reading file ${filepath}:`, error);
+        return null;
+      }
+    };
+
+    const promises = result.map(async ([filepath, head, workdir, stage]) => {
+      let fromPath: string | null = null;
+      let toPath: string | null = null;
+      let status: string = '';
+  
+      if (head === 0 && workdir === 2 && stage === 0) {
+        fromPath = null;
+        toPath = filepath;
+        status = 'untracked';
+      } else if (head === 0 && workdir === 2 && stage === 2) {
+        fromPath = null;
+        toPath = filepath;
+        status = 'added';
+      } else if (head === 0 && workdir === 2 && stage === 3) {
+        fromPath = null;
+        toPath = filepath;
+        status = 'added with unstaged changes';
+      } else if (head === 1 && workdir === 1 && stage === 1) {
+        // Skip unmodified
+        return;
+      } else if (head === 1 && workdir === 2 && stage === 1) {
+        fromPath = filepath;
+        toPath = filepath;
+        status = 'modified';
+      } else if (head === 1 && workdir === 2 && stage === 2) {
+        fromPath = filepath;
+        toPath = filepath;
+        status = 'modified and staged';
+      } else if (head === 1 && workdir === 2 && stage === 3) {
+        fromPath = filepath;
+        toPath = filepath;
+        status = 'modified and staged with unstaged changes';
+      } else if (head === 1 && workdir === 0 && stage === 1) {
+        fromPath = filepath;
+        toPath = null;
+        status = 'deleted';
+      } else if (head === 1 && workdir === 0 && stage === 0) {
+        fromPath = filepath;
+        toPath = null;
+        status = 'deleted and staged';
+      } else if (head === 1 && workdir === 2 && stage === 0) {
+        fromPath = filepath;
+        toPath = filepath;
+        status = 'deleted and staged with unstaged changes';
+      } else if (head === 1 && workdir === 1 && stage === 0) {
+        fromPath = filepath;
+        toPath = filepath;
+        status = 'deleted and staged with unstaged changes';
+      }
+  
+      const [from, to] = await Promise.all([readFileContent(fromPath), readFileContent(toPath)]);
+      diffs[filepath] = { from, to, status };
+    });
+  
+    await Promise.all(promises);
+  
+    return { diffs };
+  }
   public async fetch(req: Request, maybeIsolate?: Isolate): Promise<Response> {
     const isolate = maybeIsolate ?? this.isolate;
+    console.log("isolate", isolate);
     if (isolate === undefined) {
       return this.errAs500(
         "isolate is not defined neither inline or via params",
@@ -190,6 +288,10 @@ export class Daemon {
       }
 
       if (pathname.startsWith("/volumes")) {
+        if (pathname === DIFF_DEFAULT_ENDPOINT) {
+          const result = await this.diff();
+          return new Response(JSON.stringify(result), { status: 200 });
+        }
         if (pathname === DEFAULT_LOGS_ENDPOINT) {
           const logs = isolate.logs?.();
           if (!logs) {
