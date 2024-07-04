@@ -257,7 +257,6 @@ export class Daemon {
   }
   public async fetch(req: Request, maybeIsolate?: Isolate): Promise<Response> {
     const isolate = maybeIsolate ?? this.isolate;
-    console.log("isolate", isolate);
     if (isolate === undefined) {
       return this.errAs500(
         "isolate is not defined neither inline or via params",
