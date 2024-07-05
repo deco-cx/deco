@@ -256,6 +256,7 @@ export class Daemon {
     return { diffs };
   }
   public async fetch(req: Request, maybeIsolate?: Isolate): Promise<Response> {
+    console.log("in daemon.fetch");
     const isolate = maybeIsolate ?? this.isolate;
     if (isolate === undefined) {
       return this.errAs500(
@@ -266,8 +267,10 @@ export class Daemon {
     const isDaemonAPI = (req.headers.get(DAEMON_API_SPECIFIER) ??
       req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(DAEMON_API_SPECIFIER)) === "true";
+    console.log("isDaemonAPI", isDaemonAPI);
     if (isDaemonAPI) {
       const pathname = url.pathname;
+      console.log("pathname", pathname);
       if (pathname.startsWith("/.well-known/deco-validate/")) {
         const token = pathname.split("/").pop();
         const decoValidateEnvVar = Deno.env.get("DECO_VALIDATE_TOKEN");
@@ -276,7 +279,10 @@ export class Daemon {
         }
         return new Response(null, { status: 403 });
       }
+
+
       if (!BYPASS_JWT_VERIFICATION) {
+        console.log("in jwt");
         const jwt = await getVerifiedJWT(req);
         if (!jwt) {
           return new Response(null, { status: 401 });
@@ -286,8 +292,11 @@ export class Daemon {
         }
       }
 
+      console.log("before volumes");
       if (pathname.startsWith("/volumes")) {
+        console.log("in volumes");
         if (pathname === DIFF_DEFAULT_ENDPOINT) {
+          console.log("in diff");
           const result = await this.diff();
           return new Response(JSON.stringify(result), { status: 200 });
         }

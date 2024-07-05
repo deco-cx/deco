@@ -119,6 +119,7 @@ Deno.serve(
           { status: 200 },
         );
       }
+      console.log("before daemon.fetch");
       return response = daemon.fetch(req);
     } finally {
       response?.then((resp) => {
