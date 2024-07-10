@@ -137,7 +137,7 @@ The deno project created with Deco is completely standalone — all of the CMS i
 This means you can deploy a Deco project easily to any hosting platform you want. By using our integrated hosting partners, you get full first-class environment support an observability inside Deco.
 
 > [!WARNING]
-> Self-hosting the editor itself is coming in early 2024. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
+> Self-hosting the editor itself is coming in early 2025. Bear with us as we refactor some innards before we can invite more developers to extend it! We're looking forward to it.
 
 ## Deploy to the deco.cx PRO edge
 
