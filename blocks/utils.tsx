@@ -22,6 +22,7 @@ import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
+import { isInvokeCtx } from "deco/blocks/loader.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -94,6 +95,7 @@ export type FnContext<
   resolverId?: string;
   monitoring?: Monitoring;
   get: ResolveFunc;
+  isInvoke?: boolean;
   invoke:
     & InvocationProxy<
       TManifest
@@ -129,6 +131,7 @@ export const fnContextFromHttpContext = <TState = {}>(
     get: ctx.resolve,
     response: ctx.context.state.response,
     bag: ctx.context.state.bag,
+    isInvoke: isInvokeCtx(ctx),
     invoke: buildInvokeFunc(ctx.resolve, { propagateOptions: true }, {
       isInvoke: true,
       resolveChain: ctx.resolveChain,
