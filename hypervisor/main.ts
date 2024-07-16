@@ -15,7 +15,7 @@ if (import.meta.main && !runCommand || runCommand.length === 0) {
 
 const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
 const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
-const EXTERNAL_DOMAIN = `${DECO_ENV_NAME}--${DECO_SITE_NAME}.deco.site`;
+const EXTERNAL_DOMAIN = `${DECO_ENV_NAME?.trim()}--${DECO_SITE_NAME}.deco.site`;
 
 const APP_PORT = portPool.get();
 
