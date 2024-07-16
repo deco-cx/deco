@@ -173,6 +173,7 @@ const wrapLoader = (
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
       const cacheKeyValue = cacheKey(props, req, ctx);
+      logger.info("cacheKeyValue: ", cacheKeyValue);
       try {
         // Should skip cache
         if (
@@ -181,6 +182,7 @@ const wrapLoader = (
           !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
+          logger.info("bypassed the cache");
           status = "bypass";
           stats.cache.add(1, { status, loader });
 
@@ -250,22 +252,24 @@ const wrapLoader = (
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
+          const response = new Response(JSON.stringify(json), {
+            headers: {
+              "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
+                .toUTCString(),
+            },
+          })
+          logger.info("caching the following request: ", request, "\nAnd response: ", response);
           cache.put(
             request,
-            new Response(JSON.stringify(json), {
-              headers: {
-                "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
-                  .toUTCString(),
-              },
-            }),
-          ).catch((error) => logger.error(`loader error ${error}`));
+            response,
+          ).catch((error) => logger.error(`loader error ${error} -- callhandlerandcache`));
 
           return json;
         };
 
         const staleWhileRevalidate = async () => {
           const matched = await cache.match(request).catch(() => null);
-
+          logger.info(`matched: ${matched}`);
           if (!matched) {
             status = "miss";
             stats.cache.add(1, { status, loader });
@@ -281,7 +285,7 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
 
             callHandlerAndCache().catch((error) =>
-              logger.error(`loader error ${error}`)
+              logger.error(`loader error ${error} -- stale`)
             );
           } else {
             status = "hit";
