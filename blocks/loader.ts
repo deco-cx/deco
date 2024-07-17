@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
-import { ValueType, weakcache } from "../deps.ts";
+import { LoggerProvider, ValueType, weakcache } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
@@ -99,9 +99,9 @@ export const wrapCaughtErrors = async <
 };
 
 export const LOADER_CACHE_START_TRESHOLD =
-  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
+  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 0;
 
-export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
+export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024_000;
 
 const stats = {
   cache: meter.createCounter("loader_cache", {
@@ -173,6 +173,7 @@ const wrapLoader = (
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
       const cacheKeyValue = cacheKey(props, req, ctx);
+      logger.info("cacheKeyValue: ", cacheKeyValue);
       try {
         // Should skip cache
         if (
@@ -181,6 +182,7 @@ const wrapLoader = (
           !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
+          logger.info("bypassed the cache");
           status = "bypass";
           stats.cache.add(1, { status, loader });
 
@@ -250,22 +252,26 @@ const wrapLoader = (
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
+          const response = new Response(JSON.stringify(json), {
+            headers: {
+              "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
+                .toUTCString(),
+            },
+          })
+          logger.info("caching the following request: ", JSON.stringify(request), "\nAnd response: ", JSON.stringify(response));
           cache.put(
             request,
-            new Response(JSON.stringify(json), {
-              headers: {
-                "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
-                  .toUTCString(),
-              },
-            }),
-          ).catch((error) => logger.error(`loader error ${error}`));
+            response,
+          ).catch((error) => {
+            logger.info(`ERROR -> request ${JSON.stringify(request)} -- response ${JSON.stringify(response)} -- callhandlerandcache`);
+            logger.error(`ERROR -> loader error ${error} -- callhandlerandcache`)});
 
           return json;
         };
 
         const staleWhileRevalidate = async () => {
           const matched = await cache.match(request).catch(() => null);
-
+          logger.info(`matched: ${JSON.stringify(matched)}`);
           if (!matched) {
             status = "miss";
             stats.cache.add(1, { status, loader });
@@ -281,7 +287,7 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
 
             callHandlerAndCache().catch((error) =>
-              logger.error(`loader error ${error}`)
+              logger.error(`loader error ${error} -- stale`)
             );
           } else {
             status = "hit";
