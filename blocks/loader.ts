@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
-import { ValueType, weakcache } from "../deps.ts";
+import { LoggerProvider, ValueType, weakcache } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
@@ -258,18 +258,20 @@ const wrapLoader = (
                 .toUTCString(),
             },
           })
-          logger.info("caching the following request: ", request, "\nAnd response: ", response);
+          logger.info("caching the following request: ", JSON.stringify(request), "\nAnd response: ", JSON.stringify(response));
           cache.put(
             request,
             response,
-          ).catch((error) => logger.error(`loader error ${error} -- callhandlerandcache`));
+          ).catch((error) => {
+            logger.info(`ERROR -> request ${JSON.stringify(request)} -- response ${JSON.stringify(response)} -- callhandlerandcache`);
+            logger.error(`ERROR -> loader error ${error} -- callhandlerandcache`)});
 
           return json;
         };
 
         const staleWhileRevalidate = async () => {
           const matched = await cache.match(request).catch(() => null);
-          logger.info(`matched: ${matched}`);
+          logger.info(`matched: ${JSON.stringify(matched)}`);
           if (!matched) {
             status = "miss";
             stats.cache.add(1, { status, loader });
