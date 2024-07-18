@@ -17,6 +17,7 @@ export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
   device: Device;
   framework: "fresh" | "htmx";
+  deploymentId?: string
 }
 
 export const SectionContext = createContext<SectionContext | undefined>(
@@ -148,7 +149,7 @@ export const withSection = <TProps,>(
   return {
     props,
     Component: (props: TProps) => {
-      const { isDeploy, request } = Context.active();
+      const { isDeploy, request, deploymentId } = Context.active();
       const framework = frameworkFromState ?? request?.framework ?? "fresh";
       const binding = bindings[framework];
 
@@ -165,6 +166,7 @@ export const withSection = <TProps,>(
         <SectionContext.Provider
           value={{
             ...ctx,
+            deploymentId,
             renderSalt,
             framework,
             get device() {
