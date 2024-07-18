@@ -69,6 +69,7 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     let device: Device | null = null;
     const ctx = {
       request,
+      siteId: 0,
       get device() {
         return device ??= deviceOf(ctx.request);
       },

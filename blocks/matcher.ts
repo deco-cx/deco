@@ -9,6 +9,7 @@ export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 // deno-lint-ignore ban-types
 export type MatchContext<T = {}> = T & {
   device: Device;
+  siteId: number;
   request: Request;
 };
 
