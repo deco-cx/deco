@@ -24,7 +24,7 @@ export const useSection = <P>(
   const cbString = [
     revisionId,
     ctx?.context.state.vary.sort().join(),
-    ctx?.framework === "fresh" && ctx?.deploymentId,
+    ctx?.deploymentId,
   ].join("|");
   hasher.hash(cbString);
   const cb = hasher.result();
