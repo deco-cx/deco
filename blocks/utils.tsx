@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import type { Status } from "std/http/mod.ts";
 import type { AppManifest, ImportMap } from "../blocks/app.ts";
+import { isInvokeCtx } from "../blocks/loader.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";
 import type { JSX } from "../deps.ts";
@@ -94,6 +95,7 @@ export type FnContext<
   resolverId?: string;
   monitoring?: Monitoring;
   get: ResolveFunc;
+  isInvoke?: boolean;
   invoke:
     & InvocationProxy<
       TManifest
@@ -129,6 +131,7 @@ export const fnContextFromHttpContext = <TState = {}>(
     get: ctx.resolve,
     response: ctx.context.state.response,
     bag: ctx.context.state.bag,
+    isInvoke: isInvokeCtx(ctx),
     invoke: buildInvokeFunc(ctx.resolve, { propagateOptions: true }, {
       isInvoke: true,
       resolveChain: ctx.resolveChain,
