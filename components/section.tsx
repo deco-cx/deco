@@ -12,6 +12,7 @@ import { logger } from "../observability/otel/config.ts";
 import FreshBindings from "../runtime/fresh/Bindings.tsx";
 import HTMXBindings from "../runtime/htmx/Bindings.tsx";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
+import { Empty } from "../components/StubSection.tsx";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
@@ -211,6 +212,7 @@ export const withSection = <TProps,>(
         </SectionContext.Provider>
       );
     },
+    LoadingFallback: LoadingFallback ?? Empty,
     metadata,
   };
 };
