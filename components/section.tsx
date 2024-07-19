@@ -3,7 +3,7 @@ import { Component, type ComponentType, createContext, Fragment } from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
-import { Context } from "../deco.ts";
+import { Context, RequestContext } from "../deco.ts";
 import { Murmurhash3 } from "../deps.ts";
 import type { ComponentFunc } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
@@ -17,6 +17,7 @@ export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
   device: Device;
   framework: "fresh" | "htmx";
+  deploymentId?: string;
 }
 
 export const SectionContext = createContext<SectionContext | undefined>(
@@ -145,10 +146,15 @@ export const withSection = <TProps,>(
   };
   let device: Device | null = null;
 
+  /**
+   * Get the signal created during the request;
+   */
+  const signal = RequestContext.signal;
+
   return {
     props,
     Component: (props: TProps) => {
-      const { isDeploy, request } = Context.active();
+      const { isDeploy, request, deploymentId } = Context.active();
       const framework = frameworkFromState ?? request?.framework ?? "fresh";
       const binding = bindings[framework];
 
@@ -161,10 +167,17 @@ export const withSection = <TProps,>(
       const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
       renderCount = ++renderCount % MAX_RENDER_COUNT;
 
+      const Throw = () => {
+        // If the signal from request is aborted, then throw
+        signal?.throwIfAborted();
+        return null;
+      };
+
       return (
         <SectionContext.Provider
           value={{
             ...ctx,
+            deploymentId,
             renderSalt,
             framework,
             get device() {
@@ -185,7 +198,17 @@ export const withSection = <TProps,>(
                 loading={() => (
                   <binding.LoadingFallback id={id}>
                     {/* @ts-ignore difficult typing this */}
-                    <LoadingFallback {...props} />
+                    <LoadingFallback
+                      {...new Proxy<Partial<TProps>>(props, {
+                        get: (value: Partial<TProps>, prop) => {
+                          try {
+                            return Reflect.get(value, prop);
+                          } catch (_) {
+                            return undefined;
+                          }
+                        },
+                      })}
+                    />
                   </binding.LoadingFallback>
                 )}
                 error={({ error }) => (
@@ -202,6 +225,7 @@ export const withSection = <TProps,>(
                     )
                 )}
               >
+                {<Throw />}
                 <ComponentFunc {...props} />
               </ErrorBoundary>
             </section>

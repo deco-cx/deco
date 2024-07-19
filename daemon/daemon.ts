@@ -107,7 +107,7 @@ export class Daemon {
         lastPersist = lastPersist.catch((_err) => {}).then(() => {
           return this.realtimeFsState.persistState();
         });
-      }, 10 * MINUTE)
+      }, 2 * MINUTE)
       : undefined; // 10m
     storage.onChange = (events) => {
       if (debouncedBuild) {

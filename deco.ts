@@ -51,6 +51,7 @@ export interface DecoContext {
   decodMode?: DecodMode;
   platform: WellKnownHostingPlatform;
   site: string;
+  siteId: number;
   loginUrl?: string;
   base?: string;
   namespace?: string;
@@ -77,6 +78,7 @@ const getHostingPlatform = (): WellKnownHostingPlatform => {
 
 const defaultContext: Omit<DecoContext, "schema"> = {
   deploymentId,
+  siteId: 0,
   isDeploy: isDeploy,
   decodMode: Deno.env.get("DECOD_MODE") as DecodMode | undefined,
   platform: getHostingPlatform(),
