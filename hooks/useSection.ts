@@ -40,9 +40,17 @@ export const useSection = <P>(
 
   const { request, renderSalt, context: { state: { pathTemplate } } } = ctx;
 
+  const reqUrl = new URL(request.url);
+  const hostHeader = request.headers.get("host");
   const params = new URLSearchParams([
     ["props", JSON.stringify(props)],
-    ["href", href ?? request.url],
+    [
+      "href",
+      href ??
+          hostHeader !== reqUrl.host
+        ? new URL(request.url, `https://${hostHeader}`).href
+        : request.url,
+    ],
     ["pathTemplate", pathTemplate],
     ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     ["framework", ctx.framework],
