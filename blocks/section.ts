@@ -73,8 +73,7 @@ export interface SectionModule<
     ReturnType<ComponentFunc<TLoaderProps | TActionProps>>,
     PreactComponent
   > {
-  // Fix this ComponentType<any>
-  LoadingFallback?: ComponentType<any>;
+  LoadingFallback?: ComponentType;
   ErrorFallback?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TLoaderProps>;
   action?: PropsLoader<TConfig, TActionProps>;
