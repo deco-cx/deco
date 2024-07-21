@@ -18,6 +18,7 @@ export interface SectionContext extends HttpContext<RequestState> {
   device: Device;
   framework: "fresh" | "htmx";
   deploymentId?: string;
+  loading?: "eager" | "lazy";
 }
 
 export const SectionContext = createContext<SectionContext | undefined>(
@@ -159,7 +160,10 @@ export const withSection = <TProps,>(
       const binding = bindings[framework];
 
       // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
-      const parentRenderSalt = useContext(SectionContext)?.renderSalt;
+      const {
+        loading,
+        renderSalt: parentRenderSalt,
+      } = useContext(SectionContext) ?? {};
       // if this is the case, so we can use the renderSaltFromState - which means that we are in a partial rendering phase
       const renderSalt = parentRenderSalt === undefined
         ? renderSaltFromState ?? `${renderCount}`
@@ -225,7 +229,7 @@ export const withSection = <TProps,>(
                     )
                 )}
               >
-                {<Throw />}
+                {loading === "lazy" && <Throw />}
                 <ComponentFunc {...props} />
               </ErrorBoundary>
             </section>
