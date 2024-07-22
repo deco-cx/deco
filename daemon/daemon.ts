@@ -259,6 +259,7 @@ export class Daemon {
 
             const response = await this.realtimeFs.fetch(req);
 
+            // auto-generate blocks.json
             if (req.method !== "GET") {
               try {
                 const paths = await this.realtimeFs.fs.readdir(
