@@ -147,7 +147,7 @@ export class DaemonDiskStorage implements RealtimeStorage {
       ? keys.map((k) => join(this.dir, k))
       : join(this.dir, keys);
     try {
-      if (Array.isArray(keys)) {
+      if (Array.isArray(filePaths)) {
         const data = new Map<string, T>();
         for (const filePath of filePaths) {
           const fileContent = await this.fs.readTextFile(filePath);
@@ -155,7 +155,7 @@ export class DaemonDiskStorage implements RealtimeStorage {
         }
         return data;
       } else {
-        const fileContent = await this.fs.readTextFile(filePaths as string);
+        const fileContent = await this.fs.readTextFile(filePaths);
         return fileContent as T;
       }
     } catch (_error) {
@@ -270,7 +270,7 @@ export class DaemonRealtimeState<T = unknown> implements RealtimeState {
   }
 
   public wait() {
-    return this?.blockConcurrencyWhilePromise ?? Promise.resolve();
+    return this.blockConcurrencyWhilePromise ?? Promise.resolve();
   }
 
   public async persist(outfile: string, isEnvironmentPersistence?: boolean) {

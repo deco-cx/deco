@@ -1,4 +1,10 @@
 import {
+  DECO_FOLDER,
+  genMetadataFromFS,
+  METADATA_FOLDER,
+  METADATA_PATH,
+} from "deco/engine/decofile/fsFolder.ts";
+import {
   type ServerSentEventMessage,
   ServerSentEventStream,
 } from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
@@ -101,6 +107,12 @@ export class Daemon {
     this.realtimeFsState = new DaemonRealtimeState({
       storage,
     });
+
+    this.realtimeFsState.blockConcurrencyWhile(async () => {
+      const meta = await genMetadataFromFS();
+      await storage.put(METADATA_PATH, JSON.stringify(meta));
+    });
+
     let lastPersist = Promise.resolve();
     const debouncedPersist = this.realtimeFsState.shouldPersistState()
       ? debounce(() => {
@@ -222,30 +234,37 @@ export class Daemon {
             },
           );
         }
-        return this.realtimeFsState.wait().then(async () => {
-          if (pathname === COMMIT_DEFAULT_ENDPOINT) {
-            const { commitSha } = await req.json<{ commitSha: string }>();
-            if (!commitSha) {
-              return new Response(
-                JSON.stringify({ message: "commit sha is missing" }),
-                { status: 400 },
+        return this.realtimeFsState.wait()
+          .then(async () => {
+            if (pathname === COMMIT_DEFAULT_ENDPOINT) {
+              const { commitSha } = await req.json<{ commitSha: string }>();
+              if (!commitSha) {
+                return new Response(
+                  JSON.stringify({ message: "commit sha is missing" }),
+                  { status: 400 },
+                );
+              }
+              await this.realtimeFsState.persistNext(commitSha);
+              return new Response(null, { status: 204 });
+            }
+
+            const response = await this.realtimeFs.fetch(req);
+
+            if (req.method !== "GET") {
+              const metadata = await genMetadataFromFS();
+              await this.realtimeFsState.storage.put(
+                METADATA_PATH,
+                JSON.stringify(metadata),
               );
             }
-            await this.realtimeFsState.persistNext(commitSha);
-            return new Response(null, { status: 204 });
-          }
-          return this.realtimeFs.fetch(req);
-        })
-          .catch(
-            (err) => {
-              console.error(
-                "error when fetching realtimeFs",
-                url.pathname,
-                err,
-              );
-              return new Response(null, { status: 500 });
-            },
-          );
+
+            return response;
+          })
+          .catch((err) => {
+            console.error("error when fetching realtimeFs", url.pathname, err);
+
+            return new Response(null, { status: 500 });
+          });
       }
     }
 

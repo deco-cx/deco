@@ -1,5 +1,7 @@
 import { debounce } from "std/async/debounce.ts";
+import { walk } from "std/fs/walk.ts";
 import { basename, join } from "std/path/mod.ts";
+import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
@@ -11,10 +13,84 @@ import type {
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
 
+export const DECO_FOLDER = ".deco";
 export const BLOCKS_FOLDER = "blocks";
+export const METADATA_FOLDER = "metadata";
+export const BLOCKS_JSON = "blocks.json";
 
-const parseBlockId = (filename: string) =>
+export const METADATA_PATH = join(DECO_FOLDER, METADATA_FOLDER, BLOCKS_JSON);
+
+export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
+
+const inferBlockType = (resolveType: string, knownBlockTypes: Set<string>) => {
+  const segments = resolveType.split("/");
+
+  const blockType = segments.find((s) => knownBlockTypes.has(s));
+
+  return blockType;
+};
+
+const getMetadata = async (pathname: string, knownBlockTypes: Set<string>) => {
+  try {
+    const text = await Deno.readTextFile(pathname);
+    const { __resolveType, name, path } = JSON.parse(text) as Record<
+      string,
+      string
+    >;
+
+    const blockType = inferBlockType(__resolveType, knownBlockTypes);
+
+    if (!blockType) {
+      return null;
+    }
+
+    if (blockType === "pages") {
+      return {
+        name: name,
+        path: path,
+        blockType,
+        __resolveType,
+      };
+    }
+
+    return {
+      blockType,
+      __resolveType,
+    };
+    // TODO @gimenes: when the json is wrong, we should somehow resolve to a standard block that talks well to the admin so the user can fix it somehow
+  } catch {
+    return null;
+  }
+};
+
+export const genMetadataFromFS = async () => {
+  try {
+    const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
+
+    const paths = [];
+
+    const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
+      includeDirs: false,
+      includeFiles: true,
+      includeSymlinks: false,
+    });
+
+    for await (const entry of walker) {
+      paths.push(entry.path);
+    }
+
+    const metadata = await Promise.all(
+      paths.map(async (
+        path,
+      ) => [`/${path}`, await getMetadata(path, knownBlockTypes)]),
+    );
+
+    return Object.fromEntries(metadata);
+  } catch (error) {
+    console.error("Errored while generating metadata", error);
+  }
+};
 
 export const newFsFolderProviderFromPath = (
   fullPath: string,

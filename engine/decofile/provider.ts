@@ -8,6 +8,7 @@ import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
 import { newRealtime } from "./realtime.ts";
 import { fromConfigsTable } from "./release.ts";
+import { DECO_FOLDER } from "deco/engine/decofile/fsFolder.ts";
 
 export interface SelectionConfig {
   audiences: unknown[];
@@ -88,7 +89,6 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
 
 const DECOFILE_RELEASE_ENV_VAR = "DECO_RELEASE";
 
-const DECO_FOLDER = ".deco";
 // if decofile does not exists but blocks exists so it should be lazy
 const BLOCKS_FOLDER = join(Deno.cwd(), DECO_FOLDER, "blocks");
 const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
