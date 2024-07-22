@@ -60,44 +60,34 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
 };
 
 export const getFromDecoFolder = async (): Promise<[string, unknown][]> => {
-  try {
-    const paths = [];
+  const paths = [];
 
-    const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
-      includeDirs: false,
-      includeFiles: true,
-      includeSymlinks: false,
-    });
+  const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
+    includeDirs: false,
+    includeFiles: true,
+    includeSymlinks: false,
+  });
 
-    for await (const entry of walker) {
-      paths.push(entry.path);
-    }
-
-    return Promise.all(
-      paths.map(async (path) => [
-        join("/", path),
-        JSON.parse(await Deno.readTextFile(path)),
-      ]),
-    );
-  } catch (error) {
-    console.error(error);
-
-    return [];
+  for await (const entry of walker) {
+    paths.push(entry.path);
   }
+
+  return Promise.all(
+    paths.map(async (path) => [
+      join("/", path),
+      JSON.parse(await Deno.readTextFile(path)),
+    ]),
+  );
 };
 
 export const genMetadataFromFS = (entries: [string, unknown][]) => {
-  try {
-    const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
+  const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
 
-    const metadata = entries.map((
-      [path, content],
-    ) => [path, inferMetadata(content, knownBlockTypes)]);
+  const metadata = entries.map((
+    [path, content],
+  ) => [path, inferMetadata(content, knownBlockTypes)]);
 
-    return Object.fromEntries(metadata);
-  } catch (error) {
-    console.error("Errored while generating metadata", error);
-  }
+  return Object.fromEntries(metadata);
 };
 
 export const newFsFolderProviderFromPath = (

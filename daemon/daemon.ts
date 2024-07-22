@@ -14,7 +14,7 @@ import {
   DECO_FOLDER,
   genMetadataFromFS,
   getFromDecoFolder,
-  METADATA_PATH
+  METADATA_PATH,
 } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
@@ -111,11 +111,15 @@ export class Daemon {
     });
 
     this.realtimeFsState.blockConcurrencyWhile(async () => {
-      const entries = await getFromDecoFolder();
-      await storage.put(
-        METADATA_PATH,
-        JSON.stringify(genMetadataFromFS(entries)),
-      );
+      try {
+        const entries = await getFromDecoFolder();
+        await storage.put(
+          METADATA_PATH,
+          JSON.stringify(genMetadataFromFS(entries)),
+        );
+      } catch (error) {
+        console.error(error);
+      }
     });
 
     let lastPersist = Promise.resolve();
