@@ -31,14 +31,9 @@ const inferBlockType = (resolveType: string, knownBlockTypes: Set<string>) => {
   return blockType;
 };
 
-const getMetadata = async (pathname: string, knownBlockTypes: Set<string>) => {
+const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
   try {
-    const text = await Deno.readTextFile(pathname);
-    const { __resolveType, name, path } = JSON.parse(text) as Record<
-      string,
-      string
-    >;
-
+    const { __resolveType, name, path } = content as Record<string, string>;
     const blockType = inferBlockType(__resolveType, knownBlockTypes);
 
     if (!blockType) {
@@ -64,10 +59,8 @@ const getMetadata = async (pathname: string, knownBlockTypes: Set<string>) => {
   }
 };
 
-export const genMetadataFromFS = async () => {
+export const getFromDecoFolder = async (): Promise<[string, unknown][]> => {
   try {
-    const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
-
     const paths = [];
 
     const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
@@ -80,11 +73,26 @@ export const genMetadataFromFS = async () => {
       paths.push(entry.path);
     }
 
-    const metadata = await Promise.all(
-      paths.map(async (
-        path,
-      ) => [`/${path}`, await getMetadata(path, knownBlockTypes)]),
+    return Promise.all(
+      paths.map(async (path) => [
+        join("/", path),
+        JSON.parse(await Deno.readTextFile(path)),
+      ]),
     );
+  } catch (error) {
+    console.error(error);
+
+    return [];
+  }
+};
+
+export const genMetadataFromFS = (entries: [string, unknown][]) => {
+  try {
+    const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
+
+    const metadata = entries.map((
+      [path, content],
+    ) => [path, inferMetadata(content, knownBlockTypes)]);
 
     return Object.fromEntries(metadata);
   } catch (error) {

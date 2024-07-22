@@ -6,11 +6,15 @@ import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir, exists } from "std/fs/mod.ts";
+import { join } from "std/path/mod.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import {
+  BLOCKS_FOLDER,
+  DECO_FOLDER,
   genMetadataFromFS,
-  METADATA_PATH,
+  getFromDecoFolder,
+  METADATA_PATH
 } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
@@ -107,8 +111,11 @@ export class Daemon {
     });
 
     this.realtimeFsState.blockConcurrencyWhile(async () => {
-      const meta = await genMetadataFromFS();
-      await storage.put(METADATA_PATH, JSON.stringify(meta));
+      const entries = await getFromDecoFolder();
+      await storage.put(
+        METADATA_PATH,
+        JSON.stringify(genMetadataFromFS(entries)),
+      );
     });
 
     let lastPersist = Promise.resolve();
@@ -249,11 +256,30 @@ export class Daemon {
             const response = await this.realtimeFs.fetch(req);
 
             if (req.method !== "GET") {
-              const metadata = await genMetadataFromFS();
-              await this.realtimeFsState.storage.put(
-                METADATA_PATH,
-                JSON.stringify(metadata),
-              );
+              try {
+                const paths = await this.realtimeFs.fs.readdir(
+                  join("/", DECO_FOLDER, BLOCKS_FOLDER),
+                ) as string[];
+
+                const entries = await Promise.all(
+                  paths.map(async (p) =>
+                    [
+                      p,
+                      await this.realtimeFs.fs.readFile(p)
+                        .then(JSON.parse).catch(() => null),
+                    ] as [string, unknown]
+                  ),
+                );
+
+                const metadata = genMetadataFromFS(entries);
+
+                await this.realtimeFs.fs.writeFile(
+                  join("/", METADATA_PATH),
+                  JSON.stringify(metadata),
+                );
+              } catch (error) {
+                console.error("Error while auto-generating blocks.json", error);
+              }
             }
 
             return response;
