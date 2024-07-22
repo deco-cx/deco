@@ -6,9 +6,9 @@ import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
+import { DECO_FOLDER } from "./fsFolder.ts";
 import { newRealtime } from "./realtime.ts";
 import { fromConfigsTable } from "./release.ts";
-import { DECO_FOLDER } from "deco/engine/decofile/fsFolder.ts";
 
 export interface SelectionConfig {
   audiences: unknown[];

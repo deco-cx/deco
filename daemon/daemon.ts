@@ -1,10 +1,4 @@
 import {
-  DECO_FOLDER,
-  genMetadataFromFS,
-  METADATA_FOLDER,
-  METADATA_PATH,
-} from "deco/engine/decofile/fsFolder.ts";
-import {
   type ServerSentEventMessage,
   ServerSentEventStream,
 } from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
@@ -14,6 +8,10 @@ import * as colors from "std/fmt/colors.ts";
 import { ensureDir, exists } from "std/fs/mod.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
+import {
+  genMetadataFromFS,
+  METADATA_PATH,
+} from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
