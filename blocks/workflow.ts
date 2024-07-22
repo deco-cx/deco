@@ -8,6 +8,7 @@ import {
   type WorkflowExecution,
 } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import type {
   AvailableActions,
   AvailableFunctions,
@@ -18,7 +19,6 @@ import type {
   ManifestFunction,
   ManifestLoader,
 } from "../utils/invoke.types.ts";
-import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import type { HttpContext } from "./handler.ts";
 import {
@@ -120,19 +120,20 @@ const workflowBlock: Block<
     TState = {},
   >(func: {
     default: WorkflowFn<TProps, TState>;
-  }, key: string) =>
-  (
-    props: TProps,
-    ctx: HttpContext<{ global: any } & RequestState>,
-  ) => {
-    const durableWorkflow = func.default(
-      props,
-      fnContextFromHttpContext(ctx),
-    ) as NamedWorkflow;
-    durableWorkflow.key = key;
-    durableWorkflow.props = props;
-    return durableWorkflow;
-  },
+  }, key: string) => ({
+    invoke: (
+      props: TProps,
+      ctx: HttpContext<{ global: any } & RequestState>,
+    ) => {
+      const durableWorkflow = func.default(
+        props,
+        fnContextFromHttpContext(ctx),
+      ) as NamedWorkflow;
+      durableWorkflow.key = key;
+      durableWorkflow.props = props;
+      return durableWorkflow;
+    },
+  }),
 };
 
 /**

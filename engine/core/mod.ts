@@ -116,8 +116,10 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   public getResolvers(): ResolverMap<BaseContext> {
     return {
       ...this.resolvers,
-      resolve: function _resolve(obj: any, { resolve }: BaseContext) {
-        return resolve(obj);
+      resolve: {
+        invoke: function _resolve(obj: any, { resolve }: BaseContext) {
+          return resolve(obj);
+        },
       },
     };
   }

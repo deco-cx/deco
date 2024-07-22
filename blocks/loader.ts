@@ -52,50 +52,52 @@ export const isInvokeCtx = <TContext extends ResolverMiddlewareContext<any>>(
   return (ctx as TContext & { isInvoke: true })?.isInvoke;
 };
 
-export const wrapCaughtErrors = async <
-  TConfig = any,
-  TContext extends ResolverMiddlewareContext<any> = ResolverMiddlewareContext<
-    any
-  >,
->(_props: TConfig, ctx: TContext) => {
-  if (isInvokeCtx(ctx)) { // invoke should not wrap caught errors.
-    return ctx.next!();
-  }
-  try {
-    return await ctx.next!();
-  } catch (err) {
-    if (err instanceof HttpError) {
-      throw err;
+export const wrapCaughtErrors = {
+  invoke: async <
+    TConfig = any,
+    TContext extends ResolverMiddlewareContext<any> = ResolverMiddlewareContext<
+      any
+    >,
+  >(_props: TConfig, ctx: TContext) => {
+    if (isInvokeCtx(ctx)) { // invoke should not wrap caught errors.
+      return ctx.next!();
     }
-    return new Proxy({}, {
-      get: (_target, prop) => {
-        if (prop === "then") {
-          return undefined;
-        }
-        if (prop === "__isErr") {
-          return true;
-        }
-
-        /**
-         * This proxy may be used inside islands.
-         * Islands props are serialized by fresh's serializer.
-         * This code makes it behave well with fresh's serializer
-         */
-        if (prop === "peek") {
-          return undefined;
-        }
-        if (prop === "toJSON") {
-          return () => null;
-        }
-
-        /**
-         * No special case found, throw and hope to be catch by the
-         * section's ErrorFallback
-         */
+    try {
+      return await ctx.next!();
+    } catch (err) {
+      if (err instanceof HttpError) {
         throw err;
-      },
-    });
-  }
+      }
+      return new Proxy({}, {
+        get: (_target, prop) => {
+          if (prop === "then") {
+            return undefined;
+          }
+          if (prop === "__isErr") {
+            return true;
+          }
+
+          /**
+           * This proxy may be used inside islands.
+           * Islands props are serialized by fresh's serializer.
+           * This code makes it behave well with fresh's serializer
+           */
+          if (prop === "peek") {
+            return undefined;
+          }
+          if (prop === "toJSON") {
+            return () => null;
+          }
+
+          /**
+           * No special case found, throw and hope to be catch by the
+           * section's ErrorFallback
+           */
+          throw err;
+        },
+      });
+    }
+  },
 };
 
 export const LOADER_CACHE_START_TRESHOLD =
@@ -309,17 +311,26 @@ const loaderBlock: Block<LoaderModule> = {
   introspect: { includeReturn: true },
   adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
     wrapCaughtErrors,
-    (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
-      applyProps(wrapLoader(mod, ctx.resolveChain, ctx.context.state.release))(
-        props,
-        ctx,
-      ),
+    {
+      invoke: (
+        props: TProps,
+        ctx: HttpContext<{ global: any } & RequestState>,
+      ) =>
+        applyProps(
+          wrapLoader(mod, ctx.resolveChain, ctx.context.state.release),
+        )(
+          props,
+          ctx,
+        ),
+    },
   ],
-  defaultPreview: (result) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(result, null, 2) },
-    };
+  defaultPreview: {
+    invoke: (result) => {
+      return {
+        Component: JsonViewer,
+        props: { body: JSON.stringify(result, null, 2) },
+      };
+    },
   },
 };
 

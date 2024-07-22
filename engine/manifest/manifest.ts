@@ -90,19 +90,24 @@ const newFakeContext = () => {
   };
 };
 export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
-  return (parent, ctx) => {
-    const curr = ctx.resolveChain.findLast((r) => r.type === "dangling")?.value;
+  return {
+    invoke: (parent, ctx) => {
+      const curr = ctx.resolveChain.findLast((r) => r.type === "dangling")
+        ?.value;
 
-    if (typeof curr !== "string") {
-      throw new Error(`Resolver not found ${JSON.stringify(ctx.resolveChain)}`);
-    }
-
-    for (const { recoverable, recover } of recovers) {
-      if (recoverable(curr)) {
-        return recover(parent, ctx);
+      if (typeof curr !== "string") {
+        throw new Error(
+          `Resolver not found ${JSON.stringify(ctx.resolveChain)}`,
+        );
       }
-    }
-    throw new DanglingReference(curr);
+
+      for (const { recoverable, recover } of recovers) {
+        if (recoverable(curr)) {
+          return recover.invoke(parent, ctx);
+        }
+      }
+      throw new DanglingReference(curr);
+    },
   };
 };
 
@@ -147,7 +152,7 @@ const installAppsForResolver = async (
     return currentResolver.resolve<
       { resolvers: ResolverMap; resolvables: Record<string, Resolvable> }
     >({
-      __resolveType: defaults["state"].name,
+      __resolveType: defaults["state"].invoke.name,
     }, fakeCtx);
   };
 

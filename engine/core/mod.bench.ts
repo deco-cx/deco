@@ -2,7 +2,7 @@ import denoJSON from "../../deno.json" with { type: "json" };
 import { genHints } from "../../engine/core/hints.ts";
 import { type BaseContext, resolve } from "../../engine/core/resolver.ts";
 import releaseJSON from "./hints.test.json" with { type: "json" };
-const danglingRecover = (parent: unknown) => parent;
+const danglingRecover = { invoke: (parent: unknown) => parent };
 
 const resolveHints = {}; //on-demand hints
 Deno.bench(

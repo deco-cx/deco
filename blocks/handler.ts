@@ -40,13 +40,14 @@ const handlerBlock: Block<BlockModule<HandlerFunc>> = {
     TState = {},
   >(func: {
     default: HandlerFunc<TConfig, TState>;
-  }) =>
-  async (
-    $live: TConfig,
-    ctx: HttpContext<{ global: any } & RequestState>,
-  ) => {
-    return await func.default($live, fnContextFromHttpContext(ctx));
-  },
+  }) => ({
+    invoke: async (
+      $live: TConfig,
+      ctx: HttpContext<{ global: any } & RequestState>,
+    ) => {
+      return await func.default($live, fnContextFromHttpContext(ctx));
+    },
+  }),
 };
 
 export type Handler = InstanceOf<typeof handlerBlock, "#/root/handlers">;

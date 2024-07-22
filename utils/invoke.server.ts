@@ -16,9 +16,9 @@ export const payloadForFunc = <TManifest extends AppManifest = AppManifest>(
   obj: {
     props: func.props,
     block: sanitizer(func.key),
-    __resolveType: dfs["invoke"].name,
+    __resolveType: dfs["invoke"].invoke.name,
   },
-  __resolveType: dfs["selectKeys"].name,
+  __resolveType: dfs["selectKeys"].invoke.name,
 });
 
 export const buildInvokeFunc = <

@@ -46,10 +46,11 @@ export const applyConfigSync = <
   TFunc extends (c: TConfig) => TResp = any,
 >(func: {
   default: TFunc;
-}) =>
-($live: TConfig) => {
-  return func.default($live);
-};
+}) => ({
+  invoke: ($live: TConfig) => {
+    return func.default($live);
+  },
+});
 
 export const applyConfigFunc = <
   TConfig = any,
@@ -164,7 +165,7 @@ export const applyProps = <
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(
   { default: Component }: { default: ComponentFunc<TProps> },
   component: string,
-) => withSection<TProps>(component, Component);
+) => ({ invoke: withSection<TProps>(component, Component) });
 
 const isPreactComponent = (
   v: unknown | PreactComponent,
@@ -173,13 +174,14 @@ const isPreactComponent = (
 };
 export const usePreviewFunc = <TProps = any>(
   Component: ComponentFunc<TProps>,
-): Resolver =>
-(component: PreactComponent<TProps>): PreactComponent<TProps> => {
-  return ({
-    ...isPreactComponent(component) ? component : { props: component },
-    Component,
-  });
-};
+): Resolver => ({
+  invoke: (component: PreactComponent<TProps>): PreactComponent<TProps> => {
+    return ({
+      ...isPreactComponent(component) ? component : { props: component },
+      Component,
+    });
+  },
+});
 
 export const newComponentBlock = <K extends string>(
   type: K,
@@ -193,7 +195,7 @@ export const newComponentBlock = <K extends string>(
 > => ({
   type,
   defaultDanglingRecover,
-  defaultPreview: (comp) => comp,
+  defaultPreview: { invoke: (comp) => comp },
   adapt: fromComponentFunc,
 });
 
@@ -204,14 +206,16 @@ export const newSingleFlightGroup = <
   >,
 >(singleFlightKeyFunc?: SingleFlightKeyFunc<TConfig, TContext>) => {
   const flights = singleFlight();
-  return (c: TConfig, ctx: TContext) => {
-    if (!singleFlightKeyFunc) {
-      return ctx.next!();
-    }
-    return flights.do(
-      `${singleFlightKeyFunc(c, ctx)}`,
-      () => ctx.next!(),
-    );
+  return {
+    invoke: (c: TConfig, ctx: TContext) => {
+      if (!singleFlightKeyFunc) {
+        return ctx.next!();
+      }
+      return flights.do(
+        `${singleFlightKeyFunc(c, ctx)}`,
+        () => ctx.next!(),
+      );
+    },
   };
 };
 

@@ -251,20 +251,22 @@ const appMiddlewareToResolverMiddleware = <
     ? appMiddleware
     : [appMiddleware];
   return middlewares.map((mid) => {
-    return (props, ctx) => {
-      if (isAppHttpContext(ctx)) {
-        const appHttpCtx = ctx;
-        const appCtx = {
-          ...fnContextFromHttpContext(appHttpCtx),
-          ...state,
-          isInvoke: isInvokeCtx(ctx),
-          resolveChain: ctx.resolveChain,
-          next: ctx.next?.bind?.(ctx),
-        };
-        return mid(props, appHttpCtx.request, appCtx);
-      } else {
-        return ctx.next!();
-      }
+    return {
+      invoke: (props, ctx) => {
+        if (isAppHttpContext(ctx)) {
+          const appHttpCtx = ctx;
+          const appCtx = {
+            ...fnContextFromHttpContext(appHttpCtx),
+            ...state,
+            isInvoke: isInvokeCtx(ctx),
+            resolveChain: ctx.resolveChain,
+            next: ctx.next?.bind?.(ctx),
+          };
+          return mid(props, appHttpCtx.request, appCtx);
+        } else {
+          return ctx.next!();
+        }
+      },
     };
   });
 };
@@ -386,27 +388,30 @@ const appBlock: Block<AppModule> = {
     TState = {},
   >(
     { default: runtimeFn }: AppModule<TState, TProps>,
-  ) =>
-  async (props: TProps) => {
-    try {
-      const appRuntime = await runtimeFn(props);
-      return await buildApp<TState>(appRuntime);
-    } catch (err) {
-      console.log(
-        "error when building app runtime, falling back to an empty runtime",
-        props,
-        err,
-      );
-      return {
-        resolvers: {},
-        resolvables: {},
-        importMap: null,
-        manifest: {
-          baseUrl: import.meta.url,
-          name: "",
-        },
-      };
-    }
+  ) => {
+    return {
+      invoke: (async (props: TProps) => {
+        try {
+          const appRuntime = await runtimeFn(props);
+          return await buildApp<TState>(appRuntime);
+        } catch (err) {
+          console.log(
+            "error when building app runtime, falling back to an empty runtime",
+            props,
+            err,
+          );
+          return {
+            resolvers: {},
+            resolvables: {},
+            importMap: null,
+            manifest: {
+              baseUrl: import.meta.url,
+              name: "",
+            },
+          };
+        }
+      }),
+    };
   },
 };
 

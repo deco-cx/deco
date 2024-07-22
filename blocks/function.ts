@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { wrapCaughtErrors } from "../blocks/loader.ts";
 import type { HttpContext } from "../blocks/handler.ts";
+import { wrapCaughtErrors } from "../blocks/loader.ts";
 import {
   newSingleFlightGroup,
   type SingleFlightKeyFunc,
@@ -36,33 +36,39 @@ const functionBlock: Block<FunctionModule> = {
   ) => [
     wrapCaughtErrors,
     newSingleFlightGroup(singleFlightKey),
-    async (
-      $live: TConfig,
-      ctx: HttpContext<any, any, HandlerContext<any, TState>>,
-    ) => {
-      const { data } = await func(
-        ctx.request,
-        {
-          ...ctx.context,
-          state: {
-            ...ctx.context.state,
-            $live,
-            resolve: ctx.resolve,
-          } as DecoState<any, any>,
-        },
-        $live,
-      );
-      return data;
+    {
+      invoke: async (
+        $live: TConfig,
+        ctx: HttpContext<any, any, HandlerContext<any, TState>>,
+      ) => {
+        const { data } = await func(
+          ctx.request,
+          {
+            ...ctx.context,
+            state: {
+              ...ctx.context.state,
+              $live,
+              resolve: ctx.resolve,
+            } as DecoState<any, any>,
+          },
+          $live,
+        );
+        return data;
+      },
     },
   ],
-  defaultDanglingRecover: () => {
-    return { data: null };
+  defaultDanglingRecover: {
+    invoke: () => {
+      return { data: null };
+    },
   },
-  defaultPreview: (result) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(result, null, 2) },
-    };
+  defaultPreview: {
+    invoke: (result) => {
+      return {
+        Component: JsonViewer,
+        props: { body: JSON.stringify(result, null, 2) },
+      };
+    },
   },
 };
 

@@ -13,11 +13,13 @@ export type AccountFunc<TConfig = any> = (c: TConfig) => Account;
 const accountBlock: Block<BlockModule<AccountFunc>> = {
   type: "accounts",
   adapt: applyConfigSync,
-  defaultPreview: (account) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(account, null, 2) },
-    };
+  defaultPreview: {
+    invoke: (account) => {
+      return {
+        Component: JsonViewer,
+        props: { body: JSON.stringify(account, null, 2) },
+      };
+    },
   },
 };
 

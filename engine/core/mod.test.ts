@@ -41,12 +41,14 @@ Deno.test("resolve", async (t) => {
   await t.step(
     "resolve should not change the original data",
     async () => {
-      const identityResolver = (parent: unknown): unknown => {
-        return Promise.resolve(parent);
+      const identityResolver = {
+        invoke: function identityResolver(parent: unknown): unknown {
+          return Promise.resolve(parent);
+        },
       };
       const resolverMap = {
         ...defaults,
-        resolve: (data: unknown) => context.resolve(data),
+        resolve: { invoke: (data: unknown) => context.resolve(data) },
         identityResolver,
       };
       const resolvableMap = {
@@ -56,9 +58,9 @@ Deno.test("resolve", async (t) => {
             barNested: {
               fooNested: 10,
             },
-            __resolveType: identityResolver.name,
+            __resolveType: identityResolver.invoke.name,
           },
-          __resolveType: identityResolver.name,
+          __resolveType: identityResolver.invoke.name,
         },
       };
       const clone = structuredClone(resolvableMap);
@@ -119,12 +121,14 @@ Deno.test("resolve", async (t) => {
       bar: number;
     };
     const resolverMap = {
-      resolve: (data: unknown) => context.resolve(data),
-      testResolver: (parent: TestType): TestType => {
-        return {
-          ...parent,
-          bar: parent.bar + 1,
-        };
+      resolve: { invoke: (data: unknown) => context.resolve(data) },
+      testResolver: {
+        invoke: (parent: TestType): TestType => {
+          return {
+            ...parent,
+            bar: parent.bar + 1,
+          };
+        },
       },
     };
     const result = await resolve<{ values: TestType[] }>(
@@ -159,11 +163,13 @@ Deno.test("resolve", async (t) => {
       bar: number;
     };
     const resolverMap = {
-      testResolver: (parent: TestType): TestType => {
-        return {
-          ...parent,
-          bar: parent.bar + 1,
-        };
+      testResolver: {
+        invoke: (parent: TestType): TestType => {
+          return {
+            ...parent,
+            bar: parent.bar + 1,
+          };
+        },
       },
     };
     const result = await resolve<TestType>(
@@ -189,16 +195,20 @@ Deno.test("resolve", async (t) => {
       bar: number;
     };
     const resolverMap = {
-      testResolver2: (parent: TestType): TestType => {
-        return parent;
+      testResolver2: {
+        invoke: (parent: TestType): TestType => {
+          return parent;
+        },
       },
-      testResolver: (parent: TestTypeParent): TestType => {
-        return {
-          ...parent,
-          bar: {
-            value: parent.bar,
-          },
-        };
+      testResolver: {
+        invoke: (parent: TestTypeParent): TestType => {
+          return {
+            ...parent,
+            bar: {
+              value: parent.bar,
+            },
+          };
+        },
       },
     };
     const resolvableMap = {
@@ -238,13 +248,15 @@ Deno.test("resolve", async (t) => {
       bar: number;
     };
     const resolverMap = {
-      testResolver: (parent: TestTypeParent): TestType => {
-        return {
-          ...parent,
-          bar: {
-            value: parent.bar,
-          },
-        };
+      testResolver: {
+        invoke: (parent: TestTypeParent): TestType => {
+          return {
+            ...parent,
+            bar: {
+              value: parent.bar,
+            },
+          };
+        },
       },
     };
     const result = await resolve<

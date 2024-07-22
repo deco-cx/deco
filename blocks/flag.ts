@@ -63,33 +63,38 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     TConfig = unknown,
   >(func: {
     default: FlagFunc<TConfig>;
-  }) =>
-  ($live: TConfig, { request }: HttpContext) => {
-    const flag = func.default($live);
-    let device: Device | null = null;
-    const ctx = {
-      request,
-      siteId: 0,
-      get device() {
-        return device ??= deviceOf(ctx.request);
+  }) => {
+    return {
+      invoke: ($live: TConfig, { request }: HttpContext) => {
+        const flag = func.default($live);
+        let device: Device | null = null;
+        const ctx = {
+          request,
+          siteId: 0,
+          get device() {
+            return device ??= deviceOf(ctx.request);
+          },
+        };
+        if (isMultivariate(flag)) {
+          const value = (flag?.variants ?? []).find((variant) =>
+            typeof variant?.rule === "function" && variant?.rule(ctx)
+          )?.value ?? (flag?.variants ?? [])[flag?.variants?.length - 1];
+          return isDeferred(value) ? value() : value;
+        }
+        const matchValue = typeof flag?.matcher === "function"
+          ? flag.matcher(ctx)
+          : false;
+        return matchValue ? flag?.true : flag?.false;
       },
     };
-    if (isMultivariate(flag)) {
-      const value = (flag?.variants ?? []).find((variant) =>
-        typeof variant?.rule === "function" && variant?.rule(ctx)
-      )?.value ?? (flag?.variants ?? [])[flag?.variants?.length - 1];
-      return isDeferred(value) ? value() : value;
-    }
-    const matchValue = typeof flag?.matcher === "function"
-      ? flag.matcher(ctx)
-      : false;
-    return matchValue ? flag?.true : flag?.false;
   },
-  defaultPreview: (resp) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(resp) },
-    };
+  defaultPreview: {
+    invoke: (resp) => {
+      return {
+        Component: JsonViewer,
+        props: { body: JSON.stringify(resp) },
+      };
+    },
   },
 };
 

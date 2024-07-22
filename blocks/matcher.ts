@@ -101,85 +101,86 @@ const matcherBlock: Block<
   type: "matchers",
   adapt: <TConfig = unknown>(
     { default: func, sticky }: MatcherModule,
-  ) =>
-  (
-    $live: TConfig,
-    httpCtx: HttpContext<
-      {
-        global: unknown;
-      } & RequestState,
-      unknown
-    >,
-  ) => {
-    const matcherFunc = (ctx: MatchContext) => {
-      const fMatcher = func as unknown as
-        | ((c: TConfig, ctx: MatchContext) => boolean)
-        | MatchFunc;
-      const matcherFuncOrValue = fMatcher($live, ctx);
-      if (typeof matcherFuncOrValue === "function") {
-        return matcherFuncOrValue(ctx);
-      }
-      return matcherFuncOrValue;
-    };
-    const respHeaders = httpCtx.context.state.response.headers;
-    const cacheControl = httpCtx.request.headers.get("Cache-Control");
-    const isNoCache = cacheControl === "no-cache";
-    const shouldStickyOnSession = sticky === "session";
-    return (ctx: MatchContext) => {
-      let uniqueId = "";
-      let isSegment = true;
-
-      // from last to first and stop in the first resolvable
-      // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
-      for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
-        const { type, value } = httpCtx.resolveChain[i];
-        if (type === "prop" || type === "resolvable") {
-          uniqueId =
-            (`${value}${uniqueId.length > 0 ? charByType[type] : ""}`) +
-            uniqueId;
+  ) => ({
+    invoke: (
+      $live: TConfig,
+      httpCtx: HttpContext<
+        {
+          global: unknown;
+        } & RequestState,
+        unknown
+      >,
+    ) => {
+      const matcherFunc = (ctx: MatchContext) => {
+        const fMatcher = func as unknown as
+          | ((c: TConfig, ctx: MatchContext) => boolean)
+          | MatchFunc;
+        const matcherFuncOrValue = fMatcher($live, ctx);
+        if (typeof matcherFuncOrValue === "function") {
+          return matcherFuncOrValue(ctx);
         }
-        // stop on first resolvable
-        if (type === "resolvable") {
-          isSegment = uniqueId === value;
-          break;
+        return matcherFuncOrValue;
+      };
+      const respHeaders = httpCtx.context.state.response.headers;
+      const cacheControl = httpCtx.request.headers.get("Cache-Control");
+      const isNoCache = cacheControl === "no-cache";
+      const shouldStickyOnSession = sticky === "session";
+      return (ctx: MatchContext) => {
+        let uniqueId = "";
+        let isSegment = true;
+
+        // from last to first and stop in the first resolvable
+        // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
+        for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
+          const { type, value } = httpCtx.resolveChain[i];
+          if (type === "prop" || type === "resolvable") {
+            uniqueId =
+              (`${value}${uniqueId.length > 0 ? charByType[type] : ""}`) +
+              uniqueId;
+          }
+          // stop on first resolvable
+          if (type === "resolvable") {
+            isSegment = uniqueId === value;
+            break;
+          }
         }
-      }
-      const { [uniqueId]: isEnabled } = matchersOverride.parse(
-        ctx.request,
-      );
+        const { [uniqueId]: isEnabled } = matchersOverride.parse(
+          ctx.request,
+        );
 
-      let result = isEnabled;
-      // if it is not sticky then we can run the matcher function
-      if (!shouldStickyOnSession) {
-        result ??= matcherFunc(ctx);
-      } else {
-        hasher.hash(uniqueId);
-        const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
-        hasher.reset();
-        const isMatchFromCookie = isNoCache
-          ? undefined
-          : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
-        result ??= isMatchFromCookie ?? matcherFunc(ctx);
-        if (result !== isMatchFromCookie) {
-          setCookie(respHeaders, {
-            name: cookieName,
-            value: cookieValue.build(uniqueId, result),
-            path: "/",
-            sameSite: "Strict",
-          });
-          respHeaders.append("vary", "cookie");
+        let result = isEnabled;
+        // if it is not sticky then we can run the matcher function
+        if (!shouldStickyOnSession) {
+          result ??= matcherFunc(ctx);
+        } else {
+          hasher.hash(uniqueId);
+          const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
+          hasher.reset();
+          const isMatchFromCookie = isNoCache
+            ? undefined
+            : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
+          result ??= isMatchFromCookie ?? matcherFunc(ctx);
+          if (result !== isMatchFromCookie) {
+            setCookie(respHeaders, {
+              name: cookieName,
+              value: cookieValue.build(uniqueId, result),
+              path: "/",
+              sameSite: "Strict",
+            });
+            respHeaders.append("vary", "cookie");
+          }
         }
-      }
 
-      httpCtx.context.state.flags.push({
-        name: uniqueId,
-        value: result,
-        isSegment,
-      });
+        httpCtx.context.state.flags.push({
+          name: uniqueId,
+          value: result,
+          isSegment,
+        });
 
-      return result;
-    };
-  },
+        return result;
+      };
+    },
+  }),
 };
 
 /**

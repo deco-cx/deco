@@ -17,13 +17,15 @@ const actionBlock: Block<ActionModule> = {
   >(
     mod: ActionModule<TProps>,
   ) => [
-    applyProps(mod),
+    { invoke: applyProps(mod) },
   ],
-  defaultPreview: (result) => {
-    return {
-      Component: JsonViewer,
-      props: { body: JSON.stringify(result, null, 2) },
-    };
+  defaultPreview: {
+    invoke: (result) => {
+      return {
+        Component: JsonViewer,
+        props: { body: JSON.stringify(result, null, 2) },
+      };
+    },
   },
 };
 

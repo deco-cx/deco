@@ -90,8 +90,8 @@ export type ResolvesTo<
   TResolverMap extends ResolverMap<TContext> = ResolverMap<TContext>,
 > = {
   [resolver in keyof TResolverMap]: UnPromisify<
-    ReturnType<TResolverMap[resolver]>
-  > extends T ? TResolverMap[resolver]
+    ReturnType<TResolverMap[resolver]["invoke"]>
+  > extends T ? TResolverMap[resolver]["invoke"]
     : never;
 };
 
@@ -212,28 +212,28 @@ export const isResolvable = <
 };
 
 export type OnBeforeResolveProps = <T>(props: T, hints: HintNode<T>) => T;
-export type AsyncResolver<
+export interface AsyncResolver<
   T = any,
   TParent = any,
   TContext extends BaseContext = BaseContext,
-> = {
-  (
+> {
+  invoke: (
     parent: TParent,
     context: TContext,
-  ): Promise<Resolvable<T, TContext, any>>;
+  ) => Promise<Resolvable<T, TContext, any>>;
   onBeforeResolveProps?: OnBeforeResolveProps;
   type?: string;
-};
+}
 
-export type SyncResolver<
+export interface SyncResolver<
   T = any,
   TParent = any,
   TContext extends BaseContext = BaseContext,
-> = {
-  (parent: TParent, context: TContext): Resolvable<T, TContext, any>;
+> {
+  invoke: (parent: TParent, context: TContext) => Resolvable<T, TContext, any>;
   onBeforeResolveProps?: OnBeforeResolveProps;
   type?: string;
-};
+}
 
 export type Resolver<
   T = any,
@@ -455,7 +455,7 @@ const invokeResolverWithProps = async <
   };
 
   try {
-    let respOrPromise = resolver(
+    let respOrPromise = resolver.invoke(
       props,
       { ...ctx, monitoring, resolverId },
     );
@@ -548,7 +548,7 @@ const resolveWithType = <
   if (!ctx.danglingRecover) {
     throw new DanglingReference(resolveType);
   }
-  return ctx.danglingRecover(
+  return ctx.danglingRecover.invoke(
     props,
     ctx,
   );

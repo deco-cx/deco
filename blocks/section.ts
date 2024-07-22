@@ -18,8 +18,8 @@ import type {
   PreactComponent,
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
-import type { AppManifest, FunctionContext } from "../types.ts";
 import { HttpError } from "../engine/errors.ts";
+import type { AppManifest, FunctionContext } from "../types.ts";
 
 /**
  * @widget none
@@ -112,78 +112,86 @@ export const createSectionBlock = (
       );
     const useExportDefaultComponent = withMainComponent(mod.default);
     if (!mod.action && !mod.loader) {
-      return (
-        props: TProps,
-        ctx: HttpContext<RequestState>,
-      ): PreactComponent<TProps> => {
-        return useExportDefaultComponent(props, ctx);
-      };
-    }
-    return async (
-      props: TConfig,
-      httpCtx: HttpContext<RequestState>,
-    ): Promise<PreactComponent<TProps>> => {
-      const {
-        request,
-        context,
-        resolve,
-      } = httpCtx;
-
-      const loaderSectionProps = request.method === "GET"
-        ? mod.loader
-        : mod.action ?? mod.loader;
-
-      if (!loaderSectionProps) {
-        return useExportDefaultComponent(props as unknown as TProps, httpCtx);
-      }
-
-      const ctx = {
-        ...context,
-        state: { ...context.state, $live: props, resolve },
-      } as FunctionContext;
-
-      const fnContext = fnContextFromHttpContext(httpCtx);
-      return await propsLoader(
-        loaderSectionProps,
-        ctx.state.$live,
-        request,
-        fnContext,
-      ).then((props) => {
-        return useExportDefaultComponent(props, httpCtx);
-      }).catch((err) => {
-        if (err instanceof HttpError) {
-          throw err;
-        }
-        const allowErrorBoundary = withMainComponent(alwaysThrow(err));
-        return allowErrorBoundary(
-          ctx.state.$live as unknown as TProps,
-          httpCtx,
-        );
-      });
-    };
-  },
-  defaultDanglingRecover: (_, ctx) => {
-    const metadata = {
-      resolveChain: ctx.resolveChain,
-      component: ctx.resolveChain.findLast((chain) => chain.type === "resolver")
-        ?.value?.toString(),
-    };
-    if (Context.active().isDeploy) {
       return {
-        Component: Empty,
-        props: {},
-        metadata,
+        invoke: (
+          props: TProps,
+          ctx: HttpContext<RequestState>,
+        ): PreactComponent<TProps> => {
+          return useExportDefaultComponent(props, ctx);
+        },
       };
     }
     return {
-      Component: StubSection,
-      props: {
-        component: metadata.component,
+      invoke: async (
+        props: TConfig,
+        httpCtx: HttpContext<RequestState>,
+      ): Promise<PreactComponent<TProps>> => {
+        const {
+          request,
+          context,
+          resolve,
+        } = httpCtx;
+
+        const loaderSectionProps = request.method === "GET"
+          ? mod.loader
+          : mod.action ?? mod.loader;
+
+        if (!loaderSectionProps) {
+          return useExportDefaultComponent(props as unknown as TProps, httpCtx);
+        }
+
+        const ctx = {
+          ...context,
+          state: { ...context.state, $live: props, resolve },
+        } as FunctionContext;
+
+        const fnContext = fnContextFromHttpContext(httpCtx);
+        return await propsLoader(
+          loaderSectionProps,
+          ctx.state.$live,
+          request,
+          fnContext,
+        ).then((props) => {
+          return useExportDefaultComponent(props, httpCtx);
+        }).catch((err) => {
+          if (err instanceof HttpError) {
+            throw err;
+          }
+          const allowErrorBoundary = withMainComponent(alwaysThrow(err));
+          return allowErrorBoundary(
+            ctx.state.$live as unknown as TProps,
+            httpCtx,
+          );
+        });
       },
-      metadata,
     };
   },
-  defaultPreview: (comp) => comp,
+  defaultDanglingRecover: {
+    invoke: (_, ctx) => {
+      const metadata = {
+        resolveChain: ctx.resolveChain,
+        component: ctx.resolveChain.findLast((chain) =>
+          chain.type === "resolver"
+        )
+          ?.value?.toString(),
+      };
+      if (Context.active().isDeploy) {
+        return {
+          Component: Empty,
+          props: {},
+          metadata,
+        };
+      }
+      return {
+        Component: StubSection,
+        props: {
+          component: metadata.component,
+        },
+        metadata,
+      };
+    },
+  },
+  defaultPreview: { invoke: (comp) => comp },
 });
 
 const sectionBlock: Block<SectionModule> = createSectionBlock(
