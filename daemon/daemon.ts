@@ -11,7 +11,7 @@ import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import {
   BLOCKS_FOLDER,
   DECO_FOLDER,
-  syncMetadata
+  syncMetadata,
 } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
