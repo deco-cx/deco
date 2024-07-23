@@ -1,5 +1,5 @@
 import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
-import { Component, type ComponentType, createContext } from "preact";
+import { Component, type ComponentType, createContext, Fragment } from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
@@ -119,9 +119,7 @@ const MAX_RENDER_COUNT = 5_00; // for saved sections this number should mark a r
 export const withSection = <TProps, TLoaderProps = TProps>(
   resolver: string,
   ComponentFunc: ComponentFunc,
-  LoadingFallback: ComponentType<TLoaderProps | TProps> = () => (
-    <div style={{ height: "50vh" }}></div>
-  ),
+  LoadingFallback: ComponentType<TLoaderProps | TProps> = Fragment,
   ErrorFallback?: ComponentType<{ error?: Error }>,
   loaderProps?: TLoaderProps,
 ) =>
