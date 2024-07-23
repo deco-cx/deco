@@ -6,7 +6,6 @@ import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir, exists } from "std/fs/mod.ts";
-import { join } from "std/path/mod.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import {
@@ -263,7 +262,7 @@ export class Daemon {
             if (req.method !== "GET") {
               try {
                 const paths = await this.realtimeFs.fs.readdir(
-                  join("/", DECO_FOLDER, BLOCKS_FOLDER),
+                  `/${DECO_FOLDER}/${BLOCKS_FOLDER}`,
                 ) as string[];
 
                 const entries = await Promise.all(
@@ -279,7 +278,7 @@ export class Daemon {
                 const metadata = genMetadataFromFS(entries);
 
                 await this.realtimeFs.fs.writeFile(
-                  join("/", METADATA_PATH),
+                  `/${METADATA_PATH}`,
                   JSON.stringify(metadata),
                 );
               } catch (error) {
