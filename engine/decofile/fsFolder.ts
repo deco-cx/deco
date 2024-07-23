@@ -1,6 +1,6 @@
 import { debounce } from "std/async/debounce.ts";
 import { walk } from "std/fs/walk.ts";
-import { basename, join } from "std/path/mod.ts";
+import { basename, join, posix, SEP } from "std/path/mod.ts";
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
@@ -18,7 +18,8 @@ export const BLOCKS_FOLDER = "blocks";
 export const METADATA_FOLDER = "metadata";
 export const BLOCKS_JSON = "blocks.json";
 
-export const METADATA_PATH = join(DECO_FOLDER, METADATA_FOLDER, BLOCKS_JSON);
+export const METADATA_PATH =
+  `${DECO_FOLDER}/${METADATA_FOLDER}/${BLOCKS_JSON}`;
 
 export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
@@ -73,10 +74,12 @@ export const getFromDecoFolder = async (): Promise<[string, unknown][]> => {
   }
 
   return Promise.all(
-    paths.map(async (path) => [
-      join("/", path),
-      JSON.parse(await Deno.readTextFile(path)),
-    ]),
+    paths.map(async (path) =>
+      [
+        `/${path.replaceAll(SEP, posix.sep)}`,
+        JSON.parse(await Deno.readTextFile(path)),
+      ] as [string, unknown]
+    ),
   );
 };
 
