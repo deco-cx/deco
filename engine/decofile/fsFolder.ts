@@ -60,7 +60,7 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
   }
 };
 
-export const ogetFromDecoFolder = async (): Promise<[string, unknown][]> => {
+export const getFromDecoFolder = async (): Promise<[string, unknown][]> => {
   const paths = [];
 
   const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
@@ -74,10 +74,12 @@ export const ogetFromDecoFolder = async (): Promise<[string, unknown][]> => {
   }
 
   return Promise.all(
-    paths.map(async (path) => [
-      `/${path.replaceAll(SEP, posix.sep)}`,
-      JSON.parse(await Deno.readTextFile(path)),
-    ]),
+    paths.map(async (path) =>
+      [
+        `/${path.replaceAll(SEP, posix.sep)}`,
+        JSON.parse(await Deno.readTextFile(path)),
+      ] as [string, unknown]
+    ),
   );
 };
 
