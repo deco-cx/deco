@@ -1,4 +1,4 @@
-import { connect } from "jsr:@deco/warp@0.3.0";
+import { connect } from "jsr:@deco/warp@0.3.1";
 import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
 
