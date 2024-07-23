@@ -18,8 +18,7 @@ export const BLOCKS_FOLDER = "blocks";
 export const METADATA_FOLDER = "metadata";
 export const BLOCKS_JSON = "blocks.json";
 
-export const METADATA_PATH =
-  `${DECO_FOLDER}/${METADATA_FOLDER}/${BLOCKS_JSON}`;
+export const METADATA_PATH = `${DECO_FOLDER}/${METADATA_FOLDER}/${BLOCKS_JSON}`;
 
 export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
