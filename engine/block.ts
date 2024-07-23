@@ -58,20 +58,6 @@ export interface Block<
   defaultInvoke?: Resolver<TSerializable, BlockInvocation, any>;
   type: BType;
   introspect?: IntrospectParams;
-  decorate?: <
-    TBlockModule extends BlockModule<
-      TDefaultExportFunc,
-      TProvides,
-      TSerializable
-    > = BlockModule<
-      TDefaultExportFunc,
-      TProvides,
-      TSerializable
-    >,
-  >(
-    blockModule: TBlockModule,
-    key: string,
-  ) => TBlockModule;
   adapt?: <TConfig = any>(
     blockModule: TBlockModule,
     key: string,
