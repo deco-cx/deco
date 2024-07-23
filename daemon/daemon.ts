@@ -11,7 +11,7 @@ import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import {
   BLOCKS_FOLDER,
   DECO_FOLDER,
-  syncMetadata,
+  genMetadata,
 } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
@@ -108,7 +108,10 @@ export class Daemon {
     });
 
     this.realtimeFsState.blockConcurrencyWhile(
-      () => syncMetadata(storage),
+      async () => {
+        const meta = await genMetadata();
+        meta && storage.put(meta.path, meta.content);
+      },
     );
 
     let lastPersist = Promise.resolve();
@@ -121,7 +124,10 @@ export class Daemon {
       : undefined; // 10m
 
     const debouncedMetadataGenFromFS = debounce(
-      () => syncMetadata(storage),
+      async () => {
+        const meta = await genMetadata();
+        meta && storage.put(meta.path, meta.content);
+      },
       250,
     );
 

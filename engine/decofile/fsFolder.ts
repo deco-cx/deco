@@ -2,7 +2,6 @@ import { debounce } from "std/async/debounce.ts";
 import { walk } from "std/fs/walk.ts";
 import { basename, join, posix, SEP } from "std/path/mod.ts";
 import getBlocks from "../../blocks/index.ts";
-import type { DaemonDiskStorage } from "../../daemon/realtime/object.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
@@ -61,7 +60,7 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
 };
 
 /** Syncs FileSystem Metadata with Storage metadata */
-export const syncMetadata = async (storage: DaemonDiskStorage) => {
+export const genMetadata = async () => {
   try {
     const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
     const paths = [];
@@ -89,9 +88,11 @@ export const syncMetadata = async (storage: DaemonDiskStorage) => {
       [path, content],
     ) => [path, inferMetadata(content, knownBlockTypes)]));
 
-    await storage.put(METADATA_PATH, JSON.stringify(metadata));
+    return { path: METADATA_PATH, content: JSON.stringify(metadata) };
   } catch (error) {
     console.error("Error while auto-generating blocks.json", error);
+
+    return null;
   }
 };
 
