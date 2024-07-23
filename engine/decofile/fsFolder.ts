@@ -2,6 +2,7 @@ import { debounce } from "std/async/debounce.ts";
 import { walk } from "std/fs/walk.ts";
 import { basename, join, posix, SEP } from "std/path/mod.ts";
 import getBlocks from "../../blocks/index.ts";
+import type { DaemonDiskStorage } from "../../daemon/realtime/object.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
@@ -18,8 +19,7 @@ export const BLOCKS_FOLDER = "blocks";
 export const METADATA_FOLDER = "metadata";
 export const BLOCKS_JSON = "blocks.json";
 
-export const METADATA_PATH =
-  `${DECO_FOLDER}/${METADATA_FOLDER}/${BLOCKS_JSON}`;
+export const METADATA_PATH = `${DECO_FOLDER}/${METADATA_FOLDER}/${BLOCKS_JSON}`;
 
 export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
@@ -60,37 +60,39 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
   }
 };
 
-export const getFromDecoFolder = async (): Promise<[string, unknown][]> => {
-  const paths = [];
+/** Syncs FileSystem Metadata with Storage metadata */
+export const syncMetadata = async (storage: DaemonDiskStorage) => {
+  try {
+    const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
+    const paths = [];
 
-  const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
-    includeDirs: false,
-    includeFiles: true,
-    includeSymlinks: false,
-  });
+    const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
+      includeDirs: false,
+      includeFiles: true,
+      includeSymlinks: false,
+    });
 
-  for await (const entry of walker) {
-    paths.push(entry.path);
+    for await (const entry of walker) {
+      paths.push(entry.path);
+    }
+
+    const entries = await Promise.all(
+      paths.map(async (path) =>
+        [
+          `/${path.replaceAll(SEP, posix.sep)}`,
+          JSON.parse(await Deno.readTextFile(path)),
+        ] as [string, unknown]
+      ),
+    );
+
+    const metadata = Object.fromEntries(entries.map((
+      [path, content],
+    ) => [path, inferMetadata(content, knownBlockTypes)]));
+
+    await storage.put(METADATA_PATH, JSON.stringify(metadata));
+  } catch (error) {
+    console.error("Error while auto-generating blocks.json", error);
   }
-
-  return Promise.all(
-    paths.map(async (path) =>
-      [
-        `/${path.replaceAll(SEP, posix.sep)}`,
-        JSON.parse(await Deno.readTextFile(path)),
-      ] as [string, unknown]
-    ),
-  );
-};
-
-export const genMetadataFromFS = (entries: [string, unknown][]) => {
-  const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
-
-  const metadata = entries.map((
-    [path, content],
-  ) => [path, inferMetadata(content, knownBlockTypes)]);
-
-  return Object.fromEntries(metadata);
 };
 
 export const newFsFolderProviderFromPath = (

@@ -11,9 +11,7 @@ import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import {
   BLOCKS_FOLDER,
   DECO_FOLDER,
-  genMetadataFromFS,
-  getFromDecoFolder,
-  METADATA_PATH,
+  syncMetadata
 } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
@@ -109,17 +107,9 @@ export class Daemon {
       storage,
     });
 
-    this.realtimeFsState.blockConcurrencyWhile(async () => {
-      try {
-        const entries = await getFromDecoFolder();
-        await storage.put(
-          METADATA_PATH,
-          JSON.stringify(genMetadataFromFS(entries)),
-        );
-      } catch (error) {
-        console.error(error);
-      }
-    });
+    this.realtimeFsState.blockConcurrencyWhile(
+      () => syncMetadata(storage),
+    );
 
     let lastPersist = Promise.resolve();
     const debouncedPersist = this.realtimeFsState.shouldPersistState()
@@ -129,7 +119,20 @@ export class Daemon {
         });
       }, 2 * MINUTE)
       : undefined; // 10m
+
+    const debouncedMetadataGenFromFS = debounce(
+      () => syncMetadata(storage),
+      250,
+    );
+
     storage.onChange = (events) => {
+      // Generate new blocks.json if there are changes in .deco/blocks
+      if (
+        events.some((e) => e.path.includes(`${DECO_FOLDER}/${BLOCKS_FOLDER}`))
+      ) {
+        debouncedMetadataGenFromFS();
+      }
+
       if (debouncedBuild) {
         const hasAnyCreationOrDeletion = events.some((evt) =>
           evt.path.startsWith("/islands/") ||
@@ -256,37 +259,7 @@ export class Daemon {
               return new Response(null, { status: 204 });
             }
 
-            const response = await this.realtimeFs.fetch(req);
-
-            // auto-generate blocks.json
-            if (req.method !== "GET") {
-              try {
-                const paths = await this.realtimeFs.fs.readdir(
-                  `/${DECO_FOLDER}/${BLOCKS_FOLDER}`,
-                ) as string[];
-
-                const entries = await Promise.all(
-                  paths.map(async (p) =>
-                    [
-                      p,
-                      await this.realtimeFs.fs.readFile(p)
-                        .then(JSON.parse).catch(() => null),
-                    ] as [string, unknown]
-                  ),
-                );
-
-                const metadata = genMetadataFromFS(entries);
-
-                await this.realtimeFs.fs.writeFile(
-                  `/${METADATA_PATH}`,
-                  JSON.stringify(metadata),
-                );
-              } catch (error) {
-                console.error("Error while auto-generating blocks.json", error);
-              }
-            }
-
-            return response;
+            return await this.realtimeFs.fetch(req);
           })
           .catch((err) => {
             console.error("error when fetching realtimeFs", url.pathname, err);
