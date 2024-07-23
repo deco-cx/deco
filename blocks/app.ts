@@ -383,7 +383,7 @@ const buildApp = async <TState = {}>(
 };
 const appBlock: Block<AppModule> = {
   type: "apps",
-  adapt: <
+  new: <
     TProps = any,
     TState = {},
   >(

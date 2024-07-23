@@ -12,11 +12,11 @@ import { meter } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
 import type { HttpContext } from "./handler.ts";
 import {
-  applyProps,
-  type FnContext,
-  type FnProps,
-  type RequestState,
-  type SingleFlightKeyFunc,
+    applyProps,
+    type FnContext,
+    type FnProps,
+    type RequestState,
+    type SingleFlightKeyFunc,
 } from "./utils.tsx";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
@@ -309,7 +309,7 @@ const wrapLoader = (
 const loaderBlock: Block<LoaderModule> = {
   type: "loaders",
   introspect: { includeReturn: true },
-  adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
+  new: <TProps = any>(mod: LoaderModule<TProps>) => [
     wrapCaughtErrors,
     {
       invoke: (

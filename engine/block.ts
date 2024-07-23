@@ -58,7 +58,7 @@ export interface Block<
   defaultInvoke?: Resolver<TSerializable, BlockInvocation, any>;
   type: BType;
   introspect?: IntrospectParams;
-  adapt?: <TConfig = any>(
+  new?: <TConfig = any>(
     blockModule: TBlockModule,
     key: string,
   ) => Resolver<TSerializable, TConfig, any> | ResolverMiddleware<

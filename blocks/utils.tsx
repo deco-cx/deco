@@ -6,15 +6,15 @@ import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";
 import type { JSX } from "../deps.ts";
 import type {
-  Block,
-  BlockModule,
-  ComponentFunc,
-  PreactComponent,
+    Block,
+    BlockModule,
+    ComponentFunc,
+    PreactComponent,
 } from "../engine/block.ts";
 import type {
-  Monitoring,
-  ResolveFunc,
-  Resolver,
+    Monitoring,
+    ResolveFunc,
+    Resolver,
 } from "../engine/core/resolver.ts";
 import { type PromiseOrValue, singleFlight } from "../engine/core/utils.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
@@ -162,7 +162,7 @@ export const applyProps = <
   );
 };
 
-export const fromComponentFunc: Block["adapt"] = <TProps = any>(
+export const fromComponentFunc: Block["new"] = <TProps = any>(
   { default: Component }: { default: ComponentFunc<TProps> },
   component: string,
 ) => ({ invoke: withSection<TProps>(component, Component) });
@@ -196,7 +196,7 @@ export const newComponentBlock = <K extends string>(
   type,
   defaultDanglingRecover,
   defaultPreview: { invoke: (comp) => comp },
-  adapt: fromComponentFunc,
+  new: fromComponentFunc,
 });
 
 export const newSingleFlightGroup = <

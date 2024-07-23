@@ -5,9 +5,9 @@ import type { BaseContext } from "../engine/core/resolver.ts";
 import type { PromiseOrValue } from "../engine/core/utils.ts";
 import type { DecoState, StatefulContext } from "../types.ts";
 import {
-  type FnContext,
-  fnContextFromHttpContext,
-  type RequestState,
+    type FnContext,
+    fnContextFromHttpContext,
+    type RequestState,
 } from "./utils.tsx";
 
 export interface HttpContext<
@@ -34,7 +34,7 @@ type HandlerFunc<TConfig = any, TState = any> = (
 
 const handlerBlock: Block<BlockModule<HandlerFunc>> = {
   type: "handlers",
-  adapt: <
+  new: <
     TConfig = any,
     // deno-lint-ignore ban-types
     TState = {},

@@ -59,7 +59,7 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
       return (tsType as TsTypeReference)?.typeParams?.params?.[0];
     },
   },
-  adapt: <
+  new: <
     TConfig = unknown,
   >(func: {
     default: FlagFunc<TConfig>;

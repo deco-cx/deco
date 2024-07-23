@@ -12,7 +12,7 @@ export type ActionModule<
 
 const actionBlock: Block<ActionModule> = {
   type: "actions",
-  adapt: <
+  new: <
     TProps = any,
   >(
     mod: ActionModule<TProps>,

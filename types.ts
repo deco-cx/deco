@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import type { Manifest } from "$fresh/server.ts";
 import type handlerBlock from "deco/blocks/handler.ts";
-import type accountBlock from "./blocks/account.ts";
 import type actionBlock from "./blocks/action.ts";
 import type appBlock from "./blocks/app.ts";
 import type {
@@ -54,7 +53,6 @@ export interface DecoManifest extends Manifest {
   matchers?: Record<string, ModuleOf<typeof matcherBlock>>;
   handlers?: Record<string, ModuleOf<typeof handlerBlock>>;
   flags?: Record<string, ModuleOf<typeof flagBlock>>;
-  accounts?: Record<string, ModuleOf<typeof accountBlock>>;
 }
 
 export interface Site {

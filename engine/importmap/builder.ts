@@ -48,7 +48,7 @@ export const ImportMapBuilder = {
   new: (...resolvers: ImportMapResolver[]) => {
     return {
       mergeWith: (importMap: ImportMap, context: string): ImportMapResolver => {
-        const resolvedImportMap = resolveImportMap(importMap, new URL(context)); // { imports: { "file:///project/dir/foo/": "file:///project/dir/bar/" }, scopes: {} }
+        const resolvedImportMap = resolveImportMap(importMap, new URL(context));
         return ImportMapBuilder.new(...resolvers, {
           resolve: (specifier: string, context: string) => {
             try {

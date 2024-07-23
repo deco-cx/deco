@@ -2,8 +2,8 @@
 import type { HttpContext } from "../blocks/handler.ts";
 import { wrapCaughtErrors } from "../blocks/loader.ts";
 import {
-  newSingleFlightGroup,
-  type SingleFlightKeyFunc,
+    newSingleFlightGroup,
+    type SingleFlightKeyFunc,
 } from "../blocks/utils.tsx";
 import JsonViewer from "../components/JsonViewer.tsx";
 import type { HandlerContext } from "../deps.ts";
@@ -28,7 +28,7 @@ const functionBlock: Block<FunctionModule> = {
   introspect: {
     includeReturn: true,
   },
-  adapt: <
+  new: <
     TConfig = any,
     TState = any,
   >(

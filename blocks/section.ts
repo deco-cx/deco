@@ -3,19 +3,19 @@ import type { ComponentType } from "preact";
 import type { HttpContext } from "../blocks/handler.ts";
 import { type PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
 import {
-  fnContextFromHttpContext,
-  type RequestState,
+    fnContextFromHttpContext,
+    type RequestState,
 } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { alwaysThrow, withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";
 import type { JSX } from "../deps.ts";
 import type {
-  Block,
-  BlockModule,
-  ComponentFunc,
-  InstanceOf,
-  PreactComponent,
+    Block,
+    BlockModule,
+    ComponentFunc,
+    InstanceOf,
+    PreactComponent,
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
@@ -89,7 +89,7 @@ export const createSectionBlock = (
     funcNames: ["loader", "action", "default"],
     includeReturn: true,
   },
-  adapt: <TConfig = any, TProps = any>(
+  new: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
   ):

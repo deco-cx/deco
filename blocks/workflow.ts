@@ -1,30 +1,30 @@
 // deno-lint-ignore-file no-explicit-any
 import {
-  type Arg,
-  type LocalActivityCommand,
-  type Metadata,
-  type Workflow as DurableWorkflow,
-  WorkflowContext as DurableWorkflowContext,
-  type WorkflowExecution,
+    type Arg,
+    type Workflow as DurableWorkflow,
+    WorkflowContext as DurableWorkflowContext,
+    type LocalActivityCommand,
+    type Metadata,
+    type WorkflowExecution,
 } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import type {
-  AvailableActions,
-  AvailableFunctions,
-  AvailableLoaders,
-  Invoke,
-  InvokeResult,
-  ManifestAction,
-  ManifestFunction,
-  ManifestLoader,
+    AvailableActions,
+    AvailableFunctions,
+    AvailableLoaders,
+    Invoke,
+    InvokeResult,
+    ManifestAction,
+    ManifestFunction,
+    ManifestLoader,
 } from "../utils/invoke.types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import type { HttpContext } from "./handler.ts";
 import {
-  type FnContext,
-  fnContextFromHttpContext,
-  type RequestState,
+    type FnContext,
+    fnContextFromHttpContext,
+    type RequestState,
 } from "./utils.tsx";
 
 export interface WorkflowMetadata extends Metadata {
@@ -114,7 +114,7 @@ const workflowBlock: Block<
   BlockModule<WorkflowFn, DurableWorkflow, NamedWorkflow>
 > = {
   type: "workflows",
-  adapt: <
+  new: <
     TProps = any,
     // deno-lint-ignore ban-types
     TState = {},

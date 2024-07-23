@@ -99,7 +99,7 @@ const matcherBlock: Block<
   >
 > = {
   type: "matchers",
-  adapt: <TConfig = unknown>(
+  new: <TConfig = unknown>(
     { default: func, sticky }: MatcherModule,
   ) => ({
     invoke: (

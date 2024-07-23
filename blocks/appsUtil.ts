@@ -122,7 +122,7 @@ export const buildRuntime = <
     {} as TResolverMap,
   );
 
-  const adapted = blk.adapt
+  const adapted = blk.new
     ? mapObjKeys<Record<string, BlockModule>, Record<string, Resolver>>(
       blocks,
       (mod, key) => {
@@ -131,7 +131,7 @@ export const buildRuntime = <
         const middlewares = hasMiddleware
           ? Array.isArray(middleware) ? middleware : [middleware]
           : [];
-        const blockResolver = blk.adapt!(mod, key);
+        const blockResolver = blk.new!(mod, key);
         const composed = Array.isArray(blockResolver)
           ? compose(
             ...(hasMiddleware
