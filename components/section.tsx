@@ -100,7 +100,7 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 }
 
 export interface Framework {
-  Head: (headProps: { children: ComponentChildren }) => null;
+  Head?: (headProps: { children: ComponentChildren }) => null;
   Wrapper: ComponentType<
     { id: string; partialMode?: "replace" | "append" | "prepend" }
   >;
