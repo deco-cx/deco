@@ -1,4 +1,4 @@
-import { Head } from "../deps.ts";
+import { useFramework } from "../components/section.tsx";
 
 export interface Props {
   body: string;
@@ -40,6 +40,7 @@ const snippet = (json: string) => {
 };
 
 export default function JsonViewer(p: Props) {
+  const { Head } = useFramework();
   return (
     <>
       <Head>

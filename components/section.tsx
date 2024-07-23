@@ -1,5 +1,11 @@
 import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
-import { Component, type ComponentType, createContext } from "preact";
+import {
+  Component,
+  type ComponentChildren,
+  type ComponentType,
+  createContext,
+  Fragment,
+} from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
@@ -19,6 +25,7 @@ export interface SectionContext extends HttpContext<RequestState> {
   framework: "fresh" | "htmx";
   deploymentId?: string;
   FallbackWrapper: ComponentType<any>;
+  bindings: Framework;
 }
 
 export const SectionContext = createContext<SectionContext | undefined>(
@@ -93,6 +100,7 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 }
 
 export interface Framework {
+  Head: (headProps: { children: ComponentChildren }) => null;
   Wrapper: ComponentType<
     { id: string; partialMode?: "replace" | "append" | "prepend" }
   >;
@@ -111,6 +119,13 @@ export interface Framework {
 export const bindings = {
   fresh: FreshBindings,
   htmx: HTMXBindings,
+};
+
+export const useFramework = () => {
+  const {
+    bindings: mbindings,
+  } = useContext(SectionContext) ?? { bindings: bindings.fresh };
+  return mbindings;
 };
 
 export const alwaysThrow =
@@ -175,7 +190,7 @@ export const withSection = <TProps, TLoaderProps = TProps>(
             deploymentId,
             renderSalt,
             framework,
-            FallbackWrapper: ({ children, ...props }) => (
+            bindings: bindings[framework],
               <binding.LoadingFallback id={id} {...props}>
                 {children}
               </binding.LoadingFallback>

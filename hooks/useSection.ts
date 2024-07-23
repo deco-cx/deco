@@ -1,8 +1,9 @@
 import type { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
 import { SectionContext } from "../components/section.tsx";
-import { IS_BROWSER } from "../deps.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
+
+export const IS_BROWSER = typeof document !== "undefined";
 
 import { Murmurhash3 } from "../deps.ts";
 
