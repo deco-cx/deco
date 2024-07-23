@@ -94,7 +94,9 @@ export const propsLoader = async <TSectionInput, TProps>(
   props: TProps,
   req: Request,
   ctx: FnContext<any>,
+  signal?: AbortSignal,
 ): Promise<TSectionInput> => {
+  signal?.throwIfAborted();
   if (isLoaderFunc(resolver)) {
     return await resolver(props, req, ctx);
   }
