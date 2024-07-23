@@ -116,11 +116,12 @@ export const alwaysThrow =
     throw err;
   };
 const MAX_RENDER_COUNT = 5_00; // for saved sections this number should mark a restart.
-export const withSection = <TProps,>(
+export const withSection = <TProps, TLoaderProps = TProps>(
   resolver: string,
   ComponentFunc: ComponentFunc,
-  LoadingFallback: ComponentType = Fragment,
+  LoadingFallback: ComponentType<TLoaderProps | TProps> = Fragment,
   ErrorFallback?: ComponentType<{ error?: Error }>,
+  loaderProps?: TLoaderProps,
 ) =>
 (
   props: TProps,
@@ -238,5 +239,13 @@ export const withSection = <TProps,>(
       );
     },
     metadata,
+    LoadingFallback: () => (
+      <LoadingFallback
+        {
+          // deno-lint-ignore no-explicit-any
+          ...((loaderProps ?? props) as any)
+        }
+      />
+    ),
   };
 };
