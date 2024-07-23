@@ -8,7 +8,7 @@ import {
 } from "../blocks/utils.tsx";
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { alwaysThrow, withSection } from "../components/section.tsx";
-import { Context } from "../deco.ts";
+import { Context, RequestContext } from "../deco.ts";
 import type { JSX } from "../deps.ts";
 import type {
   Block,
@@ -18,8 +18,8 @@ import type {
   PreactComponent,
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
-import type { AppManifest, FunctionContext } from "../types.ts";
 import { HttpError } from "../engine/errors.ts";
+import type { AppManifest, FunctionContext } from "../types.ts";
 
 /**
  * @widget none
@@ -148,6 +148,7 @@ export const createSectionBlock = (
         ctx.state.$live,
         request,
         fnContext,
+        type === "sections" ? RequestContext.signal : undefined,
       ).then((props) => {
         return useExportDefaultComponent(props, httpCtx);
       }).catch((err) => {

@@ -8,6 +8,7 @@ const page = createSectionBlock(
     Component: (p) => <ComponentFunc {...p} />,
     props,
     metadata: { resolveChain, component },
+    LoadingFallback: () => <></>,
   }),
   "pages",
 );

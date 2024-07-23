@@ -20,7 +20,7 @@ const bindings: Framework = {
   LoadingFallback: function ({ children }) {
     return (
       <div
-        hx-get={useSection()}
+        hx-get={useSection({ props: { loading: "eager" } })}
         hx-trigger="intersect once"
         hx-target="closest section"
         hx-swap="outerHTML transition:true"

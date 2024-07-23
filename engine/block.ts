@@ -199,4 +199,6 @@ export interface PreactComponent<
   Component: ComponentFunc<TProps>;
   props: TProps;
   metadata?: ComponentMetadata;
+  // deno-lint-ignore ban-types
+  LoadingFallback?: ComponentFunc<{}>;
 }

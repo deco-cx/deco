@@ -47,7 +47,9 @@ const bindings: Framework = {
   ),
   LoadingFallback: ({ id, children }) => {
     const btnId = `${id}-partial-onload`;
-    const { "f-partial": href, ...rest } = usePartialSection();
+    const { "f-partial": href, ...rest } = usePartialSection({
+      props: { loading: "eager" },
+    });
 
     return (
       <>
