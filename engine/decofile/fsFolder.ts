@@ -1,6 +1,6 @@
 import { debounce } from "std/async/debounce.ts";
 import { walk } from "std/fs/walk.ts";
-import { basename, join } from "std/path/mod.ts";
+import { basename, join, posix, SEP } from "std/path/mod.ts";
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
@@ -60,7 +60,7 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
   }
 };
 
-export const getFromDecoFolder = async (): Promise<[string, unknown][]> => {
+export const ogetFromDecoFolder = async (): Promise<[string, unknown][]> => {
   const paths = [];
 
   const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
@@ -75,7 +75,7 @@ export const getFromDecoFolder = async (): Promise<[string, unknown][]> => {
 
   return Promise.all(
     paths.map(async (path) => [
-      `/${path}`,
+      `/${path.replaceAll(SEP, posix.sep)}`,
       JSON.parse(await Deno.readTextFile(path)),
     ]),
   );
