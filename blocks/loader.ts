@@ -252,7 +252,13 @@ const wrapLoader = (
         const request = new Request(url);
 
         const callHandlerAndCache = async () => {
-          const json = await handler(props, req, ctx);
+          let json = await handler(props, req, ctx);
+          if (json instanceof Function) {
+            json = await json(props, req, ctx);
+          }
+          console.log("json: ", json);
+          // imprimir cachekeyvalue
+          // desse json vai ser da PDP
           cache.put(
             request,
             new Response(JSON.stringify(json), {
@@ -261,7 +267,10 @@ const wrapLoader = (
                   .toUTCString(),
               },
             }),
-          ).catch((error) => logger.error(`loader error ${error}`));
+          ).catch((error) => {
+            // console.log("Error 1");
+            logger.error(`loader error ${error}`);
+          });
 
           return json;
         };

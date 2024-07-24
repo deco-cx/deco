@@ -89,6 +89,7 @@ export const createSectionBlock = (
     funcNames: ["loader", "action", "default"],
     includeReturn: true,
   },
+  // enriquecer a section
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
     resolver: string,
