@@ -62,7 +62,7 @@ export const wrapCaughtErrors = async <
     return ctx.next!();
   }
   try {
-    return await ctx.next!();
+    return await ctx.next!(); // Seems like here
   } catch (err) {
     if (err instanceof HttpError) {
       throw err;
@@ -173,7 +173,7 @@ const wrapLoader = (
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
       const cacheKeyValue = cacheKey(props, req, ctx);
-      logger.info("cacheKeyValue: ", cacheKeyValue);
+      console.log("loader.ts cacheKeyValue: ", cacheKeyValue, " props: ", props, " req: ", req);
       try {
         // Should skip cache
         if (
@@ -182,7 +182,7 @@ const wrapLoader = (
           !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
-          logger.info("bypassed the cache");
+          console.log("bypassed the cache, cacheKeyValue: ", cacheKeyValue, " mode: ", mode, " ENABLE_LOADER_CACHE: ", ENABLE_LOADER_CACHE, " isCache(maybeCache): ", isCache(maybeCache));
           status = "bypass";
           stats.cache.add(1, { status, loader });
 
@@ -251,34 +251,53 @@ const wrapLoader = (
         const request = new Request(url);
 
         const callHandlerAndCache = async () => {
-          const json = await handler(props, req, ctx);
+          let json;
+          try {
+            json = await handler(props, req, ctx); // aqui tá rolando o erro
+          } catch (error) {
+            console.log("ERROR -> handler error: ", error);
+          }
+          console.log("Length of json in call handler and cache: ", JSON.stringify(json) ? JSON.stringify(json).length : 0);
           const response = new Response(JSON.stringify(json), {
             headers: {
               "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
                 .toUTCString(),
             },
-          })
-          logger.info("caching the following request: ", JSON.stringify(request), "\nAnd response: ", JSON.stringify(response));
+          });
+          console.log(
+            "caching the following request: ",
+            request,
+            "\nAnd response: ",
+            response,
+            "Request headers: ", request.headers,
+          );
           cache.put(
             request,
             response,
           ).catch((error) => {
-            logger.info(`ERROR -> request ${JSON.stringify(request)} -- response ${JSON.stringify(response)} -- callhandlerandcache`);
-            logger.error(`ERROR -> loader error ${error} -- callhandlerandcache`)});
+            console.log(
+              `ERROR -> request ${request} -- response ${
+                response
+              } -- callhandlerandcache`,
+            );
+            console.error(
+              `ERROR -> loader error ${error} -- callhandlerandcache`,
+            );
+          });
 
           return json;
         };
 
         const staleWhileRevalidate = async () => {
           const matched = await cache.match(request).catch(() => null);
-          logger.info(`matched: ${JSON.stringify(matched)}`);
+          console.log(`matched: ${matched}`);
           if (!matched) {
             status = "miss";
             stats.cache.add(1, { status, loader });
 
             return await callHandlerAndCache();
           }
-
+          console.log("matched headers: ", matched.headers);
           const expires = matched.headers.get("expires");
           const isStale = expires ? !inFuture(expires) : false;
 
@@ -286,15 +305,14 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            callHandlerAndCache().catch((error) =>
-              logger.error(`loader error ${error} -- stale`)
-            );
+            callHandlerAndCache();
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
           }
-
-          return await matched.json();
+          const matchedJson = matched.json();
+          console.log("matchedJson: ", matchedJson);
+          return await matchedJson;
         };
 
         return await flights.do(request.url, staleWhileRevalidate);
