@@ -30,7 +30,6 @@ import {
   type Resolver,
   type ResolverMap,
 } from "../core/resolver.ts";
-import type { PromiseOrValue } from "../core/utils.ts";
 import { ENV_SITE_NAME } from "../decofile/constants.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
 import { type DecofileProvider, getProvider } from "../decofile/provider.ts";
@@ -38,18 +37,9 @@ import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
+export type { MiddlewareHandler } from "@hono/hono/types";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
-
-export type FreshHandler<
-  TConfig = any,
-  TData = any,
-  TState = any,
-  Resp = Response,
-> = (
-  request: Request,
-  ctx: HandlerContext<TData, DecoState<TState, TConfig>>,
-) => PromiseOrValue<Resp>;
 
 export interface HandlerContext<
   Data = unknown,
@@ -57,7 +47,6 @@ export interface HandlerContext<
 > {
   params: Record<string, string>;
   state: State;
-  data: Data;
   render: (
     data?: Data,
   ) => Response | Promise<Response>;

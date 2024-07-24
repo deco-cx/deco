@@ -1,11 +1,10 @@
-import type { MiddlewareHandlerContext } from "$fresh/server.ts";
+import type { DecoMiddleware } from "deco/runtime/routing/middleware.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { Context } from "../../../deco.ts";
 import { getCookies, SpanStatusCode } from "../../../deps.ts";
 import type { Resolvable } from "../../../engine/core/resolver.ts";
 import type { Apps } from "../../../mod.ts";
 import { startObserve } from "../../../observability/http.ts";
-import type { DecoSiteState, DecoState } from "../../../types.ts";
 import { isAdminOrLocalhost } from "../../../utils/admin.ts";
 import { decodeCookie, setCookie } from "../../../utils/cookies.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
@@ -38,10 +37,9 @@ const isMonitoringRobots = (req: Request) => {
   }
   return wellKnownMonitoringRobotsUA.some((robot) => ua.includes(robot));
 };
-export const handler = [
+export const handler: DecoMiddleware[] = [
   async (
-    req: Request,
-    ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
+    { req, ...ctx },
   ): Promise<Response> => {
     const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
     const context = Context.active();
@@ -59,7 +57,6 @@ export const handler = [
           "url.query": url.search,
           "url.path": url.pathname,
           "user_agent.original": req.headers.get("user-agent") ?? undefined,
-          "http.route.destination": ctx.destination,
         },
       },
       ctx.state.monitoring.context,
@@ -111,8 +108,7 @@ export const handler = [
     );
   },
   async (
-    req: Request,
-    ctx: MiddlewareHandlerContext<DecoState<MiddlewareConfig, DecoSiteState>>,
+    { req, ...ctx },
   ) => {
     if (req.method === "HEAD" && isMonitoringRobots(req)) {
       return new Response(null, { status: 200 });

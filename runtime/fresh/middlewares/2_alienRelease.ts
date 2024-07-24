@@ -1,10 +1,9 @@
-// deno-lint-ignore-file no-explicit-any
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
 import { Context, type DecoContext } from "../../../deco.ts";
-import { type MiddlewareHandlerContext, weakcache } from "../../../deps.ts";
+import { weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/decofile/fetcher.ts";
 import { newContext } from "../../../mod.ts";
-import type { DecoSiteState, DecoState } from "../../../types.ts";
+import { createMiddleware } from "../../routing/middleware.ts";
 
 interface Opts {
   cacheSize?: number;
@@ -24,18 +23,13 @@ let contextCache: ContextCache | null = null;
 const DECO_RELEASE_COOKIE_NAME = "deco_release";
 const DELETE_MARKER = "$";
 const COOKIE_MARKER = "@";
-export async function alienRelease(
-  request: Request,
-  context: MiddlewareHandlerContext<
-    DecoState<any, DecoSiteState, any>
-  >,
-) {
+export const alienRelease = createMiddleware(async (context) => {
   // Parse the URL from the request
-  const url = new URL(request.url);
+  const url = new URL(context.req.url);
 
   // Get the inline release from the query string
   const alienReleaseFromQs = url.searchParams.get("__r");
-  const ref = request.headers.get("referer");
+  const ref = context.req.headers.get("referer");
 
   const referer = ref && URL.canParse(ref) ? new URL(ref) : null;
   const alienReleaseFromRef = referer?.searchParams.get("__r");
@@ -53,7 +47,7 @@ export async function alienRelease(
     : requesterAlienRelease;
 
   // Get the cookies from the request headers
-  const cookies = getCookies(request.headers);
+  const cookies = getCookies(context.req.headers);
 
   // Get the inline release from the cookie
   const alienReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
@@ -94,7 +88,7 @@ export async function alienRelease(
     }
     const ctx = await contextPromise;
 
-    const next = Context.bind(ctx, context.next.bind(context));
+    const next = Context.bind(ctx, context.next.bind(ctx));
     const response = await next();
     if (shouldAddCookie) {
       setCookie(response.headers, {
@@ -107,4 +101,4 @@ export async function alienRelease(
     return response;
   }
   return context.next();
-}
+});

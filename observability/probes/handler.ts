@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from "$fresh/server.ts";
+import type { DecoMiddleware } from "deco/runtime/routing/middleware.ts";
 import { ValueType } from "../../deps.ts";
 import { logger } from "../otel/config.ts";
 import { meter } from "../otel/metrics.ts";
@@ -52,7 +52,7 @@ const livenessPath = "/deco/_liveness";
 const buildHandler = (
   // deno-lint-ignore no-explicit-any
   ...checkers: LiveChecker<any>[]
-): MiddlewareHandler => {
+): DecoMiddleware => {
   const runChecks = () => {
     return checkers.map(({ check, name, get, print }) => {
       try {
@@ -79,12 +79,11 @@ const buildHandler = (
   } catch (err) {
     console.error(`could not add signal handler ${err}`);
   }
-  return (
-    req,
+  return async (
     ctx,
   ) => {
     if (
-      ctx?.url?.pathname === livenessPath || req.url.endsWith(livenessPath)
+      ctx?.req.url.endsWith(livenessPath)
     ) {
       const results = runChecks();
 
@@ -109,10 +108,10 @@ const buildHandler = (
     }
 
     const end = checkers.map(({ observe }) => {
-      return observe?.(req);
+      return observe?.(ctx.req);
     });
     let response: Response | undefined = undefined;
-    return ctx.next().then((resp) => response = resp).finally(() => {
+    return await ctx.next().then((resp) => response = resp).finally(() => {
       end.forEach((e) => e?.end(response));
     });
   };
