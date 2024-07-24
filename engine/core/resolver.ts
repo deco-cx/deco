@@ -371,7 +371,7 @@ const resolvePropsWithHints = async <
   const props = onBeforeResolveProps(_thisProps as T, hints);
   const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 
-  const proceed = () => {
+  const proceed = (resolveId?: string) => {
     return Promise.all(
       Object.entries(hints).map(
         async ([_key, hint]) => {
@@ -380,10 +380,15 @@ const resolvePropsWithHints = async <
             const resolved = await resolvePropsWithHints(
               props[key],
               hint as HintNode<T[typeof key]>,
-              withResolveChain(ctx, {
-                type: "prop",
-                value: key.toString(),
-              }),
+              withResolveChain(
+                resolveId
+                  ? { ...ctx, resolveId: resolveId ?? ctx.resolveId }
+                  : ctx,
+                {
+                  type: "prop",
+                  value: key.toString(),
+                },
+              ),
               opts,
             );
             return { key, resolved } as ResolvedKey<T, typeof key>;
@@ -610,7 +615,9 @@ export interface ResolveHooks {
     T,
     TContext extends BaseContext = BaseContext,
   >(
-    resolve: () => Promise<Array<ResolvedKey<T, keyof T> | undefined>>,
+    resolve: (
+      resolveId?: string,
+    ) => Promise<Array<ResolvedKey<T, keyof T> | undefined>>,
     props: T,
     resolver: Resolver,
     __resolveType: string,

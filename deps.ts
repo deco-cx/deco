@@ -30,6 +30,7 @@ export type {
 export { Component } from "https://esm.sh/v135/preact@10.16.0?pin=102";
 export type { JSX } from "https://esm.sh/v135/preact@10.16.0?pin=102";
 export type {
+  DeepPartial,
   Diff,
   Intersection,
   OptionalKeys,

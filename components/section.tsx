@@ -1,10 +1,10 @@
 import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
-import { Component, type ComponentType, createContext, Fragment } from "preact";
+import { Component, type ComponentType, createContext } from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
-import { Context, RequestContext } from "../deco.ts";
-import { Murmurhash3 } from "../deps.ts";
+import { Context } from "../deco.ts";
+import { type DeepPartial, Murmurhash3 } from "../deps.ts";
 import type { ComponentFunc } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
@@ -18,7 +18,7 @@ export interface SectionContext extends HttpContext<RequestState> {
   device: Device;
   framework: "fresh" | "htmx";
   deploymentId?: string;
-  loading?: "eager" | "lazy";
+  FallbackWrapper: ComponentType<any>;
 }
 
 export const SectionContext = createContext<SectionContext | undefined>(
@@ -103,7 +103,9 @@ export interface Framework {
     isDeploy: boolean;
     error: Error;
   }>;
-  LoadingFallback: ComponentType<{ id: string }>;
+  LoadingFallback: ComponentType<
+    { id: string; props?: Record<string, unknown> }
+  >;
 }
 
 export const bindings = {
@@ -116,11 +118,12 @@ export const alwaysThrow =
     throw err;
   };
 const MAX_RENDER_COUNT = 5_00; // for saved sections this number should mark a restart.
-export const withSection = <TProps,>(
+export const withSection = <TProps, TLoaderProps = TProps>(
   resolver: string,
   ComponentFunc: ComponentFunc,
-  LoadingFallback: ComponentType = Fragment,
+  LoadingFallback?: ComponentType<DeepPartial<TLoaderProps>>,
   ErrorFallback?: ComponentType<{ error?: Error }>,
+  loaderProps?: TLoaderProps,
 ) =>
 (
   props: TProps,
@@ -147,35 +150,23 @@ export const withSection = <TProps,>(
   };
   let device: Device | null = null;
 
-  /**
-   * Get the signal created during the request;
-   */
-  const signal = RequestContext.signal;
-
   return {
     props,
     Component: (props: TProps) => {
       const { isDeploy, request, deploymentId } = Context.active();
+
       const framework = frameworkFromState ?? request?.framework ?? "fresh";
       const binding = bindings[framework];
 
       // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
-      const {
-        loading,
-        renderSalt: parentRenderSalt,
-      } = useContext(SectionContext) ?? {};
+      const { renderSalt: parentRenderSalt } = useContext(SectionContext) ?? {};
+
       // if this is the case, so we can use the renderSaltFromState - which means that we are in a partial rendering phase
       const renderSalt = parentRenderSalt === undefined
         ? renderSaltFromState ?? `${renderCount}`
         : `${parentRenderSalt ?? ""}${renderCount}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
       const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
       renderCount = ++renderCount % MAX_RENDER_COUNT;
-
-      const Throw = () => {
-        // If the signal from request is aborted, then throw
-        signal?.throwIfAborted();
-        return null;
-      };
 
       return (
         <SectionContext.Provider
@@ -184,6 +175,11 @@ export const withSection = <TProps,>(
             deploymentId,
             renderSalt,
             framework,
+            FallbackWrapper: ({ children, ...props }) => (
+              <binding.LoadingFallback id={id} {...props}>
+                {children}
+              </binding.LoadingFallback>
+            ),
             get device() {
               return device ??= deviceOf(ctx.request);
             },
@@ -229,7 +225,6 @@ export const withSection = <TProps,>(
                     )
                 )}
               >
-                {loading === "lazy" && <Throw />}
                 <ComponentFunc {...props} />
               </ErrorBoundary>
             </section>
@@ -238,5 +233,17 @@ export const withSection = <TProps,>(
       );
     },
     metadata,
+    ...LoadingFallback
+      ? {
+        LoadingFallback: () => {
+          return (
+            // @ts-ignore: could not it type well
+            <LoadingFallback
+              {...(loaderProps ?? props) as DeepPartial<TLoaderProps>}
+            />
+          );
+        },
+      }
+      : {},
   };
 };
