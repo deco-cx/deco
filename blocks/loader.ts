@@ -254,14 +254,16 @@ const wrapLoader = (
           let json;
           try {
             json = await handler(props, req, ctx); // aqui tá rolando o erro
+            json = JSON.stringify(json);
           } catch (error) {
             console.log("ERROR -> handler error: ", error);
           }
-          console.log("Length of json in call handler and cache: ", JSON.stringify(json) ? JSON.stringify(json).length : 0);
-          const response = new Response(JSON.stringify(json), {
+          console.log("Length of json in call handler and cache: ", json ? json.length : 0);
+          const response = new Response(json, {
             headers: {
               "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
                 .toUTCString(),
+              "Content-Length": json.length.toString(),
             },
           });
           console.log(
@@ -276,9 +278,11 @@ const wrapLoader = (
             response,
           ).catch((error) => {
             console.log(
-              `ERROR -> request ${request} -- response ${
-                response
-              } -- callhandlerandcache`,
+              "ERROR -> request",
+              request,
+              "\nAnd response: ",
+              response,
+              " -- callhandlerandcache",
             );
             console.error(
               `ERROR -> loader error ${error} -- callhandlerandcache`,
