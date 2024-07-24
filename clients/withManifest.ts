@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { IS_BROWSER } from "$fresh/runtime.ts";
 import type { App, AppManifest, ManifestOf } from "../blocks/app.ts";
+import { IS_BROWSER } from "../hooks/useSection.ts";
 import type { StreamProps } from "../mod.ts";
 import type {
   AvailableActions,

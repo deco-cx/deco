@@ -43,12 +43,14 @@ export default function JsonViewer(p: Props) {
   const { Head } = useFramework();
   return (
     <>
-      <Head>
-        <script
-          type="module"
-          dangerouslySetInnerHTML={{ __html: `(${snippet})(${p.body});` }}
-        />
-      </Head>
+      {Head && (
+        <Head>
+          <script
+            type="module"
+            dangerouslySetInnerHTML={{ __html: `(${snippet})(${p.body});` }}
+          />
+        </Head>
+      )}
       <pre id="json-renderer">{p.body}</pre>
     </>
   );

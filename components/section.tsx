@@ -1,4 +1,3 @@
-import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
 import {
   Component,
   type ComponentChildren,
@@ -145,7 +144,7 @@ export const withSection = <TProps, TLoaderProps = TProps>(
   ctx: HttpContext<
     RequestState & {
       renderSalt?: string;
-      partialMode?: PartialProps["mode"];
+      partialMode?: "replace" | "prepend" | "append";
       framework?: "fresh" | "htmx";
     }
   >,

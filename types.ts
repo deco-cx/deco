@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import type { Manifest } from "$fresh/server.ts";
 import type handlerBlock from "deco/blocks/handler.ts";
 import type accountBlock from "./blocks/account.ts";
 import type actionBlock from "./blocks/action.ts";
@@ -35,13 +34,13 @@ import type { createServerTimings } from "./utils/timings.ts";
 export type { App } from "./blocks/app.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams,
+  ErrorBoundaryParams
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
-export interface DecoManifest extends Manifest {
+export interface DecoManifest {
   name: string;
   baseUrl: string;
   apps?: Record<string, ModuleOf<typeof appBlock>>;
