@@ -197,18 +197,22 @@ export const withSection = <TProps, TLoaderProps = TProps>(
                 component={resolver}
                 loading={() => (
                   <binding.LoadingFallback id={id}>
-                    {/* @ts-ignore difficult typing this */}
-                    <LoadingFallback
-                      {...new Proxy<Partial<TProps>>(props, {
-                        get: (value: Partial<TProps>, prop) => {
-                          try {
-                            return Reflect.get(value, prop);
-                          } catch (_) {
-                            return undefined;
-                          }
-                        },
-                      })}
-                    />
+                    {LoadingFallback
+                      ? (
+                        // @ts-ignore difficult typing this
+                        <LoadingFallback
+                          {...new Proxy<Partial<TProps>>(props, {
+                            get: (value: Partial<TProps>, prop) => {
+                              try {
+                                return Reflect.get(value, prop);
+                              } catch (_) {
+                                return undefined;
+                              }
+                            },
+                          })}
+                        />
+                      )
+                      : <></>}
                   </binding.LoadingFallback>
                 )}
                 error={({ error }) => (

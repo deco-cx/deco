@@ -67,9 +67,9 @@ export type {
   LoaderContext,
   LoaderFunction,
   LoaderReturnType,
+  LoadingFallbackProps,
   PropsLoader,
   Route,
-  LoadingFallbackProps,
   SectionProps,
 } from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
