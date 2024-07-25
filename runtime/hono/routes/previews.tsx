@@ -1,4 +1,4 @@
-import type { PageProps } from "$fresh/server.ts";
+import type { PageParams } from "deco/runtime/hono/setup.tsx";
 import type { Page } from "../../../blocks/page.tsx";
 import LiveControls from "../../../components/LiveControls.tsx";
 import { Context } from "../../../deco.ts";
@@ -25,7 +25,7 @@ export const pageIdFromMetadata = (
 
   return pageParent?.value ?? PAGE_NOT_FOUND;
 };
-function Preview(props: PageProps<Page>) {
+function Preview(props: PageParams<Page>) {
   const { data } = props;
   const pageId = pageIdFromMetadata(data?.metadata);
   const context = Context.active();

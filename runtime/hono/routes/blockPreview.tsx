@@ -1,7 +1,7 @@
-import type { PageProps } from "$fresh/server.ts";
 import type { Page } from "../../../blocks/page.tsx";
 import { bodyFromUrl } from "../../../utils/http.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
+import type { PageParams } from "../setup.tsx";
 import Render from "./entrypoint.tsx";
 
 const paramsFromUrl = (
@@ -19,7 +19,9 @@ const paramsFromUrl = (
 };
 
 const decoder = new TextDecoder();
-export default function Preview(props: PageProps<Page>) {
+export default function Preview(
+  props: PageParams<Page>,
+) {
   const renderProps = {
     ...props,
     data: {

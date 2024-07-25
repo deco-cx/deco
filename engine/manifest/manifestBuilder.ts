@@ -265,8 +265,6 @@ export const newManifestBuilder = <TManifest extends AppManifest = AppManifest>(
       for (const manifest of def) {
         manI++;
         const {
-          routes: _doNotMergeRoutes,
-          islands: _doNotMergeIslands,
           config: _ignoreConfig,
           baseUrl: _ignoreBaseUrl,
           name: _ignoreName,

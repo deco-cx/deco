@@ -1,4 +1,3 @@
-import type { PageProps } from "$fresh/server.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import type { ConnInfo } from "std/http/mod.ts";
@@ -12,6 +11,7 @@ import {
   type DecoMiddlewareContext,
   proxyState,
 } from "../middleware.ts";
+import type { PageParams } from "../setup.tsx";
 
 export interface RouterContext {
   pagePath: string;
@@ -48,7 +48,7 @@ export default function Render({
     page,
     routerInfo,
   },
-}: PageProps<{ page: Page; routerInfo?: RouterContext }>) {
+}: PageParams<{ page: Page; routerInfo?: RouterContext }>) {
   if (!page) {
     return null;
   }

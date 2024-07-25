@@ -8,7 +8,7 @@ export type {
   JSONSchema7,
   JSONSchema7Definition,
   JSONSchema7Type,
-  JSONSchema7TypeName
+  JSONSchema7TypeName,
 } from "https://esm.sh/v135/@types/json-schema@7.0.11/index.d.ts";
 export { Component } from "https://esm.sh/v135/preact@10.16.0?pin=102";
 export type { JSX } from "https://esm.sh/v135/preact@10.16.0?pin=102";
@@ -19,7 +19,7 @@ export type {
   OptionalKeys,
   Overwrite,
   RequiredKeys,
-  UnionToIntersection
+  UnionToIntersection,
 } from "https://esm.sh/v135/utility-types@3.10.0";
 export type {
   Attributes,
@@ -31,17 +31,22 @@ export type {
   ObservableResult,
   ObservableUpDownCounter,
   Span,
-  Tracer
+  Tracer,
 } from "npm:@opentelemetry/api@1.6.0";
 export { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
 
 export {
+  context,
+  createContextKey,
+  default as opentelemetry,
+  diag,
   DiagConsoleLogger,
   DiagLogLevel,
   ROOT_CONTEXT,
   SpanKind,
-  SpanStatusCode, ValueType, context,
-  createContextKey, diag, default as opentelemetry, trace
+  SpanStatusCode,
+  trace,
+  ValueType,
 } from "npm:@opentelemetry/api@1.6.0";
 export { crypto } from "std/crypto/mod.ts";
 export { getCookies, getSetCookies, setCookie } from "std/http/mod.ts";
@@ -51,7 +56,7 @@ export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0
 export {
   InstrumentationBase,
   isWrapped as instrumentationIsWrapped,
-  registerInstrumentations
+  registerInstrumentations,
 } from "npm:@opentelemetry/instrumentation@0.43.0";
 export type { InstrumentationConfig } from "npm:@opentelemetry/instrumentation@0.43.0";
 
@@ -61,27 +66,27 @@ export {
   BatchSpanProcessor,
   ParentBasedSampler,
   SamplingDecision,
-  TraceIdRatioBasedSampler
+  TraceIdRatioBasedSampler,
 } from "npm:@opentelemetry/sdk-trace-base@1.17.0";
 
 export type {
   Sampler,
-  SamplingResult
+  SamplingResult,
 } from "npm:@opentelemetry/sdk-trace-base@1.17.0";
 export { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node@1.17.0";
 export {
-  SemanticResourceAttributes
+  SemanticResourceAttributes,
 } from "npm:@opentelemetry/semantic-conventions@1.17.0";
 
 export {
   ExplicitBucketHistogramAggregation,
   MeterProvider,
   PeriodicExportingMetricReader,
-  View
+  View,
 } from "npm:@opentelemetry/sdk-metrics@1.17.0";
 
 export { default as Murmurhash3 } from "https://deno.land/x/murmurhash@v1.0.0/mod.ts";
-export { SeverityNumber, logs } from "npm:@opentelemetry/api-logs@0.43.0";
+export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";
 export type { Logger } from "npm:@opentelemetry/api-logs@0.43.0";
 export { OTLPLogExporter } from "npm:@opentelemetry/exporter-logs-otlp-http@0.43.0";
 export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
@@ -91,13 +96,12 @@ export {
   envDetectorSync,
   hostDetectorSync,
   osDetectorSync,
-  processDetector
+  processDetector,
 } from "npm:@opentelemetry/resources@1.17.0";
 export {
   BatchLogRecordProcessor,
   ConsoleLogRecordExporter,
-  LoggerProvider
+  LoggerProvider,
 } from "npm:@opentelemetry/sdk-logs@0.43.0";
 export type { BufferConfig } from "npm:@opentelemetry/sdk-logs@0.43.0";
 export { IS_BROWSER } from "./hooks/useSection.ts";
-
