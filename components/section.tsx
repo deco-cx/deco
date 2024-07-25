@@ -3,7 +3,6 @@ import {
   type ComponentChildren,
   type ComponentType,
   createContext,
-  Fragment,
 } from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
@@ -190,6 +189,7 @@ export const withSection = <TProps, TLoaderProps = TProps>(
             renderSalt,
             framework,
             bindings: bindings[framework],
+            FallbackWrapper: ({ children, ...props }) => (
               <binding.LoadingFallback id={id} {...props}>
                 {children}
               </binding.LoadingFallback>

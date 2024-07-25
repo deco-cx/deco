@@ -1,8 +1,8 @@
 import type { DecoMiddleware } from "deco/runtime/routing/middleware.ts";
 import { Context } from "../../../deco.ts";
 import {
-  getCookies,
   context as otelContext,
+  getCookies,
   setCookie,
 } from "../../../deps.ts";
 import { observe } from "../../../observability/observe.ts";
