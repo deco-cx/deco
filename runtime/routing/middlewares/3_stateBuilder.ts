@@ -1,4 +1,3 @@
-import type { DecoMiddleware } from "deco/runtime/routing/middleware.ts";
 import { Context } from "../../../deco.ts";
 import {
   getCookies,
@@ -16,6 +15,7 @@ import { forceHttps } from "../../../utils/http.ts";
 import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
 import { createServerTimings } from "../../../utils/timings.ts";
 import { setLogger } from "../../fetch/fetchLog.ts";
+import type { DecoMiddleware } from "../middleware.ts";
 
 const addHours = function (date: Date, h: number) {
   date.setTime(date.getTime() + (h * 60 * 60 * 1000));
