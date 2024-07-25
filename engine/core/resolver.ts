@@ -406,14 +406,15 @@ const resolvePropsWithHints = async <
     ? [...props] as T
     : { ...props };
 
-  const resolvedProps = await (type
-    ? opts.hooks?.onPropsResolveStart?.(
+  const propsResolveStart = opts.hooks?.onPropsResolveStart;
+  const resolvedProps = await (type && propsResolveStart
+    ? propsResolveStart(
       proceed,
       mutableProps,
       _ctx.resolvers[type],
       type,
       ctx,
-    ) ?? proceed()
+    )
     : proceed());
   for (const { key, resolved } of resolvedProps.filter(notUndefined)) {
     mutableProps[key] = resolved;
@@ -531,13 +532,16 @@ const resolveWithType = <
         resolveType,
         context,
       );
-    return opts?.hooks?.onResolveStart?.(
-      proceed,
-      props,
-      resolver,
-      resolveType,
-      context,
-    ) ?? proceed();
+    const resolveStart = opts?.hooks?.onResolveStart;
+    return resolveStart
+      ? resolveStart(
+        proceed,
+        props,
+        resolver,
+        resolveType,
+        context,
+      )
+      : proceed();
   }
 
   const ctx = withResolveChain(context, {
