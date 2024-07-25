@@ -1,21 +1,31 @@
 import "../../utils/patched_fetch.ts";
 
 import type { MiddlewareHandler, Plugin } from "$fresh/server.ts";
-import type { PluginRoute } from "$fresh/src/server/types.ts";
+import type {
+  Handler,
+  HandlerContext,
+  Handlers,
+  PluginRoute,
+} from "$fresh/src/server/types.ts";
 import type { ImportMap } from "../../blocks/app.ts";
-import {
-  buildDecoState,
-  injectLiveStateForPath,
-} from "./middlewares/3_stateBuilder.ts";
+import { buildDecoState } from "./middlewares/3_stateBuilder.ts";
 
 import type { DecofileProvider } from "../../engine/decofile/provider.ts";
-import type { AppManifest, SiteInfo } from "../../mod.ts";
+import {
+  type AppManifest,
+  type DecoSiteState,
+  type DecoState,
+  HttpError,
+  logger,
+  type SiteInfo,
+} from "../../mod.ts";
 import { liveness } from "./middlewares/0_liveness.ts";
 import { contextProvider } from "./middlewares/1_contextProvider.ts";
 import { alienRelease } from "./middlewares/2_alienRelease.ts";
 import { handler as decodMiddleware } from "./middlewares/2_daemon.ts";
 import { handler as decoMiddleware } from "./middlewares/4_main.ts";
 
+import { mapObjKeys } from "deco/engine/core/utils.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
 import {
@@ -50,6 +60,80 @@ export type OptionsProvider<TManifest extends AppManifest = AppManifest> = (
 ) => Promise<InitOptions<TManifest>>;
 const noop: MiddlewareHandler = (_req, ctx) => {
   return ctx.next();
+};
+
+/**
+ * Wraps any route with an error handler that catches http-errors and returns the response accordingly.
+ * Additionally logs the exception when running in a deployment.
+ *
+ * Ideally, this should be placed inside the `_middleware.ts` but fresh handles exceptions and wraps it into a 500-response before being catched by the middleware.
+ * See more at: https://github.com/denoland/fresh/issues/586
+ */
+const withErrorHandler = (
+  routePath: string,
+  handler: Handler<any, any>,
+): Handler<any, any> => {
+  return async (req: Request, ctx: HandlerContext<any>) => {
+    try {
+      return await handler(req, ctx);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        return err.resp;
+      }
+      console.error(`route error ${routePath}: ${err}`);
+      logger.error(`route ${routePath}: ${err?.stack}`);
+      throw err;
+    }
+  };
+};
+
+/**
+ * Unfortunately fresh does not accept one route for catching all non-matched routes.
+ * It can be done using routeOverride (/*) but the internal fresh sort will break and this route will not be properly sorted.
+ * So we're replicating the same handler for index.tsx as well, as a consequence of that, we need to manually convert the route name to [...catchall].tsx to avoid having two different configurations for each.
+ */
+const indexTsxToCatchAll: Record<string, string> = {
+  "/index": "./routes/[...catchall].tsx",
+  "/[...catchall]": "./routes/[...catchall].tsx",
+  "./routes/index.tsx": "./routes/[...catchall].tsx",
+};
+
+export const injectLiveStateForPath = (
+  path: string,
+  handlers: Handler<any, any> | Handlers<any, any> | undefined,
+): Handler<any, any> | Handlers<any, any> => {
+  if (typeof handlers === "object") {
+    return mapObjKeys(handlers, (val) => {
+      return withErrorHandler(path, async function (
+        request: Request,
+        context: HandlerContext<any, DecoState<any, DecoSiteState>>,
+      ) {
+        const $live = await context?.state?.resolve?.(
+          indexTsxToCatchAll[path] ?? path,
+          { nullIfDangling: true },
+        ); // middleware should be executed first.
+        context.state.$live = $live;
+
+        return val!(request, context);
+      });
+    });
+  }
+  return withErrorHandler(path, async function (
+    request: Request,
+    context: HandlerContext<any, DecoState<any, DecoSiteState>>,
+  ) {
+    const $live = (await context?.state?.resolve?.(
+      indexTsxToCatchAll[path] ?? path,
+      { nullIfDangling: true },
+    )) ?? {};
+
+    if (typeof handlers === "function") {
+      context.state.$live = $live;
+
+      return await handlers(request, context);
+    }
+    return await context.render($live);
+  });
 };
 
 export default function decoPlugin(opt: Options): Plugin {

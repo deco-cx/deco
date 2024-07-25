@@ -1,4 +1,3 @@
-import type { DecoMiddleware } from "deco/runtime/routing/middleware.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { Context } from "../../../deco.ts";
 import { getCookies, SpanStatusCode } from "../../../deps.ts";
@@ -10,6 +9,7 @@ import { decodeCookie, setCookie } from "../../../utils/cookies.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
 import { tryOrDefault } from "../../../utils/object.ts";
+import type { DecoMiddleware } from "../../hono/middleware.ts";
 import { initializeState } from "../../utils.ts";
 
 export const DECO_SEGMENT = "deco_segment";

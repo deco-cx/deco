@@ -1,7 +1,7 @@
 import { context, DaemonMode } from "deco/deco.ts";
 import { Daemon, DENO_FS_APIS } from "../../../daemon/daemon.ts";
 import type { Isolate } from "../../../daemon/workers/isolate.ts";
-import { createMiddleware } from "../../routing/middleware.ts";
+import { createMiddleware } from "../../hono/middleware.ts";
 
 const decod = context.decodMode === DaemonMode.Embedded
   ? new Daemon({

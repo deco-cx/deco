@@ -3,7 +3,7 @@ import { Context, type DecoContext } from "../../../deco.ts";
 import { weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/decofile/fetcher.ts";
 import { newContext } from "../../../mod.ts";
-import { createMiddleware } from "../../routing/middleware.ts";
+import { createMiddleware } from "../../hono/middleware.ts";
 
 interface Opts {
   cacheSize?: number;

@@ -1,4 +1,3 @@
-import type { DecoMiddleware } from "deco/runtime/routing/middleware.ts";
 import { Context, type DecoContext } from "../../../deco.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/decofile/fs.ts";
 import {
@@ -10,6 +9,7 @@ import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { newContext } from "../../../mod.ts";
 import type { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
 import type { AppManifest } from "../../../types.ts";
+import type { DecoMiddleware } from "../../hono/middleware.ts";
 import { ContextCache } from "./2_alienRelease.ts";
 
 let contextCache: ContextCache | null = null;
