@@ -8,15 +8,16 @@ const decod = context.decodMode === DaemonMode.Embedded
     fsApi: { ...DENO_FS_APIS, writeTextFile: async () => {} }, // read-only environment
   })
   : undefined;
-export const handler = createMiddleware((ctx) => {
+export const handler = createMiddleware((ctx, next) => {
   if (!decod) {
-    return ctx.next();
+    return next();
   }
   const isolate: Isolate = {
-    fetch: () => {
-      return ctx.next();
+    fetch: async () => {
+      await next();
+      return ctx.res;
     },
   };
 
-  return decod.fetch(ctx.req, isolate);
+  return decod.fetch(ctx.req.raw, isolate);
 });

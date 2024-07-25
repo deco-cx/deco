@@ -23,20 +23,21 @@ let contextCache: ContextCache | null = null;
 const DECO_RELEASE_COOKIE_NAME = "deco_release";
 const DELETE_MARKER = "$";
 const COOKIE_MARKER = "@";
-export const alienRelease = createMiddleware(async (context) => {
+export const alienRelease = createMiddleware(async (context, next) => {
   // Parse the URL from the request
   const url = new URL(context.req.url);
 
   // Get the inline release from the query string
   const alienReleaseFromQs = url.searchParams.get("__r");
-  const ref = context.req.headers.get("referer");
+  const ref = context.req.header("referer");
 
   const referer = ref && URL.canParse(ref) ? new URL(ref) : null;
   const alienReleaseFromRef = referer?.searchParams.get("__r");
   const requesterAlienRelease = alienReleaseFromQs ?? alienReleaseFromRef;
   // If the inline release is the delete marker, delete the cookie and return the response
   if (requesterAlienRelease === DELETE_MARKER) {
-    const response = await context.next();
+    await next();
+    const response = context.res;
     deleteCookie(response.headers, DECO_RELEASE_COOKIE_NAME);
     return response;
   }
@@ -47,7 +48,7 @@ export const alienRelease = createMiddleware(async (context) => {
     : requesterAlienRelease;
 
   // Get the cookies from the request headers
-  const cookies = getCookies(context.req.headers);
+  const cookies = getCookies(context.req.raw.headers);
 
   // Get the inline release from the cookie
   const alienReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
@@ -88,8 +89,9 @@ export const alienRelease = createMiddleware(async (context) => {
     }
     const ctx = await contextPromise;
 
-    const next = Context.bind(ctx, context.next.bind(ctx));
-    const response = await next();
+    const mNext = Context.bind(ctx, next.bind(ctx));
+    await mNext();
+    const response = context.res;
     if (shouldAddCookie) {
       setCookie(response.headers, {
         name: DECO_RELEASE_COOKIE_NAME,
@@ -100,5 +102,5 @@ export const alienRelease = createMiddleware(async (context) => {
     }
     return response;
   }
-  return context.next();
+  await next();
 });

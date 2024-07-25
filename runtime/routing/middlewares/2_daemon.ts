@@ -1,6 +1,6 @@
-import { context, DaemonMode } from "deco/deco.ts";
 import { Daemon, DENO_FS_APIS } from "../../../daemon/daemon.ts";
 import type { Isolate } from "../../../daemon/workers/isolate.ts";
+import { context, DaemonMode } from "../../../deco.ts";
 import { createMiddleware } from "../middleware.ts";
 
 const decod = context.decodMode === DaemonMode.Embedded
@@ -8,15 +8,16 @@ const decod = context.decodMode === DaemonMode.Embedded
     fsApi: { ...DENO_FS_APIS, writeTextFile: async () => {} }, // read-only environment
   })
   : undefined;
-export const handler = createMiddleware((ctx) => {
+export const handler = createMiddleware((ctx, next) => {
   if (!decod) {
-    return ctx.next();
+    return next();
   }
   const isolate: Isolate = {
-    fetch: () => {
-      return ctx.next();
+    fetch: async () => {
+      await next();
+      return ctx.res;
     },
   };
 
-  return decod.fetch(ctx.req, isolate);
+  return decod.fetch(ctx.req.raw, isolate);
 });

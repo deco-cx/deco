@@ -1,16 +1,30 @@
+// deno-lint-ignore-file no-explicit-any
+import type { Context } from "@hono/hono";
+import type { Handler, Input, MiddlewareHandler } from "@hono/hono/types";
 import type { AppManifest, DecoSiteState, DecoState } from "../../mod.ts";
-
-export interface DecoMiddlewareContext<
-  TManifest extends AppManifest = AppManifest,
-> {
-  next: () => Promise<Response>;
-  req: Request;
-  // deno-lint-ignore no-explicit-any
-  state: DecoState<any, DecoSiteState, TManifest>;
+declare module "@hono/hono" {
+  interface ContextRenderer {
+    <T>(data: T): Promise<Response>;
+  }
 }
-export type DecoMiddleware<TManifest extends AppManifest = AppManifest> = (
-  ctx: DecoMiddlewareContext<TManifest>,
-) => Promise<Response>;
+export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
+  Variables: DecoState<any, DecoSiteState, TManifest>;
+  Bindings: object;
+};
+export type DecoHandler<TManifest extends AppManifest = AppManifest> = Handler<
+  DecoRouteState<TManifest>
+>;
+export type DecoMiddlewareContext<
+  TManifest extends AppManifest = AppManifest,
+  P extends string = any,
+  // deno-lint-ignore ban-types
+  I extends Input = {},
+> = Context<DecoRouteState<TManifest>, P, I>;
+
+export type DecoMiddleware<TManifest extends AppManifest = AppManifest> =
+  MiddlewareHandler<
+    DecoRouteState<TManifest>
+  >;
 
 export const compose = <
   TManifest extends AppManifest,
@@ -18,13 +32,13 @@ export const compose = <
   ...middlewares: DecoMiddleware<TManifest>[]
 ): DecoMiddleware<TManifest> => {
   const last = middlewares[middlewares.length - 1];
-  return async function (ctx: DecoMiddlewareContext<TManifest>) {
+  return async function (ctx, next) {
     // last called middleware #
     let index = -1;
     return await dispatch(0);
     async function dispatch(
       i: number,
-    ): Promise<Response> {
+    ): Promise<void> {
       if (i <= index) {
         return Promise.reject(
           new Error("next() called multiple times"),
@@ -33,12 +47,10 @@ export const compose = <
       index = i;
       const resolver = middlewares[i];
       if (i === middlewares.length) {
-        return await last(ctx);
+        await last(ctx, next);
+        return;
       }
-      return await resolver({
-        ...ctx,
-        next: dispatch.bind(null, i + 1),
-      });
+      await resolver(ctx, dispatch.bind(null, i + 1));
     }
   };
 };

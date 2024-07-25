@@ -88,24 +88,25 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
 ): DecoMiddleware<TManifest> =>
   async function (
     ctx,
+    next,
   ) {
-    const { enabled, action, correlationId } = debug.fromRequest(ctx.req);
+    const { enabled, action, correlationId } = debug.fromRequest(ctx.req.raw);
 
     const t = createServerTimings();
     if (enabled) {
-      ctx.state.t = t;
-      ctx.state.debugEnabled = true;
-      ctx.state.correlationId = correlationId;
+      ctx.set("t", t);
+      ctx.set("debugEnabled", true);
+      ctx.set("correlationId", correlationId);
     }
 
-    ctx.state.monitoring = {
+    ctx.set("monitoring", {
       timings: t,
       metrics: observe,
       tracer,
       context: otelContext.active().setValue(REQUEST_CONTEXT_KEY, ctx.req)
         .setValue(
           STATE_CONTEXT_KEY,
-          ctx.state,
+          ctx.var,
         ),
       logger: enabled ? console : {
         ...console,
@@ -114,20 +115,20 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
         debug: () => {},
         info: () => {},
       },
-    };
+    });
 
     // Logs  ?__d is present in localhost
     if (enabled) {
-      setLogger(ctx.state.monitoring.logger.log);
+      setLogger(ctx.var.monitoring.logger.log);
     }
 
     const url = new URL(ctx.req.url);
     const isEchoRoute = url.pathname.startsWith("/live/_echo"); // echoing
 
     if (isEchoRoute) {
-      return new Response(ctx.req.body, {
+      return new Response(ctx.req.raw.body, {
         status: 200,
-        headers: ctx.req.headers,
+        headers: ctx.req.raw.headers,
       });
     }
 
@@ -136,7 +137,8 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       console.error(
         "live runtime is not present, the apps were properly installed?",
       );
-      return ctx.next();
+      await next();
+      return;
     }
 
     const isLiveMeta = url.pathname.startsWith("/live/_meta") ||
@@ -144,9 +146,9 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     const { resolver } = await liveContext.runtime;
     const ctxResolver = resolver
       .resolverFor(
-        { context: ctx, request: forceHttps(ctx.req) },
+        { context: ctx, request: forceHttps(ctx.req.raw) },
         {
-          monitoring: ctx.state.monitoring,
+          monitoring: ctx.var.monitoring,
         },
       )
       .bind(resolver);
@@ -157,7 +159,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     if (
       !isInternalOrStatic && resolveKey
     ) {
-      const timing = ctx?.state?.t?.start("load-page");
+      const timing = ctx.var?.t?.start("load-page");
       const $live = (await ctxResolver(
         resolveKey,
         {
@@ -170,19 +172,22 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
       )) ?? {};
 
       timing?.end();
-      ctx.state.$live = $live;
+      ctx.set("$live", $live);
     }
 
-    ctx.state.resolve = ctxResolver;
-    ctx.state.release = liveContext.release!;
+    ctx.set("resolve", ctxResolver);
+    ctx.set("release", liveContext.release!);
+    ctx.set(
+      "invoke",
+      buildInvokeFunc<TManifest>(ctxResolver, {}, {
+        isInvoke: true,
+      }),
+    );
 
-    ctx.state.invoke = buildInvokeFunc<TManifest>(ctxResolver, {}, {
-      isInvoke: true,
-    });
-
-    const resp = await ctx.next();
+    await next();
+    const resp = ctx.res;
     // enable or disable debugging
-    if (ctx.req.headers.get("upgrade") === "websocket") {
+    if (ctx.req.raw.headers.get("upgrade") === "websocket") {
       return resp;
     }
     action(resp);

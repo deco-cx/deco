@@ -20,6 +20,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   // Return an async function to handle requests
   return async function (
     context,
+    next,
   ) {
     if (context.req.url.endsWith("/_healthcheck")) {
       return new Response(
@@ -27,7 +28,7 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
         { status: 200 },
       );
     }
-    const opt = typeof _opt === "function" ? await _opt(context.req) : _opt;
+    const opt = typeof _opt === "function" ? await _opt(context.req.raw) : _opt;
     contextCache ??= new ContextCache({
       cacheSize: 7, // 7 is arbitrarily chosen
     });
@@ -78,11 +79,11 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       );
     }
 
-    const next = Context.bind(
+    const mNext = Context.bind(
       await contextPromise,
-      context.next.bind(context),
+      next.bind(context),
     );
 
-    return next();
+    await mNext();
   };
 };

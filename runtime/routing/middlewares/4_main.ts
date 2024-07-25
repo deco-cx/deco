@@ -1,4 +1,3 @@
-import type { DecoMiddleware } from "../middleware.ts";
 import { DECO_MATCHER_HEADER_QS } from "../../../blocks/matcher.ts";
 import { Context } from "../../../deco.ts";
 import { getCookies, SpanStatusCode } from "../../../deps.ts";
@@ -11,6 +10,7 @@ import { allowCorsFor } from "../../../utils/http.ts";
 import { formatLog } from "../../../utils/log.ts";
 import { tryOrDefault } from "../../../utils/object.ts";
 import { initializeState } from "../../utils.ts";
+import type { DecoMiddleware } from "../middleware.ts";
 
 export const DECO_SEGMENT = "deco_segment";
 
@@ -39,35 +39,37 @@ const isMonitoringRobots = (req: Request) => {
 };
 export const handler: DecoMiddleware[] = [
   async (
-    { req, ...ctx },
+    ctx,
+    next,
   ): Promise<Response> => {
-    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
+    const url = new URL(ctx.req.url); // TODO(mcandeia) check if ctx.url can be used here
     const context = Context.active();
-    return await ctx.state.monitoring.tracer.startActiveSpan(
+    return await ctx.var.monitoring.tracer.startActiveSpan(
       "./routes/_middleware.ts",
       {
         attributes: {
           "deco.site.name": context.site,
-          "http.request.url": req.url,
-          "http.request.method": req.method,
-          "http.request.body.size": req.headers.get("content-length") ??
+          "http.request.url": ctx.req.url,
+          "http.request.method": ctx.req.method,
+          "http.request.body.size": ctx.req.header("content-length") ??
             undefined,
           "url.scheme": url.protocol,
           "server.address": url.host,
           "url.query": url.search,
           "url.path": url.pathname,
-          "user_agent.original": req.headers.get("user-agent") ?? undefined,
+          "user_agent.original": ctx.req.header("user-agent") ?? undefined,
         },
       },
-      ctx.state.monitoring.context,
+      ctx.var.monitoring.context,
       async (span) => {
-        ctx.state.monitoring.rootSpan = span;
+        ctx.var.monitoring.rootSpan = span;
 
         const begin = performance.now();
         const end = startObserve();
         let response: Response | null = null;
         try {
-          return (response = await ctx.next());
+          await next();
+          return (response = ctx.res);
         } catch (e) {
           span.recordException(e);
           throw e;
@@ -78,17 +80,17 @@ export const handler: DecoMiddleware[] = [
             code: isErr ? SpanStatusCode.ERROR : SpanStatusCode.OK,
           });
           span.setAttribute("http.response.status_code", `${status}`);
-          if (ctx?.state?.pathTemplate) {
-            const route = `${req.method} ${ctx?.state?.pathTemplate}`;
+          if (ctx?.var?.pathTemplate) {
+            const route = `${ctx.req.method} ${ctx?.var?.pathTemplate}`;
             span.updateName(route);
             span.setAttribute("http.route", route);
             end?.(
-              req.method,
-              ctx?.state?.pathTemplate,
+              ctx.req.method,
+              ctx?.var?.pathTemplate,
               response?.status ?? 500,
             );
           } else {
-            span.updateName(`${req.method} ${req.url}`);
+            span.updateName(`${ctx.req.method} ${ctx.req.url}`);
           }
           span.end();
           if (!url.pathname.startsWith("/_frsh")) {
@@ -97,8 +99,8 @@ export const handler: DecoMiddleware[] = [
                 status: response?.status ?? 500,
                 url,
                 begin,
-                timings: ctx.state.debugEnabled
-                  ? ctx.state.monitoring.timings.get()
+                timings: ctx.var.debugEnabled
+                  ? ctx.var.monitoring.timings.get()
                   : undefined,
               }),
             );
@@ -108,27 +110,28 @@ export const handler: DecoMiddleware[] = [
     );
   },
   async (
-    { req, ...ctx },
+    ctx,
+    next,
   ) => {
-    if (req.method === "HEAD" && isMonitoringRobots(req)) {
+    if (ctx.req.method === "HEAD" && isMonitoringRobots(ctx.req.raw)) {
       return new Response(null, { status: 200 });
     }
 
-    const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
+    const url = new URL(ctx.req.url); // TODO(mcandeia) check if ctx.url can be used here
 
-    const state = initializeState(ctx.state?.$live?.state);
-    Object.assign(ctx.state, state);
-    ctx.state.global = { ...(ctx.state.global ?? {}), ...state }; // compatibility mode with functions.
+    const state = initializeState(ctx.var?.$live?.state);
+    Object.assign(ctx.var, state);
+    ctx.set("global", { ...(ctx.var.global ?? {}), ...state });
 
-    const shouldAllowCorsForOptions = req.method === "OPTIONS" &&
-      isAdminOrLocalhost(req);
+    const shouldAllowCorsForOptions = ctx.req.method === "OPTIONS" &&
+      isAdminOrLocalhost(ctx.req.raw);
 
     const initialResponse = shouldAllowCorsForOptions
       ? new Response()
-      : await ctx.next();
+      : await next().then(() => ctx.res);
 
     // Let rendering occur — handlers are responsible for calling ctx.state.loadPage
-    if (req.headers.get("upgrade") === "websocket") {
+    if (ctx.req.header("upgrade") === "websocket") {
       return initialResponse;
     }
     const newHeaders = new Headers(initialResponse.headers);
@@ -139,14 +142,14 @@ export const handler: DecoMiddleware[] = [
       url.pathname.startsWith("/_frsh/") ||
       shouldAllowCorsForOptions
     ) {
-      Object.entries(allowCorsFor(req)).map(([name, value]) => {
+      Object.entries(allowCorsFor(ctx.req.raw)).map(([name, value]) => {
         newHeaders.set(name, value);
       });
     }
     state.response.headers.forEach((value, key) =>
       newHeaders.append(key, value)
     );
-    const printTimings = ctx?.state?.t?.printTimings;
+    const printTimings = ctx?.var?.t?.printTimings;
     printTimings && newHeaders.set("Server-Timing", printTimings());
 
     const responseStatus = state.response.status ?? initialResponse.status;
@@ -158,7 +161,7 @@ export const handler: DecoMiddleware[] = [
       newHeaders.set("Cache-Control", "no-cache, no-store, private");
     }
 
-    if (ctx?.state?.debugEnabled) {
+    if (ctx?.var?.debugEnabled) {
       for (const flag of state?.flags ?? []) {
         newHeaders.append(
           DECO_MATCHER_HEADER_QS,
@@ -168,7 +171,7 @@ export const handler: DecoMiddleware[] = [
     }
 
     if (state?.flags.length > 0) {
-      const currentCookies = getCookies(req.headers);
+      const currentCookies = getCookies(ctx.req.raw.headers);
       const cookieSegment = tryOrDefault(
         () => decodeCookie(currentCookies[DECO_SEGMENT]),
         "",
