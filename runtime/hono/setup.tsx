@@ -3,7 +3,6 @@ import "../../utils/patched_fetch.ts";
 import type { DecoHandler, DecoRouteState } from "./middleware.ts";
 import { liveness } from "./middlewares/0_liveness.ts";
 
-import type { PageProps } from "$fresh/src/server/types.ts";
 import { buildDecoState } from "./middlewares/3_stateBuilder.ts";
 
 import type { AppManifest } from "../../mod.ts";
@@ -38,10 +37,11 @@ import { handler as workflowHandler } from "./routes/workflow.ts";
 
 const DEV_SERVER_PATH = `/deco/dev`;
 // deno-lint-ignore no-explicit-any
-export type PageParams<TData = any> = Pick<
-    PageProps<TData>,
-    "data" | "url" | "params"
->;
+export interface PageParams<TData = any> {
+    data: TData;
+    url: URL;
+    params: Record<string, string>;
+}
 let socket: null | WebSocket = null;
 const routes: Array<
     {
