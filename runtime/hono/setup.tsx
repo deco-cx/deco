@@ -13,6 +13,7 @@ import { handler as decod } from "./middlewares/2_daemon.ts";
 import { handler as main } from "./middlewares/4_main.ts";
 
 import type { ComponentType } from "preact";
+import { renderToString } from "preact-render-to-string";
 import { join } from "std/path/join.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
@@ -50,24 +51,24 @@ const routes: Array<
         handler: releaseHandler,
     },
     {
-        paths: ["/live/inspect/[...block]", "/deco/inspect/[...block]"],
+        paths: ["/live/inspect/:block", "/deco/inspect/:block"],
         handler: inspectHandler,
     },
     {
-        paths: ["/live/invoke/index", "/deco/invoke/index"],
+        paths: ["/live/invoke", "/deco/invoke"],
         handler: invokeHandler,
     },
     {
-        paths: ["/live/invoke/[...key]", "/deco/invoke/[...key]"],
+        paths: ["/live/invoke/*", "/deco/invoke/*"],
         handler: invokeKeyHandler,
     },
     {
-        paths: ["/live/previews/index", "/deco/previews/index"],
+        paths: ["/live/previews", "/deco/previews"],
         handler: previewsHandler,
         Component: PreviewsPage,
     },
     {
-        paths: ["/live/previews/[...block]", "/deco/previews/[...block]"],
+        paths: ["/live/previews/*", "/deco/previews/*"],
         Component: PreviewPage,
         handler: previewHandler,
     },
@@ -81,11 +82,13 @@ const routes: Array<
         Component: Render,
     },
     {
-        paths: ["/index", "/[...catchall]"],
+        paths: ["/", "*"],
         handler: entrypoint,
         Component: Render,
     },
 ];
+
+export type { DecoRouteState };
 export const setup = async <
     TAppManifest extends AppManifest = AppManifest,
     THonoState extends DecoRouteState<TAppManifest> = DecoRouteState<
@@ -96,7 +99,7 @@ export const setup = async <
 ) => {
     const manifest = await import(
         import.meta.resolve(join(Deno.cwd(), "manifest.gen.ts"))
-    );
+    ).then((mod) => mod.default);
     hono.use(
         liveness,
         contextProvider({ manifest }),
@@ -105,14 +108,28 @@ export const setup = async <
         buildDecoState(),
         ...main,
     );
-    for (const { paths, handler, Component: _Component } of routes) {
+    for (const { paths, handler, Component } of routes) {
         for (const path of paths) {
             hono.all(path, (ctx, next) => {
-                ctx.setRenderer((_data) => {
-                    return Promise.resolve(
-                        new Response("<div>Not implemented</div>"),
-                    );
-                });
+                if (Component) {
+                    ctx.setRenderer((data) => {
+                        return Promise.resolve(
+                            new Response(
+                                renderToString(
+                                    <Component
+                                        params={ctx.req.param()}
+                                        url={new URL(ctx.req.url)}
+                                        data={data}
+                                    />,
+                                ),
+                                {
+                                    status: 200,
+                                    headers: { "Content-Type": "text/html" },
+                                },
+                            ),
+                        );
+                    });
+                }
                 // deno-lint-ignore no-explicit-any
                 return handler(ctx as any, next);
             });

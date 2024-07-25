@@ -1,7 +1,7 @@
 import { Context } from "../../../deco.ts";
 import {
-  context as otelContext,
   getCookies,
+  context as otelContext,
   setCookie,
 } from "../../../deps.ts";
 import { observe } from "../../../observability/observe.ts";
@@ -15,7 +15,11 @@ import { forceHttps } from "../../../utils/http.ts";
 import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
 import { createServerTimings } from "../../../utils/timings.ts";
 import { setLogger } from "../../fetch/fetchLog.ts";
-import type { DecoMiddleware } from "../middleware.ts";
+import {
+  type DecoMiddleware,
+  type DecoMiddlewareContext,
+  proxyState,
+} from "../middleware.ts";
 
 const addHours = function (date: Date, h: number) {
   date.setTime(date.getTime() + (h * 60 * 60 * 1000));
@@ -146,7 +150,10 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     const { resolver } = await liveContext.runtime;
     const ctxResolver = resolver
       .resolverFor(
-        { context: ctx, request: forceHttps(ctx.req.raw) },
+        {
+          context: proxyState(ctx as DecoMiddlewareContext),
+          request: forceHttps(ctx.req.raw),
+        },
         {
           monitoring: ctx.var.monitoring,
         },

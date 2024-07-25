@@ -127,9 +127,7 @@ export const render = async (
     {
       context: {
         ...ctx,
-        params: params ?? new Proxy({}, {
-          get: (_, prop) => ctx.req.param(prop as string),
-        }),
+        params: params ?? ctx.req.param(),
       },
       request: newReq,
     },

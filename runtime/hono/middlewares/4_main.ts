@@ -119,9 +119,8 @@ export const handler: DecoMiddleware[] = [
 
     const url = new URL(ctx.req.url); // TODO(mcandeia) check if ctx.url can be used here
 
-    const state = initializeState(ctx.var?.$live?.state);
-    Object.assign(ctx.var, state);
-    ctx.set("global", { ...(ctx.var.global ?? {}), ...state });
+    initializeState(ctx);
+    ctx.set("global", { ...(ctx.var.global ?? {}), ...ctx.var });
 
     const shouldAllowCorsForOptions = ctx.req.method === "OPTIONS" &&
       isAdminOrLocalhost(ctx.req.raw);
@@ -146,13 +145,13 @@ export const handler: DecoMiddleware[] = [
         newHeaders.set(name, value);
       });
     }
-    state.response.headers.forEach((value, key) =>
+    ctx.var.response.headers.forEach((value, key) =>
       newHeaders.append(key, value)
     );
     const printTimings = ctx?.var?.t?.printTimings;
     printTimings && newHeaders.set("Server-Timing", printTimings());
 
-    const responseStatus = state.response.status ?? initialResponse.status;
+    const responseStatus = ctx.var.response.status ?? initialResponse.status;
 
     if (
       url.pathname.startsWith("/_frsh/") &&
@@ -162,7 +161,7 @@ export const handler: DecoMiddleware[] = [
     }
 
     if (ctx?.var?.debugEnabled) {
-      for (const flag of state?.flags ?? []) {
+      for (const flag of ctx.var?.flags ?? []) {
         newHeaders.append(
           DECO_MATCHER_HEADER_QS,
           `${flag.name}=${flag.value ? 1 : 0}`,
@@ -170,7 +169,7 @@ export const handler: DecoMiddleware[] = [
       }
     }
 
-    if (state?.flags.length > 0) {
+    if (ctx.var?.flags.length > 0) {
       const currentCookies = getCookies(ctx.req.raw.headers);
       const cookieSegment = tryOrDefault(
         () => decodeCookie(currentCookies[DECO_SEGMENT]),
@@ -180,7 +179,7 @@ export const handler: DecoMiddleware[] = [
 
       const active = new Set(segment.active || []);
       const inactiveDrawn = new Set(segment.inactiveDrawn || []);
-      for (const flag of state.flags) {
+      for (const flag of ctx.var.flags) {
         if (flag.isSegment) {
           if (flag.value) {
             active.add(flag.name);

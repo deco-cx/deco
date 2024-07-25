@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import type { Context } from "@hono/hono";
 import type { Handler, Input, MiddlewareHandler } from "@hono/hono/types";
+import type { RequestState } from "../../blocks/utils.tsx";
 import {
   type AppManifest,
   type DecoSiteState,
@@ -14,7 +15,7 @@ declare module "@hono/hono" {
   }
 }
 export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
-  Variables: DecoState<any, DecoSiteState, TManifest>;
+  Variables: DecoState<any, DecoSiteState, TManifest> & RequestState;
   Bindings: object;
 };
 export type DecoHandler<TManifest extends AppManifest = AppManifest> = Handler<
@@ -27,6 +28,21 @@ export type DecoMiddlewareContext<
   I extends Input = {},
 > = Context<DecoRouteState<TManifest>, P, I>;
 
+export const proxyState = (ctx: DecoMiddlewareContext) => {
+  const ctxSetter = {
+    set(_: any, prop: any, newValue: any) {
+      ctx.set(prop, newValue);
+      return true;
+    },
+    get: (val: any, prop: any) => Reflect.get(val, prop),
+  };
+  return {
+    ...ctx,
+    get state() {
+      return new Proxy(ctx.var, ctxSetter);
+    },
+  };
+};
 export type DecoMiddleware<TManifest extends AppManifest = AppManifest> =
   MiddlewareHandler<
     DecoRouteState<TManifest>

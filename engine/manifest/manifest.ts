@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { initializeState } from "deco/runtime/utils.ts";
+import { baseState } from "deco/runtime/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { gray, green, red } from "std/fmt/colors.ts";
 import {
@@ -77,7 +77,7 @@ const newFakeContext = () => {
       route: "/[...catchall]",
       pattern: "/[...catchall]",
       isPartial: false,
-      state: initializeState(),
+      state: baseState(),
       params: {},
       destination: "route",
       data: {},

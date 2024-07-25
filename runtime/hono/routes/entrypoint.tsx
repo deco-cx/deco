@@ -7,7 +7,11 @@ import type { Page } from "../../../blocks/page.tsx";
 import type { PageContext } from "../../../engine/block.ts";
 import type { Flag } from "../../../types.ts";
 import { forceHttps, setCSPHeaders } from "../../../utils/http.ts";
-import { createHandler } from "../middleware.ts";
+import {
+  createHandler,
+  type DecoMiddlewareContext,
+  proxyState,
+} from "../middleware.ts";
 
 export interface RouterContext {
   pagePath: string;
@@ -74,6 +78,9 @@ export const handler = createHandler(async (
 
   return setCSPHeaders(
     req,
-    await handler(forceHttps(req), ctx as unknown as ConnInfo),
+    await handler(
+      forceHttps(req),
+      proxyState(ctx as DecoMiddlewareContext) as unknown as ConnInfo,
+    ),
   );
 });
