@@ -1,10 +1,6 @@
 import type { Hono } from "@hono/hono";
 import "../../utils/patched_fetch.ts";
-import type {
-    DecoHandler,
-    DecoMiddlewareContext,
-    DecoRouteState,
-} from "./middleware.ts";
+import type { DecoHandler, DecoRouteState } from "./middleware.ts";
 import { liveness } from "./middlewares/0_liveness.ts";
 
 import type { PageProps } from "$fresh/src/server/types.ts";
@@ -90,8 +86,13 @@ const routes: Array<
         Component: Render,
     },
 ];
-export const withDeco = async <TAppManifest extends AppManifest = AppManifest>(
-    hono: Hono<DecoRouteState<TAppManifest>>,
+export const setup = async <
+    TAppManifest extends AppManifest = AppManifest,
+    THonoState extends DecoRouteState<TAppManifest> = DecoRouteState<
+        TAppManifest
+    >,
+>(
+    hono: Hono<THonoState>,
 ) => {
     const manifest = await import(
         import.meta.resolve(join(Deno.cwd(), "manifest.gen.ts"))
@@ -112,7 +113,8 @@ export const withDeco = async <TAppManifest extends AppManifest = AppManifest>(
                         new Response("<div>Not implemented</div>"),
                     );
                 });
-                return handler(ctx as DecoMiddlewareContext, next);
+                // deno-lint-ignore no-explicit-any
+                return handler(ctx as any, next);
             });
         }
     }
