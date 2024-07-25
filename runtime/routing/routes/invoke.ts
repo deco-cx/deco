@@ -1,11 +1,11 @@
 import { bodyFromUrl } from "../../../utils/http.ts";
 import { invokeToHttpResponse } from "../../../utils/invoke.ts";
 import type { InvokeFunction } from "../../../utils/invoke.types.ts";
-import type { DecoHandler } from "../middleware.ts";
+import { createHandler } from "../middleware.ts";
 
 import { payloadToResolvable, wrapInvokeErr } from "./batchInvoke.ts";
 
-export const handler: DecoHandler = async (
+export const handler = createHandler(async (
   { req: { raw: req, param }, var: state },
 ): Promise<Response> => {
   const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
@@ -28,4 +28,4 @@ export const handler: DecoHandler = async (
   );
 
   return invokeToHttpResponse(req, resp);
-};
+});

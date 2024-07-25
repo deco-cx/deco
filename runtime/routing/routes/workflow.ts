@@ -15,7 +15,7 @@ import {
 } from "../../../deps.ts";
 import type { AppManifest, DecoState } from "../../../mod.ts";
 import type { DecoSiteState } from "../../../types.ts";
-import type { DecoHandler, DecoMiddlewareContext } from "../middleware.ts";
+import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 
 export type Props = HttpRunRequest<
   unknown[],
@@ -54,7 +54,7 @@ const handleProps = async (
   );
 };
 
-export const handler: DecoHandler = async (
+export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
   initOnce();
@@ -88,4 +88,4 @@ export const handler: DecoHandler = async (
     JSON.stringify(resp),
     { status: 200 },
   );
-};
+});

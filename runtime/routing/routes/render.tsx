@@ -5,7 +5,7 @@ import {
 } from "../../../engine/core/resolver.ts";
 import { badRequest, HttpError } from "../../../engine/errors.ts";
 import { useScriptAsDataURI } from "../../../hooks/useScript.ts";
-import type { DecoHandler } from "../middleware.ts";
+import { createHandler } from "../middleware.ts";
 
 interface Options {
   resolveChain?: FieldResolver[];
@@ -72,7 +72,7 @@ const fromRequest = (req: Request): Options => {
   };
 };
 
-export const handler: DecoHandler = async (
+export const handler = createHandler(async (
   ctx,
 ) => {
   const { req: { raw: req }, var: state } = ctx;
@@ -196,4 +196,4 @@ export const handler: DecoHandler = async (
   }
 
   return response;
-};
+});

@@ -3,7 +3,7 @@ import type { Page } from "../../../blocks/page.tsx";
 import LiveControls from "../../../components/LiveControls.tsx";
 import { Context } from "../../../deco.ts";
 import type { ComponentMetadata } from "../../../engine/block.ts";
-import type { DecoHandler } from "../middleware.ts";
+import { createHandler } from "../middleware.ts";
 
 const PAGE_NOT_FOUND = -1;
 export const pageIdFromMetadata = (
@@ -40,7 +40,7 @@ function Preview(props: PageProps<Page>) {
   );
 }
 
-export const handler: DecoHandler = (ctx) => {
+export const handler = createHandler((ctx) => {
   return ctx.render({});
-};
+});
 export default Preview;

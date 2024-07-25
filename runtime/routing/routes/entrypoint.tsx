@@ -7,7 +7,7 @@ import type { Page } from "../../../blocks/page.tsx";
 import type { PageContext } from "../../../engine/block.ts";
 import type { Flag } from "../../../types.ts";
 import { forceHttps, setCSPHeaders } from "../../../utils/http.ts";
-import type { DecoHandler } from "../middleware.ts";
+import { createHandler } from "../middleware.ts";
 
 export interface RouterContext {
   pagePath: string;
@@ -58,7 +58,7 @@ export default function Render({
   );
 }
 
-export const handler: DecoHandler = async (
+export const handler = createHandler(async (
   ctx,
 ) => {
   const { req: { raw: req }, var: state } = ctx;
@@ -76,4 +76,4 @@ export const handler: DecoHandler = async (
     req,
     await handler(forceHttps(req), ctx as unknown as ConnInfo),
   );
-};
+});

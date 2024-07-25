@@ -11,7 +11,7 @@ import type {
   InvokeFunction,
   InvokePayload,
 } from "../../../utils/invoke.types.ts";
-import type { DecoHandler } from "../middleware.ts";
+import { createHandler } from "../middleware.ts";
 
 export const wrapInvokeErr = (path?: string) => (err: any) => {
   if (!(err instanceof HttpError)) {
@@ -57,7 +57,7 @@ export const payloadToResolvable = (
   return resolvable;
 };
 
-export const handler: DecoHandler = async (
+export const handler = createHandler(async (
   { req: { raw: req }, var: state },
 ): Promise<Response> => {
   const { resolve } = state;
@@ -81,4 +81,4 @@ export const handler: DecoHandler = async (
   }
 
   return response;
-};
+});

@@ -1,7 +1,7 @@
 import type { PageProps } from "$fresh/server.ts";
 import type { Page } from "../../../blocks/page.tsx";
 import { bodyFromUrl } from "../../../utils/http.ts";
-import type { DecoHandler, DecoMiddlewareContext } from "../middleware.ts";
+import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 import Render from "./entrypoint.tsx";
 
 const paramsFromUrl = (
@@ -46,7 +46,7 @@ const getPropsFromRequest = async (req: Request) => {
   return data ?? {};
 };
 
-export const handler: DecoHandler = async (
+export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
   const { req: { raw: req }, var: state } = ctx;
@@ -94,7 +94,7 @@ export const handler: DecoHandler = async (
   socket.onerror = (e) =>
     state.monitoring.logger.log("render socket error:", e);
   return response;
-};
+});
 
 export const render = async (
   previewUrl: string,

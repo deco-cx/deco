@@ -1,6 +1,6 @@
-import type { DecoHandler } from "../middleware.ts";
+import { createHandler } from "../middleware.ts";
 
-export const handler: DecoHandler = async (
+export const handler = createHandler(async (
   { var: state },
 ) => {
   return new Response(
@@ -11,4 +11,4 @@ export const handler: DecoHandler = async (
       },
     },
   );
-};
+});

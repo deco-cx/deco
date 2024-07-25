@@ -7,7 +7,7 @@ import { namespaceOf } from "../../../engine/schema/gen.ts";
 import { type LazySchema, lazySchemaFor } from "../../../engine/schema/lazy.ts";
 import type { AppManifest } from "../../../types.ts";
 import { allowCorsFor } from "../../../utils/http.ts";
-import type { DecoHandler } from "../middleware.ts";
+import { createHandler } from "../middleware.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -96,7 +96,7 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
   }
 };
 
-export const handler: DecoHandler = async ({ req: { raw: req } }) => {
+export const handler = createHandler(async ({ req: { raw: req } }) => {
   const url = new URL(req.url);
 
   const ctrl = new AbortController();
@@ -131,4 +131,4 @@ export const handler: DecoHandler = async ({ req: { raw: req } }) => {
       ...allowCorsFor(req),
     },
   });
-};
+});
