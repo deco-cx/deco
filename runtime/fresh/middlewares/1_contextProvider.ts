@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-explicit-any
+import type { FreshContext, MiddlewareHandler } from "$fresh/server.ts";
 import { Context, type DecoContext } from "../../../deco.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../../../engine/decofile/fs.ts";
 import {
@@ -8,27 +10,28 @@ import { siteNameFromEnv } from "../../../engine/manifest/manifest.ts";
 import { randomSiteName } from "../../../engine/manifest/utils.ts";
 import { newContext } from "../../../mod.ts";
 import type { InitOptions, OptionsProvider } from "../../../plugins/deco.ts";
-import type { AppManifest } from "../../../types.ts";
-import type { DecoMiddleware } from "../../hono/middleware.ts";
+import type { AppManifest, DecoSiteState, DecoState } from "../../../types.ts";
 import { ContextCache } from "./2_alienRelease.ts";
 
 let contextCache: ContextCache | null = null;
 
 export const contextProvider = <TManifest extends AppManifest = AppManifest>(
   _opt: InitOptions<TManifest> | OptionsProvider,
-): DecoMiddleware<TManifest> => {
+): MiddlewareHandler<DecoState<any, DecoSiteState, TManifest>> => {
   // Return an async function to handle requests
   return async function (
-    context,
-    next,
+    request: Request,
+    context: FreshContext<
+      DecoState<any, DecoSiteState, TManifest>
+    >,
   ) {
-    if (context.req.url.endsWith("/_healthcheck")) {
+    if (request.url.endsWith("/_healthcheck")) {
       return new Response(
         "OK",
         { status: 200 },
       );
     }
-    const opt = typeof _opt === "function" ? await _opt(context.req.raw) : _opt;
+    const opt = typeof _opt === "function" ? await _opt(request) : _opt;
     contextCache ??= new ContextCache({
       cacheSize: 7, // 7 is arbitrarily chosen
     });
@@ -79,11 +82,11 @@ export const contextProvider = <TManifest extends AppManifest = AppManifest>(
       );
     }
 
-    const mNext = Context.bind(
+    const next = Context.bind(
       await contextPromise,
-      next.bind(context),
+      context.next.bind(context),
     );
 
-    await mNext();
+    return next();
   };
 };

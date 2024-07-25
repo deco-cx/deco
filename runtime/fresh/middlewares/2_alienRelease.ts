@@ -1,9 +1,12 @@
+// deno-lint-ignore-file no-explicit-any
 import { deleteCookie, getCookies, setCookie } from "std/http/mod.ts";
 import { Context, type DecoContext } from "../../../deco.ts";
+
+import type { MiddlewareHandlerContext } from "$fresh/server.ts";
 import { weakcache } from "../../../deps.ts";
 import { fromEndpoint } from "../../../engine/decofile/fetcher.ts";
 import { newContext } from "../../../mod.ts";
-import { createMiddleware } from "../../hono/middleware.ts";
+import type { DecoSiteState, DecoState } from "../../../types.ts";
 
 interface Opts {
   cacheSize?: number;
@@ -23,21 +26,25 @@ let contextCache: ContextCache | null = null;
 const DECO_RELEASE_COOKIE_NAME = "deco_release";
 const DELETE_MARKER = "$";
 const COOKIE_MARKER = "@";
-export const alienRelease = createMiddleware(async (context, next) => {
+export async function alienRelease(
+  request: Request,
+  context: MiddlewareHandlerContext<
+    DecoState<any, DecoSiteState, any>
+  >,
+) {
   // Parse the URL from the request
-  const url = new URL(context.req.url);
+  const url = new URL(request.url);
 
   // Get the inline release from the query string
   const alienReleaseFromQs = url.searchParams.get("__r");
-  const ref = context.req.header("referer");
+  const ref = request.headers.get("referer");
 
   const referer = ref && URL.canParse(ref) ? new URL(ref) : null;
   const alienReleaseFromRef = referer?.searchParams.get("__r");
   const requesterAlienRelease = alienReleaseFromQs ?? alienReleaseFromRef;
   // If the inline release is the delete marker, delete the cookie and return the response
   if (requesterAlienRelease === DELETE_MARKER) {
-    await next();
-    const response = context.res;
+    const response = await context.next();
     deleteCookie(response.headers, DECO_RELEASE_COOKIE_NAME);
     return response;
   }
@@ -48,7 +55,7 @@ export const alienRelease = createMiddleware(async (context, next) => {
     : requesterAlienRelease;
 
   // Get the cookies from the request headers
-  const cookies = getCookies(context.req.raw.headers);
+  const cookies = getCookies(request.headers);
 
   // Get the inline release from the cookie
   const alienReleaseFromCookie = cookies[DECO_RELEASE_COOKIE_NAME];
@@ -89,9 +96,8 @@ export const alienRelease = createMiddleware(async (context, next) => {
     }
     const ctx = await contextPromise;
 
-    const mNext = Context.bind(ctx, next.bind(ctx));
-    await mNext();
-    const response = context.res;
+    const next = Context.bind(ctx, context.next.bind(context));
+    const response = await next();
     if (shouldAddCookie) {
       setCookie(response.headers, {
         name: DECO_RELEASE_COOKIE_NAME,
@@ -102,5 +108,5 @@ export const alienRelease = createMiddleware(async (context, next) => {
     }
     return response;
   }
-  await next();
-});
+  return context.next();
+}
