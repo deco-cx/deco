@@ -316,7 +316,9 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
           }
           const matchedJson = matched.json();
+          const anotherMatchedJson = await matched.clone().json();
           console.log("matchedJson: ", matchedJson);
+          console.log("anotherMatchedJson: ", anotherMatchedJson);
           return await matchedJson;
         };
 
