@@ -154,7 +154,7 @@ export const withSection = <TProps, TLoaderProps = TProps>(
   const renderSaltFromState = ctx.context?.state?.renderSalt;
   const frameworkFromState = ctx.context?.state?.framework;
   // TODO @gimenes This is a fresh thing only. We need to remove it on other framework bindings
-  const partialMode = ctx.context.state.partialMode ||
+  const partialMode = ctx?.context?.state?.partialMode ||
     "replace";
   const metadata = {
     resolveChain: ctx.resolveChain,
