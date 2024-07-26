@@ -1,7 +1,9 @@
 import type { Framework } from "../../components/section.tsx";
 import { useSection } from "../../hooks/useSection.ts";
-
 const bindings: Framework = {
+  Head: () => {
+    return null;
+  },
   Wrapper: ({ children }) => <>{children}</>,
   ErrorFallback: function ({ isDeploy, debugEnabled, name, error }) {
     return (
