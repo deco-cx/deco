@@ -258,7 +258,7 @@ const wrapLoader = (
             console.log("ERROR -> handler error: ", error);
           }
           const jsonString = JSON.stringify(json);
-          console.log("Length of json in call handler and cache: ", jsonString ? jsonString.length : 0);
+          console.log("Length of json in call handler and cache: ", jsonString ? jsonString.length : 0, " type of the json: ", typeof json);
           const response = new Response(jsonString, {
             headers: {
               "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
