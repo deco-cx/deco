@@ -257,12 +257,14 @@ const wrapLoader = (
           } catch (error) {
             console.log("ERROR -> handler error: ", error);
           }
-          console.log("Length of json in call handler and cache: ", JSON.stringify(json) ? JSON.stringify(json).length : 0);
-          const response = new Response(JSON.stringify(json), {
+          const jsonString = JSON.stringify(json);
+          console.log("Length of json in call handler and cache: ", jsonString ? jsonString.length : 0);
+          const response = new Response(jsonString, {
             headers: {
               "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
                 .toUTCString(),
-              "Content-Length": JSON.stringify(json) ? JSON.stringify(json).length.toString() : "0",
+              "Content-Length": jsonString ? jsonString.length.toString() : "0",
+              "content-length": jsonString ? jsonString.length.toString() : "0",
             },
           });
           console.log(
