@@ -8,8 +8,8 @@ import type {
 } from "$fresh/server.ts";
 import { Context } from "../../../deco.ts";
 import {
-  getCookies,
   context as otelContext,
+  getCookies,
   setCookie,
 } from "../../../deps.ts";
 import { mapObjKeys } from "../../../engine/core/utils.ts";

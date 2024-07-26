@@ -34,7 +34,7 @@ import type { createServerTimings } from "./utils/timings.ts";
 export type { App } from "./blocks/app.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams
+  ErrorBoundaryParams,
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
@@ -124,9 +124,8 @@ export type DecoState<
         TManifest
       >
       & InvocationFunc<TManifest>;
-    routes?: Route[];
-    flags: Flag[];
     pathTemplate: string;
+    routes?: Route[];
   };
 
 export type { PropsLoader } from "./blocks/propsLoader.ts";

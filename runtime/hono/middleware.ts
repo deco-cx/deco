@@ -28,7 +28,9 @@ export type DecoMiddlewareContext<
   I extends Input = {},
 > = Context<DecoRouteState<TManifest>, P, I>;
 
-export const proxyState = (ctx: DecoMiddlewareContext) => {
+export const proxyState = (
+  ctx: DecoMiddlewareContext & { params?: Record<string, string> },
+) => {
   const ctxSetter = {
     set(_: any, prop: any, newValue: any) {
       ctx.set(prop, newValue);
@@ -38,6 +40,7 @@ export const proxyState = (ctx: DecoMiddlewareContext) => {
   };
   return {
     ...ctx,
+    params: ctx.params ?? ctx.req.param(),
     get state() {
       return new Proxy(ctx.var, ctxSetter);
     },
