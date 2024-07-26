@@ -17,11 +17,11 @@ const bindings: Framework = {
       </div>
     );
   },
-  LoadingFallback: function ({ children }) {
+  LoadingFallback: function ({ children, props }) {
     return (
       <div
-        hx-get={useSection()}
-        hx-trigger="intersect once"
+        hx-get={useSection({ props })}
+        hx-trigger="load once delay:6s, intersect once threshold:0.0"
         hx-target="closest section"
         hx-swap="outerHTML transition:true"
       >

@@ -5,6 +5,7 @@ import { walk } from "std/fs/walk.ts";
 import { Buffer } from "std/io/buffer.ts";
 import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
 import { copy } from "std/streams/copy.ts";
+import { METADATA_PATH } from "../../engine/decofile/fsFolder.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
@@ -78,7 +79,7 @@ export class DaemonDiskStorage implements RealtimeStorage {
       globs && ignore.add(globs);
       return {
         includes: (str) => {
-          if (str === CHANGESET_FILE) {
+          if (str === CHANGESET_FILE || str === `/${METADATA_PATH}`) {
             return false;
           }
           const isBuildFile = buildFilesRegExp &&
@@ -147,7 +148,7 @@ export class DaemonDiskStorage implements RealtimeStorage {
       ? keys.map((k) => join(this.dir, k))
       : join(this.dir, keys);
     try {
-      if (Array.isArray(keys)) {
+      if (Array.isArray(filePaths)) {
         const data = new Map<string, T>();
         for (const filePath of filePaths) {
           const fileContent = await this.fs.readTextFile(filePath);
@@ -155,7 +156,7 @@ export class DaemonDiskStorage implements RealtimeStorage {
         }
         return data;
       } else {
-        const fileContent = await this.fs.readTextFile(filePaths as string);
+        const fileContent = await this.fs.readTextFile(filePaths);
         return fileContent as T;
       }
     } catch (_error) {
@@ -270,7 +271,7 @@ export class DaemonRealtimeState<T = unknown> implements RealtimeState {
   }
 
   public wait() {
-    return this?.blockConcurrencyWhilePromise ?? Promise.resolve();
+    return this.blockConcurrencyWhilePromise ?? Promise.resolve();
   }
 
   public async persist(outfile: string, isEnvironmentPersistence?: boolean) {

@@ -9,7 +9,7 @@ import {
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { alwaysThrow, withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";
-import type { JSX } from "../deps.ts";
+import type { DeepPartial, JSX } from "../deps.ts";
 import type {
   Block,
   BlockModule,
@@ -18,8 +18,8 @@ import type {
   PreactComponent,
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
-import type { AppManifest, FunctionContext } from "../types.ts";
 import { HttpError } from "../engine/errors.ts";
+import type { AppManifest } from "../types.ts";
 
 /**
  * @widget none
@@ -54,6 +54,8 @@ export type SectionProps<LoaderFunc, ActionFunc = LoaderFunc> =
   | ReturnProps<LoaderFunc>
   | ReturnProps<ActionFunc>;
 
+export type LoadingFallbackProps<TProps> = DeepPartial<TProps>;
+
 export interface ErrorBoundaryParams<TProps> {
   error: any;
   props: TProps;
@@ -74,7 +76,7 @@ export interface SectionModule<
     PreactComponent
   > {
   // Fix this ComponentType<any>
-  LoadingFallback?: ComponentType<any>;
+  LoadingFallback?: ComponentType<DeepPartial<TConfig>>;
   ErrorFallback?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TLoaderProps>;
   action?: PropsLoader<TConfig, TActionProps>;
@@ -103,12 +105,16 @@ export const createSectionBlock = (
       TConfig,
       HttpContext<RequestState>
     > => {
-    const withMainComponent = (mainComponent: ComponentFunc) =>
-      wrapper<TProps>(
+    const withMainComponent = (
+      mainComponent: ComponentFunc,
+      loaderProps?: TConfig,
+    ) =>
+      wrapper<TProps, TConfig>(
         resolver,
         mainComponent,
         mod.LoadingFallback,
         mod.ErrorFallback,
+        loaderProps,
       );
     const useExportDefaultComponent = withMainComponent(mod.default);
     if (!mod.action && !mod.loader) {
@@ -125,8 +131,6 @@ export const createSectionBlock = (
     ): Promise<PreactComponent<TProps>> => {
       const {
         request,
-        context,
-        resolve,
       } = httpCtx;
 
       const loaderSectionProps = request.method === "GET"
@@ -137,26 +141,26 @@ export const createSectionBlock = (
         return useExportDefaultComponent(props as unknown as TProps, httpCtx);
       }
 
-      const ctx = {
-        ...context,
-        state: { ...context.state, $live: props, resolve },
-      } as FunctionContext;
-
       const fnContext = fnContextFromHttpContext(httpCtx);
+      const useExportDefaultComponentWithProps = withMainComponent(
+        mod.default,
+        props,
+      );
+
       return await propsLoader(
         loaderSectionProps,
-        ctx.state.$live,
+        props,
         request,
         fnContext,
       ).then((props) => {
-        return useExportDefaultComponent(props, httpCtx);
+        return useExportDefaultComponentWithProps(props, httpCtx);
       }).catch((err) => {
         if (err instanceof HttpError) {
           throw err;
         }
-        const allowErrorBoundary = withMainComponent(alwaysThrow(err));
+        const allowErrorBoundary = withMainComponent(alwaysThrow(err), props);
         return allowErrorBoundary(
-          ctx.state.$live as unknown as TProps,
+          props as unknown as TProps,
           httpCtx,
         );
       });

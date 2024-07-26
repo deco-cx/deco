@@ -45,9 +45,9 @@ const bindings: Framework = {
   Wrapper: ({ id, partialMode, children }) => (
     <Partial name={id} mode={partialMode}>{children}</Partial>
   ),
-  LoadingFallback: ({ id, children }) => {
+  LoadingFallback: ({ id, children, props }) => {
     const btnId = `${id}-partial-onload`;
-    const { "f-partial": href, ...rest } = usePartialSection();
+    const { "f-partial": href, ...rest } = usePartialSection({ props });
 
     return (
       <>

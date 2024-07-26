@@ -209,8 +209,12 @@ export { readFromStream } from "../clients/withManifest.ts";
 
 export const forceHttps = (req: Request) => {
   let httpsReq = req;
-  if (req.url.startsWith("http:") && !req.url.includes("localhost")) {
+  const hostHeader = req.headers.get("host");
+  const isLocalhost = req.url.includes("localhost") &&
+    (!hostHeader || hostHeader.includes("localhost"));
+  if (req.url.startsWith("http:") && !isLocalhost) {
     const url = new URL(req.url);
+    url.host = req.headers.get("host") ?? url.host;
     url.protocol = "https:";
     httpsReq = new Request(url, req);
   }

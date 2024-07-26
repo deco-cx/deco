@@ -131,7 +131,7 @@ export type DecoState<
   };
 
 export type { PropsLoader } from "./blocks/propsLoader.ts";
-export type { SectionProps } from "./blocks/section.ts";
+export type { LoadingFallbackProps, SectionProps } from "./blocks/section.ts";
 export type { FnContext } from "./blocks/utils.tsx";
 export type ActionContext<
   TState = {},

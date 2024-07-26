@@ -150,7 +150,7 @@ export class DenoRun implements Isolate {
     }
 
     const headers = new Headers(request.headers);
-    headers.set("host", url.hostname);
+    headers.set("host", request.headers.get("host") ?? url.hostname);
 
     return fetch(this.client ? request.url : url, {
       method: request.method,

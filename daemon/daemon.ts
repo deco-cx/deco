@@ -8,6 +8,11 @@ import * as colors from "std/fmt/colors.ts";
 import { ensureDir, exists } from "std/fs/mod.ts";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
+import {
+  BLOCKS_FOLDER,
+  DECO_FOLDER,
+  genMetadata,
+} from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
@@ -101,6 +106,14 @@ export class Daemon {
     this.realtimeFsState = new DaemonRealtimeState({
       storage,
     });
+
+    this.realtimeFsState.blockConcurrencyWhile(
+      async () => {
+        const meta = await genMetadata();
+        meta && storage.put(meta.path, meta.content);
+      },
+    );
+
     let lastPersist = Promise.resolve();
     const debouncedPersist = this.realtimeFsState.shouldPersistState()
       ? debounce(() => {
@@ -109,7 +122,23 @@ export class Daemon {
         });
       }, 2 * MINUTE)
       : undefined; // 10m
+
+    const debouncedMetadataGenFromFS = debounce(
+      async () => {
+        const meta = await genMetadata();
+        meta && storage.put(meta.path, meta.content);
+      },
+      250,
+    );
+
     storage.onChange = (events) => {
+      // Generate new blocks.json if there are changes in .deco/blocks
+      if (
+        events.some((e) => e.path.includes(`${DECO_FOLDER}/${BLOCKS_FOLDER}`))
+      ) {
+        debouncedMetadataGenFromFS();
+      }
+
       if (debouncedBuild) {
         const hasAnyCreationOrDeletion = events.some((evt) =>
           evt.path.startsWith("/islands/") ||
@@ -222,30 +251,27 @@ export class Daemon {
             },
           );
         }
-        return this.realtimeFsState.wait().then(async () => {
-          if (pathname === COMMIT_DEFAULT_ENDPOINT) {
-            const { commitSha } = await req.json<{ commitSha: string }>();
-            if (!commitSha) {
-              return new Response(
-                JSON.stringify({ message: "commit sha is missing" }),
-                { status: 400 },
-              );
+        return this.realtimeFsState.wait()
+          .then(async () => {
+            if (pathname === COMMIT_DEFAULT_ENDPOINT) {
+              const { commitSha } = await req.json<{ commitSha: string }>();
+              if (!commitSha) {
+                return new Response(
+                  JSON.stringify({ message: "commit sha is missing" }),
+                  { status: 400 },
+                );
+              }
+              await this.realtimeFsState.persistNext(commitSha);
+              return new Response(null, { status: 204 });
             }
-            await this.realtimeFsState.persistNext(commitSha);
-            return new Response(null, { status: 204 });
-          }
-          return this.realtimeFs.fetch(req);
-        })
-          .catch(
-            (err) => {
-              console.error(
-                "error when fetching realtimeFs",
-                url.pathname,
-                err,
-              );
-              return new Response(null, { status: 500 });
-            },
-          );
+
+            return await this.realtimeFs.fetch(req);
+          })
+          .catch((err) => {
+            console.error("error when fetching realtimeFs", url.pathname, err);
+
+            return new Response(null, { status: 500 });
+          });
       }
     }
 

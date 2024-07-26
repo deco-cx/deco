@@ -67,6 +67,7 @@ export type {
   LoaderContext,
   LoaderFunction,
   LoaderReturnType,
+  LoadingFallbackProps,
   PropsLoader,
   Route,
   SectionProps,
