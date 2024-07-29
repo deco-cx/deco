@@ -17,6 +17,7 @@ import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
+import { handler as git } from "./git.ts";
 import { cacheStaleMeta } from "./meta/cache.ts";
 import { createDurableFS } from "./realtime/fs.ts";
 import {
@@ -198,6 +199,7 @@ export class Daemon {
     const isDaemonAPI = (req.headers.get(DAEMON_API_SPECIFIER) ??
       req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(DAEMON_API_SPECIFIER)) === "true";
+
     if (isDaemonAPI) {
       const pathname = url.pathname;
       if (pathname.startsWith("/.well-known/deco-validate/")) {
@@ -272,6 +274,10 @@ export class Daemon {
 
             return new Response(null, { status: 500 });
           });
+      }
+
+      if (pathname.startsWith("/git")) {
+        return git(req);
       }
     }
 
