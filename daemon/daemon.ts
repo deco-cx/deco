@@ -199,7 +199,6 @@ export class Daemon {
     const isDaemonAPI = (req.headers.get(DAEMON_API_SPECIFIER) ??
       req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(DAEMON_API_SPECIFIER)) === "true";
-
     if (isDaemonAPI) {
       const pathname = url.pathname;
       if (pathname.startsWith("/.well-known/deco-validate/")) {
