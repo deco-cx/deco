@@ -22,7 +22,7 @@ export interface GitDiffAPI {
 }
 
 export interface GitStatusAPI {
-  response: GIT.StatusResult & {
+  response: Omit<GIT.StatusResult, "files"> & {
     files: Array<
       GIT.FileStatusResult & {
         from: string | undefined;
