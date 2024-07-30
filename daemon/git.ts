@@ -22,7 +22,14 @@ export interface GitDiffAPI {
 }
 
 export interface GitStatusAPI {
-  response: GIT.StatusResult;
+  response: GIT.StatusResult & {
+    files: Array<
+      GIT.FileStatusResult & {
+        from: string | undefined;
+        to: string | undefined;
+      }
+    >;
+  };
   searchParams: {
     diff?: boolean;
   };
