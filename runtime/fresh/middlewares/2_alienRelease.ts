@@ -83,7 +83,7 @@ export async function alienRelease(
         fromEndpoint(alienRelease),
         alienRelease,
       );
-      contextCache.set(
+      contextCache.setValue(
         alienRelease,
         contextPromise.catch((err) => {
           console.error("context creation error", err);

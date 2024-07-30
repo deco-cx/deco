@@ -201,11 +201,11 @@ const wrapLoader = (
           });
         }
 
-        const cc = countCache.get(cacheKeyValue) ?? { count: 0 };
+        const cc = countCache.getValue(cacheKeyValue) ?? { count: 0 };
 
         if (cc.count === 0) {
           cc.count = 1;
-          countCache.set(cacheKeyValue, cc);
+          countCache.setValue(cacheKeyValue, cc);
         } else {
           cc.count += 1;
         }
