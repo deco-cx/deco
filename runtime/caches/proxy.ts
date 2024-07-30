@@ -86,9 +86,11 @@ export const caches: CacheStorage = {
 
         const req = prepareRequest(request);
 
-        const response = cache.has(req.url) ? cache.get(req.url) : await fetch(
-          req,
-        );
+        const response = cache.has(req.url)
+          ? cache.getValue(req.url)
+          : await fetch(
+            req,
+          );
 
         return new Response(response.clone().body, response);
       },
@@ -144,7 +146,7 @@ export const caches: CacheStorage = {
         });
 
         try {
-          cache.insert(url, response);
+          cache.setValue(url, response);
         } catch (err) {
           span.recordException(err);
           throw err;
