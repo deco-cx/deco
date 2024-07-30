@@ -86,9 +86,11 @@ export const caches: CacheStorage = {
 
         const req = prepareRequest(request);
 
-        const response = cache.has(req.url) ? cache.getValue(req.url) : await fetch(
-          req,
-        );
+        const response = cache.has(req.url)
+          ? cache.getValue(req.url)
+          : await fetch(
+            req,
+          );
 
         return new Response(response.clone().body, response);
       },
