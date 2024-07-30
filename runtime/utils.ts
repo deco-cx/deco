@@ -1,4 +1,4 @@
-import type { RequestState } from "deco/blocks/utils.tsx";
+import { type RequestState, vary } from "deco/blocks/utils.tsx";
 import { Context } from "deco/deco.ts";
 import { defaultHeaders } from "deco/utils/http.ts";
 
@@ -40,7 +40,7 @@ export function initializeState(baseState?: Partial<RequestState>) {
   const state = baseState ?? {};
   state.response = response;
   state.bag = new WeakMap();
-  state.vary = [];
+  state.vary = vary();
   state.flags = [];
 
   return {

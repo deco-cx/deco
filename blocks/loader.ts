@@ -176,6 +176,10 @@ const wrapLoader = (
       try {
         if (cacheKeyValue) {
           ctx.vary?.push(loader, cacheKeyValue);
+        } else if (cacheKeyValue === null) {
+          // when loader returns null explicitly
+          // it means it should not be cached
+          ctx.vary?.noCache();
         }
 
         // Should skip cache
