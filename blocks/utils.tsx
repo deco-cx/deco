@@ -77,7 +77,7 @@ interface Vary {
   noCache: () => void;
 }
 
-export const vary = () => {
+export const vary = (): Vary => {
   let shouldCache = true;
 
   const vary: string[] = [];
@@ -88,10 +88,7 @@ export const vary = () => {
       if (shouldCache) return vary.sort().join();
       return undefined;
     },
-    noCache: () => {
-      console.log("noCache");
-      shouldCache = false;
-    },
+    noCache: () => shouldCache = false,
   };
 };
 
