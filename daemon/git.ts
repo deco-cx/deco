@@ -132,6 +132,7 @@ const discard = async (req: Request) => {
 };
 
 export interface RebaseAPI {
+  response: void;
 }
 
 const rebase = async (req: Request) => {
@@ -151,12 +152,38 @@ const rebase = async (req: Request) => {
   return new Response(null, { status: 204 });
 };
 
+export interface GitLogAPI {
+  response: GIT.LogResult;
+  searchParams: {
+    limit?: number;
+  };
+}
+
+const log = async (req: Request) => {
+  const url = new URL(req.url);
+  const limit = Number(url.searchParams.get("limit")) || 10;
+
+  req.signal.throwIfAborted();
+  const log = await git.log();
+
+  return new Response(
+    JSON.stringify({ ...log, all: log.all.slice(0, limit) }),
+    {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    },
+  );
+};
+
 type Handler = (req: Request) => Promise<Response>;
 type HTTPVerbs = "GET" | "POST";
 
 const routes: Record<string, Partial<Record<HTTPVerbs, Handler>>> = {
   "/git/status": {
     GET: status,
+  },
+  "/git/log": {
+    GET: log,
   },
   "/git/publish": {
     POST: publish,
