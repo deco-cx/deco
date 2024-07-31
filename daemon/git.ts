@@ -126,7 +126,9 @@ const discard = async (req: Request) => {
   req.signal.throwIfAborted();
   git.reset(["."])
     .reset([base])
-    .checkout(filepaths);
+    .checkout(
+      filepaths.map((path) => path.startsWith("/") ? path.slice(1) : path),
+    );
 
   return new Response(null, { status: 204 });
 };
