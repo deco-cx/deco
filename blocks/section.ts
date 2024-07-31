@@ -89,7 +89,7 @@ export const createSectionBlock = (
   type,
   introspect: {
     funcNames: ["loader", "action", "default"],
-    includeReturn: true,
+    includeReturn: ["default"],
   },
   adapt: <TConfig = any, TProps = any>(
     mod: SectionModule<TConfig, TProps>,
