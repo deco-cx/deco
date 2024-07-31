@@ -63,7 +63,6 @@ export const wrapCaughtErrors = async <
     return ctx.next!();
   }
   try {
-    RequestContext?.signal?.throwIfAborted();
     return await ctx.next!();
   } catch (err) {
     if (err instanceof HttpError) {
@@ -183,6 +182,7 @@ const wrapLoader = (
           // it means it should not be cached
           ctx.vary?.noCache();
         }
+        RequestContext?.signal?.throwIfAborted();
 
         // Should skip cache
         if (
