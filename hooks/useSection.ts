@@ -23,14 +23,12 @@ export const useSection = <P>(
   const revisionId = ctx?.revision;
   const vary = ctx?.context.state.vary.build();
   let cb = undefined;
-  if (vary) {
-    const cbString = vary
-      ? [
-        revisionId,
-        vary,
-        ctx?.deploymentId,
-      ].join("|")
-      : undefined;
+  if (vary !== null) {
+    const cbString = [
+      revisionId,
+      vary,
+      ctx?.deploymentId,
+    ].join("|");
     cbString && hasher.hash(cbString);
     cb = hasher.result();
     hasher.reset();

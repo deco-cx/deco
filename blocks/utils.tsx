@@ -73,7 +73,7 @@ export const createBagKey = (description: string): symbol =>
 
 interface Vary {
   push: (...key: string[]) => void;
-  build: () => string | undefined;
+  build: () => string | null;
   noCache: () => void;
 }
 
@@ -86,7 +86,7 @@ export const vary = (): Vary => {
     push: (...key: string[]) => vary.push(...key),
     build: () => {
       if (shouldCache) return vary.sort().join();
-      return undefined;
+      return null;
     },
     noCache: () => shouldCache = false,
   };
