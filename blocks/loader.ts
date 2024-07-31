@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
+import { RequestContext } from "../deco.ts";
 import { ValueType, weakcache } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
@@ -62,6 +63,7 @@ export const wrapCaughtErrors = async <
     return ctx.next!();
   }
   try {
+    RequestContext?.signal?.throwIfAborted();
     return await ctx.next!();
   } catch (err) {
     if (err instanceof HttpError) {
