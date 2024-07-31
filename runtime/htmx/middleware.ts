@@ -1,21 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
-import type { Context } from "@hono/hono";
-import type { Handler, Input, MiddlewareHandler } from "@hono/hono/types";
-import type { RequestState } from "../../blocks/utils.tsx";
-import {
-  type AppManifest,
-  type DecoSiteState,
-  type DecoState,
-  HttpError,
-  logger,
-} from "../../mod.ts";
-declare module "@hono/hono" {
-  interface ContextRenderer {
-    <T>(data: T): Promise<Response>;
-  }
-}
+import type { State } from "deco/runtime/app.ts";
+import { type AppManifest, HttpError, logger } from "../../mod.ts";
+import type { Context, Handler, Input, MiddlewareHandler } from "./deps.ts";
+
 export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
-  Variables: DecoState<any, DecoSiteState, TManifest> & RequestState;
+  Variables: State<TManifest>;
   Bindings: object;
 };
 export type DecoHandler<TManifest extends AppManifest = AppManifest> = Handler<
@@ -84,7 +73,7 @@ export const createMiddleware = <TManifest extends AppManifest = AppManifest>(
   ...mid: DecoMiddleware<TManifest>[]
 ): DecoMiddleware<TManifest> => compose(...mid);
 
-export const createHandler = <TManifest extends AppManifest = AppManifest>(
+export const createHandler = <TManifest extends AppManifest = any>(
   handler: DecoHandler<TManifest>,
 ): DecoHandler<TManifest> =>
 async (ctx, next) => {

@@ -1,7 +1,7 @@
 import type { Page } from "../../../blocks/page.tsx";
 import { bodyFromUrl } from "../../../utils/http.ts";
+import type { PageParams } from "../../app.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
-import type { PageParams } from "../setup.tsx";
 import Render from "./entrypoint.tsx";
 
 const paramsFromUrl = (

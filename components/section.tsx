@@ -22,6 +22,7 @@ export interface SectionContext extends HttpContext<RequestState> {
   device: Device;
   framework: "fresh" | "htmx";
   deploymentId?: string;
+  // deno-lint-ignore no-explicit-any
   FallbackWrapper: ComponentType<any>;
   bindings: Framework;
 }

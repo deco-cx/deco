@@ -37,7 +37,7 @@ import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
-export type { MiddlewareHandler } from "@hono/hono/types";
+export type { MiddlewareHandler } from "../../runtime/hono/deps.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
@@ -266,11 +266,11 @@ const installAppsForResolver = async (
 export const fulfillContext = async <
   T extends AppManifest,
 >(
-  ctx: DecoContext,
+  ctx: DecoContext<T>,
   initialManifest: T,
   currentImportMap?: ImportMap,
   release: DecofileProvider | undefined = undefined,
-): Promise<DecoContext> => {
+): Promise<DecoContext<T>> => {
   let currentSite = ctx.site ?? siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (ctx.isDeploy) {
@@ -286,7 +286,7 @@ export const fulfillContext = async <
   const provider = release ?? await getProvider(
     ctx.site,
   );
-  const runtimePromise = deferred<DecoRuntimeState>();
+  const runtimePromise = deferred<DecoRuntimeState<T>>();
   ctx.runtime = runtimePromise.finally(() => {
     ctx.instance.readyAt = new Date();
   });
@@ -329,7 +329,7 @@ export const fulfillContext = async <
     if (!apps || apps.length === 0) {
       runtimePromise.resolve({
         resolver: currentResolver,
-        manifest: newManifest,
+        manifest: newManifest as T,
         importMap: currentImportMap ?? buildImportMap(newManifest),
       });
       firstInstallAppsPromise.resolve();
@@ -357,7 +357,7 @@ export const fulfillContext = async <
       imports: { ...importMap?.imports, ...currentImportMap?.imports ?? {} },
     };
     const runtime = {
-      manifest: mergeManifests(newManifest, manifest),
+      manifest: mergeManifests(newManifest, manifest) as T,
       importMap: mergedImportMap,
       resolver: currentResolver,
     };
@@ -412,9 +412,9 @@ export const newContext = <
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
   namespace: string | undefined = undefined,
-): Promise<DecoContext> => {
-  const currentContext = Context.active();
-  const ctx: DecoContext = {
+): Promise<DecoContext<T>> => {
+  const currentContext = Context.active<T>();
+  const ctx: DecoContext<T> = {
     ...currentContext,
     site: site ?? currentContext.site,
     namespace: namespace ?? currentContext.namespace,

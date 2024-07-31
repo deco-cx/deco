@@ -1,6 +1,6 @@
 import type { Framework } from "../../components/section.tsx";
 import { useSection } from "../../hooks/useSection.ts";
-const bindings: Framework = {
+const bindings = {
   Head: () => {
     return null;
   },
@@ -31,6 +31,6 @@ const bindings: Framework = {
       </div>
     );
   },
-};
+} satisfies Framework;
 
 export default bindings;

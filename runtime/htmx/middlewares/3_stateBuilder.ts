@@ -1,9 +1,5 @@
 import { Context } from "../../../deco.ts";
-import {
-  context as otelContext,
-  getCookies,
-  setCookie,
-} from "../../../deps.ts";
+import { context as otelContext } from "../../../deps.ts";
 import { observe } from "../../../observability/observe.ts";
 import { tracer } from "../../../observability/otel/config.ts";
 import {
@@ -14,6 +10,7 @@ import type { AppManifest } from "../../../types.ts";
 import { forceHttps } from "../../../utils/http.ts";
 import { buildInvokeFunc } from "../../../utils/invoke.server.ts";
 import { createServerTimings } from "../../../utils/timings.ts";
+import { DEBUG } from "../../debug.ts";
 import { setLogger } from "../../fetch/fetchLog.ts";
 import {
   type DecoMiddleware,
@@ -21,72 +18,6 @@ import {
   proxyState,
 } from "../middleware.ts";
 
-const addHours = function (date: Date, h: number) {
-  date.setTime(date.getTime() + (h * 60 * 60 * 1000));
-  return date;
-};
-
-const DEBUG_COOKIE = "deco_debug";
-const DEBUG_ENABLED = "enabled";
-
-const DEBUG_QS = "__d";
-
-type DebugAction = (resp: Response) => void;
-const debug = {
-  none: (_resp: Response) => {},
-  enable: (resp: Response) => {
-    setCookie(resp.headers, {
-      name: DEBUG_COOKIE,
-      value: DEBUG_ENABLED,
-      expires: addHours(new Date(), 1),
-    });
-  },
-  disable: (resp: Response) => {
-    setCookie(resp.headers, {
-      name: DEBUG_COOKIE,
-      value: "",
-      expires: new Date("Thu, 01 Jan 1970 00:00:00 UTC"),
-    });
-  },
-  fromRequest: (
-    request: Request,
-  ): { action: DebugAction; enabled: boolean; correlationId: string } => {
-    const url = new URL(request.url);
-    const debugFromCookies = getCookies(request.headers)[DEBUG_COOKIE];
-    const debugFromQS = url.searchParams.has(DEBUG_QS) && DEBUG_ENABLED ||
-      url.searchParams.get(DEBUG_COOKIE);
-    const hasDebugFromQS = debugFromQS !== null;
-    const isLivePreview = url.pathname.includes("/live/previews/");
-    const enabled = ((debugFromQS ?? debugFromCookies) === DEBUG_ENABLED) ||
-      isLivePreview;
-
-    const correlationId = url.searchParams.get(DEBUG_QS) || crypto.randomUUID();
-    const liveContext = Context.active();
-    // querystring forces a setcookie using the querystring value
-    return {
-      action: hasDebugFromQS || isLivePreview
-        ? (enabled
-          ? (resp) => {
-            debug["enable"](resp);
-            resp.headers.set("x-correlation-id", correlationId);
-            resp.headers.set("x-deno-os-uptime-seconds", `${Deno.osUptime()}`);
-            resp.headers.set(
-              "x-isolate-started-at",
-              `${liveContext.instance.startedAt.toISOString()}`,
-            );
-            liveContext.instance.readyAt &&
-              resp.headers.set(
-                "x-isolate-ready-at",
-                `${liveContext.instance.readyAt.toISOString()}`,
-              );
-          }
-          : debug["disable"])
-        : debug["none"],
-      enabled,
-      correlationId,
-    };
-  },
-};
 export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
   resolveKey?: string,
 ): DecoMiddleware<TManifest> =>
@@ -94,7 +25,7 @@ export const buildDecoState = <TManifest extends AppManifest = AppManifest>(
     ctx,
     next,
   ) {
-    const { enabled, action, correlationId } = debug.fromRequest(ctx.req.raw);
+    const { enabled, action, correlationId } = DEBUG.fromRequest(ctx.req.raw);
 
     const t = createServerTimings();
     if (enabled) {

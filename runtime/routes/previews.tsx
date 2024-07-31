@@ -1,8 +1,8 @@
-import type { PageParams } from "deco/runtime/hono/setup.tsx";
-import type { Page } from "../../../blocks/page.tsx";
-import LiveControls from "../../../components/LiveControls.tsx";
-import { Context } from "../../../deco.ts";
-import type { ComponentMetadata } from "../../../engine/block.ts";
+import type { Page } from "../../blocks/page.tsx";
+import LiveControls from "../../components/LiveControls.tsx";
+import { Context } from "../../deco.ts";
+import type { ComponentMetadata } from "../../engine/block.ts";
+import type { PageParams } from "../app.ts";
 import { createHandler } from "../middleware.ts";
 
 const PAGE_NOT_FOUND = -1;

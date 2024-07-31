@@ -69,11 +69,7 @@ export const handler = createHandler(async (
       workflowFn,
       (execution) =>
         new WorkflowContext(
-          ctx.var as unknown as DecoState<
-            unknown,
-            DecoSiteState,
-            AppManifest
-          >,
+          ctx.var,
           execution,
         ),
     );

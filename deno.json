@@ -31,7 +31,6 @@
   },
   "imports": {
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
-    "@hono/hono": "jsr:@hono/hono@^4.5.1",
     "deco/": "./",
     "partytown/": "https://deno.land/x/partytown@0.3.0/",
     "preact": "https://esm.sh/preact@10.16.0?pin=102",

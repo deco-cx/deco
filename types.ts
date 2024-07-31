@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import type handlerBlock from "deco/blocks/handler.ts";
+import { Deco } from "deco/runtime/app.ts";
 import type accountBlock from "./blocks/account.ts";
 import type actionBlock from "./blocks/action.ts";
 import type appBlock from "./blocks/app.ts";
@@ -34,7 +35,7 @@ import type { createServerTimings } from "./utils/timings.ts";
 export type { App } from "./blocks/app.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams,
+  ErrorBoundaryParams
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
@@ -114,6 +115,8 @@ export type DecoState<
 > =
   & TState
   & {
+    deco: Deco<TManifest>;
+    url: URL;
     correlationId?: string;
     debugEnabled?: boolean;
     $live: TConfig;

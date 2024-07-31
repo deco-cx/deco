@@ -2,7 +2,7 @@ import { type RequestState, vary } from "deco/blocks/utils.tsx";
 import { Context } from "deco/deco.ts";
 import { defaultHeaders } from "deco/utils/http.ts";
 import type { RequestState } from "../blocks/utils.tsx";
-import type { DecoMiddlewareContext } from "../runtime/hono/middleware.ts";
+import type { DecoMiddlewareContext } from "./htmx/middleware.ts";
 
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle

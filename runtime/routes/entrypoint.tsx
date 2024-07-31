@@ -1,17 +1,17 @@
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import type { ConnInfo } from "std/http/mod.ts";
-import type { Handler } from "../../../blocks/handler.ts";
-import type { Page } from "../../../blocks/page.tsx";
-import type { PageContext } from "../../../engine/block.ts";
-import type { Flag } from "../../../types.ts";
-import { forceHttps, setCSPHeaders } from "../../../utils/http.ts";
+import type { Handler } from "../../blocks/handler.ts";
+import type { Page } from "../../blocks/page.tsx";
+import type { PageContext } from "../../engine/block.ts";
+import type { Flag } from "../../types.ts";
+import { forceHttps, setCSPHeaders } from "../../utils/http.ts";
+import type { PageParams } from "../app.ts";
 import {
   createHandler,
   type DecoMiddlewareContext,
   proxyState,
 } from "../middleware.ts";
-import type { PageParams } from "../setup.tsx";
 
 export interface RouterContext {
   pagePath: string;
