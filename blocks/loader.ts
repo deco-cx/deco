@@ -261,11 +261,12 @@ const wrapLoader = (
           console.log("Length of json in call handler and cache: ", jsonString ? jsonString.length : 0);
 
           const headers: { [key: string]: string } = {
-            "expires": new Date(Date.now() + (MAX_AGE_S * 1e3)).toUTCString()
+            "expires": new Date(Date.now() + (MAX_AGE_S * 1e3)).toUTCString(),
           };
           
           if (jsonString && jsonString.length > 0) {
             headers["Content-Length"] = (jsonString.length * 2).toString();
+            headers["Content-Type"] = "application/json; charset=utf-8";
           }
           
           const response = new Response(jsonString, {
