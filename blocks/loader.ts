@@ -265,7 +265,7 @@ const wrapLoader = (
           };
           
           if (jsonString && jsonString.length > 0) {
-            headers["Content-Length"] = (jsonString.length * 2).toString();
+            headers["Content-Length"] = (jsonString.length).toString();
             headers["Content-Type"] = "application/json; charset=utf-8";
           }
           
