@@ -327,7 +327,7 @@ const wrapLoader = (
             return JSON.parse(matchedText);
           } catch (error) {
             console.error("Error parsing JSON: ", error.message);
-            console.error("Faulty JSON snippet: ", matchedText.slice(4262941 - 20, 4262941 + 20)); // Log around the error position
+            console.error("Faulty JSON snippet: ", matchedText.slice(-500)); // Log the last 500 characters of matched text
             throw error; // Re-throw the error after logging for debugging purposes
           }
         };
