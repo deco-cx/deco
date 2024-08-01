@@ -1,5 +1,5 @@
-import { Context } from "../../../deco.ts";
-import { inspectVSCode } from "../../../deps.ts";
+import { Context } from "../../deco.ts";
+import { inspectVSCode } from "../../deps.ts";
 import { createHandler } from "../middleware.ts";
 
 export const handler = createHandler(async ({ req: { raw: req } }) => {

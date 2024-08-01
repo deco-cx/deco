@@ -1,8 +1,6 @@
-import { type RequestState, vary } from "deco/blocks/utils.tsx";
-import { Context } from "deco/deco.ts";
-import { defaultHeaders } from "deco/utils/http.ts";
-import type { RequestState } from "../blocks/utils.tsx";
-import type { DecoMiddlewareContext } from "./htmx/middleware.ts";
+import { type RequestState, vary } from "../blocks/utils.tsx";
+import { Context } from "../deco.ts";
+import { defaultHeaders } from "../utils/http.ts";
 
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle
@@ -51,11 +49,4 @@ export function baseState() {
       name: context.site,
     },
   } as RequestState;
-}
-
-export function initializeState(ctx: DecoMiddlewareContext) {
-  for (const [key, value] of Object.entries(baseState())) {
-    ctx.set(key as keyof RequestState, value);
-  }
-  return ctx.var;
 }

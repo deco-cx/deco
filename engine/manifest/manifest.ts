@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { baseState } from "deco/runtime/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { gray, green, red } from "std/fmt/colors.ts";
 import {
@@ -18,6 +17,7 @@ import {
   type DecoContext,
   type DecoRuntimeState,
 } from "../../deco.ts";
+import { baseState } from "../../runtime/utils.ts";
 import type { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
 import { randId } from "../../utils/rand.ts";
@@ -37,7 +37,6 @@ import { integrityCheck } from "../integrity.ts";
 import defaultResolvers from "../manifest/fresh.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
-export type { MiddlewareHandler } from "../../runtime/hono/deps.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
