@@ -65,7 +65,8 @@ window.onload = setupWebSocket;
 let hmrUniqueId = crypto.randomUUID();
 const sockets = new Map<string, WebSocket>();
 
-export interface HTMXOpts {
+export interface HTMXOpts<TAppManifest extends AppManifest = AppManifest> {
+  server?: Hono<DecoRouteState<TAppManifest>>;
   Layout?: ComponentType<
     {
       req: Request;
@@ -77,8 +78,8 @@ export interface HTMXOpts {
 }
 export const HTMX = <
   TAppManifest extends AppManifest = AppManifest,
->(opts?: HTMXOpts): Bindings<TAppManifest> => {
-  const hono = new Hono<DecoRouteState<TAppManifest>>();
+>(opts?: HTMXOpts<TAppManifest>): Bindings<TAppManifest> => {
+  const hono = opts?.server ?? new Hono<DecoRouteState<TAppManifest>>();
   hono.get(
     DEV_SERVER_PATH,
     upgradeWebSocket(() => {
