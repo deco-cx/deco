@@ -1,4 +1,4 @@
-import { GIT } from "./deps.ts";
+import { GIT, Hono, HTTPException } from "./deps.ts";
 
 const git = GIT.simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
@@ -36,21 +36,18 @@ export interface GitStatusAPI {
 }
 
 /** Git status */
-const status = async (req: Request) => {
-  const url = new URL(req.url);
+const status: Hono.Handler = async (c) => {
+  const url = new URL(c.req.url);
   const includeDiff = url.searchParams.get("diff") === "true";
 
-  req.signal.throwIfAborted();
   const base = await getMergeBase();
 
-  req.signal.throwIfAborted();
   const status = await git
     .reset(["."])
     .reset([base])
     .status();
 
   if (includeDiff) {
-    req.signal.throwIfAborted();
     status.files = await Promise.all(
       status.files.map(async (file) => {
         const [from, to] = await Promise.all([
@@ -83,16 +80,13 @@ export interface PublishAPI {
 }
 
 // TODO: maybe tag with versions!
-const publish = async (req: Request) => {
-  const { message, author } = await req.json() as PublishAPI["body"];
+const publish: Hono.Handler = async (c) => {
+  const { message, author } = await c.req.json() as PublishAPI["body"];
 
-  req.signal.throwIfAborted();
   await git.fetch(["-p"]);
 
-  req.signal.throwIfAborted();
   const base = await getMergeBase();
 
-  req.signal.throwIfAborted();
   const result = await git
     .reset(["."])
     .reset([base])
@@ -114,16 +108,13 @@ export interface CheckoutAPI {
   };
 }
 
-const discard = async (req: Request) => {
-  const { filepaths } = await req.json() as CheckoutAPI["body"];
+const discard: Hono.Handler = async (c) => {
+  const { filepaths } = await c.req.json() as CheckoutAPI["body"];
 
-  req.signal.throwIfAborted();
   await git.fetch(["-p"]);
 
-  req.signal.throwIfAborted();
   const base = await getMergeBase();
 
-  req.signal.throwIfAborted();
   git.reset(["."])
     .reset([base])
     .checkout(
@@ -137,18 +128,15 @@ export interface RebaseAPI {
   response: void;
 }
 
-const rebase = async (req: Request) => {
-  req.signal.throwIfAborted();
+const rebase: Hono.Handler = async () => {
   await git
     .fetch(["-p"])
     .add(".")
     .commit("Before rebase")
     .pull({ "--rebase": null, "--strategy-option": "theirs" });
 
-  req.signal.throwIfAborted();
   const base = await getMergeBase();
 
-  req.signal.throwIfAborted();
   await git.reset([base]);
 
   return new Response(null, { status: 204 });
@@ -161,11 +149,10 @@ export interface GitLogAPI {
   };
 }
 
-const log = async (req: Request) => {
-  const url = new URL(req.url);
+const log: Hono.Handler = async (c) => {
+  const url = new URL(c.req.url);
   const limit = Number(url.searchParams.get("limit")) || 10;
 
-  req.signal.throwIfAborted();
   const log = await git.log();
 
   return new Response(
@@ -177,39 +164,24 @@ const log = async (req: Request) => {
   );
 };
 
-type Handler = (req: Request) => Promise<Response>;
-type HTTPVerbs = "GET" | "POST";
-
-const routes: Record<string, Partial<Record<HTTPVerbs, Handler>>> = {
-  "/git/status": {
-    GET: status,
-  },
-  "/git/log": {
-    GET: log,
-  },
-  "/git/publish": {
-    POST: publish,
-  },
-  "/git/discard": {
-    POST: discard,
-  },
-  "/git/rebase": {
-    POST: rebase,
-  },
-};
-
 // On client closed the connection, respond a 499
 // TODO: move this to other Hypervisor APIs
-const aborted = async (req: Request) => {
-  await new Promise((resolve) => req.signal.addEventListener("abort", resolve));
+const aborted: Hono.MiddlewareHandler = async (c, next) => {
+  const promise = new Promise((resolve) =>
+    c.req.raw.signal.addEventListener("abort", resolve)
+  );
 
-  return new Response(null, { status: 499 });
+  await Promise.race([promise, next()]);
+
+  if (c.req.raw.signal.aborted) {
+    c.res = new Response(null, { status: 499 });
+  }
 };
 
 let hasGit = false;
-const ensureGit = async () => {
+const ensureGit: Hono.MiddlewareHandler = async (c, next) => {
   if (hasGit) {
-    return;
+    return next();
   }
 
   try {
@@ -218,45 +190,30 @@ const ensureGit = async () => {
       stdout: "piped",
     });
 
-    const process = await cmd.spawn();
-    await process.status;
+    await cmd.spawn().status;
 
     hasGit = true;
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      throw new Error("GIT_NOT_FOUND");
-    }
 
-    throw error;
-  }
-};
+    return next();
+  } catch {
+    const msg =
+      "Deco preview server requires GIT to be installed in your system but none was found. Please install it and add it to your PATH.";
 
-export const handler = async (req: Request) => {
-  const url = new URL(req.url);
-
-  try {
-    const route = routes[url.pathname][req.method as HTTPVerbs];
-
-    if (!route) {
-      return new Response("No such route", { status: 404 });
-    }
-
-    await ensureGit();
-
-    const response = await Promise.race([route(req), aborted(req)]);
-
-    return response;
-  } catch (error) {
-    if (error.message === "GIT_NOT_FOUND") {
-      const msg =
-        "Deco preview server requires GIT to be installed in your system but none was found. Please install it and add it to your PATH.";
-
-      console.warn(`\nFatal error:\n${msg}\n`);
-      return new Response(msg, { status: 424 });
-    }
-
-    return new Response(error.message || "Internal Server Error", {
-      status: 500,
+    console.warn(`\nFatal error:\n${msg}\n`);
+    throw new HTTPException(424, {
+      res: new Response(msg, { status: 424 }),
     });
   }
 };
+
+const app = new Hono.Hono();
+
+app.use(aborted);
+app.use(ensureGit);
+app.get("/git/status", status);
+app.get("/git/log", log);
+app.post("/git/publish", publish);
+app.post("/git/discard", discard);
+app.post("/git/rebase", rebase);
+
+export const handler = (req: Request) => app.fetch(req);
