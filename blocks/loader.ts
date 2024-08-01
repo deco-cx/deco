@@ -320,9 +320,9 @@ const wrapLoader = (
             status = "hit";
             stats.cache.add(1, { status, loader });
           }
-          const matchedJson = matched.json();
-          // console.log("matchedJson: ", matchedJson);
-          return await matchedJson;
+          const matchedText = await matched.text();
+          console.log("matchedText: ", matchedText);
+          return JSON.parse(matchedText);
         };
 
         return await flights.do(request.url, staleWhileRevalidate);
