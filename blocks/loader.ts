@@ -262,12 +262,13 @@ const wrapLoader = (
 
           const headers: { [key: string]: string } = {
             "expires": new Date(Date.now() + (MAX_AGE_S * 1e3)).toUTCString(),
+            "Content-Type": "application/json",
           };
           
-          if (jsonString && jsonString.length > 0) {
-            headers["Content-Length"] = (jsonString.length).toString();
-            headers["Content-Type"] = "application/json; charset=utf-8";
-          }
+          // if (jsonString && jsonString.length > 0) {
+          //   headers["Content-Length"] = (jsonString.length).toString();
+          //   headers["Content-Type"] = "application/json; charset=utf-8";
+          // }
           
           const response = new Response(jsonString, {
             headers: headers,
