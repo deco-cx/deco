@@ -66,15 +66,12 @@ const fromRequest = (req: Request): Options => {
 export const handler = createHandler(async (
   ctx,
 ) => {
-  const { req: { raw: req }, var: state } = ctx;
+  const { req: { raw: req }, var: state, render } = ctx;
   const opts = fromRequest(req);
 
   const { page, shouldCache } = await state.deco.render(state, req, opts);
 
-  const response = await ctx.var.resolve(
-    { page, __resolveType: "render" },
-    { propsAreResolved: true },
-  ) as unknown as Response;
+  const response = await render({ page });
 
   const etag = ctx.var.url.searchParams.get("__cb");
 

@@ -41,6 +41,10 @@ export const useRouterContext = () => {
   return routerCtxImpl;
 };
 
+export interface PageData {
+  page: Page;
+  routerInfo?: RouterContext;
+}
 export default function Render({
   params,
   url,
@@ -48,7 +52,7 @@ export default function Render({
     page,
     routerInfo,
   },
-}: PageParams<{ page: Page; routerInfo?: RouterContext }>) {
+}: PageParams<PageData>) {
   if (!page) {
     return null;
   }

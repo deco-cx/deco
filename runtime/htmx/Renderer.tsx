@@ -20,13 +20,11 @@ export const factory = (
       return original?.(vnode);
     };
     const body = renderToString(
-      <>
-        <Component
-          params={params}
-          url={new URL(req.url)}
-          data={data}
-        />
-      </>,
+      <Component
+        params={params}
+        url={new URL(req.url)}
+        data={data}
+      />,
     );
     options.vnode = original;
     return new Response(
