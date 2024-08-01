@@ -80,7 +80,7 @@ export const handler = createHandler(async (
     return new Response(null, { status: 304, headers: { etag } });
   }
 
-  if (shouldCache && etag) {
+  if (shouldCache && etag && ctx?.var?.vary?.shouldCache) {
     response.headers.set("etag", etag);
 
     // Stale cache on CDN, but make the browser fetch every single time.
@@ -88,6 +88,11 @@ export const handler = createHandler(async (
     response.headers.set(
       "cache-control",
       "public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400",
+    );
+  } else {
+    response.headers.set(
+      "cache-control",
+      "public, max-age=0, must-revalidate",
     );
   }
 
