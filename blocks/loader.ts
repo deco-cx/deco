@@ -173,7 +173,6 @@ const wrapLoader = (
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
       const cacheKeyValue = cacheKey(props, req, ctx);
-      console.log("loader.ts cacheKeyValue: ", cacheKeyValue, " props: ", props, " req: ", req);
       try {
         // Should skip cache
         if (
@@ -182,7 +181,7 @@ const wrapLoader = (
           !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
-          console.log("bypassed the cache, cacheKeyValue: ", cacheKeyValue, " mode: ", mode, " ENABLE_LOADER_CACHE: ", ENABLE_LOADER_CACHE, " isCache(maybeCache): ", isCache(maybeCache));
+          // console.log("bypassed the cache, cacheKeyValue: ", cacheKeyValue, " mode: ", mode, " ENABLE_LOADER_CACHE: ", ENABLE_LOADER_CACHE, " isCache(maybeCache): ", isCache(maybeCache));
           status = "bypass";
           stats.cache.add(1, { status, loader });
 
@@ -250,6 +249,7 @@ const wrapLoader = (
         url.searchParams.set("cacheKey", cacheKeyValue);
         const request = new Request(url);
 
+        // console.log("loader.ts cacheKeyValue: ", cacheKeyValue, " props: ", props, " req: ", req);
         const callHandlerAndCache = async () => {
           let json;
           try {
@@ -258,20 +258,24 @@ const wrapLoader = (
             console.log("ERROR -> handler error: ", error);
           }
           const jsonString = JSON.stringify(json);
-          console.log("Length of json in call handler and cache: ", jsonString ? jsonString.length : 0, " type of the json: ", typeof json);
+          console.log("Length of json in call handler and cache: ", jsonString ? jsonString.length : 0);
+
+          const headers: { [key: string]: string } = {
+            "expires": new Date(Date.now() + (MAX_AGE_S * 1e3)).toUTCString()
+          };
+          
+          if (jsonString && jsonString.length > 0) {
+            headers["Content-Length"] = (jsonString.length * 2).toString();
+          }
+          
           const response = new Response(jsonString, {
-            headers: {
-              "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
-                .toUTCString(),
-              "Content-Length": jsonString ? jsonString.length.toString() : "0",
-              "content-length": jsonString ? jsonString.length.toString() : "0",
-            },
+            headers: headers,
           });
           console.log(
             "caching the following request: ",
-            request,
+            request.url,
             "\nAnd response: ",
-            response,
+            response.url,
             "Request headers: ", request.headers,
           );
           cache.put(
@@ -280,9 +284,9 @@ const wrapLoader = (
           ).catch((error) => {
             console.log(
               "ERROR -> request",
-              request,
+              request.url,
               "\nAnd response: ",
-              response,
+              response.url,
               " -- callhandlerandcache",
             );
             console.error(
@@ -295,7 +299,7 @@ const wrapLoader = (
 
         const staleWhileRevalidate = async () => {
           const matched = await cache.match(request).catch(() => null);
-          console.log(`matched: ${matched}`);
+          // console.log(`matched: ${matched}`);
           if (!matched) {
             status = "miss";
             stats.cache.add(1, { status, loader });
@@ -316,9 +320,7 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
           }
           const matchedJson = matched.json();
-          const anotherMatchedJson = await matched.clone().json();
-          console.log("matchedJson: ", matchedJson);
-          console.log("anotherMatchedJson: ", anotherMatchedJson);
+          // console.log("matchedJson: ", matchedJson);
           return await matchedJson;
         };
 
