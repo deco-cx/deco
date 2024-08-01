@@ -321,8 +321,15 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
           }
           const matchedText = await matched.text();
+          console.log("Length of matchedText: ", matchedText.length);
           console.log("matchedText: ", matchedText);
-          return JSON.parse(matchedText);
+          try {
+            return JSON.parse(matchedText);
+          } catch (error) {
+            console.error("Error parsing JSON: ", error.message);
+            console.error("Faulty JSON snippet: ", matchedText.slice(4262941 - 20, 4262941 + 20)); // Log around the error position
+            throw error; // Re-throw the error after logging for debugging purposes
+          }
         };
 
         return await flights.do(request.url, staleWhileRevalidate);
