@@ -36,7 +36,7 @@ export interface GitStatusAPI {
 }
 
 /** Git status */
-const status: Hono.Handler = async (c) => {
+export const status: Hono.Handler = async (c) => {
   const url = new URL(c.req.url);
   const includeDiff = url.searchParams.get("diff") === "true";
 
@@ -80,7 +80,7 @@ export interface PublishAPI {
 }
 
 // TODO: maybe tag with versions!
-const publish: Hono.Handler = async (c) => {
+export const publish: Hono.Handler = async (c) => {
   const { message, author } = await c.req.json() as PublishAPI["body"];
 
   await git.fetch(["-p"]);
@@ -108,7 +108,7 @@ export interface CheckoutAPI {
   };
 }
 
-const discard: Hono.Handler = async (c) => {
+export const discard: Hono.Handler = async (c) => {
   const { filepaths } = await c.req.json() as CheckoutAPI["body"];
 
   await git.fetch(["-p"]);
@@ -128,7 +128,7 @@ export interface RebaseAPI {
   response: void;
 }
 
-const rebase: Hono.Handler = async () => {
+export const rebase: Hono.Handler = async () => {
   await git
     .fetch(["-p"])
     .add(".")
@@ -149,7 +149,7 @@ export interface GitLogAPI {
   };
 }
 
-const log: Hono.Handler = async (c) => {
+export const log: Hono.Handler = async (c) => {
   const url = new URL(c.req.url);
   const limit = Number(url.searchParams.get("limit")) || 10;
 
@@ -164,22 +164,8 @@ const log: Hono.Handler = async (c) => {
   );
 };
 
-// On client closed the connection, respond a 499
-// TODO: move this to other Hypervisor APIs
-const aborted: Hono.MiddlewareHandler = async (c, next) => {
-  const promise = new Promise((resolve) =>
-    c.req.raw.signal.addEventListener("abort", resolve)
-  );
-
-  await Promise.race([promise, next()]);
-
-  if (c.req.raw.signal.aborted) {
-    c.res = new Response(null, { status: 499 });
-  }
-};
-
 let hasGit = false;
-const ensureGit: Hono.MiddlewareHandler = async (c, next) => {
+export const ensureGit: Hono.MiddlewareHandler = async (c, next) => {
   if (hasGit) {
     return next();
   }
@@ -208,12 +194,11 @@ const ensureGit: Hono.MiddlewareHandler = async (c, next) => {
 
 const app = new Hono.Hono();
 
-app.use(aborted);
-app.use(ensureGit);
-app.get("/git/status", status);
-app.get("/git/log", log);
-app.post("/git/publish", publish);
-app.post("/git/discard", discard);
-app.post("/git/rebase", rebase);
+app.use("/*", ensureGit);
+app.get("/status", status);
+app.get("/log", log);
+app.post("/publish", publish);
+app.post("/discard", discard);
+app.post("/rebase", rebase);
 
-export const handler = (req: Request) => app.fetch(req);
+export default app;
