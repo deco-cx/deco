@@ -46,7 +46,7 @@ const BYPASS_JWT_VERIFICATION =
   Deno.env.get("DANGEROUSLY_ALLOW_PUBLIC_ACCESS") === "true";
 
 export interface DaemonBaseOptions {
-  build?: Deno.Command;
+  build: Deno.Command | null;
   buildFiles?: string;
   fsApi?: FileSystemApi;
 }
@@ -56,7 +56,7 @@ export interface DaemonIsolateOptions extends DaemonBaseOptions {
 }
 
 export interface DaemonExternalProcessOptions extends DaemonBaseOptions {
-  run: Deno.Command;
+  run: Deno.Command | null;
   port: number;
 }
 
@@ -161,7 +161,7 @@ export class Daemon {
     );
     this.isolate = isIsolateOptions(options)
       ? options?.isolate
-      : options
+      : options?.run
       ? new DenoRun({
         command: options.run,
         port: options.port,
@@ -190,11 +190,6 @@ export class Daemon {
   }
   public async fetch(req: Request, maybeIsolate?: Isolate): Promise<Response> {
     const isolate = maybeIsolate ?? this.isolate;
-    if (isolate === undefined) {
-      return this.errAs500(
-        "isolate is not defined neither inline or via params",
-      );
-    }
     const url = new URL(req.url);
     const isDaemonAPI = (req.headers.get(DAEMON_API_SPECIFIER) ??
       req.headers.get(HYPERVISOR_API_SPECIFIER) ??
@@ -221,7 +216,7 @@ export class Daemon {
 
       if (pathname.startsWith("/volumes")) {
         if (pathname === DEFAULT_LOGS_ENDPOINT) {
-          const logs = isolate.logs?.();
+          const logs = isolate?.logs?.();
           if (!logs) {
             return new Response(null, { status: 404 });
           }
@@ -278,6 +273,12 @@ export class Daemon {
       if (pathname.startsWith("/git")) {
         return git(req);
       }
+    }
+
+    if (isolate === undefined) {
+      return this.errAs500(
+        "isolate is not defined neither inline or via params",
+      );
     }
 
     if (isolate.isRunning?.() === false) {

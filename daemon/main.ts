@@ -9,36 +9,37 @@ const parsedArgs = parse(Deno.args, {
   string: ["build-cmd", "build-files"],
 });
 const runCommand = parsedArgs["_"];
-if (import.meta.main && !runCommand || runCommand.length === 0) {
-  console.error("No command provided.");
-  Deno.exit(1);
-}
 
 const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
 
 const APP_PORT = portPool.get();
 
-// let shutdown: (() => void) | undefined = undefined;
 const [cmd, ...args] = runCommand as string[];
 const [buildCmdStr, ...buildArgs] = parsedArgs["build-cmd"]?.split(" ") ?? [];
 
-const buildCmd = new Deno.Command(buildCmdStr, {
-  args: buildArgs,
-  stdout: "inherit",
-  stderr: "inherit",
-});
-const runCmd = new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
-  args,
-  stdout: "piped",
-  stderr: "piped",
-  env: { PORT: `${APP_PORT}` },
-});
+const buildCmd = buildCmdStr
+  ? new Deno.Command(buildCmdStr, {
+    args: buildArgs,
+    stdout: "inherit",
+    stderr: "inherit",
+  })
+  : null;
+const runCmd = cmd
+  ? new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
+    args,
+    stdout: "piped",
+    stderr: "piped",
+    env: { PORT: `${APP_PORT}` },
+  })
+  : null;
+
 if (!DECO_SITE_NAME) {
   console.error(
     `site name not found. use ${ENV_SITE_NAME} environment variable to set it.`,
   );
   Deno.exit(1);
 }
+
 const daemon = new Daemon({
   run: runCmd,
   build: buildCmd,
