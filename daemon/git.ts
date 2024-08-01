@@ -6,13 +6,13 @@ const git = GIT.simpleGit(Deno.cwd(), {
 });
 
 const getMergeBase = async () => {
-  const { all: [local, upstream] } = await git.branch();
+  const { current, tracking } = await git.status();
 
-  if (!local || !upstream) {
+  if (!current || !tracking) {
     throw new Error(`Missing local or upstream branches`);
   }
 
-  const base = await git.raw("merge-base", local, upstream);
+  const base = await git.raw("merge-base", current, tracking);
 
   return base;
 };
