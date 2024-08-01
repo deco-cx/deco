@@ -1,7 +1,8 @@
 import type { ComponentChildren, ComponentType } from "preact";
-import { type AppManifest, Context } from "../mod.ts";
+import type { AppManifest } from "../mod.ts";
 import "../utils/patched_fetch.ts";
 import type { Deco, PageParams } from "./app.ts";
+import type { ContextRenderer } from "./deps.ts";
 import { Hono, type MiddlewareHandler, serveStatic } from "./deps.ts";
 import type { DecoHandler, DecoRouteState } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
@@ -31,10 +32,8 @@ export interface RendererOpts {
     { req: Request; children: ComponentChildren; revision: string }
   >;
   factory: (
-    req: Request,
-    params: Record<string, string>,
-    Component: ComponentType<PageParams>,
-  ) => <TData = unknown>(data: TData) => Promise<Response> | Response;
+    Component: ComponentType<Pick<PageParams, "data">>,
+  ) => Promise<ContextRenderer> | ContextRenderer;
 }
 
 export interface Bindings<TAppManifest extends AppManifest = AppManifest> {
@@ -122,21 +121,14 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
           );
         }
         if (Component) {
-          const active = Context.active();
-          const revision = await active.release?.revision();
-          const Layout = bindings?.renderer?.Layout ??
-            (({ children }) => <>{children}</>);
-          const renderer = bindings?.renderer?.factory(
-            ctx.req.raw,
-            ctx.req.param(),
+          const renderer = await bindings?.renderer?.factory(
             (props) => {
               return (
-                <Layout
-                  req={ctx.req.raw}
-                  revision={revision!}
-                >
-                  <Component {...props} />
-                </Layout>
+                <Component
+                  url={ctx.var.url}
+                  params={ctx.req.param()}
+                  {...props}
+                />
               );
             },
           );

@@ -1,15 +1,14 @@
 import { type ComponentChildren, type ComponentType, options } from "preact";
 import renderToString from "preact-render-to-string";
 import type { PageParams } from "../app.ts";
+import type { ContextRenderer } from "../deps.ts";
 import bindings from "./Bindings.tsx";
 
 export const Head = bindings.Head!;
 
 export const factory = (
-  req: Request,
-  params: Record<string, string>,
-  Component: ComponentType<PageParams>,
-) => {
+  Component: ComponentType<Pick<PageParams, "data">>,
+): ContextRenderer => {
   return function <TData = unknown>(data: TData) {
     const original = options.vnode;
     const htmlHead: ComponentChildren[] = [];
@@ -21,8 +20,6 @@ export const factory = (
     };
     const body = renderToString(
       <Component
-        params={params}
-        url={new URL(req.url)}
         data={data}
       />,
     );

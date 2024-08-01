@@ -1,6 +1,7 @@
 export { Hono } from "jsr:@hono/hono@^4.5.1";
 export type {
   Context,
+  ContextRenderer,
   Handler,
   Input,
   MiddlewareHandler

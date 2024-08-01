@@ -69,7 +69,6 @@ export interface HTMXOpts<TAppManifest extends AppManifest = AppManifest> {
   server?: Hono<DecoRouteState<TAppManifest>>;
   Layout?: ComponentType<
     {
-      req: Request;
       hmrUniqueId: string;
       revision: string;
       children: ComponentChildren;
@@ -98,15 +97,15 @@ export const HTMX = <
   return {
     server: hono,
     renderer: {
-      factory,
-      Layout: ({ children, req, revision }) => {
+      factory: async (Component) => {
         const active = Context.active();
-        return (
-          <Layout req={req} hmrUniqueId={hmrUniqueId} revision={revision}>
+        const revision = await active.release?.revision();
+        return factory((props) => (
+          <Layout hmrUniqueId={hmrUniqueId} revision={revision!}>
             {!active.isDeploy ? DEV_SERVER_SCRIPT : null}
-            {children}
+            <Component {...props} />
           </Layout>
-        );
+        ));
       },
     },
   };
