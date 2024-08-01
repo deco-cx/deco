@@ -175,15 +175,6 @@ const wrapLoader = (
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
       const cacheKeyValue = cacheKey(props, req, ctx);
       try {
-        if (cacheKeyValue) {
-          ctx.vary?.push(loader, cacheKeyValue);
-        } else if (cacheKeyValue === null && ctx.vary) {
-          // when loader returns null explicitly
-          // it means it should not be cached
-          ctx.vary.shouldCache = false;
-        }
-        RequestContext?.signal?.throwIfAborted();
-
         // Should skip cache
         if (
           mode === "no-store" ||
@@ -191,11 +182,16 @@ const wrapLoader = (
           !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
+          ctx.vary.shouldCache = false;
           status = "bypass";
           stats.cache.add(1, { status, loader });
 
+          RequestContext?.signal?.throwIfAborted();
           return await handler(props, req, ctx);
         }
+
+        ctx.vary?.push(loader, cacheKeyValue);
+        RequestContext?.signal?.throwIfAborted();
 
         if (countCache === null) {
           countCache = new weakcache.WeakLRUCache({
