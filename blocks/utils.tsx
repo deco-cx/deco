@@ -73,22 +73,19 @@ export const createBagKey = (description: string): symbol =>
 
 interface Vary {
   push: (...key: string[]) => void;
-  build: () => string | null;
-  noCache: () => void;
+  build: () => string;
+  shouldCache: boolean;
 }
 
 export const vary = (): Vary => {
-  let shouldCache = true;
-
   const vary: string[] = [];
 
   return {
     push: (...key: string[]) => vary.push(...key),
     build: () => {
-      if (shouldCache) return vary.sort().join();
-      return null;
+      return vary.sort().join();
     },
-    noCache: () => shouldCache = false,
+    shouldCache: true,
   };
 };
 

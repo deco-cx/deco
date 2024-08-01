@@ -177,10 +177,10 @@ const wrapLoader = (
       try {
         if (cacheKeyValue) {
           ctx.vary?.push(loader, cacheKeyValue);
-        } else if (cacheKeyValue === null) {
+        } else if (cacheKeyValue === null && ctx.vary) {
           // when loader returns null explicitly
           // it means it should not be cached
-          ctx.vary?.noCache();
+          ctx.vary.shouldCache = false;
         }
         RequestContext?.signal?.throwIfAborted();
 

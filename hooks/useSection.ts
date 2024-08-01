@@ -22,17 +22,14 @@ export const useSection = <P>(
   const ctx = useContext(SectionContext);
   const revisionId = ctx?.revision;
   const vary = ctx?.context.state.vary.build();
-  let cb = undefined;
-  if (vary !== null) {
-    const cbString = [
-      revisionId,
-      vary,
-      ctx?.deploymentId,
-    ].join("|");
-    cbString && hasher.hash(cbString);
-    cb = hasher.result();
-    hasher.reset();
-  }
+  const cbString = [
+    revisionId,
+    vary,
+    ctx?.deploymentId,
+  ].join("|");
+  hasher.hash(cbString);
+  const cb = hasher.result();
+  hasher.reset();
 
   if (IS_BROWSER) {
     throw new Error("Partials cannot be used inside an Island!");
@@ -50,8 +47,8 @@ export const useSection = <P>(
     ["pathTemplate", pathTemplate],
     ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     ["framework", ctx.framework],
+    ["__cb", `${cb}`],
   ]);
-  cb && params.set("__cb", `${cb}`);
 
   if ((props as { __resolveType?: string })?.__resolveType === undefined) {
     params.set(
