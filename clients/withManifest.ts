@@ -21,8 +21,10 @@ import {
   type InvokeAwaiter,
   newHandler,
 } from "./proxy.ts";
+import { propsToFormData } from "./formdata.ts";
 export interface InvokerRequestInit extends Omit<RequestInit, "fetcher"> {
   fetcher?: typeof fetch;
+  multipart?: true | undefined;
 }
 
 export type GenericFunction = (...args: any[]) => Promise<any>;
@@ -92,13 +94,29 @@ const fetchWithProps = async (
     );
   }
   const headers = new Headers(init?.headers);
+  const fetcher = init?.fetcher ?? fetch;
+  const multipart = init?.multipart ?? false;
 
   headers.set("accept", `application/json, text/event-stream`);
-  headers.set("content-type", "application/json");
 
-  const response = await (init?.fetcher ?? fetch)(url, {
+  if (!headers.has("content-type")) {
+    headers.set("content-type", "application/json");
+  }
+
+  if (multipart) {
+    // Let the browser handle the content-type header, with a webkit generated boundary
+    headers.delete("content-type");
+  }
+
+  const body = headers.get("content-type") === "application/json"
+    ? JSON.stringify(props)
+    : multipart
+    ? propsToFormData(props)
+    : props as string;
+
+  const response = await fetcher(url, {
     method: "POST",
-    body: JSON.stringify(props),
+    body,
     ...init,
     headers,
   });
