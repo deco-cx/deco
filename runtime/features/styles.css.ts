@@ -227,8 +227,10 @@ const TAILWIND_FILE = "tailwind.css";
 const cache = new Map<string, string>();
 
 const TO = join(Deno.cwd(), "static", TAILWIND_FILE);
-const isDev = Deno.env.get("DECO_PREVIEW");
-const mode = isDev ? "dev" : "prod";
+const _isDev = Deno.env.get("DECO_PREVIEW") ||
+  !Deno.env.has("DENO_DEPLOYMENT_ID");
+// FIXME @author Marcos V. Candeia since we don't have a build step on HTMX sites so mode should always defaults to dev.
+const mode = "dev"; //isDev ? "dev" : "prod";
 const getCSSEager = () =>
   Deno.readTextFile(TO).catch(() =>
     `Missing TailwindCSS file in production. Make sure you are building the file on the CI`
@@ -284,7 +286,7 @@ const getCSSLazy = async (config: Config) => {
 
   return cache.get(revision)!;
 };
-const getCSS = mode === "prod" ? getCSSEager : getCSSLazy;
+const getCSS = mode === "dev" ? getCSSLazy : getCSSEager;
 
 addEventListener("hmr", () => {
   cache.clear();
