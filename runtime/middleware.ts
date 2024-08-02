@@ -11,8 +11,8 @@ import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
 import type { Deco, State } from "./app.ts";
 import type {
-  Handler,
   Context as HonoContext,
+  Handler,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";

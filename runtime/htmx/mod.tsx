@@ -1,3 +1,4 @@
+import { staticFiles } from "deco/runtime/htmx/serveStatic.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import { type AppManifest, Context } from "../../mod.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
@@ -66,6 +67,7 @@ let hmrUniqueId = crypto.randomUUID();
 const sockets = new Map<string, WebSocket>();
 
 export interface HTMXOpts<TAppManifest extends AppManifest = AppManifest> {
+  staticRoot?: string;
   server?: Hono<DecoRouteState<TAppManifest>>;
   Layout?: ComponentType<
     {
@@ -93,6 +95,7 @@ export const HTMX = <
       };
     }),
   );
+  hono.use(staticFiles(opts?.staticRoot));
   const Layout = opts?.Layout ?? (({ children }) => <>{children}</>);
   return {
     server: hono,

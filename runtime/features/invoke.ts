@@ -55,8 +55,8 @@ export const payloadToResolvable = (
 };
 
 export const batchInvoke = (
-  state: State<any>,
   payload: InvokePayload<any>,
+  state: State<any>,
 ) => {
   return state.resolve(
     payloadToResolvable(payload),
@@ -67,10 +67,10 @@ export const batchInvoke = (
 };
 
 export const invoke = async (
-  state: State<any>,
   key: InvokeFunction["key"],
   props: InvokeFunction["props"],
   select: InvokeFunction["select"],
+  state: State<any>,
 ) => {
   const invokeFunc = {
     key,

@@ -185,8 +185,8 @@ export const handler = async (
   }
 
   // this is a hack to make sure we cache only sections that does not vary based on the loader content.
-  // so we can calculate cacheBurst per page but decide to cache sections individually based on vary.
-  // ideally cacheburst should be calculated per section as well so that you can reuse section across pages and produce same cacheBursts.
+  // so we can calculate cacheBurt per page but decide to cache sections individually based on vary.
+  // ideally cachebust should be calculated per section as well so that you can reuse section across pages and produce same cacheBusts.
   const shouldCacheFromVary = ctx?.state?.vary?.shouldCache === true;
   if (shouldCache && etag && shouldCacheFromVary) {
     response.headers.set("etag", etag);

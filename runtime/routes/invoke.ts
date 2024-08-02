@@ -23,10 +23,10 @@ export const handler = createHandler(async (
     ];
 
   const resp = await ctx.var.deco.invoke(
-    ctx.var,
     key as InvokeFunction["key"],
     props as InvokeFunction["props"],
     select,
+    ctx.var,
   );
 
   return invokeToHttpResponse(ctx.req.raw, resp);

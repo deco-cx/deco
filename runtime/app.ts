@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { Context } from "deco/live.ts";
 import { join } from "std/path/join.ts";
 import { type RequestState, vary } from "../blocks/utils.tsx";
 import type { DecoContext } from "../deco.ts";
@@ -24,10 +25,9 @@ import { createServerTimings } from "../utils/timings.ts";
 import { batchInvoke, invoke } from "./features/invoke.ts";
 import { type GetMetaOpts, meta } from "./features/meta.ts";
 import { preview } from "./features/preview.tsx";
-import { render } from "./features/render.tsx";
+import { type Options, render } from "./features/render.tsx";
 import { styles } from "./features/styles.css.ts";
 import { type Bindings, handlerFor } from "./handler.tsx";
-import type { DecoMiddlewareContext } from "./middleware.ts";
 
 export interface PageParams<TData = any> {
   data: TData;
@@ -50,7 +50,7 @@ export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
 
 export class Deco<TAppManifest extends AppManifest = AppManifest> {
   private constructor(
-    private site: string,
+    public site: string,
     private ctx: DecoContext<TAppManifest>,
     public bindings?: Bindings<TAppManifest>,
   ) {
@@ -73,6 +73,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
         site,
       )
     );
+    Context.setDefault(decoContext);
     return new Deco<TAppManifest>(site, decoContext, opts?.bindings);
   }
 
@@ -96,24 +97,40 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     return styles(...args);
   }
 
-  preview(...args: Parameters<typeof preview>) {
-    return preview(...args);
+  async preview(
+    req: Request,
+    previewUrl: string,
+    props: unknown,
+    ctx?: State<TAppManifest>,
+  ) {
+    return preview(
+      req,
+      previewUrl,
+      props,
+      ctx ?? await this.prepareState({ req: { raw: req } }),
+    );
   }
 
-  render(...args: Parameters<typeof render>) {
-    return render(...args);
+  async render(req: Request, opts: Options, state?: State<TAppManifest>) {
+    return render(
+      req,
+      opts,
+      state ?? await this.prepareState({ req: { raw: req } }),
+    );
   }
 
   invoke(...args: Parameters<typeof invoke>) {
     return invoke(...args);
   }
 
-  batchInvoke(...args: Parameters<typeof batchInvoke>) {
+  batchInvoke(
+    ...args: Parameters<typeof batchInvoke>
+  ) {
     return batchInvoke(...args);
   }
 
   async prepareState<TConfig = any>(
-    context: DecoMiddlewareContext<any>,
+    context: { req: { raw: Request } },
     { enabled, correlationId }: {
       enabled: boolean;
       correlationId?: string;

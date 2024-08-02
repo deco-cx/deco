@@ -69,7 +69,7 @@ export const handler = createHandler(async (
   const { req: { raw: req }, var: state, render } = ctx;
   const opts = fromRequest(req);
 
-  const { page, shouldCache } = await state.deco.render(state, req, opts);
+  const { page, shouldCache } = await state.deco.render(req, opts, state);
 
   const response = await render({ page });
 
@@ -81,8 +81,8 @@ export const handler = createHandler(async (
   }
 
   // this is a hack to make sure we cache only sections that does not vary based on the loader content.
-  // so we can calculate cacheBurst per page but decide to cache sections individually based on vary.
-  // ideally cacheburst should be calculated per section as well so that you can reuse section across pages and produce same cacheBursts.
+  // so we can calculate cacheBust per page but decide to cache sections individually based on vary.
+  // ideally cachebust should be calculated per section as well so that you can reuse section across pages and produce same cacheBusts.
   const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
   if (shouldCache && etag && shouldCacheFromVary) {
     response.headers.set("etag", etag);

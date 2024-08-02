@@ -3,7 +3,8 @@ import type { AppManifest } from "../mod.ts";
 import "../utils/patched_fetch.ts";
 import type { Deco, PageParams } from "./app.ts";
 import type { ContextRenderer } from "./deps.ts";
-import { Hono, type MiddlewareHandler, serveStatic } from "./deps.ts";
+import { Hono } from "./deps.ts";
+
 import type { DecoHandler, DecoRouteState } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
@@ -105,21 +106,9 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   const bindings = deco.bindings;
   const hono = bindings?.server ?? new Hono<DecoRouteState<TAppManifest>>();
   hono.use(...middlewareFor(deco));
-  const staticHandlers: Record<string, MiddlewareHandler> = {};
   for (const { paths, handler, Component } of routes) {
     for (const path of paths) {
       hono.all(path, async (ctx, next) => {
-        const reqUrl = ctx.var.url;
-
-        if (reqUrl.searchParams.has("__frsh_c")) {
-          staticHandlers[ctx.req.path] ??= serveStatic({
-            root: "static/",
-          });
-          return staticHandlers[ctx.req.path](
-            ctx,
-            next,
-          );
-        }
         if (Component) {
           const renderer = await bindings?.renderer?.factory(
             (props) => {

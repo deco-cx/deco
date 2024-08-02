@@ -68,8 +68,8 @@ export const handler = createHandler(async (
     : bodyFromUrl("body", ctx.var.url); // TODO(mcandeia) check if ctx.url can be used here
 
   const result = await ctx.var.deco.batchInvoke(
-    ctx.var,
     data as Record<string, any>,
+    ctx.var,
   );
 
   const response = invokeToHttpResponse(ctx.req.raw, result);

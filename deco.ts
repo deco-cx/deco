@@ -79,7 +79,7 @@ const getHostingPlatform = (): WellKnownHostingPlatform => {
 };
 
 // deno-lint-ignore no-explicit-any
-const defaultContext: Omit<DecoContext<any>, "schema"> = {
+let defaultContext: Omit<DecoContext<any>, "schema"> = {
   deploymentId,
   siteId: 0,
   isDeploy: isDeploy,
@@ -95,6 +95,11 @@ const defaultContext: Omit<DecoContext<any>, "schema"> = {
 const asyncLocalStorage = new AsyncLocalStorage<DecoContext>();
 
 export const Context = {
+  setDefault: <T extends AppManifest = AppManifest>(
+    ctx: DecoContext<T>,
+  ): void => {
+    defaultContext = ctx;
+  },
   // Function to retrieve the active context
   active: <T extends AppManifest = AppManifest>(): DecoContext<T> => {
     // Retrieve the context associated with the async ID

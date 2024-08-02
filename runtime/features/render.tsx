@@ -3,6 +3,7 @@ import { bindings, getSectionID } from "../../components/section.tsx";
 import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
 import { useScriptAsDataURI } from "../../hooks/useScript.ts";
+import type { AppManifest } from "../../mod.ts";
 import type { State } from "../../runtime/app.ts";
 
 export interface Options {
@@ -27,10 +28,10 @@ export interface RenderResponse {
   page: Page;
   shouldCache: boolean;
 }
-export const render = async (
-  state: State,
+export const render = async <TAppManifest extends AppManifest = AppManifest>(
   req: Request,
   opts: Options,
+  state: State<TAppManifest>,
 ): Promise<RenderResponse> => {
   const {
     href,

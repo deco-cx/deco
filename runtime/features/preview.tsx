@@ -1,4 +1,5 @@
 import type { Page } from "../../blocks/page.tsx";
+import type { AppManifest } from "../../mod.ts";
 import type { State } from "../app.ts";
 
 const paramsFromUrl = (
@@ -18,11 +19,11 @@ const paramsFromUrl = (
 const addLocal = (block: string): string =>
   block.startsWith("islands") && block.endsWith("tsx") ? `./${block}` : block;
 
-export const preview = async (
+export const preview = async <TAppManifest extends AppManifest = AppManifest>(
   req: Request,
-  ctx: State,
   previewUrl: string,
   props: unknown,
+  ctx: State<TAppManifest>,
 ) => {
   const { resolve } = ctx;
   const url = new URL(previewUrl);
