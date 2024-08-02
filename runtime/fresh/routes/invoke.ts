@@ -7,7 +7,11 @@ import type { InvokeFunction } from "../../../utils/invoke.types.ts";
 
 import { payloadToResolvable, wrapInvokeErr } from "./batchInvoke.ts";
 
-const propsParsers = {
+/**
+ * All props parsing strategies supported by the invoke endpoint.
+ * To infer a valid strategy for a request, the `getParsingStrategy` function is used.
+ */
+export const propsParsers = {
   "json": async (req: Request) => await req.json() as Record<string, any>,
   "try-json": async (req: Request) => {
     try {
@@ -27,6 +31,9 @@ const propsParsers = {
   },
 };
 
+/**
+ * Gets the `propsParsers` strategy from the given request.
+ */
 function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
   if (req.method !== "POST") {
     return "search-params";
@@ -54,6 +61,11 @@ function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
   return null;
 }
 
+/**
+ * Infers a props parsing strategy from the given request
+ * then parses the props from the request.
+ * If no strategy is found, an empty object is returned.
+ */
 async function parsePropsFromRequest(
   req: Request,
 ): Promise<Record<string, any>> {
