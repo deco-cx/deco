@@ -63,6 +63,8 @@ export const withInstrumentation = (
       const cacheImpl = await cache.open(cacheName);
       return {
         ...cacheImpl,
+        delete: cacheImpl.delete.bind(cacheImpl),
+        put: cacheImpl.put.bind(cacheImpl),
         match: async (req, opts) => {
           const span = tracer.startSpan("cache-match", {
             attributes: { engine },
