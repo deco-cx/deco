@@ -2,7 +2,6 @@ import {
   type ServerSentEventMessage,
   ServerSentEventStream,
 } from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
-import fjp from "npm:fast-json-patch@3.1.1";
 import { debounce } from "std/async/debounce.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ensureDir, exists } from "std/fs/mod.ts";
@@ -16,11 +15,10 @@ import {
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
-import { ensureFile, logger, realtimeFor } from "./deps.ts";
+import { ensureFile, logger } from "./deps.ts";
 import gitApp from "./git.ts";
 import { cacheStaleMeta } from "./meta/cache.ts";
 import { createRealtimeApp } from "./realtime/app.ts";
-import { createDurableFS } from "./realtime/fs.ts";
 import {
   DaemonDiskStorage,
   DaemonRealtimeState,
@@ -36,7 +34,6 @@ const MAX_LENGTH = 10_000;
 export const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
 
 export const DENO_FS_APIS = { ...Deno, exists, ensureDir };
-const Realtime = realtimeFor(Deno.upgradeWebSocket, createDurableFS, fjp);
 const DAEMON_API_SPECIFIER = "x-daemon-api";
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
