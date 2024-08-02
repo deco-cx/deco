@@ -1,11 +1,38 @@
+/**
+ * Escape all dots in a string.
+ *
+ * Usage: escapeDots("foo.bar.baz") -> "foo\\.bar\\.baz"
+ */
 function escapeDots(key: string): string {
   return key.replace(/\./g, "\\.");
 }
 
+/**
+ * Unescape all escaped dots in a string.
+ *
+ * Usage: unescapeDots("foo\\.bar\\.baz") -> "foo.bar.baz"
+ */
 function unescapeDots(key: string): string {
   return key.replaceAll(/\\\./g, ".");
 }
 
+/**
+ * Convert a javascript object to a FormData instance.
+ *
+ * Usage:
+ * ```ts
+ * const formData = propsToFormData({ foo: "bar", baz: [1, 2, 3] });
+ * formData.get("foo"); // "bar"
+ * formData.get("baz.0"); // 1
+ * formData.get("baz.1"); // 2
+ * formData.get("baz.2"); // 3
+ * ```
+ *
+ * @param props Can be any valid serializable javascript object.
+ * Arrays as root will throw an error,
+ * since we cannot represent them as multipart.
+ * @returns FormData instance with the given props.
+ */
 export function propsToFormData(props: unknown): FormData {
   if (props instanceof FormData) {
     return props;
@@ -36,8 +63,10 @@ export function propsToFormData(props: unknown): FormData {
         } else {
           if (item instanceof Blob) {
             formData.append(`${key}.${index}`, item);
-          } else {
+          } else if (item) {
             formData.append(`${key}.${index}`, String(item));
+          } else {
+            formData.append(`${key}`, item);
           }
         }
       });
@@ -64,6 +93,20 @@ export function propsToFormData(props: unknown): FormData {
   return formData;
 }
 
+/**
+ * Convert a FormData instance to a javascript object.
+ *
+ * Usage:
+ * ```ts
+ * const formData = new FormData();
+ * formData.append("foo", "bar");
+ * const props = formDataToProps(formData);
+ * console.log(props); // { foo: "bar" }
+ * ```
+ *
+ * @param formData FormData instance to convert.
+ * @returns javascript object with the given FormData.
+ */
 export function formDataToProps(formData: FormData): Record<string, any> {
   const props: Record<string, any> = {};
 

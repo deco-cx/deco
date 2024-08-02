@@ -99,13 +99,19 @@ const fetchWithProps = async (
 
   headers.set("accept", `application/json, text/event-stream`);
 
-  if (!headers.has("content-type")) {
-    headers.set("content-type", "application/json");
+  if (multipart && headers.has("content-type")) {
+    // throw new Error(
+    //   "Setting the content-type header is not allowed when using multipart",
+    // );
+
+    console.warn(
+      "[Deco] Invoke: Setting the content-type header is not allowed when using multipart, it will be ignored",
+    );
+    headers.delete("content-type");
   }
 
-  if (multipart) {
-    // Let the browser handle the content-type header, with a webkit generated boundary
-    headers.delete("content-type");
+  if (!multipart && !headers.has("content-type")) {
+    headers.set("content-type", "application/json");
   }
 
   const body = headers.get("content-type") === "application/json"

@@ -7,33 +7,63 @@ import type { InvokeFunction } from "../../../utils/invoke.types.ts";
 
 import { payloadToResolvable, wrapInvokeErr } from "./batchInvoke.ts";
 
-const PROPS_FROM_REQUEST_STRATEGIES = {
+const propsParsers = {
   "json": async (req: Request) => await req.json() as Record<string, any>,
+  "try-json": async (req: Request) => {
+    try {
+      return await req.json() as Record<string, any>;
+    } catch (err) {
+      console.warn("Error parsing props from request", err);
+      return {};
+    }
+  },
   "form-data": async (req: Request) => {
     const formData = await req.formData();
     return formDataToProps(formData);
   },
+  "search-params": async (req: Request) => {
+    const url = new URL(req.url);
+    return bodyFromUrl("props", url);
+  },
 };
+
+function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
+  if (req.method !== "POST") {
+    return "search-params";
+  }
+
+  const contentType = req.headers.get("content-type");
+  const contentLength = req.headers.get("content-length");
+
+  if (contentLength === "0" || !contentLength) {
+    return null;
+  }
+
+  if (!contentType) {
+    return "try-json";
+  }
+
+  if (contentType.startsWith("application/json")) {
+    return "json";
+  }
+
+  if (contentType.startsWith("multipart/form-data")) {
+    return "form-data";
+  }
+
+  return null;
+}
 
 async function parsePropsFromRequest(
   req: Request,
 ): Promise<Record<string, any>> {
-  const contentType = req.headers.get("content-type");
-  const contentLength = req.headers.get("content-length");
+  const strategy = getParsingStrategy(req);
 
-  if (contentLength === "0") {
+  if (!strategy) {
     return {};
   }
 
-  if (contentType === "application/json") {
-    return await PROPS_FROM_REQUEST_STRATEGIES["json"](req);
-  }
-
-  if (contentType?.startsWith("multipart/form-data")) {
-    return await PROPS_FROM_REQUEST_STRATEGIES["form-data"](req);
-  }
-
-  return {};
+  return await propsParsers[strategy](req);
 }
 
 export const handler = async (
@@ -44,9 +74,7 @@ export const handler = async (
   >,
 ): Promise<Response> => {
   const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
-  const props = req.method === "POST"
-    ? await parsePropsFromRequest(req)
-    : bodyFromUrl("props", url);
+  const props = await parsePropsFromRequest(req);
 
   const { state: { resolve } } = ctx;
   const invokeFunc: InvokeFunction = {
