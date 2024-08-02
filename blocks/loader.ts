@@ -258,19 +258,21 @@ const wrapLoader = (
             console.log("ERROR -> handler error: ", error);
           }
           const jsonString = JSON.stringify(json);
+          const jsonStringEncoded = new TextEncoder().encode(jsonString);
           console.log("Length of json in call handler and cache: ", jsonString ? jsonString.length : 0);
+          console.log("Length of jsonEncoded in call handler and cache: ", jsonStringEncoded ? jsonStringEncoded.length : 0);
 
           const headers: { [key: string]: string } = {
             "expires": new Date(Date.now() + (MAX_AGE_S * 1e3)).toUTCString(),
             "Content-Type": "application/json",
           };
+      
+          if (jsonStringEncoded && jsonStringEncoded.length > 0) {
+            headers["Content-Length"] = "" + jsonStringEncoded.length;
+            // headers["Content-Type"] = "application/json; charset=utf-8";
+          }
           
-          // if (jsonString && jsonString.length > 0) {
-          //   headers["Content-Length"] = (jsonString.length).toString();
-          //   headers["Content-Type"] = "application/json; charset=utf-8";
-          // }
-          
-          const response = new Response(jsonString, {
+          const response = new Response(jsonStringEncoded, {
             headers: headers,
           });
           console.log(
