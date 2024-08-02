@@ -12,6 +12,11 @@ const DEV_SERVER_SCRIPT = (
     dangerouslySetInnerHTML={{
       __html: `
 // Debounce function to limit the rate of page refreshes
+const alreadyRegistered = debouncedRefresh !== undefined;
+
+if (alreadyRegistered) {
+  return;
+}
 function debounce(func, delay) {
 let timeoutId;
 return function(...args) {
@@ -26,8 +31,7 @@ window.location.reload();
 }
 
 // Debounced version of refreshPage
-const debouncedRefresh = debounce(refreshPage, 100);
-
+  const debouncedRefresh = debounce(refreshPage, 100);
 // Function to set up the WebSocket and listen for messages
 function setupWebSocket() {
 // Construct WebSocket URL based on current domain and protocol

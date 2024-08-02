@@ -4,20 +4,6 @@ import type { PageParams } from "../app.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 import Render from "./entrypoint.tsx";
 
-const paramsFromUrl = (
-  url: URL,
-): [Record<string, string | undefined> | undefined, string | null] => {
-  const pathTemplate = url.searchParams.get("pathTemplate");
-  const pathname = url.searchParams.get("path");
-  if (pathTemplate === null || pathname == null) {
-    return [undefined, null];
-  }
-
-  const urlPattern = new URLPattern({ pathname: pathTemplate });
-  const params = urlPattern.exec({ pathname })?.pathname.groups;
-  return [params, pathname];
-};
-
 const decoder = new TextDecoder();
 export default function Preview(
   props: PageParams<Page>,
@@ -35,9 +21,6 @@ export default function Preview(
     </>
   );
 }
-
-const addLocal = (block: string): string =>
-  block.startsWith("islands") && block.endsWith("tsx") ? `./${block}` : block;
 
 const getPropsFromRequest = async (req: Request) => {
   const url = new URL(req.url);
@@ -105,38 +88,10 @@ export const render = async (
   req: Request,
   ctx: DecoMiddlewareContext,
 ) => {
-  const { resolve, monitoring } = ctx.var;
-  const url = new URL(previewUrl);
-  const block = addLocal(url.pathname.replace(/^\/live\/previews\//, ""));
-
-  let timing = monitoring?.timings?.start("load-data");
-  const [params, pathname] = paramsFromUrl(url);
-  const newUrl = new URL(req.url);
-  if (pathname) {
-    newUrl.pathname = pathname;
-  }
-  const newReq = new Request(newUrl, {
-    headers: new Headers(req.headers),
-    method: "GET",
-  });
-  const page = await resolve(
-    {
-      __resolveType: "preview",
-      block,
-      props,
-    },
-    { forceFresh: false },
-    {
-      context: {
-        ...ctx,
-        params: params ?? ctx.req.param(),
-      },
-      request: newReq,
-    },
-  );
+  let timing = ctx.var.monitoring?.timings?.start("load-data");
+  const page = await ctx.var.deco.preview(req, previewUrl, props, ctx.var);
   timing?.end();
-
-  timing = monitoring?.timings?.start("render-to-string");
+  timing = ctx.var.monitoring?.timings?.start("render-to-string");
   try {
     return await ctx.render(page);
   } finally {

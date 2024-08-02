@@ -2,9 +2,8 @@ import { type ComponentChildren, type ComponentType, options } from "preact";
 import renderToString from "preact-render-to-string";
 import type { PageParams } from "../app.ts";
 import type { ContextRenderer } from "../deps.ts";
-import bindings from "./Bindings.tsx";
-
-export const Head = bindings.Head!;
+import { Head } from "./Bindings.tsx";
+export { Head } from "./Bindings.tsx";
 
 export const factory = (
   Component: ComponentType<Pick<PageParams, "data">>,

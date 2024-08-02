@@ -1,5 +1,3 @@
-import { useFramework } from "../components/section.tsx";
-
 export interface Props {
   body: string;
 }
@@ -40,17 +38,8 @@ const snippet = (json: string) => {
 };
 
 export default function JsonViewer(p: Props) {
-  const { Head } = useFramework();
   return (
     <>
-      {Head && (
-        <Head>
-          <script
-            type="module"
-            dangerouslySetInnerHTML={{ __html: `(${snippet})(${p.body});` }}
-          />
-        </Head>
-      )}
       <pre id="json-renderer">{p.body}</pre>
     </>
   );

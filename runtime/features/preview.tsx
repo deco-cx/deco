@@ -46,10 +46,7 @@ export const preview = async <TAppManifest extends AppManifest = AppManifest>(
     },
     { forceFresh: false },
     {
-      context: {
-        ...ctx,
-        params,
-      },
+      context: { params, state: ctx },
       request: newReq,
     },
   );
