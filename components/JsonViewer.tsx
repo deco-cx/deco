@@ -1,3 +1,5 @@
+import { useFramework } from "../components/section.tsx";
+
 export interface Props {
   body: string;
 }
@@ -33,13 +35,22 @@ const snippet = (json: string) => {
 
   node?.addEventListener(
     "load",
+    // deno-lint-ignore no-explicit-any
     () => (globalThis.window as any).jQuery("#json-renderer").JSONView(json),
   );
 };
 
 export default function JsonViewer(p: Props) {
+  const { Head } = useFramework();
   return (
     <>
+      {/** @ts-ignore: could not type it well */}
+      <Head>
+        <script
+          type="module"
+          dangerouslySetInnerHTML={{ __html: `(${snippet})(${p.body});` }}
+        />
+      </Head>
       <pre id="json-renderer">{p.body}</pre>
     </>
   );

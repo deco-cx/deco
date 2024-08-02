@@ -173,6 +173,7 @@ const main = () => {
 function LiveControls({ site, page, flags }: Props) {
   return (
     <>
+      {/** @ts-ignore: could not type it well */}
       <Head>
         <script
           type="application/json"
