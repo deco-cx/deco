@@ -5,6 +5,7 @@ import { singleFlight } from "../../engine/core/utils.ts";
 import type { Schemas } from "../../engine/schema/builder.ts";
 import { namespaceOf } from "../../engine/schema/gen.ts";
 import { type LazySchema, lazySchemaFor } from "../../engine/schema/lazy.ts";
+import { schemaVersion } from "../../engine/schema/parser.ts";
 import type { AppManifest } from "../../types.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
@@ -54,10 +55,9 @@ const toManifestBlocks = (
 export let mschema: Schemas | null = null; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
 
 const sf = singleFlight<MetaInfo>();
-const binaryId = Context.active().deploymentId ?? crypto.randomUUID();
 
 const etagFor = async (lazySchema: LazySchema) =>
-  `${await lazySchema.revision}@${binaryId}`;
+  `${await lazySchema.revision}@${schemaVersion}`;
 
 const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
   while (!signal.aborted) {

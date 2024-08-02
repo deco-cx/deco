@@ -1,6 +1,7 @@
 import type { AppManifest } from "../../blocks/app.ts";
 import type { DecoContext } from "../../deco.ts";
 import type { JSONSchema7 } from "../../deps.ts";
+import { schemaVersion } from "../../engine/schema/parser.ts";
 import { resolvable } from "../../utils/admin.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import type { Resolvable } from "../core/resolver.ts";
@@ -148,7 +149,7 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
   const ls = {
     get value() {
       return sf.run(async () => {
-        const revision = await ctx.release!.revision();
+        const revision = `${await ctx.release!.revision()}${schemaVersion}`;
         if (revision !== latestRevision || !_cached) {
           const { manifest, importMap } = await ctx.runtime!;
           _cached = incorporateSavedBlocksIntoSchema(
