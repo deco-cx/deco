@@ -16,9 +16,10 @@ import {
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
-import { realtimeFor } from "./deps.ts";
+import { ensureFile, logger, realtimeFor } from "./deps.ts";
 import gitApp from "./git.ts";
 import { cacheStaleMeta } from "./meta/cache.ts";
+import { createRealtimeApp } from "./realtime/app.ts";
 import { createDurableFS } from "./realtime/fs.ts";
 import {
   DaemonDiskStorage,
@@ -71,11 +72,12 @@ const isIsolateOptions = (
 import { Hono } from "./deps.ts";
 
 const daemonApp = new Hono.Hono();
+daemonApp.use(logger());
 daemonApp.route("/git", gitApp);
 
 export class Daemon {
   private realtimeFsState: DaemonRealtimeState;
-  private realtimeFs: InstanceType<typeof Realtime>;
+
   private isolate?: Isolate;
   private logsStreamStarted = false;
   constructor(protected options?: DaemonOptions) {
@@ -113,12 +115,14 @@ export class Daemon {
       storage,
     });
 
-    this.realtimeFsState.blockConcurrencyWhile(
-      async () => {
-        const meta = await genMetadata();
-        meta && storage.put(meta.path, meta.content);
-      },
-    );
+    const metadataPromise = genMetadata().then(async (meta) => {
+      if (!meta) {
+        return;
+      }
+
+      await ensureFile(meta.path);
+      await Deno.writeTextFile(meta.path, meta.content);
+    });
 
     let lastPersist = Promise.resolve();
     const debouncedPersist = this.realtimeFsState.shouldPersistState()
@@ -157,13 +161,7 @@ export class Daemon {
       }
       debouncedPersist?.();
     };
-    this.realtimeFs = new Realtime(
-      this.realtimeFsState,
-      // deno-lint-ignore no-explicit-any
-      {} as any,
-      false,
-      true,
-    );
+
     this.isolate = isIsolateOptions(options)
       ? options?.isolate
       : options?.run
@@ -172,6 +170,11 @@ export class Daemon {
         port: options.port,
       })
       : undefined;
+
+    daemonApp.use(async (_c, next) => {
+      await metadataPromise;
+      await next();
+    });
 
     // auth
     daemonApp.all("/.well-known/deco-validate/:token", (c) => {
@@ -243,7 +246,8 @@ export class Daemon {
       await this.realtimeFsState.persistNext(commitSha);
       return new Response(null, { status: 204 });
     });
-    daemonApp.all("/volumes/*", (c) => this.realtimeFs.fetch(c.req.raw));
+
+    daemonApp.route("/volumes/:id/files", createRealtimeApp());
   }
 
   errAs500(err: unknown) {
