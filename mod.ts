@@ -47,8 +47,8 @@ export { Context } from "./live.ts";
 export { logger } from "./observability/otel/config.ts";
 export { meter } from "./observability/otel/metrics.ts";
 export { Deco } from "./runtime/app.ts";
-export { DECO_SEGMENT } from "./runtime/fresh/middlewares/4_main.ts";
 export {
+export { DECO_SEGMENT } from "./runtime/middleware.ts";
   usePageContext,
   useRouterContext
 } from "./runtime/fresh/routes/entrypoint.tsx";
