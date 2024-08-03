@@ -7,7 +7,6 @@ import { cyan } from "std/fmt/colors.ts";
 import { walk } from "std/fs/walk.ts";
 import { join } from "std/path/join.ts";
 import { toFileUrl } from "std/path/mod.ts";
-import { Context } from "../../deco.ts";
 import {
   ImportMapBuilder,
   type ImportMapResolver,
@@ -224,8 +223,6 @@ const bundle = async (
 
 const TAILWIND_FILE = "tailwind.css";
 
-const cache = new Map<string, string>();
-
 const TO = join(Deno.cwd(), "static", TAILWIND_FILE);
 const _isDev = Deno.env.get("DECO_PREVIEW") ||
   !Deno.env.has("DENO_DEPLOYMENT_ID");
@@ -270,26 +267,18 @@ const withReleaseContent = async (config: Config) => {
   };
 };
 
+let css: string | null = null;
 const getCSSLazy = async (config: Config) => {
-  const ctx = Context.active();
-  const revision = await ctx.release?.revision() || "";
-
-  if (!cache.has(revision)) {
-    const css = await bundle({
-      from: TAILWIND_FILE,
-      mode,
-      config: await withReleaseContent(config),
-    });
-
-    cache.set(revision, css);
-  }
-
-  return cache.get(revision)!;
+  return css ??= await bundle({
+    from: TAILWIND_FILE,
+    mode,
+    config: await withReleaseContent(config),
+  });
 };
 const getCSS = mode === "dev" ? getCSSLazy : getCSSEager;
 
 addEventListener("hmr", () => {
-  cache.clear();
+  css = null;
 });
 
 const tailwindConfig: Config = await import(
