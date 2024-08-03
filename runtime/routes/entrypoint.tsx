@@ -79,6 +79,20 @@ export const handler = createHandler(async (
       status: 412, // precondition failed
     });
   }
+  const original = ctx.render.bind(ctx);
+  ctx.render = (args) => {
+    return original({
+      page: {
+        metadata: args?.page?.metadata,
+        Component: Render,
+        props: {
+          params: ctx.req.param(),
+          url: ctx.var.url,
+          data: args,
+        } satisfies PageParams<PageData>,
+      },
+    });
+  };
 
   return setCSPHeaders(
     req,

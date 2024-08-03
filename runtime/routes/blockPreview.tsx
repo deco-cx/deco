@@ -93,7 +93,12 @@ export const render = async (
   timing?.end();
   timing = ctx.var.monitoring?.timings?.start("render-to-string");
   try {
-    return await ctx.render(page);
+    return await ctx.render({
+      page: {
+        Component: Preview,
+        props: { url: ctx.var.url, params: ctx.req.param(), data: page },
+      },
+    });
   } finally {
     timing?.end();
   }

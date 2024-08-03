@@ -41,6 +41,11 @@ function Preview(props: PageParams<Page>) {
 }
 
 export const handler = createHandler((ctx) => {
-  return ctx.render({});
+  return ctx.render({
+    page: {
+      Component: Preview,
+      props: {},
+    },
+  });
 });
 export default Preview;

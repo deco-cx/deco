@@ -1,6 +1,8 @@
 import { FieldResolver } from "../../engine/core/resolver.ts";
 import { badRequest } from "../../engine/errors.ts";
+import type { PageParams } from "../app.ts";
 import { createHandler } from "../middleware.ts";
+import Render, { type PageData } from "./entrypoint.tsx";
 
 interface Options {
   resolveChain?: FieldResolver[];
@@ -71,7 +73,16 @@ export const handler = createHandler(async (
 
   const { page, shouldCache } = await state.deco.render(req, opts, state);
 
-  const response = await render({ page });
+  const response = await render({
+    page: {
+      Component: Render,
+      props: {
+        params: ctx.req.param(),
+        url: ctx.var.url,
+        data: { page },
+      } satisfies PageParams<PageData>,
+    },
+  });
 
   const etag = ctx.var.url.searchParams.get("__cb");
 

@@ -4,7 +4,7 @@ import { type AppManifest, Context } from "../../mod.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
 import type { Bindings } from "../handler.tsx";
 import type { DecoRouteState } from "../middleware.ts";
-import { factory } from "./Renderer.tsx";
+import { renderFn } from "./Renderer.tsx";
 
 const DEV_SERVER_PATH = `/deco/dev`;
 const DEV_SERVER_SCRIPT = (
@@ -104,15 +104,23 @@ export const HTMX = <
   return {
     server: hono,
     renderer: {
-      factory: async (Component) => {
+      renderFn: async ({ page }) => {
         const active = Context.active();
         const revision = await active.release?.revision();
-        return factory((props) => (
-          <Layout hmrUniqueId={hmrUniqueId} revision={revision!}>
-            {!active.isDeploy ? DEV_SERVER_SCRIPT : null}
-            <Component {...props} />
-          </Layout>
-        ));
+        return renderFn({
+          page: {
+            metadata: page.metadata,
+            Component: () => {
+              return (
+                <Layout hmrUniqueId={hmrUniqueId} revision={revision!}>
+                  {!active.isDeploy ? DEV_SERVER_SCRIPT : null}
+                  <page.Component {...page.props} />
+                </Layout>
+              );
+            },
+            props: {},
+          },
+        });
       },
     },
   };
