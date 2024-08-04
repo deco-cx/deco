@@ -49,6 +49,7 @@ export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
 }
 
 export class Deco<TAppManifest extends AppManifest = AppManifest> {
+  private _handler: ReturnType<typeof handlerFor> | null = null;
   private constructor(
     public site: string,
     private ctx: DecoContext<TAppManifest>,
@@ -82,7 +83,10 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   }
 
   get handler() {
-    return handlerFor(this);
+    return this._handler ??= handlerFor(this);
+  }
+  get fetch() {
+    return (req: Request) => this.handler(req);
   }
 
   async resolve<T, TContext extends BaseContext>(
