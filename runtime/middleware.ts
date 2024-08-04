@@ -11,9 +11,9 @@ import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
 import type { Deco, State } from "./app.ts";
 import type {
-  Context as HonoContext,
   ContextRenderer,
   Handler,
+  Context as HonoContext,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
@@ -47,7 +47,7 @@ export type DecoMiddleware<TManifest extends AppManifest = AppManifest> =
 export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
   Variables: State<TManifest>;
   Bindings: {
-    renderFn?: ContextRenderer;
+    RENDER_FN?: ContextRenderer;
   };
 };
 export type DecoHandler<TManifest extends AppManifest = AppManifest> = Handler<

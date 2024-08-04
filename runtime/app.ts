@@ -107,7 +107,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       req,
       previewUrl,
       props,
-      ctx ?? await this.prepareState({ req: { raw: req } }),
+      ctx ?? await this.prepareState({ req: { raw: req, param: () => ({}) } }),
     );
   }
 
@@ -115,7 +115,8 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     return render(
       req,
       opts,
-      state ?? await this.prepareState({ req: { raw: req } }),
+      state ??
+        await this.prepareState({ req: { raw: req, param: () => ({}) } }),
     );
   }
 
@@ -130,7 +131,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   }
 
   async prepareState<TConfig = any>(
-    context: { req: { raw: Request } },
+    context: { req: { raw: Request; param: () => Record<string, string> } },
     { enabled, correlationId }: {
       enabled: boolean;
       correlationId?: string;
@@ -189,6 +190,9 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
             get(target, prop, recv) {
               if (prop === "state") {
                 return state;
+              }
+              if (prop === "params") {
+                return context.req.param();
               }
               return Reflect.get(target, prop, recv);
             },

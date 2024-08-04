@@ -92,7 +92,7 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   const bindings = deco.bindings;
   const hono = bindings?.server ?? new Hono<DecoRouteState<TAppManifest>>();
   hono.use(async (ctx, next) => {
-    const renderFn = ctx.env.renderFn ?? bindings?.renderer?.renderFn;
+    const renderFn = ctx.env.RENDER_FN ?? bindings?.renderer?.renderFn;
     renderFn && ctx.setRenderer(
       renderFn,
     );

@@ -41,7 +41,7 @@ export default function decoPlugin(opt: Options): Plugin {
     handler: async (req: Request, ctx) => {
       const hdnl = await handlerPromise;
       return hdnl(req, {
-        renderFn: ctx.render.bind(ctx),
+        RENDER_FN: ctx.render.bind(ctx),
       });
     },
   };
