@@ -95,6 +95,7 @@ export const publish: Hono.Handler = async (c) => {
     .add(["."])
     .commit(message, {
       "--author": `${author.name} <${author.email}>`,
+      "--no-verify": null,
     })
     .push();
 
@@ -134,7 +135,7 @@ export const rebase: Hono.Handler = async () => {
   await git
     .fetch(["-p"])
     .add(".")
-    .commit("Before rebase")
+    .commit("Before rebase", { "--no-verify": null })
     .pull({ "--rebase": null, "--strategy-option": "theirs" });
 
   const base = await getMergeBase();
