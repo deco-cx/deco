@@ -4,7 +4,7 @@ export type {
   AppMiddleware,
   AppMiddlewareContext,
   Apps,
-  ManifestOf
+  ManifestOf,
 } from "./blocks/app.ts";
 export type { Handler } from "./blocks/handler.ts";
 export * as blocks from "./blocks/index.ts";
@@ -27,17 +27,19 @@ export type {
   InstanceOf,
   IntrospectParams,
   ResolvableOf,
-  ResolverLike
+  ResolverLike,
 } from "./engine/block.ts";
 export { asResolved, isDeferred } from "./engine/core/resolver.ts";
 export type { Resolvable, Resolved } from "./engine/core/resolver.ts";
 export {
-  HttpError, badRequest,
-  forbidden, notFound,
+  badRequest,
+  forbidden,
+  HttpError,
+  notFound,
   redirect,
   shortcircuit,
   status,
-  unauthorized
+  unauthorized,
 } from "./engine/errors.ts";
 export type { HttpErrorMessage } from "./engine/errors.ts";
 export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
@@ -45,11 +47,10 @@ export { Context } from "./live.ts";
 export { logger } from "./observability/otel/config.ts";
 export { meter } from "./observability/otel/metrics.ts";
 export { Deco } from "./runtime/app.ts";
-export {
 export { DECO_SEGMENT } from "./runtime/middleware.ts";
 export {
   usePageContext,
-  useRouterContext
+  useRouterContext,
 } from "./runtime/routes/entrypoint.tsx";
 export * from "./types.ts";
 export type {
@@ -74,9 +75,8 @@ export type {
   LoadingFallbackProps,
   PropsLoader,
   Route,
-  SectionProps
+  SectionProps,
 } from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
 export { stylesPlugin };
-
