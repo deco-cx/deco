@@ -28,7 +28,6 @@ const inflight = (): Hono.MiddlewareHandler => {
 };
 
 const toPosix = (path: string) => path.replaceAll(SEPARATOR, POSIX_SEPARATOR);
-const fromPosix = (path: string) => path.replaceAll(POSIX_SEPARATOR, SEPARATOR);
 
 const ignoreNotFound = (e: Error) => {
   if (e instanceof Deno.errors.NotFound) {
@@ -38,16 +37,46 @@ const ignoreNotFound = (e: Error) => {
   throw e;
 };
 
-export const createRealtimeApp = () => {
+export const createRealtimeAPIs = () => {
   const app = new Hono.Hono({ strict: true });
+  const cwd = Deno.cwd();
 
   const sessions: Session[] = [];
   const textState = new Map<number, BinaryIndexedTree>();
 
   let timestamp = Date.now();
 
-  const broadcast = (msg: unknown) =>
+  const broadcast = (msg: {
+    path: string;
+    timestamp: number;
+    deleted?: boolean;
+    messageId?: string;
+  }) => {
+    console.log("Broadcasting", msg.path, sessions.length);
     sessions.forEach((session) => session.socket.send(JSON.stringify(msg)));
+  };
+
+  const broadcastFS = async () => {
+    const watcher = Deno.watchFs(cwd, { recursive: true });
+
+    for await (const { kind, paths, flag } of watcher) {
+      if (kind === "create" || kind === "remove" || kind === "modify") {
+        const path = paths[0];
+
+        if (path.includes(".git")) {
+          continue;
+        }
+
+        broadcast({
+          path: toPosix(path).replace(cwd, ""),
+          timestamp: Date.now(),
+          deleted: kind === "remove",
+        });
+      } else {
+        console.log("unknown event", { kind, paths, flag });
+      }
+    }
+  };
 
   app.use(inflight());
   app.get("/", (c) => {
@@ -61,18 +90,21 @@ export const createRealtimeApp = () => {
 
     socket.addEventListener(
       "close",
-      (cls) => {
+      () => {
+        console.log("Socket closed by admin");
         const index = sessions.findIndex((s) => s.socket === socket);
-        index > -1 && sessions.splice(index, 1);
-
-        socket.close(cls.code, "Daemon is closing WebSocket");
+        if (index > -1) {
+          sessions.splice(index, 1);
+        }
       },
     );
+
+    sessions.push({ socket });
 
     return response;
   });
   app.patch("/", async (c) => {
-    const { patches, messageId } = await c.req
+    const { patches } = await c.req
       .json() as Realtime.VolumePatchRequest;
 
     const results: Realtime.FilePatchResult[] = [];
@@ -80,7 +112,8 @@ export const createRealtimeApp = () => {
     for (const patch of patches) {
       if (Realtime.isJSONFilePatch(patch)) {
         const { path, patches: operations } = patch;
-        const content = await Deno.readTextFile(fromPosix(path))
+
+        const content = await Deno.readTextFile(join(cwd, path))
           .catch(ignoreNotFound) ?? "{}";
 
         try {
@@ -94,14 +127,16 @@ export const createRealtimeApp = () => {
             content: newContent,
             deleted: newContent === "null",
           });
-        } catch {
+        } catch (error) {
+          console.error(error, fjp);
           results.push({ accepted: false, path, content });
         }
       } else if (Realtime.isTextFileSet(patch)) {
         const { path, content } = patch;
         try {
-          await ensureFile(fromPosix(path));
-          await Deno.writeTextFile(path, content ?? "");
+          const p = join(cwd, path);
+          await ensureFile(p);
+          await Deno.writeTextFile(p, content ?? "");
           results.push({
             accepted: true,
             path,
@@ -113,7 +148,7 @@ export const createRealtimeApp = () => {
         }
       } else {
         const { path, operations, timestamp } = patch;
-        const content = await Deno.readTextFile(fromPosix(path))
+        const content = await Deno.readTextFile(join(cwd, path))
           .catch(ignoreNotFound) ?? "";
         if (!textState.has(timestamp)) { // durable was restarted
           results.push({ accepted: false, path, content });
@@ -147,10 +182,11 @@ export const createRealtimeApp = () => {
       await Promise.all(
         results.map(async (r) => {
           try {
-            const system = fromPosix(r.path);
+            const system = join(cwd, r.path);
             if (r.deleted) {
               await Deno.remove(system);
             } else {
+              await ensureFile(system);
               await Deno.writeTextFile(system, r.content!);
             }
           } catch (error) {
@@ -159,19 +195,6 @@ export const createRealtimeApp = () => {
           }
         }),
       );
-
-      const shouldBroadcast = results.every((r) => r.accepted);
-      if (shouldBroadcast) {
-        for (const result of results) {
-          const { path, deleted } = result;
-          broadcast({
-            messageId,
-            path,
-            timestamp,
-            deleted,
-          });
-        }
-      }
     }
 
     return Response.json(
@@ -187,7 +210,7 @@ export const createRealtimeApp = () => {
     const withContent = c.req.query("content") === "true";
 
     const fs: Record<string, { content: string | null }> = {};
-    const root = join(Deno.cwd(), path);
+    const root = join(cwd, path);
 
     try {
       const walker = walk(root, {
@@ -218,6 +241,8 @@ export const createRealtimeApp = () => {
 
     return Response.json({ timestamp, fs });
   });
+
+  broadcastFS();
 
   return app;
 };

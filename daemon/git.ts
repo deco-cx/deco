@@ -1,4 +1,13 @@
-import { GIT, Hono, HTTPException } from "./deps.ts";
+import {
+  basename,
+  ensureFile,
+  GIT,
+  Hono,
+  HTTPException,
+  join,
+} from "./deps.ts";
+
+const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 
 const git = GIT.simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
@@ -6,7 +15,9 @@ const git = GIT.simpleGit(Deno.cwd(), {
 });
 
 const getMergeBase = async () => {
-  const { current, tracking } = await git.status();
+  const status = await git.status();
+  const current = status.current;
+  const tracking = status.tracking || "main";
 
   if (!current || !tracking) {
     throw new Error(`Missing local or upstream branches`);
@@ -79,27 +90,86 @@ export interface PublishAPI {
   response: GIT.PushResult;
 }
 
-// TODO: maybe tag with versions!
-export const publish: Hono.Handler = async (c) => {
-  const { message, author } = await c.req.json() as PublishAPI["body"];
+const persist = async (oid: string) => {
+  const start = performance.now();
 
-  await git.fetch(["-p"]);
+  if (!SOURCE_PATH) {
+    return;
+  }
 
-  const base = await getMergeBase();
+  const outfilePath = join(Deno.cwd(), "..", "..", oid, basename(Deno.cwd()));
+  await ensureFile(outfilePath);
 
-  const result = await git
-    .reset(["."])
-    .reset([base])
-    .add(["."])
-    .commit(message, {
-      "--author": `${author.name} <${author.email}>`,
-    })
-    .push();
-
-  return new Response(JSON.stringify(result), {
-    status: 200,
-    headers: { "content-type": "application/json" },
+  const tar = new Deno.Command("tar", {
+    cwd: Deno.cwd(),
+    args: [
+      "-cf",
+      outfilePath,
+      "--exclude=.git",
+      "--exclude=.github",
+      "--exclude=*.tar",
+      ".",
+    ],
+    stdout: "piped",
   });
+
+  const status = await tar.spawn().status;
+
+  console.log(
+    `[tar]: Tarballing took ${(performance.now() - start).toFixed(0)}ms`,
+  );
+
+  if (!status.success) {
+    throw new Error("Failed to tarball");
+  }
+};
+
+// TODO: maybe tag with versions!
+export const publish = ({ build }: Options): Hono.Handler => {
+  const buildMap = new Map<string, Promise<void>>();
+
+  const doBuild = (oid: string) => {
+    const p = buildMap.get(oid) || (async () => {
+      try {
+        await build?.spawn()?.status;
+        await persist(oid);
+      } catch (e) {
+        console.error("Building failed with:", e);
+      } finally {
+        buildMap.delete(oid);
+      }
+    })();
+
+    buildMap.set(oid, p);
+
+    return p;
+  };
+
+  return async (c) => {
+    const { message, author } = await c.req.json() as PublishAPI["body"];
+
+    await git.fetch(["-p"]);
+
+    const base = await getMergeBase();
+
+    const commit = await git
+      .reset(["."])
+      .reset([base])
+      .add(["."])
+      .commit(message, {
+        "--author": `${author.name} <${author.email}>`,
+      });
+
+    // Runs build pipeline asynchronously
+    doBuild(commit.commit);
+
+    const result = await git.push();
+
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
 };
 
 export interface CheckoutAPI {
@@ -192,13 +262,19 @@ export const ensureGit: Hono.MiddlewareHandler = async (c, next) => {
   }
 };
 
-const app = new Hono.Hono();
+interface Options {
+  build: Deno.Command | null;
+}
 
-app.use("/*", ensureGit);
-app.get("/status", status);
-app.get("/log", log);
-app.post("/publish", publish);
-app.post("/discard", discard);
-app.post("/rebase", rebase);
+export const createGitAPIS = (options: Options) => {
+  const app = new Hono.Hono();
 
-export default app;
+  app.use("/*", ensureGit);
+  app.get("/status", status);
+  app.get("/log", log);
+  app.post("/publish", publish(options));
+  app.post("/discard", discard);
+  app.post("/rebase", rebase);
+
+  return app;
+};

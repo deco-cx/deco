@@ -2,6 +2,7 @@ import { debounce } from "std/async/debounce.ts";
 import { walk } from "std/fs/walk.ts";
 import { basename, join, posix, SEP } from "std/path/mod.ts";
 import getBlocks from "../../blocks/index.ts";
+import { ensureFile } from "../../daemon/deps.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
@@ -88,11 +89,10 @@ export const genMetadata = async () => {
       [path, content],
     ) => [path, inferMetadata(content, knownBlockTypes)]));
 
-    return { path: METADATA_PATH, content: JSON.stringify(metadata) };
+    await ensureFile(METADATA_PATH);
+    await Deno.writeTextFile(METADATA_PATH, JSON.stringify(metadata));
   } catch (error) {
     console.error("Error while auto-generating blocks.json", error);
-
-    return null;
   }
 };
 

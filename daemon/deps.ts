@@ -15,5 +15,12 @@ export { join } from "https://deno.land/std@0.224.0/path/join.ts";
 export { SEPARATOR } from "https://deno.land/std@0.224.0/path/mod.ts";
 export { SEPARATOR as POSIX_SEPARATOR } from "https://deno.land/std@0.224.0/path/posix/mod.ts";
 export { ensureFile } from "https://deno.land/std@0.224.0/fs/ensure_file.ts";
+export { assert } from "https://deno.land/std@0.224.0/assert/assert.ts";
+export { debounce } from "https://deno.land/std@0.224.0/async/debounce.ts";
+export { basename } from "https://deno.land/std@0.224.0/path/mod.ts";
+export {
+  type ServerSentEventMessage,
+  ServerSentEventStream,
+} from "https://deno.land/std@0.224.0/http/server_sent_event_stream.ts";
 
-export * as fjp from "npm:fast-json-patch@3.1.1";
+export { default as fjp } from "npm:fast-json-patch@3.1.1";

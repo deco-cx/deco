@@ -1,18 +1,27 @@
 import { parse } from "std/flags/mod.ts";
 import * as colors from "std/fmt/colors.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
-import { formatLog } from "../utils/log.ts";
-import { Daemon, DECO_SITE_NAME } from "./daemon.ts";
+import {
+  BLOCKS_FOLDER,
+  DECO_FOLDER,
+  genMetadata,
+} from "../engine/decofile/fsFolder.ts";
+import { bundleApp } from "../scripts/apps/bundle.lib.ts";
+import { createDaemonAPIs, DECO_SITE_NAME } from "./daemon.ts";
+import { Hono, logger } from "./deps.ts";
 import { register } from "./tunnel.ts";
+import { createWorker } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
+
 const parsedArgs = parse(Deno.args, {
   string: ["build-cmd", "build-files"],
 });
 const runCommand = parsedArgs["_"];
 
 const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
+const VERBOSE = import.meta.url.startsWith("file:");
 
-const APP_PORT = portPool.get();
+const WORKER_PORT = portPool.get();
 
 const [cmd, ...args] = runCommand as string[];
 const [buildCmdStr, ...buildArgs] = parsedArgs["build-cmd"]?.split(" ") ?? [];
@@ -29,7 +38,7 @@ const runCmd = cmd
     args,
     stdout: "piped",
     stderr: "piped",
-    env: { PORT: `${APP_PORT}` },
+    env: { PORT: `${WORKER_PORT}` },
   })
   : null;
 
@@ -40,98 +49,99 @@ if (!DECO_SITE_NAME) {
   Deno.exit(1);
 }
 
-const daemon = new Daemon({
-  run: runCmd,
-  build: buildCmd,
-  buildFiles: parsedArgs["build-files"],
-  port: APP_PORT,
+globalThis.addEventListener("unhandledrejection", (e: {
+  promise: Promise<unknown>;
+  reason: unknown;
+}) => {
+  console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
 });
 
-// unhandledrejection.js
-globalThis.addEventListener(
-  "unhandledrejection",
-  (
-    e: {
-      promise: Promise<unknown>;
-      reason: unknown;
-      preventDefault: () => void;
-    },
-  ) => {
-    daemon.persistState();
-    console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
-  },
-);
+const createBundler = () => {
+  const bundler = bundleApp(Deno.cwd());
 
-const appPort = Deno.env.get("APP_PORT");
-
-const signals: Partial<Record<Deno.Signal, boolean>> = {
-  SIGINT: true, //
-  SIGTERM: true, //
+  return async () => {
+    try {
+      await bundler({ dir: ".", name: "site" });
+    } catch (error) {
+      console.error("Error while bundling site app", error);
+    }
+  };
 };
 
-for (const [_signal, shouldExit] of Object.entries(signals)) {
-  const signal = _signal as Deno.Signal;
-  try {
-    Deno.addSignalListener(signal, () => {
-      console.log(`Received ${signal}`);
-      const p = daemon.proxySignal(signal);
-      if (shouldExit) {
-        // shutdown?.();
-        daemon.shutdown?.();
-        p.finally(() => {
-          self.close();
-        });
-      }
-    });
-  } catch (_err) {
-    // ignore
+const throttle = (cb: () => Promise<void>) => {
+  let queue = Promise.resolve();
+
+  return () => {
+    queue = queue.catch(() => null).then(cb);
+
+    return queue;
+  };
+};
+
+const genManifestTS = throttle(createBundler());
+const genBlocksJSON = throttle(genMetadata);
+
+// Watch for changes in filesystem
+(async () => {
+  const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
+
+  for await (const event of watcher) {
+    const isBlockChanged = event.paths.some((path) =>
+      path.includes(`${DECO_FOLDER}/${BLOCKS_FOLDER}`)
+    );
+
+    if (isBlockChanged) {
+      genBlocksJSON();
+    }
+
+    const codeCreatedOrDeleted = event.kind !== "modify" &&
+      event.paths.some((path) => (
+        path.endsWith(".ts") || path.endsWith(".tsx")
+      ));
+
+    if (codeCreatedOrDeleted) {
+      genManifestTS();
+    }
   }
-}
-const port = appPort ? +appPort : 8000;
-Deno.serve(
-  {
-    port,
-    onListen: async (addr) => {
-      const address = `http://${addr.hostname}:${addr.port}`;
-      try {
-        if (DECO_ENV_NAME && DECO_SITE_NAME) {
-          await register({
-            site: DECO_SITE_NAME,
-            env: DECO_ENV_NAME,
-            port: `${port}`,
-          });
-        } else {
-          console.log(
-            colors.green(`Server running on ${address}`),
-          );
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    },
-  },
-  (req) => {
-    let response: Promise<Response> | null = null;
-    const begin = performance.now();
+})();
+
+await genManifestTS();
+await genBlocksJSON();
+
+const isolate = runCmd && createWorker({ command: runCmd, port: WORKER_PORT });
+
+const app = new Hono.Hono();
+VERBOSE && app.use(logger());
+app.get("/_healthcheck", () => new Response("OK", { status: 200 }));
+app.use(
+  createDaemonAPIs({
+    build: buildCmd,
+    site: DECO_SITE_NAME,
+    worker: isolate?.worker,
+  }),
+);
+isolate && app.route("", isolate.app);
+
+const port = Number(Deno.env.get("APP_PORT")) || 8000;
+Deno.serve({
+  port,
+  onListen: async (addr) => {
     try {
-      if (req.url.endsWith("/_healthcheck")) {
-        return new Response(
-          "OK",
-          { status: 200 },
+      if (DECO_ENV_NAME && DECO_SITE_NAME) {
+        await register({
+          site: DECO_SITE_NAME,
+          env: DECO_ENV_NAME,
+          port: `${port}`,
+        });
+      } else {
+        console.log(
+          colors.green(
+            `Server running on http://${addr.hostname}:${addr.port}`,
+          ),
         );
       }
-      return response = daemon.fetch(req);
-    } finally {
-      response?.then((resp) => {
-        const logline = formatLog({
-          begin,
-          status: resp.status,
-          url: new URL(req.url),
-        });
-        console.log(
-          `  ${colors.gray(logline)}`,
-        );
-      });
+    } catch (err) {
+      console.log(err);
     }
   },
-);
+}, app.fetch);
