@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { Context } from "deco/live.ts";
 import { join } from "std/path/join.ts";
 import { type RequestState, vary } from "../blocks/utils.tsx";
 import type { DecoContext } from "../deco.ts";
@@ -11,6 +10,7 @@ import {
 } from "../engine/decofile/provider.ts";
 import { siteNameFromEnv } from "../engine/manifest/manifest.ts";
 import { randomSiteName } from "../engine/manifest/utils.ts";
+import { Context } from "../live.ts";
 import { newContext, type Resolvable } from "../mod.ts";
 import { observe } from "../observability/observe.ts";
 import { tracer } from "../observability/otel/config.ts";

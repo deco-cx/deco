@@ -25,6 +25,9 @@
     }
   },
   "scopes": {
+    "https://denopkg.com/deco-cx/deco/": {
+      "deco/": "https://denopkg.com/deco-cx/deco/"
+    },
     "https://denopkg.com/deco-cx/deco@1.26.0/": {
       "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/"
     }

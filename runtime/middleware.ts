@@ -18,6 +18,7 @@ import type {
   MiddlewareHandler,
 } from "./deps.ts";
 import { setLogger } from "./fetch/fetchLog.ts";
+import { liveness } from "./middlewares/liveness.ts";
 export const DECO_SEGMENT = "deco_segment";
 
 export const proxyState = (
@@ -164,6 +165,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
   deco: Deco<TAppManifest>,
 ): DecoMiddleware<TAppManifest>[] => {
   return [
+    // 0 => liveness
+    liveness,
     // 1 => statebuilder
     async (ctx, next) => {
       const { enabled, action, correlationId } = DEBUG.fromRequest(

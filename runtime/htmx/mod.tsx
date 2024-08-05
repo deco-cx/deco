@@ -1,10 +1,10 @@
-import { staticFiles } from "deco/runtime/htmx/serveStatic.ts";
 import type { ComponentChildren, ComponentType } from "preact";
 import { type AppManifest, Context } from "../../mod.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
 import type { Bindings } from "../handler.tsx";
 import type { DecoRouteState } from "../middleware.ts";
 import { renderFn } from "./Renderer.tsx";
+import { staticFiles } from "./serveStatic.ts";
 
 const DEV_SERVER_PATH = `/deco/dev`;
 const DEV_SERVER_SCRIPT = (

@@ -1,6 +1,4 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import type handlerBlock from "deco/blocks/handler.ts";
-import { Deco } from "deco/runtime/app.ts";
 import type accountBlock from "./blocks/account.ts";
 import type actionBlock from "./blocks/action.ts";
 import type appBlock from "./blocks/app.ts";
@@ -12,6 +10,7 @@ import type {
 } from "./blocks/app.ts";
 import type flagBlock from "./blocks/flag.ts";
 import type functionBlock from "./blocks/function.ts";
+import type handlerBlock from "./blocks/handler.ts";
 import type { Handler } from "./blocks/handler.ts";
 import type loaderBlock from "./blocks/loader.ts";
 import type matcherBlock from "./blocks/matcher.ts";
@@ -29,6 +28,7 @@ import type {
 } from "./engine/core/resolver.ts";
 import type { PromiseOrValue } from "./engine/core/utils.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
+import type { Deco } from "./runtime/app.ts";
 import type { InvocationProxy } from "./utils/invoke.types.ts";
 import type { createServerTimings } from "./utils/timings.ts";
 
