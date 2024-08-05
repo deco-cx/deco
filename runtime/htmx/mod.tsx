@@ -11,57 +11,54 @@ const DEV_SERVER_SCRIPT = (
   <script
     dangerouslySetInnerHTML={{
       __html: `
-// Debounce function to limit the rate of page refreshes
-const alreadyRegistered = debouncedRefresh !== undefined;
+if (!window.HAS_PREVIEW_SCRIPT) {
+  // Debounce function to limit the rate of page refreshes
+  function debounce(func, delay) {
+  let timeoutId;
+  return function(...args) {
+  if (timeoutId) clearTimeout(timeoutId);
+  timeoutId = setTimeout(() => func.apply(null, args), delay);
+  };
+  }
 
-if (alreadyRegistered) {
-  return;
+  // Function to refresh the page
+  function refreshPage() {
+  window.location.reload();
+  }
+  // Debounced version of refreshPage
+    const debouncedRefresh = debounce(refreshPage, 100);
+  // Function to set up the WebSocket and listen for messages
+  function setupWebSocket() {
+  // Construct WebSocket URL based on current domain and protocol
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host;
+  const path = '${DEV_SERVER_PATH}';
+  const wsUrl = \`\${protocol}//\${host}\${path}\`;
+
+  // Create a WebSocket connection
+  const socket = new WebSocket(wsUrl);
+
+  // Add an event listener for messages
+  socket.addEventListener('message', function(event) {
+  // Call the debounced function to refresh the page
+  debouncedRefresh();
+  });
+
+  // Handle errors
+  socket.addEventListener('error', function(error) {
+  console.error('WebSocket Error:', error);
+  });
+
+  // Clean up the WebSocket connection when the page is unloaded
+  window.addEventListener('beforeunload', function() {
+  socket.close();
+  });
+  }
+
+  // Run the setup function when the page loads
+  window.onload = setupWebSocket;
+  window.HAS_PREVIEW_SCRIPT = true;
 }
-function debounce(func, delay) {
-let timeoutId;
-return function(...args) {
-if (timeoutId) clearTimeout(timeoutId);
-timeoutId = setTimeout(() => func.apply(null, args), delay);
-};
-}
-
-// Function to refresh the page
-function refreshPage() {
-window.location.reload();
-}
-
-// Debounced version of refreshPage
-  const debouncedRefresh = debounce(refreshPage, 100);
-// Function to set up the WebSocket and listen for messages
-function setupWebSocket() {
-// Construct WebSocket URL based on current domain and protocol
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const host = window.location.host;
-const path = '${DEV_SERVER_PATH}';
-const wsUrl = \`\${protocol}//\${host}\${path}\`;
-
-// Create a WebSocket connection
-const socket = new WebSocket(wsUrl);
-
-// Add an event listener for messages
-socket.addEventListener('message', function(event) {
-// Call the debounced function to refresh the page
-debouncedRefresh();
-});
-
-// Handle errors
-socket.addEventListener('error', function(error) {
-console.error('WebSocket Error:', error);
-});
-
-// Clean up the WebSocket connection when the page is unloaded
-window.addEventListener('beforeunload', function() {
-socket.close();
-});
-}
-
-// Run the setup function when the page loads
-window.onload = setupWebSocket;
 `,
     }}
   >
