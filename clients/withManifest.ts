@@ -1,6 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
 import type { App, AppManifest, ManifestOf } from "../blocks/app.ts";
-import { IS_BROWSER } from "../hooks/useSection.ts";
 import type { StreamProps } from "../mod.ts";
 import type {
   AvailableActions,
@@ -88,7 +87,7 @@ const fetchWithProps = async (
   props: unknown,
   init?: InvokerRequestInit | undefined,
 ) => {
-  if (!IS_BROWSER) {
+  if (typeof document === "undefined") {
     console.warn(
       "👋 Oops! Runtime.invoke should be called only on the client-side, but it seems to be called on the server-side instead. No worries, mistakes happen! 😉",
     );
