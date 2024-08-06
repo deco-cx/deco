@@ -25,14 +25,12 @@
     }
   },
   "scopes": {
-    "https://denopkg.com/deco-cx/deco/": {
-      "deco/": "https://denopkg.com/deco-cx/deco/"
-    },
     "https://denopkg.com/deco-cx/deco@1.26.0/": {
       "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/"
     }
   },
   "imports": {
+    "deco/": "./",
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
     "partytown/": "https://deno.land/x/partytown@0.3.0/",
     "preact": "https://esm.sh/preact@10.16.0?pin=102",

@@ -30,13 +30,13 @@ import type {
   TsUnionType,
   VariableDeclarator,
 } from "https://esm.sh/v130/@swc/wasm@1.3.76";
-import type { JSONSchema7TypeName } from "https://esm.sh/v130/@types/json-schema@7.0.11/index.d.ts";
 import type {
   ArrayExpression,
   AssignmentPattern,
   Expression,
   JSONSchema7,
   JSONSchema7Type,
+  JSONSchema7TypeName,
   ObjectPattern,
 } from "../../deps.ts";
 import type { BlockModuleRef, IntrospectParams } from "../block.ts";
