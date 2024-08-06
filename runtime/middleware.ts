@@ -11,9 +11,9 @@ import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
 import type { Deco, State } from "./app.ts";
 import type {
-  Context as HonoContext,
   ContextRenderer,
   Handler,
+  Context as HonoContext,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
@@ -206,7 +206,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
     async (ctx, next) => {
       const url = new URL(ctx.req.raw.url); // TODO(mcandeia) check if ctx.url can be used here
       const context = Context.active();
-      ctx.res = await ctx.var.monitoring.tracer.startActiveSpan(
+      await ctx.var.monitoring.tracer.startActiveSpan(
         "./routes/_middleware.ts",
         {
           attributes: {
@@ -230,15 +230,13 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
           const begin = performance.now();
           const end = startObserve();
-          let response: Response | null = null;
           try {
             await next();
-            return (response = ctx.res!);
           } catch (e) {
             span.recordException(e);
             throw e;
           } finally {
-            const status = response?.status ?? 500;
+            const status = ctx.res?.status ?? 500;
             const isErr = status >= 500;
             span.setStatus({
               code: isErr ? SpanStatusCode.ERROR : SpanStatusCode.OK,
@@ -254,7 +252,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
               end?.(
                 ctx.req.raw.method,
                 ctx?.var?.pathTemplate,
-                response?.status ?? 500,
+                ctx.res?.status ?? 500,
               );
             } else {
               span.updateName(
@@ -265,7 +263,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
             if (!url.pathname.startsWith("/_frsh")) {
               console.info(
                 formatLog({
-                  status: response?.status ?? 500,
+                  status: ctx.res?.status ?? 500,
                   url,
                   begin,
                   timings: ctx.var.debugEnabled
@@ -283,8 +281,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       if (
         ctx.req.raw.method === "HEAD" && isMonitoringRobots(ctx.req.raw)
       ) {
-        ctx.res = new Response(null, { status: 200 });
-        return;
+        return ctx.res = new Response(null, { status: 200 });
       }
 
       const url = new URL(ctx.req.raw.url); // TODO(mcandeia) check if ctx.url can be used here
@@ -298,8 +295,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
       // Let rendering occur — handlers are responsible for calling ctx.var.loadPage
       if (ctx.req.raw.headers.get("upgrade") === "websocket") {
-        ctx.res = initialResponse;
-        return;
+        return ctx.res = initialResponse;
       }
       const newHeaders = new Headers(initialResponse.headers);
       if (
@@ -380,12 +376,10 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
-      const newResponse = new Response(initialResponse.body, {
+      ctx.res = new Response(initialResponse.body, {
         status: responseStatus,
         headers: newHeaders,
       });
-
-      ctx.res = newResponse;
     },
   ];
 };
