@@ -10,9 +10,9 @@ import { allowCorsFor } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
 import type {
-  Context as HonoContext,
   ContextRenderer,
   Handler,
+  Context as HonoContext,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
@@ -295,6 +295,10 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
       // Let rendering occur — handlers are responsible for calling ctx.var.loadPage
       if (ctx.req.raw.headers.get("upgrade") === "websocket") {
+        // for some reason hono deletes content-type when response is not fresh.
+        // which means that sometimes it will fail as headers are immutable.
+        // so I'm first setting it to undefined and just then set the entire response again
+        ctx.res = undefined;
         return ctx.res = initialResponse;
       }
       const newHeaders = new Headers(initialResponse.headers);
@@ -376,6 +380,10 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
+      // for some reason hono deletes content-type when response is not fresh.
+      // which means that sometimes it will fail as headers are immutable.
+      // so I'm first setting it to undefined and just then set the entire response again
+      ctx.res = undefined;
       ctx.res = new Response(initialResponse.body, {
         status: responseStatus,
         headers: newHeaders,
