@@ -14,10 +14,14 @@ export interface HttpErrorMessage {
   code?: string;
 }
 
+export type ResponseErrorBuilder = (
+  err?: HttpErrorMessage,
+  headers?: Headers,
+) => void;
 /**
  * Returns a response with given status and formatted error message if provided.
  */
-export const status = (status: number) =>
+export const status = (status: number): ResponseErrorBuilder =>
 (
   err?: HttpErrorMessage,
   headers?: Headers,
@@ -37,22 +41,22 @@ export const status = (status: number) =>
 /**
  * Returns a forbidden error.
  */
-export const forbidden = status(403);
+export const forbidden: ResponseErrorBuilder = status(403);
 
 /**
  * Returns a unauthorized error.
  */
-export const unauthorized = status(401);
+export const unauthorized: ResponseErrorBuilder = status(401);
 
 /**
  * Returns not found error.
  */
-export const notFound = status(404);
+export const notFound: ResponseErrorBuilder = status(404);
 
 /**
  * Returns a bad request error
  */
-export const badRequest = status(400);
+export const badRequest: ResponseErrorBuilder = status(400);
 
 /**
  * Stop any config resolution and throw an exception that should be returned to the main handler.

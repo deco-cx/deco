@@ -1,5 +1,5 @@
-import { UAParser } from "https://esm.sh/ua-parser-js@2.0.0-beta.2";
-import { Bots } from "https://esm.sh/ua-parser-js@2.0.0-beta.2/extensions";
+import { UAParser } from "npm:ua-parser-js@2.0.0-beta.2";
+import { Bots } from "npm:ua-parser-js@2.0.0-beta.2/extensions";
 
 /**
  * @title {{{.}}}

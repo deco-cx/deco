@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { ComponentChildren, ComponentType } from "preact";
 import type { AppManifest } from "../mod.ts";
 import "../utils/patched_fetch.ts";

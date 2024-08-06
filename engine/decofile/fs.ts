@@ -1,5 +1,5 @@
-import { debounce } from "std/async/debounce.ts";
-import { join } from "std/path/mod.ts";
+import { debounce } from "@std/async/debounce";
+import { join } from "@std/path";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { getDecofileJSONFromDecofile } from "./json.ts";

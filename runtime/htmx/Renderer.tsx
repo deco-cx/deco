@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { Head as FreshHead } from "$fresh/runtime.ts";
 import { type ComponentChildren, options } from "preact";
 import renderToString from "preact-render-to-string";

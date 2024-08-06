@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { PreactComponent } from "../engine/block.ts";
 
 export type MetabaseProps = {

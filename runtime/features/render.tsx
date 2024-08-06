@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { Page } from "../../blocks/page.tsx";
 import { bindings, getSectionID } from "../../components/section.tsx";
 import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";

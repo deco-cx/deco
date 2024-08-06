@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { ComponentChildren, ComponentType } from "preact";
 import { type AppManifest, Context } from "../../mod.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";

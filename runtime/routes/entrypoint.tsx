@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import type { ConnInfo } from "std/http/mod.ts";

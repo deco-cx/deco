@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { Framework } from "../../components/section.tsx";
 import { useSection } from "../../hooks/useSection.ts";
 export const Head = () => {

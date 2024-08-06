@@ -1,9 +1,3 @@
-/// <reference no-default-lib="true"/>
-/// <reference lib="deno.ns" />
-/// <reference lib="esnext" />
-/// <reference lib="dom" />
-/// <reference lib="dom.iterable" />
-
 import "./utils/patched_fetch.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -131,4 +125,5 @@ export const RequestContext = {
   },
 };
 
-export const context = Context.active();
+// deno-lint-ignore no-explicit-any
+export const context: DecoContext<any> = Context.active();

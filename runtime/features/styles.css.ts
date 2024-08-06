@@ -222,7 +222,7 @@ const bundle = async (
 
 const TAILWIND_FILE = "tailwind.css";
 
-const TO = join(Deno.cwd(), "static", TAILWIND_FILE);
+const TO: string = join(Deno.cwd(), "static", TAILWIND_FILE);
 const _isDev = Deno.env.get("DECO_PREVIEW") ||
   !Deno.env.has("DENO_DEPLOYMENT_ID");
 // FIXME @author Marcos V. Candeia since we don't have a build step on HTMX sites so mode should always defaults to dev.

@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { InstanceOf } from "../engine/block.ts";
 import { createSectionBlock } from "./section.ts";
 

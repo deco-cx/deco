@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { Page } from "../../blocks/page.tsx";
 import LiveControls from "../../components/LiveControls.tsx";
 import { Context } from "../../deco.ts";

@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { useFramework } from "../components/section.tsx";
 
 export interface Props {

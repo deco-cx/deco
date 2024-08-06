@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { context } from "../deco.ts";
 import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";

@@ -1,3 +1,6 @@
+export { crypto } from "@std/crypto";
+export { decodeHex, encodeHex } from "@std/encoding";
+export { getCookies, getSetCookies, setCookie } from "@std/http";
 export { DomInspectorActivators } from "https://deno.land/x/inspect_vscode@0.2.1/inspector.ts";
 export * as inspectVSCode from "https://deno.land/x/inspect_vscode@0.2.1/mod.ts";
 export * as weakcache from "https://deno.land/x/weakcache@v1.1.4/index.js";
@@ -21,20 +24,6 @@ export type {
   RequiredKeys,
   UnionToIntersection,
 } from "https://esm.sh/v135/utility-types@3.10.0";
-export type {
-  Attributes,
-  BatchObservableResult,
-  Context,
-  Link,
-  ObservableCounter,
-  ObservableGauge,
-  ObservableResult,
-  ObservableUpDownCounter,
-  Span,
-  Tracer,
-} from "npm:@opentelemetry/api@1.6.0";
-export { decode as decodeHex, encode as encodeHex } from "std/encoding/hex.ts";
-
 export {
   context,
   createContextKey,
@@ -48,10 +37,19 @@ export {
   trace,
   ValueType,
 } from "npm:@opentelemetry/api@1.6.0";
-export { crypto } from "std/crypto/mod.ts";
-export { getCookies, getSetCookies, setCookie } from "std/http/mod.ts";
-export type { Handler } from "std/http/server.ts";
-
+export type {
+  Attributes,
+  BatchObservableResult,
+  Context,
+  Link,
+  Meter,
+  ObservableCounter,
+  ObservableGauge,
+  ObservableResult,
+  ObservableUpDownCounter,
+  Span,
+  Tracer,
+} from "npm:@opentelemetry/api@1.6.0";
 export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0.43.0";
 export {
   InstrumentationBase,
@@ -59,6 +57,7 @@ export {
   registerInstrumentations,
 } from "npm:@opentelemetry/instrumentation@0.43.0";
 export type { InstrumentationConfig } from "npm:@opentelemetry/instrumentation@0.43.0";
+export type Handler = (req: Request) => Promise<Response> | Response;
 
 export { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-proto@0.43.0";
 export { Resource } from "npm:@opentelemetry/resources@1.17.0";
