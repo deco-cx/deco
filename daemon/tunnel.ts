@@ -18,9 +18,18 @@ export async function register({ env, site, port }: TunnelRegisterOptions) {
       "c309424a-2dc4-46fe-bfc7-a7c10df59477",
   }).then((r) => {
     r.registered.then(() => {
-      console.log(colors.green(
-        `Server running on https://${domain} -> ${localAddr}`,
-      ));
+      const admin = new URL(
+        `/sites/${site}/spaces/dashboard?env=${env}`,
+        "https://admin.deco.cx",
+      );
+
+      console.log(
+        `\ndeco.cx started environment ${colors.green(env)} for site ${
+          colors.brightBlue(site)
+        }\n   -> 🌐 ${colors.bold("Preview")}: ${
+          colors.cyan(`https://${domain}`)
+        }\n   -> ✏️ ${colors.bold("Admin")}: ${colors.cyan(admin.href)}\n`,
+      );
     });
     return r.closed.then(async () => {
       console.log("tunnel connection error retrying in 500ms...");
