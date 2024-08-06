@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { initializeState } from "deco/runtime/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { gray, green, red } from "std/fmt/colors.ts";
 import {
@@ -18,7 +17,7 @@ import {
   type DecoContext,
   type DecoRuntimeState,
 } from "../../deco.ts";
-import type { HandlerContext } from "../../deps.ts";
+import { baseState } from "../../runtime/utils.ts";
 import type { DecoState, SiteInfo } from "../../types.ts";
 import { deferred } from "../../utils/promise.ts";
 import { randId } from "../../utils/rand.ts";
@@ -31,7 +30,6 @@ import {
   type Resolver,
   type ResolverMap,
 } from "../core/resolver.ts";
-import type { PromiseOrValue } from "../core/utils.ts";
 import { ENV_SITE_NAME } from "../decofile/constants.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
 import { type DecofileProvider, getProvider } from "../decofile/provider.ts";
@@ -42,17 +40,18 @@ import { randomSiteName } from "./utils.ts";
 
 const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
 
-export type FreshHandler<
-  TConfig = any,
-  TData = any,
-  TState = any,
-  Resp = Response,
-> = (
-  request: Request,
-  ctx: HandlerContext<TData, DecoState<TState, TConfig>>,
-) => PromiseOrValue<Resp>;
+export interface HandlerContext<
+  Data = unknown,
+  State = Record<string, unknown>,
+> {
+  params: Record<string, string>;
+  state: State;
+  render: (
+    data?: Data,
+  ) => Response | Promise<Response>;
+}
 
-export interface FreshContext<Data = any, State = any, TConfig = any>
+export interface RouteContext<Data = any, State = any, TConfig = any>
   extends BaseContext {
   context: HandlerContext<Data, DecoState<State, TConfig>>;
   request: Request;
@@ -77,8 +76,7 @@ const newFakeContext = () => {
       route: "/[...catchall]",
       pattern: "/[...catchall]",
       isPartial: false,
-      config: {} as FreshContext["context"]["config"],
-      state: initializeState(),
+      state: baseState(),
       params: {},
       destination: "route",
       data: {},
@@ -86,7 +84,7 @@ const newFakeContext = () => {
       render: () => new Response(null),
       renderNotFound: () => new Response(null),
       remoteAddr: { hostname: "", port: 0, transport: "tcp" as const },
-    } as FreshContext["context"],
+    } as RouteContext["context"],
   };
 };
 export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
@@ -132,7 +130,7 @@ export const initContext = async <
 };
 
 const installAppsForResolver = async (
-  resolver: ReleaseResolver<FreshContext>,
+  resolver: ReleaseResolver<RouteContext>,
   initialManifest: AppManifest,
   initialImportMap?: ImportMap,
 ) => {
@@ -267,11 +265,11 @@ const installAppsForResolver = async (
 export const fulfillContext = async <
   T extends AppManifest,
 >(
-  ctx: DecoContext,
+  ctx: DecoContext<T>,
   initialManifest: T,
   currentImportMap?: ImportMap,
   release: DecofileProvider | undefined = undefined,
-): Promise<DecoContext> => {
+): Promise<DecoContext<T>> => {
   let currentSite = ctx.site ?? siteName();
   if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (ctx.isDeploy) {
@@ -287,20 +285,20 @@ export const fulfillContext = async <
   const provider = release ?? await getProvider(
     ctx.site,
   );
-  const runtimePromise = deferred<DecoRuntimeState>();
+  const runtimePromise = deferred<DecoRuntimeState<T>>();
   ctx.runtime = runtimePromise.finally(() => {
     ctx.instance.readyAt = new Date();
   });
 
   ctx.release = provider;
-  const resolver = new ReleaseResolver<FreshContext>({
+  const resolver = new ReleaseResolver<RouteContext>({
     resolvers: defaultResolvers,
     release: provider,
   });
   const firstInstallAppsPromise = deferred<void>();
   const installApps = async () => {
     const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
-      (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
+      (curr, acc) => buildRuntime<AppManifest, RouteContext>(curr, acc),
       [
         {
           baseUrl: initialManifest.baseUrl,
@@ -311,7 +309,7 @@ export const fulfillContext = async <
         [],
       ] as [
         AppManifest,
-        ResolverMap<FreshContext>,
+        ResolverMap<RouteContext>,
         DanglingRecover[],
       ],
     );
@@ -330,7 +328,7 @@ export const fulfillContext = async <
     if (!apps || apps.length === 0) {
       runtimePromise.resolve({
         resolver: currentResolver,
-        manifest: newManifest,
+        manifest: newManifest as T,
         importMap: currentImportMap ?? buildImportMap(newManifest),
       });
       firstInstallAppsPromise.resolve();
@@ -358,7 +356,7 @@ export const fulfillContext = async <
       imports: { ...importMap?.imports, ...currentImportMap?.imports ?? {} },
     };
     const runtime = {
-      manifest: mergeManifests(newManifest, manifest),
+      manifest: mergeManifests(newManifest, manifest) as T,
       importMap: mergedImportMap,
       resolver: currentResolver,
     };
@@ -412,10 +410,10 @@ export const newContext = <
   release: DecofileProvider | undefined = undefined,
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
-  namespace: string | undefined = undefined,
-): Promise<DecoContext> => {
-  const currentContext = Context.active();
-  const ctx: DecoContext = {
+  namespace: string = "site",
+): Promise<DecoContext<T>> => {
+  const currentContext = Context.active<T>();
+  const ctx: DecoContext<T> = {
     ...currentContext,
     site: site ?? currentContext.site,
     namespace: namespace ?? currentContext.namespace,
@@ -443,14 +441,14 @@ export const $live = async <T extends AppManifest>(
   context.namespace ??= `deco-sites/${currentSite}`;
   context.site = currentSite;
   const [newManifest, resolvers, recovers] = (blocks() ?? []).reduce(
-    (curr, acc) => buildRuntime<AppManifest, FreshContext>(curr, acc),
-    [m, {}, []] as [AppManifest, ResolverMap<FreshContext>, DanglingRecover[]],
+    (curr, acc) => buildRuntime<AppManifest, RouteContext>(curr, acc),
+    [m, {}, []] as [AppManifest, ResolverMap<RouteContext>, DanglingRecover[]],
   );
   const provider = release ?? await getProvider(
     context.site,
   );
   context.release = provider;
-  const resolver = new ReleaseResolver<FreshContext>({
+  const resolver = new ReleaseResolver<RouteContext>({
     resolvers: { ...resolvers, ...defaultResolvers },
     release: provider,
     danglingRecover: recovers.length > 0

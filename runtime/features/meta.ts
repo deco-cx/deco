@@ -1,12 +1,12 @@
 import { parse } from "std/semver/mod.ts";
-import { Context } from "../../../deco.ts";
-import denoJSON from "../../../deno.json" with { type: "json" };
-import { singleFlight } from "../../../engine/core/utils.ts";
-import type { Schemas } from "../../../engine/schema/builder.ts";
-import { namespaceOf } from "../../../engine/schema/gen.ts";
-import { type LazySchema, lazySchemaFor } from "../../../engine/schema/lazy.ts";
-import type { AppManifest } from "../../../types.ts";
-import { allowCorsFor } from "../../../utils/http.ts";
+import { Context, type DecoContext } from "../../deco.ts";
+import denoJSON from "../../deno.json" with { type: "json" };
+import { singleFlight } from "../../engine/core/utils.ts";
+import type { Schemas } from "../../engine/schema/builder.ts";
+import { namespaceOf } from "../../engine/schema/gen.ts";
+import { type LazySchema, lazySchemaFor } from "../../engine/schema/lazy.ts";
+import { schemaVersion } from "../../engine/schema/parser.ts";
+import type { AppManifest } from "../../types.ts";
 
 type BlockMap = Record<string, { $ref: string; namespace: string }>;
 interface ManifestBlocks {
@@ -23,7 +23,7 @@ export interface MetaInfo {
   platform: string;
 }
 
-export const toManifestBlocks = (
+const toManifestBlocks = (
   decoManifest: AppManifest & {
     routes?: unknown;
     islands?: unknown;
@@ -54,11 +54,10 @@ export const toManifestBlocks = (
 
 export let mschema: Schemas | null = null; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
 
-const sf = singleFlight<string>();
-const binaryId = Context.active().deploymentId ?? crypto.randomUUID();
+const sf = singleFlight<MetaInfo>();
 
 const etagFor = async (lazySchema: LazySchema) =>
-  `${await lazySchema.revision}@${binaryId}`;
+  `${await lazySchema.revision}@${schemaVersion}`;
 
 const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
   while (!signal.aborted) {
@@ -85,49 +84,45 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
           platform: context.platform,
         };
 
-        return JSON.stringify(info);
+        return info;
       });
 
-      return { etag, info };
+      return { etag, value: info };
     }
 
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
 };
 
-export const handler = async (req: Request) => {
-  const url = new URL(req.url);
+export interface GetMetaOpts {
+  signal?: AbortSignal;
+  ifNoneMatch: string;
+}
 
+export interface VersionedMetaInfo {
+  value: MetaInfo;
+  etag: string;
+}
+
+export const meta = async (
+  context: DecoContext,
+  opts?: GetMetaOpts,
+): Promise<VersionedMetaInfo | undefined> => {
   const ctrl = new AbortController();
-
-  req.signal.onabort = () => ctrl.abort();
+  const signal = opts?.signal;
+  if (signal) {
+    signal.onabort = () => ctrl.abort();
+  }
   setTimeout(() => ctrl.abort(), 20 * 60 * 1e3); // 20 minutes in ms
-
-  const context = Context.active();
   const lazySchema = lazySchemaFor(context);
-  const ifNoneMatch = req.headers.get("if-none-match");
   const schemaEtag = await etagFor(lazySchema);
-  const res = await waitForChanges(
-    url.searchParams.get("waitForChanges") === "true" &&
-      ifNoneMatch && (ifNoneMatch === schemaEtag ||
-        ifNoneMatch === `W/${schemaEtag}`)
+  const etag =
+    signal && opts?.ifNoneMatch && (opts.ifNoneMatch === schemaEtag ||
+        opts.ifNoneMatch === `W/${schemaEtag}`)
       ? schemaEtag
-      : "",
+      : "";
+  return await waitForChanges(
+    etag,
     ctrl.signal,
   );
-
-  if (!res) {
-    return new Response(null, { status: 408, headers: allowCorsFor(req) });
-  }
-
-  const { info, etag } = res;
-
-  return new Response(info, {
-    headers: {
-      "Content-Type": "application/json",
-      "cache-control": "must-revalidate",
-      etag,
-      ...allowCorsFor(req),
-    },
-  });
 };

@@ -1,5 +1,5 @@
-import { context } from "deco/live.ts";
 import { fromFileUrl } from "std/path/mod.ts";
+import { context } from "../../live.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
 import { newFsProviderFromPath } from "./fs.ts";

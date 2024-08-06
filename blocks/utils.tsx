@@ -141,6 +141,7 @@ export const fnContextFromHttpContext = <TState = {}>(
 ): FnContext<TState> => {
   let device: Device | null = null;
   let isBot: boolean | null = null;
+
   return {
     ...ctx?.context?.state?.global,
     revision: ctx.revision,

@@ -1,21 +1,17 @@
-import type { HandlerContext } from "$fresh/server.ts";
-import { formDataToProps } from "deco/clients/formdata.ts";
-import type { DecoSiteState, DecoState } from "../../../types.ts";
-import { bodyFromUrl } from "../../../utils/http.ts";
-import { invokeToHttpResponse } from "../../../utils/invoke.ts";
-import type { InvokeFunction } from "../../../utils/invoke.types.ts";
-
-import { payloadToResolvable, wrapInvokeErr } from "./batchInvoke.ts";
-
+import { formDataToProps } from "../../clients/formdata.ts";
+import { bodyFromUrl } from "../../utils/http.ts";
+import { invokeToHttpResponse } from "../../utils/invoke.ts";
+import type { InvokeFunction } from "../../utils/invoke.types.ts";
+import { createHandler } from "../middleware.ts";
 /**
  * All props parsing strategies supported by the invoke endpoint.
  * To infer a valid strategy for a request, the `getParsingStrategy` function is used.
  */
 export const propsParsers = {
-  "json": async (req: Request) => await req.json() as Record<string, any>,
+  "json": async (req: Request) => await req.json() as Record<string, unknown>,
   "try-json": async (req: Request) => {
     try {
-      return await req.json() as Record<string, any>;
+      return await req.json() as Record<string, unknown>;
     } catch (err) {
       console.warn("Error parsing props from request", err);
       return {};
@@ -25,7 +21,7 @@ export const propsParsers = {
     const formData = await req.formData();
     return formDataToProps(formData);
   },
-  "search-params": async (req: Request) => {
+  "search-params": (req: Request) => {
     const url = new URL(req.url);
     return bodyFromUrl("props", url);
   },
@@ -68,7 +64,7 @@ function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
  */
 async function parsePropsFromRequest(
   req: Request,
-): Promise<Record<string, any>> {
+): Promise<Record<string, unknown>> {
   const strategy = getParsingStrategy(req);
 
   if (!strategy) {
@@ -77,30 +73,28 @@ async function parsePropsFromRequest(
 
   return await propsParsers[strategy](req);
 }
-
-export const handler = async (
-  req: Request,
-  ctx: HandlerContext<
-    unknown,
-    DecoState<unknown, DecoSiteState>
-  >,
+export const handler = createHandler(async (
+  ctx,
 ): Promise<Response> => {
-  const url = new URL(req.url); // TODO(mcandeia) check if ctx.url can be used here
-  const props = await parsePropsFromRequest(req);
+  const key = ctx.var.url.pathname.replace("/live/invoke/", "")
+    .replace(
+      "/deco/invoke/",
+      "",
+    );
 
-  const { state: { resolve } } = ctx;
-  const invokeFunc: InvokeFunction = {
-    key: ctx.params.key as InvokeFunction["key"],
-    props: props as InvokeFunction["props"],
-    select:
-      (url.searchParams.getAll("select") ?? []) as InvokeFunction["select"],
-  };
+  const props = await parsePropsFromRequest(ctx.req.raw);
 
-  const resp = await resolve(payloadToResolvable(invokeFunc), {
-    resolveChain: [{ type: "resolver", value: "invoke" }],
-  }).catch(
-    wrapInvokeErr(ctx.params.key),
+  const select = (ctx.var.url.searchParams.getAll("select") ??
+    []) as InvokeFunction[
+      "select"
+    ];
+
+  const resp = await ctx.var.deco.invoke(
+    key as InvokeFunction["key"],
+    props as Required<InvokeFunction>["props"],
+    select,
+    ctx.var,
   );
 
-  return invokeToHttpResponse(req, resp);
-};
+  return invokeToHttpResponse(ctx.req.raw, resp);
+});

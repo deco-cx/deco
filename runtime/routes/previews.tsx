@@ -1,8 +1,9 @@
-import type { PageProps } from "$fresh/server.ts";
-import type { Page } from "../../../blocks/page.tsx";
-import LiveControls from "../../../components/LiveControls.tsx";
-import { Context } from "../../../deco.ts";
-import type { ComponentMetadata } from "../../../engine/block.ts";
+import type { Page } from "../../blocks/page.tsx";
+import LiveControls from "../../components/LiveControls.tsx";
+import { Context } from "../../deco.ts";
+import type { ComponentMetadata } from "../../engine/block.ts";
+import { createHandler } from "../middleware.ts";
+import type { PageParams } from "../mod.ts";
 
 const PAGE_NOT_FOUND = -1;
 export const pageIdFromMetadata = (
@@ -24,7 +25,7 @@ export const pageIdFromMetadata = (
 
   return pageParent?.value ?? PAGE_NOT_FOUND;
 };
-function Preview(props: PageProps<Page>) {
+function Preview(props: PageParams<Page>) {
   const { data } = props;
   const pageId = pageIdFromMetadata(data?.metadata);
   const context = Context.active();
@@ -39,4 +40,12 @@ function Preview(props: PageProps<Page>) {
   );
 }
 
+export const handler = createHandler((ctx) => {
+  return ctx.render({
+    page: {
+      Component: Preview,
+      props: {},
+    },
+  });
+});
 export default Preview;

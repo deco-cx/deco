@@ -30,13 +30,13 @@
     }
   },
   "imports": {
-    "preact-render-to-string": "https://esm.sh/*preact-render-to-string@6.2.0?pin=102",
-    "preact/": "https://esm.sh/preact@10.16.0/",
-    "preact": "https://esm.sh/preact@10.16.0?pin=102",
-    "partytown/": "https://deno.land/x/partytown@0.3.0/",
-    "std/": "https://deno.land/std@0.203.0/",
+    "deco/": "./",
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
-    "deco/": "./"
+    "partytown/": "https://deno.land/x/partytown@0.3.0/",
+    "preact": "https://esm.sh/preact@10.16.0?pin=102",
+    "preact-render-to-string": "https://esm.sh/*preact-render-to-string@6.4.0?pin=102",
+    "preact/": "https://esm.sh/preact@10.16.0/",
+    "std/": "https://deno.land/std@0.203.0/"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

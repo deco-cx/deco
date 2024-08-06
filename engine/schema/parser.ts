@@ -83,6 +83,14 @@ export const initLoader = (): typeof load => {
   }
   return loader = load;
 };
+export let schemaVersion = crypto.randomUUID();
+addEventListener("hmr", (e) => {
+  const filePath = (e as unknown as { detail: { path: string } })?.detail?.path;
+  if (filePath) {
+    delete loadCache[filePath];
+    schemaVersion = crypto.randomUUID();
+  }
+});
 
 export const updateLoadCache = (path: string, content: string) => {
   if (!loadCache[path]) {

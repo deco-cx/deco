@@ -1,20 +1,3 @@
-export { Head, IS_BROWSER } from "$fresh/runtime.ts";
-export type {
-  FreshContext,
-  Handler as FreshHandler,
-  HandlerContext,
-  Handlers,
-  MiddlewareHandler,
-  MiddlewareHandlerContext,
-  PageProps,
-  RouteConfig,
-} from "$fresh/server.ts";
-export type { ServeHandler } from "$fresh/src/server/deps.ts";
-export type {
-  IslandModule,
-  MiddlewareModule,
-  RouteModule,
-} from "$fresh/src/server/types.ts";
 export { DomInspectorActivators } from "https://deno.land/x/inspect_vscode@0.2.1/inspector.ts";
 export * as inspectVSCode from "https://deno.land/x/inspect_vscode@0.2.1/mod.ts";
 export * as weakcache from "https://deno.land/x/weakcache@v1.1.4/index.js";

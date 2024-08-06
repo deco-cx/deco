@@ -1,7 +1,6 @@
 import type { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
 import { SectionContext } from "../components/section.tsx";
-import { IS_BROWSER } from "../deps.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 
 import { Murmurhash3 } from "../deps.ts";
@@ -31,7 +30,7 @@ export const useSection = <P>(
   const cb = hasher.result();
   hasher.reset();
 
-  if (IS_BROWSER) {
+  if (typeof document !== "undefined") {
     throw new Error("Partials cannot be used inside an Island!");
   }
 

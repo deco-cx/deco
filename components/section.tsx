@@ -1,5 +1,9 @@
-import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
-import { Component, type ComponentType, createContext } from "preact";
+import {
+  Component,
+  type ComponentChildren,
+  type ComponentType,
+  createContext,
+} from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
@@ -18,7 +22,9 @@ export interface SectionContext extends HttpContext<RequestState> {
   device: Device;
   framework: "fresh" | "htmx";
   deploymentId?: string;
+  // deno-lint-ignore no-explicit-any
   FallbackWrapper: ComponentType<any>;
+  bindings: Framework;
 }
 
 export const SectionContext = createContext<SectionContext | undefined>(
@@ -93,6 +99,7 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 }
 
 export interface Framework {
+  Head?: (headProps: { children: ComponentChildren }) => null;
   Wrapper: ComponentType<
     { id: string; partialMode?: "replace" | "append" | "prepend" }
   >;
@@ -113,6 +120,13 @@ export const bindings = {
   htmx: HTMXBindings,
 };
 
+export const useFramework = () => {
+  const {
+    bindings: mbindings,
+  } = useContext(SectionContext) ?? { bindings: bindings.fresh };
+  return mbindings;
+};
+
 export const alwaysThrow =
   (err: unknown): ComponentFunc => (_props: unknown) => {
     throw err;
@@ -130,7 +144,7 @@ export const withSection = <TProps, TLoaderProps = TProps>(
   ctx: HttpContext<
     RequestState & {
       renderSalt?: string;
-      partialMode?: PartialProps["mode"];
+      partialMode?: "replace" | "prepend" | "append";
       framework?: "fresh" | "htmx";
     }
   >,
@@ -141,7 +155,7 @@ export const withSection = <TProps, TLoaderProps = TProps>(
   const renderSaltFromState = ctx.context?.state?.renderSalt;
   const frameworkFromState = ctx.context?.state?.framework;
   // TODO @gimenes This is a fresh thing only. We need to remove it on other framework bindings
-  const partialMode = ctx.context.state.partialMode ||
+  const partialMode = ctx?.context?.state?.partialMode ||
     "replace";
   const metadata = {
     resolveChain: ctx.resolveChain,
@@ -175,6 +189,7 @@ export const withSection = <TProps, TLoaderProps = TProps>(
             deploymentId,
             renderSalt,
             framework,
+            bindings: bindings[framework],
             FallbackWrapper: ({ children, ...props }) => (
               <binding.LoadingFallback id={id} {...props}>
                 {children}

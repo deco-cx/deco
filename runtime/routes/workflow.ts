@@ -1,11 +1,10 @@
-import type { HandlerContext } from "$fresh/server.ts";
 import type { ConnInfo } from "std/http/server.ts";
-import { type Workflow, WorkflowContext } from "../../../blocks/workflow.ts";
-import { initOnce } from "../../../commons/workflows/initialize.ts";
+import { type Workflow, WorkflowContext } from "../../blocks/workflow.ts";
+import { initOnce } from "../../commons/workflows/initialize.ts";
 import {
   type WorkflowMetadata,
   WorkflowQS,
-} from "../../../commons/workflows/types.ts";
+} from "../../commons/workflows/types.ts";
 import {
   arrToStream,
   type Command,
@@ -13,9 +12,10 @@ import {
   type Metadata,
   workflowRemoteRunner,
   workflowWebSocketHandler,
-} from "../../../deps.ts";
-import type { AppManifest, DecoState } from "../../../mod.ts";
-import type { DecoSiteState } from "../../../types.ts";
+} from "../../deps.ts";
+import type { AppManifest, DecoState } from "../../mod.ts";
+import type { DecoSiteState } from "../../types.ts";
+import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 
 export type Props = HttpRunRequest<
   unknown[],
@@ -43,52 +43,45 @@ async function runWorkflow(
 
 const handleProps = async (
   props: Props,
-  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState, AppManifest>>,
+  ctx: DecoMiddlewareContext,
 ) => {
-  const metadata = await ctx.state.resolve<WorkflowMetadata>(
+  const metadata = await ctx.var.resolve<WorkflowMetadata>(
     (props?.execution?.metadata ?? {}) as WorkflowMetadata,
   );
   return runWorkflow(
     { ...props, execution: { ...props.execution, metadata } },
-    ctx.state,
+    ctx.var,
   );
 };
 
-export const handler = async (
-  req: Request,
-  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
+export const handler = createHandler(async (
+  ctx,
 ): Promise<Response> => {
   initOnce();
+  const { req: { raw: req } } = ctx;
   if (req.headers.get("upgrade") === "websocket") {
     const workflow = WorkflowQS.extractFromUrl(req.url);
     if (!workflow) {
       return new Response(null, { status: 501 });
     }
-    const workflowFn = await ctx.state.resolve(workflow);
+    const workflowFn = await ctx.var.resolve(workflow);
     const handler = workflowWebSocketHandler(
       workflowFn,
       (execution) =>
         new WorkflowContext(
-          ctx.state as unknown as DecoState<
-            unknown,
-            DecoSiteState,
-            AppManifest
-          >,
+          ctx.var,
           execution,
         ),
     );
-    return handler(req, ctx as ConnInfo);
+    return handler(req, ctx as unknown as ConnInfo);
   }
   const props: Props = await req.json();
   const resp = await handleProps(
     props,
-    ctx as unknown as HandlerContext<
-      unknown,
-      DecoState<unknown, DecoSiteState, AppManifest>
-    >,
+    ctx,
   );
   return new Response(
     JSON.stringify(resp),
     { status: 200 },
   );
-};
+});

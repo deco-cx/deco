@@ -69,7 +69,7 @@ export const createFetch = (fetcher: typeof fetch): typeof fetch =>
     const cacheTtlByStatus = init?.deco?.cacheTtlByStatus ??
       DEFAULT_TTL_BY_STATUS;
 
-    // Set cache burst key into url so we always vary by url
+    // Set cache bust key into url so we always vary by url
     // This is ok when the developer filters headers/cookies
     // before forwarding to origin, which, is always the case in our loaders
     if (cacheKey) {

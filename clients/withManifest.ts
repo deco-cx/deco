@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { IS_BROWSER } from "$fresh/runtime.ts";
 import type { App, AppManifest, ManifestOf } from "../blocks/app.ts";
 import type { StreamProps } from "../mod.ts";
 import type {
@@ -88,7 +87,7 @@ const fetchWithProps = async (
   props: unknown,
   init?: InvokerRequestInit | undefined,
 ) => {
-  if (!IS_BROWSER) {
+  if (typeof document === "undefined") {
     console.warn(
       "👋 Oops! Runtime.invoke should be called only on the client-side, but it seems to be called on the server-side instead. No worries, mistakes happen! 😉",
     );
@@ -121,7 +120,7 @@ const fetchWithProps = async (
     body,
     ...init,
     headers,
-  });
+  } as RequestInit);
 
   if (response.status === 204) {
     return;
@@ -265,7 +264,12 @@ export const invoke = <
       return invokeKey((payload as any).key, (payload as any).props, {
         ...init ?? {},
         fetcher,
-      });
+      }) as Promise<
+        InvokeResult<
+          TPayload,
+          TManifest
+        >
+      >;
     }
     const reqs: Record<
       string,
@@ -278,9 +282,19 @@ export const invoke = <
         reqs[key] = val;
       }
     }
-    return batchInvoke(reqs, { ...init ?? {}, fetcher });
+    return batchInvoke(reqs, { ...init ?? {}, fetcher }) as Promise<
+      InvokeResult<
+        TPayload,
+        TManifest
+      >
+    >;
   }
-  return batchInvoke(payload, { ...init ?? {}, fetcher });
+  return batchInvoke(payload, { ...init ?? {}, fetcher }) as Promise<
+    InvokeResult<
+      TPayload,
+      TManifest
+    >
+  >;
 };
 
 export const create = <
@@ -308,7 +322,13 @@ export const create = <
     TPayload,
     TManifest
   >
-> => invokeKey(key, props, init);
+> =>
+  invokeKey(key, props, init) as Promise<
+    InvokeResult<
+      TPayload,
+      TManifest
+    >
+  >;
 
 /**
  * Creates a set of strongly-typed utilities to be used across the repositories where pointing to an existing function is supported.

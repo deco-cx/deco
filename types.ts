@@ -1,6 +1,4 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import type { Manifest } from "$fresh/server.ts";
-import type handlerBlock from "deco/blocks/handler.ts";
 import type accountBlock from "./blocks/account.ts";
 import type actionBlock from "./blocks/action.ts";
 import type appBlock from "./blocks/app.ts";
@@ -12,6 +10,7 @@ import type {
 } from "./blocks/app.ts";
 import type flagBlock from "./blocks/flag.ts";
 import type functionBlock from "./blocks/function.ts";
+import type handlerBlock from "./blocks/handler.ts";
 import type { Handler } from "./blocks/handler.ts";
 import type loaderBlock from "./blocks/loader.ts";
 import type matcherBlock from "./blocks/matcher.ts";
@@ -29,6 +28,7 @@ import type {
 } from "./engine/core/resolver.ts";
 import type { PromiseOrValue } from "./engine/core/utils.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
+import type { Deco } from "./runtime/mod.ts";
 import type { InvocationProxy } from "./utils/invoke.types.ts";
 import type { createServerTimings } from "./utils/timings.ts";
 
@@ -41,7 +41,7 @@ export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
 export type JSONSchemaDefinition = JSONSchema7Definition;
 
-export interface DecoManifest extends Manifest {
+export interface DecoManifest {
   name: string;
   baseUrl: string;
   apps?: Record<string, ModuleOf<typeof appBlock>>;
@@ -115,6 +115,8 @@ export type DecoState<
 > =
   & TState
   & {
+    deco: Deco<TManifest>;
+    url: URL;
     correlationId?: string;
     debugEnabled?: boolean;
     $live: TConfig;
@@ -125,9 +127,8 @@ export type DecoState<
         TManifest
       >
       & InvocationFunc<TManifest>;
-    routes?: Route[];
-    flags: Flag[];
     pathTemplate: string;
+    routes?: Route[];
   };
 
 export type { PropsLoader } from "./blocks/propsLoader.ts";

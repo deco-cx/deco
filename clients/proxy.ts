@@ -8,7 +8,7 @@ import type {
 } from "../utils/invoke.types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import type { Fulfilled, Rejected } from "../utils/promise.ts";
-import type { invokeKey } from "./withManifest.ts";
+import type { invokeKey, InvokerRequestInit } from "./withManifest.ts";
 
 export type InvocationProxyHandler = {
   (props?: any, init?: RequestInit | undefined): Promise<any>;
@@ -86,7 +86,12 @@ export const newHandler = <TManifest extends AppManifest>(
       ): InvokeAwaiter<TManifest, any, any> {
         const ext = part === "x" ? "tsx" : "ts";
         return new InvokeAwaiter<TManifest, any, any>(
-          (payload, init) => invoker(payload.key, payload.props, init),
+          (payload, init) =>
+            invoker(
+              payload.key,
+              payload.props,
+              init as InvokerRequestInit,
+            ) as Promise<InvokeResult<Invoke<TManifest, any, any>, TManifest>>,
           {
             key: `${currentParts.join("/")}.${ext}`,
             props,

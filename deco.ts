@@ -13,8 +13,10 @@ import type { DecofileProvider } from "./engine/decofile/provider.ts";
 import type { AppManifest } from "./mod.ts";
 import { randId } from "./utils/rand.ts";
 
-export interface DecoRuntimeState {
-  manifest: AppManifest;
+export interface DecoRuntimeState<
+  TAppManifest extends AppManifest = AppManifest,
+> {
+  manifest: TAppManifest;
   // deno-lint-ignore no-explicit-any
   resolver: ReleaseResolver<any>;
   importMap: ImportMap;
@@ -45,7 +47,7 @@ export const DaemonMode = {
 };
 
 // The global deco context
-export interface DecoContext {
+export interface DecoContext<TAppManifest extends AppManifest = AppManifest> {
   deploymentId: string | undefined;
   isDeploy: boolean;
   decodMode?: DecodMode;
@@ -56,7 +58,7 @@ export interface DecoContext {
   base?: string;
   namespace?: string;
   release?: DecofileProvider;
-  runtime?: Promise<DecoRuntimeState>;
+  runtime?: Promise<DecoRuntimeState<TAppManifest>>;
   instance: InstanceInfo;
   request?: RequestContext;
 }
@@ -76,7 +78,8 @@ const getHostingPlatform = (): WellKnownHostingPlatform => {
   }
 };
 
-const defaultContext: Omit<DecoContext, "schema"> = {
+// deno-lint-ignore no-explicit-any
+let defaultContext: Omit<DecoContext<any>, "schema"> = {
   deploymentId,
   siteId: 0,
   isDeploy: isDeploy,
@@ -92,8 +95,13 @@ const defaultContext: Omit<DecoContext, "schema"> = {
 const asyncLocalStorage = new AsyncLocalStorage<DecoContext>();
 
 export const Context = {
+  setDefault: <T extends AppManifest = AppManifest>(
+    ctx: DecoContext<T>,
+  ): void => {
+    defaultContext = ctx;
+  },
   // Function to retrieve the active context
-  active: (): DecoContext => {
+  active: <T extends AppManifest = AppManifest>(): DecoContext<T> => {
     // Retrieve the context associated with the async ID
     return asyncLocalStorage.getStore() ?? defaultContext;
   },

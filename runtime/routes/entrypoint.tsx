@@ -1,12 +1,17 @@
-import type { HandlerContext, PageProps } from "$fresh/server.ts";
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
-import type { ConnInfo } from "std/http/server.ts";
-import type { Handler } from "../../../blocks/handler.ts";
-import type { Page } from "../../../blocks/page.tsx";
-import type { PageContext } from "../../../engine/block.ts";
-import type { DecoSiteState, DecoState, Flag } from "../../../types.ts";
-import { forceHttps, setCSPHeaders } from "../../../utils/http.ts";
+import type { ConnInfo } from "std/http/mod.ts";
+import type { Handler } from "../../blocks/handler.ts";
+import type { Page } from "../../blocks/page.tsx";
+import type { PageContext } from "../../engine/block.ts";
+import type { Flag } from "../../types.ts";
+import { forceHttps, setCSPHeaders } from "../../utils/http.ts";
+import {
+  createHandler,
+  type DecoMiddlewareContext,
+  proxyState,
+} from "../middleware.ts";
+import type { PageParams } from "../mod.ts";
 
 export interface RouterContext {
   pagePath: string;
@@ -36,6 +41,10 @@ export const useRouterContext = () => {
   return routerCtxImpl;
 };
 
+export interface PageData {
+  page: Page;
+  routerInfo?: RouterContext;
+}
 export default function Render({
   params,
   url,
@@ -43,7 +52,7 @@ export default function Render({
     page,
     routerInfo,
   },
-}: PageProps<{ page: Page; routerInfo?: RouterContext }>) {
+}: PageParams<PageData>) {
   if (!page) {
     return null;
   }
@@ -57,33 +66,39 @@ export default function Render({
   );
 }
 
-const innerHandler = async (
-  req: Request,
-  ctx: HandlerContext<
-    unknown,
-    DecoState<Handler, DecoSiteState>
-  >,
+export const handler = createHandler(async (
+  ctx,
 ) => {
-  const { state: { $live: handler } } = ctx;
+  const { req: { raw: req }, var: state } = ctx;
+  const handler = (await state?.resolve<Handler>?.(
+    "./routes/[...catchall].tsx",
+    { nullIfDangling: true },
+  )) ?? {};
   if (typeof handler !== "function") {
     return Response.json({ "message": "catchall not configured" }, {
       status: 412, // precondition failed
     });
   }
+  const original = ctx.render.bind(ctx);
+  ctx.render = (args) => {
+    return original({
+      page: {
+        metadata: args?.page?.metadata,
+        Component: Render,
+        props: {
+          params: ctx.req.param(),
+          url: ctx.var.url,
+          data: args,
+        } satisfies PageParams<PageData>,
+      },
+    });
+  };
 
   return setCSPHeaders(
     req,
-    await handler(forceHttps(req), ctx as ConnInfo),
+    await handler(
+      forceHttps(req),
+      proxyState(ctx as DecoMiddlewareContext) as unknown as ConnInfo,
+    ),
   );
-};
-
-export const handler = {
-  POST: innerHandler,
-  PUT: innerHandler,
-  PATCH: innerHandler,
-  OPTIONS: innerHandler,
-  DELETE: innerHandler,
-  // since fresh converts HEAD verbs into GET requests we need to explicitly handle it here
-  HEAD: innerHandler,
-  GET: innerHandler,
-};
+});

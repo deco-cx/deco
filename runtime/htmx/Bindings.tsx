@@ -1,7 +1,10 @@
 import type { Framework } from "../../components/section.tsx";
 import { useSection } from "../../hooks/useSection.ts";
-
-const bindings: Framework = {
+export const Head = () => {
+  return null;
+};
+const bindings = {
+  Head,
   Wrapper: ({ children }) => <>{children}</>,
   ErrorFallback: function ({ isDeploy, debugEnabled, name, error }) {
     return (
@@ -29,6 +32,6 @@ const bindings: Framework = {
       </div>
     );
   },
-};
+} satisfies Framework;
 
 export default bindings;

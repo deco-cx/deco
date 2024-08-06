@@ -1,5 +1,5 @@
 import { context } from "../deco.ts";
-import { DomInspectorActivators, Head, inspectVSCode } from "../deps.ts";
+import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
@@ -172,21 +172,19 @@ const main = () => {
 function LiveControls({ site, page, flags }: Props) {
   return (
     <>
-      <Head>
-        <script
-          type="application/json"
-          id="__DECO_STATE"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({ page, site, flags }),
-          }}
-        />
-        <script
-          type="module"
-          dangerouslySetInnerHTML={{
-            __html: `${domInspectorModule}\n(${main})()`,
-          }}
-        />
-      </Head>
+      <script
+        type="application/json"
+        id="__DECO_STATE"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({ page, site, flags }),
+        }}
+      />
+      <script
+        type="module"
+        dangerouslySetInnerHTML={{
+          __html: `${domInspectorModule}\n(${main})()`,
+        }}
+      />
     </>
   );
 }
