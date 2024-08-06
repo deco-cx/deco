@@ -5,8 +5,7 @@ import postcss, { type AcceptedPlugin } from "npm:postcss@8.4.27";
 import tailwindcss, { type Config } from "npm:tailwindcss@3.4.1";
 import { cyan } from "std/fmt/colors.ts";
 import { walk } from "std/fs/walk.ts";
-import { join } from "std/path/join.ts";
-import { toFileUrl } from "std/path/mod.ts";
+import { join, toFileUrl } from "std/path/mod.ts";
 import {
   ImportMapBuilder,
   type ImportMapResolver,
