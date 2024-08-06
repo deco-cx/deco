@@ -28,7 +28,7 @@ import type {
 } from "./engine/core/resolver.ts";
 import type { PromiseOrValue } from "./engine/core/utils.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
-import type { Deco } from "./runtime/app.ts";
+import type { Deco } from "./runtime/mod.ts";
 import type { InvocationProxy } from "./utils/invoke.types.ts";
 import type { createServerTimings } from "./utils/timings.ts";
 

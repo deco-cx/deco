@@ -1,7 +1,7 @@
 import { FieldResolver } from "../../engine/core/resolver.ts";
 import { badRequest } from "../../engine/errors.ts";
-import type { PageParams } from "../app.ts";
 import { createHandler } from "../middleware.ts";
+import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
 
 interface Options {

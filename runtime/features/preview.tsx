@@ -1,6 +1,6 @@
 import type { Page } from "../../blocks/page.tsx";
 import type { AppManifest } from "../../mod.ts";
-import type { State } from "../app.ts";
+import type { State } from "../mod.ts";
 
 const paramsFromUrl = (
   url: URL,

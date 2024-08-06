@@ -4,7 +4,7 @@ import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
 import { useScriptAsDataURI } from "../../hooks/useScript.ts";
 import type { AppManifest } from "../../mod.ts";
-import type { State } from "../../runtime/app.ts";
+import type { State } from "../mod.ts";
 
 export interface Options {
   resolveChain?: FieldResolver[];

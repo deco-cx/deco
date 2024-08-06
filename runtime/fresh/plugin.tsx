@@ -4,8 +4,8 @@ import type { Plugin, PluginRoute } from "$fresh/server.ts";
 
 import { type AppManifest, Deco, type SiteInfo } from "../../mod.ts";
 
-import type { PageParams } from "../app.ts";
 import type { PageData } from "../deps.ts";
+import type { PageParams } from "../mod.ts";
 
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;

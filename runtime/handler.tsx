@@ -1,8 +1,8 @@
 import type { ComponentChildren, ComponentType } from "preact";
 import type { AppManifest } from "../mod.ts";
 import "../utils/patched_fetch.ts";
-import type { Deco } from "./app.ts";
 import { type ContextRenderer, Hono } from "./deps.ts";
+import type { Deco } from "./mod.ts";
 
 import type { DecoHandler, DecoRouteState } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";

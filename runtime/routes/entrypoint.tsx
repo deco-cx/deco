@@ -6,12 +6,12 @@ import type { Page } from "../../blocks/page.tsx";
 import type { PageContext } from "../../engine/block.ts";
 import type { Flag } from "../../types.ts";
 import { forceHttps, setCSPHeaders } from "../../utils/http.ts";
-import type { PageParams } from "../app.ts";
 import {
   createHandler,
   type DecoMiddlewareContext,
   proxyState,
 } from "../middleware.ts";
+import type { PageParams } from "../mod.ts";
 
 export interface RouterContext {
   pagePath: string;

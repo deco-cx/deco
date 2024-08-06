@@ -9,16 +9,16 @@ import { decodeCookie, setCookie } from "../utils/cookies.ts";
 import { allowCorsFor } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
-import type { Deco, State } from "./app.ts";
 import type {
+  Context as HonoContext,
   ContextRenderer,
   Handler,
-  Context as HonoContext,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
+import type { Deco, State } from "./mod.ts";
 export const DECO_SEGMENT = "deco_segment";
 
 export const proxyState = (

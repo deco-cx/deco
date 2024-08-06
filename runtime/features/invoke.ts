@@ -3,12 +3,12 @@ import type { Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
 import { context } from "../../live.ts";
 import { logger } from "../../mod.ts";
-import type { State } from "../../runtime/app.ts";
 import { payloadForFunc } from "../../utils/invoke.server.ts";
 import type {
   InvokeFunction,
   InvokePayload,
 } from "../../utils/invoke.types.ts";
+import type { State } from "../mod.ts";
 
 export const wrapInvokeErr = (path?: string) => (err: any) => {
   if (!(err instanceof HttpError)) {

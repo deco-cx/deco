@@ -46,9 +46,9 @@ export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
 export { Context } from "./live.ts";
 export { logger } from "./observability/otel/config.ts";
 export { meter } from "./observability/otel/metrics.ts";
-export { Deco } from "./runtime/app.ts";
 export { Head } from "./runtime/htmx/Renderer.tsx";
 export { DECO_SEGMENT } from "./runtime/middleware.ts";
+export { Deco } from "./runtime/mod.ts";
 export {
   usePageContext,
   useRouterContext,
