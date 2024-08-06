@@ -43,6 +43,7 @@ export type State<
 
 export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
   site?: string;
+  namespace?: string;
   manifest?: TAppManifest;
   decofile?: DecofileProvider;
   bindings?: Bindings<TAppManifest>;
@@ -72,10 +73,15 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
         decofile,
         crypto.randomUUID(),
         site,
+        opts?.namespace,
       )
     );
     Context.setDefault(decoContext);
-    return new Deco<TAppManifest>(site, decoContext, opts?.bindings);
+    return new Deco<TAppManifest>(
+      site,
+      decoContext,
+      opts?.bindings,
+    );
   }
 
   meta(opts?: GetMetaOpts) {

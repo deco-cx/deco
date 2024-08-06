@@ -1,9 +1,7 @@
 import "../../utils/patched_fetch.ts";
 
 import type { Plugin, PluginRoute } from "$fresh/server.ts";
-import type { ImportMap } from "../../blocks/app.ts";
 
-import type { DecofileProvider } from "../../engine/decofile/provider.ts";
 import { type AppManifest, Deco, type SiteInfo } from "../../mod.ts";
 
 import type { PageParams } from "../app.ts";
@@ -11,10 +9,7 @@ import type { PageData } from "../deps.ts";
 
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
-  importMap?: ImportMap;
   site?: SiteInfo;
-  useLocalStorageOnly?: boolean;
-  release?: DecofileProvider;
 }
 
 export type Options<TManifest extends AppManifest = AppManifest> =
@@ -31,6 +26,8 @@ export default function decoPlugin(opt: Options): Plugin {
   }
   const handlerPromise = Deco.init({
     manifest: opt.manifest,
+    site: opt?.site?.name,
+    namespace: opt?.site?.namespace,
   }).then((deco) => deco.handler.bind(deco));
 
   const catchAll: PluginRoute = {
