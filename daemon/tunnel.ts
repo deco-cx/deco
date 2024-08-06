@@ -22,15 +22,12 @@ export async function register({ env, site, port }: TunnelRegisterOptions) {
         `/sites/${site}/spaces/dashboard?env=${env}`,
         "https://admin.deco.cx",
       );
-      const preview = new URL(
-        `https://${env}--${site}.deco.site`,
-      );
 
       console.log(
         `\ndeco.cx started environment ${colors.green(env)} for site ${
           colors.brightBlue(site)
         }\n   -> 🌐 ${colors.bold("Preview")}: ${
-          colors.cyan(preview.href)
+          colors.cyan(`https://${domain}`)
         }\n   -> ✏️ ${colors.bold("Admin")}: ${colors.cyan(admin.href)}\n`,
       );
     });
