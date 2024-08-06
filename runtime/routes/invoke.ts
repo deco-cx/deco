@@ -38,11 +38,11 @@ function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
   const contentType = req.headers.get("content-type");
   const contentLength = req.headers.get("content-length");
 
-  if (contentLength === "0" || !contentLength) {
+  if (contentLength === "0") {
     return null;
   }
 
-  if (!contentType) {
+  if (!contentLength || !contentType) {
     return "try-json";
   }
 
