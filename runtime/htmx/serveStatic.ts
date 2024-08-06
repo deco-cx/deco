@@ -2,9 +2,9 @@
 //
 // this implementation was heavily inspired by fresh's https://github.com/denoland/fresh/blob/bd16a65587998482dac8d70bd82e3e210d345563/src/middlewares/static_files.ts
 //
-import { contentType as getContentType } from "jsr:@std/media-types@^1.0.0-rc.1/content-type";
-import { encodeHex } from "std/encoding/hex.ts";
-import { extname } from "std/path/mod.ts";
+import { encodeHex } from "@std/encoding";
+import { contentType as getContentType } from "@std/media-types";
+import { extname } from "@std/path";
 import { context } from "../../deco.ts";
 import type { MiddlewareHandler } from "../deps.ts";
 import { getFileFromCache, initializeFileCache } from "./fileCache.ts";

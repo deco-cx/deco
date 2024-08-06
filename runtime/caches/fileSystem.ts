@@ -1,14 +1,14 @@
+import { existsSync } from "@std/fs";
+import { LRUCache } from "npm:lru-cache@10.2.0";
+import { ValueType } from "../../deps.ts";
 import { logger, tracer } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
-import { ValueType } from "../../deps.ts";
+import { numToUint8Array, uint8ArrayToNum } from "../utils.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
   withCacheNamespace,
 } from "./common.ts";
-import { existsSync } from "std/fs/mod.ts";
-import { LRUCache } from "https://esm.sh/lru-cache@10.2.0";
-import { numToUint8Array, uint8ArrayToNum } from "../utils.ts";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;

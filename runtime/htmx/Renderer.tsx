@@ -2,8 +2,8 @@
 /** @jsxImportSource preact */
 
 import { Head as FreshHead } from "$fresh/runtime.ts";
+import { renderToString } from "npm:preact-render-to-string@6.4.0";
 import { type ComponentChildren, options } from "preact";
-import renderToString from "preact-render-to-string";
 import type { ContextRenderer, PageData } from "../deps.ts";
 import { Head } from "./Bindings.tsx";
 export { Head } from "./Bindings.tsx";

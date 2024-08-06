@@ -136,7 +136,7 @@ const inFuture = (maybeDate: string) => {
 
 const noop = () => "";
 
-let countCache = null as (weakcache.WeakLRUCache | null);
+let countCache = null as (weakcache.WeakLRUCache<any, any> | null);
 
 /**
  * Wraps the loader written by the user by adding support for:
@@ -198,7 +198,7 @@ const wrapLoader = (
 
         if (countCache === null) {
           countCache = new weakcache.WeakLRUCache({
-            cacheSize: LOADER_CACHE_SIZE,
+            cacheSize: +LOADER_CACHE_SIZE,
           });
         }
 
@@ -235,15 +235,15 @@ const wrapLoader = (
           url.searchParams.set("revisionID", revisionID);
         } else {
           if (!resolveChainString && !revisionID) {
-            logger.warning(`Could not get revisionID nor resolveChain`);
+            logger.warn(`Could not get revisionID nor resolveChain`);
           }
           if (!revisionID) {
-            logger.warning(
+            logger.warn(
               `Could not get revisionID for resolveChain ${resolveChainString}`,
             );
           }
           if (!resolveChainString) {
-            logger.warning(
+            logger.warn(
               `Could not get resolveChain for revisionID ${revisionID}`,
             );
           }

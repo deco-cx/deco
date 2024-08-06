@@ -1,9 +1,9 @@
-import expectedHints from "./hints.test.expected.json" assert { type: "json" };
-import releaseJSON from "./hints.test.json" assert { type: "json" };
+import expectedHints from "./hints.test.expected.json" with { type: "json" };
+import releaseJSON from "./hints.test.json" with { type: "json" };
 
+import { assertEquals } from "@std/assert";
 import { genHints, type ResolveHints } from "../../engine/core/hints.ts";
 import type { Resolvable } from "../../engine/core/resolver.ts";
-import { assertEquals } from "std/testing/asserts.ts";
 
 Deno.test("hints", async (t) => {
   const resolvableMap: Record<string, Resolvable> = releaseJSON;

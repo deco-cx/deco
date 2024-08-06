@@ -1,4 +1,3 @@
-import type { ConnInfo } from "std/http/server.ts";
 import { type Workflow, WorkflowContext } from "../../blocks/workflow.ts";
 import { initOnce } from "../../commons/workflows/initialize.ts";
 import {
@@ -73,7 +72,8 @@ export const handler = createHandler(async (
           execution,
         ),
     );
-    return handler(req, ctx as unknown as ConnInfo);
+    // deno-lint-ignore no-explicit-any
+    return handler(req, ctx as any);
   }
   const props: Props = await req.json();
   const resp = await handleProps(

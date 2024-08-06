@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
+import { cyan } from "@std/fmt/colors";
+import { walk } from "@std/fs/walk";
+import { join, toFileUrl } from "@std/path";
 import autoprefixer from "npm:autoprefixer@10.4.14";
 import cssnano from "npm:cssnano@6.0.1";
 import postcss, { type AcceptedPlugin } from "npm:postcss@8.4.27";
 import tailwindcss, { type Config } from "npm:tailwindcss@3.4.1";
-import { cyan } from "std/fmt/colors.ts";
-import { walk } from "std/fs/walk.ts";
-import { join, toFileUrl } from "std/path/mod.ts";
 import {
   ImportMapBuilder,
   type ImportMapResolver,

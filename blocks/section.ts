@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import type { ComponentType } from "preact";
+import type { ComponentType, JSX } from "preact";
 import type { HttpContext } from "../blocks/handler.ts";
 import { type PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
 import {
@@ -9,7 +9,7 @@ import {
 import StubSection, { Empty } from "../components/StubSection.tsx";
 import { alwaysThrow, withSection } from "../components/section.tsx";
 import { Context } from "../deco.ts";
-import type { DeepPartial, JSX } from "../deps.ts";
+import type { DeepPartial } from "../deps.ts";
 import type {
   Block,
   BlockModule,

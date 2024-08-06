@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import type { JSONSchema7 } from "https://esm.sh/v103/@types/json-schema@7.0.11/index.d.ts";
 import type { FunctionComponent } from "preact";
-import type { Program, TsType } from "../deps.ts";
+import type { JSONSchema7, Program, TsType } from "../deps.ts";
 import type { HintNode } from "../engine/core/hints.ts";
 import type { FieldResolver, Resolver } from "../engine/core/resolver.ts";
 import type { PromiseOrValue } from "../engine/core/utils.ts";

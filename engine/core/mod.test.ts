@@ -1,5 +1,5 @@
-import { assertEquals, assertRejects } from "std/testing/asserts.ts";
-import { assertSpyCalls, spy } from "std/testing/mock.ts";
+import { assertEquals, assertRejects } from "@std/assert";
+import { assertSpyCalls, spy } from "@std/testing/mock";
 import { genHints } from "../../engine/core/hints.ts";
 import {
   type BaseContext,

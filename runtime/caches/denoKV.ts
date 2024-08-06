@@ -1,4 +1,3 @@
-/// <reference lib="deno.unstable" />
 /**
  * WebCache API powered by Deno.KV
  *
