@@ -3,7 +3,6 @@ import type {
   ExportNamedDeclaration,
   FunctionDeclaration,
   FunctionExpression,
-  NamedExportSpecifier,
   NamedImportSpecifier,
   ObjectExpression,
   Param,
@@ -45,7 +44,7 @@ import type { ImportMapResolver } from "../importmap/builder.ts";
 import { spannableToJSONSchema } from "./comments.ts";
 import type { ParsedSource } from "./deps.ts";
 import { parsePath } from "./parser.ts";
-import { beautify } from "./utils.ts";
+import { beautify, visit } from "./utils.ts";
 
 export type ReferenceKey = string;
 export interface SchemeableBase {
@@ -279,60 +278,91 @@ export const typeNameToSchemeable = async (
   if (val) {
     return val;
   }
+
   // imports should be considered as a last resort since type name and func names can be equal, causing ambiguity
   let fromImport: (() => Promise<Schemeable>) | undefined;
-  for (const item of program.body) {
-    if (item.type === "ExportNamedDeclaration") {
-      const spec = item.specifiers.find((
-        spec,
-      ) =>
-        spec.type === "ExportSpecifier" &&
-        (spec.exported?.value ?? spec.orig.value) === typeName
-      );
-      if (spec) {
-        const _spec = spec as NamedExportSpecifier;
-        const source = (item as ExportNamedDeclaration).source?.value;
-        if (!source) {
-          return UNKNOWN;
-        }
 
-        const from = ctx.importMapResolver.resolve(source, path);
-        if (!from) {
-          return UNKNOWN;
-        }
-        const newProgram = await parsePath(from);
-        if (!newProgram) {
-          return UNKNOWN;
-        }
+  const result = await visit(program.body, {
+    ExportNamedDeclaration: async (item) => {
+      return await visit(item.specifiers, {
+        ExportSpecifier: async (spec) => {
+          if ((spec.exported?.value ?? spec.orig.value) === typeName) {
+            const source = item.source?.value;
+            if (!source) {
+              return UNKNOWN;
+            }
 
-        return typeNameToSchemeable(
-          _spec.exported?.value ?? _spec.orig.value,
+            const from = ctx.importMapResolver.resolve(source, path);
+            if (!from) {
+              return UNKNOWN;
+            }
+            const newProgram = await parsePath(from);
+            if (!newProgram) {
+              return UNKNOWN;
+            }
+
+            return await typeNameToSchemeable(
+              typeName,
+              {
+                ...ctx,
+                path: from,
+                parsedSource: newProgram,
+              },
+            );
+          }
+        },
+      });
+    },
+    ExportDeclaration: async (item) => {
+      if (
+        item.declaration.type === "TsInterfaceDeclaration" &&
+        item.declaration.id.value === typeName
+      ) {
+        return {
+          jsDocSchema: spannableToJSONSchema(item),
+          ...await tsInterfaceDeclarationToSchemeable(item.declaration, ctx),
+        };
+      }
+      if (
+        item.declaration.type === "TsTypeAliasDeclaration" &&
+        item.declaration.id.value === typeName
+      ) {
+        const _tryGetFromInstantiatedParameters = getFromParametersFunc(
+          item.declaration.typeParams?.parameters ?? [],
+          ctx,
+        );
+        const jsDocSchema = spannableToJSONSchema(item);
+        const value = await tsTypeToSchemeable(
+          item.declaration.typeAnnotation,
           {
             ...ctx,
-            path: from,
-            parsedSource: newProgram,
+            tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
           },
         );
+
+        if ("mergeDeclarations" in jsDocSchema) {
+          delete jsDocSchema["mergeDeclarations"];
+          return {
+            ...value,
+            jsDocSchema: { ...value.jsDocSchema, ...jsDocSchema },
+          };
+        } else {
+          return {
+            type: "alias",
+            jsDocSchema,
+            value,
+            file: path,
+            name: typeName,
+          };
+        }
       }
-    }
-    if (
-      item.type === "ExportDeclaration" &&
-      item.declaration.type === "TsInterfaceDeclaration" &&
-      item.declaration.id.value === typeName
-    ) {
-      return {
-        jsDocSchema: spannableToJSONSchema(item),
-        ...await tsInterfaceDeclarationToSchemeable(item.declaration, ctx),
-      };
-    }
-    if (item.type === "ExportAllDeclaration") {
+    },
+    ExportAllDeclaration: async (item) => {
       const from = ctx.importMapResolver.resolve(item.source.value, path);
       if (!from) {
         return UNKNOWN;
       }
-      const newProgram = await parsePath(
-        from,
-      );
+      const newProgram = await parsePath(from);
       if (!newProgram) {
         return UNKNOWN;
       }
@@ -347,108 +377,82 @@ export const typeNameToSchemeable = async (
       if (type !== UNKNOWN) {
         return type;
       }
-    }
-    if (
-      item.type === "ExportDeclaration" &&
-      item.declaration.type === "TsTypeAliasDeclaration" &&
-      item.declaration.id.value === typeName
-    ) {
-      const _tryGetFromInstantiatedParameters = getFromParametersFunc(
-        item.declaration.typeParams?.parameters ?? [],
-        ctx,
-      );
-      const jsDocSchema = spannableToJSONSchema(item);
-      const value = await tsTypeToSchemeable(item.declaration.typeAnnotation, {
-        ...ctx,
-        tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
-      });
-
-      if ("mergeDeclarations" in jsDocSchema) {
-        delete jsDocSchema["mergeDeclarations"];
+    },
+    TsInterfaceDeclaration: async (item) => {
+      if (item.id.value === typeName) {
         return {
-          ...value,
-          jsDocSchema: { ...value.jsDocSchema, ...jsDocSchema },
+          jsDocSchema: spannableToJSONSchema(item),
+          ...await tsInterfaceDeclarationToSchemeable(item, ctx),
         };
       }
-      return {
-        type: "alias",
-        jsDocSchema,
-        value,
-        file: path,
-        name: typeName,
-      };
-    }
-    if (
-      item.type === "TsInterfaceDeclaration" &&
-      item.id.value === typeName
-    ) {
-      return {
-        jsDocSchema: spannableToJSONSchema(item),
-        ...await tsInterfaceDeclarationToSchemeable(item, ctx),
-      };
-    }
-    if (
-      item.type === "TsTypeAliasDeclaration" &&
-      item.id.value === typeName
-    ) {
-      const _tryGetFromInstantiatedParameters = getFromParametersFunc(
-        item.typeParams?.parameters ?? [],
-        ctx,
-      );
-      return {
-        type: "alias",
-        jsDocSchema: spannableToJSONSchema(item),
-        value: await tsTypeToSchemeable(item.typeAnnotation, {
-          ...ctx,
-          tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
-        }),
-        file: path,
-        name: typeName,
-      };
-    }
-    if (
-      item.type === "ImportDeclaration"
-    ) {
-      const spec = item.specifiers.find((spec) =>
-        spec.local.value === typeName && spec.type !== "ImportDefaultSpecifier"
-      );
-      if (spec) {
-        fromImport = async () => {
-          try {
-            const from = ctx.importMapResolver.resolve(item.source.value, path);
-            if (!from) {
-              return UNKNOWN;
+    },
+    TsTypeAliasDeclaration: async (item) => {
+      if (item.id.value === typeName) {
+        const _tryGetFromInstantiatedParameters = getFromParametersFunc(
+          item.typeParams?.parameters ?? [],
+          ctx,
+        );
+        return {
+          type: "alias",
+          jsDocSchema: spannableToJSONSchema(item),
+          value: await tsTypeToSchemeable(item.typeAnnotation, {
+            ...ctx,
+            tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
+          }),
+          file: path,
+          name: typeName,
+        };
+      }
+    },
+    ImportDeclaration: async (item) => {
+      return await visit(item.specifiers, {
+        ImportSpecifier: async (spec) => {
+          if (
+            spec.local.value === typeName
+          ) {
+            fromImport = async () => {
+              try {
+                const from = ctx.importMapResolver.resolve(
+                  item.source.value,
+                  path,
+                );
+                if (!from) {
+                  return UNKNOWN;
+                }
+                const newProgram = await parsePath(from);
+                if (!newProgram) {
+                  return UNKNOWN;
+                }
+                return typeNameToSchemeable(
+                  (spec as NamedImportSpecifier)?.imported?.value ??
+                    spec.local.value,
+                  {
+                    ...ctx,
+                    path: from,
+                    parsedSource: newProgram,
+                  },
+                );
+              } catch (err) {
+                console.log(
+                  err,
+                  item.source.value,
+                  path,
+                  import.meta.resolve(path),
+                );
+                throw err;
+              }
+            };
+            if (item.typeOnly) {
+              return await fromImport();
             }
-            const newProgram = await parsePath(
-              from,
-            );
-            if (!newProgram) {
-              return UNKNOWN;
-            }
-            return typeNameToSchemeable(
-              (spec as NamedImportSpecifier)?.imported?.value ??
-                spec.local.value,
-              {
-                ...ctx,
-                path: from,
-                parsedSource: newProgram,
-              },
-            );
-          } catch (err) {
-            console.log(
-              err,
-              item.source.value,
-              path,
-              import.meta.resolve(path),
-            );
-            throw err;
           }
-        };
-        if (item.typeOnly) {
-          return fromImport();
-        }
-      }
-    }
+        },
+      });
+    },
+  });
+
+  if (typeof result === "object") {
+    return result;
   }
   return fromImport?.() ?? UNKNOWN;
 };
