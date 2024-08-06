@@ -1,3 +1,4 @@
+import { Head as FreshHead } from "$fresh/runtime.ts";
 import { type ComponentChildren, options } from "preact";
 import renderToString from "preact-render-to-string";
 import type { ContextRenderer, PageData } from "../deps.ts";
@@ -10,7 +11,10 @@ export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
   const original = options.vnode;
   const htmlHead: ComponentChildren[] = [];
   options.vnode = (vnode) => {
-    if (vnode.type === Head) {
+    const vNodeType = vnode.type;
+    const isFunc = typeof vNodeType === "function";
+    // we support current fresh's Head
+    if (isFunc && (vNodeType === Head || (vNodeType === FreshHead))) {
       htmlHead.push(vnode.props.children);
     }
     return original?.(vnode);
