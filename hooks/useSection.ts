@@ -21,9 +21,10 @@ export const useSection = <P>(
 ) => {
   const ctx = useContext(SectionContext);
   const revisionId = ctx?.revision;
+  const vary = ctx?.context.state.vary.build();
   const cbString = [
     revisionId,
-    ctx?.context.state.vary.sort().join(),
+    vary,
     ctx?.deploymentId,
   ].join("|");
   hasher.hash(cbString);

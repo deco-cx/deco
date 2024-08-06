@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
+import { RequestContext } from "../deco.ts";
 import { ValueType, weakcache } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
@@ -174,10 +175,6 @@ const wrapLoader = (
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
       const cacheKeyValue = cacheKey(props, req, ctx);
       try {
-        if (cacheKeyValue) {
-          ctx.vary?.push(loader, cacheKeyValue);
-        }
-
         // Should skip cache
         if (
           mode === "no-store" ||
@@ -185,11 +182,19 @@ const wrapLoader = (
           !isCache(maybeCache) ||
           cacheKeyValue === null
         ) {
+          if (ctx.vary) {
+            ctx.vary.shouldCache = false;
+          }
+
           status = "bypass";
           stats.cache.add(1, { status, loader });
 
+          RequestContext?.signal?.throwIfAborted();
           return await handler(props, req, ctx);
         }
+
+        ctx.vary?.push(loader, cacheKeyValue);
+        RequestContext?.signal?.throwIfAborted();
 
         if (countCache === null) {
           countCache = new weakcache.WeakLRUCache({
@@ -197,11 +202,11 @@ const wrapLoader = (
           });
         }
 
-        const cc = countCache.get(cacheKeyValue) ?? { count: 0 };
+        const cc = countCache.getValue(cacheKeyValue) ?? { count: 0 };
 
         if (cc.count === 0) {
           cc.count = 1;
-          countCache.set(cacheKeyValue, cc);
+          countCache.setValue(cacheKeyValue, cc);
         } else {
           cc.count += 1;
         }

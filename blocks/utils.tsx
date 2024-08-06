@@ -71,11 +71,29 @@ async ($live: TConfig) => {
 export const createBagKey = (description: string): symbol =>
   Symbol(description);
 
+interface Vary {
+  push: (...key: string[]) => void;
+  build: () => string;
+  shouldCache: boolean;
+}
+
+export const vary = (): Vary => {
+  const vary: string[] = [];
+
+  return {
+    push: (...key: string[]) => vary.push(...key),
+    build: () => {
+      return vary.sort().join();
+    },
+    shouldCache: true,
+  };
+};
+
 /**
  * Values that are fulfilled for every request
  */
 export interface RequestState {
-  vary: string[];
+  vary: Vary;
   response: {
     headers: Headers;
     status?: Status;

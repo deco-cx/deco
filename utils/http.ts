@@ -157,7 +157,7 @@ export function setCSPHeaders(
     "127.0.0.1:* localhost:* http://localhost:* http://127.0.0.1:*";
   response.headers.set(
     "Content-Security-Policy",
-    `frame-ancestors 'self' ${landingPageDomain} ${localhost} ${
+    `frame-ancestors 'self' ${landingPageDomain.join(" ")} ${localhost} ${
       adminDomains.join(" ")
     } ${
       referer && isOnAdmin

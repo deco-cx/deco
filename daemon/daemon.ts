@@ -17,6 +17,7 @@ import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { Mutex } from "../utils/sync.ts";
 import { getVerifiedJWT } from "./auth/checker.ts";
 import { realtimeFor } from "./deps.ts";
+import gitApp from "./git.ts";
 import { cacheStaleMeta } from "./meta/cache.ts";
 import { createDurableFS } from "./realtime/fs.ts";
 import {
@@ -45,7 +46,7 @@ const BYPASS_JWT_VERIFICATION =
   Deno.env.get("DANGEROUSLY_ALLOW_PUBLIC_ACCESS") === "true";
 
 export interface DaemonBaseOptions {
-  build?: Deno.Command;
+  build: Deno.Command | null;
   buildFiles?: string;
   fsApi?: FileSystemApi;
 }
@@ -55,7 +56,7 @@ export interface DaemonIsolateOptions extends DaemonBaseOptions {
 }
 
 export interface DaemonExternalProcessOptions extends DaemonBaseOptions {
-  run: Deno.Command;
+  run: Deno.Command | null;
   port: number;
 }
 
@@ -66,6 +67,11 @@ const isIsolateOptions = (
 ): options is DaemonIsolateOptions => {
   return (options as DaemonExternalProcessOptions)?.run === undefined;
 };
+
+import { Hono } from "./deps.ts";
+
+const daemonApp = new Hono.Hono();
+daemonApp.route("/git", gitApp);
 
 export class Daemon {
   private realtimeFsState: DaemonRealtimeState;
@@ -160,12 +166,84 @@ export class Daemon {
     );
     this.isolate = isIsolateOptions(options)
       ? options?.isolate
-      : options
+      : options?.run
       ? new DenoRun({
         command: options.run,
         port: options.port,
       })
       : undefined;
+
+    // auth
+    daemonApp.all("/.well-known/deco-validate/:token", (c) => {
+      const { token } = c.req.param();
+      const decoValidateEnvVar = Deno.env.get("DECO_VALIDATE_TOKEN");
+      if (decoValidateEnvVar && token === decoValidateEnvVar) {
+        return new Response(decoValidateEnvVar, { status: 200 });
+      }
+      return new Response(null, { status: 403 });
+    });
+    daemonApp.use(async (c, next) => {
+      if (!BYPASS_JWT_VERIFICATION) {
+        const jwt = await getVerifiedJWT(c.req.raw);
+        if (!jwt) {
+          return new Response(null, { status: 401 });
+        }
+        if (DECO_SITE_NAME && !tokenIsValid(DECO_SITE_NAME, jwt)) {
+          return new Response(null, { status: 403 });
+        }
+      }
+      await next();
+    });
+
+    // FS APIs
+    daemonApp.all(DEFAULT_LOGS_ENDPOINT, () => {
+      const logs = this.isolate?.logs?.();
+      if (!logs) {
+        return new Response(null, { status: 404 });
+      }
+      return new Response(
+        new ReadableStream<ServerSentEventMessage>({
+          async pull(controller) {
+            for await (const content of logs) {
+              controller.enqueue({
+                data: encodeURIComponent(JSON.stringify({
+                  ...content,
+                  message: content.message.length > MAX_LENGTH
+                    ? `${content.message.slice(0, MAX_LENGTH)}...`
+                    : content.message,
+                })),
+                id: Date.now(),
+                event: "message",
+              });
+            }
+            controller.close();
+          },
+          cancel() {
+          },
+        }).pipeThrough(new ServerSentEventStream()),
+        {
+          headers: {
+            "Content-Type": "text/event-stream",
+          },
+        },
+      );
+    });
+    daemonApp.use("/volumes/*", async (_c, next) => {
+      await this.realtimeFsState.wait();
+      await next();
+    });
+    daemonApp.all(COMMIT_DEFAULT_ENDPOINT, async (c) => {
+      const { commitSha } = await c.req.json<{ commitSha: string }>();
+      if (!commitSha) {
+        return new Response(
+          JSON.stringify({ message: "commit sha is missing" }),
+          { status: 400 },
+        );
+      }
+      await this.realtimeFsState.persistNext(commitSha);
+      return new Response(null, { status: 204 });
+    });
+    daemonApp.all("/volumes/*", (c) => this.realtimeFs.fetch(c.req.raw));
   }
 
   errAs500(err: unknown) {
@@ -189,90 +267,19 @@ export class Daemon {
   }
   public async fetch(req: Request, maybeIsolate?: Isolate): Promise<Response> {
     const isolate = maybeIsolate ?? this.isolate;
-    if (isolate === undefined) {
-      return this.errAs500(
-        "isolate is not defined neither inline or via params",
-      );
-    }
     const url = new URL(req.url);
     const isDaemonAPI = (req.headers.get(DAEMON_API_SPECIFIER) ??
       req.headers.get(HYPERVISOR_API_SPECIFIER) ??
       url.searchParams.get(DAEMON_API_SPECIFIER)) === "true";
+
     if (isDaemonAPI) {
-      const pathname = url.pathname;
-      if (pathname.startsWith("/.well-known/deco-validate/")) {
-        const token = pathname.split("/").pop();
-        const decoValidateEnvVar = Deno.env.get("DECO_VALIDATE_TOKEN");
-        if (decoValidateEnvVar && token === decoValidateEnvVar) {
-          return new Response(decoValidateEnvVar, { status: 200 });
-        }
-        return new Response(null, { status: 403 });
-      }
-      if (!BYPASS_JWT_VERIFICATION) {
-        const jwt = await getVerifiedJWT(req);
-        if (!jwt) {
-          return new Response(null, { status: 401 });
-        }
-        if (DECO_SITE_NAME && !tokenIsValid(DECO_SITE_NAME, jwt)) {
-          return new Response(null, { status: 403 });
-        }
-      }
+      return daemonApp.fetch(req);
+    }
 
-      if (pathname.startsWith("/volumes")) {
-        if (pathname === DEFAULT_LOGS_ENDPOINT) {
-          const logs = isolate.logs?.();
-          if (!logs) {
-            return new Response(null, { status: 404 });
-          }
-          return new Response(
-            new ReadableStream<ServerSentEventMessage>({
-              async pull(controller) {
-                for await (const content of logs) {
-                  controller.enqueue({
-                    data: encodeURIComponent(JSON.stringify({
-                      ...content,
-                      message: content.message.length > MAX_LENGTH
-                        ? `${content.message.slice(0, MAX_LENGTH)}...`
-                        : content.message,
-                    })),
-                    id: Date.now(),
-                    event: "message",
-                  });
-                }
-                controller.close();
-              },
-              cancel() {
-              },
-            }).pipeThrough(new ServerSentEventStream()),
-            {
-              headers: {
-                "Content-Type": "text/event-stream",
-              },
-            },
-          );
-        }
-        return this.realtimeFsState.wait()
-          .then(async () => {
-            if (pathname === COMMIT_DEFAULT_ENDPOINT) {
-              const { commitSha } = await req.json<{ commitSha: string }>();
-              if (!commitSha) {
-                return new Response(
-                  JSON.stringify({ message: "commit sha is missing" }),
-                  { status: 400 },
-                );
-              }
-              await this.realtimeFsState.persistNext(commitSha);
-              return new Response(null, { status: 204 });
-            }
-
-            return await this.realtimeFs.fetch(req);
-          })
-          .catch((err) => {
-            console.error("error when fetching realtimeFs", url.pathname, err);
-
-            return new Response(null, { status: 500 });
-          });
-      }
+    if (isolate === undefined) {
+      return this.errAs500(
+        "isolate is not defined neither inline or via params",
+      );
     }
 
     if (isolate.isRunning?.() === false) {

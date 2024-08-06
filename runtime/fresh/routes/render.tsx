@@ -1,5 +1,6 @@
 import type { HandlerContext } from "$fresh/server.ts";
 import type { PartialProps } from "$fresh/src/runtime/Partial.tsx";
+import type { RequestState } from "../../../blocks/utils.tsx";
 import { bindings, getSectionID } from "../../../components/section.tsx";
 import {
   FieldResolver,
@@ -74,7 +75,10 @@ const fromRequest = (req: Request): Options => {
 
 export const handler = async (
   req: Request,
-  ctx: HandlerContext<unknown, DecoState<unknown, DecoSiteState>>,
+  ctx: HandlerContext<
+    unknown,
+    DecoState<unknown, DecoSiteState & RequestState>
+  >,
 ) => {
   const {
     href,
@@ -171,11 +175,7 @@ export const handler = async (
     }
   }
 
-  const response = await ctx.state.resolve(
-    { page, __resolveType: "render" },
-    { propsAreResolved: true },
-    original,
-  ) as unknown as Response;
+  const response = await ctx.render({ page });
 
   const etag = (ctx.url || new URL(req.url)).searchParams.get("__cb");
 
@@ -184,7 +184,7 @@ export const handler = async (
     return new Response(null, { status: 304, headers: { etag } });
   }
 
-  if (shouldCache && etag) {
+  if (shouldCache && etag && ctx?.state?.vary?.shouldCache) {
     response.headers.set("etag", etag);
 
     // Stale cache on CDN, but make the browser fetch every single time.
@@ -192,6 +192,11 @@ export const handler = async (
     response.headers.set(
       "cache-control",
       "public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400",
+    );
+  } else {
+    response.headers.set(
+      "cache-control",
+      "public, max-age=0, must-revalidate",
     );
   }
 
