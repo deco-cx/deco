@@ -379,6 +379,9 @@ export const typeNameToSchemeable = async (
       }
     },
     TsInterfaceDeclaration: async (item) => {
+      if (item.id.value !== typeName) {
+        return;
+      }
       return {
         jsDocSchema: spannableToJSONSchema(item),
         ...await tsInterfaceDeclarationToSchemeable(item, ctx),
