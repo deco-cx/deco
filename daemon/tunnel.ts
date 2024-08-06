@@ -27,7 +27,7 @@ export async function register({ env, site, port }: TunnelRegisterOptions) {
       );
 
       console.log(
-        `\n🐁 deco.cx started environment ${colors.green(env)} for site ${
+        `\ndeco.cx started environment ${colors.green(env)} for site ${
           colors.brightBlue(site)
         }\n   -> 🌐 ${colors.bold("Preview")}: ${
           colors.cyan(preview.href)
