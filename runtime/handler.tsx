@@ -12,7 +12,7 @@ import type { AppManifest } from "../types.ts";
 import "../utils/patched_fetch.ts";
 import { Hono, type PageData } from "./deps.ts";
 import HTMX from "./htmx/Bindings.tsx";
-import type { DecoHandler, DecoRouteState } from "./middleware.ts";
+import type { DecoHandler, DecoRouteState, HonoHandler } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
 import type { Deco } from "./mod.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
@@ -133,6 +133,7 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
         }))
       : renderFn;
     frameworkRenderFn && ctx.setRenderer(
+      // @ts-ignore: context render is not being used since JSR does not support global namespaces
       frameworkRenderFn,
     );
     await next();
@@ -140,7 +141,7 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   hono.use(...middlewareFor(deco));
   for (const { paths, handler } of routes) {
     for (const path of paths) {
-      hono.all(path, handler);
+      hono.all(path, handler as HonoHandler);
     }
   }
   return hono.fetch.bind(hono);

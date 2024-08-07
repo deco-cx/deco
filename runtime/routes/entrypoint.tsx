@@ -82,7 +82,7 @@ export const handler = createHandler(async (
     });
   }
   const original = ctx.render.bind(ctx);
-  ctx.render = (args) => {
+  ctx.render = ((args: PageData) => {
     return original({
       page: {
         metadata: args?.page?.metadata,
@@ -94,7 +94,7 @@ export const handler = createHandler(async (
         } satisfies PageParams<PageData>,
       },
     });
-  };
+  }) as typeof ctx["render"];
 
   return setCSPHeaders(
     req,

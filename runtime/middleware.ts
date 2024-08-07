@@ -53,16 +53,21 @@ export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
     RENDER_FN?: ContextRenderer;
   };
 };
-export type DecoHandler<TManifest extends AppManifest = AppManifest> = Handler<
+
+export type HonoHandler<TManifest extends AppManifest = AppManifest> = Handler<
   DecoRouteState<TManifest>
 >;
+export type DecoHandler<TManifest extends AppManifest = AppManifest> = (
+  c: Parameters<HonoHandler<TManifest>>[0] & { render: ContextRenderer },
+  n: Parameters<HonoHandler<TManifest>>[1],
+) => ReturnType<HonoHandler<TManifest>>;
 
 export type DecoMiddlewareContext<
   TManifest extends AppManifest = AppManifest,
   P extends string = any,
   // deno-lint-ignore ban-types
   I extends Input = {},
-> = HonoContext<DecoRouteState<TManifest>, P, I>;
+> = HonoContext<DecoRouteState<TManifest>, P, I> & { render: ContextRenderer };
 
 export const createHandler = <TManifest extends AppManifest = AppManifest>(
   handler: DecoHandler<TManifest>,
