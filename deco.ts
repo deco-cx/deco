@@ -4,7 +4,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import type { ImportMap } from "./blocks/app.ts";
 import type { ReleaseResolver } from "./engine/core/mod.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
-import type { AppManifest } from "./mod.ts";
+import type { AppManifest } from "./types.ts";
 import { randId } from "./utils/rand.ts";
 
 export interface DecoRuntimeState<

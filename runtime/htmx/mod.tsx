@@ -2,7 +2,8 @@
 /** @jsxImportSource preact */
 
 import type { ComponentChildren, ComponentType } from "preact";
-import { type AppManifest, Context } from "../../mod.ts";
+import { Context } from "../../deco.ts";
+import type { AppManifest } from "../../types.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
 import type { Bindings } from "../handler.tsx";
 import type { DecoRouteState } from "../middleware.ts";

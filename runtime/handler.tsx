@@ -8,7 +8,7 @@ import {
 } from "preact";
 import { useContext } from "preact/hooks";
 import type { Framework } from "../components/section.tsx";
-import type { AppManifest } from "../mod.ts";
+import type { AppManifest } from "../types.ts";
 import "../utils/patched_fetch.ts";
 import { Hono, type PageData } from "./deps.ts";
 import HTMX from "./htmx/Bindings.tsx";

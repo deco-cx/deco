@@ -2,10 +2,10 @@ import "../../utils/patched_fetch.ts";
 
 import type { Plugin, PluginRoute } from "$fresh/server.ts";
 
-import { type AppManifest, Deco, type SiteInfo } from "../../mod.ts";
+import type { AppManifest, SiteInfo } from "../../types.ts";
 
 import type { PageData } from "../deps.ts";
-import type { PageParams } from "../mod.ts";
+import { Deco, type PageParams } from "../mod.ts";
 import framework from "./Bindings.tsx";
 
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {

@@ -3,7 +3,7 @@ import type { InvocationFunc } from "../clients/withManifest.ts";
 import type { ResolveOptions } from "../engine/core/mod.ts";
 import type { BaseContext, ResolveFunc } from "../engine/core/resolver.ts";
 import dfs from "../engine/manifest/defaults.ts";
-import type { AppManifest } from "../mod.ts";
+import type { AppManifest } from "../types.ts";
 import type { InvocationProxy, InvokeFunction } from "./invoke.types.ts";
 
 const sanitizer = (str: string | `#${string}`) =>

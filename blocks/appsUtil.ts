@@ -12,7 +12,7 @@ import {
 } from "../engine/manifest/defaults.ts";
 import type { DanglingRecover } from "../engine/manifest/manifest.ts";
 import { compose, type ResolverMiddleware } from "../engine/middleware.ts";
-import type { AppManifest } from "../mod.ts";
+import type { AppManifest } from "../types.ts";
 import { usePreviewFunc } from "./utils.tsx";
 
 const resolverIsBlock = (blk: Block) => (resolver: string) => {

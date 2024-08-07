@@ -2,8 +2,10 @@
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context } from "../deco.ts";
 import { getCookies, SpanStatusCode } from "../deps.ts";
-import { type AppManifest, HttpError, logger } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
+import { logger } from "../observability/mod.ts";
+import { HttpError } from "../runtime/errors.ts";
+import type { AppManifest } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { decodeCookie, setCookie } from "../utils/cookies.ts";
 import { allowCorsFor } from "../utils/http.ts";

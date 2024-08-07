@@ -12,8 +12,7 @@ import {
   workflowRemoteRunner,
   workflowWebSocketHandler,
 } from "../../deps.ts";
-import type { AppManifest, DecoState } from "../../mod.ts";
-import type { DecoSiteState } from "../../types.ts";
+import type { AppManifest, DecoSiteState, DecoState } from "../../types.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 
 export type Props = HttpRunRequest<

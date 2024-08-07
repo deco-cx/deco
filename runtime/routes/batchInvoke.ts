@@ -1,11 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import {
-  allowCorsFor,
-  context,
-  HttpError,
-  logger,
-  type Resolvable,
-} from "../../mod.ts";
+import { context } from "../../deco.ts";
+import { allowCorsFor, type Resolvable } from "../../mod.ts";
+import { logger } from "../../observability/mod.ts";
 import { isAdminOrLocalhost } from "../../utils/admin.ts";
 import { bodyFromUrl } from "../../utils/http.ts";
 import { payloadForFunc } from "../../utils/invoke.server.ts";
@@ -14,6 +10,7 @@ import type {
   InvokeFunction,
   InvokePayload,
 } from "../../utils/invoke.types.ts";
+import { HttpError } from "../errors.ts";
 import { createHandler } from "../middleware.ts";
 
 export const wrapInvokeErr = (path?: string) => (err: any) => {

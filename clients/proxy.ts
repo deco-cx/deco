@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import type { AppManifest } from "../mod.ts";
+import type { AppManifest } from "../types.ts";
 import type {
   Invoke,
   InvokeAsPayload,
