@@ -43,17 +43,6 @@ async ($live: TConfig) => {
   return await func.default($live);
 };
 
-export const applyConfigSync = <
-  TConfig = any,
-  TResp = any,
-  TFunc extends (c: TConfig) => TResp = any,
->(func: {
-  default: TFunc;
-}) =>
-($live: TConfig) => {
-  return func.default($live);
-};
-
 export const applyConfigFunc = <
   TConfig = any,
   TResp extends (...args: any[]) => any = any,

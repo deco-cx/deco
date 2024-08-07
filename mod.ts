@@ -12,7 +12,7 @@ export type {
   InstanceOf,
   IntrospectParams,
   ResolvableOf,
-  ResolverLike
+  ResolverLike,
 } from "./engine/block.ts";
 export { asResolved, isDeferred } from "./engine/core/resolver.ts";
 export type { Resolvable, Resolved } from "./engine/core/resolver.ts";
@@ -24,4 +24,3 @@ export { Deco } from "./runtime/mod.ts";
 export * from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
-

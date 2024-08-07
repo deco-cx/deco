@@ -1,4 +1,4 @@
-import { applyConfigSync } from "../blocks/utils.tsx";
+// deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 
@@ -7,12 +7,20 @@ export interface Account {}
 
 export type Accounts = InstanceOf<typeof accountBlock, "#/root/accounts">;
 
-// deno-lint-ignore no-explicit-any
 export type AccountFunc<TConfig = any> = (c: TConfig) => Account;
 
 const accountBlock: Block<BlockModule<AccountFunc>> = {
   type: "accounts",
-  adapt: applyConfigSync,
+  adapt: <
+    TConfig = any,
+    TResp = any,
+    TFunc extends (c: TConfig) => TResp = any,
+  >(func: {
+    default: TFunc;
+  }) =>
+  ($live: TConfig) => {
+    return func.default($live);
+  },
   defaultPreview: (account) => {
     return {
       Component: JsonViewer,

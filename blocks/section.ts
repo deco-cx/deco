@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import type { ComponentType, JSX } from "preact";
+import type { AppManifest } from "../blocks/app.ts";
 import type { HttpContext } from "../blocks/handler.ts";
 import { type PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
 import {
@@ -19,7 +20,6 @@ import type {
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
-import type { AppManifest } from "../types.ts";
 
 /**
  * @widget none

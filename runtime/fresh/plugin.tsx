@@ -1,9 +1,8 @@
-import "../../utils/patched_fetch.ts";
-
 import type { AppManifest, SiteInfo } from "../../types.ts";
 
 import type { ComponentType } from "preact";
 import type { PageData } from "../deps.ts";
+import htmxFramework from "../htmx/Bindings.tsx";
 import { Deco, type PageParams } from "../mod.ts";
 import framework from "./Bindings.tsx";
 
@@ -28,6 +27,7 @@ export interface PluginRoute {
 
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
+  htmx?: boolean;
   site?: SiteInfo;
 }
 
@@ -47,7 +47,7 @@ export default function decoPlugin(opt: Options): Plugin {
     manifest: opt.manifest,
     site: opt?.site?.name,
     namespace: opt?.site?.namespace,
-    bindings: { framework },
+    bindings: { framework: opt?.htmx ? htmxFramework : framework },
   }).then((deco) => deco.handler.bind(deco));
 
   const catchAll: PluginRoute = {

@@ -6,7 +6,6 @@ import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
-import { DECO_FOLDER } from "./fsFolder.ts";
 import { newRealtime } from "./realtime.ts";
 import { fromConfigsTable } from "./release.ts";
 
@@ -90,7 +89,7 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
 const DECOFILE_RELEASE_ENV_VAR = "DECO_RELEASE";
 
 // if decofile does not exists but blocks exists so it should be lazy
-const BLOCKS_FOLDER = join(Deno.cwd(), DECO_FOLDER, "blocks");
+const BLOCKS_FOLDER = join(Deno.cwd(), ".deco", "blocks");
 const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
   isDirectory: true,
   isReadable: true,

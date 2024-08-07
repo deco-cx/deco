@@ -1,5 +1,6 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
+import "../utils/patched_fetch.ts";
 
 import {
   type ComponentChildren,
@@ -11,7 +12,7 @@ import type { Framework } from "../components/section.tsx";
 import type { AppManifest } from "../types.ts";
 import "../utils/patched_fetch.ts";
 import { Hono, type PageData } from "./deps.ts";
-import HTMX from "./htmx/Bindings.tsx";
+import { HTMX } from "./htmx/mod.tsx";
 import type { DecoHandler, DecoRouteState, HonoHandler } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
 import type { Deco } from "./mod.ts";
@@ -94,12 +95,12 @@ const routes: Array<
   },
 ];
 
-export const FrameworkContext = createContext<Framework>(
-  HTMX,
+export const FrameworkContext = createContext<Framework | undefined>(
+  undefined,
 );
 
 export const useFramework = () => {
-  return useContext(FrameworkContext);
+  return useContext(FrameworkContext)!;
 };
 
 export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
@@ -122,7 +123,7 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
           page: {
             Component: (props) => {
               return (
-                <FrameworkContext.Provider value={framework}>
+                <FrameworkContext.Provider value={framework ?? HTMX}>
                   <data.page.Component {...props} />
                 </FrameworkContext.Provider>
               );
