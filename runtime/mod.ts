@@ -141,14 +141,17 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   }
 
   async prepareState<TConfig = any>(
-    context: { req: { raw: Request; param: () => Record<string, string> } },
+    context: {
+      req: { raw: Request; param: () => Record<string, string> };
+      base?: unknown;
+    },
     { enabled, correlationId }: {
       enabled: boolean;
       correlationId?: string;
     } = { enabled: false },
   ): Promise<State<TAppManifest, TConfig>> {
     const req = context.req.raw;
-    const state = {} as State<TAppManifest, TConfig>;
+    const state = (context.base ?? {}) as State<TAppManifest, TConfig>;
     state.deco = this;
     const t = createServerTimings();
     if (enabled) {

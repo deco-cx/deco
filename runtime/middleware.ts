@@ -51,6 +51,7 @@ export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
   Variables: State<TManifest>;
   Bindings: {
     RENDER_FN?: ContextRenderer;
+    GLOBALS?: unknown;
   };
 };
 
@@ -201,6 +202,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         ctx.req.raw,
       );
 
+      //@ts-ignore: ctx.base dont exist in hono ctx
+      ctx.base = ctx.var.global;
       const state = await deco.prepareState(
         ctx,
         {

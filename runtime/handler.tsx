@@ -137,6 +137,10 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
       // @ts-ignore: context render is not being used since JSR does not support global namespaces
       frameworkRenderFn,
     );
+
+    const globals = ctx.env?.GLOBALS;
+    globals && ctx.set("global", globals);
+
     await next();
   });
   hono.use(...middlewareFor(deco));
