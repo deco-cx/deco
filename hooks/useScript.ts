@@ -6,11 +6,10 @@
  * Use at your own risk.
  */
 
-import initSwc, {
-  transform,
-} from "https://cdn.jsdelivr.net/npm/@swc/wasm-web@1.5.25/wasm-web.js";
-import { LRUCache } from "https://esm.sh/lru-cache@10.2.0";
+import initSwc, { transform } from "npm:@swc/wasm-web@1.5.25/wasm-web.js";
+import { LRUCache } from "npm:lru-cache@10.2.0";
 
+// @ts-ignore: initSwc is actually a callable func
 const swcPromise = initSwc(
   "https://cdn.jsdelivr.net/npm/@swc/wasm-web@1.5.25/wasm-web_bg.wasm",
 );
@@ -43,7 +42,7 @@ const minify = async (js: string) => {
     const result = await transform(js, {
       minify: true,
       jsc: {
-        target: "esnext",
+        target: "es2022" as const,
         minify: { mangle: true, format: { comments: false } },
       },
     }, undefined);

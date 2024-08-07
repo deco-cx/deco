@@ -16,7 +16,7 @@
   <a href="https://x.com/deco_frontend">X</a>
 </p>
 <p align="center">
-  <a href="https://jsr.io/@deco/warp" target="_blank"><img alt="jsr" src="https://jsr.io/badges/@deco/warp" /></a>
+  <a href="https://jsr.io/@deco/deco" target="_blank"><img alt="jsr" src="https://jsr.io/badges/@deco/deco" /></a>
   &nbsp;
   <a href="https://deno.land/x/deco" target="_blank"><img alt="Deno Land" src="https://img.shields.io/badge/denoland-deco-green" /></a>
   &nbsp;

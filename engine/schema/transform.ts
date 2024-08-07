@@ -29,7 +29,7 @@ import type {
   TsTypeReference,
   TsUnionType,
   VariableDeclarator,
-} from "https://esm.sh/v130/@swc/wasm@1.3.76";
+} from "npm:@swc/wasm@1.3.76";
 import type {
   ArrayExpression,
   AssignmentPattern,

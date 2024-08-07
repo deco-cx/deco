@@ -1,11 +1,21 @@
-import type { ComponentChildren, ComponentType } from "preact";
-import type { AppManifest } from "../mod.ts";
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
 import "../utils/patched_fetch.ts";
-import { type ContextRenderer, Hono } from "./deps.ts";
-import type { Deco } from "./mod.ts";
 
-import type { DecoHandler, DecoRouteState } from "./middleware.ts";
+import {
+  type ComponentChildren,
+  type ComponentType,
+  createContext,
+} from "preact";
+import { useContext } from "preact/hooks";
+import type { Framework } from "../components/section.tsx";
+import type { AppManifest } from "../types.ts";
+import "../utils/patched_fetch.ts";
+import { Hono, type PageData } from "./deps.ts";
+import { HTMX } from "./htmx/mod.tsx";
+import type { DecoHandler, DecoRouteState, HonoHandler } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
+import type { Deco } from "./mod.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
 import { handler as previewHandler } from "./routes/blockPreview.tsx";
@@ -17,16 +27,18 @@ import { handler as releaseHandler } from "./routes/release.ts";
 import { handler as renderHandler } from "./routes/render.tsx";
 import { styles } from "./routes/styles.css.ts";
 import { handler as workflowHandler } from "./routes/workflow.ts";
-
 export interface RendererOpts {
   Layout?: ComponentType<
     { req: Request; children: ComponentChildren; revision: string }
   >;
-  renderFn?: ContextRenderer;
+  renderFn?: <T extends PageData = PageData>(
+    data: T,
+  ) => Promise<Response> | Response;
 }
 
 export interface Bindings<TAppManifest extends AppManifest = AppManifest> {
   renderer?: RendererOpts;
+  framework: Framework;
   server?: Hono<DecoRouteState<TAppManifest>>;
 }
 
@@ -83,6 +95,14 @@ const routes: Array<
   },
 ];
 
+export const FrameworkContext = createContext<Framework | undefined>(
+  undefined,
+);
+
+export const useFramework = () => {
+  return useContext(FrameworkContext)!;
+};
+
 export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   deco: Deco<TAppManifest>,
 ): (
@@ -93,15 +113,36 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   const hono = bindings?.server ?? new Hono<DecoRouteState<TAppManifest>>();
   hono.use(async (ctx, next) => {
     const renderFn = ctx.env?.RENDER_FN ?? bindings?.renderer?.renderFn;
-    renderFn && ctx.setRenderer(
-      renderFn,
+    const framework = bindings?.framework;
+    const frameworkRenderFn = renderFn && framework
+      ? (<T extends PageData = PageData>(
+        data: T,
+      ) =>
+        renderFn({
+          ...data,
+          page: {
+            Component: (props) => {
+              return (
+                <FrameworkContext.Provider value={framework ?? HTMX}>
+                  <data.page.Component {...props} />
+                </FrameworkContext.Provider>
+              );
+            },
+            props: data.page.props,
+            metadata: data.page.metadata,
+          },
+        }))
+      : renderFn;
+    frameworkRenderFn && ctx.setRenderer(
+      // @ts-ignore: context render is not being used since JSR does not support global namespaces
+      frameworkRenderFn,
     );
     await next();
   });
   hono.use(...middlewareFor(deco));
   for (const { paths, handler } of routes) {
     for (const path of paths) {
-      hono.all(path, handler);
+      hono.all(path, handler as HonoHandler);
     }
   }
   return hono.fetch.bind(hono);

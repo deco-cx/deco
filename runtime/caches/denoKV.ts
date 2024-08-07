@@ -1,4 +1,3 @@
-/// <reference lib="deno.unstable" />
 /**
  * WebCache API powered by Deno.KV
  *
@@ -43,7 +42,7 @@ import {
   compress,
   decompress,
   init as initZstd,
-} from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
+} from "npm:@bokuweb/zstd-wasm@0.0.20";
 import { ValueType } from "../../deps.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import {
@@ -88,6 +87,7 @@ const zstdPromise = initZstd();
 
 export const caches: CacheStorage = {
   delete: async (cacheName: string): Promise<boolean> => {
+    // @ts-ignore: Deno type definitions are missing openKv
     const kv = await Deno.openKv();
 
     for await (
@@ -112,7 +112,7 @@ export const caches: CacheStorage = {
   },
   open: async (cacheName: string): Promise<Cache> => {
     await zstdPromise;
-
+    // @ts-ignore: Deno type definitions are missing openKv
     const kv = await Deno.openKv();
 
     const keyForMetadata = (sha?: string) => {
@@ -233,7 +233,7 @@ export const caches: CacheStorage = {
         if (body.chunks === 0) {
           return new Response(null, metadata);
         }
-
+        // @ts-ignore: Deno type definitions are missing openKv
         const many: Promise<Deno.KvEntryMaybe<Uint8Array>[]>[] = [];
         for (let i = 0; i < body.chunks; i += MAX_CHUNKS_BATCH_SIZE) {
           const batch = [];

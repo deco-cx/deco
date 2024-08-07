@@ -4,11 +4,11 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 
-import { assertEquals, assertObjectMatch, fail } from "std/assert/mod.ts";
-import { dirname, join } from "std/path/mod.ts";
+import { assertEquals, assertObjectMatch, fail } from "@std/assert";
+import { dirname, join } from "@std/path";
 
-import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
-import { assertSpyCall, assertSpyCalls, spy } from "std/testing/mock.ts";
+import { fromFileUrl, toFileUrl } from "@std/path";
+import { assertSpyCall, assertSpyCalls, spy } from "@std/testing/mock";
 import { parsePath } from "../../engine/schema/parser.ts";
 import { schemeableToJSONSchema } from "../../engine/schema/schemeable.ts";
 import {

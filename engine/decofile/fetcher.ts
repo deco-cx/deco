@@ -1,4 +1,4 @@
-import { fromFileUrl } from "std/path/mod.ts";
+import { fromFileUrl } from "@std/path";
 import { context } from "../../live.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";

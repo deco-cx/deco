@@ -21,7 +21,7 @@ const headersStringToObject = (headersString: string | undefined | null) => {
 const msBoundaries = [10, 100, 500, 1000, 5000, 10000, 15000];
 const sBoundaries = [1, 5, 10, 50];
 
-const meterProvider = new MeterProvider({
+const meterProvider: MeterProvider = new MeterProvider({
   resource,
   views: [
     new View({

@@ -1,4 +1,3 @@
-import type { ConnInfo } from "std/http/server.ts";
 import { type Workflow, WorkflowContext } from "../../blocks/workflow.ts";
 import { initOnce } from "../../commons/workflows/initialize.ts";
 import {
@@ -13,8 +12,7 @@ import {
   workflowRemoteRunner,
   workflowWebSocketHandler,
 } from "../../deps.ts";
-import type { AppManifest, DecoState } from "../../mod.ts";
-import type { DecoSiteState } from "../../types.ts";
+import type { AppManifest, DecoSiteState, DecoState } from "../../types.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 
 export type Props = HttpRunRequest<
@@ -73,7 +71,8 @@ export const handler = createHandler(async (
           execution,
         ),
     );
-    return handler(req, ctx as unknown as ConnInfo);
+    // deno-lint-ignore no-explicit-any
+    return handler(req, ctx as any);
   }
   const props: Props = await req.json();
   const resp = await handleProps(

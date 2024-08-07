@@ -1,5 +1,3 @@
-export { parse } from "https://denopkg.com/deco-cx/deno_ast_wasm@0.4.1/mod.ts";
+export { parse } from "jsr:@deco/deno-ast-wasm@0.5.0";
 
-export type {
-  ParsedSource,
-} from "https://denopkg.com/deco-cx/deno_ast_wasm@0.4.1/mod.ts";
+export type { ParsedSource } from "jsr:@deco/deno-ast-wasm@0.5.0";

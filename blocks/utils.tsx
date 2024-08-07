@@ -1,10 +1,13 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 // deno-lint-ignore-file no-explicit-any
-import type { Status } from "std/http/mod.ts";
+import type { StatusCode as Status } from "@std/http/status";
+import type { JSX } from "preact";
 import type { AppManifest, ImportMap } from "../blocks/app.ts";
 import { isInvokeCtx } from "../blocks/loader.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";
-import type { JSX } from "../deps.ts";
 import type {
   Block,
   BlockModule,
@@ -38,17 +41,6 @@ export const applyConfig = <
 }) =>
 async ($live: TConfig) => {
   return await func.default($live);
-};
-
-export const applyConfigSync = <
-  TConfig = any,
-  TResp = any,
-  TFunc extends (c: TConfig) => TResp = any,
->(func: {
-  default: TFunc;
-}) =>
-($live: TConfig) => {
-  return func.default($live);
 };
 
 export const applyConfigFunc = <

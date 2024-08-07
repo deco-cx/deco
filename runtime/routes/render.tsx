@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { FieldResolver } from "../../engine/core/resolver.ts";
 import { badRequest } from "../../engine/errors.ts";
 import { createHandler } from "../middleware.ts";

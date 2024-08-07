@@ -1,5 +1,5 @@
-import { Logger } from "std/log/logger.ts";
-import * as log from "std/log/mod.ts";
+import * as log from "@std/log";
+import { Logger } from "@std/log/logger";
 import { Context, context } from "../../deco.ts";
 import denoJSON from "../../deno.json" with { type: "json" };
 import {
@@ -48,8 +48,10 @@ export const resource = Resource.default().merge(
 );
 
 const loggerName = "deco-logger";
-export const OTEL_IS_ENABLED = Deno.env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
-export const logger = new Logger(loggerName, "INFO", {
+export const OTEL_IS_ENABLED: boolean = Deno.env.has(
+  "OTEL_EXPORTER_OTLP_ENDPOINT",
+);
+export const logger: Logger = new Logger(loggerName, "INFO", {
   handlers: [
     ...OTEL_IS_ENABLED
       ? [
@@ -57,7 +59,7 @@ export const logger = new Logger(loggerName, "INFO", {
           resourceAttributes: resource.attributes,
         }),
       ]
-      : [new log.handlers.ConsoleHandler("INFO")],
+      : [new log.ConsoleHandler("INFO")],
   ],
 });
 
@@ -71,6 +73,7 @@ const trackCfHeaders = [
 
 registerInstrumentations({
   instrumentations: [
+    // @ts-ignore: no idea why this is failing but it should work
     new FetchInstrumentation(
       {
         applyCustomAttributesOnSpan: (
@@ -130,6 +133,7 @@ const provider = new NodeTracerProvider({
 
 if (OTEL_IS_ENABLED) {
   const traceExporter = new OTLPTraceExporter();
+  // @ts-ignore: no idea why this is failing but it should work
   provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
 
   provider.register();

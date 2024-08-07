@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import type { Page } from "../../blocks/page.tsx";
 import { bodyFromUrl } from "../../utils/http.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";

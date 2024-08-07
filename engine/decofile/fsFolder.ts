@@ -1,6 +1,6 @@
-import { debounce } from "std/async/debounce.ts";
-import { walk } from "std/fs/walk.ts";
-import { basename, join, posix, SEP } from "std/path/mod.ts";
+import { debounce } from "@std/async/debounce";
+import { walk } from "@std/fs/walk";
+import { basename, join } from "@std/path";
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
@@ -78,7 +78,7 @@ export const genMetadata = async () => {
     const entries = await Promise.all(
       paths.map(async (path) =>
         [
-          `/${path.replaceAll(SEP, posix.sep)}`,
+          `/${path.replaceAll("\\", "/")}`,
           JSON.parse(await Deno.readTextFile(path)),
         ] as [string, unknown]
       ),

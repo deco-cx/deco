@@ -1,16 +1,10 @@
-/// <reference no-default-lib="true"/>
-/// <reference lib="deno.ns" />
-/// <reference lib="esnext" />
-/// <reference lib="dom" />
-/// <reference lib="dom.iterable" />
-
 import "./utils/patched_fetch.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { ImportMap } from "./blocks/app.ts";
 import type { ReleaseResolver } from "./engine/core/mod.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
-import type { AppManifest } from "./mod.ts";
+import type { AppManifest } from "./types.ts";
 import { randId } from "./utils/rand.ts";
 
 export interface DecoRuntimeState<
@@ -131,4 +125,5 @@ export const RequestContext = {
   },
 };
 
-export const context = Context.active();
+// deno-lint-ignore no-explicit-any
+export const context: DecoContext<any> = Context.active();

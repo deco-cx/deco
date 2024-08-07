@@ -1,12 +1,11 @@
-import * as colors from "std/fmt/colors.ts";
-import { exists } from "std/fs/mod.ts";
-import { join } from "std/path/mod.ts";
+import * as colors from "@std/fmt/colors";
+import { exists } from "@std/fs";
+import { join } from "@std/path";
 import type { Resolvable } from "../core/resolver.ts";
 import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
-import { DECO_FOLDER } from "./fsFolder.ts";
 import { newRealtime } from "./realtime.ts";
 import { fromConfigsTable } from "./release.ts";
 
@@ -90,7 +89,7 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
 const DECOFILE_RELEASE_ENV_VAR = "DECO_RELEASE";
 
 // if decofile does not exists but blocks exists so it should be lazy
-const BLOCKS_FOLDER = join(Deno.cwd(), DECO_FOLDER, "blocks");
+const BLOCKS_FOLDER = join(Deno.cwd(), ".deco", "blocks");
 const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
   isDirectory: true,
   isReadable: true,

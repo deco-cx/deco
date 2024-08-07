@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 export interface StubSectionProps {
   component: string;
 }

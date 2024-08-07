@@ -1,6 +1,8 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
-import type { ConnInfo } from "std/http/mod.ts";
 import type { Handler } from "../../blocks/handler.ts";
 import type { Page } from "../../blocks/page.tsx";
 import type { PageContext } from "../../engine/block.ts";
@@ -80,7 +82,7 @@ export const handler = createHandler(async (
     });
   }
   const original = ctx.render.bind(ctx);
-  ctx.render = (args) => {
+  ctx.render = ((args: PageData) => {
     return original({
       page: {
         metadata: args?.page?.metadata,
@@ -92,13 +94,15 @@ export const handler = createHandler(async (
         } satisfies PageParams<PageData>,
       },
     });
-  };
+  }) as typeof ctx["render"];
 
   return setCSPHeaders(
     req,
     await handler(
       forceHttps(req),
-      proxyState(ctx as DecoMiddlewareContext) as unknown as ConnInfo,
+      proxyState(
+        ctx as DecoMiddlewareContext,
+      ) as unknown as Deno.ServeHandlerInfo,
     ),
   );
 });

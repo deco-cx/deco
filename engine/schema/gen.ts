@@ -1,4 +1,4 @@
-import { toFileUrl } from "std/path/mod.ts";
+import { toFileUrl } from "@std/path";
 import type { AppManifest, ImportMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";

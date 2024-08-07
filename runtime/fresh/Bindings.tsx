@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { Head, Partial } from "$fresh/runtime.ts";
 import type { Framework } from "../../components/section.tsx";
 import { usePartialSection } from "../../hooks/usePartialSection.ts";
@@ -42,6 +45,7 @@ const dataURI = (fn: typeof script, id: string) =>
   );
 
 const bindings: Framework = {
+  name: "fresh",
   Head,
   Wrapper: ({ id, partialMode, children }) => (
     <Partial name={id} mode={partialMode}>{children}</Partial>

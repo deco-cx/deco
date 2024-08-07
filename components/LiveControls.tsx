@@ -1,5 +1,8 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { context } from "../deco.ts";
-import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
+import { DomInspector, DomInspectorActivators } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
@@ -9,21 +12,19 @@ interface Page {
   pathTemplate?: string;
 }
 
-declare global {
-  interface Window {
-    LIVE: {
-      page: Page;
-      site: Site;
-      flags?: Flag[];
-      play?: boolean;
-    };
-  }
-}
-
 interface Props {
   site: Site;
   page?: Page;
   flags?: Flag[];
+}
+
+interface DecoWindow {
+  LIVE: {
+    page: Page;
+    site: Site;
+    flags?: Flag[];
+    play?: boolean;
+  };
 }
 
 type LiveEvent = {
@@ -59,13 +60,15 @@ const DomInspectorActivators = {
     matchEvent: (event) => event.code === "Backquote",
   },
 };
-${inspectVSCode.DomInspector.toString()}`
+${DomInspector.toString()}`
   : "";
 
 const main = () => {
+  const WINDOW =
+    (globalThis as unknown as { window: Window & DecoWindow }).window;
   const onKeydown = (event: KeyboardEvent) => {
     // in case loaded in iframe, avoid redirecting to editor while in editor
-    if (globalThis.window !== globalThis.window.parent) {
+    if (WINDOW !== WINDOW.parent) {
       return;
     }
 
@@ -86,7 +89,7 @@ const main = () => {
       event.stopPropagation();
 
       const pathname =
-        `/choose-editor?site=${globalThis.window.LIVE.site.name}&domain=${globalThis.window.location.origin}&pageId=${globalThis.window.LIVE.page.id}`;
+        `/choose-editor?site=${WINDOW.LIVE.site.name}&domain=${WINDOW.location.origin}&pageId=${WINDOW.LIVE.page.id}`;
 
       const href = new URL(
         pathname,
@@ -96,14 +99,14 @@ const main = () => {
       href.searchParams.set(
         "path",
         encodeURIComponent(
-          `${globalThis.window.location.pathname}${globalThis.window.location.search}`,
+          `${WINDOW.location.pathname}${WINDOW.location.search}`,
         ),
       );
       href.searchParams.set(
         "pathTemplate",
-        encodeURIComponent(globalThis.window.LIVE.page.pathTemplate || "/*"),
+        encodeURIComponent(WINDOW.LIVE.page.pathTemplate || "/*"),
       );
-      globalThis.window.location.href = `${href}`;
+      WINDOW.location.href = `${href}`;
     }
   };
 
@@ -129,10 +132,10 @@ const main = () => {
       case "DOMInspector": {
         const action = data.args;
 
-        if (action === "activate" && !inspector.isActive()) {
-          inspector.activate();
-        } else if (action === "deactivate" && inspector.isActive()) {
-          inspector.deactivate();
+        if (action === "activate" && !inspector?.isActive()) {
+          inspector?.activate();
+        } else if (action === "deactivate" && inspector?.isActive()) {
+          inspector?.deactivate();
         }
 
         return;
@@ -144,19 +147,20 @@ const main = () => {
   };
 
   //@ts-ignore: "DomInspector not available"
-  const inspector = typeof DomInspector !== "undefined" &&
+  const inspector = typeof DomInspector !== "undefined"
     //@ts-ignore: "DomInspector not available"
-    new DomInspector(document.body, {
+    ? new DomInspector(document.body, {
       outline: "1px dashed #2fd080",
       backgroundColor: "rgba(47, 208, 128, 0.33)",
       backgroundBlendMode: "multiply",
       activator: DomInspectorActivators.Backquote,
       path: "/live/inspect",
-    });
+    })
+    : undefined;
 
   /** Setup global variables */
-  globalThis.window.LIVE = {
-    ...globalThis.window.LIVE,
+  WINDOW.LIVE = {
+    ...WINDOW.LIVE,
     ...JSON.parse(document.getElementById("__DECO_STATE")!.textContent || ""),
   };
 

@@ -41,6 +41,7 @@ const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   // },
   KV: {
     implementation: cachesKV,
+    // @ts-ignore: Deno type definitions are missing openKv
     isAvailable: typeof Deno.openKv === "function",
   },
   CACHE_API: {

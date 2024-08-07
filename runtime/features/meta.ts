@@ -1,4 +1,4 @@
-import { parse } from "std/semver/mod.ts";
+import { parse } from "@std/semver";
 import { Context, type DecoContext } from "../../deco.ts";
 import denoJSON from "../../deno.json" with { type: "json" };
 import { singleFlight } from "../../engine/core/utils.ts";

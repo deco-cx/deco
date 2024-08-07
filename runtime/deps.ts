@@ -3,7 +3,6 @@ import type { Page } from "../blocks/page.tsx";
 export { Hono } from "jsr:@hono/hono@^4.5.3";
 export type {
   Context,
-  ContextRenderer,
   Handler,
   Input,
   MiddlewareHandler,
@@ -15,10 +14,19 @@ export interface PageData {
   page: Page;
 }
 
-declare module "jsr:@hono/hono@^4.5.3" {
-  interface ContextRenderer {
-    <T extends PageData = PageData>(
-      data: T,
-    ): Promise<Response> | Response;
-  }
+// JSR does not support global declares which is the hono way for overriding ContextRenderer function
+// https://hono.dev/docs/api/context#render-setrenderer
+// sadly we need to ignore some typescript errors here
+// declare module "jsr:@hono/hono@^4.5.3" {
+//   interface ContextRenderer {
+//     <T extends PageData = PageData>(
+//       data: T,
+//     ): Promise<Response> | Response;
+//   }
+// }
+
+export interface ContextRenderer {
+  <T extends PageData = PageData>(
+    data: T,
+  ): Promise<Response> | Response;
 }

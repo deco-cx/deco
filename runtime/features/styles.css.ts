@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
+import { cyan } from "@std/fmt/colors";
+import { walk } from "@std/fs/walk";
+import { join, toFileUrl } from "@std/path";
 import autoprefixer from "npm:autoprefixer@10.4.14";
 import cssnano from "npm:cssnano@6.0.1";
 import postcss, { type AcceptedPlugin } from "npm:postcss@8.4.27";
 import tailwindcss, { type Config } from "npm:tailwindcss@3.4.1";
-import { cyan } from "std/fmt/colors.ts";
-import { walk } from "std/fs/walk.ts";
-import { join, toFileUrl } from "std/path/mod.ts";
 import {
   ImportMapBuilder,
   type ImportMapResolver,
@@ -222,7 +222,7 @@ const bundle = async (
 
 const TAILWIND_FILE = "tailwind.css";
 
-const TO = join(Deno.cwd(), "static", TAILWIND_FILE);
+const TO: string = join(Deno.cwd(), "static", TAILWIND_FILE);
 const _isDev = Deno.env.get("DECO_PREVIEW") ||
   !Deno.env.has("DENO_DEPLOYMENT_ID");
 // FIXME @author Marcos V. Candeia since we don't have a build step on HTMX sites so mode should always defaults to dev.

@@ -1,5 +1,5 @@
-import { join } from "std/path/mod.ts";
-import { readAll } from "std/streams/mod.ts";
+import { readAll } from "@std/io/read-all";
+import { join } from "@std/path";
 
 const fileCache: Map<string, { etag: string; data: Uint8Array; size: number }> =
   new Map();

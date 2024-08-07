@@ -4,10 +4,7 @@ export interface StreamProps {
 }
 
 export { isStreamProps } from "../clients/withManifest.ts";
-import {
-  type ServerSentEventMessage,
-  ServerSentEventStream,
-} from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
+import { type ServerSentEventMessage, ServerSentEventStream } from "@std/http";
 
 export const isEventStreamResponse = (
   invokeResponse: unknown | AsyncIterableIterator<unknown>,

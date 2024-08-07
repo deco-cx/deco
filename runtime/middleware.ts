@@ -2,17 +2,19 @@
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context } from "../deco.ts";
 import { getCookies, SpanStatusCode } from "../deps.ts";
-import { type AppManifest, HttpError, logger } from "../mod.ts";
 import { startObserve } from "../observability/http.ts";
+import { logger } from "../observability/mod.ts";
+import { HttpError } from "../runtime/errors.ts";
+import type { AppManifest } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
 import { decodeCookie, setCookie } from "../utils/cookies.ts";
 import { allowCorsFor } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
 import type {
+  Context as HonoContext,
   ContextRenderer,
   Handler,
-  Context as HonoContext,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
@@ -51,16 +53,21 @@ export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
     RENDER_FN?: ContextRenderer;
   };
 };
-export type DecoHandler<TManifest extends AppManifest = AppManifest> = Handler<
+
+export type HonoHandler<TManifest extends AppManifest = AppManifest> = Handler<
   DecoRouteState<TManifest>
 >;
+export type DecoHandler<TManifest extends AppManifest = AppManifest> = (
+  c: Parameters<HonoHandler<TManifest>>[0] & { render: ContextRenderer },
+  n: Parameters<HonoHandler<TManifest>>[1],
+) => ReturnType<HonoHandler<TManifest>>;
 
 export type DecoMiddlewareContext<
   TManifest extends AppManifest = AppManifest,
   P extends string = any,
   // deno-lint-ignore ban-types
   I extends Input = {},
-> = HonoContext<DecoRouteState<TManifest>, P, I>;
+> = HonoContext<DecoRouteState<TManifest>, P, I> & { render: ContextRenderer };
 
 export const createHandler = <TManifest extends AppManifest = AppManifest>(
   handler: DecoHandler<TManifest>,

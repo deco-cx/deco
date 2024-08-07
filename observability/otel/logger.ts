@@ -1,8 +1,8 @@
 // Derived from https://github.com/denoland/deno_std/blob/main/log/handlers.ts
-import * as log from "std/log/mod.ts";
+import * as log from "@std/log";
 
-import { type LevelName, LogLevels } from "std/log/levels.ts";
-import type { LogRecord } from "std/log/logger.ts";
+import { type LevelName, LogLevels } from "@std/log/levels";
+import type { LogRecord } from "@std/log/logger";
 
 import {
   type Attributes,
@@ -54,7 +54,7 @@ const OTEL_SEVERITY_NAME_MAP = {
   24: "FATAL4",
 };
 
-interface HandlerOptions extends log.HandlerOptions {
+interface HandlerOptions extends log.BaseHandlerOptions {
   exporterProtocol?: "http" | "console";
   httpExporterOptions?: OTLPExporterNodeConfigBase;
   processorConfig?: BufferConfig;
@@ -62,7 +62,7 @@ interface HandlerOptions extends log.HandlerOptions {
   detectResources?: boolean;
 }
 
-export class OpenTelemetryHandler extends log.handlers.BaseHandler {
+export class OpenTelemetryHandler extends log.BaseHandler {
   protected _logger: Logger | undefined;
   protected _processor: BatchLogRecordProcessor | undefined;
 
@@ -89,6 +89,7 @@ export class OpenTelemetryHandler extends log.handlers.BaseHandler {
       : new OTLPLogExporter(options.httpExporterOptions);
 
     const processor = new BatchLogRecordProcessor(
+      // @ts-ignore: no idea why this is failing but it should work
       exporter,
       options.processorConfig,
     );
@@ -115,7 +116,7 @@ export class OpenTelemetryHandler extends log.handlers.BaseHandler {
         return SeverityNumber.DEBUG;
       case LogLevels.INFO:
         return SeverityNumber.INFO;
-      case LogLevels.WARNING:
+      case LogLevels.WARN:
         return SeverityNumber.WARN;
       case LogLevels.ERROR:
         return SeverityNumber.ERROR;
