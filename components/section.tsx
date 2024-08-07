@@ -16,18 +16,15 @@ import type { ComponentFunc } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
 import { logger } from "../observability/otel/config.ts";
-import FreshBindings from "../runtime/fresh/Bindings.tsx";
-import HTMXBindings from "../runtime/htmx/Bindings.tsx";
+import { useFramework } from "../runtime/handler.tsx";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
   device: Device;
-  framework: "fresh" | "htmx";
   deploymentId?: string;
   // deno-lint-ignore no-explicit-any
   FallbackWrapper: ComponentType<any>;
-  bindings: Framework;
 }
 
 export const SectionContext = createContext<SectionContext | undefined>(
@@ -102,6 +99,7 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 }
 
 export interface Framework {
+  name: string;
   Head?: (headProps: { children: ComponentChildren }) => null;
   Wrapper: ComponentType<
     { id: string; partialMode?: "replace" | "append" | "prepend" }
@@ -117,18 +115,6 @@ export interface Framework {
     { id: string; props?: Record<string, unknown> }
   >;
 }
-
-export const bindings = {
-  fresh: FreshBindings,
-  htmx: HTMXBindings,
-};
-
-export const useFramework = () => {
-  const {
-    bindings: mbindings,
-  } = useContext(SectionContext) ?? { bindings: bindings.fresh };
-  return mbindings;
-};
 
 export const alwaysThrow =
   (err: unknown): ComponentFunc => (_props: unknown) => {
@@ -156,7 +142,6 @@ export const withSection = <TProps, TLoaderProps = TProps>(
   const idPrefix = getSectionID(ctx.resolveChain);
   const debugEnabled = ctx.context?.state?.debugEnabled;
   const renderSaltFromState = ctx.context?.state?.renderSalt;
-  const frameworkFromState = ctx.context?.state?.framework;
   // TODO @gimenes This is a fresh thing only. We need to remove it on other framework bindings
   const partialMode = ctx?.context?.state?.partialMode ||
     "replace";
@@ -170,13 +155,11 @@ export const withSection = <TProps, TLoaderProps = TProps>(
   return {
     props,
     Component: (props: TProps) => {
-      const { isDeploy, request, deploymentId } = Context.active();
-
-      const framework = frameworkFromState ?? request?.framework ?? "fresh";
-      const binding = bindings[framework];
+      const { isDeploy, deploymentId } = Context.active();
 
       // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
       const { renderSalt: parentRenderSalt } = useContext(SectionContext) ?? {};
+      const binding = useFramework();
 
       // if this is the case, so we can use the renderSaltFromState - which means that we are in a partial rendering phase
       const renderSalt = parentRenderSalt === undefined
@@ -191,8 +174,6 @@ export const withSection = <TProps, TLoaderProps = TProps>(
             ...ctx,
             deploymentId,
             renderSalt,
-            framework,
-            bindings: bindings[framework],
             FallbackWrapper: ({ children, ...props }) => (
               <binding.LoadingFallback id={id} {...props}>
                 {children}

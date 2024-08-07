@@ -45,6 +45,7 @@ const dataURI = (fn: typeof script, id: string) =>
   );
 
 const bindings: Framework = {
+  name: "fresh",
   Head,
   Wrapper: ({ id, partialMode, children }) => (
     <Partial name={id} mode={partialMode}>{children}</Partial>

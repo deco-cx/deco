@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import { useFramework } from "../components/section.tsx";
+import { useFramework } from "../runtime/handler.tsx";
 
 export interface Props {
   body: string;

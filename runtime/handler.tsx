@@ -1,15 +1,20 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import type { ComponentChildren, ComponentType } from "preact";
+import {
+  type ComponentChildren,
+  type ComponentType,
+  createContext,
+} from "preact";
+import { useContext } from "preact/hooks";
+import type { Framework } from "../components/section.tsx";
 import type { AppManifest } from "../mod.ts";
 import "../utils/patched_fetch.ts";
 import { Hono, type PageData } from "./deps.ts";
-import type { Deco } from "./mod.ts";
-
-import type { Framework } from "../components/section.tsx";
+import HTMX from "./htmx/Bindings.tsx";
 import type { DecoHandler, DecoRouteState } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
+import type { Deco } from "./mod.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
 import { handler as previewHandler } from "./routes/blockPreview.tsx";
@@ -21,12 +26,11 @@ import { handler as releaseHandler } from "./routes/release.ts";
 import { handler as renderHandler } from "./routes/render.tsx";
 import { styles } from "./routes/styles.css.ts";
 import { handler as workflowHandler } from "./routes/workflow.ts";
-export type PageComponent = Pick<PageData, "page">;
 export interface RendererOpts {
   Layout?: ComponentType<
     { req: Request; children: ComponentChildren; revision: string }
   >;
-  renderFn?: <T extends PageComponent = PageComponent>(
+  renderFn?: <T extends PageData = PageData>(
     data: T,
   ) => Promise<Response> | Response;
 }
@@ -90,6 +94,14 @@ const routes: Array<
   },
 ];
 
+export const FrameworkContext = createContext<Framework>(
+  HTMX,
+);
+
+export const useFramework = () => {
+  return useContext(FrameworkContext);
+};
+
 export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   deco: Deco<TAppManifest>,
 ): (
@@ -100,8 +112,28 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   const hono = bindings?.server ?? new Hono<DecoRouteState<TAppManifest>>();
   hono.use(async (ctx, next) => {
     const renderFn = ctx.env?.RENDER_FN ?? bindings?.renderer?.renderFn;
-    renderFn && ctx.setRenderer(
-      renderFn,
+    const framework = bindings?.framework;
+    const frameworkRenderFn = renderFn && framework
+      ? (<T extends PageData = PageData>(
+        data: T,
+      ) =>
+        renderFn({
+          ...data,
+          page: {
+            Component: (props) => {
+              return (
+                <FrameworkContext.Provider value={framework}>
+                  <data.page.Component {...props} />
+                </FrameworkContext.Provider>
+              );
+            },
+            props: data.page.props,
+            metadata: data.page.metadata,
+          },
+        }))
+      : renderFn;
+    frameworkRenderFn && ctx.setRenderer(
+      frameworkRenderFn,
     );
     await next();
   });

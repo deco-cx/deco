@@ -7,6 +7,7 @@ export const Head = () => {
   return null;
 };
 const bindings = {
+  name: "htmx",
   Head,
   Wrapper: ({ children }) => <>{children}</>,
   ErrorFallback: function ({ isDeploy, debugEnabled, name, error }) {

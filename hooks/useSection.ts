@@ -45,7 +45,6 @@ export const useSection = <P>(
     ["href", href ?? request.url],
     ["pathTemplate", pathTemplate],
     ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
-    ["framework", ctx.framework],
     ["__cb", `${cb}`],
   ]);
 

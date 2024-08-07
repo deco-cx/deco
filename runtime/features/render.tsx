@@ -2,11 +2,12 @@
 /** @jsxImportSource preact */
 
 import type { Page } from "../../blocks/page.tsx";
-import { bindings, getSectionID } from "../../components/section.tsx";
+import { getSectionID } from "../../components/section.tsx";
 import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
 import { useScriptAsDataURI } from "../../hooks/useScript.ts";
 import type { AppManifest } from "../../mod.ts";
+import { useFramework } from "../handler.tsx";
 import type { State } from "../mod.ts";
 
 export interface Options {
@@ -106,13 +107,12 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
       );
       const partialId = `${id}-${renderSalt}`;
 
-      const binding = bindings[framework];
-
       page = {
         props: {
           url: err.resp.headers.get("location"),
         },
         Component: (props: Props) => {
+          const binding = useFramework();
           return (
             <binding.Wrapper id={partialId}>
               <div>
