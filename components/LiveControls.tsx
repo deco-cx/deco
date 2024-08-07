@@ -2,7 +2,7 @@
 /** @jsxImportSource preact */
 
 import { context } from "../deco.ts";
-import { DomInspectorActivators, inspectVSCode } from "../deps.ts";
+import { DomInspector, DomInspectorActivators } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
@@ -62,7 +62,7 @@ const DomInspectorActivators = {
     matchEvent: (event) => event.code === "Backquote",
   },
 };
-${inspectVSCode.DomInspector.toString()}`
+${DomInspector.toString()}`
   : "";
 
 const main = () => {
@@ -132,10 +132,10 @@ const main = () => {
       case "DOMInspector": {
         const action = data.args;
 
-        if (action === "activate" && !inspector.isActive()) {
-          inspector.activate();
-        } else if (action === "deactivate" && inspector.isActive()) {
-          inspector.deactivate();
+        if (action === "activate" && !inspector?.isActive()) {
+          inspector?.activate();
+        } else if (action === "deactivate" && inspector?.isActive()) {
+          inspector?.deactivate();
         }
 
         return;
@@ -147,15 +147,16 @@ const main = () => {
   };
 
   //@ts-ignore: "DomInspector not available"
-  const inspector = typeof DomInspector !== "undefined" &&
+  const inspector = typeof DomInspector !== "undefined"
     //@ts-ignore: "DomInspector not available"
-    new DomInspector(document.body, {
+    ? new DomInspector(document.body, {
       outline: "1px dashed #2fd080",
       backgroundColor: "rgba(47, 208, 128, 0.33)",
       backgroundBlendMode: "multiply",
       activator: DomInspectorActivators.Backquote,
       path: "/live/inspect",
-    });
+    })
+    : undefined;
 
   /** Setup global variables */
   globalThis.window.LIVE = {

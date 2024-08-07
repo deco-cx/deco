@@ -1,16 +1,25 @@
 export { crypto } from "@std/crypto";
 export { decodeHex, encodeHex } from "@std/encoding";
 export { getCookies, getSetCookies, setCookie } from "@std/http";
-export * from "https://denopkg.com/deco-cx/durable@0.5.3/sdk/deno/mod.ts";
-export { DomInspectorActivators } from "jsr:@deco/inspect-vscode@0.2.1";
+export * from "jsr:@deco/durable@0.5.3";
+export {
+  DomInspector,
+  DomInspectorActivators,
+  inspectHandler,
+} from "jsr:@deco/inspect-vscode@0.2.1";
 export * as supabase from "jsr:@supabase/supabase-js@2.45.1";
 export {
+  context,
+  createContextKey,
+  default as opentelemetry,
+  diag,
   DiagConsoleLogger,
   DiagLogLevel,
   ROOT_CONTEXT,
   SpanKind,
-  SpanStatusCode, ValueType, context,
-  createContextKey, diag, default as opentelemetry, trace
+  SpanStatusCode,
+  trace,
+  ValueType,
 } from "npm:@opentelemetry/api@1.6.0";
 export type {
   Attributes,
@@ -23,13 +32,13 @@ export type {
   ObservableResult,
   ObservableUpDownCounter,
   Span,
-  Tracer
+  Tracer,
 } from "npm:@opentelemetry/api@1.6.0";
 export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0.43.0";
 export {
   InstrumentationBase,
   isWrapped as instrumentationIsWrapped,
-  registerInstrumentations
+  registerInstrumentations,
 } from "npm:@opentelemetry/instrumentation@0.43.0";
 export type { InstrumentationConfig } from "npm:@opentelemetry/instrumentation@0.43.0";
 export type * from "npm:@swc/wasm@1.3.76";
@@ -37,7 +46,7 @@ export type {
   JSONSchema7,
   JSONSchema7Definition,
   JSONSchema7Type,
-  JSONSchema7TypeName
+  JSONSchema7TypeName,
 } from "npm:@types/json-schema@7.0.11/index.d.ts";
 export type {
   DeepPartial,
@@ -46,7 +55,7 @@ export type {
   OptionalKeys,
   Overwrite,
   RequiredKeys,
-  UnionToIntersection
+  UnionToIntersection,
 } from "npm:utility-types@3.10.0";
 export * as weakcache from "npm:weak-lru-cache@1.0.0";
 export type Handler = Deno.ServeHandler;
@@ -57,26 +66,26 @@ export {
   BatchSpanProcessor,
   ParentBasedSampler,
   SamplingDecision,
-  TraceIdRatioBasedSampler
+  TraceIdRatioBasedSampler,
 } from "npm:@opentelemetry/sdk-trace-base@1.17.0";
 
 export type {
   Sampler,
-  SamplingResult
+  SamplingResult,
 } from "npm:@opentelemetry/sdk-trace-base@1.17.0";
 export { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node@1.17.0";
 export {
-  SemanticResourceAttributes
+  SemanticResourceAttributes,
 } from "npm:@opentelemetry/semantic-conventions@1.17.0";
 
 export {
   ExplicitBucketHistogramAggregation,
   MeterProvider,
   PeriodicExportingMetricReader,
-  View
+  View,
 } from "npm:@opentelemetry/sdk-metrics@1.17.0";
 
-export { SeverityNumber, logs } from "npm:@opentelemetry/api-logs@0.43.0";
+export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.43.0";
 export type { Logger } from "npm:@opentelemetry/api-logs@0.43.0";
 export { OTLPLogExporter } from "npm:@opentelemetry/exporter-logs-otlp-http@0.43.0";
 export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.43.0";
@@ -86,13 +95,12 @@ export {
   envDetectorSync,
   hostDetectorSync,
   osDetectorSync,
-  processDetector
+  processDetector,
 } from "npm:@opentelemetry/resources@1.17.0";
 export {
   BatchLogRecordProcessor,
   ConsoleLogRecordExporter,
-  LoggerProvider
+  LoggerProvider,
 } from "npm:@opentelemetry/sdk-logs@0.43.0";
 export type { BufferConfig } from "npm:@opentelemetry/sdk-logs@0.43.0";
-export { Murmurhash3 } from "./utils/hasher.ts";
-
+export { MurmurHash3 as Murmurhash3 } from "./utils/hasher.ts";
