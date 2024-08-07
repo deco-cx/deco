@@ -5,8 +5,10 @@
     "./": "./mod.ts",
     "./types": "./types.ts",
     "./blocks": "./blocks/mod.ts",
-    "./runtime/errors": "./runtime/errors.ts",
+    "./errors": "./runtime/errors.ts",
     "./runtime": "./runtime/mod.ts",
+    "./htmx": "./runtime/htmx/mod.ts",
+    "./fresh": "./runtime/fresh/plugin.ts",
     "./o11y": "./observability/mod.ts",
     "./context": "./deco.ts",
     "./workflows": "./commons/workflows/mod.ts"

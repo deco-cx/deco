@@ -1,12 +1,30 @@
 import "../../utils/patched_fetch.ts";
 
-import type { Plugin, PluginRoute } from "$fresh/server.ts";
-
 import type { AppManifest, SiteInfo } from "../../types.ts";
 
+import type { ComponentType } from "preact";
 import type { PageData } from "../deps.ts";
 import { Deco, type PageParams } from "../mod.ts";
 import framework from "./Bindings.tsx";
+
+export interface Plugin {
+  name: string;
+  routes?: PluginRoute[];
+}
+
+export interface PluginRoute {
+  /** A path in the format of a filename path without filetype */
+  path: string;
+
+  component?:
+    // deno-lint-ignore no-explicit-any
+    ComponentType<any>;
+
+  handler?: (
+    req: Request,
+    ctx: { render: (data: unknown) => Promise<Response> | Response },
+  ) => Promise<Response> | Response;
+}
 
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest: TManifest;
