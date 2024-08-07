@@ -1,7 +1,4 @@
-import {
-  resolveImportMap,
-  resolveModuleSpecifier,
-} from "https://deno.land/x/importmap@0.2.1/mod.ts";
+import { resolveImportMap, resolveModuleSpecifier } from "./mod.ts";
 
 export interface ImportMapResolver {
   resolve(specifier: string, context: string): string | null;

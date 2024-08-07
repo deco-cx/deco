@@ -42,7 +42,7 @@ import {
   compress,
   decompress,
   init as initZstd,
-} from "https://denopkg.com/mcandeia/zstd-wasm@0.20.2/deno/zstd.ts";
+} from "npm:@bokuweb/zstd-wasm@0.0.20";
 import { ValueType } from "../../deps.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import {

@@ -1,5 +1,5 @@
 {
-  "name": "@deco-cx/deco",
+  "name": "@deco/runtime",
   "version": "1.83.4",
   "exports": "./mod.ts",
   "tasks": {

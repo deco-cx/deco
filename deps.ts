@@ -1,9 +1,8 @@
 export { crypto } from "@std/crypto";
 export { decodeHex, encodeHex } from "@std/encoding";
 export { getCookies, getSetCookies, setCookie } from "@std/http";
-export { DomInspectorActivators } from "https://deno.land/x/inspect_vscode@0.2.1/inspector.ts";
-export * as inspectVSCode from "https://deno.land/x/inspect_vscode@0.2.1/mod.ts";
 export * from "https://denopkg.com/deco-cx/durable@0.5.3/sdk/deno/mod.ts";
+export { DomInspectorActivators } from "jsr:@deco/inspect-vscode@0.2.1";
 export * as supabase from "jsr:@supabase/supabase-js@2.45.1";
 export {
   DiagConsoleLogger,
@@ -95,5 +94,5 @@ export {
   LoggerProvider
 } from "npm:@opentelemetry/sdk-logs@0.43.0";
 export type { BufferConfig } from "npm:@opentelemetry/sdk-logs@0.43.0";
-export { default as Murmurhash3 } from "npm:murmurhash-js@1.0.0";
+export { Murmurhash3 } from "./utils/hasher.ts";
 
