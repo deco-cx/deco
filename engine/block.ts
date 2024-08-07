@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import type { FunctionComponent } from "preact";
+import type { Framework } from "../components/section.tsx";
 import type { JSONSchema7, Program, TsType } from "../deps.ts";
 import type { HintNode } from "../engine/core/hints.ts";
 import type { FieldResolver, Resolver } from "../engine/core/resolver.ts";
@@ -190,6 +191,7 @@ export interface PageContext {
   metadata?: ComponentMetadata | undefined;
   params: Record<string, string>;
   url: URL;
+  framework?: Framework;
 }
 
 export interface PreactComponent<

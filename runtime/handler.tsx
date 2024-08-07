@@ -4,9 +4,10 @@
 import type { ComponentChildren, ComponentType } from "preact";
 import type { AppManifest } from "../mod.ts";
 import "../utils/patched_fetch.ts";
-import { type ContextRenderer, Hono } from "./deps.ts";
+import { Hono, type PageData } from "./deps.ts";
 import type { Deco } from "./mod.ts";
 
+import type { Framework } from "../components/section.tsx";
 import type { DecoHandler, DecoRouteState } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
@@ -20,16 +21,19 @@ import { handler as releaseHandler } from "./routes/release.ts";
 import { handler as renderHandler } from "./routes/render.tsx";
 import { styles } from "./routes/styles.css.ts";
 import { handler as workflowHandler } from "./routes/workflow.ts";
-
+export type PageComponent = Pick<PageData, "page">;
 export interface RendererOpts {
   Layout?: ComponentType<
     { req: Request; children: ComponentChildren; revision: string }
   >;
-  renderFn?: ContextRenderer;
+  renderFn?: <T extends PageComponent = PageComponent>(
+    data: T,
+  ) => Promise<Response> | Response;
 }
 
 export interface Bindings<TAppManifest extends AppManifest = AppManifest> {
   renderer?: RendererOpts;
+  framework: Framework;
   server?: Hono<DecoRouteState<TAppManifest>>;
 }
 

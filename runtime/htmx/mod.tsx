@@ -6,9 +6,9 @@ import { type AppManifest, Context } from "../../mod.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
 import type { Bindings } from "../handler.tsx";
 import type { DecoRouteState } from "../middleware.ts";
+import framework from "./Bindings.tsx";
 import { renderFn } from "./Renderer.tsx";
 import { staticFiles } from "./serveStatic.ts";
-
 const DEV_SERVER_PATH = `/deco/dev`;
 const DEV_SERVER_SCRIPT = (
   <script
@@ -103,6 +103,7 @@ export const HTMX = <
   const Layout = opts?.Layout ?? (({ children }) => <>{children}</>);
   return {
     server: hono,
+    framework,
     renderer: {
       renderFn: async ({ page }) => {
         const active = Context.active();

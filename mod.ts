@@ -1,4 +1,3 @@
-import stylesPlugin from "./plugins/styles.ts";
 export type {
   AppManifest,
   AppMiddleware,
@@ -46,7 +45,6 @@ export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
 export { Context } from "./live.ts";
 export { logger } from "./observability/otel/config.ts";
 export { meter } from "./observability/otel/metrics.ts";
-export { Head } from "./runtime/htmx/Renderer.tsx";
 export { DECO_SEGMENT } from "./runtime/middleware.ts";
 export { Deco } from "./runtime/mod.ts";
 export {
@@ -80,4 +78,3 @@ export type {
 } from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
-export { stylesPlugin };

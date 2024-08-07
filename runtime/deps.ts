@@ -6,7 +6,7 @@ export type {
   ContextRenderer,
   Handler,
   Input,
-  MiddlewareHandler,
+  MiddlewareHandler
 } from "jsr:@hono/hono@^4.5.3";
 export type { Env } from "jsr:@hono/hono@^4.5.3/types";
 

@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 import { Head, Partial } from "$fresh/runtime.ts";
 import type { Framework } from "../../components/section.tsx";
 import { usePartialSection } from "../../hooks/usePartialSection.ts";
