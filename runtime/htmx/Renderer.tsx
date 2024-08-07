@@ -1,7 +1,6 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import { Head as FreshHead } from "$fresh/runtime.ts";
 import { renderToString } from "npm:preact-render-to-string@6.4.0";
 import { type ComponentChildren, options } from "preact";
 import type { ContextRenderer, PageData } from "../deps.ts";
@@ -17,7 +16,10 @@ export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
     const vNodeType = vnode.type;
     const isFunc = typeof vNodeType === "function";
     // we support current fresh's Head
-    if (isFunc && (vNodeType === Head || (vNodeType === FreshHead))) {
+    if (
+      isFunc &&
+      (vNodeType === Head || (vNodeType.displayName === "HTMLHead"))
+    ) {
       htmlHead.push(vnode.props.children);
     }
     return original?.(vnode);

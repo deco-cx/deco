@@ -2,13 +2,12 @@
   "name": "@deco/deco",
   "version": "2.0.0-alpha.1",
   "exports": {
-    "./": "./mod.ts",
+    ".": "./mod.ts",
     "./types": "./types.ts",
     "./blocks": "./blocks/mod.ts",
     "./errors": "./runtime/errors.ts",
     "./runtime": "./runtime/mod.ts",
     "./htmx": "./runtime/htmx/mod.ts",
-    "./fresh": "./runtime/fresh/plugin.ts",
     "./o11y": "./observability/mod.ts",
     "./context": "./deco.ts",
     "./workflows": "./commons/workflows/mod.ts"
