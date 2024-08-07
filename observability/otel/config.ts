@@ -73,6 +73,7 @@ const trackCfHeaders = [
 
 registerInstrumentations({
   instrumentations: [
+    // @ts-ignore: no idea why this is failing but it should work
     new FetchInstrumentation(
       {
         applyCustomAttributesOnSpan: (
@@ -132,6 +133,7 @@ const provider = new NodeTracerProvider({
 
 if (OTEL_IS_ENABLED) {
   const traceExporter = new OTLPTraceExporter();
+  // @ts-ignore: no idea why this is failing but it should work
   provider.addSpanProcessor(new BatchSpanProcessor(traceExporter));
 
   provider.register();

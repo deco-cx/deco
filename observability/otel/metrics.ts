@@ -1,6 +1,5 @@
 import {
   ExplicitBucketHistogramAggregation,
-  type Meter,
   MeterProvider,
   OTLPMetricExporter,
   PeriodicExportingMetricReader,
@@ -51,4 +50,4 @@ if (OTEL_IS_ENABLED) {
   );
 }
 
-export const meter: Meter = meterProvider.getMeter("deco");
+export const meter = meterProvider.getMeter("deco");

@@ -12,21 +12,19 @@ interface Page {
   pathTemplate?: string;
 }
 
-declare global {
-  interface Window {
-    LIVE: {
-      page: Page;
-      site: Site;
-      flags?: Flag[];
-      play?: boolean;
-    };
-  }
-}
-
 interface Props {
   site: Site;
   page?: Page;
   flags?: Flag[];
+}
+
+interface DecoWindow {
+  LIVE: {
+    page: Page;
+    site: Site;
+    flags?: Flag[];
+    play?: boolean;
+  };
 }
 
 type LiveEvent = {
@@ -66,9 +64,11 @@ ${DomInspector.toString()}`
   : "";
 
 const main = () => {
+  const WINDOW =
+    (globalThis as unknown as { window: Window & DecoWindow }).window;
   const onKeydown = (event: KeyboardEvent) => {
     // in case loaded in iframe, avoid redirecting to editor while in editor
-    if (globalThis.window !== globalThis.window.parent) {
+    if (WINDOW !== WINDOW.parent) {
       return;
     }
 
@@ -89,7 +89,7 @@ const main = () => {
       event.stopPropagation();
 
       const pathname =
-        `/choose-editor?site=${globalThis.window.LIVE.site.name}&domain=${globalThis.window.location.origin}&pageId=${globalThis.window.LIVE.page.id}`;
+        `/choose-editor?site=${WINDOW.LIVE.site.name}&domain=${WINDOW.location.origin}&pageId=${WINDOW.LIVE.page.id}`;
 
       const href = new URL(
         pathname,
@@ -99,14 +99,14 @@ const main = () => {
       href.searchParams.set(
         "path",
         encodeURIComponent(
-          `${globalThis.window.location.pathname}${globalThis.window.location.search}`,
+          `${WINDOW.location.pathname}${WINDOW.location.search}`,
         ),
       );
       href.searchParams.set(
         "pathTemplate",
-        encodeURIComponent(globalThis.window.LIVE.page.pathTemplate || "/*"),
+        encodeURIComponent(WINDOW.LIVE.page.pathTemplate || "/*"),
       );
-      globalThis.window.location.href = `${href}`;
+      WINDOW.location.href = `${href}`;
     }
   };
 
@@ -159,8 +159,8 @@ const main = () => {
     : undefined;
 
   /** Setup global variables */
-  globalThis.window.LIVE = {
-    ...globalThis.window.LIVE,
+  WINDOW.LIVE = {
+    ...WINDOW.LIVE,
     ...JSON.parse(document.getElementById("__DECO_STATE")!.textContent || ""),
   };
 

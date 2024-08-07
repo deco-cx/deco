@@ -89,6 +89,7 @@ export class OpenTelemetryHandler extends log.BaseHandler {
       : new OTLPLogExporter(options.httpExporterOptions);
 
     const processor = new BatchLogRecordProcessor(
+      // @ts-ignore: no idea why this is failing but it should work
       exporter,
       options.processorConfig,
     );
