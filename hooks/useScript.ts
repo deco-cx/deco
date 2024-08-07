@@ -6,10 +6,11 @@
  * Use at your own risk.
  */
 
-import { initSync, transform } from "npm:@swc/wasm-web@1.5.25/wasm-web.js";
+import initSwc, { transform } from "npm:@swc/wasm-web@1.5.25/wasm-web.js";
 import { LRUCache } from "npm:lru-cache@10.2.0";
 
-const swcPromise = initSync(
+// @ts-ignore: initSwc is actually a callable func
+const swcPromise = initSwc(
   "https://cdn.jsdelivr.net/npm/@swc/wasm-web@1.5.25/wasm-web_bg.wasm",
 );
 
