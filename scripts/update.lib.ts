@@ -6,9 +6,9 @@ import {
   lookup,
   REGISTRIES,
 } from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
+import denoJSON from "../deno.json" with { type: "json" };
 import { stringifyForWrite } from "../utils/json.ts";
 import { pkgInfo } from "../utils/pkg.ts";
-
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
   /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
@@ -112,7 +112,13 @@ export async function upgradeDeps(
 
 export async function updatedImportMap(logs = true) {
   const [importMap, importMapPath] = await getImportMap(Deno.cwd());
-  const upgradeFound = await upgradeDeps(importMap, logs);
+  let upgradeFound = await upgradeDeps(importMap, logs);
+  for (const [importKey, importValue] of Object.entries(denoJSON.imports)) {
+    if (!(importKey in importMap.imports)) {
+      importMap.imports[importKey] = importValue;
+      upgradeFound = true;
+    }
+  }
   if (!upgradeFound) {
     return undefined;
   }

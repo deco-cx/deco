@@ -715,7 +715,7 @@ const environments: UpgradeOption = {
     let gitignore = initialGitIgnoreContent;
     if (!gitignore.includes(".metadata/changeset.json")) {
       gitignore =
-        `${gitignore}\n\n# Deco files\n\n_docker_deps.ts\n.metadata/changeset.json`;
+        `${gitignore}\n\n# Deco files\n\n_docker_deps.ts\n.metadata/changeset.json\ndeno.*.tmp`;
     }
     const addNewTasks = async (): Promise<Patch> => {
       const [denoJSONPath, denoJSON] = await getDenoJson();
