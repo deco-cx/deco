@@ -35,7 +35,7 @@ import type { createServerTimings } from "./utils/timings.ts";
 export type { App } from "./blocks/app.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams
+  ErrorBoundaryParams,
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
@@ -160,4 +160,3 @@ export type LoaderFunction<Props = any, Data = any, State = any> = (
 >;
 
 export type LoaderReturnType<O = unknown> = O;
-
