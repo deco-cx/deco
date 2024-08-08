@@ -4,7 +4,10 @@
   "exports": {
     ".": "./mod.ts",
     "./htmx": "./runtime/htmx/mod.ts",
-    "./o11y": "./observability/mod.ts"
+    "./o11y": "./observability/mod.ts",
+    "./utils": "./utils/mod.ts",
+    "./blocks": "./blocks/mod.ts",
+    "./hooks": "./hooks/mod.ts"
   },
   "tasks": {
     "start": "deno task check",

@@ -35,7 +35,7 @@ import type { createServerTimings } from "./utils/timings.ts";
 export type { App } from "./blocks/app.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams,
+  ErrorBoundaryParams
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
@@ -156,3 +156,8 @@ export type LoaderFunction<Props = any, Data = any, State = any> = (
 >;
 
 export type LoaderReturnType<O = unknown> = O;
+
+export type { ResolveOptions } from "./engine/core/mod.ts";
+export type { ResolveFunc } from "./engine/core/resolver.ts";
+export type { RouteContext } from "./engine/manifest/manifest.ts";
+

@@ -11,16 +11,32 @@ export type {
   BlockModule,
   InstanceOf,
   IntrospectParams,
+  PreactComponent,
   ResolvableOf,
-  ResolverLike,
+  ResolverLike
 } from "./engine/block.ts";
-export { asResolved, isDeferred } from "./engine/core/resolver.ts";
-export type { Resolvable, Resolved } from "./engine/core/resolver.ts";
+export {
+  asResolved,
+  isDeferred,
+  isResolvable
+} from "./engine/core/resolver.ts";
+export type {
+  BaseContext,
+  Resolvable,
+  Resolved
+} from "./engine/core/resolver.ts";
 export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
 export { Context } from "./live.ts";
 export * from "./runtime/errors.ts";
+export { useFramework } from "./runtime/handler.tsx";
 export * from "./runtime/mod.ts";
 export { Deco } from "./runtime/mod.ts";
 export * from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
+export { isEventStreamResponse } from "./utils/invoke.ts";
 export type { StreamProps } from "./utils/invoke.ts";
+export type {
+  AvailableActions,
+  AvailableLoaders
+} from "./utils/invoke.types.ts";
+
