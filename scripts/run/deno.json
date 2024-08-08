@@ -1,5 +1,0 @@
-{
-    "name": "@deco/run",
-    "version": "1.84.4",
-    "exports": "./mod.ts"
-}

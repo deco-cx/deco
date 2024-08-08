@@ -1,16 +1,14 @@
 {
   "name": "@deco/deco",
-  "version": "1.84.4",
-  "workspace": [
-    "./scripts/run"
-  ],
+  "version": "1.84.5-alpha.0",
   "exports": {
     ".": "./mod.ts",
     "./htmx": "./runtime/htmx/mod.ts",
     "./o11y": "./observability/mod.ts",
     "./utils": "./utils/mod.ts",
     "./blocks": "./blocks/mod.ts",
-    "./hooks": "./hooks/mod.ts"
+    "./hooks": "./hooks/mod.ts",
+    "./scripts/run": "./daemon/main.ts"
   },
   "tasks": {
     "start": "deno task check",
