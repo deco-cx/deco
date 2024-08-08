@@ -38,6 +38,7 @@
   },
   "imports": {
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
+    "@deco/durable": "jsr:@deco/durable@^0.5.3",
     "@std/assert": "jsr:@std/assert@^1.0.2",
     "@std/async": "jsr:@std/async@^0.224.1",
     "@std/crypto": "jsr:@std/crypto@1.0.0-rc.1",
