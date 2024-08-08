@@ -121,18 +121,18 @@ export class Jsr implements RegistryUrl {
         }
 
         try {
-            const json: VersionsJson = await (await fetch(
-                `https://jsr.io/${name}/meta.json`,
-            ))
-                .json();
+            const json: VersionsJson =
+                await (await fetch(`https://jsr.io/${name}/meta.json`))
+                    .json();
             if (!json.versions) {
                 throw new Error(
                     `versions.json for ${name} has incorrect format`,
                 );
             }
 
-            JSR_CACHE.set(name, json.versions);
-            return json.versions;
+            const versions = Object.keys(json.versions).reverse();
+            JSR_CACHE.set(name, versions);
+            return versions;
         } catch (err) {
             // TODO this could be a permissions error e.g. no --allow-net...
             console.error(`error getting versions for ${name}`);
@@ -141,12 +141,17 @@ export class Jsr implements RegistryUrl {
     }
 
     at(version: string): RegistryUrl {
-        const url = defaultAt(this, version);
+        const [, name, _, files] = this.url.match(this.parseRegex)!;
+        const url = `jsr:${name}@${version}${files}`;
         return new Jsr(url);
     }
 
     version(): string {
-        return defaultVersion(this);
+        const [, _, version] = this.url.match(this.parseRegex)!;
+        if (version === null) {
+            throw Error(`Unable to find version in ${this.url}`);
+        }
+        return version.startsWith("^") ? version.slice(1) : version;
     }
 
     regexp = /jsr:(\@[^/]+\/[^@/]+|[^@/]+)(?:\@([^\/\"\']+))?[^\'\"]/;
