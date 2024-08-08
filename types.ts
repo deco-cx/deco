@@ -131,9 +131,13 @@ export type DecoState<
     routes?: Route[];
   };
 
+export type { JSONSchema7 } from "npm:@types/json-schema@7.0.11/index.d.ts";
 export type { PropsLoader } from "./blocks/propsLoader.ts";
 export type { LoadingFallbackProps, SectionProps } from "./blocks/section.ts";
 export type { FnContext } from "./blocks/utils.tsx";
+export type { ResolveOptions } from "./engine/core/mod.ts";
+export type { ResolveFunc } from "./engine/core/resolver.ts";
+export type { RouteContext } from "./engine/manifest/manifest.ts";
 export type ActionContext<
   TState = {},
   TManifest extends AppManifest = AppManifest,
@@ -156,8 +160,4 @@ export type LoaderFunction<Props = any, Data = any, State = any> = (
 >;
 
 export type LoaderReturnType<O = unknown> = O;
-
-export type { ResolveOptions } from "./engine/core/mod.ts";
-export type { ResolveFunc } from "./engine/core/resolver.ts";
-export type { RouteContext } from "./engine/manifest/manifest.ts";
 
