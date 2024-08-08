@@ -114,7 +114,8 @@ export async function upgradeDeps(
 export async function updatedImportMap(logs = true) {
   const [importMap, importMapPath] = await getImportMap(Deno.cwd());
   let upgradeFound = await upgradeDeps(importMap, logs);
-  for (const [importKey, importValue] of Object.entries(denoJSON.imports)) {
+  const { "deco/": _, ...imports } = denoJSON.imports;
+  for (const [importKey, importValue] of Object.entries(imports)) {
     if (!(importKey in importMap.imports)) {
       importMap.imports[importKey] = importValue;
       upgradeFound = true;
