@@ -1,14 +1,11 @@
-import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
-import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
-import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
-import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
-import {
-  lookup,
-  REGISTRIES,
-} from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
+import { parse } from "@std/flags";
+import * as colors from "@std/fmt/colors";
+import { join } from "@std/path";
+import * as semver from "@std/semver";
 import denoJSON from "../deno.json" with { type: "json" };
 import { stringifyForWrite } from "../utils/json.ts";
 import { pkgInfo } from "../utils/pkg.ts";
+import { lookup, REGISTRIES } from "../utils/registry.ts";
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
   /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
@@ -61,7 +58,7 @@ export async function upgradeDeps(
           versions: { latest: latestVersion, current: currentVersion },
         } = info;
 
-        if (!semver.valid(currentVersion) && !Deno.args.includes("force")) {
+        if (!semver.canParse(currentVersion) && !Deno.args.includes("force")) {
           logs && console.log(
             colors.yellow(
               `skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
@@ -90,7 +87,10 @@ export async function upgradeDeps(
     if (importMap.imports[pkg]) {
       const url = lookup(importMap.imports[pkg], REGISTRIES);
       const currentVersion = url?.version();
-      if (!currentVersion || semver.lt(currentVersion, minVer)) {
+      if (
+        !currentVersion ||
+        semver.lessThan(semver.parse(currentVersion), semver.parse(minVer))
+      ) {
         logs && console.info(
           `Upgrading ${pkg} ${currentVersion} -> ${minVer}.`,
         );
