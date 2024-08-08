@@ -8,28 +8,9 @@ import framework from "./Bindings.tsx";
 
 export interface Plugin {
   name: string;
-  routes?: PluginRoute[];
   middlewares?: PluginMiddleware[];
+  routes?: PluginRoute[];
 }
-
-export interface PluginMiddleware {
-  path: string;
-  middleware: Middleware;
-}
-
-export interface Middleware {
-  handler: MiddlewareHandler | MiddlewareHandler[];
-}
-
-export type MiddlewareHandler = (
-  req: Request,
-  ctx: {
-    next: () => Promise<Response | undefined>;
-    // deno-lint-ignore no-explicit-any
-    state: any;
-    params: Record<string, string>;
-  },
-) => Promise<Response | undefined>;
 
 export interface PluginRoute {
   /** A path in the format of a filename path without filetype */
@@ -49,11 +30,31 @@ export interface PluginRoute {
   ) => Promise<Response> | Response;
 }
 
+export interface PluginMiddleware {
+  path: string;
+  middleware: Middleware;
+}
+
+export interface Middleware {
+  handler: MiddlewareHandler | MiddlewareHandler[];
+}
+
+export type MiddlewareHandler = (
+  req: Request,
+  ctx: {
+    next: () => Promise<Response>;
+    // deno-lint-ignore no-explicit-any
+    state: any;
+    params: Record<string, string>;
+  },
+) => Promise<Response>;
+
 export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   manifest?: TManifest;
   htmx?: boolean;
   site?: SiteInfo;
   deco?: Deco<TManifest>;
+  middlewares?: PluginMiddleware[];
 }
 
 export type Options<TManifest extends AppManifest = AppManifest> =
@@ -68,11 +69,13 @@ export const component = ({ data }: PageParams<PageData>) => {
   return <data.page.Component {...data.page.props} />;
 };
 
-export function createFreshHandler(deco: Deco) {
+export function createFreshHandler<M extends AppManifest = AppManifest>(
+  deco: Deco<M>,
+) {
   const h: PluginRoute["handler"] = (req: Request, ctx) => {
     return deco.handler(req, {
       RENDER_FN: ctx.render.bind(ctx),
-      GLOBALS: ctx.state,
+      GLOBALS: ctx.state.global,
     });
   };
   return h;
@@ -95,30 +98,14 @@ export default function decoPlugin<TManifest extends AppManifest = AppManifest>(
   const catchAll: PluginRoute = {
     path: "/[...catchall]",
     component,
-    handler: (req: Request, ctx) =>
-      createFreshHandler(ctx.state.deco)(req, ctx),
+    handler: async (req: Request, ctx) => {
+      const deco = await decoPromise;
+      return createFreshHandler(deco)(req, ctx);
+    },
   };
   return {
     name: "deco",
-    middlewares: [
-      {
-        path: "/",
-        middleware: {
-          handler: async (req: Request, ctx) => {
-            const deco = await decoPromise;
-
-            Object.assign(
-              ctx.state,
-              await deco.prepareState({
-                req: { raw: req, param: () => ctx.params },
-              }),
-            );
-
-            return await ctx.next();
-          },
-        },
-      },
-    ],
+    middlewares: opt.middlewares,
     routes: [
       catchAll,
       { ...catchAll, path: "/index" },
