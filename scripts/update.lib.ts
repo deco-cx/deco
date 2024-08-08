@@ -87,6 +87,7 @@ export async function upgradeDeps(
     if (importMap.imports[pkg]) {
       const url = lookup(importMap.imports[pkg], REGISTRIES);
       const currentVersion = url?.version();
+      console.log({ currentVersion });
       if (
         !currentVersion ||
         semver.lessThan(semver.parse(currentVersion), semver.parse(minVer))
