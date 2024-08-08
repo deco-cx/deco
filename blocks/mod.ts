@@ -12,13 +12,13 @@ export type {
     ImportMap,
     ManifestOf
 } from "./app.ts";
-export type { FlagObj, MultivariateFlag, Variant } from "./flag.ts";
+export type { Flag, FlagObj, MultivariateFlag, Variant } from "./flag.ts";
 export type { Handler } from "./handler.ts";
 export * as blocks from "./index.ts";
 export type { Loader } from "./loader.ts";
 export type { MatchContext, Matcher } from "./matcher.ts";
 export type { Page } from "./page.tsx";
-export type { Section } from "./section.ts";
+export type { Section, isSection } from "./section.ts";
 export {
     applyProps,
     buildImportMap,
