@@ -1,7 +1,0 @@
-{
-    "name": "@deco/scripts",
-    "version": "1.84.4",
-    "exports": {
-        "./release": "./release.ts"
-    }
-}

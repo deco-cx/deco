@@ -1,17 +1,13 @@
-import { Tar } from "std/archive/tar.ts";
-import { ensureDir } from "std/fs/ensure_dir.ts";
-import type { ExistsOptions } from "std/fs/mod.ts";
-import { walk } from "std/fs/walk.ts";
-import { Buffer } from "std/io/buffer.ts";
-import { basename, dirname, globToRegExp, join } from "std/path/mod.ts";
-import { copy } from "std/streams/copy.ts";
+import type { ExistsOptions } from "@std/fs";
+import { ensureDir } from "@std/fs";
+import { walk } from "@std/fs/walk";
+import { basename, dirname, globToRegExp, join } from "@std/path";
 import { METADATA_PATH } from "../../engine/decofile/fsFolder.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { fileSeparatorToSlash } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
 import { type File, gitIgnore, type RealtimeState } from "../deps.ts";
 
-const encoder = new TextEncoder();
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEPLOYMENT_ID = Deno.env.get("DENO_DEPLOYMENT_ID");
 const TRANSIENT_ENVIRONMENT = Deno.env.get("DECO_TRANSIENT_ENV") === "true";
@@ -275,58 +271,26 @@ export class DaemonRealtimeState<T = unknown> implements RealtimeState {
   }
 
   public async persist(outfile: string, isEnvironmentPersistence?: boolean) {
-    const tar = new Tar();
-    const allFiles = await this.storage.list<string>();
-    const tasks: Promise<void>[] = [];
-    for (const [path, content] of allFiles.entries()) {
-      if (
-        !content ||
-        (path === CHANGESET_FILE)
-      ) {
-        continue;
-      }
-      const encoded = encoder.encode(content);
-      tasks.push(tar.append(path, {
-        reader: new Buffer(encoded),
-        contentSize: encoded.byteLength,
-      }));
-    }
-    if (isEnvironmentPersistence) {
-      const changeSetContent = await this.storage.get<string>(CHANGESET_FILE)
-        .catch(() => {
-          return undefined;
-        });
-      if (changeSetContent) {
-        const encoded = encoder.encode(changeSetContent);
-        tasks.push(tar.append(CHANGESET_FILE, {
-          reader: new Buffer(encoded),
-          contentSize: encoded.byteLength,
-        }));
-      }
-    }
-    await Promise.all(tasks);
-    const ensureDirPromise = ensureDir(dirname(outfile));
-    const startOut = performance.now();
-    const outtempFile = await Deno.makeTempFile({
-      prefix: "assets_",
-      suffix: ".tar",
+    const start = performance.now();
+
+    await ensureDir(dirname(outfile));
+
+    const tar = new Deno.Command("tar", {
+      args: [
+        "-cf",
+        outfile,
+        ".",
+        isEnvironmentPersistence ? null : "--exclude=.metadata",
+      ].filter((x): x is string => typeof x === "string"),
+      cwd: Deno.cwd(),
     });
-    const writer = await Deno.open(outtempFile, {
-      write: true,
-      create: true,
-    });
-    await copy(tar.getReader(), writer);
-    writer.close();
-    console.log("writing file done", performance.now() - startOut);
-    await ensureDirPromise;
-    const startCopy = performance.now();
-    console.log("copying file", outtempFile, "=>", outfile);
-    await Deno.copyFile(outtempFile, outfile); // it needs to be copy instead of rename
-    await Deno.remove(outtempFile).catch((err) => {
-      console.error(err);
-    });
-    console.log("copy file done", performance.now() - startCopy);
+
+    await tar.spawn().status;
+
+    const duration = performance.now() - start;
+    console.log("Tarballing took", duration, "ms");
   }
+  
   public shouldPersistState() {
     return SHOULD_PERSIST_STATE;
   }

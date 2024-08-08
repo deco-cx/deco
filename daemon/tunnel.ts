@@ -1,6 +1,6 @@
-import { connect } from "jsr:@deco/warp@0.3.1";
-import { parse } from "std/flags/mod.ts";
-import * as colors from "std/fmt/colors.ts";
+import { connect } from "@deco/warp";
+import { parse } from "@std/flags";
+import * as colors from "@std/fmt/colors";
 
 export interface TunnelRegisterOptions {
   env: string;

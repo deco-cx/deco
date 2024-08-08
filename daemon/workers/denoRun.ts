@@ -1,5 +1,5 @@
+import { delay } from "@std/async/delay";
 import EventEmitter from "node:events";
-import { delay } from "std/async/delay.ts";
 import { DaemonMode } from "../../deco.ts";
 import { multiplexer, type StreamMultiplexer } from "../loggings/mux.ts";
 import { type LogLine, streamLogsFrom } from "../loggings/stream.ts";

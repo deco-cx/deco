@@ -1,4 +1,4 @@
-import { Queue } from "https://deno.land/x/async@v2.1.0/queue.ts";
+import { Queue } from "@core/asyncutil/queue";
 
 export interface StreamMultiplexer<T> {
   read: () => AsyncIterableIterator<T>;
