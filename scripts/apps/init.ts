@@ -1,8 +1,5 @@
-import { join } from "https://deno.land/std@0.190.0/path/mod.ts";
-import {
-  lookup,
-  REGISTRIES,
-} from "https://denopkg.com/hayd/deno-udd@0.8.2/registry.ts";
+import { join } from "@std/path";
+import { lookup, REGISTRIES } from "../../utils/registry.ts";
 import type { InitContext } from "./context.ts";
 
 export type TemplateGenerator = (ctx: InitContext) => Promise<string> | string;

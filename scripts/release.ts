@@ -1,6 +1,6 @@
+import { Select } from "@cliffy/prompt";
 import { join } from "@std/path";
 import { format, increment, parse } from "@std/semver";
-import { Select } from "https://deno.land/x/cliffy@v0.25.5/prompt/mod.ts";
 import { stringifyForWrite } from "../utils/json.ts";
 import { exec } from "./utils.ts";
 
@@ -37,9 +37,9 @@ console.log(
 
 // TODO: Only allow releases in main branch
 
-const patchIncrement = format(increment(latestTag, "patch"), "full") || "";
-const minorIncrement = format(increment(latestTag, "minor"), "full") || "";
-const majorIncrement = format(increment(latestTag, "major"), "full") || "";
+const patchIncrement = format(increment(latestTag, "patch")) || "";
+const minorIncrement = format(increment(latestTag, "minor")) || "";
+const majorIncrement = format(increment(latestTag, "major")) || "";
 
 const newVersionByUser = await Select.prompt({
   options: [

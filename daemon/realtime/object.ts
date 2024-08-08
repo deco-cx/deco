@@ -290,7 +290,7 @@ export class DaemonRealtimeState<T = unknown> implements RealtimeState {
     const duration = performance.now() - start;
     console.log("Tarballing took", duration, "ms");
   }
-  
+
   public shouldPersistState() {
     return SHOULD_PERSIST_STATE;
   }
