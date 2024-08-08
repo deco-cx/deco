@@ -99,6 +99,64 @@ interface VersionsJson {
   versions?: string[];
 }
 
+const JSR_CACHE: Map<string, string[]> = new Map<string, string[]>();
+export class Jsr implements RegistryUrl {
+  url: string;
+  parseRegex = /^jsr:(\@[^/]+\/[^@/]+|[^@/]+)(?:\@([^/]+))?(.*)/;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  name(): string {
+    const [, name] = this.url.match(this.parseRegex)!;
+
+    return name;
+  }
+
+  async all(): Promise<string[]> {
+    const name = this.name();
+    if (JSR_CACHE.has(name)) {
+      return JSR_CACHE.get(name)!;
+    }
+
+    try {
+      const json: VersionsJson =
+        await (await fetch(`https://jsr.io/${name}/meta.json`))
+          .json();
+      if (!json.versions) {
+        throw new Error(
+          `versions.json for ${name} has incorrect format`,
+        );
+      }
+
+      const versions = Object.keys(json.versions).reverse();
+      JSR_CACHE.set(name, versions);
+      return versions;
+    } catch (err) {
+      // TODO this could be a permissions error e.g. no --allow-net...
+      console.error(`error getting versions for ${name}`);
+      throw err;
+    }
+  }
+
+  at(version: string): RegistryUrl {
+    const [, name, _, files] = this.url.match(this.parseRegex)!;
+    const url = `jsr:${name}@${version}${files}`;
+    return new Jsr(url);
+  }
+
+  version(): string {
+    const [, _, version] = this.url.match(this.parseRegex)!;
+    if (version === null) {
+      throw Error(`Unable to find version in ${this.url}`);
+    }
+    return version.startsWith("^") ? version.slice(1) : version;
+  }
+
+  regexp = /jsr:(\@[^/]+\/[^@/]+|[^@/]+)(?:\@([^\/\"\']+))?[^\'\"]/;
+}
+
 const DL_CACHE: Map<string, string[]> = new Map<string, string[]>();
 export class DenoLand implements RegistryUrl {
   url: string;
@@ -760,6 +818,7 @@ export class NestLand implements RegistryUrl {
 }
 
 export const REGISTRIES = [
+  Jsr,
   DenoLand,
   UnpkgScope,
   Unpkg,
