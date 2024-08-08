@@ -16,7 +16,8 @@ export type { FlagObj, MultivariateFlag, Variant } from "./flag.ts";
 export type { Handler } from "./handler.ts";
 export * as blocks from "./index.ts";
 export type { Loader } from "./loader.ts";
-export type { Matcher } from "./matcher.ts";
+export type { MatchContext, Matcher } from "./matcher.ts";
+export type { Page } from "./page.tsx";
 export type { Section } from "./section.ts";
 export {
     applyProps,
