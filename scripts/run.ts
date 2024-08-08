@@ -1,5 +1,2 @@
-try {
-  await import("deco/daemon/main.ts");
-} catch {
-  await import("https://deno.land/x/deco/daemon/main.ts");
-}
+// TODO: @gimenes use redirect instead of serving this file
+import "jsr:@deco/deco/scripts/run";

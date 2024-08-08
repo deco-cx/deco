@@ -1,11 +1,11 @@
 import {
   type ServerSentEventMessage,
   ServerSentEventStream,
-} from "https://deno.land/std@0.208.0/http/server_sent_event_stream.ts";
+} from "@std/http/server-sent-event-stream";
 import fjp from "npm:fast-json-patch@3.1.1";
-import { debounce } from "std/async/debounce.ts";
-import * as colors from "std/fmt/colors.ts";
-import { ensureDir, exists } from "std/fs/mod.ts";
+import { debounce } from "@std/async/debounce";
+import * as colors from "@std/fmt/colors";
+import { ensureDir, exists } from "@std/fs";
 import { tokenIsValid } from "../commons/jwt/engine.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import {

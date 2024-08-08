@@ -1,7 +1,6 @@
-import { djwt } from "./deps.ts";
+import { create, decode, verify } from "@zaubrik/djwt";
 import { importJWK, importJWKFromString } from "./keys.ts";
 
-const { create, decode, verify } = djwt;
 export interface JwtPayload {
   // deno-lint-ignore no-explicit-any
   [key: string]: any;

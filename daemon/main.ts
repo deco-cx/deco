@@ -1,10 +1,11 @@
-import { parse } from "std/flags/mod.ts";
-import * as colors from "std/fmt/colors.ts";
+import { parse } from "@std/flags";
+import * as colors from "@std/fmt/colors";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { formatLog } from "../utils/log.ts";
 import { Daemon, DECO_SITE_NAME } from "./daemon.ts";
 import { register } from "./tunnel.ts";
 import { portPool } from "./workers/portpool.ts";
+
 const parsedArgs = parse(Deno.args, {
   string: ["build-cmd", "build-files"],
 });

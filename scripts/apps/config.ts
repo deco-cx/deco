@@ -1,4 +1,4 @@
-import { join, toFileUrl } from "std/path/mod.ts";
+import { join, toFileUrl } from "@std/path";
 
 export interface AppConfig {
   name: string;
