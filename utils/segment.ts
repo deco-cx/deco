@@ -1,8 +1,8 @@
-import { getSetCookies } from "std/http/cookie.ts";
+import { getSetCookies } from "@std/http/cookie";
 import { DECO_MATCHER_PREFIX } from "../blocks/matcher.ts";
 import type { RequestState } from "../blocks/utils.tsx";
-import { Murmurhash3 } from "../deps.ts";
 import { Context } from "../deco.ts";
+import { Murmurhash3 } from "../deps.ts";
 
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
 

@@ -4,7 +4,7 @@
 /// <reference lib="esnext" />
 
 import { start } from "$fresh/server.ts";
-import { join, toFileUrl } from "std/path/mod.ts";
+import { join, toFileUrl } from "@std/path";
 import type { AppManifest, ImportMap } from "../../blocks/app.ts";
 import decoPlugin from "../../plugins/deco.ts";
 import { getDecoConfig } from "./config.ts";
