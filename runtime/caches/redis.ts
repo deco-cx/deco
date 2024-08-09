@@ -1,4 +1,4 @@
-import { Redis } from "https://deno.land/x/upstash_redis@v1.22.1/mod.ts";
+import { Redis } from "https://deno.land/x/upstash_redis@v1.34.0/mod.ts";
 
 import { logger, tracer } from "../../observability/otel/config.ts";
 import {
