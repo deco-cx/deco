@@ -9,8 +9,6 @@
     "./blocks": "./blocks/mod.ts",
     "./hooks": "./hooks/mod.ts",
     "./scripts/run": "./daemon/main.ts",
-    "./scripts/release": "./scripts/release.ts",
-    "./scripts/update": "./scripts/update.ts",
     "./scripts/bundle": "./scripts/apps/bundle.ts",
     "./scripts/dev": "./scripts/dev.ts"
   },
