@@ -1,7 +1,6 @@
 import { Select } from "@cliffy/prompt";
 import { join } from "@std/path";
 import { format, increment, parse } from "@std/semver";
-import { stringifyForWrite } from "../utils/json.ts";
 import { exec } from "./utils.ts";
 
 /**
@@ -80,7 +79,7 @@ const bump = async (...denoJSONPaths: string[]) => {
 
       await Deno.writeTextFile(
         denoJSONPath,
-        stringifyForWrite({ ...denoJSON, version: newVersion }),
+        `${JSON.stringify({ ...denoJSON, version: newVersion }, null, 2)}\n`,
       );
 
       const GIT_ADD_COMMAND = `git add ${denoJSONPath}`;

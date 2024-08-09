@@ -3,7 +3,6 @@ import * as colors from "@std/fmt/colors";
 import { join } from "@std/path";
 import * as semver from "@std/semver";
 import denoJSON from "../deno.json" with { type: "json" };
-import { stringifyForWrite } from "../utils/json.ts";
 import { pkgInfo } from "../utils/pkg.ts";
 import { lookup, REGISTRIES } from "../utils/registry.ts";
 // map of `packageAlias` to `packageRepo`
@@ -132,6 +131,9 @@ export async function update() {
     return;
   }
   const [importMap, importMapPath] = updates;
-  await Deno.writeTextFile(importMapPath, stringifyForWrite(importMap));
+  await Deno.writeTextFile(
+    importMapPath,
+    `${JSON.stringify(importMap, null, 2)}\n`,
+  );
   console.info("Upgraded successfully");
 }
