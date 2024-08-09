@@ -2,8 +2,8 @@ import { format } from "../../../utils/formatter.ts";
 import type { InitContext } from "../context.ts";
 
 export default async function AppMod(_ctx: InitContext) {
-    return await format(
-        `
+  return await format(
+    `
     import manifest from "./manifest.gen.ts";
     import type { Manifest } from "./manifest.gen.ts";
     import type { App, AppContext as AC } from "deco/mod.ts";
@@ -23,5 +23,5 @@ export default async function AppMod(_ctx: InitContext) {
     
     export type AppContext = AC<MyApp>;
 `,
-    );
+  );
 }

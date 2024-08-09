@@ -226,4 +226,3 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 
 export { DECO_SEGMENT } from "./middleware.ts";
 export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";
-
