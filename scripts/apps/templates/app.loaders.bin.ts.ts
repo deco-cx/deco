@@ -1,4 +1,4 @@
-import { format } from "../../../utils/formatter.ts";
+import { format } from "../../formatter.ts";
 import type { InitContext } from "../context.ts";
 
 export default async function AppLoadersBin(_init: InitContext) {

@@ -3,7 +3,7 @@ import { ensureFile, exists, walk } from "@std/fs";
 import { join } from "@std/path";
 import * as semver from "@std/semver";
 import * as diff from "npm:diff@5.1.0";
-import { format } from "../utils/formatter.ts";
+import { format } from "./formatter.ts";
 import { lookup, REGISTRIES } from "./registry.ts";
 import { exec } from "./utils.ts";
 

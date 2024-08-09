@@ -1,7 +1,7 @@
 import * as colors from "@std/fmt/colors";
 import { join } from "@std/path";
 import { decoManifestBuilder } from "../../engine/manifest/manifestGen.ts";
-import { format } from "../../utils/formatter.ts";
+import { format } from "../formatter.ts";
 import { type AppConfig, getDecoConfig } from "./config.ts";
 
 export const bundleApp = (dir: string) => async (app: AppConfig) => {
