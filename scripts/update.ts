@@ -1,3 +1,1 @@
-import { update } from "./update.lib.ts";
-
-await update();
+import "jsr:@deco/deco/scripts/update";
