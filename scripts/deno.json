@@ -3,11 +3,17 @@
   "version": "1.85.7",
   "exports": {
     "./release": "./release.ts",
-    "./update": "./update.ts",
+    "./update": "./update.run.ts",
     "./upgrade": "./upgrade.ts"
   },
   "publish": {
-    "exclude": ["./bundle.lib.ts", "./bundle.ts", "./config.ts", "./dev.ts"]
+    "exclude": [
+      "./bundle.lib.ts",
+      "./bundle.ts",
+      "./config.ts",
+      "./dev.ts",
+      "./update.ts"
+    ]
   },
   "imports": {
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
