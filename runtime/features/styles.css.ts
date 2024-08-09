@@ -182,7 +182,13 @@ const DEFAULT_TAILWIND_CSS = `
 export const loadTailwindConfig = (root: string): Promise<Config> =>
   import(toFileUrl(join(root, "tailwind.config.ts")).href)
     .then((mod) => mod.default)
-    .catch(() => DEFAULT_CONFIG);
+    .catch((err) => {
+      console.warn(
+        "could not load tailwind config from tailwind.config.ts",
+        err,
+      );
+      return DEFAULT_CONFIG;
+    });
 
 const bundle = async (
   { from, mode, config }: {
@@ -280,14 +286,5 @@ addEventListener("hmr", () => {
   css = null;
 });
 
-const tailwindConfig: Config = await import(
-  import.meta.resolve(join(Deno.cwd(), "tailwind.config.ts"))
-).then((mod) => mod.default).catch(() => ({
-  plugins: [],
-  content: ["./**/*.tsx"],
-  theme: {
-    container: { center: true },
-  },
-}));
-
+const tailwindConfig = await loadTailwindConfig(Deno.cwd());
 export const styles = () => getCSS(tailwindConfig);
