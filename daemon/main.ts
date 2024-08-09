@@ -17,6 +17,7 @@ import { ensureGit } from "./git.ts";
 import { register } from "./tunnel.ts";
 import { createWorker } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
+import denoJSON from "../deno.json" with { type: "json" };
 
 const parsedArgs = parseArgs(Deno.args, {
   string: ["build-cmd"],
@@ -202,7 +203,14 @@ if (VERBOSE) {
   app.use(logger());
 }
 
-app.get("/_healthcheck", () => new Response("OK", { status: 200 }));
+app.get("/_healthcheck", () => {
+  const response = new Response(denoJSON.version, { status: 200 });
+  response.headers.set("Access-Control-Allow-Origin", "*");
+  response.headers.set("Access-Control-Allow-Methods", "GET");
+  response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+  return response;
+});
+
 // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
 app.use(createDeps());
 // These are the APIs that communicate with admin UI
