@@ -1,10 +1,10 @@
-import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
+import * as colors from "https://deno.land/std@0.224.0/fmt/colors.ts";
 import {
   ensureDir,
   ensureFile,
   exists,
-} from "https://deno.land/std@0.204.0/fs/mod.ts";
-import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
+} from "https://deno.land/std@0.224.0/fs/mod.ts";
+import { join } from "https://deno.land/std@0.224.0/path/mod.ts";
 import {
   Input,
   prompt,
@@ -14,7 +14,7 @@ import {
 import {
   BlobReader,
   ZipReader,
-} from "https://deno.land/x/zipjs@v2.7.30/index.js";
+} from "https://deno.land/x/zipjs@v2.7.48/index.js";
 import { getDecofileJSONFromDecofile } from "../engine/decofile/json.ts";
 import { init as initApp } from "./apps/init.ts";
 
