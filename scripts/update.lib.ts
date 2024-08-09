@@ -2,13 +2,18 @@ import { parse } from "@std/flags";
 import * as colors from "@std/fmt/colors";
 import { join } from "@std/path";
 import * as semver from "@std/semver";
-import denoJSON from "./deco.symlink.deno.json" with { type: "json" };
 import { pkgInfo } from "./pkg.ts";
 import { lookup, REGISTRIES } from "./registry.ts";
 
 interface ImportMap {
   imports: Record<string, string>;
 }
+
+const denoJSON: ImportMap = await fetch(
+  "https://raw.githubusercontent.com/deco-cx/deco/main/deno.json",
+).then(
+  (res) => res.json(),
+);
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
@@ -115,7 +120,7 @@ export async function upgradeDeps(
 export async function updatedImportMap(logs = true) {
   const [importMap, importMapPath] = await getImportMap(Deno.cwd());
   let upgradeFound = await upgradeDeps(importMap, logs);
-  const imports = denoJSON.imports;
+  const { "deco/": _, ...imports } = denoJSON.imports;
   for (const [importKey, importValue] of Object.entries(imports)) {
     if (!(importKey in importMap.imports)) {
       importMap.imports[importKey] = importValue;
