@@ -1,5 +1,5 @@
-import { join } from "https://deno.land/std@0.201.0/path/mod.ts";
-import { mergeReadableStreams } from "https://deno.land/std@0.201.0/streams/merge_readable_streams.ts";
+import { join } from "@std/path";
+import { mergeReadableStreams } from "@std/streams";
 
 const runModule = (module: string, ...args: string[]): Deno.Command => {
   return new Deno.Command(Deno.execPath(), {

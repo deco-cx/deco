@@ -1,16 +1,7 @@
-import * as colors from "https://deno.land/std@0.204.0/fmt/colors.ts";
-import {
-  ensureDir,
-  ensureFile,
-  exists,
-} from "https://deno.land/std@0.204.0/fs/mod.ts";
-import { join } from "https://deno.land/std@0.204.0/path/mod.ts";
-import {
-  Input,
-  prompt,
-  Select,
-  Toggle,
-} from "https://deno.land/x/cliffy@v1.0.0-rc.3/prompt/mod.ts";
+import { Input, prompt, Select, Toggle } from "@cliffy/prompt";
+import * as colors from "@std/fmt/colors";
+import { ensureDir, ensureFile, exists } from "@std/fs";
+import { join } from "@std/path";
 import {
   BlobReader,
   ZipReader,
@@ -121,7 +112,10 @@ const initProject = async (name: string, config: Config) => {
   await Deno.writeTextFile(
     join(root, ".decofile.json"),
     JSON.stringify(
-      getDecofileJSONFromDecofile(releaseJson, config.appName),
+      getDecofileJSONFromDecofile(
+        releaseJson as Record<string, unknown>,
+        config.appName,
+      ),
       null,
       2,
     ),

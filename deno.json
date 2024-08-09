@@ -9,11 +9,12 @@
     "./blocks": "./blocks/mod.ts",
     "./hooks": "./hooks/mod.ts",
     "./scripts/run": "./daemon/main.ts",
-    "./scripts/release": "./scripts/release.ts",
-    "./scripts/update": "./scripts/update.run.ts",
     "./scripts/bundle": "./scripts/apps/bundle.ts",
     "./scripts/dev": "./scripts/dev.ts"
   },
+  "workspace": [
+    "./scripts"
+  ],
   "tasks": {
     "start": "deno task check",
     "component": "deno eval 'import \"deco/scripts/component.ts\"'",
@@ -38,7 +39,9 @@
   },
   "scopes": {
     "https://denopkg.com/deco-cx/deco@1.26.0/": {
-      "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/"
+      "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/",
+      "std/": "https://deno.land/std@0.203.0/",
+      "partytown/": "https://deno.land/x/partytown@0.3.0/"
     }
   },
   "imports": {

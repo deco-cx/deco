@@ -1,7 +1,6 @@
 import { Select } from "@cliffy/prompt";
 import { join } from "@std/path";
 import { format, increment, parse } from "@std/semver";
-import { stringifyForWrite } from "../utils/json.ts";
 import { exec } from "./utils.ts";
 
 /**
@@ -64,27 +63,41 @@ const newVersion = newVersionByUser === "custom"
   ? prompt("Which version: ")
   : newVersionByUser;
 
+const DENO_JSON_FILE_NAME = "deno.json";
+
 let shouldCommit = false;
-const metaJSONFilePath = join(Deno.cwd(), "deno.json");
-if (await exists(metaJSONFilePath)) {
-  const meta: { version: string } = await Deno.readTextFile(
-    metaJSONFilePath,
-  ).then(
-    JSON.parse,
-  );
-  console.log(`Bumping deno.json`);
+const bump = async (...denoJSONPaths: string[]) => {
+  for (const denoJSONPath of denoJSONPaths) {
+    if (await exists(denoJSONPath)) {
+      const denoJSON: { version: string; workspace?: string[] } = await Deno
+        .readTextFile(
+          denoJSONPath,
+        ).then(
+          JSON.parse,
+        );
+      console.log(`Bumping ${denoJSONPath}`);
 
-  await Deno.writeTextFile(
-    metaJSONFilePath,
-    stringifyForWrite({ ...meta, version: newVersion }),
-  );
+      await Deno.writeTextFile(
+        denoJSONPath,
+        `${JSON.stringify({ ...denoJSON, version: newVersion }, null, 2)}\n`,
+      );
 
-  const GIT_ADD_COMMAND = `git add ${metaJSONFilePath}`;
-  console.log(`Running \`${GIT_ADD_COMMAND}\``);
+      const GIT_ADD_COMMAND = `git add ${denoJSONPath}`;
+      console.log(`Running \`${GIT_ADD_COMMAND}\``);
 
-  await exec(GIT_ADD_COMMAND);
-  shouldCommit = true;
-}
+      await exec(GIT_ADD_COMMAND);
+      const newPaths = denoJSON.workspace?.map((path) =>
+        join(Deno.cwd(), path, DENO_JSON_FILE_NAME)
+      ) ?? [];
+      await bump(...newPaths);
+
+      shouldCommit = true;
+    }
+  }
+};
+
+const denoJSONFilePath = join(Deno.cwd(), DENO_JSON_FILE_NAME);
+await bump(denoJSONFilePath);
 
 if (shouldCommit) {
   const GIT_COMMIT_COMMAND = `git commit -m "Release [${newVersion}]" -n`;
