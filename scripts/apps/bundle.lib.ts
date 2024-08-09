@@ -18,6 +18,7 @@ export const bundleApp = (dir: string) => async (app: AppConfig) => {
     colors.brightBlue(`the manifest of ${app.name} has been generated`),
   );
 };
+
 export const bundleApps = async () => {
   const dir = Deno.cwd();
   console.log(colors.brightGreen(`start bundling apps... ${dir}`));

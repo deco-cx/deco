@@ -286,5 +286,6 @@ addEventListener("hmr", () => {
   css = null;
 });
 
-const tailwindConfig = await loadTailwindConfig(Deno.cwd());
-export const styles = () => getCSS(tailwindConfig);
+let tailwindConfig: null | Config = null;
+export const styles = async () =>
+  await getCSS(tailwindConfig ??= await loadTailwindConfig(Deno.cwd()));
