@@ -1,15 +1,10 @@
 import type { Page } from "../blocks/page.tsx";
 
-export { Hono } from "jsr:@hono/hono@^4.5.3";
-export type {
-  Context,
-  Handler,
-  Input,
-  MiddlewareHandler,
-} from "jsr:@hono/hono@^4.5.3";
-export type { Env } from "jsr:@hono/hono@^4.5.3/types";
+export { Hono } from "@hono/hono";
+export type { Context, Handler, Input, MiddlewareHandler } from "@hono/hono";
+export type { Env } from "@hono/hono/types";
 
-export { serveStatic, upgradeWebSocket } from "jsr:@hono/hono@^4.5.3/deno";
+export { serveStatic, upgradeWebSocket } from "@hono/hono/deno";
 export interface PageData {
   page: Page;
 }

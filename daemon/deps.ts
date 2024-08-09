@@ -4,5 +4,5 @@ export * as gitIgnore from "npm:ignore@5.3.1";
 
 export * as GIT from "npm:simple-git@3.25.0";
 
-export * as Hono from "jsr:@hono/hono@4.5.3";
-export { HTTPException } from "jsr:@hono/hono@4.5.3/http-exception";
+export * as Hono from "@hono/hono";
+export { HTTPException } from "@hono/hono/http-exception";
