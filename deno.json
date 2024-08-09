@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "1.85.8",
+  "version": "1.85.9",
   "exports": {
     ".": "./mod.ts",
     "./htmx": "./runtime/htmx/mod.ts",
@@ -13,7 +13,10 @@
     "./scripts/dev": "./scripts/dev.ts"
   },
   "publish": {
-    "exclude": ["**/*.bench.ts", "**/*.test.ts"]
+    "exclude": [
+      "**/*.bench.ts",
+      "**/*.test.ts"
+    ]
   },
   "tasks": {
     "start": "deno task check",
