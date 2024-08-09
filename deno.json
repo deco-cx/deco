@@ -11,7 +11,8 @@
     "./scripts/run": "./daemon/main.ts",
     "./scripts/release": "./scripts/release.ts",
     "./scripts/update": "./scripts/update.ts",
-    "./scripts/bundle": "./scripts/apps/bundle.ts"
+    "./scripts/bundle": "./scripts/apps/bundle.ts",
+    "./scripts/dev": "./scripts/dev.ts"
   },
   "tasks": {
     "start": "deno task check",
