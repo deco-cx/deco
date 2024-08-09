@@ -12,9 +12,9 @@
     "./scripts/bundle": "./scripts/apps/bundle.ts",
     "./scripts/dev": "./scripts/dev.ts"
   },
-  "workspace": [
-    "./scripts"
-  ],
+  "publish": {
+    "exclude": ["**/*.bench.ts", "**/*.test.ts"]
+  },
   "tasks": {
     "start": "deno task check",
     "component": "deno eval 'import \"deco/scripts/component.ts\"'",
