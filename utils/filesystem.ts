@@ -1,17 +1,8 @@
-import { fromFileUrl, join } from "@std/path";
-
+import { fromFileUrl, SEPARATOR } from "@std/path";
 export { exists } from "@std/fs";
 
-export const resolveFilePath = (path: string) => {
-  return join(
-    Deno.cwd(),
-    "..",
-    path,
-  );
-};
-
 export const fileSeparatorToSlash = (path: string) => {
-  return path.replaceAll("\\", "/");
+  return path.replaceAll(SEPARATOR, "/");
 };
 
 export const fromFileUrlOrNoop = (urlString: string): string => {

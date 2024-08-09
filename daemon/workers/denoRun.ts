@@ -49,7 +49,6 @@ const isCmdIsolate = (
 export class DenoRun implements Isolate {
   private ctrl: AbortController | undefined;
   protected child: Deno.ChildProcess | undefined;
-  protected cleanUpPromises: Promise<void> | undefined;
   protected inflightRequests = 0;
   protected inflightZeroEmitter = new EventEmitter();
   protected port: number;
@@ -113,14 +112,12 @@ export class DenoRun implements Isolate {
     this.ctrl = new AbortController();
     this.disposed = Promise.withResolvers<void>();
     this.ctrl.signal.onabort = this.dispose.bind(this);
-    const [child, cleanUpPromises] = this.spawn();
+    const child = this.spawn();
     this._logs = multiplexer(streamLogsFrom(child));
     this.child = child;
-    this.cleanUpPromises = cleanUpPromises;
   }
 
   async dispose() {
-    this.cleanUpPromises && await this.cleanUpPromises;
     const inflightZero = Promise.withResolvers<void>();
     if (this.inflightRequests > 0) {
       this.inflightZeroEmitter.on("zero", () => {
@@ -183,15 +180,13 @@ export class DenoRun implements Isolate {
       signal: this.ctrl?.signal,
     });
   }
-  private spawn(): [Deno.ChildProcess, Promise<void>] {
+  private spawn(): Deno.ChildProcess {
     const child = this.command.spawn();
     child.status.then((status) => {
-      if (status.code !== 0) {
-        console.error("child process failed", status);
-        this.ctrl?.abort();
-      }
+      console.error("child process exit with status code", status.code);
+      this.ctrl?.abort();
     });
-    return [child, Promise.resolve()];
+    return child;
   }
 }
 

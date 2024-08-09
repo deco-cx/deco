@@ -1,10 +1,12 @@
 import { debounce } from "@std/async/debounce";
+import { ensureFile } from "@std/fs";
 import { walk } from "@std/fs/walk";
-import { basename, join } from "@std/path";
+import { basename, join } from '@std/path';
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { Mutex } from "../../utils/sync.ts";
+import { BLOCKS_FOLDER, DECO_FOLDER, METADATA_PATH } from "./constants.ts";
 import type {
   Decofile,
   DecofileProvider,
@@ -12,13 +14,6 @@ import type {
   ReadOptions,
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
-
-export const DECO_FOLDER = ".deco";
-export const BLOCKS_FOLDER = "blocks";
-export const METADATA_FOLDER = "metadata";
-export const BLOCKS_JSON = "blocks.json";
-
-export const METADATA_PATH = `${DECO_FOLDER}/${METADATA_FOLDER}/${BLOCKS_JSON}`;
 
 export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
@@ -88,11 +83,11 @@ export const genMetadata = async () => {
       [path, content],
     ) => [path, inferMetadata(content, knownBlockTypes)]));
 
-    return { path: METADATA_PATH, content: JSON.stringify(metadata) };
+    const pathname = join(Deno.cwd(), METADATA_PATH);
+    await ensureFile(pathname);
+    await Deno.writeTextFile(pathname, JSON.stringify(metadata));
   } catch (error) {
     console.error("Error while auto-generating blocks.json", error);
-
-    return null;
   }
 };
 

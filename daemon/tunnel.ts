@@ -1,5 +1,4 @@
 import { connect } from "@deco/warp";
-import { parse } from "@std/flags";
 import * as colors from "@std/fmt/colors";
 
 export interface TunnelRegisterOptions {
@@ -41,21 +40,4 @@ export async function register({ env, site, port }: TunnelRegisterOptions) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     return register({ env, site, port });
   });
-}
-
-const paramsIsValid = (
-  options: TunnelRegisterOptions | Partial<TunnelRegisterOptions>,
-): options is TunnelRegisterOptions => {
-  return !!options.env && !!options.site && !!options.port;
-};
-
-if (import.meta.main) {
-  const parsedArgs = parse(Deno.args, {
-    string: ["env", "site", "port"],
-  });
-  if (paramsIsValid(parsedArgs)) {
-    await register(parsedArgs);
-  } else {
-    console.error(`params ${parsedArgs} are not valid`);
-  }
 }
