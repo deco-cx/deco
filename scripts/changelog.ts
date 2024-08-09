@@ -1,7 +1,7 @@
-import { Octokit } from "https://cdn.skypack.dev/@octokit/rest@19.0.4";
-import { blue, bold } from "https://deno.land/std@0.181.0/fmt/colors.ts";
-import * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
-import type { Endpoints } from "https://esm.sh/v135/@octokit/types@9.0.0";
+import { blue, bold } from "@std/fmt/colors";
+import * as semver from "@std/semver";
+import { Octokit } from "npm:@octokit/rest@19.0.4";
+import type { Endpoints } from "npm:@octokit/types@9.0.0";
 
 const _client = new Octokit();
 
@@ -22,8 +22,7 @@ export const printDiff = async (ver: semver.SemVer, ownerRepo: string) => {
     if (!version) {
       continue;
     }
-    const diff = version.compare(ver) ?? 0;
-    if (diff > 0) {
+    if (semver.lessThan(version, ver)) {
       console.log(bold(blue(`v${version.toString()}`)));
       console.log(bold(release.body ?? ""));
     }

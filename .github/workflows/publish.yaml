@@ -17,3 +17,6 @@ jobs:
 
       - name: Publish package
         run: npx jsr publish --allow-slow-types
+
+      - name: Publish script package
+        run: cd scripts/ && npx jsr publish
