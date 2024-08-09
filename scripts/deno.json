@@ -6,6 +6,9 @@
     "./update": "./update.ts",
     "./upgrade": "./upgrade.ts"
   },
+  "publish": {
+    "exclude": ["./bundle.lib.ts", "./bundle.ts", "./config.ts", "./dev.ts"]
+  },
   "imports": {
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@std/flags": "jsr:@std/flags@^0.224.0",

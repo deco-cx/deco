@@ -1,5 +1,5 @@
 import { join } from "@std/path";
-import { lookup, REGISTRIES } from "../../utils/registry.ts";
+import { lookup, REGISTRIES } from "../registry.ts";
 import type { InitContext } from "./context.ts";
 
 export type TemplateGenerator = (ctx: InitContext) => Promise<string> | string;

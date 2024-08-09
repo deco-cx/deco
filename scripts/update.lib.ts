@@ -3,8 +3,8 @@ import * as colors from "@std/fmt/colors";
 import { join } from "@std/path";
 import * as semver from "@std/semver";
 import denoJSON from "../deno.json" with { type: "json" };
-import { pkgInfo } from "../utils/pkg.ts";
-import { lookup, REGISTRIES } from "../utils/registry.ts";
+import { pkgInfo } from "./pkg.ts";
+import { lookup, REGISTRIES } from "./registry.ts";
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
   /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
