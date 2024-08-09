@@ -86,9 +86,11 @@ const bump = async (...denoJSONPaths: string[]) => {
       console.log(`Running \`${GIT_ADD_COMMAND}\``);
 
       await exec(GIT_ADD_COMMAND);
-      const newPaths = denoJSON.workspace?.map((path) =>
-        join(Deno.cwd(), path, DENO_JSON_FILE_NAME)
-      ) ?? [];
+      const newPaths = ["./scripts"];
+      // FIXME this should follow workspace spec but currently files inside workspace is being ignored.
+      // denoJSON.workspace?.map((path) =>
+      //   join(Deno.cwd(), path, DENO_JSON_FILE_NAME)
+      // ) ?? [];
       await bump(...newPaths);
 
       shouldCommit = true;
