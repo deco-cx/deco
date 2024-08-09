@@ -3,7 +3,8 @@
     "version": "1.85.5",
     "exports": {
         "./release": "./release.ts",
-        "./update": "./update.ts"
+        "./update": "./update.ts",
+        "./upgrade": "./upgrade.ts"
     },
     "imports": {
         "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",

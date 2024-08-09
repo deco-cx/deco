@@ -6,10 +6,11 @@ import * as diff from "npm:diff@5.1.0";
 import { format } from "../utils/formatter.ts";
 import { lookup, REGISTRIES } from "../utils/registry.ts";
 import { exec } from "./utils.ts";
-// deno-lint-ignore verbatim-module-syntax
-import denoJSON from "../deno.json" with { type: "json" };
 
-type DenoJSON = typeof denoJSON;
+interface DenoJSON {
+  imports: Record<string, string>;
+  tasks: Record<string, string>;
+}
 
 const getLatestVersion = async (locator: string) => {
   const versions = await lookup(locator, REGISTRIES)?.all();
