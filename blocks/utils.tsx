@@ -26,6 +26,7 @@ import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
+import type { DecoContext } from "./../deco.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -99,6 +100,9 @@ export type FnContext<
   TState = {},
   TManifest extends AppManifest = AppManifest,
 > = TState & RequestState & {
+  deco: {
+    ctx: DecoContext<TManifest>;
+  };
   revision: string;
   device: Device;
   isBot: boolean;
