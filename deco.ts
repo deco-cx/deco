@@ -47,6 +47,7 @@ export interface DecoContext<TAppManifest extends AppManifest = AppManifest> {
   decodMode?: DecodMode;
   platform: WellKnownHostingPlatform;
   site: string;
+  env?: string;
   siteId: number;
   loginUrl?: string;
   base?: string;
@@ -79,6 +80,7 @@ let defaultContext: Omit<DecoContext<any>, "schema"> = {
   isDeploy: isDeploy,
   decodMode: Deno.env.get("DECOD_MODE") as DecodMode | undefined,
   platform: getHostingPlatform(),
+  env: Deno.env.get("DECO_ENV_NAME"),
   site: "",
   instance: {
     id: randId(),
