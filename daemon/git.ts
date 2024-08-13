@@ -12,6 +12,8 @@ import {
 } from "simple-git";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
+const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ??
+  "main";
 
 const git = simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
@@ -20,33 +22,10 @@ const git = simpleGit(Deno.cwd(), {
     console.log(`git.${method} ${stage} stage ${progress}% complete`),
 });
 
-/** Make sure we have a git on k8s before doing anything. */
-export const ensureGitFolder = async (remote: string) => {
-  const hasGitFolder = await Deno.stat(join(Deno.cwd(), ".git"))
-    .then(() => true)
-    .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
-
-  if (hasGitFolder) {
-    console.log("Git folder already exists, skipping init");
-    return;
-  }
-
-  console.time("Initializing git folder...");
-
-  await git
-    .init({ "-b": "main" })
-    .addRemote("origin", remote)
-    .add(".")
-    .commit("Initial commit", { "--no-verify": null })
-    .pull({ "--rebase": null, "--strategy-option": "theirs" });
-
-  console.timeEnd("Initializing git folder...");
-};
-
 const getMergeBase = async () => {
   const status = await git.status();
   const current = status.current;
-  const tracking = status.tracking || "main";
+  const tracking = status.tracking || DEFAULT_TRACKING_BRANCH;
 
   if (!current || !tracking) {
     throw new Error(`Missing local or upstream branches`);
@@ -292,7 +271,7 @@ export const ensureGit = async (
         "1",
         "--single-branch",
         "--branch",
-        "main",
+        DEFAULT_TRACKING_BRANCH,
       ]);
   };
 
