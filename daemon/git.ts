@@ -1,13 +1,12 @@
 import { type Handler, Hono, type MiddlewareHandler } from "@hono/hono";
 import { ensureDir } from "@std/fs";
-import { basename, dirname, join } from "@std/path";
+import { basename, dirname, extname, join } from "@std/path";
 import {
-  type FileStatusResult,
   GitConfigScope,
   type LogResult,
   type PushResult,
   simpleGit,
-  type StatusResult,
+  type StatusResult
 } from "simple-git";
 import { logs } from "./loggings/stream.ts";
 
@@ -39,44 +38,94 @@ const getMergeBase = async () => {
   return base;
 };
 
-export interface GitStatusAPI {
-  response: Omit<StatusResult, "files"> & {
-    files: Array<
-      FileStatusResult & {
-        from: string | undefined;
-        to: string | undefined;
-      }
-    >;
+export interface GitDiffAPI {
+  response: {
+    from?: string;
+    to?: string;
+    mode: "text" | "binary";
   };
   searchParams: {
-    diff?: boolean;
+    path: string;
+  };
+}
+
+const WELL_KNOWN_TEXT_FILE_TYPES = new Set<string>([
+  ".txt",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".json",
+  ".html",
+  ".css",
+  ".scss",
+  ".sass",
+  ".less",
+  ".md",
+  ".yml",
+  ".yaml",
+  ".toml",
+  ".xml",
+  ".env",
+]);
+
+const isTextFile = (path: string) => {
+  const ext = extname(path);
+  return WELL_KNOWN_TEXT_FILE_TYPES.has(ext) ||
+    // for the .env case
+    WELL_KNOWN_TEXT_FILE_TYPES.has(path);
+};
+
+export const diff: Handler = async (c) => {
+  const url = new URL(c.req.url);
+  const rawPath = url.searchParams.get("path");
+  const path = rawPath?.startsWith("/") ? rawPath.slice(1) : rawPath;
+
+  if (!path) {
+    return new Response("Missing path search param", { status: 400 });
+  }
+
+  if (!isTextFile(path)) {
+    return new Response(JSON.stringify({ mode: "binary" }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  }
+
+  const base = await getMergeBase();
+  const [from, to] = await Promise.all([
+    git.show(`${base}:${path}`).catch(() => undefined),
+    Deno.readTextFile(path).catch(() => undefined),
+  ]);
+
+  return new Response(JSON.stringify({ from, to, mode: "text" }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+};
+
+export interface GitStatusAPI {
+  response: StatusResult;
+  searchParams: {
+    fetch?: boolean;
   };
 }
 
 /** Git status */
 export const status: Handler = async (c) => {
   const url = new URL(c.req.url);
-  const includeDiff = url.searchParams.get("diff") === "true";
+  const fetch = url.searchParams.get("fetch") === "true";
 
   const base = await getMergeBase();
+
+  if (fetch) {
+    await git.fetch(["-p"]);
+  }
 
   const status = await git
     .reset(["."])
     .reset([base])
     .status();
-
-  if (includeDiff) {
-    status.files = await Promise.all(
-      status.files.map(async (file) => {
-        const [from, to] = await Promise.all([
-          git.show(`${base}:${file.path}`).catch(() => undefined),
-          Deno.readTextFile(file.path).catch(() => undefined),
-        ]);
-
-        return { ...file, from, to };
-      }),
-    );
-  }
 
   return new Response(JSON.stringify(status), {
     status: 200,
@@ -312,6 +361,7 @@ export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
   app.use(setupGitConfig());
+  app.get("/diff", diff);
   app.get("/status", status);
   app.get("/log", log);
   app.post("/publish", publish(options));
