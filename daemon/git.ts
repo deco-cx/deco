@@ -4,7 +4,7 @@ const git = GIT.simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
   trimmed: true,
 });
-const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_DEFAULT_TRACKING_BRANCH") ??
+const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ??
   "main";
 const getMergeBase = async () => {
   const status = await git.status();
