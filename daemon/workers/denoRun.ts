@@ -1,8 +1,7 @@
 import { delay } from "@std/async/delay";
 import EventEmitter from "node:events";
 import { DaemonMode } from "../../deco.ts";
-import { multiplexer, type StreamMultiplexer } from "../loggings/mux.ts";
-import { type LogLine, streamLogsFrom } from "../loggings/stream.ts";
+import { iteratorFrom, logs } from "../loggings/stream.ts";
 import type { Isolate, IsolateOptions } from "./isolate.ts";
 import { portPool } from "./portpool.ts";
 import { waitForPort } from "./utils.ts";
@@ -58,7 +57,6 @@ export class DenoRun implements Isolate {
     | undefined;
   protected proxyUrl: string;
   protected client?: Deno.HttpClient;
-  protected _logs: StreamMultiplexer<LogLine> | undefined;
   constructor(options: IsolateOptions | CommandIsolate) {
     if (isCmdIsolate(options)) {
       this.port = options.port;
@@ -95,9 +93,7 @@ export class DenoRun implements Isolate {
       })
       : undefined;
   }
-  logs(): AsyncIterableIterator<LogLine> | undefined {
-    return this._logs?.read();
-  }
+
   signal(sig: Deno.Signal) {
     try {
       this.child?.kill(sig);
@@ -113,7 +109,10 @@ export class DenoRun implements Isolate {
     this.disposed = Promise.withResolvers<void>();
     this.ctrl.signal.onabort = this.dispose.bind(this);
     const child = this.spawn();
-    this._logs = multiplexer(streamLogsFrom(child));
+
+    logs.register(iteratorFrom(child.stdout, "info"));
+    logs.register(iteratorFrom(child.stderr, "error"));
+
     this.child = child;
   }
 

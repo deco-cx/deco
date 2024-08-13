@@ -111,10 +111,15 @@ const persist = async () => {
   }
 };
 
-const genManifestTS = throttle(createBundler());
-const genBlocksJSON = throttle(genMetadata);
+const bundle = createBundler();
+const genManifestTS = throttle(async () => {
+  await Promise.all([bundle(), delay(1_000)]);
+});
+const genBlocksJSON = throttle(async () => {
+  await Promise.all([genMetadata(), delay(1_000)]);
+});
 const persistState = throttle(async () => {
-  await Promise.all([persist(), delay(2 * 60 * 1000)]);
+  await Promise.all([persist(), delay(2 * 60 * 1_000)]);
 });
 
 // Watch for changes in filesystem

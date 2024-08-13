@@ -10,6 +10,7 @@ import {
   simpleGit,
   type StatusResult,
 } from "simple-git";
+import { logs } from "./loggings/stream.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 
@@ -17,7 +18,11 @@ const git = simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
   trimmed: true,
   progress: ({ method, stage, progress }) =>
-    console.log(`git.${method} ${stage} stage ${progress}% complete`),
+    logs.push({
+      level: "info",
+      message: `git.${method} ${stage} stage ${progress}% complete`,
+      timestamp: Date.now(),
+    }),
 });
 
 /** Make sure we have a git on k8s before doing anything. */

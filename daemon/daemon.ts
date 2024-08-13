@@ -6,14 +6,12 @@ import {
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { createAuth } from "./auth.ts";
 import { createGitAPIS } from "./git.ts";
+import { logs } from "./loggings/stream.ts";
 import { createRealtimeAPIs } from "./realtime/app.ts";
-import { worker } from "./worker.ts";
 
 export const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
 
-const MAX_LENGTH = 10_000;
 const DEFAULT_LOGS_ENDPOINT = "/volumes/default/logs";
-
 const DAEMON_API_SPECIFIER = "x-daemon-api";
 const HYPERVISOR_API_SPECIFIER = "x-hypervisor-api";
 
@@ -42,23 +40,18 @@ export const createDaemonAPIs = (
   app.route("/git", createGitAPIS(options));
 
   app.all(DEFAULT_LOGS_ENDPOINT, () => {
-    const logs = worker?.logs();
+    const l = logs.read();
 
-    if (!logs) {
+    if (!l) {
       return new Response(null, { status: 404 });
     }
 
     return new Response(
       new ReadableStream<ServerSentEventMessage>({
         async pull(controller) {
-          for await (const content of logs) {
+          for await (const content of l) {
             controller.enqueue({
-              data: encodeURIComponent(JSON.stringify({
-                ...content,
-                message: content.message.length > MAX_LENGTH
-                  ? `${content.message.slice(0, MAX_LENGTH)}...`
-                  : content.message,
-              })),
+              data: encodeURIComponent(JSON.stringify(content)),
               id: Date.now(),
               event: "message",
             });
