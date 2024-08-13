@@ -16,20 +16,8 @@ export const createWorker = (opts: WorkerOptions) => {
 
   worker = w;
 
-  const startLogStream = async (worker: DenoRun) => {
-    for await (const log of worker.logs?.() ?? []) {
-      const message = log.message.slice(0, -1);
-      if (log.level === "error") {
-        console.error(message);
-      } else {
-        console.log(message);
-      }
-    }
-  };
-
   const startWorker = async (worker: DenoRun) => {
     worker.start();
-    startLogStream(worker);
     await worker.waitUntilReady();
   };
 
