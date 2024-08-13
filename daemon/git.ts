@@ -15,8 +15,6 @@ import { logs } from "./loggings/stream.ts";
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 
-console.log({ "DECO_TRACKING_BRANCH": Deno.env.get("DECO_TRACKING_BRANCH") });
-
 const git = simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
   trimmed: true,
