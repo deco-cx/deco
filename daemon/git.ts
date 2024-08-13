@@ -2,7 +2,6 @@ import { type Handler, Hono, type MiddlewareHandler } from "@hono/hono";
 import { ensureDir } from "@std/fs";
 import { basename, dirname, join } from "@std/path";
 import {
-  type DiffResult,
   type FileStatusResult,
   GitConfigScope,
   type LogResult,
@@ -39,10 +38,6 @@ const getMergeBase = async () => {
 
   return base;
 };
-
-export interface GitDiffAPI {
-  response: DiffResult;
-}
 
 export interface GitStatusAPI {
   response: Omit<StatusResult, "files"> & {
@@ -195,7 +190,7 @@ export const discard: Handler = async (c) => {
 
   const base = await getMergeBase();
 
-  git.reset(["."])
+  await git.reset(["."])
     .reset([base])
     .checkout(
       filepaths.map((path) => path.startsWith("/") ? path.slice(1) : path),
