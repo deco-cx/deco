@@ -4,11 +4,12 @@ const git = GIT.simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
   trimmed: true,
 });
-
+const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_DEFAULT_TRACKING_BRANCH") ??
+  "main";
 const getMergeBase = async () => {
   const status = await git.status();
   const current = status.current;
-  const tracking = status.tracking || "main";
+  const tracking = status.tracking || DEFAULT_TRACKING_BRANCH;
 
   if (!current || !tracking) {
     throw new Error(`Missing local or upstream branches`);
@@ -168,7 +169,7 @@ export const log: Hono.Handler = async (c) => {
 };
 
 let hasGit = false;
-export const ensureGit: Hono.MiddlewareHandler = async (c, next) => {
+export const ensureGit: Hono.MiddlewareHandler = async (_, next) => {
   if (hasGit) {
     return next();
   }
