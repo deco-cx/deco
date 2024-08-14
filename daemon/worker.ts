@@ -38,15 +38,19 @@ export const createWorker = (opts: WorkerOptions) => {
   app.all("/*", (c) => w.fetch(c.req.raw));
 
   // listen for signals
-  const signals: Deno.Signal[] = ["SIGINT", "SIGTERM"];
-  for (const signal of signals) {
-    Deno.addSignalListener(signal, () => {
-      console.log(`Received ${signal}`);
-      opts.persist();
-      w.signal(signal);
-      w[Symbol.asyncDispose]();
-      self.close();
-    });
+  try {
+    const signals: Deno.Signal[] = ["SIGINT", "SIGTERM"];
+    for (const signal of signals) {
+      Deno.addSignalListener(signal, () => {
+        console.log(`Received ${signal}`);
+        opts.persist();
+        w.signal(signal);
+        w[Symbol.asyncDispose]();
+        self.close();
+      });
+    }
+  } catch {
+    /** Windows machines don't have sigint, sigterm */
   }
 
   return app;
