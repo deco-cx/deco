@@ -1,4 +1,3 @@
-
 export interface LogLine {
   message: string;
   timestamp: number;
@@ -54,9 +53,9 @@ function createLogsInterface() {
     const line: LogLine = e.detail;
 
     if (line.level === "error") {
-      console.error(line.message);
+      console.error(line.message?.replace(/\n$/, ""));
     } else {
-      console.log(line.message);
+      console.log(line.message?.replace(/\n$/, ""));
     }
 
     buffer.push(line);
@@ -83,14 +82,19 @@ function createLogsInterface() {
     }
   }
 
-  const push = (line: LogLine) => {
+  const push = (
+    { message = "unknown", level = "info", timestamp = Date.now() }: Partial<
+      LogLine
+    >,
+  ) => {
     target.dispatchEvent(
       new CustomEvent("log", {
         detail: {
-          ...line,
-          message: line.message.length > MAX_LENGTH
-            ? `${line.message.slice(0, MAX_LENGTH)}...`
-            : line.message,
+          level,
+          timestamp,
+          message: message.length > MAX_LENGTH
+            ? `${message.slice(0, MAX_LENGTH)}...`
+            : message,
         },
       }),
     );

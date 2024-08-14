@@ -18,6 +18,7 @@ import { ensureGit } from "./git.ts";
 import { register } from "./tunnel.ts";
 import { createWorker } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
+import { logs } from "./loggings/stream.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
   string: ["build-cmd"],
@@ -113,17 +114,17 @@ const persist = async () => {
 
 const bundle = createBundler();
 const genManifestTS = throttle(async () => {
-  await Promise.all([bundle(), delay(1_000)]);
+  await Promise.all([bundle(), delay(300)]);
 });
 const genBlocksJSON = throttle(async () => {
-  await Promise.all([genMetadata(), delay(1_000)]);
+  await Promise.all([genMetadata(), delay(300)]);
 });
 const persistState = throttle(async () => {
   await Promise.all([persist(), delay(2 * 60 * 1_000)]);
 });
 
 // Watch for changes in filesystem
-(async () => {
+const watch = async () => {
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
 
   for await (const event of watcher) {
@@ -157,7 +158,7 @@ const persistState = throttle(async () => {
 
     persistState();
   }
-})();
+};
 
 const createDeps = (): MiddlewareHandler => {
   let ok: Promise<unknown> | null | false = null;
@@ -165,28 +166,38 @@ const createDeps = (): MiddlewareHandler => {
   const start = async () => {
     let start = performance.now();
     await ensureGit({ site: DECO_SITE_NAME! });
-    let duration = performance.now() - start;
-    console.log(
-      `${colors.bold("[step 1/3]")}: Git setup took ${duration.toFixed(0)}ms`,
-    );
+    logs.push({
+      level: "info",
+      message: `${colors.bold("[step 1/4]")}: Git setup took ${
+        (performance.now() - start).toFixed(0)
+      }ms`,
+    });
 
     start = performance.now();
     await genManifestTS();
-    duration = performance.now() - start;
-    console.log(
-      `${colors.bold("[step 2/3]")}: Manifest generation took ${
-        duration.toFixed(0)
+    logs.push({
+      level: "info",
+      message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
+        (performance.now() - start).toFixed(0)
       }ms`,
-    );
+    });
 
     start = performance.now();
     await genBlocksJSON();
-    duration = performance.now() - start;
-    console.log(
-      `${colors.bold("[step 3/3]")}: Blocks metadata generation took ${
-        duration.toFixed(0)
+    logs.push({
+      level: "info",
+      message: `${colors.bold("[step 3/4]")}: Blocks metadata generation took ${
+        (performance.now() - start).toFixed(0)
       }ms`,
-    );
+    });
+
+    watch();
+    logs.push({
+      level: "info",
+      message: `${
+        colors.bold("[step 4/4]")
+      }: Started file watcher in background`,
+    });
   };
 
   return async (c, next) => {
