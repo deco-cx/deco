@@ -183,6 +183,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       status: undefined,
     };
     state.url = new URL(request.url);
+    state.heads = [];
     state.response = response;
     state.bag = new WeakMap();
     state.vary = vary();
@@ -226,3 +227,4 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 
 export { DECO_SEGMENT } from "./middleware.ts";
 export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";
+

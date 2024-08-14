@@ -3,7 +3,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 import type { StatusCode as Status } from "@std/http/status";
-import type { JSX } from "preact";
+import type { ComponentChildren, JSX } from "preact";
 import type { AppManifest, ImportMap } from "../blocks/app.ts";
 import { isInvokeCtx } from "../blocks/loader.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
@@ -86,6 +86,7 @@ export const vary = (): Vary => {
  */
 export interface RequestState {
   vary: Vary;
+  heads?: ComponentChildren[];
   response: {
     headers: Headers;
     status?: Status;

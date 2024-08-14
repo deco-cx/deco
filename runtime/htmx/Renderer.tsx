@@ -8,7 +8,7 @@ import { Head } from "./Bindings.tsx";
 export { Head } from "./Bindings.tsx";
 
 export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
-  { page }: TData,
+  { page, heads }: TData,
 ) => {
   const original = options.vnode;
   const htmlHead: ComponentChildren[] = [];
@@ -38,14 +38,17 @@ export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">${
       renderToString(
         <>
-          {((htmlHead ??
-            []) as ComponentChildren[]).map(
-              (child) => (
-                <>
-                  {child}
-                </>
-              ),
-            )}
+          {([
+            ...htmlHead ??
+              [],
+            ...heads ?? [],
+          ] as ComponentChildren[]).map(
+            (child) => (
+              <>
+                {child}
+              </>
+            ),
+          )}
         </>,
       )
     }</head><body>${body}</body></html>`,

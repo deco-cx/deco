@@ -120,6 +120,7 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
       ) =>
         renderFn({
           ...data,
+          heads: ctx.var.heads,
           page: {
             Component: (props) => {
               return (

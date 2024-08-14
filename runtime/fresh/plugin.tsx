@@ -1,5 +1,6 @@
 import type { AppManifest, SiteInfo } from "../../types.ts";
 
+import { Head } from "$fresh/runtime.ts";
 import type { ComponentType } from "preact";
 import type { PageData } from "../deps.ts";
 import htmxFramework from "../htmx/Bindings.tsx";
@@ -53,7 +54,16 @@ export default function decoPlugin(opt: Options): Plugin {
   const catchAll: PluginRoute = {
     path: "/[...catchall]",
     component: ({ data }: PageParams<PageData>) => {
-      return <data.page.Component {...data.page.props} />;
+      return (
+        <>
+          {data.heads && (
+            <Head>
+              {data.heads.map((children) => ({ children }))}
+            </Head>
+          )}
+          <data.page.Component {...data.page.props} />
+        </>
+      );
     },
     handler: async (req: Request, ctx) => {
       const hdnl = await handlerPromise;

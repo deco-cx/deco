@@ -106,10 +106,11 @@ export const HTMX = <
     server: hono,
     framework,
     renderer: {
-      renderFn: async ({ page }) => {
+      renderFn: async ({ page, heads }) => {
         const active = Context.active();
         const revision = await active.release?.revision();
         return renderFn({
+          heads,
           page: {
             metadata: page.metadata,
             Component: () => {

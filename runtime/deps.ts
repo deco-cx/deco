@@ -1,3 +1,4 @@
+import type { ComponentChildren } from "preact";
 import type { Page } from "../blocks/page.tsx";
 
 export { Hono } from "@hono/hono";
@@ -7,6 +8,7 @@ export type { Env } from "@hono/hono/types";
 export { serveStatic, upgradeWebSocket } from "@hono/hono/deno";
 export interface PageData {
   page: Page;
+  heads?: ComponentChildren[];
 }
 
 // JSR does not support global declares which is the hono way for overriding ContextRenderer function
