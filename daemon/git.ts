@@ -1,14 +1,33 @@
-import { GIT, Hono, HTTPException } from "./deps.ts";
+import { type Handler, Hono, type MiddlewareHandler } from "@hono/hono";
+import { ensureDir } from "@std/fs";
+import { basename, dirname, extname, join } from "@std/path";
+import {
+  GitConfigScope,
+  type LogResult,
+  type PushResult,
+  simpleGit,
+  type StatusResult
+} from "simple-git";
+import { logs } from "./loggings/stream.ts";
 
-const git = GIT.simpleGit(Deno.cwd(), {
+const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
+const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
+
+const git = simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
   trimmed: true,
+  progress: ({ method, stage, progress }) =>
+    logs.push({
+      level: "info",
+      message: `git.${method} ${stage} stage ${progress}% complete`,
+      timestamp: Date.now(),
+    }),
 });
 
 const getMergeBase = async () => {
   const status = await git.status();
   const current = status.current;
-  const tracking = status.tracking || "main";
+  const tracking = status.tracking || DEFAULT_TRACKING_BRANCH;
 
   if (!current || !tracking) {
     throw new Error(`Missing local or upstream branches`);
@@ -20,47 +39,93 @@ const getMergeBase = async () => {
 };
 
 export interface GitDiffAPI {
-  response: GIT.DiffResult;
-}
-
-export interface GitStatusAPI {
-  response: Omit<GIT.StatusResult, "files"> & {
-    files: Array<
-      GIT.FileStatusResult & {
-        from: string | undefined;
-        to: string | undefined;
-      }
-    >;
+  response: {
+    from?: string;
+    to?: string;
+    mode: "text" | "binary";
   };
   searchParams: {
-    diff?: boolean;
+    path: string;
+  };
+}
+
+const WELL_KNOWN_TEXT_FILE_TYPES = new Set<string>([
+  ".txt",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".json",
+  ".html",
+  ".css",
+  ".scss",
+  ".sass",
+  ".less",
+  ".md",
+  ".yml",
+  ".yaml",
+  ".toml",
+  ".xml",
+  ".env",
+]);
+
+const isTextFile = (path: string) => {
+  const ext = extname(path);
+  return WELL_KNOWN_TEXT_FILE_TYPES.has(ext) ||
+    // for the .env case
+    WELL_KNOWN_TEXT_FILE_TYPES.has(path);
+};
+
+export const diff: Handler = async (c) => {
+  const url = new URL(c.req.url);
+  const rawPath = url.searchParams.get("path");
+  const path = rawPath?.startsWith("/") ? rawPath.slice(1) : rawPath;
+
+  if (!path) {
+    return new Response("Missing path search param", { status: 400 });
+  }
+
+  if (!isTextFile(path)) {
+    return new Response(JSON.stringify({ mode: "binary" }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  }
+
+  const base = await getMergeBase();
+  const [from, to] = await Promise.all([
+    git.show(`${base}:${path}`).catch(() => undefined),
+    Deno.readTextFile(path).catch(() => undefined),
+  ]);
+
+  return new Response(JSON.stringify({ from, to, mode: "text" }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+};
+
+export interface GitStatusAPI {
+  response: StatusResult;
+  searchParams: {
+    fetch?: boolean;
   };
 }
 
 /** Git status */
-export const status: Hono.Handler = async (c) => {
+export const status: Handler = async (c) => {
   const url = new URL(c.req.url);
-  const includeDiff = url.searchParams.get("diff") === "true";
+  const fetch = url.searchParams.get("fetch") === "true";
 
   const base = await getMergeBase();
+
+  if (fetch) {
+    await git.fetch(["-p"]);
+  }
 
   const status = await git
     .reset(["."])
     .reset([base])
     .status();
-
-  if (includeDiff) {
-    status.files = await Promise.all(
-      status.files.map(async (file) => {
-        const [from, to] = await Promise.all([
-          git.show(`${base}:${file.path}`).catch(() => undefined),
-          Deno.readTextFile(file.path).catch(() => undefined),
-        ]);
-
-        return { ...file, from, to };
-      }),
-    );
-  }
 
   return new Response(JSON.stringify(status), {
     status: 200,
@@ -78,31 +143,87 @@ export interface PublishAPI {
       timezoneOffset?: number;
     };
   };
-  response: GIT.PushResult;
+  response: PushResult;
 }
 
-// TODO: maybe tag with versions!
-export const publish: Hono.Handler = async (c) => {
-  const { message, author } = await c.req.json() as PublishAPI["body"];
+const persist = async (oid: string) => {
+  if (!SOURCE_PATH) {
+    return;
+  }
 
-  await git.fetch(["-p"]);
+  const start = performance.now();
 
-  const base = await getMergeBase();
+  const outfilePath = join(SOURCE_PATH, "..", "..", oid, basename(SOURCE_PATH));
+  await ensureDir(dirname(outfilePath));
 
-  const result = await git
-    .reset(["."])
-    .reset([base])
-    .add(["."])
-    .commit(message, {
-      "--author": `${author.name} <${author.email}>`,
-      "--no-verify": null,
-    })
-    .push();
-
-  return new Response(JSON.stringify(result), {
-    status: 200,
-    headers: { "content-type": "application/json" },
+  const tar = new Deno.Command("tar", {
+    cwd: Deno.cwd(),
+    args: [
+      "-cf",
+      outfilePath,
+      "--exclude=.git",
+      ".",
+    ],
   });
+
+  const status = await tar.spawn().status;
+
+  console.log(
+    `[tar]: Tarballing took ${(performance.now() - start).toFixed(0)}ms`,
+  );
+
+  if (!status.success) {
+    throw new Error("Failed to tarball");
+  }
+};
+
+// TODO: maybe tag with versions!
+export const publish = ({ build }: Options): Handler => {
+  const buildMap = new Map<string, Promise<void>>();
+
+  const doBuild = (oid: string) => {
+    const p = buildMap.get(oid) || (async () => {
+      try {
+        await build?.spawn()?.status;
+        await persist(oid);
+      } catch (e) {
+        console.error("Building failed with:", e);
+      } finally {
+        buildMap.delete(oid);
+      }
+    })();
+
+    buildMap.set(oid, p);
+
+    return p;
+  };
+
+  return async (c) => {
+    const { message, author } = await c.req.json() as PublishAPI["body"];
+
+    await git.fetch(["-p"]);
+
+    const base = await getMergeBase();
+
+    const commit = await git
+      .reset(["."])
+      .reset([base])
+      .add(["."])
+      .commit(message, {
+        "--author": `${author.name} <${author.email}>`,
+        "--no-verify": null,
+      });
+
+    // Runs build pipeline asynchronously
+    doBuild(commit.commit);
+
+    const result = await git.push();
+
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
 };
 
 export interface CheckoutAPI {
@@ -111,14 +232,14 @@ export interface CheckoutAPI {
   };
 }
 
-export const discard: Hono.Handler = async (c) => {
+export const discard: Handler = async (c) => {
   const { filepaths } = await c.req.json() as CheckoutAPI["body"];
 
   await git.fetch(["-p"]);
 
   const base = await getMergeBase();
 
-  git.reset(["."])
+  await git.reset(["."])
     .reset([base])
     .checkout(
       filepaths.map((path) => path.startsWith("/") ? path.slice(1) : path),
@@ -131,7 +252,7 @@ export interface RebaseAPI {
   response: void;
 }
 
-export const rebase: Hono.Handler = async () => {
+export const rebase: Handler = async () => {
   await git
     .fetch(["-p"])
     .add(".")
@@ -146,13 +267,13 @@ export const rebase: Hono.Handler = async () => {
 };
 
 export interface GitLogAPI {
-  response: GIT.LogResult;
+  response: LogResult;
   searchParams: {
     limit?: number;
   };
 }
 
-export const log: Hono.Handler = async (c) => {
+export const log: Handler = async (c) => {
   const url = new URL(c.req.url);
   const limit = Number(url.searchParams.get("limit")) || 10;
 
@@ -167,41 +288,85 @@ export const log: Hono.Handler = async (c) => {
   );
 };
 
-let hasGit = false;
-export const ensureGit: Hono.MiddlewareHandler = async (c, next) => {
-  if (hasGit) {
-    return next();
-  }
-
-  try {
+export const ensureGit = async (
+  { site }: Pick<Options, "site">,
+) => {
+  const assertGitBinary = async () => {
     const cmd = new Deno.Command("git", {
       args: ["--version"],
       stdout: "piped",
     });
 
-    await cmd.spawn().status;
+    const status = await cmd.spawn().status;
 
-    hasGit = true;
+    if (!status.success) {
+      throw new Error("Git binary not found");
+    }
+  };
 
-    return next();
-  } catch {
-    const msg =
-      "Deco preview server requires GIT to be installed in your system but none was found. Please install it and add it to your PATH.";
+  const assertGitFolder = async () => {
+    const hasGitFolder = await Deno.stat(join(Deno.cwd(), ".git"))
+      .then(() => true)
+      .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
 
-    console.warn(`\nFatal error:\n${msg}\n`);
-    throw new HTTPException(424, {
-      res: new Response(msg, { status: 424 }),
-    });
-  }
+    if (hasGitFolder) {
+      return console.log("Git folder already exists, skipping init");
+    }
+
+    await setupGlobals()
+      .clone(`git@github.com:deco-sites/${site}.git`, ".", [
+        "--depth",
+        "1",
+        "--single-branch",
+        "--branch",
+        DEFAULT_TRACKING_BRANCH,
+      ]);
+  };
+
+  await Promise.all([assertGitBinary(), assertGitFolder()]);
 };
 
-const app = new Hono.Hono();
+const setupGlobals = () =>
+  git
+    .addConfig("safe.directory", Deno.cwd(), false, GitConfigScope.global)
+    .addConfig("push.autoSetupRemote", "true", false, GitConfigScope.global)
+    .addConfig("user.name", "decobot", false, GitConfigScope.global)
+    .addConfig("user.email", "capy@deco.cx", false, GitConfigScope.global);
 
-app.use("/*", ensureGit);
-app.get("/status", status);
-app.get("/log", log);
-app.post("/publish", publish);
-app.post("/discard", discard);
-app.post("/rebase", rebase);
+const setupGitConfig = (): MiddlewareHandler => {
+  let ok: Promise<unknown> | null = null;
 
-export default app;
+  return async (c, next) => {
+    try {
+      ok ||= setupGlobals();
+
+      await ok.then(next);
+    } catch (error) {
+      console.error(error);
+
+      ok = null;
+      c.res = new Response(`Error while setting up git`, {
+        status: 424,
+      });
+    }
+  };
+};
+
+interface Options {
+  build: Deno.Command | null;
+  site: string;
+}
+
+export const createGitAPIS = (options: Options) => {
+  const app = new Hono();
+
+  app.use(setupGitConfig());
+  app.get("/diff", diff);
+  app.get("/status", status);
+  app.get("/log", log);
+  app.post("/publish", publish(options));
+  app.post("/discard", discard);
+  app.post("/rebase", rebase);
+
+  return app;
+};

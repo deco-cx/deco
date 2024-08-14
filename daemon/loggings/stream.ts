@@ -1,5 +1,3 @@
-import { mergeReadableStreams } from "@std/streams";
-
 export interface LogLine {
   message: string;
   timestamp: number;
@@ -11,61 +9,106 @@ export interface StdStreamable {
   status: Promise<unknown>;
 }
 
+const decoder = new TextDecoder();
+
+export async function* iteratorFrom(
+  stream: ReadableStream<Uint8Array>,
+  level: "info" | "error",
+) {
+  const reader = stream.getReader();
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      yield {
+        message: decoder.decode(value),
+        timestamp: Date.now(),
+        level,
+      };
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export function streamLogsFrom(
   process: StdStreamable,
-): AsyncIterableIterator<LogLine> {
-  const stdoutStream = process.stdout.pipeThrough(new TextDecoderStream())
-    .pipeThrough(
-      new TransformStream<string, LogLine>({
-        transform(chunk, controller) {
-          controller.enqueue({
-            message: chunk,
-            timestamp: Date.now(),
-            level: "info",
-          });
-        },
-      }),
-    );
+): AsyncIterableIterator<LogLine>[] {
+  const stdout = iteratorFrom(process.stdout, "info");
+  const stderr = iteratorFrom(process.stderr, "error");
 
-  const stderrStream = process.stderr.pipeThrough(new TextDecoderStream())
-    .pipeThrough(
-      new TransformStream<string, LogLine>({
-        transform(chunk, controller) {
-          controller.enqueue({
-            message: chunk,
-            timestamp: Date.now(),
-            level: "error",
-          });
-        },
-      }),
-    );
-
-  const combinedStream = mergeReadableStreams(stdoutStream, stderrStream);
-  const reader = combinedStream.getReader();
-
-  const end = Promise.withResolvers<void>();
-
-  return (async function* () {
-    process.status.finally(() => {
-      end.resolve();
-    });
-
-    try {
-      while (true) {
-        const resp = await Promise.race([reader.read(), end.promise]);
-        if (typeof resp !== "object") {
-          return;
-        }
-
-        const { value, done } = resp as ReadableStreamReadResult<LogLine>;
-        if (done) break;
-
-        yield value;
-      }
-    } catch (error) {
-      console.error("Error reading from stream:", error);
-    } finally {
-      reader.releaseLock();
-    }
-  })();
+  return [stdout, stderr];
 }
+
+function createLogsInterface() {
+  const MAX_LENGTH = 10_000;
+  const MAX_COUNT = 1000;
+  const target = new EventTarget();
+  const buffer: LogLine[] = [];
+
+  // deno-lint-ignore no-explicit-any
+  target.addEventListener("log", (e: any) => {
+    const line: LogLine = e.detail;
+
+    if (line.level === "error") {
+      console.error(line.message?.replace(/\n$/, ""));
+    } else {
+      console.log(line.message?.replace(/\n$/, ""));
+    }
+
+    buffer.push(line);
+    if (buffer.length > MAX_COUNT) {
+      buffer.shift();
+    }
+  });
+
+  const listen = () =>
+    new Promise<LogLine>((resolve) =>
+      // deno-lint-ignore no-explicit-any
+      target.addEventListener("log", (e: any) => resolve(e.detail), {
+        once: true,
+      })
+    );
+
+  async function* read() {
+    for (const line of buffer) {
+      yield line;
+    }
+
+    while (true) {
+      yield await listen();
+    }
+  }
+
+  const push = (
+    { message = "unknown", level = "info", timestamp = Date.now() }: Partial<
+      LogLine
+    >,
+  ) => {
+    target.dispatchEvent(
+      new CustomEvent("log", {
+        detail: {
+          level,
+          timestamp,
+          message: message.length > MAX_LENGTH
+            ? `${message.slice(0, MAX_LENGTH)}...`
+            : message,
+        },
+      }),
+    );
+  };
+
+  return {
+    register: async (it: AsyncIterableIterator<LogLine>) => {
+      for await (const line of it) {
+        push(line);
+      }
+    },
+    push,
+    read,
+  };
+}
+
+export const logs = createLogsInterface();
