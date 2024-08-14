@@ -202,7 +202,9 @@ export const publish = ({ build }: Options): Handler => {
   };
 
   return async (c) => {
-    const { message, author } = await c.req.json() as PublishAPI["body"];
+    const body = await c.req.json() as PublishAPI["body"];
+    const author = body.author || { name: "decobot", email: "capy@deco.cx" };
+    const message = body.message || `New release by ${author.name}`;
 
     await git.fetch(["-p"]);
 
@@ -212,7 +214,7 @@ export const publish = ({ build }: Options): Handler => {
       .reset(["."])
       .reset([base])
       .add(["."])
-      .commit(message, {
+      .commit(message || "New release", {
         "--author": `${author.name} <${author.email}>`,
         "--no-verify": null,
       });
