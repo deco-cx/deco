@@ -220,12 +220,9 @@ export const createRealtimeAPIs = () => {
     );
   });
   app.get("/*", async (c) => {
-    const [_, ...segments] = c.req.path.split("/files");
-    const path = segments
-      .join("/")
-      .split("/")
-      .map(encodeURIComponent)
-      .join("/");
+    const url = new URL(c.req.raw.url); // necessary because of hono internal workings with encoding
+    const [_, ...segments] = url.pathname.split("/files");
+    const path = segments.join("/");
     const withContent = c.req.query("content") === "true";
 
     const fs: Record<string, { content: string | null }> = {};
