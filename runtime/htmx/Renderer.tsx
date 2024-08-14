@@ -4,7 +4,6 @@
 import { renderToString } from "npm:preact-render-to-string@6.4.0";
 import { type ComponentChildren, options } from "preact";
 import type { ContextRenderer, PageData } from "../deps.ts";
-import { Head } from "./Bindings.tsx";
 export { Head } from "./Bindings.tsx";
 
 export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
@@ -18,7 +17,7 @@ export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
     // we support current fresh's Head
     if (
       isFunc &&
-      (vNodeType === Head || (vNodeType.displayName === "HTMLHead"))
+      (vNodeType.displayName === "HTMLHead")
     ) {
       htmlHead.push(vnode.props.children);
     }

@@ -225,6 +225,8 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   }
 }
 
+export { Head } from "./htmx/Renderer.tsx";
 export { DECO_SEGMENT } from "./middleware.ts";
+export type { DecoMiddlewareContext } from "./middleware.ts";
 export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";
 

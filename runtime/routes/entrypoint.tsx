@@ -90,7 +90,13 @@ export const handler = createHandler(async (
         props: {
           params: ctx.req.param(),
           url: ctx.var.url,
-          data: args,
+          data: {
+            page: args.page,
+            routerInfo: {
+              flags: ctx.var.flags,
+              pagePath: ctx.var.pathTemplate,
+            },
+          },
         } satisfies PageParams<PageData>,
       },
     });
