@@ -6,7 +6,7 @@ import {
   type LogResult,
   type PushResult,
   simpleGit,
-  type StatusResult
+  type StatusResult,
 } from "simple-git";
 import { logs } from "./loggings/stream.ts";
 
