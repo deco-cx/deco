@@ -26,6 +26,7 @@ const parsedArgs = parseArgs(Deno.args, {
 const runCommand = parsedArgs["_"];
 
 const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
+const DECO_APP_NAME = Deno.env.get("DECO_APP_NAME");
 const DENO_DEPLOYMENT_ID = Deno.env.get("DENO_DEPLOYMENT_ID");
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DECO_TRANSIENT_ENV = Deno.env.get("DECO_TRANSIENT_ENV") === "true";
@@ -67,12 +68,12 @@ globalThis.addEventListener("unhandledrejection", (e: {
   console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
 });
 
-const createBundler = () => {
+const createBundler = (appName?: string) => {
   const bundler = bundleApp(Deno.cwd());
 
   return async () => {
     try {
-      await bundler({ dir: ".", name: "site" });
+      await bundler({ dir: ".", name: appName ?? "site" });
     } catch (error) {
       console.error("Error while bundling site app", error);
     }
@@ -112,7 +113,7 @@ const persist = async () => {
   }
 };
 
-const bundle = createBundler();
+const bundle = createBundler(DECO_APP_NAME);
 const genManifestTS = throttle(async () => {
   await Promise.all([bundle(), delay(300)]);
 });
