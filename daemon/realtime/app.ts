@@ -4,6 +4,7 @@ import { ensureFile } from "@std/fs";
 import { walk, WalkError } from "@std/fs/walk";
 import { join, SEPARATOR } from "@std/path";
 import fjp from "fast-json-patch";
+import { lockerGitAPI } from "../git.ts";
 import { BinaryIndexedTree } from "./crdt/bit.ts";
 import { apply } from "./crdt/text.ts";
 import {
@@ -68,7 +69,7 @@ export const createRealtimeAPIs = () => {
 
       const path = paths[0];
 
-      if (path.includes(".git")) {
+      if (path.includes(".git") || path.includes("node_modules")) {
         continue;
       }
 
@@ -80,6 +81,7 @@ export const createRealtimeAPIs = () => {
     }
   };
 
+  app.use(lockerGitAPI.rlock);
   app.use(inflight());
   app.get("/", (c) => {
     if (c.req.header("Upgrade") !== "websocket") {
@@ -238,7 +240,7 @@ export const createRealtimeAPIs = () => {
       for await (const entry of walker) {
         const key = toPosix(entry.path.replace(root, "/"));
 
-        if (key.includes(".git")) {
+        if (key.includes(".git") || key.includes("node_modules")) {
           continue;
         }
 

@@ -8,10 +8,13 @@ import {
   simpleGit,
   type StatusResult,
 } from "simple-git";
+import { createLocker } from "./async.ts";
 import { logs } from "./loggings/stream.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
+
+export const lockerGitAPI = createLocker();
 
 const git = simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
@@ -347,6 +350,7 @@ interface Options {
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
+  app.use(lockerGitAPI.wlock);
   app.get("/diff", diff);
   app.get("/status", status);
   app.get("/log", log);

@@ -14,11 +14,11 @@ import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { delay, throttle } from "../utils/async.ts";
 import { createDaemonAPIs, DECO_SITE_NAME } from "./daemon.ts";
-import { ensureGit } from "./git.ts";
+import { ensureGit, lockerGitAPI } from "./git.ts";
+import { logs } from "./loggings/stream.ts";
 import { register } from "./tunnel.ts";
 import { createWorker } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
-import { logs } from "./loggings/stream.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
   string: ["build-cmd"],
@@ -129,7 +129,10 @@ const watch = async () => {
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
 
   for await (const event of watcher) {
-    const skip = event.paths.some((path) => path.includes(".git"));
+    using _ = await lockerGitAPI.lock.rlock();
+    const skip = event.paths.some((path) =>
+      path.includes(".git") || path.includes("node_modules")
+    );
 
     if (skip) {
       continue;

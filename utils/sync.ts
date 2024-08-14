@@ -3,44 +3,6 @@ import { isAwaitable, type PromiseOrValue } from "../engine/core/utils.ts";
 export interface SyncOnce<T> {
   do: (cb: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
-export class Mutex {
-  public locked: boolean;
-  public queue: Array<ReturnType<typeof Promise.withResolvers<void>>>;
-  constructor() {
-    this.locked = false;
-    this.queue = [];
-  }
-
-  acquire(): Promise<Disposable> {
-    const disposable = {
-      [Symbol.dispose]: () => {
-        return this.release();
-      },
-    };
-    if (!this.locked) {
-      this.locked = true;
-      return Promise.resolve(disposable);
-    }
-    const promise = Promise.withResolvers<void>();
-    this.queue.push(promise);
-    return promise.promise.then(() => {
-      return disposable;
-    });
-  }
-
-  freeOrNext(): boolean {
-    return !this.locked || this.queue.length === 0;
-  }
-
-  release() {
-    if (this.queue.length > 0) {
-      const next = this.queue.shift();
-      next?.resolve();
-    } else {
-      this.locked = false;
-    }
-  }
-}
 
 /**
  * Run the function only once.
