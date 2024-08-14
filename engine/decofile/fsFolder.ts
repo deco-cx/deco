@@ -1,3 +1,4 @@
+import { Mutex } from "@core/asyncutil/mutex";
 import { debounce } from "@std/async/debounce";
 import { ensureFile } from "@std/fs";
 import { walk } from "@std/fs/walk";
@@ -13,7 +14,6 @@ import type {
   ReadOptions,
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
-import { Mutex } from "@core/asyncutil/mutex";
 
 export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
