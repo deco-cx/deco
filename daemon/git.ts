@@ -214,7 +214,7 @@ export const publish = ({ build }: Options): Handler => {
       .reset(["."])
       .reset([base])
       .add(["."])
-      .commit(message || "New release", {
+      .commit(message, {
         "--author": `${author.name} <${author.email}>`,
         "--no-verify": null,
       });
