@@ -168,6 +168,27 @@ const isMonitoringRobots = (req: Request) => {
   return wellKnownMonitoringRobotsUA.some((robot) => ua.includes(robot));
 };
 
+/**
+ * @description server-timing separator.
+ */
+const SERVER_TIMING_SEPARATOR: string = ",";
+/**
+ * @description max length of server-timing header.
+ */
+const SERVER_TIMING_MAX_LEN: number = 2_000;
+/**
+ * @description return server-timing string equal or less than size parameter.
+ * if timings.length > size then return the timing until the well formed timing that's smaller than size.
+ */
+const reduceServerTimingsTo = (timings: string, size: number): string => {
+  if (timings.length <= size) return timings;
+
+  return timings.substring(
+    0,
+    timings.lastIndexOf(SERVER_TIMING_SEPARATOR, size),
+  );
+};
+
 export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
   deco: Deco<TAppManifest>,
 ): DecoMiddleware<TAppManifest>[] => {
@@ -326,7 +347,9 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         newHeaders.append(key, value)
       );
       const printTimings = ctx?.var?.t?.printTimings;
-      printTimings && newHeaders.set("Server-Timing", printTimings());
+      const printedTimings = printTimings &&
+        reduceServerTimingsTo(printTimings(), SERVER_TIMING_MAX_LEN);
+      printedTimings && newHeaders.set("Server-Timing", printedTimings);
 
       const responseStatus = ctx.var.response.status ??
         initialResponse.status;
