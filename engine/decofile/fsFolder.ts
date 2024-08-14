@@ -1,7 +1,7 @@
 import { debounce } from "@std/async/debounce";
 import { ensureFile } from "@std/fs";
 import { walk } from "@std/fs/walk";
-import { basename, join } from '@std/path';
+import { basename, join } from "@std/path";
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";

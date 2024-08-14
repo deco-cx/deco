@@ -1,7 +1,4 @@
-import type {
-  DeleteAtOperation,
-  TextFilePatchOperation,
-} from "../types.ts";
+import type { DeleteAtOperation, TextFilePatchOperation } from "../types.ts";
 import { BinaryIndexedTree } from "./bit.ts";
 
 const shrinkOperations = (
