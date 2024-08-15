@@ -148,9 +148,8 @@ const watch = async () => {
     }
 
     const codeCreatedOrDeleted = event.kind !== "modify" &&
-      event.kind !== "access" &&
-      event.paths.some((path) => (
-        path.endsWith(".ts") || path.endsWith(".tsx")
+      event.kind !== "access" && event.paths.some((path) => (
+        /\.tsx?$/.test(path) && !path.includes("manifest.gen.ts")
       ));
 
     if (codeCreatedOrDeleted) {
