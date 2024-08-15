@@ -1,4 +1,4 @@
-import { type Handler, Hono, type MiddlewareHandler } from "@hono/hono";
+import { type Handler, Hono } from "@hono/hono";
 import { ensureDir } from "@std/fs";
 import { basename, dirname, extname, join } from "@std/path";
 import {
@@ -309,11 +309,23 @@ export const ensureGit = async (
       .then(() => true)
       .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
 
+    const [name, email] = await Promise.all([
+      git.getConfig("user.name", GitConfigScope.global),
+      git.getConfig("user.email", GitConfigScope.global),
+    ]);
+
+    const userName = name.value || name.values[0] || "decobot";
+    const userEmail = email.value || email.values[0] || "capy@deco.cx";
+
+    await git
+      .addConfig("safe.directory", Deno.cwd(), false, GitConfigScope.global)
+      .addConfig("push.autoSetupRemote", "true", false, GitConfigScope.global)
+      .addConfig("user.name", userName, false, GitConfigScope.global)
+      .addConfig("user.email", userEmail, false, GitConfigScope.global);
+
     if (hasGitFolder) {
       return console.log("Git folder already exists, skipping init");
     }
-
-    await setupGlobals();
 
     await git.clone(`git@github.com:deco-sites/${site}.git`, ".", [
       "--depth",
@@ -327,41 +339,6 @@ export const ensureGit = async (
   await Promise.all([assertGitBinary(), assertGitFolder()]);
 };
 
-const setupGlobals = async () => {
-  const [name, email] = await Promise.all([
-    git.getConfig("user.name", GitConfigScope.global),
-    git.getConfig("user.email", GitConfigScope.global),
-  ]);
-
-  const userName = name.value || name.values[0] || "decobot";
-  const userEmail = email.value || email.values[0] || "capy@deco.cx";
-
-  await git
-    .addConfig("safe.directory", Deno.cwd(), false, GitConfigScope.global)
-    .addConfig("push.autoSetupRemote", "true", false, GitConfigScope.global)
-    .addConfig("user.name", userName, false, GitConfigScope.global)
-    .addConfig("user.email", userEmail, false, GitConfigScope.global);
-};
-
-const setupGitConfig = (): MiddlewareHandler => {
-  let ok: Promise<unknown> | null = null;
-
-  return async (c, next) => {
-    try {
-      ok ||= setupGlobals();
-
-      await ok.then(next);
-    } catch (error) {
-      console.error(error);
-
-      ok = null;
-      c.res = new Response(`Error while setting up git`, {
-        status: 424,
-      });
-    }
-  };
-};
-
 interface Options {
   build: Deno.Command | null;
   site: string;
@@ -370,7 +347,6 @@ interface Options {
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
-  app.use(setupGitConfig());
   app.get("/diff", diff);
   app.get("/status", status);
   app.get("/log", log);
