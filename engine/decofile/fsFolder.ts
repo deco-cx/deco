@@ -39,7 +39,10 @@ const inferBlockType = (resolveType: string, knownBlockTypes: Set<string>) => {
   return blockType;
 };
 
-const inferMetadata = (content: unknown, knownBlockTypes: Set<string>): Metadata | null => {
+const inferMetadata = (
+  content: unknown,
+  knownBlockTypes: Set<string>,
+): Metadata | null => {
   try {
     const { __resolveType, name, path } = content as Record<string, string>;
     const blockType = inferBlockType(__resolveType, knownBlockTypes);
@@ -70,7 +73,7 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>): Metadata
 
 /**
  * Recursively maps block references in an object and updates the `usedBy` property of the corresponding blocks.
- * 
+ *
  * @param obj - The object to map block references in.
  * @param blocks - A map of block paths to block metadata.
  * @param currentPath - The current path of the object being processed.
@@ -80,19 +83,20 @@ const mapBlockReferences = (
   obj: unknown,
   blocks: Map<string, Metadata>,
   currentPath: string,
-  isRoot = true
+  isRoot = true,
 ): void => {
-  if (typeof obj !== 'object' || obj === null) return;
+  if (typeof obj !== "object" || obj === null) return;
 
   if (Array.isArray(obj)) {
-    obj.forEach(item => mapBlockReferences(item, blocks, currentPath, false));
+    obj.forEach((item) => mapBlockReferences(item, blocks, currentPath, false));
   } else {
     for (const [key, value] of Object.entries(obj)) {
-      if (key === '__resolveType' && typeof value === 'string' && !isRoot) {
-        const blockName = value.split('/').pop();
+      if (key === "__resolveType" && typeof value === "string" && !isRoot) {
+        const blockName = value.split("/").pop();
         if (blockName) {
-          const blockPath = Array.from(blocks.keys()).find(path => 
-            decodeURIComponent(path.split('/').pop() ?? '') === `${blockName}.json`
+          const blockPath = Array.from(blocks.keys()).find((path) =>
+            decodeURIComponent(path.split("/").pop() ?? "") ===
+              `${blockName}.json`
           );
           if (blockPath && blockPath !== currentPath) {
             const block = blocks.get(blockPath);
@@ -101,7 +105,7 @@ const mapBlockReferences = (
             }
           }
         }
-      } else if (typeof value === 'object' && value !== null) {
+      } else if (typeof value === "object" && value !== null) {
         mapBlockReferences(value, blocks, currentPath, false);
       }
     }
@@ -137,7 +141,7 @@ export const genMetadata = async () => {
       entries.map(([path, content]) => [
         path,
         inferMetadata(content, knownBlockTypes),
-      ]).filter(([, meta]) => meta !== null) as [string, Metadata][]
+      ]).filter(([, meta]) => meta !== null) as [string, Metadata][],
     );
 
     for (const [path, content] of entries) {
@@ -146,7 +150,10 @@ export const genMetadata = async () => {
 
     const pathname = join(Deno.cwd(), METADATA_PATH);
     await ensureFile(pathname);
-    await Deno.writeTextFile(pathname, JSON.stringify(Object.fromEntries(metadata)));
+    await Deno.writeTextFile(
+      pathname,
+      JSON.stringify(Object.fromEntries(metadata)),
+    );
   } catch (error) {
     console.error("Error while auto-generating blocks.json", error);
   }
