@@ -1,10 +1,16 @@
-//Tailwind Checker by Carcará
 import { walk } from "https://deno.land/std@0.201.0/fs/mod.ts";
-import * as colors from "std/fmt/colors.ts";
 
-const folderPaths = ["./components", "./sections"];
+const green = "\x1b[32m";
+const reset = "\x1b[0m";
+
+const folderPaths = ["./components", "./sections", "./islands"];
 const tailwindCssUrl =
   "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css";
+
+function isDynamicClass(cls: string): boolean {
+  const bracketValueRegex = /\[\d+(px|em|rem|%|vh|vw|vmin|vmax|ch|ex)\]/;
+  return bracketValueRegex.test(cls);
+}
 
 async function getAllClassesInCss(url: string): Promise<string[]> {
   try {
@@ -33,36 +39,43 @@ async function getAllClassesInCode(
   const allClasses: { file: string; class: string }[] = [];
 
   for (const folderPath of folderPaths) {
-    for await (const entry of walk(folderPath, { exts: [".tsx"] })) {
-      if (entry.isFile) {
-        try {
-          const data = await Deno.readTextFile(entry.path);
-          const lines = data.split("\n");
-          const classes = data.match(/class\s*=\s*["'`]([^"'`]+)["'`]/g);
+    try {
+      for await (const entry of walk(folderPath, { exts: [".tsx"] })) {
+        if (entry.isFile) {
+          try {
+            const data = await Deno.readTextFile(entry.path);
+            const lines = data.split("\n");
+            const classes = data.match(/class\s*=\s*["'`]([^"'`]+)["'`]/g);
 
-          if (classes) {
-            for (let i = 0; i < lines.length; i++) {
-              const line = lines[i];
-              const classList = line.match(/class\s*=\s*["'`]([^"'`]+)["'`]/);
-              if (classList && classList[1]) {
-                const individualClasses = classList[1].split(" ");
-                individualClasses.forEach((cls) => {
-                  const cleanCls = cls.replace(/\\/g, "");
-                  if (
-                    !cssClasses.includes(cleanCls) && /\-[\[\]]/.test(cleanCls)
-                  ) {
-                    allClasses.push({
-                      file: `${entry.path}:${i + 1}`,
-                      class: cleanCls,
-                    });
-                  }
-                });
+            if (classes) {
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const classList = line.match(/class\s*=\s*["'`]([^"'`]+)["'`]/);
+                if (classList && classList[1]) {
+                  const individualClasses = classList[1].split(" ");
+                  individualClasses.forEach((cls) => {
+                    const cleanCls = cls.replace(/\\/g, "");
+                    if (
+                      !cssClasses.includes(cleanCls) &&
+                      isDynamicClass(cleanCls)
+                    ) {
+                      allClasses.push({
+                        file: `${entry.path}:${i + 1}`,
+                        class: cleanCls,
+                      });
+                    }
+                  });
+                }
               }
             }
+          } catch (err) {
+            console.error(`Error processing file ${entry.path}: ${err}`);
           }
-        } catch (err) {
-          console.error(`Error processing file ${entry.path}: ${err}`);
         }
+      }
+    } catch (err) {
+      if (err instanceof Deno.errors.NotFound) {
+        continue;
       }
     }
   }
@@ -101,9 +114,7 @@ async function compareClasses() {
       if (differentClasses.length > 0) {
         console.log("\n");
         console.log(
-          colors.green(
-            `✨ Hint: Click on the file paths to jump to the location of the class`,
-          ),
+          `${green}✨ Hint: Click on the file paths to jump to the location of the class${reset}`,
         );
         console.table(differentClasses, ["file", "class"]);
       } else {
