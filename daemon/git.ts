@@ -314,19 +314,27 @@ export const ensureGit = async (
       .then(() => true)
       .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
 
+    await git
+      .addConfig("safe.directory", Deno.cwd(), false, GitConfigScope.global)
+      .addConfig("push.autoSetupRemote", "true", false, GitConfigScope.global);
+
     const [name, email] = await Promise.all([
       git.getConfig("user.name", GitConfigScope.global),
       git.getConfig("user.email", GitConfigScope.global),
     ]);
 
-    const userName = name.value || name.values[0] || "decobot";
-    const userEmail = email.value || email.values[0] || "capy@deco.cx";
+    if (!name.value && name.values.length === 0) {
+      await git.addConfig("user.name", "decobot", false, GitConfigScope.global);
+    }
 
-    await git
-      .addConfig("safe.directory", Deno.cwd(), false, GitConfigScope.global)
-      .addConfig("push.autoSetupRemote", "true", false, GitConfigScope.global)
-      .addConfig("user.name", userName, false, GitConfigScope.global)
-      .addConfig("user.email", userEmail, false, GitConfigScope.global);
+    if (!email.value && email.values.length === 0) {
+      await git.addConfig(
+        "user.email",
+        "capy@deco.cx",
+        false,
+        GitConfigScope.global,
+      );
+    }
 
     if (hasGitFolder) {
       return console.log("Git folder already exists, skipping init");
