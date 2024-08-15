@@ -50,7 +50,7 @@
   "imports": {
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
-    "@core/asyncutil": "jsr:@core/asyncutil@^1.0.0",
+    "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
     "@deco/durable": "jsr:@deco/durable@^0.5.3",
     "@deco/warp": "jsr:@deco/warp@^0.3.4",
     "@hono/hono": "jsr:@hono/hono@^4.5.4",

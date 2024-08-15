@@ -8,10 +8,13 @@ import {
   simpleGit,
   type StatusResult,
 } from "simple-git";
+import { createLocker } from "./async.ts";
 import { logs } from "./loggings/stream.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
+
+export const lockerGitAPI = createLocker();
 
 const git = simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
@@ -199,7 +202,9 @@ export const publish = ({ build }: Options): Handler => {
   };
 
   return async (c) => {
-    const { message, author } = await c.req.json() as PublishAPI["body"];
+    const body = await c.req.json() as PublishAPI["body"];
+    const author = body.author || { name: "decobot", email: "capy@deco.cx" };
+    const message = body.message || `New release by ${author.name}`;
 
     await git.fetch(["-p"]);
 
@@ -347,6 +352,7 @@ interface Options {
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
+  app.use(lockerGitAPI.wlock);
   app.get("/diff", diff);
   app.get("/status", status);
   app.get("/log", log);

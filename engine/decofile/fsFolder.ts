@@ -1,3 +1,4 @@
+import { Mutex } from "@core/asyncutil/mutex";
 import { debounce } from "@std/async/debounce";
 import { ensureFile } from "@std/fs";
 import { walk } from "@std/fs/walk";
@@ -5,7 +6,6 @@ import { basename, join } from "@std/path";
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
 import { exists } from "../../utils/filesystem.ts";
-import { Mutex } from "../../utils/sync.ts";
 import { BLOCKS_FOLDER, DECO_FOLDER, METADATA_PATH } from "./constants.ts";
 import type {
   Decofile,
@@ -123,7 +123,7 @@ export const newFsFolderProviderFromPath = (
       const watcher = Deno.watchFs(fullPath);
       let filesChangedBatch: string[] = [];
       const updateState = debounce(async () => {
-        using _ = await limiter.acquire();
+        using _lock = await limiter.acquire();
 
         // for each filesChangedBatch read them all
         // and update the state
