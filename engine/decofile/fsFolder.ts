@@ -15,6 +15,19 @@ import type {
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
 
+interface BaseMetadata {
+  blockType: string;
+  __resolveType: string;
+  usedBy: string[];
+}
+
+interface PageMetadata extends BaseMetadata {
+  name: string;
+  path: string;
+}
+
+type Metadata = BaseMetadata | PageMetadata;
+
 export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
 
@@ -26,7 +39,7 @@ const inferBlockType = (resolveType: string, knownBlockTypes: Set<string>) => {
   return blockType;
 };
 
-const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
+const inferMetadata = (content: unknown, knownBlockTypes: Set<string>): Metadata | null => {
   try {
     const { __resolveType, name, path } = content as Record<string, string>;
     const blockType = inferBlockType(__resolveType, knownBlockTypes);
@@ -41,16 +54,57 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
         path: path,
         blockType,
         __resolveType,
+        usedBy: [],
       };
     }
 
     return {
       blockType,
       __resolveType,
+      usedBy: [],
     };
-    // TODO @gimenes: when the json is wrong, we should somehow resolve to a standard block that talks well to the admin so the user can fix it somehow
   } catch {
     return null;
+  }
+};
+
+/**
+ * Recursively maps block references in an object and updates the `usedBy` property of the corresponding blocks.
+ * 
+ * @param obj - The object to map block references in.
+ * @param blocks - A map of block paths to block metadata.
+ * @param currentPath - The current path of the object being processed.
+ * @param isRoot - Indicates whether the current object is the root object.
+ */
+const mapBlockReferences = (
+  obj: unknown,
+  blocks: Map<string, Metadata>,
+  currentPath: string,
+  isRoot = true
+): void => {
+  if (typeof obj !== 'object' || obj === null) return;
+
+  if (Array.isArray(obj)) {
+    obj.forEach(item => mapBlockReferences(item, blocks, currentPath, false));
+  } else {
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === '__resolveType' && typeof value === 'string' && !isRoot) {
+        const blockName = value.split('/').pop();
+        if (blockName) {
+          const blockPath = Array.from(blocks.keys()).find(path => 
+            decodeURIComponent(path.split('/').pop() ?? '') === `${blockName}.json`
+          );
+          if (blockPath && blockPath !== currentPath) {
+            const block = blocks.get(blockPath);
+            if (block && !block.usedBy.includes(currentPath)) {
+              block.usedBy.push(currentPath);
+            }
+          }
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        mapBlockReferences(value, blocks, currentPath, false);
+      }
+    }
   }
 };
 
@@ -58,7 +112,7 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
 export const genMetadata = async () => {
   try {
     const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
-    const paths = [];
+    const paths: string[] = [];
 
     const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
       includeDirs: false,
@@ -79,13 +133,20 @@ export const genMetadata = async () => {
       ),
     );
 
-    const metadata = Object.fromEntries(entries.map((
-      [path, content],
-    ) => [path, inferMetadata(content, knownBlockTypes)]));
+    const metadata = new Map(
+      entries.map(([path, content]) => [
+        path,
+        inferMetadata(content, knownBlockTypes),
+      ]).filter(([, meta]) => meta !== null) as [string, Metadata][]
+    );
+
+    for (const [path, content] of entries) {
+      mapBlockReferences(content, metadata, path);
+    }
 
     const pathname = join(Deno.cwd(), METADATA_PATH);
     await ensureFile(pathname);
-    await Deno.writeTextFile(pathname, JSON.stringify(metadata));
+    await Deno.writeTextFile(pathname, JSON.stringify(Object.fromEntries(metadata)));
   } catch (error) {
     console.error("Error while auto-generating blocks.json", error);
   }
