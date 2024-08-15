@@ -313,25 +313,35 @@ export const ensureGit = async (
       return console.log("Git folder already exists, skipping init");
     }
 
-    await setupGlobals()
-      .clone(`git@github.com:deco-sites/${site}.git`, ".", [
-        "--depth",
-        "1",
-        "--single-branch",
-        "--branch",
-        DEFAULT_TRACKING_BRANCH,
-      ]);
+    await setupGlobals();
+
+    await git.clone(`git@github.com:deco-sites/${site}.git`, ".", [
+      "--depth",
+      "1",
+      "--single-branch",
+      "--branch",
+      DEFAULT_TRACKING_BRANCH,
+    ]);
   };
 
   await Promise.all([assertGitBinary(), assertGitFolder()]);
 };
 
-const setupGlobals = () =>
-  git
+const setupGlobals = async () => {
+  const [name, email] = await Promise.all([
+    git.getConfig("user.name", GitConfigScope.global),
+    git.getConfig("user.email", GitConfigScope.global),
+  ]);
+
+  const userName = name.value || name.values[0] || "decobot";
+  const userEmail = email.value || email.values[0] || "capy@deco.cx";
+
+  await git
     .addConfig("safe.directory", Deno.cwd(), false, GitConfigScope.global)
     .addConfig("push.autoSetupRemote", "true", false, GitConfigScope.global)
-    .addConfig("user.name", "decobot", false, GitConfigScope.global)
-    .addConfig("user.email", "capy@deco.cx", false, GitConfigScope.global);
+    .addConfig("user.name", userName, false, GitConfigScope.global)
+    .addConfig("user.email", userEmail, false, GitConfigScope.global);
+};
 
 const setupGitConfig = (): MiddlewareHandler => {
   let ok: Promise<unknown> | null = null;
