@@ -1,5 +1,4 @@
 import { Hono } from "@hono/hono";
-import { lockerGitAPI } from "./git.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 
 export interface WorkerOptions {
@@ -21,8 +20,6 @@ export const createWorker = (opts: WorkerOptions) => {
     worker.start();
     await worker.waitUntilReady();
   };
-
-  app.use(lockerGitAPI.rlock);
 
   // ensure isolate is up and running
   app.use("/*", async (c, next) => {
