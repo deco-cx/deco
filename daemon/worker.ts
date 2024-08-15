@@ -1,4 +1,5 @@
 import { Hono } from "@hono/hono";
+import { lockerGitAPI } from "./git.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 
 export interface WorkerOptions {
@@ -21,6 +22,8 @@ export const createWorker = (opts: WorkerOptions) => {
     await worker.waitUntilReady();
   };
 
+  app.use(lockerGitAPI.rlock);
+
   // ensure isolate is up and running
   app.use("/*", async (c, next) => {
     try {
@@ -38,9 +41,9 @@ export const createWorker = (opts: WorkerOptions) => {
   app.all("/*", (c) => w.fetch(c.req.raw));
 
   // listen for signals
-  try {
-    const signals: Deno.Signal[] = ["SIGINT", "SIGTERM"];
-    for (const signal of signals) {
+  const signals: Deno.Signal[] = ["SIGINT", "SIGTERM"];
+  for (const signal of signals) {
+    try {
       Deno.addSignalListener(signal, () => {
         console.log(`Received ${signal}`);
         opts.persist();
@@ -48,9 +51,9 @@ export const createWorker = (opts: WorkerOptions) => {
         w[Symbol.asyncDispose]();
         self.close();
       });
+    } catch {
+      /** Windows machines don't have sigterm */
     }
-  } catch {
-    /** Windows machines don't have sigint, sigterm */
   }
 
   return app;
