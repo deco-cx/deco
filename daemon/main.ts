@@ -11,6 +11,7 @@ import {
   ENV_SITE_NAME,
 } from "../engine/decofile/constants.ts";
 import { genMetadata } from "../engine/decofile/fsFolder.ts";
+import { liveness } from "../runtime/middlewares/liveness.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { delay, throttle } from "../utils/async.ts";
 import { createDaemonAPIs, DECO_SITE_NAME } from "./daemon.ts";
@@ -234,6 +235,8 @@ app.get("/_healthcheck", () =>
 
 // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
 app.use(createDeps());
+// k8s liveness probe
+app.get("/deco/_liveness", liveness);
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
 // Workers are only necessary if there needs to have a preview of the site
