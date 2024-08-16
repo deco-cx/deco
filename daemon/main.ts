@@ -234,6 +234,8 @@ app.get("/_healthcheck", () =>
 
 // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
 app.use(createDeps());
+// k8s liveness probe
+app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
 // Workers are only necessary if there needs to have a preview of the site
