@@ -34,6 +34,13 @@ export const isStreamProps = <TProps>(
   return Boolean((props as StreamProps)?.stream) === true;
 };
 
+export const isEventStreamResponse = (
+  invokeResponse: unknown | AsyncIterableIterator<unknown>,
+): invokeResponse is AsyncIterableIterator<unknown> => {
+  return typeof (invokeResponse as AsyncIterableIterator<unknown>)?.next ===
+    "function";
+};
+
 export async function* readFromStream<T>(
   response: Response,
 ): AsyncIterableIterator<T> {

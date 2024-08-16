@@ -3,15 +3,12 @@ export interface StreamProps {
   stream: true;
 }
 
-export { isStreamProps } from "../clients/withManifest.ts";
+export {
+  isEventStreamResponse,
+  isStreamProps,
+} from "../clients/withManifest.ts";
 import { type ServerSentEventMessage, ServerSentEventStream } from "@std/http";
-
-export const isEventStreamResponse = (
-  invokeResponse: unknown | AsyncIterableIterator<unknown>,
-): invokeResponse is AsyncIterableIterator<unknown> => {
-  return typeof (invokeResponse as AsyncIterableIterator<unknown>)?.next ===
-    "function";
-};
+import { isEventStreamResponse } from "../clients/withManifest.ts";
 
 /**
  * Converts an invoke result to a valid http response based on the return type
