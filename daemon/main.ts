@@ -96,7 +96,7 @@ const persist = async () => {
 
     const tar = new Deno.Command("tar", {
       cwd: Deno.cwd(),
-      args: ["-cf", outfilePath, "."],
+      args: ["-cf", outfilePath, "--exclude=node_modules", "."],
     });
 
     const status = await tar.spawn().status;
