@@ -87,21 +87,11 @@ export const handler = createHandler(async (
     },
   });
 
-  // const etag = ctx.var.url.searchParams.get("__cb");
-  //
-  // const ifNoneMatch = req.headers.get("if-none-match");
-  // if (etag && (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`)) {
-  //   return new Response(null, { status: 304, headers: { etag } });
-  // }
-
   // this is a hack to make sure we cache only sections that does not vary based on the loader content.
   // so we can calculate cacheBust per page but decide to cache sections individually based on vary.
   // ideally cachebust should be calculated per section as well so that you can reuse section across pages and produce same cacheBusts.
   const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
-  // if (shouldCache && etag && shouldCacheFromVary) {
   if (shouldCache && shouldCacheFromVary) {
-    // response.headers.set("etag", etag);
-
     // Stale cache on CDN, but make the browser fetch every single time.
     // We can test if caching on the browser helps too.
     response.headers.set(
