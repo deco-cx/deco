@@ -315,7 +315,7 @@ export const ensureGit = async (
       .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
 
     await git
-      .addConfig("safe.directory", Deno.cwd(), false, GitConfigScope.global)
+      .addConfig("safe.directory", Deno.cwd(), true, GitConfigScope.global)
       .addConfig("push.autoSetupRemote", "true", false, GitConfigScope.global);
 
     const [name, email] = await Promise.all([
