@@ -43,7 +43,7 @@ const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
   ];
 };
 
-export async function upgradeDeps(
+async function upgradeImportMapDeps(
   importMap: ImportMap,
   logs = true,
   deps = PACKAGES_TO_CHECK,
@@ -119,7 +119,15 @@ export async function upgradeDeps(
 
 export async function updatedImportMap(logs = true) {
   const [importMap, importMapPath] = await getImportMap(Deno.cwd());
-  let upgradeFound = await upgradeDeps(importMap, logs);
+  const upgradeFound = await upgradeDeps(importMap, logs);
+  if (!upgradeFound) {
+    return undefined;
+  }
+  return [importMap, importMapPath] as [ImportMap, string];
+}
+
+export async function upgradeDeps(importMap: ImportMap, logs: boolean) {
+  let upgradeFound = await upgradeImportMapDeps(importMap, logs);
   const { "deco/": _, ...imports } = denoJSON.imports;
   for (const [importKey, importValue] of Object.entries(imports)) {
     if (!(importKey in importMap.imports)) {
@@ -127,11 +135,9 @@ export async function updatedImportMap(logs = true) {
       upgradeFound = true;
     }
   }
-  if (!upgradeFound) {
-    return undefined;
-  }
-  return [importMap, importMapPath] as [ImportMap, string];
+  return upgradeFound;
 }
+
 export async function update() {
   const updates = await updatedImportMap();
   if (!updates) {
