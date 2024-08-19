@@ -28,8 +28,8 @@ const createReadWriteLock = () => {
 
     return {
       [Symbol.dispose]: () => {
-        r[Symbol.dispose]();
         w[Symbol.dispose]();
+        r.then((r) => r[Symbol.dispose]());
       },
     };
   };
