@@ -17,7 +17,7 @@ const denoJSON: ImportMap = await fetch(
 
 // map of `packageAlias` to `packageRepo`
 const PACKAGES_TO_CHECK =
-  /(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
+  /(@deco\/.*)|(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
 
 const requiredMinVersion: Record<string, string> = {
   // "std/": "0.208.0",
