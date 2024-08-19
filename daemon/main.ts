@@ -16,6 +16,7 @@ import { delay, throttle } from "../utils/async.ts";
 import { createDaemonAPIs, DECO_SITE_NAME } from "./daemon.ts";
 import { ensureGit, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
+import { activityMonitor, idleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
 import { createWorker } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
@@ -236,6 +237,8 @@ app.get("/_healthcheck", () =>
 app.use(createDeps());
 // k8s liveness probe
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
+app.get("/deco/_is_idle", idleHandler);
+app.use(activityMonitor);
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
 // Workers are only necessary if there needs to have a preview of the site
