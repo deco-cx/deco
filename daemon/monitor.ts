@@ -11,7 +11,7 @@ const DECO_IDLE_THRESHOLD_MS =
     ? Math.max(+DECO_IDLE_THRESHOLD_STR, ONE_MINUTE_MS)
     : undefined;
 
-const shouldReportActivity = DECO_IDLE_NOTIFICATION_ENDPOINT !== undefined &&
+let shouldReportActivity = DECO_IDLE_NOTIFICATION_ENDPOINT !== undefined &&
   URL.canParse(DECO_IDLE_NOTIFICATION_ENDPOINT) &&
   DECO_IDLE_THRESHOLD_MS !== undefined;
 
@@ -34,7 +34,11 @@ export const activityMonitor: MiddlewareHandler = async (_ctx, next) => {
 };
 
 export const createIdleHandler = (site: string, envName: string): Handler => {
-  if (shouldReportActivity && DECO_IDLE_NOTIFICATION_ENDPOINT) {
+  shouldReportActivity = shouldReportActivity && typeof site === "string" &&
+    typeof envName === "string";
+  if (
+    shouldReportActivity && DECO_IDLE_NOTIFICATION_ENDPOINT
+  ) {
     const notificationUrl = new URL(DECO_IDLE_NOTIFICATION_ENDPOINT);
     notificationUrl.searchParams.set("site", site);
     notificationUrl.searchParams.set("name", envName);
