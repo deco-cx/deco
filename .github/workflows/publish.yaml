@@ -20,3 +20,61 @@ jobs:
 
       - name: Publish script package
         run: cd scripts/ && npx jsr publish
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Create a new builder instance
+        run: docker buildx create --name mybuilder --use
+
+      - name: Inspect the builder
+        run: docker buildx inspect --bootstrap
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create a new builder instance
+        run: docker buildx create --name mybuilder --use
+
+      - name: Build, tag, and push the builder image to Amazon ECR
+        id: build-builder-image
+        env:
+          REGISTRY: ghcr.io
+          REPOSITORY: deco-cx/deco
+          IMAGE_TAG_LATEST: latest
+          IMAGE_TAG_COMMIT: ${{ github.ref_name }}
+        run: |
+          # Get the current tag
+
+          # Create the Dockerfile
+          cat <<EOF > Dockerfile
+          FROM denoland/deno:alpine-1.44.4
+
+          # The port that your application listens to.
+          EXPOSE 8000
+
+          WORKDIR /app
+
+          # maybe add deno lsp?
+          RUN apk add git openssh
+          RUN deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
+          RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir
+
+          # Prefer not to run as root.
+          USER deno
+
+          WORKDIR /app/deco
+          EOF
+
+          docker buildx build --platform linux/amd64,linux/arm64 -t $REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST -t $REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT --push .
+          echo "::set-output name=image_builder_latest::$REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
+          echo "::set-output name=image_builder_commit::$REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT"
