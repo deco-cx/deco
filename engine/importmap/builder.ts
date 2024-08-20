@@ -1,7 +1,11 @@
+import { resolveJsrSpecifier } from "./jsr.ts";
 import { resolveImportMap, resolveModuleSpecifier } from "./mod.ts";
 
 export interface ImportMapResolver {
-  resolve(specifier: string, context: string): string | null;
+  resolve(
+    specifier: string,
+    context: string,
+  ): Promise<string | null> | string | null;
 }
 
 const useEsm = (npmSpecifier: string) => {
@@ -14,7 +18,7 @@ export interface ImportMap {
 }
 
 class NativeImportMapResolver implements ImportMapResolver {
-  resolve(specifier: string, context: string): string | null {
+  async resolve(specifier: string, context: string): Promise<string | null> {
     // should use origin
     if (specifier.startsWith("/")) {
       const pathUrl = new URL(import.meta.resolve(context));
@@ -33,7 +37,7 @@ class NativeImportMapResolver implements ImportMapResolver {
     }
     // import from import_map
     try {
-      return import.meta.resolve(specifier);
+      return await resolveJsrSpecifier(import.meta.resolve(specifier));
     } catch {
       return null;
     }
@@ -60,10 +64,10 @@ export const ImportMapBuilder = {
           },
         });
       },
-      resolve: (specifier: string, context: string) => {
+      resolve: async (specifier: string, context: string) => {
         const chainedImportResolvers = [...resolvers, NATIVE_RESOLVER];
         for (const resolver of chainedImportResolvers) {
-          const result = resolver.resolve(specifier, context);
+          const result = await resolver.resolve(specifier, context);
 
           if (result !== null) {
             return result;
