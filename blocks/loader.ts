@@ -180,12 +180,12 @@ const wrapLoader = (
       const isCacheModeToBypass = mode === "no-store";
 
       const bypassCache = isCacheModeToBypass ||
-        !isCacheEngineDefined ||
         isCacheKeyValueToBypass;
       try {
         // Should skip cache
         if (
           !ENABLE_LOADER_CACHE ||
+          !isCacheEngineDefined ||
           bypassCache ||
           // This code is unreachable, but the TS complains that cache is undefined because
           // it doesn't get that isCache is inside of bypassCache variable
