@@ -8,7 +8,7 @@ export class BinaryIndexedTree {
   }
 
   private increase(idx: number, delta: number): void {
-    let currValue = this.bit.get(idx) || 0;
+    const currValue = this.bit.get(idx) || 0;
     this.bit.set(idx, currValue + delta);
   }
 

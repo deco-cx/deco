@@ -15,7 +15,10 @@
   "publish": {
     "exclude": [
       "**/*.bench.ts",
-      "**/*.test.ts"
+      "**/*.test.ts",
+      "./scripts/release.ts",
+      "./scripts/upgrade.ts",
+      "./scripts/update.lib.ts"
     ]
   },
   "tasks": {

@@ -1,7 +1,7 @@
 import { Hono, type MiddlewareHandler } from "@hono/hono";
 import * as colors from "@std/fmt/colors";
 import { ensureFile } from "@std/fs";
-import { walk, WalkError } from "@std/fs/walk";
+import { walk } from "@std/fs/walk";
 import { join, SEPARATOR } from "@std/path";
 import fjp from "fast-json-patch";
 import { lockerGitAPI } from "../git.ts";

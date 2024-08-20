@@ -1,0 +1,21 @@
+{
+    "name": "@deco/run",
+    "version": "1.89.0",
+    "exports": {
+        ".": "./main.ts"
+    },
+    "imports": {
+        "@core/asyncutil": "jsr:@core/asyncutil@^1.0.4",
+        "@deco/warp": "jsr:@deco/warp@^0.3.4",
+        "@hono/hono": "jsr:@hono/hono@^4.5.6",
+        "@std/async": "jsr:@std/async@^1.0.3",
+        "@std/cli": "jsr:@std/cli@^1.0.3",
+        "@std/fmt": "jsr:@std/fmt@^1.0.0",
+        "@std/fs": "jsr:@std/fs@^0.229.1",
+        "@std/http": "jsr:@std/http@^1.0.3",
+        "@std/path": "jsr:@std/path@^1.0.2",
+        "@zaubrik/djwt": "jsr:@zaubrik/djwt@^3.0.2",
+        "fast-json-patch": "npm:fast-json-patch@^3.1.1",
+        "simple-git": "npm:simple-git@^3.25.0"
+    }
+}
