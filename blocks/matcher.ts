@@ -161,11 +161,14 @@ const matcherBlock: Block<
           : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
         result ??= isMatchFromCookie ?? matcherFunc(ctx);
         if (result !== isMatchFromCookie) {
+          const date = new Date();
+          date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
           setCookie(respHeaders, {
             name: cookieName,
             value: cookieValue.build(uniqueId, result),
             path: "/",
             sameSite: "Strict",
+            expires: date
           });
           respHeaders.append("vary", "cookie");
         }
