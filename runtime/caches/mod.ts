@@ -1,5 +1,5 @@
 import { withInstrumentation } from "./common.ts";
-import { caches as cachesKV } from "./denoKV.ts";
+// import { caches as cachesKV } from "./denoKV.ts";
 import {
   caches as cachesFileSystem,
   isFileSystemAvailable,
@@ -11,7 +11,7 @@ import { createTieredCache } from "./tiered.ts";
 
 export const ENABLE_LOADER_CACHE =
   Deno.env.get("ENABLE_LOADER_CACHE") === "true";
-const DEFAULT_CACHE_ENGINE = "KV";
+const DEFAULT_CACHE_ENGINE = "CACHE_API";
 const WEB_CACHE_ENGINES: CacheEngine[] = Deno.env.has("WEB_CACHE_ENGINE")
   ? Deno.env.get("WEB_CACHE_ENGINE")!.split(",") as CacheEngine[]
   : [DEFAULT_CACHE_ENGINE];
@@ -25,7 +25,7 @@ export type CacheEngine =
   // TODO (mcandeia) see line 7.
   // | "REDIS"
   // | "S3";
-  | "KV"
+  // | "KV"
   | "CACHE_API"
   | "FILE_SYSTEM";
 
@@ -39,11 +39,12 @@ const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   //   implementation: cachesS3,
   //   isAvailable: isS3Available,
   // },
-  KV: {
-    implementation: cachesKV,
-    // @ts-ignore: Deno type definitions are missing openKv
-    isAvailable: typeof Deno.openKv === "function",
-  },
+  // KV: {
+  //   implementation: cachesKV,
+  //   // @ts-ignore: Deno type definitions are missing openKv
+  //   isAvailable: typeof Deno.openKv === "function",
+  //   isAvailable: false,
+  // },
   CACHE_API: {
     implementation: globalThis.caches,
     isAvailable: typeof globalThis.caches !== "undefined",
