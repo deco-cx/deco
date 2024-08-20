@@ -176,16 +176,17 @@ const wrapLoader = (
 
       const cacheKeyValue = cacheKey(props, req, ctx);
       const isCacheKeyValueToBypass = cacheKeyValue === null;
-      const isCacheEngineDefined = isCache(maybeCache);
       const isCacheModeToBypass = mode === "no-store";
-
-      const bypassCache = isCacheModeToBypass ||
+      const shouldVary = isCacheModeToBypass ||
         isCacheKeyValueToBypass;
+
+      const isCacheEngineDefined = isCache(maybeCache);
+      const bypassCache = !ENABLE_LOADER_CACHE ||
+        !isCacheEngineDefined ||
+        shouldVary;
       try {
         // Should skip cache
         if (
-          !ENABLE_LOADER_CACHE ||
-          !isCacheEngineDefined ||
           bypassCache ||
           // This code is unreachable, but the TS complains that cache is undefined because
           // it doesn't get that isCache is inside of bypassCache variable
@@ -195,7 +196,7 @@ const wrapLoader = (
            * This vary should cache is used to vary sections content. Even if the loader results isn't being cached,
            * the sections could be cached
            */
-          if (ctx.vary && bypassCache) {
+          if (ctx.vary && shouldVary) {
             ctx.vary.shouldCache = false;
           }
 
