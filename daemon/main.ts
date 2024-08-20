@@ -251,7 +251,7 @@ Deno.serve({
   port,
   onListen: async (addr) => {
     try {
-      if (DECO_ENV_NAME && DECO_SITE_NAME) {
+      if (DECO_ENV_NAME && DECO_SITE_NAME && !Deno.env.has("DECO_PREVIEW")) {
         await register({
           site: DECO_SITE_NAME,
           env: DECO_ENV_NAME,

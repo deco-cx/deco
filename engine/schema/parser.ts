@@ -10,7 +10,7 @@ import { resolveJsrSpecifier } from "./jsr.ts";
 async function load(
   specifier: string,
 ): Promise<string | undefined> {
-  const url = new URL(specifier);
+  const url = new URL(await resolveJsrSpecifier(specifier));
   try {
     switch (url.protocol) {
       case "file:": {
