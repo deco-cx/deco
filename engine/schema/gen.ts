@@ -32,7 +32,7 @@ const resolveForPath = async (
   blockKey: string,
   references: Map<ReferenceKey, Schemeable>,
 ): Promise<BlockModuleRef | undefined> => {
-  const blockPath = importMapResolver.resolve(blockKey, baseDir) ??
+  const blockPath = await importMapResolver.resolve(blockKey, baseDir) ??
     resolveImport(blockKey);
   if (!blockPath) {
     return undefined;

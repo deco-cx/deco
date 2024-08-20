@@ -96,7 +96,7 @@ const resolveRecursively = async (
   importMapResolver: ImportMapResolver,
   cache: Map<string, string>,
 ) => {
-  const resolvedPath = importMapResolver.resolve(path, context);
+  const resolvedPath = await importMapResolver.resolve(path, context);
 
   if (!resolvedPath || skipPath(resolvedPath) || cache.has(resolvedPath)) {
     return;

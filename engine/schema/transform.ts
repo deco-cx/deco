@@ -292,7 +292,7 @@ export const typeNameToSchemeable = async (
             return UNKNOWN;
           }
 
-          const from = ctx.importMapResolver.resolve(source, path);
+          const from = await ctx.importMapResolver.resolve(source, path);
           if (!from) {
             return UNKNOWN;
           }
@@ -356,7 +356,7 @@ export const typeNameToSchemeable = async (
       }
     },
     ExportAllDeclaration: async (item) => {
-      const from = ctx.importMapResolver.resolve(item.source.value, path);
+      const from = await ctx.importMapResolver.resolve(item.source.value, path);
       if (!from) {
         return UNKNOWN;
       }
@@ -415,7 +415,7 @@ export const typeNameToSchemeable = async (
           }
           fromImport = async () => {
             try {
-              const from = ctx.importMapResolver.resolve(
+              const from = await ctx.importMapResolver.resolve(
                 item.source.value,
                 path,
               );
@@ -1025,7 +1025,7 @@ const findFuncFromExportNamedDeclaration = async (
       if (!source) {
         return undefined;
       }
-      const url = importMapResolver.resolve(source, path);
+      const url = await importMapResolver.resolve(source, path);
       if (!url) {
         return undefined;
       }

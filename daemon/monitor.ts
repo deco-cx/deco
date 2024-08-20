@@ -11,7 +11,7 @@ const DECO_IDLE_THRESHOLD_MS =
     ? Math.max(+DECO_IDLE_THRESHOLD_STR, ONE_MINUTE_MS)
     : undefined;
 
-const shouldReportActivity = DECO_IDLE_NOTIFICATION_ENDPOINT !== undefined &&
+let shouldReportActivity = DECO_IDLE_NOTIFICATION_ENDPOINT !== undefined &&
   URL.canParse(DECO_IDLE_NOTIFICATION_ENDPOINT) &&
   DECO_IDLE_THRESHOLD_MS !== undefined;
 
@@ -19,9 +19,9 @@ const isIdle = () => {
   const now = Date.now();
   return now - lastActivity > DECO_IDLE_THRESHOLD_MS!;
 };
-const checkActivity = async () => {
+const checkActivity = async (notificationUrl: URL) => {
   if (isIdle()) {
-    await fetch(DECO_IDLE_NOTIFICATION_ENDPOINT!, { method: "POST" }).catch(
+    await fetch(notificationUrl, { method: "POST" }).catch(
       (_err) => {},
     );
   }
@@ -33,19 +33,26 @@ export const activityMonitor: MiddlewareHandler = async (_ctx, next) => {
   await next();
 };
 
-export const idleHandler: Handler = () => {
-  return new Response(`${shouldReportActivity && isIdle()}`, {
-    status: 200,
-    headers: {
-      "x-deco-idle-threshold-ms": DECO_IDLE_THRESHOLD_MS
-        ? `${DECO_IDLE_THRESHOLD_MS}`
-        : "",
-      "x-deco-idle-notification-endpoint": DECO_IDLE_NOTIFICATION_ENDPOINT ??
-        "",
-    },
-  });
+export const createIdleHandler = (site: string, envName: string): Handler => {
+  shouldReportActivity = shouldReportActivity && typeof site === "string" &&
+    typeof envName === "string";
+  if (
+    shouldReportActivity && DECO_IDLE_NOTIFICATION_ENDPOINT
+  ) {
+    const notificationUrl = new URL(DECO_IDLE_NOTIFICATION_ENDPOINT);
+    notificationUrl.searchParams.set("site", site);
+    notificationUrl.searchParams.set("name", envName);
+    setInterval(() => checkActivity(notificationUrl), ONE_MINUTE_MS);
+  }
+  return () =>
+    new Response(`${shouldReportActivity && isIdle()}`, {
+      status: 200,
+      headers: {
+        "x-deco-idle-threshold-ms": DECO_IDLE_THRESHOLD_MS
+          ? `${DECO_IDLE_THRESHOLD_MS}`
+          : "",
+        "x-deco-idle-notification-endpoint": DECO_IDLE_NOTIFICATION_ENDPOINT ??
+          "",
+      },
+    });
 };
-
-if (shouldReportActivity) {
-  setInterval(checkActivity, ONE_MINUTE_MS);
-}

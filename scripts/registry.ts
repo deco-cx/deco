@@ -102,7 +102,7 @@ interface VersionsJson {
 const JSR_CACHE: Map<string, string[]> = new Map<string, string[]>();
 export class Jsr implements RegistryUrl {
   url: string;
-  parseRegex = /^jsr:(\@[^/]+\/[^@/]+|[^@/]+)(?:\@([^/]+))?(.*)/;
+  parseRegex = /^jsr:(\/?\@[^/]+\/[^@/]+|\/?[^@/]+)(?:\@([^/]+))?(.*)/;
 
   constructor(url: string) {
     this.url = url;
@@ -144,6 +144,10 @@ export class Jsr implements RegistryUrl {
     const [, name, _, files] = this.url.match(this.parseRegex)!;
     const url = `jsr:${name}@${version}${files}`;
     return new Jsr(url);
+  }
+  files(): string {
+    const [, _, __, files] = this.url.match(this.parseRegex)!;
+    return `.${files ?? ""}`;
   }
 
   version(): string {
