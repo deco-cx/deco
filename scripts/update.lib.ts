@@ -138,8 +138,45 @@ export async function upgradeDeps(importMap: ImportMap, logs: boolean) {
   return upgradeFound;
 }
 
-export async function update() {
+const updateStd = (newVer: string, code: string): string =>
+  code.replace(
+    /(https:\/\/[^\/]+\/(?:[^\/]+\/)?deco-sites\/std)@[^\/]+/,
+    (_match, prefix) => `${prefix}@${newVer}`,
+  );
+
+const latestStdVersion = async () => {
+  const info = await pkgInfo(`https://denopkg.com/deco-sites/std@1.25.0/`);
+  if (!info) {
+    return undefined;
+  }
+  return info?.versions?.latest;
+};
+
+const FRESH_CONFIG = "fresh.config.ts";
+
+const updgradeStd = async () => {
+  const freshConfigFile = await Deno.readTextFile(
+    join(Deno.cwd(), FRESH_CONFIG),
+  ).catch((_err) => null);
+  if (typeof freshConfigFile === "string") {
+    const newVer = await latestStdVersion().catch((_err) => null);
+    if (!newVer) {
+      return;
+    }
+    const updatedFreshConfigFile = updateStd(newVer, freshConfigFile);
+    if (updatedFreshConfigFile !== freshConfigFile) {
+      await Deno.writeTextFile(
+        join(Deno.cwd(), FRESH_CONFIG),
+        updatedFreshConfigFile,
+      );
+    }
+  }
+};
+export async function update(checkStdUpdates = false) {
   const updates = await updatedImportMap();
+  if (checkStdUpdates) {
+    await updgradeStd();
+  }
   if (!updates) {
     return;
   }
