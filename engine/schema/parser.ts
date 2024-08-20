@@ -107,6 +107,13 @@ export const updateLoadCache = (path: string, content: string) => {
  * Parses the given path using the default loader. Caches the result in memory.
  */
 export const parsePath = (path: string) => {
+  if (path.startsWith("npm:")) {
+    console.warn(
+      `%cnpm package ${path} could not be resolved in the schema parser, typings may be missing`,
+      "color: gray",
+    );
+    return Promise.resolve(undefined);
+  }
   const mLoader = initLoader();
   return loadCache[path] ??= mLoader(path).then(async (content) => {
     if (!content && content !== "") {
