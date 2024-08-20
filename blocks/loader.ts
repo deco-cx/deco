@@ -174,15 +174,20 @@ const wrapLoader = (
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
       const cacheKeyValue = cacheKey(props, req, ctx);
+      const bypassCache = mode === "no-store" ||
+        !isCache(maybeCache) ||
+        cacheKeyValue === null;
       try {
         // Should skip cache
         if (
-          mode === "no-store" ||
           !ENABLE_LOADER_CACHE ||
-          !isCache(maybeCache) ||
-          cacheKeyValue === null
+          bypassCache
         ) {
-          if (ctx.vary) {
+          /**
+           * This vary should cache is used to vary sections content. Even if the loader results isn't being cached,
+           * the sections could be cached
+           */
+          if (ctx.vary && bypassCache) {
             ctx.vary.shouldCache = false;
           }
 
