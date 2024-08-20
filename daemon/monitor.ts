@@ -51,7 +51,8 @@ export const createIdleHandler = (site: string, envName: string): Handler => {
     new Response(`${shouldReportActivity && isIdle()}`, {
       status: 200,
       headers: {
-        "x-deco-idle-threshold-ms": DECO_IDLE_THRESHOLD_MINUTES
+        "x-deco-last-activity": `${new Date(lastActivity).toISOString()}`,
+        "x-deco-idle-threshold-minutes": DECO_IDLE_THRESHOLD_MINUTES
           ? `${DECO_IDLE_THRESHOLD_MINUTES}`
           : "",
         "x-deco-idle-notification-endpoint": DECO_IDLE_NOTIFICATION_ENDPOINT ??
