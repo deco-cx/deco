@@ -69,7 +69,7 @@ export const ImportMapBuilder = {
         for (const resolver of chainedImportResolvers) {
           const result = await resolver.resolve(specifier, context);
 
-          if (result !== null) {
+          if (result !== null && !result.startsWith("jsr:")) {
             return result;
           }
         }

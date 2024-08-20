@@ -13,10 +13,10 @@ import {
 import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { delay, throttle } from "../utils/async.ts";
-import { createDaemonAPIs, DECO_SITE_NAME } from "./daemon.ts";
+import { createDaemonAPIs, DECO_ENV_NAME, DECO_SITE_NAME } from "./daemon.ts";
 import { ensureGit, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
-import { activityMonitor, idleHandler } from "./monitor.ts";
+import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
 import { createWorker } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
@@ -26,7 +26,6 @@ const parsedArgs = parseArgs(Deno.args, {
 });
 const runCommand = parsedArgs["_"];
 
-const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
 const DECO_APP_NAME = Deno.env.get("DECO_APP_NAME");
 const DENO_DEPLOYMENT_ID = Deno.env.get("DENO_DEPLOYMENT_ID");
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
@@ -237,7 +236,7 @@ app.get("/_healthcheck", () =>
 app.use(createDeps());
 // k8s liveness probe
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
-app.get("/deco/_is_idle", idleHandler);
+app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
 app.use(activityMonitor);
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));

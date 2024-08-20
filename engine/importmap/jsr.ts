@@ -31,6 +31,7 @@ export const resolveJsrSpecifier = async (specifier: string) => {
     return specifier;
   }
   const jsr = new Jsr(specifier);
+
   const [
     name,
     version,
