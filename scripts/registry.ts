@@ -2,7 +2,7 @@
 // under MIT License.
 
 export type RegistryCtor = new (url: string) => RegistryUrl;
-export function lookup(url: string, registries: RegistryCtor[]):
+export function lookup(url: string, registries: RegistryCtor[] = REGISTRIES):
   | RegistryUrl
   | undefined {
   for (const R of registries) {
