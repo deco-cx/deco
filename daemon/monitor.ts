@@ -1,23 +1,25 @@
 import type { Handler, MiddlewareHandler } from "@hono/hono";
 
 const ONE_MINUTE_MS = 1e3 * 60;
-const DECO_IDLE_THRESHOLD_STR = Deno.env.get("DECO_IDLE_THRESHOLD_MS");
+const DECO_IDLE_THRESHOLD_MINUTES_STR = Deno.env.get(
+  "DECO_IDLE_THRESHOLD_MINUTES",
+);
 const DECO_IDLE_NOTIFICATION_ENDPOINT = Deno.env.get(
   "DECO_IDLE_NOTIFICATION_ENDPOINT",
 );
 
-const DECO_IDLE_THRESHOLD_MS =
-  DECO_IDLE_THRESHOLD_STR && typeof +DECO_IDLE_THRESHOLD_STR === "number"
-    ? Math.max(+DECO_IDLE_THRESHOLD_STR, ONE_MINUTE_MS)
-    : undefined;
+const DECO_IDLE_THRESHOLD_MINUTES = DECO_IDLE_THRESHOLD_MINUTES_STR &&
+    typeof +DECO_IDLE_THRESHOLD_MINUTES_STR === "number"
+  ? Math.max(+DECO_IDLE_THRESHOLD_MINUTES_STR, 1)
+  : undefined;
 
 let shouldReportActivity = DECO_IDLE_NOTIFICATION_ENDPOINT !== undefined &&
   URL.canParse(DECO_IDLE_NOTIFICATION_ENDPOINT) &&
-  DECO_IDLE_THRESHOLD_MS !== undefined;
+  DECO_IDLE_THRESHOLD_MINUTES !== undefined;
 
 const isIdle = () => {
   const now = Date.now();
-  return now - lastActivity > DECO_IDLE_THRESHOLD_MS!;
+  return now - lastActivity > (DECO_IDLE_THRESHOLD_MINUTES! * ONE_MINUTE_MS);
 };
 const checkActivity = async (notificationUrl: URL) => {
   if (isIdle()) {
@@ -48,8 +50,8 @@ export const createIdleHandler = (site: string, envName: string): Handler => {
     new Response(`${shouldReportActivity && isIdle()}`, {
       status: 200,
       headers: {
-        "x-deco-idle-threshold-ms": DECO_IDLE_THRESHOLD_MS
-          ? `${DECO_IDLE_THRESHOLD_MS}`
+        "x-deco-idle-threshold-ms": DECO_IDLE_THRESHOLD_MINUTES
+          ? `${DECO_IDLE_THRESHOLD_MINUTES}`
           : "",
         "x-deco-idle-notification-endpoint": DECO_IDLE_NOTIFICATION_ENDPOINT ??
           "",
