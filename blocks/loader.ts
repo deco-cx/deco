@@ -173,10 +173,15 @@ const wrapLoader = (
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
+
       const cacheKeyValue = cacheKey(props, req, ctx);
-      const bypassCache = mode === "no-store" ||
-        !isCache(maybeCache) ||
-        cacheKeyValue === null;
+      const isCacheKeyValueToBypass = cacheKeyValue === null;
+      const isCacheEngineDefined = isCache(maybeCache);
+      const isCacheModeToBypass = mode === "no-store";
+
+      const bypassCache = isCacheModeToBypass ||
+        !isCacheEngineDefined ||
+        isCacheKeyValueToBypass;
       try {
         // Should skip cache
         if (
