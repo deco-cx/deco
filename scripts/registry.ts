@@ -145,6 +145,10 @@ export class Jsr implements RegistryUrl {
     const url = `jsr:${name}@${version}${files}`;
     return new Jsr(url);
   }
+  files(): string {
+    const [, _, __, files] = this.url.match(this.parseRegex)!;
+    return `.${files ?? ""}`;
+  }
 
   version(): string {
     const [, _, version] = this.url.match(this.parseRegex)!;

@@ -1,6 +1,7 @@
 import { createCache } from "jsr:@deno/cache-dir@0.10.1";
 import { assignComments } from "./comments.ts";
 import { parse, type ParsedSource } from "./deps.ts";
+import { resolveJsrSpecifier } from "./jsr.ts";
 
 /**
  * Loads the content of the given specifier.
@@ -66,8 +67,8 @@ export const initLoader = (): typeof load => {
   if (typeof Deno.permissions.querySync !== "undefined") {
     try {
       const cache = createCache();
-      return loader = (specifier) =>
-        cache.load(specifier).then((cached) => {
+      return loader = async (specifier) =>
+        cache.load(await resolveJsrSpecifier(specifier)).then((cached) => {
           const content = (cached as { content: string | Uint8Array })?.content;
           if (!content) {
             return undefined;
