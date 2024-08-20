@@ -357,7 +357,7 @@ export const typeNameToSchemeable = async (
     },
     ExportAllDeclaration: async (item) => {
       const from = await ctx.importMapResolver.resolve(item.source.value, path);
-      if (!from || from.startsWith("npm:")) {
+      if (!from) {
         return;
       }
       const newProgram = await parsePath(
