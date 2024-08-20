@@ -1,9 +1,7 @@
-import { walk } from "https://deno.land/std@0.201.0/fs/mod.ts";
+import { walk } from "@std/fs/walk";
+import * as colors from "@std/fmt/colors";
 
-const green = "\x1b[32m";
-const reset = "\x1b[0m";
-
-const folderPaths = ["./components", "./sections", "./islands"];
+const folderPaths = "./*";
 const tailwindCssUrl =
   "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css";
 
@@ -21,7 +19,6 @@ async function getAllClassesInCss(url: string): Promise<string[]> {
       );
     }
     const cssText = await response.text();
-
     const regexPattern = /\.([a-zA-Z0-9_\-\\]+)/g;
     const matches = cssText.match(regexPattern);
 
@@ -33,15 +30,22 @@ async function getAllClassesInCss(url: string): Promise<string[]> {
 }
 
 async function getAllClassesInCode(
-  folderPaths: string[],
+  folderPaths: string,
   cssClasses: string[],
 ): Promise<{ file: string; class: string }[]> {
   const allClasses: { file: string; class: string }[] = [];
 
   for (const folderPath of folderPaths) {
     try {
-      for await (const entry of walk(folderPath, { exts: [".tsx"] })) {
-        if (entry.isFile) {
+      for await (const entry of walk(folderPath)) {
+        if (entry.isFile && entry.path.endsWith(".tsx")) {
+          const ignorePaths = ["node_modules", ".gitignore"];
+          if (
+            ignorePaths.some((ignorePath) => entry.path.includes(ignorePath))
+          ) {
+            continue;
+          }
+
           try {
             const data = await Deno.readTextFile(entry.path);
             const lines = data.split("\n");
@@ -114,7 +118,9 @@ async function compareClasses() {
       if (differentClasses.length > 0) {
         console.log("\n");
         console.log(
-          `${green}✨ Hint: Click on the file paths to jump to the location of the class${reset}`,
+          colors.green(
+            `✨ Hint: Click on the file paths to jump to the location of the class`,
+          ),
         );
         console.table(differentClasses, ["file", "class"]);
       } else {
@@ -128,4 +134,6 @@ async function compareClasses() {
   }
 }
 
-compareClasses();
+if (import.meta.main) {
+  await compareClasses();
+}
