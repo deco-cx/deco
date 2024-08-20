@@ -23,6 +23,7 @@ const isIdle = () => {
 };
 const checkActivity = async (notificationUrl: URL) => {
   if (isIdle()) {
+    console.log(`env is considered idle notifying ${notificationUrl}`);
     await fetch(notificationUrl, { method: "POST" }).catch(
       (_err) => {},
     );
