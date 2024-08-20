@@ -181,7 +181,10 @@ const wrapLoader = (
         // Should skip cache
         if (
           !ENABLE_LOADER_CACHE ||
-          bypassCache
+          bypassCache ||
+          // This code is unreachable, but the TS complains that cache is undefined because
+          // it doesn't get that isCache is inside of bypassCache variable
+          !isCache(maybeCache)
         ) {
           /**
            * This vary should cache is used to vary sections content. Even if the loader results isn't being cached,
