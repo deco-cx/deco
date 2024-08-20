@@ -32,18 +32,12 @@ jobs:
       - name: Create a new builder instance
         run: docker buildx create --name mybuilder --use
 
-      - name: Inspect the builder
-        run: docker buildx inspect --bootstrap
-
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create a new builder instance
-        run: docker buildx create --name mybuilder --use
 
       - name: Build, tag, and push the builder image to Amazon ECR
         id: build-builder-image
