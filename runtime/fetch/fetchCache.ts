@@ -5,7 +5,7 @@
  */
 import { bgRed, gray, yellow } from "@std/fmt/colors";
 import { caches } from "../caches/proxy.ts";
-import { sha1 } from "../utils.ts";
+import { sha1 } from "../../utils/sha1.ts";
 
 const getCacheKey = (
   input: string | Request | URL,
