@@ -3,6 +3,9 @@ on:
   push:
     tags:
       - "*"
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   publish:
@@ -37,15 +40,15 @@ jobs:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build, tag, and push the builder image to Github ghcr
         id: build-builder-image
         env:
-          REGISTRY: ghcr.io
-          REPOSITORY: deco-cx/deco
+          REGISTRY: ${{ env.REGISTRY }}
+          REPOSITORY: ${{ env.IMAGE_NAME }}
           IMAGE_TAG_LATEST: latest
           IMAGE_TAG_COMMIT: ${{ github.ref_name }}
         run: |
@@ -62,7 +65,7 @@ jobs:
 
           # maybe add deno lsp?
           RUN apk add git openssh
-          RUN deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
+          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir
 
           # Prefer not to run as root.
