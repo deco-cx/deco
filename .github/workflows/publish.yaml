@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
+      packages: write
+      attestations: write
       id-token: write
 
     steps:
@@ -39,7 +41,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build, tag, and push the builder image to Amazon ECR
+      - name: Build, tag, and push the builder image to Github ghcr
         id: build-builder-image
         env:
           REGISTRY: ghcr.io
