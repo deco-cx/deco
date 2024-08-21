@@ -122,8 +122,6 @@ const matcherBlock: Block<
       return matcherFuncOrValue;
     };
     const respHeaders = httpCtx.context.state.response.headers;
-    const cacheControl = httpCtx.request.headers.get("Cache-Control");
-    const isNoCache = cacheControl === "no-cache";
     const shouldStickyOnSession = sticky === "session";
     return (ctx: MatchContext) => {
       let uniqueId = "";
@@ -156,9 +154,7 @@ const matcherBlock: Block<
         hasher.hash(uniqueId);
         const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
         hasher.reset();
-        const isMatchFromCookie = isNoCache
-          ? undefined
-          : cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
+        const isMatchFromCookie = cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
         result ??= isMatchFromCookie ?? matcherFunc(ctx);
         if (result !== isMatchFromCookie) {
           const date = new Date();
