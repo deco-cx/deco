@@ -50,7 +50,12 @@ const runCmd = cmd
     args,
     stdout: "piped",
     stderr: "piped",
-    env: { PORT: `${WORKER_PORT}` },
+    env: {
+      PORT: `${WORKER_PORT}`,
+      ...Deno.env.get("DENO_DIR_RUN")
+        ? { DENO_DIR: Deno.env.get("DENO_DIR_RUN") }
+        : {},
+    },
   })
   : null;
 
