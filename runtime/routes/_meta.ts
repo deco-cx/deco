@@ -6,10 +6,7 @@ export const handler = createHandler(async (ctx) => {
 
   const res = await ctx.var.deco.meta(
     ifNoneMatch && ctx.var.url.searchParams.get("waitForChanges") === "true"
-      ? {
-        ifNoneMatch,
-        signal: ctx.req.raw.signal,
-      }
+      ? { ifNoneMatch, signal: ctx.req.raw.signal }
       : undefined,
   );
   if (!res) {

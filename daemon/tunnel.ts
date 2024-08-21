@@ -6,7 +6,9 @@ export interface TunnelRegisterOptions {
   site: string;
   port: string;
 }
-const DEBUG = Deno.env.get("DEBUG") === "1";
+
+const VERBOSE = Deno.env.get("VERBOSE");
+
 export async function register({ env, site, port }: TunnelRegisterOptions) {
   const domain = `${env}--${site}.deco.site`;
   const localAddr = `http://localhost:${port}`;
@@ -34,7 +36,7 @@ export async function register({ env, site, port }: TunnelRegisterOptions) {
     return r.closed.then(async (err) => {
       console.log(
         "tunnel connection error retrying in 500ms...",
-        DEBUG ? err : "",
+        VERBOSE ? err : "",
       );
       await new Promise((resolve) => setTimeout(resolve, 500));
       return register({ env, site, port });
@@ -42,7 +44,7 @@ export async function register({ env, site, port }: TunnelRegisterOptions) {
   }).catch(async (err) => {
     console.log(
       "tunnel connection error retrying in 500ms...",
-      DEBUG ? err : "",
+      VERBOSE ? err : "",
     );
     await new Promise((resolve) => setTimeout(resolve, 500));
     return register({ env, site, port });

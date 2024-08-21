@@ -1,7 +1,7 @@
 import { Mutex } from "@core/asyncutil/mutex";
 import type { MiddlewareHandler } from "@hono/hono";
 
-const createReadWriteLock = () => {
+export const createReadWriteLock = () => {
   const read = new Mutex();
   const write = new Mutex();
 
@@ -36,6 +36,8 @@ const createReadWriteLock = () => {
 
   return { wlock, rlock };
 };
+
+export type RwLock = ReturnType<typeof createReadWriteLock>;
 
 export const createLocker = () => {
   const lock = createReadWriteLock();
