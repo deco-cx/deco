@@ -1,4 +1,3 @@
-import * as colors from "@std/fmt/colors";
 import { ensureFile, walk } from "@std/fs";
 import { join, SEPARATOR } from "@std/path";
 import { createReadWriteLock, type RwLock } from "deco/daemon/async.ts";
@@ -6,6 +5,7 @@ import type { StatusResult } from "simple-git";
 import { Hono } from "../../runtime/deps.ts";
 import { sha1 } from "../../utils/sha1.ts";
 import { git, lockerGitAPI } from "../git.ts";
+import { broadcast } from "../sse/channel.ts";
 import {
   applyPatch,
   type FSEvent,
@@ -109,11 +109,84 @@ const shouldIgnore = (path: string) =>
   path.includes("/.git/") ||
   path.includes("/node_modules/");
 
+const systemPathFromBrowser = (url: string) => {
+  const [_, ...segments] = url.split("/file");
+  const s = segments.join("/file");
+
+  return join(Deno.cwd(), "/", s);
+};
+
+const browserPathFromSystem = (filepath: string) =>
+  filepath.replace(Deno.cwd(), "").replaceAll(SEPARATOR, "/");
+
+export async function* start(since: number): AsyncIterableIterator<FSEvent> {
+  const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
+
+  for await (const entry of walker) {
+    if (shouldIgnore(entry.path)) {
+      continue;
+    }
+
+    const [metadata, stats] = await Promise.all([
+      inferMetadata(entry.path),
+      stat(entry.path),
+    ]);
+
+    const mtime = stats.mtime?.getTime() ?? Date.now();
+
+    if (
+      !metadata || mtime < since
+    ) {
+      continue;
+    }
+
+    const filepath = browserPathFromSystem(entry.path);
+    yield {
+      type: "fs-sync",
+      detail: { metadata, filepath, timestamp: mtime },
+    };
+  }
+
+  yield {
+    type: "fs-snapshot",
+    detail: { timestamp: Date.now(), status: await git.status() },
+  };
+}
+
+const watchFS = async () => {
+  const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
+
+  for await (const { kind, paths } of watcher) {
+    if (kind !== "create" && kind !== "remove" && kind !== "modify") {
+      continue;
+    }
+
+    const [filepath] = paths;
+
+    if (shouldIgnore(filepath)) {
+      continue;
+    }
+
+    const [status, metadata, stats] = await Promise.all([
+      git.status(),
+      inferMetadata(filepath),
+      stat(filepath),
+    ]);
+
+    broadcast({
+      type: "fs-sync",
+      detail: {
+        status,
+        metadata,
+        timestamp: stats.mtime?.getTime() ?? Date.now(),
+        filepath: browserPathFromSystem(filepath),
+      },
+    });
+  }
+};
+
 export const createFSAPIs = () => {
   const app = new Hono();
-  const cwd = Deno.cwd();
-
-  const sockets: WebSocket[] = [];
 
   const lockByPath = new Map<string, RwLock>();
   const getRwLock = (filepath: string) => {
@@ -124,141 +197,7 @@ export const createFSAPIs = () => {
     return lockByPath.get(filepath);
   };
 
-  const send = (msg: FSEvent, socket: WebSocket) => {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(msg));
-    }
-  };
-
-  const broadcast = (msg: FSEvent) => {
-    const msgStr = JSON.stringify(msg);
-    for (const socket of sockets) {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(msgStr);
-      }
-    }
-  };
-
-  const watchFS = async () => {
-    const watcher = Deno.watchFs(cwd, { recursive: true });
-
-    for await (const { kind, paths } of watcher) {
-      if (kind !== "create" && kind !== "remove" && kind !== "modify") {
-        continue;
-      }
-
-      const [filepath] = paths;
-
-      if (shouldIgnore(filepath)) {
-        continue;
-      }
-
-      const [status, metadata, stats] = await Promise.all([
-        git.status(),
-        inferMetadata(filepath),
-        stat(filepath),
-      ]);
-
-      broadcast({
-        type: "sync",
-        detail: {
-          status,
-          metadata,
-          timestamp: stats.mtime?.getTime() ?? Date.now(),
-          filepath: browserPathFromSystem(filepath),
-        },
-      });
-    }
-  };
-
   app.use(lockerGitAPI.rlock);
-
-  app.get("/watch", (c) => {
-    const since = Number(c.req.query("since"));
-
-    if (c.req.header("Upgrade") !== "websocket") {
-      return new Response("Missing header Upgrade: websocket ", {
-        status: 400,
-      });
-    }
-
-    const { response, socket } = Deno.upgradeWebSocket(c.req.raw);
-
-    socket.addEventListener(
-      "close",
-      () => {
-        const index = sockets.findIndex((s) => s === socket);
-        console.log(
-          colors.bold(`[admin.deco.cx][${index}]:`),
-          "socket is",
-          colors.red("closed"),
-        );
-
-        if (index > -1) {
-          sockets.splice(index, 1);
-        }
-      },
-    );
-
-    socket.addEventListener("open", async () => {
-      const index = sockets.findIndex((s) => s === socket);
-      console.log(
-        colors.bold(`[admin.deco.cx][${index}]:`),
-        "socket is",
-        colors.green("open"),
-      );
-
-      const walker = walk(cwd, { includeDirs: false, includeFiles: true });
-
-      for await (const entry of walker) {
-        if (shouldIgnore(entry.path)) {
-          continue;
-        }
-
-        const [metadata, stats] = await Promise.all([
-          inferMetadata(entry.path),
-          stat(entry.path),
-        ]);
-
-        const mtime = stats.mtime?.getTime() ?? Date.now();
-
-        if (
-          !metadata || mtime < since
-        ) {
-          continue;
-        }
-
-        const filepath = browserPathFromSystem(entry.path);
-        send({
-          type: "sync",
-          detail: { metadata, filepath, timestamp: mtime },
-        }, socket);
-      }
-
-      if (socket.readyState !== WebSocket.OPEN) {
-        return;
-      }
-
-      send({
-        type: "snapshot",
-        detail: { timestamp: Date.now(), status: await git.status() },
-      }, socket);
-    });
-
-    sockets.push(socket);
-
-    return response;
-  });
-
-  const systemPathFromBrowser = (url: string) => {
-    const [_, ...segments] = url.split("/file");
-    const s = segments.join("/file");
-
-    return join(cwd, "/", s);
-  };
-
-  const browserPathFromSystem = (filepath: string) =>
-    filepath.replace(cwd, "").replaceAll(SEPARATOR, "/");
 
   app.get("/file/*", async (c) => {
     const filepath = systemPathFromBrowser(c.req.raw.url);
@@ -346,7 +285,7 @@ export const createFSAPIs = () => {
     return c.json(update);
   });
 
-  watchFS().catch(console.error);
-
   return app;
 };
+
+watchFS().catch(console.error);

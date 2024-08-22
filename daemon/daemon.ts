@@ -5,10 +5,11 @@ import {
 } from "@std/http/server-sent-event-stream";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { createAuth } from "./auth.ts";
+import { createFSAPIs } from "./fs/api.ts";
 import { createGitAPIS } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
 import { createRealtimeAPIs } from "./realtime/app.ts";
-import { createFSAPIs } from "./fs/api.ts";
+import { createSSE } from "./sse/api.ts";
 
 export const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
 export const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
@@ -73,6 +74,7 @@ export const createDaemonAPIs = (
 
   app.route("/volumes/:id/files", createRealtimeAPIs());
   app.route("/fs", createFSAPIs());
+  app.route("", createSSE());
 
   return async (c, next) => {
     const isDaemonAPI = c.req.header(DAEMON_API_SPECIFIER) ??
