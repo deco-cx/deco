@@ -71,6 +71,7 @@ const applyJSONPatch = <T>(content: T, patch: Patch["payload"]) => {
       content: patch.reduce<T>(fjp.applyReducer, content),
     };
   } catch (error) {
+    console.error(error);
     if (
       error instanceof fjp.JsonPatchError &&
       error.name === "TEST_OPERATION_FAILED"
