@@ -26,7 +26,25 @@ export interface LoaderModule<
   TProps = any,
   TState = any,
 > extends BlockModule<FnProps<TProps>> {
-  cache?: "no-store" | "stale-while-revalidate";
+  /**
+   * Specifies caching behavior for the loader and its dependencies.
+   *
+   * - **no-store**:
+   *   - Completely bypasses the cache, ensuring that the loader always runs and fetches fresh data.
+   *   - This setting also changes `ctx.vary.shouldCache` to `false`, which prevents other dependent sections from being cached.
+   *   - The `vary` is not set, even if the loader has a cache key.
+   *
+   * - **no-cache**:
+   *   - Ignores the cache for the current loader run, but does not affect the caching behavior of other dependent blocks.
+   *   - This is useful for loaders that should always execute but whose results can still be cached.
+   *
+   * - **stale-while-revalidate**:
+   *   - If no data exists for a cache key, the loader runs, and the fresh data is returned.
+   *   - If stale data is available, it is returned immediately while the loader runs in the background to revalidate and update the cache if the data is outdated.
+   *
+   * @default "no-store"
+   */
+  cache?: "no-store" | "stale-while-revalidate" | "no-cache";
   // a null value avoid cache
   cacheKey?: (
     props: TProps,
@@ -173,16 +191,30 @@ const wrapLoader = (
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
+
+      const isCacheEngineDefined = isCache(maybeCache);
+      const isCacheDisabled = !ENABLE_LOADER_CACHE ||
+        !isCacheEngineDefined;
+
       const cacheKeyValue = cacheKey(props, req, ctx);
+      const isCacheKeyNull = cacheKeyValue === null;
+      const isCacheNoStore = mode === "no-store";
+      const isCacheNoCache = mode === "no-cache";
+
+      const bypassCache = isCacheNoStore || isCacheNoCache ||
+        isCacheKeyNull || isCacheDisabled;
+
       try {
         // Should skip cache
         if (
-          mode === "no-store" ||
-          !ENABLE_LOADER_CACHE ||
-          !isCache(maybeCache) ||
-          cacheKeyValue === null
+          bypassCache ||
+          // This code is unreachable, but the TS complains that cache is undefined because
+          // it doesn't get that isCache is inside of bypassCache variable
+          !isCache(maybeCache)
         ) {
-          if (ctx.vary) {
+          const shouldNotCache = isCacheNoStore || isCacheKeyNull;
+
+          if (ctx.vary && shouldNotCache) {
             ctx.vary.shouldCache = false;
           }
 
