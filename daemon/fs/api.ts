@@ -120,37 +120,41 @@ const browserPathFromSystem = (filepath: string) =>
   filepath.replace(Deno.cwd(), "").replaceAll(SEPARATOR, "/");
 
 export async function* start(since: number): AsyncIterableIterator<FSEvent> {
-  const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
+  try {
+    const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
 
-  for await (const entry of walker) {
-    if (shouldIgnore(entry.path)) {
-      continue;
+    for await (const entry of walker) {
+      if (shouldIgnore(entry.path)) {
+        continue;
+      }
+
+      const [metadata, stats] = await Promise.all([
+        inferMetadata(entry.path),
+        stat(entry.path),
+      ]);
+
+      const mtime = stats.mtime?.getTime() ?? Date.now();
+
+      if (
+        !metadata || mtime < since
+      ) {
+        continue;
+      }
+
+      const filepath = browserPathFromSystem(entry.path);
+      yield {
+        type: "fs-sync",
+        detail: { metadata, filepath, timestamp: mtime },
+      };
     }
 
-    const [metadata, stats] = await Promise.all([
-      inferMetadata(entry.path),
-      stat(entry.path),
-    ]);
-
-    const mtime = stats.mtime?.getTime() ?? Date.now();
-
-    if (
-      !metadata || mtime < since
-    ) {
-      continue;
-    }
-
-    const filepath = browserPathFromSystem(entry.path);
     yield {
-      type: "fs-sync",
-      detail: { metadata, filepath, timestamp: mtime },
+      type: "fs-snapshot",
+      detail: { timestamp: Date.now(), status: await git.status() },
     };
+  } catch (error) {
+    console.error(error);
   }
-
-  yield {
-    type: "fs-snapshot",
-    detail: { timestamp: Date.now(), status: await git.status() },
-  };
 }
 
 const watchFS = async () => {
