@@ -43,7 +43,7 @@ export const isEventStreamResponse = (
 
 export async function* readFromStream<T>(
   response: Response,
-  shouldDecodeChunk?: boolean,
+  shouldDecodeChunk: boolean = true,
 ): AsyncIterableIterator<T> {
   if (!response.body) {
     return;
@@ -70,6 +70,8 @@ export async function* readFromStream<T>(
       if (!data.startsWith("data:")) {
         continue;
       }
+
+      console.log(shouldDecodeChunk);
 
       try {
         const chunk = data.replace("data:", "");
