@@ -1,4 +1,5 @@
 import { Hono } from "@hono/hono";
+import { broadcast } from "./sse/channel.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 
 export interface WorkerOptions {
@@ -7,35 +8,54 @@ export interface WorkerOptions {
   port: number;
 }
 
-export let worker: DenoRun | null = null;
+export type WorkerStatusEvent = {
+  type: "worker-status";
+  detail: WorkerStatus;
+};
+
+export type WorkerStatus = { state: "updating" | "ready" };
+
+const workerState: WorkerStatus = { state: "updating" };
+
+export const dispatchWorkerState = (state: "ready" | "updating") => {
+  workerState.state = state;
+  broadcast({ type: "worker-status", detail: workerState });
+};
+
+export const start = (): WorkerStatusEvent => ({
+  type: "worker-status",
+  detail: workerState,
+});
+
+const wp = Promise.withResolvers<DenoRun>();
+
+export const worker = async () => {
+  const w = await wp.promise;
+
+  w.start();
+  await w.waitUntilReady();
+
+  return w;
+};
 
 export const createWorker = (opts: WorkerOptions) => {
   const app = new Hono();
-  const w = new DenoRun(opts);
-  let ok: Promise<unknown> | null = null;
 
-  worker = w;
-
-  const startWorker = async (worker: DenoRun) => {
-    worker.start();
-    await worker.waitUntilReady();
-  };
+  wp.resolve(new DenoRun(opts));
 
   // ensure isolate is up and running
   app.use("/*", async (c, next) => {
     try {
-      ok ||= startWorker(w);
-
-      await ok.then(next);
+      await worker();
+      await next();
     } catch (error) {
       console.error(error);
 
-      ok = null;
       c.res = new Response(`Error while starting worker`, { status: 424 });
     }
   });
 
-  app.all("/*", (c) => w.fetch(c.req.raw));
+  app.all("/*", (c) => wp.promise.then((w) => w.fetch(c.req.raw)));
 
   // listen for signals
   const signals: Deno.Signal[] = ["SIGINT", "SIGTERM"];
@@ -44,8 +64,10 @@ export const createWorker = (opts: WorkerOptions) => {
       Deno.addSignalListener(signal, () => {
         console.log(`Received ${signal}`);
         opts.persist();
-        w.signal(signal);
-        w[Symbol.asyncDispose]();
+        wp.promise.then((w) => {
+          w.signal(signal);
+          w[Symbol.asyncDispose]();
+        });
         self.close();
       });
     } catch {

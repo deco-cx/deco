@@ -27,10 +27,10 @@ export type Metadata = BlockMetadata | PageBlockMetadata | FileMetadata;
 export type GitStatus = StatusResult;
 
 export type FSEvent = {
-  type: "sync";
+  type: "fs-sync";
   detail: SyncUpdate;
 } | {
-  type: "snapshot";
+  type: "fs-snapshot";
   detail: SnapshotUpdate;
 };
 
