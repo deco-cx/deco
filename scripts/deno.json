@@ -5,7 +5,7 @@
     "./release": "./release.ts",
     "./update": "./update.run.ts",
     "./upgrade": "./upgrade.ts",
-    "./tailwind_checker.ts": "./tailwind_checker.ts"
+    "./tailwindChecker.ts": "./tailwindChecker.ts"
   },
   "publish": {
     "exclude": [
