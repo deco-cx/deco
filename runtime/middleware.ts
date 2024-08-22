@@ -253,6 +253,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
             "url.path": url.pathname,
             "user_agent.original": ctx.req.raw.headers.get("user-agent") ??
               undefined,
+            "request.internal": ctx.req.raw.headers.has("traceparent"),
           },
         },
         ctx.var.monitoring.context,
