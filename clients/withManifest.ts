@@ -71,8 +71,6 @@ export async function* readFromStream<T>(
         continue;
       }
 
-      console.log(shouldDecodeChunk);
-
       try {
         const chunk = data.replace("data:", "");
         yield JSON.parse(shouldDecodeChunk ? decodeURIComponent(chunk) : chunk);
