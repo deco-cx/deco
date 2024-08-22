@@ -43,6 +43,7 @@ export const isEventStreamResponse = (
 
 export async function* readFromStream<T>(
   response: Response,
+  shouldDecodeChunk?: boolean,
 ): AsyncIterableIterator<T> {
   if (!response.body) {
     return;
@@ -71,7 +72,8 @@ export async function* readFromStream<T>(
       }
 
       try {
-        yield JSON.parse(decodeURIComponent(data.replace("data:", "")));
+        const chunk = data.replace("data:", "");
+        yield JSON.parse(shouldDecodeChunk ? decodeURIComponent(chunk) : chunk);
       } catch (_err) {
         console.log("error parsing data", _err, data);
         continue;
