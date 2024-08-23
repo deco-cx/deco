@@ -1,7 +1,7 @@
 import { ValueType } from "../../deps.ts";
 import { tracer } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
-import { sha1 } from "../../utils/sha1.ts";
+import { sha1 } from "../utils.ts";
 
 export const assertNoOptions = (
   { ignoreMethod, ignoreSearch, ignoreVary }: CacheQueryOptions = {},
