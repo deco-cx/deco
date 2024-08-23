@@ -157,7 +157,7 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
   }
 }
 
-const watchFS = async () => {
+export const watchFS = async () => {
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
 
   for await (const { kind, paths } of watcher) {
@@ -291,5 +291,3 @@ export const createFSAPIs = () => {
 
   return app;
 };
-
-watchFS().catch(console.error);
