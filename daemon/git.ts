@@ -16,7 +16,7 @@ const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 
 export const lockerGitAPI = createLocker();
 
-const git = simpleGit(Deno.cwd(), {
+export const git = simpleGit(Deno.cwd(), {
   maxConcurrentProcesses: 1,
   trimmed: true,
   progress: ({ method, stage, progress }) =>
@@ -224,16 +224,16 @@ export const publish = ({ build }: Options): Handler => {
 
     const result = await git.push();
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    });
+    return Response.json(result);
   };
 };
 
 export interface CheckoutAPI {
   body: {
     filepaths: string[];
+  };
+  response: {
+    status: StatusResult;
   };
 }
 
@@ -244,17 +244,20 @@ export const discard: Handler = async (c) => {
 
   const base = await getMergeBase();
 
-  await git.reset(["."])
+  const status = await git.reset(["."])
     .reset([base])
     .checkout(
       filepaths.map((path) => path.startsWith("/") ? path.slice(1) : path),
-    );
+    )
+    .status();
 
-  return new Response(null, { status: 204 });
+  return Response.json({ status });
 };
 
 export interface RebaseAPI {
-  response: void;
+  response: {
+    status: StatusResult;
+  };
 }
 
 export const rebase: Handler = async () => {
@@ -266,9 +269,9 @@ export const rebase: Handler = async () => {
 
   const base = await getMergeBase();
 
-  await git.reset([base]);
+  const status = await git.reset([base]).status();
 
-  return new Response(null, { status: 204 });
+  return Response.json({ status });
 };
 
 export interface GitLogAPI {

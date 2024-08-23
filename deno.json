@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "1.92.5",
+  "version": "1.93.0-alpha.1",
   "exports": {
     ".": "./mod.ts",
     "./htmx": "./runtime/htmx/mod.ts",
@@ -52,7 +52,7 @@
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
     "@deco/durable": "jsr:@deco/durable@^0.5.3",
-    "@deco/warp": "jsr:@deco/warp@^0.3.4",
+    "@deco/warp": "jsr:@deco/warp@^0.3.6",
     "@hono/hono": "jsr:@hono/hono@^4.5.4",
     "@std/assert": "jsr:@std/assert@^1.0.2",
     "@std/async": "jsr:@std/async@^0.224.1",

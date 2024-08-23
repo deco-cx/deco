@@ -130,6 +130,7 @@ const persistState = throttle(async () => {
 });
 
 // Watch for changes in filesystem
+// TODO: we should be able to completely remove this after in some point in the future
 const watch = async () => {
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
 
@@ -147,6 +148,7 @@ const watch = async () => {
       console.log(event.kind, ...event.paths);
     }
 
+    // TODO: remove genBlocksJSON after we stop using old FS API
     const isBlockChanged = event.paths.some((path) =>
       path.includes(`${DECO_FOLDER}/${BLOCKS_FOLDER}`)
     );
@@ -155,6 +157,7 @@ const watch = async () => {
       genBlocksJSON();
     }
 
+    /** We should move this to the new FS api */
     const codeCreatedOrDeleted = event.kind !== "modify" &&
       event.kind !== "access" && event.paths.some((path) => (
         /\.tsx?$/.test(path) && !path.includes("manifest.gen.ts")
@@ -164,6 +167,7 @@ const watch = async () => {
       genManifestTS();
     }
 
+    // TODO: We should be able to remove this after we migrate to ebs
     persistState();
   }
 };
