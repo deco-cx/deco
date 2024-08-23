@@ -14,8 +14,10 @@ import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { delay, throttle } from "../utils/async.ts";
 import { createDaemonAPIs, DECO_ENV_NAME, DECO_SITE_NAME } from "./daemon.ts";
+import { watchFS } from "./fs/api.ts";
 import { ensureGit, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
+import { watchMeta } from "./meta.ts";
 import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
 import { createWorker } from "./worker.ts";
@@ -203,7 +205,10 @@ const createDeps = (): MiddlewareHandler => {
       }ms`,
     });
 
-    watch();
+    watch().catch(console.error);
+    watchMeta().catch(console.error);
+    watchFS().catch(console.error);
+
     logs.push({
       level: "info",
       message: `${

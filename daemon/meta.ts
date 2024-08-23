@@ -50,7 +50,7 @@ export const start = async (): Promise<MetaEvent> => ({
   detail: isPromiseLike(meta) ? await meta.promise : meta,
 });
 
-const watchMeta = async () => {
+export const watchMeta = async () => {
   let etag = "";
 
   while (true) {
@@ -76,5 +76,3 @@ const watchMeta = async () => {
     }
   }
 };
-
-watchMeta().catch(console.error);
