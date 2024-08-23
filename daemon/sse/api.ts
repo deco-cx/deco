@@ -31,38 +31,28 @@ export const createSSE = () => {
         async start(controller) {
           console.log(colors.bold(`[sse]:`), "stream is", colors.green("open"));
 
-          for await (const event of startFS(since)) {
-            enqueue(controller, event);
-          }
-
-          enqueue(controller, startWorker());
-        },
-        pull(controller) {
-          startMeta(since)
-            .then((meta) => {
-              if (meta) {
-                console.log("enqueueing meta");
-                controller.enqueue({
-                  data: encodeURIComponent(JSON.stringify(meta)),
-                  event: "message",
-                });
-                enqueue(controller, startWorker());
-              } else {
-                console.log("not enqueing meta");
-              }
-            })
-            .catch(console.error);
-
           const handler = (e: CustomEvent<DaemonEvent>) =>
             enqueue(controller, e.detail);
 
           // @ts-expect-error TS does not handle well this case
           channel.addEventListener("broadcast", handler);
-
-          signal.addEventListener("abort", () => {
+          done.promise.then(() => {
             // @ts-expect-error TS does not handle well this case
             channel.removeEventListener("broadcast", handler);
-          }, { once: true });
+          });
+
+          for await (const event of startFS(since)) {
+            if (signal.aborted) {
+              return;
+            }
+            enqueue(controller, event);
+          }
+
+          enqueue(controller, startWorker());
+
+          startMeta(since)
+            .then((meta) => meta && enqueue(controller, meta))
+            .catch(console.error);
 
           return done.promise;
         },

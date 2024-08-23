@@ -49,8 +49,6 @@ const isPromiseLike = <T>(
 export const start = async (since: number): Promise<MetaEvent | null> => {
   const detail = isPromiseLike(meta) ? await meta.promise : meta;
 
-  console.log("start meta", since, detail.timestamp, since >= detail.timestamp);
-
   if (since >= detail.timestamp) {
     return null;
   }
@@ -67,9 +65,7 @@ export const watchMeta = async () => {
   while (true) {
     try {
       const w = await worker();
-      console.log("watching meta", { etag });
       const response = await w.fetch(metaRequest(etag));
-      console.log("responded", { ok: response.ok });
       if (!response.ok) {
         throw new Error(`Failed to fetch meta info: ${response.statusText}`);
       }
@@ -80,9 +76,6 @@ export const watchMeta = async () => {
 
       if (isPromiseLike(meta)) {
         meta.resolve(withExtraParams);
-        console.log("setting new meta");
-      } else {
-        console.log("not promise like");
       }
       meta = withExtraParams;
 
