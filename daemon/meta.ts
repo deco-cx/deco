@@ -49,7 +49,7 @@ const isPromiseLike = <T>(
 export const start = async (since: number): Promise<MetaEvent | null> => {
   const detail = isPromiseLike(meta) ? await meta.promise : meta;
 
-  console.log("start meta", since, detail.timestamp);
+  console.log("start meta", since, detail.timestamp, since >= detail.timestamp);
 
   if (since >= detail.timestamp) {
     return null;

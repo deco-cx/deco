@@ -36,12 +36,12 @@ export const createSSE = () => {
           }
 
           enqueue(controller, startWorker());
-
+        },
+        pull(controller) {
           startMeta(since)
             .then((meta) => meta && enqueue(controller, meta))
             .catch(console.error);
-        },
-        pull(controller) {
+
           const handler = (e: CustomEvent<DaemonEvent>) =>
             enqueue(controller, e.detail);
 
