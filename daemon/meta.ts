@@ -79,8 +79,8 @@ export const watchMeta = async () => {
       }
       meta = withExtraParams;
 
-      dispatchWorkerState("ready");
       broadcast({ type: "meta-info", detail: withExtraParams });
+      dispatchWorkerState("ready");
     } catch (error) {
       dispatchWorkerState("updating");
       console.error(error);
