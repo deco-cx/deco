@@ -96,7 +96,7 @@ export const handler = createHandler(async (
     // We can test if caching on the browser helps too.
     response.headers.set(
       "cache-control",
-      "public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400",
+      "public, max-age=60, must-revalidate, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400",
     );
   } else {
     response.headers.set(
