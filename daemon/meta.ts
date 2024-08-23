@@ -66,6 +66,9 @@ export const watchMeta = async () => {
     try {
       const w = await worker();
       const response = await w.fetch(metaRequest(etag));
+      if (!response.ok) {
+        throw new Error(`Failed to fetch meta info: ${response.statusText}`);
+      }
       const m: MetaInfo = await response.json();
 
       etag = response.headers.get("etag") ?? etag;
