@@ -3,7 +3,6 @@ import { join, SEPARATOR } from "@std/path";
 import { createReadWriteLock, type RwLock } from "deco/daemon/async.ts";
 import type { StatusResult } from "simple-git";
 import { Hono } from "../../runtime/deps.ts";
-import { sha1 } from "../../utils/sha1.ts";
 import { git, lockerGitAPI } from "../git.ts";
 import { broadcast } from "../sse/channel.ts";
 import {
@@ -64,17 +63,24 @@ const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
   }
 };
 
-const stat = async (filepath: string) => {
+const mtimeFor = async (filepath: string) => {
   try {
     const stats = await Deno.stat(filepath);
 
-    return stats;
+    return stats.mtime?.getTime() ?? Date.now();
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      return { mtime: new Date() };
+      return Date.now();
     }
     throw error;
   }
+};
+
+const onNotFound = <T>(fallback: T) => (error: unknown) => {
+  if (error instanceof Deno.errors.NotFound) {
+    return fallback;
+  }
+  throw error;
 };
 
 export interface ListAPI {
@@ -98,7 +104,7 @@ export interface ReadAPI {
 
 export interface PatchAPI {
   response: UpdateResponse;
-  body: { patch: Patch; hash: string };
+  body: { patch: Patch; timestamp: number };
 }
 
 export interface DeleteAPI {
@@ -128,12 +134,10 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
         continue;
       }
 
-      const [metadata, stats] = await Promise.all([
+      const [metadata, mtime] = await Promise.all([
         inferMetadata(entry.path),
-        stat(entry.path),
+        mtimeFor(entry.path),
       ]);
-
-      const mtime = stats.mtime?.getTime() ?? Date.now();
 
       if (
         !metadata || mtime < since
@@ -171,10 +175,10 @@ export const watchFS = async () => {
       continue;
     }
 
-    const [status, metadata, stats] = await Promise.all([
+    const [status, metadata, mtime] = await Promise.all([
       git.status(),
       inferMetadata(filepath),
-      stat(filepath),
+      mtimeFor(filepath),
     ]);
 
     broadcast({
@@ -182,7 +186,7 @@ export const watchFS = async () => {
       detail: {
         status,
         metadata,
-        timestamp: stats.mtime?.getTime() ?? Date.now(),
+        timestamp: mtime,
         filepath: browserPathFromSystem(filepath),
       },
     });
@@ -232,15 +236,16 @@ export const createFSAPIs = () => {
 
   app.patch("/file/*", async (c) => {
     const filepath = systemPathFromBrowser(c.req.raw.url);
-    const { patch, hash } = await c.req.json<PatchAPI["body"]>();
+    const {
+      patch,
+      timestamp: mtimeClient,
+    } = await c.req.json<PatchAPI["body"]>();
     using _ = await getRwLock(filepath)?.wlock();
 
-    const content = await Deno.readTextFile(filepath).catch((e) => {
-      if (e instanceof Deno.errors.NotFound) {
-        return null;
-      }
-      throw e;
-    });
+    const [mtimeBefore, content] = await Promise.all([
+      mtimeFor(filepath),
+      Deno.readTextFile(filepath).catch(onNotFound(null)),
+    ]);
 
     const result = applyPatch(content, patch);
 
@@ -249,24 +254,20 @@ export const createFSAPIs = () => {
       await Deno.writeTextFile(filepath, result.content);
     }
 
-    const [status, metadata, stats] = await Promise.all([
+    const [status, metadata, mtimeAfter] = await Promise.all([
       git.status(),
       inferMetadata(filepath),
-      Deno.stat(filepath),
+      mtimeFor(filepath),
     ]);
 
-    const timestamp = stats.mtime?.getTime() ?? Date.now();
-
     const update: UpdateResponse = result.conflict
-      ? { conflict: true, status, metadata, timestamp, content }
+      ? { conflict: true, status, metadata, timestamp: mtimeAfter, content }
       : {
         conflict: false,
         status,
         metadata,
-        timestamp,
-        content: hash !== await sha1(result.content)
-          ? result.content
-          : undefined,
+        timestamp: mtimeAfter,
+        content: mtimeBefore !== mtimeClient ? result.content : undefined,
       };
 
     return c.json(update);
