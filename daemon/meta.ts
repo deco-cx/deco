@@ -80,9 +80,9 @@ export const watchMeta = async () => {
 
       if (isPromiseLike(meta)) {
         meta.resolve(withExtraParams);
-        console.log("setting new meta", withExtraParams);
+        console.log("setting new meta");
       } else {
-        console.log("not promise like", meta);
+        console.log("not promise like");
       }
       meta = withExtraParams;
 
