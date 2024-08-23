@@ -31,7 +31,7 @@ let meta: PromiseWithResolvers<MetaInfo> | MetaInfo = Promise.withResolvers<
 >();
 
 const metaRequest = (etag: string) =>
-  new Request(`https://localhost/deco/meta?waitForChanges=true`, {
+  new Request(`http://0.0.0.0/deco/meta?waitForChanges=true`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
