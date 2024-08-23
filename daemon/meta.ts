@@ -74,10 +74,10 @@ export const watchMeta = async () => {
       etag = response.headers.get("etag") ?? etag;
       const withExtraParams = { ...m, etag, timestamp: Date.now() };
 
-      meta = withExtraParams;
       if (isPromiseLike(meta)) {
         meta.resolve(withExtraParams);
       }
+      meta = withExtraParams;
 
       dispatchWorkerState("ready");
       broadcast({ type: "meta-info", detail: withExtraParams });
