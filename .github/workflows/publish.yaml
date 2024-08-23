@@ -43,8 +43,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: nowsprinting/check-version-format-action@v3
-        id: version
 
       - name: Build, tag, and push the builder image to Github ghcr
         id: build-builder-image
