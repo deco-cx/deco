@@ -46,6 +46,7 @@ export const createSSE = () => {
                   data: encodeURIComponent(JSON.stringify(meta)),
                   event: "message",
                 });
+                enqueue(controller, startWorker());
               } else {
                 console.log("not enqueing meta");
               }
