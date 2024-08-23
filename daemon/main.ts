@@ -14,8 +14,10 @@ import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { delay, throttle } from "../utils/async.ts";
 import { createDaemonAPIs, DECO_ENV_NAME, DECO_SITE_NAME } from "./daemon.ts";
+import { watchFS } from "./fs/api.ts";
 import { ensureGit, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
+import { watchMeta } from "./meta.ts";
 import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
 import { createWorker } from "./worker.ts";
@@ -130,6 +132,7 @@ const persistState = throttle(async () => {
 });
 
 // Watch for changes in filesystem
+// TODO: we should be able to completely remove this after in some point in the future
 const watch = async () => {
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
 
@@ -147,6 +150,7 @@ const watch = async () => {
       console.log(event.kind, ...event.paths);
     }
 
+    // TODO: remove genBlocksJSON after we stop using old FS API
     const isBlockChanged = event.paths.some((path) =>
       path.includes(`${DECO_FOLDER}/${BLOCKS_FOLDER}`)
     );
@@ -155,6 +159,7 @@ const watch = async () => {
       genBlocksJSON();
     }
 
+    /** We should move this to the new FS api */
     const codeCreatedOrDeleted = event.kind !== "modify" &&
       event.kind !== "access" && event.paths.some((path) => (
         /\.tsx?$/.test(path) && !path.includes("manifest.gen.ts")
@@ -164,6 +169,7 @@ const watch = async () => {
       genManifestTS();
     }
 
+    // TODO: We should be able to remove this after we migrate to ebs
     persistState();
   }
 };
@@ -199,7 +205,10 @@ const createDeps = (): MiddlewareHandler => {
       }ms`,
     });
 
-    watch();
+    watch().catch(console.error);
+    watchMeta().catch(console.error);
+    watchFS().catch(console.error);
+
     logs.push({
       level: "info",
       message: `${

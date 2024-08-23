@@ -86,8 +86,8 @@ export const genMetadata = async () => {
     const pathname = join(Deno.cwd(), METADATA_PATH);
     await ensureFile(pathname);
     await Deno.writeTextFile(pathname, JSON.stringify(metadata));
-  } catch (error) {
-    console.error("Error while auto-generating blocks.json", error);
+  } catch {
+    /** ok */
   }
 };
 
