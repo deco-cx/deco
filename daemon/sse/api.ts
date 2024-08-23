@@ -37,8 +37,8 @@ export const createSSE = () => {
 
           enqueue(controller, startWorker());
 
-          startMeta()
-            .then((meta) => enqueue(controller, meta))
+          startMeta(since)
+            .then((meta) => meta && enqueue(controller, meta))
             .catch(console.error);
         },
         pull(controller) {

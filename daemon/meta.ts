@@ -19,6 +19,7 @@ export interface MetaInfo {
   manifest: ManifestBlocks;
   site: string;
   etag?: string;
+  timestamp: number;
 }
 
 export type MetaEvent = {
@@ -45,10 +46,18 @@ const isPromiseLike = <T>(
   // @ts-expect-error typescript is wild
   typeof x.resolve === "function" && typeof x.reject === "function";
 
-export const start = async (): Promise<MetaEvent> => ({
-  type: "meta-info",
-  detail: isPromiseLike(meta) ? await meta.promise : meta,
-});
+export const start = async (since: number): Promise<MetaEvent | null> => {
+  const detail = isPromiseLike(meta) ? await meta.promise : meta;
+
+  if (since >= detail.timestamp) {
+    return null;
+  }
+
+  return {
+    type: "meta-info",
+    detail,
+  };
+};
 
 export const watchMeta = async () => {
   let etag = "";
@@ -60,16 +69,15 @@ export const watchMeta = async () => {
       const m: MetaInfo = await response.json();
 
       etag = response.headers.get("etag") ?? etag;
+      const withExtraParams = { ...m, etag, timestamp: Date.now() };
 
-      const withEtag = { ...m, etag };
-
+      meta = withExtraParams;
       if (isPromiseLike(meta)) {
-        meta.resolve(withEtag);
+        meta.resolve(withExtraParams);
       }
-      meta = withEtag;
 
       dispatchWorkerState("ready");
-      broadcast({ type: "meta-info", detail: withEtag });
+      broadcast({ type: "meta-info", detail: withExtraParams });
     } catch (error) {
       dispatchWorkerState("updating");
       console.error(error);
