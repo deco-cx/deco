@@ -36,23 +36,12 @@ export const createSSE = () => {
           }
 
           enqueue(controller, startWorker());
+
+          startMeta(since)
+            .then((meta) => meta && enqueue(controller, meta))
+            .catch(console.error);
         },
         pull(controller) {
-          startMeta(since)
-            .then((meta) => {
-              if (meta) {
-                console.log("enqueueing meta");
-                controller.enqueue({
-                  data: encodeURIComponent(JSON.stringify(meta)),
-                  event: "message",
-                });
-                enqueue(controller, startWorker());
-              } else {
-                console.log("not enqueing meta");
-              }
-            })
-            .catch(console.error);
-
           const handler = (e: CustomEvent<DaemonEvent>) =>
             enqueue(controller, e.detail);
 

@@ -1,10 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
 import { join, toFileUrl } from "@std/path";
+import { fromJSON } from "deco/engine/decofile/fetcher.ts";
 import { type RequestState, vary } from "../blocks/utils.tsx";
 import type { DecoContext } from "../deco.ts";
 import { context as otelContext } from "../deps.ts";
 import type { BaseContext } from "../engine/core/resolver.ts";
 import {
+  type Decofile,
   type DecofileProvider,
   getProvider,
 } from "../engine/decofile/provider.ts";
@@ -45,9 +47,14 @@ export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
   site?: string;
   namespace?: string;
   manifest?: TAppManifest;
-  decofile?: DecofileProvider;
+  decofile?: DecofileProvider | Decofile;
   bindings?: Bindings<TAppManifest>;
 }
+
+const isProvider = (
+  decofile?: DecofileProvider | Decofile,
+): decofile is DecofileProvider =>
+  typeof (decofile as DecofileProvider).state === "function";
 
 export class Deco<TAppManifest extends AppManifest = AppManifest> {
   private _handler: ReturnType<typeof handlerFor> | null = null;
@@ -62,7 +69,12 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     opts?: DecoOptions<TAppManifest>,
   ): Promise<Deco<TAppManifest>> {
     const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
-    const decofile = opts?.decofile ?? await getProvider(site);
+    const optsDecofile = opts?.decofile;
+    const decofileProvider: DecofileProvider | undefined =
+      optsDecofile !== undefined
+        ? isProvider(optsDecofile) ? optsDecofile : fromJSON(optsDecofile)
+        : undefined;
+    const decofile = decofileProvider ?? await getProvider(site);
     const manifest = opts?.manifest ?? (await import(
       toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href
     ).then((mod) => mod.default));
@@ -229,3 +241,4 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 
 export { DECO_SEGMENT } from "./middleware.ts";
 export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";
+

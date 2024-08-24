@@ -5,8 +5,15 @@ import { walk } from "@std/fs/walk";
 import { basename, join } from "@std/path";
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../live.ts";
+import { format as formatTs } from "../../scripts/formatter.ts";
 import { exists } from "../../utils/filesystem.ts";
-import { BLOCKS_FOLDER, DECO_FOLDER, METADATA_PATH } from "./constants.ts";
+import {
+  BLOCKS_FOLDER,
+  BLOCKS_PATH,
+  DECO_FOLDER,
+  DECOFILE_PATH,
+  METADATA_PATH,
+} from "./constants.ts";
 import type {
   Decofile,
   DecofileProvider,
@@ -87,6 +94,47 @@ export const genMetadata = async () => {
     await ensureFile(pathname);
     await Deno.writeTextFile(pathname, JSON.stringify(metadata));
   } catch {
+    /** ok */
+  }
+};
+
+/** Syncs FileSystem Metadata with Storage metadata */
+export const genDecofile = async () => {
+  try {
+    const paths = [];
+
+    const walker = walk(join(DECO_FOLDER, BLOCKS_FOLDER), {
+      includeDirs: false,
+      includeFiles: true,
+      includeSymlinks: false,
+      exts: [".json"],
+    });
+
+    for await (const entry of walker) {
+      paths.push([
+        parseBlockId(`/${entry.name.replaceAll("\\", "/")}`).slice(1),
+        entry.path,
+      ]);
+    }
+
+    const pathname = join(Deno.cwd(), DECOFILE_PATH);
+    await ensureFile(pathname);
+    await Deno.writeTextFile(
+      pathname,
+      await formatTs(
+        `${
+          paths.map(([_path, importPath], idx) =>
+            `import $${idx} from "${`./${
+              encodeURIComponent(importPath.replace(`${BLOCKS_PATH}/`, ""))
+            }`}" with { type: "json" };`
+          ).join("\n")
+        }\nexport default {${
+          paths.map(([path], idx) => `"${path}": $${idx},`).join("\n")
+        }}`,
+      ),
+    );
+  } catch (err) {
+    console.error(err);
     /** ok */
   }
 };
@@ -189,3 +237,7 @@ export const newFsFolderProvider = (
   const fullPath = join(Deno.cwd(), path);
   return newFsFolderProviderFromPath(fullPath);
 };
+
+if (import.meta.main) {
+  await genDecofile();
+}
