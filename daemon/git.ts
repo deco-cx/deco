@@ -17,6 +17,7 @@ const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 export const lockerGitAPI = createLocker();
 
 export const git = simpleGit(Deno.cwd(), {
+  config: ["core.editor=true"], // disable interactive editor
   maxConcurrentProcesses: 1,
   trimmed: true,
   progress: ({ method, stage, progress }) =>
@@ -181,6 +182,7 @@ const persist = async (oid: string) => {
 };
 
 // TODO: maybe tag with versions!
+// TODO: handle rebase conflicts
 export const publish = ({ build }: Options): Handler => {
   const buildMap = new Map<string, Promise<void>>();
 
@@ -260,12 +262,63 @@ export interface RebaseAPI {
   };
 }
 
+const abortRebase = async () => {
+  await git.rebase({ "--abort": null });
+  throw new Error(
+    "Something went very wrong during rebase. You should rebase manually by cloning the repo",
+  );
+};
+
+const resolveConflictsRecursively = async (wip: number = 50) => {
+  // Avoids infinite loop
+  if (!wip) {
+    await abortRebase();
+  }
+
+  try {
+    const status = await git.status();
+
+    for (const file of status.conflicted) {
+      const summary = status.files.find((f) => f.path === file);
+
+      if (!summary) {
+        await abortRebase();
+      }
+
+      if (summary?.working_dir === "D") {
+        await git.rm(file);
+      } else {
+        await git.add(file);
+      }
+    }
+
+    const after = await git.status();
+    if (after.conflicted.length !== 0) {
+      await abortRebase();
+    }
+
+    await git.rebase({ "--continue": null });
+  } catch (error) {
+    // We should never enter this `if` in normal circumstances
+    if (!error.message?.includes("CONFLICT")) {
+      console.error(error);
+      await abortRebase();
+    }
+
+    await resolveConflictsRecursively();
+  }
+};
+
 export const rebase: Handler = async () => {
-  await git
-    .fetch(["-p"])
-    .add(".")
-    .commit("Before rebase", { "--no-verify": null })
-    .pull({ "--rebase": null, "--strategy-option": "theirs" });
+  try {
+    await git
+      .fetch(["-p"])
+      .add(".")
+      .commit("Before rebase", { "--no-verify": null })
+      .rebase({ "--strategy-option": "theirs" });
+  } catch {
+    await resolveConflictsRecursively();
+  }
 
   const base = await getMergeBase();
 
