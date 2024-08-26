@@ -115,23 +115,23 @@ export interface GitStatusAPI {
   };
 }
 
+const resetToMergeBase = async () => {
+  const base = await getMergeBase();
+  await git.reset(["."]).reset([base]);
+};
+
 /** Git status */
 export const status: Handler = async (c) => {
   const url = new URL(c.req.url);
   const fetch = url.searchParams.get("fetch") === "true";
 
-  const base = await getMergeBase();
-
   if (fetch) {
     await git.fetch(["-p"]);
   }
 
-  const status = await git
-    .reset(["."])
-    .reset([base])
-    .status();
+  await resetToMergeBase();
 
-  return new Response(JSON.stringify(status), {
+  return new Response(JSON.stringify(await git.status()), {
     status: 200,
     headers: { "content-type": "application/json" },
   });
@@ -210,21 +210,19 @@ export const publish = ({ build }: Options): Handler => {
 
     await git.fetch(["-p"]);
 
-    const base = await getMergeBase();
+    await resetToMergeBase();
 
     const commit = await git
-      .reset(["."])
-      .reset([base])
       .add(["."])
       .commit(message, {
         "--author": `${author.name} <${author.email}>`,
         "--no-verify": null,
       });
 
+    const result = await git.push();
+
     // Runs build pipeline asynchronously
     doBuild(commit.commit);
-
-    const result = await git.push();
 
     return Response.json(result);
   };
@@ -244,10 +242,9 @@ export const discard: Handler = async (c) => {
 
   await git.fetch(["-p"]);
 
-  const base = await getMergeBase();
+  await resetToMergeBase();
 
-  const status = await git.reset(["."])
-    .reset([base])
+  const status = await git
     .checkout(
       filepaths.map((path) => path.startsWith("/") ? path.slice(1) : path),
     )
@@ -309,6 +306,11 @@ const resolveConflictsRecursively = async (wip: number = 50) => {
   }
 };
 
+/** 
+ * Rebases with -XTheirs strategy. If conflicts are found, it will try to resolve them automatically.
+ * Conflicts happen when someone deletes a file and you modify it, or when you modify a file and someone else modifies it.
+ * In this case, the strategy is to keep the changes the current branch has.
+ */
 export const rebase: Handler = async () => {
   try {
     await git
@@ -320,11 +322,9 @@ export const rebase: Handler = async () => {
     await resolveConflictsRecursively();
   }
 
-  const base = await getMergeBase();
+  await resetToMergeBase();
 
-  const status = await git.reset([base]).status();
-
-  return Response.json({ status });
+  return Response.json({ status: await git.status() });
 };
 
 export interface GitLogAPI {
@@ -393,7 +393,8 @@ export const ensureGit = async (
     }
 
     if (hasGitFolder) {
-      return console.log("Git folder already exists, skipping init");
+      await resetToMergeBase();
+      return;
     }
 
     await git.clone(`git@github.com:deco-sites/${site}.git`, ".", [
