@@ -306,7 +306,7 @@ const resolveConflictsRecursively = async (wip: number = 50) => {
   }
 };
 
-/** 
+/**
  * Rebases with -XTheirs strategy. If conflicts are found, it will try to resolve them automatically.
  * Conflicts happen when someone deletes a file and you modify it, or when you modify a file and someone else modifies it.
  * In this case, the strategy is to keep the changes the current branch has.
