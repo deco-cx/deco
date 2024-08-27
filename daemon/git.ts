@@ -13,6 +13,7 @@ import { logs } from "./loggings/stream.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
+const REPO_URL = Deno.env.get("DECO_REPO_URL");
 
 export const lockerGitAPI = createLocker();
 
@@ -397,7 +398,7 @@ export const ensureGit = async (
       return;
     }
 
-    await git.clone(`git@github.com:deco-sites/${site}.git`, ".", [
+    await git.clone(REPO_URL ?? `git@github.com:deco-sites/${site}.git`, ".", [
       "--depth",
       "1",
       "--single-branch",
