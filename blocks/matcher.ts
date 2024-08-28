@@ -163,7 +163,7 @@ const matcherBlock: Block<
             name: cookieName,
             value: cookieValue.build(uniqueId, result),
             path: "/",
-            sameSite: "Strict",
+            sameSite: "Lax",
             expires: date
           });
           respHeaders.append("vary", "cookie");

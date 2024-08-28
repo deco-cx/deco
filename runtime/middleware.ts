@@ -425,7 +425,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
             name: DECO_SEGMENT,
             value,
             path: "/",
-            expires: date
+            expires: date,
+            sameSite: "Lax",
           }, { encode: true });
         }
       }
