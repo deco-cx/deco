@@ -89,7 +89,7 @@ async (ctx, next) => {
       correlationId,
     });
     throw new HTTPException(500, {
-      res: new Response(`Something went wrong`, {
+      res: new Response(err?.message ?? `Something went wrong`, {
         status: 500,
         headers: {
           "x-correlation-Id": correlationId,
