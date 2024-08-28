@@ -153,8 +153,10 @@ export default {
     const resolved = await resolve({ __resolveType: block, ...props }, {
       propsAreResolved: true,
     });
+    const isXml = resolved.headers.get("content-type").includes("xml");
     const preview = await resolve({
       __resolveType: pvResolver,
+      ...(isXml ? { __decoXml: await resolved.text() } : {}),
       ...resolved,
     }, { propsAreResolved: true });
     return preview;

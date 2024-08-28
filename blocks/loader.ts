@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
+import XmlViewer from "deco/components/XmlViewer.tsx";
 import { RequestContext } from "../deco.ts";
 import { ValueType, weakcache } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
@@ -353,6 +354,13 @@ const loaderBlock: Block<LoaderModule> = {
       ),
   ],
   defaultPreview: (result) => {
+    const isXml = result.__decoXml;
+    if(isXml) {
+      return {
+        Component: XmlViewer,
+        props: { body: isXml },
+      }
+    }
     return {
       Component: JsonViewer,
       props: { body: JSON.stringify(result, null, 2) },
