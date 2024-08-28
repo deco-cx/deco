@@ -217,6 +217,7 @@ const wrapLoader = (
           if (ctx.vary && shouldNotCache) {
             ctx.vary.shouldCache = false;
           }
+          !shouldNotCache && ctx.vary?.push(cacheKeyValue);
 
           status = "bypass";
           stats.cache.add(1, { status, loader });
