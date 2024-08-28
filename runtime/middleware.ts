@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context } from "../deco.ts";
 import { getCookies, SpanStatusCode } from "../deps.ts";
@@ -12,9 +13,9 @@ import { allowCorsFor } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
 import type {
-  Context as HonoContext,
   ContextRenderer,
   Handler,
+  Context as HonoContext,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
@@ -80,9 +81,21 @@ async (ctx, next) => {
     if (err instanceof HttpError) {
       return err.resp;
     }
-    console.error(`route error ${ctx.req.routePath}: ${err}`);
-    logger.error(`route ${ctx.req.routePath}: ${err?.stack}`);
-    throw err;
+    const correlationId = ctx.var.correlationId ?? crypto.randomUUID();
+    console.error(`route error ${ctx.req.routePath}: ${err}`, {
+      correlationId,
+    });
+    logger.error(`route ${ctx.req.routePath}: ${err?.stack}`, {
+      correlationId,
+    });
+    throw new HTTPException(500, {
+      res: new Response(`Something went wrong`, {
+        status: 500,
+        headers: {
+          "x-correlation-Id": correlationId,
+        },
+      }),
+    });
   }
 };
 
