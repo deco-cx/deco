@@ -15,12 +15,12 @@ import type {
   ManifestLoader,
 } from "../utils/invoke.types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
+import { propsToFormData } from "./formdata.ts";
 import {
   type InvocationProxyHandler,
   type InvokeAwaiter,
   newHandler,
 } from "./proxy.ts";
-import { propsToFormData } from "./formdata.ts";
 export interface InvokerRequestInit extends Omit<RequestInit, "fetcher"> {
   fetcher?: typeof fetch;
   multipart?: true | undefined;
@@ -97,6 +97,16 @@ export async function* readFromStream<T>(
   }
 }
 
+class InvokeError extends Error {
+  public correlationId: string | null = null;
+  constructor(
+    message: string,
+    options?: ErrorOptions & { correlationId: string | null },
+  ) {
+    super(message, options);
+    this.correlationId = options?.correlationId ?? null;
+  }
+}
 const fetchWithProps = async (
   url: string,
   props: unknown,
@@ -152,12 +162,14 @@ const fetchWithProps = async (
   const error = await response.text();
   if (response.headers.get("content-type") === "application/json") {
     const errorObj = JSON.parse(error);
-    throw new Error(`${response.status}: ${response.statusText}`, {
+    throw new InvokeError(`${response.status}: ${response.statusText}`, {
       cause: errorObj,
+      correlationId: response.headers.get("x-correlation-id"),
     });
   }
-  throw new Error(`${response.status}: ${response.statusText}`, {
+  throw new InvokeError(`${response.status}: ${response.statusText}`, {
     cause: error,
+    correlationId: response.headers.get("x-correlation-id"),
   });
 };
 

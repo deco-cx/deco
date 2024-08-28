@@ -10,30 +10,34 @@ import type {
 } from "../../utils/invoke.types.ts";
 import type { State } from "../mod.ts";
 
-export const wrapInvokeErr = (path?: string) => (err: any) => {
-  if (!(err instanceof HttpError)) {
-    if (context.isDeploy) {
-      logger.error(`invoke error ${path}: ${err?.stack} ${err?.message}`);
-    } else {
-      console.error(`invoke error ${path}`, err);
-    }
-    throw new HttpError(
-      new Response(
-        err ? err : JSON.stringify({
-          message: "Something went wrong.",
-          code: "SWW",
-        }),
-        {
-          status: 500,
-          headers: {
-            "content-type": "application/json",
+export const wrapInvokeErr =
+  (correlationId: string, path?: string) => (err: any) => {
+    if (!(err instanceof HttpError)) {
+      if (context.isDeploy) {
+        logger.error(`invoke error ${path}: ${err?.stack} ${err?.message}`, {
+          correlationId,
+        });
+      } else {
+        console.error(`invoke error ${path}`, err);
+      }
+      throw new HttpError(
+        new Response(
+          err ? err : JSON.stringify({
+            message: "Something went wrong.",
+            code: "SWW",
+          }),
+          {
+            status: 500,
+            headers: {
+              "x-correlation-id": correlationId,
+              "content-type": "application/json",
+            },
           },
-        },
-      ),
-    );
-  }
-  throw err;
-};
+        ),
+      );
+    }
+    throw err;
+  };
 const isInvokeFunc = (
   p: InvokePayload<any> | InvokeFunction,
 ): p is InvokeFunction => {
@@ -63,7 +67,7 @@ export const batchInvoke = (
     {
       resolveChain: [{ type: "resolver", value: "invoke" }],
     },
-  ).catch(wrapInvokeErr());
+  ).catch(wrapInvokeErr(state.correlationId ?? crypto.randomUUID()));
 };
 
 export const invoke = async (
@@ -81,6 +85,6 @@ export const invoke = async (
   return await state.resolve(payloadToResolvable(invokeFunc), {
     resolveChain: [{ type: "resolver", value: "invoke" }],
   }).catch(
-    wrapInvokeErr(key),
+    wrapInvokeErr(state.correlationId ?? crypto.randomUUID(), key),
   );
 };
