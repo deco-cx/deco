@@ -240,7 +240,7 @@ export const createRealtimeAPIs = () => {
       for await (const entry of walker) {
         const key = toPosix(entry.path.replace(root, "/"));
 
-        if (key.includes(".git") || key.includes("node_modules")) {
+        if (key.includes(".git/") || key.includes("node_modules")) {
           continue;
         }
 
