@@ -67,7 +67,7 @@ export const watchMeta = async () => {
       const w = await worker();
       const response = await w.fetch(metaRequest(etag));
       if (!response.ok) {
-        throw new Error(`Failed to fetch meta info: ${response.statusText}`);
+        throw response;
       }
       const m: MetaInfo = await response.json();
 
@@ -82,6 +82,12 @@ export const watchMeta = async () => {
       broadcast({ type: "meta-info", detail: withExtraParams });
       dispatchWorkerState("ready");
     } catch (error) {
+      // in case of timeout, retry without updating the worker state
+      // to avoid false alarming down state
+      if (error.status === 408) {
+        continue;
+      }
+
       dispatchWorkerState("updating");
       console.error(error);
     }
