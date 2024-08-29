@@ -1,7 +1,7 @@
 import { ensureFile, walk } from "@std/fs";
 import { join, SEPARATOR } from "@std/path";
-import { createReadWriteLock, type RwLock } from "deco/daemon/async.ts";
 import type { StatusResult } from "simple-git";
+import { createReadWriteLock, type RwLock } from "../../daemon/async.ts";
 import { Hono } from "../../runtime/deps.ts";
 import { git, lockerGitAPI } from "../git.ts";
 import { broadcast } from "../sse/channel.ts";
