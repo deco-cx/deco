@@ -10,6 +10,7 @@ import {
 } from "simple-git";
 import { createLocker } from "./async.ts";
 import { logs } from "./loggings/stream.ts";
+import { DENO_DEPLOYMENT_ID } from "./main.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
@@ -353,6 +354,23 @@ export const log: Handler = async (c) => {
 export const ensureGit = async (
   { site }: Pick<Options, "site">,
 ) => {
+  const assertNoIndexLock = async () => {
+    const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
+    if (!isDeployment) {
+      return;
+    }
+    const lockIndexPath = join(Deno.cwd(), ".git/index.lock");
+    // index.lock should not exists as it means that another git process is running or it is unterminated (non-atomic operations.)
+    const hasGitIndexLock = await Deno.stat(lockIndexPath)
+      .then(() => true)
+      .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
+    if (hasGitIndexLock) {
+      console.log(
+        "deleting .git/index.lock as this should not exist on deployment startup",
+      );
+      await Deno.remove(lockIndexPath);
+    }
+  };
   const assertGitBinary = async () => {
     const cmd = new Deno.Command("git", {
       args: ["--version"],
@@ -407,7 +425,11 @@ export const ensureGit = async (
     ]);
   };
 
-  await Promise.all([assertGitBinary(), assertGitFolder()]);
+  await assertNoIndexLock();
+  await Promise.all([
+    assertGitBinary(),
+    assertGitFolder(),
+  ]);
 };
 
 interface Options {
