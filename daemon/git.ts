@@ -10,7 +10,7 @@ import {
 } from "simple-git";
 import { createLocker } from "./async.ts";
 import { logs } from "./loggings/stream.ts";
-import { DENO_DEPLOYMENT_ID } from "./main.ts";
+import { DENO_DEPLOYMENT_ID, VERBOSE } from "./main.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
@@ -39,6 +39,9 @@ const getMergeBase = async () => {
   let tracking: string | undefined | null = status.tracking ||
     defaultTrackingBranch;
 
+  if (VERBOSE) {
+    console.log("current branch is: ", { current });
+  }
   if (!current) {
     throw new Error(`Missing local or upstream branches`);
   }
