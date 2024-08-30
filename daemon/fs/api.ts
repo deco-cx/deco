@@ -112,8 +112,8 @@ export interface DeleteAPI {
 }
 
 const shouldIgnore = (path: string) =>
-  path.includes("/.git/") ||
-  path.includes("/node_modules/");
+  path.includes(`${SEPARATOR}.git${SEPARATOR}`) ||
+  path.includes(`${SEPARATOR}node_modules${SEPARATOR}`);
 
 const systemPathFromBrowser = (url: string) => {
   const [_, ...segments] = url.split("/file");
