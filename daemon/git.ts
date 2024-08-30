@@ -10,7 +10,7 @@ import {
 } from "simple-git";
 import { createLocker } from "./async.ts";
 import { logs } from "./loggings/stream.ts";
-import { DENO_DEPLOYMENT_ID, VERBOSE } from "./main.ts";
+import { DENO_DEPLOYMENT_ID } from "./main.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
@@ -35,30 +35,11 @@ const getMergeBase = async () => {
   const current = status.current;
   const defaultTrackingBranch = typeof DENO_DEPLOYMENT_ID === "string"
     ? DEFAULT_TRACKING_BRANCH
-    : undefined;
-  let tracking: string | undefined | null = status.tracking ||
-    defaultTrackingBranch;
+    : status.current;
+  const tracking = status.tracking || defaultTrackingBranch;
 
-  if (VERBOSE) {
-    console.log("current branch is: ", { current });
-  }
-  if (!current) {
+  if (!current || !tracking) {
     throw new Error(`Missing local or upstream branches`);
-  }
-
-  if (!tracking) {
-    tracking = prompt(
-      "missing git tracking branch, please enter the name of your gitbranch:",
-    );
-    if (tracking) {
-      await git.raw("push", "--set-upstream", "origin", tracking);
-    }
-  }
-
-  if (!tracking || !current) {
-    throw new Error(
-      "missing tracking branch, please run `git push --set-upstream origin $BRANCH_NAME`",
-    );
   }
 
   return git.raw("merge-base", current, tracking);
