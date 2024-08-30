@@ -1,51 +1,32 @@
-# Detailed implementation
+# deco Runtime - Config Resolver Engine
 
-The config resolution algorithm is based on two basic building blocks:
-**Resolvers** and **Resolvables**, when put together they form the
-**Configuration State**.
+The `deco` runtime includes a powerful **Config Resolver Engine** written in TypeScript. This engine takes a JSON object (referred to as a **Resolvable**) and a set of functions (called **Resolvers**) to return a fully resolved JavaScript object. The engine is inspired by GraphQL and is optimized for efficiency by using topological sorting, which ensures that only the necessary parts of the object are resolved.
+
+## Key Concepts
 
 ### Resolvers
 
-Resolvers are functions that has an arbitrary name, receives a context and an
-input, and produces an output, resolvers can be either sync or async and can
-also optionally returns a resolvable. The default resolver receives an input and
-produces the same input as received.
+**Resolvers** are functions that receive a context and an input, producing an output. They can be synchronous or asynchronous, and may optionally return another **Resolvable**.
 
-```ts
+```typescript
 export type AsyncResolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = (parent: TParent, context: TContext) => Promise<Resolvable<T> | T>;
 
 export type SyncResolver<
   T = any,
   TParent = any,
-  TContext extends BaseContext = BaseContext,
+  TContext extends BaseContext = BaseContext
 > = (parent: TParent, context: TContext) => Resolvable<T> | T;
-
-export type Resolver<
-  T = any,
-  TParent = any,
-  TContext extends BaseContext = BaseContext,
-> = AsyncResolver<T, TParent, TContext> | SyncResolver<T, TParent, TContext>;
 ```
 
-Meaning that a `Resolver<T, TInput>` is whatever function that takes TInput as a
-parameter and returns T or Resolvable<T> as an output.
+### Resolvables
 
-### Resolvable
+**Resolvables** are JSON objects with a special property `__resolveType` that points to a **Resolver** or another **Resolvable**. If the `__resolveType` reference is missing, a **DanglingReference** error is thrown, indicating an invalid configuration.
 
-**Resolvables** are arbitrary json that contains a property named
-`__resolveType` which points to either: A resolver or a resolvable. When
-pointing to a **Resolver** the data is passed as a input to such resolver and
-when pointing to a **Resolvable** the algorithm starts again taking the target
-resolvable as input for the `__resolveType` property.
-
-When the reference for `__resolveType` is missing, a `Dangling reference` error
-is thrown to sinalize that the configuration state is invalid and must be fixed.
-
-See an example below
+#### Example
 
 ```json
 {
@@ -67,89 +48,77 @@ See an example below
 }
 ```
 
-Notice that the `loader-category-homens` is referenced by the `page-homens`
-Resolvable.
+In the example above, `loader-category-homens` is referenced by `page-homens`.
 
-Below you can see an example of a `dangling reference`.
+### Resolution Algorithm
 
-```json
-{
-  "page-homens": {
-    "sections": [
-      {
-        "products": {
-          "__resolveType": "loader-category-homens"
-        },
-        "__resolveType": "./sections/ProductShelf.tsx"
-      }
-    ],
-    "__resolveType": "$live/pages/LivePage.tsx"
-  }
-}
+The resolution algorithm takes either a `Resolvable<T>` or a `ResolvableId` and returns the resolved `T` value by following these steps:
+
+1. Retrieve the **Resolvable** from the configuration state if an ID is provided.
+2. Validate the `__resolveType` reference.
+3. If the value is a primitive type, return it.
+4. Recursively resolve objects and arrays.
+5. Use the resolved value as input to the function referenced by `__resolveType`.
+6. Repeat the algorithm if the result is another **Resolvable**.
+
+**Note:** Resolvers take precedence over Resolvables in case of a name clash.
+
+```mermaid
+graph TD;
+    A[Start Resolution] --> B{ResolvableId?};
+    B -->|Yes| C[Retrieve Resolvable from State];
+    B -->|No| D[Use Provided Resolvable];
+    D --> E{Primitive Type?};
+    E -->|Yes| F[Return Primitive Value];
+    E -->|No| G[Check __resolveType];
+    G --> H{__resolveType Valid?};
+    H -->|Yes| I[Resolve with Function];
+    H -->|No| J[Throw Dangling Reference Error];
+    I --> K[Return Resolved Value];
 ```
 
-Notice that the `loader-category-homens` was removed.
+### Optimization in Version 1.15.1
 
-## Resolution Algorithm
+In version 1.15.1, the algorithm introduced a structure called **hints**. Hints are pre-calculated and cached to determine which fields should be resolved, reducing unnecessary computation and improving performance. This optimization eliminates the need for manual resolution of inner objects during the resolution cycle.
 
-The resolution algorithm takes either a Resolvable<T> or the ResolvableId as a
-parameter (e.g `page-homens`) and the configuration state and returns the T
-value to the caller, following the steps below:
-
-1. If it is a ResolvableId, get the Resolvable from the config state, otherwise
-   use the provided Resolvable.
-2. Check if the Resolvable has a valid \_\_resolveType reference or it is a
-   primitive type
-3. If primitive (boolean, number, function, string), so return straight itself
-   as a result
-4. if it is a object, then for each key of the object call the resolution
-   function recursively
-5. if it is an array, then for each index call the resolution function
-   recursively
-6. when the resolver result is calculated so the resolution algorithm takes the
-   function referenced to the \_\_resolveType and use the resolved value as an
-   input providing the output for the outer caller.
-7. If the result of the Resolver is a Resolvable so the algorithm will be
-   repeated until all inner objects are resolved
-
-> In case of name clash (Resolver and Resolvable with the same name) a Resolver
-> function takes precedence.
-
-Important: If the target object that needs to be resolved does not contains the
-`__resolveType` property so the resolver algorithm consider as a resolved
-object. Which means that if you have inner objects that needs to be resolved in
-the same resolution cycle, so you need to manually reference the `resolve`
-function which is the default resolver. We chose to do that to avoid unnecessary
-computation (going too far when there's nothing to resolve) when possible (and
-there's a ambiguity between resolved objects and resolvable-eligible objects).
-
-The following object does not resolve the inner `sections` array
-
-```json
-{
-  "name": "my-config-name",
-  "sections": [{ "__resolveType": "section#123" }]
-}
+```mermaid
+graph TD;
+    A[Start Resolution with Hints] --> B{Are Hints Cached?};
+    B -->|Yes| C[Use Cached Hints];
+    B -->|No| D[Calculate Hints with Topological Sort];
+    D --> E[Cache Hints for Future Use];
+    C --> F[Resolve with Hints];
+    F --> G[Return Resolved Object];
 ```
 
-To fix that use the `resolve` func.
+### Parallelism in Resolution
 
-```json
-{
-  "name": "my-config-name",
-  "sections": [{ "__resolveType": "section#123" }],
-  "__resolveType": "resolve"
-}
+The engine can resolve properties at the same level in parallel, significantly improving performance.
+
+```mermaid
+graph LR;
+    A[Parent Resolvable] -->|Resolve| B[Property A];
+    A -->|Resolve| C[Property B];
+    B --> D[Resolved A];
+    C --> E[Resolved B];
+    D --> F[Combine Results];
+    E --> F[Combine Results];
 ```
 
-# The algorithm has changed since deco version 1.15.1
+This parallelism ensures that multiple properties within a resolvable can be processed simultaneously, reducing the overall time required for resolution.
 
-The algorithm now uses an auxiliary structure named `hints`, hints are used to
-determine the exactly fields that should be resolved when resolving an arbitrary
-resolvable. Those hints are calculated once when the configuration changes and
-its cached all the way long for the entire live of a given release. The idea
-behind the algorithm is the same, but the hints helps to decrease the
-performance burden associated to discover the exact fields that should be
-resolved in runtime. **In other words** the problem mentioned in the previous
-section does not exists anymore, hints are calculated using topological sort
-algorithm which avoids resolving an object that is already resolved.
+## Handling Dangling References
+
+When a reference to a `__resolveType` cannot be found, a `DanglingReference` error is thrown. The engine can be configured to either throw this error or handle it gracefully by returning `null`.
+
+```typescript
+if (opts.nullIfDangling) {
+  return Promise.resolve(null as T);
+}
+
+if (!ctx.danglingRecover) {
+  throw new DanglingReference(resolveType);
+}
+
+return ctx.danglingRecover(props, ctx);
+```
