@@ -1,0 +1,178 @@
+name: Release Tagging
+
+on:
+  pull_request:
+    types: [opened]
+
+  push:
+    branches:
+      - main
+
+permissions: write-all
+
+jobs:
+  tag-discussion:
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Calculate new versions
+        id: calculate_versions
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="0.0.0"
+          fi
+          MAJOR=$(echo $LATEST_TAG | cut -d. -f1)
+          MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+          PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+          NEW_PATCH_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          NEW_MINOR_VERSION="$MAJOR.$((MINOR + 1)).0"
+          NEW_MAJOR_VERSION="$((MAJOR + 1)).0.0"
+          echo "patch_version=$NEW_PATCH_VERSION" >> $GITHUB_OUTPUT
+          echo "minor_version=$NEW_MINOR_VERSION" >> $GITHUB_OUTPUT
+          echo "major_version=$NEW_MAJOR_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Start Discussion for Tagging
+        uses: peter-evans/create-or-update-comment@v2
+        id: comment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Tagging Options
+            Should a new tag be published when this PR is merged?
+            - 👍 for **Patch** ${{ steps.calculate_versions.outputs.patch_version }} update
+            - 🎉 for **Minor** ${{ steps.calculate_versions.outputs.minor_version }} update
+            - 🚀 for **Major** ${{ steps.calculate_versions.outputs.major_version }} update
+
+  determine-tag:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Find the Merged Pull Request
+        id: find_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE_BRANCH="main"
+          RECENT_PR=$(gh pr list --state closed --base $BASE_BRANCH --json number,title,closedAt --jq '.[] | select(.closedAt >= "'$(date -u -d '1 minute ago' +%Y-%m-%dT%H:%M:%SZ)'") | {number, title}')
+          echo "RECENT_PR=$RECENT_PR" >> $GITHUB_ENV
+          echo "PR_NUMBER=$(echo $RECENT_PR | jq -r '.number')" >> $GITHUB_ENV
+
+      - name: Fetch latest stable tag (excluding prerelease tags)
+        id: get_latest_tag
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="0.0.0"
+          fi
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Determine the next version based on comments
+        id: determine_version
+        if: env.PR_NUMBER != ''
+        env:
+          PR_NUMBER: ${{ env.PR_NUMBER }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=${{ steps.get_latest_tag.outputs.latest_tag }}
+          MAJOR=$(echo $LATEST_TAG | cut -d. -f1)
+          MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+          PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+
+          # Define allowed users as a JSON array
+          ALLOWED_USERS=$(cat MAINTAINERS.txt | jq -R -s -c 'split("\n")[:-1]')
+          echo "Maintainers list: $ALLOWED_USERS"
+
+          # Fetch reactions and filter by allowed users
+          REACTION=$(gh api graphql -f query='
+            query {
+              repository(owner:"${{ github.repository_owner }}", name:"${{ github.event.repository.name }}") {
+                pullRequest(number: '${PR_NUMBER}') {
+                  comments(last: 100) {
+                    nodes {
+                      body
+                      id
+                      reactions(last: 100) {
+                        nodes {
+                          content
+                          user {
+                            login
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }' | jq -r --argjson allowed_users "$ALLOWED_USERS" '
+              .data.repository.pullRequest.comments.nodes[] |
+              select(.body | contains("## Tagging Options")) |
+              .reactions.nodes[] |
+              select(.user.login | IN($allowed_users[])) |
+              .content'
+          )
+          # Determine the new tag version based on the allowed reactions
+          if [[ "$REACTION" == *"ROCKET"* ]]; then
+            NEW_TAG="$((MAJOR + 1)).0.0"
+          elif [[ "$REACTION" == *"TADA"* ]]; then
+            NEW_TAG="$MAJOR.$((MINOR + 1)).0"
+          elif [[ "$REACTION" == *"THUMBS_UP"* ]]; then  # Ensure thumbs up reaction is correctly identified
+            NEW_TAG="$MAJOR.$MINOR.$((PATCH + 1))"
+          else
+            echo "No valid reactions found for version bump. Exiting."
+            exit 0
+          fi
+
+          echo "new_version=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Update deno.json Version
+        if: steps.determine_version.outputs.new_version != ''
+        run: |
+          jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' deno.json > tmp.$$.json && mv tmp.$$.json deno.json
+          jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' ./scripts/deno.json > tmp.$$.json && mv tmp.$$.json ./scripts/deno.json
+
+          git config user.name "decobot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deno.json ./scripts/deno.json
+          git commit -m "Update version to ${{ steps.determine_version.outputs.new_version }}"
+          git push origin main
+
+      - name: Create and Push Tag
+        if: steps.determine_version.outputs.new_version != ''
+        run: |
+          git tag ${{ steps.determine_version.outputs.new_version }}
+          git push origin ${{ steps.determine_version.outputs.new_version }}
+      - name: "Create release"
+        if: steps.determine_version.outputs.new_version != ''
+        uses: "actions/github-script@v6"
+        env:
+          RELEASE_TAG: ${{ steps.determine_version.outputs.new_version }}
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            const tag = process.env.RELEASE_TAG;
+            try {
+              const response = await github.rest.repos.createRelease({
+                draft: false,
+                generate_release_notes: true,
+                name: `Release ${tag}`,
+                owner: context.repo.owner,
+                prerelease: tag.includes("rc-") || tag.includes("preview") || tag.includes("beta") || tag.includes("alpha"),
+                repo: context.repo.repo,
+                tag_name: tag,
+              });
+
+              core.exportVariable('RELEASE_ID', response.data.id);
+              core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
+            } catch (error) {
+              core.setFailed(error.message);
+            }
