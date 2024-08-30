@@ -151,28 +151,17 @@ jobs:
         run: |
           git tag ${{ steps.determine_version.outputs.new_version }}
           git push origin ${{ steps.determine_version.outputs.new_version }}
-      - name: "Create release"
-        if: steps.determine_version.outputs.new_version != ''
-        uses: "actions/github-script@v6"
-        env:
-          RELEASE_TAG: ${{ steps.determine_version.outputs.new_version }}
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            const tag = process.env.RELEASE_TAG;
-            try {
-              const response = await github.rest.repos.createRelease({
-                draft: false,
-                generate_release_notes: true,
-                name: `Release ${tag}`,
-                owner: context.repo.owner,
-                prerelease: tag.includes("rc-") || tag.includes("preview") || tag.includes("beta") || tag.includes("alpha"),
-                repo: context.repo.repo,
-                tag_name: tag,
-              });
-
-              core.exportVariable('RELEASE_ID', response.data.id);
-              core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
-            } catch (error) {
-              core.setFailed(error.message);
-            }
+      - name: Trigger Release Workflow
+        run: |
+            curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.everest-preview+json" \
+                https://api.github.com/repos/${{ github.repository }}/actions/workflows/release.yml/dispatches \
+                -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
+      - name: Trigger Publish Workflow
+        run: |
+            curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.everest-preview+json" \
+                https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish.yml/dispatches \
+                -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
