@@ -33,15 +33,32 @@ export const git = simpleGit(Deno.cwd(), {
 const getMergeBase = async () => {
   const status = await git.status();
   const current = status.current;
-  const tracking = status.tracking || DEFAULT_TRACKING_BRANCH;
+  const defaultTrackingBranch = typeof DENO_DEPLOYMENT_ID === "string"
+    ? DEFAULT_TRACKING_BRANCH
+    : undefined;
+  let tracking: string | undefined | null = status.tracking ||
+    defaultTrackingBranch;
 
-  if (!current || !tracking) {
+  if (!current) {
     throw new Error(`Missing local or upstream branches`);
   }
 
-  const base = await git.raw("merge-base", current, tracking);
+  if (!tracking) {
+    tracking = prompt(
+      "missing git tracking branch, please enter the name of your gitbranch:",
+    );
+    if (tracking) {
+      await git.raw("push", "--set-upstream", "origin", tracking);
+    }
+  }
 
-  return base;
+  if (!tracking || !current) {
+    throw new Error(
+      "missing tracking branch, please run `git push --set-upstream origin $BRANCH_NAME`",
+    );
+  }
+
+  return git.raw("merge-base", current, tracking);
 };
 
 export interface GitDiffAPI {
