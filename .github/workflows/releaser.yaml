@@ -130,7 +130,7 @@ jobs:
           # Determine the new tag version based on the allowed reactions
           if [[ "$REACTION" == *"ROCKET"* ]]; then
             NEW_TAG="$((MAJOR + 1)).0.0"
-          elif [[ "$REACTION" == *"TADA"* ]]; then
+          elif [[ "$REACTION" == *"HOORAY"* ]]; then
             NEW_TAG="$MAJOR.$((MINOR + 1)).0"
           elif [[ "$REACTION" == *"THUMBS_UP"* ]]; then  # Ensure thumbs up reaction is correctly identified
             NEW_TAG="$MAJOR.$MINOR.$((PATCH + 1))"
