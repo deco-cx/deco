@@ -2,7 +2,7 @@ name: Release Tagging
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened]
 
   push:
     branches:
@@ -12,7 +12,7 @@ permissions: write-all
 
 jobs:
   tag-discussion:
-    if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
