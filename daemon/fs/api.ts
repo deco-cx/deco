@@ -1,10 +1,10 @@
 import { ensureFile, walk } from "@std/fs";
 import { basename, join, SEPARATOR } from "@std/path";
-import { VERBOSE } from "deco/daemon/main.ts";
 import type { StatusResult } from "simple-git";
 import { createReadWriteLock, type RwLock } from "../../daemon/async.ts";
 import { Hono } from "../../runtime/deps.ts";
 import { git, lockerGitAPI } from "../git.ts";
+import { VERBOSE } from "../main.ts";
 import { broadcast } from "../sse/channel.ts";
 import {
   applyPatch,
