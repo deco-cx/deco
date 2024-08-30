@@ -39,7 +39,9 @@ const getMergeBase = async () => {
   const tracking = status.tracking || defaultTrackingBranch;
 
   if (!current || !tracking) {
-    throw new Error(`Missing local or upstream branches`);
+    throw new Error(
+      `Missing local or upstream branches, have you tried to run "git push --set-upstream origin <your branch name>" ?`,
+    );
   }
 
   return git.raw("merge-base", current, tracking);
