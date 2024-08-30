@@ -1,5 +1,6 @@
 import { ensureFile, walk } from "@std/fs";
 import { join, SEPARATOR } from "@std/path";
+import { VERBOSE } from "deco/daemon/main.ts";
 import type { StatusResult } from "simple-git";
 import { createReadWriteLock, type RwLock } from "../../daemon/async.ts";
 import { Hono } from "../../runtime/deps.ts";
@@ -130,6 +131,9 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
     const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
 
     for await (const entry of walker) {
+      if (VERBOSE) {
+        console.log("walking:", entry.path);
+      }
       if (shouldIgnore(entry.path)) {
         continue;
       }
@@ -173,6 +177,9 @@ export const watchFS = async () => {
 
     if (shouldIgnore(filepath)) {
       continue;
+    }
+    if (VERBOSE) {
+      console.log("file has changed", kind, paths);
     }
 
     const [status, metadata, mtime] = await Promise.all([
