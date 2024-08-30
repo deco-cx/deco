@@ -120,6 +120,13 @@ jobs:
               select(.user.login | IN($allowed_users[])) |
               .content'
           )
+
+          # Print the reaction to debug
+          echo "Captured reaction: $REACTION"
+
+          # Convert reaction to uppercase to handle any case inconsistencies
+          REACTION=$(echo "$REACTION" | tr '[:lower:]' '[:upper:]')
+
           # Determine the new tag version based on the allowed reactions
           if [[ "$REACTION" == *"ROCKET"* ]]; then
             NEW_TAG="$((MAJOR + 1)).0.0"
