@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "1.95.7",
+  "version": "1.95.8",
   "exports": {
     ".": "./mod.ts",
     "./htmx": "./runtime/htmx/mod.ts",
