@@ -1,5 +1,5 @@
 import { ensureFile, walk } from "@std/fs";
-import { join, SEPARATOR } from "@std/path";
+import { basename, join, SEPARATOR } from "@std/path";
 import { VERBOSE } from "deco/daemon/main.ts";
 import type { StatusResult } from "simple-git";
 import { createReadWriteLock, type RwLock } from "../../daemon/async.ts";
@@ -113,7 +113,8 @@ export interface DeleteAPI {
 }
 
 const shouldIgnore = (path: string) =>
-  path.includes(`${SEPARATOR}.git${SEPARATOR}`) ||
+  basename(path) !== ".gitignore" &&
+    path.includes(`${SEPARATOR}.git`) ||
   path.includes(`${SEPARATOR}node_modules${SEPARATOR}`);
 
 const systemPathFromBrowser = (url: string) => {
