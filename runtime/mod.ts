@@ -126,7 +126,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     previewUrl: string,
     props: unknown,
     ctx?: State<TAppManifest>,
-  ): Promise<PreactComponent<any>> {
+  ): Promise<PreactComponent<unknown>> {
     return preview(
       req,
       previewUrl,
@@ -148,13 +148,13 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     );
   }
 
-  invoke(...args: Parameters<typeof invoke>): Promise<any> {
+  invoke(...args: Parameters<typeof invoke>): Promise<unknown> {
     return invoke(...args);
   }
 
   batchInvoke(
     ...args: Parameters<typeof batchInvoke>
-  ): Promise<any> {
+  ) {
     return batchInvoke(...args);
   }
 

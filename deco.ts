@@ -109,7 +109,6 @@ export const Context = {
   },
 };
 
-
 export const RequestContext = {
   active: () => Context.active().request,
   bind: <R, TArgs extends unknown[]>(
