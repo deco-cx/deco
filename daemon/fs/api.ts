@@ -132,9 +132,6 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
     const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
 
     for await (const entry of walker) {
-      if (VERBOSE) {
-        console.log("walking:", entry.path);
-      }
       if (shouldIgnore(entry.path)) {
         continue;
       }
