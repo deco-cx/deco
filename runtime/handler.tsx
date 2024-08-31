@@ -99,7 +99,7 @@ export const FrameworkContext = createContext<Framework | undefined>(
   undefined,
 );
 
-export const useFramework = () => {
+export const useFramework = (): Framework => {
   return useContext(FrameworkContext)!;
 };
 

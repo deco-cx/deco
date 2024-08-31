@@ -23,7 +23,7 @@ const ctx = createContext<PageContext | undefined>(undefined);
 
 const routerCtx = createContext<RouterContext | undefined>(undefined);
 
-export const usePageContext = () => {
+export const usePageContext = (): PageContext | undefined => {
   const pageCtx = useContext(ctx);
   if (pageCtx === undefined) {
     console.warn(
@@ -33,7 +33,7 @@ export const usePageContext = () => {
   return pageCtx;
 };
 
-export const useRouterContext = () => {
+export const useRouterContext = (): RouterContext | undefined => {
   const routerCtxImpl = useContext(routerCtx);
   if (routerCtxImpl === undefined) {
     console.warn(

@@ -62,7 +62,7 @@ const minify = async (js: string) => {
 export function useScript<T extends (...args: any[]) => any>(
   fn: T,
   ...params: Parameters<T>
-) {
+): string {
   const javascript = fn.toString();
   const cached = cache.get(javascript) || minify(javascript);
 
@@ -86,6 +86,6 @@ export function useScript<T extends (...args: any[]) => any>(
 export function useScriptAsDataURI<T extends (...args: any[]) => any>(
   fn: T,
   ...params: Parameters<T>
-) {
+): string {
   return `data:text/javascript,${encodeURIComponent(useScript(fn, ...params))}`;
 }

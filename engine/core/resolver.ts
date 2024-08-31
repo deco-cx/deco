@@ -107,7 +107,7 @@ const SCORE_BY_RESOLVE_TYPES = new Map(
 );
 
 export const FieldResolver = {
-  minify: (chain: FieldResolver[]) => {
+  minify: (chain: FieldResolver[]): (string | number | undefined)[] => {
     const minified = [];
 
     for (const c of chain) {
@@ -117,7 +117,7 @@ export const FieldResolver = {
 
     return minified;
   },
-  unwind: (minified: string[]) => {
+  unwind: (minified: string[]): FieldResolver[] => {
     const unwinded: FieldResolver[] = [];
 
     for (let it = 0; it < minified.length; it += 2) {

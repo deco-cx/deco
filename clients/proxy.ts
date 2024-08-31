@@ -45,7 +45,7 @@ export class InvokeAwaiter<
   ) {
   }
 
-  public get() {
+  public get(): Invoke<TManifest, TInvocableKey, TFuncSelector> {
     return this.payload;
   }
 

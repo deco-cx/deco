@@ -164,7 +164,7 @@ export const applyProps = <
 (
   $live: TProps,
   ctx: HttpContext<{ global: any } & RequestState>,
-) => { // by default use global state
+): PromiseOrValue<TResp> => { // by default use global state
   return func.default(
     $live,
     ctx.request,

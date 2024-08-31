@@ -1,3 +1,4 @@
+import type { Meter } from "npm:@opentelemetry/api@1.9.0";
 import {
   ExplicitBucketHistogramAggregation,
   MeterProvider,
@@ -50,4 +51,4 @@ if (OTEL_IS_ENABLED) {
   );
 }
 
-export const meter = meterProvider.getMeter("deco");
+export const meter: Meter = meterProvider.getMeter("deco");

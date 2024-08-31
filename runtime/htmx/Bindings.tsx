@@ -5,7 +5,7 @@ import type { ComponentChildren } from "preact";
 import type { Framework } from "../../components/section.tsx";
 import { useSection } from "../../hooks/useSection.ts";
 
-export const Head = (_: { children: ComponentChildren }) => {
+export const Head = (_: { children: ComponentChildren }): null => {
   return null;
 };
 const bindings = {

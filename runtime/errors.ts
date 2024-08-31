@@ -62,14 +62,14 @@ export const badRequest: ResponseErrorBuilder = status(400);
  * Stop any config resolution and throw an exception that should be returned to the main handler.
  * @param resp
  */
-export const shortcircuit = (resp: Response) => {
+export const shortcircuit = (resp: Response): HttpError => {
   throw new HttpError(resp);
 };
 
 /**
  * Redirect using the specified @param url.
  */
-export const redirect = (url: string | URL, status?: number) => {
+export const redirect = (url: string | URL, status?: number): void => {
   shortcircuit(
     new Response(null, {
       status: status ?? 307,
