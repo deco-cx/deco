@@ -5,7 +5,13 @@ export interface Timing {
   end?: number;
 }
 
-export function createServerTimings() {
+export interface ServerTimingsReturn { 
+  get: () => readonly Timing[]; 
+  start: (name: string, desc?: string, start?: number) => { end: () => void; 
+  setDesc: (desc: string | undefined) => void; name: () => string; }; printTimings: () => string; 
+}
+
+export function createServerTimings(): ServerTimingsReturn {
   const timings: Timing[] = [];
 
   const start = (name: string, desc?: string, start?: number) => {

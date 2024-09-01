@@ -154,7 +154,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 
   batchInvoke(
     ...args: Parameters<typeof batchInvoke>
-  ) {
+  ): Promise<unknown> {
     return batchInvoke(...args);
   }
 

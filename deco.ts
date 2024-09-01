@@ -57,6 +57,13 @@ export interface DecoContext<TAppManifest extends AppManifest = AppManifest> {
   request?: RequestContext;
 }
 
+export interface ContextResponse {
+  active: () => RequestContext | undefined; 
+  bind: <R, TArgs extends unknown[]>(request: RequestContext, 
+    f: (...args: TArgs) => R) => (...args: TArgs) => R; readonly signal: AbortSignal | undefined; 
+    readonly framework: "fresh" | "htmx"; 
+}
+
 const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
 const isDeploy = Boolean(deploymentId);
 
@@ -109,8 +116,8 @@ export const Context = {
   },
 };
 
-export const RequestContext = {
-  active: () => Context.active().request,
+export const RequestContext: ContextResponse = {
+  active: (): RequestContext | undefined => Context.active().request,
   bind: <R, TArgs extends unknown[]>(
     request: RequestContext,
     f: (...args: TArgs) => R,
