@@ -5,10 +5,18 @@ export interface Timing {
   end?: number;
 }
 
-export interface ServerTimingsReturn { 
-  get: () => readonly Timing[]; 
-  start: (name: string, desc?: string, start?: number) => { end: () => void; 
-  setDesc: (desc: string | undefined) => void; name: () => string; }; printTimings: () => string; 
+export interface ServerTimingsReturn {
+  get: () => readonly Timing[];
+  start: (
+    name: string,
+    desc?: string,
+    start?: number,
+  ) => {
+    end: () => void;
+    setDesc: (desc: string | undefined) => void;
+    name: () => string;
+  };
+  printTimings: () => string;
 }
 
 export function createServerTimings(): ServerTimingsReturn {
