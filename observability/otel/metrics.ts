@@ -1,10 +1,10 @@
 import {
   ExplicitBucketHistogramAggregation,
+  type Meter,
   MeterProvider,
   OTLPMetricExporter,
   PeriodicExportingMetricReader,
   View,
-  type Meter
 } from "../../deps.ts";
 import { OTEL_IS_ENABLED, resource } from "./config.ts";
 // a=b,c=d => {a:b, c:d}
