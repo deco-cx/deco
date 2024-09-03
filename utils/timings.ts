@@ -5,7 +5,7 @@ export interface Timing {
   end?: number;
 }
 
-export interface ServerTimingsReturn {
+export interface ServerTimingsBuilder {
   get: () => readonly Timing[];
   start: (
     name: string,
@@ -19,7 +19,7 @@ export interface ServerTimingsReturn {
   printTimings: () => string;
 }
 
-export function createServerTimings(): ServerTimingsReturn {
+export function createServerTimings(): ServerTimingsBuilder {
   const timings: Timing[] = [];
 
   const start = (name: string, desc?: string, start?: number) => {

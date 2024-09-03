@@ -4,6 +4,7 @@ import {
   OTLPMetricExporter,
   PeriodicExportingMetricReader,
   View,
+  type Meter
 } from "../../deps.ts";
 import { OTEL_IS_ENABLED, resource } from "./config.ts";
 // a=b,c=d => {a:b, c:d}
@@ -50,4 +51,4 @@ if (OTEL_IS_ENABLED) {
   );
 }
 
-export const meter = meterProvider.getMeter("deco");
+export const meter: Meter = meterProvider.getMeter("deco");

@@ -315,7 +315,7 @@ export const create = <TManifest extends AppManifest>() =>
 ): Promise<InvokeResult<TPayload, TManifest>> =>
   invokeKey(key, props, init) as Promise<InvokeResult<TPayload, TManifest>>;
 
-interface WithManifestReturn<TManifest extends AppManifest> {
+interface ManifestInvoke<TManifest extends AppManifest> {
   invoke: ReturnType<typeof invoke<TManifest>>;
   create: ReturnType<typeof create<TManifest>>;
 }
@@ -325,7 +325,7 @@ interface WithManifestReturn<TManifest extends AppManifest> {
  */
 export const withManifest = <
   TManifest extends AppManifest,
->(): WithManifestReturn<TManifest> => {
+>(): ManifestInvoke<TManifest> => {
   return {
     /**
      * Invokes the target function using the invoke api.
