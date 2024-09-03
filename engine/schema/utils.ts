@@ -62,38 +62,3 @@ export const beautify = (propName: string) => {
       .replace(/\.tsx?$/, "")
   );
 };
-
-export interface TypedElement {
-  type: string;
-}
-export type Visitor<T extends TypedElement, TResult = void> = {
-  [K in T["type"]]?: (t: Extract<T, { type: K }>) => TResult | void;
-};
-
-export function visitSync<T extends TypedElement, TResult = void>(
-  items: T[],
-  visitor: Visitor<T, TResult>,
-): TResult | void {
-  for (const item of items) {
-    const visitFunc = visitor[item.type as keyof Visitor<T>];
-    // deno-lint-ignore no-explicit-any
-    const result = visitFunc?.(item as any);
-    if (result) {
-      return result;
-    }
-  }
-}
-
-export async function visit<T extends TypedElement, TResult = void>(
-  items: T[],
-  visitor: Visitor<T, TResult>,
-): Promise<TResult | void> {
-  for (const item of items) {
-    const visitFunc = visitor[item.type as keyof Visitor<T>];
-    // deno-lint-ignore no-explicit-any
-    const result = await visitFunc?.(item as any);
-    if (result) {
-      return result;
-    }
-  }
-}

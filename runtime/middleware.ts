@@ -10,9 +10,9 @@ import { allowCorsFor } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
 import type {
+  Context as HonoContext,
   ContextRenderer,
   Handler,
-  Context as HonoContext,
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
