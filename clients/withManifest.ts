@@ -315,7 +315,7 @@ export const create = <TManifest extends AppManifest>() =>
 ): Promise<InvokeResult<TPayload, TManifest>> =>
   invokeKey(key, props, init) as Promise<InvokeResult<TPayload, TManifest>>;
 
-interface ManifestInvoke<TManifest extends AppManifest> {
+export interface ManifestInvoke<TManifest extends AppManifest> {
   invoke: ReturnType<typeof invoke<TManifest>>;
   create: ReturnType<typeof create<TManifest>>;
 }
@@ -368,14 +368,10 @@ export const proxy = <TManifest extends AppManifest>(
   return proxyFor(invoke<TManifest>(fetcher) as typeof batchInvoke);
 };
 
-interface forAppType<TApp extends App> {
-  create: ReturnType<typeof create<ManifestOf<TApp>>>;
-  invoke: InvocationProxyWithBatcher<ManifestOf<TApp>>;
-}
 /**
  * Creates a proxy that lets you invoke functions based on the declared actions and loaders. (compatibility with old invoke)
  */
-export const forApp = <TApp extends App>(): forAppType<TApp> => {
+export const forApp = <TApp extends App>(): ManifestInvoke<ManifestOf<TApp>> => {
   const { create } = withManifest<ManifestOf<TApp>>();
   return {
     create: create,
