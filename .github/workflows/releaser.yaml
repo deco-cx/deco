@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   tag-discussion:
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
