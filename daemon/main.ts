@@ -29,11 +29,14 @@ const parsedArgs = parseArgs(Deno.args, {
 const runCommand = parsedArgs["_"];
 
 const DECO_APP_NAME = Deno.env.get("DECO_APP_NAME");
-export const DENO_DEPLOYMENT_ID = Deno.env.get("DENO_DEPLOYMENT_ID");
+export const DENO_DEPLOYMENT_ID: string | undefined = Deno.env.get(
+  "DENO_DEPLOYMENT_ID",
+);
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DECO_TRANSIENT_ENV = Deno.env.get("DECO_TRANSIENT_ENV") === "true";
 const SHOULD_PERSIST = DENO_DEPLOYMENT_ID && SOURCE_PATH && !DECO_TRANSIENT_ENV;
-export const VERBOSE = Deno.env.get("VERBOSE") || DENO_DEPLOYMENT_ID;
+export const VERBOSE: string | undefined = Deno.env.get("VERBOSE") ||
+  DENO_DEPLOYMENT_ID;
 
 const WORKER_PORT = portPool.get();
 
