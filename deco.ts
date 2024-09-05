@@ -57,7 +57,7 @@ export interface DecoContext<TAppManifest extends AppManifest = AppManifest> {
   request?: RequestContext;
 }
 
-export interface ContextResponse {
+export interface RequestContextBinder {
   active: () => RequestContext | undefined;
   bind: <R, TArgs extends unknown[]>(
     request: RequestContext,
@@ -119,7 +119,7 @@ export const Context = {
   },
 };
 
-export const RequestContext: ContextResponse = {
+export const RequestContext: RequestContextBinder = {
   active: (): RequestContext | undefined => Context.active().request,
   bind: <R, TArgs extends unknown[]>(
     request: RequestContext,
