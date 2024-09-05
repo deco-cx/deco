@@ -103,7 +103,7 @@ export const denoJSON = <
   TContext extends CodeModContext = CodeModContext,
 >(f: JsonPatcher<DenoJSON, TContext>): CodeModTarget<TContext> => {
   return {
-    options: { match: [/deno.json(c?)/] },
+    options: { match: [/deno.json(c?)$/] },
     apply: json(f),
   };
 };
@@ -244,19 +244,6 @@ const applyPatch = async (p: FileMod, ctx: CodeModContext): Promise<void> => {
 const applyCodeMod = async ({ patches, name, description, ctx }: CodeMod) => {
   // Check if patches change the same file
   const yesToAll = Boolean(Deno.args.find((x) => x === "--y"));
-  const knownPaths = new Set();
-  for (const patch of patches) {
-    const path = isDelete(patch) ? patch.from.path : patch.to.path;
-
-    if (knownPaths.has(path)) {
-      throw new Error(
-        `Patch on file ${path} conflicts with previous patch`,
-      );
-    }
-
-    knownPaths.add(path);
-  }
-
   for (const patch of patches) {
     if (isDelete(patch)) {
       console.log(`🚨 ${brightRed(patch.from.path)} will be deleted.`);

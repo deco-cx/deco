@@ -10,10 +10,17 @@ const EXPORTS = {
   DURABLE: "@deco/durable",
 };
 if (import.meta.main) {
-  const [decoLatest, durableLatest] = await Promise.all([
-    jsrLatest(EXPORTS.DECO),
-    jsrLatest(EXPORTS.DURABLE),
-  ]);
+  const newJsrPackages = [
+    EXPORTS.DECO,
+    EXPORTS.DURABLE,
+    "@deno/gfm",
+    "@deco/inspect-vscode",
+  ];
+  const newImports: Record<string, string> = await Promise.all(
+    newJsrPackages.map((pkg) =>
+      jsrLatest(pkg).then((jsrPkg) => [pkg, jsrPkg] as [string, string])
+    ),
+  ).then(Object.fromEntries);
   await codeMod({
     name: "deco-to-jsr",
     description: "converts deco http imports to jsr imports",
@@ -24,6 +31,7 @@ if (import.meta.main) {
             moduleSpecifier: EXPORTS.DECO,
           },
         },
+        "deco/plugins/deco": {},
         "deco/utils/invoke.ts": {
           isEventStreamResponse: {
             moduleSpecifier: EXPORTS.DECO,
@@ -515,20 +523,34 @@ if (import.meta.main) {
         },
       }),
       denoJSON(({ content: denoJSON, path }) => {
-        const { "deco/": _, "$live/": __, ...imports } = denoJSON.imports ??
+        const imports = denoJSON.imports ??
           {};
         return {
           content: {
             ...denoJSON,
             imports: {
               ...imports,
-              [EXPORTS.DECO]: decoLatest,
-              [EXPORTS.DURABLE]: durableLatest,
+              ...newImports,
             },
           },
           path,
         };
       }),
+      {
+        options: {
+          match: [/fresh.config.ts$/],
+        },
+        apply: (txt) => {
+          const regex = /^import plugins from ".*";$/gm;
+          return {
+            path: txt.path,
+            content: txt.content.replace(
+              regex,
+              `import plugins from "deco/plugins/mod.ts";`,
+            ),
+          };
+        },
+      },
     ],
   });
 }

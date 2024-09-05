@@ -17,7 +17,8 @@
       "**/*.bench.ts",
       "**/*.test.ts",
       "./scripts/codemod/jsr.ts",
-      "./scripts/codemod.ts"
+      "./scripts/codemod.ts",
+      "./plugins"
     ]
   },
   "tasks": {
