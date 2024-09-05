@@ -15,7 +15,9 @@
   "publish": {
     "exclude": [
       "**/*.bench.ts",
-      "**/*.test.ts"
+      "**/*.test.ts",
+      "./scripts/codemod/jsr.ts",
+      "./scripts/codemod.ts"
     ]
   },
   "tasks": {

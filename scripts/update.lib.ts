@@ -173,11 +173,12 @@ export async function upgradeDeps(
   logger: typeof console["info"] = console.info,
 ) {
   let upgradeFound = await upgradeImportMapDeps(importMap, logs, deps, logger);
-  const { "deco/": _, ...imports } = denoJSON.imports;
-  for (const [importKey, importValue] of Object.entries(imports)) {
-    if (!(importKey in importMap.imports)) {
-      importMap.imports[importKey] = importValue;
-      upgradeFound = true;
+    const { "deco/": _, ...imports } = denoJSON.imports;
+    for (const [importKey, importValue] of Object.entries(imports)) {
+      if (!(importKey in importMap.imports)) {
+        importMap.imports[importKey] = importValue;
+        upgradeFound = true;
+      }
     }
   }
   return upgradeFound;
