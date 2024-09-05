@@ -419,10 +419,14 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         const hasFlags = active.size > 0 || inactiveDrawn.size > 0;
 
         if (hasFlags && cookieSegment !== value) {
+          const date = new Date();
+          date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
           setCookie(newHeaders, {
             name: DECO_SEGMENT,
             value,
             path: "/",
+            expires: date,
+            sameSite: "Lax",
           }, { encode: true });
         }
       }
