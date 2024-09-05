@@ -51,12 +51,14 @@ async function* getImportMaps(
   } else {
     const importMapFile = denoJSON?.importMap ?? "./import_map.json";
     const importMapPath = join(dir, importMapFile.replace("./", ""));
-    yield [
-      await Deno.readTextFile(importMapPath).then(JSON.parse).catch(() => ({
-        imports: {},
-      })),
-      importMapPath,
-    ];
+    if (await (exists(importMapPath))) {
+      yield [
+        await Deno.readTextFile(importMapPath).then(JSON.parse).catch(() => ({
+          imports: {},
+        })),
+        importMapPath,
+      ];
+    }
   }
 
   if (Array.isArray(denoJSON.workspace)) {
