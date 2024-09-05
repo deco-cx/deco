@@ -16,16 +16,15 @@ export const observe = async <T>(
   f: () => Promise<T>,
 ): Promise<T> => {
   const start = performance.now();
-  let isError = "false";
+  let isError = false;
   try {
-    return await f().then((resp) => {
-      if (isWrappedError(resp)) {
-        isError = "true";
-      }
-      return resp;
-    });
+    const result = await f();
+    if (isWrappedError(result)) {
+      isError = true;
+    }
+    return result;
   } catch (error) {
-    isError = "true";
+    isError = true;
     throw error;
   } finally {
     operationDuration.record(performance.now() - start, {

@@ -3,8 +3,10 @@ import { type DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import type { ResolveOptions } from "../core/mod.ts";
 import {
   type BaseContext,
+  type FieldResolver,
   isResolvable,
   type Resolvable,
+  type ResolveFunc,
   type Resolver,
   type ResolverMap,
 } from "../core/resolver.ts";
@@ -19,6 +21,30 @@ export interface BlockInvocation<TProps = any> {
   props: TProps;
   source?: "internal" | "external";
 }
+
+function createDeferred<T, R extends { data: T; deferred?: boolean }>(
+  props: R,
+  resolveFunc: ResolveFunc,
+  resolveChain: FieldResolver[],
+) {
+  const deferred = (
+    tCtx: Partial<BaseContext>,
+    opts?: Partial<ResolveOptions>,
+  ) =>
+    typeof props?.data === "object"
+      ? resolveFunc(
+        props?.data,
+        { resolveChain: resolveChain, ...opts ?? {} },
+        tCtx ?? {},
+      )
+      : props?.data;
+  deferred._deferred = true;
+  deferred.__resolveType = isResolvable(props?.data)
+    ? props?.data?.__resolveType
+    : undefined;
+  return deferred;
+}
+
 export default {
   state: function state(_props, { resolvables, resolvers }) {
     return {
@@ -100,21 +126,9 @@ export default {
     ctx: BaseContext,
   ) => {
     if (props?.deferred && props?.data) {
-      const deferred = (
-        tCtx: Partial<BaseContext>,
-        opts?: Partial<ResolveOptions>,
-      ) =>
-        typeof props?.data === "object"
-          ? ctx.resolve(
-            props?.data,
-            { resolveChain: ctx.resolveChain, ...opts ?? {} },
-            tCtx ?? {},
-          )
-          : props?.data;
-      deferred._deferred = true;
-      deferred.__resolveType = isResolvable(props?.data)
-        ? props?.data?.__resolveType
-        : undefined;
+      const resolveFunc = ctx.resolve;
+      const resolveChain = ctx.resolveChain;
+      const deferred = createDeferred(props, resolveFunc, resolveChain);
       return deferred;
     }
     return props?.data;

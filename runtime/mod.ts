@@ -58,6 +58,8 @@ export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
   bindings?: Bindings<TAppManifest>;
 }
 
+const NOOP_CALL = () => {};
+
 export class Deco<TAppManifest extends AppManifest = AppManifest> {
   private _handler: ReturnType<typeof handlerFor> | null = null;
   private constructor(
@@ -187,12 +189,27 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
           state,
         ),
       logger: enabled ? console : {
-        ...console,
-        log: () => {},
-        error: () => {},
-        debug: () => {},
-        info: () => {},
-      },
+        assert: NOOP_CALL,
+        clear: NOOP_CALL,
+        count: NOOP_CALL,
+        countReset: NOOP_CALL,
+        debug: NOOP_CALL,
+        dir: NOOP_CALL,
+        dirxml: NOOP_CALL,
+        error: NOOP_CALL,
+        group: NOOP_CALL,
+        groupCollapsed: NOOP_CALL,
+        groupEnd: NOOP_CALL,
+        info: NOOP_CALL,
+        log: NOOP_CALL,
+        table: NOOP_CALL,
+        time: NOOP_CALL,
+        timeEnd: NOOP_CALL,
+        timeLog: NOOP_CALL,
+        timeStamp: NOOP_CALL,
+        trace: NOOP_CALL,
+        warn: NOOP_CALL,
+      } as Console,
     };
 
     const liveContext = this.ctx;

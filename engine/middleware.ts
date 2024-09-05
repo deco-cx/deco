@@ -22,25 +22,18 @@ export const compose = <
   ...middlewares: ResolverMiddleware<T, TParent, TContext>[]
 ): Resolver<T, TParent, TContext> => {
   const last = middlewares[middlewares.length - 1];
-  return async function (p: TParent, ctx: TContext) {
-    // last called middleware #
-    let index = -1;
-    return await dispatch(0);
-    async function dispatch(
+  return async function composedResolver(p: TParent, ctx: TContext) {
+    const dispatch = async (
       i: number,
-    ): Promise<Resolvable<T, TContext, any>> {
-      if (i <= index) {
-        return Promise.reject(new Error("next() called multiple times"));
-      }
-      index = i;
+    ): Promise<Resolvable<T, TContext, any>> => {
       const resolver = middlewares[i];
-      if (i === middlewares.length) {
-        return await last(p, ctx);
+      if (!resolver) {
+        return last(p, ctx);
       }
-      return await resolver(p, {
-        ...ctx,
-        next: dispatch.bind(null, i + 1),
-      });
-    }
+      const next = () => dispatch(i + 1);
+      return resolver(p, { ...ctx, next });
+    };
+
+    return dispatch(0);
   };
 };
