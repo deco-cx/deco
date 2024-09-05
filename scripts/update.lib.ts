@@ -1,5 +1,6 @@
 import { parse } from "@std/flags";
 import * as colors from "@std/fmt/colors";
+import { exists } from "@std/fs/exists";
 import { join } from "@std/path";
 import * as semver from "@std/semver";
 import { pkgInfo } from "./pkg.ts";
@@ -26,30 +27,53 @@ const requiredMinVersion: Record<string, string> = {
 const flags = parse(Deno.args, {
   boolean: ["allow-pre"],
 });
-
-const getImportMap = async (dir: string): Promise<[ImportMap, string]> => {
-  const denoJSONPath = join(dir, "deno.json");
+const denoJSONFileNames = ["deno.json", "deno.jsonc"];
+const getDenoJSONPath = async (cwd = Deno.cwd()) => {
+  for (const importFileName of denoJSONFileNames) {
+    const importMapPath = join(cwd, importFileName);
+    if (await exists(importMapPath, { isFile: true })) {
+      return importMapPath;
+    }
+  }
+  return undefined;
+};
+async function* getImportMaps(
+  dir: string,
+): AsyncIterableIterator<[ImportMap, string]> {
+  const denoJSONPath = await getDenoJSONPath(dir);
+  if (!denoJSONPath) {
+    throw new Error(`could not find deno.json definition in ${dir}`);
+  }
   const denoJSON = await Deno.readTextFile(denoJSONPath).then(JSON.parse);
   // inlined import_map inside deno.json
   if (denoJSON.imports) {
-    return [denoJSON, denoJSONPath];
+    yield [denoJSON, denoJSONPath];
+  } else {
+    const importMapFile = denoJSON?.importMap ?? "./import_map.json";
+    const importMapPath = join(dir, importMapFile.replace("./", ""));
+    yield [
+      await Deno.readTextFile(importMapPath).then(JSON.parse).catch(() => ({
+        imports: {},
+      })),
+      importMapPath,
+    ];
   }
 
-  const importMapFile = denoJSON?.importMap ?? "./import_map.json";
-  const importMapPath = join(dir, importMapFile.replace("./", ""));
-  return [
-    await Deno.readTextFile(importMapPath).then(JSON.parse),
-    importMapPath,
-  ];
-};
+  if (Array.isArray(denoJSON.workspace)) {
+    for (const workspace of denoJSON.workspace as string[]) {
+      yield* getImportMaps(join(dir, workspace));
+    }
+  }
+}
 
 async function upgradeImportMapDeps(
   importMap: ImportMap,
   logs = true,
   deps = PACKAGES_TO_CHECK,
+  logger = console.info,
 ) {
   let upgradeFound = false;
-  logs && console.info("Looking up latest versions");
+  logs && logger("looking up latest versions");
 
   await Promise.all(
     Object.keys(importMap.imports ?? {})
@@ -65,7 +89,7 @@ async function upgradeImportMapDeps(
         } = info;
 
         if (!semver.canParse(currentVersion) && !Deno.args.includes("force")) {
-          logs && console.log(
+          logs && logger(
             colors.yellow(
               `skipping ${pkg} ${currentVersion} -> ${latestVersion}. Use --force to upgrade.`,
             ),
@@ -74,8 +98,8 @@ async function upgradeImportMapDeps(
         }
 
         if (currentVersion !== latestVersion) {
-          logs && console.info(
-            `Upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
+          logs && logger(
+            `upgrading ${pkg} ${currentVersion} -> ${latestVersion}.`,
           );
 
           upgradeFound = true;
@@ -84,8 +108,8 @@ async function upgradeImportMapDeps(
       }),
   );
 
-  if (!importMap.imports["deco/"] && importMap.imports["$live/"]) {
-    logs && console.info("Add deco/ alias");
+  if (!importMap.imports?.["deco/"] && importMap.imports?.["$live/"]) {
+    logs && logger("add deco/ alias");
     importMap.imports["deco/"] = importMap.imports["$live/"];
   }
 
@@ -93,13 +117,13 @@ async function upgradeImportMapDeps(
     if (importMap.imports[pkg]) {
       const url = lookup(importMap.imports[pkg], REGISTRIES);
       const currentVersion = url?.version();
-      console.log({ currentVersion });
+      logger({ currentVersion });
       if (
         !currentVersion ||
         semver.lessThan(semver.parse(currentVersion), semver.parse(minVer))
       ) {
-        logs && console.info(
-          `Upgrading ${pkg} ${currentVersion} -> ${minVer}.`,
+        logs && logger(
+          `upgrading ${pkg} ${currentVersion} -> ${minVer}.`,
         );
 
         upgradeFound = true;
@@ -110,20 +134,34 @@ async function upgradeImportMapDeps(
 
   if (!upgradeFound) {
     logs &&
-      console.info(
-        "Local website depends on the most recent releases of Live!",
+      logger(
+        "dependencies are on the most recent releases of deco!",
       );
   }
   return upgradeFound;
 }
 
-export async function updatedImportMap(logs = true) {
-  const [importMap, importMapPath] = await getImportMap(Deno.cwd());
-  const upgradeFound = await upgradeDeps(importMap, logs);
-  if (!upgradeFound) {
-    return undefined;
+export async function* updatedImportMap(
+  logs = true,
+  cwd = Deno.cwd(),
+): AsyncIterableIterator<[ImportMap, string]> {
+  for await (const [importMap, importMapPath] of getImportMaps(cwd)) {
+    const logger = (...msg: unknown[]) =>
+      console.info(
+        colors.gray(`${importMapPath.replaceAll(Deno.cwd(), ".")}:`),
+        ...msg,
+      );
+    const upgradeFound = await upgradeImportMapDeps(
+      importMap,
+      logs,
+      PACKAGES_TO_CHECK,
+      logger,
+    );
+    if (upgradeFound) {
+      yield [importMap, importMapPath];
+      logger(colors.green(`upgraded successfully`));
+    }
   }
-  return [importMap, importMapPath] as [ImportMap, string];
 }
 
 export async function upgradeDeps(importMap: ImportMap, logs: boolean) {
@@ -154,9 +192,9 @@ const latestStdVersion = async () => {
 
 const FRESH_CONFIG = "fresh.config.ts";
 
-const updgradeStd = async () => {
+const updgradeStd = async (cwd = Deno.cwd()) => {
   const freshConfigFile = await Deno.readTextFile(
-    join(Deno.cwd(), FRESH_CONFIG),
+    join(cwd, FRESH_CONFIG),
   ).catch((_err) => null);
   if (typeof freshConfigFile === "string") {
     const newVer = await latestStdVersion().catch((_err) => null);
@@ -166,24 +204,20 @@ const updgradeStd = async () => {
     const updatedFreshConfigFile = updateStd(newVer, freshConfigFile);
     if (updatedFreshConfigFile !== freshConfigFile) {
       await Deno.writeTextFile(
-        join(Deno.cwd(), FRESH_CONFIG),
+        join(cwd, FRESH_CONFIG),
         updatedFreshConfigFile,
       );
     }
   }
 };
-export async function update(checkStdUpdates = false) {
-  const updates = await updatedImportMap();
+export async function update(checkStdUpdates = false, cwd = Deno.cwd()) {
+  for await (const [importMap, importMapPath] of updatedImportMap(true, cwd)) {
+    await Deno.writeTextFile(
+      importMapPath,
+      `${JSON.stringify(importMap, null, 2)}\n`,
+    );
+  }
   if (checkStdUpdates) {
-    await updgradeStd();
+    await updgradeStd(cwd);
   }
-  if (!updates) {
-    return;
-  }
-  const [importMap, importMapPath] = updates;
-  await Deno.writeTextFile(
-    importMapPath,
-    `${JSON.stringify(importMap, null, 2)}\n`,
-  );
-  console.info("Upgraded successfully");
 }
