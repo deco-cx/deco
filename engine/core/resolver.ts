@@ -107,17 +107,17 @@ const SCORE_BY_RESOLVE_TYPES = new Map(
 );
 
 export const FieldResolver = {
-  minify: (chain: FieldResolver[]) => {
+  minify: (chain: FieldResolver[]): (string | number)[] => {
     const minified = [];
 
     for (const c of chain) {
-      minified.push(SCORE_BY_RESOLVE_TYPES.get(c.type));
+      minified.push(SCORE_BY_RESOLVE_TYPES.get(c.type)!);
       minified.push(c.value);
     }
 
     return minified;
   },
-  unwind: (minified: string[]) => {
+  unwind: (minified: string[]): FieldResolver[] => {
     const unwinded: FieldResolver[] = [];
 
     for (let it = 0; it < minified.length; it += 2) {

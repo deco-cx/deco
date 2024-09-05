@@ -21,6 +21,7 @@ export {
   trace,
   ValueType,
 } from "npm:@opentelemetry/api@1.9.0";
+export type { Meter } from "npm:@opentelemetry/api@1.9.0";
 export type {
   Attributes,
   BatchObservableResult,

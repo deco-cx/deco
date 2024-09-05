@@ -233,7 +233,7 @@ const _isDev = Deno.env.get("DECO_PREVIEW") ||
   !Deno.env.has("DENO_DEPLOYMENT_ID");
 // FIXME @author Marcos V. Candeia since we don't have a build step on HTMX sites so mode should always defaults to dev.
 const mode = "dev"; //isDev ? "dev" : "prod";
-const getCSSEager = () =>
+const getCSSEager = (): Promise<string> =>
   Deno.readTextFile(TO).catch(() =>
     `Missing TailwindCSS file in production. Make sure you are building the file on the CI`
   );
@@ -273,7 +273,7 @@ const withReleaseContent = async (config: Config) => {
 };
 
 let css: string | null = null;
-const getCSSLazy = async (config: Config) => {
+const getCSSLazy = async (config: Config): Promise<string> => {
   return css ??= await bundle({
     from: TAILWIND_FILE,
     mode,
@@ -287,5 +287,5 @@ addEventListener("hmr", () => {
 });
 
 let tailwindConfig: null | Config = null;
-export const styles = async () =>
+export const styles = async (): Promise<string> =>
   await getCSS(tailwindConfig ??= await loadTailwindConfig(Deno.cwd()));

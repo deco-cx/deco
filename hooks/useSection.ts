@@ -17,7 +17,7 @@ export type Options<P> = {
 
 export const useSection = <P>(
   { props = {}, href }: Pick<Options<P>, "href" | "props"> = {},
-) => {
+): string => {
   const ctx = useContext(SectionContext);
   const revisionId = ctx?.revision;
   const vary = ctx?.context.state.vary.build();

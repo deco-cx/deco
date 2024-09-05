@@ -2,6 +2,7 @@
 /** @jsxImportSource preact */
 
 import { useFramework } from "../runtime/handler.tsx";
+import type { JSX } from "preact";
 
 export interface Props {
   body: string;
@@ -43,7 +44,7 @@ const snippet = (json: string) => {
   );
 };
 
-export default function JsonViewer(p: Props) {
+export default function JsonViewer(p: Props): JSX.Element {
   const { Head } = useFramework();
   return (
     <>

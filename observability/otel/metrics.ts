@@ -21,6 +21,7 @@ const headersStringToObject = (headersString: string | undefined | null) => {
 const msBoundaries = [10, 100, 500, 1000, 5000, 10000, 15000];
 const sBoundaries = [1, 5, 10, 50];
 
+type IMeter = ReturnType<MeterProvider["getMeter"]>;
 const meterProvider: MeterProvider = new MeterProvider({
   resource,
   views: [
@@ -50,4 +51,4 @@ if (OTEL_IS_ENABLED) {
   );
 }
 
-export const meter = meterProvider.getMeter("deco");
+export const meter: IMeter = meterProvider.getMeter("deco");

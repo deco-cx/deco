@@ -18,6 +18,9 @@ import { HttpError } from "../engine/errors.ts";
 import { logger } from "../observability/otel/config.ts";
 import { useFramework } from "../runtime/handler.tsx";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
+import type { JSX } from "preact";
+import type { ComponentMetadata } from "deco/engine/block.ts";
+import type { Context as PreactContext } from "preact";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
@@ -27,9 +30,10 @@ export interface SectionContext extends HttpContext<RequestState> {
   FallbackWrapper: ComponentType<any>;
 }
 
-export const SectionContext = createContext<SectionContext | undefined>(
-  undefined,
-);
+export const SectionContext: PreactContext<SectionContext | undefined> =
+  createContext<SectionContext | undefined>(
+    undefined,
+  );
 
 // Murmurhash3 was chosen because it is fast
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
@@ -127,7 +131,20 @@ export function withSection<TProps, TLoaderProps = TProps>(
   LoadingFallback?: ComponentType<DeepPartial<TLoaderProps>>,
   ErrorFallback?: ComponentType<{ error?: Error }>,
   loaderProps?: TLoaderProps,
-) {
+): (
+  props: TProps,
+  ctx: HttpContext<
+    RequestState & {
+      renderSalt?: string;
+      partialMode?: "replace" | "prepend" | "append";
+    }
+  >,
+) => {
+  LoadingFallback?: (() => JSX.Element) | undefined;
+  props: TProps;
+  Component: (props: TProps) => JSX.Element;
+  metadata: ComponentMetadata;
+} {
   return ((
     props: TProps,
     ctx: HttpContext<

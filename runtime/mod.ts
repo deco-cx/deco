@@ -11,7 +11,7 @@ import {
 import { siteNameFromEnv } from "../engine/manifest/manifest.ts";
 import { randomSiteName } from "../engine/manifest/utils.ts";
 import { Context } from "../live.ts";
-import { newContext, type Resolvable } from "../mod.ts";
+import { newContext, type PreactComponent, type Resolvable } from "../mod.ts";
 import { observe } from "../observability/observe.ts";
 import { tracer } from "../observability/otel/config.ts";
 import {
@@ -23,11 +23,20 @@ import { defaultHeaders, forceHttps } from "../utils/http.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { createServerTimings } from "../utils/timings.ts";
 import { batchInvoke, invoke } from "./features/invoke.ts";
-import { type GetMetaOpts, meta } from "./features/meta.ts";
+import {
+  type GetMetaOpts,
+  meta,
+  type VersionedMetaInfo,
+} from "./features/meta.ts";
 import { preview } from "./features/preview.tsx";
-import { type Options, render } from "./features/render.tsx";
+import {
+  type Options,
+  render,
+  type RenderResponse,
+} from "./features/render.tsx";
 import { styles } from "./features/styles.css.ts";
 import { type Bindings, handlerFor } from "./handler.tsx";
+import type { ContextRenderer } from "deco/runtime/deps.ts";
 
 export interface PageParams<TData = any> {
   data: TData;
@@ -84,14 +93,19 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     );
   }
 
-  meta(opts?: GetMetaOpts) {
+  meta(opts?: GetMetaOpts): Promise<VersionedMetaInfo | undefined> {
     return meta(this.ctx, opts);
   }
 
-  get handler() {
+  get handler(): (
+    req: Request,
+    bindings?:
+      | { RENDER_FN?: ContextRenderer | undefined; GLOBALS?: unknown }
+      | undefined,
+  ) => Response | Promise<Response> {
     return this._handler ??= handlerFor(this);
   }
-  get fetch() {
+  get fetch(): (req: Request) => Response | Promise<Response> {
     return (req: Request) => this.handler(req);
   }
 
@@ -103,7 +117,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     return resolver.resolve(resolvable, ctx ?? {});
   }
 
-  styles(...args: Parameters<typeof styles>) {
+  styles(...args: Parameters<typeof styles>): Promise<string> {
     return styles(...args);
   }
 
@@ -112,7 +126,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     previewUrl: string,
     props: unknown,
     ctx?: State<TAppManifest>,
-  ) {
+  ): Promise<PreactComponent<unknown>> {
     return preview(
       req,
       previewUrl,
@@ -121,7 +135,11 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     );
   }
 
-  async render(req: Request, opts: Options, state?: State<TAppManifest>) {
+  async render(
+    req: Request,
+    opts: Options,
+    state?: State<TAppManifest>,
+  ): Promise<RenderResponse> {
     return render(
       req,
       opts,
@@ -130,13 +148,13 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     );
   }
 
-  invoke(...args: Parameters<typeof invoke>) {
+  invoke(...args: Parameters<typeof invoke>): Promise<unknown> {
     return invoke(...args);
   }
 
   batchInvoke(
     ...args: Parameters<typeof batchInvoke>
-  ) {
+  ): Promise<unknown> {
     return batchInvoke(...args);
   }
 

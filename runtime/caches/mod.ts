@@ -4,12 +4,13 @@ import {
   caches as cachesFileSystem,
   isFileSystemAvailable,
 } from "./fileSystem.ts";
-// TODO(mcandeia) s3 and redis is not being used and together they are 30% of the bundle size of deco, so we should remove them for now and add it dinamically later.
+// TODO(mcandeia) s3 and redis are not being used and together they are 30% of the bundle size of deco,
+// so we should remove them for now and add it dinamically later.
 // import { caches as redisCache, redis } from "./redis.ts";
 // import { caches as cachesS3, isS3Available } from "./s3.ts";
 import { createTieredCache } from "./tiered.ts";
 
-export const ENABLE_LOADER_CACHE =
+export const ENABLE_LOADER_CACHE: boolean =
   Deno.env.get("ENABLE_LOADER_CACHE") === "true";
 const DEFAULT_CACHE_ENGINE = "CACHE_API";
 const WEB_CACHE_ENGINES: CacheEngine[] = Deno.env.has("WEB_CACHE_ENGINE")
