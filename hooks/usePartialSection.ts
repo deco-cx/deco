@@ -7,14 +7,14 @@ interface Options<P> extends SO<P> {
   mode?: "replace" | "append" | "prepend";
 }
 
-interface PartialSectionReturnType {
-  [CLIENT_NAV_ATTR]: boolean;
-  [PARTIAL_ATTR]: string;
+interface PartialSectionAttrs {
+  "f-client-nav": boolean;
+  "f-partial": string;
 }
 
 export const usePartialSection = <P>(
   props: Options<P> = {},
-): PartialSectionReturnType => ({
+): PartialSectionAttrs => ({
   [CLIENT_NAV_ATTR]: true,
   [PARTIAL_ATTR]: `${useSection(props)}&fresh-partial=true&partialMode=${
     props.mode || "replace"
