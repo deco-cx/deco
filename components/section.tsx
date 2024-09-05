@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import type { JSX, Context as PreactContext } from "preact";
+import type { Context as PreactContext, JSX } from "preact";
 import {
   Component,
   type ComponentChildren,
