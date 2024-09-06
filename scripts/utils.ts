@@ -72,16 +72,3 @@ export async function exec(
     stderr,
   };
 }
-
-export const jsrLatest = async (packageName: string, defaultsTo = "1") => {
-  const versions: { latest: string } = await fetch(
-    `https://jsr.io/${packageName}/meta.json`,
-  ).then(
-    (resp) => resp.json(),
-  ).catch(() => {
-    return {
-      latest: defaultsTo,
-    };
-  });
-  return `jsr:${packageName}@^${versions.latest}`;
-};

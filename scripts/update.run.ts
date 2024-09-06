@@ -1,3 +1,3 @@
-import { update } from "./update.lib.ts";
+import { update } from "@deco/codemod-toolkit/pkg";
 
 await update(true);

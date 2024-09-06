@@ -1,5 +1,10 @@
-import { codeMod, denoJSON, rewriteImports, upgradeDeps } from "../codemod.ts";
-import { jsrLatest } from "../utils.ts";
+import {
+  codeMod,
+  denoJSON,
+  rewriteImports,
+  upgradeDeps,
+} from "@deco/codemod-toolkit";
+import { jsrLatest } from "@deco/codemod-toolkit/deno-json";
 
 const EXPORTS = {
   DECO: "@deco/deco",
@@ -31,7 +36,6 @@ if (import.meta.main) {
             moduleSpecifier: EXPORTS.DECO,
           },
         },
-        "deco/plugins/deco": {},
         "deco/utils/invoke.ts": {
           isEventStreamResponse: {
             moduleSpecifier: EXPORTS.DECO,

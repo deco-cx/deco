@@ -25,7 +25,8 @@ export const bundleApps = async () => {
   const decoConfig = await getDecoConfig(dir);
 
   console.debug(
-    `found ${colors.brightBlue((decoConfig?.apps ?? []).length.toString())
+    `found ${
+      colors.brightBlue((decoConfig?.apps ?? []).length.toString())
     } apps`,
   );
 
