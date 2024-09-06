@@ -1,5 +1,23 @@
-import { Jsr } from "../../scripts/registry.ts";
-
+const JSR_PARSE_REGEX = /^jsr:(\/?\@[^/]+\/[^@/]+|\/?[^@/]+)(?:\@([^/]+))?(.*)/;
+const parseSpecifier = (url: string) => {
+  return {
+    name() {
+      const [, name] = url.match(JSR_PARSE_REGEX)!;
+      return name;
+    },
+    version() {
+      const [, , version] = url.match(JSR_PARSE_REGEX)!;
+      if (version === null) {
+        throw Error(`Unable to find version in ${url}`);
+      }
+      return version.startsWith("^") ? version.slice(1) : version;
+    },
+    files(): string {
+      const [, _, __, files] = url.match(JSR_PARSE_REGEX)!;
+      return `.${files ?? ""}`;
+    },
+  };
+};
 export interface PackageMeta {
   exports: Record<string, string>;
 }
@@ -30,7 +48,7 @@ export const resolveJsrSpecifier = async (specifier: string) => {
   if (!specifier.startsWith("jsr:")) {
     return specifier;
   }
-  const jsr = new Jsr(specifier);
+  const jsr = parseSpecifier(specifier);
 
   const [
     name,
