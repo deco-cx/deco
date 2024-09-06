@@ -1,7 +1,9 @@
 import { useContext } from "preact/hooks";
-import { SectionContext } from "../components/section.tsx";
 
-export const useDevice = (): string => {
+import { SectionContext } from "../components/section.tsx";
+import { Device } from "../utils/userAgent.ts";
+
+export const useDevice = (): Device => {
   const ctx = useContext(SectionContext);
 
   if (typeof document !== "undefined") {
