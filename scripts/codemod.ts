@@ -233,8 +233,12 @@ const applyPatch = async (p: FileMod, ctx: CodeModContext): Promise<void> => {
   if (isDelete(p)) {
     await ctx.fs.remove(p.from.path).catch(() => {});
   } else {
-    if (isPatch(p) && (p.from.path !== p.to.path)) {
-      await ctx.fs.remove(p.from.path).catch(() => {});
+    if (isPatch(p)) {
+      if ((p.from.path !== p.to.path)) {
+        await ctx.fs.remove(p.from.path).catch(() => {});
+      } else if (p.from.content === p.to.content) {
+        return;
+      }
     }
     await ctx.fs.ensureFile(p.to.path);
     await ctx.fs.writeTextFile(p.to.path, p.to.content);
