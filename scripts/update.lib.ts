@@ -153,7 +153,7 @@ export async function* updatedImportMap(
         colors.gray(`${importMapPath.replaceAll(Deno.cwd(), ".")}:`),
         ...msg,
       );
-    const upgradeFound = await upgradeImportMapDeps(
+    const upgradeFound = await upgradeDeps(
       importMap,
       logs,
       PACKAGES_TO_CHECK,
@@ -166,8 +166,13 @@ export async function* updatedImportMap(
   }
 }
 
-export async function upgradeDeps(importMap: ImportMap, logs: boolean) {
-  let upgradeFound = await upgradeImportMapDeps(importMap, logs);
+export async function upgradeDeps(
+  importMap: ImportMap,
+  logs: boolean,
+  deps: RegExp = PACKAGES_TO_CHECK,
+  logger: typeof console["info"] = console.info,
+) {
+  let upgradeFound = await upgradeImportMapDeps(importMap, logs, deps, logger);
   const { "deco/": _, ...imports } = denoJSON.imports;
   for (const [importKey, importValue] of Object.entries(imports)) {
     if (!(importKey in importMap.imports)) {
