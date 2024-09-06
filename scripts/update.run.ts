@@ -533,6 +533,11 @@ if (import.meta.main) {
         return {
           content: {
             ...denoJSON,
+            tasks: {
+              ...denoJSON.tasks ?? {},
+              start:
+                "deno run -A --unstable-http --env https://deco.cx/run -- deno task dev",
+            },
             imports: {
               ...imports,
               ...(await newImportsPromise),
