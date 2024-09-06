@@ -21,8 +21,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.base.ref }}  # Checkout the base branch (target repository)
+          repository: ${{ github.event.pull_request.base.repo.full_name }}  # Checkout from the target repo
 
       - name: Calculate new versions
         id: calculate_versions
