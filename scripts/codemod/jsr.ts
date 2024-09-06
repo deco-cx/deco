@@ -1,4 +1,4 @@
-import { codeMod, denoJSON, rewriteImports } from "../codemod.ts";
+import { codeMod, denoJSON, rewriteImports, upgradeDeps } from "../codemod.ts";
 import { jsrLatest } from "../utils.ts";
 
 const EXPORTS = {
@@ -16,7 +16,7 @@ if (import.meta.main) {
     "@deno/gfm",
     "@deco/inspect-vscode",
   ];
-  const newImports: Record<string, string> = await Promise.all(
+  const newImportsPromise: Promise<Record<string, string>> = Promise.all(
     newJsrPackages.map((pkg) =>
       jsrLatest(pkg).then((jsrPkg) => [pkg, jsrPkg] as [string, string])
     ),
@@ -522,7 +522,7 @@ if (import.meta.main) {
           },
         },
       }),
-      denoJSON(({ content: denoJSON, path }) => {
+      denoJSON(async ({ content: denoJSON, path }) => {
         const imports = denoJSON.imports ??
           {};
         return {
@@ -530,12 +530,13 @@ if (import.meta.main) {
             ...denoJSON,
             imports: {
               ...imports,
-              ...newImports,
+              ...(await newImportsPromise),
             },
           },
           path,
         };
       }),
+      upgradeDeps(),
       {
         options: {
           match: [/fresh.config.ts$/],
@@ -546,7 +547,7 @@ if (import.meta.main) {
             path: txt.path,
             content: txt.content.replace(
               regex,
-              `import plugins from "deco/plugins/mod.ts";`,
+              `import plugins from "deco/plugins/fresh.ts";`,
             ),
           };
         },
