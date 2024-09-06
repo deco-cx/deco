@@ -383,7 +383,9 @@ export const proxy = <TManifest extends AppManifest>(
 /**
  * Creates a proxy that lets you invoke functions based on the declared actions and loaders. (compatibility with old invoke)
  */
-export const forApp = <TApp extends App>(): ManifestInvoke<ManifestOf<TApp>> => {
+export const forApp = <TApp extends App>(): ManifestInvoke<
+  ManifestOf<TApp>
+> => {
   const { create } = withManifest<ManifestOf<TApp>>();
   return {
     create: create,
