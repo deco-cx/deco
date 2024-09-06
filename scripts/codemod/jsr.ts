@@ -526,7 +526,7 @@ if (import.meta.main) {
           },
         },
       }),
-      denoJSON(async ({ content: denoJSON, path }) => {
+      denoJSON(async ({ content: denoJSON }) => {
         const imports = denoJSON.imports ??
           {};
         return {
@@ -537,7 +537,6 @@ if (import.meta.main) {
               ...(await newImportsPromise),
             },
           },
-          path,
         };
       }),
       upgradeDeps(),
@@ -548,7 +547,6 @@ if (import.meta.main) {
         apply: (txt) => {
           const regex = /^import plugins from ".*";$/gm;
           return {
-            path: txt.path,
             content: txt.content.replace(
               regex,
               `import plugins from "deco/plugins/fresh.ts";`,

@@ -54,7 +54,7 @@
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
-    "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.1.4",
+    "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.2.0",
     "@deco/durable": "jsr:@deco/durable@^0.5.3",
     "@deco/warp": "jsr:@deco/warp@^0.3.6",
     "@hono/hono": "jsr:@hono/hono@^4.5.4",
