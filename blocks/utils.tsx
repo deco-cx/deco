@@ -154,7 +154,17 @@ export const fnContextFromHttpContext = <TState = {}>(
       return isBot ??= isUABot(ctx.request);
     },
   };
+
 };
+/**
+ * Applies props to a function and returns the result.
+ *
+ * @template TProps, TResp
+ * @param {Object} func - A function with a `default` property.
+ * @param {TProps} $live - Props to be applied to the function.
+ * @param {HttpContext<{ global: any } & RequestState>} ctx - A context object containing global state and request information.
+ * @returns {PromiseOrValue<TResp>} The result of the function call with the applied props.
+ */
 export const applyProps = <
   TProps = any,
   TResp = any,

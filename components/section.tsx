@@ -30,6 +30,9 @@ export interface SectionContext extends HttpContext<RequestState> {
   FallbackWrapper: ComponentType<any>;
 }
 
+/**
+ * Preact context for storing section context.
+ */
 export const SectionContext: PreactContext<SectionContext | undefined> =
   createContext<SectionContext | undefined>(
     undefined,

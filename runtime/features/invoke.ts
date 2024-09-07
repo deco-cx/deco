@@ -44,6 +44,12 @@ const isInvokeFunc = (
   return (p as InvokeFunction).key !== undefined;
 };
 
+/**
+ * Converts an invoke payload into a resolvable object.
+ *
+ * @param {InvokePayload<any>} p - The invoke payload.
+ * @returns {Resolvable} The resolvable object.
+ */
 export const payloadToResolvable = (
   p: InvokePayload<any>,
 ): Resolvable => {
@@ -58,6 +64,13 @@ export const payloadToResolvable = (
   return resolvable;
 };
 
+/**
+ * Invokes multiple payloads in a batch.
+ *
+ * @param {InvokePayload<any>} payload - The batch payload containing invocations.
+ * @param {State<any>} state - The application state.
+ * @returns {Promise<any>} Promise resolving to the result of the batch invocation.
+ */
 export const batchInvoke = (
   payload: InvokePayload<any>,
   state: State<any>,
@@ -70,6 +83,15 @@ export const batchInvoke = (
   ).catch(wrapInvokeErr(state.correlationId ?? crypto.randomUUID()));
 };
 
+/**
+ * Invokes a function within the application state.
+ *
+ * @param {InvokeFunction["key"]} key - The key of the function to invoke.
+ * @param {InvokeFunction["props"]} props - Props to be passed to the function.
+ * @param {InvokeFunction["select"]} select - The selection path for the function.
+ * @param {State<any>} state - The application state.
+ * @returns {Promise<any>} Promise resolving to the result of the invocation.
+ */
 export const invoke = async (
   key: InvokeFunction["key"],
   props: InvokeFunction["props"],
