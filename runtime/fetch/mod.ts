@@ -13,6 +13,13 @@ interface FechInfo {
   ): Promise<Response>;
 }
 
+/**
+ * A modified fetch function that includes logging and caching features.
+ *
+ * @type {FechInfo}
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/fetch}
+ */
+
 export const fetch: FechInfo = [
   withLogs,
   ENABLE_LOADER_CACHE ? undefined : withCache,

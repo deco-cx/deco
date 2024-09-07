@@ -95,14 +95,30 @@ const routes: Array<
   },
 ];
 
+/**
+ * Preact context for storing the application framework.
+ */
 export const FrameworkContext = createContext<Framework | undefined>(
   undefined,
 );
 
+/**
+ * Hook to access the application framework from context.
+ *
+ * @throws {Error}  - Throws an error if framework is not set in context.
+ * @returns {Framework} The application framework.
+ */
 export const useFramework = (): Framework => {
   return useContext(FrameworkContext)!;
 };
 
+/**
+ * Creates a handler function for a decorated application manifest.
+ *
+ * @template TAppManifest extends AppManifest = AppManifest - Type of the application manifest.
+ * @param {Deco<TAppManifest>} deco - The decorated application manifest.
+ * @returns {(req: Request, bindings?: DecoRouteState<TAppManifest>["Bindings"]) => Promise<Response> | Response} - The handler function for the application.
+ */
 export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
   deco: Deco<TAppManifest>,
 ): (
