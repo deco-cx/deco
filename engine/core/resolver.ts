@@ -465,13 +465,14 @@ const invokeResolverWithProps = async <
       props,
       { ...ctx, monitoring, resolverId },
     );
+    const metricsFunc = ctx.monitoring?.metrics;
     if (isAwaitable(respOrPromise)) {
       await ctx?.monitoring?.tracer?.startActiveSpan?.(__resolveType, {
         attributes: {
           "block.kind": "resolver",
         },
       }, async (span) => {
-        await ctx.monitoring?.metrics?.(__resolveType, async () => {
+        await metricsFunc?.(__resolveType, async () => {
           respOrPromise = await respOrPromise;
 
           // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,

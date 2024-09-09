@@ -1,4 +1,3 @@
-import { weakcache } from "../../deps.ts";
 import { tracer, tracerIsRecording } from "../../observability/otel/config.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
@@ -31,8 +30,6 @@ export const caches: CacheStorage = {
     throw new Error("Not Implemented");
   },
   open: (_cacheName: string): Promise<Cache> => {
-    const cache = new weakcache.WeakLRUCache({ cacheSize: 200 });
-
     return Promise.resolve({
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
       add: (_request: RequestInfo | URL): Promise<void> => {
@@ -85,14 +82,8 @@ export const caches: CacheStorage = {
         };
 
         const req = prepareRequest(request);
-
-        const response = cache.has(req.url)
-          ? cache.getValue(req.url)
-          : await fetch(
-            req,
-          );
-
-        return new Response(response.clone().body, response);
+        const response = await fetch(req);
+        return new Response(response.body, response);
       },
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
       matchAll: (
@@ -104,55 +95,10 @@ export const caches: CacheStorage = {
       /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/put) */
       // deno-lint-ignore require-await
       put: async (
-        request: RequestInfo | URL,
-        response: Response,
+        _request: RequestInfo | URL,
+        _response: Response,
       ): Promise<void> => {
-        const req = new Request(request);
-
-        if (!/^http(s?):\/\//.test(req.url)) {
-          throw new TypeError(
-            "Request url protocol must be 'http:' or 'https:'",
-          );
-        }
-        if (req.method !== "GET") {
-          throw new TypeError("Request method must be GET");
-        }
-
-        if (response.status === 206) {
-          throw new TypeError("Response status must not be 206");
-        }
-
-        const getResponseLength = async (
-          response: Response,
-        ): Promise<number> => {
-          const length = response.headers.get("content-length");
-          if (!length) {
-            const responseClone = response.clone();
-            return (await responseClone?.text()).length ?? 0;
-          }
-          return Number(length);
-        };
-
-        const url = req.url;
-        const responseLength = tracerIsRecording()
-          ? await getResponseLength(response)
-          : 0;
-
-        const span = tracer.startSpan("put-cache-proxy", {
-          attributes: {
-            url_size_bytes: url.length * 2,
-            response_size_bytes: responseLength * 2,
-          },
-        });
-
-        try {
-          cache.setValue(url, response);
-        } catch (err) {
-          span.recordException(err);
-          throw err;
-        } finally {
-          span.end();
-        }
+        // noop call
       },
     });
   },

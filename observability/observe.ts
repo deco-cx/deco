@@ -18,12 +18,11 @@ export const observe = async <T>(
   const start = performance.now();
   let isError = "false";
   try {
-    return await f().then((resp) => {
-      if (isWrappedError(resp)) {
-        isError = "true";
-      }
-      return resp;
-    });
+    const result = await f();
+    if (isWrappedError(result)) {
+      isError = "true";
+    }
+    return result;
   } catch (error) {
     isError = "true";
     throw error;
