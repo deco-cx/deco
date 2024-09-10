@@ -2,6 +2,5 @@ export {
   forApp,
   isEventStreamResponse,
   proxy,
-  withManifest
+  withManifest,
 } from "./clients/withManifest.ts";
-
