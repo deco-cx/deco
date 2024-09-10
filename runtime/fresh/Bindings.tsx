@@ -3,7 +3,7 @@
 
 import { Head, Partial } from "$fresh/runtime.ts";
 import type { Framework } from "@deco/deco";
-import { usePartialSection } from "@deco/deco/hooks";
+import { useAsyncRenderAttributes, usePartialSection } from "@deco/deco/hooks";
 
 const script = (id: string) => {
   function init() {
@@ -60,6 +60,7 @@ const bindings: Framework = {
           <link rel="prefetch" href={href} as="document" />
         </Head>
         <button
+          {...useAsyncRenderAttributes()}
           f-partial={href}
           {...rest}
           id={btnId}
