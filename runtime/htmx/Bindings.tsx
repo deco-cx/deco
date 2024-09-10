@@ -8,7 +8,7 @@ import { useSection } from "../../hooks/useSection.ts";
 export const Head = (_: { children: ComponentChildren }): null => {
   return null;
 };
-const bindings = {
+const bindings: Framework = {
   name: "htmx",
   Head,
   Wrapper: ({ children }) => <>{children}</>,
@@ -38,6 +38,6 @@ const bindings = {
       </div>
     );
   },
-} satisfies Framework;
+};
 
 export default bindings;

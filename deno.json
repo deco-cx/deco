@@ -1,8 +1,9 @@
 {
   "name": "@deco/deco",
-  "version": "1.96.11",
+  "version": "1.97.0-alpha.1",
   "exports": {
     ".": "./mod.ts",
+    "./web": "./mod.web.ts",
     "./htmx": "./runtime/htmx/mod.ts",
     "./o11y": "./observability/mod.ts",
     "./utils": "./utils/mod.ts",

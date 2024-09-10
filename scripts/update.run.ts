@@ -10,6 +10,7 @@ const PKGS_TO_CHECK =
   /(@deco\/.*)|(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
 const EXPORTS = {
   DECO: "@deco/deco",
+  DECO_WEB: "@deco/deco/web",
   O11Y: "@deco/deco/o11y",
   HOOKS: "@deco/deco/hooks",
   BLOCKS: "@deco/deco/blocks",
@@ -20,7 +21,6 @@ if (import.meta.main) {
   const newJsrPackages = [
     EXPORTS.DECO,
     EXPORTS.DURABLE,
-    "@deno/gfm",
     "@deco/inspect-vscode",
   ];
   const newImportsPromise: Promise<Record<string, string>> = Promise.all(
@@ -39,7 +39,7 @@ if (import.meta.main) {
         },
         "deco/utils/invoke.ts": {
           isEventStreamResponse: {
-            moduleSpecifier: EXPORTS.DECO,
+            moduleSpecifier: EXPORTS.DECO_WEB,
           },
           StreamProps: {
             moduleSpecifier: EXPORTS.DECO,
@@ -119,10 +119,10 @@ if (import.meta.main) {
         },
         "deco/clients/withManifest.ts": {
           forApp: {
-            moduleSpecifier: EXPORTS.DECO,
+            moduleSpecifier: EXPORTS.DECO_WEB,
           },
           proxy: {
-            moduleSpecifier: EXPORTS.DECO,
+            moduleSpecifier: EXPORTS.DECO_WEB,
           },
         },
         "deco/hooks/usePartialSection.ts": {
@@ -533,6 +533,7 @@ if (import.meta.main) {
         return {
           content: {
             ...denoJSON,
+            lock: false,
             tasks: {
               ...denoJSON.tasks ?? {},
               start:
