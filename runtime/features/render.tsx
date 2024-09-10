@@ -49,7 +49,11 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
 
   const url = new URL(href, req.url);
   const request = new Request(url, req);
-  const params = new URLPattern({ pathname: pathTemplate }).exec(url);
+  const [pathname, search] = pathTemplate.split("?");
+  const params = new URLPattern({ 
+    pathname: pathname,
+    search: search ? `?${search}` : undefined,
+  }).exec(url);
 
   const resolvables = await state.resolve({
     __resolveType: "resolvables",
