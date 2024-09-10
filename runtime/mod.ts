@@ -22,6 +22,7 @@ import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import { defaultHeaders, forceHttps } from "../utils/http.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { createServerTimings } from "../utils/timings.ts";
+import type { ContextRenderer } from "./deps.ts";
 import { batchInvoke, invoke } from "./features/invoke.ts";
 import {
   type GetMetaOpts,
@@ -36,7 +37,6 @@ import {
 } from "./features/render.tsx";
 import { styles } from "./features/styles.css.ts";
 import { type Bindings, handlerFor } from "./handler.tsx";
-import type { ContextRenderer } from "deco/runtime/deps.ts";
 
 export interface PageParams<TData = any> {
   data: TData;
@@ -262,5 +262,6 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   }
 }
 
+export type { PageData } from "./deps.ts";
 export { DECO_SEGMENT } from "./middleware.ts";
 export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";

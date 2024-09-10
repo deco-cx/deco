@@ -3,7 +3,7 @@ import { exists } from "@std/fs";
 import { join } from "@std/path";
 import type { Resolvable } from "../core/resolver.ts";
 import type { PromiseOrValue } from "../core/utils.ts";
-import { DECO_FOLDER, ENTRYPOINT } from "./constants.ts";
+import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
 import { newRealtime } from "./realtime.ts";

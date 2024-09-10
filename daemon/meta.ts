@@ -1,4 +1,4 @@
-import type { JSONSchema } from "deco/types.ts";
+import type { JSONSchema } from "../types.ts";
 import { broadcast } from "./sse/channel.ts";
 import { dispatchWorkerState, worker } from "./worker.ts";
 

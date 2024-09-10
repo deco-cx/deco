@@ -3,7 +3,7 @@ import {
   type ServerSentEventMessage,
   ServerSentEventStream,
 } from "@std/http/server-sent-event-stream";
-import { Hono } from "deco/runtime/deps.ts";
+import { Hono } from "../../runtime/deps.ts";
 import { start as startFS } from "../fs/api.ts";
 import { start as startMeta } from "../meta.ts";
 import { start as startWorker } from "../worker.ts";

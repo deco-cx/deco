@@ -1,6 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
+import type { Context as PreactContext, JSX } from "preact";
 import {
   Component,
   type ComponentChildren,
@@ -12,15 +13,12 @@ import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
 import { Context } from "../deco.ts";
 import { type DeepPartial, Murmurhash3 } from "../deps.ts";
-import type { ComponentFunc } from "../engine/block.ts";
+import type { ComponentFunc, ComponentMetadata } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
 import { logger } from "../observability/otel/config.ts";
 import { useFramework } from "../runtime/handler.tsx";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
-import type { JSX } from "preact";
-import type { ComponentMetadata } from "deco/engine/block.ts";
-import type { Context as PreactContext } from "preact";
 
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;

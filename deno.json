@@ -1,8 +1,9 @@
 {
   "name": "@deco/deco",
-  "version": "1.96.11",
+  "version": "1.97.0-alpha.1",
   "exports": {
     ".": "./mod.ts",
+    "./web": "./mod.web.ts",
     "./htmx": "./runtime/htmx/mod.ts",
     "./o11y": "./observability/mod.ts",
     "./utils": "./utils/mod.ts",
@@ -15,7 +16,10 @@
   "publish": {
     "exclude": [
       "**/*.bench.ts",
-      "**/*.test.ts"
+      "**/*.test.ts",
+      "./scripts/codemod/jsr.ts",
+      "./scripts/codemod.ts",
+      "./plugins"
     ]
   },
   "tasks": {
@@ -51,6 +55,7 @@
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
+    "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.2.1",
     "@deco/durable": "jsr:@deco/durable@^0.5.3",
     "@deco/warp": "jsr:@deco/warp@^0.3.6",
     "@hono/hono": "jsr:@hono/hono@^4.5.4",
