@@ -7,7 +7,8 @@ import { createSectionBlock, type SectionModule } from "./section.ts";
 export type Page = InstanceOf<typeof page, "#/root/pages">;
 
 /**
- * Creates a new Block object for a section within a component or page.
+ * Defines a Page block. 
+ * Pages are JSX-based components and can be rendered by any JSX-compliant library like react or preact.
  *
  * @param {any} component - The component or element to be used in the section.
  * @param {Function} ComponentFunc - A function that renders the component.

@@ -157,7 +157,7 @@ export const fnContextFromHttpContext = <TState = {}>(
 
 };
 /**
- * Applies props to a function and returns the result.
+ *  Applies the given props to the target block function.
  *
  * @template TProps, TResp
  * @param {Object} func - A function with a `default` property.
