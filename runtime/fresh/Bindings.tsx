@@ -2,8 +2,8 @@
 /** @jsxImportSource preact */
 
 import { Head, Partial } from "$fresh/runtime.ts";
-import type { Framework } from "@deco/deco";
-import { usePartialSection } from "@deco/deco/hooks";
+import type { Framework } from "../../components/section.tsx";
+import { usePartialSection } from "../../hooks/usePartialSection.ts";
 
 const script = (id: string) => {
   function init() {
