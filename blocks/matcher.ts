@@ -154,7 +154,9 @@ const matcherBlock: Block<
         hasher.hash(uniqueId);
         const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
         hasher.reset();
-        const isMatchFromCookie = cookieValue.boolean(getCookies(ctx.request.headers)[cookieName]);
+        const isMatchFromCookie = cookieValue.boolean(
+          getCookies(ctx.request.headers)[cookieName],
+        );
         result ??= isMatchFromCookie ?? matcherFunc(ctx);
         if (result !== isMatchFromCookie) {
           const date = new Date();
@@ -164,7 +166,7 @@ const matcherBlock: Block<
             value: cookieValue.build(uniqueId, result),
             path: "/",
             sameSite: "Lax",
-            expires: date
+            expires: date,
           });
           respHeaders.append("vary", "cookie");
         }
