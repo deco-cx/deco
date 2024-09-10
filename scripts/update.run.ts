@@ -1,7 +1,7 @@
 import { codeMod, denoJSON, upgradeDeps } from "@deco/codemod-toolkit";
 import type { DenoJSON } from "@deco/codemod-toolkit/deno-json";
 
-const decoDenoJSON: DenoJSON = await fetch(
+const decoDenoJSONPromise: Promise<DenoJSON> = fetch(
   "https://raw.githubusercontent.com/deco-cx/deco/main/deno.json",
 ).then(
   (res) => res.json(),
@@ -26,8 +26,9 @@ await codeMod({
         };
       },
     },
-    denoJSON((denoJSON) => {
-      const { "deco/": _, ...imports } = decoDenoJSON.imports ?? {};
+    denoJSON(async (denoJSON) => {
+      const { "deco/": _, ...imports } = (await decoDenoJSONPromise).imports ??
+        {};
       return {
         content: {
           ...denoJSON.content,
