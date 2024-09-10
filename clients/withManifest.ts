@@ -380,11 +380,17 @@ export const proxy = <TManifest extends AppManifest>(
   return proxyFor(invoke<TManifest>(fetcher) as typeof batchInvoke);
 };
 
+export type ExtendedForAppInvoke<TApp extends App> =
+  & ManifestInvoke<
+    ManifestOf<TApp>
+  >
+  & { invoke: InvocationProxyWithBatcher<ManifestOf<TApp>> };
+
 /**
  * Creates a proxy that lets you invoke functions based on the declared actions and loaders. (compatibility with old invoke)
  */
-export const forApp = <TApp extends App>(): ManifestInvoke<
-  ManifestOf<TApp>
+export const forApp = <TApp extends App>(): ExtendedForAppInvoke<
+  TApp
 > => {
   const { create } = withManifest<ManifestOf<TApp>>();
   return {
