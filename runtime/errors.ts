@@ -62,7 +62,7 @@ export const badRequest: ResponseErrorBuilder = status(400);
  * Stop any config resolution and throw an exception that should be returned to the main handler.
  * @param resp
  */
-export const shortcircuit = (resp: Response): HttpError => {
+export const shortcircuit = (resp: Response): never => {
   throw new HttpError(resp);
 };
 
