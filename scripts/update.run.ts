@@ -1,4 +1,11 @@
-import { codeMod, upgradeDeps } from "@deco/codemod-toolkit";
+import { codeMod, denoJSON, upgradeDeps } from "@deco/codemod-toolkit";
+import type { DenoJSON } from "@deco/codemod-toolkit/deno-json";
+
+const decoDenoJSON: DenoJSON = await fetch(
+  "https://raw.githubusercontent.com/deco-cx/deco/main/deno.json",
+).then(
+  (res) => res.json(),
+);
 
 const PKGS_TO_CHECK =
   /(@deco\/.*)|(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
@@ -19,6 +26,18 @@ await codeMod({
         };
       },
     },
+    denoJSON((denoJSON) => {
+      const { "deco/": _, ...imports } = decoDenoJSON.imports ?? {};
+      return {
+        content: {
+          ...denoJSON.content,
+          imports: {
+            ...imports,
+            ...denoJSON.content.imports ?? {},
+          },
+        },
+      };
+    }),
     upgradeDeps(PKGS_TO_CHECK, true),
   ],
 });
