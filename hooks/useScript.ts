@@ -59,6 +59,14 @@ const minify = async (js: string) => {
   }
 };
 
+/**
+ * Hook to create a minified script tag from a function.
+ *
+ * @template T - Type of the function to be used as script
+ * @param {T} fn - The function to be included as a script.
+ * @param {...Parameters<T>} params - Parameters to be passed to the function.
+ * @returns {string} The minified script tag content.
+ */
 export function useScript<T extends (...args: any[]) => any>(
   fn: T,
   ...params: Parameters<T>

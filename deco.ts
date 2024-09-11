@@ -119,21 +119,49 @@ export const Context = {
   },
 };
 
+/**
+ * Provides methods for accessing and binding request context.
+ */
 export const RequestContext: RequestContextBinder = {
+  /**
+   * Returns the active request context.
+   *
+   * @returns {RequestContext | undefined} The active request context.
+   */
   active: (): RequestContext | undefined => Context.active().request,
+
+  /**
+   * Binds a function to the given request context.
+   *
+   * @template R, TArgs
+   * @param {RequestContext} request - The request context.
+   * @param {Function} f - The function to bind.
+   * @returns {Function} The bound function.
+   */
   bind: <R, TArgs extends unknown[]>(
     request: RequestContext,
     f: (...args: TArgs) => R,
   ): (...args: TArgs) => R => {
     return Context.bind({ ...Context.active(), request }, f);
   },
+
+  /**
+   * Gets the request's signal.
+   *
+   * @returns {AbortSignal | undefined} The request's signal.
+   */
   get signal() {
     return Context.active().request?.signal;
   },
+
+  /**
+   * Gets the request's framework.
+   *
+   * @returns {string} The request's framework. Defaults to "fresh".
+   */
   get framework() {
     return Context.active().request?.framework ?? "fresh";
   },
 };
-
 // deno-lint-ignore no-explicit-any
 export const context: DecoContext<any> = Context.active();

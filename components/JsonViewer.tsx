@@ -44,6 +44,12 @@ const snippet = (json: string) => {
   );
 };
 
+/**
+ * Renders a JSON object in a formatted and interactive way.
+ *
+ * @param {Props} p - Props for the JSON viewer component.
+ * @returns {JSX.Element} The rendered JSON viewer component.
+ */
 export default function JsonViewer(p: Props): JSX.Element {
   const { Head } = useFramework();
   return (

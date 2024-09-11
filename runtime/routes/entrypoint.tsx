@@ -23,6 +23,11 @@ const ctx = createContext<PageContext | undefined>(undefined);
 
 const routerCtx = createContext<RouterContext | undefined>(undefined);
 
+/**
+ * Hook to access the page context.
+ *
+ * @returns {PageContext | undefined} The page context, or undefined if not available.
+ */
 export const usePageContext = (): PageContext | undefined => {
   const pageCtx = useContext(ctx);
   if (pageCtx === undefined) {
@@ -33,6 +38,11 @@ export const usePageContext = (): PageContext | undefined => {
   return pageCtx;
 };
 
+/**
+ * Hook to access the router context.
+ *
+ * @returns {RouterContext | undefined} The router context, or undefined if not available.
+ */
 export const useRouterContext = (): RouterContext | undefined => {
   const routerCtxImpl = useContext(routerCtx);
   if (routerCtxImpl === undefined) {

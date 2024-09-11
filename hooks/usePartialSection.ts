@@ -12,6 +12,13 @@ interface PartialSectionAttrs {
   "f-partial": string;
 }
 
+/**
+ * Hook to create attributes for a partial section component.
+ *
+ * @template P - Type of the partial section props
+ * @param {Options<P>} props - Optional props for the partial section.
+ * @returns {PartialSectionAttrs} An object containing attributes for the partial section.
+ */
 export const usePartialSection = <P>(
   props: Options<P> = {},
 ): PartialSectionAttrs => ({
