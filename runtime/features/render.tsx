@@ -52,7 +52,7 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
   const urlPathTemplate = new URL(pathTemplate, "http://localhost:8000");
   const params = new URLPattern({
     pathname: urlPathTemplate.pathname,
-    search: urlPathTemplate.search,
+    ...(urlPathTemplate.search ? {search: urlPathTemplate.search} : {}),
   }).exec(url);
 
   const resolvables = await state.resolve({
