@@ -18,11 +18,12 @@ import { DebugSampler } from "./samplers/debug.ts";
 import { type SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
 import { ENV_SITE_NAME } from "../../engine/decofile/constants.ts";
+import { safeImportResolve } from "../../engine/importmap/builder.ts";
 import { OpenTelemetryHandler } from "./logger.ts";
 
 const tryGetVersionOf = (pkg: string) => {
   try {
-    const [_, ver] = import.meta.resolve(pkg).split("@");
+    const [_, ver] = safeImportResolve(pkg).split("@");
     return ver.substring(0, ver.length - 1);
   } catch {
     return undefined;

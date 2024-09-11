@@ -2,12 +2,10 @@ import { walk } from "@std/fs/walk";
 import { join } from "@std/path";
 import { shouldBeLocal } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import type { BlockType } from "../../engine/block.ts";
-import {
-  type ManifestBuilder,
-  newManifestBuilder,
-} from "../../engine/manifest/manifestBuilder.ts";
 import { exists, fileSeparatorToSlash } from "../../utils/filesystem.ts";
+import type { BlockType } from "../block.ts";
+import { safeImportResolve } from "../importmap/builder.ts";
+import { type ManifestBuilder, newManifestBuilder } from "./manifestBuilder.ts";
 const sanitize = (functionName: string) =>
   functionName.startsWith("/") ? functionName : `/${functionName}`;
 const withDefinition = (
@@ -44,7 +42,7 @@ const withDefinition = (
 export const resolveAny = (importString: string[]): string =>
   importString.find((impl) => {
     try {
-      return import.meta.resolve(impl);
+      return safeImportResolve(impl);
     } catch {
       return undefined;
     }

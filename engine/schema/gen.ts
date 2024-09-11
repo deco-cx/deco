@@ -7,6 +7,7 @@ import type { Block, BlockModuleRef } from "../block.ts";
 import {
   ImportMapBuilder,
   type ImportMapResolver,
+  safeImportResolve,
 } from "../importmap/builder.ts";
 import {
   type BlockModule,
@@ -53,10 +54,10 @@ const resolveForPath = async (
 
 const resolveImport = (path: string) => {
   try {
-    return import.meta.resolve(path);
+    return safeImportResolve(path);
   } catch (err) {
     if (path.startsWith("$live")) {
-      return import.meta.resolve(path.replace("$live", "deco"));
+      return safeImportResolve(path.replace("$live", "deco"));
     }
     throw err;
   }
