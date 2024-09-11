@@ -1,5 +1,5 @@
 import type { Plugin } from "$fresh/server.ts";
-import type { AppManifest } from "@deco/deco";
+import type { AppManifest } from "../mod.ts";
 import {
   type Config,
   plugin as tailwindPlugin,
