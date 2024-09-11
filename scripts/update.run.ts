@@ -20,13 +20,12 @@ const EXPORTS = {
 const OVERRIDE_FRESH_PREACT = {
   "preact": "npm:preact@10.23.1",
   "https://esm.sh/*preact-render-to-string@6.3.1":
-    "npm:preact-render-to-string@6.4.0",
-  "preact-render-to-string": "npm:preact-render-to-string@6.4.0",
+    "npm:preact-render-to-string@6.4.2",
+  "preact-render-to-string": "npm:preact-render-to-string@6.4.2",
 };
 const newJsrPackages = [
   EXPORTS.DECO,
   EXPORTS.DURABLE,
-  "@deco/inspect-vscode",
 ];
 const newImportsPromise: Promise<Record<string, string>> = Promise.all(
   newJsrPackages.map((pkg) =>
