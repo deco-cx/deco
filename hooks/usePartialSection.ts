@@ -1,9 +1,7 @@
-import { IS_BROWSER } from "$fresh/runtime.ts";
 import { type Options as SO, useSection } from "./useSection.ts";
 
 const CLIENT_NAV_ATTR = "f-client-nav";
 const PARTIAL_ATTR = "f-partial";
-const ASYNC_RENDER_TRIGGER = "async-render-trigger";
 
 interface Options<P> extends SO<P> {
   mode?: "replace" | "append" | "prepend";

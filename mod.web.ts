@@ -4,4 +4,3 @@ export {
   proxy,
   withManifest,
 } from "./clients/withManifest.ts";
-export { clickOnAsyncRenderElements } from "./hooks/client/useAsyncRender.ts";
