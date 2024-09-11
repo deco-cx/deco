@@ -4,7 +4,7 @@ import { ensureFile } from "@std/fs";
 import { walk } from "@std/fs/walk";
 import { basename, join } from "@std/path";
 import getBlocks from "../../blocks/index.ts";
-import { Context } from "../../live.ts";
+import { Context } from "../../deco.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { BLOCKS_FOLDER, DECO_FOLDER, METADATA_PATH } from "./constants.ts";
 import type {

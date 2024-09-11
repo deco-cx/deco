@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
+import { context } from "../../deco.ts";
 import type { Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
-import { context } from "../../live.ts";
 import { logger } from "../../observability/mod.ts";
 import { payloadForFunc } from "../../utils/invoke.server.ts";
 import type {

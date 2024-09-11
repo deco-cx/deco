@@ -1,4 +1,4 @@
-import { context } from "../../live.ts";
+import { context } from "../../deco.ts";
 import { getProbeThresholdAsNum, type LiveChecker } from "./handler.ts";
 
 const MINUTE = 60;

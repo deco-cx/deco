@@ -2,6 +2,7 @@
 import { join, toFileUrl } from "@std/path";
 import { type RequestState, vary } from "../blocks/utils.tsx";
 import type { DecoContext } from "../deco.ts";
+import { Context } from "../deco.ts";
 import { context as otelContext } from "../deps.ts";
 import type { BaseContext } from "../engine/core/resolver.ts";
 import {
@@ -10,7 +11,6 @@ import {
 } from "../engine/decofile/provider.ts";
 import { siteNameFromEnv } from "../engine/manifest/manifest.ts";
 import { randomSiteName } from "../engine/manifest/utils.ts";
-import { Context } from "../live.ts";
 import { newContext, type PreactComponent, type Resolvable } from "../mod.ts";
 import { observe } from "../observability/observe.ts";
 import { tracer } from "../observability/otel/config.ts";

@@ -154,7 +154,6 @@ export const fnContextFromHttpContext = <TState = {}>(
       return isBot ??= isUABot(ctx.request);
     },
   };
-
 };
 /**
  *  Applies the given props to the target block function.
