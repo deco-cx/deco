@@ -552,6 +552,7 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
               ...denoJSON.tasks ?? {},
               start:
                 "deno run -A --unstable-http --env https://deco.cx/run -- deno task dev",
+              reload: "deno cache -r https://deco.cx/run",
             },
             imports: {
               ...imports,
