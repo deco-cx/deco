@@ -20,7 +20,7 @@ const EXPORTS = {
 const OVERRIDE_FRESH_PREACT = {
   "preact": "npm:preact@10.23.1",
   "https://esm.sh/*preact-render-to-string@6.3.1":
-    "npm:preact-render-to-string@6.3.1",
+    "npm:preact-render-to-string@6.4.0",
   "preact-render-to-string": "npm:preact-render-to-string@6.4.0",
 };
 const newJsrPackages = [
@@ -538,7 +538,7 @@ await codeMod({
       },
     }),
     denoJSON(async ({ content: denoJSON }) => {
-      const imports = denoJSON.imports ??
+      const { "preact/": _, ...imports } = denoJSON.imports ??
         {};
       return {
         content: {
