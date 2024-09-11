@@ -1,10 +1,12 @@
 // TODO make fresh plugin use @deco/deco from JSR. so that we can use the same code for both
 
-import type { AppManifest, SiteInfo } from "@deco/deco";
-import { Deco, type PageData, type PageParams } from "@deco/deco";
-import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { ComponentType } from "preact";
+import type { AppManifest, SiteInfo } from "../../types.ts";
 import framework from "./Bindings.tsx";
+
+import type { PageData } from "../deps.ts";
+import htmxFramework from "../htmx/Bindings.tsx";
+import { Deco, type PageParams } from "../mod.ts";
 
 export interface Plugin {
   name: string;
