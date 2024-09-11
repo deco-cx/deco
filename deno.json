@@ -19,7 +19,14 @@
       "**/*.test.ts",
       "./scripts/codemod/jsr.ts",
       "./scripts/codemod.ts",
-      "./plugins"
+      "./plugins",
+      "live.gen.ts",
+      "MAINTAINERS.txt",
+      "live.ts",
+      "CODE_OF_CONDUCT.md",
+      ".gitattributes",
+      ".github",
+      "assets"
     ]
   },
   "tasks": {
