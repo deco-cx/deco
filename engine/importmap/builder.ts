@@ -17,18 +17,40 @@ export interface ImportMap {
   imports: Record<string, string>;
 }
 
+/**
+ * This function is a workaround while deno's team did not resolve the issue with import.meta.resolve
+ * Tracked issue: https://github.com/denoland/deno/issues/25579
+ * @param specifier specifier to be resolved
+ */
+export const safeImportResolve = (specifier: string): string => {
+  try {
+    return import.meta.resolve(specifier);
+  } catch (err) {
+    const msg = err?.message;
+    if (typeof msg === "string") {
+      const match = msg.match(JSR_ERROR_REGEX);
+
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    throw err;
+  }
+};
+const JSR_ERROR_REGEX =
+  /Importing (.*?) blocked\. JSR packages cannot import non-JSR remote modules for security reasons\./;
 class NativeImportMapResolver implements ImportMapResolver {
   async resolve(specifier: string, context: string): Promise<string | null> {
     // should use origin
     if (specifier.startsWith("/")) {
-      const pathUrl = new URL(import.meta.resolve(context));
+      const pathUrl = new URL(safeImportResolve(context));
       return `${pathUrl.origin}${specifier}`;
     }
 
     // relative import
     if (specifier.startsWith(".")) {
-      return import.meta.resolve(
-        new URL(specifier, import.meta.resolve(context)).toString(),
+      return safeImportResolve(
+        new URL(specifier, safeImportResolve(context)).toString(),
       );
     }
 
@@ -37,7 +59,7 @@ class NativeImportMapResolver implements ImportMapResolver {
     }
     // import from import_map
     try {
-      return await resolveJsrSpecifier(import.meta.resolve(specifier));
+      return await resolveJsrSpecifier(safeImportResolve(specifier));
     } catch {
       return null;
     }

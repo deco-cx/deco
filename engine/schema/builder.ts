@@ -1,7 +1,8 @@
 import type { JSONSchema7 } from "../../deps.ts";
-import { mergeJSONSchemas } from "../../engine/schema/merge.ts";
-import { schemeableToJSONSchema } from "../../engine/schema/schemeable.ts";
-import type { Schemeable } from "../../engine/schema/transform.ts";
+import { safeImportResolve } from "../importmap/builder.ts";
+import { mergeJSONSchemas } from "./merge.ts";
+import { schemeableToJSONSchema } from "./schemeable.ts";
+import type { Schemeable } from "./transform.ts";
 
 export interface Schemas {
   definitions: Record<string, JSONSchema7>;
@@ -204,7 +205,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         resolvePath = true,
       ): [string | undefined, string | undefined] => {
         const file = schemeable.file
-          ? resolvePath ? import.meta.resolve(schemeable.file) : schemeable.file
+          ? resolvePath ? safeImportResolve(schemeable.file) : schemeable.file
           : undefined;
         const friendlyIdFor = (file?: string) =>
           file && schemeable.name ? `${file}@${schemeable.name}` : undefined;

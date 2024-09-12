@@ -40,7 +40,10 @@ import type {
   ObjectPattern,
 } from "../../deps.ts";
 import type { BlockModuleRef, IntrospectParams } from "../block.ts";
-import type { ImportMapResolver } from "../importmap/builder.ts";
+import {
+  type ImportMapResolver,
+  safeImportResolve,
+} from "../importmap/builder.ts";
 import { spannableToJSONSchema } from "./comments.ts";
 import type { ParsedSource } from "./deps.ts";
 import { parsePath } from "./parser.ts";
@@ -442,7 +445,7 @@ export const typeNameToSchemeable = async (
                 err,
                 item.source.value,
                 path,
-                import.meta.resolve(path),
+                safeImportResolve(path),
               );
               throw err;
             }
@@ -1395,28 +1398,3 @@ export const programToBlockRef = async (
   }
   return undefined;
 };
-
-const useEsm = (npmSpecifier: string) => {
-  const withoutNpm = npmSpecifier.substring("https://esm.sh/".length);
-  return `https://esm.sh/${withoutNpm}`;
-};
-export function resolveSpecifier(specifier: string, context: string) {
-  // should use origin
-  if (specifier.startsWith("/")) {
-    const pathUrl = new URL(import.meta.resolve(context));
-    return `${pathUrl.origin}${specifier}`;
-  }
-
-  // relative import
-  if (specifier.startsWith(".")) {
-    return import.meta.resolve(
-      new URL(specifier, import.meta.resolve(context)).toString(),
-    );
-  }
-
-  if (specifier.startsWith("https://esm.sh/")) {
-    return useEsm(specifier);
-  }
-  // import from import_map
-  return import.meta.resolve(specifier);
-}

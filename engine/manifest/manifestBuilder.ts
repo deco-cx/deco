@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import type { AppManifest, DecoManifest } from "../../types.ts";
+import { safeImportResolve } from "../importmap/builder.ts";
 
 export interface DefaultImport {
   alias: string;
@@ -246,7 +247,7 @@ ${
 
 const tryResolveDeco = (path: string): string | undefined => {
   try {
-    return import.meta.resolve(path);
+    return safeImportResolve(path);
   } catch {
     return undefined;
   }
