@@ -544,6 +544,12 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
       denoJSON(async ({ content: denoJSON }) => {
         const { "preact/": _, ...imports } = denoJSON.imports ??
           {};
+        const bundleCmd = denoJSON.tasks?.bundle;
+        let appName = "";
+        if (typeof bundleCmd === "string") {
+          const parts = bundleCmd.split(" ");
+          appName = parts[parts.length - 1];
+        }
         return {
           content: {
             ...denoJSON,
@@ -552,6 +558,8 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
               ...denoJSON.tasks ?? {},
               start:
                 "deno run -A --unstable-http --env https://deco.cx/run -- deno task dev",
+              bundle: `deno run -A jsr:@deco/deco/scripts/bundle ${appName}`,
+              update: `deno run -Ar https://deco.cx/update`,
               reload: "deno cache -r https://deco.cx/run",
             },
             imports: {
