@@ -1,9 +1,5 @@
 import { existsSync } from "@std/fs";
-import { LRUCache } from "npm:lru-cache@10.2.0";
-import { ValueType } from "../../deps.ts";
-import { logger, tracer } from "../../observability/otel/config.ts";
-import { meter } from "../../observability/otel/metrics.ts";
-import { numToUint8Array, uint8ArrayToNum } from "../utils.ts";
+import { logger } from "../../observability/otel/config.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -12,48 +8,6 @@ import {
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
-
-const MAX_CACHE_SIZE = parseInt(Deno.env.get("MAX_CACHE_SIZE") ?? "1073741824"); // 1 GB max size of cache
-const TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
-const TTL_RESOLUTION = parseInt(Deno.env.get("TTL_RESOLUTION") ?? "30000"); // check for expired items every 30 seconds
-
-const downloadDuration = meter.createHistogram(
-  "file_system_cache_download_duration",
-  {
-    description: "file system cache download duration",
-    unit: "ms",
-    valueType: ValueType.DOUBLE,
-  },
-);
-
-const bufferSizeSumObserver = meter.createUpDownCounter("buffer_size_sum", {
-  description: "Sum of buffer sizes",
-  unit: "1",
-  valueType: ValueType.INT,
-});
-
-const failedToDisposeFromCache = meter.createCounter(
-  "failed_to_delete_from_fs_cache",
-  {
-    description: "Counter of failed attempts to delete from file system cache",
-    unit: "1",
-    valueType: ValueType.INT,
-  },
-);
-
-const cacheOptions = {
-  maxSize: MAX_CACHE_SIZE,
-  ttlAutopurge: TTL_AUTOPURGE,
-  ttlResolution: TTL_RESOLUTION,
-  sizeCalculation: (value: Uint8Array) => {
-    return uint8ArrayToNum(value); // return the length of the array
-  },
-  dispose: async (_value: Uint8Array, key: string) => {
-    await Deno.remove(`${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`).catch((err) =>
-      failedToDisposeFromCache.add(1, { err })
-    );
-  },
-};
 
 // Function to convert headers object to a Uint8Array
 function headersToUint8Array(headers: [string, string][]) {
@@ -102,16 +56,20 @@ function getIterableHeaders(headers: Uint8Array) {
   return filteredHeaders;
 }
 
-const fileCache = new LRUCache(cacheOptions);
-
-function createFileSystemCache(): CacheStorage {
+function createFileSystemCache(fsDir: string | undefined): CacheStorage {
+  if (fsDir === undefined) {
+    return caches;
+  }
   let isCacheInitialized = false;
-  async function assertCacheDirectory() {
+  async function assertCacheDirectory(cacheName: string) {
     try {
       if (
-        FILE_SYSTEM_CACHE_DIRECTORY && !existsSync(FILE_SYSTEM_CACHE_DIRECTORY)
+        fsDir &&
+        !existsSync(fsDir + "/" + cacheName)
       ) {
-        await Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
+        await Deno.mkdirSync(fsDir + "/" + cacheName, {
+          recursive: true,
+        });
       }
       isCacheInitialized = true;
     } catch (err) {
@@ -121,34 +79,23 @@ function createFileSystemCache(): CacheStorage {
 
   async function putFile(
     key: string,
+    cacheName: string,
     responseArray: Uint8Array,
-    expires: string,
   ) {
     if (!isCacheInitialized) {
-      await assertCacheDirectory();
+      await assertCacheDirectory(cacheName);
     }
-    const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-
-    const expirationTimestamp = Date.parse(expires); // Convert expires string to a number representing the expiration timestamp
-    const ttl = expirationTimestamp - Date.now(); // Calculate the time to live (ttl) by subtracting the current timestamp from the expiration timestamp
-
-    fileCache.set(key, numToUint8Array(responseArray.length), {
-      ttl: ttl, // Set the ttl of the file added
-    }); // Add to cache, which may trigger disposal of old item
+    const filePath = `${fsDir}/${cacheName}/${key}`;
     await Deno.writeFile(filePath, responseArray);
     return;
   }
 
-  async function getFile(key: string) {
+  async function getFile(key: string, cacheName: string) {
     if (!isCacheInitialized) {
-      await assertCacheDirectory();
+      await assertCacheDirectory(cacheName);
     }
     try {
-      if (fileCache.has(key)) {
-        // Update the access time in the cache
-        fileCache.get(key);
-      }
-      const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
+      const filePath = `${fsDir}/${cacheName}/${key}`;
       const fileContent = await Deno.readFile(filePath);
       return fileContent;
     } catch (err) {
@@ -161,12 +108,12 @@ function createFileSystemCache(): CacheStorage {
     }
   }
 
-  async function deleteFile(key: string) {
+  async function deleteFile(key: string, cacheName: string) {
     if (!isCacheInitialized) {
-      await assertCacheDirectory();
+      await assertCacheDirectory(cacheName);
     }
     try {
-      const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
+      const filePath = `${fsDir}/${key}`;
       await Deno.remove(filePath);
       return true;
     } catch (err) {
@@ -175,12 +122,21 @@ function createFileSystemCache(): CacheStorage {
     }
   }
 
-  const caches: CacheStorage = {
+  const cachesFs: CacheStorage = {
     delete: (_cacheName: string): Promise<boolean> => {
-      throw new Error("Not Implemented");
+      if (
+        fsDir && existsSync(fsDir)
+      ) {
+        return Deno.remove(fsDir, { recursive: true })
+          .then(() => true).catch(() => false);
+      }
+      return Promise.resolve(false);
     },
     has: (_cacheName: string): Promise<boolean> => {
-      throw new Error("Not Implemented");
+      return Promise.resolve(
+        !!(fsDir &&
+          existsSync(fsDir)),
+      );
     },
     keys: (): Promise<string[]> => {
       throw new Error("Not Implemented");
@@ -192,6 +148,9 @@ function createFileSystemCache(): CacheStorage {
       throw new Error("Not Implemented");
     },
     open: (cacheName: string): Promise<Cache> => {
+      if (!fsDir) {
+        throw new Error("Not Implemented");
+      }
       const requestURLSHA1 = withCacheNamespace(cacheName);
       return Promise.resolve({
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
@@ -211,6 +170,7 @@ function createFileSystemCache(): CacheStorage {
 
           const deleteResponse = await deleteFile(
             await requestURLSHA1(request),
+            cacheName,
           );
           return deleteResponse;
         },
@@ -228,38 +188,19 @@ function createFileSystemCache(): CacheStorage {
         ): Promise<Response | undefined> => {
           assertNoOptions(options);
           const cacheKey = await requestURLSHA1(request);
-          const span = tracer.startSpan("file-system-get", {
-            attributes: {
-              cacheKey,
-            },
-          });
-          try {
-            const startTime = performance.now();
-            const data = await getFile(cacheKey);
-            const downloadDurationTime = performance.now() - startTime;
+          const data = await getFile(cacheKey, cacheName);
 
-            span.addEvent("file-system-get-data");
-
-            if (data === null) {
-              return undefined;
-            }
-
-            downloadDuration.record(downloadDurationTime, {
-              bufferSize: data.length,
-            });
-
-            const { headers, body } = extractCombinedBuffer(data);
-            const iterableHeaders = getIterableHeaders(headers);
-            const responseHeaders = new Headers(iterableHeaders);
-            return new Response(
-              body,
-              { headers: responseHeaders },
-            );
-          } catch (err) {
-            throw err;
-          } finally {
-            span.end();
+          if (data === null) {
+            return undefined;
           }
+
+          const { headers, body } = extractCombinedBuffer(data);
+          const iterableHeaders = getIterableHeaders(headers);
+          const responseHeaders = new Headers(iterableHeaders);
+          return new Response(
+            body,
+            { headers: responseHeaders },
+          );
         },
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
         matchAll: (
@@ -284,7 +225,6 @@ function createFileSystemCache(): CacheStorage {
           const bodyBuffer = await response.arrayBuffer()
             .then((buffer) => new Uint8Array(buffer))
             .then((buffer) => {
-              bufferSizeSumObserver.add(buffer.length);
               return buffer;
             });
           const headersBuffer = headersToUint8Array([
@@ -292,53 +232,31 @@ function createFileSystemCache(): CacheStorage {
           ]);
           const buffer = generateCombinedBuffer(bodyBuffer, headersBuffer);
 
-          const span = tracer.startSpan("file-system-put", {
-            attributes: {
-              cacheKey,
+          await putFile(
+            cacheKey,
+            cacheName,
+            buffer,
+          ).catch(
+            (err) => {
+              console.error("file system error", err);
             },
-          });
-
-          try {
-            try {
-              const setSpan = tracer.startSpan("file-system-set", {
-                attributes: { cacheKey },
-              });
-              await putFile(
-                cacheKey,
-                buffer,
-                response.headers.get("expires") ?? "",
-              ).catch(
-                (err) => {
-                  console.error("file system error", err);
-                  setSpan.recordException(err);
-                },
-              ).finally(() => {
-                setSpan.end();
-              }); // do not await for setting cache
-            } catch (error) {
-              logger.error(`error saving to file system ${error?.message}`);
-            }
-          } catch (err) {
-            span.recordException(err);
-            throw err;
-          } finally {
-            span.end();
-          }
+          );
         },
       });
     },
   };
 
-  return caches;
+  return cachesFs;
 }
 
-const hasWritePerm = async (): Promise<boolean> => {
+const hasWritePerm = async (fsDir: string): Promise<boolean> => {
   return await Deno.permissions.query(
-    { name: "write", path: FILE_SYSTEM_CACHE_DIRECTORY } as const,
+    { name: "write", path: fsDir } as const,
   ).then((status) => status.state === "granted");
 };
 
-export const isFileSystemAvailable = await hasWritePerm() &&
-  FILE_SYSTEM_CACHE_DIRECTORY !== undefined;
+export const isFileSystemAvailable = FILE_SYSTEM_CACHE_DIRECTORY !== undefined && await hasWritePerm(FILE_SYSTEM_CACHE_DIRECTORY);
 
-export const caches = createFileSystemCache();
+export const cachesFs = createFileSystemCache(FILE_SYSTEM_CACHE_DIRECTORY);
+
+export const createCachesFs = (fsDir: string) => createFileSystemCache(fsDir);
