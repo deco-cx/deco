@@ -12,6 +12,7 @@ const PKGS_TO_CHECK =
 const EXPORTS = {
   DECO: "@deco/deco",
   DECO_WEB: "@deco/deco/web",
+  HTMX: "@deco/deco/htmx",
   O11Y: "@deco/deco/o11y",
   HOOKS: "@deco/deco/hooks",
   BLOCKS: "@deco/deco/blocks",
@@ -41,6 +42,23 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
     yPrompt: false,
     targets: [
       rewriteImports({
+        "deco/runtime/htmx/mod.ts": {
+          asset: {
+            moduleSpecifier: EXPORTS.HTMX,
+          },
+          bindings: {
+            moduleSpecifier: EXPORTS.HTMX,
+          },
+          Head: {
+            moduleSpecifier: EXPORTS.HTMX,
+          },
+        },
+        "deco/utils/dataURI.ts": {
+          scriptAsDataURI: {
+            name: "useScript",
+            moduleSpecifier: EXPORTS.BLOCKS,
+          },
+        },
         "deco/runtime/handler.tsx": {
           useFramework: {
             moduleSpecifier: EXPORTS.DECO,
@@ -358,6 +376,9 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
         },
         "deco/mod.ts": {
+          Deco: {
+            moduleSpecifier: EXPORTS.DECO,
+          },
           Flag: {
             moduleSpecifier: EXPORTS.DECO,
             isTypeOnly: true,
