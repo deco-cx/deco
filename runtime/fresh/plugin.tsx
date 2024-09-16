@@ -5,12 +5,8 @@ import { Deco, type PageData, type PageParams } from "@deco/deco";
 import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { ComponentType } from "preact";
 import framework from "./Bindings.tsx";
-
-export interface Plugin {
-  name: string;
-  middlewares?: PluginMiddleware[];
-  routes?: PluginRoute[];
-}
+import type { Plugin } from "$fresh/server.ts";
+export type { Plugin } from "$fresh/server.ts";
 
 export interface PluginRoute {
   /** A path in the format of a filename path without filetype */
@@ -110,5 +106,9 @@ export default function decoPlugin<TManifest extends AppManifest = AppManifest>(
       catchAll,
       { ...catchAll, path: "/index" },
     ],
+    islands: {
+      baseLocation: import.meta.url,
+      paths: ["./islands/DispatchAsyncRender.tsx"],
+    },
   };
 }

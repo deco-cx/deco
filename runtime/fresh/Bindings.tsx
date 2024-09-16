@@ -4,45 +4,7 @@
 import { Head, Partial } from "$fresh/runtime.ts";
 import type { Framework } from "@deco/deco";
 import { usePartialSection } from "@deco/deco/hooks";
-
-const script = (id: string) => {
-  function init() {
-    const elem = document.getElementById(id);
-    const parent = elem?.parentElement;
-
-    if (elem == null || parent == null) {
-      console.error(
-        `Missing element of id ${id} or its parent element. Async rendering will NOT work properly`,
-      );
-      return;
-    }
-
-    const observeAndClose = (e: IntersectionObserverEntry[]) => {
-      e.forEach((entry) => {
-        if (entry.isIntersecting) {
-          elem.click();
-          observer.disconnect();
-        }
-      });
-    };
-    const observer = new IntersectionObserver(observeAndClose);
-    observer.observe(parent);
-    observeAndClose(observer.takeRecords());
-  }
-
-  if (document.readyState === "complete") {
-    init();
-  } else {
-    addEventListener("load", init);
-  }
-};
-
-const dataURI = (fn: typeof script, id: string) =>
-  btoa(
-    `decodeURIComponent(escape(${
-      unescape(encodeURIComponent(`((${fn})("${id}"))`))
-    }))`,
-  );
+import DispatchAsyncRender from "./islands/DispatchAsyncRender.tsx";
 
 const bindings: Framework = {
   name: "fresh",
@@ -65,10 +27,7 @@ const bindings: Framework = {
           id={btnId}
           style={{ display: "none" }}
         />
-        <script
-          defer
-          src={`data:text/javascript;base64,${dataURI(script, btnId)}`}
-        />
+        <DispatchAsyncRender id={btnId} />
         {children}
       </>
     );
