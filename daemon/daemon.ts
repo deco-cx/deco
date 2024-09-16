@@ -3,6 +3,7 @@ import {
   type ServerSentEventMessage,
   ServerSentEventStream,
 } from "@std/http/server-sent-event-stream";
+import { runCmd } from "deco/daemon/cmd.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { createAuth } from "./auth.ts";
 import { createFSAPIs } from "./fs/api.ts";
@@ -39,7 +40,7 @@ export const createDaemonAPIs = (
   });
 
   app.use(createAuth({ site: options.site }));
-
+  app.post("/update", runCmd("deno", "task", "update"));
   app.route("/git", createGitAPIS(options));
 
   app.all(DEFAULT_LOGS_ENDPOINT, () => {
