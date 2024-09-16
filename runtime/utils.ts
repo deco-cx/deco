@@ -1,4 +1,5 @@
-import { type RequestState, vary } from "../blocks/utils.tsx";
+import type { RequestState } from "../blocks/utils.tsx";
+import { vary } from "../utils/vary.ts";
 import { Context } from "../deco.ts";
 import { defaultHeaders } from "../utils/http.ts";
 

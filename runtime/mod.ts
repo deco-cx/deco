@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { join, toFileUrl } from "@std/path";
-import { type RequestState, vary } from "../blocks/utils.tsx";
+import type { RequestState } from "../blocks/utils.tsx";
+import { vary } from "../utils/vary.ts";
 import type { DecoContext } from "../deco.ts";
 import { Context } from "../deco.ts";
 import { context as otelContext } from "../deps.ts";

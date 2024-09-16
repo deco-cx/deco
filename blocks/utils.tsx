@@ -26,6 +26,7 @@ import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
+import type { Vary } from "../utils/vary.ts";
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -62,24 +63,6 @@ async ($live: TConfig) => {
  */
 export const createBagKey = (description: string): symbol =>
   Symbol(description);
-
-interface Vary {
-  push: (...key: string[]) => void;
-  build: () => string;
-  shouldCache: boolean;
-}
-
-export const vary = (): Vary => {
-  const vary: string[] = [];
-
-  return {
-    push: (...key: string[]) => vary.push(...key),
-    build: () => {
-      return vary.sort().join();
-    },
-    shouldCache: true,
-  };
-};
 
 /**
  * Values that are fulfilled for every request
