@@ -42,6 +42,11 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
     yPrompt: false,
     targets: [
       rewriteImports({
+        "deco/blocks/mod.ts": {
+          Matcher: {
+            moduleSpecifier: EXPORTS.DECO,
+          },
+        },
         "deco/runtime/htmx/mod.ts": {
           asset: {
             moduleSpecifier: EXPORTS.HTMX,
@@ -380,6 +385,16 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
         },
         "deco/mod.ts": {
+          status: {
+            moduleSpecifier: EXPORTS.DECO,
+          },
+          Resolvable: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
+          },
+          shortcircuit: {
+            moduleSpecifier: EXPORTS.DECO,
+          },
           LoaderReturnType: {
             moduleSpecifier: EXPORTS.DECO,
             isTypeOnly: true,
@@ -454,6 +469,10 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
             moduleSpecifier: EXPORTS.DECO,
             isTypeOnly: true,
           },
+          ActionContext: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
+          },
           FnContext: {
             moduleSpecifier: EXPORTS.DECO,
             isTypeOnly: true,
@@ -474,6 +493,12 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
             isTypeOnly: true,
           },
           notFound: {
+            moduleSpecifier: EXPORTS.DECO,
+          },
+          forbidden: {
+            moduleSpecifier: EXPORTS.DECO,
+          },
+          unauthorized: {
             moduleSpecifier: EXPORTS.DECO,
           },
           badRequest: {
@@ -559,6 +584,9 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
         },
         "deco/engine/core/utils.ts": {
           PromiseOrValue: {
+            moduleSpecifier: EXPORTS.UTILS,
+          },
+          singleFlight: {
             moduleSpecifier: EXPORTS.UTILS,
           },
           notUndefined: {

@@ -10,6 +10,8 @@
     "./blocks": "./blocks/mod.ts",
     "./hooks": "./hooks/mod.ts",
     "./scripts/run": "./daemon/main.ts",
+    "./daemon": "./daemon/mod.ts",
+    "./jwt": "./commons/jwt/mod.ts",
     "./scripts/bundle": "./scripts/apps/bundle.ts",
     "./scripts/dev": "./scripts/dev.ts"
   },

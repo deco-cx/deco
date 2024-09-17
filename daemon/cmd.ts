@@ -1,5 +1,9 @@
 import { iteratorFrom, logs } from "./loggings/stream.ts";
 
+export interface CmdAPI {
+  response: null;
+}
+
 /**
  * Returns a http handler that runs a command and pipes the output to the response
  */

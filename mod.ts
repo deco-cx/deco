@@ -5,11 +5,13 @@ export type {
   WorkflowContext,
 } from "./blocks/mod.ts";
 export * from "./commons/workflows/mod.ts";
+export * from "./commons/workflows/types.ts";
 export * as JsonViewer from "./components/JsonViewer.tsx";
 export type { Framework } from "./components/section.tsx";
 export * from "./deco.ts";
 export { Context } from "./deco.ts";
-export type { ValueType, WorkflowGen } from "./deps.ts";
+export { ValueType } from "./deps.ts";
+export type { WorkflowGen } from "./deps.ts";
 export type {
   Block,
   BlockFromKey,
