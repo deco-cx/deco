@@ -1,5 +1,8 @@
 import { iteratorFrom, logs } from "./loggings/stream.ts";
 
+/**
+ * Returns a http handler that runs a command and pipes the output to the response
+ */
 export const runCmd = (...cmd: string[]) => {
   return async () => {
     const [runCmd, ...args] = cmd;
