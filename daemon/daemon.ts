@@ -3,9 +3,9 @@ import {
   type ServerSentEventMessage,
   ServerSentEventStream,
 } from "@std/http/server-sent-event-stream";
-import { runCmd } from "deco/daemon/cmd.ts";
 import { ENV_SITE_NAME } from "../engine/decofile/constants.ts";
 import { createAuth } from "./auth.ts";
+import { runCmd } from "./cmd.ts";
 import { createFSAPIs } from "./fs/api.ts";
 import { createGitAPIS } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
