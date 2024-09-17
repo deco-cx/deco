@@ -13,7 +13,7 @@ export const runCmd = (...cmd: string[]) => {
     );
     const child = denoCmd.spawn();
     logs.register(iteratorFrom(child.stdout, "info"));
-    logs.register(iteratorFrom(child.stderr, "info"));
+    logs.register(iteratorFrom(child.stderr, "error"));
     const status = await child.status;
 
     if (!status.success) {

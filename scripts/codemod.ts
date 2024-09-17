@@ -197,6 +197,10 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
         },
         "deco/types.ts": {
+          LoaderReturnType: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
+          },
           SectionProps: {
             moduleSpecifier: EXPORTS.DECO,
             isTypeOnly: true,
@@ -376,6 +380,10 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
         },
         "deco/mod.ts": {
+          LoaderReturnType: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
+          },
           Deco: {
             moduleSpecifier: EXPORTS.DECO,
           },
@@ -524,6 +532,10 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
         },
         "deco/engine/core/resolver.ts": {
+          Resolved: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
+          },
           ResolveFunc: {
             moduleSpecifier: EXPORTS.DECO,
           },
