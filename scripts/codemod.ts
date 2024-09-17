@@ -608,7 +608,7 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           match: [/fresh.config.ts$/],
         },
         apply: (txt) => {
-          const regex = /^import plugins from ".*";$/gm;
+          const regex = /^import plugins from ['"].*['"](;?)$/gm;
           return {
             content: txt.content.replace(
               regex,
