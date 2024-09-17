@@ -54,7 +54,8 @@
     "https://denopkg.com/deco-cx/deco@1.26.0/": {
       "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/",
       "std/": "https://deno.land/std@0.203.0/",
-      "partytown/": "https://deno.land/x/partytown@0.3.0/"
+      "partytown/": "https://deno.land/x/partytown@0.3.0/",
+      "deco/": "https://denopkg.com/deco-cx/deco@1.26.0/"
     }
   },
   "imports": {
@@ -83,7 +84,6 @@
     "@std/streams": "jsr:@std/streams@^1.0.0",
     "@std/testing": "jsr:@std/testing@^1.0.0",
     "@zaubrik/djwt": "jsr:@zaubrik/djwt@^3.0.2",
-    "deco/": "./",
     "fast-json-patch": "npm:fast-json-patch@^3.1.1",
     "partytown/": "https://deno.land/x/partytown@0.3.0/",
     "preact": "npm:preact@10.23.1",
