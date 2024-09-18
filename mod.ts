@@ -1,3 +1,4 @@
+export { defineBlock } from "./blocks/index.ts";
 export type {
   AppMiddlewareContext,
   ManifestOf,
