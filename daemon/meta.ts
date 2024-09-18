@@ -1,3 +1,4 @@
+import { BlockType } from "deco/engine/block.ts";
 import type { JSONSchema } from "../types.ts";
 import { broadcast } from "./sse/channel.ts";
 import { dispatchWorkerState, worker } from "./worker.ts";
@@ -30,6 +31,8 @@ export type MetaEvent = {
 let meta: PromiseWithResolvers<MetaInfo> | MetaInfo = Promise.withResolvers<
   MetaInfo
 >();
+/** Map (filename, blockType) */
+let filenameBlockTypeMap: Record<string, BlockType> = {};
 
 const metaRequest = (etag: string) =>
   new Request(`http://0.0.0.0/deco/meta?waitForChanges=true`, {
@@ -47,7 +50,7 @@ const isPromiseLike = <T>(
   typeof x.resolve === "function" && typeof x.reject === "function";
 
 export const start = async (since: number): Promise<MetaEvent | null> => {
-  const detail = isPromiseLike(meta) ? await meta.promise : meta;
+  const detail = await ensureMetaIsReady();
 
   if (since >= detail.timestamp) {
     return null;
@@ -58,6 +61,10 @@ export const start = async (since: number): Promise<MetaEvent | null> => {
     detail,
   };
 };
+
+/** Ensures meta is resolved and return. */
+export const ensureMetaIsReady = async (): Promise<MetaInfo> =>
+  isPromiseLike(meta) ? await meta.promise : meta;
 
 export const watchMeta = async () => {
   let etag = "";
@@ -74,6 +81,7 @@ export const watchMeta = async () => {
       etag = response.headers.get("etag") ?? etag;
       const withExtraParams = { ...m, etag, timestamp: Date.now() };
 
+      updateFilenameBlockTypeMapFromManifest(m.manifest);
       if (isPromiseLike(meta)) {
         meta.resolve(withExtraParams);
       }
@@ -92,4 +100,24 @@ export const watchMeta = async () => {
       console.error(error);
     }
   }
+};
+
+/** Update filenameBlockTypeMap from manifest */
+const updateFilenameBlockTypeMapFromManifest = (
+  manifest: ManifestBlocks,
+): void => {
+  const newFilenameBlockTypeMap: Record<string, string> = {};
+  for (const blockType in manifest.blocks) {
+    const blocksByBlockType = manifest.blocks[blockType];
+    for (const filename in blocksByBlockType) {
+      newFilenameBlockTypeMap[filename] = blockType;
+    }
+  }
+
+  filenameBlockTypeMap = newFilenameBlockTypeMap;
+};
+
+/** Given a filename returns a blocktype */
+export const inferBlockType = (filename: string): string => {
+  return filenameBlockTypeMap[filename];
 };

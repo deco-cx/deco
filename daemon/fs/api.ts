@@ -13,22 +13,7 @@ import {
   type Patch,
   type UpdateResponse,
 } from "./common.ts";
-
-const WELL_KNOWN_BLOCK_TYPES = new Set([
-  "accounts",
-  "actions",
-  "apps",
-  "flags",
-  "handlers",
-  "loaders",
-  "matchers",
-  "pages",
-  "sections",
-  "workflows",
-]);
-
-const inferBlockType = (resolveType: string) =>
-  resolveType.split("/").find((s) => WELL_KNOWN_BLOCK_TYPES.has(s));
+import { ensureMetaIsReady, inferBlockType } from "../meta.ts";
 
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
   try {
@@ -136,6 +121,7 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
         continue;
       }
 
+      await ensureMetaIsReady();
       const [metadata, mtime] = await Promise.all([
         inferMetadata(entry.path),
         mtimeFor(entry.path),
@@ -180,6 +166,7 @@ export const watchFS = async () => {
       console.log("file has changed", kind, paths);
     }
 
+    await ensureMetaIsReady();
     const [status, metadata, mtime] = await Promise.all([
       git.status(),
       inferMetadata(filepath),
@@ -217,6 +204,7 @@ export const createFSAPIs = () => {
     using _ = await getRwLock(filepath)?.rlock();
 
     try {
+      await ensureMetaIsReady();
       const [
         metadata,
         content,
@@ -259,6 +247,7 @@ export const createFSAPIs = () => {
       await Deno.writeTextFile(filepath, result.content);
     }
 
+    await ensureMetaIsReady();
     const [status, metadata, mtimeAfter] = await Promise.all([
       git.status(),
       inferMetadata(filepath),
