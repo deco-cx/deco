@@ -49,5 +49,6 @@ export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
 export type {
   AvailableActions,
+  AvailableInvocations,
   AvailableLoaders,
 } from "./utils/invoke.types.ts";
