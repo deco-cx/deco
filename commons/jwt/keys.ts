@@ -71,7 +71,7 @@ export const setFromString = (publicKey: string, privateKey: string) => {
 /**
  * Returns a tuple of [publicKey, privateKey] in a JsonWebKey format.
  */
-export const getKeyPair = async () => {
+export const getKeyPair = async (): Promise<[JsonWebKey, JsonWebKey]> => {
   keys ??= getOrGenerateKeyPair();
   return await keys;
 };

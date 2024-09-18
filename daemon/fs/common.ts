@@ -84,7 +84,10 @@ const applyJSONPatch = <T>(content: T, patch: Patch["payload"]) => {
   }
 };
 
-export const applyPatch = (content: string | null, patch: Patch) => {
+export const applyPatch = (content: string | null, patch: Patch): {
+  conflict: true | false;
+  content?: string;
+} => {
   if (patch.type === "json") {
     const result = applyJSONPatch(JSON.parse(content ?? "{}"), patch.payload);
 
@@ -117,7 +120,10 @@ export const applyPatch = (content: string | null, patch: Patch) => {
   throw new Error(`Unknown patch type: ${patch.type}`);
 };
 
-export const generatePatch = (from: string | null, to: string | null) => {
+export const generatePatch = (
+  from: string | null,
+  to: string | null,
+): Patch => {
   try {
     return {
       type: "json" as const,

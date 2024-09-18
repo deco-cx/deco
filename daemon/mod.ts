@@ -7,7 +7,7 @@ export type {
   Metadata,
   PageBlockMetadata,
   Patch,
-  SyncUpdate
+  SyncUpdate,
 } from "./fs/common.ts";
 export type {
   CheckoutAPI,
@@ -15,7 +15,6 @@ export type {
   GitLogAPI,
   GitStatusAPI,
   PublishAPI,
-  RebaseAPI
+  RebaseAPI,
 } from "./git.ts";
 export type { DaemonEvent } from "./sse/channel.ts";
-

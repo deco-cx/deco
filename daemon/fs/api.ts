@@ -254,7 +254,7 @@ export const createFSAPIs = () => {
 
     const result = applyPatch(content, patch);
 
-    if (!result.conflict) {
+    if (!result.conflict && result.content) {
       await ensureFile(filepath);
       await Deno.writeTextFile(filepath, result.content);
     }
