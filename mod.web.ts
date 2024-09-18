@@ -2,7 +2,7 @@ export {
   forApp,
   isEventStreamResponse,
   proxy,
-  withManifest
+  withManifest,
 } from "./clients/withManifest.ts";
 export type { InvocationFunc } from "./clients/withManifest.ts";
 export type {
@@ -14,6 +14,5 @@ export type {
   InvokeResult,
   ManifestAction,
   ManifestFunction,
-  ManifestLoader
+  ManifestLoader,
 } from "./utils/invoke.types.ts";
-
