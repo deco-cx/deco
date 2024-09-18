@@ -1,7 +1,6 @@
 export type { WorkflowGen } from "@deco/durable";
 export {
-  type SectionContext,
-  SectionContext as SectionCtx,
+  SectionContext as SectionCtx, type SectionContext
 } from "../components/section.tsx";
 export type { ComponentFunc, ComponentMetadata } from "../engine/block.ts";
 export type { Resolvable } from "../engine/core/resolver.ts";
@@ -12,7 +11,7 @@ export type {
   AppMiddlewareContext,
   Apps,
   ImportMap,
-  ManifestOf,
+  ManifestOf
 } from "./app.ts";
 export type { Flag, FlagObj, MultivariateFlag, Variant } from "./flag.ts";
 export type { Handler } from "./handler.ts";
@@ -25,8 +24,9 @@ export {
   applyProps,
   buildImportMap,
   buildImportMapWith,
-  createBagKey,
+  createBagKey
 } from "./utils.tsx";
 export type { FnProps } from "./utils.tsx";
 export { WorkflowContext } from "./workflow.ts";
 export type { Workflow, WorkflowFn } from "./workflow.ts";
+
