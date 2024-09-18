@@ -16,7 +16,7 @@ export type {
 } from "./app.ts";
 export type { Flag, FlagObj, MultivariateFlag, Variant } from "./flag.ts";
 export type { Handler } from "./handler.ts";
-export * as blocks from "./index.ts";
+export { default as blocks } from "./index.ts";
 export type { Loader } from "./loader.ts";
 export type { MatchContext, Matcher } from "./matcher.ts";
 export type { Page } from "./page.tsx";
