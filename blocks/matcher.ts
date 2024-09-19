@@ -152,7 +152,7 @@ const matcherBlock: Block<
         result ??= matcherFunc(ctx);
       } else {
         hasher.hash(uniqueId);
-        const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
+        const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}_${($live as {traffic: number})?.traffic}`;
         hasher.reset();
         const isMatchFromCookie = cookieValue.boolean(
           getCookies(ctx.request.headers)[cookieName],
