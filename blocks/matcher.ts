@@ -160,7 +160,7 @@ const matcherBlock: Block<
         result ??= isMatchFromCookie ?? matcherFunc(ctx);
         if (result !== isMatchFromCookie) {
           const date = new Date();
-          date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
+          date.setTime(date.getTime() + (5 * 24 * 60 * 60 * 1000)); // 5 days
           setCookie(respHeaders, {
             name: cookieName,
             value: cookieValue.build(uniqueId, result),
