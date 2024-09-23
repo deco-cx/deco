@@ -250,6 +250,10 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
             moduleSpecifier: EXPORTS.DECO,
             isTypeOnly: true,
           },
+          LoadingFallbackProps: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
+          },
         },
         "deco/blocks/page.tsx": {
           Page: {
@@ -503,6 +507,14 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
           badRequest: {
             moduleSpecifier: EXPORTS.DECO,
+          },
+          LoadingFallbackProps: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
+          },
+          Resolved: {
+            moduleSpecifier: EXPORTS.DECO,
+            isTypeOnly: true,
           },
         },
         "deco/blocks/matcher.ts": {
