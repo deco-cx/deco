@@ -1,4 +1,4 @@
-import type { BlockType } from "deco/engine/block.ts";
+import type { BlockType } from "../engine/block.ts";
 import type { JSONSchema } from "../types.ts";
 import { broadcast } from "./sse/channel.ts";
 import { dispatchWorkerState, worker } from "./worker.ts";
