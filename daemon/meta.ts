@@ -1,4 +1,4 @@
-import { BlockType } from "deco/engine/block.ts";
+import type { BlockType } from "deco/engine/block.ts";
 import type { JSONSchema } from "../types.ts";
 import { broadcast } from "./sse/channel.ts";
 import { dispatchWorkerState, worker } from "./worker.ts";
@@ -23,14 +23,15 @@ export interface MetaInfo {
   timestamp: number;
 }
 
+type Meta = MetaInfo | null;
+
 export type MetaEvent = {
   type: "meta-info";
-  detail: MetaInfo;
+  detail: Meta;
 };
 
-let meta: PromiseWithResolvers<MetaInfo> | MetaInfo = Promise.withResolvers<
-  MetaInfo
->();
+let meta: PromiseWithResolvers<Meta> | Meta = Promise
+  .withResolvers<Meta>();
 /** Map (filename, blockType) */
 let filenameBlockTypeMap: Record<string, BlockType> = {};
 
@@ -47,12 +48,12 @@ const isPromiseLike = <T>(
   x: T | PromiseWithResolvers<T>,
 ): x is PromiseWithResolvers<T> =>
   // @ts-expect-error typescript is wild
-  typeof x.resolve === "function" && typeof x.reject === "function";
+  !!x && typeof x.resolve === "function" && typeof x.reject === "function";
 
 export const start = async (since: number): Promise<MetaEvent | null> => {
   const detail = await ensureMetaIsReady();
 
-  if (since >= detail.timestamp) {
+  if (!detail || since >= detail.timestamp) {
     return null;
   }
 
@@ -63,11 +64,20 @@ export const start = async (since: number): Promise<MetaEvent | null> => {
 };
 
 /** Ensures meta is resolved and return. */
-export const ensureMetaIsReady = async (): Promise<MetaInfo> =>
+export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
   isPromiseLike(meta) ? await meta.promise : meta;
 
 export const watchMeta = async () => {
   let etag = "";
+
+  const setMeta = (
+    m: MetaInfo | null,
+  ) => {
+    if (meta && isPromiseLike(meta)) {
+      meta.resolve(m);
+    }
+    meta = m;
+  };
 
   while (true) {
     try {
@@ -81,11 +91,9 @@ export const watchMeta = async () => {
       etag = response.headers.get("etag") ?? etag;
       const withExtraParams = { ...m, etag, timestamp: Date.now() };
 
-      updateFilenameBlockTypeMapFromManifest(m.manifest);
-      if (isPromiseLike(meta)) {
-        meta.resolve(withExtraParams);
-      }
-      meta = withExtraParams;
+      filenameBlockTypeMap = updateFilenameBlockTypeMapFromManifest(m.manifest);
+
+      setMeta(withExtraParams);
 
       broadcast({ type: "meta-info", detail: withExtraParams });
       dispatchWorkerState("ready");
@@ -94,6 +102,13 @@ export const watchMeta = async () => {
       // to avoid false alarming down state
       if (error.status === 408) {
         continue;
+      }
+
+      if (error.status === 404) {
+        setMeta(null);
+        broadcast({ type: "meta-info", detail: null });
+        dispatchWorkerState("ready");
+        return;
       }
 
       dispatchWorkerState("updating");
@@ -105,7 +120,7 @@ export const watchMeta = async () => {
 /** Update filenameBlockTypeMap from manifest */
 const updateFilenameBlockTypeMapFromManifest = (
   manifest: ManifestBlocks,
-): void => {
+): Record<string, string> => {
   const newFilenameBlockTypeMap: Record<string, string> = {};
   for (const blockType in manifest.blocks) {
     const blocksByBlockType = manifest.blocks[blockType];
@@ -113,11 +128,11 @@ const updateFilenameBlockTypeMapFromManifest = (
       newFilenameBlockTypeMap[filename] = blockType;
     }
   }
-
-  filenameBlockTypeMap = newFilenameBlockTypeMap;
+  return newFilenameBlockTypeMap;
 };
 
 /** Given a filename returns a blocktype */
-export const inferBlockType = (filename: string): string => {
+export const inferBlockType = async (filename: string): Promise<string> => {
+  await ensureMetaIsReady();
   return filenameBlockTypeMap[filename];
 };

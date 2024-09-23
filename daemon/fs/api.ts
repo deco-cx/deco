@@ -13,14 +13,14 @@ import {
   type Patch,
   type UpdateResponse,
 } from "./common.ts";
-import { ensureMetaIsReady, inferBlockType } from "../meta.ts";
+import { inferBlockType } from "../meta.ts";
 
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
   try {
     const { __resolveType, name, path } = JSON.parse(
       await Deno.readTextFile(filepath),
     );
-    const blockType = inferBlockType(__resolveType);
+    const blockType = await inferBlockType(__resolveType);
 
     if (!blockType) {
       return { kind: "file" };
@@ -121,7 +121,6 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
         continue;
       }
 
-      await ensureMetaIsReady();
       const [metadata, mtime] = await Promise.all([
         inferMetadata(entry.path),
         mtimeFor(entry.path),
@@ -166,7 +165,6 @@ export const watchFS = async () => {
       console.log("file has changed", kind, paths);
     }
 
-    await ensureMetaIsReady();
     const [status, metadata, mtime] = await Promise.all([
       git.status(),
       inferMetadata(filepath),
@@ -204,7 +202,6 @@ export const createFSAPIs = () => {
     using _ = await getRwLock(filepath)?.rlock();
 
     try {
-      await ensureMetaIsReady();
       const [
         metadata,
         content,
@@ -247,7 +244,6 @@ export const createFSAPIs = () => {
       await Deno.writeTextFile(filepath, result.content);
     }
 
-    await ensureMetaIsReady();
     const [status, metadata, mtimeAfter] = await Promise.all([
       git.status(),
       inferMetadata(filepath),
