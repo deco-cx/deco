@@ -41,6 +41,7 @@ export * from "./runtime/errors.ts";
 export { fetch } from "./runtime/fetch/mod.ts";
 export type { RequestInit } from "./runtime/fetch/mod.ts";
 export { useFramework } from "./runtime/handler.tsx";
+export { type DecoRouteState } from "./runtime/middleware.ts";
 export * from "./runtime/mod.ts";
 export { Deco } from "./runtime/mod.ts";
 export type { PageData } from "./runtime/mod.ts";
