@@ -13,29 +13,14 @@ import {
   type Patch,
   type UpdateResponse,
 } from "./common.ts";
-
-const WELL_KNOWN_BLOCK_TYPES = new Set([
-  "accounts",
-  "actions",
-  "apps",
-  "flags",
-  "handlers",
-  "loaders",
-  "matchers",
-  "pages",
-  "sections",
-  "workflows",
-]);
-
-const inferBlockType = (resolveType: string) =>
-  resolveType.split("/").find((s) => WELL_KNOWN_BLOCK_TYPES.has(s));
+import { inferBlockType } from "../meta.ts";
 
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
   try {
     const { __resolveType, name, path } = JSON.parse(
       await Deno.readTextFile(filepath),
     );
-    const blockType = inferBlockType(__resolveType);
+    const blockType = await inferBlockType(__resolveType);
 
     if (!blockType) {
       return { kind: "file" };
