@@ -1,8 +1,10 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
-import { useFramework } from "../runtime/handler.tsx";
 import type { JSX } from "preact";
+import {
+  Fragment as _Fragment,
+  jsx as _jsx,
+  jsxs as _jsxs,
+} from "preact/jsx-runtime";
+import { useFramework } from "../runtime/handler.ts";
 
 export interface Props {
   body: string;
@@ -52,16 +54,21 @@ const snippet = (json: string) => {
  */
 export default function JsonViewer(p: Props): JSX.Element {
   const { Head } = useFramework();
-  return (
-    <>
-      {/** @ts-ignore: could not type it well */}
-      <Head>
-        <script
-          type="module"
-          dangerouslySetInnerHTML={{ __html: `(${snippet})(${p.body});` }}
-        />
-      </Head>
-      <pre id="json-renderer">{p.body}</pre>
-    </>
-  );
+  return /*#__PURE__*/ _jsxs(_Fragment, {
+    children: [
+      // @ts-expect-error: JSX does not have a script element
+      /*#__PURE__*/ _jsx(Head, {
+        children: /*#__PURE__*/ _jsx("script", {
+          type: "module",
+          dangerouslySetInnerHTML: {
+            __html: `(${snippet})(${p.body});`,
+          },
+        }),
+      }),
+      /*#__PURE__*/ _jsx("pre", {
+        id: "json-renderer",
+        children: p.body,
+      }),
+    ],
+  });
 }

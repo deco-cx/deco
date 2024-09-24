@@ -3,8 +3,8 @@ import type { ComponentType, JSX } from "preact";
 import type { AppManifest } from "../blocks/app.ts";
 import type { HttpContext } from "../blocks/handler.ts";
 import { type PropsLoader, propsLoader } from "../blocks/propsLoader.ts";
-import StubSection, { Empty } from "../components/StubSection.tsx";
-import { alwaysThrow, withSection } from "../components/section.tsx";
+import StubSection, { Empty } from "../components/StubSection.ts";
+import { alwaysThrow, withSection } from "../components/section.ts";
 import { Context } from "../deco.ts";
 import type { DeepPartial } from "../deps.ts";
 import type {
@@ -16,10 +16,7 @@ import type {
 } from "../engine/block.ts";
 import type { Resolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
-import {
-  fnContextFromHttpContext,
-  type RequestState,
-} from "./utils.ts";
+import { fnContextFromHttpContext, type RequestState } from "./utils.ts";
 
 /**
  * @widget none

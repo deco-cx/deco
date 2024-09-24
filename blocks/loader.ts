@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import JsonViewer from "../components/JsonViewer.tsx";
+import JsonViewer from "../components/JsonViewer.ts";
 import { RequestContext } from "../deco.ts";
 import { ValueType, weakcache } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";

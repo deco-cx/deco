@@ -1,6 +1,8 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
+import {
+  Fragment as _Fragment,
+  jsx as _jsx,
+  jsxs as _jsxs,
+} from "preact/jsx-runtime";
 import { context } from "../deco.ts";
 import { DomInspector, DomInspectorActivators } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
@@ -174,23 +176,27 @@ const main = () => {
 };
 
 function LiveControls({ site, page, flags }: Props) {
-  return (
-    <>
-      <script
-        type="application/json"
-        id="__DECO_STATE"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({ page, site, flags }),
-        }}
-      />
-      <script
-        type="module"
-        dangerouslySetInnerHTML={{
+  return /*#__PURE__*/ _jsxs(_Fragment, {
+    children: [
+      /*#__PURE__*/ _jsx("script", {
+        type: "application/json",
+        id: "__DECO_STATE",
+        dangerouslySetInnerHTML: {
+          __html: JSON.stringify({
+            page,
+            site,
+            flags,
+          }),
+        },
+      }),
+      /*#__PURE__*/ _jsx("script", {
+        type: "module",
+        dangerouslySetInnerHTML: {
           __html: `${domInspectorModule}\n(${main})()`,
-        }}
-      />
-    </>
-  );
+        },
+      }),
+    ],
+  });
 }
 
 export default LiveControls;

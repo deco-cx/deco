@@ -1,6 +1,6 @@
 import type { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
-import { SectionContext } from "../components/section.tsx";
+import { SectionContext } from "../components/section.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 
 import { Murmurhash3 } from "../deps.ts";

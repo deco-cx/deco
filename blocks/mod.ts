@@ -1,7 +1,7 @@
 export type { WorkflowGen } from "@deco/durable";
 export {
   SectionContext as SectionCtx, type SectionContext
-} from "../components/section.tsx";
+} from "../components/section.ts";
 export type { ComponentFunc, ComponentMetadata } from "../engine/block.ts";
 export type { Resolvable } from "../engine/core/resolver.ts";
 export type { Accounts } from "./account.ts";

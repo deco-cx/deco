@@ -1,4 +1,4 @@
-import PreviewNotAvailable from "../../components/PreviewNotAvailable.tsx";
+import PreviewNotAvailable from "../../components/PreviewNotAvailable.ts";
 import { type DotNestedKeys, pickPaths } from "../../utils/object.ts";
 import type { ResolveOptions } from "../core/mod.ts";
 import {

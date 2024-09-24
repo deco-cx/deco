@@ -9,10 +9,10 @@ import {
 import { Context } from "../../deco.ts";
 import type { AppManifest } from "../../types.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
-import type { Bindings } from "../handler.tsx";
+import type { Bindings } from "../handler.ts";
 import type { DecoRouteState } from "../middleware.ts";
-import framework from "./Bindings.tsx";
-import { renderFn } from "./Renderer.tsx";
+import framework from "./Bindings.ts";
+import { renderFn } from "./Renderer.ts";
 import { staticFiles } from "./serveStatic.ts";
 const DEV_SERVER_PATH = `/deco/dev`;
 const DEV_SERVER_SCRIPT = /*#__PURE__*/ _jsx("script", {

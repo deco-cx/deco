@@ -1,8 +1,6 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
+import { jsx as _jsx } from "preact/jsx-runtime";
 import type { Handler } from "../../blocks/handler.ts";
 import type { Page } from "../../blocks/page.ts";
 import type { PageContext } from "../../engine/block.ts";
@@ -69,13 +67,19 @@ export default function Render({
     return null;
   }
   const { Component, props, metadata } = page;
-  return (
-    <routerCtx.Provider value={routerInfo}>
-      <ctx.Provider value={{ metadata, params, url }}>
-        <Component {...props}></Component>
-      </ctx.Provider>
-    </routerCtx.Provider>
-  );
+  return /*#__PURE__*/ _jsx(routerCtx.Provider, {
+    value: routerInfo,
+    children: /*#__PURE__*/ _jsx(ctx.Provider, {
+      value: {
+        metadata,
+        params,
+        url,
+      },
+      children: /*#__PURE__*/ _jsx(Component, {
+        ...props,
+      }),
+    }),
+  });
 }
 
 export const handler = createHandler(async (

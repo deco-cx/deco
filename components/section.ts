@@ -1,6 +1,3 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
 import type { JSX, Context as PreactContext } from "preact";
 import {
   Component,
@@ -9,6 +6,7 @@ import {
   createContext,
 } from "preact";
 import { useContext } from "preact/hooks";
+import { Fragment as _Fragment, jsx as _jsx } from "preact/jsx-runtime";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.ts";
 import { Context } from "../deco.ts";
@@ -17,7 +15,7 @@ import type { ComponentFunc, ComponentMetadata } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
 import { logger } from "../observability/otel/config.ts";
-import { useFramework } from "../runtime/handler.tsx";
+import { useFramework } from "../runtime/handler.ts";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
 
 export interface SectionContext extends HttpContext<RequestState> {
@@ -92,14 +90,16 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
     }
 
     if (mode === "loading") {
-      return <Loading />;
+      return /*#__PURE__*/ _jsx(Loading, {});
     }
-
     if (mode === "error") {
-      return <Error error={error!} />;
+      return /*#__PURE__*/ _jsx(Error, {
+        error: error as Error,
+      });
     }
-
-    return <>{children}</>;
+    return /*#__PURE__*/ _jsx(_Fragment, {
+      children: children,
+    });
   }
 }
 
@@ -171,97 +171,89 @@ export function withSection<TProps, TLoaderProps = TProps>(
 
     return {
       props,
-      Component: (props: TProps) => {
+      Component: (props) => {
         const { isDeploy, deploymentId } = Context.active();
-
         // if parent salt is not defined it means that we are at the root level, meaning that we are the first partial in the rendering tree.
         const { renderSalt: parentRenderSalt } = useContext(SectionContext) ??
           {};
         const binding = useFramework();
-
         // if this is the case, so we can use the renderSaltFromState - which means that we are in a partial rendering phase
         const renderSalt = parentRenderSalt === undefined
           ? renderSaltFromState ?? `${renderCount}`
           : `${parentRenderSalt ?? ""}${renderCount}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
         const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
         renderCount = ++renderCount % MAX_RENDER_COUNT;
-
-        return (
-          <SectionContext.Provider
-            value={{
-              ...ctx,
-              deploymentId,
-              renderSalt,
-              FallbackWrapper: ({ children, ...props }) => (
-                <binding.LoadingFallback id={id} {...props}>
-                  {children}
-                </binding.LoadingFallback>
-              ),
-              get device() {
-                return device ??= deviceOf(ctx.request);
-              },
-            }}
-          >
-            <binding.Wrapper id={id} partialMode={partialMode}>
-              <section
-                id={id}
-                data-manifest-key={resolver}
-                data-resolve-chain={isPreview(ctx.resolveChain)
-                  ? JSON.stringify(ctx.resolveChain)
-                  : undefined}
-              >
-                <ErrorBoundary
-                  component={resolver}
-                  loading={() => (
-                    <binding.LoadingFallback id={id}>
-                      {LoadingFallback
-                        ? (
-                          // @ts-ignore difficult typing this
-                          <LoadingFallback
-                            {...new Proxy<Partial<TProps>>(props, {
-                              get: (value: Partial<TProps>, prop) => {
-                                try {
-                                  return Reflect.get(value, prop);
-                                } catch (_) {
-                                  return undefined;
-                                }
-                              },
-                            })}
-                          />
-                        )
-                        : <></>}
-                    </binding.LoadingFallback>
-                  )}
-                  error={({ error }) => (
-                    ErrorFallback
-                      ? <ErrorFallback error={error} />
-                      : (
-                        <binding.ErrorFallback
-                          id={id}
-                          name={resolver}
-                          error={error}
-                          isDeploy={isDeploy}
-                          debugEnabled={debugEnabled}
-                        />
-                      )
-                  )}
-                >
-                  <ComponentFunc {...props} />
-                </ErrorBoundary>
-              </section>
-            </binding.Wrapper>
-          </SectionContext.Provider>
-        );
+        return /*#__PURE__*/ _jsx(SectionContext.Provider, {
+          value: {
+            ...ctx,
+            deploymentId,
+            renderSalt,
+            FallbackWrapper: ({ children, ...props }) =>
+              /*#__PURE__*/ _jsx(binding.LoadingFallback, {
+                id: id,
+                ...props,
+                children: children,
+              }),
+            get device() {
+              return device ??= deviceOf(ctx.request);
+            },
+          },
+          children: /*#__PURE__*/ _jsx(binding.Wrapper, {
+            id: id,
+            partialMode: partialMode,
+            children: /*#__PURE__*/ _jsx("section", {
+              id: id,
+              "data-manifest-key": resolver,
+              "data-resolve-chain": isPreview(ctx.resolveChain)
+                ? JSON.stringify(ctx.resolveChain)
+                : undefined,
+              children: /*#__PURE__*/ _jsx(ErrorBoundary, {
+                component: resolver,
+                loading: () =>
+                  /*#__PURE__*/ _jsx(binding.LoadingFallback, {
+                    id: id,
+                    children: LoadingFallback // @ts-ignore difficult typing this
+                      ? /*#__PURE__*/ _jsx(LoadingFallback, {
+                        ...new Proxy(props as object, {
+                          get: (value, prop) => {
+                            try {
+                              return Reflect.get(value, prop);
+                            } catch (_) {
+                              return undefined;
+                            }
+                          },
+                        }),
+                      })
+                      : /*#__PURE__*/ _jsx(_Fragment, {}),
+                  }),
+                error: ({ error }) =>
+                  ErrorFallback
+                    ? /*#__PURE__*/ _jsx(ErrorFallback, {
+                      error: error,
+                    })
+                    : /*#__PURE__*/ _jsx(binding.ErrorFallback, {
+                      id: id,
+                      name: resolver,
+                      error: error,
+                      isDeploy: isDeploy,
+                      debugEnabled: debugEnabled,
+                    }),
+                children: /*#__PURE__*/ _jsx(ComponentFunc, {
+                  ...props,
+                }),
+              }),
+            }),
+          }),
+        });
       },
       metadata,
       ...LoadingFallback
         ? {
           LoadingFallback: () => {
-            return (
-              // @ts-ignore: could not it type well
-              <LoadingFallback
-                {...(loaderProps ?? props) as DeepPartial<TLoaderProps>}
-              />
+            return ( // @ts-ignore: could not it type well
+              /*#__PURE__*/ _jsx(LoadingFallback, {
+                ...loaderProps ?? props,
+              })
             );
           },
         }

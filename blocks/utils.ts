@@ -2,7 +2,7 @@
 import type { StatusCode as Status } from "@std/http/status";
 import type { JSX } from "preact";
 import type { InvocationFunc } from "../clients/withManifest.ts";
-import { withSection } from "../components/section.tsx";
+import { withSection } from "../components/section.ts";
 import type {
   Block,
   BlockModule,

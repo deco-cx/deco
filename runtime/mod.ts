@@ -30,14 +30,14 @@ import {
   meta,
   type VersionedMetaInfo,
 } from "./features/meta.ts";
-import { preview } from "./features/preview.tsx";
+import { preview } from "./features/preview.ts";
 import {
   type Options,
   render,
   type RenderResponse,
-} from "./features/render.tsx";
+} from "./features/render.ts";
 import { styles } from "./features/styles.css.ts";
-import { type Bindings, handlerFor } from "./handler.tsx";
+import { type Bindings, handlerFor } from "./handler.ts";
 
 export interface PageParams<TData = any> {
   data: TData;
@@ -265,5 +265,5 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 
 export type { PageData } from "./deps.ts";
 export { DECO_SEGMENT } from "./middleware.ts";
-export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";
+export { usePageContext, useRouterContext } from "./routes/entrypoint.ts";
 
