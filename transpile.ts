@@ -1,7 +1,7 @@
 import { ensureDir } from "https://deno.land/std@0.224.0/fs/ensure_dir.ts";
 import { walk } from "https://deno.land/std@0.224.0/fs/walk.ts";
 import { extname, join } from "https://deno.land/std@0.224.0/path/mod.ts";
-import { build } from "https://deno.land/x/esbuild@v0.24.0/mod.js";
+import { transpile } from "jsr:@deno/emit";
 
 // Function to transpile TSX to JS using esbuild
 async function transpileTSXToJS(inputDir: string, outputDir: string) {
@@ -31,23 +31,22 @@ async function transpileTSXToJS(inputDir: string, outputDir: string) {
       ),
     );
 
-    // Use esbuild to transpile the TSX file to JS
-    const result = await build({
-      entryPoints: [sourceFilePath],
-      outfile: outputFilePath,
-      write: true,
-      bundle: false,
-      format: "esm",
-      target: ["esnext"],
-      jsx: "preserve", // Handle JSX transformation,
-      loader: { ".tsx": "tsx" }, // Preserve the TypeScript syntax
-      jsxFactory: "React.createElement",
-      jsxFragment: "React.Fragment",
-      minify: false,
-      sourcemap: true,
+    const url = new URL(sourceFilePath, import.meta.url);
+    console.log(`file://${join(Deno.cwd(), "deno.json")}`);
+
+    const result = await transpile(url, {
+      allowRemote: true,
+      compilerOptions: {
+        "jsx": "react-jsx",
+        "jsxImportSource": "preact",
+      },
+      importMap: join(Deno.cwd(), "deno.json"),
     });
 
-    console.log(result);
+    const code = result.get(url.href);
+
+    const tsFile = url.href.replace(".tsx", ".ts");
+    code && await Deno.writeTextFile(tsFile, code)
 
     // Clean up after esbuild
   }
