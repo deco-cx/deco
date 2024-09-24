@@ -4,7 +4,7 @@
 import { createContext } from "preact";
 import { useContext } from "preact/hooks";
 import type { Handler } from "../../blocks/handler.ts";
-import type { Page } from "../../blocks/page.tsx";
+import type { Page } from "../../blocks/page.ts";
 import type { PageContext } from "../../engine/block.ts";
 import type { Flag } from "../../types.ts";
 import { forceHttps, setCSPHeaders } from "../../utils/http.ts";

@@ -9,7 +9,7 @@ import matcherBlock from "../blocks/matcher.ts";
 import sectionBlock from "../blocks/section.ts";
 import workflowBlock from "../blocks/workflow.ts";
 import type { Block } from "../engine/block.ts";
-import pageBlock from "./page.tsx";
+import pageBlock from "./page.ts";
 
 const userDefinedBlocks: Block[] = [];
 

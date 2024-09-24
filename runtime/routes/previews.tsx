@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import type { Page } from "../../blocks/page.tsx";
+import type { Page } from "../../blocks/page.ts";
 import LiveControls from "../../components/LiveControls.tsx";
 import { Context } from "../../deco.ts";
 import type { ComponentMetadata } from "../../engine/block.ts";

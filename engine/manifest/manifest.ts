@@ -10,7 +10,7 @@ import {
 } from "../../blocks/app.ts";
 import { buildRuntime } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
-import { buildImportMap } from "../../blocks/utils.tsx";
+import { buildImportMap } from "../../blocks/utils.ts";
 import {
   Context,
   context,

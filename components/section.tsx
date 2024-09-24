@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import type { Context as PreactContext, JSX } from "preact";
+import type { JSX, Context as PreactContext } from "preact";
 import {
   Component,
   type ComponentChildren,
@@ -10,7 +10,7 @@ import {
 } from "preact";
 import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
-import type { RequestState } from "../blocks/utils.tsx";
+import type { RequestState } from "../blocks/utils.ts";
 import { Context } from "../deco.ts";
 import { type DeepPartial, Murmurhash3 } from "../deps.ts";
 import type { ComponentFunc, ComponentMetadata } from "../engine/block.ts";

@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import type { Page } from "../../blocks/page.tsx";
+import type { Page } from "../../blocks/page.ts";
 import { getSectionID } from "../../components/section.tsx";
 import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";

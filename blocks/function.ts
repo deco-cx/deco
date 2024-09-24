@@ -4,7 +4,7 @@ import { wrapCaughtErrors } from "../blocks/loader.ts";
 import {
   newSingleFlightGroup,
   type SingleFlightKeyFunc,
-} from "../blocks/utils.tsx";
+} from "../blocks/utils.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import type { Block, BlockModule } from "../engine/block.ts";
 import type { HandlerContext } from "../engine/manifest/manifest.ts";

@@ -18,7 +18,7 @@ import {
   type FnProps,
   type RequestState,
   type SingleFlightKeyFunc,
-} from "./utils.tsx";
+} from "./utils.ts";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 

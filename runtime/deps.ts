@@ -1,4 +1,4 @@
-import type { Page } from "../blocks/page.tsx";
+import type { Page } from "../blocks/page.ts";
 
 export { Hono } from "@hono/hono";
 export type { Context, Handler, Input, MiddlewareHandler } from "@hono/hono";

@@ -1,7 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
+import { jsx as _jsx } from "preact/jsx-runtime";
 import type { Block, InstanceOf, ResolverLike } from "../engine/block.ts";
 import { createSectionBlock, type SectionModule } from "./section.ts";
 
@@ -27,7 +25,10 @@ const page: Block<
   any
 > = createSectionBlock(
   (component, ComponentFunc) => (props, { resolveChain }) => ({
-    Component: (p) => <ComponentFunc {...p} />,
+    Component: (p) =>
+      /*#__PURE__*/ _jsx(ComponentFunc, {
+        ...p,
+      }),
     props,
     metadata: { resolveChain, component },
   }),
