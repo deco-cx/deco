@@ -5,6 +5,7 @@ import { createReadWriteLock, type RwLock } from "../../daemon/async.ts";
 import { Hono } from "../../runtime/deps.ts";
 import { git, lockerGitAPI } from "../git.ts";
 import { VERBOSE } from "../main.ts";
+import { inferBlockType } from "../meta.ts";
 import { broadcast } from "../sse/channel.ts";
 import {
   applyPatch,
@@ -13,7 +14,6 @@ import {
   type Patch,
   type UpdateResponse,
 } from "./common.ts";
-import { inferBlockType } from "../meta.ts";
 
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
   try {
@@ -102,7 +102,8 @@ const shouldIgnore = (path: string) =>
     path.includes(`${SEPARATOR}.git`) ||
   path.includes(`${SEPARATOR}node_modules${SEPARATOR}`);
 
-const systemPathFromBrowser = (url: string) => {
+const systemPathFromBrowser = (pathAndQuery: string) => {
+  const [url] = pathAndQuery.split("?");
   const [_, ...segments] = url.split("/file");
   const s = segments.join("/file");
 
