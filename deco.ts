@@ -1,6 +1,6 @@
 import "./utils/patched_fetch.ts";
 
-//import { AsyncLocalStorage } from "node:async_hooks";
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { ImportMap } from "./blocks/app.ts";
 import type { ReleaseResolver } from "./engine/core/mod.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
