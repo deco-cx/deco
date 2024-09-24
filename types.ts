@@ -14,9 +14,9 @@ import type handlerBlock from "./blocks/handler.ts";
 import type { Handler } from "./blocks/handler.ts";
 import type loaderBlock from "./blocks/loader.ts";
 import type matcherBlock from "./blocks/matcher.ts";
-import type pageBlock from "./blocks/page.tsx";
+import type pageBlock from "./blocks/page.ts";
 import type sectionBlock from "./blocks/section.ts";
-import type { FnContext } from "./blocks/utils.tsx";
+import type { FnContext } from "./blocks/utils.ts";
 import type workflowBlock from "./blocks/workflow.ts";
 import type { InvocationFunc } from "./clients/withManifest.ts";
 import type { JSONSchema7, JSONSchema7Definition } from "./deps.ts";
@@ -35,7 +35,7 @@ import type { createServerTimings } from "./utils/timings.ts";
 export type { App } from "./blocks/app.ts";
 export type {
   ErrorBoundaryComponent,
-  ErrorBoundaryParams,
+  ErrorBoundaryParams
 } from "./blocks/section.ts";
 export type { AppContext, AppManifest, AppModule, AppRuntime };
 export type JSONSchema = JSONSchema7;
@@ -134,7 +134,7 @@ export type DecoState<
 export type { JSONSchema7 } from "npm:@types/json-schema@7.0.11/index.d.ts";
 export type { PropsLoader } from "./blocks/propsLoader.ts";
 export type { LoadingFallbackProps, SectionProps } from "./blocks/section.ts";
-export type { FnContext } from "./blocks/utils.tsx";
+export type { FnContext } from "./blocks/utils.ts";
 export type { ResolveOptions } from "./engine/core/mod.ts";
 export type { ResolveFunc } from "./engine/core/resolver.ts";
 export type { RouteContext } from "./engine/manifest/manifest.ts";

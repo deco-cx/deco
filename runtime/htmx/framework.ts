@@ -1,20 +1,23 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
-
 import type { ComponentChildren, ComponentType } from "preact";
+import {
+  Fragment as _Fragment,
+  jsx as _jsx,
+  jsxs as _jsxs,
+} from "preact/jsx-runtime";
 import { Context } from "../../deco.ts";
 import type { AppManifest } from "../../types.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
-import type { Bindings } from "../handler.tsx";
+import type { Bindings } from "../handler.ts";
 import type { DecoRouteState } from "../middleware.ts";
-import framework from "./Bindings.tsx";
-import { renderFn } from "./Renderer.tsx";
+import framework from "./Bindings.ts";
+import { renderFn } from "./Renderer.ts";
 import { staticFiles } from "./serveStatic.ts";
 const DEV_SERVER_PATH = `/deco/dev`;
-const DEV_SERVER_SCRIPT = (
-  <script
-    dangerouslySetInnerHTML={{
-      __html: `
+const DEV_SERVER_SCRIPT = /*#__PURE__*/ _jsx("script", {
+  dangerouslySetInnerHTML: {
+    __html: `
 if (!window.HAS_PREVIEW_SCRIPT) {
   // Debounce function to limit the rate of page refreshes
   function debounce(func, delay) {
@@ -64,10 +67,8 @@ if (!window.HAS_PREVIEW_SCRIPT) {
   window.HAS_PREVIEW_SCRIPT = true;
 }
 `,
-    }}
-  >
-  </script>
-);
+  },
+});
 let hmrUniqueId = crypto.randomUUID();
 const sockets = new Map<string, WebSocket>();
 
@@ -101,7 +102,11 @@ export const HTMX = <
     }),
   );
   hono.use(staticFiles(opts?.staticRoot));
-  const Layout = opts?.Layout ?? (({ children }) => <>{children}</>);
+  const Layout = opts?.Layout ??
+    (({ children }) =>
+      /*#__PURE__*/ _jsx(_Fragment, {
+        children: children,
+      }));
   return {
     server: hono,
     framework,
@@ -113,12 +118,17 @@ export const HTMX = <
           page: {
             metadata: page.metadata,
             Component: () => {
-              return (
-                <Layout hmrUniqueId={hmrUniqueId} revision={revision!}>
-                  {!active.isDeploy ? DEV_SERVER_SCRIPT : null}
-                  <page.Component {...page.props} />
-                </Layout>
-              );
+              // @ts-expect-error: i dont know why this is happening
+              return /*#__PURE__*/ _jsxs(Layout, {
+                hmrUniqueId: hmrUniqueId,
+                revision: revision,
+                children: [
+                  !active.isDeploy ? DEV_SERVER_SCRIPT : null,
+                  /*#__PURE__*/ _jsx(page.Component, {
+                    ...page.props,
+                  }),
+                ],
+              });
             },
             props: {},
           },

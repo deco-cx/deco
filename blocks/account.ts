@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import JsonViewer from "../components/JsonViewer.tsx";
+import JsonViewer from "../components/JsonViewer.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 
 // deno-lint-ignore no-empty-interface

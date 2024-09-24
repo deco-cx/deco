@@ -13,7 +13,7 @@ import {
 import type { DanglingRecover } from "../engine/manifest/manifest.ts";
 import { compose, type ResolverMiddleware } from "../engine/middleware.ts";
 import type { AppManifest } from "../types.ts";
-import { usePreviewFunc } from "./utils.tsx";
+import { usePreviewFunc } from "./utils.ts";
 
 const resolverIsBlock = (blk: Block) => (resolver: string) => {
   const splitted = resolver.split("/");

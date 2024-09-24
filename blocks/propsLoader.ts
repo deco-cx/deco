@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import type { FnProps } from "../blocks/utils.tsx";
+import type { FnProps } from "../blocks/utils.ts";
 import type {
   Diff,
   Intersection,

@@ -4,8 +4,8 @@ import { wrapCaughtErrors } from "../blocks/loader.ts";
 import {
   newSingleFlightGroup,
   type SingleFlightKeyFunc,
-} from "../blocks/utils.tsx";
-import JsonViewer from "../components/JsonViewer.tsx";
+} from "../blocks/utils.ts";
+import JsonViewer from "../components/JsonViewer.ts";
 import type { Block, BlockModule } from "../engine/block.ts";
 import type { HandlerContext } from "../engine/manifest/manifest.ts";
 import type { DecoState, LoaderFunction } from "../types.ts";

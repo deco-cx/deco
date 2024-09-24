@@ -2,11 +2,6 @@
 import blocks from "../blocks/index.ts";
 import { propsLoader } from "../blocks/propsLoader.ts";
 import type { SectionModule } from "../blocks/section.ts";
-import {
-  type AppHttpContext,
-  buildImportMap,
-  type FnProps,
-} from "../blocks/utils.tsx";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import type {
   BaseContext,
@@ -23,7 +18,12 @@ import type {
 import type { DecoManifest, FnContext } from "../types.ts";
 import { resolversFrom } from "./appsUtil.ts";
 import { isInvokeCtx } from "./loader.ts";
-import { fnContextFromHttpContext } from "./utils.tsx";
+import {
+  type AppHttpContext,
+  buildImportMap,
+  fnContextFromHttpContext,
+  type FnProps,
+} from "./utils.ts";
 
 export type Apps = InstanceOf<AppRuntime, "#/root/apps">;
 export type AppManifest = Omit<DecoManifest, "islands" | "routes">;

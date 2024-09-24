@@ -1,6 +1,6 @@
 import { getSetCookies } from "@std/http/cookie";
 import { DECO_MATCHER_PREFIX } from "../blocks/matcher.ts";
-import type { RequestState } from "../blocks/utils.tsx";
+import type { RequestState } from "../blocks/utils.ts";
 import { Context } from "../deco.ts";
 import { Murmurhash3 } from "../deps.ts";
 

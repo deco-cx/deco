@@ -1,13 +1,11 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
-import type { Page } from "../../blocks/page.tsx";
-import { getSectionID } from "../../components/section.tsx";
+import { jsx as _jsx } from "preact/jsx-runtime";
+import type { Page } from "../../blocks/page.ts";
+import { getSectionID } from "../../components/section.ts";
 import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
 import { useScriptAsDataURI } from "../../hooks/useScript.ts";
 import type { AppManifest } from "../../types.ts";
-import { useFramework } from "../handler.tsx";
+import { useFramework } from "../handler.ts";
 import type { State } from "../mod.ts";
 
 export interface Options {
@@ -117,17 +115,16 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
         },
         Component: (props: Props) => {
           const binding = useFramework();
-          return (
-            <binding.Wrapper id={partialId}>
-              <div>
-                <script
-                  type="text/javascript"
-                  defer
-                  src={useScriptAsDataURI(snippet, props.url)}
-                />
-              </div>
-            </binding.Wrapper>
-          );
+          return /*#__PURE__*/ _jsx(binding.Wrapper, {
+            id: partialId,
+            children: /*#__PURE__*/ _jsx("div", {
+              children: /*#__PURE__*/ _jsx("script", {
+                type: "text/javascript",
+                defer: true,
+                src: useScriptAsDataURI(snippet, props.url),
+              }),
+            }),
+          });
         },
       };
     }

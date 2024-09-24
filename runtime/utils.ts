@@ -1,7 +1,7 @@
-import type { RequestState } from "../blocks/utils.tsx";
-import { vary } from "../utils/vary.ts";
+import type { RequestState } from "../blocks/utils.ts";
 import { Context } from "../deco.ts";
 import { defaultHeaders } from "../utils/http.ts";
+import { vary } from "../utils/vary.ts";
 
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle

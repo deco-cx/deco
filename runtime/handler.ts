@@ -1,32 +1,30 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-import "../utils/patched_fetch.ts";
-
 import {
   type ComponentChildren,
   type ComponentType,
   createContext,
 } from "preact";
 import { useContext } from "preact/hooks";
-import type { Framework } from "../components/section.tsx";
+import { jsx as _jsx } from "preact/jsx-runtime";
+import type { Framework } from "../components/section.ts";
 import type { AppManifest } from "../types.ts";
 import "../utils/patched_fetch.ts";
 import { Hono, type PageData } from "./deps.ts";
-import { HTMX } from "./htmx/mod.tsx";
+import { HTMX } from "./htmx/framework.ts";
 import type { DecoHandler, DecoRouteState, HonoHandler } from "./middleware.ts";
 import { middlewareFor } from "./middleware.ts";
 import type { Deco } from "./mod.ts";
 import { handler as metaHandler } from "./routes/_meta.ts";
 import { handler as invokeHandler } from "./routes/batchInvoke.ts";
-import { handler as previewHandler } from "./routes/blockPreview.tsx";
-import { handler as entrypoint } from "./routes/entrypoint.tsx";
+import { handler as previewHandler } from "./routes/blockPreview.ts";
+import { handler as entrypoint } from "./routes/entrypoint.ts";
 import { handler as inspectHandler } from "./routes/inspect.ts";
 import { handler as invokeKeyHandler } from "./routes/invoke.ts";
-import { handler as previewsHandler } from "./routes/previews.tsx";
+import { handler as previewsHandler } from "./routes/previews.ts";
 import { handler as releaseHandler } from "./routes/release.ts";
-import { handler as renderHandler } from "./routes/render.tsx";
+import { handler as renderHandler } from "./routes/render.ts";
 import { styles } from "./routes/styles.css.ts";
 import { handler as workflowHandler } from "./routes/workflow.ts";
+
 export interface RendererOpts {
   Layout?: ComponentType<
     { req: Request; children: ComponentChildren; revision: string }
@@ -138,11 +136,12 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
           ...data,
           page: {
             Component: (props) => {
-              return (
-                <FrameworkContext.Provider value={framework ?? HTMX}>
-                  <data.page.Component {...props} />
-                </FrameworkContext.Provider>
-              );
+              return /*#__PURE__*/ _jsx(FrameworkContext.Provider, {
+                value: framework ?? HTMX,
+                children: /*#__PURE__*/ _jsx(data.page.Component, {
+                  ...props,
+                }),
+              });
             },
             props: data.page.props,
             metadata: data.page.metadata,

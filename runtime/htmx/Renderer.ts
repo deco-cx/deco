@@ -1,11 +1,9 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
 import { renderToString } from "npm:preact-render-to-string@6.4.0";
 import { type ComponentChildren, options } from "preact";
+import { Fragment as _Fragment, jsx as _jsx } from "preact/jsx-runtime";
 import type { ContextRenderer, PageData } from "../deps.ts";
-import { Head } from "./Bindings.tsx";
-export { Head } from "./Bindings.tsx";
+import { Head } from "./Bindings.ts";
+export { Head };
 
 export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
   { page }: TData,
@@ -24,11 +22,10 @@ export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
     }
     return original?.(vnode);
   };
-  const body = renderToString(
-    <page.Component
-      {...page.props}
-    />,
-  );
+  const body = renderToString(/*#__PURE__*/ _jsx(page.Component, {
+    ...page.props,
+  }));
+
   options.vnode = original;
   return new Response(
     `<!DOCTYPE html>
@@ -36,18 +33,13 @@ export const renderFn: ContextRenderer = <TData extends PageData = PageData>(
                     <head>
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">${
-      renderToString(
-        <>
-          {((htmlHead ??
-            []) as ComponentChildren[]).map(
-              (child) => (
-                <>
-                  {child}
-                </>
-              ),
-            )}
-        </>,
-      )
+      renderToString(/*#__PURE__*/ _jsx(_Fragment, {
+        children: (htmlHead ?? []).map((child) =>
+          /*#__PURE__*/ _jsx(_Fragment, {
+            children: child,
+          })
+        ),
+      }))
     }</head><body>${body}</body></html>`,
     {
       status: 200,

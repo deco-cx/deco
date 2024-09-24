@@ -8,7 +8,7 @@ import {
   type FnContext,
   fnContextFromHttpContext,
   type RequestState,
-} from "./utils.tsx";
+} from "./utils.ts";
 
 export interface HttpContext<
   // deno-lint-ignore ban-types

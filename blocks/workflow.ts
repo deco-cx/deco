@@ -1,13 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   type Arg,
-  type LocalActivityCommand,
-  type Metadata,
   type Workflow as DurableWorkflow,
   WorkflowContext as DurableWorkflowContext,
+  type LocalActivityCommand,
+  type Metadata,
   type WorkflowExecution,
 } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import type {
   AvailableActions,
   AvailableFunctions,
@@ -18,14 +19,13 @@ import type {
   ManifestFunction,
   ManifestLoader,
 } from "../utils/invoke.types.ts";
-import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import type { DotNestedKeys } from "../utils/object.ts";
 import type { HttpContext } from "./handler.ts";
 import {
   type FnContext,
   fnContextFromHttpContext,
   type RequestState,
-} from "./utils.tsx";
+} from "./utils.ts";
 
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;

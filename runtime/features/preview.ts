@@ -1,7 +1,4 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
-import type { Page } from "../../blocks/page.tsx";
+import type { Page } from "../../blocks/page.ts";
 import type { AppManifest } from "../../types.ts";
 import type { State } from "../mod.ts";
 

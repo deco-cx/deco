@@ -1,11 +1,9 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
-import type { Page } from "../../blocks/page.tsx";
+import { Fragment as _Fragment, jsx as _jsx } from "preact/jsx-runtime";
+import type { Page } from "../../blocks/page.ts";
 import { bodyFromUrl } from "../../utils/http.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
-import Render from "./entrypoint.tsx";
+import Render from "./entrypoint.ts";
 
 const decoder = new TextDecoder();
 export default function Preview(
@@ -18,11 +16,11 @@ export default function Preview(
     },
   };
 
-  return (
-    <>
-      <Render {...renderProps}></Render>
-    </>
-  );
+  return /*#__PURE__*/ _jsx(_Fragment, {
+    children: /*#__PURE__*/ _jsx(Render, {
+      ...renderProps,
+    }),
+  });
 }
 
 const getPropsFromRequest = async (req: Request) => {

@@ -1,11 +1,8 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
 import { FieldResolver } from "../../engine/core/resolver.ts";
 import { badRequest } from "../../engine/errors.ts";
 import { createHandler } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
-import Render, { type PageData } from "./entrypoint.tsx";
+import Render, { type PageData } from "./entrypoint.ts";
 
 interface Options {
   resolveChain?: FieldResolver[];

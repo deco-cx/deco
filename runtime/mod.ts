@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { join, toFileUrl } from "@std/path";
-import type { RequestState } from "../blocks/utils.tsx";
-import { vary } from "../utils/vary.ts";
+import type { RequestState } from "../blocks/utils.ts";
 import type { DecoContext } from "../deco.ts";
 import { Context } from "../deco.ts";
 import { context as otelContext } from "../deps.ts";
@@ -23,6 +22,7 @@ import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import { defaultHeaders, forceHttps } from "../utils/http.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { createServerTimings } from "../utils/timings.ts";
+import { vary } from "../utils/vary.ts";
 import type { ContextRenderer } from "./deps.ts";
 import { batchInvoke, invoke } from "./features/invoke.ts";
 import {
@@ -30,14 +30,14 @@ import {
   meta,
   type VersionedMetaInfo,
 } from "./features/meta.ts";
-import { preview } from "./features/preview.tsx";
+import { preview } from "./features/preview.ts";
 import {
   type Options,
   render,
   type RenderResponse,
-} from "./features/render.tsx";
+} from "./features/render.ts";
 import { styles } from "./features/styles.css.ts";
-import { type Bindings, handlerFor } from "./handler.tsx";
+import { type Bindings, handlerFor } from "./handler.ts";
 
 export interface PageParams<TData = any> {
   data: TData;
@@ -265,4 +265,5 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 
 export type { PageData } from "./deps.ts";
 export { DECO_SEGMENT } from "./middleware.ts";
-export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";
+export { usePageContext, useRouterContext } from "./routes/entrypoint.ts";
+

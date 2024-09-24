@@ -1,8 +1,6 @@
-/** @jsxRuntime automatic */
-/** @jsxImportSource preact */
-
-import type { Page } from "../../blocks/page.tsx";
-import LiveControls from "../../components/LiveControls.tsx";
+import { Fragment as _Fragment, jsx as _jsx } from "preact/jsx-runtime";
+import type { Page } from "../../blocks/page.ts";
+import LiveControls from "../../components/LiveControls.ts";
 import { Context } from "../../deco.ts";
 import type { ComponentMetadata } from "../../engine/block.ts";
 import { createHandler } from "../middleware.ts";
@@ -33,14 +31,17 @@ function Preview(props: PageParams<Page>) {
   const pageId = pageIdFromMetadata(data?.metadata);
   const context = Context.active();
 
-  return (
-    <>
-      <LiveControls
-        site={{ id: context.siteId, name: context.site }}
-        page={{ id: pageId }}
-      />
-    </>
-  );
+  return /*#__PURE__*/ _jsx(_Fragment, {
+    children: /*#__PURE__*/ _jsx(LiveControls, {
+      site: {
+        id: context.siteId,
+        name: context.site,
+      },
+      page: {
+        id: pageId,
+      },
+    }),
+  });
 }
 
 export const handler = createHandler((ctx) => {

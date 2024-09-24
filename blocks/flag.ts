@@ -1,6 +1,6 @@
 import type { HttpContext } from "../blocks/handler.ts";
 import type { Matcher } from "../blocks/matcher.ts";
-import JsonViewer from "../components/JsonViewer.tsx";
+import JsonViewer from "../components/JsonViewer.ts";
 import type { TsType, TsTypeReference } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
