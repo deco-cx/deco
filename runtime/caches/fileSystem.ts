@@ -4,7 +4,7 @@ import {
   assertCanBeCached,
   assertNoOptions,
   withCacheNamespace,
-} from "./common.ts";
+} from "./utils.ts";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? undefined;
@@ -255,7 +255,9 @@ const hasWritePerm = async (fsDir: string): Promise<boolean> => {
   ).then((status) => status.state === "granted");
 };
 
-export const isFileSystemAvailable = FILE_SYSTEM_CACHE_DIRECTORY !== undefined && await hasWritePerm(FILE_SYSTEM_CACHE_DIRECTORY);
+export const isFileSystemAvailable =
+  FILE_SYSTEM_CACHE_DIRECTORY !== undefined &&
+  await hasWritePerm(FILE_SYSTEM_CACHE_DIRECTORY);
 
 export const cachesFs = createFileSystemCache(FILE_SYSTEM_CACHE_DIRECTORY);
 

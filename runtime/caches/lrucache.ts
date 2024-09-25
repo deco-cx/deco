@@ -1,18 +1,17 @@
 import { LRUCache } from "npm:lru-cache@10.2.0";
-import { numToUint8Array, uint8ArrayToNum } from "../utils.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
-  withCacheNamespace,
-} from "./common.ts";
+  baseCache,
+  createBaseCacheStorage,
+} from "./utils.ts";
 
-export const MAX_CACHE_SIZE = parseInt(
+const MAX_CACHE_SIZE = parseInt(
   Deno.env.get("MAX_CACHE_SIZE") ?? "1073824",
 ); // 1 GB max size of cache
-export const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
-export const TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
-export const ALLOW_STALE = Deno.env.get("ALLOW_STALE") !== "false"; // automatically allow stale
-export const TTL_RESOLUTION = parseInt(
+const TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
+const ALLOW_STALE = Deno.env.get("ALLOW_STALE") !== "false"; // automatically allow stale
+const TTL_RESOLUTION = parseInt(
   Deno.env.get("TTL_RESOLUTION") ?? "30000",
 ); // check for expired items every 30 seconds
 
@@ -22,32 +21,19 @@ const cacheOptions = (cache: Cache) => (
     ttlAutopurge: TTL_AUTOPURGE,
     ttlResolution: TTL_RESOLUTION,
     allowStale: ALLOW_STALE,
-    sizeCalculation: (value: Uint8Array) => {
-      return uint8ArrayToNum(value); // return the length of the array
-    },
     dispose: async (_value: Uint8Array, key: string) => {
       await cache.delete(key);
     },
   }
 );
 
-const NOT_IMPLEMENTED = () => {
-  throw new Error("Not Implemented");
-};
-
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
-  const caches: CacheStorage = {
-    delete: NOT_IMPLEMENTED,
-    has: NOT_IMPLEMENTED,
-    keys: NOT_IMPLEMENTED,
-    match: NOT_IMPLEMENTED,
-    open: async (cacheName: string): Promise<Cache> => {
-      const cacheInner = await cacheStorageInner.open(cacheName);
+  const caches = createBaseCacheStorage(
+    cacheStorageInner,
+    (_cacheName, cacheInner, requestURLSHA1) => {
       const fileCache = new LRUCache(cacheOptions(cacheInner));
-      const requestURLSHA1 = (request: RequestInfo | URL) => withCacheNamespace(cacheName)(request).then((key) => 'http://localhost:8000/' + key);
-      const cache = Promise.resolve({
-        add: NOT_IMPLEMENTED,
-        addAll: NOT_IMPLEMENTED,
+      return Promise.resolve({
+        ...baseCache,
         delete: async (
           request: RequestInfo | URL,
           options?: CacheQueryOptions,
@@ -56,7 +42,6 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           cacheInner.delete(cacheKey, options);
           return fileCache.delete(cacheKey);
         },
-        keys: NOT_IMPLEMENTED,
         match: async (
           request: RequestInfo | URL,
           options?: CacheQueryOptions,
@@ -74,7 +59,6 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           }
           return undefined;
         },
-        matchAll: NOT_IMPLEMENTED,
         put: async (
           request: RequestInfo | URL,
           response: Response,
@@ -98,35 +82,17 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
             if (length == "0") {
               return;
             } else {
-              fileCache.set(cacheKey, numToUint8Array(parseInt(length)), {
+              fileCache.set(cacheKey, new Uint8Array(), {
                 size: parseInt(length),
                 ttl,
               });
-              return cacheInner.put(cacheKey, new Response(response.body, {
-                headers: new Headers({...response.headers,
-                  "Expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
-                  .toUTCString(),
-                  "Content-Length": length
-                })
-              }));
+              return cacheInner.put(cacheKey, response);
             }
-          } else {
-            const body = await response.arrayBuffer();
-            fileCache.set(cacheKey, numToUint8Array(body.byteLength), { ttl });
-            return cacheInner.put(cacheKey, new Response(body, {
-              headers: new Headers({...response.headers,
-                "Expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
-                  .toUTCString(),
-                "Content-Length": `${body.byteLength}`
-              })
-            }));
           }
         },
       });
-      return cache;
     },
-  };
-
+  );
   return caches;
 }
 
