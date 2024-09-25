@@ -1,6 +1,8 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { caches as lruCache, MAX_CACHE_SIZE } from "./lrucache.ts";
+import { caches as lruCache } from "./lrucache.ts";
+import { caches as headersCache } from "./headerscache.ts";
 
+const MAX_CACHE_SIZE = 1073824;
 
 const NOT_IMPLEMENTED = () => {
   throw new Error("Not Implemented");
@@ -13,7 +15,10 @@ const testCacheStorage = (
     (request as Request).url ?? request.toString();
   return (
     {
-      delete: () => { map.clear(); return Promise.resolve(true)},
+      delete: () => {
+        map.clear();
+        return Promise.resolve(true);
+      },
       has: NOT_IMPLEMENTED,
       keys: NOT_IMPLEMENTED,
       match: NOT_IMPLEMENTED,
@@ -44,10 +49,11 @@ const createRequest = (i: number) => new Request(`https://example.com/${i}`);
 const CACHE_NAME = "test";
 
 const baseTest = async (cacheStorageUT: CacheStorage) => {
-  const cache = await lruCache(cacheStorageUT).open(CACHE_NAME);
-  const response = () => new Response("Hello, World!", {
-    headers: { "Content-length": `${MAX_CACHE_SIZE / 2}` },
-  });
+  const cache = await headersCache(lruCache(cacheStorageUT)).open(CACHE_NAME);
+  const response = () =>
+    new Response("Hello, World!", {
+      headers: { "Content-length": `${MAX_CACHE_SIZE / 2}` },
+    });
   for (let i = 0; i < 5; i++) {
     const request = createRequest(i);
     await cache.put(request, response());
@@ -60,12 +66,16 @@ const baseTest = async (cacheStorageUT: CacheStorage) => {
   }
   for (let i = 3; i < 5; i++) {
     const request = createRequest(i);
-    const response = await cache.match(request)
+    const response = await cache.match(request);
     assertNotEquals(response, undefined);
   }
-}
+};
 
-Deno.test("lru_cache_adapter", async (t) => {
+Deno.test({
+  name: "lru_cache_adapter",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async (t) => {
   await t.step(
     "test base scenario",
     async () => {
@@ -74,35 +84,49 @@ Deno.test("lru_cache_adapter", async (t) => {
   );
 });
 
-Deno.test({name: "test one resource",
+Deno.test({
+  name: "test one resource",
   sanitizeResources: false,
-sanitizeOps: false}, async (t) => {
+  sanitizeOps: false,
+}, async (t) => {
   const testMap = new Map();
-  const cache = await lruCache(testCacheStorage(testMap)).open(CACHE_NAME);
+  const cache = await headersCache(lruCache(testCacheStorage(testMap))).open(
+    CACHE_NAME,
+  );
   await t.step(
     "test one resource without content-length",
     async () => {
       await cache.put(createRequest(0), new Response("Hello, World!"));
       const responseWithDiscoveredLength = await cache.match(createRequest(0));
-      assertEquals(responseWithDiscoveredLength?.headers.get("content-length"), "13");;      
+      assertEquals(
+        responseWithDiscoveredLength?.headers.get("content-length"),
+        "13",
+      );
     },
   );
   await t.step(
     "test one resource with content-length",
     async () => {
-      await cache.put(createRequest(1), new Response("Hello, World!", {
-        headers: { "content-length": "100" }
-      }));
+      await cache.put(
+        createRequest(1),
+        new Response("Hello, World!", {
+          headers: { "content-length": "100" },
+        }),
+      );
       const responseWithContentLength = await cache.match(createRequest(1));
-      assertEquals(responseWithContentLength?.headers.get("content-length"), "100");
+      assertEquals(
+        responseWithContentLength?.headers.get("content-length"),
+        "100",
+      );
     },
   );
 });
 
-
-Deno.test({name: "webstandard_cache_with_adapter",
-    sanitizeResources: false,
-  sanitizeOps: false}, async (t) => {
+Deno.test({
+  name: "webstandard_cache_with_adapter",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async (t) => {
   await t.step(
     "test base scenario",
     async () => {

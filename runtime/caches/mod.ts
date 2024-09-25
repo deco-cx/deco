@@ -1,11 +1,12 @@
 import { withInstrumentation } from "./common.ts";
 
-import {
-  cachesFs as cachesFileSystem,
-  isFileSystemAvailable,
-} from "./fileSystem.ts";
+import { isFileSystemAvailable } from "./fileSystem.ts";
+
+import { caches as headersCache } from "./headerscache.ts";
 
 import { createTieredCache } from "./tiered.ts";
+
+import { caches as lruCache } from "./lrucache.ts";
 
 export const ENABLE_LOADER_CACHE: boolean =
   Deno.env.get("ENABLE_LOADER_CACHE") === "true";
@@ -23,13 +24,13 @@ export type CacheEngine =
   | "CACHE_API"
   | "FILE_SYSTEM";
 
-const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
+export const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   CACHE_API: {
-    implementation: globalThis.caches,
+    implementation: headersCache(globalThis.caches),
     isAvailable: typeof globalThis.caches !== "undefined",
   },
   FILE_SYSTEM: {
-    implementation: cachesFileSystem,
+    implementation: headersCache(lruCache(globalThis.caches)),
     isAvailable: isFileSystemAvailable,
   },
 };
