@@ -6,21 +6,21 @@ import {
   createBaseCacheStorage,
 } from "./utils.ts";
 
-const DECO_CACHE_MAX_CACHE_SIZE = parseInt(
-  Deno.env.get("MAX_CACHE_SIZE") ?? "1073824",
+const CACHE_MAX_SIZE = parseInt(
+  Deno.env.get("CACHE_MAX_SIZE") ?? "1073824",
 ); // 1 GB max size of cache
-const DECO_CACHE_TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
-const DECO_CACHE_ALLOW_STALE = Deno.env.get("ALLOW_STALE") !== "false"; // automatically allow stale
-const DECO_CACHE_TTL_RESOLUTION = parseInt(
-  Deno.env.get("TTL_RESOLUTION") ?? "30000",
+const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") !== "false"; // automatically delete expired items
+const CACHE_ALLOW_STALE = Deno.env.get("CACHE_ALLOW_STALE") !== "false"; // automatically allow stale
+const CACHE_TTL_RESOLUTION = parseInt(
+  Deno.env.get("CACHE_TTL_RESOLUTION") ?? "30000",
 ); // check for expired items every 30 seconds
 
 const cacheOptions = (cache: Cache) => (
   {
-    maxSize: DECO_CACHE_MAX_CACHE_SIZE,
-    ttlAutopurge: DECO_CACHE_TTL_AUTOPURGE,
-    ttlResolution: DECO_CACHE_TTL_RESOLUTION,
-    allowStale: DECO_CACHE_ALLOW_STALE,
+    maxSize: CACHE_MAX_SIZE,
+    ttlAutopurge: CACHE_TTL_AUTOPURGE,
+    ttlResolution: CACHE_TTL_RESOLUTION,
+    allowStale: CACHE_ALLOW_STALE,
     dispose: async (_value: Uint8Array, key: string) => {
       await cache.delete(key);
     },
