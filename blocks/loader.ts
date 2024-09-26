@@ -296,7 +296,7 @@ const wrapLoader = (
           );
 
           const headers: { [key: string]: string } = {
-            "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
+            expires: new Date(Date.now() + (MAX_AGE_S * 1e3))
               .toUTCString(),
             "Content-Type": "application/json",
           };
