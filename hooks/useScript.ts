@@ -34,6 +34,7 @@ const minify = async (js: string) => {
 
     const result = await terserMinify(js, {
       ecma: 2020,
+      mangle: true,
       compress: {
         side_effects: false,
       },
