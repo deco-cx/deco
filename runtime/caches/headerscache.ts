@@ -5,7 +5,7 @@ import {
   createBaseCacheStorage,
 } from "./utils.ts";
 
-const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
+const DECO_CACHE_MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
 
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
   const caches = createBaseCacheStorage(
@@ -49,27 +49,26 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
                 new Response(response.body, {
                   headers: new Headers({
                     ...response.headers,
-                    "Expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
+                    expires: new Date(Date.now() + (DECO_CACHE_MAX_AGE_S * 1e3))
                       .toUTCString(),
                     "Content-Length": length,
                   }),
                 }),
               );
             }
-          } else {
-            const body = await response.arrayBuffer();
-            return cacheInner.put(
-              cacheKey,
-              new Response(body, {
-                headers: new Headers({
-                  ...response.headers,
-                  "Expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
-                    .toUTCString(),
-                  "Content-Length": `${body.byteLength}`,
-                }),
-              }),
-            );
           }
+          const body = await response.arrayBuffer();
+          return cacheInner.put(
+            cacheKey,
+            new Response(body, {
+              headers: new Headers({
+                ...response.headers,
+                expires: new Date(Date.now() + (DECO_CACHE_MAX_AGE_S * 1e3))
+                  .toUTCString(),
+                "Content-Length": `${body.byteLength}`,
+              }),
+            }),
+          );
         },
       });
     },

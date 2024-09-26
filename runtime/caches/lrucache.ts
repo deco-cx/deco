@@ -6,21 +6,21 @@ import {
   createBaseCacheStorage,
 } from "./utils.ts";
 
-const MAX_CACHE_SIZE = parseInt(
+const DECO_CACHE_MAX_CACHE_SIZE = parseInt(
   Deno.env.get("MAX_CACHE_SIZE") ?? "1073824",
 ); // 1 GB max size of cache
-const TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
-const ALLOW_STALE = Deno.env.get("ALLOW_STALE") !== "false"; // automatically allow stale
-const TTL_RESOLUTION = parseInt(
+const DECO_CACHE_TTL_AUTOPURGE = Deno.env.get("TTL_AUTOPURGE") !== "false"; // automatically delete expired items
+const DECO_CACHE_ALLOW_STALE = Deno.env.get("ALLOW_STALE") !== "false"; // automatically allow stale
+const DECO_CACHE_TTL_RESOLUTION = parseInt(
   Deno.env.get("TTL_RESOLUTION") ?? "30000",
 ); // check for expired items every 30 seconds
 
 const cacheOptions = (cache: Cache) => (
   {
-    maxSize: MAX_CACHE_SIZE,
-    ttlAutopurge: TTL_AUTOPURGE,
-    ttlResolution: TTL_RESOLUTION,
-    allowStale: ALLOW_STALE,
+    maxSize: DECO_CACHE_MAX_CACHE_SIZE,
+    ttlAutopurge: DECO_CACHE_TTL_AUTOPURGE,
+    ttlResolution: DECO_CACHE_TTL_RESOLUTION,
+    allowStale: DECO_CACHE_ALLOW_STALE,
     dispose: async (_value: Uint8Array, key: string) => {
       await cache.delete(key);
     },
@@ -78,17 +78,14 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
 
           const cacheKey = await requestURLSHA1(request);
           const length = response.headers.get("Content-Length");
-          if (length) {
-            if (length == "0") {
-              return;
-            } else {
-              fileCache.set(cacheKey, new Uint8Array(), {
-                size: parseInt(length),
-                ttl,
-              });
-              return cacheInner.put(cacheKey, response);
-            }
+          if (!length || length == "0") {
+            return;
           }
+          fileCache.set(cacheKey, new Uint8Array(), {
+            size: parseInt(length),
+            ttl,
+          });
+          return cacheInner.put(cacheKey, response);
         },
       });
     },
