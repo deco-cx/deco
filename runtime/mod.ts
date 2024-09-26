@@ -1,7 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { join, toFileUrl } from "@std/path";
 import type { RequestState } from "../blocks/utils.tsx";
-import { vary } from "../utils/vary.ts";
 import type { DecoContext } from "../deco.ts";
 import { Context } from "../deco.ts";
 import { context as otelContext } from "../deps.ts";
@@ -23,6 +22,7 @@ import type { AppManifest, DecoSiteState, DecoState } from "../types.ts";
 import { defaultHeaders, forceHttps } from "../utils/http.ts";
 import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { createServerTimings } from "../utils/timings.ts";
+import { vary } from "../utils/vary.ts";
 import type { ContextRenderer } from "./deps.ts";
 import { batchInvoke, invoke } from "./features/invoke.ts";
 import {
@@ -74,7 +74,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     opts?: DecoOptions<TAppManifest>,
   ): Promise<Deco<TAppManifest>> {
     const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
-    const decofile = opts?.decofile ?? await getProvider(site);
+    const decofile = opts?.decofile ?? await getProvider();
     const manifest = opts?.manifest ?? (await import(
       toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href
     ).then((mod) => mod.default));

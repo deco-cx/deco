@@ -7,7 +7,6 @@ export {
   DomInspectorActivators,
   inspectHandler,
 } from "jsr:@deco/inspect-vscode@0.2.1";
-export * as supabase from "jsr:@supabase/supabase-js@2.45.1";
 export {
   context,
   createContextKey,

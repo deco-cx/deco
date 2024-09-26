@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import type { supabase } from "../../deps.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import type { Resolvable } from "../core/resolver.ts";
@@ -24,7 +23,7 @@ export interface RealtimeDecofileProvider {
   subscribe(
     onChange: (arg: VersionedDecofile) => void,
     cb: (
-      status: `${supabase.REALTIME_SUBSCRIBE_STATES}`,
+      status: string,
       err?: Error,
     ) => void,
   ): void;
@@ -59,7 +58,7 @@ export const newRealtime = (
   // the first load retry attempts
   let remainingRetries = 5;
   // the last error based on the retries
-  let lastError: supabase.PostgrestSingleResponse<unknown>["error"] = null;
+  let lastError: Error | null = null;
 
   // the first load is required as the isolate should not depend on any background behavior to work properly.
   // so this method retries 5 times with a 100ms delay between each attempt otherwise the promise will be rejected.

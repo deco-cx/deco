@@ -1,0 +1,11 @@
+{
+  "name": "@deco/dev",
+  "version": "1.101.19",
+  "exports": {
+    "./tailwind": "./tailwind.ts"
+  },
+  "imports": {
+    "@std/fmt": "jsr:@std/fmt@^1.0.0",
+    "@std/path": "jsr:@std/path@^1.0.2"
+  }
+}

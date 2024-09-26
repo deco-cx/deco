@@ -644,7 +644,7 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
         };
       }),
-      {
+      { // TODO fix this to remove tailwind css.
         options: {
           match: [/fresh.config.ts$/],
         },
@@ -653,12 +653,30 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           return {
             content: txt.content.replace(
               regex,
-              `import plugins from "deco/plugins/fresh.ts";`,
-            ),
+              `import { plugins } from "deco/plugins/deco.ts";`,
+            ).replace(`import tailwind from "./tailwind.config.ts";\n`, "")
+              .replace("tailwind,\n", "").replace(
+                `// @ts-expect-error somehow this typing doesnt work\n`,
+                "",
+              ),
           };
         },
       },
       upgradeDeps(PKGS_TO_CHECK, true),
+      {
+        options: {
+          match: [/dev.ts$/],
+        },
+        apply: (txt) => {
+          if (txt.content.includes("@deco/dev/tailwind")) {
+            return txt;
+          }
+          return {
+            content:
+              `import { build } from "@deco/dev/tailwind";\nawait build();\n${txt.content}`,
+          };
+        },
+      },
     ],
   });
 };
