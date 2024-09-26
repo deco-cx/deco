@@ -1,3 +1,2 @@
-export { parse } from "jsr:@deco/deno-ast-wasm@0.5.1";
-
-export type { ParsedSource } from "jsr:@deco/deno-ast-wasm@0.5.1";
+export { parse } from "@deco/deno-ast-wasm";
+export type { ParsedSource } from "@deco/deno-ast-wasm";

@@ -2,7 +2,6 @@ export * from "@deco/durable";
 export { crypto } from "@std/crypto";
 export { decodeHex, encodeHex } from "@std/encoding";
 export { getCookies, getSetCookies, setCookie } from "@std/http";
-export type * from "jsr:@deco/deno-ast-wasm@0.5.1/types";
 export {
   DomInspector,
   DomInspectorActivators,

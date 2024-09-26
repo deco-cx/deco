@@ -6,9 +6,6 @@ import type {
   Expression,
   FunctionDeclaration,
   FunctionExpression,
-  JSONSchema7,
-  JSONSchema7Type,
-  JSONSchema7TypeName,
   NamedImportSpecifier,
   ObjectExpression,
   ObjectPattern,
@@ -36,6 +33,11 @@ import type {
   TsTypeReference,
   TsUnionType,
   VariableDeclarator,
+} from "@deco/deno-ast-wasm/types";
+import type {
+  JSONSchema7,
+  JSONSchema7Type,
+  JSONSchema7TypeName,
 } from "../../deps.ts";
 import type { BlockModuleRef, IntrospectParams } from "../block.ts";
 import {
