@@ -171,17 +171,12 @@ Here is a table with the integrations that we have built and the statuses of the
 ## Cache env vars (WIP)
 | Environment Variable              | Description                                             | Example Value                                          |
 |-----------------------------------|---------------------------------------------------------|--------------------------------------------------------|
-| `CACHE_UPLOAD_BUCKET`             | The AWS S3 bucket name for cache uploads                | `BUCKET-NAME`                                       |
-| `CACHE_AWS_REGION`                | AWS region where the cache bucket is located            | `sa-east-1`                                            |
-| `CACHE_AWS_ACCESS_KEY_ID`         | AWS access key ID for authentication                    | ``                                 |
-| `CACHE_AWS_SECRET_ACCESS_KEY`     | AWS secret access key for authentication                | ``             |
 | `ENABLE_LOADER_CACHE`             | Flag to enable or disable the loader cache              | `true`                                                 |
 | `LOADER_CACHE_START_TRESHOLD`     | Cache start threshold                                   | `0`                                                    |
-| `WEB_CACHE_ENGINE`                | Defines the cache engine(s) to use                      | `"FILE_SYSTEM,S3"`                                     |
-| `FILE_SYSTEM_CACHE_DIRECTORY`     | Directory path for file system cache                    | `` |
-| `MAX_CACHE_SIZE`                  | Maximum size of the file system cache (in bytes)                    | `1073741824` (1 GB)                                    |
-| `TTL_AUTOPURGE`                   | Flag to automatically delete expired items from the file system cache (cpu intensive) | `false`                                      |
-| `TTL_RESOLUTION`                  | Time interval to check for expired items in the file system cache (in milliseconds) | `30000` (30 seconds)                               |
+| `WEB_CACHE_ENGINE`                | Defines the cache engine(s) to use                      | `"FILE_SYSTEM,CACHE_API"`                                     |
+| `CACHE_MAX_SIZE`                  | Maximum size of the file system cache (in bytes)                    | `1073741824` (1 GB)                                    |
+| `CACHE_TTL_AUTOPURGE`                   | Flag to automatically delete expired items from the file system cache (cpu intensive) | `false`                                      |
+| `CACHE_TTL_RESOLUTION`                  | Time interval to check for expired items in the file system cache (in milliseconds) | `30000` (30 seconds)                               |
 | `CACHE_MAX_AGE_S`                  | Time for cache to become stale | `60` (60 seconds)                              |
 
 
