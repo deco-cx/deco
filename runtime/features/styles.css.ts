@@ -287,5 +287,12 @@ addEventListener("hmr", () => {
 });
 
 let tailwindConfig: null | Config = null;
-export const styles = async () =>
-  await getCSS(tailwindConfig ??= await loadTailwindConfig(Deno.cwd()));
+export const styles = async () => {
+  console.log("config", tailwindConfig);
+  if (!tailwindConfig) {
+    const cfg = await loadTailwindConfig(Deno.cwd());
+    console.log("Loaded config", cfg);
+  }
+  console.log("mode", mode);
+  return await getCSS(tailwindConfig ??= await loadTailwindConfig(Deno.cwd()));
+};
