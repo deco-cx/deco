@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "1.101.20",
+  "version": "1.101.21",
   "exports": {
     ".": "./mod.ts",
     "./web": "./mod.web.ts",
