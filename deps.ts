@@ -2,6 +2,7 @@ export * from "@deco/durable";
 export { crypto } from "@std/crypto";
 export { decodeHex, encodeHex } from "@std/encoding";
 export { getCookies, getSetCookies, setCookie } from "@std/http";
+export type * from "jsr:@deco/deno-ast-wasm@0.5.1/types";
 export {
   DomInspector,
   DomInspectorActivators,
@@ -41,7 +42,6 @@ export {
   registerInstrumentations,
 } from "npm:@opentelemetry/instrumentation@0.52.1";
 export type { InstrumentationConfig } from "npm:@opentelemetry/instrumentation@0.52.1";
-export type * from "npm:@swc/wasm@1.3.76";
 export type {
   JSONSchema7,
   JSONSchema7Definition,
