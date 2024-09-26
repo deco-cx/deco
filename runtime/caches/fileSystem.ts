@@ -1,5 +1,4 @@
-const FILE_SYSTEM_CACHE_DIRECTORY =
-  Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/tmp";
+const FILE_SYSTEM_CACHE_DIRECTORY = "/tmp";
 
 const hasWritePerm = async (fsDir: string): Promise<boolean> => {
   return await Deno.permissions.query(
