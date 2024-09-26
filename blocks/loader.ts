@@ -118,9 +118,9 @@ export const wrapCaughtErrors = async <
 };
 
 export const LOADER_CACHE_START_TRESHOLD =
-  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 0;
+  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 5;
 
-export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024_000;
+export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024;
 
 const stats = {
   cache: meter.createCounter("loader_cache", {
@@ -291,24 +291,13 @@ const wrapLoader = (
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
-          const jsonStringEncoded = new TextEncoder().encode(
-            JSON.stringify(json),
-          );
-
-          const headers: { [key: string]: string } = {
-            expires: new Date(Date.now() + (MAX_AGE_S * 1e3))
-              .toUTCString(),
-            "Content-Type": "application/json",
-          };
-
-          if (jsonStringEncoded && jsonStringEncoded.length > 0) {
-            headers["Content-Length"] = "" + jsonStringEncoded.length;
-          }
-
           cache.put(
             request,
-            new Response(jsonStringEncoded, {
-              headers: headers,
+            new Response(JSON.stringify(json), {
+              headers: {
+                "expires": new Date(Date.now() + (MAX_AGE_S * 1e3))
+                  .toUTCString(),
+              },
             }),
           ).catch((error) => logger.error(`loader error ${error}`));
 
