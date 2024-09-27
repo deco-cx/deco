@@ -6,6 +6,8 @@ import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
+import { newRealtime } from "./realtime.ts";
+import { fromConfigsTable } from "./release.ts";
 
 export interface SelectionConfig {
   audiences: unknown[];
@@ -102,6 +104,7 @@ const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
  * @returns the config store provider.
  */
 export const getProvider = async (
+  site: string,
   localStorageOnly = false,
 ): Promise<DecofileProvider> => {
   const providers = [];
@@ -122,6 +125,8 @@ export const getProvider = async (
       ),
     );
     providers.push(fromEndpoint(endpoint));
+  } else {
+    providers.push(newRealtime(fromConfigsTable(site), true)); // if not deploy so no background is needed
   }
 
   if (Deno.env.has("USE_LOCAL_STORAGE")) {

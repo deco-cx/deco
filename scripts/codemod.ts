@@ -35,14 +35,20 @@ const newJsrPackages = [
   "@deco/dev",
 ];
 
-const LATEST_WORKING_ADMIN_V1_VERSION = "1.101.22";
+const LATEST_WORKING_ADMIN_V1_VERSION = "1.103.0";
 const pinDecoVersion = denoJSON((json) => {
+  let decoEntry = json.content.imports?.["deco/"];
+  if (decoEntry) {
+    const [registry] = decoEntry.split("@");
+    decoEntry = `${registry}@${LATEST_WORKING_ADMIN_V1_VERSION}/`;
+  }
   return {
     content: {
       ...json.content,
       imports: {
         ...json.content.imports,
         "@deco/deco": `jsr:@deco/deco@${LATEST_WORKING_ADMIN_V1_VERSION}`,
+        ...decoEntry && { "deco/": decoEntry },
       },
     },
   };

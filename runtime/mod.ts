@@ -74,7 +74,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     opts?: DecoOptions<TAppManifest>,
   ): Promise<Deco<TAppManifest>> {
     const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
-    const decofile = opts?.decofile ?? await getProvider();
+    const decofile = opts?.decofile ?? await getProvider(site);
     const manifest = opts?.manifest ?? (await import(
       toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href
     ).then((mod) => mod.default));
