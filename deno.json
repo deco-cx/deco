@@ -13,7 +13,8 @@
     "./daemon": "./daemon/mod.ts",
     "./jwt": "./commons/jwt/mod.ts",
     "./scripts/bundle": "./scripts/apps/bundle.ts",
-    "./scripts/dev": "./scripts/dev.ts"
+    "./scripts/dev": "./scripts/dev.ts",
+    "./engine": "./engine/mod.ts"
   },
   "publish": {
     "exclude": [

@@ -106,7 +106,7 @@ export const updateLoadCache = (path: string, content: string) => {
 /**
  * Parses the given path using the default loader. Caches the result in memory.
  */
-export const parsePath = (path: string) => {
+export const parsePath = (path: string): Promise<ParsedSource | undefined> => {
   if (path.startsWith("npm:")) {
     console.warn(
       `%cnpm package ${path} could not be resolved in the schema parser, typings may be missing`,

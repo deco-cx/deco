@@ -68,7 +68,11 @@ class NativeImportMapResolver implements ImportMapResolver {
 
 const NATIVE_RESOLVER = new NativeImportMapResolver();
 export const ImportMapBuilder = {
-  new: (...resolvers: ImportMapResolver[]) => {
+  new: (
+    ...resolvers: ImportMapResolver[]
+  ): {
+    mergeWith: (importMap: ImportMap, context: string) => ImportMapResolver;
+  } & ImportMapResolver => {
     return {
       mergeWith: (importMap: ImportMap, context: string): ImportMapResolver => {
         const resolvedImportMap = resolveImportMap(importMap, new URL(context)); // { imports: { "file:///project/dir/foo/": "file:///project/dir/bar/" }, scopes: {} }
