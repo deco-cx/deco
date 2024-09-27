@@ -6,9 +6,13 @@ import {
   upgradeDeps,
 } from "@deco/codemod-toolkit";
 import { jsrLatest } from "@deco/codemod-toolkit/deno-json";
+import { join } from "@std/path/join";
 
-const PKGS_TO_CHECK =
-  /(@deco\/.*)|(apps)|(deco)|(\$live)|(deco-sites\/.*\/$)|(partytown)/;
+const DECO_PKGS = /(@deco\/.*)|(deco)|(\$live)/;
+const PKGS_TO_CHECK = /(apps)|(deco-sites\/.*\/$)|(partytown)|(@deco\/warp)/;
+
+const upgradeDecoVersion = upgradeDeps(DECO_PKGS, true);
+
 const EXPORTS = {
   DECO: "@deco/deco",
   DECO_WEB: "@deco/deco/web",
@@ -664,6 +668,16 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
         },
       },
       upgradeDeps(PKGS_TO_CHECK, true),
+      {
+        options: upgradeDecoVersion.options,
+        apply: async (txt, ctx) => {
+          const isAdminV2 = await ctx.fs.exists(join(ctx.fs.cwd(), ".deco"));
+          if (isAdminV2) {
+            return upgradeDecoVersion.apply(txt, ctx);
+          }
+          return txt;
+        },
+      },
       {
         options: {
           match: [/dev.ts$/],
