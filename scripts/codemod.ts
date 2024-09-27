@@ -674,6 +674,9 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
               `import { plugins } from "deco/plugins/deco.ts";`,
             ).replace(`import tailwind from "./tailwind.config.ts";\n`, "")
               .replace("tailwind,\n", "").replace(
+                `tailwind: tailwind as any,`,
+                "",
+              ).replace(
                 `// @ts-expect-error somehow this typing doesnt work\n`,
                 "",
               ),
