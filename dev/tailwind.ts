@@ -83,7 +83,7 @@ const getCSS = async (config: Config): Promise<string> => {
 
 const TO: string = join(Deno.cwd(), "static", TAILWIND_FILE);
 
-export const build = async () => {
+export const build = async (): Promise<void> => {
   await getCSS(tailwindConfig ??= await loadTailwindConfig(Deno.cwd())).then(
     (txt) => Deno.writeTextFile(TO, txt),
   );
