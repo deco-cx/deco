@@ -1,7 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
-import { allowCorsFor, type Resolvable } from "../../mod.ts";
+
+import type { Resolvable } from "../../mod.ts";
+
 import { isAdminOrLocalhost } from "../../utils/admin.ts";
-import { bodyFromUrl } from "../../utils/http.ts";
+import { allowCorsFor, bodyFromUrl } from "../../utils/http.ts";
+
 import { payloadForFunc } from "../../utils/invoke.server.ts";
 import { invokeToHttpResponse } from "../../utils/invoke.ts";
 import type {
