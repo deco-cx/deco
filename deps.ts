@@ -83,7 +83,6 @@ export {
   View,
 } from "npm:@opentelemetry/sdk-metrics@1.25.1";
 
-export * as supabase from "jsr:@supabase/supabase-js@2.45.1";
 export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.52.1";
 export type { Logger } from "npm:@opentelemetry/api-logs@0.52.1";
 export { OTLPLogExporter } from "npm:@opentelemetry/exporter-logs-otlp-http@0.52.1";
