@@ -28,6 +28,7 @@ const OVERRIDE_FRESH_PREACT = {
 const newJsrPackages = [
   EXPORTS.DECO,
   EXPORTS.DURABLE,
+  "@deco/dev",
 ];
 
 export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
