@@ -1,4 +1,4 @@
-import { ValueType } from "../deps.ts";
+import { ValueType } from "../observability/deps.ts";
 import { meter } from "./otel/metrics.ts";
 
 const httpDuration = meter.createHistogram("http_request_duration", {

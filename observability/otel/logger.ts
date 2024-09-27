@@ -21,7 +21,7 @@ import {
   processDetector,
   Resource,
   SeverityNumber,
-} from "../../deps.ts";
+} from "../../observability/deps.ts";
 
 const UNSPECIFIED_SEVERITY_TEXT = "";
 

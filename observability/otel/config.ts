@@ -12,7 +12,7 @@ import {
   registerInstrumentations,
   Resource,
   SemanticResourceAttributes,
-} from "../../deps.ts";
+} from "../../observability/deps.ts";
 import { DenoRuntimeInstrumentation } from "./instrumentation/deno-runtime.ts";
 import { DebugSampler } from "./samplers/debug.ts";
 import { type SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";

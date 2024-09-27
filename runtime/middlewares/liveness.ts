@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { ValueType } from "../../deps.ts";
+import { ValueType } from "../../observability/deps.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { medianLatencyChecker } from "../../observability/probes/medianLatency.ts";

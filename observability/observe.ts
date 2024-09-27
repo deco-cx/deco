@@ -1,5 +1,5 @@
 import { isWrappedError } from "../blocks/loader.ts";
-import { ValueType } from "../deps.ts";
+import { ValueType } from "../observability/deps.ts";
 import { meter } from "./otel/metrics.ts";
 
 const operationDuration = meter.createHistogram("block_op_duration", {

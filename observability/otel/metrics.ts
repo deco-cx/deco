@@ -4,7 +4,7 @@ import {
   OTLPMetricExporter,
   PeriodicExportingMetricReader,
   View,
-} from "../../deps.ts";
+} from "../../observability/deps.ts";
 import { OTEL_IS_ENABLED, resource } from "./config.ts";
 // a=b,c=d => {a:b, c:d}
 const headersStringToObject = (headersString: string | undefined | null) => {

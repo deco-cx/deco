@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import type { Context, Span, Tracer } from "../../deps.ts";
+import type { Context, Span, Tracer } from "../../observability/deps.ts";
 import { identity } from "../../utils/object.ts";
 import type { createServerTimings } from "../../utils/timings.ts";
 import { type HintNode, type ResolveHints, traverseAny } from "./hints.ts";

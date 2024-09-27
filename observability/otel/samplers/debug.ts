@@ -6,7 +6,7 @@ import {
   SamplingDecision,
   type SamplingResult,
   type SpanKind,
-} from "../../../deps.ts";
+} from "../../../observability/deps.ts";
 import type { DecoState } from "../../../types.ts";
 import { REQUEST_CONTEXT_KEY, STATE_CONTEXT_KEY } from "../context.ts";
 

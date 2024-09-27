@@ -2,7 +2,8 @@
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context } from "../deco.ts";
-import { getCookies, SpanStatusCode } from "../deps.ts";
+import { getCookies } from "../deps.ts";
+import { SpanStatusCode } from "../observability/deps.ts";
 import { startObserve } from "../observability/http.ts";
 import { logger } from "../observability/mod.ts";
 import { HttpError } from "../runtime/errors.ts";

@@ -10,7 +10,6 @@ export * as JsonViewer from "./components/JsonViewer.tsx";
 export type { Framework } from "./components/section.tsx";
 export * from "./deco.ts";
 export { Context } from "./deco.ts";
-export { ValueType } from "./deps.ts";
 export type { WorkflowGen } from "./deps.ts";
 export type {
   Block,
@@ -37,6 +36,7 @@ export type {
 } from "./engine/core/resolver.ts";
 export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
 export { lazySchemaFor } from "./engine/schema/lazy.ts";
+export { ValueType } from "./observability/deps.ts";
 export * from "./runtime/errors.ts";
 export { fetch } from "./runtime/fetch/mod.ts";
 export type { RequestInit } from "./runtime/fetch/mod.ts";

@@ -11,7 +11,7 @@ import {
   type ObservableResult,
   type ObservableUpDownCounter,
   ValueType,
-} from "../../../deps.ts";
+} from "../../../observability/deps.ts";
 
 export class DenoRuntimeInstrumentation extends InstrumentationBase {
   readonly component: string = "deno-runtime";

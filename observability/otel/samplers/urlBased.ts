@@ -3,7 +3,7 @@ import {
   type Sampler,
   SamplingDecision,
   type SamplingResult,
-} from "../../../deps.ts";
+} from "../../../observability/deps.ts";
 import { REQUEST_CONTEXT_KEY } from "../context.ts";
 
 export interface URLBasedSampling {

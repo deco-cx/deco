@@ -1,6 +1,6 @@
 import { existsSync } from "@std/fs";
 import { LRUCache } from "npm:lru-cache@10.2.0";
-import { ValueType } from "../../deps.ts";
+import { ValueType } from "../../observability/deps.ts";
 import { logger, tracer } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { numToUint8Array, uint8ArrayToNum } from "../utils.ts";
