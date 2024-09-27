@@ -282,7 +282,7 @@ export const fulfillContext = async <
   }
   ctx.namespace ??= `deco-sites/${currentSite}`;
   ctx.site = currentSite!;
-  const provider = release ?? await getProvider(ctx.site);
+  const provider = release ?? await getProvider();
   const runtimePromise = deferred<DecoRuntimeState<T>>();
   ctx.runtime = runtimePromise.finally(() => {
     ctx.instance.readyAt = new Date();
@@ -442,7 +442,7 @@ export const $live = async <T extends AppManifest>(
     (curr, acc) => buildRuntime<AppManifest, RouteContext>(curr, acc),
     [m, {}, []] as [AppManifest, ResolverMap<RouteContext>, DanglingRecover[]],
   );
-  const provider = release ?? await getProvider(context.site);
+  const provider = release ?? await getProvider();
   context.release = provider;
   const resolver = new ReleaseResolver<RouteContext>({
     resolvers: { ...resolvers, ...defaultResolvers },
