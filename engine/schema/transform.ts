@@ -1,10 +1,14 @@
 import type {
+  ArrayExpression,
   ArrowFunctionExpression,
+  AssignmentPattern,
   ExportNamedDeclaration,
+  Expression,
   FunctionDeclaration,
   FunctionExpression,
   NamedImportSpecifier,
   ObjectExpression,
+  ObjectPattern,
   Param,
   Pattern,
   StringLiteral,
@@ -29,15 +33,11 @@ import type {
   TsTypeReference,
   TsUnionType,
   VariableDeclarator,
-} from "npm:@swc/wasm@1.3.76";
+} from "@deco/deno-ast-wasm/types";
 import type {
-  ArrayExpression,
-  AssignmentPattern,
-  Expression,
   JSONSchema7,
   JSONSchema7Type,
   JSONSchema7TypeName,
-  ObjectPattern,
 } from "../../deps.ts";
 import type { BlockModuleRef, IntrospectParams } from "../block.ts";
 import {

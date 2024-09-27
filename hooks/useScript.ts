@@ -6,13 +6,8 @@
  * Use at your own risk.
  */
 
-import initSwc, { transform } from "npm:@swc/wasm-web@1.5.25/wasm-web.js";
 import { LRUCache } from "npm:lru-cache@10.2.0";
-
-// @ts-ignore: initSwc is actually a callable func
-const swcPromise = initSwc(
-  "https://cdn.jsdelivr.net/npm/@swc/wasm-web@1.5.25/wasm-web_bg.wasm",
-);
+import { minify as terserMinify } from "npm:terser@5.34.0";
 
 const verbose = !!Deno.env.get("SCRIPT_MINIFICATION_DEBUG");
 
@@ -35,19 +30,16 @@ const timings = (js: string) => {
 
 const minify = async (js: string) => {
   try {
-    await swcPromise;
-
     const log = verbose ? timings(js) : null;
 
-    const result = await transform(js, {
-      minify: true,
-      jsc: {
-        target: "es2022" as const,
-        minify: { mangle: true, format: { comments: false } },
+    const result = await terserMinify(js, {
+      ecma: 2020,
+      mangle: true,
+      compress: {
+        side_effects: false,
       },
-    }, undefined);
-
-    const code = result.code.replace(/;$/, "") as string;
+    });
+    const code = result?.code?.replace(/;$/, "") as string;
 
     log?.();
 

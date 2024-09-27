@@ -13,10 +13,12 @@
     "./daemon": "./daemon/mod.ts",
     "./jwt": "./commons/jwt/mod.ts",
     "./scripts/bundle": "./scripts/apps/bundle.ts",
-    "./scripts/dev": "./scripts/dev.ts"
+    "./scripts/dev": "./scripts/dev.ts",
+    "./engine": "./engine/mod.ts"
   },
   "publish": {
     "exclude": [
+      "./dev",
       "**/*.bench.ts",
       "**/*.test.ts",
       "./scripts/codemod.ts",
@@ -27,7 +29,7 @@
       "CODE_OF_CONDUCT.md",
       ".gitattributes",
       ".github",
-      "assets"
+      "./assets"
     ]
   },
   "tasks": {
@@ -64,7 +66,8 @@
     "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
-    "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.3.1",
+    "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.3.3",
+    "@deco/deno-ast-wasm": "jsr:@deco/deno-ast-wasm@^0.5.4",
     "@deco/durable": "jsr:@deco/durable@^0.5.3",
     "@deco/warp": "jsr:@deco/warp@^0.3.8",
     "@hono/hono": "jsr:@hono/hono@^4.5.4",

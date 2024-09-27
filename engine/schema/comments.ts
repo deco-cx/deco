@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import type { HasSpan } from "npm:@swc/wasm@1.3.76";
+import type { HasSpan } from "@deco/deno-ast-wasm/types";
 import type { JSONSchema7 } from "../../deps.ts";
 import type { ParsedSource } from "./deps.ts";
 import { parseJSDocAttribute } from "./utils.ts";
