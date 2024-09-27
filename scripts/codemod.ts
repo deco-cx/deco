@@ -35,6 +35,19 @@ const newJsrPackages = [
   "@deco/dev",
 ];
 
+const LATEST_WORKING_ADMIN_V1_VERSION = "1.101.22";
+const pinDecoVersion = denoJSON((json) => {
+  return {
+    content: {
+      ...json.content,
+      imports: {
+        ...json.content.imports,
+        "@deco/deco": `jsr:@deco/deco@${LATEST_WORKING_ADMIN_V1_VERSION}`,
+      },
+    },
+  };
+});
+
 export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
   const newImportsPromise: Promise<Record<string, string>> = Promise.all(
     newJsrPackages.map((pkg) =>
@@ -675,7 +688,7 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           if (isAdminV2) {
             return upgradeDecoVersion.apply(txt, ctx);
           }
-          return txt;
+          return pinDecoVersion.apply(txt, ctx);
         },
       },
       {
