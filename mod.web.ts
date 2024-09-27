@@ -3,6 +3,7 @@ export {
   forApp,
   isEventStreamResponse,
   proxy,
+  readFromStream,
   withManifest,
 } from "./clients/withManifest.ts";
 export type { InvocationFunc } from "./clients/withManifest.ts";
