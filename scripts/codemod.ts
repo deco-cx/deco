@@ -701,7 +701,9 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           }
           return {
             content:
-              `import { build } from "@deco/dev/tailwind";\nawait build();\n${txt.content}`,
+              `import { build } from "@deco/dev/tailwind";\nawait build();\n${
+                txt.content.replace(`#!/usr/bin/env -S deno run -A --watch`, "")
+              }`,
           };
         },
       },
