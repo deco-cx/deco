@@ -174,6 +174,7 @@ Here is a table with the integrations that we have built and the statuses of the
 | `ENABLE_LOADER_CACHE`             | Flag to enable or disable the loader cache              | `true`                                                 |
 | `LOADER_CACHE_START_TRESHOLD`     | Cache start threshold                                   | `0`                                                    |
 | `WEB_CACHE_ENGINE`                | Defines the cache engine(s) to use                      | `"FILE_SYSTEM,CACHE_API"`                                     |
+| `FILE_SYSTEM_CACHE_DIRECTORY`     | Directory path for file system cache                    | `/tmp` |
 | `CACHE_MAX_SIZE`                  | Maximum size of the file system cache (in bytes)                    | `1073741824` (1 GB)                                    |
 | `CACHE_TTL_AUTOPURGE`                   | Flag to automatically delete expired items from the file system cache (cpu intensive) | `false`                                      |
 | `CACHE_TTL_RESOLUTION`                  | Time interval to check for expired items in the file system cache (in milliseconds) | `30000` (30 seconds)                               |
