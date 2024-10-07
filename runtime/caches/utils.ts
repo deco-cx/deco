@@ -9,7 +9,7 @@ export const sha1 = async (text: string) => {
   return hex;
 };
 
-const NOT_IMPLEMENTED = () => {
+export const NOT_IMPLEMENTED = () => {
   throw new Error("Not Implemented");
 };
 
