@@ -4,11 +4,11 @@ import { logger } from "../../observability/otel/config.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
-  withCacheNamespace
+  withCacheNamespace,
 } from "./utils.ts";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
-  Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? '/tmp/deco_cache';
+  Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/tmp/deco_cache";
 
 // Function to convert headers object to a Uint8Array
 function headersToUint8Array(headers: [string, string][]) {
@@ -217,7 +217,7 @@ function createFileSystemCache(): CacheStorage {
 
           await putFile(
             cacheKey,
-            buffer
+            buffer,
           ).catch(
             (err) => {
               console.error("file system error", err);
