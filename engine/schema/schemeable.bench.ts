@@ -10,8 +10,8 @@ import { fromFileUrl, toFileUrl } from "@std/path";
 import {
   findSchemeableFromNode,
   type Schemeable as _Schemeable,
-} from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
-import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
+} from "https://denopkg.com/deco-cx/deco@1.104.2/engine/schema/transform.ts";
+import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.104.2/engine/schema/utils.ts";
 import { ImportMapBuilder } from "../importmap/builder.ts";
 import { parsePath } from "./parser.ts";
 import { type Schemeable, typeNameToSchemeable } from "./transform.ts";
