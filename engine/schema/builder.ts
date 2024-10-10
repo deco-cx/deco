@@ -171,6 +171,7 @@ function fileUniqueId(
   return [btoa(fileUrl), fileUrl];
 }
 
+let lastId = 0;
 export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
   return {
     data: initial,
@@ -200,6 +201,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
       });
     },
     build() {
+      // lastId = 0;
       const schemeableId = (
         schemeable: Schemeable,
         resolvePath = true,
@@ -366,8 +368,16 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           },
         ] as [Schemas["definitions"], JSONSchema7],
       );
+
+      const finalDefsWith$id = Object.fromEntries(
+        Object.entries(finalDefs).map((entry, idx) => {
+          entry[1] = { ...entry[1], $id: `#/${idx}-${lastId}` };
+          return entry;
+        }),
+      );
+
       return {
-        definitions: finalDefs,
+        definitions: finalDefsWith$id,
         root: {
           ...root,
           entrypoint,
