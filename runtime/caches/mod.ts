@@ -4,6 +4,11 @@ import { isFileSystemAvailable } from "./fileSystem.ts";
 
 import { caches as headersCache } from "./headerscache.ts";
 
+import {
+  caches as redisCache,
+  isAvailable as isRedisCacheAvailable,
+} from "./redis.ts";
+
 import { createTieredCache } from "./tiered.ts";
 
 import { caches as lruCache } from "./lrucache.ts";
@@ -24,6 +29,7 @@ export interface CacheStorageOption {
 
 export type CacheEngine =
   | "CACHE_API"
+  | "REDIS"
   | "FILE_SYSTEM";
 
 export const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
@@ -34,6 +40,10 @@ export const cacheImplByEngine: Record<CacheEngine, CacheStorageOption> = {
   FILE_SYSTEM: {
     implementation: headersCache(lruCache(fileSystem)),
     isAvailable: isFileSystemAvailable,
+  },
+  REDIS: {
+    implementation: redisCache,
+    isAvailable: isRedisCacheAvailable,
   },
 };
 
