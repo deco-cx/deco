@@ -9,9 +9,9 @@ on:
       - main
 
 permissions:
-  contents: write  # Necessary for accessing and modifying repository content
-  pull-requests: write  # Necessary for interacting with pull requests
-  actions: write  # Necessary for triggering other workflows
+  contents: write # Necessary for accessing and modifying repository content
+  pull-requests: write # Necessary for interacting with pull requests
+  actions: write # Necessary for triggering other workflows
 
 jobs:
   tag-discussion:
@@ -21,8 +21,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.base.ref }}  # Checkout the base branch (target repository)
-          repository: ${{ github.event.pull_request.base.repo.full_name }}  # Checkout from the target repo
+          ref: ${{ github.event.pull_request.base.ref }} # Checkout the base branch (target repository)
+          repository: ${{ github.event.pull_request.base.repo.full_name }} # Checkout from the target repo
 
       - name: Calculate new versions
         id: calculate_versions
@@ -168,15 +168,15 @@ jobs:
           git push origin ${{ steps.determine_version.outputs.new_version }}
       - name: Trigger Release Workflow
         run: |
-            curl -X POST \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                -H "Accept: application/vnd.github.everest-preview+json" \
-                https://api.github.com/repos/${{ github.repository }}/actions/workflows/release.yaml/dispatches \
-                -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
+          curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.everest-preview+json" \
+              https://api.github.com/repos/${{ github.repository }}/actions/workflows/release.yaml/dispatches \
+              -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
       - name: Trigger Publish Workflow
         run: |
-            curl -X POST \
-                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                -H "Accept: application/vnd.github.everest-preview+json" \
-                https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish.yaml/dispatches \
-                -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
+          curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.everest-preview+json" \
+              https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish.yaml/dispatches \
+              -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'

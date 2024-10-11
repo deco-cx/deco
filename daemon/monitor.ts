@@ -24,8 +24,17 @@ const isIdle = () => {
 const checkActivity = async (notificationUrl: URL) => {
   if (isIdle()) {
     console.log(`env is considered idle notifying ${notificationUrl}`);
-    await fetch(notificationUrl, { method: "GET" }).catch(
-      (_err) => {},
+    await fetch(notificationUrl, { method: "GET" }).then(async (resp) => {
+      if (!resp.ok) {
+        console.error(
+          `Failed to notify ${notificationUrl} with status ${resp.status} ${await resp
+            .text()}`,
+        );
+      }
+    }).catch(
+      (_err) => {
+        console.error(`Failed to notify ${notificationUrl}`, _err);
+      },
     );
   }
 };

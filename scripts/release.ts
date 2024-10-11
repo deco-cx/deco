@@ -97,7 +97,7 @@ const bump = async (...denoJSONPaths: string[]) => {
   }
 };
 
-const WELLKNOWN_DENO_JSON_FOLDERS = [".", "./scripts"];
+const WELLKNOWN_DENO_JSON_FOLDERS = [".", "./scripts", "./dev"];
 await bump(
   ...WELLKNOWN_DENO_JSON_FOLDERS.map((path) =>
     join(Deno.cwd(), path, DENO_JSON_FILE_NAME)
