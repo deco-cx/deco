@@ -24,6 +24,7 @@ export type {
   Attributes,
   BatchObservableResult,
   Context,
+  Exception,
   Link,
   Meter,
   ObservableCounter,

@@ -64,9 +64,9 @@ interface BoundaryState {
 }
 
 export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
-  state = { error: null };
+  override state = { error: null };
 
-  static getDerivedStateFromError(error: Error) {
+  static override getDerivedStateFromError(error: Error) {
     if (error instanceof HttpError) {
       throw error;
     }

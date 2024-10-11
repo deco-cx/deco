@@ -3,7 +3,6 @@
  */
 import {
   type Attributes,
-  type BatchObservableResult,
   InstrumentationBase,
   type InstrumentationConfig,
   type ObservableCounter,
@@ -30,19 +29,6 @@ export class DenoRuntimeInstrumentation extends InstrumentationBase {
 
   protected init() {}
 
-  private gatherOpenResources = (x: ObservableResult<Attributes>) => {
-    for (
-      const entry of Object
-        .values(Deno.resources())
-        .reduce<Map<string, number>>(
-          (acc, x) => (acc.set(x, 1 + (acc.get(x) ?? 0)), acc),
-          new Map(),
-        )
-    ) {
-      x.observe(entry[1], { "deno.resource.type": entry[0] });
-    }
-  };
-
   private gatherMemoryUsage = (x: ObservableResult<Attributes>) => {
     const usage = Deno.memoryUsage();
     x.observe(usage.rss, { "deno.memory.type": "rss" });
@@ -51,21 +37,7 @@ export class DenoRuntimeInstrumentation extends InstrumentationBase {
     x.observe(usage.external, { "deno.memory.type": "external" });
   };
 
-  private gatherOps = (x: BatchObservableResult<Attributes>) => {
-    for (const [op, data] of Object.entries(Deno.metrics().ops)) {
-      if (data.opsDispatched == 0) continue;
-      x.observe(this.metrics.dispatchedCtr, data.opsDispatched, {
-        "deno.op": op,
-      });
-      x.observe(
-        this.metrics.inflightCtr,
-        data.opsDispatched - data.opsCompleted,
-        { "deno.op": op },
-      );
-    }
-  };
-
-  enable() {
+  override enable() {
     this.metrics ??= {
       openResources: this.meter
         .createObservableUpDownCounter("deno.open_resources", {
@@ -88,20 +60,10 @@ export class DenoRuntimeInstrumentation extends InstrumentationBase {
         }),
     };
 
-    this.metrics.openResources.addCallback(this.gatherOpenResources);
     this.metrics.memoryUsage.addCallback(this.gatherMemoryUsage);
-    this.meter.addBatchObservableCallback(this.gatherOps, [
-      this.metrics.dispatchedCtr,
-      this.metrics.inflightCtr,
-    ]);
   }
 
-  disable() {
-    this.metrics.openResources.removeCallback(this.gatherOpenResources);
+  override disable() {
     this.metrics.memoryUsage.removeCallback(this.gatherMemoryUsage);
-    this.meter.removeBatchObservableCallback(this.gatherOps, [
-      this.metrics.dispatchedCtr,
-      this.metrics.inflightCtr,
-    ]);
   }
 }

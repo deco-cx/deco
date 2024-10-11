@@ -1,4 +1,4 @@
-import { ValueType } from "../../deps.ts";
+import { type Exception, ValueType } from "../../deps.ts";
 import { tracer } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 
@@ -38,7 +38,7 @@ export const withInstrumentation = (
             });
             return isMatch;
           } catch (err) {
-            span.recordException(err);
+            span.recordException(err as Exception);
             throw err;
           } finally {
             span.end();
