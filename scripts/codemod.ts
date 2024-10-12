@@ -66,6 +66,11 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
     yPrompt: false,
     targets: [
       rewriteImports({
+        "deco/utils/userAgent.ts": {
+          Device: {
+            moduleSpecifier: EXPORTS.UTILS,
+          },
+        },
         "deco/blocks/mod.ts": {
           Matcher: {
             moduleSpecifier: EXPORTS.DECO,
@@ -179,6 +184,9 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           },
         },
         "deco/clients/withManifest.ts": {
+          withManifest: {
+            moduleSpecifier: EXPORTS.DECO_WEB,
+          },
           forApp: {
             moduleSpecifier: EXPORTS.DECO_WEB,
           },
@@ -362,6 +370,9 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
         },
         "deco/blocks/utils.tsx": {
           buildImportMap: {
+            moduleSpecifier: EXPORTS.BLOCKS,
+          },
+          createBagKey: {
             moduleSpecifier: EXPORTS.BLOCKS,
           },
         },

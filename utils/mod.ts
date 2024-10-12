@@ -15,3 +15,4 @@ export { metabasePreview } from "./metabase.tsx";
 export { tryOrDefault } from "./object.ts";
 export type { DotNestedKeys } from "./object.ts";
 export { createServerTimings } from "./timings.ts";
+export type { Device } from "./userAgent.ts";
