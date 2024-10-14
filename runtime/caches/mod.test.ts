@@ -2,7 +2,7 @@ import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { caches as lruCache } from "./lrucache.ts";
 import { caches as headersCache } from "./headerscache.ts";
 
-const MAX_CACHE_SIZE = 1073824;
+const MAX_CACHE_SIZE = 1073741824;
 
 const NOT_IMPLEMENTED = () => {
   throw new Error("Not Implemented");
@@ -52,7 +52,7 @@ const baseTest = async (cacheStorageUT: CacheStorage) => {
   const cache = await headersCache(lruCache(cacheStorageUT)).open(CACHE_NAME);
   const response = () =>
     new Response("Hello, World!", {
-      headers: { "Content-length": `${MAX_CACHE_SIZE / 2}` },
+      headers: { "Content-length": `${MAX_CACHE_SIZE / 2 }` },
     });
   for (let i = 0; i < 5; i++) {
     const request = createRequest(i);

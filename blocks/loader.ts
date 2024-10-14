@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
 import { RequestContext } from "../deco.ts";
-import { ValueType, weakcache } from "../deps.ts";
+import { ValueType } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
@@ -117,11 +117,6 @@ export const wrapCaughtErrors = async <
   }
 };
 
-export const LOADER_CACHE_START_TRESHOLD =
-  Deno.env.get("LOADER_CACHE_START_TRESHOLD") ?? 0;
-
-export const LOADER_CACHE_SIZE = Deno.env.get("LOADER_CACHE_SIZE") ?? 1_024_000;
-
 const stats = {
   cache: meter.createCounter("loader_cache", {
     unit: "1",
@@ -153,8 +148,6 @@ const inFuture = (maybeDate: string) => {
 };
 
 const noop = () => "";
-
-let countCache = null as (weakcache.WeakLRUCache<any, any> | null);
 
 /**
  * Wraps the loader written by the user by adding support for:
@@ -228,28 +221,6 @@ const wrapLoader = (
 
         ctx.vary?.push(loader, cacheKeyValue);
         RequestContext?.signal?.throwIfAborted();
-
-        if (countCache === null) {
-          countCache = new weakcache.WeakLRUCache({
-            cacheSize: +LOADER_CACHE_SIZE,
-          });
-        }
-
-        const cc = countCache.getValue(cacheKeyValue) ?? { count: 0 };
-
-        if (cc.count === 0) {
-          cc.count = 1;
-          countCache.setValue(cacheKeyValue, cc);
-        } else {
-          cc.count += 1;
-        }
-
-        if (cc.count < LOADER_CACHE_START_TRESHOLD) {
-          status = "bypass";
-          stats.cache.add(1, { status, loader });
-
-          return await handler(props, req, ctx);
-        }
 
         const cache = maybeCache;
 

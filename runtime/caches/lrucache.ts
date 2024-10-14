@@ -6,8 +6,10 @@ import {
   createBaseCacheStorage,
 } from "./utils.ts";
 
+// keep compatible with old variable name
 const CACHE_MAX_SIZE = parseInt(
-  Deno.env.get("CACHE_MAX_SIZE") ?? "1073824",
+  Deno.env.get("CACHE_MAX_SIZE") ?? Deno.env.get("MAX_CACHE_SIZE") ??
+    "1073741824",
 ); // 1 GB max size of cache
 const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") !== "false"; // automatically delete expired items
 const CACHE_ALLOW_STALE = Deno.env.get("CACHE_ALLOW_STALE") !== "false"; // automatically allow stale
@@ -51,10 +53,6 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           if (fileCache.has(cacheKey)) {
             fileCache.get(cacheKey);
             const result = cacheInner.match(cacheKey);
-            if (!result) {
-              // innercache miss
-              fileCache.delete(cacheKey);
-            }
             return result;
           }
           return undefined;
