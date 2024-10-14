@@ -147,13 +147,10 @@ function createFileSystemCache(): CacheStorage {
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/delete) */
         delete: async (
           request: RequestInfo | URL,
-          options?: CacheQueryOptions,
+          _options?: CacheQueryOptions,
         ): Promise<boolean> => {
-          assertNoOptions(options);
-
-          const deleteResponse = await deleteFile(
-            await requestURLSHA1(request),
-          );
+          const cacheKey = await requestURLSHA1(request);
+          const deleteResponse = await deleteFile(cacheKey);
           return deleteResponse;
         },
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/keys) */
