@@ -421,7 +421,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
         if (hasFlags && cookieSegment !== value) {
           const date = new Date();
-          date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
+          date.setTime(date.getTime() + (5 * 24 * 60 * 60 * 1000)); // 5 days
           setCookie(newHeaders, {
             name: DECO_SEGMENT,
             value,
