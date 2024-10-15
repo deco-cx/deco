@@ -30,15 +30,15 @@ jobs:
         with:
           deno-version: v2.x
       - name: Build Deno Module
-        run: deno run -A --lock=deno.lock --lock-write --reload mod.ts
+        run: deno run -A --lock=deno.lock --frozen=false --reload mod.ts
       - name: fetch any uncached dependencies
         run: |
-          deno cache --lock=deno.lock --lock-write --reload=file: ./mod.ts
+          deno cache --lock=deno.lock --frozen=false --reload=file: ./mod.ts
 
       - run: |
-          deno test --lock=deno.lock --lock-write -A .
+          deno test --lock=deno.lock --frozen=false -A .
       - run: |
-          deno bench --lock=deno.lock --lock-write -A .
+          deno bench --lock=deno.lock --frozen=false -A .
       - name: check lint
         continue-on-error: true
         run: |
