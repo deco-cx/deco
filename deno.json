@@ -38,7 +38,7 @@
     "component": "deno eval 'import \"deco/scripts/component.ts\"'",
     "order_imports": "deno eval 'import \"deco/scripts/order_imports.ts\"'",
     "release": "deno run -A ./scripts/release.ts",
-    "check": "deno fmt && deno check live.ts && deno  --unstable-http test -A . && deno bench -A .",
+    "check": "deno fmt && deno check live.ts && deno test --unstable-http -A . && deno bench -A .",
     "cache_clean": "rm deno.lock; deno cache -r live.ts",
     "info_json": "deno info --json live.ts > deps.json",
     "detective": "deno run -A https://deno.land/x/detective/detective.ts deps.json",

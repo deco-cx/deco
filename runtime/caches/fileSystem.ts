@@ -93,7 +93,8 @@ function createFileSystemCache(): CacheStorage {
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
       const fileContent = await Deno.readFile(filePath);
       return fileContent;
-    } catch (err) {
+    } catch (_err) {
+      const err = _err as { code?: string };
       // Error code different for file/dir not found
       // The file won't be found in cases where it's not cached
       if (err.code !== "ENOENT") {

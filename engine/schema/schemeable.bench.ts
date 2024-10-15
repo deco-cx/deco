@@ -7,11 +7,6 @@
 import { dirname, join } from "@std/path";
 
 import { fromFileUrl, toFileUrl } from "@std/path";
-import {
-  findSchemeableFromNode,
-  type Schemeable as _Schemeable,
-} from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/transform.ts";
-import { denoDoc } from "https://denopkg.com/deco-cx/deco@1.26.0/engine/schema/utils.ts";
 import { ImportMapBuilder } from "../importmap/builder.ts";
 import { parsePath } from "./parser.ts";
 import { type Schemeable, typeNameToSchemeable } from "./transform.ts";
@@ -79,18 +74,6 @@ const getSchemeableDenoAST = async (
   });
 };
 
-const getSchemeableDenoDoc = async (
-  path: string,
-  name: string,
-): Promise<_Schemeable | undefined> => {
-  const ast = await denoDoc(path);
-  const nodeTypeRef = ast.find((node) => node.name === name);
-  if (!nodeTypeRef) {
-    return undefined;
-  }
-  return await findSchemeableFromNode(nodeTypeRef, [path, ast], new Map());
-};
-
 Deno.bench(
   "transform to schemeable using deno_ast",
   { group: "schema_gen", baseline: true },
@@ -99,17 +82,6 @@ Deno.bench(
 
     await Promise.all(testCases.map(({ path, typeName }) => {
       return getSchemeableDenoAST(path, typeName);
-    }));
-  },
-);
-
-Deno.bench(
-  "transform to schemeable using denodoc",
-  { group: "schema_gen" },
-  async () => {
-    localStorage.clear();
-    await Promise.all(testCases.map(({ path, typeName }) => {
-      return getSchemeableDenoDoc(path, typeName);
     }));
   },
 );

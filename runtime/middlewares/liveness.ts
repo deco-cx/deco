@@ -6,7 +6,6 @@ import { medianLatencyChecker } from "../../observability/probes/medianLatency.t
 import { memoryChecker } from "../../observability/probes/memory.ts";
 import { reqCountChecker } from "../../observability/probes/reqCount.ts";
 import { reqInflightChecker } from "../../observability/probes/reqInflight.ts";
-import { resourcesChecker } from "../../observability/probes/resources.ts";
 import { uptimeChecker } from "../../observability/probes/uptime.ts";
 import type { DecoMiddleware } from "../middleware.ts";
 
@@ -21,7 +20,6 @@ export interface Metrics {
   };
   mem: Deno.MemoryUsage;
   sys: Deno.SystemMemoryInfo;
-  resources: Deno.ResourceMap;
 }
 
 export interface LiveChecker<TValue = number> {
@@ -125,5 +123,4 @@ export const liveness = buildHandler(
   reqCountChecker,
   medianLatencyChecker,
   reqInflightChecker,
-  resourcesChecker,
 );

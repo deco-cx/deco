@@ -25,7 +25,8 @@ export interface ImportMap {
 export const safeImportResolve = (specifier: string): string => {
   try {
     return import.meta.resolve(specifier);
-  } catch (err) {
+  } catch (_err) {
+    const err = _err as { message?: string };
     const msg = err?.message;
     if (typeof msg === "string") {
       const match = msg.match(JSR_ERROR_REGEX);

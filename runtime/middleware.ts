@@ -2,7 +2,7 @@
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context } from "../deco.ts";
-import { getCookies, SpanStatusCode } from "../deps.ts";
+import { Exception, getCookies, SpanStatusCode } from "../deps.ts";
 import { startObserve } from "../observability/http.ts";
 import { logger } from "../observability/mod.ts";
 import { HttpError } from "../runtime/errors.ts";
@@ -77,7 +77,8 @@ export const createHandler = <TManifest extends AppManifest = AppManifest>(
 async (ctx, next) => {
   try {
     return await handler(ctx, next);
-  } catch (err) {
+  } catch (_err) {
+    const err = _err as { stack?: string; message?: string };
     if (err instanceof HttpError) {
       return err.resp;
     }
@@ -278,7 +279,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           try {
             await next();
           } catch (e) {
-            span.recordException(e);
+            span.recordException(e as Exception);
             throw e;
           } finally {
             const status = ctx.res?.status ?? 500;
