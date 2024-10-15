@@ -69,7 +69,8 @@ class PortPool implements PortPool {
       const server = Deno.listen(options);
       server.close();
       return { valid: true, port };
-    } catch (e) {
+    } catch (_err) {
+      const e = _err as { name?: string };
       if (e.name !== "AddrInUse") throw e;
       else return { valid: false, port };
     }

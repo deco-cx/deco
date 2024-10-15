@@ -300,7 +300,8 @@ const resolveConflictsRecursively = async (wip: number = 50) => {
     }
 
     await git.rebase({ "--continue": null });
-  } catch (error) {
+  } catch (_error) {
+    const error = _error as { message?: string };
     // We should never enter this `if` in normal circumstances
     if (!error.message?.includes("CONFLICT")) {
       console.error(error);

@@ -97,7 +97,8 @@ export const watchMeta = async () => {
 
       broadcast({ type: "meta-info", detail: withExtraParams });
       dispatchWorkerState("ready");
-    } catch (error) {
+    } catch (_error) {
+      const error = _error as { status?: number };
       // in case of timeout, retry without updating the worker state
       // to avoid false alarming down state
       if (error.status === 408) {
