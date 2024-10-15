@@ -26,17 +26,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
       - name: Publish package
-        run: deno publish
+        run: npx jsr publish
 
       - name: Publish script package
-        run: cd scripts/ && deno publish
+        run: cd scripts/ && npx jsr publish
 
       - name: Publish dev package
-        run: cd dev/ && deno publish
+        run: cd dev/ && npx jsr publish
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
