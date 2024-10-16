@@ -65,8 +65,9 @@ const resolveImport = (path: string) => {
 
 export const genSchemasFromManifest = async (
   manifest: AppManifest,
-  baseDir?: string,
+  baseDir: string | undefined = undefined,
   importMap: ImportMap = { imports: {} },
+  revision: Promise<string>,
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
   const dir = toFileUrl(baseDir ? baseDir : Deno.cwd()).toString();
@@ -82,11 +83,12 @@ export const genSchemasFromManifest = async (
     },
     {} as Record<string, JSONSchema7>,
   );
+  const rev = await revision;
   const schemaBuilder = newSchemaBuilder({
     schema: { root: rootWithBlocks, definitions: {} },
     blockModules: [],
     entrypoints: [],
-  });
+  }, rev);
 
   const refPromises: Promise<
     (BlockModule | EntrypointModule | undefined)
