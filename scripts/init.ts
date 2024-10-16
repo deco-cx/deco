@@ -5,7 +5,7 @@ import { join } from "@std/path";
 import {
   BlobReader,
   ZipReader,
-} from "https://deno.land/x/zipjs@v2.7.30/index.js";
+} from "https://deno.land/x/zipjs@v2.7.52/index.js";
 import { getDecofileJSONFromDecofile } from "../engine/decofile/json.ts";
 import { init as initApp } from "./apps/init.ts";
 
