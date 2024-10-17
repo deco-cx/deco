@@ -167,6 +167,7 @@ const matcherBlock: Block<
             path: "/",
             sameSite: "Lax",
             expires: date,
+            httpOnly: true,
           });
           respHeaders.append("vary", "cookie");
         }
