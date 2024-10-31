@@ -6,7 +6,7 @@ import {
   initLoader,
   parsePath,
 } from "@deco/deco/engine";
-import { join, toFileUrl } from "@std/path";
+import { join, SEPARATOR, toFileUrl } from "@std/path";
 
 const visit = (
   program: ParsedSource,
@@ -67,7 +67,7 @@ const importsFrom = async (path: string): Promise<string[]> => {
   return [...imports.values()];
 };
 
-const localAppsFolder = `${Deno.cwd()}/apps`;
+const localAppsFolder = `${Deno.cwd().replaceAll(SEPARATOR, "/")}/apps`;
 
 const skipPath = (path: string) => {
   if (path.endsWith(".tsx")) {

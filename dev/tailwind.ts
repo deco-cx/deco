@@ -1,6 +1,6 @@
 import { cyan } from "@std/fmt/colors";
 import { walk } from "@std/fs";
-import { join, toFileUrl } from "@std/path";
+import { join, SEPARATOR, toFileUrl } from "@std/path";
 import autoprefixer from "npm:autoprefixer@10.4.14";
 import cssnano from "npm:cssnano@6.0.1";
 import postcss, { type AcceptedPlugin } from "npm:postcss@8.4.27";
@@ -87,7 +87,8 @@ const withReleaseContent = async (config: Config) => {
       includeFiles: true,
     })
   ) {
-    if (entry.path.endsWith(".tsx") || entry.path.includes("/apps/")) {
+    const path = entry.path.replaceAll(SEPARATOR, "/");
+    if (path.endsWith(".tsx") || path.includes("/apps/")) {
       roots.add(toFileUrl(entry.path).href);
     }
   }
