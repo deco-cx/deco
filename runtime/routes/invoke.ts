@@ -42,6 +42,10 @@ function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
     return null;
   }
 
+  if (contentType?.startsWith("multipart/form-data")) {
+    return "form-data";
+  }
+
   if (!contentLength || !contentType) {
     return "try-json";
   }
@@ -50,9 +54,6 @@ function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
     return "json";
   }
 
-  if (contentType.startsWith("multipart/form-data")) {
-    return "form-data";
-  }
 
   return null;
 }
