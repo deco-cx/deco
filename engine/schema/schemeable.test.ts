@@ -905,8 +905,8 @@ Deno.test("Anonymous types generation", async () => {
 
   const isWindows = Deno.build.os === "windows";
   // TODO: get name for unix systems
-  const cardName = isWindows ? "tl@1586-1845" : "tl@693-760";
-  const buttonName = isWindows ? "tl@1698-1838" : "tl@189-329";
+  const cardName = isWindows ? "tl@1586-1845" : "tl@1516-1761";
+  const buttonName = isWindows ? "tl@1698-1838" : "tl@1622-1755";
 
   assertEquals(transformed, {
     file: path,
