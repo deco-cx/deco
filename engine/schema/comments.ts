@@ -30,9 +30,41 @@ export type Spannable =
   | ExportNamedDeclarationSpannable;
 
 const getChildren = (s: Spannable) => {
-  return (s as any)?.declaration?.body?.body ?? (s as any)?.body?.body ??
+  const children = (s as any)?.declaration?.body?.body ??
+    (s as any)?.body?.body ??
     (s as ModuleSpannable)?.body ??
     (s as ImportDeclarationSpannable)?.specifiers;
+
+  if (children) {
+    return children;
+  }
+
+  if ((s as any)?.type === "TsPropertySignature") {
+    const typeAnnotation = (s as any)?.typeAnnotation?.typeAnnotation as any;
+    if (
+      typeAnnotation?.type === "TsTypeLiteral" &&
+      typeAnnotation?.members?.length
+    ) {
+      return typeAnnotation.members;
+    }
+
+    if (
+      typeAnnotation?.type === "TsArrayType" &&
+      typeAnnotation?.elemType?.type === "TsTypeLiteral" &&
+      typeAnnotation?.elemType?.members?.length
+    ) {
+      return typeAnnotation.elemType.members;
+    }
+
+    if (
+      typeAnnotation?.type === "TsTypeReference" &&
+      typeAnnotation?.typeName?.value === "Array" &&
+      typeAnnotation?.typeParams?.params?.[0]?.type === "TsTypeLiteral" &&
+      typeAnnotation?.typeParams?.params?.[0]?.members?.length
+    ) {
+      return typeAnnotation.typeParams.params[0].members;
+    }
+  }
 };
 
 const isSpannableArray = (child: any): child is Spannable[] => {
@@ -44,7 +76,7 @@ const isSpannableArray = (child: any): child is Spannable[] => {
  * This function allocate comments where it should be placed.
  * When a program is parsed all comments are ignored meaning that it will not be part of the code AST.
  * The problem is that we use comments to enrich JSONSchema based on the JsDoc attribute.
- * As comments are treat as a separate array of strings containing only the information of which characeter it starts and ends (spannable).
+ * As comments are treat as a separate array of strings containing only the information of which character it starts and ends (spannable).
  * This code distribute it based on the span attribute of the comments, matching with the body span attribute.
  *
  * So it basically starts with all comments of the module, and then distribute it into body items, it recursively do the same thing inside a body item declaration if it is a TsInterface declaration,

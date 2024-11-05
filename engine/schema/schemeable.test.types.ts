@@ -63,3 +63,24 @@ export interface TypeWithExtendsOmit extends Omit<ComplexType, "jsonLD"> {
 }
 
 export { type MyDataUriType } from "data:text/tsx,export interface MyDataUriType { a: string; };";
+
+export interface WithAnonTypes {
+  /**
+   * @title Cards
+   */
+  items: {
+    title: string;
+    /**
+     * @format rich-text
+     */
+    description: string;
+    buttons: Array<{
+      label: string;
+      /**
+       * @format url
+       */
+      url: string;
+      position: "left" | "right" | "center";
+    }>;
+  }[];
+}

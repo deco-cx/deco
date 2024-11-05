@@ -896,3 +896,138 @@ Deno.test("Wellknown in types generation", async () => {
 
   assertSpyCalls(genId, 9);
 });
+
+Deno.test("Anonymous types generation", async () => {
+  const transformed = await getSchemeableFor("WithAnonTypes");
+  if (!transformed) {
+    fail("TypeAlias should exists");
+  }
+
+  const isWindows = Deno.build.os === "windows";
+  // TODO: get name for unix systems
+  const cardName = isWindows ? "tl@1586-1845" : "tl@1516-1761";
+  const buttonName = isWindows ? "tl@1698-1838" : "tl@1622-1755";
+
+  assertEquals(transformed, {
+    file: path,
+    name: "WithAnonTypes",
+    extends: [],
+    jsDocSchema: {},
+    type: "object",
+    value: {
+      items: {
+        title: "Items",
+        jsDocSchema: { title: "Cards" },
+        schemeable: {
+          file: path,
+          type: "array",
+          name: `[${cardName}]`,
+          value: {
+            file: path,
+            name: cardName,
+            type: "object",
+            value: {
+              title: {
+                title: "Title",
+                jsDocSchema: {},
+                schemeable: {
+                  type: "inline",
+                  name: "string",
+                  value: { type: "string" },
+                },
+                required: true,
+              },
+              description: {
+                title: "Description",
+                jsDocSchema: { format: "rich-text" },
+                schemeable: {
+                  type: "inline",
+                  name: "string",
+                  value: { type: "string" },
+                },
+                required: true,
+              },
+              buttons: {
+                title: "Buttons",
+                jsDocSchema: {},
+                schemeable: {
+                  type: "array",
+                  name: `[${buttonName}]`,
+                  file: path,
+                  value: {
+                    file: path,
+                    name: buttonName,
+                    type: "object",
+                    value: {
+                      label: {
+                        title: "Label",
+                        jsDocSchema: {},
+                        schemeable: {
+                          type: "inline",
+                          name: "string",
+                          value: { type: "string" },
+                        },
+                        required: true,
+                      },
+                      url: {
+                        title: "Url",
+                        jsDocSchema: { format: "url" },
+                        schemeable: {
+                          type: "inline",
+                          name: "string",
+                          value: { type: "string" },
+                        },
+                        required: true,
+                      },
+                      position: {
+                        title: "Position",
+                        jsDocSchema: {},
+                        schemeable: {
+                          file: undefined,
+                          type: "union",
+                          name: "left|right|center",
+                          value: [
+                            {
+                              type: "inline",
+                              name: "left",
+                              value: {
+                                type: "string",
+                                const: "left",
+                                default: "left",
+                              },
+                            },
+                            {
+                              type: "inline",
+                              name: "right",
+                              value: {
+                                type: "string",
+                                const: "right",
+                                default: "right",
+                              },
+                            },
+                            {
+                              type: "inline",
+                              name: "center",
+                              value: {
+                                type: "string",
+                                const: "center",
+                                default: "center",
+                              },
+                            },
+                          ],
+                        },
+                        required: true,
+                      },
+                    },
+                  },
+                },
+                required: true,
+              },
+            },
+          },
+        },
+        required: true,
+      },
+    },
+  });
+});
