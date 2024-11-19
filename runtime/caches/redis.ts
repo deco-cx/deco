@@ -15,6 +15,7 @@ import {
 
 const CONNECTION_TIMEOUT = 500;
 const RECONNECTION_TIMEOUT = 5000;
+const TTL = parseInt(Deno.env.get("LOADER_CACHE_REDIS_TTL_SECONDS") || "3600");
 
 type RedisConnection = RedisClientType<
   RedisModules,
@@ -119,15 +120,7 @@ export const caches: CacheStorage = {
         const cacheKey = await generateKey(request);
 
         serialize(response)
-          .then((data) => {
-            const expirationTimestamp = Date.parse(
-              response.headers.get("expires") ?? "",
-            );
-
-            const ttl = expirationTimestamp - Date.now();
-
-            return redis?.set(cacheKey, data, { PX: ttl });
-          })
+          .then((data) => redis?.set(cacheKey, data, { EX: TTL }))
           .catch(() => {});
       },
     });
