@@ -1,5 +1,4 @@
 import { build } from "./tailwind.ts";
-
 await build();
 
 if (Deno.args.includes("build")) {
