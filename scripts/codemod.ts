@@ -717,11 +717,11 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
           match: [/.gitignore$/],
         },
         apply: (txt) => {
-          if (txt.content.includes(".deco/blocks/decofile.json")) {
+          if (txt.content.includes(".deco/decofile.json")) {
             return txt;
           }
           return {
-            content: `${txt.content}\n.deco/blocks/decofile.json\n`,
+            content: `${txt.content}\n.deco/decofile.json\n`,
           };
         },
       },
