@@ -714,10 +714,28 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
       },
       {
         options: {
+          match: [/.gitignore$/],
+        },
+        apply: (txt) => {
+          if (txt.content.includes(".deco/blocks/decofile.json")) {
+            return txt;
+          }
+          return {
+            content: `${txt.content}\n.deco/blocks/decofile.json\n`,
+          };
+        },
+      },
+      {
+        options: {
           match: [/dev.ts$/],
         },
         apply: (txt) => {
           if (txt.content.includes("@deco/dev/tailwind")) {
+            return {
+              content: txt.content.replace("@deco/dev/tailwind", "@deco/dev"),
+            };
+          }
+          if (txt.content.includes("@deco/dev")) {
             return txt;
           }
           return {

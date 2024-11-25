@@ -1,12 +1,12 @@
 {
   "name": "@deco/dev",
-  "version": "1.107.0",
+  "version": "1.107.2-beta.1",
   "exports": {
     ".": "./mod.ts",
     "./tailwind": "./tailwind.ts"
   },
   "imports": {
-    "@deco/deco": "jsr:@deco/deco@^1.101.22-alpha.1",
+    "@deco/deco": "jsr:@deco/deco@^1.107.2-beta.1",
     "@std/fmt": "jsr:@std/fmt@^1.0.0",
     "@std/fs": "jsr:@std/fs@^1.0.4",
     "@std/path": "jsr:@std/path@^1.0.2"
