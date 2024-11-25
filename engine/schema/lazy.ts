@@ -154,7 +154,11 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
           const { manifest, importMap } = await ctx.runtime!;
           _cached = incorporateSavedBlocksIntoSchema(
             manifest,
-            await genSchemas(manifest, importMap),
+            await genSchemas(
+              manifest,
+              importMap,
+              ctx.release?.revision() ?? Promise.resolve(""),
+            ),
             {
               ...await ctx.release!.state(),
             },
