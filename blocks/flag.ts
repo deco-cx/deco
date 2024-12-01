@@ -75,9 +75,11 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
       },
     };
     if (isMultivariate(flag)) {
-      const value = (flag?.variants ?? []).find((variant) =>
+      const value = ((flag?.variants ?? []).find((variant) =>
         typeof variant?.rule === "function" && variant?.rule(ctx)
-      )?.value ?? (flag?.variants ?? [])[flag?.variants?.length - 1];
+      ) as Variant<unknown>)?.value ??
+        ((flag?.variants ?? [])[flag?.variants?.length - 1] as Variant<unknown>)
+          ?.value;
       return isDeferred(value) ? value() : value;
     }
     const matchValue = typeof flag?.matcher === "function"
