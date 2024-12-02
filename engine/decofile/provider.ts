@@ -88,8 +88,13 @@ const DECOFILE_RELEASE_ENV_VAR = "DECO_RELEASE";
 
 // if decofile does not exists but blocks exists so it should be lazy
 const BLOCKS_FOLDER = join(Deno.cwd(), ".deco", "blocks");
+const BUILT_DECOFILE_PATH = join(Deno.cwd(), ".deco", "decofile.json");
 const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
   isDirectory: true,
+  isReadable: true,
+});
+const builtDecofileExistsPromise = exists(BUILT_DECOFILE_PATH, {
+  isFile: true,
   isReadable: true,
 });
 const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
@@ -110,9 +115,13 @@ export const getProvider = async (
     return newFsProvider();
   }
 
-  const endpoint = await blocksFolderExistsPromise
-    ? `folder://${BLOCKS_FOLDER}`
-    : DECOFILE_PATH_FROM_ENV;
+  let endpoint = DECOFILE_PATH_FROM_ENV;
+  if (await builtDecofileExistsPromise) {
+    endpoint = `file://${BUILT_DECOFILE_PATH}`;
+  } else if (await blocksFolderExistsPromise) {
+    endpoint = `folder://${BLOCKS_FOLDER}`;
+  }
+
   if (endpoint) {
     console.info(
       colors.brightCyan(

@@ -21,7 +21,7 @@ const buildPermissionsArgs = (
   for (const [key, value] of Object.entries(perm)) {
     if (value === "inherit") {
       permCache[key] ??= Deno.permissions.querySync({
-        name: key as keyof Deno.PermissionOptionsObject,
+        name: key as Deno.PermissionDescriptor["name"],
       }).state;
       const access = permCache[key];
       access === "granted" && args.push(`--allow-${key}`);
