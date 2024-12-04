@@ -78,11 +78,15 @@ type MatchFunc<TConfig = any> =
 
 export type MatcherStickiness = "session" | "none";
 
-export type MatcherModule<TProps = any> = MatcherStickySessionModule<TProps> | MatcherStickyNoneModule;
+export type MatcherModule<TProps = any> =
+  | MatcherStickySessionModule<TProps>
+  | MatcherStickyNoneModule;
 
-const isStickySessionModule = <TProps = any>(matcher: MatcherModule<TProps>) : matcher is MatcherStickySessionModule<TProps> => {
+const isStickySessionModule = <TProps = any>(
+  matcher: MatcherModule<TProps>,
+): matcher is MatcherStickySessionModule<TProps> => {
   return (matcher as MatcherStickySessionModule<TProps>).sticky === "session";
-}
+};
 
 export type BlockModuleMatcher = BlockModule<
   MatchFunc,
@@ -169,7 +173,9 @@ const matcherBlock: Block<
         result ??= matcherFunc(ctx);
       } else {
         hasher.hash(uniqueId);
-        const _sessionKey = matcherModule.sessionKey ? `_${matcherModule.sessionKey?.($live, ctx)}` : "";
+        const _sessionKey = matcherModule.sessionKey
+          ? `_${matcherModule.sessionKey?.($live, ctx)}`
+          : "";
         const cookieName =
           `${DECO_MATCHER_PREFIX}${hasher.result()}${_sessionKey}`;
         hasher.reset();

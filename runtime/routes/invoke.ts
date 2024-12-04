@@ -54,7 +54,6 @@ function getParsingStrategy(req: Request): keyof typeof propsParsers | null {
     return "json";
   }
 
-
   return null;
 }
 
