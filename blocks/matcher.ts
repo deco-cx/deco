@@ -78,13 +78,17 @@ type MatchFunc<TConfig = any> =
 
 export type MatcherStickiness = "session" | "none";
 
-export interface MatcherModule extends
+export interface MatcherModule<TProps> extends
   BlockModule<
-    MatchFunc,
+    MatchFunc<TProps>,
     boolean | ((ctx: MatchContext) => boolean),
     (ctx: MatchContext) => boolean
   > {
   sticky?: MatcherStickiness;
+  sessionKey?: (
+    props: TProps,
+    ctx: MatchContext,
+  ) => string | null;
 }
 
 const charByType = {
@@ -100,7 +104,7 @@ const matcherBlock: Block<
 > = {
   type: "matchers",
   adapt: <TConfig = unknown>(
-    { default: func, sticky }: MatcherModule,
+    { default: func, sticky, sessionKey }: MatcherModule<TConfig>,
   ) =>
   (
     $live: TConfig,
@@ -152,7 +156,8 @@ const matcherBlock: Block<
         result ??= matcherFunc(ctx);
       } else {
         hasher.hash(uniqueId);
-        const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
+        const _sessionKey = sessionKey ? `_${sessionKey?.($live, ctx)}` : "";
+        const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}${_sessionKey}`;
         hasher.reset();
         const isMatchFromCookie = cookieValue.boolean(
           getCookies(ctx.request.headers)[cookieName],
