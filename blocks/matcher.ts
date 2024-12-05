@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import type { HttpContext } from "../blocks/handler.ts";
 import { getCookies, Murmurhash3, setCookie } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
@@ -70,7 +71,6 @@ const cookieValue = {
   },
 };
 
-// deno-lint-ignore no-explicit-any
 type MatchFunc<TConfig = any> =
   | ((config: TConfig) => (ctx: MatchContext) => boolean)
   | ((config: TConfig) => boolean)
@@ -78,13 +78,33 @@ type MatchFunc<TConfig = any> =
 
 export type MatcherStickiness = "session" | "none";
 
-export interface MatcherModule extends
-  BlockModule<
-    MatchFunc,
-    boolean | ((ctx: MatchContext) => boolean),
-    (ctx: MatchContext) => boolean
-  > {
-  sticky?: MatcherStickiness;
+export type MatcherModule<TProps = any> =
+  | MatcherStickySessionModule<TProps>
+  | MatcherStickyNoneModule;
+
+const isStickySessionModule = <TProps = any>(
+  matcher: MatcherModule<TProps>,
+): matcher is MatcherStickySessionModule<TProps> => {
+  return (matcher as MatcherStickySessionModule<TProps>).sticky === "session";
+};
+
+export type BlockModuleMatcher = BlockModule<
+  MatchFunc,
+  boolean | ((ctx: MatchContext) => boolean),
+  (ctx: MatchContext) => boolean
+>;
+
+export interface MatcherStickyNoneModule extends BlockModuleMatcher {
+  sticky?: "none";
+}
+
+export interface MatcherStickySessionModule<TProps = any>
+  extends BlockModuleMatcher {
+  sticky: "session";
+  sessionKey?: (
+    props: TProps,
+    ctx: MatchContext,
+  ) => string | null;
 }
 
 const charByType = {
@@ -100,7 +120,7 @@ const matcherBlock: Block<
 > = {
   type: "matchers",
   adapt: <TConfig = unknown>(
-    { default: func, sticky }: MatcherModule,
+    matcherModule: MatcherModule<TConfig>,
   ) =>
   (
     $live: TConfig,
@@ -111,6 +131,7 @@ const matcherBlock: Block<
       unknown
     >,
   ) => {
+    const { default: func } = matcherModule;
     const matcherFunc = (ctx: MatchContext) => {
       const fMatcher = func as unknown as
         | ((c: TConfig, ctx: MatchContext) => boolean)
@@ -122,7 +143,7 @@ const matcherBlock: Block<
       return matcherFuncOrValue;
     };
     const respHeaders = httpCtx.context.state.response.headers;
-    const shouldStickyOnSession = sticky === "session";
+    const shouldStickyOnSession = isStickySessionModule(matcherModule);
     return (ctx: MatchContext) => {
       let uniqueId = "";
       let isSegment = true;
@@ -152,7 +173,11 @@ const matcherBlock: Block<
         result ??= matcherFunc(ctx);
       } else {
         hasher.hash(uniqueId);
-        const cookieName = `${DECO_MATCHER_PREFIX}${hasher.result()}`;
+        const _sessionKey = matcherModule.sessionKey
+          ? `_${matcherModule.sessionKey?.($live, ctx)}`
+          : "";
+        const cookieName =
+          `${DECO_MATCHER_PREFIX}${hasher.result()}${_sessionKey}`;
         hasher.reset();
         const isMatchFromCookie = cookieValue.boolean(
           getCookies(ctx.request.headers)[cookieName],

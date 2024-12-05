@@ -17,7 +17,7 @@ export const useDevice = (): Device => {
   }
 
   if (!ctx) {
-    console.warn("Missing context in rendering tree")
+    console.warn("Missing context in rendering tree");
   }
 
   return ctx?.device || "desktop";
