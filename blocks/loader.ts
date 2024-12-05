@@ -9,7 +9,10 @@ import type { DecofileProvider } from "../engine/decofile/provider.ts";
 import { HttpError } from "../engine/errors.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import { logger } from "../observability/otel/config.ts";
-import { meter } from "../observability/otel/metrics.ts";
+import {
+  meter,
+  OTEL_ENABLE_EXTRA_METRICS,
+} from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
 import type { HttpContext } from "./handler.ts";
 import {
@@ -317,7 +320,9 @@ const wrapLoader = (
         return await flights.do(request.url, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
-        stats.latency.record(performance.now() - start, dimension);
+        if (OTEL_ENABLE_EXTRA_METRICS) {
+          stats.latency.record(performance.now() - start, dimension);
+        }
         ctx.monitoring?.currentSpan?.setDesc(status);
       }
     },

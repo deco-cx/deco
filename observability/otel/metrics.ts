@@ -6,6 +6,17 @@ import {
   View,
 } from "../../deps.ts";
 import { OTEL_IS_ENABLED, resource } from "./config.ts";
+
+export const OTEL_ENABLE_EXTRA_METRICS: boolean = Deno.env.has(
+  "OTEL_ENABLE_EXTRA_METRICS",
+);
+
+// 2 minutes. We don't need frequent updates here.
+export const OTEL_EXPORT_INTERVAL: number = parseInt(
+  Deno.env.get("OTEL_EXPORT_INTERVAL") ?? "120000",
+  10,
+);
+
 // a=b,c=d => {a:b, c:d}
 const headersStringToObject = (headersString: string | undefined | null) => {
   if (!headersString) {
@@ -46,7 +57,7 @@ if (OTEL_IS_ENABLED) {
   meterProvider.addMetricReader(
     new PeriodicExportingMetricReader({
       exporter: metricExporter,
-      exportIntervalMillis: 30_000,
+      exportIntervalMillis: OTEL_EXPORT_INTERVAL,
     }),
   );
 }
