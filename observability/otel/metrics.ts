@@ -13,7 +13,7 @@ export const OTEL_ENABLE_EXTRA_METRICS: boolean = Deno.env.has(
 
 // 2 minutes. We don't need frequent updates here.
 export const OTEL_EXPORT_INTERVAL: number = parseInt(
-  Deno.env.get("OTEL_EXPORT_INTERVAL") ?? "120000",
+  Deno.env.get("OTEL_EXPORT_INTERVAL") ?? "60000",
   10,
 );
 
