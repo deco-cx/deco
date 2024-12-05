@@ -1,6 +1,6 @@
 import { isWrappedError } from "../blocks/loader.ts";
 import { ValueType } from "../deps.ts";
-import { meter } from "./otel/metrics.ts";
+import { meter, OTEL_ENABLE_EXTRA_METRICS } from "./otel/metrics.ts";
 
 const operationDuration = meter.createHistogram("block_op_duration", {
   description: "operation duration",
@@ -27,9 +27,11 @@ export const observe = async <T>(
     isError = "true";
     throw error;
   } finally {
-    operationDuration.record(performance.now() - start, {
-      "operation.name": op,
-      "operation.is_error": isError,
-    });
+    if (OTEL_ENABLE_EXTRA_METRICS) {
+      operationDuration.record(performance.now() - start, {
+        "operation.name": op,
+        "operation.is_error": isError,
+      });
+    }
   }
 };
