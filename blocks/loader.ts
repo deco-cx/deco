@@ -111,7 +111,7 @@ export const wrapCaughtErrors = async <
         }
 
         /**
-         * No special case found, throw and hope to be catch by the
+         * No special case found, throw and hope to be caught by the
          * section's ErrorFallback
          */
         throw err;
@@ -205,7 +205,7 @@ const wrapLoader = (
         if (
           bypassCache ||
           // This code is unreachable, but the TS complains that cache is undefined because
-          // it doesn't get that isCache is inside of bypassCache variable
+          // it doesn't get that isCache is inside the bypassCache variable
           !isCache(maybeCache)
         ) {
           const shouldNotCache = isCacheNoStore || isCacheKeyNull;

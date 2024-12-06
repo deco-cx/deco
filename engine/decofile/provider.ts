@@ -86,7 +86,7 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
 
 const DECOFILE_RELEASE_ENV_VAR = "DECO_RELEASE";
 
-// if decofile does not exists but blocks exists so it should be lazy
+// if decofile does not exist but blocks exist so it should be lazy
 const BLOCKS_FOLDER = join(Deno.cwd(), ".deco", "blocks");
 const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
   isDirectory: true,

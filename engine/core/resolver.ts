@@ -293,7 +293,7 @@ export const withResolveChainOfType = <
 export const RESOLVE_SHORTCIRCUIT = "resolved";
 
 /**
- * wraps an arbitrary data as a resolved object skiping the config resolution algorithm.
+ * wraps an arbitrary data as a resolved object skipping the config resolution algorithm.
  */
 export const asResolved = <T>(data: T, deferred?: boolean): T => {
   return {

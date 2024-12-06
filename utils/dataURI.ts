@@ -1,5 +1,5 @@
 // Avoid throwing DOM Exception:
-// The string to be encoded contains characters outside of the Latin1 range.
+// The string to be encoded contains characters outside the Latin1 range.
 const btoaSafe = (x: string) =>
   btoa(`decodeURIComponent(escape(${unescape(encodeURIComponent(x))}))`);
 

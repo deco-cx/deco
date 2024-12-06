@@ -193,7 +193,7 @@ const SERVER_TIMING_SEPARATOR: string = ",";
 const SERVER_TIMING_MAX_LEN: number = 2_000;
 /**
  * @description return server-timing string equal or less than size parameter.
- * if timings.length > size then return the timing until the well formed timing that's smaller than size.
+ * if timings.length > size then return the timing until the well-formed timing that's smaller than size.
  */
 const reduceServerTimingsTo = (timings: string, size: number): string => {
   if (timings.length <= size) return timings;
