@@ -16,9 +16,9 @@ import type { AppManifest } from "../types.ts";
 import { usePreviewFunc } from "./utils.tsx";
 
 const resolverIsBlock = (blk: Block) => (resolver: string) => {
-  const splitted = resolver.split("/");
+  const segments = resolver.split("/");
   // check if there's any segment on the same name of the block
-  return splitted.some((segment) => segment === blk.type); //FIXME (mcandeia) this is not a straightforward solution
+  return segments.some((segment) => segment === blk.type); //FIXME (mcandeia) this is not a straightforward solution
 };
 
 const asManifest = <TManifest extends AppManifest>(

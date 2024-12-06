@@ -1,6 +1,6 @@
 import { RequestContext } from "../deco.ts";
 
-// Monkey patch fetch so we can have global cancelation token
+// Monkey patch fetch so we can have global cancellation token
 const fetcher = globalThis.fetch;
 
 type RequestInitWithSignal = (RequestInit | globalThis.RequestInit) & {

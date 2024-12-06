@@ -182,7 +182,7 @@ export function withSection<TProps, TLoaderProps = TProps>(
         // if this is the case, so we can use the renderSaltFromState - which means that we are in a partial rendering phase
         const renderSalt = parentRenderSalt === undefined
           ? renderSaltFromState ?? `${renderCount}`
-          : `${parentRenderSalt ?? ""}${renderCount}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many time this function is called.
+          : `${parentRenderSalt ?? ""}${renderCount}`; // the render salt is used to prevent duplicate ids in the same page, it starts with parent renderSalt and appends how many times this function is called.
         const id = `${idPrefix}-${renderSalt}`; // all children of the same parent will have the same renderSalt, but different renderCount
         renderCount = ++renderCount % MAX_RENDER_COUNT;
 

@@ -1,5 +1,5 @@
 /**
- * Some attriibutes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
+ * Some attributes are not string in JSON Schema. Because of that, we need to parse some to boolean or number.
  * For instance, maxLength and maxItems have to be parsed to number. readOnly should be a boolean etc
  */
 export const parseJSDocAttribute = (key: string, value: string) => {
