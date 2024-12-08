@@ -79,9 +79,10 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
       let match: Variant<unknown> | null = null;
 
       for (const variant of flag.variants || []) {
-        let ruleResult = typeof variant?.rule === "function"
-          ? variant?.rule(ctx)
-          : null;
+        if (typeof variant?.rule !== "function") {
+          continue;
+        }
+        let ruleResult = variant?.rule(ctx);
         // the rule can sometimes be a promise and we need to await it to check if it's truthy or not
         if (isAwaitable(ruleResult)) {
           try {
