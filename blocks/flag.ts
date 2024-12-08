@@ -84,7 +84,12 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
           : null;
         // the rule can sometimes be a promise and we need to await it to check if it's truthy or not
         if (isAwaitable(ruleResult)) {
-          ruleResult = await ruleResult;
+          try {
+            ruleResult = await ruleResult;
+          } catch (_) {
+            // if the rule throws an error, we don't match this variant
+            ruleResult = false;
+          }
         }
         if (ruleResult) {
           match = variant;
