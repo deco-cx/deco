@@ -5,6 +5,7 @@ import JsonViewer from "../components/JsonViewer.tsx";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
+import { isAwaitable } from "../utils/mod.ts";
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<TVariant = unknown> {
@@ -64,7 +65,7 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
   >(func: {
     default: FlagFunc<TConfig>;
   }) =>
-  ($live: TConfig, { request }: HttpContext) => {
+  async ($live: TConfig, { request }: HttpContext) => {
     const flag = func.default($live);
     let device: Device | null = null;
     const ctx = {
@@ -75,10 +76,27 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
       },
     };
     if (isMultivariate(flag)) {
-      const value = ((flag?.variants ?? []).find((variant) =>
-        typeof variant?.rule === "function" && variant?.rule(ctx)
-      ) as Variant<unknown>)?.value ?? null;
-      return isDeferred(value) ? value() : value;
+      let match: Variant<unknown> | null = null;
+
+      for (const variant of flag.variants || []) {
+        let ruleResult = typeof variant?.rule === "function"
+          ? variant?.rule(ctx)
+          : null;
+        // the rule can sometimes be a promise and we need to await it to check if it's truthy or not
+        if (isAwaitable(ruleResult)) {
+          ruleResult = await ruleResult;
+        }
+        if (ruleResult) {
+          match = variant;
+          break;
+        }
+      }
+
+      if (!match) {
+        match = flag.variants[flag.variants.length - 1];
+      }
+
+      return isDeferred(match?.value) ? match?.value() : match?.value;
     }
     const matchValue = typeof flag?.matcher === "function"
       ? flag.matcher(ctx)
