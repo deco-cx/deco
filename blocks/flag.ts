@@ -85,12 +85,7 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
         let ruleResult = variant?.rule(ctx);
         // the rule can sometimes be a promise and we need to await it to check if it's truthy or not
         if (isAwaitable(ruleResult)) {
-          try {
-            ruleResult = await ruleResult;
-          } catch (_) {
-            // if the rule throws an error, we don't match this variant
-            ruleResult = false;
-          }
+          ruleResult = await ruleResult;
         }
         if (ruleResult) {
           match = variant;
