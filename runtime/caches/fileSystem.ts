@@ -113,7 +113,6 @@ function createFileSystemCache(): CacheStorage {
       await Deno.remove(filePath);
       return true;
     } catch (err) {
-      logger.error(`error when deleting from file system, ${err}`);
       return false;
     }
   }
