@@ -50,7 +50,7 @@ export class InvokeAwaiter<
   }
 
   then<TResult1, TResult2 = TResult1>(
-    onfufilled?: Fulfilled<
+    onfulfilled?: Fulfilled<
       InvokeResult<
         Invoke<TManifest, TInvocableKey, TFuncSelector>,
         TManifest
@@ -59,7 +59,7 @@ export class InvokeAwaiter<
     >,
     onrejected?: Rejected<TResult2>,
   ): Promise<TResult1 | TResult2> {
-    return this.invoker(this.payload, this.init).then(onfufilled).catch(
+    return this.invoker(this.payload, this.init).then(onfulfilled).catch(
       onrejected,
     );
   }

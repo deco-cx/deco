@@ -1,5 +1,5 @@
 /**
- * Heavily inspired from unlicense code: https://github.com/cloudydeno/deno-observability/blob/main/instrumentation/deno-runtime.ts
+ * Heavily inspired from unlicensed code: https://github.com/cloudydeno/deno-observability/blob/main/instrumentation/deno-runtime.ts
  */
 import {
   type Attributes,

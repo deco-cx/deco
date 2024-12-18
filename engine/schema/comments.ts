@@ -79,7 +79,7 @@ const isSpannableArray = (child: any): child is Spannable[] => {
  * As comments are treat as a separate array of strings containing only the information of which character it starts and ends (spannable).
  * This code distribute it based on the span attribute of the comments, matching with the body span attribute.
  *
- * So it basically starts with all comments of the module, and then distribute it into body items, it recursively do the same thing inside a body item declaration if it is a TsInterface declaration,
+ * So it basically starts with all comments of the module, and then distribute it into body items, it recursively does the same thing inside a body item declaration if it is a TsInterface declaration,
  * so that we have the comments assigned to the properties as well.
  */
 const assignCommentsForSpannable = (_rootSpan: any) => {

@@ -314,7 +314,7 @@ const resolveConflictsRecursively = async (wip: number = 50) => {
 
 /**
  * Rebases with -XTheirs strategy. If conflicts are found, it will try to resolve them automatically.
- * Conflicts happen when someone deletes a file and you modify it, or when you modify a file and someone else modifies it.
+ * Conflicts happen when someone deletes a file, and you modify it, or when you modify a file and someone else modifies it.
  * In this case, the strategy is to keep the changes the current branch has.
  */
 export const rebase: Handler = async () => {
@@ -364,7 +364,7 @@ export const ensureGit = async (
       return;
     }
     const lockIndexPath = join(Deno.cwd(), ".git/index.lock");
-    // index.lock should not exists as it means that another git process is running or it is unterminated (non-atomic operations.)
+    // index.lock should not exist as it means that another git process is running, or it is unterminated (non-atomic operations.)
     const hasGitIndexLock = await Deno.stat(lockIndexPath)
       .then(() => true)
       .catch((e) => e instanceof Deno.errors.NotFound ? false : true);

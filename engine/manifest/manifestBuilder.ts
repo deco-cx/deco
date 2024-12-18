@@ -93,7 +93,7 @@ export interface ManifestBuilder<TManifest extends AppManifest = AppManifest> {
   build(): string;
 }
 // function type any of root if not output
-// if output gen output and add anyOf function type
+// if output, gen output and add anyOf function type
 export interface ExportDefault {
   variable: Variable;
 }

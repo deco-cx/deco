@@ -536,11 +536,11 @@ const wellKnownTypeReferenceToSchemeable = async <
       if (literal.type !== "StringLiteral") {
         return undefined;
       }
-      const splitted = literal.value.split("/");
+      const split = literal.value.split("/");
       return {
         file: ctx.path,
         type: "inline",
-        name: splitted[splitted.length - 1],
+        name: split[split.length - 1],
         value: {
           $ref: literal.value,
         },

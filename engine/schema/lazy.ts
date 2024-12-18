@@ -46,8 +46,8 @@ const indexedBlocks = (
 /**
  * This function basically incorporate saved blocks in the schema so the user can select it through the UI as part of the schema.
  * So it is divided in two phases
- * 1. The first phase is responsible for incorporating on the root block types its saved definitions. For instance, handlers, sections and pages has no differentiation between its returns. So I don't need to group it individually they can be group alltogether
- * 2. The second phase is for loaders that needs to be referenced based on its return type. So instead of putting in the loaders root type it should be put on its return type definition, e.g whereas a Product[] fit, a saved loader that returns a Product[] also fit.
+ * 1. The first phase is responsible for incorporating on the root block types its saved definitions. For instance, handlers, sections and pages has no differentiation between its returns. So I don't need to group it individually they can be grouped altogether
+ * 2. The second phase is for loaders that needs to be referenced based on its return type. So instead of putting in the loaders root type it should be put on its return type definition, e.g. whereas a Product[] fit, a saved loader that returns a Product[] also fit.
  */
 const incorporateSavedBlocksIntoSchema = <
   TAppManifest extends AppManifest = AppManifest,
@@ -92,7 +92,7 @@ const incorporateSavedBlocksIntoSchema = <
     const first = anyOf && (anyOf[0] as JSONSchema7).$ref;
     if (first === "#/definitions/Resolvable") { // means that this block can be swapped out to a saved block
       anyOf?.splice(0, 1); // remove resolvable
-      definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] }; // create a any of value instead of the value itself
+      definitions[ref] = { ...val, anyOf: [...val?.anyOf ?? []] }; // create an any of value instead of the value itself
       const availableFunctions = (anyOf?.map((func) =>
         getResolveType(func)
       ) ?? []).filter(notUndefined).reduce((acc, f) => {
