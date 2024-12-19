@@ -1,5 +1,5 @@
 /**
- * Promise.prototype.then onfufilled callback type.
+ * Promise.prototype.then onfulfilled callback type.
  */
 export type Fulfilled<R, T> = ((result: R) => T | PromiseLike<T>) | null;
 

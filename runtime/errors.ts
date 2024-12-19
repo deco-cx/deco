@@ -1,5 +1,5 @@
 /**
- * Escape hatch to allow throwing an http error
+ * Escape hatch to allow throwing a http error
  */
 export class HttpError extends Error {
   public status: number;

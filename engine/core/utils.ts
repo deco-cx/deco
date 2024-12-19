@@ -55,7 +55,7 @@ export const isPrimitive = <T>(v: T): boolean => {
 
 export interface SingleFlight<T> {
   /**
-   * Do separates executions between "keys"
+   * Do separate executions between "keys"
    */
   do: (key: string, f: () => Promise<T>) => Promise<T>;
   /**

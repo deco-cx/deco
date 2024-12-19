@@ -28,6 +28,6 @@ const actionBlock: Block<ActionModule> = {
 };
 
 /**
- * Actions are arbitrary functions that always run in a request context, it execute mutations.
+ * Actions are arbitrary functions that always run in a request context, it executes mutations.
  */
 export default actionBlock;

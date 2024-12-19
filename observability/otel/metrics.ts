@@ -22,10 +22,10 @@ const headersStringToObject = (headersString: string | undefined | null) => {
   if (!headersString) {
     return {};
   }
-  const splittedByComma = headersString.split(",").map((keyVal) =>
+  const splitByComma = headersString.split(",").map((keyVal) =>
     keyVal.split("=") as [string, string]
   );
-  return Object.fromEntries(splittedByComma);
+  return Object.fromEntries(splitByComma);
 };
 
 // Add views with different boundaries for each unit.

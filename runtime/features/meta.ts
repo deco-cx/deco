@@ -68,7 +68,7 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
     if (etag !== ifNoneMatch) {
       const info = await sf.do(context.instance.id, async () => {
         const { manifest } = await context.runtime!;
-        const manfiestBlocks = toManifestBlocks(
+        const manifestBlocks = toManifestBlocks(
           manifest,
         );
         const schema = await lazySchema.value;
@@ -79,7 +79,7 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
           version: denoJSON.version,
           namespace: context.namespace!,
           site: context.site!,
-          manifest: manfiestBlocks,
+          manifest: manifestBlocks,
           schema,
           platform: context.platform,
         };

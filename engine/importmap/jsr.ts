@@ -34,7 +34,7 @@ const fetchMetaExports = (
     `https://jsr.io/${packg}/${version}_meta.json`,
   ).then(
     (meta) => meta.json() as Promise<PackageMeta>,
-    // there are other fields that dosn't need to be cached as they are very large.
+    // there are other fields that doesn't need to be cached as they are very large.
   ).then(({ exports }) => {
     return { exports };
   });

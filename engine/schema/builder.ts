@@ -75,7 +75,7 @@ const withNotResolveType = (
 /**
  * Used as a schema for the return value of the given function.
  * E.g, let's say you have a function that returns a boolean, and this function is referenced by `deco-sites/std/myBooleanFunction.ts`
- * Say this function receives a input named `BooleanFunctionProps` that takes any arbitrary data.
+ * Say this function receives an input named `BooleanFunctionProps` that takes any arbitrary data.
  * This function takes the mentioned parameters (functionRef and inputSchema) and builds a JSONSchema that uses the input as `allOf` property ("extends")
  * and a required property `__resolveType` pointing to the mentioned function.
  *
@@ -130,7 +130,7 @@ export interface SchemaBuilder {
   build(): Schemas;
   /**
    * Add a new block schema to the schema.
-   * @param blockSchema is the refernece to the configuration input and the blockfunction output
+   * @param blockSchema is the reference to the configuration input and the blockfunction output
    */
   withBlockSchema(blockSchema: BlockModule | EntrypointModule): SchemaBuilder;
 }

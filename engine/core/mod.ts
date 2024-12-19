@@ -57,7 +57,7 @@ export const resolverIdFromResolveChain = (chain: FieldResolver[]) => {
   let uniqueId = "";
 
   // from last to first and stop in the first resolvable
-  // the rational behind is: whenever you enter in a resolvable it means that it can be referenced by other resolvables and this value should not change.
+  // the rationale behind is: whenever you enter a resolvable it means that it can be referenced by other resolvables and this value should not change.
   for (let i = chain.length - 1; i >= 0; i--) {
     const { type, value } = chain[i];
     if (type === "prop" || type === "resolvable") {
