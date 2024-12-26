@@ -171,7 +171,10 @@ function fileUniqueId(
   return [btoa(fileUrl), fileUrl];
 }
 
-export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
+export const newSchemaBuilder = (
+  initial: SchemaData,
+  revision: string,
+): SchemaBuilder => {
   return {
     data: initial,
     withBlockSchema(schema: BlockModule | EntrypointModule): SchemaBuilder {
@@ -179,7 +182,7 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
         return newSchemaBuilder({
           ...initial,
           entrypoints: [...initial.entrypoints, schema],
-        });
+        }, revision);
       }
       // routes is always entrypoints
       if (schema.blockType === "routes" && schema.inputSchema) {
@@ -192,12 +195,12 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               config: schema.inputSchema,
             },
           ],
-        });
+        }, revision);
       }
       return newSchemaBuilder({
         ...initial,
         blockModules: [...initial.blockModules, schema],
-      });
+      }, revision);
     },
     build() {
       const schemeableId = (
@@ -366,8 +369,16 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
           },
         ] as [Schemas["definitions"], JSONSchema7],
       );
+
+      const finalDefsWith$id = Object.fromEntries(
+        Object.entries(finalDefs).map((entry, idx) => {
+          entry[1] = { ...entry[1], $id: `#/${idx}-${revision}` };
+          return entry;
+        }),
+      );
+
       return {
-        definitions: finalDefs,
+        definitions: finalDefsWith$id,
         root: {
           ...root,
           entrypoint,
