@@ -3,9 +3,11 @@
 import type { AppManifest, SiteInfo } from "@deco/deco";
 import { Deco, type PageData, type PageParams } from "@deco/deco";
 import { framework as htmxFramework } from "@deco/deco/htmx";
-import type { ComponentType } from "preact";
+import type { ComponentChildren, ComponentType } from "preact";
 import framework from "./Bindings.tsx";
 import type { Plugin } from "$fresh/server.ts";
+import { renderToString } from "preact-render-to-string";
+import { HEAD_CONTEXT } from "$fresh/src/runtime/head.ts";
 export type { Plugin } from "$fresh/server.ts";
 
 export interface PluginRoute {
@@ -65,12 +67,41 @@ export const component = ({ data }: PageParams<PageData>) => {
   return <data.page.Component {...data.page.props} />;
 };
 
+const adaptRenderOptions = (
+  render: (data: unknown) => Promise<Response> | Response,
+) => {
+  return (data: PageData) => {
+    if (data.page.props.options?.serverSideOnly) {
+      const headContextValue: ComponentChildren[] = [];
+      // Fill the headContextValue with <Head> from the page.
+      let res = renderToString(
+        <HEAD_CONTEXT.Provider value={headContextValue}>
+          {data.page.Component(data.page.props)}
+        </HEAD_CONTEXT.Provider>,
+      );
+      // Render <Head> to string and add it to the head of the page.
+      const headContent = headContextValue.map((child) => {
+        try {
+          return renderToString(child);
+        } catch (error) {
+          console.error("Error rendering to string:", error);
+          return null;
+        }
+      }).filter((content) => content !== null).join("");
+      res =
+        `<!DOCTYPE html><html><head><meta charset="utf-8">${headContent}</head>${res}</html>`;
+      return new Response(res);
+    }
+    return render(data);
+  };
+};
+
 export function createFreshHandler<M extends AppManifest = AppManifest>(
   deco: Deco<M>,
 ) {
   const h: PluginRoute["handler"] = (req: Request, ctx) => {
     return deco.handler(req, {
-      RENDER_FN: ctx.render.bind(ctx),
+      RENDER_FN: adaptRenderOptions(ctx.render.bind(ctx)),
       GLOBALS: ctx.state.global,
     });
   };
