@@ -5,7 +5,7 @@ import JsonViewer from "../components/JsonViewer.tsx";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
-import { isAwaitable } from "../utils/mod.ts";
+
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
 export interface FlagObj<TVariant = unknown> {
@@ -76,26 +76,14 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
       },
     };
     if (isMultivariate(flag)) {
-      let match: Variant<unknown> | null = null;
+      const variants = flag.variants || [];
 
-      for (const variant of flag.variants || []) {
-        if (typeof variant?.rule !== "function") {
-          continue;
-        }
-        let ruleResult = variant?.rule(ctx);
-        // the rule can sometimes be a promise and we need to await it to check if it's truthy or not
-        if (isAwaitable(ruleResult)) {
-          ruleResult = await ruleResult;
-        }
-        if (ruleResult) {
-          match = variant;
-          break;
-        }
-      }
-
-      if (!match) {
-        match = flag.variants[flag.variants.length - 1];
-      }
+      const results = await Promise.all(
+        variants.map((variant) =>
+          typeof variant?.rule === "function" ? variant.rule(ctx) : false
+        ),
+      );
+      const match = variants.find((_, index) => results[index]) || variants[0];
 
       return isDeferred(match?.value) ? match?.value() : match?.value;
     }
