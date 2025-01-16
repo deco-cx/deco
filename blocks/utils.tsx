@@ -27,6 +27,11 @@ import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 import type { Vary } from "../utils/vary.ts";
+import { Context } from "../mod.ts";
+
+export interface GateKeeperAccess {
+  defaultVisibility?: "private" | "public";
+}
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -138,6 +143,7 @@ export const fnContextFromHttpContext = <TState = {}>(
     },
   };
 };
+
 /**
  *  Applies the given props to the target block function.
  *
@@ -248,3 +254,23 @@ export const buildImportMap = (manifest: AppManifest): ImportMap => {
     );
   return buildImportMapWith(manifest, builder);
 };
+
+export const gateKeeper =
+  (defaultVisibility: GateKeeperAccess["defaultVisibility"], key: string) =>
+  <
+    TContext extends ResolverMiddlewareContext<any> = ResolverMiddlewareContext<
+      any
+    >,
+  >(_props: unknown, ctx: TContext) => {
+    const currentContext = Context.active();
+
+    const visibility = currentContext.visibilityOverrides?.[key] ??
+      defaultVisibility ?? "public";
+
+    if (visibility === "private" && !isInvokeCtx(ctx)) {
+      return new Response(null, {
+        status: 403,
+      });
+    }
+    return ctx.next!();
+  };

@@ -1,6 +1,6 @@
 // TODO make fresh plugin use @deco/deco from JSR. so that we can use the same code for both
 
-import type { AppManifest, SiteInfo } from "@deco/deco";
+import type { AppManifest, DecoContext, SiteInfo } from "@deco/deco";
 import { Deco, type PageData, type PageParams } from "@deco/deco";
 import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { ComponentType } from "preact";
@@ -51,6 +51,7 @@ export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   site?: SiteInfo;
   deco?: Deco<TManifest>;
   middlewares?: PluginMiddleware[];
+  visibilityOverrides?: DecoContext<TManifest>["visibilityOverrides"];
 }
 
 export type Options<TManifest extends AppManifest = AppManifest> =
@@ -89,6 +90,7 @@ export default function decoPlugin<TManifest extends AppManifest = AppManifest>(
     site: opt?.site?.name,
     namespace: opt?.site?.namespace,
     bindings: { framework: opt?.htmx ? htmxFramework : framework },
+    visibilityOverrides: opt.visibilityOverrides,
   });
 
   const catchAll: PluginRoute = {

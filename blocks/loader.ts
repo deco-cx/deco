@@ -19,6 +19,8 @@ import {
   applyProps,
   type FnContext,
   type FnProps,
+  gateKeeper,
+  type GateKeeperAccess,
   type RequestState,
   type SingleFlightKeyFunc,
 } from "./utils.tsx";
@@ -28,7 +30,7 @@ export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 export interface LoaderModule<
   TProps = any,
   TState = any,
-> extends BlockModule<FnProps<TProps>> {
+> extends BlockModule<FnProps<TProps>>, GateKeeperAccess {
   /**
    * Specifies caching behavior for the loader and its dependencies.
    *
@@ -332,10 +334,13 @@ const wrapLoader = (
 const loaderBlock: Block<LoaderModule> = {
   type: "loaders",
   introspect: { includeReturn: true },
-  adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
+  adapt: <TProps = any>(mod: LoaderModule<TProps>, key: string) => [
+    gateKeeper(mod.defaultVisibility, key),
     wrapCaughtErrors,
     (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
-      applyProps(wrapLoader(mod, ctx.resolveChain, ctx.context.state.release))(
+      applyProps(
+        wrapLoader(mod, ctx.resolveChain, ctx.context.state.release),
+      )(
         props,
         ctx,
       ),
