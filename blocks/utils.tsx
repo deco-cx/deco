@@ -27,10 +27,9 @@ import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 import type { Vary } from "../utils/vary.ts";
-import { ActionModule } from "./action.ts";
 
 export interface GateKeeperAccess {
-  visibility?: "server" | "public";
+  defaultVisibility?: "private" | "public";
 }
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
@@ -258,7 +257,7 @@ export const buildImportMap = (manifest: AppManifest): ImportMap => {
 export const gateKeeper = (
   {
     default: handler,
-    visibility = "public",
+    defaultVisibility = "public",
     ...rest
   }: BlockModule & GateKeeperAccess,
 ) => {
@@ -269,7 +268,7 @@ export const gateKeeper = (
       req: Request,
       ctx: FnContext<unknown, any>,
     ): Promise<ReturnType<typeof handler>> => {
-      if (visibility === "server" && !ctx.isInvoke) {
+      if (defaultVisibility === "private" && !ctx.isInvoke) {
         return new Response(null, {
           status: 403,
         });

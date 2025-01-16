@@ -2,7 +2,7 @@
 import {
   applyProps,
   type FnProps,
-  GateKeeperAccess,
+  type GateKeeperAccess,
 } from "../blocks/utils.tsx";
 import JsonViewer from "../components/JsonViewer.tsx";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
