@@ -6,6 +6,8 @@ import type { ReleaseResolver } from "./engine/core/mod.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
 import type { AppManifest } from "./types.ts";
 import { randId } from "./utils/rand.ts";
+import { BlockKeys } from "./mod.ts";
+import { GateKeeperAccess } from "./blocks/utils.tsx";
 
 export interface DecoRuntimeState<
   TAppManifest extends AppManifest = AppManifest,
@@ -55,6 +57,12 @@ export interface DecoContext<TAppManifest extends AppManifest = AppManifest> {
   runtime?: Promise<DecoRuntimeState<TAppManifest>>;
   instance: InstanceInfo;
   request?: RequestContext;
+
+  visibilityOverrides?: Record<
+    BlockKeys<TAppManifest> extends undefined ? string
+      : BlockKeys<TAppManifest>,
+    GateKeeperAccess["defaultVisibility"]
+  >;
 }
 
 export interface RequestContextBinder {
@@ -107,7 +115,7 @@ export const Context = {
   // Function to retrieve the active context
   active: <T extends AppManifest = AppManifest>(): DecoContext<T> => {
     // Retrieve the context associated with the async ID
-    return asyncLocalStorage.getStore() ?? defaultContext;
+    return asyncLocalStorage.getStore() as DecoContext<T> ?? defaultContext;
   },
   bind: <R, TArgs extends unknown[]>(
     ctx: DecoContext,

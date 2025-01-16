@@ -21,8 +21,10 @@ const actionBlock: Block<ActionModule> = {
     TProps = any,
   >(
     mod: ActionModule<TProps>,
+    key: string,
   ) => [
-    applyProps(gateKeeper(mod)),
+    gateKeeper(mod.defaultVisibility, key),
+    applyProps(mod),
   ],
   defaultPreview: (result) => {
     return {

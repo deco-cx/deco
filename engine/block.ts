@@ -117,7 +117,7 @@ export type InstanceOf<
 export type BlockTypes<TManifest extends AppManifest = AppManifest> =
   keyof Omit<
     TManifest,
-    "config" | "baseUrl"
+    "config" | "baseUrl" | "name"
   >;
 
 export type BlockKeys<TManifest extends AppManifest = AppManifest> = {

@@ -334,13 +334,12 @@ const wrapLoader = (
 const loaderBlock: Block<LoaderModule> = {
   type: "loaders",
   introspect: { includeReturn: true },
-  adapt: <TProps = any>(mod: LoaderModule<TProps>) => [
+  adapt: <TProps = any>(mod: LoaderModule<TProps>, key: string) => [
+    gateKeeper(mod.defaultVisibility, key),
     wrapCaughtErrors,
     (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
       applyProps(
-        gateKeeper(
-          wrapLoader(mod, ctx.resolveChain, ctx.context.state.release),
-        ),
+        wrapLoader(mod, ctx.resolveChain, ctx.context.state.release),
       )(
         props,
         ctx,

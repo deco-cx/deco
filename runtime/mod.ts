@@ -57,6 +57,8 @@ export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
   manifest?: TAppManifest;
   decofile?: DecofileProvider;
   bindings?: Bindings<TAppManifest>;
+
+  visibilityOverrides?: DecoContext<TAppManifest>["visibilityOverrides"];
 }
 
 const NOOP_CALL = () => {};
@@ -86,6 +88,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
         crypto.randomUUID(),
         site,
         opts?.namespace,
+        opts?.visibilityOverrides,
       )
     );
     Context.setDefault(decoContext);
