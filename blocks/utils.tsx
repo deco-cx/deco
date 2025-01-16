@@ -5,7 +5,7 @@
 import type { StatusCode as Status } from "@std/http/status";
 import type { JSX } from "preact";
 import type { AppManifest, ImportMap } from "../blocks/app.ts";
-import { isInvokeCtx } from "../blocks/loader.ts";
+import { isInvokeCtx, LoaderModule } from "../blocks/loader.ts";
 import type { InvocationFunc } from "../clients/withManifest.ts";
 import { withSection } from "../components/section.tsx";
 import type {
@@ -27,6 +27,11 @@ import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 import type { Vary } from "../utils/vary.ts";
+import { ActionModule } from "./action.ts";
+
+export interface GateKeeperAccess {
+  visibility?: "server" | "public";
+}
 
 export type SingleFlightKeyFunc<TConfig = any, TCtx = any> = (
   args: TConfig,
@@ -138,6 +143,7 @@ export const fnContextFromHttpContext = <TState = {}>(
     },
   };
 };
+
 /**
  *  Applies the given props to the target block function.
  *
@@ -247,4 +253,28 @@ export const buildImportMap = (manifest: AppManifest): ImportMap => {
       new URL("./", baseUrl).href,
     );
   return buildImportMapWith(manifest, builder);
+};
+
+export const gateKeeper = (
+  {
+    default: handler,
+    visibility = "public",
+    ...rest
+  }: BlockModule & GateKeeperAccess,
+) => {
+  return {
+    ...rest,
+    default: async (
+      props: Parameters<typeof handler>[0],
+      req: Request,
+      ctx: FnContext<unknown, any>,
+    ): Promise<ReturnType<typeof handler>> => {
+      if (visibility === "server" && !ctx.isInvoke) {
+        return new Response(null, {
+          status: 403,
+        });
+      }
+      return await handler(props, req, ctx);
+    },
+  };
 };

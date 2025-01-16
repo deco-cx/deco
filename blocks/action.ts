@@ -1,14 +1,19 @@
 // deno-lint-ignore-file no-explicit-any
-import { applyProps, type FnProps } from "../blocks/utils.tsx";
+import {
+  applyProps,
+  type FnProps,
+  GateKeeperAccess,
+} from "../blocks/utils.tsx";
 import JsonViewer from "../components/JsonViewer.tsx";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import { gateKeeper } from "./utils.tsx";
 
 export type Action = InstanceOf<typeof actionBlock, "#/root/actions">;
 
-export type ActionModule<
+export interface ActionModule<
   TProps = any,
   TResp = any,
-> = BlockModule<FnProps<TProps, TResp>>;
+> extends BlockModule<FnProps<TProps, TResp>>, GateKeeperAccess {}
 
 const actionBlock: Block<ActionModule> = {
   type: "actions",
@@ -17,7 +22,7 @@ const actionBlock: Block<ActionModule> = {
   >(
     mod: ActionModule<TProps>,
   ) => [
-    applyProps(mod),
+    applyProps(gateKeeper(mod)),
   ],
   defaultPreview: (result) => {
     return {
