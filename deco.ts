@@ -90,6 +90,12 @@ const getHostingPlatform = (): WellKnownHostingPlatform => {
   }
 };
 
+export const platformId = {
+  "kubernetes": "deco-a3ViZXJuZXRlcw==",
+  "denodeploy": "deco-ZGVub2RlcGxveQ==",
+  "localhost": "deco-local",
+}
+
 // deno-lint-ignore no-explicit-any
 let defaultContext: Omit<DecoContext<any>, "schema"> = {
   deploymentId,

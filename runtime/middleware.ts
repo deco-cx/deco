@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { Context } from "../deco.ts";
+import { context, Context, platformId } from "../deco.ts";
 import { Exception, getCookies, SpanStatusCode } from "../deps.ts";
 import { startObserve } from "../observability/http.ts";
 import { logger } from "../observability/mod.ts";
@@ -348,6 +348,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         return ctx.res = initialResponse;
       }
       const newHeaders = new Headers(initialResponse.headers);
+      platformId[context.platform] && newHeaders.set("x-deco-platform", platformId[context.platform]);
+
       if (
         (url.pathname.startsWith("/live/previews") &&
           url.searchParams.has("mode") &&
