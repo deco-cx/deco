@@ -45,6 +45,11 @@ export const resource = Resource.default().merge(
     "deco.apps.version": apps_ver,
     [SemanticResourceAttributes.CLOUD_REGION]: Deno.env.get("DENO_REGION") ??
       "unknown",
+    [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: Deno.env.get(
+        "DECO_ENV_NAME",
+      )
+      ? `env-${Deno.env.get("DECO_ENV_NAME")}`
+      : "production",
   }),
 );
 
