@@ -80,9 +80,11 @@ const WELL_KNOWN_TEXT_FILE_TYPES = new Set<string>([
 
 const isTextFile = (path: string) => {
   const ext = extname(path);
-  return WELL_KNOWN_TEXT_FILE_TYPES.has(ext) ||
+  return (
+    WELL_KNOWN_TEXT_FILE_TYPES.has(ext) ||
     // for the .env case
-    WELL_KNOWN_TEXT_FILE_TYPES.has(path);
+    WELL_KNOWN_TEXT_FILE_TYPES.has(path)
+  );
 };
 
 export const diff: Handler = async (c) => {
@@ -131,7 +133,7 @@ export const status: Handler = async (c) => {
   const fetch = url.searchParams.get("fetch") === "true";
 
   if (fetch) {
-    await git.fetch(["-p"]);
+    await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
   }
 
   await resetToMergeBase();
@@ -167,12 +169,7 @@ const persist = async (oid: string) => {
 
   const tar = new Deno.Command("tar", {
     cwd: Deno.cwd(),
-    args: [
-      "-cf",
-      outfilePath,
-      "--exclude=.git",
-      ".",
-    ],
+    args: ["-cf", outfilePath, "--exclude=.git", "."],
   });
 
   const status = await tar.spawn().status;
@@ -192,16 +189,17 @@ export const publish = ({ build }: Options): Handler => {
   const buildMap = new Map<string, Promise<void>>();
 
   const doBuild = (oid: string) => {
-    const p = buildMap.get(oid) || (async () => {
-      try {
-        await build?.spawn()?.status;
-        await persist(oid);
-      } catch (e) {
-        console.error("Building failed with:", e);
-      } finally {
-        buildMap.delete(oid);
-      }
-    })();
+    const p = buildMap.get(oid) ||
+      (async () => {
+        try {
+          await build?.spawn()?.status;
+          await persist(oid);
+        } catch (e) {
+          console.error("Building failed with:", e);
+        } finally {
+          buildMap.delete(oid);
+        }
+      })();
 
     buildMap.set(oid, p);
 
@@ -209,20 +207,18 @@ export const publish = ({ build }: Options): Handler => {
   };
 
   return async (c) => {
-    const body = await c.req.json() as PublishAPI["body"];
+    const body = (await c.req.json()) as PublishAPI["body"];
     const author = body.author || { name: "decobot", email: "capy@deco.cx" };
     const message = body.message || `New release by ${author.name}`;
 
-    await git.fetch(["-p"]);
+    await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
 
     await resetToMergeBase();
 
-    const commit = await git
-      .add(["."])
-      .commit(message, {
-        "--author": `${author.name} <${author.email}>`,
-        "--no-verify": null,
-      });
+    const commit = await git.add(["."]).commit(message, {
+      "--author": `${author.name} <${author.email}>`,
+      "--no-verify": null,
+    });
 
     const result = await git.push();
 
@@ -243,15 +239,15 @@ export interface CheckoutAPI {
 }
 
 export const discard: Handler = async (c) => {
-  const { filepaths } = await c.req.json() as CheckoutAPI["body"];
+  const { filepaths } = (await c.req.json()) as CheckoutAPI["body"];
 
-  await git.fetch(["-p"]);
+  await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
 
   await resetToMergeBase();
 
   const status = await git
     .checkout(
-      filepaths.map((path) => path.startsWith("/") ? path.slice(1) : path),
+      filepaths.map((path) => (path.startsWith("/") ? path.slice(1) : path)),
     )
     .status();
 
@@ -321,6 +317,7 @@ export const rebase: Handler = async () => {
   try {
     await git
       .fetch(["-p"])
+      .submoduleUpdate(["--depth", "1"])
       .add(".")
       .commit("Before rebase", { "--no-verify": null })
       .rebase({ "--strategy-option": "theirs" });
@@ -355,9 +352,7 @@ export const log: Handler = async (c) => {
   );
 };
 
-export const ensureGit = async (
-  { site }: Pick<Options, "site">,
-) => {
+export const ensureGit = async ({ site }: Pick<Options, "site">) => {
   const assertNoIndexLock = async () => {
     const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
     if (!isDeployment) {
@@ -367,7 +362,7 @@ export const ensureGit = async (
     // index.lock should not exist as it means that another git process is running, or it is unterminated (non-atomic operations.)
     const hasGitIndexLock = await Deno.stat(lockIndexPath)
       .then(() => true)
-      .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
+      .catch((e) => (e instanceof Deno.errors.NotFound ? false : true));
     if (hasGitIndexLock) {
       console.log(
         "deleting .git/index.lock as this should not exist on deployment startup",
@@ -391,7 +386,7 @@ export const ensureGit = async (
   const assertGitFolder = async () => {
     const hasGitFolder = await Deno.stat(join(Deno.cwd(), ".git"))
       .then(() => true)
-      .catch((e) => e instanceof Deno.errors.NotFound ? false : true);
+      .catch((e) => (e instanceof Deno.errors.NotFound ? false : true));
 
     await git
       .addConfig("safe.directory", Deno.cwd(), true, GitConfigScope.global)
@@ -420,20 +415,20 @@ export const ensureGit = async (
       return;
     }
 
-    await git.clone(REPO_URL ?? `git@github.com:deco-sites/${site}.git`, ".", [
-      "--depth",
-      "1",
-      "--single-branch",
-      "--branch",
-      DEFAULT_TRACKING_BRANCH,
-    ]);
+    await git
+      .clone(REPO_URL ?? `git@github.com:deco-sites/${site}.git`, ".", [
+        "--depth",
+        "1",
+        "--single-branch",
+        "--branch",
+        DEFAULT_TRACKING_BRANCH,
+      ])
+      .submoduleInit()
+      .submoduleUpdate(["--depth", "1"]);
   };
 
   await assertNoIndexLock();
-  await Promise.all([
-    assertGitBinary(),
-    assertGitFolder(),
-  ]);
+  await Promise.all([assertGitBinary(), assertGitFolder()]);
 };
 
 interface Options {
