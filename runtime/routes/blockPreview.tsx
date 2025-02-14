@@ -99,7 +99,12 @@ export const render = async (
     return await ctx.render({
       page: {
         Component: Preview,
-        props: { url: ctx.var.url, params: ctx.req.param(), data: page },
+        props: {
+          url: ctx.var.url,
+          params: ctx.req.param(),
+          data: page,
+          options: { serverSideOnly: true },
+        },
       },
     });
   } finally {

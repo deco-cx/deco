@@ -47,7 +47,7 @@ export const handler = createHandler((ctx) => {
   return ctx.render({
     page: {
       Component: Preview,
-      props: {},
+      props: { options: { serverSideOnly: true } },
     },
   });
 });
