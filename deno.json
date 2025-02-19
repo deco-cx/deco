@@ -96,7 +96,7 @@
     "preact-render-to-string": "npm:preact-render-to-string@6.4.0",
     "simple-git": "npm:simple-git@^3.25.0",
     "std/": "https://deno.land/std@0.203.0/",
-    "brotli": "https://deno.land/x/brotli/mod.ts"
+    "brotli": "npm:brotli"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
