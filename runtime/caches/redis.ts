@@ -12,6 +12,7 @@ import {
   type RedisModules,
   type RedisScripts,
 } from "npm:@redis/client@^1.6.0";
+import { compress, decompress } from "brotli";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -29,19 +30,40 @@ export type RedisConnection = RedisClientType<
 
 export const isAvailable = Deno.env.has("LOADER_CACHE_REDIS_URL");
 
+function base64Encode(buffer: Uint8Array): string {
+  return btoa(String.fromCharCode(...buffer));
+}
+
+function base64Decode(base64: string): Uint8Array {
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+}
+
 async function serialize(response: Response): Promise<string> {
   const body = await response.text();
-
-  return JSON.stringify({
-    body: body,
-    headers: response.headers,
+  const headersObj = Object.fromEntries(response.headers.entries()); // Converte Headers para objeto JSON
+  const data = JSON.stringify({
+    body,
+    headers: headersObj,
     status: response.status,
   });
+  const compressed = compress(new TextEncoder().encode(data));
+
+  return base64Encode(compressed);
 }
 
 function deserialize(raw: string): Response {
-  const { body, headers, status } = JSON.parse(raw);
-  return new Response(body, { headers, status });
+  try {
+    const compressed = base64Decode(raw);
+    const decompressed = decompress(compressed);
+    const { body, headers, status } = JSON.parse(
+      new TextDecoder().decode(decompressed),
+    );
+
+    return new Response(body, { headers, status });
+  } catch {
+    const { body, status } = JSON.parse(raw);
+    return new Response(body, { status });
+  }
 }
 
 function wait(ms: number) {
