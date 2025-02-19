@@ -52,13 +52,18 @@ async function serialize(response: Response): Promise<string> {
 }
 
 function deserialize(raw: string): Response {
-  const compressed = base64Decode(raw);
-  const decompressed = decompress(compressed);
-  const { body, headers, status } = JSON.parse(
-    new TextDecoder().decode(decompressed),
-  );
+  try {
+    const compressed = base64Decode(raw);
+    const decompressed = decompress(compressed);
+    const { body, headers, status } = JSON.parse(
+      new TextDecoder().decode(decompressed),
+    );
 
-  return new Response(body, { headers, status });
+    return new Response(body, { headers, status });
+  } catch {
+    const { body, status } = JSON.parse(raw);
+    return new Response(body, { status });
+  }
 }
 
 function wait(ms: number) {
