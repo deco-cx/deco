@@ -12,7 +12,7 @@ import {
   type RedisModules,
   type RedisScripts,
 } from "npm:@redis/client@^1.6.0";
-import { compress, decompress } from "npm:brotli-wasm@2.0.1";
+import { compress, decompress } from "brotli";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
