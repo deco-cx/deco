@@ -96,7 +96,7 @@
     "preact-render-to-string": "npm:preact-render-to-string@6.4.0",
     "simple-git": "npm:simple-git@^3.25.0",
     "std/": "https://deno.land/std@0.203.0/",
-    "zlib": "npm:zlib@^1.0.5"
+    "zlib": "node:zlib"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

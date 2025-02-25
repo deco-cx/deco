@@ -12,7 +12,8 @@ import {
   type RedisModules,
   type RedisScripts,
 } from "npm:@redis/client@^1.6.0";
-import * as Zlib from "npm:zlib@^1.0.5";
+import { promisify } from "node:util";
+import { deflate, unzip } from "node:zlib";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -39,16 +40,20 @@ async function serialize(response: Response): Promise<string> {
   });
 
   const encoder = new TextEncoder();
-  const compressed = Zlib.gzipSync(encoder.encode(data));
+  const do_deflate = promisify(deflate);
+  const compressed = await do_deflate(encoder.encode(data));
 
   return btoa(String.fromCharCode(...compressed));
 }
 
-function deserialize(raw: string): Response {
+async function deserialize(raw: string): Promise<Response> {
   const compressed = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
-  const decompressed = new TextDecoder().decode(Zlib.gunzipSync(compressed));
-  const { body, headers, status } = JSON.parse(decompressed);
+  const do_unzip = promisify(unzip);
 
+  const decompressed = await do_unzip(compressed);
+  const { body, headers, status } = JSON.parse(
+    new TextDecoder().decode(decompressed),
+  );
   return new Response(body, { headers, status });
 }
 
@@ -97,26 +102,23 @@ export function create(redis: RedisConnection | null, namespace: string) {
       options?: CacheQueryOptions,
     ): Promise<Response | undefined> => {
       assertNoOptions(options);
-
       const generateKey = withCacheNamespace(namespace);
 
-      const result = await generateKey(request)
-        .then((cacheKey: string) =>
-          waitOrReject<string | null>(
-            () => redis?.get(cacheKey) ?? Promise.resolve(null),
-            COMMAND_TIMEOUT,
-          )
-        )
-        .then((result: string | null) => {
-          if (!result) {
-            return undefined;
-          }
+      try {
+        const cacheKey = await generateKey(request);
+        const result = await waitOrReject<string | null>(
+          () => redis?.get(cacheKey) ?? Promise.resolve(null),
+          COMMAND_TIMEOUT,
+        );
 
-          return deserialize(result);
-        })
-        .catch(() => undefined);
+        if (!result) {
+          return undefined;
+        }
 
-      return result;
+        return await deserialize(result);
+      } catch {
+        return undefined;
+      }
     },
     put: async (
       request: RequestInfo | URL,
