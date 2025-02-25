@@ -12,6 +12,7 @@ import {
   type RedisModules,
   type RedisScripts,
 } from "npm:@redis/client@^1.6.0";
+import * as Zlib from "npm:zlib@^1.0.5";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -31,16 +32,23 @@ export const isAvailable = Deno.env.has("LOADER_CACHE_REDIS_URL");
 
 async function serialize(response: Response): Promise<string> {
   const body = await response.text();
-
-  return JSON.stringify({
+  const data = JSON.stringify({
     body: body,
-    headers: response.headers,
+    headers: Object.fromEntries(response.headers.entries()),
     status: response.status,
   });
+
+  const encoder = new TextEncoder();
+  const compressed = Zlib.gzipSync(encoder.encode(data));
+
+  return btoa(String.fromCharCode(...compressed));
 }
 
 function deserialize(raw: string): Response {
-  const { body, headers, status } = JSON.parse(raw);
+  const compressed = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+  const decompressed = new TextDecoder().decode(Zlib.gunzipSync(compressed));
+  const { body, headers, status } = JSON.parse(decompressed);
+
   return new Response(body, { headers, status });
 }
 
