@@ -139,12 +139,13 @@ export function create(redis: RedisConnection | null, namespace: string) {
       const req = new Request(request);
       assertCanBeCached(req, response);
 
-      if (!response.body) {
-        return;
-      }
-
       const generateKey = withCacheNamespace(namespace);
       const cacheKey = await generateKey(request);
+
+      if (!response.body) {
+        console.log(`${cacheKey} - No Body`);
+        return;
+      }
 
       serialize(response)
         .then((data) =>
@@ -154,7 +155,9 @@ export function create(redis: RedisConnection | null, namespace: string) {
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => {});
+        .catch((error) => {
+          console.log(`${cacheKey} - Error`, error);
+        });
     },
   };
 }
