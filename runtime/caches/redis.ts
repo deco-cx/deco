@@ -111,12 +111,15 @@ export function create(redis: RedisConnection | null, namespace: string) {
           COMMAND_TIMEOUT,
         );
 
-        const urlObj = request instanceof URL
+        const req = typeof request === "string"
           ? request
-          : new URL(request.toString());
+          : request instanceof URL
+          ? request.href
+          : request.url;
+
         await redis?.set(
           `${cacheKey}:request`,
-          JSON.stringify({ url: urlObj.toString(), href: urlObj.href }),
+          req,
         );
 
         if (!result) {
