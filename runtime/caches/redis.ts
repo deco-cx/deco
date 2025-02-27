@@ -110,11 +110,12 @@ export function create(redis: RedisConnection | null, namespace: string) {
           () => redis?.get(cacheKey) ?? Promise.resolve(null),
           COMMAND_TIMEOUT,
         );
-
+        await redis?.set(`${cacheKey}:request`, JSON.stringify(request));
         if (!result) {
+          await redis?.incr(`${cacheKey}:misses`);
           return undefined;
         }
-
+        await redis?.incr(`${cacheKey}:hits`);
         return await deserialize(result);
       } catch {
         return undefined;
