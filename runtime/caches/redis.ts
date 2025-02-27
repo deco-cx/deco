@@ -110,7 +110,15 @@ export function create(redis: RedisConnection | null, namespace: string) {
           () => redis?.get(cacheKey) ?? Promise.resolve(null),
           COMMAND_TIMEOUT,
         );
-        await redis?.set(`${cacheKey}:request`, JSON.stringify(request));
+
+        const urlObj = request instanceof URL
+          ? request
+          : new URL(request.toString());
+        await redis?.set(
+          `${cacheKey}:request`,
+          JSON.stringify({ url: urlObj.toString(), href: urlObj.href }),
+        );
+
         if (!result) {
           await redis?.incr(`${cacheKey}:misses`);
           return undefined;
