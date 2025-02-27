@@ -43,7 +43,14 @@ async function serialize(response: Response): Promise<string> {
   const do_deflate = promisify(deflate);
   const compressed = await do_deflate(encoder.encode(data));
 
-  return btoa(String.fromCharCode(...compressed));
+  // Process bytes in chunks to avoid call stack issues
+  let binary = '';
+  const bytes = new Uint8Array(compressed);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 async function deserialize(raw: string): Promise<Response> {
