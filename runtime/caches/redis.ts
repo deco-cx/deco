@@ -154,7 +154,9 @@ export function create(redis: RedisConnection | null, namespace: string) {
               redis?.set(cacheKey, data, { EX: TTL }) ?? Promise.resolve(null),
             COMMAND_TIMEOUT,
           )
-        )
+        ).then((data) => {
+          console.log(`${cacheKey} - SET`, data);
+        })
         .catch((error) => {
           console.log(`${cacheKey} - Error`, error);
         });
