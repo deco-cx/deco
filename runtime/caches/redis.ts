@@ -44,7 +44,7 @@ async function serialize(response: Response): Promise<string> {
   const compressed = await do_deflate(encoder.encode(data));
 
   // Process bytes in chunks to avoid call stack issues
-  let binary = '';
+  let binary = "";
   const bytes = new Uint8Array(compressed);
   const len = bytes.byteLength;
   for (let i = 0; i < len; i++) {
@@ -150,7 +150,6 @@ export function create(redis: RedisConnection | null, namespace: string) {
       const cacheKey = await generateKey(request);
 
       if (!response.body) {
-        console.log(`${cacheKey} - No Body`);
         return;
       }
 
@@ -161,9 +160,7 @@ export function create(redis: RedisConnection | null, namespace: string) {
               redis?.set(cacheKey, data, { EX: TTL }) ?? Promise.resolve(null),
             COMMAND_TIMEOUT,
           )
-        ).then((data) => {
-          console.log(`${cacheKey} - SET`, data);
-        })
+        )
         .catch((error) => {
           console.log(`${cacheKey} - Error`, error);
         });
