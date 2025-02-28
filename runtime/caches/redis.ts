@@ -118,22 +118,9 @@ export function create(redis: RedisConnection | null, namespace: string) {
           COMMAND_TIMEOUT,
         );
 
-        const req = typeof request === "string"
-          ? request
-          : request instanceof URL
-          ? request.href
-          : request.url;
-
-        await redis?.set(
-          `${cacheKey}:request`,
-          req,
-        );
-
         if (!result) {
-          await redis?.incr(`${cacheKey}:misses`);
           return undefined;
         }
-        await redis?.incr(`${cacheKey}:hits`);
         return await deserialize(result);
       } catch {
         return undefined;
