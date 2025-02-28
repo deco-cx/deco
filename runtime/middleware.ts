@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { context, Context } from "../deco.ts";
+import { Context, context } from "../deco.ts";
 import { Exception, getCookies, SpanStatusCode } from "../deps.ts";
 import { startObserve } from "../observability/http.ts";
 import { logger } from "../observability/mod.ts";

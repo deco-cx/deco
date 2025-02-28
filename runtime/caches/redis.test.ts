@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { create, type RedisConnection } from "./redis.ts";
 import type { SetOptions } from "npm:@redis/client@^1.6.0";
+import { deflateSync } from "zlib";
 
 Deno.test({
   name: ".match",
@@ -9,13 +10,19 @@ Deno.test({
 }, async (t) => {
   const namespace = "test";
 
+  const encoder = new TextEncoder();
   const store: RedisConnection = {
     get: (cacheKey: string): string => {
       const data: { [key: string]: string } = {
-        a94a8fe5ccb19ba61c4c0873d391e987982fbbd3test: JSON.stringify({
-          body: "body",
-          status: 200,
-        }),
+        "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3test": btoa(
+          String.fromCharCode(
+            ...deflateSync(encoder.encode(JSON.stringify({
+              body: "body",
+              headers: {},
+              status: 200,
+            }))),
+          ),
+        ),
       };
 
       return data[cacheKey];

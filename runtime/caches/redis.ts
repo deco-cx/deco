@@ -12,6 +12,8 @@ import {
   type RedisModules,
   type RedisScripts,
 } from "npm:@redis/client@^1.6.0";
+import { promisify } from "node:util";
+import { deflate, unzip } from "node:zlib";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -31,16 +33,34 @@ export const isAvailable = Deno.env.has("LOADER_CACHE_REDIS_URL");
 
 async function serialize(response: Response): Promise<string> {
   const body = await response.text();
-
-  return JSON.stringify({
+  const data = JSON.stringify({
     body: body,
-    headers: response.headers,
+    headers: Object.fromEntries(response.headers.entries()),
     status: response.status,
   });
+
+  const encoder = new TextEncoder();
+  const do_deflate = promisify(deflate);
+  const compressed = await do_deflate(encoder.encode(data));
+
+  // Process bytes in chunks to avoid call stack issues
+  let binary = "";
+  const bytes = new Uint8Array(compressed);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
-function deserialize(raw: string): Response {
-  const { body, headers, status } = JSON.parse(raw);
+async function deserialize(raw: string): Promise<Response> {
+  const compressed = Uint8Array.from(atob(raw), (c) => c.charCodeAt(0));
+  const do_unzip = promisify(unzip);
+
+  const decompressed = await do_unzip(compressed);
+  const { body, headers, status } = JSON.parse(
+    new TextDecoder().decode(decompressed),
+  );
   return new Response(body, { headers, status });
 }
 
@@ -89,26 +109,22 @@ export function create(redis: RedisConnection | null, namespace: string) {
       options?: CacheQueryOptions,
     ): Promise<Response | undefined> => {
       assertNoOptions(options);
-
       const generateKey = withCacheNamespace(namespace);
 
-      const result = await generateKey(request)
-        .then((cacheKey: string) =>
-          waitOrReject<string | null>(
-            () => redis?.get(cacheKey) ?? Promise.resolve(null),
-            COMMAND_TIMEOUT,
-          )
-        )
-        .then((result: string | null) => {
-          if (!result) {
-            return undefined;
-          }
+      try {
+        const cacheKey = await generateKey(request);
+        const result = await waitOrReject<string | null>(
+          () => redis?.get(cacheKey) ?? Promise.resolve(null),
+          COMMAND_TIMEOUT,
+        );
 
-          return deserialize(result);
-        })
-        .catch(() => undefined);
-
-      return result;
+        if (!result) {
+          return undefined;
+        }
+        return await deserialize(result);
+      } catch {
+        return undefined;
+      }
     },
     put: async (
       request: RequestInfo | URL,
@@ -117,12 +133,12 @@ export function create(redis: RedisConnection | null, namespace: string) {
       const req = new Request(request);
       assertCanBeCached(req, response);
 
+      const generateKey = withCacheNamespace(namespace);
+      const cacheKey = await generateKey(request);
+
       if (!response.body) {
         return;
       }
-
-      const generateKey = withCacheNamespace(namespace);
-      const cacheKey = await generateKey(request);
 
       serialize(response)
         .then((data) =>
@@ -132,7 +148,9 @@ export function create(redis: RedisConnection | null, namespace: string) {
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => {});
+        .catch((error) => {
+          console.log(`${cacheKey} - Error`, error);
+        });
     },
   };
 }
