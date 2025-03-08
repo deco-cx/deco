@@ -40,6 +40,10 @@ export interface Bindings<TAppManifest extends AppManifest = AppManifest> {
   renderer?: RendererOpts;
   framework: Framework;
   server?: Hono<DecoRouteState<TAppManifest>>;
+  useServer?: (
+    deco: Deco<TAppManifest>,
+    server: Hono<DecoRouteState<TAppManifest>>,
+  ) => void;
 }
 
 const routes: Array<
@@ -127,6 +131,7 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
 ) => Promise<Response> | Response => {
   const bindings = deco.bindings;
   const hono = bindings?.server ?? new Hono<DecoRouteState<TAppManifest>>();
+  bindings?.useServer?.(deco, hono);
   hono.use(async (ctx, next) => {
     const renderFn = ctx.env?.RENDER_FN ?? bindings?.renderer?.renderFn;
     const framework = bindings?.framework;
