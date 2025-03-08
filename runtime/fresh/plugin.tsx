@@ -6,6 +6,7 @@ import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { ComponentType } from "preact";
 import framework from "./Bindings.tsx";
 import type { Plugin } from "$fresh/server.ts";
+import type { Bindings } from "../handler.tsx";
 export type { Plugin } from "$fresh/server.ts";
 
 export interface PluginRoute {
@@ -50,6 +51,7 @@ export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   htmx?: boolean;
   site?: SiteInfo;
   deco?: Deco<TManifest>;
+  useServer?: Bindings<TManifest>["useServer"];
   middlewares?: PluginMiddleware[];
   visibilityOverrides?: DecoContext<TManifest>["visibilityOverrides"];
 }
@@ -89,7 +91,10 @@ export default function decoPlugin<TManifest extends AppManifest = AppManifest>(
     manifest: opt.manifest,
     site: opt?.site?.name,
     namespace: opt?.site?.namespace,
-    bindings: { framework: opt?.htmx ? htmxFramework : framework },
+    bindings: {
+      framework: opt?.htmx ? htmxFramework : framework,
+      useServer: opt?.useServer,
+    },
     visibilityOverrides: opt.visibilityOverrides,
   });
 
