@@ -37,6 +37,7 @@ export type {
 } from "./engine/core/resolver.ts";
 export { $live, initContext, newContext } from "./engine/manifest/manifest.ts";
 export { lazySchemaFor } from "./engine/schema/lazy.ts";
+export type { Schemas } from "./engine/schema/builder.ts";
 export * from "./runtime/errors.ts";
 export { fetch } from "./runtime/fetch/mod.ts";
 export type { RequestInit } from "./runtime/fetch/mod.ts";
