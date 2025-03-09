@@ -312,7 +312,21 @@ export const newSchemaBuilder = (initial: SchemaData): SchemaBuilder => {
               ...currentRoot,
               [blockFunction.blockType]: {
                 title: blockFunction.blockType,
-                anyOf: [...currAnyOfs, { $ref: `#/definitions/${id}` }],
+                anyOf: [...currAnyOfs, {
+                  $ref: `#/definitions/${id}`,
+                  ...(blockFunction.inputSchemaId
+                    ? {
+                      inputSchema:
+                        `#/definitions/${blockFunction.inputSchemaId}`,
+                    }
+                    : {}),
+                  ...(blockFunction.outputSchemaId
+                    ? {
+                      outputSchema:
+                        `#/definitions/${blockFunction.outputSchemaId}`,
+                    }
+                    : {}),
+                }],
               },
             },
           ];
