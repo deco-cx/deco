@@ -220,3 +220,8 @@ export const forceHttps = (req: Request) => {
   }
   return httpsReq;
 };
+
+export const simulateBot = (req: Request) => {
+  const url = new URL(req.url);
+  return url.searchParams.has("__asBot");
+};

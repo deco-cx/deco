@@ -28,6 +28,7 @@ import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 import type { Vary } from "../utils/vary.ts";
 import { Context } from "../mod.ts";
+import { simulateBot } from "../utils/http.ts";
 
 export interface GateKeeperAccess {
   defaultVisibility?: "private" | "public";
@@ -139,7 +140,7 @@ export const fnContextFromHttpContext = <TState = {}>(
       return device ??= deviceOf(ctx.request);
     },
     get isBot() {
-      return isBot ??= isUABot(ctx.request);
+      return isBot ??= isUABot(ctx.request) || simulateBot(ctx.request);
     },
   };
 };
