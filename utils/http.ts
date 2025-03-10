@@ -223,5 +223,5 @@ export const forceHttps = (req: Request) => {
 
 export const simulateBot = (req: Request) => {
   const url = new URL(req.url);
-  return url.searchParams.has("asBot");
+  return url.searchParams.has("__asBot");
 };
