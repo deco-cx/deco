@@ -32,7 +32,7 @@ const BLOCKED_QS = new Set<string>([
   "ck_subscriber_id",
 ]);
 
-export const addBlockedQS = (queryStrings: string[]) => {
+export const addBlockedQS = (queryStrings: string[]): void => {
   queryStrings.forEach((qs) => BLOCKED_QS.add(qs));
 };
 
