@@ -32,6 +32,10 @@ const BLOCKED_QS = new Set<string>([
   "ck_subscriber_id",
 ]);
 
+export const addBlockedQS = (queryStrings: string[]) => {
+  queryStrings.forEach((qs) => BLOCKED_QS.add(qs));
+};
+
 /** Returns new props object with prop __cb with `pathname?querystring` from href */
 const createStableHref = (href: string): string => {
   const hrefUrl = new URL(href!, "http://localhost:8000");
@@ -67,10 +71,11 @@ export const useSection = <P>(
   const { request, renderSalt, context: { state: { pathTemplate } } } = ctx;
 
   const hrefParam = href ?? request.url;
+  const stableHrefPathQs = createStableHref(hrefParam);
   const cbString = [
     revisionId,
     vary,
-    createStableHref(hrefParam),
+    stableHrefPathQs,
     ctx?.deploymentId,
   ].join("|");
   hasher.hash(cbString);
@@ -79,7 +84,7 @@ export const useSection = <P>(
 
   const params = new URLSearchParams([
     ["props", JSON.stringify(props)],
-    ["href", hrefParam],
+    ["href", new URL(stableHrefPathQs, hrefParam).href],
     ["pathTemplate", pathTemplate],
     ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     ["__cb", `${cb}`],
