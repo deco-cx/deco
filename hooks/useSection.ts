@@ -39,7 +39,8 @@ export const addBlockedQS = (queryStrings: string[]): void => {
 /** Returns new props object with prop __cb with `pathname?querystring` from href */
 const createStableHref = (href: string): string => {
   const hrefUrl = new URL(href!, "http://localhost:8000");
-  hrefUrl.searchParams.forEach((_: string, qsName: string) => {
+  const qsList = [...hrefUrl.searchParams.keys()];
+  qsList.forEach((qsName: string) => {
     if (BLOCKED_QS.has(qsName)) hrefUrl.searchParams.delete(qsName);
   });
   hrefUrl.searchParams.sort();
