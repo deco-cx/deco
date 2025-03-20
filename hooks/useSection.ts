@@ -43,7 +43,7 @@ const createStableHref = (href: string): string => {
     if (BLOCKED_QS.has(qsName)) hrefUrl.searchParams.delete(qsName);
   });
   hrefUrl.searchParams.sort();
-  return `${hrefUrl.pathname}${hrefUrl.search}`;
+  return hrefUrl.href;
 };
 
 export type Options<P> = {
@@ -71,11 +71,11 @@ export const useSection = <P>(
   const { request, renderSalt, context: { state: { pathTemplate } } } = ctx;
 
   const hrefParam = href ?? request.url;
-  const stableHrefPathQs = createStableHref(hrefParam);
+  const stableHref = createStableHref(hrefParam);
   const cbString = [
     revisionId,
     vary,
-    stableHrefPathQs,
+    stableHref,
     ctx?.deploymentId,
   ].join("|");
   hasher.hash(cbString);
@@ -84,7 +84,7 @@ export const useSection = <P>(
 
   const params = new URLSearchParams([
     ["props", JSON.stringify(props)],
-    ["href", new URL(stableHrefPathQs, hrefParam).href],
+    ["href", stableHref],
     ["pathTemplate", pathTemplate],
     ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     ["__cb", `${cb}`],
