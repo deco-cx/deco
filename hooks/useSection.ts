@@ -43,7 +43,7 @@ const createStableHref = (href: string): string => {
     if (BLOCKED_QS.has(qsName)) hrefUrl.searchParams.delete(qsName);
   });
   hrefUrl.searchParams.sort();
-  return `${hrefUrl.pathname}?${hrefUrl.search}`;
+  return `${hrefUrl.pathname}${hrefUrl.search}`;
 };
 
 export type Options<P> = {
