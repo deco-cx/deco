@@ -2,4 +2,4 @@ export { ImportMapBuilder } from "./importmap/builder.ts";
 export type { ImportMapResolver } from "./importmap/builder.ts";
 export type { ParsedSource } from "./schema/deps.ts";
 export { initLoader, parsePath } from "./schema/parser.ts";
-export { fromEndpoint } from "./decofile/fetcher.ts";
+export { fromEndpoint, fromJSON } from "./decofile/fetcher.ts";
