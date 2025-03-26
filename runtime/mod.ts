@@ -67,7 +67,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   private _handler: ReturnType<typeof handlerFor> | null = null;
   private constructor(
     public site: string,
-    private ctx: DecoContext<TAppManifest>,
+    public ctx: DecoContext<TAppManifest>,
     public bindings?: Bindings<TAppManifest>,
   ) {
   }
