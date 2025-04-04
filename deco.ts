@@ -6,8 +6,8 @@ import type { ReleaseResolver } from "./engine/core/mod.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
 import type { AppManifest } from "./types.ts";
 import { randId } from "./utils/rand.ts";
-import { BlockKeys } from "./mod.ts";
-import { GateKeeperAccess } from "./blocks/utils.tsx";
+import type { BlockKeys } from "./engine/block.ts";
+import type { GateKeeperAccess } from "./blocks/utils.tsx";
 
 export interface DecoRuntimeState<
   TAppManifest extends AppManifest = AppManifest,
