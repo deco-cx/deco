@@ -409,7 +409,6 @@ export const newContext = <
   instanceId: string | undefined = undefined,
   site: string | undefined = undefined,
   namespace: string = "site",
-  visibilityOverrides?: DecoContext<T>["visibilityOverrides"],
 ): Promise<DecoContext<T>> => {
   const currentContext = Context.active<T>();
   const ctx: DecoContext<T> = {
@@ -420,7 +419,6 @@ export const newContext = <
       id: instanceId ?? randId(),
       startedAt: new Date(),
     },
-    visibilityOverrides,
   };
 
   return fulfillContext(ctx, m, currentImportMap, release);
