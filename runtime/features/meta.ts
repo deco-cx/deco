@@ -105,13 +105,17 @@ export interface VersionedMetaInfo {
 }
 
 export const meta = async (
-  context: DecoContext,
+  _context: DecoContext,
   opts?: GetMetaOpts,
 ): Promise<VersionedMetaInfo | undefined> => {
   const ctrl = new AbortController();
   const signal = opts?.signal;
   if (signal) {
     signal.onabort = () => ctrl.abort();
+  }
+  let context = Context.active();
+  if (Context.isDefault()) {
+    context = _context;
   }
   setTimeout(() => ctrl.abort(), 20 * 60 * 1e3); // 20 minutes in ms
   const lazySchema = lazySchemaFor(context);

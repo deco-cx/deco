@@ -117,6 +117,9 @@ export const Context = {
     // Retrieve the context associated with the async ID
     return asyncLocalStorage.getStore() as DecoContext<T> ?? defaultContext;
   },
+  isDefault: (): boolean => {
+    return asyncLocalStorage.getStore() === defaultContext;
+  },
   bind: <R, TArgs extends unknown[]>(
     ctx: DecoContext,
     f: (...args: TArgs) => R,
