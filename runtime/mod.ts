@@ -267,5 +267,6 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 }
 
 export type { PageData } from "./deps.ts";
-export { DECO_SEGMENT } from "./middleware.ts";
+export { DECO_SEGMENT, type DecoMiddlewareContext } from "./middleware.ts";
+
 export { usePageContext, useRouterContext } from "./routes/entrypoint.tsx";
