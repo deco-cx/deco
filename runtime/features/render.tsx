@@ -25,7 +25,7 @@ export interface Props {
 }
 
 const snippet = (url: string) => {
-  window.location.href = url;
+  globalThis.location.href = url;
 };
 
 export interface RenderResponse {

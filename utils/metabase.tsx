@@ -10,7 +10,7 @@ export type MetabaseProps = {
 export const metabasePreview = (iframeSrc: string): PreactComponent => ({
   Component: () => (
     <iframe
-      style={"min-width: 100vw; min-height: 100vh;"}
+      style="min-width: 100vw; min-height: 100vh;"
       src={`${iframeSrc}#bordered=false&titled=false`}
     />
   ),

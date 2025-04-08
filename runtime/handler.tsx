@@ -38,7 +38,7 @@ export interface RendererOpts {
 
 export interface Bindings<TAppManifest extends AppManifest = AppManifest> {
   renderer?: RendererOpts;
-  framework: Framework;
+  framework?: Framework;
   server?: Hono<DecoRouteState<TAppManifest>>;
   useServer?: (
     deco: Deco<TAppManifest>,
