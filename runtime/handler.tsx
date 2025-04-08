@@ -131,7 +131,6 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
 ) => Promise<Response> | Response => {
   const bindings = deco.bindings;
   const hono = bindings?.server ?? new Hono<DecoRouteState<TAppManifest>>();
-  bindings?.useServer?.(deco, hono);
   hono.use(async (ctx, next) => {
     const renderFn = ctx.env?.RENDER_FN ?? bindings?.renderer?.renderFn;
     const framework = bindings?.framework;
@@ -165,6 +164,7 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
     await next();
   });
   hono.use(...middlewareFor(deco));
+  bindings?.useServer?.(deco, hono);
   for (const { paths, handler } of routes) {
     for (const path of paths) {
       hono.all(path, handler as HonoHandler);
