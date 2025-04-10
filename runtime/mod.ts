@@ -1,6 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { join, toFileUrl } from "@std/path";
+import type { ImportMap } from "../blocks/mod.ts";
 import type { RequestState } from "../blocks/utils.tsx";
+import { buildImportMap } from "../blocks/utils.tsx";
 import type { DecoContext } from "../deco.ts";
 import { Context } from "../deco.ts";
 import { context as otelContext } from "../deps.ts";
@@ -38,7 +40,8 @@ import {
 } from "./features/render.tsx";
 import { styles } from "./features/styles.css.ts";
 import { type Bindings, handlerFor } from "./handler.tsx";
-
+export { buildImportMap };
+export type { ImportMap };
 export interface PageParams<TData = any> {
   data: TData;
   url: URL;
@@ -54,6 +57,7 @@ export type State<
 export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
   site?: string;
   namespace?: string;
+  importMap?: ImportMap;
   manifest?: TAppManifest;
   decofile?: DecofileProvider;
   bindings?: Bindings<TAppManifest>;
@@ -83,7 +87,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     const decoContext = await Promise.resolve(manifest).then((m) =>
       newContext(
         m,
-        undefined,
+        opts?.importMap,
         decofile,
         crypto.randomUUID(),
         site,
