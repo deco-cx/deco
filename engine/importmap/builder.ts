@@ -17,6 +17,20 @@ export interface ImportMap {
   imports: Record<string, string>;
 }
 
+export const FuncAddr = {
+  build: (importClause: string, funcName: string) => {
+    return `${importClause}@[${funcName}]`;
+  },
+  unwind: (importStr: string) => {
+    const match = importStr.match(/(.*)@\[(.*?)\]$/);
+    if (!match) {
+      return { importClause: importStr, funcName: undefined };
+    }
+    const [, importClause, funcName] = match;
+    return { importClause, funcName };
+  },
+};
+
 /**
  * This function is a workaround while deno's team did not resolve the issue with import.meta.resolve
  * Tracked issue: https://github.com/denoland/deno/issues/25579

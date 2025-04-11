@@ -15,7 +15,7 @@ import type {
   ResolverMap,
 } from "../engine/core/resolver.ts";
 import { mapObjKeys, type PromiseOrValue } from "../engine/core/utils.ts";
-import type { ImportMap } from "../engine/importmap/builder.ts";
+import { FuncAddr, type ImportMap } from "../engine/importmap/builder.ts";
 import type {
   ResolverMiddleware,
   ResolverMiddlewareContext,
@@ -304,7 +304,7 @@ const buildRuntimeFromApp = <
   };
 };
 
-export type AppModule<
+export type AppDefaultModule<
   TState = {},
   TProps = any,
   TResolverMap extends ResolverMap = ResolverMap,
@@ -316,6 +316,29 @@ export type AppModule<
   | AppRuntime<any, TState>,
   AppRuntime<any, TState>
 >;
+
+export type AppClassModule<
+  TProps = any,
+  TClass extends new (props: TProps) => any = new (props: TProps) => any,
+> = BlockModule<
+  TClass
+>;
+
+export type AppModule<
+  TState = {},
+  TProps = any,
+  TResolverMap extends ResolverMap = ResolverMap,
+  TAppManifest extends AppManifest = AppManifest,
+  TAppDependencies extends (AppRuntime | App)[] = (AppRuntime | App)[],
+> =
+  | AppDefaultModule<
+    TState,
+    TProps,
+    TResolverMap,
+    TAppManifest,
+    TAppDependencies
+  >
+  | AppClassModule<TProps>;
 
 const injectAppState = <TState = any>(
   state: TState,
@@ -379,15 +402,102 @@ const buildApp = async <TState = {}>(
     state,
   };
 };
-const appBlock: Block<AppModule> = {
+function isAppModuleClass<TState, TProps>(
+  value: AppModule<TState, TProps>,
+): value is AppClassModule<TProps> {
+  return typeof value === "object" && "default" in value &&
+    value.default.toString().substring(0, 5) === "class";
+}
+
+const toAppModule = <TState, TProps>(
+  path: string,
+  moduleClass: AppClassModule<TProps>,
+): AppDefaultModule<TState, TProps> => {
+  const appName = moduleClass.default.name.toLowerCase();
+  return {
+    default: (props) => {
+      const { default: Constructor } = moduleClass;
+      const classInstance = new Constructor(props);
+      const loaders: AppManifest["loaders"] = {};
+      const actions: AppManifest["actions"] = {};
+      const importMap: ImportMap = {
+        imports: {},
+      };
+      for (
+        const methodName of Object.getOwnPropertyNames(Constructor.prototype)
+      ) {
+        if (methodName === "constructor") {
+          continue;
+        }
+        const impl = classInstance[methodName];
+        if (typeof impl === "function") {
+          let set = actions;
+          let setName = "actions";
+          if (methodName.startsWith("loader_")) {
+            set = loaders;
+            setName = "loaders";
+          }
+          const fWithoutPrefix = methodName.replaceAll("loader_", "")
+            .replaceAll(
+              "action_",
+              "",
+            );
+          const methodInvokeName =
+            `${appName}/${setName}/${fWithoutPrefix}/run.ts`;
+          importMap.imports[methodInvokeName] = FuncAddr.build(
+            import.meta.resolve(path),
+            `${moduleClass.default.name}.${methodName}`,
+          );
+          set[methodInvokeName] = {
+            default: (props, req, ctx) => {
+              return impl.bind(classInstance)(props, req, ctx);
+            },
+          };
+        }
+      }
+      return {
+        manifest: {
+          name: appName,
+          loaders,
+          actions,
+          baseUrl: import.meta.url,
+        },
+        importMap,
+        state: {} as TState,
+      };
+    },
+  };
+};
+
+const appBlock: Block<AppModule, any> = {
   type: "apps",
+  introspect: {
+    funcNames: (p) => {
+      const className = p.program.body.find((p) =>
+        p.type === "ExportDefaultDeclaration" &&
+        p.decl.type === "ClassExpression"
+      );
+      if (
+        className?.type === "ExportDefaultDeclaration" &&
+        className.decl.type === "ClassExpression" &&
+        className.decl.identifier?.value
+      ) {
+        return [`${className.decl.identifier.value}.constructor`, "default"];
+      }
+      return ["default"];
+    },
+  },
   adapt: <
     TProps = any,
     TState = {},
   >(
-    { default: runtimeFn }: AppModule<TState, TProps>,
+    appModule: AppModule<TState, TProps>,
+    path: string,
   ) =>
   async (props: TProps) => {
+    const { default: runtimeFn } = isAppModuleClass<TState, TProps>(appModule)
+      ? toAppModule<TState, TProps>(path, appModule)
+      : appModule;
     try {
       const appRuntime = await runtimeFn(props);
       return await buildApp<TState>(appRuntime);

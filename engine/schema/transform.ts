@@ -2,8 +2,10 @@ import type {
   ArrayExpression,
   ArrowFunctionExpression,
   AssignmentPattern,
+  Constructor,
   ExportNamedDeclaration,
   Expression,
+  Fn,
   FunctionDeclaration,
   FunctionExpression,
   NamedImportSpecifier,
@@ -989,7 +991,7 @@ export interface CanonicalDeclarationBase {
   jsDoc: JSONSchema7;
 }
 export interface FunctionCanonicalDeclaration extends CanonicalDeclarationBase {
-  exp: FunctionExpression | FunctionDeclaration;
+  exp: FunctionExpression | FunctionDeclaration | Fn | Constructor;
 }
 
 export interface VariableCanonicalDeclaration extends CanonicalDeclarationBase {
@@ -1000,6 +1002,7 @@ export interface VariableCanonicalDeclaration extends CanonicalDeclarationBase {
 export type CanonicalDeclaration =
   | VariableCanonicalDeclaration
   | FunctionCanonicalDeclaration;
+
 const findFuncFromExportNamedDeclaration = async (
   importMapResolver: ImportMapResolver,
   funcName: string,
@@ -1058,6 +1061,94 @@ const findFunc = async (
   path: string,
   parsedSource: ParsedSource,
 ): Promise<[CanonicalDeclaration, boolean] | undefined> => {
+  // Check if the function name contains a class reference
+  const parts = funcName.split(".");
+  if (parts.length === 2) {
+    const [className, methodName] = parts;
+
+    // Look for class declarations
+    for (const item of parsedSource.program.body) {
+      if (item.type === "ExportDefaultDeclaration") {
+        if (item.decl.type === "ClassExpression") {
+          const className = item.decl.identifier?.value;
+          if (!className) {
+            continue;
+          }
+          for (const member of item.decl.body) {
+            if (
+              member.type === "Constructor" &&
+              member.key.type === "Identifier" &&
+              member.key.value === methodName
+            ) {
+              return [{
+                path,
+                parsedSource,
+                exp: member,
+                jsDoc: spannableToJSONSchema(member),
+              }, true]; // Consider class methods as always exported
+            }
+
+            if (
+              member.type === "ClassMethod" &&
+              member.key.type === "Identifier" &&
+              member.key.value === methodName
+            ) {
+              return [{
+                path,
+                parsedSource,
+                exp: member.function,
+                jsDoc: spannableToJSONSchema(member),
+              }, true]; // Consider class methods as always exported
+            }
+          }
+        }
+      }
+      // Check class declarations
+      if (
+        item.type === "ClassDeclaration" &&
+        item.identifier.value === className
+      ) {
+        for (const member of item.body) {
+          if (
+            member.type === "ClassMethod" &&
+            member.key.type === "Identifier" &&
+            member.key.value === methodName
+          ) {
+            return [{
+              path,
+              parsedSource,
+              exp: member.function,
+              jsDoc: spannableToJSONSchema(member),
+            }, true]; // Consider class methods as always exported
+          }
+        }
+      }
+
+      // Check exported class declarations
+      if (
+        item.type === "ExportDeclaration" &&
+        item.declaration.type === "ClassDeclaration" &&
+        item.declaration.identifier.value === className
+      ) {
+        for (const member of item.declaration.body) {
+          if (
+            member.type === "ClassMethod" &&
+            member.key.type === "Identifier" &&
+            member.key.value === methodName
+          ) {
+            return [{
+              path,
+              parsedSource,
+              exp: member.function,
+              jsDoc: spannableToJSONSchema(member),
+            }, true]; // Consider class methods as always exported
+          }
+        }
+      }
+    }
+  }
+
+  // Original function finding logic for non-class methods
   for (const item of parsedSource.program.body) {
     if (item.type === "ExportNamedDeclaration") {
       const found = await findFuncFromExportNamedDeclaration(
@@ -1332,7 +1423,11 @@ export const programToBlockRef = async (
   >,
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
-  const funcNames = introspect?.funcNames ?? ["default"];
+  const funcNamesOrFn = introspect?.funcNames ?? ["default"];
+
+  const funcNames = typeof funcNamesOrFn === "function"
+    ? funcNamesOrFn(mProgram)
+    : funcNamesOrFn;
 
   for (const name of funcNames) {
     const fn = name === "default"

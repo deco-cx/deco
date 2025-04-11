@@ -9,6 +9,7 @@ import type { ResolverMiddleware } from "../engine/middleware.ts";
 import type { Schemeable } from "../engine/schema/transform.ts";
 import type { AppManifest } from "../types.ts";
 import type { BlockInvocation } from "./manifest/defaults.ts";
+import type { ParsedSource } from "./mod.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;
@@ -19,7 +20,7 @@ export interface BlockModuleRef {
 
 export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
 export type BlockModule<
-  TDefaultExportFunc extends ResolverLike<T> = ResolverLike,
+  TDefaultExportFunc = any,
   T = TDefaultExportFunc extends ResolverLike<infer TValue> ? TValue : any,
   TSerializable = T,
 > = {
@@ -37,7 +38,7 @@ export type ModuleOf<TBlock> = TBlock extends Block<
 
 export interface IntrospectParams {
   includeReturn?: boolean | string[] | ((ts: TsType) => TsType | undefined);
-  funcNames?: string[];
+  funcNames?: string[] | ((source: ParsedSource) => string[]);
 }
 
 export interface Block<
@@ -46,7 +47,7 @@ export interface Block<
     TProvides,
     TSerializable
   > = BlockModule<any>,
-  TDefaultExportFunc extends ResolverLike<TProvides> = ResolverLike,
+  TDefaultExportFunc = ResolverLike,
   BType extends BlockType = BlockType,
   TProvides = any,
   TSerializable = any,
