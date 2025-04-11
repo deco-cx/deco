@@ -46,15 +46,10 @@ const resolveForPath = async (
   }
 
   if (funcName) {
-    const funcNamesFn = typeof introspect?.funcNames === "function"
-      ? introspect!.funcNames
-      : undefined;
     introspect = introspect
       ? {
         ...introspect,
-        funcNames: typeof funcNamesFn === "function"
-          ? (p) => [...funcNamesFn(p), funcName]
-          : [funcName, ...(introspect.funcNames as string[] ?? [])],
+        funcNames: [funcName, ...introspect.funcNames ?? []],
       }
       : {
         funcNames: [funcName, "default"],

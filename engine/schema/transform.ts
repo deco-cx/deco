@@ -1010,10 +1010,11 @@ const findFuncFromExportNamedDeclaration = async (
   path: string,
   parsedSource: ParsedSource,
 ): Promise<CanonicalDeclaration | undefined> => {
+  const [fName, _fType] = funcName.split(".");
   for (const spec of item.specifiers) {
     if (
       spec.type === "ExportSpecifier" &&
-      (spec.exported?.value ?? spec.orig.value) === funcName
+      (spec.exported?.value ?? spec.orig.value) === fName
     ) {
       let source = item.source?.value;
       if (!source) {
@@ -1040,12 +1041,12 @@ const findFuncFromExportNamedDeclaration = async (
       if (!newProgram) {
         return undefined;
       }
-      if (isFromDefault) {
+      if (isFromDefault && !_fType) {
         return findDefaultFuncExport(importMapResolver, url, newProgram);
       } else {
         return findFuncExport(
           importMapResolver,
-          spec.orig.value,
+          _fType ? `${spec.orig.value}.${_fType}` : spec.orig.value,
           url,
           newProgram,
         );
@@ -1070,8 +1071,8 @@ const findFunc = async (
     for (const item of parsedSource.program.body) {
       if (item.type === "ExportDefaultDeclaration") {
         if (item.decl.type === "ClassExpression") {
-          const className = item.decl.identifier?.value;
-          if (!className) {
+          const clssName = item.decl.identifier?.value;
+          if (!clssName) { // when default export is what matters.
             continue;
           }
           for (const member of item.decl.body) {
@@ -1262,6 +1263,29 @@ export const findDefaultFuncExport = async (
       );
       return func?.[0];
     }
+
+    if (
+      item.type === "ExportDefaultDeclaration" &&
+      item.decl.type === "ClassExpression"
+    ) {
+      const clssName = item.decl.identifier?.value;
+      if (!clssName) { // when default export is what matters.
+        continue;
+      }
+      for (const member of item.decl.body) {
+        if (
+          member.type === "Constructor" &&
+          member.key.type === "Identifier"
+        ) {
+          return {
+            path,
+            parsedSource,
+            exp: member,
+            jsDoc: spannableToJSONSchema(member),
+          };
+        }
+      }
+    }
     if (
       item.type === "ExportDefaultDeclaration" &&
       item.decl.type === "FunctionExpression"
@@ -1423,11 +1447,7 @@ export const programToBlockRef = async (
   >,
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
-  const funcNamesOrFn = introspect?.funcNames ?? ["default"];
-
-  const funcNames = typeof funcNamesOrFn === "function"
-    ? funcNamesOrFn(mProgram)
-    : funcNamesOrFn;
+  const funcNames = introspect?.funcNames ?? ["default"];
 
   for (const name of funcNames) {
     const fn = name === "default"

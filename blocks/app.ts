@@ -446,7 +446,7 @@ const toAppModule = <TState, TProps>(
             `${appName}/${setName}/${fWithoutPrefix}/run.ts`;
           importMap.imports[methodInvokeName] = FuncAddr.build(
             import.meta.resolve(path),
-            `${moduleClass.default.name}.${methodName}`,
+            `default.${methodName}`,
           );
           set[methodInvokeName] = {
             default: (props, req, ctx) => {
@@ -471,22 +471,6 @@ const toAppModule = <TState, TProps>(
 
 const appBlock: Block<AppModule, any> = {
   type: "apps",
-  introspect: {
-    funcNames: (p) => {
-      const className = p.program.body.find((p) =>
-        p.type === "ExportDefaultDeclaration" &&
-        p.decl.type === "ClassExpression"
-      );
-      if (
-        className?.type === "ExportDefaultDeclaration" &&
-        className.decl.type === "ClassExpression" &&
-        className.decl.identifier?.value
-      ) {
-        return [`${className.decl.identifier.value}.constructor`, "default"];
-      }
-      return ["default"];
-    },
-  },
   adapt: <
     TProps = any,
     TState = {},

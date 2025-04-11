@@ -9,7 +9,6 @@ import type { ResolverMiddleware } from "../engine/middleware.ts";
 import type { Schemeable } from "../engine/schema/transform.ts";
 import type { AppManifest } from "../types.ts";
 import type { BlockInvocation } from "./manifest/defaults.ts";
-import type { ParsedSource } from "./mod.ts";
 
 export interface BlockModuleRef {
   inputSchema?: Schemeable;
@@ -38,7 +37,7 @@ export type ModuleOf<TBlock> = TBlock extends Block<
 
 export interface IntrospectParams {
   includeReturn?: boolean | string[] | ((ts: TsType) => TsType | undefined);
-  funcNames?: string[] | ((source: ParsedSource) => string[]);
+  funcNames?: string[];
 }
 
 export interface Block<
