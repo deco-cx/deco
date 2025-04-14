@@ -409,6 +409,8 @@ function isAppModuleClass<TState, TProps>(
     value.default.toString().substring(0, 5) === "class";
 }
 
+const LOADER_PREFIX = "loader_";
+const ACTION_PREFIX = "action_";
 const toAppModule = <TState, TProps>(
   path: string,
   moduleClass: AppClassModule<TProps>,
@@ -433,15 +435,13 @@ const toAppModule = <TState, TProps>(
         if (typeof impl === "function") {
           let set = actions;
           let setName = "actions";
-          if (methodName.startsWith("loader_")) {
+          if (methodName.startsWith(LOADER_PREFIX)) {
             set = loaders;
             setName = "loaders";
           }
-          const fWithoutPrefix = methodName.replaceAll("loader_", "")
-            .replaceAll(
-              "action_",
-              "",
-            );
+          const fWithoutPrefix = methodName
+            .replaceAll(LOADER_PREFIX, "")
+            .replaceAll(ACTION_PREFIX, "");
           const methodInvokeName =
             `${appName}/${setName}/${fWithoutPrefix}/run.ts`;
           importMap.imports[methodInvokeName] = FuncAddr.build(
