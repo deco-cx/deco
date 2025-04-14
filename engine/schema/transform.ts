@@ -1010,11 +1010,11 @@ const findFuncFromExportNamedDeclaration = async (
   path: string,
   parsedSource: ParsedSource,
 ): Promise<CanonicalDeclaration | undefined> => {
-  const [fName, _fType] = funcName.split(".");
+  const [funcNameOrClass, noneOrMethod] = funcName.split(".");
   for (const spec of item.specifiers) {
     if (
       spec.type === "ExportSpecifier" &&
-      (spec.exported?.value ?? spec.orig.value) === fName
+      (spec.exported?.value ?? spec.orig.value) === funcNameOrClass
     ) {
       let source = item.source?.value;
       if (!source) {
@@ -1041,12 +1041,12 @@ const findFuncFromExportNamedDeclaration = async (
       if (!newProgram) {
         return undefined;
       }
-      if (isFromDefault && !_fType) {
+      if (isFromDefault && !noneOrMethod) {
         return findDefaultFuncExport(importMapResolver, url, newProgram);
       } else {
         return findFuncExport(
           importMapResolver,
-          _fType ? `${spec.orig.value}.${_fType}` : spec.orig.value,
+          noneOrMethod ? `${spec.orig.value}.${noneOrMethod}` : spec.orig.value,
           url,
           newProgram,
         );
