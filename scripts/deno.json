@@ -1,6 +1,6 @@
 {
   "name": "@deco/scripts",
-  "version": "1.112.2",
+  "version": "1.113.0",
   "exports": {
     "./release": "./release.ts",
     "./update": "./update.run.ts",
