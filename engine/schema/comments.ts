@@ -30,6 +30,11 @@ export type Spannable =
   | ExportNamedDeclarationSpannable;
 
 const getChildren = (s: Spannable) => {
+  // Handle class declarations
+  if ((s as any)?.decl?.type === "ClassExpression") {
+    return (s as any).decl.body;
+  }
+
   const children = (s as any)?.declaration?.body?.body ??
     (s as any)?.body?.body ??
     (s as ModuleSpannable)?.body ??

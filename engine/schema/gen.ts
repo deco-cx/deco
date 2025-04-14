@@ -5,6 +5,7 @@ import blocks from "../../blocks/index.ts";
 import type { JSONSchema7 } from "../../deps.ts";
 import type { Block, BlockModuleRef } from "../block.ts";
 import {
+  FuncAddr,
   ImportMapBuilder,
   type ImportMapResolver,
   safeImportResolve,
@@ -38,9 +39,21 @@ const resolveForPath = async (
   if (!blockPath) {
     return undefined;
   }
-  const program = await parsePath(blockPath);
+  const { importClause, funcName } = FuncAddr.unwind(blockPath);
+  const program = await parsePath(importClause);
   if (!program) {
     return undefined;
+  }
+
+  if (funcName) {
+    introspect = introspect
+      ? {
+        ...introspect,
+        funcNames: [funcName, ...introspect.funcNames ?? []],
+      }
+      : {
+        funcNames: [funcName, "default"],
+      };
   }
   return programToBlockRef(
     importMapResolver,
