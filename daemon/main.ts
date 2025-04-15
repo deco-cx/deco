@@ -267,15 +267,29 @@ if (runCmd) {
   app.route("", createWorker({ command: runCmd, port: WORKER_PORT, persist }));
 }
 
+const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
+const stableEnvironmentName = () => {
+  const savedEnvironment = localStorage.getItem(LOCAL_STORAGE_ENV_NAME);
+  if (savedEnvironment) {
+    return savedEnvironment;
+  }
+
+  const newEnvironment = `${crypto.randomUUID().slice(0, 6)}-localhost`;
+  localStorage.setItem(LOCAL_STORAGE_ENV_NAME, newEnvironment);
+  return newEnvironment;
+};
 const port = Number(Deno.env.get("APP_PORT")) || 8000;
 Deno.serve({
   port,
   onListen: async (addr) => {
     try {
-      if (DECO_ENV_NAME && DECO_SITE_NAME && !Deno.env.has("DECO_PREVIEW")) {
+      const env = DECO_HOST && !DECO_ENV_NAME
+        ? stableEnvironmentName()
+        : DECO_ENV_NAME;
+      if (env && DECO_SITE_NAME && !Deno.env.has("DECO_PREVIEW")) {
         await register({
           site: DECO_SITE_NAME,
-          env: DECO_ENV_NAME,
+          env,
           port: `${port}`,
           decoHost: DECO_HOST,
         });
