@@ -445,7 +445,7 @@ const toAppModule = <TState, TProps>(
           const methodInvokeName =
             `${appName}/${setName}/${fWithoutPrefix}/run.ts`;
           importMap.imports[methodInvokeName] = FuncAddr.build(
-            import.meta.resolve(path),
+            `resolve://${path}`,
             `default.${methodName}`,
           );
           set[methodInvokeName] = {
