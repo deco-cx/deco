@@ -14,6 +14,7 @@ import { createSSE } from "./sse/api.ts";
 
 export const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME);
 export const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
+export const DECO_HOST = Deno.env.get("DECO_HOST") === "true";
 
 const DEFAULT_LOGS_ENDPOINT = "/volumes/default/logs";
 const DAEMON_API_SPECIFIER = "x-daemon-api";
