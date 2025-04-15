@@ -13,7 +13,12 @@ import {
 import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { delay, throttle } from "../utils/async.ts";
-import { createDaemonAPIs, DECO_ENV_NAME, DECO_SITE_NAME } from "./daemon.ts";
+import {
+  createDaemonAPIs,
+  DECO_ENV_NAME,
+  DECO_HOST,
+  DECO_SITE_NAME,
+} from "./daemon.ts";
 import { watchFS } from "./fs/api.ts";
 import { ensureGit, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
@@ -272,6 +277,7 @@ Deno.serve({
           site: DECO_SITE_NAME,
           env: DECO_ENV_NAME,
           port: `${port}`,
+          decoHost: DECO_HOST,
         });
       } else {
         console.log(
