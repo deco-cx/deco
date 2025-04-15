@@ -3,7 +3,7 @@
 
 import { FieldResolver } from "../../engine/core/resolver.ts";
 import { badRequest } from "../../engine/errors.ts";
-import { createHandler } from "../middleware.ts";
+import { createHandler, DEBUG_QS } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
 
@@ -15,6 +15,7 @@ interface Options {
   renderSalt?: string;
   partialMode?: "replace" | "prepend" | "append";
   framework: "fresh" | "htmx";
+  searchParams: URLSearchParams;
 }
 
 export interface Props {
@@ -65,6 +66,7 @@ const fromRequest = (req: Request): Options => {
     resolveChain: resolveChain
       ? FieldResolver.unwind(JSON.parse(resolveChain))
       : undefined,
+    searchParams: params,
   };
 };
 
@@ -73,8 +75,13 @@ export const handler = createHandler(async (
 ) => {
   const { req: { raw: req }, var: state, render } = ctx;
   const opts = fromRequest(req);
+  const isDebugRequest = opts.searchParams.has(DEBUG_QS);
 
   const { page, shouldCache } = await state.deco.render(req, opts, state);
+
+  if (isDebugRequest) {
+    return Response.json({ debugData: state.vary.debug.build() });
+  }
 
   const response = await render({
     page: {

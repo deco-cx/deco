@@ -8,12 +8,14 @@ import { singleFlight } from "../engine/core/utils.ts";
 import type { DecofileProvider } from "../engine/decofile/provider.ts";
 import { HttpError } from "../engine/errors.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
+import type { State } from "../mod.ts";
 import { logger } from "../observability/otel/config.ts";
 import {
   meter,
   OTEL_ENABLE_EXTRA_METRICS,
 } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
+import { DebugProperties } from "../utils/vary.ts";
 import type { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -59,6 +61,13 @@ export interface LoaderModule<
 
   /** @deprecated use cacheKey instead */
   singleFlightKey?: SingleFlightKeyFunc<TProps, HttpContext>;
+}
+
+interface LoaderDebugData extends DebugProperties {
+  reason: {
+    cache: NonNullable<LoaderModule["cache"]>;
+    cacheKeyNull: boolean;
+  };
 }
 
 export interface WrappedError {
@@ -184,7 +193,7 @@ const wrapLoader = (
     default: async (
       props: Parameters<typeof handler>[0],
       req: Request,
-      ctx: FnContext<unknown, any>,
+      ctx: FnContext<State, any>,
     ): Promise<ReturnType<typeof handler>> => {
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
@@ -214,6 +223,18 @@ const wrapLoader = (
 
           if (ctx.vary && shouldNotCache) {
             ctx.vary.shouldCache = false;
+
+            if (ctx.debugEnabled) {
+              const resolver = resolveChain.at(-1);
+              resolver &&
+                ctx.vary.debug.push<LoaderDebugData>({
+                  resolver,
+                  reason: {
+                    cache: mode,
+                    cacheKeyNull: isCacheKeyNull,
+                  },
+                });
+            }
           }
           !shouldNotCache && ctx.vary?.push(cacheKeyValue);
 
