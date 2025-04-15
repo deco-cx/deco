@@ -17,16 +17,13 @@ export interface ImportMap {
   imports: Record<string, string>;
 }
 
+const EXPORT_QS = `?export=`;
 export const FuncAddr = {
   build: (importClause: string, funcName: string) => {
-    return `${importClause}@[${funcName}]`;
+    return `${importClause}${EXPORT_QS}${funcName}`;
   },
   unwind: (importStr: string) => {
-    const match = importStr.match(/(.*)@\[(.*?)\]$/);
-    if (!match) {
-      return { importClause: importStr, funcName: undefined };
-    }
-    const [, importClause, funcName] = match;
+    const [importClause, funcName] = importStr.split(EXPORT_QS);
     return { importClause, funcName };
   },
 };
@@ -108,9 +105,22 @@ export const ImportMapBuilder = {
       resolve: async (specifier: string, context: string) => {
         const chainedImportResolvers = [...resolvers, NATIVE_RESOLVER];
         for (const resolver of chainedImportResolvers) {
-          const result = await resolver.resolve(specifier, context);
+          let result = await resolver.resolve(specifier, context);
 
           if (result !== null && !result.startsWith("jsr:")) {
+            if (URL.canParse(result)) {
+              const resultUrl = new URL(result);
+              // if the result is a resolve://, we need to resolve the result of the resolve://
+              if (resultUrl.protocol === "resolve:") {
+                result = await resolver.resolve(
+                  `${resultUrl.hostname}${resultUrl.pathname}`,
+                  context,
+                );
+                if (result) {
+                  result = `${result}${resultUrl.search}`;
+                }
+              }
+            }
             return result;
           }
         }
