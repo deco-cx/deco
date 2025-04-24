@@ -409,6 +409,32 @@ function isAppModuleClass<TState, TProps>(
     value.default.toString().substring(0, 5) === "class";
 }
 
+const BUILT_IN_METHODS = [
+  "constructor",
+  "__defineGetter__",
+  "__defineSetter__",
+  "hasOwnProperty",
+  "__lookupGetter__",
+  "__lookupSetter__",
+  "isPrototypeOf",
+  "propertyIsEnumerable",
+  "toString",
+  "valueOf",
+  "toLocaleString",
+];
+function validMethods<T extends Record<string, unknown>>(obj: T): string[] {
+  const methods = new Set<string>();
+  while (obj) {
+    Object.getOwnPropertyNames(obj).forEach((prop) => {
+      if (typeof obj[prop] === "function" && !BUILT_IN_METHODS.includes(prop)) {
+        methods.add(prop);
+      }
+    });
+    obj = Object.getPrototypeOf(obj);
+  }
+  return Array.from(methods);
+}
+
 const LOADER_PREFIX = "loader_";
 const ACTION_PREFIX = "action_";
 const toAppModule = <TState, TProps>(
@@ -426,11 +452,8 @@ const toAppModule = <TState, TProps>(
         imports: {},
       };
       for (
-        const methodName of Object.getOwnPropertyNames(Constructor.prototype)
+        const methodName of validMethods(classInstance)
       ) {
-        if (methodName === "constructor") {
-          continue;
-        }
         const impl = classInstance[methodName];
         if (typeof impl === "function") {
           let set = actions;
