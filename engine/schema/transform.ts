@@ -1126,7 +1126,6 @@ const findFunc = async (
   const parts = funcName.split(".");
   if (parts.length === 2) {
     const [className, methodName] = parts;
-
     // Look for class declarations
     for (const item of parsedSource.program.body) {
       if (item.type === "ExportDefaultExpression") {
@@ -1141,13 +1140,12 @@ const findFunc = async (
             const method = findMethod(clss[0], methodName);
 
             if (method) {
-              console.log({ method });
               return [{
                 path,
                 parsedSource,
                 exp: method.function,
                 jsDoc: spannableToJSONSchema(method),
-              }, clss[1]];
+              }, true];
             }
           }
         }
@@ -1202,7 +1200,6 @@ const findFunc = async (
         }
       }
     }
-    console.log({ parts }, "not_found");
   }
 
   // Original function finding logic for non-class methods
@@ -1515,16 +1512,12 @@ export const programToBlockRef = async (
   >,
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
-  console.log({ blockKey, introspect });
   const funcNames = introspect?.funcNames ?? ["default"];
 
   for (const name of funcNames) {
     const fn = name === "default"
       ? await findDefaultFuncExport(importMapResolver, mPath, mProgram)
       : await findFuncExport(importMapResolver, name, mPath, mProgram);
-    if (blockKey === "candy/actions/myFunc/run.ts") {
-      console.log({ fn, name });
-    }
     if (!fn) {
       continue;
     }
