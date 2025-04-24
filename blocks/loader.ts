@@ -320,7 +320,7 @@ const wrapLoader = (
           try {
             return JSON.parse(json);
           } catch (error) {
-            logger.error("MATCHED", json);
+            logger.error("MATCHED", {json: json || "no json"});
             throw error;
           }
         };
