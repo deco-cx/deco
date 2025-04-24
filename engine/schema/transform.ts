@@ -2,17 +2,22 @@ import type {
   ArrayExpression,
   ArrowFunctionExpression,
   AssignmentPattern,
+  ClassDeclaration,
+  ClassExpression,
+  ClassMethod,
   Constructor,
   ExportNamedDeclaration,
   Expression,
   Fn,
   FunctionDeclaration,
   FunctionExpression,
+  ModuleItem,
   NamedImportSpecifier,
   ObjectExpression,
   ObjectPattern,
   Param,
   Pattern,
+  Statement,
   StringLiteral,
   TsArrayType,
   TsEntityName,
@@ -1056,6 +1061,61 @@ const findFuncFromExportNamedDeclaration = async (
   return undefined;
 };
 
+const classOf = (
+  item: ModuleItem | Statement,
+  className: string,
+): [ClassDeclaration, boolean] | undefined => {
+  // Check direct class declarations
+  if (
+    item.type === "ClassDeclaration" &&
+    item.identifier.value === className
+  ) {
+    return [item, false];
+  }
+
+  // Check exported class declarations
+  if (
+    item.type === "ExportDeclaration" &&
+    item.declaration.type === "ClassDeclaration" &&
+    item.declaration.identifier.value === className
+  ) {
+    return [item.declaration, true];
+  }
+};
+const findClass = (
+  className: string,
+  parsedSource: ParsedSource,
+): [ClassDeclaration, boolean] | undefined => {
+  // Look for class declarations
+  for (const item of parsedSource.program.body) {
+    const clss = classOf(item, className);
+    if (clss) {
+      return clss;
+    }
+  }
+};
+
+const findMethod = (
+  decl: ClassDeclaration | ClassExpression,
+  methodName: string,
+): ClassMethod | (Constructor & { function: Constructor }) | undefined => {
+  for (const member of decl.body) {
+    if (
+      member.type === "Constructor" &&
+      member.key.type === "Identifier" &&
+      member.key.value === methodName
+    ) {
+      return { ...member, function: member }; // Consider class methods as always exported
+    }
+    if (
+      member.type === "ClassMethod" &&
+      member.key.type === "Identifier" &&
+      member.key.value === methodName
+    ) {
+      return member;
+    }
+  }
+};
 const findFunc = async (
   importMapResolver: ImportMapResolver,
   funcName: string,
@@ -1069,38 +1129,43 @@ const findFunc = async (
 
     // Look for class declarations
     for (const item of parsedSource.program.body) {
+      if (item.type === "ExportDefaultExpression") {
+        if (
+          item.expression.type === "Identifier"
+        ) {
+          const clss = findClass(
+            item.expression.value,
+            parsedSource,
+          );
+          if (clss) {
+            const method = findMethod(clss[0], methodName);
+
+            if (method) {
+              console.log({ method });
+              return [{
+                path,
+                parsedSource,
+                exp: method.function,
+                jsDoc: spannableToJSONSchema(method),
+              }, clss[1]];
+            }
+          }
+        }
+      }
       if (item.type === "ExportDefaultDeclaration") {
         if (item.decl.type === "ClassExpression") {
           const clssName = item.decl.identifier?.value;
           if (!clssName) { // when default export is what matters.
             continue;
           }
-          for (const member of item.decl.body) {
-            if (
-              member.type === "Constructor" &&
-              member.key.type === "Identifier" &&
-              member.key.value === methodName
-            ) {
-              return [{
-                path,
-                parsedSource,
-                exp: member,
-                jsDoc: spannableToJSONSchema(member),
-              }, true]; // Consider class methods as always exported
-            }
-
-            if (
-              member.type === "ClassMethod" &&
-              member.key.type === "Identifier" &&
-              member.key.value === methodName
-            ) {
-              return [{
-                path,
-                parsedSource,
-                exp: member.function,
-                jsDoc: spannableToJSONSchema(member),
-              }, true]; // Consider class methods as always exported
-            }
+          const method = findMethod(item.decl, methodName);
+          if (method) {
+            return [{
+              path,
+              parsedSource,
+              exp: method.function,
+              jsDoc: spannableToJSONSchema(method),
+            }, true]; // Consider class methods as always exported
           }
         }
       }
@@ -1109,19 +1174,14 @@ const findFunc = async (
         item.type === "ClassDeclaration" &&
         item.identifier.value === className
       ) {
-        for (const member of item.body) {
-          if (
-            member.type === "ClassMethod" &&
-            member.key.type === "Identifier" &&
-            member.key.value === methodName
-          ) {
-            return [{
-              path,
-              parsedSource,
-              exp: member.function,
-              jsDoc: spannableToJSONSchema(member),
-            }, true]; // Consider class methods as always exported
-          }
+        const method = findMethod(item, methodName);
+        if (method) {
+          return [{
+            path,
+            parsedSource,
+            exp: method.function,
+            jsDoc: spannableToJSONSchema(method),
+          }, true]; // Consider class methods as always exported
         }
       }
 
@@ -1131,26 +1191,34 @@ const findFunc = async (
         item.declaration.type === "ClassDeclaration" &&
         item.declaration.identifier.value === className
       ) {
-        for (const member of item.declaration.body) {
-          if (
-            member.type === "ClassMethod" &&
-            member.key.type === "Identifier" &&
-            member.key.value === methodName
-          ) {
-            return [{
-              path,
-              parsedSource,
-              exp: member.function,
-              jsDoc: spannableToJSONSchema(member),
-            }, true]; // Consider class methods as always exported
-          }
+        const method = findMethod(item.declaration, methodName);
+        if (method) {
+          return [{
+            path,
+            parsedSource,
+            exp: method.function,
+            jsDoc: spannableToJSONSchema(method),
+          }, true]; // Consider class methods as always exported
         }
       }
     }
+    console.log({ parts }, "not_found");
   }
 
   // Original function finding logic for non-class methods
   for (const item of parsedSource.program.body) {
+    const clss = classOf(item, funcName);
+    if (clss) {
+      const method = findMethod(clss[0], "constructor");
+      if (method) {
+        return [{
+          path,
+          parsedSource,
+          exp: method.function,
+          jsDoc: spannableToJSONSchema(method),
+        }, clss[1]];
+      }
+    }
     if (item.type === "ExportNamedDeclaration") {
       const found = await findFuncFromExportNamedDeclaration(
         importMapResolver,
@@ -1447,12 +1515,16 @@ export const programToBlockRef = async (
   >,
   introspect?: IntrospectParams,
 ): Promise<BlockModuleRef | undefined> => {
+  console.log({ blockKey, introspect });
   const funcNames = introspect?.funcNames ?? ["default"];
 
   for (const name of funcNames) {
     const fn = name === "default"
       ? await findDefaultFuncExport(importMapResolver, mPath, mProgram)
       : await findFuncExport(importMapResolver, name, mPath, mProgram);
+    if (blockKey === "candy/actions/myFunc/run.ts") {
+      console.log({ fn, name });
+    }
     if (!fn) {
       continue;
     }
