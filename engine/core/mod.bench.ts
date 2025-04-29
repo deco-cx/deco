@@ -69,7 +69,7 @@ Deno.bench(
 );
 
 const latestVersion = await import(
-  `https://denopkg.com/deco-cx/deco@${denoJSON.version}/engine/core/resolver.ts`
+  `https://cdn.jsdelivr.net/gh/deco-cx/deco@${denoJSON.version}/engine/core/resolver.ts`
 );
 Deno.bench(
   `resolve ${denoJSON.version} version (with on-demand hints)`,

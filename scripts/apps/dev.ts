@@ -13,7 +13,7 @@ const resolveAppLocation = async (appLocation: string) => {
   if (existsOnFS) {
     return appLocation;
   }
-  return `https://denopkg.com/${appLocation}`;
+  return `https://cdn.jsdelivr.net/gh/${appLocation}`;
 };
 export const dev = async (
   appName: string,

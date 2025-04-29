@@ -26,13 +26,13 @@ const getLatestVersion = async (locator: string) => {
 };
 
 const DECO_SITES_STD = getLatestVersion(
-  "https://denopkg.com/deco-sites/std@master",
+  "https://cdn.jsdelivr.net/gh/deco-sites/std@master",
 );
 const DECO_CX_DECO = getLatestVersion(
-  "https://denopkg.com/deco-cx/deco@master",
+  "https://cdn.jsdelivr.net/gh/deco-cx/deco@master",
 );
 const DECO_CX_APPS = getLatestVersion(
-  "https://denopkg.com/deco-cx/apps@master",
+  "https://cdn.jsdelivr.net/gh/deco-cx/apps@master",
 );
 
 const withSlashAtEnd = (str: string | undefined) =>
