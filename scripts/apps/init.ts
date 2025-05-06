@@ -67,7 +67,7 @@ const templates: Templates = [
 
 export const init = async (name: string) => {
   const latestVersionPromise = lookup(
-    "https://denopkg.com/deco-cx/deco@main/",
+    "https://cdn.jsdelivr.net/gh/deco-cx/deco@main/",
     REGISTRIES,
   )
     ?.all().then((all) => all[0]);

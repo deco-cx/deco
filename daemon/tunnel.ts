@@ -5,17 +5,29 @@ export interface TunnelRegisterOptions {
   env: string;
   site: string;
   port: string;
+  decoHost?: boolean;
 }
 
 const VERBOSE = Deno.env.get("VERBOSE");
 
-export async function register({ env, site, port }: TunnelRegisterOptions) {
-  const domain = `${env}--${site}.deco.site`;
+export async function register(
+  { env, site, port, decoHost }: TunnelRegisterOptions,
+) {
+  const decoHostDomain = `${env}--${site}.deco.host`;
+  const { server, domain } = decoHost
+    ? {
+      server: `wss://${decoHostDomain}`,
+      domain: decoHostDomain,
+    }
+    : {
+      server: "wss://simpletunnel.deco.site",
+      domain: `${env}--${site}.deco.site`,
+    };
   const localAddr = `http://localhost:${port}`;
   await connect({
     domain,
     localAddr,
-    server: "wss://simpletunnel.deco.site",
+    server,
     apiKey: Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
       "c309424a-2dc4-46fe-bfc7-a7c10df59477",
   }).then((r) => {

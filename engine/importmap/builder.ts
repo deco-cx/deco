@@ -17,6 +17,17 @@ export interface ImportMap {
   imports: Record<string, string>;
 }
 
+const EXPORT_QS = `?export=`;
+export const FuncAddr = {
+  build: (importClause: string, funcName: string) => {
+    return `${importClause}${EXPORT_QS}${funcName}`;
+  },
+  unwind: (importStr: string) => {
+    const [importClause, funcName] = importStr.split(EXPORT_QS);
+    return { importClause, funcName };
+  },
+};
+
 /**
  * This function is a workaround while deno's team did not resolve the issue with import.meta.resolve
  * Tracked issue: https://github.com/denoland/deno/issues/25579
@@ -93,15 +104,39 @@ export const ImportMapBuilder = {
       },
       resolve: async (specifier: string, context: string) => {
         const chainedImportResolvers = [...resolvers, NATIVE_RESOLVER];
-        for (const resolver of chainedImportResolvers) {
-          const result = await resolver.resolve(specifier, context);
+        const resolveSpecifier = async (
+          specifier: string,
+        ): Promise<string | null> => {
+          for (const resolver of chainedImportResolvers) {
+            let result = await resolver.resolve(specifier, context);
 
-          if (result !== null && !result.startsWith("jsr:")) {
-            return result;
+            if (result !== null && !result.startsWith("jsr:")) {
+              if (URL.canParse(result)) {
+                const resultUrl = new URL(result);
+                // if the result is a resolve://, we need to resolve the result of the resolve://
+                if (resultUrl.protocol === "resolve:") {
+                  result = await resolveSpecifier(
+                    `${resultUrl.hostname}${resultUrl.pathname}`,
+                  );
+                  if (result) {
+                    result = `${result}${resultUrl.search}`;
+                  }
+                }
+              }
+
+              return result;
+            }
           }
+
+          return null;
+        };
+        const resolvedSpecifier = await resolveSpecifier(specifier);
+        if (!resolvedSpecifier) {
+          // should never reach here if the import map is valid
+          throw new Error(`${specifier} could not be resolved at ${context}`);
         }
-        // should never reach here if the import map is valid
-        throw new Error(`${specifier} could not be resolved at ${context}`);
+
+        return resolvedSpecifier;
       },
     };
   },

@@ -19,7 +19,7 @@ export interface BlockModuleRef {
 
 export type ResolverLike<T = any> = (...args: any[]) => PromiseOrValue<T>;
 export type BlockModule<
-  TDefaultExportFunc extends ResolverLike<T> = ResolverLike,
+  TDefaultExportFunc = any,
   T = TDefaultExportFunc extends ResolverLike<infer TValue> ? TValue : any,
   TSerializable = T,
 > = {
@@ -46,7 +46,7 @@ export interface Block<
     TProvides,
     TSerializable
   > = BlockModule<any>,
-  TDefaultExportFunc extends ResolverLike<TProvides> = ResolverLike,
+  TDefaultExportFunc = ResolverLike,
   BType extends BlockType = BlockType,
   TProvides = any,
   TSerializable = any,

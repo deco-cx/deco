@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "1.112.2",
+  "version": "1.115.7",
   "lock": false,
   "exports": {
     ".": "./mod.ts",
@@ -56,19 +56,19 @@
     }
   },
   "scopes": {
-    "https://denopkg.com/deco-cx/deco@1.26.0/": {
-      "$live/": "https://denopkg.com/deco-cx/deco@1.26.0/",
+    "https://cdn.jsdelivr.net/gh/deco-cx/deco@1.26.0/": {
+      "$live/": "https://cdn.jsdelivr.net/gh/deco-cx/deco@1.26.0/",
       "std/": "https://deno.land/std@0.203.0/",
       "partytown/": "https://deno.land/x/partytown@0.3.0/",
-      "deco/": "https://denopkg.com/deco-cx/deco@1.26.0/"
+      "deco/": "https://cdn.jsdelivr.net/gh/deco-cx/deco@1.26.0/"
     }
   },
   "imports": {
-    "$fresh/": "https://denopkg.com/denoland/fresh@1.6.8/",
+    "$fresh/": "https://cdn.jsdelivr.net/gh/denoland/fresh@1.6.8/",
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
     "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.3.4",
-    "@deco/deno-ast-wasm": "jsr:@deco/deno-ast-wasm@^0.5.4",
+    "@deco/deno-ast-wasm": "jsr:@deco/deno-ast-wasm@^0.5.5",
     "@deco/durable": "jsr:@deco/durable@^0.5.3",
     "@deco/warp": "jsr:@deco/warp@^0.3.8",
     "@hono/hono": "jsr:@hono/hono@^4.5.4",

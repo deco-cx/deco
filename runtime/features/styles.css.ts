@@ -2,7 +2,9 @@ import { join } from "@std/path";
 
 const TAILWIND_FILE = "tailwind.css";
 
-const TO: string = join(Deno.cwd(), "static", TAILWIND_FILE);
+const STATIC_ROOT = Deno.env.get("STATIC_ROOT") || join(Deno.cwd(), "static");
+
+const TO: string = join(STATIC_ROOT, TAILWIND_FILE);
 
 export const styles = (): Promise<string> =>
   Deno.readTextFile(TO).catch(() =>
