@@ -103,7 +103,7 @@ async (ctx, next) => {
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
 
-const DEBUG_QS = "__d";
+export const DEBUG_QS = "__d";
 const addHours = function (date: Date, h: number) {
   date.setTime(date.getTime() + (h * 60 * 60 * 1000));
   return date;
