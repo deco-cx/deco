@@ -11,10 +11,15 @@ import {
 import { createLocker } from "./async.ts";
 import { logs } from "./loggings/stream.ts";
 import { DENO_DEPLOYMENT_ID } from "./main.ts";
+import type { MiddlewareHandler } from "@hono/hono";
+import {
+  DECO_SITE_NAME,
+} from "./daemon.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 const REPO_URL = Deno.env.get("DECO_REPO_URL");
+const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
 
 export const lockerGitAPI = createLocker();
 
@@ -352,6 +357,50 @@ export const log: Handler = async (c) => {
   );
 };
 
+// update netrc file used for git authentication
+const updateNetrc = async (token: string) => {
+  const home = Deno.env.get("HOME");
+  if (!home) {
+    throw new Error("HOME environment variable not set");
+  }
+  const netrcPath = join(home, ".netrc");
+  const content = `machine github.com
+login x-access-token
+password ${token}
+`;
+  await Deno.writeTextFile(netrcPath, content);
+  // Set proper permissions for .netrc file (readable only by owner)
+  await Deno.chmod(netrcPath, 0o600);
+};
+
+const githubAuthMiddleware: MiddlewareHandler = async (c, next) => {
+  if (!GITHUB_APP_KEY) {
+    return await next();
+  }
+
+  try {
+    const response = await fetch(`https://admin.deco.cx/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`, {
+      headers: {
+        "x-api-key": GITHUB_APP_KEY,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch access token: ${response.statusText}`);
+    }
+    const responseJson = await response.json();
+    const token = responseJson.token;
+    if (!token) {
+      throw new Error("No token received from GitHub app");
+    }
+    await updateNetrc(token);
+  } catch (error) {
+    console.error("Failed to setup GitHub authentication:", error);
+    return new Response("Failed to setup GitHub authentication", { status: 500 });
+  }
+
+  return await next();
+};
+
 export const ensureGit = async ({ site }: Pick<Options, "site">) => {
   const assertNoIndexLock = async () => {
     const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
@@ -415,8 +464,12 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       return;
     }
 
+    const cloneUrl = REPO_URL ?? (GITHUB_APP_KEY 
+      ? `https://github.com/deco-sites/${site}.git`
+      : `git@github.com:deco-sites/${site}.git`);
+
     await git
-      .clone(REPO_URL ?? `git@github.com:deco-sites/${site}.git`, ".", [
+      .clone(cloneUrl, ".", [
         "--depth",
         "1",
         "--single-branch",
@@ -439,6 +492,7 @@ interface Options {
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
+  app.use(githubAuthMiddleware);
   app.use(lockerGitAPI.wlock);
   app.get("/diff", diff);
   app.get("/status", status);
