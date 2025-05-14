@@ -9,7 +9,7 @@ export default function DispatchAsyncRender({ id }: Props) {
     let timeout: number | undefined;
 
     function dispatch() {
-      timeout = setTimeout(() => {
+      function click() {
         const elem = document.getElementById(id);
         const parent = elem?.parentElement;
 
@@ -21,9 +21,41 @@ export default function DispatchAsyncRender({ id }: Props) {
         }
 
         elem.click();
+      }
+
+      const self = document.getElementById(`${id}-dispatch-async-render`);
+      if (self == null) {
+        console.error(
+          `Missing element of id ${id}-dispatch-async-render. Async rendering will NOT work properly`,
+        );
+        return;
+      }
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            click();
+            observer.disconnect();
+            if (typeof timeout !== "undefined") {
+              clearTimeout(timeout);
+            }
+          }
+        },
+        {
+          rootMargin: "0px",
+          threshold: 0.1,
+        },
+      );
+
+      observer.observe(self);
+      timeout = setTimeout(() => {
+        observer.disconnect();
+        click();
       }, 6000);
 
-      return () => clearTimeout(timeout);
+      return () => {
+        observer.disconnect();
+        clearTimeout(timeout);
+      };
     }
 
     if (document.readyState === "complete") {
@@ -40,5 +72,10 @@ export default function DispatchAsyncRender({ id }: Props) {
     };
   }, []);
 
-  return <div data-dispatch-async-render />;
+  return (
+    <div
+      id={`${id}-dispatch-async-render`}
+      data-dispatch-async-render
+    />
+  );
 }
