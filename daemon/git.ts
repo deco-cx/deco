@@ -12,9 +12,7 @@ import { createLocker } from "./async.ts";
 import { logs } from "./loggings/stream.ts";
 import { DENO_DEPLOYMENT_ID } from "./main.ts";
 import type { MiddlewareHandler } from "@hono/hono";
-import {
-  DECO_SITE_NAME,
-} from "./daemon.ts";
+import { DECO_SITE_NAME } from "./daemon.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
@@ -373,29 +371,45 @@ password ${token}
   await Deno.chmod(netrcPath, 0o600);
 };
 
+const getGitHubToken = async (): Promise<void> => {
+  if (!GITHUB_APP_KEY) {
+    throw new Error("GITHUB_APP_KEY not set");
+  }
+
+  const response = await fetch(
+    `https://admin.deco.cx/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+    {
+      headers: {
+        "x-api-key": GITHUB_APP_KEY,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch access token: ${response.statusText}`);
+  }
+
+  const responseJson = await response.json();
+  const token = responseJson.token;
+
+  if (!token) {
+    throw new Error("No token received from GitHub app");
+  }
+  await updateNetrc(token);
+};
+
 const githubAuthMiddleware: MiddlewareHandler = async (c, next) => {
   if (!GITHUB_APP_KEY) {
     return await next();
   }
 
   try {
-    const response = await fetch(`https://admin.deco.cx/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`, {
-      headers: {
-        "x-api-key": GITHUB_APP_KEY,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch access token: ${response.statusText}`);
-    }
-    const responseJson = await response.json();
-    const token = responseJson.token;
-    if (!token) {
-      throw new Error("No token received from GitHub app");
-    }
-    await updateNetrc(token);
+    await getGitHubToken();
   } catch (error) {
     console.error("Failed to setup GitHub authentication:", error);
-    return new Response("Failed to setup GitHub authentication", { status: 500 });
+    return new Response("Failed to setup GitHub authentication", {
+      status: 500,
+    });
   }
 
   return await next();
@@ -459,14 +473,19 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       );
     }
 
+    if (GITHUB_APP_KEY) {
+      await getGitHubToken();
+    }
+
     if (hasGitFolder) {
       await resetToMergeBase();
       return;
     }
 
-    const cloneUrl = REPO_URL ?? (GITHUB_APP_KEY 
-      ? `https://github.com/deco-sites/${site}.git`
-      : `git@github.com:deco-sites/${site}.git`);
+    const cloneUrl = REPO_URL ??
+      (GITHUB_APP_KEY
+        ? `https://github.com/deco-sites/${site}.git`
+        : `git@github.com:deco-sites/${site}.git`);
 
     await git
       .clone(cloneUrl, ".", [
