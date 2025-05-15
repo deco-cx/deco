@@ -6,7 +6,7 @@ interface Props {
 
 export default function DispatchAsyncRender({ id }: Props) {
   useEffect(function clickOnAsyncRenderElements() {
-    // let timeout: number | undefined;
+    let timeout: number | undefined;
 
     function dispatch() {
       function click() {
@@ -35,9 +35,9 @@ export default function DispatchAsyncRender({ id }: Props) {
           if (entry.isIntersecting) {
             click();
             observer.disconnect();
-            // if (typeof timeout !== "undefined") {
-            //   clearTimeout(timeout);
-            // }
+            if (typeof timeout !== "undefined") {
+              clearTimeout(timeout);
+            }
           }
         },
         {
@@ -47,14 +47,14 @@ export default function DispatchAsyncRender({ id }: Props) {
       );
 
       observer.observe(self);
-      // timeout = setTimeout(() => {
-      //   observer.disconnect();
-      //   click();
-      // }, 6000);
+      timeout = setTimeout(() => {
+        observer.disconnect();
+        click();
+      }, 6000);
 
       return () => {
         observer.disconnect();
-        // clearTimeout(timeout);
+        clearTimeout(timeout);
       };
     }
 
@@ -65,9 +65,9 @@ export default function DispatchAsyncRender({ id }: Props) {
     document.addEventListener("DOMContentLoaded", dispatch);
 
     return () => {
-      // if (typeof timeout !== "undefined") {
-      //   clearTimeout(timeout);
-      // }
+      if (typeof timeout !== "undefined") {
+        clearTimeout(timeout);
+      }
       document.removeEventListener("DOMContentLoaded", dispatch);
     };
   }, []);
