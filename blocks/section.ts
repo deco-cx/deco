@@ -80,6 +80,8 @@ export interface SectionModule<
   ErrorFallback?: ComponentType<{ error?: Error }>;
   loader?: PropsLoader<TConfig, TLoaderProps>;
   action?: PropsLoader<TConfig, TActionProps>;
+
+  cache?: "no-store";
 }
 
 export const createSectionBlock = (
@@ -115,6 +117,7 @@ export const createSectionBlock = (
         mod.LoadingFallback,
         mod.ErrorFallback,
         loaderProps,
+        mod.cache,
       );
     const useExportDefaultComponent = withMainComponent(mod.default);
     if (!mod.action && !mod.loader) {
