@@ -43,6 +43,10 @@ const SHOULD_PERSIST = DENO_DEPLOYMENT_ID && SOURCE_PATH && !DECO_TRANSIENT_ENV;
 export const VERBOSE: string | undefined = Deno.env.get("VERBOSE") ||
   DENO_DEPLOYMENT_ID;
 const DENO_AUTH_TOKENS = "DENO_AUTH_TOKENS";
+const WORKER_RESPAWN_INTERVAL_MS = Deno.env.get("WORKER_RESPAWN_INTERVAL_MS")
+  ? parseInt(Deno.env.get("WORKER_RESPAWN_INTERVAL_MS")!, 10)
+  : 3_600_000; // 1hour
+const HAS_PRIVATE_GITHUB_IMPORT = Deno.env.get("HAS_PRIVATE_GITHUB_IMPORT");
 
 const WORKER_PORT = portPool.get();
 
@@ -74,6 +78,20 @@ const createRunCmd = cmd
       },
     })
   : null;
+
+let lastUpdateEnvUpdate: number | undefined;
+const updateDenoAuthTokenEnv = async () => {
+  if (lastUpdateEnvUpdate && Date.now() < lastUpdateEnvUpdate) return;
+  lastUpdateEnvUpdate = Date.now() + WORKER_RESPAWN_INTERVAL_MS;
+
+  const appTokens = await getGitHubPackageTokens();
+  Deno.env.set(
+    DENO_AUTH_TOKENS,
+    appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
+      ";",
+    ),
+  );
+};
 
 if (!DECO_SITE_NAME) {
   console.error(
@@ -183,6 +201,8 @@ const watch = async () => {
       genManifestTS();
     }
 
+    updateDenoAuthTokenEnv();
+
     // TODO: We should be able to remove this after we migrate to ebs
     persistState();
   }
@@ -270,21 +290,10 @@ app.use(activityMonitor);
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
 // Workers are only necessary if there needs to have a preview of the site
 if (createRunCmd) {
-  const hasPrivateGhImport = Deno.env.get("HAS_PRIVATE_GITHUB_IMPORT");
   // Create a function that returns fresh WorkerOptions with new tokens
   const createWorkerOptions = async (): Promise<WorkerOptions> => {
-    if (hasPrivateGhImport) {
-      const updateEnvs = async () => {
-        const appTokens = await getGitHubPackageTokens();
-        Deno.env.set(
-          DENO_AUTH_TOKENS,
-          appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
-            ";",
-          ),
-        );
-      };
-
-      await updateEnvs();
+    if (HAS_PRIVATE_GITHUB_IMPORT) {
+      await updateDenoAuthTokenEnv();
     }
 
     return {
