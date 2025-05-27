@@ -8,6 +8,10 @@ export interface WorkerOptions {
   port: number;
 }
 
+export type WorkerOptionsProvider =
+  | WorkerOptions
+  | (() => Promise<WorkerOptions>);
+
 export type WorkerStatusEvent = {
   type: "worker-status";
   detail: WorkerStatus;
@@ -38,10 +42,30 @@ export const worker = async () => {
   return w;
 };
 
-export const createWorker = (opts: WorkerOptions) => {
+const isProviderFn = (provider: unknown): provider is () => unknown =>
+  typeof provider === "function";
+
+const resolveWorkerOptions = async <
+  T extends WorkerOptions,
+>(
+  provider: T | (() => Promise<T>),
+): Promise<T> => {
+  if (isProviderFn(provider)) {
+    return await provider();
+  }
+  return provider;
+};
+
+export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
   const app = new Hono();
 
-  wp.resolve(new DenoRun(opts));
+  // Initialize worker with initial options
+  const initializeWorker = async () => {
+    const initialOpts = await resolveWorkerOptions(optionsProvider);
+    wp.resolve(new DenoRun(initialOpts));
+  };
+
+  initializeWorker();
 
   // ensure isolate is up and running
   app.use("/*", async (c, next) => {
@@ -61,9 +85,16 @@ export const createWorker = (opts: WorkerOptions) => {
   const signals: Deno.Signal[] = ["SIGINT", "SIGTERM"];
   for (const signal of signals) {
     try {
-      Deno.addSignalListener(signal, () => {
+      Deno.addSignalListener(signal, async () => {
         console.log(`Received ${signal}`);
-        opts.persist();
+
+        try {
+          const opts = await resolveWorkerOptions(optionsProvider);
+          opts.persist();
+        } catch (error) {
+          console.error("Error calling persist during shutdown:", error);
+        }
+
         wp.promise.then((w) => {
           w.signal(signal);
           w[Symbol.asyncDispose]();
