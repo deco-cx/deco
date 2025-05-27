@@ -25,7 +25,7 @@ import { logs } from "./loggings/stream.ts";
 import { watchMeta } from "./meta.ts";
 import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
-import { createWorker, type WorkerOptionsWithRefresh } from "./worker.ts";
+import { createWorker, type WorkerOptions } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
@@ -43,11 +43,6 @@ const SHOULD_PERSIST = DENO_DEPLOYMENT_ID && SOURCE_PATH && !DECO_TRANSIENT_ENV;
 export const VERBOSE: string | undefined = Deno.env.get("VERBOSE") ||
   DENO_DEPLOYMENT_ID;
 const DENO_AUTH_TOKENS = "DENO_AUTH_TOKENS";
-
-const WORKER_RESPAWN_INTERVAL_STR = Deno.env.get("WORKER_RESPAWN_INTERVAL_MS");
-const WORKER_RESPAWN_INTERVAL_MS = WORKER_RESPAWN_INTERVAL_STR
-  ? parseInt(WORKER_RESPAWN_INTERVAL_STR, 10)
-  : undefined;
 
 const WORKER_PORT = portPool.get();
 
@@ -277,22 +272,25 @@ app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
 if (createRunCmd) {
   const hasPrivateGhImport = Deno.env.get("HAS_PRIVATE_GITHUB_IMPORT");
   // Create a function that returns fresh WorkerOptions with new tokens
-  const createWorkerOptions = async (): Promise<WorkerOptionsWithRefresh> => {
+  const createWorkerOptions = async (): Promise<WorkerOptions> => {
     if (hasPrivateGhImport) {
-      const appTokens = await getGitHubPackageTokens();
-      Deno.env.set(
-        DENO_AUTH_TOKENS,
-        appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
-          ";",
-        ),
-      );
+      const updateEnvs = async () => {
+        const appTokens = await getGitHubPackageTokens();
+        Deno.env.set(
+          DENO_AUTH_TOKENS,
+          appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
+            ";",
+          ),
+        );
+      };
+
+      await updateEnvs();
     }
 
     return {
       command: createRunCmd(), // This will create a fresh command with new tokens
       port: WORKER_PORT,
       persist,
-      respawnIntervalMs: WORKER_RESPAWN_INTERVAL_MS,
     };
   };
 
