@@ -18,6 +18,7 @@ const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 const REPO_URL = Deno.env.get("DECO_REPO_URL");
 const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
+const ADMIN_DOMAIN = "https://admin.deco.cx";
 
 export const lockerGitAPI = createLocker();
 
@@ -371,13 +372,16 @@ password ${token}
   await Deno.chmod(netrcPath, 0o600);
 };
 
-const getGitHubToken = async (): Promise<void> => {
+export const getGitHubToken = async (): Promise<string | undefined> => {
   if (!GITHUB_APP_KEY) {
     throw new Error("GITHUB_APP_KEY not set");
   }
 
   const response = await fetch(
-    `https://admin.deco.cx/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+    new URL(
+      `/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+      ADMIN_DOMAIN,
+    ).href,
     {
       headers: {
         "x-api-key": GITHUB_APP_KEY,
@@ -386,7 +390,8 @@ const getGitHubToken = async (): Promise<void> => {
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch access token: ${response.statusText}`);
+    console.log(`Failed to fetch access token: ${response.statusText}`);
+    return;
   }
 
   const responseJson = await response.json();
@@ -395,16 +400,56 @@ const getGitHubToken = async (): Promise<void> => {
   if (!token) {
     throw new Error("No token received from GitHub app");
   }
+
+  return token;
+};
+
+export const getGitHubPackageTokens = async (): Promise<string[]> => {
+  if (!GITHUB_APP_KEY) {
+    throw new Error("GITHUB_APP_KEY not set");
+  }
+
+  const response = await fetch(
+    new URL(
+      `/live/invoke/deco-sites/admin/loaders/github/getPackagesAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+      ADMIN_DOMAIN,
+    ),
+    {
+      headers: {
+        "x-api-key": GITHUB_APP_KEY,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    console.log(`Failed to fetch access token: ${response.statusText}`);
+    return [];
+  }
+
+  const responseJson = await response.json();
+  const packageTokens = responseJson.packageTokens;
+
+  if (!packageTokens) {
+    throw new Error("No package tokens received from GitHub app");
+  }
+
+  return packageTokens;
+};
+
+const setupGithubTokenNetrc = async (): Promise<void> => {
+  const token = await getGitHubToken();
+  if (token === undefined) return;
+
   await updateNetrc(token);
 };
 
-const githubAuthMiddleware: MiddlewareHandler = async (c, next) => {
+const githubAuthMiddleware: MiddlewareHandler = async (_, next) => {
   if (!GITHUB_APP_KEY) {
     return await next();
   }
 
   try {
-    await getGitHubToken();
+    await setupGithubTokenNetrc();
   } catch (error) {
     console.error("Failed to setup GitHub authentication:", error);
     return new Response("Failed to setup GitHub authentication", {
@@ -474,7 +519,7 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
     }
 
     if (GITHUB_APP_KEY) {
-      await getGitHubToken();
+      await setupGithubTokenNetrc();
     }
 
     if (hasGitFolder) {
