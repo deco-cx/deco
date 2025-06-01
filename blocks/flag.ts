@@ -83,7 +83,7 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
           typeof variant?.rule === "function" ? variant.rule(ctx) : false
         ),
       );
-      const match = variants.find((_, index) => results[index]) || variants[0];
+      const match = variants.find((_, index) => results[index]);
 
       return isDeferred(match?.value) ? match?.value() : match?.value;
     }
