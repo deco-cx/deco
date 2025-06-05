@@ -59,6 +59,8 @@ export interface LoaderModule<
     ctx: FnContext<TState>,
   ) => string | null;
 
+  cacheMaxAge?: number;
+
   /** @deprecated use cacheKey instead */
   singleFlightKey?: SingleFlightKeyFunc<TProps, HttpContext>;
 }
@@ -174,6 +176,7 @@ const wrapLoader = (
     default: handler,
     cache: mode = "no-store",
     cacheKey = noop,
+    cacheMaxAge,
     singleFlightKey,
     ...rest
   }: LoaderModule,
@@ -293,7 +296,7 @@ const wrapLoader = (
           );
 
           const headers: { [key: string]: string } = {
-            expires: new Date(Date.now() + (MAX_AGE_S * 1e3))
+            expires: new Date(Date.now() + ((cacheMaxAge ?? MAX_AGE_S) * 1e3))
               .toUTCString(),
             "Content-Type": "application/json",
           };
