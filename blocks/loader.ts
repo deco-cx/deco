@@ -69,7 +69,7 @@ export interface LoaderModule<
 
 interface LoaderDebugData extends DebugProperties {
   reason: {
-    cache: NonNullable<LoaderModule["cache"]>;
+    cache: NonNullable<CacheMode>;
     cacheKeyNull: boolean;
   };
 }
@@ -176,7 +176,7 @@ const noop = () => "";
 const wrapLoader = (
   {
     default: handler,
-    cache: mode = "no-store",
+    cache = "no-store",
     cacheKey = noop,
     singleFlightKey,
     ...rest
@@ -184,6 +184,9 @@ const wrapLoader = (
   resolveChain: FieldResolver[],
   release: DecofileProvider,
 ) => {
+  const [cacheMaxAge, mode] = typeof cache === "string"
+    ? [MAX_AGE_S, cache]
+    : [cache?.maxAge, "stale-while-revalidate"];
   const flights = singleFlight();
 
   if (typeof singleFlightKey === "function") {
@@ -234,7 +237,7 @@ const wrapLoader = (
                 ctx.vary.debug.push<LoaderDebugData>({
                   resolver,
                   reason: {
-                    cache: mode,
+                    cache: mode as CacheMode,
                     cacheKeyNull: isCacheKeyNull,
                   },
                 });
@@ -295,10 +298,6 @@ const wrapLoader = (
           const jsonStringEncoded = new TextEncoder().encode(
             JSON.stringify(json),
           );
-
-          const cacheMaxAge = typeof mode === "object"
-            ? mode.maxAge
-            : MAX_AGE_S;
 
           const headers: { [key: string]: string } = {
             expires: new Date(Date.now() + (cacheMaxAge * 1e3)).toUTCString(),
