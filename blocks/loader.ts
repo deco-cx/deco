@@ -63,8 +63,6 @@ export interface LoaderModule<
     ctx: FnContext<TState>,
   ) => string | null;
 
-  cacheMaxAge?: number;
-
   /** @deprecated use cacheKey instead */
   singleFlightKey?: SingleFlightKeyFunc<TProps, HttpContext>;
 }
