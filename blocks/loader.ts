@@ -29,6 +29,8 @@ import {
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
+type CacheMode = "no-store" | "no-cache" | "stale-while-revalidate";
+
 export interface LoaderModule<
   TProps = any,
   TState = any,
@@ -51,7 +53,9 @@ export interface LoaderModule<
    *
    * @default "no-store"
    */
-  cache?: "no-store" | "stale-while-revalidate" | "no-cache";
+  cache?: CacheMode | {
+    maxAge: number;
+  };
   // a null value avoid cache
   cacheKey?: (
     props: TProps,
@@ -176,7 +180,6 @@ const wrapLoader = (
     default: handler,
     cache: mode = "no-store",
     cacheKey = noop,
-    cacheMaxAge,
     singleFlightKey,
     ...rest
   }: LoaderModule,
@@ -295,9 +298,12 @@ const wrapLoader = (
             JSON.stringify(json),
           );
 
+          const cacheMaxAge = typeof mode === "object"
+            ? mode.maxAge
+            : MAX_AGE_S;
+
           const headers: { [key: string]: string } = {
-            expires: new Date(Date.now() + ((cacheMaxAge ?? MAX_AGE_S) * 1e3))
-              .toUTCString(),
+            expires: new Date(Date.now() + (cacheMaxAge * 1e3)).toUTCString(),
             "Content-Type": "application/json",
           };
 
