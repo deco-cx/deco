@@ -29,6 +29,8 @@ import {
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
+type CacheMode = "no-store" | "no-cache" | "stale-while-revalidate";
+
 export interface LoaderModule<
   TProps = any,
   TState = any,
@@ -51,7 +53,9 @@ export interface LoaderModule<
    *
    * @default "no-store"
    */
-  cache?: "no-store" | "stale-while-revalidate" | "no-cache";
+  cache?: CacheMode | {
+    maxAge: number;
+  };
   // a null value avoid cache
   cacheKey?: (
     props: TProps,
@@ -65,7 +69,7 @@ export interface LoaderModule<
 
 interface LoaderDebugData extends DebugProperties {
   reason: {
-    cache: NonNullable<LoaderModule["cache"]>;
+    cache: NonNullable<CacheMode>;
     cacheKeyNull: boolean;
   };
 }
@@ -172,7 +176,7 @@ const noop = () => "";
 const wrapLoader = (
   {
     default: handler,
-    cache: mode = "no-store",
+    cache = "no-store",
     cacheKey = noop,
     singleFlightKey,
     ...rest
@@ -180,6 +184,9 @@ const wrapLoader = (
   resolveChain: FieldResolver[],
   release: DecofileProvider,
 ) => {
+  const [cacheMaxAge, mode] = typeof cache === "string"
+    ? [MAX_AGE_S, cache]
+    : [cache?.maxAge, "stale-while-revalidate"];
   const flights = singleFlight();
 
   if (typeof singleFlightKey === "function") {
@@ -230,7 +237,7 @@ const wrapLoader = (
                 ctx.vary.debug.push<LoaderDebugData>({
                   resolver,
                   reason: {
-                    cache: mode,
+                    cache: mode as CacheMode,
                     cacheKeyNull: isCacheKeyNull,
                   },
                 });
@@ -293,8 +300,7 @@ const wrapLoader = (
           );
 
           const headers: { [key: string]: string } = {
-            expires: new Date(Date.now() + (MAX_AGE_S * 1e3))
-              .toUTCString(),
+            expires: new Date(Date.now() + (cacheMaxAge * 1e3)).toUTCString(),
             "Content-Type": "application/json",
           };
 
