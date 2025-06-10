@@ -26,15 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Publish package
-        run: npx jsr publish
-
-      - name: Publish script package
-        run: cd scripts/ && npx jsr publish
-
-      - name: Publish dev package
-        run: cd dev/ && npx jsr publish
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
