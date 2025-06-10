@@ -85,6 +85,7 @@ const updateDenoAuthTokenEnv = async () => {
   lastUpdateEnvUpdate = Date.now() + WORKER_RESPAWN_INTERVAL_MS;
 
   const appTokens = await getGitHubPackageTokens();
+  // TODO: handle if DENO_AUTH_TOKENS is already set
   Deno.env.set(
     DENO_AUTH_TOKENS,
     appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
@@ -201,7 +202,9 @@ const watch = async () => {
       genManifestTS();
     }
 
-    updateDenoAuthTokenEnv();
+    if (HAS_PRIVATE_GITHUB_IMPORT) {
+      updateDenoAuthTokenEnv();
+    }
 
     // TODO: We should be able to remove this after we migrate to ebs
     persistState();
