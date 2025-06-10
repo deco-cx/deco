@@ -180,11 +180,3 @@ jobs:
               -H "Accept: application/vnd.github.everest-preview+json" \
               https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish.yaml/dispatches \
               -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
-      - name: Trigger Publish deno 2 Workflow
-        run: |
-          curl -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.everest-preview+json" \
-              https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish-2.yaml/dispatches \
-              -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
-        
