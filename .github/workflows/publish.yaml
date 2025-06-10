@@ -103,3 +103,54 @@ jobs:
             echo "::set-output name=image_builder_latest::$REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
           fi
           echo "::set-output name=image_builder_commit::$REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT"
+
+      - name: Build, tag, and push the builder image to Github ghcr
+        id: build-builder-image-2
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          REPOSITORY: ${{ env.IMAGE_NAME }}/deno2
+          IMAGE_TAG_LATEST: latest
+          IMAGE_TAG_COMMIT: ${{ github.event.inputs.tag_name || github.ref_name }}
+        run: |
+          #!/bin/bash
+
+          # Function to check if the tag is a prerelease
+          hasPrerelease() {
+            [[ "$1" == *"-"* ]]
+          }
+
+          LATEST=""
+
+          # Check if the tag is a prerelease
+          if ! hasPrerelease "$IMAGE_TAG_COMMIT"; then
+            LATEST="-t $REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
+          fi
+
+          # Get the current tag and create the Dockerfile
+          cat <<EOF > Dockerfile
+          FROM denoland/deno:alpine-2.3.5
+
+          # The port that your application listens to.
+          EXPOSE 8000
+
+          WORKDIR /app
+
+          # Maybe add deno lsp?
+          RUN apk add git openssh
+          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
+          RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir && chown -R deno:deno /daemon-deno-dir
+
+          # Prefer not to run as root.
+          USER deno
+
+          WORKDIR /app/deco
+          EOF
+
+          # Build and push the Docker image
+          docker buildx build --platform linux/amd64,linux/arm64 $LATEST -t $REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT --push .
+
+          # Set the GitHub Actions outputs
+          if [ -n "$LATEST" ]; then
+            echo "::set-output name=image_builder_latest::$REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
+          fi
+          echo "::set-output name=image_builder_commit::$REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT"
