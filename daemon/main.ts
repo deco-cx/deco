@@ -20,12 +20,12 @@ import {
   DECO_SITE_NAME,
 } from "./daemon.ts";
 import { watchFS } from "./fs/api.ts";
-import { ensureGit, lockerGitAPI } from "./git.ts";
+import { ensureGit, getGitHubPackageTokens, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
 import { watchMeta } from "./meta.ts";
 import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
-import { createWorker } from "./worker.ts";
+import { createWorker, type WorkerOptions } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
@@ -42,6 +42,11 @@ const DECO_TRANSIENT_ENV = Deno.env.get("DECO_TRANSIENT_ENV") === "true";
 const SHOULD_PERSIST = DENO_DEPLOYMENT_ID && SOURCE_PATH && !DECO_TRANSIENT_ENV;
 export const VERBOSE: string | undefined = Deno.env.get("VERBOSE") ||
   DENO_DEPLOYMENT_ID;
+const DENO_AUTH_TOKENS = "DENO_AUTH_TOKENS";
+const WORKER_RESPAWN_INTERVAL_MS = Deno.env.get("WORKER_RESPAWN_INTERVAL_MS")
+  ? parseInt(Deno.env.get("WORKER_RESPAWN_INTERVAL_MS")!, 10)
+  : 3_600_000; // 1hour
+const HAS_PRIVATE_GITHUB_IMPORT = Deno.env.get("HAS_PRIVATE_GITHUB_IMPORT");
 
 const WORKER_PORT = portPool.get();
 
@@ -55,19 +60,39 @@ const buildCmd = buildCmdStr
     stderr: "inherit",
   })
   : null;
-const runCmd = cmd
-  ? new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
-    args,
-    stdout: "piped",
-    stderr: "piped",
-    env: {
-      PORT: `${WORKER_PORT}`,
-      ...Deno.env.get("DENO_DIR_RUN")
-        ? { DENO_DIR: Deno.env.get("DENO_DIR_RUN") }
-        : {},
-    },
-  })
+
+const getEnvVar = (envName: string, varName: string) =>
+  Deno.env.get(envName) ? { [varName]: Deno.env.get(envName) } : {};
+
+const createRunCmd = cmd
+  ? (opt?: Pick<Deno.CommandOptions, "env">) =>
+    new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
+      args,
+      stdout: "piped",
+      stderr: "piped",
+      env: {
+        ...opt?.env,
+        PORT: `${WORKER_PORT}`,
+        ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
+        ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
+      },
+    })
   : null;
+
+let lastUpdateEnvUpdate: number | undefined;
+const updateDenoAuthTokenEnv = async () => {
+  if (lastUpdateEnvUpdate && Date.now() < lastUpdateEnvUpdate) return;
+  lastUpdateEnvUpdate = Date.now() + WORKER_RESPAWN_INTERVAL_MS;
+
+  const appTokens = await getGitHubPackageTokens();
+  // TODO: handle if DENO_AUTH_TOKENS is already set
+  Deno.env.set(
+    DENO_AUTH_TOKENS,
+    appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
+      ";",
+    ),
+  );
+};
 
 if (!DECO_SITE_NAME) {
   console.error(
@@ -177,6 +202,10 @@ const watch = async () => {
       genManifestTS();
     }
 
+    if (HAS_PRIVATE_GITHUB_IMPORT) {
+      updateDenoAuthTokenEnv();
+    }
+
     // TODO: We should be able to remove this after we migrate to ebs
     persistState();
   }
@@ -263,8 +292,21 @@ app.use(activityMonitor);
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
 // Workers are only necessary if there needs to have a preview of the site
-if (runCmd) {
-  app.route("", createWorker({ command: runCmd, port: WORKER_PORT, persist }));
+if (createRunCmd) {
+  // Create a function that returns fresh WorkerOptions with new tokens
+  const createWorkerOptions = async (): Promise<WorkerOptions> => {
+    if (HAS_PRIVATE_GITHUB_IMPORT) {
+      await updateDenoAuthTokenEnv();
+    }
+
+    return {
+      command: createRunCmd(), // This will create a fresh command with new tokens
+      port: WORKER_PORT,
+      persist,
+    };
+  };
+
+  app.route("", createWorker(createWorkerOptions));
 }
 
 const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
