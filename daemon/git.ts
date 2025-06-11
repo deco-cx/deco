@@ -390,7 +390,9 @@ export const getGitHubToken = async (): Promise<string | undefined> => {
   );
 
   if (!response.ok) {
-    console.log(`Failed to fetch access token: ${response.statusText}`);
+    console.log(
+      `Failed to fetch github/getAccessToken: ${response.statusText}`,
+    );
     return;
   }
 
@@ -422,7 +424,9 @@ export const getGitHubPackageTokens = async (): Promise<string[]> => {
   );
 
   if (!response.ok) {
-    console.log(`Failed to fetch access token: ${response.statusText}`);
+    console.log(
+      `Failed to fetch github/getPackagesAccessToken: ${response.statusText}`,
+    );
     return [];
   }
 
