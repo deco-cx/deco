@@ -44,12 +44,17 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
             if (length == "0") {
               return;
             } else {
+              const expiresHeader = response.headers.get("expires");
+              const ttl = (expiresHeader !== null && expiresHeader !== "")
+                ? Date.parse(expiresHeader)
+                : Date.now() + (CACHE_MAX_AGE_S * 1e3);
+              console.log("ttl", ttl, expiresHeader, cacheKey);
               return cacheInner.put(
                 cacheKey,
                 new Response(response.body, {
                   headers: new Headers({
                     ...response.headers,
-                    expires: new Date(Date.now() + (CACHE_MAX_AGE_S * 1e3))
+                    expires: new Date(ttl)
                       .toUTCString(),
                     "Content-Length": length,
                   }),
