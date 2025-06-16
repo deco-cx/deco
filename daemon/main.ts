@@ -43,9 +43,12 @@ const SHOULD_PERSIST = DENO_DEPLOYMENT_ID && SOURCE_PATH && !DECO_TRANSIENT_ENV;
 export const VERBOSE: string | undefined = Deno.env.get("VERBOSE") ||
   DENO_DEPLOYMENT_ID;
 const DENO_AUTH_TOKENS = "DENO_AUTH_TOKENS";
-const WORKER_RESPAWN_INTERVAL_MS = Deno.env.get("WORKER_RESPAWN_INTERVAL_MS")
-  ? parseInt(Deno.env.get("WORKER_RESPAWN_INTERVAL_MS")!, 10)
-  : 3_600_000; // 1hour
+const UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME =
+  "UNSTABLE_WORKER_RESPAWN_INTERVAL_MS";
+const UNSTABLE_WORKER_RESPAWN_INTERVAL_MS =
+  Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME)
+    ? parseInt(Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME)!, 10)
+    : 3_600_000; // 1hour
 const HAS_PRIVATE_GITHUB_IMPORT = Deno.env.get("HAS_PRIVATE_GITHUB_IMPORT");
 
 const WORKER_PORT = portPool.get();
@@ -82,7 +85,7 @@ const createRunCmd = cmd
 let lastUpdateEnvUpdate: number | undefined;
 const updateDenoAuthTokenEnv = async () => {
   if (lastUpdateEnvUpdate && Date.now() < lastUpdateEnvUpdate) return;
-  lastUpdateEnvUpdate = Date.now() + WORKER_RESPAWN_INTERVAL_MS;
+  lastUpdateEnvUpdate = Date.now() + UNSTABLE_WORKER_RESPAWN_INTERVAL_MS;
 
   const appTokens = await getGitHubPackageTokens();
   // TODO: handle if DENO_AUTH_TOKENS is already set
@@ -297,6 +300,14 @@ if (createRunCmd) {
   const createWorkerOptions = async (): Promise<WorkerOptions> => {
     if (HAS_PRIVATE_GITHUB_IMPORT) {
       await updateDenoAuthTokenEnv();
+    }
+
+    if (UNSTABLE_WORKER_RESPAWN_INTERVAL_MS) {
+      // TODO: Implement a better approach handling updating child env vars, preventing multiple child processes and with HMR
+      // Kill process to allow restart with new env settings
+      setTimeout(() => {
+        Deno.exit(1);
+      }, UNSTABLE_WORKER_RESPAWN_INTERVAL_MS);
     }
 
     return {
