@@ -447,23 +447,6 @@ const setupGithubTokenNetrc = async (): Promise<void> => {
   await updateNetrc(token);
 };
 
-const githubAuthMiddleware: MiddlewareHandler = async (_, next) => {
-  if (!GITHUB_APP_KEY) {
-    return await next();
-  }
-
-  try {
-    await setupGithubTokenNetrc();
-  } catch (error) {
-    console.error("Failed to setup GitHub authentication:", error);
-    return new Response("Failed to setup GitHub authentication", {
-      status: 500,
-    });
-  }
-
-  return await next();
-};
-
 export const ensureGit = async ({ site }: Pick<Options, "site">) => {
   const assertNoIndexLock = async () => {
     const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
@@ -560,7 +543,6 @@ interface Options {
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
-  app.use(githubAuthMiddleware);
   app.use(lockerGitAPI.wlock);
   app.get("/diff", diff);
   app.get("/status", status);

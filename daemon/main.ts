@@ -303,7 +303,10 @@ if (createRunCmd) {
     }
 
     if (UNSTABLE_WORKER_RESPAWN_INTERVAL_MS) {
-      // TODO: Implement a better approach handling updating child env vars, preventing multiple child processes and with HMR
+      /* TODO: Implement a better approach handling updating child env vars, preventing multiple child processes and with HMR.
+       * Also should have the git short live auth token to do git operations like: push/pull/rebase. Now, these git operations are guaranted
+       * because the short live git token is set once in inicialization and respawning
+       */
       // Kill process to allow restart with new env settings
       setTimeout(() => {
         Deno.exit(1);
