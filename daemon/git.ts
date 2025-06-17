@@ -531,7 +531,7 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       .submoduleUpdate(["--depth", "1"]);
 
     const copyBuildFiles = new Deno.Command("cp", {
-      args: ["-r", Deno.env.get("HOME") + "/build-files/", "."],
+      args: ["-r", Deno.env.get("HOME") + "/build-files/.npmrc", "."],
     });
 
     const copy = await copyBuildFiles.output();
