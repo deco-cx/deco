@@ -529,6 +529,14 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
+
+    const copyBuildFiles = new Deno.Command("cp", {
+      args: ["-r", Deno.env.get("HOME") + "/build-files/", "."],
+    });
+
+    const copy = await copyBuildFiles.output();
+    console.log("stdout", new TextDecoder().decode(copy.stdout));
+    console.log("stderr", new TextDecoder().decode(copy.stderr));
   };
 
   await assertNoIndexLock();
