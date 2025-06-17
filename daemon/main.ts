@@ -46,9 +46,12 @@ const DENO_AUTH_TOKENS = "DENO_AUTH_TOKENS";
 const UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME =
   "UNSTABLE_WORKER_RESPAWN_INTERVAL_MS";
 const UNSTABLE_WORKER_RESPAWN_INTERVAL_MS =
-  Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME)
+  Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME) &&
+    !Number.isNaN(
+      parseInt(Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME)!, 10),
+    )
     ? parseInt(Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME)!, 10)
-    : 3_600_000; // 1hour
+    : undefined; // 1hour
 const HAS_PRIVATE_GITHUB_IMPORT = Deno.env.get("HAS_PRIVATE_GITHUB_IMPORT");
 
 const WORKER_PORT = portPool.get();
@@ -84,7 +87,11 @@ const createRunCmd = cmd
 
 let lastUpdateEnvUpdate: number | undefined;
 const updateDenoAuthTokenEnv = async () => {
-  if (lastUpdateEnvUpdate && Date.now() < lastUpdateEnvUpdate) return;
+  if (
+    !UNSTABLE_WORKER_RESPAWN_INTERVAL_MS ||
+    lastUpdateEnvUpdate &&
+      Date.now() < lastUpdateEnvUpdate
+  ) return;
   lastUpdateEnvUpdate = Date.now() + UNSTABLE_WORKER_RESPAWN_INTERVAL_MS;
 
   const appTokens = await getGitHubPackageTokens();
