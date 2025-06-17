@@ -390,7 +390,9 @@ export const getGitHubToken = async (): Promise<string | undefined> => {
   );
 
   if (!response.ok) {
-    console.log(`Failed to fetch access token: ${response.statusText}`);
+    console.log(
+      `Failed to fetch github/getAccessToken: ${response.statusText}`,
+    );
     return;
   }
 
@@ -422,7 +424,9 @@ export const getGitHubPackageTokens = async (): Promise<string[]> => {
   );
 
   if (!response.ok) {
-    console.log(`Failed to fetch access token: ${response.statusText}`);
+    console.log(
+      `Failed to fetch github/getPackagesAccessToken: ${response.statusText}`,
+    );
     return [];
   }
 
@@ -441,23 +445,6 @@ const setupGithubTokenNetrc = async (): Promise<void> => {
   if (token === undefined) return;
 
   await updateNetrc(token);
-};
-
-const githubAuthMiddleware: MiddlewareHandler = async (_, next) => {
-  if (!GITHUB_APP_KEY) {
-    return await next();
-  }
-
-  try {
-    await setupGithubTokenNetrc();
-  } catch (error) {
-    console.error("Failed to setup GitHub authentication:", error);
-    return new Response("Failed to setup GitHub authentication", {
-      status: 500,
-    });
-  }
-
-  return await next();
 };
 
 export const ensureGit = async ({ site }: Pick<Options, "site">) => {
@@ -556,7 +543,6 @@ interface Options {
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
-  app.use(githubAuthMiddleware);
   app.use(lockerGitAPI.wlock);
   app.get("/diff", diff);
   app.get("/status", status);
