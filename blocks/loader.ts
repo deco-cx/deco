@@ -15,7 +15,7 @@ import {
   OTEL_ENABLE_EXTRA_METRICS,
 } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
-import { DebugProperties } from "../utils/vary.ts";
+import type { DebugProperties } from "../utils/vary.ts";
 import type { HttpContext } from "./handler.ts";
 import {
   applyProps,
