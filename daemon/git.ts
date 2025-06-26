@@ -18,7 +18,6 @@ const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 const REPO_URL = Deno.env.get("DECO_REPO_URL");
 const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
-const BUILD_FILES_DIR = Deno.env.get("BUILD_FILES_DIR");
 const ADMIN_DOMAIN = "https://admin.deco.cx";
 
 export const lockerGitAPI = createLocker();
@@ -531,16 +530,13 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
 
-    // Copy build files if BUILD_FILES_DIR is specified
-    if (BUILD_FILES_DIR) {
-      const copyBuildFiles = new Deno.Command("cp", {
-        args: ["-r", BUILD_FILES_DIR + "/.", "."],
-      });
+    const copyBuildFiles = new Deno.Command("cp", {
+      args: ["-r", Deno.env.get("HOME") + "/build-files/.npmrc", "."],
+    });
 
-      const copy = await copyBuildFiles.output();
-      console.log("stdout", new TextDecoder().decode(copy.stdout));
-      console.log("stderr", new TextDecoder().decode(copy.stderr));
-    }
+    const copy = await copyBuildFiles.output();
+    console.log("stdout", new TextDecoder().decode(copy.stdout));
+    console.log("stderr", new TextDecoder().decode(copy.stderr));
   };
 
   await assertNoIndexLock();
