@@ -17,6 +17,7 @@ export interface ActionModule<
 
 const actionBlock: Block<ActionModule> = {
   type: "actions",
+  introspect: { includeReturn: true },
   adapt: <
     TProps = any,
   >(
