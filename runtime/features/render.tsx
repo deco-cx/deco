@@ -120,11 +120,13 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
           return (
             <binding.Wrapper id={partialId}>
               <div>
-                <script
-                  type="text/javascript"
-                  defer
-                  src={useScriptAsDataURI(snippet, props.url)}
-                />
+                {props.url && (
+                  <script
+                    type="text/javascript"
+                    defer
+                    src={useScriptAsDataURI(snippet, props.url)}
+                  />
+                )}
               </div>
             </binding.Wrapper>
           );
