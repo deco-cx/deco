@@ -6,6 +6,7 @@ import { getSectionID } from "../../components/section.tsx";
 import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
 import { useScriptAsDataURI } from "../../hooks/useScript.ts";
+import { logger } from "@deco/deco/o11y";
 import type { AppManifest } from "../../types.ts";
 import { useFramework } from "../handler.tsx";
 import type { State } from "../mod.ts";
@@ -98,6 +99,17 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
     );
     shouldCache = req.method === "GET";
   } catch (err) {
+    logger.error(
+      `Error ocurred while rendering page: ${(err as Error).stack}`,
+      {
+        url: url.toString(),
+        pathTemplate,
+        section: {
+          __resolveType: section?.__resolveType,
+        },
+        props,
+      },
+    );
     if (err instanceof HttpError) {
       // we are creating a section with client side redirect
       // and inserting the same partialId from old section
