@@ -89,6 +89,7 @@ export const useSection = <P>(
     ["pathTemplate", pathTemplate],
     ["renderSalt", `${renderSalt ?? crypto.randomUUID()}`],
     ["__cb", `${cb}`],
+    ["__dId", `${ctx?.deploymentId ?? ""}`],
   ]);
 
   if ((props as { __resolveType?: string })?.__resolveType === undefined) {
