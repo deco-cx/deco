@@ -7,6 +7,8 @@ import { createHandler, DEBUG_QS } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
 
+const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
+
 interface Options {
   resolveChain?: FieldResolver[];
   props: Record<string, unknown>;
@@ -16,6 +18,7 @@ interface Options {
   partialMode?: "replace" | "prepend" | "append";
   framework: "fresh" | "htmx";
   searchParams: URLSearchParams;
+  deploymentId?: string;
 }
 
 export interface Props {
@@ -31,6 +34,7 @@ const fromRequest = (req: Request): Options => {
   const pathTemplate = params.get("pathTemplate");
   const renderSalt = params.get("renderSalt");
   const framework = params.get("framework") ?? "fresh";
+  const deploymentId = params.get("__dId") ?? undefined;
   const partialMode = params.get("partialMode") as
     | "replace"
     | "prepend"
@@ -59,6 +63,7 @@ const fromRequest = (req: Request): Options => {
   return {
     props: parsedProps,
     href,
+    deploymentId,
     framework: framework as "fresh" | "htmx",
     pathTemplate,
     renderSalt: renderSalt ?? undefined,
@@ -77,6 +82,14 @@ export const handler = createHandler(async (
 ) => {
   const { req: { raw: req }, var: state, render } = ctx;
   const opts = fromRequest(req);
+  if (opts.deploymentId && deploymentId) {
+    if (opts.deploymentId !== deploymentId) {
+      throw badRequest({
+        code: "400",
+        message: "Deployment ID mismatch",
+      });
+    }
+  }
   const isDebugRequest = opts.searchParams.has(DEBUG_QS);
 
   const { page, shouldCache } = await state.deco.render(req, opts, state);
