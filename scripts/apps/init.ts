@@ -57,7 +57,6 @@ const createFromTemplate =
   };
 
 const templates: Templates = [
-  "import_map.json",
   "deno.json",
   "deco.ts",
   {
