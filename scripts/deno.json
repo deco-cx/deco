@@ -1,12 +1,13 @@
 {
   "name": "@deco/scripts",
-  "version": "1.120.4",
+  "version": "1.120.5-alpha.0",
   "exports": {
     "./release": "./release.ts",
     "./update": "./update.run.ts",
     "./upgrade": "./upgrade.ts",
     "./tailwind-checker": "./tailwindChecker.ts",
-    "./codemod": "./codemod.ts"
+    "./codemod": "./codemod.ts",
+    "./apps/init": "./apps/init.ts"
   },
   "publish": {
     "exclude": [
