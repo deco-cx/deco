@@ -19,7 +19,7 @@ import { HttpError } from "../engine/errors.ts";
 import { logger } from "../observability/otel/config.ts";
 import { useFramework } from "../runtime/handler.tsx";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
-
+import type { SectionModule } from "../blocks/section.ts";
 export interface SectionContext extends HttpContext<RequestState> {
   renderSalt?: string;
   device: Device;
@@ -132,6 +132,7 @@ export function withSection<TProps, TLoaderProps = TProps>(
   LoadingFallback?: ComponentType<DeepPartial<TLoaderProps>>,
   ErrorFallback?: ComponentType<{ error?: Error }>,
   loaderProps?: TLoaderProps,
+  cache?: SectionModule["cache"],
 ): (
   props: TProps,
   ctx: HttpContext<
@@ -145,6 +146,7 @@ export function withSection<TProps, TLoaderProps = TProps>(
   props: TProps;
   Component: (props: TProps) => JSX.Element;
   metadata: ComponentMetadata;
+  cache?: SectionModule["cache"];
 } {
   return ((
     props: TProps,
@@ -168,6 +170,10 @@ export function withSection<TProps, TLoaderProps = TProps>(
         ?.value?.toString()!,
     };
     let device: Device | null = null;
+
+    if (cache === "no-store") {
+      ctx.context.state.vary.noStore = true;
+    }
 
     return {
       props,
