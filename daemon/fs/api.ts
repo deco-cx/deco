@@ -288,15 +288,17 @@ export const createFSAPIs = () => {
 
   app.get("/grep", async (c) => {
     const query = c.req.query("query");
+
     const includePattern = c.req.query("includePattern") || "*";
     const excludePattern = c.req.query("excludePattern");
     const caseInsensitive = c.req.query("caseInsensitive") === "true";
     const isRegex = c.req.query("isRegex") === "true";
     const limit = parseInt(c.req.query("limit") || "100");
+    const filepath = c.req.query("filepath");
 
     if (!query) {
       c.status(400);
-      return c.json({ error: "Query parameter 'q' is required" });
+      return c.json({ error: "Query parameter 'query' is required" });
     }
 
     try {
@@ -306,6 +308,7 @@ export const createFSAPIs = () => {
         includePattern,
         excludePattern,
         limit,
+        filepath,
       };
 
       const result = await grep(query, options);

@@ -1,5 +1,5 @@
 import { walk } from "@std/fs";
-import { SEPARATOR } from "@std/path";
+import { join, SEPARATOR } from "@std/path";
 import { VERBOSE } from "../main.ts";
 
 export interface GrepMatch {
@@ -25,6 +25,7 @@ export interface GrepOptions {
   includePattern?: string;
   excludePattern?: string;
   limit?: number;
+  filepath?: string;
 }
 
 const shouldIgnore = (path: string) =>
@@ -77,24 +78,42 @@ const systemGrep = async (
       args.push("-F"); // fixed strings (literal)
     }
 
-    // Add include/exclude patterns
-    if (options.includePattern && options.includePattern !== "*") {
-      args.push("--include", options.includePattern);
+    // Add include/exclude patterns (only if not searching a specific file)
+    const searchPath = options.filepath || ".";
+
+    // Check if we're searching a specific file
+    let isFile = false;
+    if (options.filepath) {
+      try {
+        const fullPath = options.filepath.startsWith("/")
+          ? options.filepath
+          : join(Deno.cwd(), options.filepath);
+        const stat = await Deno.stat(fullPath);
+        isFile = stat.isFile;
+      } catch {
+        // Assume it's a directory/glob pattern if stat fails
+      }
     }
 
-    if (options.excludePattern) {
-      args.push("--exclude", options.excludePattern);
+    if (!isFile) {
+      if (options.includePattern && options.includePattern !== "*") {
+        args.push("--include", options.includePattern);
+      }
+
+      if (options.excludePattern) {
+        args.push("--exclude", options.excludePattern);
+      }
+
+      // Standard exclusions for directory searches
+      args.push(
+        "--exclude-dir=.git",
+        "--exclude-dir=node_modules",
+        "--exclude-dir=.deco",
+        "-r", // recursive
+      );
     }
 
-    // Standard exclusions
-    args.push(
-      "--exclude-dir=.git",
-      "--exclude-dir=node_modules",
-      "--exclude-dir=.deco",
-      "-r", // recursive
-      query,
-      ".", // search in current directory
-    );
+    args.push(query, searchPath);
 
     const cmd = new Deno.Command("grep", {
       args,
@@ -253,7 +272,33 @@ const fallbackGrep = async (
 
   const results: GrepFileResult[] = [];
   let total = 0;
-  const walker = walk(Deno.cwd(), {
+
+  const searchPath = options.filepath
+    ? (options.filepath.startsWith("/")
+      ? options.filepath
+      : join(Deno.cwd(), options.filepath))
+    : Deno.cwd();
+
+  // Check if searchPath is a file or directory
+  try {
+    const stat = await Deno.stat(searchPath);
+    if (stat.isFile) {
+      // If it's a file, search only in that file
+      const result = await grepInFile(searchPath, pattern);
+      if (result) {
+        results.push(result);
+        total += result.matches.length;
+      }
+      return { results, total };
+    }
+  } catch (error) {
+    // If stat fails, continue with directory walk
+    if (VERBOSE) {
+      console.error(`Error checking path ${searchPath}:`, error);
+    }
+  }
+
+  const walker = walk(searchPath, {
     includeDirs: false,
     includeFiles: true,
     match: options.includePattern && options.includePattern !== "*"
