@@ -314,7 +314,6 @@ export const createFSAPIs = () => {
       const result = await grep(query, options);
       return c.json(result);
     } catch (error) {
-      console.error("Grep error:", error);
       c.status(500);
       return c.json({ error: "Internal server error during grep operation" });
     }
