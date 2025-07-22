@@ -287,11 +287,11 @@ export const createFSAPIs = () => {
   });
 
   app.get("/grep", async (c) => {
-    const query = c.req.query("q");
-    const includePattern = c.req.query("include") || "*";
-    const excludePattern = c.req.query("exclude");
-    const caseInsensitive = c.req.query("case-insensitive") === "true";
-    const isRegex = c.req.query("regex") === "true";
+    const query = c.req.query("query");
+    const includePattern = c.req.query("includePattern") || "*";
+    const excludePattern = c.req.query("excludePattern");
+    const caseInsensitive = c.req.query("caseInsensitive") === "true";
+    const isRegex = c.req.query("isRegex") === "true";
     const limit = parseInt(c.req.query("limit") || "100");
 
     if (!query) {
