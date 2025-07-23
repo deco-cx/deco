@@ -13,7 +13,54 @@ async function load(
   try {
     switch (url.protocol) {
       case "file:": {
-        return await Deno.readTextFile(url);
+        // Check file content cache first
+        const filePath = url.pathname;
+        const cached = fileContentCache[filePath];
+        if (cached) {
+          try {
+            const stat = await Deno.stat(url);
+            if (stat.mtime?.getTime() === cached.mtime) {
+              return cached.content;
+            }
+          } catch {
+            // If stat fails, continue to read file
+          }
+        }
+        
+        let result: string;
+        
+        try {
+          // Method 1: Direct file reading
+          result = await Deno.readTextFile(url);
+        } catch (error) {
+          console.log(`%c load: Deno.readTextFile failed for ${url}:`, "color: red", error);
+          
+          // Method 2: Try reading as bytes first
+          try {
+            const bytes = await Deno.readFile(url);
+            result = new TextDecoder().decode(bytes);
+          } catch (bytesError) {
+            console.log(`%c load: Deno.readFile also failed for ${url}:`, "color: red", bytesError);
+            throw error; // Re-throw original error
+          }
+        }
+        
+        // Cache the content with modification time
+        try {
+          const stat = await Deno.stat(url);
+          fileContentCache[filePath] = {
+            content: result,
+            mtime: stat.mtime?.getTime() ?? Date.now(),
+          };
+        } catch {
+          // If stat fails, still cache without mtime
+          fileContentCache[filePath] = {
+            content: result,
+            mtime: Date.now(),
+          };
+        }
+        
+        return result;
       }
       case "http:":
       case "https:": {
@@ -47,6 +94,7 @@ async function load(
 }
 
 const loadCache: Record<string, Promise<ParsedSource | undefined>> = {};
+const fileContentCache: Record<string, { content: string; mtime: number }> = {};
 
 /**
  * Parses the given content.
@@ -87,7 +135,27 @@ export let schemaVersion = crypto.randomUUID();
 addEventListener("hmr", (e) => {
   const filePath = (e as unknown as { detail: { path: string } })?.detail?.path;
   if (filePath) {
-    delete loadCache[filePath];
+    // Clear cache for multiple possible path formats
+    const possiblePaths = [
+      filePath,
+      `file://${filePath}`,
+      new URL(filePath, `file://${Deno.cwd()}/`).href,
+      filePath.replace(/\\/g, '/'), // Windows path normalization
+      filePath.replace(/\//g, '\\'), // Unix path normalization
+    ];
+    
+    for (const path of possiblePaths) {
+      delete loadCache[path];
+      delete fileContentCache[path];
+    }
+    
+    // Also clear all caches if it's a major change
+    if (filePath.includes('manifest.gen.ts') || filePath.includes('blocks.json')) {
+      console.log(`%c HMR: Clearing all caches due to ${filePath}`, "color: orange");
+      Object.keys(loadCache).forEach(key => delete loadCache[key]);
+      Object.keys(fileContentCache).forEach(key => delete fileContentCache[key]);
+    }
+    
     schemaVersion = crypto.randomUUID();
   }
 });
@@ -115,7 +183,11 @@ export const parsePath = (path: string): Promise<ParsedSource | undefined> => {
     return Promise.resolve(undefined);
   }
   const mLoader = initLoader();
-  return loadCache[path] ??= mLoader(path).then(async (content) => {
+  const cached = loadCache[path];
+  if (cached) {
+    return cached;
+  }
+  return loadCache[path] = mLoader(path).then(async (content) => {
     if (!content && content !== "") {
       throw new Error(`Path not found ${path}`);
     }

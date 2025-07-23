@@ -67,7 +67,7 @@ export const start = async (since: number): Promise<MetaEvent | null> => {
 export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
   isPromiseLike(meta) ? await meta.promise : meta;
 
-export const watchMeta = async () => {
+export const watchMeta = async (signal?: AbortSignal) => {
   let etag = "";
 
   const setMeta = (
@@ -80,6 +80,10 @@ export const watchMeta = async () => {
   };
 
   while (true) {
+    if (signal?.aborted) {
+      console.log("watchMeta: received abort signal, exiting loop");
+      break;
+    }
     try {
       const w = await worker();
       const response = await w.fetch(metaRequest(etag));
