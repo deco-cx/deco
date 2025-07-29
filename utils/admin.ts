@@ -4,6 +4,7 @@ export const adminDomains = [
   "https://admin.deco.cx/",
   "https://v0-admin.deco.cx/",
   "https://play.deco.cx/",
+  "https://admin-cx.deco.page/"
 ];
 export const landingPageDomain = ["https://deco.cx", "https://www.deco.cx"];
 const adminPreviewUrls = "https://deco-sites-admin-";
