@@ -216,7 +216,10 @@ export const publish = ({ build }: Options): Handler => {
     const author = body.author || { name: "decobot", email: "capy@deco.cx" };
     const message = body.message || `New release by ${author.name}`;
 
-    await setupGithubTokenNetrc();
+    if (GITHUB_APP_KEY) {
+      await setupGithubTokenNetrc();
+    }
+
     await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
 
     await resetToMergeBase();
