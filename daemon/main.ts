@@ -9,6 +9,7 @@ import {
   BLOCKS_FOLDER,
   DECO_FOLDER,
   ENV_SITE_NAME,
+  METADATA_PATH,
 } from "../engine/decofile/constants.ts";
 import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
@@ -235,22 +236,60 @@ const createDeps = (): MiddlewareHandler => {
     });
 
     start = performance.now();
-    await genManifestTS();
-    logs.push({
-      level: "info",
-      message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
-        (performance.now() - start).toFixed(0)
-      }ms`,
-    });
+
+    // Check if manifest.gen.ts already exists
+    const manifestExists = await Deno.stat(join(Deno.cwd(), "manifest.gen.ts"))
+      .then(() => true)
+      .catch(() => false);
+
+    if (manifestExists) {
+      logs.push({
+        level: "info",
+        message: `${
+          colors.bold("[step 2/4]")
+        }: Manifest already exists, skipping generation, it took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      });
+    } else {
+      await genManifestTS();
+      logs.push({
+        level: "info",
+        message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      });
+    }
 
     start = performance.now();
-    await genBlocksJSON();
-    logs.push({
-      level: "info",
-      message: `${colors.bold("[step 3/4]")}: Blocks metadata generation took ${
-        (performance.now() - start).toFixed(0)
-      }ms`,
-    });
+
+    // Check if blocks metadata already exists
+    const blocksMetadataExists = await Deno.stat(
+      join(Deno.cwd(), METADATA_PATH),
+    )
+      .then(() => true)
+      .catch(() => false);
+
+    if (blocksMetadataExists) {
+      logs.push({
+        level: "info",
+        message: `${
+          colors.bold("[step 3/4]")
+        }: Blocks metadata already exists, skipping generation, it took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      });
+    } else {
+      await genBlocksJSON();
+      logs.push({
+        level: "info",
+        message: `${
+          colors.bold("[step 3/4]")
+        }: Blocks metadata generation took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      });
+    }
 
     watch().catch(console.error);
     watchMeta().catch(console.error);
