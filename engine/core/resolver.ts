@@ -6,7 +6,6 @@ import { type HintNode, type ResolveHints, traverseAny } from "./hints.ts";
 import { type ResolveOptions, resolverIdFromResolveChain } from "./mod.ts";
 import {
   isAwaitable,
-  notUndefined,
   type PromiseOrValue,
   type UnPromisify,
 } from "./utils.ts";
@@ -262,9 +261,10 @@ export const withResolveChain = <TContext extends BaseContext = BaseContext>(
   ctx: TContext,
   ...resolverType: FieldResolver[]
 ): TContext => {
+  // Optimize array operations - use concat instead of spread for better performance
   return {
     ...ctx,
-    resolveChain: [...ctx.resolveChain, ...resolverType],
+    resolveChain: ctx.resolveChain.concat(resolverType),
   };
 };
 
@@ -274,19 +274,21 @@ export const withResolveChainOfType = <
   ctx: TContext,
   ...resolverType: string[]
 ): TContext => {
+  // Optimize array operations - use concat instead of spread for better performance
+  const newResolveChain = ctx.resolveChain.concat(
+    resolverType.map((tp) => ({
+      type: tp in ctx.resolvables
+        ? "resolvable" as const
+        : tp in ctx.resolvers
+        ? "resolver" as const
+        : "dangling" as const,
+      value: tp,
+    }))
+  );
+  
   return {
     ...ctx,
-    resolveChain: [
-      ...ctx.resolveChain,
-      ...(resolverType.map((tp) => ({
-        type: tp in ctx.resolvables
-          ? "resolvable"
-          : tp in ctx.resolvers
-          ? "resolver"
-          : "dangling",
-        value: tp,
-      }))),
-    ],
+    resolveChain: newResolveChain,
   };
 };
 
@@ -371,9 +373,12 @@ const resolvePropsWithHints = async <
   const props = onBeforeResolveProps(_thisProps as T, hints);
   const ctx = type ? withResolveChainOfType(_ctx, type) : _ctx;
 
+  // Cache Object.entries result to avoid duplicate enumeration
+  const hintsEntries = Object.entries(hints);
+  
   const proceed = (resolveId?: string) => {
     return Promise.all(
-      Object.entries(hints).map(
+      hintsEntries.map(
         async ([_key, hint]) => {
           const key = _key as keyof T;
           if (props[key]) {
@@ -386,7 +391,7 @@ const resolvePropsWithHints = async <
                   : ctx,
                 {
                   type: "prop",
-                  value: key.toString(),
+                  value: _key,
                 },
               ),
               opts,
@@ -398,7 +403,6 @@ const resolvePropsWithHints = async <
       ),
     );
   };
-  const hintsEntries = Object.entries(hints);
 
   const mutableProps: T = hintsEntries.length === 0 // if there's no resolved properties so no shallow copy is needed.
     ? props
@@ -416,8 +420,11 @@ const resolvePropsWithHints = async <
       ctx,
     )
     : proceed());
-  for (const { key, resolved } of resolvedProps.filter(notUndefined)) {
-    mutableProps[key] = resolved;
+  // Optimize filtering - avoid creating intermediate array
+  for (const resolvedProp of resolvedProps) {
+    if (resolvedProp !== undefined && resolvedProp !== null) {
+      mutableProps[resolvedProp.key] = resolvedProp.resolved;
+    }
   }
 
   if (!type) {

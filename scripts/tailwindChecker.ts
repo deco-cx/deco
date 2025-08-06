@@ -87,13 +87,16 @@ async function getAllClassesInCode(
   return allClasses;
 }
 
+// Reuse TextEncoder instance to avoid repeated instantiation
+const textEncoder = new TextEncoder();
+
 function showLoadingAnimation() {
   const loadingAnimation = ["|", "/", "-", "\\"];
   let index = 0;
 
   const interval = setInterval(() => {
     Deno.stdout.write(
-      new TextEncoder().encode(`\rDynamic Classes: ${loadingAnimation[index]}`),
+      textEncoder.encode(`\rDynamic Classes: ${loadingAnimation[index]}`),
     );
     index = (index + 1) % loadingAnimation.length;
   }, 100);
