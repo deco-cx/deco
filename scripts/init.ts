@@ -62,9 +62,7 @@ const progress = (msg: string) => {
   const promise = Deno.stdout.write(textEncoder.encode(`> ${msg}`));
 
   return () =>
-    promise.then(() =>
-      Deno.stdout.write(textEncoder.encode(" [DONE]\n"))
-    );
+    promise.then(() => Deno.stdout.write(textEncoder.encode(" [DONE]\n")));
 };
 
 const initProject = async (name: string, config: Config) => {

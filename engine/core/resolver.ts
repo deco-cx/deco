@@ -4,11 +4,7 @@ import { identity } from "../../utils/object.ts";
 import type { createServerTimings } from "../../utils/timings.ts";
 import { type HintNode, type ResolveHints, traverseAny } from "./hints.ts";
 import { type ResolveOptions, resolverIdFromResolveChain } from "./mod.ts";
-import {
-  isAwaitable,
-  type PromiseOrValue,
-  type UnPromisify,
-} from "./utils.ts";
+import { isAwaitable, type PromiseOrValue, type UnPromisify } from "./utils.ts";
 
 export class DanglingReference extends Error {
   public resolverType: string;
@@ -283,9 +279,9 @@ export const withResolveChainOfType = <
         ? "resolver" as const
         : "dangling" as const,
       value: tp,
-    }))
+    })),
   );
-  
+
   return {
     ...ctx,
     resolveChain: newResolveChain,
@@ -375,7 +371,7 @@ const resolvePropsWithHints = async <
 
   // Cache Object.entries result to avoid duplicate enumeration
   const hintsEntries = Object.entries(hints);
-  
+
   const proceed = (resolveId?: string) => {
     return Promise.all(
       hintsEntries.map(

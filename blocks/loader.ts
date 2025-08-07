@@ -175,7 +175,7 @@ const noop = () => "";
  * 1. Caching
  * 2. Single Flight
  * 3. Tracing
- * 
+ *
  * Performance optimizations applied:
  * - Reused TextEncoder instance to avoid repeated instantiation
  * - Optimized cache key generation using string concatenation
@@ -266,7 +266,7 @@ const wrapLoader = (
         const cache = maybeCache;
 
         const timing = ctx.monitoring?.timings.start("loader-hash");
-        
+
         const resolveChainString = FieldResolver.minify(resolveChain)
           .toString();
         const revisionID = await release?.revision() ?? undefined;
@@ -291,14 +291,18 @@ const wrapLoader = (
         }
 
         timing?.end();
-        
+
         // Optimize cache key generation using simple string concatenation
-        const cacheKeyUrl = `https://localhost/?resolver=${encodeURIComponent(loader)}&resolveChain=${encodeURIComponent(resolveChainString)}&revisionID=${encodeURIComponent(revisionID)}&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
+        const cacheKeyUrl = `https://localhost/?resolver=${
+          encodeURIComponent(loader)
+        }&resolveChain=${encodeURIComponent(resolveChainString)}&revisionID=${
+          encodeURIComponent(revisionID)
+        }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
         const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
-          
+
           // Optimize JSON serialization and encoding using reused TextEncoder
           const jsonString = JSON.stringify(json);
           const jsonStringEncoded = textEncoder.encode(jsonString);
