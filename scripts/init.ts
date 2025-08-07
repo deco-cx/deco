@@ -55,13 +55,14 @@ const TEMPLATES = {
   },
 } satisfies Record<string, Config | Record<string, Config>>;
 
+// Reuse TextEncoder instance to avoid repeated instantiation
+const textEncoder = new TextEncoder();
+
 const progress = (msg: string) => {
-  const promise = Deno.stdout.write(new TextEncoder().encode(`> ${msg}`));
+  const promise = Deno.stdout.write(textEncoder.encode(`> ${msg}`));
 
   return () =>
-    promise.then(() =>
-      Deno.stdout.write(new TextEncoder().encode(" [DONE]\n"))
-    );
+    promise.then(() => Deno.stdout.write(textEncoder.encode(" [DONE]\n")));
 };
 
 const initProject = async (name: string, config: Config) => {
