@@ -63,9 +63,6 @@ jobs:
         run: |
           #!/bin/bash
 
-          echo "tag_name: ${{ github.event.inputs.tag_name }}"
-          echo "ref_name: ${{ github.ref_name }}"
-
           # Function to check if the tag is a prerelease
           hasPrerelease() {
             [[ "$1" == *"-"* ]]
