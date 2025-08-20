@@ -114,7 +114,9 @@ export const newFsFolderProviderFromPath = (
       }
       return {
         state: decofile,
-        revision: Context.active().deploymentId ?? `${Date.now()}`,
+        revision: Context.active().isPreview
+          ? `${Date.now()}`
+          : Context.active().deploymentId ?? `${Date.now()}`,
       };
     },
   ).then((result) => {
