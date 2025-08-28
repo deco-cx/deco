@@ -16,6 +16,7 @@ import {
 } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
 import type { DebugProperties } from "../utils/vary.ts";
+import { getSectionID } from "../components/section.tsx";
 import type { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -72,7 +73,52 @@ interface LoaderDebugData extends DebugProperties {
     cache: NonNullable<CacheMode>;
     cacheKeyNull: boolean;
   };
+  timingMs?: number;
+  sizeBytes?: number;
+  resolverId?: string;
+  loaderType?: string;
+  propsPreview?: unknown;
+  resultPreview?: unknown;
+  sectionId?: string;
+  component?: string;
+  resolveChain?: FieldResolver[];
+  pathTemplate?: string;
+  url?: string;
 }
+
+// Summarize values keeping only first two levels of keys to avoid huge payloads
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+const summarizeTwoLevels = (value: unknown): unknown => {
+  try {
+    if (!isPlainObject(value) && !Array.isArray(value)) return typeof value;
+    if (Array.isArray(value)) {
+      const first = value.length > 0 ? value[0] : undefined;
+      return {
+        __type: "array",
+        length: value.length,
+        keys: isPlainObject(first) ? Object.keys(first).slice(0, 50) : typeof first,
+      };
+    }
+    const out: Record<string, unknown> = {};
+    const topKeys = Object.keys(value).slice(0, 100);
+    for (const k of topKeys) {
+      const child = (value as Record<string, unknown>)[k];
+      if (isPlainObject(child)) {
+        out[k] = Object.keys(child).slice(0, 50);
+      } else if (Array.isArray(child)) {
+        const first = child.length > 0 ? child[0] : undefined;
+        out[k] = ["[array]", ...(isPlainObject(first) ? Object.keys(first).slice(0, 50) : [])];
+      } else {
+        out[k] = typeof child;
+      }
+    }
+    return out;
+  } catch {
+    return "[unavailable]";
+  }
+};
 
 export interface WrappedError {
   __isErr: true;
@@ -211,6 +257,17 @@ const wrapLoader = (
       ctx: FnContext<State, any>,
     ): Promise<ReturnType<typeof handler>> => {
       const loader = ctx.resolverId || "unknown";
+      const ctxAny = ctx as unknown as { resolveChain?: FieldResolver[]; context?: { state?: { pathTemplate?: string; url?: URL } } };
+      const resolveChainArr = Array.isArray(ctxAny?.resolveChain)
+        ? ctxAny.resolveChain as FieldResolver[]
+        : [];
+      const sectionId = resolveChainArr.length
+        ? getSectionID(resolveChainArr)
+        : undefined;
+      const component = resolveChainArr.findLast((c: FieldResolver) => c.type === "resolver")
+        ?.value?.toString();
+      const pathTemplate = ctxAny?.context?.state?.pathTemplate;
+      const url = ctxAny?.context?.state?.url?.href;
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
@@ -257,7 +314,34 @@ const wrapLoader = (
           stats.cache.add(1, { status, loader });
 
           RequestContext?.signal?.throwIfAborted();
-          return await handler(props, req, ctx);
+          const result = await handler(props, req, ctx);
+          if (ctx.debugEnabled) {
+            const resolver = resolveChain.at(-1);
+            const duration = performance.now() - start;
+            try {
+              const jsonString = JSON.stringify(result);
+              const sizeBytes = textEncoder.encode(jsonString).length;
+              resolver && ctx.vary.debug.push<LoaderDebugData>({
+                resolver,
+                reason: {
+                  cache: mode as CacheMode,
+                  cacheKeyNull: isCacheKeyNull,
+                },
+                timingMs: duration,
+                sizeBytes,
+                resolverId: loader,
+                loaderType: "bypass",
+                propsPreview: summarizeTwoLevels(props),
+                resultPreview: summarizeTwoLevels(result),
+                sectionId,
+                component,
+                resolveChain: resolveChainArr.length ? resolveChainArr : undefined,
+                pathTemplate,
+                url,
+              });
+            } catch { /* ignore debug serialization */ }
+          }
+          return result;
         }
 
         ctx.vary?.push(loader, cacheKeyValue);
@@ -354,7 +438,34 @@ const wrapLoader = (
           return await matched.json();
         };
 
-        return await flights.do(request.url, staleWhileRevalidate);
+        const out = await flights.do(request.url, staleWhileRevalidate);
+        if (ctx.debugEnabled) {
+          const resolver = resolveChain.at(-1);
+          const duration = performance.now() - start;
+          try {
+            const jsonString = JSON.stringify(out);
+            const sizeBytes = textEncoder.encode(jsonString).length;
+            resolver && ctx.vary.debug.push<LoaderDebugData>({
+              resolver,
+              reason: {
+                cache: mode as CacheMode,
+                cacheKeyNull: isCacheKeyNull,
+              },
+              timingMs: duration,
+              sizeBytes,
+              resolverId: loader,
+              loaderType: status,
+              propsPreview: summarizeTwoLevels(props),
+              resultPreview: summarizeTwoLevels(out),
+              sectionId,
+              component,
+              resolveChain: resolveChainArr.length ? resolveChainArr : undefined,
+              pathTemplate,
+              url,
+            });
+          } catch { /* ignore debug serialization */ }
+        }
+        return out;
       } finally {
         const dimension = { loader, status };
         if (OTEL_ENABLE_EXTRA_METRICS) {

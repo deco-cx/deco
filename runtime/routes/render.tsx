@@ -83,7 +83,11 @@ export const handler = createHandler(async (
   const { page, shouldCache } = await state.deco.render(req, opts, state);
 
   if (isDebugRequest) {
-    return Response.json({ debugData: state.vary.debug.build() });
+    return Response.json({
+      debugData: state.vary.debug.build(),
+      url: ctx.var.url.href,
+      correlationId: ctx.var.correlationId,
+    });
   }
 
   const response = await render({
@@ -96,6 +100,15 @@ export const handler = createHandler(async (
       } satisfies PageParams<PageData>,
     },
   });
+  if (isDebugRequest) {
+    const dbg = state.vary.debug.build();
+    const inject = `\n<script>window.__DECO_DEBUG__=${JSON.stringify(dbg)};<\/script>`;
+    const original = await response.text();
+    return new Response(original.replace(/<\/body>/i, `${inject}</body>`), {
+      status: response.status,
+      headers: response.headers,
+    });
+  }
 
   // this is a hack to make sure we cache only sections that does not vary based on the loader content.
   // so we can calculate cacheBust per page but decide to cache sections individually based on vary.

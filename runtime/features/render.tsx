@@ -74,6 +74,21 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
     }
   }
 
+  // Log render start with identifiers to help correlate blocks in .deco/blocks
+  try {
+    const sectionId = resolveChain ? getSectionID(resolveChain as FieldResolver[]) : undefined;
+    logger.info("render.start", {
+      url: url.toString(),
+      pathTemplate,
+      section: {
+        __resolveType: (section as any)?.__resolveType,
+        id: sectionId,
+      },
+    });
+  } catch (_e) {
+    // best-effort logging only
+  }
+
   const context = {
     request,
     context: {
@@ -99,17 +114,38 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
     );
     shouldCache = req.method === "GET";
   } catch (err) {
-    logger.error(
-      `Error ocurred while rendering page: ${(err as Error).stack}`,
-      {
+    const isKnownAbort = (err as { name?: string })?.name === "AbortError";
+    try {
+      const sectionId = resolveChain ? getSectionID(resolveChain as FieldResolver[]) : undefined;
+      const payload = {
         url: url.toString(),
         pathTemplate,
         section: {
-          __resolveType: section?.__resolveType,
+          __resolveType: (section as any)?.__resolveType,
+          id: sectionId,
         },
         props,
-      },
-    );
+      } as const;
+      if (isKnownAbort) {
+        logger.info(`[async-render-abort] Render aborted by signal`, payload);
+      } else {
+        logger.error(`Error ocurred while rendering page: ${(err as Error).stack}`, payload);
+      }
+    } catch (_e) {
+      const payload = {
+        url: url.toString(),
+        pathTemplate,
+        section: {
+          __resolveType: (section as any)?.__resolveType,
+        },
+        props,
+      } as const;
+      if (isKnownAbort) {
+        logger.info(`[async-render-abort] Render aborted by signal`, payload);
+      } else {
+        logger.error(`Error ocurred while rendering page: ${(err as Error).stack}`, payload);
+      }
+    }
     if (err instanceof HttpError) {
       // we are creating a section with client side redirect
       // and inserting the same partialId from old section

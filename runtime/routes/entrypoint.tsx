@@ -14,6 +14,7 @@ import {
   proxyState,
 } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
+import DebugOverlay from "../../components/DebugOverlay.tsx";
 
 export interface RouterContext {
   pagePath: string;
@@ -56,15 +57,14 @@ export const useRouterContext = (): RouterContext | undefined => {
 export interface PageData {
   page: Page;
   routerInfo?: RouterContext;
+  debugData?: unknown[];
 }
 export default function Render({
   params,
   url,
-  data: {
-    page,
-    routerInfo,
-  },
+  data,
 }: PageParams<PageData>) {
+  const { page, routerInfo, debugData } = data ?? {} as PageData;
   if (!page) {
     return null;
   }
@@ -72,6 +72,9 @@ export default function Render({
   return (
     <routerCtx.Provider value={routerInfo}>
       <ctx.Provider value={{ metadata, params, url }}>
+        {url.searchParams.has("__d") && (
+          <DebugOverlay enabled data={debugData ?? []} />
+        )}
         <Component {...props}></Component>
       </ctx.Provider>
     </routerCtx.Provider>
@@ -100,7 +103,12 @@ export const handler = createHandler(async (
         props: {
           params: ctx.req.param(),
           url: ctx.var.url,
-          data: args,
+          data: {
+            ...args,
+            debugData: ctx.var.url.searchParams.has("__d")
+              ? ctx.var.vary.debug.build()
+              : undefined,
+          },
         } satisfies PageParams<PageData>,
       },
     });
