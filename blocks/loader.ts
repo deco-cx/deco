@@ -69,6 +69,7 @@ export interface LoaderModule<
 }
 
 interface LoaderDebugData extends DebugProperties {
+  kind?: "loader" | "resolver";
   reason: {
     cache: NonNullable<CacheMode>;
     cacheKeyNull: boolean;
@@ -81,9 +82,12 @@ interface LoaderDebugData extends DebugProperties {
   resultPreview?: unknown;
   sectionId?: string;
   component?: string;
+  sectionChain?: FieldResolver[];
   resolveChain?: FieldResolver[];
   pathTemplate?: string;
   url?: string;
+  startMs?: number;
+  endMs?: number;
 }
 
 // Summarize values keeping only first two levels of keys to avoid huge payloads
@@ -258,16 +262,25 @@ const wrapLoader = (
     ): Promise<ReturnType<typeof handler>> => {
       const loader = ctx.resolverId || "unknown";
       const ctxAny = ctx as unknown as { resolveChain?: FieldResolver[]; context?: { state?: { pathTemplate?: string; url?: URL } } };
-      const resolveChainArr = Array.isArray(ctxAny?.resolveChain)
-        ? ctxAny.resolveChain as FieldResolver[]
-        : [];
-      const sectionId = resolveChainArr.length
-        ? getSectionID(resolveChainArr)
+      // Prefer the resolveChain captured when wrapping the loader; fall back to the runtime ctx if present
+      const resolveChainArr: FieldResolver[] = Array.isArray(resolveChain) && resolveChain.length
+        ? (resolveChain as FieldResolver[])
+        : (Array.isArray(ctxAny?.resolveChain) ? (ctxAny.resolveChain as FieldResolver[]) : []);
+      // Try to infer section component path from the resolve chain.
+      const sectionResolverIdx = resolveChainArr.findLastIndex((c: FieldResolver) => c.type === "resolver" && typeof c.value === "string" && (c.value as string).includes("/sections/"));
+      const sectionChain = sectionResolverIdx >= 0
+        ? resolveChainArr.slice(0, sectionResolverIdx + 1)
+        : resolveChainArr;
+      const inferredSectionComponent = sectionResolverIdx >= 0
+        ? String(resolveChainArr[sectionResolverIdx].value)
+        : resolveChainArr.findLast((c: FieldResolver) => c.type === "resolver")?.value?.toString();
+      const sectionId = sectionChain.length
+        ? getSectionID(sectionChain)
         : undefined;
-      const component = resolveChainArr.findLast((c: FieldResolver) => c.type === "resolver")
-        ?.value?.toString();
+      const component = inferredSectionComponent;
       const pathTemplate = ctxAny?.context?.state?.pathTemplate;
       const url = ctxAny?.context?.state?.url?.href;
+      const startNow = performance.now();
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
@@ -322,6 +335,7 @@ const wrapLoader = (
               const jsonString = JSON.stringify(result);
               const sizeBytes = textEncoder.encode(jsonString).length;
               resolver && ctx.vary.debug.push<LoaderDebugData>({
+                kind: "loader",
                 resolver,
                 reason: {
                   cache: mode as CacheMode,
@@ -333,8 +347,11 @@ const wrapLoader = (
                 loaderType: "bypass",
                 propsPreview: summarizeTwoLevels(props),
                 resultPreview: summarizeTwoLevels(result),
+                startMs: startNow,
+                endMs: startNow + duration,
                 sectionId,
                 component,
+                sectionChain: sectionChain.length ? sectionChain : undefined,
                 resolveChain: resolveChainArr.length ? resolveChainArr : undefined,
                 pathTemplate,
                 url,
@@ -446,6 +463,7 @@ const wrapLoader = (
             const jsonString = JSON.stringify(out);
             const sizeBytes = textEncoder.encode(jsonString).length;
             resolver && ctx.vary.debug.push<LoaderDebugData>({
+              kind: "loader",
               resolver,
               reason: {
                 cache: mode as CacheMode,
@@ -457,8 +475,11 @@ const wrapLoader = (
               loaderType: status,
               propsPreview: summarizeTwoLevels(props),
               resultPreview: summarizeTwoLevels(out),
+              startMs: startNow,
+              endMs: startNow + duration,
               sectionId,
               component,
+              sectionChain: sectionChain.length ? sectionChain : undefined,
               resolveChain: resolveChainArr.length ? resolveChainArr : undefined,
               pathTemplate,
               url,

@@ -15,6 +15,8 @@ interface DebugEntry {
   resolveChain?: unknown;
   pathTemplate?: string;
   url?: string;
+  startMs?: number;
+  endMs?: number;
 }
 
 interface Props {
@@ -39,7 +41,9 @@ export default function DebugOverlay({ enabled, data }: Props) {
 
   const containerStyle = {
     position: "fixed",
-    inset: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 2147483647 as number,
     background: C.bg,
     backdropFilter: "blur(2px)",
@@ -47,13 +51,13 @@ export default function DebugOverlay({ enabled, data }: Props) {
     flexDirection: "column",
     color: C.text,
     border: `1px solid ${C.border}`,
-    height: "100vh",
+    height: "50vh",
     width: "100vw",
     overflow: "hidden",
     boxSizing: "border-box" as const,
   } as const;
 
-  const panelStyle = {
+  const _panelStyle = {
     background: C.panel,
     color: C.text,
     borderTop: `1px solid ${C.border}`,
@@ -100,6 +104,12 @@ export default function DebugOverlay({ enabled, data }: Props) {
     flex: 1,
     minHeight: 0,
   } as const;
+  const pageRow = {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+    padding: 12,
+  } as const;
   const pane = {
     background: C.panel,
     border: `1px solid ${C.border}`,
@@ -122,7 +132,23 @@ export default function DebugOverlay({ enabled, data }: Props) {
     minHeight: 0,
   } as const;
 
-  const entries = (data ?? []).slice().sort((a, b) => (b.timingMs ?? 0) - (a.timingMs ?? 0));
+  function renderBar(d: DebugEntry, all: DebugEntry[]) {
+    const starts = all.map((e) => e.startMs ?? 0);
+    const ends = all.map((e) => e.endMs ?? (e.startMs ?? 0));
+    const min = Math.min(...starts);
+    const max = Math.max(...ends);
+    if (!isFinite(min) || !isFinite(max) || max <= min) return null;
+    const start = ((d.startMs ?? min) - min) / (max - min);
+    const end = ((d.endMs ?? (d.startMs ?? min)) - min) / (max - min);
+    const left = `${(start * 100).toFixed(2)}%`;
+    const width = `${Math.max(0.5, (end - start) * 100).toFixed(2)}%`;
+    return (
+      <div style={{ position: 'absolute', left, width, top: 0, bottom: 0, background: C.accent, opacity: 0.6, borderRadius: 3 }} />
+    );
+  }
+
+  const allEntries = (data ?? []).slice();
+  const entries = allEntries.filter((e:any)=> (e && (e as any)['kind']) ? (e as any)['kind'] === 'loader' : true).sort((a, b) => (b.timingMs ?? 0) - (a.timingMs ?? 0));
   const totals = entries.reduce(
     (acc, e) => {
       acc.count++;
@@ -133,12 +159,12 @@ export default function DebugOverlay({ enabled, data }: Props) {
     { count: 0, size: 0, time: 0 },
   );
 
-  const bySection = entries.reduce<Record<string, DebugEntry[]>>((acc, e) => {
+  const bySection = entries.reduce((acc: Record<string, DebugEntry[]>, e) => {
     const key = e.sectionId || e.component || "unknown";
     acc[key] = acc[key] || [];
     acc[key].push(e);
     return acc;
-  }, {});
+  }, {} as Record<string, DebugEntry[]>);
 
   return (
     <div id="__deco_debug_overlay__" style={containerStyle}>
@@ -146,50 +172,44 @@ export default function DebugOverlay({ enabled, data }: Props) {
         <strong>Deco Debug</strong>
         <span style={{ opacity: 0.9, color: C.textDim }}>loaders={entries.length} • total={formatMs(totals.time)} • size={formatBytes(totals.size)} • press D to toggle</span>
         <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
-          <input placeholder="Filter by resolver/component..." onInput={(e) => filterList((e.currentTarget as HTMLInputElement).value)} style={{ width: 320, padding: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, borderRadius: 4 }}/>
-          <button onClick={() => copyJSON(entries)} style={btnStyle}>Copy JSON</button>
-          <button id="__deco_debug_close__" style={{ ...btnStyle, padding: '4px 8px' }}>✕</button>
+          <input placeholder="Filter by resolver/component..." onInput={(e) => filterList((e.currentTarget && (e.currentTarget as any).value) || '')} style={{ width: 320, padding: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, borderRadius: 4 }}/>
+          <button type="button" onClick={() => copyJSON(entries)} style={btnStyle}>Copy JSON</button>
+          <button type="button" id="__deco_debug_close__" style={{ ...btnStyle, padding: '4px 8px' }}>✕</button>
         </div>
       </div>
+      
       <div style={twoCols}>
         <div style={{ ...pane }}>
-          <div style={paneHeader}>Entries (sorted by time)</div>
+          <div style={paneHeader}>Loaders (sorted by time)</div>
           <div style={{ ...paneBody, ...listStyle }} id="__deco_debug_list__">
-            {Object.entries(bySection).map(([rawKey, items]) => {
-              const key = rawKey || (items[0]?.resolverId?.split('@')[0] ?? 'unknown');
-              const time = items.reduce((s, i) => s + (i.timingMs ?? 0), 0);
-              const size = items.reduce((s, i) => s + (i.sizeBytes ?? 0), 0);
-              return (
-                <div>
-                  <div style={{ padding: "6px 8px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 4, margin: "6px 0" }}>
-                    <span style={badgeStyle}>section</span> <span style={{ color: C.accent }}>{key}</span>
-                    <span style={{ float: "right" }}>{formatMs(time)} • {formatBytes(size)}</span>
-                  </div>
-                  {items.map((d) => (
-                    <div
-                      style={rowStyle}
-                      class="__deco_entry"
-                      role="button"
-                      data-idx={`${entries.indexOf(d)}`}
-                    >
-                      <div>
-                        <span style={badgeStyle}>id</span> {d.resolverId ?? ""}
-                        <span style={badge(d.loaderType)}>{d.loaderType}</span>
-                        <span style={badge(d.reason?.cache)}>{d.reason?.cache}</span>
-                        {d.reason?.cacheKeyNull ? <span style={badgeStyle}>cacheKey:null</span> : null}
-                        <span style={{ float: "right" }}>{formatMs(d.timingMs)} • {formatBytes(d.sizeBytes)}</span>
-                      </div>
-                      {d.pathTemplate || d.url ? (
-                        <div style={{ opacity: 0.8 }}>
-                          {d.pathTemplate ? <span>route: {d.pathTemplate} </span> : null}
-                          {d.url ? <span>url: {d.url}</span> : null}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
+            {entries.map((d) => (
+              <div
+                style={rowStyle}
+                class="__deco_entry"
+                role="button"
+                data-idx={`${entries.indexOf(d)}`}
+              >
+                <div style={{ position: 'relative', height: 6, marginBottom: 6, background: '#022018', borderRadius: 3 }}>
+                  {renderBar(d, entries)}
                 </div>
-              );
-            })}
+                <div>
+                  <span style={badgeStyle}>id</span> {d.resolverId ?? ''}
+                  <span style={badge(d.loaderType)}>{d.loaderType}</span>
+                  <span style={badge(d.reason?.cache)}>{d.reason?.cache}</span>
+                  {d.reason?.cacheKeyNull ? <span style={badgeStyle}>cacheKey:null</span> : null}
+                  <span style={{ float: 'right' }}>{formatMs(d.timingMs)} • {formatBytes(d.sizeBytes)}</span>
+                </div>
+                <div style={{ opacity: 0.8, marginTop: 2 }}>
+                  {d.component || ''}
+                </div>
+                {d.pathTemplate || d.url ? (
+                  <div style={{ opacity: 0.8 }}>
+                    {d.pathTemplate ? <span>route: {d.pathTemplate} </span> : null}
+                    {d.url ? <span>url: {d.url}</span> : null}
+                  </div>
+                ) : null}
+              </div>
+            ))}
             {!entries.length && (
               <div style={hintStyle}>No loader debug entries captured. Ensure the page was loaded with <code>?__d</code> and the server restarted.</div>
             )}
@@ -206,18 +226,18 @@ export default function DebugOverlay({ enabled, data }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, height: '100%' }}>
                 <div style={{ ...pane, height: '100%', minHeight: 0 }}>
                   <div style={paneHeader}>props</div>
-                  <button id="__deco_debug_render_props__" style={btnStyle}>Render props</button>
+                  <button type="button" id="__deco_debug_render_props__" style={btnStyle}>Render props</button>
                   <pre id="__deco_debug_props__" style={{ ...preStyle as any, ...paneBody }}></pre>
                 </div>
                 <div style={{ ...pane, height: '100%', minHeight: 0 }}>
                   <div style={paneHeader}>result</div>
-                  <button id="__deco_debug_render_result__" style={btnStyle}>Render result</button>
+                  <button type="button" id="__deco_debug_render_result__" style={btnStyle}>Render result</button>
                   <pre id="__deco_debug_result__" style={{ ...preStyle as any, ...paneBody }}></pre>
                 </div>
               </div>
               <div style={{ ...pane, marginTop: 8 }}>
                 <div style={paneHeader}>resolveChain</div>
-                <button id="__deco_debug_render_chain__" style={btnStyle}>Render chain</button>
+                <button type="button" id="__deco_debug_render_chain__" style={btnStyle}>Render chain</button>
                 <pre id="__deco_debug_chain__" style={{ ...preStyle as any, ...paneBody }}></pre>
               </div>
             </div>
@@ -273,6 +293,33 @@ export default function DebugOverlay({ enabled, data }: Props) {
             if(activeEl){ activeEl.style.background=''; }
             activeEl = el; activeEl.style.background = 'rgba(0,255,153,0.06)';
             showFromIdx(idx);
+            // highlight corresponding section row and DOM section
+            try {
+              ensureData();
+              const d = data[idx];
+              const sid = d && (d.sectionId || d.component || '');
+              // highlight row in sections panel
+              const prev = document.querySelector('#__deco_debug_sections__ .__deco_section_row.__active');
+              if (prev) {
+                prev.classList.remove('__active');
+                if (prev instanceof HTMLElement) { prev.style.background = ''; }
+              }
+              const selector = '#__deco_debug_sections__ .__deco_section_row[data-id="' + CSS.escape(sid) + '"]';
+              const row = sid ? document.querySelector(selector) : null;
+              if (row && row instanceof HTMLElement) {
+                row.style.background = 'rgba(0,255,153,0.08)';
+                row.classList.add('__active');
+                row.scrollIntoView({ block: 'nearest' });
+              }
+              // highlight real section behind overlay
+              if (sid) {
+                const domSection = document.getElementById(sid);
+                if (domSection && domSection instanceof HTMLElement) {
+                  domSection.style.outline = '2px solid #00ff99';
+                  setTimeout(()=>{ domSection.style.outline = ''; }, 1200);
+                }
+              }
+            } catch {}
           });
           function renderLimited(obj, out){
             ensureData(); try {
@@ -282,6 +329,7 @@ export default function DebugOverlay({ enabled, data }: Props) {
               out.textContent = str.length > MAX ? (str.slice(0, MAX) + "\\n[truncated]") : str;
             } catch {}
           }
+          // (page/sections UI removed per request)
           renderPropsBtn?.addEventListener('click', ()=>{ if(currentIdx<0) return; ensureData(); const d = data[currentIdx]; renderLimited(d?.propsPreview, propsOut); });
           renderResultBtn?.addEventListener('click', ()=>{ if(currentIdx<0) return; ensureData(); const d = data[currentIdx]; renderLimited(d?.resultPreview, resultOut); });
           renderChainBtn?.addEventListener('click', ()=>{ if(currentIdx<0) return; ensureData(); const d = data[currentIdx]; renderLimited(d?.resolveChain, chainOut); });
