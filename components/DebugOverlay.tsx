@@ -169,8 +169,8 @@ export default function DebugOverlay({ enabled, data }: Props) {
   return (
     <div id="__deco_debug_overlay__" style={containerStyle}>
       <div style={headerStyle}>
-        <strong>Deco Debug</strong>
-        <span style={{ opacity: 0.9, color: C.textDim }}>loaders={entries.length} • total={formatMs(totals.time)} • size={formatBytes(totals.size)} • press D to toggle</span>
+        <strong id="__deco_debug_title__">Deco Debug</strong>
+        <span id="__deco_debug_sub__" style={{ opacity: 0.9, color: C.textDim }}>loaders={entries.length} • total={formatMs(totals.time)} • size={formatBytes(totals.size)} • press D to toggle</span>
         <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
           <input placeholder="Filter by resolver/component..." onInput={(e) => filterList((e.currentTarget && (e.currentTarget as any).value) || '')} style={{ width: 320, padding: 6, border: `1px solid ${C.border}`, background: C.bg, color: C.text, borderRadius: 4 }}/>
           <button type="button" onClick={() => copyJSON(entries)} style={btnStyle}>Copy JSON</button>
@@ -250,6 +250,8 @@ export default function DebugOverlay({ enabled, data }: Props) {
           const root = document.getElementById('__deco_debug_list__');
           const overlay = document.getElementById('__deco_debug_overlay__');
           const closeBtn = document.getElementById('__deco_debug_close__');
+          const title = document.getElementById('__deco_debug_title__');
+          const sub = document.getElementById('__deco_debug_sub__');
           try {
             // detach from framework root to avoid hydration issues
             if (overlay && overlay.parentElement && overlay.parentElement !== document.body) {
@@ -258,6 +260,17 @@ export default function DebugOverlay({ enabled, data }: Props) {
             }
           } catch {}
           console.log('[deco-debug] overlay mounted');
+          // Read page meta to enrich title
+          try {
+            var meta = document.querySelector('meta[name="deco:page"]');
+            if (meta && meta.getAttribute('content')) {
+              var content = meta.getAttribute('content');
+              var info = null; try { info = JSON.parse(content); } catch(_){}
+              if (info && info.pathTemplate) {
+                title && (title.textContent = 'Deco Debug — page=' + info.pathTemplate);
+              }
+            }
+          } catch(_){ }
           function toggle(){ if(!overlay) return; overlay.style.display = (overlay.style.display==='none') ? '' : 'none'; }
           window.addEventListener('keydown', (e)=>{ if(e.key==='d'||e.key==='D'){ toggle(); } });
           closeBtn && closeBtn.addEventListener('click', toggle);
@@ -272,6 +285,37 @@ export default function DebugOverlay({ enabled, data }: Props) {
           const renderChainBtn = document.getElementById('__deco_debug_render_chain__');
           let currentIdx = -1;
           let activeEl = null;
+          // Listen for async debug chunks being pushed by partial renders
+          try {
+            window.addEventListener('deco:debug:add', function(ev){
+              try {
+                const payload = (ev && ev.detail && ev.detail.entries) || [];
+                if (!Array.isArray(payload) || payload.length === 0) return;
+                ensureData();
+                const base = Array.isArray(data) ? data : [];
+                for (var i=0;i<payload.length;i++){ base.push(payload[i]); }
+                (window).__DECO_DEBUG_DATA__ = data = base;
+                // append new rows to the list
+                const entries = base.filter(function(e){ return !e.kind || e.kind==='loader'; }).sort(function(a,b){ return (b.timingMs||0)-(a.timingMs||0); });
+                const list = document.getElementById('__deco_debug_list__');
+                if (!list) return;
+                list.textContent = '';
+                for (var j=0;j<entries.length;j++){
+                  var d = entries[j];
+                  var row = document.createElement('div');
+                  row.className='__deco_entry'; row.setAttribute('role','button'); row.setAttribute('data-idx', String(j));
+                  row.style.padding='8px'; row.style.borderBottom='1px solid #0b3a2d'; row.style.cursor='pointer';
+                  var ruler=document.createElement('div'); ruler.style.position='relative'; ruler.style.height='6px'; ruler.style.marginBottom='6px'; ruler.style.background='#022018'; ruler.style.borderRadius='3px';
+                  row.appendChild(ruler);
+                  var meta=document.createElement('div'); meta.innerHTML='<span style="background:#073c2f;color:#a6ffd4;padding:0 6px;border-radius:4px;font-size:11px;text-transform:uppercase">id</span> '+(d.resolverId||'');
+                  var right=document.createElement('span'); right.style.float='right'; right.textContent=(d.timingMs||0).toFixed(1)+' ms • '+(d.sizeBytes?d.sizeBytes+' B':''); meta.appendChild(right);
+                  row.appendChild(meta);
+                  var comp=document.createElement('div'); comp.style.opacity='0.8'; comp.textContent=d.component||''; row.appendChild(comp);
+                  list.appendChild(row);
+                }
+              } catch(_){ }
+            });
+          } catch(_){ }
           function showFromIdx(idx){
             ensureData(); currentIdx = idx; const d = data[idx]; if(!d) return;
             propsOut.textContent = '';

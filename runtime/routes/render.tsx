@@ -82,14 +82,6 @@ export const handler = createHandler(async (
 
   const { page, shouldCache } = await state.deco.render(req, opts, state);
 
-  if (isDebugRequest) {
-    return Response.json({
-      debugData: state.vary.debug.build(),
-      url: ctx.var.url.href,
-      correlationId: ctx.var.correlationId,
-    });
-  }
-
   const response = await render({
     page: {
       Component: Render,
@@ -102,9 +94,21 @@ export const handler = createHandler(async (
   });
   if (isDebugRequest) {
     const dbg = state.vary.debug.build();
-    const inject = `\n<script>window.__DECO_DEBUG__=${JSON.stringify(dbg)};<\/script>`;
-    const original = await response.text();
-    return new Response(original.replace(/<\/body>/i, `${inject}</body>`), {
+    const payload = JSON.stringify(dbg);
+    const injectScript = `\n<script>(function(){try{\n  window.__DECO_DEBUG_PUSH = window.__DECO_DEBUG_PUSH || function(arr){ try { var entries = Array.isArray(arr) ? arr : []; entries = entries.map(function(e){ e = e||{}; e.__async = true; return e; }); var ev = new CustomEvent('deco:debug:add', { detail: { entries: entries } }); window.dispatchEvent(ev); } catch(_){} };\n  window.__DECO_DEBUG_PUSH(${payload});\n}catch(_){}})();<\/script>`;
+    const pageMeta = (state as any)?.pageInfo || {
+      pathTemplate: opts.pathTemplate,
+    };
+    const metaContent = JSON.stringify(pageMeta).replace(/'/g, "&#39;");
+    const injectMeta = `\n<meta name="deco:page" content='${metaContent}'>`;
+    let html = await response.text();
+    if (/<\/head>/i.test(html)) {
+      html = html.replace(/<\/head>/i, `${injectMeta}</head>`);
+    } else {
+      html = injectMeta + html;
+    }
+    html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${injectScript}</body>`) : (html + injectScript);
+    return new Response(html, {
       status: response.status,
       headers: response.headers,
     });
