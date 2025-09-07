@@ -3,6 +3,7 @@ import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context, context } from "../deco.ts";
 import { type Exception, getCookies, SpanStatusCode } from "../deps.ts";
+import { withRequestContext } from "../observability/otel/context.ts";
 import { startObserve } from "../observability/http.ts";
 import { logger } from "../observability/mod.ts";
 import { HttpError } from "../runtime/errors.ts";
@@ -239,7 +240,19 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         });
       }
 
-      await next();
+      // Store request context in AsyncLocalStorage for reliable access
+      const requestContext = {
+        url: deco.ctx.request?.url,
+        method: deco.ctx.request?.method,
+        pathname: deco.ctx.request?.pathname,
+        userAgent: deco.ctx.request?.userAgent,
+        correlationId: deco.ctx.request?.correlationId,
+      };
+
+      await withRequestContext(requestContext, async () => {
+        await next();
+      });
+
       // enable or disable debugging
       if (ctx.req.raw.headers.get("upgrade") === "websocket") {
         return;

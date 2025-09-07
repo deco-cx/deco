@@ -3,7 +3,7 @@ import * as log from "@std/log";
 
 import { type LevelName, LogLevels } from "@std/log/levels";
 import type { LogRecord } from "@std/log/logger";
-import { Context } from "../../deco.ts";
+import { requestContextStore } from "./context.ts";
 
 import {
   type Attributes,
@@ -23,6 +23,7 @@ import {
   Resource,
   SeverityNumber,
 } from "../../deps.ts";
+import { Context } from "../../deco.ts";
 
 const UNSPECIFIED_SEVERITY_TEXT = "";
 
@@ -151,29 +152,22 @@ export class OpenTelemetryHandler extends log.BaseHandler {
   }
 
   /**
-   * Extracts request context data from the current context
+   * Extracts request context data from the request context store
    */
   private extractRequestContext(): Record<string, unknown> {
     try {
-      const activeContext = Context.active();
-      const requestContext = activeContext.request;
+      const context = requestContextStore.getStore() ||
+        Context.active()?.request;
 
       return {
-        siteId: activeContext.siteId,
-        siteName: activeContext.site,
-        platform: activeContext.platform,
-        deploymentId: activeContext.deploymentId,
-        request: {
-          url: requestContext?.url,
-          method: requestContext?.method,
-          pathname: requestContext?.pathname,
-          userAgent: requestContext?.userAgent,
-          correlationId: requestContext?.correlationId,
-          framework: requestContext?.framework,
-        },
+        "request.url": context?.url,
+        "request.method": context?.method,
+        "request.pathname": context?.pathname,
+        "request.userAgent": context?.userAgent,
+        "request.correlationId": context?.correlationId,
       };
-    } catch {
-      console.error("Error extracting request context");
+    } catch (error) {
+      console.error("Error extracting request context:", error);
       // If context is not available, return empty object
       return {};
     }
