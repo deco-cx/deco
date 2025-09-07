@@ -3,6 +3,7 @@ import * as log from "@std/log";
 
 import { type LevelName, LogLevels } from "@std/log/levels";
 import type { LogRecord } from "@std/log/logger";
+import { Context } from "../../deco.ts";
 
 import {
   type Attributes,
@@ -133,6 +134,9 @@ export class OpenTelemetryHandler extends log.BaseHandler {
 
     const otelSeverityNumber = this.toOtelSeverityNumber(logRecord.level);
 
+    // Automatically enrich logs with request context
+    const requestContext = this.extractRequestContext();
+
     this._logger?.emit({
       severityNumber: otelSeverityNumber,
       severityText: OTEL_SEVERITY_NAME_MAP[otelSeverityNumber] ??
@@ -141,8 +145,38 @@ export class OpenTelemetryHandler extends log.BaseHandler {
       attributes: {
         ...typeof firstArg === "object" ? firstArg : {},
         loggerName: logRecord.loggerName,
+        ...requestContext,
       },
     });
+  }
+
+  /**
+   * Extracts request context data from the current context
+   */
+  private extractRequestContext(): Record<string, unknown> {
+    try {
+      const activeContext = Context.active();
+      const requestContext = activeContext.request;
+
+      return {
+        siteId: activeContext.siteId,
+        siteName: activeContext.site,
+        platform: activeContext.platform,
+        deploymentId: activeContext.deploymentId,
+        request: {
+          url: requestContext?.url,
+          method: requestContext?.method,
+          pathname: requestContext?.pathname,
+          userAgent: requestContext?.userAgent,
+          correlationId: requestContext?.correlationId,
+          framework: requestContext?.framework,
+        },
+      };
+    } catch {
+      console.error("Error extracting request context");
+      // If context is not available, return empty object
+      return {};
+    }
   }
 
   log(_msg: string) {}

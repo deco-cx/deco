@@ -222,13 +222,26 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
 
     const liveContext = this.ctx;
     const request = forceHttps(req);
+    const url = new URL(request.url);
+
+    // Create or update request context with additional data
+    if (!liveContext.request) {
+      liveContext.request = {};
+    }
+
+    liveContext.request.url = request.url;
+    liveContext.request.method = request.method;
+    liveContext.request.pathname = url.pathname;
+    liveContext.request.userAgent = request.headers.get("user-agent") ||
+      undefined;
+    liveContext.request.correlationId = correlationId;
 
     state.release = liveContext.release!;
     const response = {
       headers: new Headers(defaultHeaders),
       status: undefined,
     };
-    state.url = new URL(request.url);
+    state.url = url;
     state.response = response;
     state.bag = new WeakMap();
     state.vary = vary();
