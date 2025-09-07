@@ -224,10 +224,8 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     const request = forceHttps(req);
     const url = new URL(request.url);
 
-    // Create or update request context with additional data
-    if (!liveContext.request) {
-      liveContext.request = {};
-    }
+    // Create a new request context
+    liveContext.request = {};
 
     liveContext.request.url = request.url;
     liveContext.request.method = request.method;
