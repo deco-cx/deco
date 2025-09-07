@@ -100,7 +100,9 @@ export const handler = createHandler(async (
   // this is a hack to make sure we cache only sections that does not vary based on the loader content.
   // so we can calculate cacheBust per page but decide to cache sections individually based on vary.
   // ideally cachebust should be calculated per section as well so that you can reuse section across pages and produce same cacheBusts.
-  const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
+  const noStore = ctx?.var?.vary?.noStore === true;
+  const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true &&
+    noStore === false;
   if (shouldCache && shouldCacheFromVary) {
     // Stale cache on CDN, but make the browser fetch every single time.
     // We can test if caching on the browser helps too.
@@ -111,7 +113,9 @@ export const handler = createHandler(async (
   } else {
     response.headers.set(
       "cache-control",
-      "public, max-age=0, must-revalidate",
+      noStore
+        ? "no-cache, no-store, max-age=0, must-revalidate"
+        : "public, max-age=0, must-revalidate",
     );
   }
 
