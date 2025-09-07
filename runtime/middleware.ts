@@ -242,11 +242,11 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
       // Store request context in AsyncLocalStorage for reliable access
       const requestContext = {
-        url: deco.ctx.request?.url,
-        method: deco.ctx.request?.method,
-        pathname: deco.ctx.request?.pathname,
-        userAgent: deco.ctx.request?.userAgent,
-        correlationId: deco.ctx.request?.correlationId,
+        url: ctx.req.raw.url,
+        method: ctx.req.raw.method,
+        pathname: url.pathname,
+        userAgent: ctx.req.raw.headers.get("user-agent") || undefined,
+        correlationId: ctx.var.correlationId,
       };
 
       await withRequestContext(requestContext, async () => {
