@@ -46,7 +46,7 @@ const getMergeBase = async () => {
 
   const tracking = isEnvOfRevert
     ? "main"
-    : status.tracking || defaultTrackingBranch;
+    : status.tracking || defaultTrackingBranch; 
 
   if (!current || !tracking) {
     throw new Error(
