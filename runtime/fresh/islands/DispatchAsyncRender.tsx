@@ -1,10 +1,19 @@
 import { useEffect } from "preact/hooks";
 
+export type PartialTriggerMode = "load" | "threshold";
+
+let triggerMode: "load" | "threshold" = "load";
+export const getPartialTriggerMode = () => triggerMode;
+export const setPartialTriggerMode = (newMode: PartialTriggerMode) => {
+  triggerMode = newMode;
+};
+
 interface Props {
   id: string;
+  partialTriggerMode: PartialTriggerMode;
 }
 
-export default function DispatchAsyncRender({ id }: Props) {
+export default function DispatchAsyncRender({ id, partialTriggerMode }: Props) {
   useEffect(function observeAsyncRenderElements() {
     const elem = document.getElementById(id);
     const parent = elem?.parentElement;
@@ -13,6 +22,11 @@ export default function DispatchAsyncRender({ id }: Props) {
       console.error(
         `Missing element of id ${id} or its parent element. Async rendering will NOT work properly`,
       );
+      return;
+    }
+
+    if (partialTriggerMode === "load") {
+      elem.click();
       return;
     }
 
