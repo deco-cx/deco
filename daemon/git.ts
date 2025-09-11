@@ -54,6 +54,8 @@ const getMergeBase = async () => {
     );
   }
 
+  console.log("merge-base", current, tracking);
+
   return git.raw("merge-base", current, tracking);
 };
 
