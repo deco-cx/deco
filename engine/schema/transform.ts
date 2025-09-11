@@ -274,69 +274,245 @@ const tsInterfaceDeclarationToSchemeable = async (
     extends: await Promise.all(allOfs),
   };
 };
-// cannot have typeParams but can have type parameters on context
-export const typeNameToSchemeable = async (
-  typeName: string,
-  ctx: SchemeableTransformContext,
-): Promise<Schemeable> => {
-  const {
-    path,
-    parsedSource,
-    tryGetFromInstantiatedParameters,
-  } = ctx;
-  const { program } = parsedSource;
-  const val = await tryGetFromInstantiatedParameters?.(typeName);
-  if (val) {
-    return val;
+// Advanced caching system with graph-based resolution
+interface TypeResolutionNode {
+  id: string;
+  type: 'type' | 'import' | 'well-known';
+  dependencies: Set<string>;
+  resolved: boolean;
+  result?: Promise<Schemeable>;
+  timestamp: number;
+}
+
+class TypeResolutionGraph {
+  private nodes = new Map<string, TypeResolutionNode>();
+  private processing = new Set<string>();
+  private cache = new Map<string, Promise<Schemeable>>();
+  private fileCache = new Map<string, Promise<ParsedSource | undefined>>();
+  private typeCache = new Map<string, Promise<Schemeable>>();
+  
+  constructor() {
+    // Clear caches on HMR
+    addEventListener("hmr", () => {
+      this.nodes.clear();
+      this.processing.clear();
+      this.cache.clear();
+      this.fileCache.clear();
+      this.typeCache.clear();
+    });
   }
-  // imports should be considered as a last resort since type name and func names can be equal, causing ambiguity
-  let fromImport: (() => Promise<Schemeable>) | undefined;
-  const result = await visit(program.body, {
-    ExportNamedDeclaration: (item) => {
-      return visit(item.specifiers, {
-        ExportSpecifier: async (spec) => {
-          if ((spec.exported?.value ?? spec.orig.value) !== typeName) {
-            return;
-          }
-          const source = item.source?.value;
-          if (!source) {
-            return UNKNOWN;
-          }
 
-          const from = await ctx.importMapResolver.resolve(source, path);
-          if (!from) {
-            return UNKNOWN;
-          }
-          const newProgram = await parsePath(from);
-          if (!newProgram) {
-            return UNKNOWN;
-          }
+  private createNodeId(type: string, path: string, context: string = ''): string {
+    return `${type}:${path}:${context}`;
+  }
 
-          return typeNameToSchemeable(
-            typeName,
-            {
-              ...ctx,
-              path: from,
-              parsedSource: newProgram,
-            },
-          );
-        },
+  private async resolveNode(nodeId: string, resolver: () => Promise<Schemeable>): Promise<Schemeable> {
+    const node = this.nodes.get(nodeId);
+    if (!node) {
+      throw new Error(`Node ${nodeId} not found`);
+    }
+
+    // Check if already resolved
+    if (node.resolved && node.result) {
+      return node.result;
+    }
+
+    // Check if currently processing (circular dependency detection)
+    if (this.processing.has(nodeId)) {
+      console.warn(`Circular dependency detected for ${nodeId}`);
+      return UNKNOWN;
+    }
+
+    // Check cache first
+    const cached = this.cache.get(nodeId);
+    if (cached) {
+      node.resolved = true;
+      node.result = cached;
+      return cached;
+    }
+
+    // Mark as processing
+    this.processing.add(nodeId);
+
+    try {
+      // Resolve dependencies first (topological order)
+      const dependencyPromises = Array.from(node.dependencies).map(depId => {
+        const depNode = this.nodes.get(depId);
+        return depNode ? this.resolveNode(depId, () => Promise.resolve(UNKNOWN)) : Promise.resolve(UNKNOWN);
       });
-    },
-    ExportDeclaration: async (item) => {
-      if (
-        item.declaration.type === "TsInterfaceDeclaration" &&
-        item.declaration.id.value === typeName
-      ) {
+
+      await Promise.all(dependencyPromises);
+
+      // Now resolve this node
+      const result = await resolver();
+
+      // Cache the result
+      this.cache.set(nodeId, Promise.resolve(result));
+      node.resolved = true;
+      node.result = Promise.resolve(result);
+      node.timestamp = Date.now();
+
+      return result;
+    } finally {
+      this.processing.delete(nodeId);
+    }
+  }
+
+  async resolveType(typeName: string, ctx: SchemeableTransformContext): Promise<Schemeable> {
+    const nodeId = this.createNodeId('type', ctx.path, typeName);
+    
+    // Check if node already exists
+    let node = this.nodes.get(nodeId);
+    if (!node) {
+      node = {
+        id: nodeId,
+        type: 'type',
+        dependencies: new Set(),
+        resolved: false,
+        timestamp: Date.now(),
+      };
+      this.nodes.set(nodeId, node);
+    }
+
+    return this.resolveNode(nodeId, async () => {
+      return this.performTypeResolution(typeName, ctx, node!);
+    });
+  }
+
+  async resolveFile(path: string, importMapResolver: ImportMapResolver): Promise<ParsedSource | undefined> {
+    const nodeId = this.createNodeId('file', path);
+    
+    // Check file cache first
+    const cached = this.fileCache.get(nodeId);
+    if (cached) {
+      return cached;
+    }
+
+    const filePromise = parsePath(path);
+    this.fileCache.set(nodeId, filePromise);
+    return filePromise;
+  }
+
+  private async performTypeResolution(
+    typeName: string, 
+    ctx: SchemeableTransformContext, 
+    node: TypeResolutionNode
+  ): Promise<Schemeable> {
+    // Check instantiated parameters first
+    const val = await ctx.tryGetFromInstantiatedParameters?.(typeName);
+    if (val) {
+      return val;
+    }
+
+    // Check type cache
+    const cacheKey = `${ctx.path}:${typeName}:${ctx.parsedSource.program.body.length}`;
+    const typeCached = this.typeCache.get(cacheKey);
+    if (typeCached) {
+      return typeCached;
+    }
+
+    // Perform the actual resolution
+    const result = await this.resolveTypeInProgram(typeName, ctx, node);
+    
+    // Cache the result
+    this.typeCache.set(cacheKey, Promise.resolve(result));
+    
+    return result;
+  }
+
+  private async resolveTypeInProgram(
+    typeName: string, 
+    ctx: SchemeableTransformContext, 
+    node: TypeResolutionNode
+  ): Promise<Schemeable> {
+    const { program } = ctx.parsedSource;
+    
+    // Use optimized visitor pattern with early exit
+    const visitor = this.createOptimizedVisitor(typeName, ctx, node);
+    const result = await this.visitProgram(program, visitor);
+    
+    if (result) {
+      return result;
+    }
+    
+    return UNKNOWN;
+  }
+
+  private createOptimizedVisitor(
+    typeName: string, 
+    ctx: SchemeableTransformContext, 
+    node: TypeResolutionNode
+  ) {
+    return {
+      ExportNamedDeclaration: async (item: any) => {
+        // Early exit if no source (local export)
+        if (!item.source?.value) {
+          return this.visitLocalExports(item, typeName, ctx);
+        }
+        
+        // Handle re-exports with dependency tracking
+        return this.visitReExports(item, typeName, ctx, node);
+      },
+      ExportDeclaration: async (item: any) => {
+        return this.visitDirectExports(item, typeName, ctx);
+      },
+      ExportAllDeclaration: async (item: any) => {
+        return this.visitExportAll(item, typeName, ctx, node);
+      }
+    };
+  }
+
+  private async visitLocalExports(item: any, typeName: string, ctx: SchemeableTransformContext): Promise<Schemeable | undefined> {
+    // Fast path for local exports - no file I/O needed
+    for (const spec of item.specifiers || []) {
+      if ((spec.exported?.value ?? spec.orig.value) === typeName) {
+        // Find the actual declaration in the current file
+        return this.findLocalDeclaration(typeName, ctx);
+      }
+    }
+    return undefined;
+  }
+
+  private async visitReExports(
+    item: any, 
+    typeName: string, 
+    ctx: SchemeableTransformContext, 
+    node: TypeResolutionNode
+  ): Promise<Schemeable | undefined> {
+    const source = item.source.value;
+    
+    // Add dependency to the graph
+    const depNodeId = this.createNodeId('file', source);
+    node.dependencies.add(depNodeId);
+    
+    // Resolve the imported file
+    const from = await ctx.importMapResolver.resolve(source, ctx.path);
+    if (!from) {
+      return UNKNOWN;
+    }
+    
+    const newProgram = await this.resolveFile(from, ctx.importMapResolver);
+    if (!newProgram) {
+      return UNKNOWN;
+    }
+    
+    // Recursively resolve in the new context
+    return this.resolveType(typeName, {
+      ...ctx,
+      path: from,
+      parsedSource: newProgram,
+    });
+  }
+
+  private async visitDirectExports(item: any, typeName: string, ctx: SchemeableTransformContext): Promise<Schemeable | undefined> {
+    if (item.declaration?.id?.value === typeName) {
+      if (item.declaration.type === "TsInterfaceDeclaration") {
         return {
           jsDocSchema: spannableToJSONSchema(item),
           ...await tsInterfaceDeclarationToSchemeable(item.declaration, ctx),
         };
       }
-      if (
-        item.declaration.type === "TsTypeAliasDeclaration" &&
-        item.declaration.id.value === typeName
-      ) {
+      if (item.declaration.type === "TsTypeAliasDeclaration") {
         const _tryGetFromInstantiatedParameters = getFromParametersFunc(
           item.declaration.typeParams?.parameters ?? [],
           ctx,
@@ -361,114 +537,99 @@ export const typeNameToSchemeable = async (
           type: "alias",
           jsDocSchema,
           value,
-          file: path,
+          file: ctx.path,
           name: typeName,
         };
       }
-    },
-    ExportAllDeclaration: async (item) => {
-      const from = await ctx.importMapResolver.resolve(item.source.value, path);
-      if (!from) {
-        return;
-      }
-      const newProgram = await parsePath(
-        from,
-      );
-      if (!newProgram) {
-        return UNKNOWN;
-      }
-      const type = await typeNameToSchemeable(
-        typeName,
-        {
-          ...ctx,
-          path: from,
-          parsedSource: newProgram,
-        },
-      );
-      if (type !== UNKNOWN) {
-        return type;
-      }
-    },
-    TsInterfaceDeclaration: async (item) => {
-      if (item.id.value !== typeName) {
-        return;
-      }
-      return {
-        jsDocSchema: spannableToJSONSchema(item),
-        ...await tsInterfaceDeclarationToSchemeable(item, ctx),
-      };
-    },
-    TsTypeAliasDeclaration: async (item) => {
-      if (
-        item.id.value === typeName
-      ) {
-        const _tryGetFromInstantiatedParameters = getFromParametersFunc(
-          item.typeParams?.parameters ?? [],
-          ctx,
-        );
-        return {
-          type: "alias",
-          jsDocSchema: spannableToJSONSchema(item),
-          value: await tsTypeToSchemeable(item.typeAnnotation, {
-            ...ctx,
-            tryGetFromInstantiatedParameters: _tryGetFromInstantiatedParameters,
-          }),
-          file: path,
-          name: typeName,
-        };
-      }
-    },
-    ImportDeclaration: (item) => {
-      return visit(item.specifiers, {
-        ImportSpecifier: (spec) => {
-          if (spec.local.value !== typeName) {
-            return;
-          }
-          fromImport = async () => {
-            try {
-              const from = await ctx.importMapResolver.resolve(
-                item.source.value,
-                path,
-              );
-              if (!from) {
-                return UNKNOWN;
-              }
-              const newProgram = await parsePath(
-                from,
-              );
-              if (!newProgram) {
-                return UNKNOWN;
-              }
-              return typeNameToSchemeable(
-                (spec as NamedImportSpecifier)?.imported?.value ??
-                  spec.local.value,
-                {
-                  ...ctx,
-                  path: from,
-                  parsedSource: newProgram,
-                },
-              );
-            } catch (err) {
-              console.log(
-                err,
-                item.source.value,
-                path,
-                safeImportResolve(path),
-              );
-              throw err;
-            }
-          };
-          if (item.typeOnly) {
-            return fromImport();
-          }
-        },
-      });
-    },
-  });
-  if (typeof result === "object") {
-    return result;
+    }
+    return undefined;
   }
-  return fromImport?.() ?? UNKNOWN;
+
+  private async visitExportAll(
+    item: any, 
+    typeName: string, 
+    ctx: SchemeableTransformContext, 
+    node: TypeResolutionNode
+  ): Promise<Schemeable | undefined> {
+    const source = item.source.value;
+    
+    // Add dependency to the graph
+    const depNodeId = this.createNodeId('file', source);
+    node.dependencies.add(depNodeId);
+    
+    const from = await ctx.importMapResolver.resolve(source, ctx.path);
+    if (!from) {
+      return undefined;
+    }
+    
+    const newProgram = await this.resolveFile(from, ctx.importMapResolver);
+    if (!newProgram) {
+      return UNKNOWN;
+    }
+    
+    return this.resolveType(typeName, {
+      ...ctx,
+      path: from,
+      parsedSource: newProgram,
+    });
+  }
+
+  private async findLocalDeclaration(typeName: string, ctx: SchemeableTransformContext): Promise<Schemeable | undefined> {
+    // Fast local search without file I/O
+    const { program } = ctx.parsedSource;
+    
+    for (const decl of program.body) {
+      if (decl.type === "ExportDeclaration" && 
+          decl.declaration && 
+          'id' in decl.declaration && 
+          decl.declaration.id?.value === typeName) {
+        return this.visitDirectExports(decl, typeName, ctx);
+      }
+    }
+    
+    return undefined;
+  }
+
+  private async visitProgram(program: any, visitor: any): Promise<Schemeable | undefined> {
+    // Optimized visitor that stops on first match
+    for (const item of program.body) {
+      const handler = visitor[item.type];
+      if (handler) {
+        const result = await handler(item);
+        if (result) {
+          return result;
+        }
+      }
+    }
+    return undefined;
+  }
+}
+
+// Global instance of the resolution graph
+const typeResolutionGraph = new TypeResolutionGraph();
+
+// Global cache for type name resolution to avoid repeated lookups
+const typeNameCache = new Map<string, Promise<Schemeable>>();
+
+// Clear type name cache on HMR
+addEventListener("hmr", () => {
+  typeNameCache.clear();
+});
+
+// Global cache for tsType resolution to avoid repeated processing
+const tsTypeCache = new Map<string, Promise<Schemeable>>();
+
+// Clear tsType cache on HMR
+addEventListener("hmr", () => {
+  tsTypeCache.clear();
+});
+
+export const typeNameToSchemeable = async (
+  typeName: string,
+  ctx: SchemeableTransformContext,
+): Promise<Schemeable> => {
+  // Use the new graph-based resolution system
+  return typeResolutionGraph.resolveType(typeName, ctx);
 };
 
 const wellKnownTypeReferenceToSchemeable = async <
@@ -512,10 +673,12 @@ const wellKnownTypeReferenceToSchemeable = async <
       }
       const typeRef = typeParams[0];
 
-      return tsTypeToSchemeable(
+      const result = await tsTypeToSchemeable(
         typeRef,
         ctx,
       );
+      
+      return result;
     }
     case "Response": {
       return {
@@ -530,7 +693,10 @@ const wellKnownTypeReferenceToSchemeable = async <
       if (typeParams.length === 0) {
         return undefined;
       }
-      return tsTypeToSchemeable(typeParams[0], ctx);
+      
+      const result = await tsTypeToSchemeable(typeParams[0], ctx);
+      
+      return result;
     }
     case "InstanceOf": {
       if (typeParams.length < 2) {
@@ -586,10 +752,12 @@ const wellKnownTypeReferenceToSchemeable = async <
       }
       const typeRef = typeParams[0];
 
-      return tsTypeToSchemeable(
+      const result = await tsTypeToSchemeable(
         typeRef,
         ctx,
       );
+      
+      return result;
     }
     case "Partial": {
       if (typeParams.length < 1) {
@@ -757,6 +925,17 @@ export const tsTypeToSchemeable = async (
     path,
     references,
   } = ctx;
+
+  // Create a global cache key
+  const globalCacheKey = `${path}:${tsType.type}:${tsType.span.start}-${tsType.span.end}:${optional}:${
+    ctx.instantiatedTypeParams?.map?.((param) => param.name)?.sort?.()?.join("") ?? ""
+  }`;
+  
+  // Check global cache first
+  const globalCached = tsTypeCache.get(globalCacheKey);
+  if (globalCached) {
+    return globalCached;
+  }
 
   const refKey = `${ctx.path}+${tsType.span.start}${tsType.span.end}+${
     ctx.instantiatedTypeParams?.map?.((param) => param.name)?.sort?.()?.join(
@@ -988,6 +1167,10 @@ export const tsTypeToSchemeable = async (
   const resolved: Schemeable = await resolve();
   Object.assign(ref, resolved);
   references?.delete?.(refKey);
+  
+  // Cache the result for future lookups
+  tsTypeCache.set(globalCacheKey, Promise.resolve(resolved));
+  
   return resolved;
 };
 
