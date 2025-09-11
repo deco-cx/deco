@@ -28,6 +28,16 @@ export type RequestContext = {
   /** Cancelation token used for early processing halt */
   signal?: AbortSignal;
   framework?: "fresh" | "htmx";
+  /** Request URL for context */
+  url?: string;
+  /** Request method */
+  method?: string;
+  /** Request pathname */
+  pathname?: string;
+  /** User agent */
+  userAgent?: string;
+  /** Correlation ID for tracing */
+  correlationId?: string;
 };
 
 export type WellKnownHostingPlatform =
