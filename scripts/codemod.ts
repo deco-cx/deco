@@ -10,7 +10,7 @@ import { join } from "@std/path/join";
 
 const DECO_PKGS = /(@deco\/.*)|(deco)|(\$live)/;
 const PKGS_TO_CHECK =
-  /(\$fresh)|(apps)|(deco-sites\/.*\/$)|(partytown)|(@deco\/warp)/;
+  /(apps)|(deco-sites\/.*\/$)|(partytown)|(@deco\/warp)/;
 
 const upgradeDecoVersion = upgradeDeps(DECO_PKGS, true);
 
@@ -29,6 +29,7 @@ const OVERRIDE_FRESH_PREACT = {
   "https://esm.sh/*preact-render-to-string@6.3.1":
     "npm:preact-render-to-string@6.4.2",
   "preact-render-to-string": "npm:preact-render-to-string@6.4.2",
+  "$fresh/": "https://deno.land/x/fresh@1.7.3/", //Prevent fresh 2
 };
 const newJsrPackages = [
   EXPORTS.DECO,
