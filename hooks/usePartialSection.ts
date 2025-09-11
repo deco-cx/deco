@@ -1,4 +1,5 @@
 import { type Options as SO, useSection } from "./useSection.ts";
+import { setPartialTriggerMode } from "../runtime/fresh/islands/DispatchAsyncRender.tsx";
 
 const CLIENT_NAV_ATTR = "f-client-nav";
 const PARTIAL_ATTR = "f-partial";
@@ -27,3 +28,5 @@ export const usePartialSection = <P>(
     props.mode || "replace"
   }`,
 });
+
+export { setPartialTriggerMode };
