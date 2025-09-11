@@ -4,6 +4,7 @@
 <p align="center">
   <strong>Git-based Visual CMS for Deno, &lt;/>htmx and Tailwind Apps.</strong>
 </p>
+
 <p align="center">
   <a href="https://deco.cx">deco.cx</a>
   ·
