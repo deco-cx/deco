@@ -4,7 +4,7 @@ export type PartialTriggerMode = "load" | "threshold";
 
 let triggerMode: "load" | "threshold" = "load";
 export const getPartialTriggerMode = () => triggerMode;
-export const setPartialTriggerMode = (newMode: PartialTriggerMode) => {
+export const setPartialTriggerMode = (newMode: PartialTriggerMode): void => {
   triggerMode = newMode;
 };
 
