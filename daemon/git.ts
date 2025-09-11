@@ -46,7 +46,7 @@ const getMergeBase = async () => {
 
   const tracking = isEnvOfRevert
     ? "main"
-    : status.tracking || defaultTrackingBranch; 
+    : status.tracking || defaultTrackingBranch;
 
   if (!current || !tracking) {
     throw new Error(
@@ -529,19 +529,36 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
         ? `https://github.com/deco-sites/${site}.git`
         : `git@github.com:deco-sites/${site}.git`);
 
-    const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME") ?? "";
-    const isEnvOfRevert = DECO_ENV_NAME.startsWith("a-revert");
-
     await git
       .clone(cloneUrl, ".", [
         "--depth",
         "1",
         "--single-branch",
         "--branch",
-        isEnvOfRevert ? DECO_ENV_NAME : DEFAULT_TRACKING_BRANCH,
+        DEFAULT_TRACKING_BRANCH,
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
+
+    const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME") ?? "";
+    const isEnvOfRevert = DECO_ENV_NAME.startsWith("a-revert");
+
+    // Get revert branch from repo
+    if (isEnvOfRevert) {
+      const branch = DECO_ENV_NAME;
+      try {
+        await git.fetch("origin", branch);
+        const remotes = await git.branch(["-r"]);
+        const remoteRef = `origin/${branch}`;
+        if (remotes.all.includes(remoteRef)) {
+          await git.checkoutBranch(branch, remoteRef);
+        } else {
+          console.warn(`Remote branch ${remoteRef} not found`);
+        }
+      } catch (e) {
+        console.warn(`Failed to checkout ${branch} from origin:`, e);
+      }
+    }
 
     // Copy build files if BUILD_FILES_DIR is specified
     if (BUILD_FILES_DIR) {
