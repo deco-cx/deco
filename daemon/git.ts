@@ -41,7 +41,12 @@ const getMergeBase = async () => {
   const defaultTrackingBranch = typeof DENO_DEPLOYMENT_ID === "string"
     ? DEFAULT_TRACKING_BRANCH
     : status.current;
-  const tracking = status.tracking || defaultTrackingBranch;
+
+  const isEnvOfRevert = Deno.env.get("DECO_ENV_NAME")?.startsWith("a-revert");
+
+  const tracking = isEnvOfRevert
+    ? "main"
+    : status.tracking || defaultTrackingBranch; 
 
   if (!current || !tracking) {
     throw new Error(
@@ -524,13 +529,16 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
         ? `https://github.com/deco-sites/${site}.git`
         : `git@github.com:deco-sites/${site}.git`);
 
+    const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME") ?? "";
+    const isEnvOfRevert = DECO_ENV_NAME.startsWith("a-revert");
+
     await git
       .clone(cloneUrl, ".", [
         "--depth",
         "1",
         "--single-branch",
         "--branch",
-        DEFAULT_TRACKING_BRANCH,
+        isEnvOfRevert ? DECO_ENV_NAME : DEFAULT_TRACKING_BRANCH,
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
