@@ -566,6 +566,8 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       try {
         await git.fetch("origin", branch);
         const remotes = await git.branch(["-r"]);
+        console.log(remotes)
+        console.log(remotes.all)
         const remoteRef = `origin/${branch}`;
         if (remotes.all.includes(remoteRef)) {
           await git.checkoutBranch(branch, remoteRef);
