@@ -30,7 +30,9 @@ export const preview = async <TAppManifest extends AppManifest = AppManifest>(
 ) => {
   const { resolve } = ctx;
   const url = new URL(previewUrl);
-  const block = addLocal(url.pathname.replace(/^\/live\/previews\//, ""));
+  const block = addLocal(
+    decodeURIComponent(url.pathname.replace(/^\/live\/previews\//, "")),
+  );
 
   const [params, pathname] = paramsFromUrl(url);
   const newUrl = new URL(req.url);
