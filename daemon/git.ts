@@ -42,11 +42,7 @@ const getMergeBase = async () => {
     ? DEFAULT_TRACKING_BRANCH
     : status.current;
 
-  const isEnvOfRevert = Deno.env.get("DECO_ENV_NAME")?.startsWith("a-revert");
-
-  const tracking = isEnvOfRevert
-    ? "main"
-    : status.tracking || defaultTrackingBranch;
+  const tracking = status.tracking || defaultTrackingBranch;
 
   if (!current || !tracking) {
     throw new Error(
@@ -539,26 +535,6 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
-
-    const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME") ?? "";
-    const isEnvOfRevert = DECO_ENV_NAME.startsWith("a-revert");
-
-    // Get revert branch from repo
-    if (isEnvOfRevert) {
-      const branch = DECO_ENV_NAME;
-      try {
-        await git.fetch("origin", branch);
-        const remotes = await git.branch(["-r"]);
-        const remoteRef = `origin/${branch}`;
-        if (remotes.all.includes(remoteRef)) {
-          await git.checkoutBranch(branch, remoteRef);
-        } else {
-          console.warn(`Remote branch ${remoteRef} not found`);
-        }
-      } catch (e) {
-        console.warn(`Failed to checkout ${branch} from origin:`, e);
-      }
-    }
 
     // Copy build files if BUILD_FILES_DIR is specified
     if (BUILD_FILES_DIR) {
