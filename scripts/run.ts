@@ -26,4 +26,5 @@ console.log(
 );
 clearTimeout(timeoutId);
 
-await import(`jsr:${packageName}@${versions.latest}/scripts/run`);
+// await import(`jsr:${packageName}@${versions.latest}/scripts/run`);
+await import('../daemon/main.ts');
