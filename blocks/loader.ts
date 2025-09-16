@@ -321,7 +321,16 @@ const wrapLoader = (
             new Response(jsonStringEncoded, {
               headers: headers,
             }),
-          ).catch((error) => logger.error(`loader error ${error}`));
+          ).catch((error) =>
+            logger.error(`loader error ${error}`, {
+              loader,
+              cacheKey: cacheKeyValue,
+              error: {
+                message: error.message,
+                stack: error.stack,
+              },
+            })
+          );
 
           return json;
         };
@@ -344,7 +353,14 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
 
             callHandlerAndCache().catch((error) =>
-              logger.error(`loader error ${error}`)
+              logger.error(`loader error ${error}`, {
+                loader,
+                cacheKey: cacheKeyValue,
+                error: {
+                  message: error.message,
+                  stack: error.stack,
+                },
+              })
             );
           } else {
             status = "hit";
