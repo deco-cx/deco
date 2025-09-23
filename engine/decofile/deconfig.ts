@@ -184,7 +184,6 @@ export const deconfigFs = (uri: string): Fs => {
           state[event.path] &&
           state[event.path].address !== event.metadata.address
         ) {
-          console.log(event.path);
           delete state[event.path];
         }
         yield { paths: [event.path] };
