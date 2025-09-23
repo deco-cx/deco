@@ -9,8 +9,7 @@ import { jsrLatest } from "@deco/codemod-toolkit/deno-json";
 import { join } from "@std/path/join";
 
 const DECO_PKGS = /(@deco\/.*)|(deco)|(\$live)/;
-const PKGS_TO_CHECK =
-  /(apps)|(deco-sites\/.*\/$)|(partytown)|(@deco\/warp)/;
+const PKGS_TO_CHECK = /(apps)|(deco-sites\/.*\/$)|(partytown)|(@deco\/warp)/;
 
 const upgradeDecoVersion = upgradeDeps(DECO_PKGS, true);
 
