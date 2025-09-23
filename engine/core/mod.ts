@@ -90,6 +90,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     this.resolveHints = hints ?? {};
     this.runOncePerRelease = oncePerRelease ?? {};
     this.release.onChange(() => {
+      dispatchEvent(new Event("deco:hmr"));
       this.runOncePerRelease = {};
       this.resolveHints = {};
     });

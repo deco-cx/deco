@@ -132,10 +132,12 @@ export const HTMX = <
 const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
 
 if (DECO_ENV_NAME) {
-  addEventListener("hmr", () => {
+  const onHMR = () => {
     hmrUniqueId = crypto.randomUUID();
     for (const socket of sockets.values()) {
       socket.send("refresh");
     }
-  });
+  };
+  addEventListener("hmr", onHMR);
+  addEventListener("deco:hmr", onHMR);
 }

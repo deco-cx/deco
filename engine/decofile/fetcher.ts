@@ -10,6 +10,7 @@ import {
   type RealtimeDecofileProvider,
   type VersionedDecofile,
 } from "./realtime.ts";
+import { deconfigFs } from "./deconfig.ts";
 
 const decofileCache: Record<string, Promise<DecofileProvider | undefined>> = {};
 
@@ -191,6 +192,12 @@ async function decofileLoader(
         assertAllowedAuthority();
         const content = await fetchFromHttp(url);
         return content ? fromHttpContent(content) : undefined;
+      }
+      case "deconfig:": {
+        return newFsFolderProviderFromPath(
+          "/.deco/blocks",
+          deconfigFs(endpointSpecifier),
+        );
       }
       default:
         return undefined;
