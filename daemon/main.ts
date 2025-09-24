@@ -283,15 +283,23 @@ if (VERBOSE) {
   app.use(logger());
 }
 
-app.get("/_healthcheck", () =>
-  new Response(denoJSON.version, {
+app.get("/_healthcheck", (c) => {
+  const timestamp = +(c.req.header("x-hc-retry-timestamp") ?? "0");
+  const attempt = +(c.req.header("x-hc-retry-attempt") ?? "0");
+  console.log("healthcheck received", {
+    timestamp: new Date(timestamp).toISOString(),
+    attempt,
+  });
+
+  return new Response(denoJSON.version, {
     status: 200,
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET",
       "Access-Control-Allow-Headers": "Content-Type",
     },
-  }));
+  });
+});
 // idle should run even when branch is not active
 app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
 // k8s liveness probe
