@@ -122,11 +122,6 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
   try {
     const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
 
-    yield {
-      type: "fs-snapshot",
-      detail: { timestamp: Date.now(), status: await git.status() },
-    };
-
     for await (const entry of walker) {
       if (shouldIgnore(entry.path)) {
         continue;
