@@ -60,7 +60,10 @@ const etagFor = async (lazySchema: LazySchema) =>
   `${await lazySchema.revision}@${schemaVersion}`;
 
 const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
-  while (!signal.aborted) {
+  while (true) {
+    if (signal?.aborted) {
+      break;
+    }
     const context = Context.active();
     const lazySchema = lazySchemaFor(context);
     const etag = await etagFor(lazySchema);

@@ -253,7 +253,7 @@ const createDeps = (): MiddlewareHandler => {
     });
 
     watch().catch(console.error);
-    watchMeta().catch(console.error);
+    watchMetaPromise = watchMeta(watchMetaController.signal).catch(console.error);
     watchFS().catch(console.error);
 
     logs.push({
@@ -377,3 +377,20 @@ Deno.serve({
     }
   },
 }, app.fetch);
+
+const watchMetaController = new AbortController();
+let watchMetaPromise: Promise<void> | undefined;
+
+// Use string literals for signals as per Deno.addSignalListener docs
+["SIGINT", "SIGTERM"].forEach((sig) => {
+  try {
+    Deno.addSignalListener(sig, async () => {
+      console.log(`Received ${sig}, shutting down...`);
+      watchMetaController.abort();
+      if (watchMetaPromise) {
+        await watchMetaPromise;
+      }
+      Deno.exit(0);
+    });
+  } catch {}
+});
