@@ -294,10 +294,11 @@ app.get("/_healthcheck", () =>
   }));
 // idle should run even when branch is not active
 app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
-// Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-app.use(createDeps());
 // k8s liveness probe
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
+
+// Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
+app.use(createDeps());
 app.use(activityMonitor);
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
