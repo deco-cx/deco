@@ -54,6 +54,7 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
   }
 };
 const denoFs: Fs = {
+  exists,
   readTextFile: Deno.readTextFile,
   cwd: Deno.cwd,
   readDir: async function* (path: string) {
@@ -109,80 +110,87 @@ export const newFsFolderProviderFromPath = (
   fs: Fs = denoFs,
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
-  let decofile: Promise<VersionedDecofile> = exists(fullPath, {
-    isDirectory: true,
-    isReadable: true,
-  }).then(
-    async () => {
-      const decofile: Decofile = {};
-      const files = fs.readDir(fullPath);
-      const promises: Promise<unknown>[] = [];
-      for await (const file of files) {
-        promises.push(
-          fs.readTextFile(join(fullPath, file))
-            .then(JSON.parse)
-            .then((content) => {
-              if (content !== null) {
-                decofile[parseBlockId(file)] = content;
-              }
-            })
-            .catch(() => null),
-        );
-      }
-      await Promise.all(promises);
-      return {
-        state: decofile,
-        revision: Context.active().isPreview
-          ? `${Date.now()}`
-          : Context.active().deploymentId ?? `${Date.now()}`,
-      };
-    },
-  ).then((result) => {
-    (async () => {
-      const limiter = new Mutex();
-      const watcher = fs.watchFs(fullPath);
-      let filesChangedBatch: string[] = [];
-      const updateState = debounce(async () => {
-        using _lock = await limiter.acquire();
 
-        // for each filesChangedBatch read them all
-        // and update the state
-        // make filesChangedBatch empty
-        if (filesChangedBatch.length === 0) {
-          return;
-        }
-        const copied = [...new Set(filesChangedBatch)];
-        filesChangedBatch.length = 0;
-        filesChangedBatch = [];
-        const { state: prevState } = await decofile;
-        const changedBlocks: Decofile = {};
-        await Promise.all(
-          copied.map(async (filePath) => {
-            const content = await fs.readTextFile(filePath)
+  let decofile: Promise<VersionedDecofile> | null = null;
+  const getDecofile = () => {
+    return decofile ??= fs.exists(fullPath, {
+      isDirectory: true,
+      isReadable: true,
+    }).then(
+      async () => {
+        const decofile: Decofile = {};
+        const files = fs.readDir(fullPath);
+        const promises: Promise<unknown>[] = [];
+        for await (const file of files) {
+          promises.push(
+            fs.readTextFile(join(fullPath, file))
               .then(JSON.parse)
-              .catch(() => null);
-            changedBlocks[parseBlockId(basename(filePath))] = content;
-          }),
-        );
-        decofile = Promise.resolve({
-          state: { ...prevState, ...changedBlocks },
-          revision: `${Date.now()}`,
-        });
-        for (const cb of onChangeCbs) {
-          cb();
+              .then((content) => {
+                if (content !== null) {
+                  decofile[parseBlockId(file)] = content;
+                }
+              })
+              .catch(() => null),
+          );
         }
-      }, 300);
-      for await (const event of watcher) {
-        filesChangedBatch.push(...event.paths);
-        updateState();
-      }
-    })();
+        await Promise.all(promises);
+        return {
+          state: decofile,
+          revision: Context.active().isPreview
+            ? `${Date.now()}`
+            : Context.active().deploymentId ?? `${Date.now()}`,
+        };
+      },
+    ).then((result) => {
+      (async () => {
+        const limiter = new Mutex();
+        const watcher = fs.watchFs(fullPath);
+        let filesChangedBatch: string[] = [];
+        const updateState = debounce(async () => {
+          using _lock = await limiter.acquire();
 
-    return result;
-  });
+          // for each filesChangedBatch read them all
+          // and update the state
+          // make filesChangedBatch empty
+          if (filesChangedBatch.length === 0) {
+            return;
+          }
+          const copied = [...new Set(filesChangedBatch)];
+          filesChangedBatch.length = 0;
+          filesChangedBatch = [];
+          const { state: prevState } = await getDecofile();
+          const changedBlocks: Decofile = {};
+          await Promise.all(
+            copied.map(async (filePath) => {
+              const content = await fs.readTextFile(filePath)
+                .then(JSON.parse)
+                .catch(() => null);
+              changedBlocks[parseBlockId(basename(filePath))] = content;
+            }),
+          );
+          decofile = Promise.resolve({
+            state: { ...prevState, ...changedBlocks },
+            revision: `${Date.now()}`,
+          });
+          for (const cb of onChangeCbs) {
+            cb();
+          }
+        }, 300);
+        for await (const event of watcher) {
+          filesChangedBatch.push(...event.paths);
+          updateState();
+        }
+      })();
+
+      return result;
+    }).catch((err) => {
+      decofile = null;
+      throw err;
+    });
+  };
 
   const state = async (_options: ReadOptions | undefined) => {
-    return await decofile.then((r) => r.state);
+    return await getDecofile().then((r) => r.state);
   };
 
   return {
@@ -203,11 +211,15 @@ export const newFsFolderProviderFromPath = (
     dispose: () => {
       fs[Symbol.dispose]?.();
     },
-    revision: () => decofile.then((r) => r.revision),
+    revision: () => getDecofile().then((r) => r.revision),
   };
 };
 
 export interface Fs extends Partial<Disposable> {
+  exists: (
+    path: string,
+    options?: { isDirectory?: boolean; isReadable?: boolean },
+  ) => Promise<boolean>;
   readTextFile: (path: string) => Promise<string>;
   cwd: () => string;
   readDir: (

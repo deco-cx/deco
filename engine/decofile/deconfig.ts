@@ -158,6 +158,7 @@ export const deconfigFs = (uri: string): Fs => {
   const { client, watcher } = createClient(options);
   const state: Record<string, { content: string; address: string }> = {};
   return {
+    exists: () => Promise.resolve(true),
     cwd: () => "/",
     ensureFile: () => Promise.resolve(),
     readDir: async function* (path: string) {
