@@ -126,9 +126,9 @@ const createClient = (
       throw new Error(response.statusText);
     }
     const responseJson = await response.json() as {
-      structuredContent: unknown;
+      data: unknown;
     };
-    return responseJson.structuredContent;
+    return responseJson.data;
   };
   return {
     client: new Proxy<DeconfigClient>({} as DeconfigClient, {
