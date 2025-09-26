@@ -6,6 +6,8 @@ import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
 import { fromEndpoint } from "./fetcher.ts";
 import { newFsProvider } from "./fs.ts";
+import { Deconfig } from "./deconfig.ts";
+import { PooledDecofileProvider } from "./pool.ts";
 
 export interface SelectionConfig {
   audiences: unknown[];
@@ -103,19 +105,19 @@ const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
  */
 export const getProvider = async (
   localStorageOnly = false,
+  decofilePath = DECOFILE_PATH_FROM_ENV,
+  pooled = true,
 ): Promise<DecofileProvider> => {
-  const providers = [];
+  const providers: DecofileProvider[] = [];
 
   if (Deno.env.has("USE_LOCAL_STORAGE_ONLY") || localStorageOnly) {
     return newFsProvider();
   }
 
-  const isDeconfig = DECOFILE_PATH_FROM_ENV?.startsWith("deconfig://");
-
   const endpoint = await blocksFolderExistsPromise &&
-      !isDeconfig
+      !Deconfig.canParse(decofilePath)
     ? `folder://${BLOCKS_FOLDER}`
-    : DECOFILE_PATH_FROM_ENV;
+    : decofilePath;
   if (endpoint) {
     console.info(
       colors.brightCyan(
@@ -124,7 +126,11 @@ export const getProvider = async (
         } has been loaded from ${endpoint}`,
       ),
     );
-    providers.push(fromEndpoint(endpoint));
+    providers.push(
+      pooled
+        ? new PooledDecofileProvider(fromEndpoint(endpoint))
+        : fromEndpoint(endpoint),
+    );
   }
 
   if (Deno.env.has("USE_LOCAL_STORAGE")) {
