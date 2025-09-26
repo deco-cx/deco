@@ -131,7 +131,6 @@ export class PooledDecofileProvider implements DecofileProvider {
   private pool: ProviderPool;
   private fallbackProvider: Promise<DecofileProvider>;
   private callbacks: OnChangeCallback[] = [];
-  private fallbackCallbacksRegistered = false;
 
   constructor(
     fallbackProvider?: DecofileProvider | Promise<DecofileProvider>,
@@ -152,21 +151,13 @@ export class PooledDecofileProvider implements DecofileProvider {
 
     // If no decofile in context, use fallback provider
     if (decofilePath === undefined) {
-      const provider = await this.fallbackProvider;
-
-      // Register callbacks on fallback provider only once
-      if (!this.fallbackCallbacksRegistered) {
-        this.callbacks.forEach((callback) => provider.onChange(callback));
-        this.fallbackCallbacksRegistered = true;
-      }
-
-      return provider;
+      return await this.fallbackProvider;
     }
 
     // Use pooled provider for specific decofile paths
     const { provider, isNew } = await this.pool.get(decofilePath);
 
-    // Only register callbacks on new providers
+    // Register all existing callbacks on new providers
     if (isNew) {
       this.callbacks.forEach((callback) => provider.onChange(callback));
     }
@@ -188,10 +179,8 @@ export class PooledDecofileProvider implements DecofileProvider {
     // Store callback for future providers
     this.callbacks.push(callback);
 
-    // Register on fallback provider if callbacks haven't been registered yet
-    if (!this.fallbackCallbacksRegistered) {
-      this.fallbackProvider.then((provider) => provider.onChange(callback));
-    }
+    // Always register on fallback provider
+    this.fallbackProvider.then((provider) => provider.onChange(callback));
 
     // Register on all existing pooled providers
     this.pool.getAllProviders().then((providers) => {
