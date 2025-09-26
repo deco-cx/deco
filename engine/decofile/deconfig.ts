@@ -4,6 +4,16 @@ export const Deconfig = {
   canParse: (uri?: string) => {
     return uri?.startsWith("deconfig://");
   },
+  build: (
+    project: string,
+    branch: string,
+    token?: string,
+    server?: string | null,
+  ) => {
+    return `deconfig://${server ?? "api.decocms.com"}/${project}@${branch}:${
+      token ?? ""
+    }`;
+  },
   parseUri: (uri: string) => {
     // the format is deconfig://<project-url>@<branch>:<token>
     const [, url] = uri.split("://");
@@ -107,8 +117,10 @@ const createClient = (
         body: JSON.stringify(args),
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${options.token}`,
           "x-deco-branch": options.branch ?? "main",
+          ...(options.token
+            ? { Authorization: `Bearer ${options.token}` }
+            : {}),
         },
       },
     );

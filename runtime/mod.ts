@@ -11,9 +11,17 @@ import {
   type DecofileProvider,
   getProvider,
 } from "../engine/decofile/provider.ts";
-import { siteNameFromEnv } from "../engine/manifest/manifest.ts";
+import {
+  siteNameFromEnv,
+  teamNameFromEnv,
+} from "../engine/manifest/manifest.ts";
 import { randomSiteName } from "../engine/manifest/utils.ts";
-import { newContext, type PreactComponent, type Resolvable } from "../mod.ts";
+import {
+  newContext,
+  type PreactComponent,
+  RequestContext,
+  type Resolvable,
+} from "../mod.ts";
 import { observe } from "../observability/observe.ts";
 import { tracer } from "../observability/otel/config.ts";
 import {
@@ -80,6 +88,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     opts?: DecoOptions<TAppManifest>,
   ): Promise<Deco<TAppManifest>> {
     const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
+    const team = teamNameFromEnv();
     const decofile = opts?.decofile ?? await getProvider();
     const manifest = opts?.manifest ?? (await import(
       toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href
@@ -93,6 +102,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
         site,
         opts?.namespace,
         opts?.visibilityOverrides,
+        team,
       )
     );
     Context.setDefault(decoContext);
@@ -113,7 +123,10 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       | { RENDER_FN?: ContextRenderer | undefined; GLOBALS?: unknown }
       | undefined,
   ) => Response | Promise<Response> {
-    return this._handler ??= handlerFor(this);
+    const handler = this._handler ??= handlerFor(this);
+    return (req, bindings) => {
+      return RequestContext.bind({ current: req }, handler)(req, bindings);
+    };
   }
   get fetch(): (req: Request) => Response | Promise<Response> {
     return (req: Request) => this.handler(req);

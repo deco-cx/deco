@@ -200,11 +200,14 @@ export const newFsFolderProviderFromPath = (
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
     },
+    dispose: () => {
+      fs[Symbol.dispose]?.();
+    },
     revision: () => decofile.then((r) => r.revision),
   };
 };
 
-export interface Fs {
+export interface Fs extends Partial<Disposable> {
   readTextFile: (path: string) => Promise<string>;
   cwd: () => string;
   readDir: (

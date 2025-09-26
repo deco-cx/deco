@@ -30,7 +30,7 @@ import {
   type Resolver,
   type ResolverMap,
 } from "../core/resolver.ts";
-import { ENV_SITE_NAME } from "../decofile/constants.ts";
+import { ENV_SITE_NAME, ENV_TEAM_NAME } from "../decofile/constants.ts";
 import { DECO_FILE_NAME, newFsProvider } from "../decofile/fs.ts";
 import { type DecofileProvider, getProvider } from "../decofile/provider.ts";
 import { integrityCheck } from "../integrity.ts";
@@ -103,6 +103,8 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
     throw new DanglingReference(curr);
   };
 };
+
+export const teamNameFromEnv = () => Deno.env.get(ENV_TEAM_NAME);
 
 export const siteNameFromEnv = () => Deno.env.get(ENV_SITE_NAME);
 export const siteName = (): string | undefined => {
@@ -410,10 +412,12 @@ export const newContext = <
   site: string | undefined = undefined,
   namespace: string = "site",
   visibilityOverrides?: DecoContext<T>["visibilityOverrides"],
+  team?: string,
 ): Promise<DecoContext<T>> => {
   const currentContext = Context.active<T>();
   const ctx: DecoContext<T> = {
     ...currentContext,
+    team,
     site: site ?? currentContext.site,
     namespace: namespace ?? currentContext.namespace,
     instance: {
