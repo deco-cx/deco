@@ -55,7 +55,6 @@ export interface DeconfigClient {
   ) => Promise<
     { files: Record<string, { content?: string; address: string }> }
   >;
-  PUT_FILE: (options: PutFileOptions) => Promise<void>;
 }
 
 export interface DeconfigClientOptions {
@@ -112,7 +111,7 @@ const createClient = (
   const token = options.token ?? Deno.env.get("DECO_DECONFIG_TOKEN");
   const callTool = async (tool: string, args: Record<string, unknown>) => {
     const response = await fetch(
-      `${options.projectUrl}/i:deconfig-management/tools/call/${tool}`,
+      `${options.projectUrl}/tools/call/${tool}`,
       {
         method: "POST",
         body: JSON.stringify(args),
@@ -185,8 +184,8 @@ export const deconfigFs = (uri: string): Fs => {
       });
       return content;
     },
-    writeTextFile: async (path: string, content: string) => {
-      await client.PUT_FILE({ path, content, branch: options.branch });
+    writeTextFile: () => {
+      throw new Error("Not implemented");
     },
     watchFs: async function* (path: string) {
       for await (
