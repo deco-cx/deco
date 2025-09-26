@@ -109,6 +109,7 @@ const createClient = (
     options: { pathFilter: string; branch?: string },
   ) => AsyncIterable<{ path: string; metadata: { address: string } }>;
 } => {
+  const token = options.token ?? Deno.env.get("DECO_DECONFIG_TOKEN");
   const callTool = async (tool: string, args: Record<string, unknown>) => {
     const response = await fetch(
       `${options.projectUrl}/i:deconfig-management/tools/call/${tool}`,
@@ -118,9 +119,7 @@ const createClient = (
         headers: {
           "Content-Type": "application/json",
           "x-deco-branch": options.branch ?? "main",
-          ...(options.token
-            ? { Authorization: `Bearer ${options.token}` }
-            : {}),
+          ...(token ? { Authorization: `Bearer ${options.token}` } : {}),
         },
       },
     );
