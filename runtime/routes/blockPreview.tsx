@@ -40,6 +40,7 @@ export const handler = createHandler(async (
   const { req: { raw: req }, var: state } = ctx;
   if (req.headers.get("upgrade") != "websocket") {
     const props = await getPropsFromRequest(req);
+    console.log("props", props);
     return await render(req.url, await props, req, ctx);
   }
   const { socket, response } = Deno.upgradeWebSocket(req);

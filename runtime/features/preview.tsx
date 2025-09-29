@@ -34,6 +34,7 @@ export const preview = async <TAppManifest extends AppManifest = AppManifest>(
     decodeURIComponent(url.pathname.replace(/^\/live\/previews\//, "")),
   );
 
+  console.log(block);
   const [params, pathname] = paramsFromUrl(url);
   const newUrl = new URL(req.url);
   if (pathname) {

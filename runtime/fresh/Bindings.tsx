@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import { Head, Partial } from "$fresh/runtime.ts";
+import { Head, Partial } from "fresh/runtime";
 import type { Framework } from "@deco/deco";
 import { usePartialSection } from "@deco/deco/hooks";
 import DispatchAsyncRender, {

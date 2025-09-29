@@ -1,19 +1,25 @@
-import { type Workflow, WorkflowContext } from "../../blocks/workflow.ts";
+import { type Workflow } from "../../blocks/workflow.ts";
+// import { type Workflow, WorkflowContext } from "../../blocks/workflow.ts";
 import { initOnce } from "../../commons/workflows/initialize.ts";
 import {
   type WorkflowMetadata,
   WorkflowQS,
 } from "../../commons/workflows/types.ts";
 import {
-  arrToStream,
+  // arrToStream,
   type Command,
   type HttpRunRequest,
   type Metadata,
-  workflowRemoteRunner,
-  workflowWebSocketHandler,
+  // workflowRemoteRunner,
+  // workflowWebSocketHandler,
 } from "../../deps.ts";
 import type { AppManifest, DecoSiteState, DecoState } from "../../types.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
+
+const throwError = () => {throw new Error("Durable is not supported")}
+const arrToStream = throwError
+const workflowRemoteRunner = throwError
+const workflowWebSocketHandler = throwError
 
 export type Props = HttpRunRequest<
   unknown[],
@@ -32,7 +38,10 @@ async function runWorkflow(
   const workflow = metadata!.workflow;
   const handler = workflowRemoteRunner(
     workflow,
-    (execution) => new WorkflowContext(ctx, execution),
+    // (execution) => new WorkflowContext(ctx, execution),
+    (execution) => {
+      throw new Error("WorkflowContext is not supported");
+    },
   );
   const commands = arrToStream(props.results);
   await handler({ ...props, commands });
@@ -65,11 +74,13 @@ export const handler = createHandler(async (
     const workflowFn = await ctx.var.resolve(workflow);
     const handler = workflowWebSocketHandler(
       workflowFn,
-      (execution) =>
-        new WorkflowContext(
-          ctx.var,
-          execution,
-        ),
+      (execution) => {
+        throw new Error("WorkflowContext is not supported");
+      },
+      // new WorkflowContext(
+      //   ctx.var,
+      //   execution,
+      // ),
     );
     // deno-lint-ignore no-explicit-any
     return handler(req, ctx as any);

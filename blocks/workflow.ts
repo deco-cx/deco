@@ -4,7 +4,7 @@ import {
   type LocalActivityCommand,
   type Metadata,
   type Workflow as DurableWorkflow,
-  WorkflowContext as DurableWorkflowContext,
+  // WorkflowContext as DurableWorkflowContext,
   type WorkflowExecution,
 } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
@@ -30,59 +30,59 @@ import {
 export interface WorkflowMetadata extends Metadata {
   defaultInvokeHeaders?: Record<string, string>;
 }
-export class WorkflowContext<
-  TManifest extends AppManifest = AppManifest,
-  TMetadata extends WorkflowMetadata = WorkflowMetadata,
-> extends DurableWorkflowContext<TMetadata> {
-  constructor(
-    public state: DecoState<unknown, DecoSiteState, TManifest>,
-    execution: WorkflowExecution<Arg, unknown, TMetadata>,
-  ) {
-    super(execution);
-  }
+// export class WorkflowContext<
+//   TManifest extends AppManifest = AppManifest,
+//   TMetadata extends WorkflowMetadata = WorkflowMetadata,
+// > extends DurableWorkflowContext<TMetadata> {
+//   constructor(
+//     public state: DecoState<unknown, DecoSiteState, TManifest>,
+//     execution: WorkflowExecution<Arg, unknown, TMetadata>,
+//   ) {
+//     super(execution);
+//   }
 
-  public invoke<
-    TInvocableKey extends
-      | AvailableFunctions<TManifest>
-      | AvailableLoaders<TManifest>
-      | AvailableActions<TManifest>,
-    TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
-      ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
-      : TInvocableKey extends AvailableActions<TManifest>
-        ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
-      : TInvocableKey extends AvailableLoaders<TManifest>
-        ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
-      : never,
-    TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
-  >(
-    key: TInvocableKey,
-    props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-  ): LocalActivityCommand<
-    InvokeResult<
-      TPayload,
-      TManifest
-    >,
-    [Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]]
-  > {
-    const ctx = this.state;
-    const fn = function (
-      props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
-    ): Promise<
-      InvokeResult<
-        TPayload,
-        TManifest
-      >
-    > {
-      return ctx.invoke(key, props);
-    };
-    Object.defineProperty(fn, "name", { value: key });
-    return {
-      name: "local_activity",
-      fn,
-      args: [props],
-    };
-  }
-}
+//   public invoke<
+//     TInvocableKey extends
+//       | AvailableFunctions<TManifest>
+//       | AvailableLoaders<TManifest>
+//       | AvailableActions<TManifest>,
+//     TFuncSelector extends TInvocableKey extends AvailableFunctions<TManifest>
+//       ? DotNestedKeys<ManifestFunction<TManifest, TInvocableKey>["return"]>
+//       : TInvocableKey extends AvailableActions<TManifest>
+//         ? DotNestedKeys<ManifestAction<TManifest, TInvocableKey>["return"]>
+//       : TInvocableKey extends AvailableLoaders<TManifest>
+//         ? DotNestedKeys<ManifestLoader<TManifest, TInvocableKey>["return"]>
+//       : never,
+//     TPayload extends Invoke<TManifest, TInvocableKey, TFuncSelector>,
+//   >(
+//     key: TInvocableKey,
+//     props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+//   ): LocalActivityCommand<
+//     InvokeResult<
+//       TPayload,
+//       TManifest
+//     >,
+//     [Invoke<TManifest, TInvocableKey, TFuncSelector>["props"]]
+//   > {
+//     const ctx = this.state;
+//     const fn = function (
+//       props?: Invoke<TManifest, TInvocableKey, TFuncSelector>["props"],
+//     ): Promise<
+//       InvokeResult<
+//         TPayload,
+//         TManifest
+//       >
+//     > {
+//       return ctx.invoke(key, props);
+//     };
+//     Object.defineProperty(fn, "name", { value: key });
+//     return {
+//       name: "local_activity",
+//       fn,
+//       args: [props],
+//     };
+//   }
+// }
 
 export type Workflow = InstanceOf<typeof workflowBlock, "#/root/workflows">;
 

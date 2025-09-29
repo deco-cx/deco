@@ -1,13 +1,21 @@
 import { Context } from "../../deco.ts";
 import {
   type Arg,
-  cancel as durableCancel,
-  get as durableGet,
-  history as durableHistory,
-  init,
-  signal as durableSignal,
-  start as durableStart,
+  // cancel as durableCancel,
+  // get as durableGet,
+  // history as durableHistory,
+  // init,
+  // signal as durableSignal,
+  // start as durableStart,
 } from "../../deps.ts";
+
+const throwError = () => {throw new Error("Durable is not supported")}
+const durableCancel = throwError
+const durableGet = throwError
+const durableHistory = throwError
+const init = throwError
+const durableSignal = throwError
+const durableStart = throwError
 
 const initializeOnceWhen = <TArgs extends Arg = Arg, TResult = unknown>(
   f: (...args: [...TArgs]) => TResult,

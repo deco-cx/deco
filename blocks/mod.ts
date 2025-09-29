@@ -1,4 +1,4 @@
-export type { WorkflowGen } from "@deco/durable";
+// export type { WorkflowGen } from "@deco/durable";
 export {
   type SectionContext,
   SectionContext as SectionCtx,
@@ -28,5 +28,5 @@ export {
   createBagKey,
 } from "./utils.tsx";
 export type { FnProps } from "./utils.tsx";
-export { WorkflowContext } from "./workflow.ts";
+// export { WorkflowContext } from "./workflow.ts";
 export type { Workflow, WorkflowFn } from "./workflow.ts";

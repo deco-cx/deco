@@ -2,7 +2,7 @@ export type {
   AppMiddlewareContext,
   ManifestOf,
   MatchContext,
-  WorkflowContext,
+  // WorkflowContext,
 } from "./blocks/mod.ts";
 export * from "./commons/workflows/mod.ts";
 export * from "./commons/workflows/types.ts";

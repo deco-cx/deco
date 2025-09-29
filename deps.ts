@@ -1,4 +1,4 @@
-export * from "@deco/durable";
+// export * from "@deco/durable";
 export { crypto } from "@std/crypto";
 export { decodeHex, encodeHex } from "@std/encoding";
 export { getCookies, getSetCookies, setCookie } from "@std/http";
