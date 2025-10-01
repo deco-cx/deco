@@ -187,11 +187,6 @@ export const RequestContext: RequestContextBinder = {
       return undefined;
     }
     const parsed = new URL(url);
-    const decofile = parsed.searchParams.get("__decofile");
-    if (decofile) {
-      return decofile;
-    }
-
     const deconfigServer = request.headers.get("x-deco-server");
     const deconfigBranch = request.headers.get("x-deco-branch") ??
       parsed.searchParams.get("branch");
