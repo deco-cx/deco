@@ -2,12 +2,13 @@ import "./utils/patched_fetch.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { ImportMap } from "./blocks/app.ts";
+import type { GateKeeperAccess } from "./blocks/utils.tsx";
+import type { BlockKeys } from "./engine/block.ts";
 import type { ReleaseResolver } from "./engine/core/mod.ts";
+import { Deconfig } from "./engine/decofile/deconfig.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
 import type { AppManifest } from "./types.ts";
 import { randId } from "./utils/rand.ts";
-import type { BlockKeys } from "./engine/block.ts";
-import type { GateKeeperAccess } from "./blocks/utils.tsx";
 
 export interface DecoRuntimeState<
   TAppManifest extends AppManifest = AppManifest,
@@ -28,6 +29,7 @@ export type RequestContext = {
   /** Cancelation token used for early processing halt */
   signal?: AbortSignal;
   framework?: "fresh" | "htmx";
+  current?: Request;
 };
 
 export type WellKnownHostingPlatform =
@@ -50,6 +52,7 @@ export interface DecoContext<TAppManifest extends AppManifest = AppManifest> {
   decodMode?: DecodMode;
   platform: WellKnownHostingPlatform;
   site: string;
+  team?: string;
   siteId: number;
   loginUrl?: string;
   base?: string;
@@ -73,6 +76,7 @@ export interface RequestContextBinder {
     f: (...args: TArgs) => R,
   ) => (...args: TArgs) => R;
   readonly signal: AbortSignal | undefined;
+  readonly decofile: string | undefined;
   readonly framework: "fresh" | "htmx";
 }
 
@@ -156,7 +160,11 @@ export const RequestContext: RequestContextBinder = {
     request: RequestContext,
     f: (...args: TArgs) => R,
   ): (...args: TArgs) => R => {
-    return Context.bind({ ...Context.active(), request }, f);
+    const active = Context.active();
+    return Context.bind({
+      ...active,
+      request: { ...active.request, ...request },
+    }, f);
   },
 
   /**
@@ -166,6 +174,37 @@ export const RequestContext: RequestContextBinder = {
    */
   get signal() {
     return Context.active().request?.signal;
+  },
+
+  get decofile(): string | undefined {
+    const ctx = Context.active();
+    const request = ctx.request?.current;
+    if (!request) {
+      return undefined;
+    }
+    const url = request?.url;
+    if (!url || !URL.canParse(url)) {
+      return undefined;
+    }
+    const parsed = new URL(url);
+    const deconfigServer = request.headers.get("x-deco-server");
+    const deconfigBranch = request.headers.get("x-deco-branch") ??
+      parsed.searchParams.get("branch");
+    const deconfigTeam = ctx.team ?? request.headers.get("x-deco-team") ??
+      parsed.searchParams.get("team");
+    const deconfigToken = request.headers.get("x-deco-token") ??
+      parsed.searchParams.get("token") ?? undefined;
+
+    if (!deconfigBranch || !deconfigTeam) {
+      return undefined;
+    }
+
+    return Deconfig.build(
+      `${deconfigTeam}/${ctx.site}`,
+      deconfigBranch,
+      deconfigToken,
+      deconfigServer,
+    );
   },
 
   /**

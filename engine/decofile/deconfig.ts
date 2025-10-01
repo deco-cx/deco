@@ -4,6 +4,16 @@ export const Deconfig = {
   canParse: (uri?: string) => {
     return uri?.startsWith("deconfig://");
   },
+  build: (
+    project: string,
+    branch: string,
+    token?: string,
+    server?: string | null,
+  ) => {
+    return `deconfig://${server ?? "api.decocms.com"}/${project}@${branch}:${
+      token ?? ""
+    }`;
+  },
   parseUri: (uri: string) => {
     // the format is deconfig://<project-url>@<branch>:<token>
     const [, url] = uri.split("://");
@@ -45,7 +55,6 @@ export interface DeconfigClient {
   ) => Promise<
     { files: Record<string, { content?: string; address: string }> }
   >;
-  PUT_FILE: (options: PutFileOptions) => Promise<void>;
 }
 
 export interface DeconfigClientOptions {
@@ -99,16 +108,17 @@ const createClient = (
     options: { pathFilter: string; branch?: string },
   ) => AsyncIterable<{ path: string; metadata: { address: string } }>;
 } => {
+  const token = options.token ?? Deno.env.get("DECO_DECONFIG_TOKEN");
   const callTool = async (tool: string, args: Record<string, unknown>) => {
     const response = await fetch(
-      `${options.projectUrl}/i:deconfig-management/tools/call/${tool}`,
+      `${options.projectUrl}/tools/call/${tool}`,
       {
         method: "POST",
         body: JSON.stringify(args),
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${options.token}`,
           "x-deco-branch": options.branch ?? "main",
+          ...(token ? { Authorization: `Bearer ${options.token}` } : {}),
         },
       },
     );
@@ -116,9 +126,9 @@ const createClient = (
       throw new Error(response.statusText);
     }
     const responseJson = await response.json() as {
-      structuredContent: unknown;
+      data: unknown;
     };
-    return responseJson.structuredContent;
+    return responseJson.data;
   };
   return {
     client: new Proxy<DeconfigClient>({} as DeconfigClient, {
@@ -147,6 +157,7 @@ export const deconfigFs = (uri: string): Fs => {
   const { client, watcher } = createClient(options);
   const state: Record<string, { content: string; address: string }> = {};
   return {
+    exists: () => Promise.resolve(true),
     cwd: () => "/",
     ensureFile: () => Promise.resolve(),
     readDir: async function* (path: string) {
@@ -173,8 +184,8 @@ export const deconfigFs = (uri: string): Fs => {
       });
       return content;
     },
-    writeTextFile: async (path: string, content: string) => {
-      await client.PUT_FILE({ path, content, branch: options.branch });
+    writeTextFile: () => {
+      throw new Error("Not implemented");
     },
     watchFs: async function* (path: string) {
       for await (
