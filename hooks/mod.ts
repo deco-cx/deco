@@ -8,3 +8,4 @@ export {
   addBlockedQS as unstable_blockUseSectionHrefQueryStrings,
   useSection,
 } from "./useSection.ts";
+export { useSetEarlyHints } from "./useSetEarlyHints.ts";
