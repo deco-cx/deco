@@ -13,42 +13,24 @@ async function findTypeDefinitionFile(
   const url = new URL(jsPath);
 
   // Only process file:// protocol paths in node_modules
-  if (url.protocol !== "file:" || !jsPath.includes("node_modules")) {
+  if (
+    url.protocol !== "file:" || !jsPath.includes("node_modules") ||
+    jsPath.endsWith(".js")
+  ) {
     return undefined;
   }
 
   const pathStr = url.pathname;
 
   // Try common .d.ts file patterns
-  const candidates: string[] = [];
+  const candidate: string = pathStr.replace(/\.js$/, ".d.ts");
 
-  // 1. Replace .mjs with .d.mts (for ESM type definitions)
-  if (pathStr.endsWith(".mjs")) {
-    candidates.push(pathStr.replace(/\.mjs$/, ".d.mts"));
-    candidates.push(pathStr.replace(/\.mjs$/, ".d.ts"));
-  }
-
-  // 2. Replace .js with .d.ts
-  if (pathStr.endsWith(".js")) {
-    candidates.push(pathStr.replace(/\.js$/, ".d.ts"));
-  }
-
-  // 3. Replace .cjs with .d.cts (for CommonJS type definitions)
-  if (pathStr.endsWith(".cjs")) {
-    candidates.push(pathStr.replace(/\.cjs$/, ".d.cts"));
-    candidates.push(pathStr.replace(/\.cjs$/, ".d.ts"));
-  }
-
-  // Try each candidate
-  for (const candidate of candidates) {
-    try {
-      const fileUrl = new URL(`file://${candidate}`);
-      await Deno.stat(fileUrl);
-      return fileUrl.href;
-    } catch {
-      // File doesn't exist, try next candidate
-      continue;
-    }
+  try {
+    const fileUrl = new URL(`file://${candidate}`);
+    await Deno.stat(fileUrl);
+    return fileUrl.href;
+  } catch {
+    // File doesn't exist, try next candidate
   }
 
   return undefined;
@@ -79,15 +61,15 @@ async function resolveFileExtension(
 
   // Extensions to try, in order of preference
   const extensions = [
-    ".d.ts",   // TypeScript definitions (highest priority for type resolution)
-    ".d.mts",  // ESM TypeScript definitions
-    ".d.cts",  // CommonJS TypeScript definitions
-    ".ts",     // TypeScript source
-    ".tsx",    // TypeScript JSX
-    ".mjs",    // ESM JavaScript
-    ".js",     // JavaScript
-    ".cjs",    // CommonJS JavaScript
-    ".jsx",    // JSX
+    ".d.ts", // TypeScript definitions (highest priority for type resolution)
+    ".d.mts", // ESM TypeScript definitions
+    ".d.cts", // CommonJS TypeScript definitions
+    ".ts", // TypeScript source
+    ".tsx", // TypeScript JSX
+    ".mjs", // ESM JavaScript
+    ".js", // JavaScript
+    ".cjs", // CommonJS JavaScript
+    ".jsx", // JSX
   ];
 
   // Try each extension
@@ -154,7 +136,11 @@ async function load(
               const content = await Deno.readTextFile(new URL(dtsPath));
               return content;
             } catch (err) {
-              console.log("Failed to read .d.ts file, falling back to .js:", dtsPath, err);
+              console.log(
+                "Failed to read .d.ts file, falling back to .js:",
+                dtsPath,
+                err,
+              );
               // Fall through to load the original file
             }
           }
@@ -227,7 +213,11 @@ const wrapLoaderWithDtsSupport = (
             return dtsContent;
           }
         } catch (err) {
-          console.log("Failed to load .d.ts file, falling back to .js:", dtsPath, err);
+          console.log(
+            "Failed to load .d.ts file, falling back to .js:",
+            dtsPath,
+            err,
+          );
           // Fall through to load the original file
         }
       }
@@ -286,7 +276,9 @@ export const updateLoadCache = (path: string, content: string) => {
 /**
  * Parses the given path using the default loader. Caches the result in memory.
  */
-export const parsePath = async (path: string): Promise<ParsedSource | undefined> => {
+export const parsePath = async (
+  path: string,
+): Promise<ParsedSource | undefined> => {
   if (path.startsWith("npm:")) {
     console.warn(
       `%cnpm package ${path} could not be resolved in the schema parser, typings may be missing`,
@@ -305,17 +297,19 @@ export const parsePath = async (path: string): Promise<ParsedSource | undefined>
   }
 
   const mLoader = initLoader();
-  return loadCache[resolvedPath] ??= mLoader(resolvedPath).then(async (content) => {
-    if (!content && content !== "") {
-      throw new Error(`Path not found ${resolvedPath}`);
-    }
-    try {
-      return await parseContent(content);
-    } catch (err) {
-      console.log(err, resolvedPath);
-      throw err;
-    }
-  }).catch((err) => {
+  return loadCache[resolvedPath] ??= mLoader(resolvedPath).then(
+    async (content) => {
+      if (!content && content !== "") {
+        throw new Error(`Path not found ${resolvedPath}`);
+      }
+      try {
+        return await parseContent(content);
+      } catch (err) {
+        console.log(err, resolvedPath);
+        throw err;
+      }
+    },
+  ).catch((err) => {
     delete loadCache[resolvedPath];
     throw err;
   });
