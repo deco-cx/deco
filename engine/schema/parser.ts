@@ -2,6 +2,13 @@ import { createCache } from "jsr:@deno/cache-dir@0.10.1";
 import { assignComments } from "./comments.ts";
 import { parse, type ParsedSource } from "./deps.ts";
 
+const JS_REGEX_PATH: RegExp = /\.(m?js|cjs)$/;
+/**
+ * Check if js filepath
+ * @return {boolean}
+ */
+const isJsFilePath = (filePath: string) => filePath.match(JS_REGEX_PATH);
+
 /**
  * Tries to find a .d.ts file for a given JavaScript file in node_modules.
  * @param jsPath The path to the .js or .mjs file
@@ -15,7 +22,7 @@ async function findTypeDefinitionFile(
   // Only process file:// protocol paths in node_modules
   if (
     url.protocol !== "file:" || !jsPath.includes("node_modules") ||
-    jsPath.endsWith(".js")
+    !isJsFilePath(jsPath)
   ) {
     return undefined;
   }
@@ -23,7 +30,7 @@ async function findTypeDefinitionFile(
   const pathStr = url.pathname;
 
   // Try common .d.ts file patterns
-  const candidate: string = pathStr.replace(/\.js$/, ".d.ts");
+  const candidate: string = pathStr.replace(JS_REGEX_PATH, ".d.ts");
 
   try {
     const fileUrl = new URL(`file://${candidate}`);
@@ -125,7 +132,7 @@ async function load(
     switch (url.protocol) {
       case "file:": {
         // Check if this is a JavaScript file in node_modules
-        const isJsFile = specifier.match(/\.(m?js|cjs)$/);
+        const isJsFile = isJsFilePath(specifier);
         const isNodeModule = specifier.includes("node_modules");
 
         if (isJsFile && isNodeModule) {
