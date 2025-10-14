@@ -11,18 +11,16 @@ const CACHE_MAX_SIZE = parseInt(
   Deno.env.get("CACHE_MAX_SIZE") ?? Deno.env.get("MAX_CACHE_SIZE") ??
     "1073741824",
 ); // 1 GB max size of cache
-const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") !== "false"; // automatically delete expired items
-const CACHE_ALLOW_STALE = Deno.env.get("CACHE_ALLOW_STALE") !== "false"; // automatically allow stale
+const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") === "true"; // automatically delete expired items
 const CACHE_TTL_RESOLUTION = parseInt(
-  Deno.env.get("CACHE_TTL_RESOLUTION") ?? "30000",
+  Deno.env.get("CACHE_TTL_RESOLUTION") ?? "60000",
 ); // check for expired items every 30 seconds
 
 const cacheOptions = (cache: Cache) => (
   {
     maxSize: CACHE_MAX_SIZE,
-    ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
-    allowStale: CACHE_ALLOW_STALE,
+    ttlAutopurge: CACHE_TTL_AUTOPURGE,
     dispose: async (_value: Uint8Array, key: string) => {
       await cache.delete(key);
     },
@@ -83,6 +81,8 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
             size: parseInt(length),
             ttl,
           });
+          /** This get below is important to allow stale at least once */
+          fileCache.get(cacheKey);
           return cacheInner.put(cacheKey, response);
         },
       });
