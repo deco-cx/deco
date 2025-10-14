@@ -48,7 +48,6 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
               const ttl = (expiresHeader !== null && expiresHeader !== "")
                 ? Date.parse(expiresHeader)
                 : Date.now() + (CACHE_MAX_AGE_S * 1e3);
-              console.log("ttl", ttl, expiresHeader, cacheKey);
               return cacheInner.put(
                 cacheKey,
                 new Response(response.body, {
