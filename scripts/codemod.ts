@@ -24,10 +24,10 @@ const EXPORTS = {
   DURABLE: "@deco/durable",
 };
 const OVERRIDE_FRESH_PREACT = {
-  "preact": "npm:preact@10.23.1",
+  "preact": "npm:preact@10.27.2",
   "https://esm.sh/*preact-render-to-string@6.3.1":
-    "npm:preact-render-to-string@6.4.2",
-  "preact-render-to-string": "npm:preact-render-to-string@6.4.2",
+    "npm:preact-render-to-string@6.6.2",
+  "preact-render-to-string": "npm:preact-render-to-string@6.6.2",
   "$fresh/": "https://deno.land/x/fresh@1.7.3/", //Prevent fresh 2
 };
 const newJsrPackages = [
