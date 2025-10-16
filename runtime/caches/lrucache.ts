@@ -31,6 +31,8 @@ const cacheOptions = (cache: Cache) => (
   }
 );
 
+const cacheTtlParsed = parseInt(CACHE_TTL ?? "");
+
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
   const caches = createBaseCacheStorage(
     cacheStorageInner,
@@ -73,8 +75,6 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           const expirationTimestamp = Date.parse(
             response.headers.get("expires") ?? "",
           );
-
-          const cacheTtlParsed = parseInt(CACHE_TTL ?? "");
 
           const ttl = !Number.isNaN(cacheTtlParsed)
             ? cacheTtlParsed
