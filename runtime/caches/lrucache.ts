@@ -16,8 +16,11 @@ const CACHE_ALLOW_STALE = Deno.env.get("CACHE_ALLOW_STALE") !== "false"; // auto
 const CACHE_TTL_RESOLUTION = parseInt(
   Deno.env.get("CACHE_TTL_RESOLUTION") ?? "30000",
 ); // check for expired items every 30 seconds
-// Time-to-live in milliseconds for cached items. If not set, uses the expiration timestamp from response headers
-const LRU_CACHE_TTL = parseInt(Deno.env.get("LRU_CACHE_TTL") ?? "");
+// Additional time-to-live increment in milliseconds to extend the cache expiration beyond the response's Expires header.
+// If not set, the cache will use only the expiration timestamp from response headers
+const CACHE_TTL_INCREMENT = parseInt(
+  Deno.env.get("CACHE_TTL_INCREMENT") ?? "0",
+);
 
 const cacheOptions = (cache: Cache) => (
   {
@@ -74,8 +77,13 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
             response.headers.get("expires") ?? "",
           );
 
-          const ttl = !Number.isNaN(LRU_CACHE_TTL)
-            ? LRU_CACHE_TTL
+          // Calculate the time-to-live (TTL) for the cached item:
+          // - If CACHE_TTL_INCREMENT is configured, add it to the expiration time from the response headers
+          //   This allows extending the cache lifetime beyond what the server specifies
+          // - If CACHE_TTL_INCREMENT is not set (NaN), use only the time remaining until expiration
+          //   based on the response's Expires header
+          const ttl = !Number.isNaN(CACHE_TTL_INCREMENT)
+            ? (expirationTimestamp - Date.now()) + CACHE_TTL_INCREMENT
             : expirationTimestamp - Date.now();
 
           const cacheKey = await requestURLSHA1(request);
