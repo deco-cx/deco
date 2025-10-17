@@ -2,7 +2,7 @@
   <img src="https://github.com/deco-cx/deco/assets/1633518/ba714da8-514e-4b48-bbec-b7d86377b273" alt="deco" width="210px"/>
 </p>
 <p align="center">
-  <strong>Git-based Visual CMS for Deno, &lt;/>htmx and Tailwind Apps.</strong>
+  <strong>Git-based Visual CMS for Typescript.</strong>
 </p>
 
 <p align="center">
