@@ -78,10 +78,9 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           );
 
           // Calculate the time-to-live (TTL) for the cached item:
-          // - If CACHE_TTL_INCREMENT is configured, add it to the expiration time from the response headers
-          //   This allows extending the cache lifetime beyond what the server specifies
-          // - If CACHE_TTL_INCREMENT is not set (NaN), use only the time remaining until expiration
-          //   based on the response's Expires header
+          // - If STALE_TTL_PERIOD is configured, add it to the expiration time from the response headers
+          //   This allows extending the cache lifetime beyond what the server specifies and serves stale content during this extra time
+          // The staleness is detect at the loader level because it checks for the expires header, that remains untouched here, the idea is to serve stale content but with expired header
           const ttl = !Number.isNaN(CACHE_TTL_INCREMENT)
             ? (expirationTimestamp - Date.now()) + CACHE_TTL_INCREMENT
             : expirationTimestamp - Date.now();
