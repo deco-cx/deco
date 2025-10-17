@@ -18,8 +18,8 @@ const CACHE_TTL_RESOLUTION = parseInt(
 ); // check for expired items every 30 seconds
 // Additional time-to-live increment in milliseconds to extend the cache expiration beyond the response's Expires header.
 // If not set, the cache will use only the expiration timestamp from response headers
-const CACHE_TTL_INCREMENT = parseInt(
-  Deno.env.get("CACHE_TTL_INCREMENT") ?? "0",
+const STALE_TTL_PERIOD = parseInt(
+  Deno.env.get("STALE_TTL_PERIOD") ?? "0",
 );
 
 const cacheOptions = (cache: Cache) => (
@@ -81,8 +81,8 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           // - If STALE_TTL_PERIOD is configured, add it to the expiration time from the response headers
           //   This allows extending the cache lifetime beyond what the server specifies and serves stale content during this extra time
           // The staleness is detect at the loader level because it checks for the expires header, that remains untouched here, the idea is to serve stale content but with expired header
-          const ttl = !Number.isNaN(CACHE_TTL_INCREMENT)
-            ? (expirationTimestamp - Date.now()) + CACHE_TTL_INCREMENT
+          const ttl = !Number.isNaN(STALE_TTL_PERIOD)
+            ? (expirationTimestamp - Date.now()) + STALE_TTL_PERIOD
             : expirationTimestamp - Date.now();
 
           const cacheKey = await requestURLSHA1(request);
