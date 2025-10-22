@@ -102,3 +102,11 @@ export const assertCanBeCached = (req: Request, response: Response) => {
     throw new TypeError("Response status must not be 206");
   }
 };
+
+export const inFuture = (maybeDate: string) => {
+  try {
+    return new Date(maybeDate) > new Date();
+  } catch {
+    return false;
+  }
+};
