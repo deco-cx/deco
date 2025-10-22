@@ -17,10 +17,10 @@ const getCacheStatus = (
   isMatch: Response | undefined,
 ): "miss" | "stale" | "hit" => {
   if (!isMatch) return "miss";
-  
+
   const expires = isMatch.headers.get("expires");
   const isStale = expires ? !inFuture(expires) : false;
-  
+
   return isStale ? "stale" : "hit";
 };
 
@@ -44,7 +44,7 @@ export const withInstrumentation = (
             const isMatch = await cacheImpl.match(req, opts);
             //there is an edge case where there is no expires header, but technically our loader always sets it
             const result = getCacheStatus(isMatch);
-            
+
             span.setAttribute("status", result);
             cacheHit.add(1, {
               result,
