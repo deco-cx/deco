@@ -15,6 +15,7 @@ import {
   OTEL_ENABLE_EXTRA_METRICS,
 } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
+import { inFuture } from "../runtime/caches/utils.ts";
 import type { DebugProperties } from "../utils/vary.ts";
 import type { HttpContext } from "./handler.ts";
 import {
@@ -159,14 +160,6 @@ const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 secon
 const textEncoder = new TextEncoder();
 
 const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
-
-const inFuture = (maybeDate: string) => {
-  try {
-    return new Date(maybeDate) > new Date();
-  } catch {
-    return false;
-  }
-};
 
 const noop = () => "";
 
