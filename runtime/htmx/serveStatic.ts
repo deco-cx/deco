@@ -110,6 +110,9 @@ export function staticFiles(root: string = "static/"): MiddlewareHandler {
     }
     headers.append("Cache-Control", "public, max-age=31536000, immutable");
 
-    return c.res = new Response(file.data, { status: 200, headers });
+    return c.res = new Response(file.data as BufferSource, {
+      status: 200,
+      headers,
+    });
   };
 }

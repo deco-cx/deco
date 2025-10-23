@@ -9,10 +9,9 @@ import {
   type StatusResult,
 } from "simple-git";
 import { createLocker } from "./async.ts";
+import { DECO_SITE_NAME } from "./daemon.ts";
 import { logs } from "./loggings/stream.ts";
 import { DENO_DEPLOYMENT_ID } from "./main.ts";
-import type { MiddlewareHandler } from "@hono/hono";
-import { DECO_SITE_NAME } from "./daemon.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
@@ -41,6 +40,7 @@ const getMergeBase = async () => {
   const defaultTrackingBranch = typeof DENO_DEPLOYMENT_ID === "string"
     ? DEFAULT_TRACKING_BRANCH
     : status.current;
+
   const tracking = status.tracking || defaultTrackingBranch;
 
   if (!current || !tracking) {
@@ -215,6 +215,10 @@ export const publish = ({ build }: Options): Handler => {
     const body = (await c.req.json()) as PublishAPI["body"];
     const author = body.author || { name: "decobot", email: "capy@deco.cx" };
     const message = body.message || `New release by ${author.name}`;
+
+    if (GITHUB_APP_KEY) {
+      await setupGithubTokenNetrc();
+    }
 
     await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
 
@@ -448,9 +452,90 @@ const setupGithubTokenNetrc = async (): Promise<void> => {
   await updateNetrc(token);
 };
 
+/**
+ * Checks if the repository can be rebased without conflicts.
+ * Only rebases if there are no uncommitted changes (clean working directory).
+ * If there are uncommitted changes or conflicts, skips rebase to avoid complications.
+ */
+export const assertRebased = async (): Promise<void> => {
+  // First, fetch the latest changes
+  await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
+
+  // Get current status to check for conflicts and uncommitted changes
+  const status = await git.status();
+
+  // Check if there are already conflicts in the working directory
+  if (status.conflicted.length > 0) {
+    console.log(
+      `Skipping rebase: Repository has existing conflicts: ${
+        status.conflicted.join(", ")
+      }`,
+    );
+    return;
+  }
+
+  // Check if there are uncommitted changes - if so, skip rebase
+  if (status.files.length > 0) {
+    console.log("Skipping rebase: Repository has uncommitted changes");
+    return;
+  }
+
+  try {
+    // Try to determine if rebase is needed
+    const base = await getMergeBase();
+    const current = status.current;
+    const tracking = status.tracking || DEFAULT_TRACKING_BRANCH;
+
+    if (!current || !tracking) {
+      console.log(
+        "Cannot determine current or tracking branch for rebase check",
+      );
+      return;
+    }
+
+    // Check if we're already up to date
+    const isUpToDate = await git.raw(
+      "rev-list",
+      "--count",
+      `${base}..${tracking}`,
+    );
+    if (parseInt(isUpToDate.trim()) === 0) {
+      // Already up to date, just reset to merge base
+      await resetToMergeBase();
+      return;
+    }
+
+    // Check if we're behind the remote
+    const behindCount = await git.raw(
+      "rev-list",
+      "--count",
+      `${current}..${tracking}`,
+    );
+    if (parseInt(behindCount.trim()) === 0) {
+      // Not behind remote, no rebase needed
+      return;
+    }
+
+    console.log(
+      "Performing automatic rebase - clean working directory detected",
+    );
+
+    // Working directory is clean and we're behind remote, safe to rebase
+    await git.rebase({ "--strategy-option": "theirs" });
+    await resetToMergeBase();
+
+    console.log("Automatic rebase completed successfully");
+  } catch (error) {
+    console.log(`Rebase failed, resetting to clean state: ${error}`);
+    // Reset to clean state if anything goes wrong
+    await resetToMergeBase();
+    // Don't throw error - just log and continue
+  }
+};
+
 export const ensureGit = async ({ site }: Pick<Options, "site">) => {
+  const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
   const assertNoIndexLock = async () => {
-    const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
     if (!isDeployment) {
       return;
     }
@@ -545,6 +630,11 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
 
   await assertNoIndexLock();
   await Promise.all([assertGitBinary(), assertGitFolder()]);
+
+  // Ensure repository is rebased and up to date
+  if (isDeployment) {
+    await assertRebased();
+  }
 };
 
 interface Options {

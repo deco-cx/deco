@@ -2,8 +2,9 @@
   <img src="https://github.com/deco-cx/deco/assets/1633518/ba714da8-514e-4b48-bbec-b7d86377b273" alt="deco" width="210px"/>
 </p>
 <p align="center">
-  <strong>Git-based Visual CMS for Deno, &lt;/>htmx and Tailwind Apps.</strong>
+  <strong>Git-based Visual CMS for Typescript.</strong>
 </p>
+
 <p align="center">
   <a href="https://deco.cx">deco.cx</a>
   ·
@@ -72,6 +73,37 @@ will be saved to git!
 
 Now, to get to production, install any of the Hosting apps available in
 `deco.store` by clicking on "Create new production environment".
+
+# Running the Deco Engine Locally
+
+If you want to contribute to the Deco engine itself or test changes to the core
+framework, you can run a local version of the engine:
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/deco-cx/deco.git
+   ```
+
+2. Navigate to your target project that runs deco (e.g., a site from
+   `deco-sites`):
+   ```bash
+   cd path/to/your-deco-site
+   ```
+
+3. Run the dev script pointing to your local deco clone:
+   ```bash
+   deno run -A jsr:@deco/deco/scripts/dev ../deco
+   ```
+   > Replace `../deco` with the relative path to where you cloned the deco
+   > repository.
+
+4. If you encounter any missing package errors, add them to your project:
+   ```bash
+   deno add <package-name>
+   ```
+
+This will run your site using your local version of the deco engine, allowing
+you to test changes and contribute back to the project.
 
 # TypeScript Props to Visual Content Editor
 

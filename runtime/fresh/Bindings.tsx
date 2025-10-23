@@ -4,7 +4,9 @@
 import { Head, Partial } from "$fresh/runtime.ts";
 import type { Framework } from "@deco/deco";
 import { usePartialSection } from "@deco/deco/hooks";
-import DispatchAsyncRender from "./islands/DispatchAsyncRender.tsx";
+import DispatchAsyncRender, {
+  getPartialTriggerMode,
+} from "./islands/DispatchAsyncRender.tsx";
 
 const bindings: Framework = {
   name: "fresh",
@@ -14,6 +16,7 @@ const bindings: Framework = {
   ),
   LoadingFallback: ({ id, children, props }) => {
     const btnId = `${id}-partial-onload`;
+    const partialTriggerMode = getPartialTriggerMode();
     const { "f-partial": href, ...rest } = usePartialSection({ props });
 
     return (
@@ -27,7 +30,10 @@ const bindings: Framework = {
           id={btnId}
           style={{ display: "none" }}
         />
-        <DispatchAsyncRender id={btnId} />
+        <DispatchAsyncRender
+          id={btnId}
+          partialTriggerMode={partialTriggerMode}
+        />
         {children}
       </>
     );

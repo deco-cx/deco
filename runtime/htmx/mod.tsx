@@ -10,6 +10,7 @@ import type { DecoRouteState } from "../middleware.ts";
 import framework from "./Bindings.tsx";
 import { renderFn } from "./Renderer.tsx";
 import { staticFiles } from "./serveStatic.ts";
+
 const DEV_SERVER_PATH = `/deco/dev`;
 const DEV_SERVER_SCRIPT = (
   <script
@@ -128,9 +129,15 @@ export const HTMX = <
   };
 };
 
-addEventListener("hmr", () => {
-  hmrUniqueId = crypto.randomUUID();
-  for (const socket of sockets.values()) {
-    socket.send("refresh");
-  }
-});
+const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
+
+if (DECO_ENV_NAME) {
+  const onHMR = () => {
+    hmrUniqueId = crypto.randomUUID();
+    for (const socket of sockets.values()) {
+      socket.send("refresh");
+    }
+  };
+  addEventListener("hmr", onHMR);
+  addEventListener("deco:hmr", onHMR);
+}

@@ -3,9 +3,12 @@ import { vary } from "../utils/vary.ts";
 import { Context } from "../deco.ts";
 import { defaultHeaders } from "../utils/http.ts";
 
+// Reuse TextEncoder instance to avoid repeated instantiation
+const textEncoder = new TextEncoder();
+
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle
-    .digest("SHA-1", new TextEncoder().encode(text));
+    .digest("SHA-1", textEncoder.encode(text));
 
   const hex = Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, "0"))

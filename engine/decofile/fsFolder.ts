@@ -53,9 +53,22 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
     return null;
   }
 };
-
+const denoFs: Fs = {
+  readTextFile: Deno.readTextFile,
+  cwd: Deno.cwd,
+  readDir: async function* (path: string) {
+    for await (const entry of Deno.readDir(path)) {
+      if (entry.isFile) {
+        yield entry.name;
+      }
+    }
+  },
+  writeTextFile: Deno.writeTextFile,
+  watchFs: Deno.watchFs,
+  ensureFile,
+};
 /** Syncs FileSystem Metadata with Storage metadata */
-export const genMetadata = async () => {
+export const genMetadata = async (fs: Fs = denoFs) => {
   try {
     const knownBlockTypes = new Set(getBlocks().map((x) => x.type));
     const paths = [];
@@ -74,7 +87,7 @@ export const genMetadata = async () => {
       paths.map(async (path) =>
         [
           `/${path.replaceAll("\\", "/")}`,
-          JSON.parse(await Deno.readTextFile(path)),
+          JSON.parse(await fs.readTextFile(path)),
         ] as [string, unknown]
       ),
     );
@@ -83,9 +96,9 @@ export const genMetadata = async () => {
       [path, content],
     ) => [path, inferMetadata(content, knownBlockTypes)]));
 
-    const pathname = join(Deno.cwd(), METADATA_PATH);
-    await ensureFile(pathname);
-    await Deno.writeTextFile(pathname, JSON.stringify(metadata));
+    const pathname = join(fs.cwd(), METADATA_PATH);
+    await fs.ensureFile(pathname);
+    await fs.writeTextFile(pathname, JSON.stringify(metadata));
   } catch {
     /** ok */
   }
@@ -93,6 +106,7 @@ export const genMetadata = async () => {
 
 export const newFsFolderProviderFromPath = (
   fullPath: string,
+  fs: Fs = denoFs,
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
   let decofile: Promise<VersionedDecofile> = exists(fullPath, {
@@ -101,26 +115,32 @@ export const newFsFolderProviderFromPath = (
   }).then(
     async () => {
       const decofile: Decofile = {};
-      const files = Deno.readDir(fullPath);
+      const files = fs.readDir(fullPath);
+      const promises: Promise<unknown>[] = [];
       for await (const file of files) {
-        if (file.isFile) {
-          const content = await Deno.readTextFile(join(fullPath, file.name))
+        promises.push(
+          fs.readTextFile(join(fullPath, file))
             .then(JSON.parse)
-            .catch(() => null);
-          if (content !== null) {
-            decofile[parseBlockId(file.name)] = content;
-          }
-        }
+            .then((content) => {
+              if (content !== null) {
+                decofile[parseBlockId(file)] = content;
+              }
+            })
+            .catch(() => null),
+        );
       }
+      await Promise.all(promises);
       return {
         state: decofile,
-        revision: Context.active().deploymentId ?? `${Date.now()}`,
+        revision: Context.active().isPreview
+          ? `${Date.now()}`
+          : Context.active().deploymentId ?? `${Date.now()}`,
       };
     },
   ).then((result) => {
     (async () => {
       const limiter = new Mutex();
-      const watcher = Deno.watchFs(fullPath);
+      const watcher = fs.watchFs(fullPath);
       let filesChangedBatch: string[] = [];
       const updateState = debounce(async () => {
         using _lock = await limiter.acquire();
@@ -138,7 +158,7 @@ export const newFsFolderProviderFromPath = (
         const changedBlocks: Decofile = {};
         await Promise.all(
           copied.map(async (filePath) => {
-            const content = await Deno.readTextFile(filePath)
+            const content = await fs.readTextFile(filePath)
               .then(JSON.parse)
               .catch(() => null);
             changedBlocks[parseBlockId(basename(filePath))] = content;
@@ -183,9 +203,24 @@ export const newFsFolderProviderFromPath = (
     revision: () => decofile.then((r) => r.revision),
   };
 };
+
+export interface Fs {
+  readTextFile: (path: string) => Promise<string>;
+  cwd: () => string;
+  readDir: (
+    path: string,
+  ) => AsyncIterable<
+    string
+  >;
+  writeTextFile: (path: string, content: string) => Promise<void>;
+  watchFs: (path: string) => AsyncIterable<{ paths: string[] }>;
+  ensureFile: (path: string) => Promise<void>;
+}
+
 export const newFsFolderProvider = (
   path = BLOCKS_FOLDER,
+  fs: Fs = denoFs,
 ): DecofileProvider => {
-  const fullPath = join(Deno.cwd(), path);
-  return newFsFolderProviderFromPath(fullPath);
+  const fullPath = join(fs.cwd(), path);
+  return newFsFolderProviderFromPath(fullPath, fs);
 };

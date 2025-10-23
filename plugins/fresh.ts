@@ -3,7 +3,7 @@ import type { AppManifest } from "@deco/deco";
 import {
   type Config,
   plugin as tailwindPlugin,
-} from "https://cdn.jsdelivr.net/gh/deco-sites/std@1.26.8/plugins/tailwind/mod.ts";
+} from "../../std/plugins/tailwind/mod.ts";
 import decoPlugin, { type Options } from "./deco.ts";
 
 const plugins = <TManifest extends AppManifest = AppManifest>(

@@ -110,7 +110,10 @@ export const getProvider = async (
     return newFsProvider();
   }
 
-  const endpoint = await blocksFolderExistsPromise
+  const isDeconfig = DECOFILE_PATH_FROM_ENV?.startsWith("deconfig://");
+
+  const endpoint = await blocksFolderExistsPromise &&
+      !isDeconfig
     ? `folder://${BLOCKS_FOLDER}`
     : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {

@@ -1,5 +1,11 @@
 export type { CmdAPI } from "./cmd.ts";
-export type { DeleteAPI, ListAPI, PatchAPI, ReadAPI } from "./fs/api.ts";
+export type {
+  DeleteAPI,
+  GrepAPI,
+  ListAPI,
+  PatchAPI,
+  ReadAPI,
+} from "./fs/api.ts";
 export { applyPatch, generatePatch } from "./fs/common.ts";
 export type {
   BlockMetadata,

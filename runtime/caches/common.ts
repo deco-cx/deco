@@ -1,6 +1,7 @@
 import { type Exception, ValueType } from "../../deps.ts";
 import { tracer } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
+import { inFuture } from "./utils.ts";
 
 export interface CacheMetrics {
   engine: string;
@@ -11,6 +12,17 @@ const cacheHit = meter.createCounter("cache_hit", {
   unit: "1",
   valueType: ValueType.INT,
 });
+
+const getCacheStatus = (
+  isMatch: Response | undefined,
+): "miss" | "stale" | "hit" => {
+  if (!isMatch) return "miss";
+
+  const expires = isMatch.headers.get("expires");
+  const isStale = expires ? !inFuture(expires) : false;
+
+  return isStale ? "stale" : "hit";
+};
 
 export const withInstrumentation = (
   cache: CacheStorage,
@@ -30,8 +42,10 @@ export const withInstrumentation = (
           });
           try {
             const isMatch = await cacheImpl.match(req, opts);
-            const result = isMatch ? "hit" : "miss";
-            span.addEvent("cache-result", { result });
+            //there is an edge case where there is no expires header, but technically our loader always sets it
+            const result = getCacheStatus(isMatch);
+
+            span.setAttribute("status", result);
             cacheHit.add(1, {
               result,
               engine,
