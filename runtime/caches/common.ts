@@ -45,7 +45,7 @@ export const withInstrumentation = (
             //there is an edge case where there is no expires header, but technically our loader always sets it
             const result = getCacheStatus(isMatch);
 
-            span.setAttribute("status", result);
+            span.setAttribute("cache_status", result);
             cacheHit.add(1, {
               result,
               engine,
