@@ -2,7 +2,6 @@
 import { ValueType } from "../../deps.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
-import { medianLatencyChecker } from "../../observability/probes/medianLatency.ts";
 import { memoryChecker } from "../../observability/probes/memory.ts";
 import { reqCountChecker } from "../../observability/probes/reqCount.ts";
 import { reqInflightChecker } from "../../observability/probes/reqInflight.ts";
@@ -121,6 +120,6 @@ export const liveness = buildHandler(
   memoryChecker,
   uptimeChecker,
   reqCountChecker,
-  medianLatencyChecker,
+  //medianLatencyChecker, //It looks like it is degrading more than it is helping, the requests latency during startup is worst than the avg latency so apply this could worsen the scenario.
   reqInflightChecker,
 );
