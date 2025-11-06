@@ -300,6 +300,13 @@ export const parsePath = async (
     const resolved = await resolveFileExtension(path);
     if (resolved) {
       resolvedPath = resolved;
+    } else if (!path.match(/\.(ts|tsx|js|jsx|mjs|cjs|d\.ts|d\.mts|d\.cts)$/)) {
+      // If resolution failed and path has no extension, return undefined instead of throwing
+      console.warn(
+        `%cCould not resolve path ${path}, file not found`,
+        "color: gray",
+      );
+      return Promise.resolve(undefined);
     }
   }
 
