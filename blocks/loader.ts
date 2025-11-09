@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import JsonViewer from "../components/JsonViewer.tsx";
-import { RequestContext } from "../deco.ts";
+import { Context, RequestContext } from "../deco.ts";
 import { ValueType } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
@@ -31,6 +31,7 @@ import {
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
 
 type CacheMode = "no-store" | "no-cache" | "stale-while-revalidate";
+type LoaderCacheStatus = "bypass" | "miss" | "stale" | "hit" | "error";
 
 export interface LoaderModule<
   TProps = any,
@@ -68,10 +69,18 @@ export interface LoaderModule<
   singleFlightKey?: SingleFlightKeyFunc<TProps, HttpContext>;
 }
 
-interface LoaderDebugData extends DebugProperties {
-  reason: {
-    cache: NonNullable<CacheMode>;
-    cacheKeyNull: boolean;
+interface LoaderDebugEntry extends DebugProperties {
+  kind: "loader";
+  loader: string;
+  resolveChain: FieldResolver[];
+  resolveChainMinified: (string | number)[];
+  status: LoaderCacheStatus;
+  latencyMs: number;
+  cache: {
+    mode: CacheMode | "disabled";
+    maxAge?: number;
+    key?: string | null;
+    configured: boolean;
   };
 }
 
@@ -205,7 +214,7 @@ const wrapLoader = (
     ): Promise<ReturnType<typeof handler>> => {
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
-      let status: "bypass" | "miss" | "stale" | "hit" | undefined;
+      let status: LoaderCacheStatus | undefined;
 
       const isCacheEngineDefined = isCache(maybeCache);
       const isCacheDisabled = !ENABLE_LOADER_CACHE ||
@@ -231,18 +240,6 @@ const wrapLoader = (
 
           if (ctx.vary && shouldNotCache) {
             ctx.vary.shouldCache = false;
-
-            if (ctx.debugEnabled) {
-              const resolver = resolveChain.at(-1);
-              resolver &&
-                ctx.vary.debug.push<LoaderDebugData>({
-                  resolver,
-                  reason: {
-                    cache: mode as CacheMode,
-                    cacheKeyNull: isCacheKeyNull,
-                  },
-                });
-            }
           }
           !shouldNotCache && ctx.vary?.push(cacheKeyValue);
 
@@ -349,11 +346,35 @@ const wrapLoader = (
 
         return await flights.do(request.url, staleWhileRevalidate);
       } finally {
+        const duration = performance.now() - start;
         const dimension = { loader, status };
         if (OTEL_ENABLE_EXTRA_METRICS) {
-          stats.latency.record(performance.now() - start, dimension);
+          stats.latency.record(duration, dimension);
         }
         ctx.monitoring?.currentSpan?.setDesc(status);
+
+        const debugShouldRecord = ctx.debugEnabled ||
+          !Context.active().isDeploy;
+        if (debugShouldRecord && ctx.vary?.debug) {
+          const resolver = resolveChain.at(-1);
+          if (resolver) {
+            ctx.vary.debug.push<LoaderDebugEntry>({
+              resolver,
+              kind: "loader",
+              loader,
+              resolveChain: resolveChain.map((entry) => ({ ...entry })),
+              resolveChainMinified: FieldResolver.minify(resolveChain),
+              status: status ?? "error",
+              latencyMs: duration,
+              cache: {
+                mode: isCacheDisabled ? "disabled" : mode,
+                maxAge: cacheMaxAge,
+                key: bypassCache ? null : cacheKeyValue,
+                configured: !isCacheDisabled && !isCacheNoStore,
+              },
+            });
+          }
+        }
       }
     },
   };
