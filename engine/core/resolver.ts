@@ -2,6 +2,7 @@
 import type { Context, Span, Tracer } from "../../deps.ts";
 import { identity } from "../../utils/object.ts";
 import type { createServerTimings } from "../../utils/timings.ts";
+import { MurmurHash3 } from "../../utils/hasher.ts";
 import { type HintNode, type ResolveHints, traverseAny } from "./hints.ts";
 import { type ResolveOptions, resolverIdFromResolveChain } from "./mod.ts";
 import { isAwaitable, type PromiseOrValue, type UnPromisify } from "./utils.ts";
@@ -51,6 +52,7 @@ export interface BaseContext {
   danglingRecover?: Resolver;
   resolveHints: ResolveHints;
   memo: Record<string, any>;
+  contentMemo: Record<string, any>;
   runOnce: <T>(key: string, f: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
 
@@ -352,6 +354,27 @@ const resolveTypeOf = <
   return [resolvable as Omit<T, "__resolveType">, undefined];
 };
 
+/**
+ * Generates a content-based hash for deduplicating identical inline resolvables
+ */
+const generateContentHash = <T>(resolveType: string, props: T): string => {
+  const hasher = new MurmurHash3();
+  hasher.hash(resolveType);
+  hasher.hash(
+    JSON.stringify(props, Object.keys(props as Record<string, unknown>).sort()),
+  );
+  return `${hasher.result()}`;
+};
+
+/**
+ * Checks if a resolver type should be deduplicated.
+ * Only loaders (data fetchers) should be deduplicated, not sections (UI components).
+ */
+const shouldDeduplicateResolver = (resolveType: string): boolean => {
+  // Only deduplicate loaders - they typically contain "/loaders/" in path or end with loader-like patterns
+  return resolveType.includes("/loaders/");
+};
+
 interface ResolvedKey<T, K extends keyof T> {
   key: K;
   resolved: T[K];
@@ -537,6 +560,33 @@ const resolveWithType = <
         context,
       );
     const resolveStart = opts?.hooks?.onResolveStart;
+
+    // Only apply content-based deduplication to loaders, not sections
+    if (shouldDeduplicateResolver(resolveType)) {
+      // Generate content hash for inline resolvables to enable deduplication
+      const contentHash = generateContentHash(resolveType, props);
+
+      // Check if we already resolved this exact content
+      if (context.contentMemo[contentHash]) {
+        return context.contentMemo[contentHash];
+      }
+
+      // Store the promise in contentMemo to deduplicate identical inline resolvables
+      const result = resolveStart
+        ? resolveStart(
+          proceed,
+          props,
+          resolver,
+          resolveType,
+          context,
+        )
+        : proceed();
+
+      context.contentMemo[contentHash] = result;
+      return result;
+    }
+
+    // For non-loaders (sections, etc.), execute normally without deduplication
     return resolveStart
       ? resolveStart(
         proceed,
