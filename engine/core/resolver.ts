@@ -355,14 +355,65 @@ const resolveTypeOf = <
 };
 
 /**
+ * Recursively hashes object properties in a deterministic way without creating large intermediate strings
+ */
+const hashObjectRecursively = (
+  hasher: MurmurHash3,
+  obj: any,
+  depth = 0,
+): void => {
+  // Prevent infinite recursion and limit depth for performance
+  if (depth > 10) {
+    hasher.hash("[max-depth]");
+    return;
+  }
+
+  if (obj === null) {
+    hasher.hash("null");
+    return;
+  }
+
+  if (obj === undefined) {
+    hasher.hash("undefined");
+    return;
+  }
+
+  const type = typeof obj;
+  hasher.hash(type);
+
+  if (type !== "object") {
+    hasher.hash(String(obj));
+    return;
+  }
+
+  if (Array.isArray(obj)) {
+    hasher.hash(`[${obj.length}]`);
+    // Preserve array order - don't sort array elements
+    for (let i = 0; i < obj.length; i++) {
+      hasher.hash(`[${i}]`);
+      hashObjectRecursively(hasher, obj[i], depth + 1);
+    }
+    return;
+  }
+
+  // For objects, sort keys only for first 2 levels (depth 0 and 1)
+  const keys = depth < 2 ? Object.keys(obj).sort() : Object.keys(obj);
+  hasher.hash(`{${keys.length}}`);
+
+  for (const key of keys) {
+    hasher.hash(key);
+    hashObjectRecursively(hasher, obj[key], depth + 1);
+  }
+};
+
+/**
  * Generates a content-based hash for deduplicating identical inline resolvables
+ * Uses incremental hashing to avoid creating large intermediate strings
  */
 const generateContentHash = <T>(resolveType: string, props: T): string => {
   const hasher = new MurmurHash3();
   hasher.hash(resolveType);
-  hasher.hash(
-    JSON.stringify(props, Object.keys(props as Record<string, unknown>).sort()),
-  );
+  hashObjectRecursively(hasher, props);
   return `${hasher.result()}`;
 };
 
