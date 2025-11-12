@@ -78,3 +78,6 @@ server/
 deps.json
 
 deno.lock
+
+.cursorindexingignore
+.specstory/
