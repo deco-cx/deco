@@ -47,16 +47,15 @@ const createStableHref = (href: string): string => {
   const hrefUrl = new URL(href!, "http://localhost:8000");
   const qsList = [...hrefUrl.searchParams.keys()];
 
-  if (ALLOWED_QS.size > 0) {
-    qsList.forEach((qsName: string) => {
-      if (!ALLOWED_QS.has(qsName)) hrefUrl.searchParams.delete(qsName);
-    });
-  } else {
-    
-    qsList.forEach((qsName: string) => {
-      if (BLOCKED_QS.has(qsName)) hrefUrl.searchParams.delete(qsName);
-    });
-  }
+  qsList.forEach((qsName: string) => {
+    const shouldRemove = ALLOWED_QS.size > 0
+      ? !ALLOWED_QS.has(qsName)
+      : BLOCKED_QS.has(qsName);
+
+    if (shouldRemove) {
+      hrefUrl.searchParams.delete(qsName);
+    }
+  });
 
   hrefUrl.searchParams.sort();
   return hrefUrl.href;
@@ -77,7 +76,6 @@ export const useSection = <P>(
   if (typeof document !== "undefined") {
     throw new Error("Partials cannot be used inside an Island!");
   }
-
   if (!ctx) {
     throw new Error("Missing context in rendering tree");
   }
