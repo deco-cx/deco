@@ -94,6 +94,10 @@ const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
 });
 const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
 
+const respectDecofileProviders = [
+  "deconfig://",
+  "file:///app/decofile/decofile.json",
+];
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
@@ -110,10 +114,12 @@ export const getProvider = async (
     return newFsProvider();
   }
 
-  const isDeconfig = DECOFILE_PATH_FROM_ENV?.startsWith("deconfig://");
+  const shouldRespectDecoRelease = respectDecofileProviders.some((provider) =>
+    DECOFILE_PATH_FROM_ENV?.startsWith(provider)
+  );
 
   const endpoint = await blocksFolderExistsPromise &&
-      !isDeconfig
+      !shouldRespectDecoRelease
     ? `folder://${BLOCKS_FOLDER}`
     : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {
