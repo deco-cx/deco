@@ -25,6 +25,21 @@ export const newFsProviderFromPath = (
   appName?: string,
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
+  const updateState = debounce(async () => {
+    const state = await Deno.readTextFile(fullPath)
+      .then(JSON.parse)
+      .catch((_e) => null);
+    if (state === null) {
+      return;
+    }
+    decofile = Promise.resolve({
+      state,
+      revision: `${Date.now()}`,
+    });
+    for (const cb of onChangeCbs) {
+      cb();
+    }
+  }, 300);
   const copyDecoState = !appName ? Promise.resolve({}) : copyFrom(appName);
   let decofile: Promise<VersionedDecofile> = exists(fullPath, {
     isFile: true,
@@ -48,21 +63,6 @@ export const newFsProviderFromPath = (
   ).then((result) => {
     (async () => {
       const watcher = Deno.watchFs(fullPath);
-      const updateState = debounce(async () => {
-        const state = await Deno.readTextFile(fullPath)
-          .then(JSON.parse)
-          .catch((_e) => null);
-        if (state === null) {
-          return;
-        }
-        decofile = Promise.resolve({
-          state,
-          revision: `${Date.now()}`,
-        });
-        for (const cb of onChangeCbs) {
-          cb();
-        }
-      }, 300);
       for await (const _event of watcher) {
         updateState();
       }
@@ -81,6 +81,10 @@ export const newFsProviderFromPath = (
 
   return {
     state,
+    notify: () => {
+      updateState();
+      return Promise.resolve();
+    },
     set: (state, rev) => {
       decofile = Promise.resolve({
         state,

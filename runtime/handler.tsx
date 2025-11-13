@@ -24,6 +24,7 @@ import { handler as inspectHandler } from "./routes/inspect.ts";
 import { handler as invokeKeyHandler } from "./routes/invoke.ts";
 import { handler as previewsHandler } from "./routes/previews.tsx";
 import { handler as releaseHandler } from "./routes/release.ts";
+import { handler as reloadHandler } from "./routes/reload.ts";
 import { handler as renderHandler } from "./routes/render.tsx";
 import { styles } from "./routes/styles.css.ts";
 import { handler as workflowHandler } from "./routes/workflow.ts";
@@ -64,6 +65,10 @@ const routes: Array<
   {
     paths: ["/live/release", "/.decofile"],
     handler: releaseHandler,
+  },
+  {
+    paths: ["/.decofile/reload"],
+    handler: reloadHandler,
   },
   {
     paths: ["/live/inspect/:block", "/deco/inspect/:block"],
