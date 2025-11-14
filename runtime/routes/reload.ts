@@ -8,6 +8,7 @@ export const handler = createHandler(async (
   const delayMs = delay ? parseInt(delay) : 5000;
 
   let currentInterval = 1000; // Start with 1 second
+  const maxInterval = 10000; // Cap at 10 seconds to avoid huge gaps
   let elapsed = 0;
   let resolved = false;
   using _ = state.release.onChange(() => {
@@ -26,7 +27,7 @@ export const handler = createHandler(async (
       await state.release.notify?.();
 
       elapsed += currentInterval;
-      currentInterval *= 2; // Double for next time (exponential backoff)
+      currentInterval = Math.min(currentInterval * 2, maxInterval); // Double but cap at maxInterval
       scheduleNext(); // Schedule the next notification
     }, currentInterval);
   };

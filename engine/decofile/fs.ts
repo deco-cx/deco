@@ -27,7 +27,8 @@ export const newFsProviderFromPath = (
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
   let previousState: unknown = null;
-  const updateState = debounce(async () => {
+
+  const doUpdateState = async () => {
     const state = await Deno.readTextFile(fullPath)
       .then(JSON.parse)
       .catch((_e) => null);
@@ -46,7 +47,9 @@ export const newFsProviderFromPath = (
     for (const cb of onChangeCbs) {
       cb();
     }
-  }, 300);
+  };
+
+  const updateState = debounce(doUpdateState, 300);
   const copyDecoState = !appName ? Promise.resolve({}) : copyFrom(appName);
   let decofile: Promise<VersionedDecofile> = exists(fullPath, {
     isFile: true,
@@ -91,9 +94,10 @@ export const newFsProviderFromPath = (
 
   return {
     state,
-    notify: () => {
-      updateState();
-      return Promise.resolve();
+    notify: async () => {
+      // Directly check for updates without debounce
+      // This is important for environments where Deno.watchFs doesn't work (e.g., tempfs)
+      await doUpdateState();
     },
     set: (state, rev) => {
       previousState = state;

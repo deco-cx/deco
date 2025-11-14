@@ -66,6 +66,12 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
           },
         };
       },
+      notify: async () => {
+        await Promise.all([
+          providers.notify?.(),
+          current.notify?.(),
+        ]);
+      },
       revision: () => {
         return Promise.all([
           providers.revision(),
