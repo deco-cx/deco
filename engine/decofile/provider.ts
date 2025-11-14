@@ -109,6 +109,7 @@ const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
 const respectDecofileProviders = [
   "deconfig://",
   "file:///app/decofile/decofile.json",
+  "file:///app/decofile/decofile.bin", // brotli-compressed decofile
 ];
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
