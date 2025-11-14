@@ -4,17 +4,26 @@ export const handler = createHandler((
   { var: state, req },
 ) => {
   const delay = req.query("delay");
-  const delayMs = delay ? parseInt(delay) : 1000;
-  const interval = Math.min(delayMs, 1000); // Use 1s, or delay if less than 1s
+  const delayMs = delay ? parseInt(delay) : 5000;
 
-  const intervalId = setInterval(async () => {
-    await state.release.notify?.();
-  }, interval);
+  let currentInterval = 1000; // Start with 1 second
+  let elapsed = 0;
 
-  // Clear the interval after the delay duration has passed
-  setTimeout(() => {
-    clearInterval(intervalId);
-  }, delayMs);
+  const scheduleNext = () => {
+    if (elapsed >= delayMs) {
+      return; // Stop when we've reached the delay
+    }
+
+    setTimeout(async () => {
+      await state.release.notify?.();
+
+      elapsed += currentInterval;
+      currentInterval *= 2; // Double for next time (exponential backoff)
+      scheduleNext(); // Schedule the next notification
+    }, currentInterval);
+  };
+
+  scheduleNext(); // Start the exponential retry process
 
   return new Response(
     JSON.stringify({ scheduled: true }),
