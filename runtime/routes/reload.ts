@@ -9,12 +9,14 @@ export const handler = createHandler(async (
 
   let currentInterval = 1000; // Start with 1 second
   let elapsed = 0;
+  let resolved = false;
   using _ = state.release.onChange(() => {
     isUpToDate.resolve(); // force resolve
+    resolved = true;
   });
 
   const scheduleNext = () => {
-    if (elapsed >= delayMs) {
+    if (elapsed >= delayMs || resolved) {
       isUpToDate.resolve(); // force resolve
       return; // Stop when we've reached the delay
     }
