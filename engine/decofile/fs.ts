@@ -1,10 +1,13 @@
 import { debounce } from "@std/async/debounce";
 import { equal } from "@std/assert/equal";
+import { extname } from "@std/path";
 import { join } from "@std/path";
+import { decompress } from "npm:brotli@1.3.3";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { getDecofileJSONFromDecofile } from "./json.ts";
 import type {
+  Decofile,
   DecofileProvider,
   OnChangeCallback,
   ReadOptions,
@@ -19,6 +22,28 @@ const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
     ) => ({} as Record<string, unknown>));
 };
 
+const readAndDecompressFile = async (filePath: string): Promise<Decofile> => {
+  const ext = extname(filePath);
+
+  if (ext === ".bin") {
+    // Read as text (base64 encoded), decode, and decompress with brotli
+    const base64Content = await Deno.readTextFile(filePath);
+    const compressedData = Uint8Array.from(
+      atob(base64Content),
+      (c) => c.charCodeAt(0),
+    );
+    const decompressed = decompress(compressedData);
+    const textDecoder = new TextDecoder();
+    const jsonString = textDecoder.decode(decompressed);
+    return JSON.parse(jsonString) as Decofile;
+  } else {
+    // Regular JSON file
+    return Deno.readTextFile(filePath).then((text) =>
+      JSON.parse(text) as Decofile
+    );
+  }
+};
+
 export const DECO_FILE_NAME = ".decofile.json";
 
 export const newFsProviderFromPath = (
@@ -29,8 +54,7 @@ export const newFsProviderFromPath = (
   let previousState: unknown = null;
 
   const doUpdateState = async () => {
-    const state = await Deno.readTextFile(fullPath)
-      .then(JSON.parse)
+    const state = await readAndDecompressFile(fullPath)
       .catch((_e) => null);
     if (state === null) {
       return;
@@ -66,7 +90,7 @@ export const newFsProviderFromPath = (
           return { state: data, revision: `${Date.now()}` };
         });
       }
-      const state = await Deno.readTextFile(fullPath).then(JSON.parse);
+      const state = await readAndDecompressFile(fullPath);
       previousState = state;
       return {
         state,
@@ -86,7 +110,7 @@ export const newFsProviderFromPath = (
 
   const state = async (options: ReadOptions | undefined) => {
     if (options?.forceFresh) {
-      return Deno.readTextFile(fullPath).then(JSON.parse);
+      return readAndDecompressFile(fullPath);
     }
 
     return await decofile.then((r) => r.state);
