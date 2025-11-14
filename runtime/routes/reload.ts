@@ -18,6 +18,7 @@ export const handler = createHandler(async (
   const scheduleNext = () => {
     if (elapsed >= delayMs || resolved) {
       isUpToDate.resolve(); // force resolve
+      state.release.notify?.();
       return; // Stop when we've reached the delay
     }
 
