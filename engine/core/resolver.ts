@@ -2,6 +2,7 @@
 import type { Context, Span, Tracer } from "../../deps.ts";
 import { identity } from "../../utils/object.ts";
 import type { createServerTimings } from "../../utils/timings.ts";
+import { MurmurHash3 } from "../../utils/hasher.ts";
 import { type HintNode, type ResolveHints, traverseAny } from "./hints.ts";
 import { type ResolveOptions, resolverIdFromResolveChain } from "./mod.ts";
 import { isAwaitable, type PromiseOrValue, type UnPromisify } from "./utils.ts";
@@ -51,6 +52,7 @@ export interface BaseContext {
   danglingRecover?: Resolver;
   resolveHints: ResolveHints;
   memo: Record<string, any>;
+  contentMemo: Record<string, any>;
   runOnce: <T>(key: string, f: () => PromiseOrValue<T>) => PromiseOrValue<T>;
 }
 
@@ -352,6 +354,78 @@ const resolveTypeOf = <
   return [resolvable as Omit<T, "__resolveType">, undefined];
 };
 
+/**
+ * Recursively hashes object properties in a deterministic way without creating large intermediate strings
+ */
+const hashObjectRecursively = (
+  hasher: MurmurHash3,
+  obj: any,
+  depth = 0,
+): void => {
+  // Prevent infinite recursion and limit depth for performance
+  if (depth > 10) {
+    hasher.hash("[max-depth]");
+    return;
+  }
+
+  if (obj === null) {
+    hasher.hash("null");
+    return;
+  }
+
+  if (obj === undefined) {
+    hasher.hash("undefined");
+    return;
+  }
+
+  const type = typeof obj;
+  hasher.hash(type);
+
+  if (type !== "object") {
+    hasher.hash(String(obj));
+    return;
+  }
+
+  if (Array.isArray(obj)) {
+    hasher.hash(`[${obj.length}]`);
+    // Preserve array order - don't sort array elements
+    for (let i = 0; i < obj.length; i++) {
+      hasher.hash(`[${i}]`);
+      hashObjectRecursively(hasher, obj[i], depth + 1);
+    }
+    return;
+  }
+
+  // For objects, sort keys only for first 2 levels (depth 0 and 1)
+  const keys = depth < 2 ? Object.keys(obj).sort() : Object.keys(obj);
+  hasher.hash(`{${keys.length}}`);
+
+  for (const key of keys) {
+    hasher.hash(key);
+    hashObjectRecursively(hasher, obj[key], depth + 1);
+  }
+};
+
+/**
+ * Generates a content-based hash for deduplicating identical inline resolvables
+ * Uses incremental hashing to avoid creating large intermediate strings
+ */
+const generateContentHash = <T>(resolveType: string, props: T): string => {
+  const hasher = new MurmurHash3();
+  hasher.hash(resolveType);
+  hashObjectRecursively(hasher, props);
+  return `${hasher.result()}`;
+};
+
+/**
+ * Checks if a resolver type should be deduplicated.
+ * Only loaders (data fetchers) should be deduplicated, not sections (UI components).
+ */
+const shouldDeduplicateResolver = (resolveType: string): boolean => {
+  // Only deduplicate loaders - they typically contain "/loaders/" in path or end with loader-like patterns
+  return resolveType.includes("/loaders/");
+};
+
 interface ResolvedKey<T, K extends keyof T> {
   key: K;
   resolved: T[K];
@@ -537,6 +611,33 @@ const resolveWithType = <
         context,
       );
     const resolveStart = opts?.hooks?.onResolveStart;
+
+    // Only apply content-based deduplication to loaders, not sections
+    if (shouldDeduplicateResolver(resolveType)) {
+      // Generate content hash for inline resolvables to enable deduplication
+      const contentHash = generateContentHash(resolveType, props);
+
+      // Check if we already resolved this exact content
+      if (context.contentMemo[contentHash]) {
+        return context.contentMemo[contentHash];
+      }
+
+      // Store the promise in contentMemo to deduplicate identical inline resolvables
+      const result = resolveStart
+        ? resolveStart(
+          proceed,
+          props,
+          resolver,
+          resolveType,
+          context,
+        )
+        : proceed();
+
+      context.contentMemo[contentHash] = result;
+      return result;
+    }
+
+    // For non-loaders (sections, etc.), execute normally without deduplication
     return resolveStart
       ? resolveStart(
         proceed,
