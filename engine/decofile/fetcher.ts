@@ -148,6 +148,11 @@ export const fromJSON = (
     state: () => Promise.resolve(state),
     onChange: (cb) => {
       cbs.push(cb);
+      return {
+        [Symbol.dispose]: () => {
+          cbs.splice(cbs.indexOf(cb), 1);
+        },
+      };
     },
     notify: () => {
       return Promise.all(cbs.map((cb) => cb())).then(() => {});
@@ -232,6 +237,10 @@ export const fromEndpoint = (endpoint: string): DecofileProvider => {
     state: (options) => decofileProviderPromise.then((r) => r.state(options)),
     onChange: (cb) => {
       decofileProviderPromise.then((r) => r.onChange(cb));
+      return {
+        [Symbol.dispose]: () => {
+        },
+      };
     },
     revision: () => decofileProviderPromise.then((r) => r.revision()),
     dispose: () => {

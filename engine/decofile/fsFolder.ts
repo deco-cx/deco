@@ -199,6 +199,11 @@ export const newFsFolderProviderFromPath = (
     },
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
+      return {
+        [Symbol.dispose]: () => {
+          onChangeCbs.splice(onChangeCbs.indexOf(cb), 1);
+        },
+      };
     },
     revision: () => decofile.then((r) => r.revision),
   };
