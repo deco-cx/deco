@@ -19,7 +19,7 @@ export interface ReadOptions {
 export interface DecofileProvider {
   state(options?: ReadOptions): Promise<Decofile>;
   revision(): Promise<string>;
-  onChange(callback: OnChangeCallback): void;
+  onChange(callback: OnChangeCallback): Disposable;
   notify?(): Promise<void>;
   dispose?: () => void;
   set?(state: Decofile, revision?: string): Promise<void>;
@@ -57,8 +57,14 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
         current?.dispose?.();
       },
       onChange: (cb) => {
-        providers.onChange(cb);
-        current.onChange(cb);
+        const disposable = providers.onChange(cb);
+        const currentDisposable = current.onChange(cb);
+        return {
+          [Symbol.dispose]: () => {
+            disposable[Symbol.dispose]();
+            currentDisposable[Symbol.dispose]();
+          },
+        };
       },
       revision: () => {
         return Promise.all([

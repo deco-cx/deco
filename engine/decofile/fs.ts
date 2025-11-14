@@ -1,4 +1,5 @@
 import { debounce } from "@std/async/debounce";
+import { equal } from "@std/assert/equal";
 import { join } from "@std/path";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
@@ -25,6 +26,7 @@ export const newFsProviderFromPath = (
   appName?: string,
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
+  let previousState: unknown = null;
   const updateState = debounce(async () => {
     const state = await Deno.readTextFile(fullPath)
       .then(JSON.parse)
@@ -32,6 +34,11 @@ export const newFsProviderFromPath = (
     if (state === null) {
       return;
     }
+    // Only update and notify if the state has actually changed
+    if (equal(state, previousState)) {
+      return;
+    }
+    previousState = state;
     decofile = Promise.resolve({
       state,
       revision: `${Date.now()}`,
@@ -52,11 +59,14 @@ export const newFsProviderFromPath = (
           fullPath,
           stringifyForWrite(data),
         ).then(() => {
+          previousState = data;
           return { state: data, revision: `${Date.now()}` };
         });
       }
+      const state = await Deno.readTextFile(fullPath).then(JSON.parse);
+      previousState = state;
       return {
-        state: await Deno.readTextFile(fullPath).then(JSON.parse),
+        state,
         revision: `${Date.now()}`,
       };
     },
@@ -86,6 +96,7 @@ export const newFsProviderFromPath = (
       return Promise.resolve();
     },
     set: (state, rev) => {
+      previousState = state;
       decofile = Promise.resolve({
         state,
         revision: rev ?? `${Date.now()}`,
@@ -97,6 +108,11 @@ export const newFsProviderFromPath = (
     },
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
+      return {
+        [Symbol.dispose]: () => {
+          onChangeCbs.splice(onChangeCbs.indexOf(cb), 1);
+        },
+      };
     },
     revision: () => decofile.then((r) => r.revision),
   };
