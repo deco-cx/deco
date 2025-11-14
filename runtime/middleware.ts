@@ -434,6 +434,18 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
+      // Apply page-level Cache-Control if configured and safe to cache
+      // Local constants to avoid cross-package import cycles
+      const DECO_PAGE_CACHE_CONTROL_HEADER = "x-deco-page-cache-control";
+      const isGet = ctx.req.raw.method === "GET";
+      const pageCC = ctx.var.response.headers.get(
+        DECO_PAGE_CACHE_CONTROL_HEADER,
+      );
+      const shouldCachePage = pageCC && isGet && ctx?.var?.vary?.shouldCache;
+      if (shouldCachePage) {
+        newHeaders.set("cache-control", pageCC as string);
+      }
+
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
       // so I'm first setting it to undefined and just then set the entire response again

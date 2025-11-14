@@ -143,6 +143,41 @@ export const defaultHeaders = {
   ["x-powered-by"]: `deco@${denoJSON.version}`,
 };
 
+/**
+ * Internal header used to signal that the current page should emit Cache-Control.
+ * The value must be a valid Cache-Control string; when present, middleware will apply it if safe.
+ */
+export const DECO_PAGE_CACHE_CONTROL_HEADER = "x-deco-page-cache-control";
+/**
+ * Internal header used to list which matcher groups are allowed to vary when page cache-control is enabled.
+ * Example value: "device,time"
+ */
+export const DECO_PAGE_CACHE_ALLOW_HEADER = "x-deco-page-cache-allow";
+
+/**
+ * Normalize a cache-control configuration into a valid header string.
+ * - true => DEFAULT_CACHE_CONTROL
+ * - string => parsed/validated and re-formatted; on invalid, falls back to DEFAULT_CACHE_CONTROL
+ * - falsy/undefined => undefined (disabled)
+ */
+export const normalizeCacheControlHeader = (
+  value?: boolean | string,
+): string | undefined => {
+  if (!value) return undefined;
+  if (value === true) {
+    return formatCacheControl(DEFAULT_CACHE_CONTROL);
+  }
+  try {
+    const h = new Headers({ "cache-control": value });
+    const parsed = parseCacheControl(h);
+    // If nothing parsed, treat as invalid
+    const normalized = formatCacheControl(parsed);
+    return normalized || formatCacheControl(DEFAULT_CACHE_CONTROL);
+  } catch {
+    return formatCacheControl(DEFAULT_CACHE_CONTROL);
+  }
+};
+
 export function setCSPHeaders(
   request: Request,
   response: Response,

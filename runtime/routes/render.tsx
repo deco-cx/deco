@@ -104,10 +104,9 @@ export const handler = createHandler(async (
   if (shouldCache && shouldCacheFromVary) {
     // Stale cache on CDN, but make the browser fetch every single time.
     // We can test if caching on the browser helps too.
-    response.headers.set(
-      "cache-control",
-      DECO_RENDER_CACHE_CONTROL,
-    );
+    const DECO_PAGE_CACHE_CONTROL_HEADER = "x-deco-page-cache-control";
+    const pageCC = ctx.var.response.headers.get(DECO_PAGE_CACHE_CONTROL_HEADER);
+    response.headers.set("cache-control", pageCC ?? DECO_RENDER_CACHE_CONTROL);
   } else {
     response.headers.set(
       "cache-control",
