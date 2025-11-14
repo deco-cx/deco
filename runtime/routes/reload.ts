@@ -4,37 +4,74 @@ export const handler = createHandler(async (
   { var: state, req },
 ) => {
   const isUpToDate = Promise.withResolvers<void>();
-  const delay = req.query("delay");
-  const delayMs = delay ? parseInt(delay) : 5000;
+  const timestampParam = req.query("timestamp");
+  const tsFile = req.query("tsFile");
 
-  let currentInterval = 1000; // Start with 1 second
-  const maxInterval = 10000; // Cap at 10 seconds to avoid huge gaps
-  let elapsed = 0;
+  if (!timestampParam || !tsFile) {
+    return new Response(
+      JSON.stringify({ error: "Missing timestamp or tsFile parameter" }),
+      {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  }
+
+  const targetTimestamp = parseInt(timestampParam);
+  const pollInterval = 2000; // Poll every 2 seconds
+  const timeout = 5 * 60 * 1000; // 5 minutes
+  const startTime = Date.now();
   let resolved = false;
+
   using _ = state.release.onChange(() => {
-    isUpToDate.resolve(); // force resolve
+    isUpToDate.resolve();
     resolved = true;
   });
 
-  const scheduleNext = () => {
-    if (elapsed >= delayMs || resolved) {
-      isUpToDate.resolve(); // force resolve
-      state.release.notify?.();
-      return; // Stop when we've reached the delay
+  const checkTimestamp = async () => {
+    if (resolved) {
+      return;
     }
 
-    setTimeout(async () => {
-      await state.release.notify?.();
+    const elapsed = Date.now() - startTime;
 
-      elapsed += currentInterval;
-      currentInterval = Math.min(currentInterval * 2, maxInterval); // Double but cap at maxInterval
-      scheduleNext(); // Schedule the next notification
-    }, currentInterval);
+    // Check timeout
+    if (elapsed >= timeout) {
+      isUpToDate.resolve();
+      return;
+    }
+
+    try {
+      // Read the timestamp file
+      const fileContent = await Deno.readTextFile(tsFile);
+      const fileTimestamp = parseInt(fileContent.trim());
+
+      // Check if timestamp is >= target
+      if (fileTimestamp >= targetTimestamp) {
+        await state.release.notify?.();
+        // Check again after notify to see if callbacks fired
+        if (!resolved) {
+          // Schedule next check if still not resolved
+          setTimeout(checkTimestamp, pollInterval);
+        }
+      } else {
+        // Not ready yet, schedule next check
+        setTimeout(checkTimestamp, pollInterval);
+      }
+    } catch (_error) {
+      // File might not exist yet or be unreadable, keep polling
+      setTimeout(checkTimestamp, pollInterval);
+    }
   };
 
-  scheduleNext(); // Start the exponential retry process
+  // Start polling
+  checkTimestamp();
 
   await isUpToDate.promise;
+  const elapsed = Date.now() - startTime;
+
   return new Response(
     JSON.stringify({ elapsed }),
     {
