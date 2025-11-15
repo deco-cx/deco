@@ -3,13 +3,26 @@ import { createHandler } from "../middleware.ts";
 export const handler = createHandler(async (
   { var: state, req },
 ) => {
-  const isUpToDate = Promise.withResolvers<void>();
-  const timestampParam = req.query("timestamp");
-  const tsFile = req.query("tsFile");
+  // Parse request body to get the decofile
+  let decofile;
+  try {
+    const body = await req.json();
+    decofile = body.decofile;
 
-  if (!timestampParam || !tsFile) {
+    if (!decofile) {
+      return new Response(
+        JSON.stringify({ error: "Missing decofile in request body" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+  } catch (_error) {
     return new Response(
-      JSON.stringify({ error: "Missing timestamp or tsFile parameter" }),
+      JSON.stringify({ error: "Invalid JSON in request body" }),
       {
         status: 400,
         headers: {
@@ -19,61 +32,11 @@ export const handler = createHandler(async (
     );
   }
 
-  const targetTimestamp = parseInt(timestampParam);
-  const pollInterval = 2000; // Poll every 2 seconds
-  const timeout = 5 * 60 * 1000; // 5 minutes
-  const startTime = Date.now();
-  let resolved = false;
-
-  using _ = state.release.onChange(() => {
-    isUpToDate.resolve();
-    resolved = true;
-  });
-
-  const checkTimestamp = async () => {
-    if (resolved) {
-      return;
-    }
-
-    const elapsed = Date.now() - startTime;
-
-    // Check timeout
-    if (elapsed >= timeout) {
-      isUpToDate.resolve();
-      return;
-    }
-
-    try {
-      // Read the timestamp file
-      const fileContent = await Deno.readTextFile(tsFile);
-      const fileTimestamp = parseInt(fileContent.trim());
-
-      // Check if timestamp is >= target
-      if (fileTimestamp >= targetTimestamp) {
-        await state.release.notify?.();
-        // Check again after notify to see if callbacks fired
-        if (!resolved) {
-          // Schedule next check if still not resolved
-          setTimeout(checkTimestamp, pollInterval);
-        }
-      } else {
-        // Not ready yet, schedule next check
-        setTimeout(checkTimestamp, pollInterval);
-      }
-    } catch (_error) {
-      // File might not exist yet or be unreadable, keep polling
-      setTimeout(checkTimestamp, pollInterval);
-    }
-  };
-
-  // Start polling
-  checkTimestamp();
-
-  await isUpToDate.promise;
-  const elapsed = Date.now() - startTime;
+  // Set the new decofile
+  await state.release.set?.(decofile);
 
   return new Response(
-    JSON.stringify({ elapsed }),
+    JSON.stringify({ success: true }),
     {
       headers: {
         "Content-Type": "application/json",
