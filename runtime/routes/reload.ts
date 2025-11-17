@@ -1,9 +1,19 @@
 import { createHandler } from "../middleware.ts";
 
+const RELOAD_TOKEN = Deno.env.get("DECO_RELOAD_TOKEN");
 export const handler = createHandler(async (
   { var: state, req },
 ) => {
   // Parse request body to get the decofile
+  const token = req.header("Authorization")?.split(" ")[1];
+  if (RELOAD_TOKEN && token !== RELOAD_TOKEN) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      {
+        status: 401,
+      },
+    );
+  }
   let decofile;
   try {
     const body = await req.json();
