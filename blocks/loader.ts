@@ -5,7 +5,6 @@ import { ValueType } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 import { singleFlight } from "../engine/core/utils.ts";
-import type { DecofileProvider } from "../engine/decofile/provider.ts";
 import { HttpError } from "../engine/errors.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { State } from "../mod.ts";
@@ -183,7 +182,6 @@ const wrapLoader = (
     ...rest
   }: LoaderModule,
   resolveChain: FieldResolver[],
-  release: DecofileProvider,
 ) => {
   const [cacheMaxAge, mode] = typeof cache === "string"
     ? [MAX_AGE_S, cache]
@@ -262,23 +260,9 @@ const wrapLoader = (
 
         const resolveChainString = FieldResolver.minify(resolveChain)
           .toString();
-        const revisionID = await release?.revision() ?? undefined;
 
-        if (!resolveChainString || !revisionID) {
-          if (!resolveChainString && !revisionID) {
-            logger.warn(`Could not get revisionID nor resolveChain`);
-          }
-          if (!revisionID) {
-            logger.warn(
-              `Could not get revisionID for resolveChain ${resolveChainString}`,
-            );
-          }
-          if (!resolveChainString) {
-            logger.warn(
-              `Could not get resolveChain for revisionID ${revisionID}`,
-            );
-          }
-
+        if (!resolveChainString) {
+          logger.warn(`Could not get resolveChain`);
           timing?.end();
           return await handler(props, req, ctx);
         }
@@ -288,9 +272,9 @@ const wrapLoader = (
         // Optimize cache key generation using simple string concatenation
         const cacheKeyUrl = `https://localhost/?resolver=${
           encodeURIComponent(loader)
-        }&resolveChain=${encodeURIComponent(resolveChainString)}&revisionID=${
-          encodeURIComponent(revisionID)
-        }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
+        }&resolveChain=${encodeURIComponent(resolveChainString)}&cacheKey=${
+          encodeURIComponent(cacheKeyValue)
+        }`;
         const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {
@@ -367,7 +351,7 @@ const loaderBlock: Block<LoaderModule> = {
     wrapCaughtErrors,
     (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
       applyProps(
-        wrapLoader(mod, ctx.resolveChain, ctx.context.state.release),
+        wrapLoader(mod, ctx.resolveChain),
       )(
         props,
         ctx,
