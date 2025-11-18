@@ -20,12 +20,12 @@ import {
   DECO_SITE_NAME,
 } from "./daemon.ts";
 import { watchFS } from "./fs/api.ts";
-import { ensureGit, lockerGitAPI } from "./git.ts";
+import { ensureGit, getGitHubPackageTokens, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
 import { watchMeta } from "./meta.ts";
 import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
-import { createWorker } from "./worker.ts";
+import { createWorker, type WorkerOptions } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
@@ -42,6 +42,17 @@ const DECO_TRANSIENT_ENV = Deno.env.get("DECO_TRANSIENT_ENV") === "true";
 const SHOULD_PERSIST = DENO_DEPLOYMENT_ID && SOURCE_PATH && !DECO_TRANSIENT_ENV;
 export const VERBOSE: string | undefined = Deno.env.get("VERBOSE") ||
   DENO_DEPLOYMENT_ID;
+const DENO_AUTH_TOKENS = "DENO_AUTH_TOKENS";
+const UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME =
+  "UNSTABLE_WORKER_RESPAWN_INTERVAL_MS";
+const UNSTABLE_WORKER_RESPAWN_INTERVAL_MS =
+  Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME) &&
+    !Number.isNaN(
+      parseInt(Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME)!, 10),
+    )
+    ? parseInt(Deno.env.get(UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME)!, 10)
+    : undefined; // 1hour
+const HAS_PRIVATE_GITHUB_IMPORT = Deno.env.get("HAS_PRIVATE_GITHUB_IMPORT");
 
 const WORKER_PORT = portPool.get();
 
@@ -55,19 +66,43 @@ const buildCmd = buildCmdStr
     stderr: "inherit",
   })
   : null;
-const runCmd = cmd
-  ? new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
-    args,
-    stdout: "piped",
-    stderr: "piped",
-    env: {
-      PORT: `${WORKER_PORT}`,
-      ...Deno.env.get("DENO_DIR_RUN")
-        ? { DENO_DIR: Deno.env.get("DENO_DIR_RUN") }
-        : {},
-    },
-  })
+
+const getEnvVar = (envName: string, varName: string) =>
+  Deno.env.get(envName) ? { [varName]: Deno.env.get(envName) } : {};
+
+const createRunCmd = cmd
+  ? (opt?: Pick<Deno.CommandOptions, "env">) =>
+    new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
+      args,
+      stdout: "piped",
+      stderr: "piped",
+      env: {
+        ...opt?.env,
+        PORT: `${WORKER_PORT}`,
+        ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
+        ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
+      },
+    })
   : null;
+
+let lastUpdateEnvUpdate: number | undefined;
+const updateDenoAuthTokenEnv = async () => {
+  if (
+    !UNSTABLE_WORKER_RESPAWN_INTERVAL_MS ||
+    lastUpdateEnvUpdate &&
+      Date.now() < lastUpdateEnvUpdate
+  ) return;
+  lastUpdateEnvUpdate = Date.now() + UNSTABLE_WORKER_RESPAWN_INTERVAL_MS;
+
+  const appTokens = await getGitHubPackageTokens();
+  // TODO: handle if DENO_AUTH_TOKENS is already set
+  Deno.env.set(
+    DENO_AUTH_TOKENS,
+    appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
+      ";",
+    ),
+  );
+};
 
 if (!DECO_SITE_NAME) {
   console.error(
@@ -177,6 +212,10 @@ const watch = async () => {
       genManifestTS();
     }
 
+    if (HAS_PRIVATE_GITHUB_IMPORT) {
+      updateDenoAuthTokenEnv();
+    }
+
     // TODO: We should be able to remove this after we migrate to ebs
     persistState();
   }
@@ -244,27 +283,60 @@ if (VERBOSE) {
   app.use(logger());
 }
 
-app.get("/_healthcheck", () =>
-  new Response(denoJSON.version, {
+app.get("/_healthcheck", (c) => {
+  const timestamp = +(c.req.header("x-hc-retry-timestamp") ?? "0");
+  const attempt = +(c.req.header("x-hc-retry-attempt") ?? "0");
+  console.log("healthcheck received", {
+    timestamp: new Date(timestamp).toISOString(),
+    attempt,
+  });
+
+  return new Response(denoJSON.version, {
     status: 200,
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET",
       "Access-Control-Allow-Headers": "Content-Type",
     },
-  }));
+  });
+});
 // idle should run even when branch is not active
 app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
-// Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-app.use(createDeps());
 // k8s liveness probe
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
+
+// Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
+app.use(createDeps());
 app.use(activityMonitor);
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
 // Workers are only necessary if there needs to have a preview of the site
-if (runCmd) {
-  app.route("", createWorker({ command: runCmd, port: WORKER_PORT, persist }));
+if (createRunCmd) {
+  // Create a function that returns fresh WorkerOptions with new tokens
+  const createWorkerOptions = async (): Promise<WorkerOptions> => {
+    if (HAS_PRIVATE_GITHUB_IMPORT) {
+      await updateDenoAuthTokenEnv();
+    }
+
+    if (UNSTABLE_WORKER_RESPAWN_INTERVAL_MS) {
+      /* TODO: Implement a better approach handling updating child env vars, preventing multiple child processes and with HMR.
+       * Also should have the git short live auth token to do git operations like: push/pull/rebase. Now, these git operations are guaranted
+       * because the short live git token is set once in inicialization and respawning
+       */
+      // Kill process to allow restart with new env settings
+      setTimeout(() => {
+        Deno.exit(1);
+      }, UNSTABLE_WORKER_RESPAWN_INTERVAL_MS);
+    }
+
+    return {
+      command: createRunCmd(), // This will create a fresh command with new tokens
+      port: WORKER_PORT,
+      persist,
+    };
+  };
+
+  app.route("", createWorker(createWorkerOptions));
 }
 
 const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";

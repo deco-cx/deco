@@ -15,7 +15,8 @@ import {
   OTEL_ENABLE_EXTRA_METRICS,
 } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
-import { DebugProperties } from "../utils/vary.ts";
+import { inFuture } from "../runtime/caches/utils.ts";
+import type { DebugProperties } from "../utils/vary.ts";
 import type { HttpContext } from "./handler.ts";
 import {
   applyProps,
@@ -28,6 +29,8 @@ import {
 } from "./utils.tsx";
 
 export type Loader = InstanceOf<typeof loaderBlock, "#/root/loaders">;
+
+type CacheMode = "no-store" | "no-cache" | "stale-while-revalidate";
 
 export interface LoaderModule<
   TProps = any,
@@ -51,7 +54,9 @@ export interface LoaderModule<
    *
    * @default "no-store"
    */
-  cache?: "no-store" | "stale-while-revalidate" | "no-cache";
+  cache?: CacheMode | {
+    maxAge: number;
+  };
   // a null value avoid cache
   cacheKey?: (
     props: TProps,
@@ -65,7 +70,7 @@ export interface LoaderModule<
 
 interface LoaderDebugData extends DebugProperties {
   reason: {
-    cache: NonNullable<LoaderModule["cache"]>;
+    cache: NonNullable<CacheMode>;
     cacheKeyNull: boolean;
   };
 }
@@ -151,15 +156,10 @@ caches?.open("loader")
 
 const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
 
-const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
+// Reuse TextEncoder instance to avoid repeated instantiation
+const textEncoder = new TextEncoder();
 
-const inFuture = (maybeDate: string) => {
-  try {
-    return new Date(maybeDate) > new Date();
-  } catch {
-    return false;
-  }
-};
+const isCache = (c: Cache | undefined): c is Cache => typeof c !== "undefined";
 
 const noop = () => "";
 
@@ -168,11 +168,16 @@ const noop = () => "";
  * 1. Caching
  * 2. Single Flight
  * 3. Tracing
+ *
+ * Performance optimizations applied:
+ * - Reused TextEncoder instance to avoid repeated instantiation
+ * - Optimized cache key generation using string concatenation
+ * - Improved string concatenation for Content-Length header
  */
 const wrapLoader = (
   {
     default: handler,
-    cache: mode = "no-store",
+    cache = "no-store",
     cacheKey = noop,
     singleFlightKey,
     ...rest
@@ -180,6 +185,9 @@ const wrapLoader = (
   resolveChain: FieldResolver[],
   release: DecofileProvider,
 ) => {
+  const [cacheMaxAge, mode] = typeof cache === "string"
+    ? [MAX_AGE_S, cache]
+    : [cache?.maxAge, "stale-while-revalidate"];
   const flights = singleFlight();
 
   if (typeof singleFlightKey === "function") {
@@ -230,7 +238,7 @@ const wrapLoader = (
                 ctx.vary.debug.push<LoaderDebugData>({
                   resolver,
                   reason: {
-                    cache: mode,
+                    cache: mode as CacheMode,
                     cacheKeyNull: isCacheKeyNull,
                   },
                 });
@@ -251,19 +259,12 @@ const wrapLoader = (
         const cache = maybeCache;
 
         const timing = ctx.monitoring?.timings.start("loader-hash");
-        // Web Cache API requires a request. Create an artificial request with the right key
-        // TODO: (@tlgimenes) Resolve props cache key statically
-        const url = new URL("https://localhost");
-        url.searchParams.set("resolver", loader);
 
         const resolveChainString = FieldResolver.minify(resolveChain)
           .toString();
         const revisionID = await release?.revision() ?? undefined;
 
-        if (resolveChainString && revisionID) {
-          url.searchParams.set("resolveChain", resolveChainString);
-          url.searchParams.set("revisionID", revisionID);
-        } else {
+        if (!resolveChainString || !revisionID) {
           if (!resolveChainString && !revisionID) {
             logger.warn(`Could not get revisionID nor resolveChain`);
           }
@@ -283,23 +284,29 @@ const wrapLoader = (
         }
 
         timing?.end();
-        url.searchParams.set("cacheKey", cacheKeyValue);
-        const request = new Request(url);
+
+        // Optimize cache key generation using simple string concatenation
+        const cacheKeyUrl = `https://localhost/?resolver=${
+          encodeURIComponent(loader)
+        }&resolveChain=${encodeURIComponent(resolveChainString)}&revisionID=${
+          encodeURIComponent(revisionID)
+        }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
+        const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
-          const jsonStringEncoded = new TextEncoder().encode(
-            JSON.stringify(json),
-          );
+
+          // Optimize JSON serialization and encoding using reused TextEncoder
+          const jsonString = JSON.stringify(json);
+          const jsonStringEncoded = textEncoder.encode(jsonString);
 
           const headers: { [key: string]: string } = {
-            expires: new Date(Date.now() + (MAX_AGE_S * 1e3))
-              .toUTCString(),
+            expires: new Date(Date.now() + (cacheMaxAge * 1e3)).toUTCString(),
             "Content-Type": "application/json",
           };
 
-          if (jsonStringEncoded && jsonStringEncoded.length > 0) {
-            headers["Content-Length"] = "" + jsonStringEncoded.length;
+          if (jsonStringEncoded.length > 0) {
+            headers["Content-Length"] = jsonStringEncoded.length.toString();
           }
 
           cache.put(

@@ -155,6 +155,11 @@ export const newRealtime = (
   return {
     onChange: (cb: OnChangeCallback) => {
       onChangeCbs.push(cb);
+      return {
+        [Symbol.dispose]: () => {
+          onChangeCbs.splice(onChangeCbs.indexOf(cb), 1);
+        },
+      };
     },
     notify() {
       return notify();

@@ -14,6 +14,7 @@ import {
   type Patch,
   type UpdateResponse,
 } from "./common.ts";
+import { grep, type GrepResult } from "./grep.ts";
 
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
   try {
@@ -95,6 +96,10 @@ export interface PatchAPI {
 
 export interface DeleteAPI {
   response: UpdateResponse;
+}
+
+export interface GrepAPI {
+  response: GrepResult;
 }
 
 const shouldIgnore = (path: string) =>
@@ -279,6 +284,38 @@ export const createFSAPIs = () => {
     };
 
     return c.json(update);
+  });
+
+  app.get("/grep", async (c) => {
+    const query = c.req.query("query");
+
+    const includePattern = c.req.query("includePattern") || "*";
+    const excludePattern = c.req.query("excludePattern");
+    const caseInsensitive = c.req.query("caseInsensitive") === "true";
+    const isRegex = c.req.query("isRegex") === "true";
+    const limit = parseInt(c.req.query("limit") || "100");
+    const filepath = c.req.query("filepath");
+
+    if (!query) {
+      c.status(400);
+      return c.json({ error: "Query parameter 'query' is required" });
+    }
+
+    try {
+      const options = {
+        caseInsensitive,
+        isRegex,
+        includePattern,
+        excludePattern,
+        limit,
+        filepath,
+      };
+
+      const result = await grep(query, options);
+      return c.json(result);
+    } catch (_error) {
+      return c.json({ error: "Internal server error during grep operation" });
+    }
   });
 
   return app;

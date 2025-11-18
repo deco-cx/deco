@@ -10,10 +10,13 @@ import {
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/tmp/deco_cache";
 
+// Reuse TextEncoder instance to avoid repeated instantiation
+const textEncoder = new TextEncoder();
+
 // Function to convert headers object to a Uint8Array
 function headersToUint8Array(headers: [string, string][]) {
   const headersStr = JSON.stringify(headers);
-  return new TextEncoder().encode(headersStr);
+  return textEncoder.encode(headersStr);
 }
 
 // Function to combine the body and headers into a single buffer

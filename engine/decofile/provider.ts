@@ -19,7 +19,7 @@ export interface ReadOptions {
 export interface DecofileProvider {
   state(options?: ReadOptions): Promise<Decofile>;
   revision(): Promise<string>;
-  onChange(callback: OnChangeCallback): void;
+  onChange(callback: OnChangeCallback): Disposable;
   notify?(): Promise<void>;
   dispose?: () => void;
   set?(state: Decofile, revision?: string): Promise<void>;
@@ -57,8 +57,20 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
         current?.dispose?.();
       },
       onChange: (cb) => {
-        providers.onChange(cb);
-        current.onChange(cb);
+        const disposable = providers.onChange(cb);
+        const currentDisposable = current.onChange(cb);
+        return {
+          [Symbol.dispose]: () => {
+            disposable[Symbol.dispose]();
+            currentDisposable[Symbol.dispose]();
+          },
+        };
+      },
+      notify: async () => {
+        await Promise.all([
+          providers.notify?.(),
+          current.notify?.(),
+        ]);
       },
       revision: () => {
         return Promise.all([
@@ -94,6 +106,11 @@ const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
 });
 const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
 
+const respectDecofileProviders = [
+  "deconfig://",
+  "file:///app/decofile/decofile.json",
+  "file:///app/decofile/decofile.bin", // brotli-compressed decofile
+];
 /**
  * Compose `config` and `pages` tables into a single ConfigStore provider given the impression that they are a single source of truth.
  * @param ns the site namespace
@@ -110,7 +127,12 @@ export const getProvider = async (
     return newFsProvider();
   }
 
-  const endpoint = await blocksFolderExistsPromise
+  const shouldRespectDecoRelease = respectDecofileProviders.some((provider) =>
+    DECOFILE_PATH_FROM_ENV?.startsWith(provider)
+  );
+
+  const endpoint = await blocksFolderExistsPromise &&
+      !shouldRespectDecoRelease
     ? `folder://${BLOCKS_FOLDER}`
     : DECOFILE_PATH_FROM_ENV;
   if (endpoint) {

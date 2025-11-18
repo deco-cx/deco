@@ -1,12 +1,12 @@
 // TODO make fresh plugin use @deco/deco from JSR. so that we can use the same code for both
 
-import type { AppManifest, DecoContext, SiteInfo } from "@deco/deco";
+import type { Plugin } from "$fresh/server.ts";
+import type { AppManifest, DecoContext, Framework, SiteInfo } from "@deco/deco";
 import { Deco, type PageData, type PageParams } from "@deco/deco";
 import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { ComponentType } from "preact";
-import framework from "./Bindings.tsx";
-import type { Plugin } from "$fresh/server.ts";
 import type { Bindings } from "../handler.tsx";
+import freshFramework from "./Bindings.tsx";
 export type { Plugin } from "$fresh/server.ts";
 
 export interface PluginRoute {
@@ -51,6 +51,7 @@ export interface InitOptions<TManifest extends AppManifest = AppManifest> {
   htmx?: boolean;
   site?: SiteInfo;
   deco?: Deco<TManifest>;
+  ErrorFallback?: Framework["ErrorFallback"];
   useServer?: Bindings<TManifest>["useServer"];
   middlewares?: PluginMiddleware[];
   visibilityOverrides?: DecoContext<TManifest>["visibilityOverrides"];
@@ -87,12 +88,17 @@ export default function decoPlugin<TManifest extends AppManifest = AppManifest>(
     throw new Error(`functions opts are not supported`);
   }
 
+  const framework = opt?.htmx ? htmxFramework : freshFramework;
+
   const decoPromise = opt.deco instanceof Deco ? opt.deco : Deco.init({
     manifest: opt.manifest,
     site: opt?.site?.name,
     namespace: opt?.site?.namespace,
     bindings: {
-      framework: opt?.htmx ? htmxFramework : framework,
+      framework: {
+        ...framework,
+        ErrorFallback: opt.ErrorFallback ?? framework.ErrorFallback,
+      },
       useServer: opt?.useServer,
     },
     visibilityOverrides: opt.visibilityOverrides,

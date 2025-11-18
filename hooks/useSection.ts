@@ -32,17 +32,31 @@ const BLOCKED_QS = new Set<string>([
   "ck_subscriber_id",
 ]);
 
+const ALLOWED_QS = new Set<string>();
+
 export const addBlockedQS = (queryStrings: string[]): void => {
   queryStrings.forEach((qs) => BLOCKED_QS.add(qs));
+};
+
+export const addAllowedQS = (queryStrings: string[]): void => {
+  queryStrings.forEach((qs) => ALLOWED_QS.add(qs));
 };
 
 /** Returns new props object with prop __cb with `pathname?querystring` from href */
 const createStableHref = (href: string): string => {
   const hrefUrl = new URL(href!, "http://localhost:8000");
   const qsList = [...hrefUrl.searchParams.keys()];
+
   qsList.forEach((qsName: string) => {
-    if (BLOCKED_QS.has(qsName)) hrefUrl.searchParams.delete(qsName);
+    const shouldRemove = ALLOWED_QS.size > 0
+      ? !ALLOWED_QS.has(qsName)
+      : BLOCKED_QS.has(qsName);
+
+    if (shouldRemove) {
+      hrefUrl.searchParams.delete(qsName);
+    }
   });
+
   hrefUrl.searchParams.sort();
   return hrefUrl.href;
 };
@@ -62,7 +76,6 @@ export const useSection = <P>(
   if (typeof document !== "undefined") {
     throw new Error("Partials cannot be used inside an Island!");
   }
-
   if (!ctx) {
     throw new Error("Missing context in rendering tree");
   }

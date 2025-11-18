@@ -10,6 +10,7 @@ import {
   type RealtimeDecofileProvider,
   type VersionedDecofile,
 } from "./realtime.ts";
+import { deconfigFs } from "./deconfig.ts";
 
 const decofileCache: Record<string, Promise<DecofileProvider | undefined>> = {};
 
@@ -147,6 +148,11 @@ export const fromJSON = (
     state: () => Promise.resolve(state),
     onChange: (cb) => {
       cbs.push(cb);
+      return {
+        [Symbol.dispose]: () => {
+          cbs.splice(cbs.indexOf(cb), 1);
+        },
+      };
     },
     notify: () => {
       return Promise.all(cbs.map((cb) => cb())).then(() => {});
@@ -192,6 +198,12 @@ async function decofileLoader(
         const content = await fetchFromHttp(url);
         return content ? fromHttpContent(content) : undefined;
       }
+      case "deconfig:": {
+        return newFsFolderProviderFromPath(
+          "/.deco/blocks",
+          deconfigFs(endpointSpecifier),
+        );
+      }
       default:
         return undefined;
     }
@@ -225,6 +237,10 @@ export const fromEndpoint = (endpoint: string): DecofileProvider => {
     state: (options) => decofileProviderPromise.then((r) => r.state(options)),
     onChange: (cb) => {
       decofileProviderPromise.then((r) => r.onChange(cb));
+      return {
+        [Symbol.dispose]: () => {
+        },
+      };
     },
     revision: () => decofileProviderPromise.then((r) => r.revision()),
     dispose: () => {

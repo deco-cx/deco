@@ -9,15 +9,16 @@ import {
   type StatusResult,
 } from "simple-git";
 import { createLocker } from "./async.ts";
+import { DECO_SITE_NAME } from "./daemon.ts";
 import { logs } from "./loggings/stream.ts";
 import { DENO_DEPLOYMENT_ID } from "./main.ts";
-import type { MiddlewareHandler } from "@hono/hono";
-import { DECO_SITE_NAME } from "./daemon.ts";
 
 const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 const REPO_URL = Deno.env.get("DECO_REPO_URL");
 const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
+const BUILD_FILES_DIR = Deno.env.get("BUILD_FILES_DIR");
+const ADMIN_DOMAIN = "https://admin.deco.cx";
 
 export const lockerGitAPI = createLocker();
 
@@ -39,6 +40,7 @@ const getMergeBase = async () => {
   const defaultTrackingBranch = typeof DENO_DEPLOYMENT_ID === "string"
     ? DEFAULT_TRACKING_BRANCH
     : status.current;
+
   const tracking = status.tracking || defaultTrackingBranch;
 
   if (!current || !tracking) {
@@ -214,6 +216,10 @@ export const publish = ({ build }: Options): Handler => {
     const author = body.author || { name: "decobot", email: "capy@deco.cx" };
     const message = body.message || `New release by ${author.name}`;
 
+    if (GITHUB_APP_KEY) {
+      await setupGithubTokenNetrc();
+    }
+
     await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
 
     await resetToMergeBase();
@@ -371,13 +377,16 @@ password ${token}
   await Deno.chmod(netrcPath, 0o600);
 };
 
-const getGitHubToken = async (): Promise<void> => {
+export const getGitHubToken = async (): Promise<string | undefined> => {
   if (!GITHUB_APP_KEY) {
     throw new Error("GITHUB_APP_KEY not set");
   }
 
   const response = await fetch(
-    `https://admin.deco.cx/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+    new URL(
+      `/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+      ADMIN_DOMAIN,
+    ).href,
     {
       headers: {
         "x-api-key": GITHUB_APP_KEY,
@@ -386,7 +395,10 @@ const getGitHubToken = async (): Promise<void> => {
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch access token: ${response.statusText}`);
+    console.log(
+      `Failed to fetch github/getAccessToken: ${response.statusText}`,
+    );
+    return;
   }
 
   const responseJson = await response.json();
@@ -395,29 +407,135 @@ const getGitHubToken = async (): Promise<void> => {
   if (!token) {
     throw new Error("No token received from GitHub app");
   }
+
+  return token;
+};
+
+export const getGitHubPackageTokens = async (): Promise<string[]> => {
+  if (!GITHUB_APP_KEY) {
+    throw new Error("GITHUB_APP_KEY not set");
+  }
+
+  const response = await fetch(
+    new URL(
+      `/live/invoke/deco-sites/admin/loaders/github/getPackagesAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+      ADMIN_DOMAIN,
+    ),
+    {
+      headers: {
+        "x-api-key": GITHUB_APP_KEY,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    console.log(
+      `Failed to fetch github/getPackagesAccessToken: ${response.statusText}`,
+    );
+    return [];
+  }
+
+  const responseJson = await response.json();
+  const packageTokens = responseJson.packageTokens;
+
+  if (!packageTokens) {
+    throw new Error("No package tokens received from GitHub app");
+  }
+
+  return packageTokens;
+};
+
+const setupGithubTokenNetrc = async (): Promise<void> => {
+  const token = await getGitHubToken();
+  if (token === undefined) return;
+
   await updateNetrc(token);
 };
 
-const githubAuthMiddleware: MiddlewareHandler = async (c, next) => {
-  if (!GITHUB_APP_KEY) {
-    return await next();
+/**
+ * Checks if the repository can be rebased without conflicts.
+ * Only rebases if there are no uncommitted changes (clean working directory).
+ * If there are uncommitted changes or conflicts, skips rebase to avoid complications.
+ */
+export const assertRebased = async (): Promise<void> => {
+  // First, fetch the latest changes
+  await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
+
+  // Get current status to check for conflicts and uncommitted changes
+  const status = await git.status();
+
+  // Check if there are already conflicts in the working directory
+  if (status.conflicted.length > 0) {
+    console.log(
+      `Skipping rebase: Repository has existing conflicts: ${
+        status.conflicted.join(", ")
+      }`,
+    );
+    return;
+  }
+
+  // Check if there are uncommitted changes - if so, skip rebase
+  if (status.files.length > 0) {
+    console.log("Skipping rebase: Repository has uncommitted changes");
+    return;
   }
 
   try {
-    await getGitHubToken();
-  } catch (error) {
-    console.error("Failed to setup GitHub authentication:", error);
-    return new Response("Failed to setup GitHub authentication", {
-      status: 500,
-    });
-  }
+    // Try to determine if rebase is needed
+    const base = await getMergeBase();
+    const current = status.current;
+    const tracking = status.tracking || DEFAULT_TRACKING_BRANCH;
 
-  return await next();
+    if (!current || !tracking) {
+      console.log(
+        "Cannot determine current or tracking branch for rebase check",
+      );
+      return;
+    }
+
+    // Check if we're already up to date
+    const isUpToDate = await git.raw(
+      "rev-list",
+      "--count",
+      `${base}..${tracking}`,
+    );
+    if (parseInt(isUpToDate.trim()) === 0) {
+      // Already up to date, just reset to merge base
+      await resetToMergeBase();
+      return;
+    }
+
+    // Check if we're behind the remote
+    const behindCount = await git.raw(
+      "rev-list",
+      "--count",
+      `${current}..${tracking}`,
+    );
+    if (parseInt(behindCount.trim()) === 0) {
+      // Not behind remote, no rebase needed
+      return;
+    }
+
+    console.log(
+      "Performing automatic rebase - clean working directory detected",
+    );
+
+    // Working directory is clean and we're behind remote, safe to rebase
+    await git.rebase({ "--strategy-option": "theirs" });
+    await resetToMergeBase();
+
+    console.log("Automatic rebase completed successfully");
+  } catch (error) {
+    console.log(`Rebase failed, resetting to clean state: ${error}`);
+    // Reset to clean state if anything goes wrong
+    await resetToMergeBase();
+    // Don't throw error - just log and continue
+  }
 };
 
 export const ensureGit = async ({ site }: Pick<Options, "site">) => {
+  const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
   const assertNoIndexLock = async () => {
-    const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
     if (!isDeployment) {
       return;
     }
@@ -474,7 +592,7 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
     }
 
     if (GITHUB_APP_KEY) {
-      await getGitHubToken();
+      await setupGithubTokenNetrc();
     }
 
     if (hasGitFolder) {
@@ -497,10 +615,26 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
+
+    // Copy build files if BUILD_FILES_DIR is specified
+    if (BUILD_FILES_DIR) {
+      const copyBuildFiles = new Deno.Command("cp", {
+        args: ["-r", BUILD_FILES_DIR + "/.", "."],
+      });
+
+      const copy = await copyBuildFiles.output();
+      console.log("stdout", new TextDecoder().decode(copy.stdout));
+      console.log("stderr", new TextDecoder().decode(copy.stderr));
+    }
   };
 
   await assertNoIndexLock();
   await Promise.all([assertGitBinary(), assertGitFolder()]);
+
+  // Ensure repository is rebased and up to date
+  if (isDeployment) {
+    await assertRebased();
+  }
 };
 
 interface Options {
@@ -511,7 +645,6 @@ interface Options {
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
-  app.use(githubAuthMiddleware);
   app.use(lockerGitAPI.wlock);
   app.get("/diff", diff);
   app.get("/status", status);

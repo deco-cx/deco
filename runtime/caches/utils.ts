@@ -1,6 +1,9 @@
+// Reuse TextEncoder instance to avoid repeated instantiation
+const textEncoder = new TextEncoder();
+
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle
-    .digest("SHA-1", new TextEncoder().encode(text));
+    .digest("SHA-1", textEncoder.encode(text));
 
   const hex = Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -97,5 +100,13 @@ export const assertCanBeCached = (req: Request, response: Response) => {
 
   if (response.status === 206) {
     throw new TypeError("Response status must not be 206");
+  }
+};
+
+export const inFuture = (maybeDate: string) => {
+  try {
+    return new Date(maybeDate) > new Date();
+  } catch {
+    return false;
   }
 };
