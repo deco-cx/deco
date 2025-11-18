@@ -8,6 +8,7 @@ export interface Vary {
   push: (...key: string[]) => void;
   build: () => string;
   shouldCache: boolean;
+  noStore: boolean;
   debug: {
     push: <T extends DebugProperties>(debug: T) => void;
     build: <T extends DebugProperties>() => T[];
@@ -24,6 +25,7 @@ export const vary = (): Vary => {
       return vary.sort().join();
     },
     shouldCache: true,
+    noStore: false,
     debug: {
       push: <T extends DebugProperties>(_debug: T) =>
         debug.push(_debug as DebugProperties),
