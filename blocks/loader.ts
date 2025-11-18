@@ -267,10 +267,17 @@ const wrapLoader = (
           return await handler(props, req, ctx);
         }
 
-        timing?.end();
-
         // Optimize cache key generation using simple string concatenation
         const kRevision = Deno.env.get("K_REVISION") ?? "";
+
+        if (!kRevision) {
+          logger.warn(`Could not get K_REVISION`);
+          timing?.end();
+          return await handler(props, req, ctx);
+        }
+
+        timing?.end();
+
         const cacheKeyUrl = `https://localhost/?resolver=${
           encodeURIComponent(loader)
         }&resolveChain=${encodeURIComponent(resolveChainString)}&revision=${
