@@ -344,7 +344,13 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
           }
 
-          return await matched.json();
+          const json = await matched.text();
+          try {
+            return JSON.parse(json);
+          } catch (error) {
+            logger.error("MATCHED", {json: json || "no json", loader, url: url.toString()});
+            throw error;
+          }
         };
 
         return await flights.do(request.url, staleWhileRevalidate);
