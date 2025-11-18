@@ -111,7 +111,7 @@ export const handler = createHandler(async (
   } else {
     response.headers.set(
       "cache-control",
-      "public, max-age=0, must-revalidate",
+      "no-store, no-cache, must-revalidate",
     );
   }
 
