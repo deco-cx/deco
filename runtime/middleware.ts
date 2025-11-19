@@ -455,6 +455,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           respCookie: checkoutCookie,
           changed: reqCookie && reqCookie !== checkoutCookie.value,
           userAgent: ctx.req.raw.headers.get("user-agent"),
+          referer: ctx.req.raw.headers.get("referer"),
           url: ctx.req.raw.url,
           cache_control: newHeaders.get("cache-control"),
           vary: newHeaders.get("vary"),
