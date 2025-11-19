@@ -443,13 +443,18 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         headers: newHeaders,
       });
 
+      const checkoutCookieName = "checkout.vtex.com";
       const cookies = getSetCookies(newHeaders);
       const checkoutCookie = cookies.find((cookie) =>
-        cookie.name === "checkout.vtex.com"
+        cookie.name === checkoutCookieName
       );
       if (checkoutCookie) {
+        const reqCookie = getCookies(ctx.req.raw.headers)[checkoutCookieName];
         logger.warn("[checkout-cookie]", {
-          cookie: checkoutCookie,
+          reqCookie: { value: reqCookie, name: checkoutCookieName },
+          respCookie: checkoutCookie,
+          changed: reqCookie !== checkoutCookie.value,
+          userAgent: ctx.req.raw.headers.get("user-agent"),
           url: ctx.req.raw.url,
           cache_control: newHeaders.get("cache-control"),
           vary: newHeaders.get("vary"),
