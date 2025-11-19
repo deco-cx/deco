@@ -453,7 +453,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         logger.warn("[checkout-cookie]", {
           reqCookie: { value: reqCookie, name: checkoutCookieName },
           respCookie: checkoutCookie,
-          changed: reqCookie !== checkoutCookie.value,
+          changed: reqCookie && reqCookie !== checkoutCookie.value,
           userAgent: ctx.req.raw.headers.get("user-agent"),
           url: ctx.req.raw.url,
           cache_control: newHeaders.get("cache-control"),
