@@ -4,7 +4,6 @@
 <p align="center">
   <strong>Git-based Visual CMS for Typescript.</strong>
 </p>
-
 <p align="center">
   <a href="https://deco.cx">deco.cx</a>
   ·
