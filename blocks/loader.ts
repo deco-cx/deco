@@ -155,6 +155,8 @@ caches?.open("loader")
   .catch(() => maybeCache = undefined);
 
 const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
+const CACHE_SINGLEFLIGHT_DISABLED =
+  Deno.env.get("CACHE_SINGLEFLIGHT_DISABLED") === "true";
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
@@ -347,6 +349,9 @@ const wrapLoader = (
           return await matched.json();
         };
 
+        if (CACHE_SINGLEFLIGHT_DISABLED) {
+          return await staleWhileRevalidate();
+        }
         return await flights.do(request.url, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
