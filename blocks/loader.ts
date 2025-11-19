@@ -264,33 +264,29 @@ const wrapLoader = (
 
         const resolveChainString = FieldResolver.minify(resolveChain)
           .toString();
-        const revisionID = await release?.revision() ?? undefined;
 
-        if (!resolveChainString || !revisionID) {
-          if (!resolveChainString && !revisionID) {
-            logger.warn(`Could not get revisionID nor resolveChain`);
-          }
-          if (!revisionID) {
-            logger.warn(
-              `Could not get revisionID for resolveChain ${resolveChainString}`,
-            );
-          }
-          if (!resolveChainString) {
-            logger.warn(
-              `Could not get resolveChain for revisionID ${revisionID}`,
-            );
-          }
+        if (!resolveChainString) {
+          logger.warn(`Could not get resolveChain`);
+          timing?.end();
+          return await handler(props, req, ctx);
+        }
 
+        // K_REVISION is preferred over the revisionID from the release
+        // because it does not change when only .decofile changes
+        const revisionID = Deno.env.get("K_REVISION") ??
+          (await release?.revision() ?? undefined);
+
+        if (!revisionID) {
+          logger.warn(`Could not get K_REVISION`);
           timing?.end();
           return await handler(props, req, ctx);
         }
 
         timing?.end();
 
-        // Optimize cache key generation using simple string concatenation
         const cacheKeyUrl = `https://localhost/?resolver=${
           encodeURIComponent(loader)
-        }&resolveChain=${encodeURIComponent(resolveChainString)}&revisionID=${
+        }&resolveChain=${encodeURIComponent(resolveChainString)}&revision=${
           encodeURIComponent(revisionID)
         }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
         const request = new Request(cacheKeyUrl);
