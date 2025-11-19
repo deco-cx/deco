@@ -1,5 +1,9 @@
-import { type Cookie, setCookie as stdSetCookie } from "@std/http/cookie";
-
+import {
+  type Cookie,
+  getSetCookies,
+  setCookie as stdSetCookie,
+} from "@std/http/cookie";
+export { getSetCookies };
 export const MAX_COOKIE_SIZE = 4096; // 4KB
 
 export const getCookieSize = (cookie: string) => {

@@ -8,7 +8,7 @@ import { logger } from "../observability/mod.ts";
 import { HttpError } from "../runtime/errors.ts";
 import type { AppManifest } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
-import { decodeCookie, setCookie } from "../utils/cookies.ts";
+import { decodeCookie, getSetCookies, setCookie } from "../utils/cookies.ts";
 import { allowCorsFor } from "../utils/http.ts";
 import { formatLog } from "../utils/log.ts";
 import { tryOrDefault } from "../utils/object.ts";
@@ -442,6 +442,19 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         status: responseStatus,
         headers: newHeaders,
       });
+
+      const cookies = getSetCookies(newHeaders);
+      const checkoutCookie = cookies.find((cookie) =>
+        cookie.name === "checkout.vtex.com"
+      );
+      if (checkoutCookie) {
+        logger.debug("[checkout-cookie]", {
+          cookie: checkoutCookie,
+          url: ctx.req.raw.url,
+          cache_control: newHeaders.get("cache-control"),
+          vary: newHeaders.get("vary"),
+        });
+      }
     },
   ];
 };
