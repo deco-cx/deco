@@ -4,6 +4,10 @@ import { getCookies, Murmurhash3, setCookie } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import type { Device } from "../utils/userAgent.ts";
 import type { RequestState } from "./utils.tsx";
+import {
+  DECO_PAGE_CACHE_ALLOW_HEADER,
+  DECO_PAGE_CACHE_CONTROL_HEADER,
+} from "../utils/http.ts";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -147,6 +151,7 @@ const matcherBlock: Block<
     return (ctx: MatchContext) => {
       let uniqueId = "";
       let isSegment = true;
+      let matcherResolver = "";
 
       // from last to first and stop in the first resolvable
       // the rationale behind is: whenever you enter a resolvable it means that it can be referenced by other resolvables and this value should not change.
@@ -160,6 +165,7 @@ const matcherBlock: Block<
         // stop on first resolvable
         if (type === "resolvable") {
           isSegment = uniqueId === value;
+          matcherResolver = `${value}`;
           break;
         }
       }
@@ -168,9 +174,32 @@ const matcherBlock: Block<
       );
 
       let result = isEnabled;
+      // If page Cache-Control is enabled, ignore all matchers that are not device/time based.
+      const pageCachingOn = respHeaders.has(DECO_PAGE_CACHE_CONTROL_HEADER);
+      if (pageCachingOn) {
+        const allow = respHeaders.get(DECO_PAGE_CACHE_ALLOW_HEADER) ??
+          "device,time";
+        const allowDevice = allow.includes("device");
+        const allowTime = allow.includes("time");
+        const isDeviceMatcher = /\/matchers\/device\.tsx?$/.test(
+          matcherResolver,
+        );
+        const isTimeMatcher = /\/matchers\/(date|cron)\.tsx?$/.test(
+          matcherResolver,
+        ) || /\/matchers\/(date|cron)\.ts$/.test(matcherResolver);
+        const allowed = (allowDevice && isDeviceMatcher) ||
+          (allowTime && isTimeMatcher);
+        if (!allowed) {
+          result = false;
+        }
+      }
       // if it is not sticky then we can run the matcher function
       if (!shouldStickyOnSession) {
-        result ??= matcherFunc(ctx);
+        if (pageCachingOn && result === false) {
+          // matcher disabled by page caching, do not evaluate
+        } else {
+          result ??= matcherFunc(ctx);
+        }
       } else {
         hasher.hash(uniqueId);
         const _sessionKey = matcherModule.sessionKey
@@ -182,7 +211,11 @@ const matcherBlock: Block<
         const isMatchFromCookie = cookieValue.boolean(
           getCookies(ctx.request.headers)[cookieName],
         );
-        result ??= isMatchFromCookie ?? matcherFunc(ctx);
+        if (pageCachingOn && result === false) {
+          // matcher disabled by page caching, do not evaluate nor set cookie
+        } else {
+          result ??= isMatchFromCookie ?? matcherFunc(ctx);
+        }
         if (result !== isMatchFromCookie) {
           const date = new Date();
           date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month

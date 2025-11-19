@@ -16,3 +16,9 @@ export { tryOrDefault } from "./object.ts";
 export type { DotNestedKeys } from "./object.ts";
 export { createServerTimings } from "./timings.ts";
 export type { Device } from "./userAgent.ts";
+
+export {
+  DECO_PAGE_CACHE_ALLOW_HEADER,
+  DECO_PAGE_CACHE_CONTROL_HEADER,
+  normalizeCacheControlHeader,
+} from "./http.ts";
