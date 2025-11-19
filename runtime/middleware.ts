@@ -204,6 +204,68 @@ const reduceServerTimingsTo = (timings: string, size: number): string => {
   );
 };
 
+/**
+ * Safely parses a JWT token and returns the payload or an error.
+ */
+const safeParseJwt = (cookie: string): [any, Error | null] => {
+  try {
+    const segments = cookie.split(".");
+    if (segments.length < 2) {
+      return [null, new Error("Invalid JWT format")];
+    }
+    const payload = segments[1];
+    return [JSON.parse(atob(payload)), null];
+  } catch (e) {
+    return [null, e as Error];
+  }
+};
+
+/**
+ * Logs checkout cookie information including user email extracted from VTEX JWT cookie.
+ */
+const logCheckoutCookie = (
+  ctx: { req: { raw: { headers: Headers; url: string } } },
+  newHeaders: Headers,
+) => {
+  const checkoutCookieName = "checkout.vtex.com";
+  const cookies = getSetCookies(newHeaders);
+  const checkoutCookie = cookies.find((cookie) =>
+    cookie.name === checkoutCookieName
+  );
+  if (checkoutCookie) {
+    const reqCookie = getCookies(ctx.req.raw.headers)[checkoutCookieName];
+
+    // Extract user email from VTEX JWT cookie
+    let userEmail: string | undefined;
+    let userId: string | undefined;
+
+    const vtexAuthCookieName = `VtexIdclientAutCookie_lojafarm`;
+    const reqCookies = getCookies(ctx.req.raw.headers);
+    const userFromCookie = reqCookies[vtexAuthCookieName];
+
+    if (userFromCookie) {
+      const [jwtPayload, error] = safeParseJwt(userFromCookie);
+      if (!error && jwtPayload) {
+        userEmail = jwtPayload?.sub;
+        userId = jwtPayload?.userId;
+      }
+    }
+
+    logger.warn("[checkout-cookie]", {
+      reqCookie: { value: reqCookie, name: checkoutCookieName },
+      respCookie: checkoutCookie,
+      changed: reqCookie && reqCookie !== checkoutCookie.value,
+      userAgent: ctx.req.raw.headers.get("user-agent"),
+      referer: ctx.req.raw.headers.get("referer") ?? "unknown",
+      url: ctx.req.raw.url,
+      cache_control: newHeaders.get("cache-control"),
+      vary: newHeaders.get("vary"),
+      vtexIdclientAutCookieUserEmail: userEmail,
+      vtexIdclientAutCookieUserId: userId,
+    });
+  }
+};
+
 export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
   deco: Deco<TAppManifest>,
 ): DecoMiddleware<TAppManifest>[] => {
@@ -443,24 +505,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         headers: newHeaders,
       });
 
-      const checkoutCookieName = "checkout.vtex.com";
-      const cookies = getSetCookies(newHeaders);
-      const checkoutCookie = cookies.find((cookie) =>
-        cookie.name === checkoutCookieName
-      );
-      if (checkoutCookie) {
-        const reqCookie = getCookies(ctx.req.raw.headers)[checkoutCookieName];
-        logger.warn("[checkout-cookie]", {
-          reqCookie: { value: reqCookie, name: checkoutCookieName },
-          respCookie: checkoutCookie,
-          changed: reqCookie && reqCookie !== checkoutCookie.value,
-          userAgent: ctx.req.raw.headers.get("user-agent"),
-          referer: ctx.req.raw.headers.get("referer") ?? "unknown",
-          url: ctx.req.raw.url,
-          cache_control: newHeaders.get("cache-control"),
-          vary: newHeaders.get("vary"),
-        });
-      }
+      logCheckoutCookie(ctx, newHeaders);
     },
   ];
 };
