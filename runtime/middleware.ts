@@ -448,7 +448,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         cookie.name === "checkout.vtex.com"
       );
       if (checkoutCookie) {
-        logger.debug("[checkout-cookie]", {
+        logger.warn("[checkout-cookie]", {
           cookie: checkoutCookie,
           url: ctx.req.raw.url,
           cache_control: newHeaders.get("cache-control"),
