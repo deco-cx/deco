@@ -434,6 +434,14 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
+      // If response has set-cookie header, set cache-control to no-store
+      const hasSetCookie = Array.from(newHeaders.entries()).some(
+        ([key]) => key.toLowerCase() === "set-cookie",
+      );
+      if (hasSetCookie) {
+        newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      }
+
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
       // so I'm first setting it to undefined and just then set the entire response again
