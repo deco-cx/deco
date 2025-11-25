@@ -2,7 +2,7 @@
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context, context } from "../deco.ts";
-import { type Exception, getCookies, SpanStatusCode } from "../deps.ts";
+import { type Exception, getCookies, getSetCookies, SpanStatusCode } from "../deps.ts";
 import { startObserve } from "../observability/http.ts";
 import { logger } from "../observability/mod.ts";
 import { HttpError } from "../runtime/errors.ts";
@@ -432,6 +432,11 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
             sameSite: "Lax",
           }, { encode: true });
         }
+      }
+
+      // If response has set-cookie header, set cache-control to no-store
+      if (getSetCookies(newHeaders).length > 0) {
+        newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
       }
 
       // for some reason hono deletes content-type when response is not fresh.
