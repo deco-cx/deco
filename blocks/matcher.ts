@@ -211,22 +211,21 @@ const matcherBlock: Block<
         const isMatchFromCookie = cookieValue.boolean(
           getCookies(ctx.request.headers)[cookieName],
         );
-        if (pageCachingOn && result === false) {
-          // matcher disabled by page caching, do not evaluate nor set cookie
-        } else {
+        const skipStickyOps = pageCachingOn && result === false;
+        if (!skipStickyOps) {
           result ??= isMatchFromCookie ?? matcherFunc(ctx);
-        }
-        if (result !== isMatchFromCookie) {
-          const date = new Date();
-          date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
-          setCookie(respHeaders, {
-            name: cookieName,
-            value: cookieValue.build(uniqueId, result),
-            path: "/",
-            sameSite: "Lax",
-            expires: date,
-          });
-          respHeaders.append("vary", "cookie");
+          if (result !== isMatchFromCookie) {
+            const date = new Date();
+            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
+            setCookie(respHeaders, {
+              name: cookieName,
+              value: cookieValue.build(uniqueId, result),
+              path: "/",
+              sameSite: "Lax",
+              expires: date,
+            });
+            respHeaders.append("vary", "cookie");
+          }
         }
       }
 
