@@ -41,21 +41,21 @@ export class DenoRuntimeInstrumentation extends InstrumentationBase {
     this.metrics ??= {
       openResources: this.meter
         .createObservableUpDownCounter("deno.open_resources", {
-          valueType: ValueType.INT,
+          valueType: ValueType.DOUBLE,
           description: "Number of open resources of a particular type.",
         }),
       memoryUsage: this.meter
         .createObservableGauge("deno.memory_usage", {
-          valueType: ValueType.INT,
+          valueType: ValueType.DOUBLE,
         }),
       dispatchedCtr: this.meter
         .createObservableCounter("deno.ops_dispatched", {
-          valueType: ValueType.INT,
+          valueType: ValueType.DOUBLE,
           description: "Total number of Deno op invocations.",
         }),
       inflightCtr: this.meter
         .createObservableUpDownCounter("deno.ops_inflight", {
-          valueType: ValueType.INT,
+          valueType: ValueType.DOUBLE,
           description: "Number of currently-inflight Deno ops.",
         }),
     };

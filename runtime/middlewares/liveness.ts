@@ -35,7 +35,7 @@ const DRY_RUN = Deno.env.get("PROBE_DRY_RUN") === "true";
 
 const probe = meter.createCounter("probe_failed", {
   unit: "1",
-  valueType: ValueType.INT,
+  valueType: ValueType.DOUBLE,
 });
 
 export function getProbeThresholdAsNum(

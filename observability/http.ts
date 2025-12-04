@@ -4,7 +4,7 @@ import { meter } from "./otel/metrics.ts";
 const httpDuration = meter.createHistogram("http_request_duration", {
   description: "http request duration",
   unit: "ms",
-  valueType: ValueType.INT,
+  valueType: ValueType.DOUBLE,
 });
 /**
  * @returns a end function that when gets called observe the duration of the operation.
