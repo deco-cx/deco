@@ -139,7 +139,7 @@ export const wrapCaughtErrors = async <
 const stats = {
   cache: meter.createCounter("loader_cache", {
     unit: "1",
-    valueType: ValueType.INT,
+    valueType: ValueType.DOUBLE,
   }),
   latency: meter.createHistogram("resolver_latency", {
     description: "resolver latency",

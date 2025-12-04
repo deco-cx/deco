@@ -10,7 +10,7 @@ export interface CacheMetrics {
 }
 const cacheHit = meter.createCounter("cache_hit", {
   unit: "1",
-  valueType: ValueType.INT,
+  valueType: ValueType.DOUBLE,
 });
 
 const getCacheStatus = (
