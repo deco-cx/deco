@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mesh:
+    image: ${IMAGE_REPOSITORY:-ghcr.io/decocms/admin/mesh}:${IMAGE_TAG:-latest}
+    platform: linux/amd64
+    container_name: deco-mcp-mesh
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Configurações básicas
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - HOST=0.0.0.0
+      
+      # URLs da aplicação
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      
+      # Secret de autenticação (obrigatório)
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      
+      # Database URL
+      # Se POSTGRES_USER estiver definido no .env: monta PostgreSQL automaticamente
+      # Caso contrário: usa SQLite como padrão (/app/data/mesh.db)
+      # Você pode sobrescrever definindo DATABASE_URL manualmente no .env
+      - DATABASE_URL=${DATABASE_URL:-${POSTGRES_USER:+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-mesh_db}}}
+      - DATABASE_URL=${DATABASE_URL:-/app/data/mesh.db}
+    volumes:
+      # Volume persistente para dados (SQLite ou outros arquivos)
+      - mesh-data:/app/data
+      
+      # Auth config - monta o arquivo JSON de configuração de autenticação
+      # O arquivo é montado em /app/apps/mesh/auth-config.json
+      # Se o arquivo não existir localmente, o Docker Compose falhará ao iniciar
+      - ./auth-config.json:/app/apps/mesh/auth-config.json:ro
+    healthcheck:
+      # Health check usando curl (ajuste se sua imagem não tiver curl)
+      # Alternativa: usar wget ou remover se não disponível
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # Security context
+    user: "1001:1001"
+
+volumes:
+  mesh-data:
+    driver: local
+

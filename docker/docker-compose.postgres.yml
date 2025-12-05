@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mesh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mesh_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-this-password}
+      POSTGRES_DB: ${POSTGRES_DB:-mesh_db}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mesh_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - mesh-network
+
+  mesh:
+    image: ${IMAGE_REPOSITORY:-ghcr.io/decocms/admin/mesh}:${IMAGE_TAG:-latest}
+    platform: linux/amd64
+    container_name: deco-mcp-mesh
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Configurações básicas
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - HOST=0.0.0.0
+      
+      # URLs da aplicação
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      
+      # Secret de autenticação (obrigatório)
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      
+      # Database URL - PostgreSQL
+      # Monta automaticamente usando as variáveis do PostgreSQL definidas acima
+      # Usa o nome do serviço 'postgres' como host (funciona na rede Docker)
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-mesh_user}:${POSTGRES_PASSWORD:-change-this-password}@postgres:5432/${POSTGRES_DB:-mesh_db}
+    volumes:
+      # Volume persistente para dados (outros arquivos além do banco)
+      - mesh-data:/app/data
+      
+      # Auth config - monta o arquivo JSON de configuração de autenticação
+      # O arquivo é montado em /app/apps/mesh/auth-config.json (mesmo caminho do Helm Chart)
+      # Se o arquivo não existir localmente, o Docker Compose falhará ao iniciar
+      - ./auth-config.json:/app/apps/mesh/auth-config.json:ro
+    healthcheck:
+      # Health check usando curl (ajuste se sua imagem não tiver curl)
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # Security context (equivalente ao Helm Chart)
+    user: "1001:1001"
+    networks:
+      - mesh-network
+
+volumes:
+  mesh-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  mesh-network:
+    driver: bridge

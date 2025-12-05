@@ -1,0 +1,34 @@
+{
+  "emailAndPassword": {
+    "enabled": true
+  },
+  "socialProviders": {
+    "google": {
+      "clientId": "",
+      "clientSecret": ""
+    },
+    "github": {
+      "clientId": "",
+      "clientSecret": ""
+    }
+  },
+  "saml": {
+    "enabled": false,
+    "providers": []
+  },
+  "emailProviders": [
+    {
+      "id": "resend-primary",
+      "provider": "resend",
+      "config": {
+        "apiKey": "",
+        "fromEmail": "noreply@example.com"
+      }
+    }
+  ],
+  "inviteEmailProviderId": "resend-primary",
+  "magicLinkConfig": {
+    "enabled": true,
+    "emailProviderId": "resend-primary"
+  }
+}
