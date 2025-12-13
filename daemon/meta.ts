@@ -74,7 +74,9 @@ export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
       const scheduleWarn = () => {
         warnTimer = setTimeout(() => {
           console.log(
-            `[meta] still waiting for meta.promise after ${(performance.now() - startedAt).toFixed(0)}ms`,
+            `[meta] still waiting for meta.promise after ${
+              (performance.now() - startedAt).toFixed(0)
+            }ms`,
           );
           scheduleWarn();
         }, warnEveryMs) as unknown as number;
@@ -83,7 +85,9 @@ export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
       try {
         const result = await meta.promise;
         console.log(
-          `[meta] meta.promise resolved after ${(performance.now() - startedAt).toFixed(0)}ms`,
+          `[meta] meta.promise resolved after ${
+            (performance.now() - startedAt).toFixed(0)
+          }ms`,
         );
         return result;
       } finally {
@@ -132,24 +136,21 @@ export const watchMeta = async () => {
       dispatchWorkerState("ready");
     } catch (_error) {
       const error = _error as { status?: number };
+      console.log(`[meta] watchMeta error: ${error.status}`);
+
       // in case of timeout, retry without updating the worker state
       // to avoid false alarming down state
       if (error.status === 408) {
-        console.log(`[meta] /deco/meta returned 408; retrying`);
         continue;
       }
 
       if (error.status === 404) {
-        console.log(
-          "[meta] /deco/meta returned 404; setting meta=null and stopping watcher",
-        );
         setMeta(null);
         broadcast({ type: "meta-info", detail: null });
         dispatchWorkerState("ready");
         return;
       }
 
-      console.error("[meta] watchMeta error", error);
       dispatchWorkerState("updating");
     }
   }
