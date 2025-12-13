@@ -113,6 +113,7 @@ export const watchMeta = async () => {
       console.log(`[meta] worker() ready; fetching /deco/meta (etag=${etag})`);
       const response = await w.fetch(metaRequest(etag));
       if (!response.ok) {
+        console.log(`[meta] /deco/meta returned ${response.status}`);
         throw response;
       }
       const m: MetaInfo = await response.json();
@@ -134,6 +135,7 @@ export const watchMeta = async () => {
       // in case of timeout, retry without updating the worker state
       // to avoid false alarming down state
       if (error.status === 408) {
+        console.log(`[meta] /deco/meta returned 408; retrying`);
         continue;
       }
 
@@ -147,8 +149,8 @@ export const watchMeta = async () => {
         return;
       }
 
-      dispatchWorkerState("updating");
       console.error("[meta] watchMeta error", error);
+      dispatchWorkerState("updating");
     }
   }
 };
