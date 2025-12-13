@@ -196,42 +196,74 @@ export const publish = ({ build }: Options): Handler => {
   const doBuild = (oid: string) => {
     const p = buildMap.get(oid) ||
       (async () => {
+        console.log(`[publish][build] Starting build process for oid=${oid}`);
         try {
+          const start = performance.now();
           await build?.spawn()?.status;
           await persist(oid);
+          console.log(
+            `[publish][build] Build process for oid=${oid} finished in ${
+              (performance.now() - start).toFixed(0)
+            }ms`,
+          );
         } catch (e) {
-          console.error("Building failed with:", e);
+          console.error(`[publish][build] Building failed for oid=${oid}:`, e);
         } finally {
           buildMap.delete(oid);
+          console.log(
+            `[publish][build] Build process for oid=${oid} removed from buildMap`,
+          );
         }
       })();
 
     buildMap.set(oid, p);
 
+    console.log(
+      `[publish][build] Build process for oid=${oid} added to buildMap`,
+    );
+
     return p;
   };
 
   return async (c) => {
+    console.log(`[publish] Received publish request`);
     const body = (await c.req.json()) as PublishAPI["body"];
     const author = body.author || { name: "decobot", email: "capy@deco.cx" };
     const message = body.message || `New release by ${author.name}`;
 
+    console.log(
+      `[publish] Author: ${JSON.stringify(author)}, Message: "${message}"`,
+    );
+
     if (GITHUB_APP_KEY) {
+      console.log(
+        `[publish] GITHUB_APP_KEY detected, setting up Github token netrc...`,
+      );
       await setupGithubTokenNetrc();
+      console.log(`[publish] Github token netrc setup completed`);
     }
 
+    console.log(`[publish] Fetching latest from git repository...`);
     await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
+    console.log(`[publish] Git fetch and submodule update completed`);
 
+    console.log(`[publish] Resetting to merge base...`);
     await resetToMergeBase();
+    console.log(`[publish] Reset to merge base completed`);
 
+    console.log(`[publish] Adding changes and committing...`);
     const commit = await git.add(["."]).commit(message, {
       "--author": `${author.name} <${author.email}>`,
       "--no-verify": null,
     });
+    console.log(`[publish] Commit created: ${JSON.stringify(commit)}`);
 
     const result = await git.push();
 
     // Runs build pipeline asynchronously
+    console.log(
+      `[publish] Triggering build pipeline for commit: ${commit.commit}`,
+    );
     doBuild(commit.commit);
 
     return Response.json(result);

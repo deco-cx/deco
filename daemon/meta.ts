@@ -65,10 +65,40 @@ export const start = async (since: number): Promise<MetaEvent | null> => {
 
 /** Ensures meta is resolved and return. */
 export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
-  isPromiseLike(meta) ? await meta.promise : meta;
+  isPromiseLike(meta)
+    ? await (async () => {
+      const startedAt = performance.now();
+      // If meta is stuck, emit periodic warnings so we can see the hang source.
+      const warnEveryMs = 10_000;
+      let warnTimer: number | undefined;
+      const scheduleWarn = () => {
+        warnTimer = setTimeout(() => {
+          console.log(
+            `[meta] still waiting for meta.promise after ${
+              (performance.now() - startedAt).toFixed(0)
+            }ms`,
+          );
+          scheduleWarn();
+        }, warnEveryMs) as unknown as number;
+      };
+      scheduleWarn();
+      try {
+        const result = await meta.promise;
+        console.log(
+          `[meta] meta.promise resolved after ${
+            (performance.now() - startedAt).toFixed(0)
+          }ms`,
+        );
+        return result;
+      } finally {
+        warnTimer && clearTimeout(warnTimer);
+      }
+    })()
+    : meta;
 
 export const watchMeta = async () => {
   let etag = "";
+  let attempt = 0;
 
   const setMeta = (
     m: MetaInfo | null,
@@ -81,9 +111,13 @@ export const watchMeta = async () => {
 
   while (true) {
     try {
+      attempt++;
+      console.log(`[meta] watchMeta tick attempt=${attempt} etag=${etag}`);
       const w = await worker();
+      console.log(`[meta] worker() ready; fetching /deco/meta (etag=${etag})`);
       const response = await w.fetch(metaRequest(etag));
       if (!response.ok) {
+        console.log(`[meta] /deco/meta returned ${response.status}`);
         throw response;
       }
       const m: MetaInfo = await response.json();
@@ -93,12 +127,17 @@ export const watchMeta = async () => {
 
       filenameBlockTypeMap = updateFilenameBlockTypeMapFromManifest(m.manifest);
 
+      console.log(
+        `[meta] received meta: version=${withExtraParams.version} namespace=${withExtraParams.namespace} site=${withExtraParams.site}`,
+      );
       setMeta(withExtraParams);
 
       broadcast({ type: "meta-info", detail: withExtraParams });
       dispatchWorkerState("ready");
     } catch (_error) {
       const error = _error as { status?: number };
+      console.log(`[meta] watchMeta error: ${error.status}`);
+
       // in case of timeout, retry without updating the worker state
       // to avoid false alarming down state
       if (error.status === 408) {
@@ -113,7 +152,6 @@ export const watchMeta = async () => {
       }
 
       dispatchWorkerState("updating");
-      console.error(error);
     }
   }
 };
