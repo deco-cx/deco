@@ -1,3 +1,5 @@
+import { env } from "../../compat/mod.ts";
+
 export interface LiveChecker<TValue = number> {
   name: string;
   get: () => TValue;
@@ -11,6 +13,6 @@ export interface LiveChecker<TValue = number> {
 export function getProbeThresholdAsNum(
   checkerName: string,
 ): number | undefined {
-  const fromEnv = Deno.env.get(`PROBE_${checkerName}_THRESHOLD`);
+  const fromEnv = env.get(`PROBE_${checkerName}_THRESHOLD`);
   return fromEnv ? +fromEnv : undefined;
 }

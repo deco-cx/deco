@@ -1,8 +1,8 @@
 import { Mutex } from "@core/asyncutil/mutex";
-import { debounce } from "@std/async/debounce";
-import { ensureFile } from "@std/fs";
-import { walk } from "@std/fs/walk";
-import { basename, join } from "@std/path";
+import { debounce } from "../../compat/std-async.ts";
+import { ensureFile, walk } from "../../compat/std-fs.ts";
+import { basename, join } from "../../compat/std-path.ts";
+import { fs as compatFs, proc, isDeno } from "../../compat/mod.ts";
 import getBlocks from "../../blocks/index.ts";
 import { Context } from "../../deco.ts";
 import { exists } from "../../utils/filesystem.ts";
@@ -53,18 +53,41 @@ const inferMetadata = (content: unknown, knownBlockTypes: Set<string>) => {
     return null;
   }
 };
+// Deno types for compile-time safety
+declare const Deno: {
+  readTextFile(path: string): Promise<string>;
+  writeTextFile(path: string, content: string): Promise<void>;
+  readDir(path: string): AsyncIterable<{ name: string; isFile: boolean }>;
+  watchFs(path: string): AsyncIterable<{ paths: string[] }>;
+  cwd(): string;
+};
+
+// Create the default filesystem implementation
 const denoFs: Fs = {
-  readTextFile: Deno.readTextFile,
-  cwd: Deno.cwd,
+  readTextFile: (path) => compatFs.readTextFile(path),
+  cwd: () => proc.cwd(),
   readDir: async function* (path: string) {
-    for await (const entry of Deno.readDir(path)) {
+    for await (const entry of compatFs.readDir(path)) {
       if (entry.isFile) {
         yield entry.name;
       }
     }
   },
-  writeTextFile: Deno.writeTextFile,
-  watchFs: Deno.watchFs,
+  writeTextFile: (path, content) => compatFs.writeTextFile(path, content),
+  // watchFs requires runtime-specific implementation
+  // Deno has built-in watchFs, Node.js would need chokidar or fs.watch
+  watchFs: isDeno
+    ? Deno.watchFs
+    : async function* (_path: string) {
+        // Node.js stub - in production, use chokidar or similar
+        // This allows the code to load but file watching won't work
+        console.warn(
+          "[deco] File watching not available in Node.js without additional setup",
+        );
+        // Never yield - just hang forever (watcher would be started but never fires)
+        await new Promise(() => {});
+        yield { paths: [] };
+      },
   ensureFile,
 };
 /** Syncs FileSystem Metadata with Storage metadata */

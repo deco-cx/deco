@@ -6,10 +6,11 @@
  * Use at your own risk.
  */
 
-import { LRUCache } from "npm:lru-cache@10.2.0";
-import { minify as terserMinify } from "npm:terser@5.34.0";
+import { LRUCache } from "lru-cache";
+import { minify as terserMinify } from "terser";
+import { env } from "../compat/mod.ts";
 
-const verbose = !!Deno.env.get("SCRIPT_MINIFICATION_DEBUG");
+const verbose = !!env.get("SCRIPT_MINIFICATION_DEBUG");
 
 const cache = new LRUCache<string, string | Promise<string | null>>({
   max: 100,

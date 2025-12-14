@@ -1,6 +1,8 @@
+import { env } from "../compat/mod.ts";
+
 const ALLOWED_AUTHORITIES_ENV_VAR_NAME = "DECO_ALLOWED_AUTHORITIES";
-const ALLOWED_AUTHORITIES = Deno.env.has(ALLOWED_AUTHORITIES_ENV_VAR_NAME)
-  ? Deno.env.get(ALLOWED_AUTHORITIES_ENV_VAR_NAME)!.split(",")
+const ALLOWED_AUTHORITIES = env.has(ALLOWED_AUTHORITIES_ENV_VAR_NAME)
+  ? env.get(ALLOWED_AUTHORITIES_ENV_VAR_NAME)!.split(",")
   : ["configs.decocdn.com", "configs.deco.cx", "admin.deco.cx", "localhost"];
 
 export const assertAllowedAuthority = (urlOrString: string | URL) => {

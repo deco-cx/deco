@@ -1,4 +1,5 @@
-import { toFileUrl } from "@std/path";
+import { toFileUrl } from "../../compat/std-path.ts";
+import { cwd } from "../../compat/mod.ts";
 import type { AppManifest, ImportMap } from "../../blocks/app.ts";
 import { withoutLocalModules } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
@@ -82,7 +83,7 @@ export const genSchemasFromManifest = async (
   importMap: ImportMap = { imports: {} },
 ): Promise<Schemas> => {
   const { baseUrl: _ignore, name: _ignoreName, ...manifestBlocks } = manifest;
-  const dir = toFileUrl(baseDir ? baseDir : Deno.cwd()).toString();
+  const dir = toFileUrl(baseDir ? baseDir : cwd()).toString();
   const importMapResolver = ImportMapBuilder.new().mergeWith(importMap, dir);
 
   const rootWithBlocks: Record<string, JSONSchema7> = blocks().reduce(

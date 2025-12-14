@@ -1,4 +1,4 @@
-import { getSetCookies } from "@std/http/cookie";
+import { getSetCookies } from "../deps.ts";
 import { DECO_MATCHER_PREFIX } from "../blocks/matcher.ts";
 import type { RequestState } from "../blocks/utils.tsx";
 import { Context } from "../deco.ts";

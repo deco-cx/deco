@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import { env } from "../compat/mod.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import { RequestContext } from "../deco.ts";
 import { ValueType } from "../deps.ts";
@@ -154,9 +155,9 @@ caches?.open("loader")
   .then((c) => maybeCache = c)
   .catch(() => maybeCache = undefined);
 
-const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
+const MAX_AGE_S = parseInt(env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
 const CACHE_SINGLEFLIGHT_DISABLED =
-  Deno.env.get("CACHE_SINGLEFLIGHT_DISABLED") === "true";
+  env.get("CACHE_SINGLEFLIGHT_DISABLED") === "true";
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();

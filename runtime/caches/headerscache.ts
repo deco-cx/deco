@@ -1,3 +1,4 @@
+import { env } from "../../compat/mod.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -5,7 +6,7 @@ import {
   createBaseCacheStorage,
 } from "./utils.ts";
 
-const CACHE_MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
+const CACHE_MAX_AGE_S = parseInt(env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
 
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
   const caches = createBaseCacheStorage(

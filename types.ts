@@ -131,7 +131,7 @@ export type DecoState<
     routes?: Route[];
   };
 
-export type { JSONSchema7 } from "npm:@types/json-schema@7.0.11/index.d.ts";
+export type { JSONSchema7 } from "@types/json-schema";
 export type { PropsLoader } from "./blocks/propsLoader.ts";
 export type { LoadingFallbackProps, SectionProps } from "./blocks/section.ts";
 export type { FnContext } from "./blocks/utils.tsx";

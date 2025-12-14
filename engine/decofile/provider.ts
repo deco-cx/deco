@@ -1,6 +1,7 @@
-import * as colors from "@std/fmt/colors";
-import { exists } from "@std/fs";
-import { join } from "@std/path";
+import * as colors from "../../compat/std-fmt-colors.ts";
+import { exists } from "../../compat/std-fs.ts";
+import { join } from "../../compat/std-path.ts";
+import { env, proc } from "../../compat/mod.ts";
 import type { Resolvable } from "../core/resolver.ts";
 import type { PromiseOrValue } from "../core/utils.ts";
 import { ENTRYPOINT } from "./constants.ts";
@@ -99,12 +100,12 @@ export const compose = (...providers: DecofileProvider[]): DecofileProvider => {
 const DECOFILE_RELEASE_ENV_VAR = "DECO_RELEASE";
 
 // if decofile does not exist but blocks exist so it should be lazy
-const BLOCKS_FOLDER = join(Deno.cwd(), ".deco", "blocks");
+const BLOCKS_FOLDER = join(proc.cwd(), ".deco", "blocks");
 const blocksFolderExistsPromise = exists(BLOCKS_FOLDER, {
   isDirectory: true,
   isReadable: true,
 });
-const DECOFILE_PATH_FROM_ENV = Deno.env.get(DECOFILE_RELEASE_ENV_VAR);
+const DECOFILE_PATH_FROM_ENV = env.get(DECOFILE_RELEASE_ENV_VAR);
 
 const respectDecofileProviders = [
   "deconfig://",
@@ -123,7 +124,7 @@ export const getProvider = async (
 ): Promise<DecofileProvider> => {
   const providers = [];
 
-  if (Deno.env.has("USE_LOCAL_STORAGE_ONLY") || localStorageOnly) {
+  if (env.has("USE_LOCAL_STORAGE_ONLY") || localStorageOnly) {
     return newFsProvider();
   }
 
@@ -146,7 +147,7 @@ export const getProvider = async (
     providers.push(fromEndpoint(endpoint));
   }
 
-  if (Deno.env.has("USE_LOCAL_STORAGE")) {
+  if (env.has("USE_LOCAL_STORAGE")) {
     providers.push(newFsProvider());
   }
 

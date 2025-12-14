@@ -1,5 +1,6 @@
-import * as log from "@std/log";
-import { Logger } from "@std/log/logger";
+import * as log from "../../compat/std-log.ts";
+import { Logger } from "../../compat/std-log.ts";
+import { env, isDeno } from "../../compat/mod.ts";
 import { Context, context } from "../../deco.ts";
 import denoJSON from "../../deno.json" with { type: "json" };
 import {
@@ -18,6 +19,7 @@ import { DebugSampler } from "./samplers/debug.ts";
 import { type SamplingOptions, URLBasedSampler } from "./samplers/urlBased.ts";
 
 import { ENV_SITE_NAME } from "../../engine/decofile/constants.ts";
+import { siteName } from "../../engine/manifest/manifest.ts";
 import { safeImportResolve } from "../../engine/importmap/builder.ts";
 import { OpenTelemetryHandler } from "./logger.ts";
 
@@ -32,31 +34,40 @@ const tryGetVersionOf = (pkg: string) => {
 const apps_ver = tryGetVersionOf("apps/") ??
   tryGetVersionOf("deco-sites/std/") ?? "_";
 
+// Get hostname in a cross-runtime way
+const getHostname = (): string => {
+  if (isDeno) {
+    // deno-lint-ignore no-explicit-any
+    return (globalThis as any).Deno?.hostname?.() ?? "unknown";
+  }
+  try {
+    // Node.js/Bun
+    const os = require("node:os");
+    return os.hostname();
+  } catch {
+    return "unknown";
+  }
+};
+
 export const resource = Resource.default().merge(
   new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: Deno.env.get(ENV_SITE_NAME) ??
-      "deco",
+    [SemanticResourceAttributes.SERVICE_NAME]: siteName() ?? "deco",
     [SemanticResourceAttributes.SERVICE_VERSION]:
-      Context.active().deploymentId ??
-        Deno.hostname(),
+      Context.active().deploymentId ?? getHostname(),
     [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: crypto.randomUUID(),
     [SemanticResourceAttributes.CLOUD_PROVIDER]: context.platform,
     "deco.runtime.version": denoJSON.version,
     "deco.apps.version": apps_ver,
-    [SemanticResourceAttributes.CLOUD_REGION]: Deno.env.get("DENO_REGION") ??
+    [SemanticResourceAttributes.CLOUD_REGION]: env.get("DENO_REGION") ??
       "unknown",
-    [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: Deno.env.get(
-        "DECO_ENV_NAME",
-      )
-      ? `env-${Deno.env.get("DECO_ENV_NAME")}`
-      : "production",
+    [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: env.get("DECO_ENV_NAME")
+      ? `env-${env.get("DECO_ENV_NAME")}`
+      : "localhost",
   }),
 );
 
 const loggerName = "deco-logger";
-export const OTEL_IS_ENABLED: boolean = Deno.env.has(
-  "OTEL_EXPORTER_OTLP_ENDPOINT",
-);
+export const OTEL_IS_ENABLED: boolean = env.has("OTEL_EXPORTER_OTLP_ENDPOINT");
 export const logger: Logger = new Logger(loggerName, "INFO", {
   handlers: [
     ...OTEL_IS_ENABLED
@@ -113,7 +124,7 @@ try {
   // deno-lint-ignore no-empty
 } catch {}
 const parseSamplingOptions = (): SamplingOptions | undefined => {
-  const encodedOpts = Deno.env.get("OTEL_SAMPLING_CONFIG");
+  const encodedOpts = env.get("OTEL_SAMPLING_CONFIG");
   if (!encodedOpts) {
     return undefined;
   }

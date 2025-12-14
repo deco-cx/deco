@@ -1,5 +1,5 @@
-import { fromFileUrl, SEPARATOR } from "@std/path";
-export { exists } from "@std/fs";
+import { fromFileUrl, SEPARATOR } from "../compat/std-path.ts";
+export { exists } from "../compat/std-fs.ts";
 
 export const fileSeparatorToSlash = (path: string) => {
   return path.replaceAll(SEPARATOR, "/");

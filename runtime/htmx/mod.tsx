@@ -2,6 +2,7 @@
 /** @jsxImportSource preact */
 
 import type { ComponentChildren, ComponentType } from "preact";
+import { env } from "../../compat/mod.ts";
 import { Context } from "../../deco.ts";
 import type { AppManifest } from "../../types.ts";
 import { Hono, upgradeWebSocket } from "../deps.ts";
@@ -129,7 +130,7 @@ export const HTMX = <
   };
 };
 
-const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
+const DECO_ENV_NAME = env.get("DECO_ENV_NAME");
 
 if (DECO_ENV_NAME) {
   const onHMR = () => {

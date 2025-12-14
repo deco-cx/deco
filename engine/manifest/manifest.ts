@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import { parse } from "@std/flags";
-import { gray, green, red } from "@std/fmt/colors";
+import { parse } from "../../compat/std-flags.ts";
+import { gray, green, red } from "../../compat/std-fmt-colors.ts";
+import { env, proc } from "../../compat/mod.ts";
 import {
   type AppManifest,
   type ImportMap,
@@ -38,7 +39,7 @@ import defaultResolvers from "../manifest/fresh.ts";
 import defaults from "./defaults.ts";
 import { randomSiteName } from "./utils.ts";
 
-const shouldCheckIntegrity = parse(Deno.args)["check"] === true;
+const shouldCheckIntegrity = parse(proc.args())["check"] === true;
 
 export interface HandlerContext<
   Data = unknown,
@@ -104,12 +105,36 @@ export const buildDanglingRecover = (recovers: DanglingRecover[]): Resolver => {
   };
 };
 
-export const siteNameFromEnv = () => Deno.env.get(ENV_SITE_NAME);
+/**
+ * Infer site name from folder name.
+ * This eliminates the need for DECO_SITE_NAME env variable in most cases.
+ */
+export const siteNameFromFolder = (): string | undefined => {
+  try {
+    const currentDir = proc.cwd();
+    // Get the last part of the path (folder name)
+    const parts = currentDir.split(/[/\\]/);
+    const folderName = parts[parts.length - 1];
+    // Sanitize: remove invalid characters, lowercase
+    return folderName?.toLowerCase().replace(/[^a-z0-9-]/g, "-") || undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+export const siteNameFromEnv = () => env.get(ENV_SITE_NAME);
+
 export const siteName = (): string | undefined => {
   const context = Context.active();
+  // Priority: 1. env var, 2. folder name, 3. namespace
   const fromEnvSiteName = siteNameFromEnv();
   if (fromEnvSiteName) {
     return fromEnvSiteName;
+  }
+  // Infer from folder name (no more .env file needed!)
+  const fromFolder = siteNameFromFolder();
+  if (fromFolder) {
+    return fromFolder;
   }
   if (!context.namespace) {
     return undefined;
@@ -271,10 +296,10 @@ export const fulfillContext = async <
   release: DecofileProvider | undefined = undefined,
 ): Promise<DecoContext<T>> => {
   let currentSite = ctx.site ?? siteName();
-  if (!currentSite || Deno.env.has("USE_LOCAL_STORAGE_ONLY")) {
+  if (!currentSite || env.has("USE_LOCAL_STORAGE_ONLY")) {
     if (ctx.isDeploy) {
       throw new Error(
-        `site is not identified, use variable ${ENV_SITE_NAME} to define it`,
+        `site is not identified. Site name is inferred from the folder name, or set ${ENV_SITE_NAME} env variable.`,
       );
     }
     currentSite = randomSiteName();

@@ -3,7 +3,7 @@ import {
   animals,
   NumberDictionary,
   uniqueNamesGenerator,
-} from "npm:unique-names-generator@4.7.1";
+} from "unique-names-generator";
 const numberDictionary = NumberDictionary.generate({ min: 10, max: 99 });
 
 export const randomSiteName = () => {

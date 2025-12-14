@@ -1,4 +1,4 @@
-import { encodeHex } from "@std/encoding/hex";
+import { encodeHex } from "../compat/std-encoding.ts";
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
