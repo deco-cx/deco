@@ -1,5 +1,5 @@
-import { delay } from "@std/async/delay";
 import EventEmitter from "node:events";
+import { delay } from "@std/async/delay";
 import { DaemonMode } from "../../deco.ts";
 import { iteratorFrom, logs } from "../loggings/stream.ts";
 import type { Isolate, IsolateOptions } from "./isolate.ts";
@@ -142,7 +142,13 @@ export class DenoRun implements Isolate {
     url.search = search;
 
     if (request.headers.get("upgrade") === "websocket") {
-      return proxyWebSocket(url, request);
+      const response = proxyWebSocket(url, request);
+      // Decrement counter immediately for WebSocket as it's not a regular HTTP request
+      this.inflightRequests--;
+      if (this.inflightRequests === 0) {
+        this.inflightZeroEmitter.emit("zero");
+      }
+      return response;
     }
 
     const headers = new Headers(request.headers);
@@ -153,7 +159,7 @@ export class DenoRun implements Isolate {
       headers,
       body: request.body,
       redirect: "manual",
-      ...this.client ? { client: this.client } : {},
+      ...(this.client ? { client: this.client } : {}),
     }).finally(() => {
       this.inflightRequests--;
       if (this.inflightRequests === 0) {
@@ -236,6 +242,27 @@ function proxyWebSocket(url: URL, nReq: Request) {
   proxySocket.onclose = () => {
     proxySocketReady = false;
     socket.close();
+  };
+
+  // Add error handlers to prevent hanging
+  proxySocket.onerror = (error) => {
+    console.error("WebSocket proxy error (proxy socket):", error);
+    proxySocketReady = false;
+    try {
+      socket.close();
+    } catch (_err) {
+      // Socket may already be closed
+    }
+  };
+
+  socket.onerror = (error) => {
+    console.error("WebSocket proxy error (target socket):", error);
+    targetSocketReady = false;
+    try {
+      proxySocket.close();
+    } catch (_err) {
+      // Socket may already be closed
+    }
   };
 
   function flushProxyMessageQueue() {

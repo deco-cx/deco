@@ -38,7 +38,7 @@ export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
   const { req: { raw: req }, var: state } = ctx;
-  if (req.headers.get("upgrade") != "websocket") {
+  if (req.headers.get("upgrade") !== "websocket") {
     const props = await getPropsFromRequest(req);
     return await render(req.url, await props, req, ctx);
   }
@@ -79,8 +79,18 @@ export const handler = createHandler(async (
     }
   };
   socket.onclose = () => state.monitoring.logger.log("render socket closed.");
-  socket.onerror = (e) =>
+  socket.onerror = (e) => {
     state.monitoring.logger.log("render socket error:", e);
+    if (
+      "error" in e && typeof e.error === "string" &&
+      e.error.includes(
+        "operation was canceled: upgrade expected but not completed",
+      )
+    ) {
+      console.error("exiting due to upgrade expected but not completed");
+      Deno.exit(1);
+    }
+  };
   return response;
 });
 
