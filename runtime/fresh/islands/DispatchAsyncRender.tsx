@@ -2,7 +2,7 @@ import { useEffect } from "preact/hooks";
 
 export type PartialTriggerMode = "load" | "threshold";
 
-let triggerMode: "load" | "threshold" = "load";
+let triggerMode: "load" | "threshold" = "threshold";
 export const getPartialTriggerMode = () => triggerMode;
 export const setPartialTriggerMode = (newMode: PartialTriggerMode): void => {
   triggerMode = newMode;
