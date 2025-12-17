@@ -1,9 +1,10 @@
+import { setCSPHeaders } from "../../utils/http.ts";
 import { createHandler } from "../middleware.ts";
 
 export const handler = createHandler(async (
-  { var: state },
+  { var: state, req },
 ) => {
-  return new Response(
+  const response = new Response(
     JSON.stringify(await state.release.state()),
     {
       headers: {
@@ -11,4 +12,5 @@ export const handler = createHandler(async (
       },
     },
   );
+  return setCSPHeaders(req.raw, response);
 });
