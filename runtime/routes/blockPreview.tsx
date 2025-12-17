@@ -2,6 +2,7 @@
 /** @jsxImportSource preact */
 
 import type { Page } from "../../blocks/page.tsx";
+import { fromJSON } from "../../engine/decofile/fetcher.ts";
 import { bodyFromUrl } from "../../utils/http.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
@@ -92,7 +93,51 @@ export const render = async (
   ctx: DecoMiddlewareContext,
 ) => {
   let timing = ctx.var.monitoring?.timings?.start("load-data");
-  const page = await ctx.var.deco.preview(req, previewUrl, props, ctx.var);
+  
+  // Check if __decofile exists in props and replace the resolver with one using the new decofile
+  let state = ctx.var;
+  if (props?.__decofile) {
+    const { __decofile: decofile, __props } = props;
+
+    props = __props;
+    const decofileData = typeof decofile === "string" 
+      ? JSON.parse(decofile) 
+      : decofile;
+    const newDecofileProvider = fromJSON(decofileData);
+    
+    // Get the current resolver from the runtime
+    const currentRuntime = await ctx.var.deco.ctx.runtime!;
+    const currentResolver = currentRuntime.resolver;
+    
+    // Create a new resolver with the new decofile provider
+    const newResolver = currentResolver.with({ release: newDecofileProvider });
+    
+    // Create a new resolve function using the new resolver
+    const request = req;
+    const ctxResolver = newResolver
+      .resolverFor(
+        {
+          context: {
+            state,
+            params: ctx.req.param(),
+          },
+          request,
+        },
+        {
+          monitoring: state.monitoring,
+        },
+      )
+      .bind(newResolver);
+    
+    // Create a new state with the new resolve function
+    state = {
+      ...state,
+      resolve: ctxResolver,
+      release: newDecofileProvider,
+    };
+  }
+  
+  const page = await ctx.var.deco.preview(req, previewUrl, props, state);
   timing?.end();
   timing = ctx.var.monitoring?.timings?.start("render-to-string");
   try {
