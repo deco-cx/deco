@@ -149,7 +149,7 @@ export const caches: CacheStorage = {
       redis ??= createClient({
         url: Deno.env.get("LOADER_CACHE_REDIS_URL"),
       });
-
+      // @ts-ignore redis types are not up to date
       redis.on("error", () => {
         if (redis?.isOpen) {
           redis?.disconnect();

@@ -21,9 +21,6 @@ const bindings: Framework = {
 
     return (
       <>
-        <Head>
-          <link rel="prefetch" href={href} as="document" />
-        </Head>
         <button
           f-partial={href}
           {...rest}
