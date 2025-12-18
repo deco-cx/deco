@@ -671,6 +671,7 @@ export const runCodeMod = async (context?: CodeModContext): Promise<void> => {
               update: `deno run -Ar https://deco.cx/update`,
               reload: "deno cache -r https://deco.cx/run",
               dev: "deno run -A --env --unstable-kv --unstable-hmr dev.ts",
+              validate: "deno run -A https://deco.cx/validate",
             },
             imports: {
               ...imports,
