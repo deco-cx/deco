@@ -1,7 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource preact */
 
-import { renderToString } from "npm:preact-render-to-string@6.4.0";
+import { renderToString } from "preact-render-to-string";
 import { type ComponentChildren, options } from "preact";
 import type { ContextRenderer, PageData } from "../deps.ts";
 import { Head } from "./Bindings.tsx";

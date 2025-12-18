@@ -1,4 +1,5 @@
-import { LRUCache } from "npm:lru-cache@10.2.0";
+import { LRUCache } from "lru-cache";
+import { env } from "../../compat/mod.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -8,17 +9,17 @@ import {
 
 // keep compatible with old variable name
 const CACHE_MAX_SIZE = parseInt(
-  Deno.env.get("CACHE_MAX_SIZE") ?? Deno.env.get("MAX_CACHE_SIZE") ??
+  env.get("CACHE_MAX_SIZE") ?? env.get("MAX_CACHE_SIZE") ??
     "1073741824",
 ); // 1 GB max size of cache
-const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") === "true"; // creates a cron for each element in the cache to automatically delete expired items
+const CACHE_TTL_AUTOPURGE = env.get("CACHE_TTL_AUTOPURGE") === "true"; // creates a cron for each element in the cache to automatically delete expired items
 const CACHE_TTL_RESOLUTION = parseInt(
-  Deno.env.get("CACHE_TTL_RESOLUTION") ?? "1000",
+  env.get("CACHE_TTL_RESOLUTION") ?? "1000",
 ); // updates the lru cache timer every 1 second
 // Additional time-to-live increment in milliseconds to extend the cache expiration beyond the response's Expires header.
 // If not set, the cache will use only the expiration timestamp from response headers
 const STALE_TTL_PERIOD = parseInt(
-  Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
+  env.get("STALE_TTL_PERIOD") ?? "30000",
 );
 
 const cacheOptions = (cache: Cache) => (

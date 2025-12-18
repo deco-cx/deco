@@ -15,7 +15,9 @@
     "./jwt": "./commons/jwt/mod.ts",
     "./scripts/bundle": "./scripts/apps/bundle.ts",
     "./scripts/dev": "./scripts/dev.ts",
-    "./engine": "./engine/mod.ts"
+    "./scripts/migrate-to-bun": "./scripts/migrate-to-bun.ts",
+    "./engine": "./engine/mod.ts",
+    "./compat": "./compat/mod.ts"
   },
   "publish": {
     "exclude": [
@@ -42,7 +44,8 @@
     "cache_clean": "rm deno.lock; deno cache -r live.ts",
     "info_json": "deno info --json live.ts > deps.json",
     "detective": "deno run -A https://deno.land/x/detective/detective.ts deps.json",
-    "deps": "deno task cache_clean && deno task info_json && deno task detective"
+    "deps": "deno task cache_clean && deno task info_json && deno task detective",
+    "migrate:bun": "deno run -A ./scripts/migrate-to-bun.ts"
   },
   "githooks": {
     "pre-commit": "check"

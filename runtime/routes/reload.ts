@@ -1,6 +1,7 @@
+import { env } from "../../compat/mod.ts";
 import { createHandler } from "../middleware.ts";
 
-const RELOAD_TOKEN = Deno.env.get("DECO_RELOAD_TOKEN");
+const RELOAD_TOKEN = env.get("DECO_RELOAD_TOKEN");
 export const handler = createHandler(async (
   { var: state, req },
 ) => {

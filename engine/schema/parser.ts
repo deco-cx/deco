@@ -1,4 +1,11 @@
-import { createCache } from "jsr:@deno/cache-dir@0.10.1";
+import { args, fs, isDeno } from "../../compat/mod.ts";
+
+// Cache for Deno module resolution - only available in Deno
+const createCache = isDeno
+  ? (await import("jsr:@deno/cache-dir@0.10.1")).createCache
+  : () => ({
+      load: async (_specifier: string) => undefined,
+    });
 import { assignComments } from "./comments.ts";
 import { parse, type ParsedSource } from "./deps.ts";
 
@@ -33,9 +40,10 @@ async function findTypeDefinitionFile(
   const candidate: string = pathStr.replace(JS_REGEX_PATH, ".d.ts");
 
   try {
-    const fileUrl = new URL(`file://${candidate}`);
-    await Deno.stat(fileUrl);
-    return fileUrl.href;
+    const exists = await fs.exists(candidate);
+    if (exists) {
+      return `file://${candidate}`;
+    }
   } catch {
     // File doesn't exist, try next candidate
   }
@@ -83,9 +91,10 @@ async function resolveFileExtension(
   for (const ext of extensions) {
     try {
       const candidatePath = pathStr + ext;
-      const fileUrl = new URL(`file://${candidatePath}`);
-      await Deno.stat(fileUrl);
-      return fileUrl.href;
+      const exists = await fs.exists(candidatePath);
+      if (exists) {
+        return `file://${candidatePath}`;
+      }
     } catch {
       // File doesn't exist, try next extension
       continue;
@@ -108,9 +117,10 @@ async function resolveFileExtension(
   for (const indexExt of indexExtensions) {
     try {
       const candidatePath = pathStr + indexExt;
-      const fileUrl = new URL(`file://${candidatePath}`);
-      await Deno.stat(fileUrl);
-      return fileUrl.href;
+      const exists = await fs.exists(candidatePath);
+      if (exists) {
+        return `file://${candidatePath}`;
+      }
     } catch {
       // File doesn't exist, try next index extension
       continue;
@@ -140,7 +150,7 @@ async function load(
           const dtsPath = await findTypeDefinitionFile(specifier);
           if (dtsPath) {
             try {
-              const content = await Deno.readTextFile(new URL(dtsPath));
+              const content = await fs.readTextFile(new URL(dtsPath).pathname);
               return content;
             } catch (err) {
               console.log(
@@ -153,7 +163,7 @@ async function load(
           }
         }
 
-        return await Deno.readTextFile(url);
+        return await fs.readTextFile(url.pathname);
       }
       case "http:":
       case "https:": {
@@ -238,24 +248,29 @@ export const initLoader = (): typeof load => {
   if (loader) {
     return loader;
   }
-  if (typeof Deno.permissions.querySync !== "undefined") {
-    try {
-      const cache = createCache();
-      const cacheLoader = (specifier: string) =>
-        cache.load(specifier).then((cached) => {
-          const content = (cached as { content: string | Uint8Array })?.content;
-          if (!content) {
-            return undefined;
-          }
-          if (typeof content === "string") {
-            return content;
-          }
-          return decoder.decode(content);
-        });
+  // Only try to use Deno cache on Deno runtime
+  if (isDeno) {
+    // deno-lint-ignore no-explicit-any
+    const Deno = (globalThis as any).Deno;
+    if (typeof Deno?.permissions?.querySync !== "undefined") {
+      try {
+        const cache = createCache();
+        const cacheLoader = (specifier: string) =>
+          cache.load(specifier).then((cached) => {
+            const content = (cached as { content: string | Uint8Array })?.content;
+            if (!content) {
+              return undefined;
+            }
+            if (typeof content === "string") {
+              return content;
+            }
+            return decoder.decode(content);
+          });
 
-      return loader = wrapLoaderWithDtsSupport(cacheLoader);
-    } catch {
-      return loader = load;
+        return loader = wrapLoaderWithDtsSupport(cacheLoader);
+      } catch {
+        return loader = load;
+      }
     }
   }
   return loader = load;
@@ -330,6 +345,6 @@ export const parsePath = async (
 };
 
 if (import.meta.main) {
-  const file = Deno.args[0];
+  const file = args()[0];
   console.log(JSON.stringify(await parsePath(file)));
 }

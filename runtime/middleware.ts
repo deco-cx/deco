@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { HTTPException } from "@hono/hono/http-exception";
+import { HTTPException } from "hono/http-exception";
+import { isDeno } from "../compat/mod.ts";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context, context } from "../deco.ts";
 import { type Exception, getCookies, getSetCookies, SpanStatusCode } from "../deps.ts";
@@ -150,7 +151,8 @@ export const DEBUG = {
             resp.headers.set("x-correlation-id", correlationId);
             resp.headers.set(
               "x-deno-os-uptime-seconds",
-              `${Deno.osUptime()}`,
+              // deno-lint-ignore no-explicit-any
+              `${isDeno ? (globalThis as any).Deno?.osUptime?.() ?? 0 : Math.floor(process.uptime())}`,
             );
             resp.headers.set(
               "x-isolate-started-at",
