@@ -10,16 +10,12 @@ export const handler = createHandler(async (
     "Content-Type": "application/json",
   };
 
-  if (origin) {
-    try {
+  if (origin && URL.canParse(origin)) {
       const originUrl = new URL(origin);
       const allowedAuthorities = getAllowedAuthorities();
       if (allowedAuthorities.includes(originUrl.hostname)) {
         Object.assign(headers, allowCorsForOrigin(origin));
       }
-    } catch {
-      // Invalid origin URL, ignore
-    }
   }
 
   return new Response(
