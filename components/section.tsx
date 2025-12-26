@@ -57,6 +57,9 @@ interface BoundaryProps {
   error: ComponentFunc<{ error: Error }>;
   loading: ComponentFunc;
   component: string;
+  url?: URL;
+  blockId: string;
+  resolverId: string | number;
 }
 
 interface BoundaryState {
@@ -84,11 +87,24 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
       : "children";
 
     if (mode === "error") {
-      const msg = `rendering: ${this.props.component} ${
-        (error as Error)?.stack
-      }`;
-      logger.error(msg);
-      console.error(msg);
+      const msg =
+        `rendering: ${this.props.component} at ${this.props.url} with resolverId ${this.props.resolverId} ${
+          (error as Error)?.stack
+        }`;
+      logger.error(msg, {
+        host: this.props.url?.host,
+        pathname: this.props.url?.pathname,
+        search: this.props.url?.search,
+        component: this.props.blockId,
+        resolverId: this.props.resolverId,
+      });
+      console.error(msg, {
+        host: this.props.url?.host,
+        pathname: this.props.url?.pathname,
+        search: this.props.url?.search,
+        component: this.props.blockId,
+        resolverId: this.props.resolverId,
+      });
     }
 
     if (mode === "loading") {
@@ -212,6 +228,9 @@ export function withSection<TProps, TLoaderProps = TProps>(
               >
                 <ErrorBoundary
                   component={resolver}
+                  url={ctx.context?.state?.url}
+                  blockId={resolver}
+                  resolverId={ctx.resolverId}
                   loading={() => (
                     <binding.LoadingFallback id={id}>
                       {LoadingFallback
