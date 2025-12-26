@@ -11,11 +11,11 @@ export const handler = createHandler(async (
   };
 
   if (origin && URL.canParse(origin)) {
-      const originUrl = new URL(origin);
-      const allowedAuthorities = getAllowedAuthorities();
-      if (allowedAuthorities.includes(originUrl.hostname)) {
-        Object.assign(headers, allowCorsForOrigin(origin));
-      }
+    const originUrl = new URL(origin);
+    const allowedAuthorities = getAllowedAuthorities();
+    if (allowedAuthorities.includes(originUrl.hostname)) {
+      Object.assign(headers, allowCorsForOrigin(origin));
+    }
   }
 
   return new Response(
