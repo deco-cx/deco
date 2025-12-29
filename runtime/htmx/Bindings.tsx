@@ -30,7 +30,7 @@ const bindings: Framework = {
     return (
       <div
         hx-get={useSection({ props })}
-        hx-trigger="load once delay:6s, intersect once threshold:0.0"
+        hx-trigger="intersect once threshold:0.0"
         hx-target="closest section"
         hx-swap="outerHTML transition:true"
       >
