@@ -83,7 +83,7 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
           manifest: manifestBlocks,
           schema,
           platform: context.platform,
-          cloudProvider: Deno.env.get("DENO_REGION") ?? "unknown",
+          cloudProvider: Deno.env.get("CLOUD_PROVIDER") ?? "unknown",
         };
 
         return info;
