@@ -21,6 +21,7 @@ export interface MetaInfo {
   manifest: ManifestBlocks;
   site: string;
   platform: string;
+  cloudProvider: string;
 }
 
 const toManifestBlocks = (
@@ -82,6 +83,7 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
           manifest: manifestBlocks,
           schema,
           platform: context.platform,
+          cloudProvider: Deno.env.get("CLOUD_PROVIDER") ?? "unknown",
         };
 
         return info;
