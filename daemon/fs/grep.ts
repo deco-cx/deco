@@ -26,6 +26,7 @@ export interface GrepOptions {
   excludePattern?: string;
   limit?: number;
   filepath?: string;
+  contextChars?: number; // Characters to show before and after match (default: 200)
 }
 
 const shouldIgnore = (path: string) =>
@@ -35,6 +36,46 @@ const shouldIgnore = (path: string) =>
 
 const browserPathFromSystem = (filepath: string) =>
   filepath.replace(Deno.cwd(), "").replaceAll(SEPARATOR, "/");
+
+const truncateLineWithContext = (
+  line: string,
+  columnStart: number,
+  columnEnd: number,
+  contextChars: number = 200,
+): {
+  line: string;
+  columnStart: number;
+  columnEnd: number;
+  truncated: boolean;
+} => {
+  const matchStart = Math.max(0, columnStart - contextChars);
+  const matchEnd = Math.min(line.length, columnEnd + contextChars);
+
+  if (matchStart === 0 && matchEnd === line.length) {
+    return { line, columnStart, columnEnd, truncated: false };
+  }
+
+  let truncatedLine = line.substring(matchStart, matchEnd);
+
+  // Add truncation indicators
+  if (matchStart > 0) {
+    truncatedLine = "..." + truncatedLine;
+  }
+  if (matchEnd < line.length) {
+    truncatedLine = truncatedLine + "...";
+  }
+
+  const offsetAdjustment = matchStart > 0 ? matchStart - 3 : matchStart;
+  const newColumnStart = columnStart - offsetAdjustment;
+  const newColumnEnd = columnEnd - offsetAdjustment;
+
+  return {
+    line: truncatedLine,
+    columnStart: Math.max(0, newColumnStart),
+    columnEnd: Math.max(0, newColumnEnd),
+    truncated: true,
+  };
+};
 
 // Check if system grep is available
 let isSystemGrepAvailable: boolean | null = null;
@@ -189,11 +230,19 @@ const systemGrep = async (
         }
       }
 
-      fileResult.matches.push({
-        lineNumber,
-        line: content,
+      const contextChars = options.contextChars ?? 200;
+      const truncatedResult = truncateLineWithContext(
+        content,
         columnStart,
         columnEnd,
+        contextChars,
+      );
+
+      fileResult.matches.push({
+        lineNumber,
+        line: truncatedResult.line,
+        columnStart: truncatedResult.columnStart,
+        columnEnd: truncatedResult.columnEnd,
       });
       total++;
     }
@@ -213,6 +262,7 @@ const systemGrep = async (
 const grepInFile = async (
   filepath: string,
   pattern: RegExp,
+  options: GrepOptions = {},
 ): Promise<GrepFileResult | null> => {
   try {
     const content = await Deno.readTextFile(filepath);
@@ -227,11 +277,19 @@ const grepInFile = async (
       pattern.lastIndex = 0;
 
       while ((match = pattern.exec(line)) !== null) {
+        const contextChars = options.contextChars ?? 200;
+        const truncatedResult = truncateLineWithContext(
+          line,
+          match.index,
+          match.index + match[0].length,
+          contextChars,
+        );
+
         matches.push({
           lineNumber: i + 1,
-          line: line,
-          columnStart: match.index,
-          columnEnd: match.index + match[0].length,
+          line: truncatedResult.line,
+          columnStart: truncatedResult.columnStart,
+          columnEnd: truncatedResult.columnEnd,
         });
 
         // If not global flag, break after first match
@@ -284,7 +342,7 @@ const fallbackGrep = async (
     const stat = await Deno.stat(searchPath);
     if (stat.isFile) {
       // If it's a file, search only in that file
-      const result = await grepInFile(searchPath, pattern);
+      const result = await grepInFile(searchPath, pattern, options);
       if (result) {
         results.push(result);
         total += result.matches.length;
@@ -367,7 +425,7 @@ const fallbackGrep = async (
       continue;
     }
 
-    const result = await grepInFile(entry.path, pattern);
+    const result = await grepInFile(entry.path, pattern, options);
     if (result) {
       results.push(result);
       total += result.matches.length;
