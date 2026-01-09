@@ -1,4 +1,5 @@
-import { fromFileUrl } from "@std/path";
+import { fromFileUrl } from "../../compat/std-path.ts";
+import { proc } from "../../compat/mod.ts";
 import { context } from "../../deco.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import { assertAllowedAuthority as assertAllowedAuthorityFor } from "../trustedAuthority.ts";
@@ -52,7 +53,7 @@ const fetchFromHttp = async (
     );
     if (context.isDeploy) {
       console.error("exiting due to the lack of decofile");
-      Deno.exit(1);
+      proc.exit(1);
     }
     return undefined;
   }

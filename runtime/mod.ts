@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { join, toFileUrl } from "@std/path";
+import { join } from "../compat/std-path.ts";
+import { proc, toFileURL } from "../compat/mod.ts";
 import type { ImportMap } from "../blocks/mod.ts";
 import type { RequestState } from "../blocks/utils.tsx";
 import { buildImportMap } from "../blocks/utils.tsx";
@@ -82,7 +83,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
     const decofile = opts?.decofile ?? await getProvider();
     const manifest = opts?.manifest ?? (await import(
-      toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href
+      toFileURL(join(proc.cwd(), "manifest.gen.ts")).href
     ).then((mod) => mod.default));
     const decoContext = await Promise.resolve(manifest).then((m) =>
       newContext(

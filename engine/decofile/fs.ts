@@ -1,8 +1,8 @@
-import { debounce } from "@std/async/debounce";
-import { equal } from "@std/assert/equal";
-import { extname } from "@std/path";
-import { join } from "@std/path";
-import { decompress } from "npm:brotli@1.3.3";
+import { debounce } from "../../compat/std-async.ts";
+import { equal } from "../../compat/std-assert.ts";
+import { extname, join } from "../../compat/std-path.ts";
+import { decompress } from "brotli";
+import { fs, isDeno, proc } from "../../compat/mod.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { stringifyForWrite } from "../../utils/json.ts";
 import { getDecofileJSONFromDecofile } from "./json.ts";
@@ -27,7 +27,7 @@ const readAndDecompressFile = async (filePath: string): Promise<Decofile> => {
 
   if (ext === ".bin") {
     // Read as text (base64 encoded), decode, and decompress with brotli
-    const base64Content = await Deno.readTextFile(filePath);
+    const base64Content = await fs.readTextFile(filePath);
     const compressedData = Uint8Array.from(
       atob(base64Content),
       (c) => c.charCodeAt(0),
@@ -38,7 +38,7 @@ const readAndDecompressFile = async (filePath: string): Promise<Decofile> => {
     return JSON.parse(jsonString) as Decofile;
   } else {
     // Regular JSON file
-    return Deno.readTextFile(filePath).then((text) =>
+    return fs.readTextFile(filePath).then((text) =>
       JSON.parse(text) as Decofile
     );
   }
@@ -82,7 +82,7 @@ export const newFsProviderFromPath = (
     async (exists) => {
       if (!exists) {
         const data = getDecofileJSONFromDecofile(await copyDecoState, appName);
-        return Deno.writeTextFile(
+        return fs.writeTextFile(
           fullPath,
           stringifyForWrite(data),
         ).then(() => {
@@ -98,12 +98,21 @@ export const newFsProviderFromPath = (
       };
     },
   ).then((result) => {
-    (async () => {
-      const watcher = Deno.watchFs(fullPath);
-      for await (const _event of watcher) {
-        updateState();
-      }
-    })();
+    // File watching - Deno has built-in watchFs, Node.js would need additional setup
+    if (isDeno) {
+      (async () => {
+        // deno-lint-ignore no-explicit-any
+        const Deno = (globalThis as any).Deno;
+        const watcher = Deno.watchFs(fullPath);
+        for await (const _event of watcher) {
+          updateState();
+        }
+      })();
+    } else {
+      // Node.js: file watching requires chokidar or similar
+      // For now, rely on notify() being called explicitly
+      console.info("[deco] File watching not available - use notify() for updates");
+    }
 
     return result;
   });
@@ -120,7 +129,7 @@ export const newFsProviderFromPath = (
     state,
     notify: async () => {
       // Directly check for updates without debounce
-      // This is important for environments where Deno.watchFs doesn't work (e.g., tempfs)
+      // This is important for environments where file watching doesn't work (e.g., tempfs, Node.js)
       await doUpdateState();
     },
     set: (state, rev) => {
@@ -149,6 +158,6 @@ export const newFsProvider = (
   path = DECO_FILE_NAME,
   appName?: string,
 ): DecofileProvider => {
-  const fullPath = join(Deno.cwd(), path);
+  const fullPath = join(proc.cwd(), path);
   return newFsProviderFromPath(fullPath, appName);
 };

@@ -2,9 +2,10 @@
 //
 // this implementation was heavily inspired by fresh's https://github.com/denoland/fresh/blob/bd16a65587998482dac8d70bd82e3e210d345563/src/middlewares/static_files.ts
 //
-import { encodeHex } from "@std/encoding";
-import { contentType as getContentType } from "@std/media-types";
-import { extname } from "@std/path";
+import { encodeHex } from "../../compat/std-encoding.ts";
+import { contentType as getContentType } from "../../compat/std-media-types.ts";
+import { extname } from "../../compat/std-path.ts";
+import { env } from "../../compat/mod.ts";
 import { context } from "../../deco.ts";
 import type { MiddlewareHandler } from "../deps.ts";
 import { getFileFromCache, initializeFileCache } from "./fileCache.ts";
@@ -14,7 +15,7 @@ export const FRSH_ASSET_CACHE_BUST_KEY = "__frsh_c";
 
 const deploymentId = context.deploymentId ||
   // For CI
-  Deno.env.get("GITHUB_SHA") ||
+  env.get("GITHUB_SHA") ||
   crypto.randomUUID();
 const buildIdHash = await crypto.subtle.digest(
   "SHA-1",

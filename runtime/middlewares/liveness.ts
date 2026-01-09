@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { ValueType } from "../../deps.ts";
+import { env, isDeno } from "../../compat/mod.ts";
 import { logger } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { memoryChecker } from "../../observability/probes/memory.ts";
@@ -7,6 +8,23 @@ import { reqCountChecker } from "../../observability/probes/reqCount.ts";
 import { reqInflightChecker } from "../../observability/probes/reqInflight.ts";
 import { uptimeChecker } from "../../observability/probes/uptime.ts";
 import type { DecoMiddleware } from "../middleware.ts";
+
+export interface MemoryUsage {
+  rss: number;
+  heapTotal: number;
+  heapUsed: number;
+  external: number;
+}
+
+export interface SystemMemoryInfo {
+  total: number;
+  free: number;
+  available: number;
+  buffers: number;
+  cached: number;
+  swapTotal: number;
+  swapFree: number;
+}
 
 export interface Metrics {
   uptime: number;
@@ -17,8 +35,8 @@ export interface Metrics {
   latency: {
     median: number;
   };
-  mem: Deno.MemoryUsage;
-  sys: Deno.SystemMemoryInfo;
+  mem: MemoryUsage;
+  sys: SystemMemoryInfo;
 }
 
 export interface LiveChecker<TValue = number> {
@@ -31,7 +49,7 @@ export interface LiveChecker<TValue = number> {
   check: (val: TValue) => boolean;
 }
 
-const DRY_RUN = Deno.env.get("PROBE_DRY_RUN") === "true";
+const DRY_RUN = env.get("PROBE_DRY_RUN") === "true";
 
 const probe = meter.createCounter("probe_failed", {
   unit: "1",
@@ -41,7 +59,7 @@ const probe = meter.createCounter("probe_failed", {
 export function getProbeThresholdAsNum(
   checkerName: string,
 ): number | undefined {
-  const fromEnv = Deno.env.get(`PROBE_${checkerName}_THRESHOLD`);
+  const fromEnv = env.get(`PROBE_${checkerName}_THRESHOLD`);
   return fromEnv ? +fromEnv : undefined;
 }
 
@@ -66,11 +84,21 @@ const buildHandler = (
     });
   };
   try {
-    if (Deno.build.os !== "windows") {
-      Deno.addSignalListener("SIGTERM", () => {
+    // Add signal listener for graceful shutdown (works on Deno and Node/Bun)
+    if (isDeno) {
+      const Deno = (globalThis as any).Deno;
+      if (Deno?.build?.os !== "windows") {
+        Deno.addSignalListener("SIGTERM", () => {
+          const checks = runChecks();
+          console.log(checks);
+          self.close();
+        });
+      }
+    } else if (typeof process !== "undefined") {
+      process.on("SIGTERM", () => {
         const checks = runChecks();
         console.log(checks);
-        self.close();
+        process.exit(0);
       });
     }
   } catch (err) {

@@ -1,0 +1,126 @@
+{
+  "name": "@deco/deco",
+  "version": "1.132.1",
+  "description": "The deco.cx framework - build type-safe applications with live editing capabilities",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./mod.ts",
+      "types": "./mod.ts"
+    },
+    "./web": {
+      "import": "./mod.web.ts",
+      "types": "./mod.web.ts"
+    },
+    "./htmx": {
+      "import": "./runtime/htmx/mod.ts",
+      "types": "./runtime/htmx/mod.ts"
+    },
+    "./compat": {
+      "import": "./compat/mod.ts",
+      "types": "./compat/mod.ts"
+    },
+    "./compat/*": {
+      "import": "./compat/*.ts",
+      "types": "./compat/*.ts"
+    },
+    "./hooks": {
+      "import": "./hooks/index.js",
+      "types": "./hooks/mod.ts"
+    },
+    "./o11y": {
+      "import": "./o11y/index.js",
+      "types": "./observability/mod.ts"
+    },
+    "./utils": {
+      "import": "./utils/mod.ts",
+      "types": "./utils/mod.ts"
+    },
+    "./blocks": {
+      "import": "./blocks/mod.ts",
+      "types": "./blocks/mod.ts"
+    }
+  },
+  "files": [
+    "blocks",
+    "clients",
+    "commons",
+    "compat",
+    "components",
+    "engine",
+    "hooks",
+    "observability",
+    "plugins",
+    "runtime",
+    "utils",
+    "*.ts",
+    "!*.test.ts",
+    "!*.bench.ts"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "echo 'No build step required for TypeScript source distribution'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:node": "vitest run --config vitest.node.config.ts"
+  },
+  "keywords": [
+    "deco",
+    "cms",
+    "framework",
+    "typescript",
+    "react",
+    "preact"
+  ],
+  "author": "deco.cx",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deco-cx/deco.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deco-cx/deco/issues"
+  },
+  "homepage": "https://deco.cx",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "hono": "^4.0.0"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.7.0",
+    "@opentelemetry/api-logs": "^0.208.0",
+    "@opentelemetry/core": "^1.21.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.208.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.208.0",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.48.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.208.0",
+    "@opentelemetry/instrumentation": "^0.208.0",
+    "@opentelemetry/instrumentation-fetch": "^0.208.0",
+    "@opentelemetry/otlp-exporter-base": "^0.208.0",
+    "@opentelemetry/resources": "^1.21.0",
+    "@opentelemetry/sdk-logs": "^0.208.0",
+    "@opentelemetry/sdk-metrics": "^1.21.0",
+    "@opentelemetry/sdk-trace-base": "^1.21.0",
+    "@opentelemetry/sdk-trace-node": "^2.2.0",
+    "@opentelemetry/semantic-conventions": "^1.21.0",
+    "@preact/signals": "^2.5.1",
+    "@redis/client": "^5.10.0",
+    "@types/json-schema": "^7.0.15",
+    "brotli": "^1.3.3",
+    "lru-cache": "^11.2.4",
+    "preact": "^10.28.0",
+    "preact-render-to-string": "^6.6.3",
+    "terser": "^5.44.1",
+    "ua-parser-js": "^2.0.7",
+    "unique-names-generator": "^4.7.1",
+    "utility-types": "^3.11.0",
+    "weak-lru-cache": "^1.2.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.0.0",
+    "vitest": "^2.1.0"
+  }
+}
