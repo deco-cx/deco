@@ -82,6 +82,7 @@ export interface Flag {
   name: string;
   value: boolean;
   isSegment?: boolean;
+  cacheable?: boolean;
 }
 
 export interface StatefulContext<T> {

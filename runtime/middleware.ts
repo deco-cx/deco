@@ -27,7 +27,11 @@ import type {
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
 import type { Deco, State } from "./mod.ts";
+import { sha1 } from "./utils.ts";
 export const DECO_SEGMENT = "deco_segment";
+
+const DECO_PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ||
+  "public, max-age=120, must-revalidate, s-maxage=120, stale-while-revalidate=86400";
 
 export const proxyState = (
   ctx: DecoMiddlewareContext & { params?: Record<string, string> },
@@ -439,8 +443,152 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
-      // If response has set-cookie header, set cache-control to no-store
-      if (getSetCookies(newHeaders).length > 0) {
+      // Cache logic implementation
+      // Skip cache logic for internal routes that have their own cache handling
+      const isInternalRoute = url.pathname.startsWith("/deco/") ||
+        url.pathname.startsWith("/_frsh/") ||
+        url.pathname.startsWith("/live/");
+      
+      // Rule 1: If response has set-cookie header, don't cache
+      const setCookies = getSetCookies(newHeaders);
+      const hasSetCookie = setCookies.length > 0;
+      
+      // Rule 3: Check if all active flags are cacheable
+      // If there are any active flags, all must be cacheable for caching to be allowed
+      const activeFlags = ctx.var?.flags?.filter((flag) => flag.value) ?? [];
+      const hasActiveFlags = activeFlags.length > 0;
+      const nonCacheableFlags = activeFlags.filter((flag) => flag.cacheable !== true);
+      const allFlagsCacheable = hasActiveFlags
+        ? activeFlags.every((flag) => flag.cacheable === true)
+        : true; // No active flags means cacheable by default
+
+      // Check if vary allows caching (loaders may set shouldCache to false)
+      const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
+      const varyDebug = ctx?.var?.vary?.debug?.build() ?? [];
+
+      // Determine if we should cache (only for GET requests with 200 status, and not internal routes)
+      const shouldCache = !isInternalRoute && !hasSetCookie && allFlagsCacheable &&
+        shouldCacheFromVary &&
+        ctx.req.raw.method === "GET" &&
+        responseStatus === 200;
+
+      // Log cache warnings for debugging
+      if (!isInternalRoute && ctx.req.raw.method === "GET" && responseStatus === 200) {
+        if (hasSetCookie) {
+          // Try to identify which section might be setting cookies
+          // Extract section name from the last resolvable in the pathTemplate context
+          let sectionName = "unknown section";
+          try {
+            // Try to get section name from pathTemplate or URL
+            const pathTemplate = ctx.var?.pathTemplate;
+            if (pathTemplate) {
+              // Extract a readable section identifier
+              const match = pathTemplate.match(/\/([^\/]+)/);
+              if (match) {
+                sectionName = `"${match[1]}"`;
+              }
+            }
+          } catch {
+            // Fallback to unknown
+          }
+          console.warn(
+            `[cache] Page not cached: set-cookie at section ${sectionName}`,
+          );
+        } else if (!allFlagsCacheable) {
+          // List non-cacheable matchers
+          const matcherNames = nonCacheableFlags
+            .map((flag) => `"${flag.name}"`)
+            .join(", ");
+          console.warn(
+            `[cache] Page not cached: matcher${nonCacheableFlags.length > 1 ? "s" : ""} ${matcherNames} being used`,
+          );
+        } else if (!shouldCacheFromVary) {
+          // Check vary.debug for loaders that prevented caching
+          const loadersPreventingCache = varyDebug
+            .filter((debug: any) => 
+              debug.reason?.cache === "no-store" || debug.reason?.cacheKeyNull
+            )
+            .map((debug: any) => {
+              const resolver = debug.resolver;
+              if (!resolver) return null;
+              
+              // Try to get loader name from resolver
+              if (resolver.type === "resolver") {
+                return resolver.value;
+              }
+              
+              // Try to extract from resolveChain
+              if (resolver.resolveChain) {
+                // Find the last resolvable (section) and resolver (loader)
+                const resolveChain = resolver.resolveChain;
+                const lastResolver = resolveChain
+                  .slice()
+                  .reverse()
+                  .find((item: any) => item.type === "resolver");
+                const lastResolvable = resolveChain
+                  .slice()
+                  .reverse()
+                  .find((item: any) => item.type === "resolvable");
+                
+                if (lastResolver && lastResolvable) {
+                  return `"${lastResolvable.value}" executed dynamic loader "${lastResolver.value}"`;
+                } else if (lastResolver) {
+                  return `"${lastResolver.value}"`;
+                } else if (lastResolvable) {
+                  return `section "${lastResolvable.value}"`;
+                }
+              }
+              
+              return null;
+            })
+            .filter((name): name is string => name !== null);
+          
+          if (loadersPreventingCache.length > 0) {
+            const message = loadersPreventingCache.join(", ");
+            console.warn(
+              `[cache] Page not cached: ${message}`,
+            );
+          } else {
+            console.warn(
+              `[cache] Page not cached: dynamic loader(s) executed`,
+            );
+          }
+        }
+      }
+
+      if (hasSetCookie) {
+        // Rule 1: If response has set-cookie header, set cache-control to no-store
+        newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      } else if (!allFlagsCacheable) {
+        // Rule 3: If not all active flags are cacheable, don't cache
+        newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      } else if (shouldCache) {
+        // Rule 2: Build cache key using vary.build() which contains all loader __cb values
+        const varyKey = ctx.var?.vary?.build() ?? "";
+        
+        
+        // Generate ETag from vary key and flag cacheKeys
+        // Include both varyKey (loader __cb values) and flag cacheKeys
+        const etagSource = varyKey ?? url.toString();
+        const etagHash = await sha1(etagSource);
+        const etagValue = `"${etagHash}"`;
+        newHeaders.set("ETag", etagValue);
+        
+        // Check if client sent If-None-Match header
+        const ifNoneMatch = ctx.req.raw.headers.get("If-None-Match");
+        if (ifNoneMatch === etagValue || ifNoneMatch === `W/${etagValue}`) {
+          // Return 304 Not Modified
+          ctx.res = undefined;
+          return ctx.res = new Response(null, {
+            status: 304,
+            headers: newHeaders,
+          });
+        }
+        
+        // Set cache-control for public caching
+        newHeaders.set("Cache-Control", DECO_PAGE_CACHE_CONTROL);
+      } else {
+        // Default: no cache
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
       }
 
