@@ -234,6 +234,32 @@ const wrapLoader = (
           if (ctx.vary && shouldNotCache) {
             ctx.vary.shouldCache = false;
 
+            // Extract section name from resolveChain
+            let sectionName: string | undefined;
+            for (let i = resolveChain.length - 1; i >= 0; i--) {
+              const item = resolveChain[i];
+              if (item?.type === "resolvable") {
+                sectionName = item.value;
+                break; // Stop at first resolvable (section)
+              }
+            }
+
+            // Clean loader name (remove path, keep just the name)
+            const cleanLoaderName = loader.includes("/")
+              ? loader.split("/").pop()?.replace(/\.ts$/, "") || loader
+              : loader;
+
+            // Clean section name (remove hash if present)
+            const cleanSectionName = sectionName
+              ? sectionName.replace(/-\w{12}$/, "")
+              : undefined;
+
+            // Add to list of loaders preventing cache
+            ctx.vary.loadersPreventingCache.push({
+              loader: cleanLoaderName,
+              section: cleanSectionName,
+            });
+
             if (ctx.debugEnabled) {
               const resolver = resolveChain.at(-1);
               resolver &&

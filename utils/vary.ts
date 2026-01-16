@@ -4,10 +4,16 @@ export interface DebugProperties {
   resolver: FieldResolver;
 }
 
+export interface LoaderPreventingCache {
+  loader: string;
+  section?: string;
+}
+
 export interface Vary {
   push: (...key: string[]) => void;
   build: () => string;
   shouldCache: boolean;
+  loadersPreventingCache: LoaderPreventingCache[];
   debug: {
     push: <T extends DebugProperties>(debug: T) => void;
     build: <T extends DebugProperties>() => T[];
@@ -17,6 +23,7 @@ export interface Vary {
 export const vary = (): Vary => {
   const vary: string[] = [];
   const debug: DebugProperties[] = [];
+  const loadersPreventingCache: LoaderPreventingCache[] = [];
 
   return {
     push: (...key: string[]) => vary.push(...key),
@@ -24,6 +31,7 @@ export const vary = (): Vary => {
       return vary.sort().join();
     },
     shouldCache: true,
+    loadersPreventingCache,
     debug: {
       push: <T extends DebugProperties>(_debug: T) =>
         debug.push(_debug as DebugProperties),
