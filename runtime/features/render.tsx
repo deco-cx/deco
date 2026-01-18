@@ -32,6 +32,7 @@ const snippet = (url: string) => {
 export interface RenderResponse {
   page: Page;
   shouldCache: boolean;
+  sectionName?: string;
 }
 export const render = async <TAppManifest extends AppManifest = AppManifest>(
   req: Request,
@@ -146,5 +147,48 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
       };
     }
   }
-  return { page, shouldCache };
+  // Extract section name for debugging/observability
+  // Priority: nested section component > section type > block ID
+  let sectionName: string | undefined;
+  
+  // Helper to clean component names
+  const cleanName = (name: string) => name
+    .replace(/^site\//, '')
+    .replace(/^website\//, '')
+    .replace(/^sections\//, '')
+    .replace(/\.tsx$/, '')
+    .replace(/Rendering\/.*/, ''); // Skip rendering wrappers
+  
+  // Look for the ACTUAL section inside Rendering/Lazy wrapper
+  // The structure is: Lazy.section -> actual component
+  const actualSection = section?.section || section;
+  const actualResolveType = actualSection?.__resolveType?.toString();
+  
+  if (actualResolveType) {
+    const componentType = cleanName(actualResolveType);
+    if (componentType && !componentType.includes('Rendering/')) {
+      sectionName = componentType;
+      
+      // Try to add title for more context
+      const title = props?.title || actualSection?.title || actualSection?.name;
+      if (typeof title === 'string' && title.length > 0) {
+        const shortTitle = title.length > 20 ? title.substring(0, 17) + '...' : title;
+        sectionName = `${componentType}: ${shortTitle}`;
+      }
+    }
+  }
+  
+  // Fallback to resolveChain block ID if no component type
+  if (!sectionName && resolveChain) {
+    const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
+    if (index >= 0) {
+      const blockId = resolveChain[index].value?.toString();
+      sectionName = blockId
+        ?.replace(/^pages-/, '')
+        ?.replace(/-\d+$/, '')
+        ?.replace(/%20/g, ' ');
+    }
+  }
+  
+  return { page, shouldCache, sectionName: sectionName || undefined };
 };
