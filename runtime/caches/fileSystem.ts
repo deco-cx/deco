@@ -1,4 +1,5 @@
-import { existsSync } from "@std/fs";
+import { existsSync } from "../../compat/std-fs.ts";
+import { env, fs, isDeno } from "../../compat/mod.ts";
 import { logger } from "../../observability/otel/config.ts";
 
 import {
@@ -8,7 +9,7 @@ import {
 } from "./utils.ts";
 
 const FILE_SYSTEM_CACHE_DIRECTORY =
-  Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/tmp/deco_cache";
+  env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/tmp/deco_cache";
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
@@ -67,7 +68,7 @@ function createFileSystemCache(): CacheStorage {
       if (
         FILE_SYSTEM_CACHE_DIRECTORY && !existsSync(FILE_SYSTEM_CACHE_DIRECTORY)
       ) {
-        await Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
+        await fs.mkdir(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
       }
       isCacheInitialized = true;
     } catch (err) {
@@ -84,7 +85,7 @@ function createFileSystemCache(): CacheStorage {
     }
     const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
 
-    await Deno.writeFile(filePath, responseArray);
+    await fs.writeFile(filePath, responseArray);
     return;
   }
 
@@ -94,7 +95,7 @@ function createFileSystemCache(): CacheStorage {
     }
     try {
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-      const fileContent = await Deno.readFile(filePath);
+      const fileContent = await fs.readFile(filePath);
       return fileContent;
     } catch (_err) {
       const err = _err as { code?: string };
@@ -113,7 +114,7 @@ function createFileSystemCache(): CacheStorage {
     }
     try {
       const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-      await Deno.remove(filePath);
+      await fs.remove(filePath);
       return true;
     } catch (err) {
       return false;
@@ -232,9 +233,15 @@ function createFileSystemCache(): CacheStorage {
 }
 
 const hasWritePerm = async (): Promise<boolean> => {
-  return await Deno.permissions.query(
-    { name: "write", path: FILE_SYSTEM_CACHE_DIRECTORY } as const,
-  ).then((status) => status.state === "granted");
+  if (isDeno) {
+    // deno-lint-ignore no-explicit-any
+    const Deno = (globalThis as any).Deno;
+    return await Deno.permissions.query(
+      { name: "write", path: FILE_SYSTEM_CACHE_DIRECTORY } as const,
+    ).then((status: { state: string }) => status.state === "granted");
+  }
+  // Node.js/Bun: assume we have write permission, the mkdir/write will fail if not
+  return true;
 };
 
 export const isFileSystemAvailable = await hasWritePerm() &&

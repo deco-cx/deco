@@ -1,3 +1,4 @@
+import { env } from "../../compat/mod.ts";
 import { withInstrumentation } from "./common.ts";
 
 import { isFileSystemAvailable } from "./fileSystem.ts";
@@ -16,10 +17,10 @@ import { caches as lruCache } from "./lrucache.ts";
 import { caches as fileSystem } from "./fileSystem.ts";
 
 export const ENABLE_LOADER_CACHE: boolean =
-  Deno.env.get("ENABLE_LOADER_CACHE") !== "false";
+  env.get("ENABLE_LOADER_CACHE") !== "false";
 const DEFAULT_CACHE_ENGINE = "CACHE_API";
-const WEB_CACHE_ENGINES: CacheEngine[] = Deno.env.has("WEB_CACHE_ENGINE")
-  ? Deno.env.get("WEB_CACHE_ENGINE")!.split(",") as CacheEngine[]
+const WEB_CACHE_ENGINES: CacheEngine[] = env.has("WEB_CACHE_ENGINE")
+  ? env.get("WEB_CACHE_ENGINE")!.split(",") as CacheEngine[]
   : [DEFAULT_CACHE_ENGINE];
 
 export interface CacheStorageOption {

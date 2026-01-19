@@ -1,5 +1,5 @@
-import { walk } from "@std/fs/walk";
-import { join } from "@std/path";
+import { walk } from "../../compat/std-fs.ts";
+import { join } from "../../compat/std-path.ts";
 import { shouldBeLocal } from "../../blocks/appsUtil.ts";
 import blocks from "../../blocks/index.ts";
 import { exists, fileSeparatorToSlash } from "../../utils/filesystem.ts";

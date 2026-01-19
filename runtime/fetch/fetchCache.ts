@@ -3,7 +3,7 @@
  *
  * Heavily inspired on: https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties
  */
-import { bgRed, gray, yellow } from "@std/fmt/colors";
+import { bgRed, gray, yellow } from "../../compat/std-fmt-colors.ts";
 import { caches } from "../caches/proxy.ts";
 import { sha1 } from "../utils.ts";
 

@@ -1,3 +1,4 @@
+import { env } from "../../compat/mod.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -11,12 +12,12 @@ import {
   type RedisFunctions,
   type RedisModules,
   type RedisScripts,
-} from "npm:@redis/client@^1.6.0";
+} from "@redis/client";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
 const RECONNECTION_TIMEOUT = 5000;
-const TTL = parseInt(Deno.env.get("LOADER_CACHE_REDIS_TTL_SECONDS") || "3600");
+const TTL = parseInt(env.get("LOADER_CACHE_REDIS_TTL_SECONDS") || "3600");
 
 interface RedisCommandTimeout extends Error {
 }
@@ -27,7 +28,7 @@ export type RedisConnection = RedisClientType<
   RedisScripts
 >;
 
-export const isAvailable = Deno.env.has("LOADER_CACHE_REDIS_URL");
+export const isAvailable = env.has("LOADER_CACHE_REDIS_URL");
 
 async function serialize(response: Response): Promise<string> {
   const body = await response.text();
@@ -147,7 +148,7 @@ export const caches: CacheStorage = {
       }
 
       redis ??= createClient({
-        url: Deno.env.get("LOADER_CACHE_REDIS_URL"),
+        url: env.get("LOADER_CACHE_REDIS_URL"),
       });
       // @ts-ignore redis types are not up to date
       redis.on("error", () => {

@@ -1,10 +1,21 @@
 import type { Page } from "../blocks/page.tsx";
+import { isDeno } from "../compat/mod.ts";
 
-export { Hono } from "@hono/hono";
-export type { Context, Handler, Input, MiddlewareHandler } from "@hono/hono";
-export type { Env } from "@hono/hono/types";
+// Use standard hono package (works in Deno, Bun, and Node)
+export { Hono } from "hono";
+export type { Context, Handler, Input, MiddlewareHandler } from "hono";
+export type { Env } from "hono/types";
 
-export { serveStatic, upgradeWebSocket } from "@hono/hono/deno";
+// Deno-specific adapters - stub for other runtimes
+export const serveStatic = isDeno
+  // @ts-ignore - dynamic import for Deno
+  ? (await import("@hono/hono/deno")).serveStatic
+  : () => async () => new Response(null, { status: 404 });
+
+export const upgradeWebSocket = isDeno
+  // @ts-ignore - dynamic import for Deno
+  ? (await import("@hono/hono/deno")).upgradeWebSocket
+  : () => () => ({});
 export interface PageData {
   page: Page;
 }

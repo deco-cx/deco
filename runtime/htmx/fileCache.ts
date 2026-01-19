@@ -1,5 +1,5 @@
-import { readAll } from "@std/io/read-all";
-import { join } from "@std/path";
+import { join } from "../../compat/std-path.ts";
+import { fs } from "../../compat/mod.ts";
 
 const fileCache: Map<string, { etag: string; data: Uint8Array; size: number }> =
   new Map();
@@ -19,19 +19,17 @@ async function generateEtag(data: Uint8Array): Promise<string> {
 async function readFile(root: string, pathname: string) {
   const filePath = join(root, pathname);
   try {
-    const file = await Deno.open(filePath, { read: true });
-    const data = await readAll(file);
+    const data = await fs.readFile(filePath);
     const etag = await generateEtag(data);
     const size = data.byteLength;
     fileCache.set(`/${pathname}`, { etag, data, size });
-    file.close();
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error);
   }
 }
 
 export async function initializeFileCache(root: string) {
-  for await (const entry of Deno.readDir(root)) {
+  for await (const entry of fs.readDir(root)) {
     if (entry.isFile) {
       await readFile(root, entry.name);
     }

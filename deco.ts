@@ -1,6 +1,7 @@
 import "./utils/patched_fetch.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
+import { env } from "./compat/mod.ts";
 import type { ImportMap } from "./blocks/app.ts";
 import type { ReleaseResolver } from "./engine/core/mod.ts";
 import type { DecofileProvider } from "./engine/decofile/provider.ts";
@@ -76,12 +77,12 @@ export interface RequestContextBinder {
   readonly framework: "fresh" | "htmx";
 }
 
-const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID");
-const isPreview = Deno.env.get("DECO_PREVIEW") === "true";
+const deploymentId = env.get("DENO_DEPLOYMENT_ID");
+const isPreview = env.get("DECO_PREVIEW") === "true";
 const isDeploy = Boolean(deploymentId);
 
 const getHostingPlatform = (): WellKnownHostingPlatform => {
-  const kService = Deno.env.get("K_SERVICE") !== undefined;
+  const kService = env.get("K_SERVICE") !== undefined;
 
   if (kService) {
     return "kubernetes";
@@ -98,7 +99,7 @@ let defaultContext: Omit<DecoContext<any>, "schema"> = {
   siteId: 0,
   isDeploy: isDeploy,
   isPreview,
-  decodMode: Deno.env.get("DECOD_MODE") as DecodMode | undefined,
+  decodMode: env.get("DECOD_MODE") as DecodMode | undefined,
   platform: getHostingPlatform(),
   site: "",
   instance: {
