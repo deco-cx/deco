@@ -209,6 +209,15 @@ const wrapLoader = (
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
+      // Check if signal is aborted early - if so, this is just a structural resolution
+      // and we should not affect caching behavior
+      const isAborted = RequestContext?.signal?.aborted;
+      if (isAborted) {
+        // For aborted requests (structural resolution), just throw immediately
+        // without affecting vary.shouldCache
+        RequestContext?.signal?.throwIfAborted();
+      }
+
       const isCacheEngineDefined = isCache(maybeCache);
       const isCacheDisabled = !ENABLE_LOADER_CACHE ||
         !isCacheEngineDefined;

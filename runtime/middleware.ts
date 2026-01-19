@@ -547,9 +547,6 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
         // Set cache-control for public caching
         newHeaders.set("Cache-Control", DECO_PAGE_CACHE_CONTROL);
-      } else {
-        // Default: no cache
-        newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
       }
 
       // for some reason hono deletes content-type when response is not fresh.
