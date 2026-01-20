@@ -4,7 +4,8 @@ import { extname } from "@std/path";
 import { join } from "@std/path";
 import { decompress } from "npm:brotli@1.3.3";
 import { exists } from "../../utils/filesystem.ts";
-import { stringifyForWrite } from "../../utils/json.ts";
+import { stableStringify, stringifyForWrite } from "../../utils/json.ts";
+import { MurmurHash3 } from "../../utils/hasher.ts";
 import { getDecofileJSONFromDecofile } from "./json.ts";
 import type {
   Decofile,
@@ -13,6 +14,17 @@ import type {
   ReadOptions,
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
+
+/**
+ * Creates a stable hash of the decofile state.
+ * This ensures all PODs with the same state have the same revision.
+ * Uses stable stringification to guarantee consistent key ordering.
+ */
+const hashState = (state: Decofile): string => {
+  const stateStr = stableStringify(state);
+  const hash = new MurmurHash3(stateStr);
+  return hash.result().toString(36);
+};
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
   return fetch(`https://${appName.replace("/", "-")}.deno.dev/live/release`)
@@ -67,7 +79,7 @@ export const newFsProviderFromPath = (
     previousState = state;
     decofile = Promise.resolve({
       state,
-      revision: `${Date.now()}`,
+      revision: hashState(state),
     });
     for (const cb of onChangeCbs) {
       cb();
@@ -88,14 +100,14 @@ export const newFsProviderFromPath = (
           stringifyForWrite(data),
         ).then(() => {
           previousState = data;
-          return { state: data, revision: `${Date.now()}` };
+          return { state: data, revision: hashState(data) };
         });
       }
       const state = await readAndDecompressFile(fullPath);
       previousState = state;
       return {
         state,
-        revision: `${Date.now()}`,
+        revision: hashState(state),
       };
     },
   ).then((result) => {
@@ -128,7 +140,7 @@ export const newFsProviderFromPath = (
       previousState = state;
       decofile = Promise.resolve({
         state,
-        revision: rev ?? `${Date.now()}`,
+        revision: rev ?? hashState(state),
       });
       for (const cb of onChangeCbs) {
         cb();
