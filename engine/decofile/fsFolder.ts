@@ -4,8 +4,9 @@ import { ensureFile } from "@std/fs";
 import { walk } from "@std/fs/walk";
 import { basename, join } from "@std/path";
 import getBlocks from "../../blocks/index.ts";
-import { Context } from "../../deco.ts";
 import { exists } from "../../utils/filesystem.ts";
+import { MurmurHash3 } from "../../utils/hasher.ts";
+import { stableStringify } from "../../utils/json.ts";
 import { BLOCKS_FOLDER, DECO_FOLDER, METADATA_PATH } from "./constants.ts";
 import type {
   Decofile,
@@ -14,6 +15,21 @@ import type {
   ReadOptions,
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
+
+const hash = new MurmurHash3();
+
+/**
+ * Creates a stable hash of the decofile state.
+ * This ensures all PODs with the same state have the same revision.
+ * Uses stable stringification to guarantee consistent key ordering.
+ */
+const hashState = (state: Decofile): string => {
+  const stateStr = stableStringify(state);
+  hash.hash(stateStr);
+  const result = hash.result();
+  hash.reset();
+  return `${result}`;
+};
 
 export const parseBlockId = (filename: string) =>
   decodeURIComponent(filename.slice(0, filename.length - ".json".length));
@@ -130,11 +146,10 @@ export const newFsFolderProviderFromPath = (
         );
       }
       await Promise.all(promises);
+      
       return {
         state: decofile,
-        revision: Context.active().isPreview
-          ? `${Date.now()}`
-          : Context.active().deploymentId ?? `${Date.now()}`,
+        revision: hashState(decofile),
       };
     },
   ).then((result) => {
@@ -164,9 +179,10 @@ export const newFsFolderProviderFromPath = (
             changedBlocks[parseBlockId(basename(filePath))] = content;
           }),
         );
+        const newState = { ...prevState, ...changedBlocks };
         decofile = Promise.resolve({
-          state: { ...prevState, ...changedBlocks },
-          revision: `${Date.now()}`,
+          state: newState,
+          revision: hashState(newState),
         });
         for (const cb of onChangeCbs) {
           cb();
@@ -190,7 +206,7 @@ export const newFsFolderProviderFromPath = (
     set: (state, rev) => {
       decofile = Promise.resolve({
         state,
-        revision: rev ?? `${Date.now()}`,
+        revision: rev ?? hashState(state),
       });
       for (const cb of onChangeCbs) {
         cb();
