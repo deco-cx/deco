@@ -114,7 +114,7 @@ const addHours = function (date: Date, h: number) {
   return date;
 };
 
-export type DebugAction = (resp: Response) => void;
+export type DebugAction = (resp: Response) => void | Promise<void>;
 export const DEBUG = {
   none: (_resp: Response) => {},
   enable: (resp: Response) => {
@@ -150,12 +150,16 @@ export const DEBUG = {
     return {
       action: hasDebugFromQS || isLivePreview
         ? (enabled
-          ? (resp) => {
+          ? async (resp) => {
             DEBUG.enable(resp);
             resp.headers.set("x-correlation-id", correlationId);
             resp.headers.set(
               "x-deno-os-uptime-seconds",
               `${Deno.osUptime()}`,
+            );
+            resp.headers.set(
+              "x-deco-revision",
+              `${await liveContext.release?.revision() ?? ""}`,
             );
             resp.headers.set(
               "x-isolate-started-at",
@@ -249,7 +253,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       if (ctx.req.raw.headers.get("upgrade") === "websocket") {
         return;
       }
-      ctx.res && action(ctx.res);
+      ctx.res && await action(ctx.res);
       setLogger(null);
     },
     // 2 => observability
