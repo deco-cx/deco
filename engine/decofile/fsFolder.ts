@@ -130,11 +130,20 @@ export const newFsFolderProviderFromPath = (
         );
       }
       await Promise.all(promises);
+      const deploymentId = Context.active().deploymentId;
+      const isPreview = Context.active().isPreview;
+      const revisionId = Context.active().isPreview ? `${Date.now()}`
+      : Context.active().deploymentId ?? `${Date.now()}`
+
+      console.log({
+        deploymentId,
+        isPreview,
+        revisionId,
+      })
+      
       return {
         state: decofile,
-        revision: Context.active().isPreview
-          ? `${Date.now()}`
-          : Context.active().deploymentId ?? `${Date.now()}`,
+        revision: revisionId,
       };
     },
   ).then((result) => {
