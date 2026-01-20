@@ -124,7 +124,6 @@ export const newFsFolderProviderFromPath = (
   fullPath: string,
   fs: Fs = denoFs,
 ): DecofileProvider => {
-  console.log(`[DecofileProvider] Using FS Folder provider - path: ${fullPath}`);
   const onChangeCbs: OnChangeCallback[] = [];
   let decofile: Promise<VersionedDecofile> = exists(fullPath, {
     isDirectory: true,
