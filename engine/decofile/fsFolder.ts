@@ -4,7 +4,6 @@ import { ensureFile } from "@std/fs";
 import { walk } from "@std/fs/walk";
 import { basename, join } from "@std/path";
 import getBlocks from "../../blocks/index.ts";
-import { Context } from "../../deco.ts";
 import { exists } from "../../utils/filesystem.ts";
 import { MurmurHash3 } from "../../utils/hasher.ts";
 import { stableStringify } from "../../utils/json.ts";
@@ -148,19 +147,10 @@ export const newFsFolderProviderFromPath = (
         );
       }
       await Promise.all(promises);
-      const deploymentId = Context.active().deploymentId;
-      const isPreview = Context.active().isPreview;
-      const revisionId = hashState(decofile);
-
-      console.log({
-        deploymentId,
-        isPreview,
-        revisionId,
-      })
       
       return {
         state: decofile,
-        revision: revisionId,
+        revision: hashState(decofile),
       };
     },
   ).then((result) => {
