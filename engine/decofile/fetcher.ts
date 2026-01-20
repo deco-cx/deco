@@ -63,6 +63,7 @@ const fetchFromHttp = async (
 
 type SubscribeParameters = Parameters<RealtimeDecofileProvider["subscribe"]>;
 const fromEventSource = (es: EventSource): RealtimeDecofileProvider => {
+  console.log(`[DecofileProvider] Using EventSource (SSE) provider - url: ${es.url}`);
   let [onChange, onError]: [
     SubscribeParameters[0] | undefined,
     SubscribeParameters[1] | undefined,
@@ -141,6 +142,7 @@ export const fromJSON = (
   parsed: Record<string, unknown>,
   revision?: string,
 ): DecofileProvider => {
+  console.log(`[DecofileProvider] Using JSON provider - revision: ${revision ?? 'generated'}`);
   const cbs: Array<OnChangeCallback> = [];
   let state = parsed;
   let currentRevision: string = revision ?? crypto.randomUUID();
@@ -168,6 +170,7 @@ export const fromJSON = (
 async function decofileLoader(
   endpointSpecifier: string,
 ): Promise<DecofileProvider | undefined> {
+  console.log(`[DecofileProvider] Loading from endpoint: ${endpointSpecifier}`);
   const url = new URL(endpointSpecifier);
   const assertAllowedAuthority = () => {
     assertAllowedAuthorityFor(url);

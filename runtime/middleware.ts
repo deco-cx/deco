@@ -162,6 +162,10 @@ export const DEBUG = {
               `${await liveContext.release?.revision() ?? ""}`,
             );
             resp.headers.set(
+              "x-deco-vary",
+              `${liveContext.vary?.build()}`,
+            );
+            resp.headers.set(
               "x-isolate-started-at",
               `${liveContext.instance.startedAt.toISOString()}`,
             );

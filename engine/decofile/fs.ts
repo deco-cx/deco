@@ -50,6 +50,7 @@ export const newFsProviderFromPath = (
   fullPath: string,
   appName?: string,
 ): DecofileProvider => {
+  console.log(`[DecofileProvider] Using FS provider - path: ${fullPath}${appName ? `, appName: ${appName}` : ''}`);
   const onChangeCbs: OnChangeCallback[] = [];
   let previousState: unknown = null;
 
