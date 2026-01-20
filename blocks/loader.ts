@@ -209,14 +209,8 @@ const wrapLoader = (
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
-      // Check if signal is aborted early - if so, this is just a structural resolution
-      // and we should not affect caching behavior
+      // Check if signal is aborted early - this indicates structural resolution (e.g., Lazy component)
       const isAborted = RequestContext?.signal?.aborted;
-      if (isAborted) {
-        // For aborted requests (structural resolution), just throw immediately
-        // without affecting vary.shouldCache
-        RequestContext?.signal?.throwIfAborted();
-      }
 
       const isCacheEngineDefined = isCache(maybeCache);
       const isCacheDisabled = !ENABLE_LOADER_CACHE ||
@@ -240,7 +234,10 @@ const wrapLoader = (
         ) {
           const shouldNotCache = isCacheNoStore || isCacheKeyNull;
 
-          if (ctx.vary && shouldNotCache) {
+          // Only affect shouldCache if NOT a structural resolution (not aborted)
+          // During structural resolution (aborted signal), we still need vary keys for useSection
+          // but should not prevent page caching
+          if (ctx.vary && shouldNotCache && !isAborted) {
             ctx.vary.shouldCache = false;
 
             // Extract section name from resolveChain
