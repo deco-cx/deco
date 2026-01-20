@@ -15,6 +15,8 @@ import type {
 } from "./provider.ts";
 import type { VersionedDecofile } from "./realtime.ts";
 
+const hash = new MurmurHash3();
+
 /**
  * Creates a stable hash of the decofile state.
  * This ensures all PODs with the same state have the same revision.
@@ -22,8 +24,10 @@ import type { VersionedDecofile } from "./realtime.ts";
  */
 const hashState = (state: Decofile): string => {
   const stateStr = stableStringify(state);
-  const hash = new MurmurHash3(stateStr);
-  return hash.result().toString(36);
+  hash.hash(stateStr);
+  const result = hash.result();
+  hash.reset();
+  return `${result}`;
 };
 
 const copyFrom = (appName: string): Promise<Record<string, unknown>> => {
@@ -62,7 +66,6 @@ export const newFsProviderFromPath = (
   fullPath: string,
   appName?: string,
 ): DecofileProvider => {
-  console.log(`[DecofileProvider] Using FS provider - path: ${fullPath}${appName ? `, appName: ${appName}` : ''}`);
   const onChangeCbs: OnChangeCallback[] = [];
   let previousState: unknown = null;
 
