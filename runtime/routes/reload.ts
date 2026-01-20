@@ -15,9 +15,11 @@ export const handler = createHandler(async (
     );
   }
   let decofile;
+  let revision;
   try {
     const body = await req.json();
     decofile = body.decofile;
+    revision = body.timestamp;
 
     if (!decofile) {
       return new Response(
@@ -43,7 +45,7 @@ export const handler = createHandler(async (
   }
 
   // Set the new decofile
-  await state.release.set?.(decofile);
+  await state.release.set?.(decofile, `${revision}`);
 
   return new Response(
     JSON.stringify({ success: true }),
