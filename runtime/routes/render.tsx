@@ -80,7 +80,7 @@ export const handler = createHandler(async (
   const opts = fromRequest(req);
   const isDebugRequest = opts.searchParams.has(DEBUG_QS);
 
-  const { page, shouldCache } = await state.deco.render(req, opts, state);
+  const { page, shouldCache, sectionName } = await state.deco.render(req, opts, state);
 
   if (isDebugRequest) {
     return Response.json({ debugData: state.vary.debug.build() });
@@ -96,6 +96,11 @@ export const handler = createHandler(async (
       } satisfies PageParams<PageData>,
     },
   });
+
+  // Add section name header for debugging/observability
+  if (sectionName) {
+    response.headers.set("x-deco-section", sectionName);
+  }
 
   // this is a hack to make sure we cache only sections that does not vary based on the loader content.
   // so we can calculate cacheBust per page but decide to cache sections individually based on vary.
