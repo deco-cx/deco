@@ -71,7 +71,7 @@ const bundle = async (
 const TAILWIND_FILE = "tailwind.css";
 
 const isDev = Deno.env.get("DECO_PREVIEW") ||
-  !Deno.env.has("DENO_DEPLOYMENT_ID") || !Deno.env.has("TAILWIND_MODE_PROD");
+  !Deno.env.has("DENO_DEPLOYMENT_ID");
 
 const mode = isDev ? "dev" : "prod";
 
