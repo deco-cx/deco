@@ -146,7 +146,7 @@ export const newFsFolderProviderFromPath = (
         );
       }
       await Promise.all(promises);
-      
+
       return {
         state: decofile,
         revision: hashState(decofile),
