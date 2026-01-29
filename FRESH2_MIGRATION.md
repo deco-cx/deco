@@ -117,24 +117,31 @@ if (import.meta.main) {
 }
 ```
 
-If using deco plugin, update to:
+**For deco sites**, update to use `decoMiddleware`:
 
 ```typescript
 import { App, staticFiles } from "fresh";
-import { plugins } from "deco/plugins/deco.ts";
+import { decoMiddleware } from "deco/runtime/fresh/plugin.tsx";
+import manifest from "./manifest.gen.ts";
 
-// Deco integration handles routing
-export const app = new App()
-  .use(staticFiles());
-
-// Register deco plugin
-for (const plugin of plugins({ manifest })) {
-  app.use(plugin);
-}
+// Create Fresh app with deco middleware
+const app = new App()
+  .use(staticFiles())
+  .use(await decoMiddleware({ manifest }));
 
 if (import.meta.main) {
   app.listen();
 }
+```
+
+### Create the DispatchAsyncRender island
+
+Fresh 2 auto-discovers islands from the `islands/` folder. Create `islands/DispatchAsyncRender.tsx`:
+
+```typescript
+// Re-export deco's island for lazy section loading
+export { default } from "deco/runtime/fresh/islands/DispatchAsyncRender.tsx";
+export * from "deco/runtime/fresh/islands/DispatchAsyncRender.tsx";
 ```
 
 ## 7. Update Fresh imports in components
@@ -200,6 +207,8 @@ deno task preview
 | `$fresh/runtime.ts` | `fresh/runtime` |
 | `$fresh/server.ts` | `fresh` |
 | `_404.tsx` + `_500.tsx` | `_error.tsx` |
+| `decoPlugin({ manifest })` | `await decoMiddleware({ manifest })` |
+| Plugin API (`routes`, `middlewares`) | `app.use()` middleware pattern |
 
 ## Dependency versions reference
 
