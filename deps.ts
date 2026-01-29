@@ -7,6 +7,9 @@ export {
   DomInspectorActivators,
   inspectHandler,
 } from "jsr:@deco/inspect-vscode@0.2.1";
+
+// @opentelemetry/api is ESM-safe (pure API layer, no Node.js require())
+// All other OpenTelemetry packages are loaded dynamically in observability/otel/init.ts
 export {
   context,
   createContextKey,
@@ -19,7 +22,7 @@ export {
   SpanStatusCode,
   trace,
   ValueType,
-} from "npm:@opentelemetry/api@1.9.0";
+} from "@opentelemetry/api";
 export type {
   Attributes,
   BatchObservableResult,
@@ -33,10 +36,8 @@ export type {
   ObservableUpDownCounter,
   Span,
   Tracer,
-} from "npm:@opentelemetry/api@1.9.0";
-// Note: @opentelemetry/instrumentation-fetch and @opentelemetry/instrumentation
-// are loaded dynamically in otel/config.ts to avoid CommonJS issues in Vite SSR
-export type { InstrumentationConfig } from "@opentelemetry/instrumentation";
+} from "@opentelemetry/api";
+
 export type {
   JSONSchema7,
   JSONSchema7Definition,
@@ -55,48 +56,17 @@ export type {
 export * as weakcache from "npm:weak-lru-cache@1.0.0";
 export type Handler = Deno.ServeHandler;
 
-export { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-proto@0.52.1";
-export { Resource } from "npm:@opentelemetry/resources@1.25.1";
-export {
-  BatchSpanProcessor,
-  ParentBasedSampler,
-  SamplingDecision,
-  TraceIdRatioBasedSampler,
-} from "npm:@opentelemetry/sdk-trace-base@1.25.1";
+// NOTE: The following OpenTelemetry packages use Node.js require() and are
+// incompatible with Vite SSR. They are now loaded dynamically in
+// observability/otel/init.ts:
+//
+// - @opentelemetry/resources (uses require() for machine-id detection)
+// - @opentelemetry/sdk-metrics (depends on resources)
+// - @opentelemetry/sdk-trace-base (depends on resources)
+// - @opentelemetry/sdk-trace-node (uses require-in-the-middle)
+// - @opentelemetry/sdk-logs (depends on resources)
+// - @opentelemetry/instrumentation (uses require-in-the-middle)
+// - @opentelemetry/instrumentation-fetch (depends on instrumentation)
+// - @opentelemetry/exporter-* (various Node.js dependencies)
 
-export type {
-  Sampler,
-  SamplingResult,
-} from "npm:@opentelemetry/sdk-trace-base@1.25.1";
-// Note: @opentelemetry/sdk-trace-node is loaded dynamically in otel/config.ts
-// to avoid CommonJS issues in Vite SSR
-export {
-  SemanticResourceAttributes,
-} from "npm:@opentelemetry/semantic-conventions@1.25.1";
-
-export {
-  ExplicitBucketHistogramAggregation,
-  MeterProvider,
-  PeriodicExportingMetricReader,
-  View,
-} from "npm:@opentelemetry/sdk-metrics@1.25.1";
-
-export { logs, SeverityNumber } from "npm:@opentelemetry/api-logs@0.52.1";
-export type { Logger } from "npm:@opentelemetry/api-logs@0.52.1";
-export { OTLPLogExporter } from "npm:@opentelemetry/exporter-logs-otlp-http@0.52.1";
-export { OTLPMetricExporter } from "npm:@opentelemetry/exporter-metrics-otlp-http@0.52.1";
-export type { OTLPExporterNodeConfigBase } from "npm:@opentelemetry/otlp-exporter-base@0.52.1";
-export {
-  detectResourcesSync,
-  envDetectorSync,
-  hostDetectorSync,
-  osDetectorSync,
-  processDetector,
-} from "npm:@opentelemetry/resources@1.25.1";
-export {
-  BatchLogRecordProcessor,
-  ConsoleLogRecordExporter,
-  LoggerProvider,
-} from "npm:@opentelemetry/sdk-logs@0.52.1";
-export type { BufferConfig } from "npm:@opentelemetry/sdk-logs@0.52.1";
 export { MurmurHash3 as Murmurhash3 } from "./utils/hasher.ts";

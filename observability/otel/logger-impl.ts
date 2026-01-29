@@ -1,33 +1,39 @@
-// Derived from https://github.com/denoland/deno_std/blob/main/log/handlers.ts
-import * as log from "@std/log";
+/**
+ * OpenTelemetry Logger Implementation
+ *
+ * This file is only loaded dynamically when OpenTelemetry is being initialized.
+ * It uses CommonJS-dependent packages that are incompatible with Vite SSR.
+ */
 
+import * as log from "@std/log";
 import { type LevelName, LogLevels } from "@std/log/levels";
 import type { LogRecord } from "@std/log/logger";
 
+import type { Attributes } from "@opentelemetry/api";
 import {
-  type Attributes,
   BatchLogRecordProcessor,
   type BufferConfig,
   ConsoleLogRecordExporter,
+  LoggerProvider,
+  type Logger,
+} from "@opentelemetry/sdk-logs";
+import { logs, SeverityNumber } from "@opentelemetry/api-logs";
+import type { OTLPExporterNodeConfigBase } from "@opentelemetry/otlp-exporter-base";
+import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
+import {
   detectResourcesSync,
   envDetectorSync,
   hostDetectorSync,
-  type Logger,
-  LoggerProvider,
-  logs,
   osDetectorSync,
-  type OTLPExporterNodeConfigBase,
-  OTLPLogExporter,
   processDetector,
   Resource,
-  SeverityNumber,
-} from "../../deps.ts";
+} from "@opentelemetry/resources";
 
 const UNSPECIFIED_SEVERITY_TEXT = "";
 
 // https://github.com/open-telemetry/opentelemetry-specification/blob/fc8289b8879f3a37e1eba5b4e445c94e74b20359/specification/logs/data-model.md#displaying-severity
-const OTEL_SEVERITY_NAME_MAP = {
-  0: UNSPECIFIED_SEVERITY_TEXT, // XXX: This is not to spec
+const OTEL_SEVERITY_NAME_MAP: Record<number, string> = {
+  0: UNSPECIFIED_SEVERITY_TEXT,
   1: "TRACE",
   2: "TRACE2",
   3: "TRACE3",
@@ -75,7 +81,6 @@ export class OpenTelemetryHandler extends log.BaseHandler {
 
     const detectedResource = detectResourcesSync({
       detectors:
-        // This will require a few extra deno permissions
         options.detectResources === false ? [] : [
           envDetectorSync,
           hostDetectorSync,

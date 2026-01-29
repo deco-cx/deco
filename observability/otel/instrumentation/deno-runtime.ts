@@ -1,15 +1,16 @@
 /**
  * Heavily inspired from unlicensed code: https://github.com/cloudydeno/deno-observability/blob/main/instrumentation/deno-runtime.ts
  */
-import {
-  type Attributes,
-  type ObservableCounter,
-  type ObservableGauge,
-  type ObservableResult,
-  type ObservableUpDownCounter,
-  ValueType,
-} from "../../../deps.ts";
-// Import directly to avoid bundling in deps.ts (CommonJS incompatible with Vite SSR)
+// This file is only loaded dynamically when OpenTelemetry is initialized,
+// so direct imports from CommonJS-incompatible packages are safe here.
+import type {
+  Attributes,
+  ObservableCounter,
+  ObservableGauge,
+  ObservableResult,
+  ObservableUpDownCounter,
+} from "@opentelemetry/api";
+import { ValueType } from "@opentelemetry/api";
 import {
   InstrumentationBase,
   type InstrumentationConfig,
