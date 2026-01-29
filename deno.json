@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "2.0.0",
+  "version": "2.0.0-alpha.1",
   "lock": false,
   "exports": {
     ".": "./mod.ts",
@@ -98,7 +98,12 @@
     "preact-render-to-string": "npm:preact-render-to-string@^6.5.11",
     "@preact/signals": "npm:@preact/signals@^2.2.1",
     "simple-git": "npm:simple-git@^3.25.0",
-    "std/": "https://deno.land/std@0.203.0/"
+    "std/": "https://deno.land/std@0.203.0/",
+    "@opentelemetry/instrumentation-fetch": "npm:@opentelemetry/instrumentation-fetch@0.52.1",
+    "@opentelemetry/instrumentation": "npm:@opentelemetry/instrumentation@0.52.1",
+    "@opentelemetry/sdk-trace-node": "npm:@opentelemetry/sdk-trace-node@1.25.1",
+    "@opentelemetry/sdk-trace-base": "npm:@opentelemetry/sdk-trace-base@1.25.1",
+    "@opentelemetry/exporter-trace-otlp-proto": "npm:@opentelemetry/exporter-trace-otlp-proto@0.52.1"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

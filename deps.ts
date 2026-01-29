@@ -34,13 +34,9 @@ export type {
   Span,
   Tracer,
 } from "npm:@opentelemetry/api@1.9.0";
-export { FetchInstrumentation } from "npm:@opentelemetry/instrumentation-fetch@0.52.1";
-export {
-  InstrumentationBase,
-  isWrapped as instrumentationIsWrapped,
-  registerInstrumentations,
-} from "npm:@opentelemetry/instrumentation@0.52.1";
-export type { InstrumentationConfig } from "npm:@opentelemetry/instrumentation@0.52.1";
+// Note: @opentelemetry/instrumentation-fetch and @opentelemetry/instrumentation
+// are loaded dynamically in otel/config.ts to avoid CommonJS issues in Vite SSR
+export type { InstrumentationConfig } from "@opentelemetry/instrumentation";
 export type {
   JSONSchema7,
   JSONSchema7Definition,
@@ -72,7 +68,8 @@ export type {
   Sampler,
   SamplingResult,
 } from "npm:@opentelemetry/sdk-trace-base@1.25.1";
-export { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node@1.25.1";
+// Note: @opentelemetry/sdk-trace-node is loaded dynamically in otel/config.ts
+// to avoid CommonJS issues in Vite SSR
 export {
   SemanticResourceAttributes,
 } from "npm:@opentelemetry/semantic-conventions@1.25.1";

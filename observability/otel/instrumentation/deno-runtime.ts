@@ -3,14 +3,17 @@
  */
 import {
   type Attributes,
-  InstrumentationBase,
-  type InstrumentationConfig,
   type ObservableCounter,
   type ObservableGauge,
   type ObservableResult,
   type ObservableUpDownCounter,
   ValueType,
 } from "../../../deps.ts";
+// Import directly to avoid bundling in deps.ts (CommonJS incompatible with Vite SSR)
+import {
+  InstrumentationBase,
+  type InstrumentationConfig,
+} from "@opentelemetry/instrumentation";
 
 export class DenoRuntimeInstrumentation extends InstrumentationBase {
   readonly component: string = "deno-runtime";
