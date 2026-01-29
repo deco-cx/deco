@@ -1,4 +1,4 @@
-import type { Plugin } from "$fresh/server.ts";
+import type { Plugin } from "fresh";
 import type { AppManifest } from "@deco/deco";
 import {
   type Config,

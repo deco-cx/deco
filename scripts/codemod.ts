@@ -28,7 +28,9 @@ const OVERRIDE_FRESH_PREACT = {
   "https://esm.sh/*preact-render-to-string@6.3.1":
     "npm:preact-render-to-string@6.4.2",
   "preact-render-to-string": "npm:preact-render-to-string@6.4.2",
-  "$fresh/": "https://deno.land/x/fresh@1.7.3/", //Prevent fresh 2
+  "fresh": "jsr:@fresh/core@^2.2.0",
+  "fresh/": "jsr:@fresh/core@^2.2.0/",
+  "$fresh/": "jsr:@fresh/core@^2.2.0/",
 };
 const newJsrPackages = [
   EXPORTS.DECO,

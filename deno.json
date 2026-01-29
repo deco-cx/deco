@@ -64,7 +64,9 @@
     }
   },
   "imports": {
-    "$fresh/": "https://cdn.jsdelivr.net/gh/denoland/fresh@1.6.8/",
+    "fresh": "jsr:@fresh/core@^2.2.0",
+    "fresh/": "jsr:@fresh/core@^2.2.0/",
+    "$fresh/": "jsr:@fresh/core@^2.2.0/",
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
     "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.3.4",
