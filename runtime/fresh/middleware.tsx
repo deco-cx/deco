@@ -1,3 +1,6 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource preact */
+
 /**
  * Fresh 2 Middleware Adapter for Deco
  *
@@ -7,14 +10,24 @@
  *
  * Fresh 1.x: (req, { next, state }) => Response
  * Fresh 2:   (ctx) => ctx.next()
+ *
+ * Additionally, Fresh 2 changed ctx.render():
+ * Fresh 1.x: ctx.render(data) - passed data as props to component
+ * Fresh 2:   ctx.render(<Component {...props} />) - must pass JSX element
  */
 
+import type { ComponentChildren, VNode } from "preact";
 import type { AppManifest, DecoContext, Framework, SiteInfo } from "@deco/deco";
 import { Deco, type PageData } from "@deco/deco";
 import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { Bindings, RendererOpts } from "../handler.tsx";
 import { handlerFor } from "../handler.tsx";
 import freshFramework from "./Bindings.tsx";
+
+/**
+ * Fresh 2 render function type - expects JSX element
+ */
+type Fresh2RenderFn = (element: VNode | ComponentChildren) => Promise<Response> | Response;
 
 /**
  * Fresh 2 context type (simplified - actual type comes from fresh)
@@ -24,7 +37,7 @@ export interface FreshContext<State = unknown> {
   url: URL;
   state: State;
   params: Record<string, string>;
-  render: <T extends PageData = PageData>(data: T) => Promise<Response> | Response;
+  render: Fresh2RenderFn;
   next: () => Promise<Response>;
 }
 
@@ -91,9 +104,17 @@ export async function decoMiddleware<
   const handler = handlerFor(deco);
 
   return async (ctx: FreshContext): Promise<Response> => {
-    // Pass Fresh 2's render function and state to deco's handler
+    // Adapter: Convert deco's data-based render to Fresh 2's JSX-based render
+    // Deco calls: renderFn({ page: { Component, props, metadata } })
+    // Fresh 2 expects: ctx.render(<Component {...props} />)
+    const renderAdapter = <T extends PageData = PageData>(data: T): Promise<Response> | Response => {
+      const { Component, props } = data.page;
+      // Call Fresh 2's render with JSX element
+      return ctx.render(<Component {...props} />);
+    };
+
     const response = await handler(ctx.req, {
-      RENDER_FN: ctx.render,
+      RENDER_FN: renderAdapter,
       GLOBALS: ctx.state,
     });
 
@@ -132,8 +153,14 @@ export async function createDecoMiddleware<
   const handler = handlerFor(deco);
 
   const middleware: FreshMiddleware = async (ctx: FreshContext): Promise<Response> => {
+    // Adapter: Convert deco's data-based render to Fresh 2's JSX-based render
+    const renderAdapter = <T extends PageData = PageData>(data: T): Promise<Response> | Response => {
+      const { Component, props } = data.page;
+      return ctx.render(<Component {...props} />);
+    };
+
     const response = await handler(ctx.req, {
-      RENDER_FN: ctx.render,
+      RENDER_FN: renderAdapter,
       GLOBALS: ctx.state,
     });
 

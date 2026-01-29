@@ -27,7 +27,7 @@ export {
   type DecoFresh2Options,
   type FreshContext,
   type FreshMiddleware,
-} from "../runtime/fresh/middleware.ts";
+} from "../runtime/fresh/middleware.tsx";
 
 // Re-export legacy plugin for Fresh 1.x compatibility
 export {

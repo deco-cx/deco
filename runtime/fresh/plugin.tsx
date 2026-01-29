@@ -34,7 +34,7 @@ export {
   type DecoFresh2Options,
   type FreshContext,
   type FreshMiddleware,
-} from "./middleware.ts";
+} from "./middleware.tsx";
 
 /**
  * Fresh 1.x Plugin interface (deprecated in Fresh 2)
