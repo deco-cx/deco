@@ -119,18 +119,28 @@ const browserPathFromSystem = (filepath: string) =>
   filepath.replace(Deno.cwd(), "").replaceAll(SEPARATOR, "/");
 
 export async function* start(since: number): AsyncIterableIterator<FSEvent> {
+  const totalStart = performance.now();
+  let fileCount = 0;
+  let yieldedCount = 0;
+  let walkTime = 0;
+  let metadataTime = 0;
+
   try {
+    const walkStart = performance.now();
     const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
 
     for await (const entry of walker) {
+      fileCount++;
       if (shouldIgnore(entry.path)) {
         continue;
       }
 
+      const metaStart = performance.now();
       const [metadata, mtime] = await Promise.all([
         inferMetadata(entry.path),
         mtimeFor(entry.path),
       ]);
+      metadataTime += performance.now() - metaStart;
 
       if (
         !metadata || mtime < since
@@ -139,15 +149,25 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
       }
 
       const filepath = browserPathFromSystem(entry.path);
+      yieldedCount++;
       yield {
         type: "fs-sync",
         detail: { metadata, filepath, timestamp: mtime },
       };
     }
+    walkTime = performance.now() - walkStart;
+
+    const gitStart = performance.now();
+    const status = await git.status();
+    const gitTime = performance.now() - gitStart;
+
+    console.log(
+      `[fs/api start] files=${fileCount} yielded=${yieldedCount} walk=${walkTime.toFixed(0)}ms metadata=${metadataTime.toFixed(0)}ms git=${gitTime.toFixed(0)}ms total=${(performance.now() - totalStart).toFixed(0)}ms`,
+    );
 
     yield {
       type: "fs-snapshot",
-      detail: { timestamp: Date.now(), status: await git.status() },
+      detail: { timestamp: Date.now(), status },
     };
   } catch (error) {
     console.error(error);
