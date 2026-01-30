@@ -82,6 +82,8 @@ export const handler = createHandler(async (
   ctx,
 ) => {
   const { req: { raw: req }, var: state } = ctx;
+  // Defensive: create URL from request if not set
+  const url = ctx.var.url ?? new URL(ctx.req.raw.url);
   const handler = (await state?.resolve<Handler>?.(
     "./routes/[...catchall].tsx",
     { nullIfDangling: true },
@@ -99,7 +101,7 @@ export const handler = createHandler(async (
         Component: Render,
         props: {
           params: ctx.req.param(),
-          url: ctx.var.url,
+          url,
           data: args,
         } satisfies PageParams<PageData>,
       },

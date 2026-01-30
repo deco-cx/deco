@@ -77,6 +77,8 @@ export const handler = createHandler(async (
   ctx,
 ) => {
   const { req: { raw: req }, var: state, render } = ctx;
+  // Defensive: create URL from request if not set
+  const url = ctx.var.url ?? new URL(ctx.req.raw.url);
   const opts = fromRequest(req);
   const isDebugRequest = opts.searchParams.has(DEBUG_QS);
 
@@ -91,7 +93,7 @@ export const handler = createHandler(async (
       Component: Render,
       props: {
         params: ctx.req.param(),
-        url: ctx.var.url,
+        url,
         data: { page },
       } satisfies PageParams<PageData>,
     },

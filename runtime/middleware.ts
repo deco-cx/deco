@@ -39,11 +39,13 @@ export const proxyState = (
     },
     get: (val: any, prop: any, recv: any) => Reflect.get(val, prop, recv),
   };
+  // Fresh 2 handlers expect ctx.url to be available
+  // Create from request if not set (defensive fallback)
+  const url = ctx.var.url ?? new URL(ctx.req.raw.url);
   return {
     ...ctx,
     params: ctx.params ?? ctx.req.param(),
-    // Fresh 2 handlers expect ctx.url to be available
-    url: ctx.var.url,
+    url,
     get state() {
       return new Proxy(ctx.var, ctxSetter);
     },
