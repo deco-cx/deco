@@ -78,5 +78,3 @@ server/
 deps.json
 
 deno.lock
-
-.claude

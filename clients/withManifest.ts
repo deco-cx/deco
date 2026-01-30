@@ -47,32 +47,6 @@ export const isEventStreamResponse = (
   );
 };
 
-// Decompress gzip-compressed base64 data
-const decompress = async (base64Data: string): Promise<string> => {
-  const binaryStr = atob(base64Data);
-  const bytes = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    bytes[i] = binaryStr.charCodeAt(i);
-  }
-  const stream = new Blob([bytes]).stream();
-  const decompressed = stream.pipeThrough(new DecompressionStream("gzip"));
-  return await new Response(decompressed).text();
-};
-
-const parseChunk = async (
-  chunk: string,
-  shouldDecode: boolean,
-): Promise<unknown> => {
-  // Check if data is gzip compressed (prefixed with "gzip:")
-  if (chunk.startsWith("gzip:")) {
-    const base64Data = chunk.slice(5); // Remove "gzip:" prefix
-    const decompressed = await decompress(base64Data);
-    return JSON.parse(decompressed);
-  }
-  // Regular URL-encoded data
-  return JSON.parse(shouldDecode ? decodeURIComponent(chunk) : chunk);
-};
-
 export async function* readFromStream<T>(
   response: Response,
   options: ReadFromStreamOptions = {},
@@ -105,7 +79,7 @@ export async function* readFromStream<T>(
 
       try {
         const chunk = data.replace("data:", "");
-        yield await parseChunk(chunk, shouldDecodeChunk) as T;
+        yield JSON.parse(shouldDecodeChunk ? decodeURIComponent(chunk) : chunk);
       } catch (_err) {
         console.log("error parsing data", _err, data);
         continue;
@@ -116,10 +90,7 @@ export async function* readFromStream<T>(
   // Process any remaining buffer after the stream ends
   if (buffer.length > 0 && buffer.startsWith("data:")) {
     try {
-      yield await parseChunk(
-        buffer.replace("data:", ""),
-        shouldDecodeChunk,
-      ) as T;
+      yield JSON.parse(decodeURIComponent(buffer.replace("data:", "")));
     } catch (_err) {
       console.log("error parsing data", _err, buffer);
     }

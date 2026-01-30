@@ -130,14 +130,6 @@ async function load(
   const url = new URL(specifier);
   try {
     switch (url.protocol) {
-      case "data:": {
-        // Handle data URIs (e.g., data:text/tsx,export interface Foo { ... })
-        const dataUriMatch = specifier.match(/^data:[^,]*,(.*)$/);
-        if (dataUriMatch) {
-          return decodeURIComponent(dataUriMatch[1]);
-        }
-        return undefined;
-      }
       case "file:": {
         // Check if this is a JavaScript file in node_modules
         const isJsFile = isJsFilePath(specifier);
@@ -215,15 +207,6 @@ const wrapLoaderWithDtsSupport = (
   baseLoader: (specifier: string) => Promise<string | undefined>,
 ): typeof load => {
   return async (specifier: string): Promise<string | undefined> => {
-    // Handle data URIs directly
-    if (specifier.startsWith("data:")) {
-      const dataUriMatch = specifier.match(/^data:[^,]*,(.*)$/);
-      if (dataUriMatch) {
-        return decodeURIComponent(dataUriMatch[1]);
-      }
-      return undefined;
-    }
-
     const isJsFile = specifier.match(/\.(m?js|cjs)$/);
     const isNodeModule = specifier.includes("node_modules");
 

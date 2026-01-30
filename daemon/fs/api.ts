@@ -16,30 +16,7 @@ import {
 } from "./common.ts";
 import { grep, type GrepResult } from "./grep.ts";
 
-// Directories to skip when walking (expensive to enumerate)
-const SKIP_DIRS = [
-  "node_modules",
-  ".git",
-  "_fresh",
-  ".next",
-  "dist",
-  ".deno",
-  ".cache",
-];
-
-// Large generated files to skip (reading them is expensive)
-const SKIP_FILES = [
-  "schemas.gen.json",
-  "manifest.gen.ts",
-  "fresh.gen.ts",
-];
-
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
-  // Only JSON files can be blocks - skip reading other files entirely
-  if (!filepath.endsWith(".json")) {
-    return { kind: "file" };
-  }
-
   try {
     const { __resolveType, name, path } = JSON.parse(
       await Deno.readTextFile(filepath),
@@ -142,37 +119,11 @@ const browserPathFromSystem = (filepath: string) =>
   filepath.replace(Deno.cwd(), "").replaceAll(SEPARATOR, "/");
 
 export async function* start(since: number): AsyncIterableIterator<FSEvent> {
-  const totalStart = performance.now();
-  let fileCount = 0;
-  let yieldedCount = 0;
-
-  // Escape special regex characters
-  const escapeRegex = (str: string) =>
-    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  // Build skip regex from SKIP_DIRS with proper escaping
-  const escapedSeparator = escapeRegex(SEPARATOR);
-  const escapedDirs = SKIP_DIRS.map(escapeRegex).join("|");
-  const skipRegex = new RegExp(
-    `(^|${escapedSeparator})(${escapedDirs})($|${escapedSeparator})`,
-  );
-
   try {
-    for await (
-      const entry of walk(Deno.cwd(), {
-        includeDirs: false,
-        includeFiles: true,
-        followSymlinks: false,
-        skip: [skipRegex],
-      })
-    ) {
-      fileCount++;
+    const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
 
-      // Skip non-relevant files and large generated files
-      if (
-        shouldIgnore(entry.path) ||
-        SKIP_FILES.some((f) => entry.path.endsWith(f))
-      ) {
+    for await (const entry of walker) {
+      if (shouldIgnore(entry.path)) {
         continue;
       }
 
@@ -181,31 +132,22 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
         mtimeFor(entry.path),
       ]);
 
-      if (!metadata || mtime < since) {
+      if (
+        !metadata || mtime < since
+      ) {
         continue;
       }
 
       const filepath = browserPathFromSystem(entry.path);
-      yieldedCount++;
       yield {
         type: "fs-sync",
         detail: { metadata, filepath, timestamp: mtime },
       };
     }
 
-    const gitStart = performance.now();
-    const status = await git.status();
-    const gitTime = performance.now() - gitStart;
-
-    console.log(
-      `[fs/api start] files=${fileCount} yielded=${yieldedCount} git=${
-        gitTime.toFixed(0)
-      }ms total=${(performance.now() - totalStart).toFixed(0)}ms`,
-    );
-
     yield {
       type: "fs-snapshot",
-      detail: { timestamp: Date.now(), status },
+      detail: { timestamp: Date.now(), status: await git.status() },
     };
   } catch (error) {
     console.error(error);
