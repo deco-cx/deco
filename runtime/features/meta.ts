@@ -114,15 +114,15 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
   while (!signal.aborted) {
     const context = Context.active();
     const lazySchema = lazySchemaFor(context);
+
     const etag = await etagFor(lazySchema);
 
     if (etag !== ifNoneMatch) {
       const info = await sf.do(context.instance.id, async () => {
         const { manifest } = await context.runtime!;
-        const manifestBlocks = toManifestBlocks(
-          manifest,
-        );
+        const manifestBlocks = toManifestBlocks(manifest);
         const schema = await lazySchema.value;
+
         mschema = schema; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
 
         // Read folder metadata from _folder.json files
