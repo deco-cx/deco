@@ -25,6 +25,8 @@ export const createSSE = () => {
     const signal = c.req.raw.signal;
     const done = Promise.withResolvers<void>();
     const since = Number(c.req.query("since"));
+    // Check if client supports gzip encoding (backward compatibility)
+    const clientSupportsGzip = c.req.header("X-SSE-Encoding")?.includes("gzip") ?? false;
     let eventCounter = 0;
 
     const enqueue = async (
@@ -35,7 +37,8 @@ export const createSSE = () => {
       eventCounter++;
 
       const jsonStr = JSON.stringify(event);
-      const shouldCompress = jsonStr.length > 50_000; // Compress if > 50KB
+      // Only compress if client supports it AND payload is large
+      const shouldCompress = clientSupportsGzip && jsonStr.length > 50_000;
 
       let data: string;
       if (shouldCompress) {
