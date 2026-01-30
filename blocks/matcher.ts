@@ -23,7 +23,6 @@ const DECO_MATCHER_HEADER_QS_OVERRIDE = `${DECO_MATCHER_HEADER_QS}-override`;
 
 const matchersOverride = {
   parse: (request: Request): Record<string, boolean> => {
-    console.log("parse from qs", matchersOverride.parseFromQS(request.url));
     return matchersOverride.parseFromHeaders(request.headers) ??
       matchersOverride.parseFromQS(request.url) ?? {};
   },
@@ -38,7 +37,6 @@ const matchersOverride = {
       const [key, value] = val.split("=");
       values[key] = value === "1";
     }
-    console.log("values", values);
     return values;
   },
   parseFromHeaders: (headers: Headers): Record<string, boolean> | undefined => {
@@ -133,7 +131,6 @@ const matcherBlock: Block<
       unknown
     >,
   ) => {
-    console.log("Matcher block");
     const { default: func } = matcherModule;
     const matcherFunc = (ctx: MatchContext) => {
       const fMatcher = func as unknown as
@@ -166,12 +163,9 @@ const matcherBlock: Block<
           break;
         }
       }
-      console.log("uniqueId", uniqueId);
       const { [uniqueId]: isEnabled } = matchersOverride.parse(
         ctx.request,
       );
-
-      console.log("isEnabled", isEnabled);
 
       let result = isEnabled;
       // if it is not sticky then we can run the matcher function
