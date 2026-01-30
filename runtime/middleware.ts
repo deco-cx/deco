@@ -42,6 +42,8 @@ export const proxyState = (
   return {
     ...ctx,
     params: ctx.params ?? ctx.req.param(),
+    // Fresh 2 handlers expect ctx.url to be available
+    url: ctx.var.url,
     get state() {
       return new Proxy(ctx.var, ctxSetter);
     },
