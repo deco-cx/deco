@@ -146,20 +146,33 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
   let fileCount = 0;
   let yieldedCount = 0;
 
-  // Build skip regex from SKIP_DIRS
-  const skipRegex = new RegExp(`(^|${SEPARATOR})(${SKIP_DIRS.join("|")})($|${SEPARATOR})`);
+  // Escape special regex characters
+  const escapeRegex = (str: string) =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Build skip regex from SKIP_DIRS with proper escaping
+  const escapedSeparator = escapeRegex(SEPARATOR);
+  const escapedDirs = SKIP_DIRS.map(escapeRegex).join("|");
+  const skipRegex = new RegExp(
+    `(^|${escapedSeparator})(${escapedDirs})($|${escapedSeparator})`,
+  );
 
   try {
-    for await (const entry of walk(Deno.cwd(), {
-      includeDirs: false,
-      includeFiles: true,
-      followSymlinks: false,
-      skip: [skipRegex],
-    })) {
+    for await (
+      const entry of walk(Deno.cwd(), {
+        includeDirs: false,
+        includeFiles: true,
+        followSymlinks: false,
+        skip: [skipRegex],
+      })
+    ) {
       fileCount++;
 
       // Skip non-relevant files and large generated files
-      if (shouldIgnore(entry.path) || SKIP_FILES.some(f => entry.path.endsWith(f))) {
+      if (
+        shouldIgnore(entry.path) ||
+        SKIP_FILES.some((f) => entry.path.endsWith(f))
+      ) {
         continue;
       }
 
@@ -185,7 +198,9 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
     const gitTime = performance.now() - gitStart;
 
     console.log(
-      `[fs/api start] files=${fileCount} yielded=${yieldedCount} git=${gitTime.toFixed(0)}ms total=${(performance.now() - totalStart).toFixed(0)}ms`,
+      `[fs/api start] files=${fileCount} yielded=${yieldedCount} git=${
+        gitTime.toFixed(0)
+      }ms total=${(performance.now() - totalStart).toFixed(0)}ms`,
     );
 
     yield {

@@ -71,32 +71,45 @@ const readFolderMeta = async (
   const folderMeta: FolderMetaMap = {};
 
   for (const [blockType, blocks] of Object.entries(manifestBlocks.blocks)) {
-    const folders = new Set<string>();
+    // Map of folder name -> full folder path (e.g., "AIPartner" -> "site/sections/AIPartner")
+    const folderPaths = new Map<string, string>();
 
-    // Extract folder names from block paths
+    // Extract folder names and their full paths from block paths
     for (const blockKey of Object.keys(blocks)) {
       // blockKey looks like: site/sections/AIPartner/Hero.tsx
       const parts = blockKey.split("/");
       const blockTypeIndex = parts.indexOf(blockType);
       if (blockTypeIndex !== -1 && parts.length > blockTypeIndex + 2) {
         // There's a folder between blockType and the file
-        folders.add(parts[blockTypeIndex + 1]);
+        const folderName = parts[blockTypeIndex + 1];
+        // Store the full path from start up to and including the folder
+        const fullFolderPath = parts.slice(0, blockTypeIndex + 2).join("/");
+        folderPaths.set(folderName, fullFolderPath);
       }
     }
 
-    // Read _folder.json for each folder
-    for (const folder of folders) {
-      try {
-        const filePath = `./${blockType}/${folder}/_folder.json`;
-        const content = await Deno.readTextFile(filePath);
-        const meta = JSON.parse(content) as FolderMeta;
+    // Read _folder.json for each folder in parallel
+    const readResults = await Promise.allSettled(
+      Array.from(folderPaths.entries()).map(
+        async ([folderName, fullFolderPath]) => {
+          const filePath = `./${fullFolderPath}/_folder.json`;
+          const content = await Deno.readTextFile(filePath);
+          const meta = JSON.parse(content) as FolderMeta;
+          return { folderName, meta };
+        },
+      ),
+    );
+
+    for (const result of readResults) {
+      if (result.status === "fulfilled") {
+        const { folderName, meta } = result.value;
         if (meta.description || meta.icon) {
           folderMeta[blockType] ??= {};
-          folderMeta[blockType][folder] = meta;
+          folderMeta[blockType][folderName] = meta;
         }
-      } catch {
-        // Ignore - folder might not have _folder.json
       }
+      // Silently ignore rejected promises (file not found, parse errors, etc.)
+      // If we want to surface parse errors, we could check result.reason here
     }
   }
 
@@ -134,7 +147,9 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
           namespace: context.namespace!,
           site: context.site!,
           manifest: manifestBlocks,
-          folderMeta: Object.keys(folderMeta).length > 0 ? folderMeta : undefined,
+          folderMeta: Object.keys(folderMeta).length > 0
+            ? folderMeta
+            : undefined,
           schema,
           platform: context.platform,
           cloudProvider: Deno.env.get("CLOUD_PROVIDER") ?? "unknown",

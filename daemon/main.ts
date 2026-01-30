@@ -304,41 +304,48 @@ app.get("/_ready", async (c) => {
   const start = Date.now();
 
   try {
-    // Wait for worker to be ready with the specified timeout
-    const ctrl = new AbortController();
-    const timeoutId = setTimeout(() => ctrl.abort(), timeout);
-
+    // Wait for worker to be ready with the specified timeout using Promise.race
     const { worker } = await import("./worker.ts");
-    await worker();
 
-    clearTimeout(timeoutId);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("Timeout")), timeout);
+    });
+
+    await Promise.race([worker(), timeoutPromise]);
+
     const elapsed = Date.now() - start;
 
-    return new Response(JSON.stringify({
-      ready: true,
-      version: denoJSON.version,
-      elapsed
-    }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+    return new Response(
+      JSON.stringify({
+        ready: true,
+        version: denoJSON.version,
+        elapsed,
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
       },
-    });
+    );
   } catch (_err) {
     const elapsed = Date.now() - start;
-    return new Response(JSON.stringify({
-      ready: false,
-      version: denoJSON.version,
-      elapsed,
-      error: "Worker not ready within timeout"
-    }), {
-      status: 503,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+    return new Response(
+      JSON.stringify({
+        ready: false,
+        version: denoJSON.version,
+        elapsed,
+        error: "Worker not ready within timeout",
+      }),
+      {
+        status: 503,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
       },
-    });
+    );
   }
 });
 // idle should run even when branch is not active

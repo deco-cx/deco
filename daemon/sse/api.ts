@@ -26,7 +26,8 @@ export const createSSE = () => {
     const done = Promise.withResolvers<void>();
     const since = Number(c.req.query("since"));
     // Check if client supports gzip encoding (backward compatibility)
-    const clientSupportsGzip = c.req.header("X-SSE-Encoding")?.includes("gzip") ?? false;
+    const clientSupportsGzip =
+      c.req.header("X-SSE-Encoding")?.includes("gzip") ?? false;
     let eventCounter = 0;
 
     const enqueue = async (

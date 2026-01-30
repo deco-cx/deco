@@ -59,7 +59,10 @@ const decompress = async (base64Data: string): Promise<string> => {
   return await new Response(decompressed).text();
 };
 
-const parseChunk = async (chunk: string, shouldDecode: boolean): Promise<unknown> => {
+const parseChunk = async (
+  chunk: string,
+  shouldDecode: boolean,
+): Promise<unknown> => {
   // Check if data is gzip compressed (prefixed with "gzip:")
   if (chunk.startsWith("gzip:")) {
     const base64Data = chunk.slice(5); // Remove "gzip:" prefix
@@ -113,7 +116,10 @@ export async function* readFromStream<T>(
   // Process any remaining buffer after the stream ends
   if (buffer.length > 0 && buffer.startsWith("data:")) {
     try {
-      yield await parseChunk(buffer.replace("data:", ""), shouldDecodeChunk) as T;
+      yield await parseChunk(
+        buffer.replace("data:", ""),
+        shouldDecodeChunk,
+      ) as T;
     } catch (_err) {
       console.log("error parsing data", _err, buffer);
     }
