@@ -166,6 +166,15 @@ export const handlerFor = <TAppManifest extends AppManifest = AppManifest>(
     const globals = ctx.env?.GLOBALS;
     globals && ctx.set("global", globals);
 
+    // Ensure URL is available in context (Fresh 2 passes it via GLOBALS)
+    // This is a fallback in case prepareState hasn't run yet
+    if (globals?.url) {
+      ctx.set("url", globals.url);
+    } else {
+      // Create URL from request as fallback
+      ctx.set("url", new URL(ctx.req.raw.url));
+    }
+
     await next();
   });
   hono.use(...middlewareFor(deco));

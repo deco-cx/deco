@@ -36,9 +36,11 @@ export const payloadToResolvable = (
 export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
+  // Defensive: create URL from request if not set
+  const url = ctx.var.url ?? new URL(ctx.req.raw.url);
   const data = ctx.req.raw.method === "POST"
     ? await ctx.req.raw.json()
-    : bodyFromUrl("body", ctx.var.url); // TODO(mcandeia) check if ctx.url can be used here
+    : bodyFromUrl("body", url);
 
   const result = await ctx.var.deco.batchInvoke(
     data as Record<string, any>,

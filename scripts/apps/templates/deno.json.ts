@@ -8,7 +8,9 @@ export default function DenoJson({ decoVersion }: InitContext) {
         "imports": {
           "$live/": `https://cdn.jsdelivr.net/gh/deco-cx/deco@${decoVersion}/`,
           "deco/": `https://cdn.jsdelivr.net/gh/deco-cx/deco@${decoVersion}/`,
-          "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+          "fresh": "jsr:@fresh/core@^2.2.0",
+          "fresh/": "jsr:@fresh/core@^2.2.0/",
+          "$fresh/": "jsr:@fresh/core@^2.2.0/",
           "preact": "https://esm.sh/preact@10.15.1",
           "preact/": "https://esm.sh/preact@10.15.1/",
           "preact-render-to-string":

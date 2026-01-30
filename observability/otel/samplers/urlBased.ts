@@ -1,9 +1,9 @@
+import type { Context } from "@opentelemetry/api";
 import {
-  type Context,
   type Sampler,
   SamplingDecision,
   type SamplingResult,
-} from "../../../deps.ts";
+} from "@opentelemetry/sdk-trace-base";
 import { REQUEST_CONTEXT_KEY } from "../context.ts";
 
 export interface URLBasedSampling {

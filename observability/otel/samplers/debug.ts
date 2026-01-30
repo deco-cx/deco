@@ -1,12 +1,9 @@
+import type { Attributes, Context, Link, SpanKind } from "@opentelemetry/api";
 import {
-  type Attributes,
-  type Context,
-  type Link,
   type Sampler,
   SamplingDecision,
   type SamplingResult,
-  type SpanKind,
-} from "../../../deps.ts";
+} from "@opentelemetry/sdk-trace-base";
 import type { DecoState } from "../../../types.ts";
 import { REQUEST_CONTEXT_KEY, STATE_CONTEXT_KEY } from "../context.ts";
 

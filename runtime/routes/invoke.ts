@@ -76,7 +76,9 @@ async function parsePropsFromRequest(
 export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
-  const key = ctx.var.url.pathname.replace("/live/invoke/", "")
+  // Defensive: create URL from request if not set
+  const url = ctx.var.url ?? new URL(ctx.req.raw.url);
+  const key = url.pathname.replace("/live/invoke/", "")
     .replace(
       "/deco/invoke/",
       "",
@@ -84,7 +86,7 @@ export const handler = createHandler(async (
 
   const props = await parsePropsFromRequest(ctx.req.raw);
 
-  const select = (ctx.var.url.searchParams.getAll("select") ??
+  const select = (url.searchParams.getAll("select") ??
     []) as InvokeFunction[
       "select"
     ];

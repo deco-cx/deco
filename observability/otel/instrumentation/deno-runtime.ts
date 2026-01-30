@@ -1,16 +1,20 @@
 /**
  * Heavily inspired from unlicensed code: https://github.com/cloudydeno/deno-observability/blob/main/instrumentation/deno-runtime.ts
  */
+// This file is only loaded dynamically when OpenTelemetry is initialized,
+// so direct imports from CommonJS-incompatible packages are safe here.
+import type {
+  Attributes,
+  ObservableCounter,
+  ObservableGauge,
+  ObservableResult,
+  ObservableUpDownCounter,
+} from "@opentelemetry/api";
+import { ValueType } from "@opentelemetry/api";
 import {
-  type Attributes,
   InstrumentationBase,
   type InstrumentationConfig,
-  type ObservableCounter,
-  type ObservableGauge,
-  type ObservableResult,
-  type ObservableUpDownCounter,
-  ValueType,
-} from "../../../deps.ts";
+} from "@opentelemetry/instrumentation";
 
 export class DenoRuntimeInstrumentation extends InstrumentationBase {
   readonly component: string = "deno-runtime";

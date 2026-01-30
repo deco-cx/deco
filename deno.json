@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "1.133.7",
+  "version": "2.0.0-alpha.1",
   "lock": false,
   "exports": {
     ".": "./mod.ts",
@@ -64,7 +64,9 @@
     }
   },
   "imports": {
-    "$fresh/": "https://cdn.jsdelivr.net/gh/denoland/fresh@1.6.8/",
+    "fresh": "jsr:@fresh/core@^2.2.0",
+    "fresh/": "jsr:@fresh/core@^2.2.0/",
+    "$fresh/": "jsr:@fresh/core@^2.2.0/",
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0-rc.5",
     "@core/asyncutil": "jsr:@core/asyncutil@^1.0.2",
     "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.3.4",
@@ -92,10 +94,25 @@
     "@zaubrik/djwt": "jsr:@zaubrik/djwt@^3.0.2",
     "fast-json-patch": "npm:fast-json-patch@^3.1.1",
     "partytown/": "https://deno.land/x/partytown@0.3.0/",
-    "preact": "npm:preact@10.23.1",
-    "preact-render-to-string": "npm:preact-render-to-string@6.4.0",
+    "preact": "npm:preact@^10.27.0",
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.11",
+    "@preact/signals": "npm:@preact/signals@^2.2.1",
     "simple-git": "npm:simple-git@^3.25.0",
-    "std/": "https://deno.land/std@0.203.0/"
+    "std/": "https://deno.land/std@0.203.0/",
+    "@opentelemetry/api": "npm:@opentelemetry/api@1.9.0",
+    "@opentelemetry/api-logs": "npm:@opentelemetry/api-logs@0.52.1",
+    "@opentelemetry/resources": "npm:@opentelemetry/resources@1.25.1",
+    "@opentelemetry/sdk-metrics": "npm:@opentelemetry/sdk-metrics@1.25.1",
+    "@opentelemetry/sdk-logs": "npm:@opentelemetry/sdk-logs@0.52.1",
+    "@opentelemetry/sdk-trace-base": "npm:@opentelemetry/sdk-trace-base@1.25.1",
+    "@opentelemetry/sdk-trace-node": "npm:@opentelemetry/sdk-trace-node@1.25.1",
+    "@opentelemetry/instrumentation": "npm:@opentelemetry/instrumentation@0.52.1",
+    "@opentelemetry/instrumentation-fetch": "npm:@opentelemetry/instrumentation-fetch@0.52.1",
+    "@opentelemetry/exporter-trace-otlp-proto": "npm:@opentelemetry/exporter-trace-otlp-proto@0.52.1",
+    "@opentelemetry/exporter-metrics-otlp-http": "npm:@opentelemetry/exporter-metrics-otlp-http@0.52.1",
+    "@opentelemetry/exporter-logs-otlp-http": "npm:@opentelemetry/exporter-logs-otlp-http@0.52.1",
+    "@opentelemetry/otlp-exporter-base": "npm:@opentelemetry/otlp-exporter-base@0.52.1",
+    "@opentelemetry/semantic-conventions": "npm:@opentelemetry/semantic-conventions@1.25.1"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

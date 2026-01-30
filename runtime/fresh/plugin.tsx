@@ -1,13 +1,54 @@
-// TODO make fresh plugin use @deco/deco from JSR. so that we can use the same code for both
+/**
+ * Deco Fresh Plugin
+ *
+ * Fresh 2 Integration:
+ * Use `decoMiddleware` from this module for Fresh 2's App pattern:
+ *
+ * ```typescript
+ * import { App, staticFiles } from "fresh";
+ * import { decoMiddleware } from "deco/runtime/fresh/plugin.tsx";
+ *
+ * const app = new App()
+ *   .use(staticFiles())
+ *   .use(await decoMiddleware({ manifest }));
+ *
+ * if (import.meta.main) {
+ *   app.listen();
+ * }
+ * ```
+ *
+ * @module
+ */
 
-import type { Plugin } from "$fresh/server.ts";
 import type { AppManifest, DecoContext, Framework, SiteInfo } from "@deco/deco";
 import { Deco, type PageData, type PageParams } from "@deco/deco";
 import { framework as htmxFramework } from "@deco/deco/htmx";
 import type { ComponentType } from "preact";
 import type { Bindings } from "../handler.tsx";
 import freshFramework from "./Bindings.tsx";
-export type { Plugin } from "$fresh/server.ts";
+
+// Re-export Fresh 2 middleware API (preferred for Fresh 2)
+export {
+  createDecoMiddleware,
+  decoMiddleware,
+  type DecoFresh2Options,
+  type FreshContext,
+  type FreshMiddleware,
+} from "./middleware.tsx";
+
+/**
+ * Fresh 1.x Plugin interface (deprecated in Fresh 2)
+ * Kept for backward compatibility documentation.
+ */
+export interface Plugin {
+  name: string;
+  routes?: PluginRoute[];
+  middlewares?: PluginMiddleware[];
+  islands?: {
+    baseLocation: string;
+    paths: string[];
+  };
+}
 
 export interface PluginRoute {
   /** A path in the format of a filename path without filetype */
@@ -81,6 +122,17 @@ export function createFreshHandler<M extends AppManifest = AppManifest>(
   return h;
 }
 
+/**
+ * @deprecated Fresh 2 does not support the Plugin API. Use `decoMiddleware` instead.
+ *
+ * For Fresh 2, use:
+ * ```typescript
+ * import { decoMiddleware } from "deco/runtime/fresh/plugin.tsx";
+ * const app = new App().use(await decoMiddleware({ manifest }));
+ * ```
+ *
+ * This function is kept for Fresh 1.x backward compatibility only.
+ */
 export default function decoPlugin<TManifest extends AppManifest = AppManifest>(
   opt: Options<TManifest>,
 ): Plugin {

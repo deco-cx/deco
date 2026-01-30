@@ -140,11 +140,13 @@ export const render = async (
   const page = await ctx.var.deco.preview(req, previewUrl, props, state);
   timing?.end();
   timing = ctx.var.monitoring?.timings?.start("render-to-string");
+  // Defensive: create URL from request if not set
+  const url = ctx.var.url ?? new URL(ctx.req.raw.url);
   try {
     return await ctx.render({
       page: {
         Component: Preview,
-        props: { url: ctx.var.url, params: ctx.req.param(), data: page },
+        props: { url, params: ctx.req.param(), data: page },
       },
     });
   } finally {
