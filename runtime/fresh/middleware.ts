@@ -113,17 +113,9 @@ export async function decoMiddleware<
       return ctx.render(<Component {...props} />);
     };
 
-    // Pass Fresh 2's URL in GLOBALS so deco's prepareState can use it as fallback
-    // Fresh 2 provides ctx.url which is the parsed URL
-    const globals = {
-      ...ctx.state,
-      url: ctx.url,
-      params: ctx.params,
-    };
-
     const response = await handler(ctx.req, {
       RENDER_FN: renderAdapter,
-      GLOBALS: globals,
+      GLOBALS: ctx.state,
     });
 
     return response;
@@ -167,16 +159,9 @@ export async function createDecoMiddleware<
       return ctx.render(<Component {...props} />);
     };
 
-    // Pass Fresh 2's URL in GLOBALS so deco's prepareState can use it as fallback
-    const globals = {
-      ...ctx.state,
-      url: ctx.url,
-      params: ctx.params,
-    };
-
     const response = await handler(ctx.req, {
       RENDER_FN: renderAdapter,
-      GLOBALS: globals,
+      GLOBALS: ctx.state,
     });
 
     return response;
