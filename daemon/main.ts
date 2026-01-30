@@ -283,10 +283,14 @@ if (VERBOSE) {
   app.use(logger());
 }
 
-const daemonStartTime = Date.now();
-
-// Fast health check - just confirms daemon is alive
 app.get("/_healthcheck", (c) => {
+  const timestamp = +(c.req.header("x-hc-retry-timestamp") ?? "0");
+  const attempt = +(c.req.header("x-hc-retry-attempt") ?? "0");
+  console.log("healthcheck received", {
+    timestamp: new Date(timestamp).toISOString(),
+    attempt,
+  });
+
   return new Response(denoJSON.version, {
     status: 200,
     headers: {
@@ -295,58 +299,6 @@ app.get("/_healthcheck", (c) => {
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
-});
-
-// Readiness check - waits until worker is actually ready (long-poll style)
-// This avoids the client doing timeout-based retries
-app.get("/_ready", async (c) => {
-  const timeout = +(c.req.query("timeout") ?? "30000");
-  const start = Date.now();
-
-  try {
-    // Wait for worker to be ready with the specified timeout using Promise.race
-    const { worker } = await import("./worker.ts");
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Timeout")), timeout);
-    });
-
-    await Promise.race([worker(), timeoutPromise]);
-
-    const elapsed = Date.now() - start;
-
-    return new Response(
-      JSON.stringify({
-        ready: true,
-        version: denoJSON.version,
-        elapsed,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      },
-    );
-  } catch (_err) {
-    const elapsed = Date.now() - start;
-    return new Response(
-      JSON.stringify({
-        ready: false,
-        version: denoJSON.version,
-        elapsed,
-        error: "Worker not ready within timeout",
-      }),
-      {
-        status: 503,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      },
-    );
-  }
 });
 // idle should run even when branch is not active
 app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
@@ -399,35 +351,9 @@ const stableEnvironmentName = () => {
   return newEnvironment;
 };
 const port = Number(Deno.env.get("APP_PORT")) || 8000;
-// Start worker and meta generation eagerly to reduce first-request latency
-// This runs in background - don't await to avoid blocking server startup
-const eagerStart = async () => {
-  try {
-    const { worker } = await import("./worker.ts");
-    const w = await worker();
-
-    // Trigger meta generation and pre-resolve the daemon's meta promise
-    // This way SSE connections won't have to wait for watchMeta() to complete
-    const response = await w.fetch(new Request("http://0.0.0.0/deco/meta"));
-    if (response.ok) {
-      const metaInfo = await response.json();
-      const etag = response.headers.get("etag") ?? "";
-      const { setMetaIfPending } = await import("./meta.ts");
-      setMetaIfPending({ ...metaInfo, etag, timestamp: Date.now() });
-    }
-  } catch (_err) {
-    // Eager start failed - will be handled by normal startup
-  }
-};
-
 Deno.serve({
   port,
   onListen: async (addr) => {
-    // Start eager initialization in background
-    if (createRunCmd) {
-      eagerStart().catch(console.error);
-    }
-
     try {
       const env = DECO_HOST && !DECO_ENV_NAME
         ? stableEnvironmentName()

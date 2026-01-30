@@ -32,14 +32,6 @@ export type MetaEvent = {
 
 let meta: PromiseWithResolvers<Meta> | Meta = Promise
   .withResolvers<Meta>();
-
-// Allow external code (like eagerStart) to pre-resolve meta
-export const setMetaIfPending = (m: MetaInfo) => {
-  if (isPromiseLike(meta)) {
-    meta.resolve(m);
-    meta = m;
-  }
-};
 /** Map (filename, blockType) */
 let filenameBlockTypeMap: Record<string, BlockType> = {};
 
@@ -58,15 +50,13 @@ const isPromiseLike = <T>(
   // @ts-expect-error typescript is wild
   !!x && typeof x.resolve === "function" && typeof x.reject === "function";
 
-export const start = async (_since: number): Promise<MetaEvent | null> => {
+export const start = async (since: number): Promise<MetaEvent | null> => {
   const detail = await ensureMetaIsReady();
 
-  if (!detail) {
+  if (!detail || since >= detail.timestamp) {
     return null;
   }
 
-  // Always return meta-info on connection, even if client already has it
-  // This ensures fast initial load - client can handle duplicates
   return {
     type: "meta-info",
     detail,
@@ -79,7 +69,6 @@ export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
 
 export const watchMeta = async () => {
   let etag = "";
-  let iteration = 0;
 
   const setMeta = (
     m: MetaInfo | null,
@@ -91,12 +80,9 @@ export const watchMeta = async () => {
   };
 
   while (true) {
-    iteration++;
-
     try {
       const w = await worker();
       const response = await w.fetch(metaRequest(etag));
-
       if (!response.ok) {
         throw response;
       }
@@ -127,7 +113,7 @@ export const watchMeta = async () => {
       }
 
       dispatchWorkerState("updating");
-      console.error(`[meta] error:`, error);
+      console.error(error);
     }
   }
 };
