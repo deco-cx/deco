@@ -7,7 +7,11 @@ import { randId as ulid } from "../../utils/rand.ts";
 import type { Resolvable } from "../core/resolver.ts";
 import { notUndefined, singleFlight } from "../core/utils.ts";
 import type { Schemas } from "./builder.ts";
-import { genSchemas } from "./reader.ts";
+// Remove the genSchemas import as we'll use the worker
+// import { genSchemas } from "./reader.ts";
+
+// Add worker-related types and imports
+import type { ImportMap } from "../../blocks/app.ts";
 
 const getResolveType = (schema: unknown): string | undefined => {
   const asJsonSchema = schema as JSONSchema7;
@@ -132,6 +136,92 @@ export interface LazySchema {
 }
 const ctxSchema = new WeakMap();
 
+// Add worker functionality after existing imports
+export interface SchemaWorkerMessage {
+  id: string;
+  type: "generate";
+  payload: {
+    manifest: AppManifest;
+    importMap: ImportMap;
+    baseDir: string;
+  };
+}
+
+export interface SchemaWorkerResponse {
+  id: string;
+  type: "success" | "error";
+  payload: Schemas | { error: string };
+}
+
+// Worker management
+let schemaWorker: Worker | null = null;
+const pendingRequests = new Map<string, {
+  resolve: (value: Schemas) => void;
+  reject: (error: Error) => void;
+}>();
+
+const getSchemaWorker = (): Worker => {
+  if (!schemaWorker) {
+    // Create worker with the schema-worker.ts file
+    const workerUrl = new URL("./schema-worker.ts", import.meta.url);
+    schemaWorker = new Worker(workerUrl.href, { type: "module" });
+
+    schemaWorker.addEventListener(
+      "message",
+      (event: MessageEvent<SchemaWorkerResponse>) => {
+        const { id, type, payload } = event.data;
+        const pending = pendingRequests.get(id);
+
+        if (pending) {
+          pendingRequests.delete(id);
+
+          if (type === "success") {
+            pending.resolve(payload as Schemas);
+          } else {
+            pending.reject(new Error((payload as { error: string }).error));
+          }
+        }
+      },
+    );
+
+    schemaWorker.addEventListener("error", (error) => {
+      console.error("Schema worker error:", error);
+      // Reject all pending requests
+      for (const pending of pendingRequests.values()) {
+        pending.reject(new Error("Worker error occurred"));
+      }
+      pendingRequests.clear();
+    });
+  }
+
+  return schemaWorker;
+};
+
+const genSchemasInWorker = (
+  manifest: AppManifest,
+  importMap: ImportMap,
+  baseDir: string,
+): Promise<Schemas> => {
+  return new Promise((resolve, reject) => {
+    const id = ulid();
+    const worker = getSchemaWorker();
+
+    pendingRequests.set(id, { resolve, reject });
+
+    const message: SchemaWorkerMessage = {
+      id,
+      type: "generate",
+      payload: {
+        manifest,
+        importMap,
+        baseDir,
+      },
+    };
+
+    worker.postMessage(message);
+  });
+};
+
 /**
  * This function is responsible for creating a lazy schema that will be used in the runtime.
  * It will create a single flight to avoid multiple calls to the schema generation and will also cache the schema based on the revision.
@@ -152,9 +242,17 @@ export const lazySchemaFor = (ctx: Omit<DecoContext, "schema">): LazySchema => {
         const revision = `${await ctx.release!.revision()}${schemaVersion}`;
         if (revision !== latestRevision || !_cached) {
           const { manifest, importMap } = await ctx.runtime!;
+
+          // Use web worker instead of direct call
+          const schemas = await genSchemasInWorker(
+            manifest,
+            importMap,
+            Deno.cwd(), // Pass current working directory
+          );
+
           _cached = incorporateSavedBlocksIntoSchema(
             manifest,
-            await genSchemas(manifest, importMap),
+            schemas,
             {
               ...await ctx.release!.state(),
             },
