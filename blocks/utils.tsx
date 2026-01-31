@@ -27,7 +27,7 @@ import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 import type { Vary } from "../utils/vary.ts";
-import { Context } from "../deco.ts";
+import { Context, RequestContext } from "../deco.ts";
 import { simulateBot } from "../utils/http.ts";
 
 export interface GateKeeperAccess {
@@ -182,11 +182,15 @@ export const applyProps = <
   $live: TProps,
   ctx: HttpContext<{ global: any } & RequestState>,
 ): PromiseOrValue<TResp> => { // by default use global state
-  return func.default(
-    $live,
-    ctx.request,
-    fnContextFromHttpContext(ctx),
+  const fnCtx = fnContextFromHttpContext(ctx);
+
+  // Bind the block context so fetch calls know which block is executing
+  const boundFn = RequestContext.bind(
+    { ...RequestContext.active(), blockId: ctx.resolverId },
+    () => func.default($live, ctx.request, fnCtx),
   );
+
+  return boundFn();
 };
 
 export const fromComponentFunc: Block["adapt"] = <TProps = any>(
