@@ -41,15 +41,17 @@ export interface FetchEvent {
 }
 
 /**
- * Event emitted when a fetch call completes.
+ * Event emitted when a fetch call completes (success or failure).
  */
 export interface FetchCompleteEvent extends FetchEvent {
-  /** HTTP status code of the response */
+  /** HTTP status code of the response (0 if request failed before getting a response) */
   status: number;
   /** Whether the response was successful (2xx) */
   ok: boolean;
   /** Duration in milliseconds */
   durationMs: number;
+  /** Error message if the request failed */
+  error?: string;
 }
 
 type FetchListener = (event: FetchCompleteEvent) => void;
@@ -82,7 +84,8 @@ const notifyListeners = (event: FetchCompleteEvent) => {
 
 // Register default logging listener with OTEL structured fields
 onFetch((event) => {
-  logger.info("outgoing fetch", {
+  const logFn = event.error ? logger.error : logger.info;
+  logFn.call(logger, "outgoing fetch", {
     "fetch.app": event.app,
     "fetch.block_id": event.blockId,
     "fetch.url": event.url,
@@ -90,6 +93,7 @@ onFetch((event) => {
     "fetch.status": event.status,
     "fetch.ok": event.ok,
     "fetch.duration_ms": Math.round(event.durationMs),
+    ...(event.error && { "fetch.error": event.error }),
   });
 });
 
@@ -105,21 +109,40 @@ globalThis.fetch = async (input, init) => {
   const request = new Request(input, init);
   const startedAt = performance.now();
 
-  const response = await fetcher(input, { signal, ...init });
+  try {
+    const response = await fetcher(input, { signal, ...init });
 
-  // Notify listeners if any are registered
-  if (listeners.length > 0) {
-    notifyListeners({
-      app,
-      blockId,
-      url: request.url,
-      method: request.method,
-      startedAt,
-      status: response.status,
-      ok: response.ok,
-      durationMs: performance.now() - startedAt,
-    });
+    // Notify listeners on success
+    if (listeners.length > 0) {
+      notifyListeners({
+        app,
+        blockId,
+        url: request.url,
+        method: request.method,
+        startedAt,
+        status: response.status,
+        ok: response.ok,
+        durationMs: performance.now() - startedAt,
+      });
+    }
+
+    return response;
+  } catch (err) {
+    // Notify listeners on failure
+    if (listeners.length > 0) {
+      notifyListeners({
+        app,
+        blockId,
+        url: request.url,
+        method: request.method,
+        startedAt,
+        status: 0,
+        ok: false,
+        durationMs: performance.now() - startedAt,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    throw err; // Re-throw to preserve original behavior
   }
-
-  return response;
 };
