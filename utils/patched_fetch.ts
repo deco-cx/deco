@@ -24,6 +24,43 @@ const extractAppName = (blockId: string | undefined): string | undefined => {
 };
 
 /**
+ * Extracts URL string from fetch input without consuming the body.
+ */
+const extractUrl = (input: RequestInfo | URL): string => {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return input.url; // Request object
+};
+
+/**
+ * Extracts HTTP method from fetch input/init without consuming the body.
+ */
+const extractMethod = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): string => {
+  if (init?.method) return init.method;
+  if (input instanceof Request) return input.method;
+  return "GET"; // Default method
+};
+
+/**
+ * Parses a URL and returns host and path (without query string or hash).
+ * Returns undefined values if URL is invalid or relative.
+ */
+const parseUrlParts = (
+  urlStr: string,
+): { host: string | undefined; path: string | undefined } => {
+  try {
+    const url = new URL(urlStr);
+    return { host: url.host, path: url.pathname };
+  } catch {
+    // Relative URL or invalid - return as-is in path
+    return { host: undefined, path: urlStr.split("?")[0].split("#")[0] };
+  }
+};
+
+/**
  * Event emitted when a fetch call is made.
  * Can be used for monitoring/observability of external API calls.
  */
@@ -73,7 +110,8 @@ export const onFetch = (listener: FetchListener): () => void => {
 };
 
 const notifyListeners = (event: FetchCompleteEvent) => {
-  for (const listener of listeners) {
+  // Iterate over a copy to safely handle listeners that unsubscribe during iteration
+  for (const listener of [...listeners]) {
     try {
       listener(event);
     } catch {
@@ -85,10 +123,13 @@ const notifyListeners = (event: FetchCompleteEvent) => {
 // Register default logging listener with OTEL structured fields
 onFetch((event) => {
   const logFn = event.error ? logger.error : logger.info;
+  const { host, path } = parseUrlParts(event.url);
+
   logFn.call(logger, "outgoing fetch", {
     "fetch.app": event.app,
     "fetch.block_id": event.blockId,
-    "fetch.url": event.url,
+    "fetch.host": host,
+    "fetch.path": path,
     "fetch.method": event.method,
     "fetch.status": event.status,
     "fetch.ok": event.ok,
@@ -106,19 +147,22 @@ globalThis.fetch = async (input, init) => {
 
   const blockId = RequestContext.blockId;
   const app = extractAppName(blockId);
-  const request = new Request(input, init);
+  // Extract URL and method without constructing a Request (which would consume the body)
+  const url = extractUrl(input);
+  const method = extractMethod(input, init);
   const startedAt = performance.now();
 
   try {
-    const response = await fetcher(input, { signal, ...init });
+    // Spread init first, then signal, so computed signal takes precedence over init.signal: undefined
+    const response = await fetcher(input, { ...init, signal });
 
     // Notify listeners on success
     if (listeners.length > 0) {
       notifyListeners({
         app,
         blockId,
-        url: request.url,
-        method: request.method,
+        url,
+        method,
         startedAt,
         status: response.status,
         ok: response.ok,
@@ -133,8 +177,8 @@ globalThis.fetch = async (input, init) => {
       notifyListeners({
         app,
         blockId,
-        url: request.url,
-        method: request.method,
+        url,
+        method,
         startedAt,
         status: 0,
         ok: false,
