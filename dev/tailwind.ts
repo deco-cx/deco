@@ -75,7 +75,7 @@ const isDev = Deno.env.get("DECO_PREVIEW") ||
 
 const mode = isDev ? "dev" : "prod";
 
-const withReleaseContent = async (config: Config) => {
+const withReleaseContent = async (config: Config): Promise<Config> => {
   const allTsxFiles = new Map<string, string>();
 
   // init search graph with local FS
@@ -102,8 +102,14 @@ const withReleaseContent = async (config: Config) => {
   );
 
   // Merge with existing content config
-  const existingContent = Array.isArray(config.content) ? config.content : [];
-  const dynamicContent = [
+  let existingContent: Config["content"] = [];
+  if (Array.isArray(config.content)) {
+    existingContent = config.content;
+  } else if (config.content && "files" in config.content) {
+    existingContent = config.content.files;
+  }
+
+  const dynamicContent: Config["content"] = [
     ...allTsxFiles.values().map((content) => ({
       raw: content,
       extension: "tsx" as const,
