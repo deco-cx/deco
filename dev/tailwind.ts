@@ -101,12 +101,18 @@ const withReleaseContent = async (config: Config) => {
     ` 🔍 TailwindCSS resolved ${allTsxFiles.size} dependencies in ${duration}ms`,
   );
 
+  // Merge with existing content config
+  const existingContent = Array.isArray(config.content) ? config.content : [];
+  const dynamicContent = [
+    ...allTsxFiles.values().map((content) => ({
+      raw: content,
+      extension: "tsx" as const,
+    })),
+  ];
+
   return {
     ...config,
-    content: [...allTsxFiles.values()].map((content) => ({
-      raw: content,
-      extension: "tsx",
-    })),
+    content: [...existingContent, ...dynamicContent],
   };
 };
 
