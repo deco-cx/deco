@@ -103,14 +103,26 @@ export async function decoMiddleware<
 
   const handler = handlerFor(deco);
 
+  const deepLogFunctions = <T extends unknown>(obj: T, path: string[]): void => {
+    if (typeof obj === "function") {
+      console.log("Function found, path:", path);
+    }
+    if (typeof obj === "object" && obj !== null) {  
+      Object.entries(obj).forEach(([key, value]) => deepLogFunctions(value, [...path, key]));
+    }
+  };
+
   return async (ctx: FreshContext): Promise<Response> => {
     // Adapter: Convert deco's data-based render to Fresh 2's JSX-based render
     // Deco calls: renderFn({ page: { Component, props, metadata } })
     // Fresh 2 expects: ctx.render(<Component {...props} />)
     const renderAdapter = <T extends PageData = PageData>(data: T): Promise<Response> | Response => {
-      const { Component, props } = data.page;
+      const { Component, props: _props } = data.page;
+      deepLogFunctions(_props, []);
+
+      // console.log("internal props", props.data.page.props);
       // Call Fresh 2's render with JSX element
-      return ctx.render(<Component {...props} />);
+      return ctx.render(<Component {..._props} />);
     };
 
     const response = await handler(ctx.req, {
