@@ -79,7 +79,6 @@ export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
 
 export const watchMeta = async () => {
   let etag = "";
-  let iteration = 0;
 
   const setMeta = (
     m: MetaInfo | null,
@@ -91,8 +90,6 @@ export const watchMeta = async () => {
   };
 
   while (true) {
-    iteration++;
-
     try {
       const w = await worker();
       const response = await w.fetch(metaRequest(etag));

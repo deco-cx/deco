@@ -97,7 +97,13 @@ export const createSSE = () => {
           done.resolve();
         },
       }).pipeThrough(new ServerSentEventStream()),
-      { headers: { "Content-Type": "text/event-stream" } },
+      {
+        headers: {
+          "Content-Type": "text/event-stream",
+          // Signal to client that we may send gzip-compressed events
+          ...(clientSupportsGzip && { "X-SSE-Encoding": "gzip" }),
+        },
+      },
     );
   });
 

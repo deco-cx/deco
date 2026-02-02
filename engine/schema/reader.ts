@@ -1,5 +1,6 @@
 import { join } from "@std/path";
 import type { ImportMap } from "../../blocks/app.ts";
+import denoJSON from "../../deno.json" with { type: "json" };
 import { genSchemasFromManifest } from "../../engine/schema/gen.ts";
 import type { AppManifest } from "../../types.ts";
 import type { Schemas } from "./builder.ts";
@@ -8,6 +9,8 @@ const SCHEMA_CACHE_FILE = "schemas.gen.json";
 
 interface SchemaCache {
   manifestHash: string;
+  decoVersion: string;
+  timestamp: number;
   schema: Schemas;
 }
 
@@ -29,7 +32,8 @@ const loadSchemaCache = async (manifestHash: string): Promise<Schemas | null> =>
     const cachePath = join(Deno.cwd(), SCHEMA_CACHE_FILE);
     const content = await Deno.readTextFile(cachePath);
     const cache: SchemaCache = JSON.parse(content);
-    if (cache.manifestHash === manifestHash) {
+    // Invalidate cache if manifest changed OR deco version changed
+    if (cache.manifestHash === manifestHash && cache.decoVersion === denoJSON.version) {
       return cache.schema;
     }
     return null;
@@ -41,7 +45,12 @@ const loadSchemaCache = async (manifestHash: string): Promise<Schemas | null> =>
 const saveSchemaCache = async (manifestHash: string, schema: Schemas): Promise<void> => {
   try {
     const cachePath = join(Deno.cwd(), SCHEMA_CACHE_FILE);
-    const cache: SchemaCache = { manifestHash, schema };
+    const cache: SchemaCache = {
+      manifestHash,
+      decoVersion: denoJSON.version,
+      timestamp: Date.now(),
+      schema,
+    };
     await Deno.writeTextFile(cachePath, JSON.stringify(cache));
   } catch {
     // Ignore cache save errors

@@ -283,8 +283,6 @@ if (VERBOSE) {
   app.use(logger());
 }
 
-const daemonStartTime = Date.now();
-
 // Fast health check - just confirms daemon is alive
 app.get("/_healthcheck", (c) => {
   return new Response(denoJSON.version, {
@@ -304,15 +302,34 @@ app.get("/_ready", async (c) => {
   const start = Date.now();
 
   try {
-    // Wait for worker to be ready with the specified timeout
-    const ctrl = new AbortController();
-    const timeoutId = setTimeout(() => ctrl.abort(), timeout);
+    // Race worker startup against timeout
+    const result = await Promise.race([
+      (async () => {
+        const { worker } = await import("./worker.ts");
+        await worker();
+        return "ready" as const;
+      })(),
+      new Promise<"timeout">((resolve) =>
+        setTimeout(() => resolve("timeout"), timeout)
+      ),
+    ]);
 
-    const { worker } = await import("./worker.ts");
-    await worker();
-
-    clearTimeout(timeoutId);
     const elapsed = Date.now() - start;
+
+    if (result === "timeout") {
+      return new Response(JSON.stringify({
+        ready: false,
+        version: denoJSON.version,
+        elapsed,
+        error: "Worker not ready within timeout"
+      }), {
+        status: 503,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
 
     return new Response(JSON.stringify({
       ready: true,
@@ -325,13 +342,13 @@ app.get("/_ready", async (c) => {
         "Access-Control-Allow-Origin": "*",
       },
     });
-  } catch (_err) {
+  } catch (err) {
     const elapsed = Date.now() - start;
     return new Response(JSON.stringify({
       ready: false,
       version: denoJSON.version,
       elapsed,
-      error: "Worker not ready within timeout"
+      error: err instanceof Error ? err.message : "Worker failed to start"
     }), {
       status: 503,
       headers: {
