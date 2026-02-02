@@ -13,12 +13,20 @@ interface ManifestBlocks {
   blocks: Record<string, BlockMap>;
 }
 
+export interface FolderMeta {
+  description?: string;
+  icon?: string;
+}
+
+export type FolderMetaMap = Record<string, Record<string, FolderMeta>>;
+
 export interface MetaInfo {
   major: number;
   namespace: string;
   version: string;
   schema: Schemas;
   manifest: ManifestBlocks;
+  folderMeta?: FolderMetaMap;
   site: string;
   platform: string;
   cloudProvider: string;
@@ -53,6 +61,51 @@ const toManifestBlocks = (
   return { blocks: manBlocks };
 };
 
+/**
+ * Reads _folder.json files for folder metadata.
+ * Returns a map of blockType -> folderName -> FolderMeta
+ */
+const readFolderMeta = async (
+  manifestBlocks: ManifestBlocks,
+): Promise<FolderMetaMap> => {
+  const folderMeta: FolderMetaMap = {};
+
+  for (const [blockType, blocks] of Object.entries(manifestBlocks.blocks)) {
+    const folders = new Set<string>();
+
+    // Extract folder names from block paths
+    for (const blockKey of Object.keys(blocks)) {
+      // blockKey looks like: site/sections/AIPartner/Hero.tsx
+      const parts = blockKey.split("/");
+      const blockTypeIndex = parts.indexOf(blockType);
+      if (blockTypeIndex !== -1 && parts.length > blockTypeIndex + 2) {
+        // There's a folder between blockType and the file
+        folders.add(parts[blockTypeIndex + 1]);
+      }
+    }
+
+    // Read _folder.json for each folder
+    for (const folder of folders) {
+      try {
+        const filePath = `./${blockType}/${folder}/_folder.json`;
+        const content = await Deno.readTextFile(filePath);
+        const meta = JSON.parse(content) as FolderMeta;
+        if (meta.description || meta.icon) {
+          folderMeta[blockType] ??= {};
+          folderMeta[blockType][folder] = meta;
+        }
+      } catch (err) {
+        // Only ignore missing files, surface other errors (e.g., invalid JSON)
+        if (!(err instanceof Deno.errors.NotFound)) {
+          console.error(`[meta] Error reading ${blockType}/${folder}/_folder.json:`, err);
+        }
+      }
+    }
+  }
+
+  return folderMeta;
+};
+
 export let mschema: Schemas | null = null; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
 
 const sf = singleFlight<MetaInfo>();
@@ -64,16 +117,19 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
   while (!signal.aborted) {
     const context = Context.active();
     const lazySchema = lazySchemaFor(context);
+
     const etag = await etagFor(lazySchema);
 
     if (etag !== ifNoneMatch) {
       const info = await sf.do(context.instance.id, async () => {
         const { manifest } = await context.runtime!;
-        const manifestBlocks = toManifestBlocks(
-          manifest,
-        );
+        const manifestBlocks = toManifestBlocks(manifest);
         const schema = await lazySchema.value;
+
         mschema = schema; // compatibility mode only, it should be deleted when https://github.com/deco-cx/apps/pull/285/files was merged
+
+        // Read folder metadata from _folder.json files
+        const folderMeta = await readFolderMeta(manifestBlocks);
 
         const info: MetaInfo = {
           major: parse(denoJSON.version).major,
@@ -81,6 +137,7 @@ const waitForChanges = async (ifNoneMatch: string, signal: AbortSignal) => {
           namespace: context.namespace!,
           site: context.site!,
           manifest: manifestBlocks,
+          folderMeta: Object.keys(folderMeta).length > 0 ? folderMeta : undefined,
           schema,
           platform: context.platform,
           cloudProvider: Deno.env.get("CLOUD_PROVIDER") ?? "unknown",
