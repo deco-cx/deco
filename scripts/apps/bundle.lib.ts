@@ -21,8 +21,11 @@ export const bundleApp = (dir: string) => async (app: AppConfig) => {
       );
       return;
     }
-  } catch {
-    // File doesn't exist, will create it
+  } catch (err) {
+    // Only ignore missing file, surface other errors (permission, I/O)
+    if (!(err instanceof Deno.errors.NotFound)) {
+      throw err;
+    }
   }
 
   await Deno.writeTextFile(manifestFile, newContent);

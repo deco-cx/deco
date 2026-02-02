@@ -94,8 +94,11 @@ const readFolderMeta = async (
           folderMeta[blockType] ??= {};
           folderMeta[blockType][folder] = meta;
         }
-      } catch {
-        // Ignore - folder might not have _folder.json
+      } catch (err) {
+        // Only ignore missing files, surface other errors (e.g., invalid JSON)
+        if (!(err instanceof Deno.errors.NotFound)) {
+          console.error(`[meta] Error reading ${blockType}/${folder}/_folder.json:`, err);
+        }
       }
     }
   }

@@ -297,22 +297,33 @@ app.get("/_healthcheck", (c) => {
 
 // Readiness check - waits until worker is actually ready (long-poll style)
 // This avoids the client doing timeout-based retries
+const MIN_READY_TIMEOUT_MS = 1000;
+const MAX_READY_TIMEOUT_MS = 120000;
+const DEFAULT_READY_TIMEOUT_MS = 30000;
+
 app.get("/_ready", async (c) => {
-  const timeout = +(c.req.query("timeout") ?? "30000");
+  const rawTimeout = +(c.req.query("timeout") ?? DEFAULT_READY_TIMEOUT_MS);
+  // Validate and clamp timeout to reasonable bounds
+  const timeout = Number.isNaN(rawTimeout) || rawTimeout <= 0
+    ? DEFAULT_READY_TIMEOUT_MS
+    : Math.min(Math.max(rawTimeout, MIN_READY_TIMEOUT_MS), MAX_READY_TIMEOUT_MS);
   const start = Date.now();
 
   try {
     // Race worker startup against timeout
+    let timeoutId: ReturnType<typeof setTimeout>;
     const result = await Promise.race([
       (async () => {
         const { worker } = await import("./worker.ts");
         await worker();
         return "ready" as const;
       })(),
-      new Promise<"timeout">((resolve) =>
-        setTimeout(() => resolve("timeout"), timeout)
-      ),
+      new Promise<"timeout">((resolve) => {
+        timeoutId = setTimeout(() => resolve("timeout"), timeout);
+      }),
     ]);
+    // Clear timeout to avoid timer leak when worker finishes first
+    clearTimeout(timeoutId!);
 
     const elapsed = Date.now() - start;
 

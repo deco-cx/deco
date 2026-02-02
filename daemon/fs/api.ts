@@ -148,7 +148,9 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
   let yieldedCount = 0;
 
   // Build skip regex from SKIP_DIRS
-  const skipRegex = new RegExp(`(^|${SEPARATOR})(${SKIP_DIRS.join("|")})($|${SEPARATOR})`);
+  // Escape SEPARATOR for regex (backslash is special in regex)
+  const escapedSep = SEPARATOR.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+  const skipRegex = new RegExp(`(^|${escapedSep})(${SKIP_DIRS.join("|")})(${escapedSep}|$)`);
 
   try {
     for await (const entry of walk(Deno.cwd(), {
