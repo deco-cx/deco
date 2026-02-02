@@ -17,14 +17,15 @@ import {
 import { grep, type GrepResult } from "./grep.ts";
 
 // Directories to skip when walking (expensive to enumerate)
+// Note: These are used in a regex, so dots are escaped
 const SKIP_DIRS = [
   "node_modules",
-  ".git",
+  "\\.git",
   "_fresh",
-  ".next",
+  "\\.next",
   "dist",
-  ".deno",
-  ".cache",
+  "\\.deno",
+  "\\.cache",
 ];
 
 // Large generated files to skip (reading them is expensive)
@@ -153,7 +154,6 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
     for await (const entry of walk(Deno.cwd(), {
       includeDirs: false,
       includeFiles: true,
-      followSymlinks: false,
       skip: [skipRegex],
     })) {
       fileCount++;
