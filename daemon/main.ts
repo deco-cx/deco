@@ -394,22 +394,42 @@ const stableEnvironmentName = () => {
 const port = Number(Deno.env.get("APP_PORT")) || 8000;
 // Start worker and meta generation eagerly to reduce first-request latency
 // This runs in background - don't await to avoid blocking server startup
-const eagerStart = async () => {
-  try {
-    const { worker } = await import("./worker.ts");
-    const w = await worker();
+const EAGER_START_TIMEOUT_MS = 60_000; // 60 seconds max for eager start
 
-    // Trigger meta generation and pre-resolve the daemon's meta promise
-    // This way SSE connections won't have to wait for watchMeta() to complete
-    const response = await w.fetch(new Request("http://0.0.0.0/deco/meta"));
-    if (response.ok) {
-      const metaInfo = await response.json();
-      const etag = response.headers.get("etag") ?? "";
-      const { setMetaIfPending } = await import("./meta.ts");
-      setMetaIfPending({ ...metaInfo, etag, timestamp: Date.now() });
+const eagerStart = async () => {
+  const start = Date.now();
+  try {
+    // Race against timeout to prevent hanging forever
+    const result = await Promise.race([
+      (async () => {
+        const { worker } = await import("./worker.ts");
+        const w = await worker();
+
+        // Trigger meta generation and pre-resolve the daemon's meta promise
+        // This way SSE connections won't have to wait for watchMeta() to complete
+        const response = await w.fetch(new Request("http://0.0.0.0/deco/meta"));
+        if (response.ok) {
+          const metaInfo = await response.json();
+          const etag = response.headers.get("etag") ?? "";
+          const { setMetaIfPending } = await import("./meta.ts");
+          setMetaIfPending({ ...metaInfo, etag, timestamp: Date.now() });
+        }
+        return "success";
+      })(),
+      new Promise<"timeout">((resolve) =>
+        setTimeout(() => resolve("timeout"), EAGER_START_TIMEOUT_MS)
+      ),
+    ]);
+
+    if (result === "timeout") {
+      console.warn(`[eagerStart] timed out after ${EAGER_START_TIMEOUT_MS}ms`);
+    } else {
+      console.log(`[eagerStart] completed in ${Date.now() - start}ms`);
     }
-  } catch (_err) {
+  } catch (err) {
     // Eager start failed - will be handled by normal startup
+    // Log the error so we can debug issues
+    console.warn(`[eagerStart] failed after ${Date.now() - start}ms:`, err);
   }
 };
 

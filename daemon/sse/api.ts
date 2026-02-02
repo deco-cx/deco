@@ -36,23 +36,28 @@ export const createSSE = () => {
       if (signal.aborted) return;
       eventCounter++;
 
-      const jsonStr = JSON.stringify(event);
-      // Only compress if client supports it AND payload is large
-      const shouldCompress = clientSupportsGzip && jsonStr.length > 50_000;
+      try {
+        const jsonStr = JSON.stringify(event);
+        // Only compress if client supports it AND payload is large
+        const shouldCompress = clientSupportsGzip && jsonStr.length > 50_000;
 
-      let data: string;
-      if (shouldCompress) {
-        // For large payloads, gzip compress and base64 encode
-        const compressedData = await compress(jsonStr);
-        data = `gzip:${compressedData}`;
-      } else {
-        data = encodeURIComponent(jsonStr);
+        let data: string;
+        if (shouldCompress) {
+          // For large payloads, gzip compress and base64 encode
+          const compressedData = await compress(jsonStr);
+          data = `gzip:${compressedData}`;
+        } else {
+          data = encodeURIComponent(jsonStr);
+        }
+
+        controller.enqueue({
+          data,
+          event: "message",
+        });
+      } catch (err) {
+        // Don't crash the stream if a single event fails to enqueue
+        console.error("[sse] enqueue error:", err);
       }
-
-      controller.enqueue({
-        data,
-        event: "message",
-      });
     };
 
     return new Response(
@@ -69,11 +74,15 @@ export const createSSE = () => {
             channel.removeEventListener("broadcast", handler);
           });
 
-          for await (const event of startFS(since)) {
-            if (signal.aborted) {
-              return;
+          try {
+            for await (const event of startFS(since)) {
+              if (signal.aborted) {
+                return;
+              }
+              await enqueue(controller, event);
             }
-            await enqueue(controller, event);
+          } catch (err) {
+            console.error("[sse] file sync error:", err);
           }
 
           await enqueue(controller, startWorker());
