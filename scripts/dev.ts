@@ -3,7 +3,6 @@ import denoJSON from "../deno.json" with { type: "json" };
 
 const name = denoJSON.name;
 const exports = denoJSON.exports;
-const imports: Record<string, string> = denoJSON.imports ?? {};
 const resetOrDecoFolder = Deno.args[0];
 
 const denoJSONPath = join(Deno.cwd(), "deno.json");
@@ -19,16 +18,6 @@ for (const [key, value] of Object.entries(exports)) {
     delete entries[entryKey];
   } else {
     entries[entryKey] = value.replace(".", resetOrDecoFolder);
-  }
-}
-
-// Copy dependencies that the deco package needs but projects might not have
-const requiredDeps = ["@deco/deno-ast-wasm"];
-for (const dep of requiredDeps) {
-  if (isReset) {
-    delete entries[dep];
-  } else if (imports[dep] && !entries[dep]) {
-    entries[dep] = imports[dep];
   }
 }
 

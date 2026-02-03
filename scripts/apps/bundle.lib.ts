@@ -10,25 +10,10 @@ export const bundleApp = (dir: string) => async (app: AppConfig) => {
   const manifest = await decoManifestBuilder(appDir, app.name);
 
   const manifestFile = join(appDir, "manifest.gen.ts");
-  const newContent = await format(manifest.build());
-
-  // Only write if content changed to avoid triggering HMR unnecessarily
-  try {
-    const existingContent = await Deno.readTextFile(manifestFile);
-    if (existingContent === newContent) {
-      console.log(
-        colors.gray(`the manifest of ${app.name} is unchanged, skipping write`),
-      );
-      return;
-    }
-  } catch (err) {
-    // Only ignore missing file, surface other errors (permission, I/O)
-    if (!(err instanceof Deno.errors.NotFound)) {
-      throw err;
-    }
-  }
-
-  await Deno.writeTextFile(manifestFile, newContent);
+  await Deno.writeTextFile(
+    manifestFile,
+    await format(manifest.build()),
+  );
   console.log(
     colors.brightBlue(`the manifest of ${app.name} has been generated`),
   );
