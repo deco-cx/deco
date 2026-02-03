@@ -3,7 +3,7 @@ import denoJSON from "../deno.json" with { type: "json" };
 
 const name = denoJSON.name;
 const exports = denoJSON.exports;
-const imports = denoJSON.imports;
+const imports: Record<string, string> = denoJSON.imports ?? {};
 const resetOrDecoFolder = Deno.args[0];
 
 const denoJSONPath = join(Deno.cwd(), "deno.json");
