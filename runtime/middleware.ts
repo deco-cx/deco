@@ -462,7 +462,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
       // Rule 3: Check if all active flags are cacheable
       // If there are any active flags, all must be cacheable for caching to be allowed
-      const flags = ctx.var?.flags;
+      const flags = ctx.var?.flags ?? [];
       const nonCacheableFlags = flags.filter((flag) => flag.cacheable !== true);
       const allFlagsCacheable = flags.length > 0
         ? flags.every((flag) => flag.cacheable === true)
