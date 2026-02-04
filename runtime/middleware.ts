@@ -35,6 +35,8 @@ export const DECO_SEGMENT = "deco_segment";
 const DECO_PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ||
   "public, max-age=120, must-revalidate, s-maxage=120, stale-while-revalidate=86400";
 
+const PAGE_CACHE_ENABLED = Deno.env.get("PAGE_CACHE") === "true";
+
 const formatMatcherName = (flagName: string, resolveType?: string): string => {
   return `${resolveType} in "${flagName}"`;
 };
@@ -470,7 +472,9 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       // Check if vary allows page caching (loaders outside Lazy sections may set shouldCachePage to false)
       const shouldCachePageFromVary = ctx?.var?.vary?.shouldCachePage === true;
       // Determine if we should cache (only for GET requests with 200 status, and not internal routes)
-      const shouldCache = !isInternalRoute && !hasSetCookie &&
+      const shouldCache = PAGE_CACHE_ENABLED &&
+        !isInternalRoute &&
+        !hasSetCookie &&
         allFlagsCacheable &&
         shouldCachePageFromVary &&
         ctx.req.raw.method === "GET" &&
@@ -479,7 +483,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       // Log cache warnings for debugging
       if (
         !isInternalRoute && ctx.req.raw.method === "GET" &&
-        responseStatus === 200
+        responseStatus === 200 && PAGE_CACHE_ENABLED
       ) {
         if (hasSetCookie) {
           console.warn(
