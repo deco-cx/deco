@@ -221,6 +221,39 @@ const wrapLoader = (
       const isCacheNoStore = mode === "no-store";
       const isCacheNoCache = mode === "no-cache";
 
+      // Check if loader has a custom cacheKey (not the default noop)
+      // If it has a cacheKey and is running outside Lazy, prevent page caching
+      const hasCustomCacheKey = cacheKey !== noop;
+      if (ctx.vary && hasCustomCacheKey && !isAborted) {
+        ctx.vary.shouldCachePage = false;
+
+        // Extract section name from resolveChain
+        let sectionName: string | undefined;
+        for (let i = resolveChain.length - 1; i >= 0; i--) {
+          const item = resolveChain[i];
+          if (item?.type === "resolvable") {
+            sectionName = item.value;
+            break; // Stop at first resolvable (section)
+          }
+        }
+
+        // Clean loader name (remove path, keep just the name)
+        const cleanLoaderName = loader.includes("/")
+          ? loader.split("/").pop()?.replace(/\.ts$/, "") || loader
+          : loader;
+
+        // Clean section name (remove hash if present)
+        const cleanSectionName = sectionName
+          ? sectionName.replace(/-\w{12}$/, "")
+          : undefined;
+
+        // Add to list of loaders preventing page cache
+        ctx.vary.loadersPreventingCache.push({
+          loader: cleanLoaderName,
+          section: cleanSectionName,
+        });
+      }
+
       const bypassCache = isCacheNoStore || isCacheNoCache ||
         isCacheKeyNull || isCacheDisabled;
 
@@ -236,35 +269,10 @@ const wrapLoader = (
 
           // Only affect shouldCache if NOT a structural resolution (not aborted)
           // During structural resolution (aborted signal), we still need vary keys for useSection
-          // but should not prevent page caching
+          // but should not prevent section caching
+          // When isAborted=true (e.g., inside Lazy.tsx), loaders don't prevent section caching
           if (ctx.vary && shouldNotCache && !isAborted) {
             ctx.vary.shouldCache = false;
-
-            // Extract section name from resolveChain
-            let sectionName: string | undefined;
-            for (let i = resolveChain.length - 1; i >= 0; i--) {
-              const item = resolveChain[i];
-              if (item?.type === "resolvable") {
-                sectionName = item.value;
-                break; // Stop at first resolvable (section)
-              }
-            }
-
-            // Clean loader name (remove path, keep just the name)
-            const cleanLoaderName = loader.includes("/")
-              ? loader.split("/").pop()?.replace(/\.ts$/, "") || loader
-              : loader;
-
-            // Clean section name (remove hash if present)
-            const cleanSectionName = sectionName
-              ? sectionName.replace(/-\w{12}$/, "")
-              : undefined;
-
-            // Add to list of loaders preventing cache
-            ctx.vary.loadersPreventingCache.push({
-              loader: cleanLoaderName,
-              section: cleanSectionName,
-            });
 
             if (ctx.debugEnabled) {
               const resolver = resolveChain.at(-1);

@@ -467,12 +467,12 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         ? flags.every((flag) => flag.cacheable === true)
         : true; // No active flags means cacheable by default
 
-      // Check if vary allows caching (loaders may set shouldCache to false)
-      const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
+      // Check if vary allows page caching (loaders outside Lazy sections may set shouldCachePage to false)
+      const shouldCachePageFromVary = ctx?.var?.vary?.shouldCachePage === true;
       // Determine if we should cache (only for GET requests with 200 status, and not internal routes)
       const shouldCache = !isInternalRoute && !hasSetCookie &&
         allFlagsCacheable &&
-        shouldCacheFromVary &&
+        shouldCachePageFromVary &&
         ctx.req.raw.method === "GET" &&
         responseStatus === 200;
 
@@ -493,8 +493,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           console.warn(
             yellow(`[cache] Page not cached: ${matcherNames} being used`),
           );
-        } else if (!shouldCacheFromVary) {
-          // Use the loadersPreventingCache array that was populated when shouldCache = false
+        } else if (!shouldCachePageFromVary) {
+          // Use the loadersPreventingCache array that was populated when shouldCachePage = false
           const loadersPreventingCache: LoaderPreventingCache[] =
             (ctx.var?.vary as any)?.loadersPreventingCache ?? [];
 

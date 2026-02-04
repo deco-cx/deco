@@ -237,6 +237,7 @@ export function withSection<TProps, TLoaderProps = TProps>(
                         ? (
                           // @ts-ignore difficult typing this
                           <LoadingFallback
+                            device={device || deviceOf(ctx.request)}
                             {...new Proxy<Partial<TProps>>(props, {
                               get: (value: Partial<TProps>, prop) => {
                                 try {
@@ -279,6 +280,7 @@ export function withSection<TProps, TLoaderProps = TProps>(
             return (
               // @ts-ignore: could not it type well
               <LoadingFallback
+                device={device || deviceOf(ctx.request)}
                 {...(loaderProps ?? props) as DeepPartial<TLoaderProps>}
               />
             );

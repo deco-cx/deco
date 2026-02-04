@@ -13,6 +13,7 @@ export interface Vary {
   push: (...key: string[]) => void;
   build: () => string;
   shouldCache: boolean;
+  shouldCachePage: boolean;
   loadersPreventingCache: LoaderPreventingCache[];
   debug: {
     push: <T extends DebugProperties>(debug: T) => void;
@@ -31,6 +32,7 @@ export const vary = (): Vary => {
       return vary.sort().join();
     },
     shouldCache: true,
+    shouldCachePage: true,
     loadersPreventingCache,
     debug: {
       push: <T extends DebugProperties>(_debug: T) =>
