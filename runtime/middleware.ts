@@ -27,7 +27,6 @@ import type {
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
 import type { Deco, State } from "./mod.ts";
-import { sha1 } from "./utils.ts";
 import { yellow } from "@std/fmt/colors";
 import type { LoaderPreventingCache } from "../utils/vary.ts";
 export const DECO_SEGMENT = "deco_segment";
@@ -528,27 +527,6 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         // Rule 3: If not all active flags are cacheable, don't cache
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
       } else if (shouldCache) {
-        // Rule 2: Build cache key using vary.build() which contains all loader __cb values
-        const varyKey = ctx.var?.vary?.build() ?? "";
-
-        // Generate ETag from vary key and flag cacheKeys
-        // Include both varyKey (loader __cb values) and flag cacheKeys
-        const etagSource = varyKey ?? url.toString();
-        const etagHash = await sha1(etagSource);
-        const etagValue = `"${etagHash}"`;
-        newHeaders.set("ETag", etagValue);
-
-        // Check if client sent If-None-Match header
-        const ifNoneMatch = ctx.req.raw.headers.get("If-None-Match");
-        if (ifNoneMatch === etagValue || ifNoneMatch === `W/${etagValue}`) {
-          // Return 304 Not Modified
-          ctx.res = undefined;
-          return ctx.res = new Response(null, {
-            status: 304,
-            headers: newHeaders,
-          });
-        }
-
         // Set cache-control for public caching
         newHeaders.set("Cache-Control", DECO_PAGE_CACHE_CONTROL);
       }
