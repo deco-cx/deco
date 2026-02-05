@@ -34,7 +34,7 @@ export const DECO_SEGMENT = "deco_segment";
 const DECO_PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ||
   "public, max-age=120, must-revalidate, s-maxage=120, stale-while-revalidate=86400";
 
-const PAGE_CACHE_ENABLED = Deno.env.get("PAGE_CACHE") === "true";
+const PAGE_CACHE_ENABLED = Deno.env.get("PAGE_CACHE_ENABLED") === "true";
 
 const formatMatcherName = (flagName: string, resolveType?: string): string => {
   return `${resolveType} in "${flagName}"`;
