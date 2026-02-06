@@ -2,6 +2,7 @@ import type { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
 import { SectionContext } from "../components/section.tsx";
 import { FieldResolver } from "../engine/core/resolver.ts";
+import { stableStringify } from "../utils/json.ts";
 
 import { Murmurhash3 } from "../deps.ts";
 
@@ -88,8 +89,8 @@ export const useSection = <P>(
   const hrefParam = href ?? request.url;
   const stableHref = createStableHref(hrefParam);
   const cbString = [
-    JSON.stringify(sectionConfig), // Section-specific config
-    JSON.stringify(props),           // Partial props override
+    stableStringify(sectionConfig), // Section-specific config (deterministic)
+    stableStringify(props),          // Partial props override (deterministic)
     vary,
     stableHref,
     ctx?.deploymentId, // Understand if we can remove it
