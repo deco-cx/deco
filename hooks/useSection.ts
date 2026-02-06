@@ -82,15 +82,24 @@ export const useSection = <P>(
   }
 
   const vary = ctx?.context.state.vary.build();
-  const { request, renderSalt, context: { state: { pathTemplate } }, resolvables, resolveChain } = ctx;
+  const {
+    request,
+    renderSalt,
+    context: { state: { pathTemplate } },
+    resolvables,
+    resolveChain,
+  } = ctx;
 
-  const sectionConfig = FieldResolver.resolveFromChain(resolveChain, resolvables);
+  const sectionConfig = FieldResolver.resolveFromChain(
+    resolveChain,
+    resolvables,
+  );
 
   const hrefParam = href ?? request.url;
   const stableHref = createStableHref(hrefParam);
   const cbString = [
     stableStringify(sectionConfig), // Section-specific config (deterministic)
-    stableStringify(props),          // Partial props override (deterministic)
+    stableStringify(props), // Partial props override (deterministic)
     vary,
     stableHref,
     ctx?.deploymentId, // Understand if we can remove it
