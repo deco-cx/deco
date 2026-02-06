@@ -124,6 +124,37 @@ export const FieldResolver = {
 
     return unwinded;
   },
+  /**
+   * Resolves a value from resolvables by following a resolveChain.
+   * Finds the last resolvable in the chain and then navigates through any prop fields.
+   * @param resolveChain - The chain of field resolvers to follow
+   * @param resolvables - The map of resolvables to resolve from
+   * @returns The resolved value, or undefined if not found
+   */
+  resolveFromChain: (
+    resolveChain: FieldResolver[],
+    resolvables: Record<string, any>,
+  ): any | undefined => {
+    if (!resolveChain || !resolvables) {
+      return undefined;
+    }
+
+    const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
+    if (index < 0) {
+      return undefined;
+    }
+
+    let value = resolvables[resolveChain[index].value];
+
+    // Navigate through the resolveChain to get the specific nested value
+    for (let it = 0; it < resolveChain.length; it++) {
+      const item = resolveChain[it];
+      if (it < index || item.type !== "prop") continue;
+      value = value?.[item.value];
+    }
+
+    return value;
+  },
 };
 
 export type ResolvableObj<

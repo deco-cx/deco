@@ -80,17 +80,19 @@ export const useSection = <P>(
     throw new Error("Missing context in rendering tree");
   }
 
-  const revisionId = ctx?.revision;
   const vary = ctx?.context.state.vary.build();
-  const { request, renderSalt, context: { state: { pathTemplate } } } = ctx;
+  const { request, renderSalt, context: { state: { pathTemplate } }, resolvables, resolveChain } = ctx;
+
+  const sectionConfig = FieldResolver.resolveFromChain(resolveChain, resolvables);
 
   const hrefParam = href ?? request.url;
   const stableHref = createStableHref(hrefParam);
   const cbString = [
-    revisionId,
+    JSON.stringify(sectionConfig), // Section-specific config
+    JSON.stringify(props),           // Partial props override
     vary,
     stableHref,
-    ctx?.deploymentId,
+    ctx?.deploymentId, // Understand if we can remove it
   ].join("|");
   hasher.hash(cbString);
   const cb = hasher.result();
