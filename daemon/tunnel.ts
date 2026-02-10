@@ -61,7 +61,7 @@ export async function register(
       VERBOSE ? err : "",
     );
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return register({ env, site, port });
+    return register({ env, site, port, decoHost });
   }).catch(async (err) => {
     if (intentionalClose) return;
     console.log(
@@ -69,7 +69,7 @@ export async function register(
       VERBOSE ? err : "",
     );
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return register({ env, site, port });
+    return register({ env, site, port, decoHost });
   });
 
   return {

@@ -12,7 +12,7 @@ import { logs } from "./loggings/stream.ts";
 import { createRealtimeAPIs } from "./realtime/app.ts";
 import { createSSE } from "./sse/api.ts";
 
-const SANDBOX_MODE = Deno.env.get("SANDBOX_MODE") === "true";
+export const SANDBOX_MODE = Deno.env.get("SANDBOX_MODE") === "true";
 
 let _siteName: string | undefined = SANDBOX_MODE
   ? undefined

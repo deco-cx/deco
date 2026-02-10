@@ -18,6 +18,7 @@ import {
   DECO_ENV_NAME,
   DECO_HOST,
   getSiteName,
+  SANDBOX_MODE,
 } from "./daemon.ts";
 import { watchFS } from "./fs/api.ts";
 import { ensureGit, getGitHubPackageTokens, lockerGitAPI } from "./git.ts";
@@ -112,8 +113,6 @@ const updateDenoAuthTokenEnv = async () => {
     ),
   );
 };
-
-const SANDBOX_MODE = Deno.env.get("SANDBOX_MODE") === "true";
 
 if (SANDBOX_MODE && getSiteName()) {
   console.error(
@@ -252,8 +251,12 @@ const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
   let ok: Promise<unknown> | null | false = null;
 
   const start = async () => {
+    const siteName = getSiteName();
+    if (!siteName) {
+      throw new Error("Cannot initialize deps: site name not set");
+    }
     let start = performance.now();
-    await ensureGit({ site: getSiteName()! });
+    await ensureGit({ site: siteName });
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -510,7 +513,7 @@ if (SANDBOX_MODE) {
   });
 } else {
   // Normal mode: site is known at startup
-  const siteName = getSiteName()!;
+  const siteName = getSiteName();
   if (!siteName) {
     throw new Error("Site name is required");
   }

@@ -34,7 +34,7 @@ export const createSandboxHandlers = (
     return c.json({
       sandbox: true,
       deployed: !!site,
-      site: site ?? undefined,
+      site,
     });
   };
 
