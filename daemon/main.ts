@@ -25,8 +25,8 @@ import { logs } from "./loggings/stream.ts";
 import { watchMeta } from "./meta.ts";
 import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
-import { register } from "./tunnel.ts";
-import { createWorker, type WorkerOptions } from "./worker.ts";
+import { register, type TunnelConnection } from "./tunnel.ts";
+import { createWorker, worker, type WorkerOptions } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
@@ -200,10 +200,13 @@ const persistState = throttle(async () => {
 
 // Watch for changes in filesystem
 // TODO: we should be able to completely remove this after in some point in the future
-const watch = async () => {
+const watch = async (signal?: AbortSignal) => {
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
+  signal?.addEventListener("abort", () => watcher.close(), { once: true });
 
   for await (const event of watcher) {
+    if (signal?.aborted) break;
+
     using _ = await lockerGitAPI.lock.rlock();
     const skip = event.paths.some((path) =>
       path.includes(".git") || path.includes("node_modules")
@@ -245,7 +248,7 @@ const watch = async () => {
   }
 };
 
-const createDeps = (): MiddlewareHandler => {
+const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
   let ok: Promise<unknown> | null | false = null;
 
   const start = async () => {
@@ -276,9 +279,9 @@ const createDeps = (): MiddlewareHandler => {
       }ms`,
     });
 
-    watch().catch(console.error);
-    watchMeta().catch(console.error);
-    watchFS().catch(console.error);
+    watch(signal).catch(console.error);
+    watchMeta(signal).catch(console.error);
+    watchFS(signal).catch(console.error);
 
     logs.push({
       level: "info",
@@ -346,6 +349,7 @@ interface SiteAppResult {
 const createSiteApp = (
   { siteName, runCmdFactory }: SiteAppOptions,
 ): SiteAppResult => {
+  const ac = new AbortController();
   const siteApp = new Hono();
   // idle should run even when branch is not active
   // When DECO_ENV_NAME is unset, idle reporting is disabled by createIdleHandler
@@ -355,7 +359,7 @@ const createSiteApp = (
     createIdleHandler(siteName, envName),
   );
   // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-  siteApp.use(createDeps());
+  siteApp.use(createDeps(ac.signal));
   siteApp.use(activityMonitor);
   // These are the APIs that communicate with admin UI
   siteApp.use(createDaemonAPIs({ build: buildCmd, site: siteName }));
@@ -365,7 +369,25 @@ const createSiteApp = (
   }
 
   const dispose = async () => {
-    // Clean all files in cwd (the cloned site repo)
+    // 1. Stop the worker subprocess
+    try {
+      const w = await Promise.race([
+        worker().then((w) => w),
+        new Promise<null>((r) => setTimeout(() => r(null), 1000)),
+      ]);
+      if (w) {
+        await w[Symbol.asyncDispose]();
+        console.log(`[sandbox] Worker subprocess stopped`);
+      }
+    } catch {
+      // Worker may not have been started
+    }
+
+    // 2. Stop all file watchers (prevents manifest gen / HMR triggers)
+    ac.abort();
+    console.log(`[sandbox] Watchers stopped`);
+
+    // 3. Clean all files in cwd (the cloned site repo)
     const cwd = Deno.cwd();
     for await (const entry of Deno.readDir(cwd)) {
       const path = join(cwd, entry.name);
@@ -376,7 +398,6 @@ const createSiteApp = (
 
   return { app: siteApp, dispose };
 };
-
 const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
 const stableEnvironmentName = () => {
   const savedEnvironment = localStorage.getItem(LOCAL_STORAGE_ENV_NAME);
@@ -391,14 +412,12 @@ const stableEnvironmentName = () => {
 
 const port = Number(Deno.env.get("APP_PORT")) || 8000;
 
-type CloseTunnel = () => void;
-
 const registerTunnel = async (
   siteName: string,
-): Promise<CloseTunnel | null> => {
-  const env = DECO_HOST && !DECO_ENV_NAME
-    ? stableEnvironmentName()
-    : DECO_ENV_NAME;
+  envNameOverride?: string,
+): Promise<TunnelConnection | null> => {
+  const env = envNameOverride ??
+    (DECO_HOST && !DECO_ENV_NAME ? stableEnvironmentName() : DECO_ENV_NAME);
   if (env && !Deno.env.has("DECO_PREVIEW")) {
     return await register({
       site: siteName,
@@ -439,35 +458,42 @@ app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 if (SANDBOX_MODE) {
   // Sandbox mode: start without a site, deploy later via POST /sandbox/deploy
   let currentSite: SiteAppResult | null = null;
-  let closeTunnel: CloseTunnel | null = null;
+  let tunnelConn: TunnelConnection | null = null;
 
   const sandbox = createSandboxHandlers({
-    onDeploy: ({ site, runCommand }: DeployParams) => {
+    onDeploy: async ({ site, envName, runCommand }: DeployParams) => {
       // Use run command from deploy request, fall back to CLI args
       const runCmdFactory = runCommand?.length
         ? makeRunCmdFactory(runCommand[0], runCommand.slice(1))
         : createRunCmd;
 
       currentSite = createSiteApp({ siteName: site, runCmdFactory });
-      registerTunnel(site)
-        .then((close) => { closeTunnel = close; })
-        .catch(console.error);
+
+      const tunnel = await registerTunnel(site, envName).catch((err) => {
+        console.error("Tunnel registration failed:", err);
+        return null;
+      });
+
+      tunnelConn = tunnel;
+
+      return { domain: tunnel?.domain };
     },
     onUndeploy: async () => {
       if (currentSite) {
         await currentSite.dispose();
         currentSite = null;
       }
-      if (closeTunnel) {
-        closeTunnel();
-        closeTunnel = null;
+      if (tunnelConn) {
+        tunnelConn.close();
+        tunnelConn = null;
+        console.log(`[sandbox] Tunnel closed`);
       }
     },
   });
 
   app.get("/sandbox/status", sandbox.status);
   app.post("/sandbox/deploy", sandbox.deploy);
-  app.post("/sandbox/undeploy", sandbox.undeploy);
+  app.delete("/sandbox/deploy", sandbox.undeploy);
 
   // Delegate all other requests to the site app once deployed, or return 503
   app.all("*", (c) => {
@@ -500,11 +526,9 @@ Deno.serve({
   onListen: async (addr) => {
     try {
       const siteName = !SANDBOX_MODE ? getSiteName() : undefined;
-      const closeFn = siteName
-        ? await registerTunnel(siteName)
-        : null;
+      const tunnel = siteName ? await registerTunnel(siteName) : null;
 
-      if (!closeFn) {
+      if (!tunnel) {
         const prefix = SANDBOX_MODE ? "[sandbox] " : "";
         console.log(
           colors.green(

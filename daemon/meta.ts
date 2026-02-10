@@ -67,7 +67,7 @@ export const start = async (since: number): Promise<MetaEvent | null> => {
 export const ensureMetaIsReady = async (): Promise<MetaInfo | null> =>
   isPromiseLike(meta) ? await meta.promise : meta;
 
-export const watchMeta = async () => {
+export const watchMeta = async (signal?: AbortSignal) => {
   let etag = "";
 
   const setMeta = (
@@ -79,7 +79,7 @@ export const watchMeta = async () => {
     meta = m;
   };
 
-  while (true) {
+  while (!signal?.aborted) {
     try {
       const w = await worker();
       const response = await w.fetch(metaRequest(etag));
@@ -98,6 +98,9 @@ export const watchMeta = async () => {
       broadcast({ type: "meta-info", detail: withExtraParams });
       dispatchWorkerState("ready");
     } catch (_error) {
+      // If aborted, exit silently
+      if (signal?.aborted) break;
+
       const error = _error as { status?: number };
       // in case of timeout, retry without updating the worker state
       // to avoid false alarming down state

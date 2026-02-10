@@ -3,11 +3,16 @@ import { getSiteName, resetSiteName, setSiteName } from "./daemon.ts";
 
 interface DeployParams {
   site: string;
+  envName?: string;
   runCommand?: string[];
 }
 
+interface DeployResult {
+  domain?: string;
+}
+
 interface SandboxOptions {
-  onDeploy: (params: DeployParams) => void;
+  onDeploy: (params: DeployParams) => Promise<DeployResult>;
   onUndeploy: () => Promise<void>;
 }
 
@@ -39,27 +44,29 @@ export const createSandboxHandlers = (
     }
     deploying = true;
 
-    let body: { site?: string; runCommand?: string[] };
+    let body: { site?: string; envName?: string; runCommand?: string[] };
     try {
       body = await c.req.json();
     } catch {
       return c.json({ error: "Invalid JSON body" }, 400);
     }
 
-    const { site, runCommand } = body;
+    const { site, envName, runCommand } = body;
     if (!site || typeof site !== "string") {
       return c.json({ error: "Missing required field: site" }, 400);
     }
 
     if (
       runCommand &&
-      (!Array.isArray(runCommand) || !runCommand.every((s) => typeof s === "string"))
+      (!Array.isArray(runCommand) ||
+        !runCommand.every((s) => typeof s === "string"))
     ) {
       return c.json({ error: "runCommand must be a string array" }, 400);
     }
 
+    let result: DeployResult;
     try {
-      onDeploy({ site, runCommand });
+      result = await onDeploy({ site, envName, runCommand });
     } catch (err) {
       deploying = false;
       console.error(`[sandbox] Deploy failed:`, err);
@@ -68,13 +75,15 @@ export const createSandboxHandlers = (
 
     setSiteName(site);
 
+    const url = result.domain ? `https://${result.domain}` : undefined;
+
     console.log(
       `[sandbox] Deployed as site: ${site}${
         runCommand ? ` with command: ${runCommand.join(" ")}` : ""
-      }`,
+      }${url ? ` at ${url}` : ""}`,
     );
 
-    return c.json({ ok: true, site });
+    return c.json({ ok: true, site, url });
   };
 
   const undeploy: Handler = async (c) => {

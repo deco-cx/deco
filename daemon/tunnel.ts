@@ -10,9 +10,14 @@ export interface TunnelRegisterOptions {
 
 const VERBOSE = Deno.env.get("VERBOSE");
 
+export interface TunnelConnection {
+  close: () => void;
+  domain: string;
+}
+
 export async function register(
   { env, site, port, decoHost }: TunnelRegisterOptions,
-): Promise<() => void> {
+): Promise<TunnelConnection> {
   const decoHostDomain = `${env}--${site}.deco.host`;
   const { server, domain } = decoHost
     ? {
@@ -47,7 +52,10 @@ export async function register(
     );
   });
 
+  let intentionalClose = false;
+
   r.closed.then(async (err) => {
+    if (intentionalClose) return;
     console.log(
       "tunnel connection error retrying in 500ms...",
       VERBOSE ? err : "",
@@ -55,6 +63,7 @@ export async function register(
     await new Promise((resolve) => setTimeout(resolve, 500));
     return register({ env, site, port });
   }).catch(async (err) => {
+    if (intentionalClose) return;
     console.log(
       "tunnel connection error retrying in 500ms...",
       VERBOSE ? err : "",
@@ -63,5 +72,11 @@ export async function register(
     return register({ env, site, port });
   });
 
-  return () => r.close();
+  return {
+    close: () => {
+      intentionalClose = true;
+      r.close();
+    },
+    domain,
+  };
 }
