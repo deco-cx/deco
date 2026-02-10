@@ -9,7 +9,7 @@ import {
   type StatusResult,
 } from "simple-git";
 import { createLocker } from "./async.ts";
-import { DECO_SITE_NAME } from "./daemon.ts";
+import { getSiteName } from "./daemon.ts";
 import { logs } from "./loggings/stream.ts";
 import { DENO_DEPLOYMENT_ID } from "./main.ts";
 
@@ -384,7 +384,7 @@ export const getGitHubToken = async (): Promise<string | undefined> => {
 
   const response = await fetch(
     new URL(
-      `/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+      `/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${getSiteName()}`,
       ADMIN_DOMAIN,
     ).href,
     {
@@ -418,7 +418,7 @@ export const getGitHubPackageTokens = async (): Promise<string[]> => {
 
   const response = await fetch(
     new URL(
-      `/live/invoke/deco-sites/admin/loaders/github/getPackagesAccessToken.ts?sitename=${DECO_SITE_NAME}`,
+      `/live/invoke/deco-sites/admin/loaders/github/getPackagesAccessToken.ts?sitename=${getSiteName()}`,
       ADMIN_DOMAIN,
     ),
     {

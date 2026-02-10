@@ -17,13 +17,14 @@ import {
   createDaemonAPIs,
   DECO_ENV_NAME,
   DECO_HOST,
-  DECO_SITE_NAME,
+  getSiteName,
 } from "./daemon.ts";
 import { watchFS } from "./fs/api.ts";
 import { ensureGit, getGitHubPackageTokens, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
 import { watchMeta } from "./meta.ts";
 import { activityMonitor, createIdleHandler } from "./monitor.ts";
+import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
 import { register } from "./tunnel.ts";
 import { createWorker, type WorkerOptions } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
@@ -70,19 +71,27 @@ const buildCmd = buildCmdStr
 const getEnvVar = (envName: string, varName: string) =>
   Deno.env.get(envName) ? { [varName]: Deno.env.get(envName) } : {};
 
-const createRunCmd = cmd
-  ? (opt?: Pick<Deno.CommandOptions, "env">) =>
-    new Deno.Command(cmd === "deno" ? Deno.execPath() : cmd, {
-      args,
-      stdout: "piped",
-      stderr: "piped",
-      env: {
-        ...opt?.env,
-        PORT: `${WORKER_PORT}`,
-        ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
-        ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
-      },
-    })
+type RunCmdFactory = (opt?: Pick<Deno.CommandOptions, "env">) => Deno.Command;
+
+const makeRunCmdFactory = (
+  runCmd: string,
+  runArgs: string[],
+): RunCmdFactory =>
+(opt?: Pick<Deno.CommandOptions, "env">) =>
+  new Deno.Command(runCmd === "deno" ? Deno.execPath() : runCmd, {
+    args: runArgs,
+    stdout: "piped",
+    stderr: "piped",
+    env: {
+      ...opt?.env,
+      PORT: `${WORKER_PORT}`,
+      ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
+      ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
+    },
+  });
+
+const createRunCmd: RunCmdFactory | null = cmd
+  ? makeRunCmdFactory(cmd, args)
   : null;
 
 let lastUpdateEnvUpdate: number | undefined;
@@ -104,11 +113,26 @@ const updateDenoAuthTokenEnv = async () => {
   );
 };
 
-if (!DECO_SITE_NAME) {
+const SANDBOX_MODE = Deno.env.get("SANDBOX_MODE") === "true";
+
+if (SANDBOX_MODE && getSiteName()) {
   console.error(
-    `site name not found. use ${ENV_SITE_NAME} environment variable to set it.`,
+    `[sandbox] SANDBOX_MODE=true but ${ENV_SITE_NAME} is already set. These are mutually exclusive.`,
   );
   Deno.exit(1);
+}
+
+if (!SANDBOX_MODE && !getSiteName()) {
+  console.error(
+    `site name not found. use ${ENV_SITE_NAME} environment variable to set it, or set SANDBOX_MODE=true.`,
+  );
+  Deno.exit(1);
+}
+
+if (SANDBOX_MODE) {
+  console.log(
+    `[sandbox] Starting in sandbox mode. Use POST /sandbox/deploy to assign a site.`,
+  );
 }
 
 globalThis.addEventListener("unhandledrejection", (e: {
@@ -226,7 +250,7 @@ const createDeps = (): MiddlewareHandler => {
 
   const start = async () => {
     let start = performance.now();
-    await ensureGit({ site: DECO_SITE_NAME! });
+    await ensureGit({ site: getSiteName()! });
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -277,6 +301,84 @@ const createDeps = (): MiddlewareHandler => {
   };
 };
 
+// Create a function that returns fresh WorkerOptions with new tokens
+const makeWorkerOptionsFactory =
+  (runCmdFactory: RunCmdFactory) => async (): Promise<WorkerOptions> => {
+    if (HAS_PRIVATE_GITHUB_IMPORT) {
+      await updateDenoAuthTokenEnv();
+    }
+
+    if (UNSTABLE_WORKER_RESPAWN_INTERVAL_MS) {
+      /* TODO: Implement a better approach handling updating child env vars, preventing multiple child processes and with HMR.
+       * Also should have the git short live auth token to do git operations like: push/pull/rebase. Now, these git operations are guaranted
+       * because the short live git token is set once in inicialization and respawning
+       */
+      // Kill process to allow restart with new env settings
+      setTimeout(() => {
+        Deno.exit(1);
+      }, UNSTABLE_WORKER_RESPAWN_INTERVAL_MS);
+    }
+
+    return {
+      command: runCmdFactory(), // This will create a fresh command with new tokens
+      port: WORKER_PORT,
+      persist,
+    };
+  };
+
+interface SiteAppOptions {
+  siteName: string;
+  runCmdFactory?: RunCmdFactory | null;
+}
+
+/**
+ * Creates a Hono sub-app with all site-specific middleware:
+ * idle handler, deps (git, manifests, watchers), activity monitor,
+ * daemon APIs, and worker proxy.
+ */
+const createSiteApp = ({ siteName, runCmdFactory }: SiteAppOptions): Hono => {
+  const siteApp = new Hono();
+  // idle should run even when branch is not active
+  siteApp.get(
+    "/deco/_is_idle",
+    createIdleHandler(siteName, DECO_ENV_NAME!),
+  );
+  // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
+  siteApp.use(createDeps());
+  siteApp.use(activityMonitor);
+  // These are the APIs that communicate with admin UI
+  siteApp.use(createDaemonAPIs({ build: buildCmd, site: siteName }));
+  // Workers are only necessary if there needs to have a preview of the site
+  if (runCmdFactory) {
+    siteApp.route("", createWorker(makeWorkerOptionsFactory(runCmdFactory)));
+  }
+  return siteApp;
+};
+
+const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
+const stableEnvironmentName = () => {
+  const savedEnvironment = localStorage.getItem(LOCAL_STORAGE_ENV_NAME);
+  if (savedEnvironment) {
+    return savedEnvironment;
+  }
+
+  const newEnvironment = `${crypto.randomUUID().slice(0, 6)}-localhost`;
+  localStorage.setItem(LOCAL_STORAGE_ENV_NAME, newEnvironment);
+  return newEnvironment;
+};
+
+const port = Number(Deno.env.get("APP_PORT")) || 8000;
+
+const registerTunnel = (siteName: string) => {
+  const env = DECO_HOST && !DECO_ENV_NAME
+    ? stableEnvironmentName()
+    : DECO_ENV_NAME;
+  if (env && !Deno.env.has("DECO_PREVIEW")) {
+    register({ site: siteName, env, port: `${port}`, decoHost: DECO_HOST })
+      .catch(console.error);
+  }
+};
+
 const app = new Hono();
 
 if (VERBOSE) {
@@ -300,75 +402,80 @@ app.get("/_healthcheck", (c) => {
     },
   });
 });
-// idle should run even when branch is not active
-app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
 // k8s liveness probe
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 
-// Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-app.use(createDeps());
-app.use(activityMonitor);
-// These are the APIs that communicate with admin UI
-app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
-// Workers are only necessary if there needs to have a preview of the site
-if (createRunCmd) {
-  // Create a function that returns fresh WorkerOptions with new tokens
-  const createWorkerOptions = async (): Promise<WorkerOptions> => {
-    if (HAS_PRIVATE_GITHUB_IMPORT) {
-      await updateDenoAuthTokenEnv();
+if (SANDBOX_MODE) {
+  // Sandbox mode: start without a site, deploy later via POST /sandbox/deploy
+  let siteApp: Hono | null = null;
+
+  const sandbox = createSandboxHandlers({
+    onDeploy: ({ site, runCommand }: DeployParams) => {
+      // Use run command from deploy request, fall back to CLI args
+      const runCmdFactory = runCommand?.length
+        ? makeRunCmdFactory(runCommand[0], runCommand.slice(1))
+        : createRunCmd;
+
+      siteApp = createSiteApp({ siteName: site, runCmdFactory });
+      registerTunnel(site);
+    },
+  });
+
+  app.get("/sandbox/status", sandbox.status);
+  app.post("/sandbox/deploy", sandbox.deploy);
+
+  // Delegate all other requests to the site app once deployed, or return 503
+  app.all("*", (c) => {
+    if (!siteApp) {
+      return c.json(
+        {
+          error:
+            "Sandbox mode: not deployed yet. POST /sandbox/deploy to assign a site.",
+        },
+        503,
+      );
     }
-
-    if (UNSTABLE_WORKER_RESPAWN_INTERVAL_MS) {
-      /* TODO: Implement a better approach handling updating child env vars, preventing multiple child processes and with HMR.
-       * Also should have the git short live auth token to do git operations like: push/pull/rebase. Now, these git operations are guaranted
-       * because the short live git token is set once in inicialization and respawning
-       */
-      // Kill process to allow restart with new env settings
-      setTimeout(() => {
-        Deno.exit(1);
-      }, UNSTABLE_WORKER_RESPAWN_INTERVAL_MS);
-    }
-
-    return {
-      command: createRunCmd(), // This will create a fresh command with new tokens
-      port: WORKER_PORT,
-      persist,
-    };
-  };
-
-  app.route("", createWorker(createWorkerOptions));
+    return siteApp.fetch(c.req.raw);
+  });
+} else {
+  // Normal mode: site is known at startup
+  const siteName = getSiteName()!;
+  if (!siteName) {
+    throw new Error("Site name is required");
+  }
+  app.route("", createSiteApp({ siteName, runCmdFactory: createRunCmd }));
 }
 
-const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
-const stableEnvironmentName = () => {
-  const savedEnvironment = localStorage.getItem(LOCAL_STORAGE_ENV_NAME);
-  if (savedEnvironment) {
-    return savedEnvironment;
-  }
-
-  const newEnvironment = `${crypto.randomUUID().slice(0, 6)}-localhost`;
-  localStorage.setItem(LOCAL_STORAGE_ENV_NAME, newEnvironment);
-  return newEnvironment;
-};
-const port = Number(Deno.env.get("APP_PORT")) || 8000;
 Deno.serve({
   port,
   onListen: async (addr) => {
     try {
-      const env = DECO_HOST && !DECO_ENV_NAME
-        ? stableEnvironmentName()
-        : DECO_ENV_NAME;
-      if (env && DECO_SITE_NAME && !Deno.env.has("DECO_PREVIEW")) {
-        await register({
-          site: DECO_SITE_NAME,
-          env,
-          port: `${port}`,
-          decoHost: DECO_HOST,
-        });
+      if (!SANDBOX_MODE) {
+        const siteName = getSiteName();
+        if (!siteName) {
+          throw new Error("Site name is required");
+        }
+        const env = DECO_HOST && !DECO_ENV_NAME
+          ? stableEnvironmentName()
+          : DECO_ENV_NAME;
+        if (env && !Deno.env.has("DECO_PREVIEW")) {
+          await register({
+            site: siteName,
+            env,
+            port: `${port}`,
+            decoHost: DECO_HOST,
+          });
+        } else {
+          console.log(
+            colors.green(
+              `Server running on http://${addr.hostname}:${addr.port}`,
+            ),
+          );
+        }
       } else {
         console.log(
           colors.green(
-            `Server running on http://${addr.hostname}:${addr.port}`,
+            `[sandbox] Server running on http://${addr.hostname}:${addr.port}`,
           ),
         );
       }

@@ -12,8 +12,20 @@ import { logs } from "./loggings/stream.ts";
 import { createRealtimeAPIs } from "./realtime/app.ts";
 import { createSSE } from "./sse/api.ts";
 
-export const DECO_SITE_NAME = Deno.env.get(ENV_SITE_NAME) ??
-  Deno.cwd().split("/").pop()?.split("\\").pop();
+const SANDBOX_MODE = Deno.env.get("SANDBOX_MODE") === "true";
+
+let _siteName: string | undefined = SANDBOX_MODE
+  ? undefined
+  : (Deno.env.get(ENV_SITE_NAME) ??
+    Deno.cwd().split("/").pop()?.split("\\").pop());
+
+export function getSiteName(): string | undefined {
+  return _siteName;
+}
+
+export function setSiteName(name: string) {
+  _siteName = name;
+}
 export const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
 export const DECO_HOST = Deno.env.get("DECO_HOST") !== "false";
 
