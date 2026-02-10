@@ -104,7 +104,9 @@ const updateDenoAuthTokenEnv = async () => {
   );
 };
 
-if (!DECO_SITE_NAME) {
+const SANDBOX_MODE = Deno.env.get("SANDBOX_MODE") === "true";
+
+if (!DECO_SITE_NAME && !SANDBOX_MODE) {
   console.error(
     `site name not found. use ${ENV_SITE_NAME} environment variable to set it.`,
   );
@@ -221,12 +223,13 @@ const watch = async () => {
   }
 };
 
-const createDeps = (): MiddlewareHandler => {
+const createDeps = (siteName?: string): MiddlewareHandler => {
   let ok: Promise<unknown> | null | false = null;
 
   const start = async () => {
+    const site = siteName || DECO_SITE_NAME!;
     let start = performance.now();
-    await ensureGit({ site: DECO_SITE_NAME! });
+    await ensureGit({ site });
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -301,15 +304,115 @@ app.get("/_healthcheck", (c) => {
   });
 });
 // idle should run even when branch is not active
-app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
+app.get(
+  "/deco/_is_idle",
+  createIdleHandler(DECO_SITE_NAME ?? "unknown", DECO_ENV_NAME ?? "unknown"),
+);
 // k8s liveness probe
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 
-// Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-app.use(createDeps());
+// SANDBOX_MODE: Deploy endpoint for dynamic site setup
+if (SANDBOX_MODE) {
+  let deployed = false;
+  let deployedSiteName: string | null = null;
+
+  app.post("/deploy", async (c) => {
+    if (deployed) {
+      return c.json({
+        status: "error",
+        message: "Site already deployed",
+        site: deployedSiteName,
+      });
+    }
+
+    try {
+      const body = await c.req.json();
+      const { site, gitUrl, branch = "main" } = body;
+
+      if (!site) {
+        return c.json({ status: "error", error: "Site name is required" }, 400);
+      }
+
+      console.log(`🚀 SANDBOX_MODE: Deploying site "${site}"`);
+
+      const url = gitUrl || `https://github.com/deco-sites/${site}.git`;
+
+      // Clone repository
+      console.log(`📦 Cloning repository: ${url} (branch: ${branch})`);
+      const cloneCmd = new Deno.Command("git", {
+        args: ["clone", "-b", branch, "--depth", "1", url, "/app/deco"],
+      });
+
+      const cloneStatus = await cloneCmd.spawn().status;
+      if (!cloneStatus.success) {
+        return c.json(
+          {
+            status: "error",
+            error: `Failed to clone repository: ${url}`,
+          },
+          500,
+        );
+      }
+
+      // Change working directory to cloned repo
+      Deno.chdir("/app/deco");
+      console.log(`📁 Changed working directory to: ${Deno.cwd()}`);
+
+      // Set environment variable
+      Deno.env.set(ENV_SITE_NAME, site);
+      deployedSiteName = site;
+
+      // Initialize daemon (run ensureGit, genManifest, etc.)
+      console.log(`🔧 Initializing deco daemon for site: ${site}`);
+      const deps = createDeps(site);
+
+      // Trigger initialization
+      await new Promise<void>((resolve, reject) => {
+        const mockContext = {
+          req: {},
+          res: new Response(),
+        };
+        deps(mockContext as any, () => {
+          console.log(`✅ Site "${site}" deployed successfully`);
+          deployed = true;
+          resolve();
+        }).catch(reject);
+      });
+
+      return c.json({
+        status: "deployed",
+        site,
+        url: `http://localhost:${port}`,
+        message: `Site "${site}" deployed successfully`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Deployment error:", message);
+      return c.json(
+        {
+          status: "error",
+          error: `Deployment failed: ${message}`,
+        },
+        500,
+      );
+    }
+  });
+
+  // In SANDBOX_MODE, skip initial createDeps until /deploy is called
+  console.log(
+    "🏖️  SANDBOX_MODE activated - waiting for deployment via POST /deploy",
+  );
+} else {
+  // Normal mode: Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
+  app.use(createDeps());
+}
+
 app.use(activityMonitor);
 // These are the APIs that communicate with admin UI
-app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
+// In SANDBOX_MODE, site name will be set dynamically via /deploy
+app.use(
+  createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME ?? "unknown" }),
+);
 // Workers are only necessary if there needs to have a preview of the site
 if (createRunCmd) {
   // Create a function that returns fresh WorkerOptions with new tokens
