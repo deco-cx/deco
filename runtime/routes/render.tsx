@@ -102,8 +102,6 @@ export const handler = createHandler(async (
   // ideally cachebust should be calculated per section as well so that you can reuse section across pages and produce same cacheBusts.
   const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
   if (shouldCache && shouldCacheFromVary) {
-    // Stale cache on CDN, but make the browser fetch every single time.
-    // We can test if caching on the browser helps too.
     response.headers.set(
       "cache-control",
       DECO_RENDER_CACHE_CONTROL,
