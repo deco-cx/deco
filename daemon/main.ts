@@ -331,12 +331,21 @@ interface SiteAppOptions {
   runCmdFactory?: RunCmdFactory | null;
 }
 
+interface SiteAppResult {
+  app: Hono;
+  dispose: () => Promise<void>;
+}
+
 /**
  * Creates a Hono sub-app with all site-specific middleware:
  * idle handler, deps (git, manifests, watchers), activity monitor,
  * daemon APIs, and worker proxy.
+ *
+ * Returns the app and a dispose function to clean up on undeploy.
  */
-const createSiteApp = ({ siteName, runCmdFactory }: SiteAppOptions): Hono => {
+const createSiteApp = (
+  { siteName, runCmdFactory }: SiteAppOptions,
+): SiteAppResult => {
   const siteApp = new Hono();
   // idle should run even when branch is not active
   siteApp.get(
@@ -352,7 +361,18 @@ const createSiteApp = ({ siteName, runCmdFactory }: SiteAppOptions): Hono => {
   if (runCmdFactory) {
     siteApp.route("", createWorker(makeWorkerOptionsFactory(runCmdFactory)));
   }
-  return siteApp;
+
+  const dispose = async () => {
+    // Clean all files in cwd (the cloned site repo)
+    const cwd = Deno.cwd();
+    for await (const entry of Deno.readDir(cwd)) {
+      const path = join(cwd, entry.name);
+      await Deno.remove(path, { recursive: true }).catch(() => {});
+    }
+    console.log(`[sandbox] Cleaned working directory: ${cwd}`);
+  };
+
+  return { app: siteApp, dispose };
 };
 
 const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
@@ -407,7 +427,7 @@ app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 
 if (SANDBOX_MODE) {
   // Sandbox mode: start without a site, deploy later via POST /sandbox/deploy
-  let siteApp: Hono | null = null;
+  let currentSite: SiteAppResult | null = null;
 
   const sandbox = createSandboxHandlers({
     onDeploy: ({ site, runCommand }: DeployParams) => {
@@ -416,17 +436,24 @@ if (SANDBOX_MODE) {
         ? makeRunCmdFactory(runCommand[0], runCommand.slice(1))
         : createRunCmd;
 
-      siteApp = createSiteApp({ siteName: site, runCmdFactory });
+      currentSite = createSiteApp({ siteName: site, runCmdFactory });
       registerTunnel(site);
+    },
+    onUndeploy: async () => {
+      if (currentSite) {
+        await currentSite.dispose();
+        currentSite = null;
+      }
     },
   });
 
   app.get("/sandbox/status", sandbox.status);
   app.post("/sandbox/deploy", sandbox.deploy);
+  app.post("/sandbox/undeploy", sandbox.undeploy);
 
   // Delegate all other requests to the site app once deployed, or return 503
   app.all("*", (c) => {
-    if (!siteApp) {
+    if (!currentSite) {
       return c.json(
         {
           error:
@@ -435,7 +462,7 @@ if (SANDBOX_MODE) {
         503,
       );
     }
-    return siteApp.fetch(c.req.raw);
+    return currentSite.app.fetch(c.req.raw);
   });
 } else {
   // Normal mode: site is known at startup
@@ -443,7 +470,11 @@ if (SANDBOX_MODE) {
   if (!siteName) {
     throw new Error("Site name is required");
   }
-  app.route("", createSiteApp({ siteName, runCmdFactory: createRunCmd }));
+  const { app: siteAppRoutes } = createSiteApp({
+    siteName,
+    runCmdFactory: createRunCmd,
+  });
+  app.route("", siteAppRoutes);
 }
 
 Deno.serve({

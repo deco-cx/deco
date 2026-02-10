@@ -1,5 +1,5 @@
 import type { Handler } from "@hono/hono";
-import { getSiteName, setSiteName } from "./daemon.ts";
+import { getSiteName, resetSiteName, setSiteName } from "./daemon.ts";
 
 interface DeployParams {
   site: string;
@@ -8,17 +8,19 @@ interface DeployParams {
 
 interface SandboxOptions {
   onDeploy: (params: DeployParams) => void;
+  onUndeploy: () => Promise<void>;
 }
 
 interface SandboxHandlers {
   status: Handler;
   deploy: Handler;
+  undeploy: Handler;
 }
 
 export type { DeployParams };
 
 export const createSandboxHandlers = (
-  { onDeploy }: SandboxOptions,
+  { onDeploy, onUndeploy }: SandboxOptions,
 ): SandboxHandlers => {
   const status: Handler = (c) => {
     const site = getSiteName();
@@ -62,5 +64,21 @@ export const createSandboxHandlers = (
     return c.json({ ok: true, site });
   };
 
-  return { status, deploy };
+  const undeploy: Handler = async (c) => {
+    const site = getSiteName();
+    if (!site) {
+      return c.json({ error: "Not deployed" }, 409);
+    }
+
+    console.log(`[sandbox] Undeploying site: ${site}`);
+
+    await onUndeploy();
+    resetSiteName();
+
+    console.log(`[sandbox] Undeployed. Ready for new deploy.`);
+
+    return c.json({ ok: true });
+  };
+
+  return { status, deploy, undeploy };
 };

@@ -26,6 +26,10 @@ export function getSiteName(): string | undefined {
 export function setSiteName(name: string) {
   _siteName = name;
 }
+
+export function resetSiteName() {
+  _siteName = undefined;
+}
 export const DECO_ENV_NAME = Deno.env.get("DECO_ENV_NAME");
 export const DECO_HOST = Deno.env.get("DECO_HOST") !== "false";
 
