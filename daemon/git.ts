@@ -537,6 +537,7 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
   const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
   const assertNoIndexLock = async () => {
     if (!isDeployment) {
+      console.log("Not a deployment, skipping index lock check");
       return;
     }
     const lockIndexPath = join(Deno.cwd(), ".git/index.lock");
