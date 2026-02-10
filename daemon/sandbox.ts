@@ -22,6 +22,8 @@ export type { DeployParams };
 export const createSandboxHandlers = (
   { onDeploy, onUndeploy }: SandboxOptions,
 ): SandboxHandlers => {
+  let deploying = false;
+
   const status: Handler = (c) => {
     const site = getSiteName();
     return c.json({
@@ -32,9 +34,10 @@ export const createSandboxHandlers = (
   };
 
   const deploy: Handler = async (c) => {
-    if (getSiteName()) {
+    if (getSiteName() || deploying) {
       return c.json({ error: "Already deployed" }, 409);
     }
+    deploying = true;
 
     let body: { site?: string; runCommand?: string[] };
     try {
@@ -48,12 +51,22 @@ export const createSandboxHandlers = (
       return c.json({ error: "Missing required field: site" }, 400);
     }
 
-    if (runCommand && !Array.isArray(runCommand)) {
+    if (
+      runCommand &&
+      (!Array.isArray(runCommand) || !runCommand.every((s) => typeof s === "string"))
+    ) {
       return c.json({ error: "runCommand must be a string array" }, 400);
     }
 
+    try {
+      onDeploy({ site, runCommand });
+    } catch (err) {
+      deploying = false;
+      console.error(`[sandbox] Deploy failed:`, err);
+      return c.json({ error: "Deploy failed" }, 500);
+    }
+
     setSiteName(site);
-    onDeploy({ site, runCommand });
 
     console.log(
       `[sandbox] Deployed as site: ${site}${
@@ -74,6 +87,7 @@ export const createSandboxHandlers = (
 
     await onUndeploy();
     resetSiteName();
+    deploying = false;
 
     console.log(`[sandbox] Undeployed. Ready for new deploy.`);
 

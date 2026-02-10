@@ -348,9 +348,11 @@ const createSiteApp = (
 ): SiteAppResult => {
   const siteApp = new Hono();
   // idle should run even when branch is not active
+  // When DECO_ENV_NAME is unset, idle reporting is disabled by createIdleHandler
+  const envName = DECO_ENV_NAME ?? "";
   siteApp.get(
     "/deco/_is_idle",
-    createIdleHandler(siteName, DECO_ENV_NAME!),
+    createIdleHandler(siteName, envName),
   );
   // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
   siteApp.use(createDeps());
@@ -389,14 +391,23 @@ const stableEnvironmentName = () => {
 
 const port = Number(Deno.env.get("APP_PORT")) || 8000;
 
-const registerTunnel = (siteName: string) => {
+type CloseTunnel = () => void;
+
+const registerTunnel = async (
+  siteName: string,
+): Promise<CloseTunnel | null> => {
   const env = DECO_HOST && !DECO_ENV_NAME
     ? stableEnvironmentName()
     : DECO_ENV_NAME;
   if (env && !Deno.env.has("DECO_PREVIEW")) {
-    register({ site: siteName, env, port: `${port}`, decoHost: DECO_HOST })
-      .catch(console.error);
+    return await register({
+      site: siteName,
+      env,
+      port: `${port}`,
+      decoHost: DECO_HOST,
+    });
   }
+  return null;
 };
 
 const app = new Hono();
@@ -428,6 +439,7 @@ app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 if (SANDBOX_MODE) {
   // Sandbox mode: start without a site, deploy later via POST /sandbox/deploy
   let currentSite: SiteAppResult | null = null;
+  let closeTunnel: CloseTunnel | null = null;
 
   const sandbox = createSandboxHandlers({
     onDeploy: ({ site, runCommand }: DeployParams) => {
@@ -437,12 +449,18 @@ if (SANDBOX_MODE) {
         : createRunCmd;
 
       currentSite = createSiteApp({ siteName: site, runCmdFactory });
-      registerTunnel(site);
+      registerTunnel(site)
+        .then((close) => { closeTunnel = close; })
+        .catch(console.error);
     },
     onUndeploy: async () => {
       if (currentSite) {
         await currentSite.dispose();
         currentSite = null;
+      }
+      if (closeTunnel) {
+        closeTunnel();
+        closeTunnel = null;
       }
     },
   });
@@ -481,32 +499,16 @@ Deno.serve({
   port,
   onListen: async (addr) => {
     try {
-      if (!SANDBOX_MODE) {
-        const siteName = getSiteName();
-        if (!siteName) {
-          throw new Error("Site name is required");
-        }
-        const env = DECO_HOST && !DECO_ENV_NAME
-          ? stableEnvironmentName()
-          : DECO_ENV_NAME;
-        if (env && !Deno.env.has("DECO_PREVIEW")) {
-          await register({
-            site: siteName,
-            env,
-            port: `${port}`,
-            decoHost: DECO_HOST,
-          });
-        } else {
-          console.log(
-            colors.green(
-              `Server running on http://${addr.hostname}:${addr.port}`,
-            ),
-          );
-        }
-      } else {
+      const siteName = !SANDBOX_MODE ? getSiteName() : undefined;
+      const closeFn = siteName
+        ? await registerTunnel(siteName)
+        : null;
+
+      if (!closeFn) {
+        const prefix = SANDBOX_MODE ? "[sandbox] " : "";
         console.log(
           colors.green(
-            `[sandbox] Server running on http://${addr.hostname}:${addr.port}`,
+            `${prefix}Server running on http://${addr.hostname}:${addr.port}`,
           ),
         );
       }

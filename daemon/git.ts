@@ -382,9 +382,14 @@ export const getGitHubToken = async (): Promise<string | undefined> => {
     throw new Error("GITHUB_APP_KEY not set");
   }
 
+  const siteName = getSiteName();
+  if (!siteName) {
+    throw new Error("Site name not set");
+  }
+
   const response = await fetch(
     new URL(
-      `/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${getSiteName()}`,
+      `/live/invoke/deco-sites/admin/loaders/github/getAccessToken.ts?sitename=${siteName}`,
       ADMIN_DOMAIN,
     ).href,
     {
@@ -416,9 +421,14 @@ export const getGitHubPackageTokens = async (): Promise<string[]> => {
     throw new Error("GITHUB_APP_KEY not set");
   }
 
+  const siteName = getSiteName();
+  if (!siteName) {
+    throw new Error("Site name not set");
+  }
+
   const response = await fetch(
     new URL(
-      `/live/invoke/deco-sites/admin/loaders/github/getPackagesAccessToken.ts?sitename=${getSiteName()}`,
+      `/live/invoke/deco-sites/admin/loaders/github/getPackagesAccessToken.ts?sitename=${siteName}`,
       ADMIN_DOMAIN,
     ),
     {
