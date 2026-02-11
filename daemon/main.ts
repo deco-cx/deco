@@ -74,22 +74,20 @@ const getEnvVar = (envName: string, varName: string) =>
 
 type RunCmdFactory = (opt?: Pick<Deno.CommandOptions, "env">) => Deno.Command;
 
-const makeRunCmdFactory = (
-  runCmd: string,
-  runArgs: string[],
-): RunCmdFactory =>
-(opt?: Pick<Deno.CommandOptions, "env">) =>
-  new Deno.Command(runCmd === "deno" ? Deno.execPath() : runCmd, {
-    args: runArgs,
-    stdout: "piped",
-    stderr: "piped",
-    env: {
-      ...opt?.env,
-      PORT: `${WORKER_PORT}`,
-      ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
-      ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
-    },
-  });
+const makeRunCmdFactory =
+  (runCmd: string, runArgs: string[]): RunCmdFactory =>
+  (opt?: Pick<Deno.CommandOptions, "env">) =>
+    new Deno.Command(runCmd === "deno" ? Deno.execPath() : runCmd, {
+      args: runArgs,
+      stdout: "piped",
+      stderr: "piped",
+      env: {
+        ...opt?.env,
+        PORT: `${WORKER_PORT}`,
+        ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
+        ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
+      },
+    });
 
 const createRunCmd: RunCmdFactory | null = cmd
   ? makeRunCmdFactory(cmd, args)
@@ -99,18 +97,17 @@ let lastUpdateEnvUpdate: number | undefined;
 const updateDenoAuthTokenEnv = async () => {
   if (
     !UNSTABLE_WORKER_RESPAWN_INTERVAL_MS ||
-    lastUpdateEnvUpdate &&
-      Date.now() < lastUpdateEnvUpdate
-  ) return;
+    (lastUpdateEnvUpdate && Date.now() < lastUpdateEnvUpdate)
+  ) {
+    return;
+  }
   lastUpdateEnvUpdate = Date.now() + UNSTABLE_WORKER_RESPAWN_INTERVAL_MS;
 
   const appTokens = await getGitHubPackageTokens();
   // TODO: handle if DENO_AUTH_TOKENS is already set
   Deno.env.set(
     DENO_AUTH_TOKENS,
-    appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(
-      ";",
-    ),
+    appTokens.map((token) => `${token}@raw.githubusercontent.com`).join(";"),
   );
 };
 
@@ -134,12 +131,12 @@ if (SANDBOX_MODE) {
   );
 }
 
-globalThis.addEventListener("unhandledrejection", (e: {
-  promise: Promise<unknown>;
-  reason: unknown;
-}) => {
-  console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
-});
+globalThis.addEventListener(
+  "unhandledrejection",
+  (e: { promise: Promise<unknown>; reason: unknown }) => {
+    console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
+  },
+);
 
 const createBundler = (appName?: string) => {
   const bundler = bundleApp(Deno.cwd());
@@ -207,8 +204,8 @@ const watch = async (signal?: AbortSignal) => {
     if (signal?.aborted) break;
 
     using _ = await lockerGitAPI.lock.rlock();
-    const skip = event.paths.some((path) =>
-      path.includes(".git") || path.includes("node_modules")
+    const skip = event.paths.some(
+      (path) => path.includes(".git") || path.includes("node_modules"),
     );
 
     if (skip) {
@@ -230,9 +227,10 @@ const watch = async (signal?: AbortSignal) => {
 
     /** We should move this to the new FS api */
     const codeCreatedOrDeleted = event.kind !== "modify" &&
-      event.kind !== "access" && event.paths.some((path) => (
-        /\.tsx?$/.test(path) && !path.includes("manifest.gen.ts")
-      ));
+      event.kind !== "access" &&
+      event.paths.some(
+        (path) => /\.tsx?$/.test(path) && !path.includes("manifest.gen.ts"),
+      );
 
     if (codeCreatedOrDeleted) {
       genManifestTS();
@@ -260,7 +258,9 @@ const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
-        (performance.now() - start).toFixed(0)
+        (
+          performance.now() - start
+        ).toFixed(0)
       }ms`,
     });
 
@@ -269,7 +269,9 @@ const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
     logs.push({
       level: "info",
       message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
-        (performance.now() - start).toFixed(0)
+        (
+          performance.now() - start
+        ).toFixed(0)
       }ms`,
     });
 
@@ -278,7 +280,9 @@ const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
     logs.push({
       level: "info",
       message: `${colors.bold("[step 3/4]")}: Blocks metadata generation took ${
-        (performance.now() - start).toFixed(0)
+        (
+          performance.now() - start
+        ).toFixed(0)
       }ms`,
     });
 
@@ -289,7 +293,9 @@ const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
     logs.push({
       level: "info",
       message: `${
-        colors.bold("[step 4/4]")
+        colors.bold(
+          "[step 4/4]",
+        )
       }: Started file watcher in background`,
     });
   };
@@ -316,9 +322,9 @@ const makeWorkerOptionsFactory =
 
     if (UNSTABLE_WORKER_RESPAWN_INTERVAL_MS) {
       /* TODO: Implement a better approach handling updating child env vars, preventing multiple child processes and with HMR.
-       * Also should have the git short live auth token to do git operations like: push/pull/rebase. Now, these git operations are guaranted
-       * because the short live git token is set once in inicialization and respawning
-       */
+			 * Also should have the git short live auth token to do git operations like: push/pull/rebase. Now, these git operations are guaranted
+			 * because the short live git token is set once in inicialization and respawning
+			 */
       // Kill process to allow restart with new env settings
       setTimeout(() => {
         Deno.exit(1);
@@ -349,18 +355,16 @@ interface SiteAppResult {
  *
  * Returns the app and a dispose function to clean up on undeploy.
  */
-const createSiteApp = (
-  { siteName, runCmdFactory }: SiteAppOptions,
-): SiteAppResult => {
+const createSiteApp = ({
+  siteName,
+  runCmdFactory,
+}: SiteAppOptions): SiteAppResult => {
   const ac = new AbortController();
   const siteApp = new Hono();
   // idle should run even when branch is not active
   // When DECO_ENV_NAME is unset, idle reporting is disabled by createIdleHandler
   const envName = DECO_ENV_NAME ?? "";
-  siteApp.get(
-    "/deco/_is_idle",
-    createIdleHandler(siteName, envName),
-  );
+  siteApp.get("/deco/_is_idle", createIdleHandler(siteName, envName));
   // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
   siteApp.use(createDeps(ac.signal));
   siteApp.use(activityMonitor);
@@ -524,23 +528,26 @@ if (SANDBOX_MODE) {
   app.route("", siteAppRoutes);
 }
 
-Deno.serve({
-  port,
-  onListen: async (addr) => {
-    try {
-      const siteName = !SANDBOX_MODE ? getSiteName() : undefined;
-      const tunnel = siteName ? await registerTunnel(siteName) : null;
+Deno.serve(
+  {
+    port,
+    onListen: async (addr) => {
+      try {
+        const siteName = !SANDBOX_MODE ? getSiteName() : undefined;
+        const tunnel = siteName ? await registerTunnel(siteName) : null;
 
-      if (!tunnel) {
-        const prefix = SANDBOX_MODE ? "[sandbox] " : "";
-        console.log(
-          colors.green(
-            `${prefix}Server running on http://${addr.hostname}:${addr.port}`,
-          ),
-        );
+        if (!tunnel) {
+          const prefix = SANDBOX_MODE ? "[sandbox] " : "";
+          console.log(
+            colors.green(
+              `${prefix}Server running on http://${addr.hostname}:${addr.port}`,
+            ),
+          );
+        }
+      } catch (err) {
+        console.log(err);
       }
-    } catch (err) {
-      console.log(err);
-    }
+    },
   },
-}, app.fetch);
+  app.fetch,
+);

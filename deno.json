@@ -70,7 +70,7 @@
     "@deco/codemod-toolkit": "jsr:@deco/codemod-toolkit@^0.3.4",
     "@deco/deno-ast-wasm": "jsr:@deco/deno-ast-wasm@^0.5.5",
     "@deco/durable": "jsr:@deco/durable@^0.5.3",
-    "@deco/warp": "jsr:@deco/warp@^0.3.11",
+    "@deco/warp": "jsr:@deco/warp@^0.3.12",
     "@hono/hono": "jsr:@hono/hono@^4.5.4",
     "@std/assert": "jsr:@std/assert@^1.0.2",
     "@std/async": "jsr:@std/async@^0.224.1",

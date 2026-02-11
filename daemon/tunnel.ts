@@ -52,18 +52,16 @@ export async function register(
     );
   });
 
-  let intentionalClose = false;
-
-  r.closed.then(async (err) => {
-    if (intentionalClose) return;
+  r.closed.then(async (reason) => {
+    if (reason && "intentional" in reason && reason.intentional) return;
     console.log(
       "tunnel connection error retrying in 500ms...",
-      VERBOSE ? err : "",
+      VERBOSE ? reason : "",
     );
     await new Promise((resolve) => setTimeout(resolve, 500));
     return register({ env, site, port, decoHost });
   }).catch(async (err) => {
-    if (intentionalClose) return;
+    if (err?.intentional) return;
     console.log(
       "tunnel connection error retrying in 500ms...",
       VERBOSE ? err : "",
@@ -72,11 +70,5 @@ export async function register(
     return register({ env, site, port, decoHost });
   });
 
-  return {
-    close: () => {
-      intentionalClose = true;
-      r.close();
-    },
-    domain,
-  };
+  return { close: () => r.close(), domain };
 }
