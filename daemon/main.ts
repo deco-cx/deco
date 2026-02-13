@@ -197,6 +197,7 @@ const persistState = throttle(async () => {
 // Watch for changes in filesystem
 // TODO: we should be able to completely remove this after in some point in the future
 const watch = async (signal?: AbortSignal) => {
+  if (signal?.aborted) return;
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
   signal?.addEventListener("abort", () => watcher.close(), { once: true });
 
@@ -469,6 +470,9 @@ if (SANDBOX_MODE) {
 
   const sandbox = createSandboxHandlers({
     onDeploy: async ({ site, envName, runCommand }: DeployParams) => {
+      // Set env var so worker subprocesses inherit the site name
+      Deno.env.set(ENV_SITE_NAME, site);
+
       // Use run command from deploy request, fall back to CLI args
       const runCmdFactory = runCommand?.length
         ? makeRunCmdFactory(runCommand[0], runCommand.slice(1))
@@ -495,6 +499,7 @@ if (SANDBOX_MODE) {
         tunnelConn = null;
         console.log(`[sandbox] Tunnel closed`);
       }
+      Deno.env.delete(ENV_SITE_NAME);
     },
   });
 

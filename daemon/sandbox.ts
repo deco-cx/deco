@@ -34,6 +34,7 @@ export const createSandboxHandlers = (
     return c.json({
       sandbox: true,
       deployed: !!site,
+      deploying: deploying && !site,
       site,
     });
   };
@@ -54,6 +55,10 @@ export const createSandboxHandlers = (
     const { site, envName, runCommand } = body;
     if (!site || typeof site !== "string") {
       return c.json({ error: "Missing required field: site" }, 400);
+    }
+
+    if (envName !== undefined && typeof envName !== "string") {
+      return c.json({ error: "envName must be a string" }, 400);
     }
 
     if (
@@ -94,9 +99,15 @@ export const createSandboxHandlers = (
 
     console.log(`[sandbox] Undeploying site: ${site}`);
 
-    await onUndeploy();
-    resetSiteName();
-    deploying = false;
+    try {
+      await onUndeploy();
+    } catch (err) {
+      console.error(`[sandbox] Undeploy failed:`, err);
+      return c.json({ error: "Undeploy failed" }, 500);
+    } finally {
+      resetSiteName();
+      deploying = false;
+    }
 
     console.log(`[sandbox] Undeployed. Ready for new deploy.`);
 

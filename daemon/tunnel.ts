@@ -50,6 +50,8 @@ export async function register(
         colors.cyan(`https://${domain}`)
       }\n   -> ✏️ ${colors.bold("Admin")}: ${colors.cyan(admin.href)}\n`,
     );
+  }).catch((err) => {
+    console.error("Tunnel registration failed:", err);
   });
 
   r.closed.then(async (reason) => {
@@ -60,8 +62,10 @@ export async function register(
     );
     await new Promise((resolve) => setTimeout(resolve, 500));
     return register({ env, site, port, decoHost });
-  }).catch(async (err) => {
-    if (err?.intentional) return;
+  }).catch(async (err: unknown) => {
+    if (
+      err && typeof err === "object" && "intentional" in err && err.intentional
+    ) return;
     console.log(
       "tunnel connection error retrying in 500ms...",
       VERBOSE ? err : "",

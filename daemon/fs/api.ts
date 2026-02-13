@@ -155,6 +155,7 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
 }
 
 export const watchFS = async (signal?: AbortSignal) => {
+  if (signal?.aborted) return;
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
   signal?.addEventListener("abort", () => watcher.close(), { once: true });
 
