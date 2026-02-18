@@ -154,10 +154,13 @@ export async function* start(since: number): AsyncIterableIterator<FSEvent> {
   }
 }
 
-export const watchFS = async () => {
+export const watchFS = async (signal?: AbortSignal) => {
+  if (signal?.aborted) return;
   const watcher = Deno.watchFs(Deno.cwd(), { recursive: true });
+  signal?.addEventListener("abort", () => watcher.close(), { once: true });
 
   for await (const { kind, paths } of watcher) {
+    if (signal?.aborted) break;
     if (kind !== "create" && kind !== "remove" && kind !== "modify") {
       continue;
     }

@@ -10,9 +10,14 @@ export interface TunnelRegisterOptions {
 
 const VERBOSE = Deno.env.get("VERBOSE");
 
+export interface TunnelConnection {
+  close: () => void;
+  domain: string;
+}
+
 export async function register(
   { env, site, port, decoHost }: TunnelRegisterOptions,
-) {
+): Promise<TunnelConnection> {
   const decoHostDomain = `${env}--${site}.deco.host`;
   const { server, domain } = decoHost
     ? {
@@ -24,41 +29,50 @@ export async function register(
       domain: `${env}--${site}.deco.site`,
     };
   const localAddr = `http://localhost:${port}`;
-  await connect({
+  const r = await connect({
     domain,
     localAddr,
     server,
     apiKey: Deno.env.get("DECO_TUNNEL_SERVER_TOKEN") ??
       "c309424a-2dc4-46fe-bfc7-a7c10df59477",
-  }).then((r) => {
-    r.registered.then(() => {
-      const admin = new URL(
-        `/sites/${site}/spaces/dashboard?env=${env}`,
-        "https://admin.deco.cx",
-      );
+  });
 
-      console.log(
-        `\ndeco.cx started environment ${colors.green(env)} for site ${
-          colors.brightBlue(site)
-        }\n   -> 🌐 ${colors.bold("Preview")}: ${
-          colors.cyan(`https://${domain}`)
-        }\n   -> ✏️ ${colors.bold("Admin")}: ${colors.cyan(admin.href)}\n`,
-      );
-    });
-    return r.closed.then(async (err) => {
-      console.log(
-        "tunnel connection error retrying in 500ms...",
-        VERBOSE ? err : "",
-      );
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return register({ env, site, port });
-    });
-  }).catch(async (err) => {
+  r.registered.then(() => {
+    const admin = new URL(
+      `/sites/${site}/spaces/dashboard?env=${env}`,
+      "https://admin.deco.cx",
+    );
+
+    console.log(
+      `\ndeco.cx started environment ${colors.green(env)} for site ${
+        colors.brightBlue(site)
+      }\n   -> 🌐 ${colors.bold("Preview")}: ${
+        colors.cyan(`https://${domain}`)
+      }\n   -> ✏️ ${colors.bold("Admin")}: ${colors.cyan(admin.href)}\n`,
+    );
+  }).catch((err) => {
+    console.error("Tunnel registration failed:", err);
+  });
+
+  r.closed.then(async (reason) => {
+    if (reason && "intentional" in reason && reason.intentional) return;
+    console.log(
+      "tunnel connection error retrying in 500ms...",
+      VERBOSE ? reason : "",
+    );
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return register({ env, site, port, decoHost });
+  }).catch(async (err: unknown) => {
+    if (
+      err && typeof err === "object" && "intentional" in err && err.intentional
+    ) return;
     console.log(
       "tunnel connection error retrying in 500ms...",
       VERBOSE ? err : "",
     );
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return register({ env, site, port });
+    return register({ env, site, port, decoHost });
   });
+
+  return { close: () => r.close(), domain };
 }
