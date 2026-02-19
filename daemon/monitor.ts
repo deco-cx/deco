@@ -57,7 +57,7 @@ export const createIdleHandler = (site: string, envName: string): Handler => {
     setInterval(() => checkActivity(notificationUrl), ONE_MINUTE_MS);
   }
   return () =>
-    new Response(`${shouldReportActivity && isIdle()}`, {
+    new Response(`${isIdle()}`, {
       status: 200,
       headers: {
         "x-deco-last-activity": `${new Date(lastActivity).toISOString()}`,
