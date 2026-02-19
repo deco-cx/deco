@@ -24,7 +24,11 @@ import { watchFS } from "./fs/api.ts";
 import { ensureGit, getGitHubPackageTokens, lockerGitAPI } from "./git.ts";
 import { logs } from "./loggings/stream.ts";
 import { watchMeta } from "./meta.ts";
-import { activityMonitor, createIdleHandler } from "./monitor.ts";
+import {
+  activityMonitor,
+  createIdleHandler,
+  resetActivity,
+} from "./monitor.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
 import { register, type TunnelConnection } from "./tunnel.ts";
 import { createWorker, worker, type WorkerOptions } from "./worker.ts";
@@ -481,6 +485,8 @@ if (SANDBOX_MODE) {
     onDeploy: async (
       { repo, site, envName, runCommand, envs }: DeployParams,
     ) => {
+      // Reset idle timer so the newly claimed sandbox starts fresh
+      resetActivity();
       // Set env var so worker subprocesses inherit the site name
       Deno.env.set(ENV_SITE_NAME, site);
 
