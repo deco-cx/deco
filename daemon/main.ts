@@ -29,6 +29,7 @@ import {
   createIdleHandler,
   resetActivity,
 } from "./monitor.ts";
+import { downloadCache } from "./cache.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
 import { register, type TunnelConnection } from "./tunnel.ts";
 import { createWorker, worker, type WorkerOptions } from "./worker.ts";
@@ -275,6 +276,19 @@ const createDeps = (
         ).toFixed(0)
       }ms`,
     });
+
+    if (SANDBOX_MODE) {
+      start = performance.now();
+      await downloadCache(siteName).catch((err) => {
+        console.warn(`[cache] Failed to download build cache: ${err.message}`);
+      });
+      logs.push({
+        level: "info",
+        message: `${colors.bold("[step 1.5/4]")}: Cache download took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      });
+    }
 
     start = performance.now();
     await genManifestTS();
