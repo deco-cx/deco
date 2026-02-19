@@ -74,20 +74,24 @@ const getEnvVar = (envName: string, varName: string) =>
 
 type RunCmdFactory = (opt?: Pick<Deno.CommandOptions, "env">) => Deno.Command;
 
-const makeRunCmdFactory =
-  (runCmd: string, runArgs: string[]): RunCmdFactory =>
-  (opt?: Pick<Deno.CommandOptions, "env">) =>
-    new Deno.Command(runCmd === "deno" ? Deno.execPath() : runCmd, {
-      args: runArgs,
-      stdout: "piped",
-      stderr: "piped",
-      env: {
-        ...opt?.env,
-        PORT: `${WORKER_PORT}`,
-        ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
-        ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
-      },
-    });
+const makeRunCmdFactory = (
+  runCmd: string,
+  runArgs: string[],
+  extraEnv?: Record<string, string>,
+): RunCmdFactory =>
+(opt?: Pick<Deno.CommandOptions, "env">) =>
+  new Deno.Command(runCmd === "deno" ? Deno.execPath() : runCmd, {
+    args: runArgs,
+    stdout: "piped",
+    stderr: "piped",
+    env: {
+      ...extraEnv,
+      ...opt?.env,
+      PORT: `${WORKER_PORT}`,
+      ...getEnvVar(DENO_AUTH_TOKENS, DENO_AUTH_TOKENS),
+      ...getEnvVar("DENO_DIR_RUN", "DENO_DIR"),
+    },
+  });
 
 const createRunCmd: RunCmdFactory | null = cmd
   ? makeRunCmdFactory(cmd, args)
@@ -246,7 +250,10 @@ const watch = async (signal?: AbortSignal) => {
   }
 };
 
-const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
+const createDeps = (
+  signal?: AbortSignal,
+  opts?: { repoUrl?: string },
+): MiddlewareHandler => {
   let ok: Promise<unknown> | null | false = null;
 
   const start = async () => {
@@ -255,7 +262,7 @@ const createDeps = (signal?: AbortSignal): MiddlewareHandler => {
       throw new Error("Cannot initialize deps: site name not set");
     }
     let start = performance.now();
-    await ensureGit({ site: siteName });
+    await ensureGit({ site: siteName, repoUrl: opts?.repoUrl });
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -342,6 +349,7 @@ const makeWorkerOptionsFactory =
 interface SiteAppOptions {
   siteName: string;
   runCmdFactory?: RunCmdFactory | null;
+  repoUrl?: string;
 }
 
 interface SiteAppResult {
@@ -359,6 +367,7 @@ interface SiteAppResult {
 const createSiteApp = ({
   siteName,
   runCmdFactory,
+  repoUrl,
 }: SiteAppOptions): SiteAppResult => {
   const ac = new AbortController();
   const siteApp = new Hono();
@@ -367,7 +376,7 @@ const createSiteApp = ({
   const envName = DECO_ENV_NAME ?? "";
   siteApp.get("/deco/_is_idle", createIdleHandler(siteName, envName));
   // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-  siteApp.use(createDeps(ac.signal));
+  siteApp.use(createDeps(ac.signal, { repoUrl }));
   siteApp.use(activityMonitor);
   // These are the APIs that communicate with admin UI
   siteApp.use(createDaemonAPIs({ build: buildCmd, site: siteName }));
@@ -469,16 +478,22 @@ if (SANDBOX_MODE) {
   let tunnelConn: TunnelConnection | null = null;
 
   const sandbox = createSandboxHandlers({
-    onDeploy: async ({ site, envName, runCommand }: DeployParams) => {
+    onDeploy: async (
+      { repo, site, envName, runCommand, envs }: DeployParams,
+    ) => {
       // Set env var so worker subprocesses inherit the site name
       Deno.env.set(ENV_SITE_NAME, site);
 
       // Use run command from deploy request, fall back to CLI args
       const runCmdFactory = runCommand?.length
-        ? makeRunCmdFactory(runCommand[0], runCommand.slice(1))
+        ? makeRunCmdFactory(runCommand[0], runCommand.slice(1), envs)
         : createRunCmd;
 
-      currentSite = createSiteApp({ siteName: site, runCmdFactory });
+      currentSite = createSiteApp({
+        siteName: site,
+        runCmdFactory,
+        repoUrl: repo,
+      });
 
       const tunnel = await registerTunnel(site, envName).catch((err) => {
         console.error("Tunnel registration failed:", err);
