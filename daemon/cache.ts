@@ -15,8 +15,11 @@ export async function downloadCache(site: string): Promise<void> {
 
   const s3Key = `deco-sites/${site}/${CACHE_FILE}`;
   const localTar = `/tmp/${CACHE_FILE}`;
-  const denoDir = Deno.env.get("DENO_DIR_RUN") || Deno.env.get("DENO_DIR") ||
-    "/deno-dir";
+  const denoDir = Deno.env.get("DENO_DIR_RUN");
+  if (!denoDir) {
+    console.warn("[cache] DENO_DIR_RUN not set, skipping cache download");
+    return;
+  }
 
   // deno-lint-ignore no-explicit-any -- Deno can't resolve AWS SDK's inherited send() generics
   const client: any = new S3Client({
