@@ -84,6 +84,7 @@ jobs:
 
           WORKDIR /app
 
+          # Maybe add deno lsp?
           RUN apk add git openssh zstd
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir && chown -R deno:deno /daemon-deno-dir
@@ -134,6 +135,7 @@ jobs:
 
           WORKDIR /app
 
+          # Maybe add deno lsp?
           RUN apk add git openssh zstd
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           // common deps
