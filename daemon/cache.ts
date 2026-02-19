@@ -2,7 +2,7 @@ import { GetObjectCommand, S3Client } from "npm:@aws-sdk/client-s3@3.946.0";
 
 const ASSETS_BUCKET = Deno.env.get("ASSETS_BUCKET") || "deco-assets-storage";
 const S3_REGION = Deno.env.get("ADMIN_S3_REGION") || "sa-east-1";
-const CACHE_FILE = "cache.tar";
+const CACHE_FILE = "cache.tar.zst";
 
 export async function downloadCache(site: string): Promise<void> {
   const accessKeyId = Deno.env.get("ADMIN_S3_ACCESS_KEY_ID") || "";
@@ -63,9 +63,14 @@ export async function downloadCache(site: string): Promise<void> {
     });
   });
 
-  const { success } = await new Deno.Command("tar", {
-    args: ["xf", localTar, "-C", denoDir],
-  }).output();
+  const extractCmd = localTar.endsWith(".zst")
+    ? new Deno.Command("sh", {
+      args: ["-c", `zstd -d "${localTar}" --stdout | tar xf - -C "${denoDir}"`],
+    })
+    : new Deno.Command("tar", {
+      args: ["xf", localTar, "-C", denoDir],
+    });
+  const { success } = await extractCmd.output();
 
   if (!success) {
     throw new Error(`tar extraction failed for ${localTar} -> ${denoDir}`);
