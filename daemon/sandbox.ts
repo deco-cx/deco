@@ -1,10 +1,26 @@
 import type { Handler } from "@hono/hono";
 import { getSiteName, resetSiteName, setSiteName } from "./daemon.ts";
 
+/**
+ * Extracts a site name from a git repository URL.
+ * e.g. "https://github.com/org/my-repo.git" → "my-repo"
+ *      "git@github.com:org/my-repo.git"     → "my-repo"
+ */
+const siteNameFromRepo = (repo: string): string => {
+  const name = repo.split("/").pop()?.replace(/\.git$/, "");
+  if (!name) {
+    throw new Error(`Cannot derive site name from repo URL: ${repo}`);
+  }
+  return name;
+};
+
 interface DeployParams {
+  repo?: string;
+  /** Always resolved: either from the request body or derived from `repo`. */
   site: string;
   envName?: string;
   runCommand?: string[];
+  envs?: Record<string, string>;
 }
 
 interface DeployResult {
@@ -45,16 +61,34 @@ export const createSandboxHandlers = (
     }
     deploying = true;
 
-    let body: { site?: string; envName?: string; runCommand?: string[] };
+    let body: {
+      repo?: string;
+      site?: string;
+      envName?: string;
+      runCommand?: string[];
+      envs?: Record<string, string>;
+    };
     try {
       body = await c.req.json();
     } catch {
       return c.json({ error: "Invalid JSON body" }, 400);
     }
 
-    const { site, envName, runCommand } = body;
-    if (!site || typeof site !== "string") {
-      return c.json({ error: "Missing required field: site" }, 400);
+    const { repo, site: siteOverride, envName, runCommand, envs } = body;
+
+    if (repo !== undefined && typeof repo !== "string") {
+      return c.json({ error: "repo must be a string" }, 400);
+    }
+
+    if (siteOverride !== undefined && typeof siteOverride !== "string") {
+      return c.json({ error: "site must be a string" }, 400);
+    }
+
+    if (!repo && !siteOverride) {
+      return c.json(
+        { error: "At least one of 'repo' or 'site' is required" },
+        400,
+      );
     }
 
     if (envName !== undefined && typeof envName !== "string") {
@@ -69,9 +103,24 @@ export const createSandboxHandlers = (
       return c.json({ error: "runCommand must be a string array" }, 400);
     }
 
+    if (
+      envs !== undefined &&
+      (typeof envs !== "object" || envs === null || Array.isArray(envs) ||
+        !Object.values(envs).every((v) => typeof v === "string"))
+    ) {
+      return c.json(
+        { error: "envs must be an object with string values" },
+        400,
+      );
+    }
+
+    // Derive site name from repo URL if not explicitly provided
+    // At this point, at least one of repo/siteOverride is guaranteed to exist
+    const site = siteOverride ?? siteNameFromRepo(repo as string);
+
     let result: DeployResult;
     try {
-      result = await onDeploy({ site, envName, runCommand });
+      result = await onDeploy({ repo, site, envName, runCommand, envs });
     } catch (err) {
       deploying = false;
       console.error(`[sandbox] Deploy failed:`, err);
@@ -83,7 +132,7 @@ export const createSandboxHandlers = (
     const url = result.domain ? `https://${result.domain}` : undefined;
 
     console.log(
-      `[sandbox] Deployed as site: ${site}${
+      `[sandbox] Deployed site: ${site}${repo ? ` from repo: ${repo}` : ""}${
         runCommand ? ` with command: ${runCommand.join(" ")}` : ""
       }${url ? ` at ${url}` : ""}`,
     );

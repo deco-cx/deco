@@ -543,7 +543,9 @@ export const assertRebased = async (): Promise<void> => {
   }
 };
 
-export const ensureGit = async ({ site }: Pick<Options, "site">) => {
+export const ensureGit = async (
+  { site, repoUrl }: Pick<Options, "site"> & { repoUrl?: string },
+) => {
   const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
   const assertNoIndexLock = async () => {
     if (!isDeployment) {
@@ -610,7 +612,7 @@ export const ensureGit = async ({ site }: Pick<Options, "site">) => {
       return;
     }
 
-    const cloneUrl = REPO_URL ??
+    const cloneUrl = repoUrl ?? REPO_URL ??
       (GITHUB_APP_KEY
         ? `https://github.com/deco-sites/${site}.git`
         : `git@github.com:deco-sites/${site}.git`);
