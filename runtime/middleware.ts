@@ -2,14 +2,26 @@
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { Context, context } from "../deco.ts";
-import {
-  type Exception,
-  getCookies,
-  getSetCookies,
-  SpanStatusCode,
-} from "../deps.ts";
-import { startObserve } from "../observability/http.ts";
-import { logger } from "../observability/mod.ts";
+// Import directly from source to avoid loading all OpenTelemetry from deps.ts (~3s)
+import { getCookies, getSetCookies } from "@std/http";
+import type { Exception } from "npm:@opentelemetry/api@1.9.0";
+// SpanStatusCode removed - importing from deps.ts loads all OpenTelemetry (~3s)
+// Using direct values instead: ERROR = 2, OK = 1
+// import { SpanStatusCode } from "../deps.ts";
+// Observability imports lazy-loaded to avoid 3s startup penalty
+// import { startObserve } from "../observability/http.ts";
+// import { logger } from "../observability/mod.ts";
+
+// Lazy-loaded startObserve wrapper
+let _startObserveCache: (() => (method: string, path: string, status: number) => void) | null = null;
+const getStartObserve = async () => {
+  if (!_startObserveCache) {
+    const { startObserve } = await import("../observability/http.ts");
+    _startObserveCache = startObserve;
+  }
+  return _startObserveCache;
+};
+
 import { HttpError } from "../runtime/errors.ts";
 import type { AppManifest } from "../types.ts";
 import { isAdminOrLocalhost } from "../utils/admin.ts";
@@ -91,8 +103,13 @@ async (ctx, next) => {
     console.error(`route error ${ctx.req.routePath}: ${err}`, {
       correlationId,
     });
-    logger.error(`route ${ctx.req.routePath}: ${err?.stack}`, {
-      correlationId,
+    // Lazy load logger to avoid startup penalty
+    import("../observability/mod.ts").then(({ logger }) => {
+      logger.error(`route ${ctx.req.routePath}: ${err?.stack}`, {
+        correlationId,
+      });
+    }).catch(() => {
+      // Logger failed to load, console.error above already logged
     });
     throw new HTTPException(500, {
       res: new Response(err?.message ?? `Something went wrong`, {
@@ -284,7 +301,9 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           ctx.var.monitoring.rootSpan = span;
 
           const begin = performance.now();
-          const end = startObserve();
+          // Lazy load startObserve to avoid 3s startup penalty
+          const startObserveFn = await getStartObserve();
+          const end = startObserveFn();
           try {
             await next();
           } catch (e) {
@@ -294,7 +313,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
             const status = ctx.res?.status ?? 500;
             const isErr = status >= 500;
             span.setStatus({
-              code: isErr ? SpanStatusCode.ERROR : SpanStatusCode.OK,
+              code: isErr ? 2 /* SpanStatusCode.ERROR */ : 1 /* SpanStatusCode.OK */,
             });
             span.setAttribute(
               "http.response.status_code",

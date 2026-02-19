@@ -6,11 +6,14 @@ export type {
 } from "./blocks/mod.ts";
 export * from "./commons/workflows/mod.ts";
 export * from "./commons/workflows/types.ts";
-export * as JsonViewer from "./components/JsonViewer.tsx";
+// JsonViewer removed from main export - use @deco/deco/components if needed
+// It loads runtime/handler.tsx which adds ~6s to startup
+// export * as JsonViewer from "./components/JsonViewer.tsx";
 export type { Framework } from "./components/section.tsx";
 export * from "./deco.ts";
 export { Context } from "./deco.ts";
-export { ValueType } from "./deps.ts";
+// ValueType removed - importing from deps.ts loads all OpenTelemetry (~3s)
+// export { ValueType } from "./deps.ts";
 export type { WorkflowGen } from "./deps.ts";
 export type {
   Block,
@@ -41,11 +44,15 @@ export type { Schemas } from "./engine/schema/builder.ts";
 export * from "./runtime/errors.ts";
 export { fetch } from "./runtime/fetch/mod.ts";
 export type { RequestInit } from "./runtime/fetch/mod.ts";
-export { useFramework } from "./runtime/handler.tsx";
-export { type DecoRouteState } from "./runtime/middleware.ts";
-export * from "./runtime/mod.ts";
+// Import from lightweight framework.ts instead of heavy handler.tsx (~5.5s savings!)
+export { useFramework } from "./runtime/framework.ts";
+export { DECO_SEGMENT, type DecoRouteState } from "./runtime/middleware.ts";
+// Wildcard export removed - was loading entire runtime/mod.ts (~6s)
+// Only export what's explicitly needed by apps package
+// export * from "./runtime/mod.ts";
 export { Deco } from "./runtime/mod.ts";
 export type { PageData } from "./runtime/mod.ts";
+export { usePageContext, useRouterContext } from "./runtime/routes/entrypoint.tsx";
 export * from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";

@@ -1,6 +1,6 @@
 import { useContext } from "preact/hooks";
 
-import { SectionContext } from "../components/section.tsx";
+import { SectionContext } from "../components/context.ts";
 
 /**
  * Hook to access set early hints information.

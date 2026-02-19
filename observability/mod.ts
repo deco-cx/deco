@@ -1,3 +1,3 @@
-export { ValueType } from "../deps.ts";
-export { logger } from "./otel/config.ts";
-export { meter } from "./otel/metrics.ts";
+// Import from lazy modules to avoid module-level OpenTelemetry initialization
+export { logger } from "./otel/config-lazy.ts";
+export { meter } from "./otel/metrics-lazy.ts";

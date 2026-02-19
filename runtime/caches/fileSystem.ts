@@ -1,5 +1,5 @@
 import { existsSync } from "@std/fs";
-import { logger } from "../../observability/otel/config.ts";
+import { logger } from "../../observability/otel/config-lazy.ts";
 
 import {
   assertCanBeCached,

@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { ValueType } from "../../deps.ts";
-import { logger } from "../../observability/otel/config.ts";
+import { logger } from "../../observability/otel/config-lazy.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { memoryChecker } from "../../observability/probes/memory.ts";
 import { reqCountChecker } from "../../observability/probes/reqCount.ts";

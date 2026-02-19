@@ -12,29 +12,16 @@ import { useContext } from "preact/hooks";
 import type { HttpContext } from "../blocks/handler.ts";
 import type { RequestState } from "../blocks/utils.tsx";
 import { Context } from "../deco.ts";
-import { type DeepPartial, Murmurhash3 } from "../deps.ts";
+import type { DeepPartial } from "npm:utility-types@3.10.0";
+import { MurmurHash3 as Murmurhash3 } from "../utils/hasher.ts";
 import type { ComponentFunc, ComponentMetadata } from "../engine/block.ts";
 import type { FieldResolver } from "../engine/core/resolver.ts";
 import { HttpError } from "../engine/errors.ts";
-import { logger } from "../observability/otel/config.ts";
-import { useFramework } from "../runtime/handler.tsx";
+// Import from lightweight framework.ts instead of heavy handler.tsx
+import { useFramework } from "../runtime/framework.ts";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
-
-export interface SectionContext extends HttpContext<RequestState> {
-  renderSalt?: string;
-  device: Device;
-  deploymentId?: string;
-  // deno-lint-ignore no-explicit-any
-  FallbackWrapper: ComponentType<any>;
-}
-
-/**
- * Preact context for storing section context.
- */
-export const SectionContext: PreactContext<SectionContext | undefined> =
-  createContext<SectionContext | undefined>(
-    undefined,
-  );
+import { SectionContext } from "./context.ts";
+export { SectionContext };
 
 // Murmurhash3 was chosen because it is fast
 const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
@@ -91,12 +78,17 @@ export class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
         `rendering: ${this.props.component} at ${this.props.url} with resolverId ${this.props.resolverId} ${
           (error as Error)?.stack
         }`;
-      logger.error(msg, {
-        host: this.props.url?.host,
-        pathname: this.props.url?.pathname,
-        search: this.props.url?.search,
-        component: this.props.blockId,
-        resolverId: this.props.resolverId,
+      // Lazy load logger to avoid loading OpenTelemetry at startup
+      import("../observability/otel/config.ts").then(({ logger }) => {
+        logger.error(msg, {
+          host: this.props.url?.host,
+          pathname: this.props.url?.pathname,
+          search: this.props.url?.search,
+          component: this.props.blockId,
+          resolverId: this.props.resolverId,
+        });
+      }).catch(() => {
+        // Logger failed to load, console.error below will still work
       });
       console.error(msg, {
         host: this.props.url?.host,

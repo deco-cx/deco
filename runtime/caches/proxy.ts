@@ -1,7 +1,7 @@
 import type {
   tracer,
   tracerIsRecording,
-} from "../../observability/otel/config.ts";
+} from "../../observability/otel/config-lazy.ts";
 
 const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
 

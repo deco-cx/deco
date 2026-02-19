@@ -1,6 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import type { HttpContext } from "../blocks/handler.ts";
-import { getCookies, Murmurhash3, setCookie } from "../deps.ts";
+// Import directly from source instead of deps.ts to avoid loading OpenTelemetry (~3s)
+import { getCookies, setCookie } from "@std/http";
+import { MurmurHash3 as Murmurhash3 } from "../utils/hasher.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import type { Device } from "../utils/userAgent.ts";
 import type { RequestState } from "./utils.tsx";

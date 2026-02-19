@@ -5,7 +5,8 @@ import type { RequestState } from "../blocks/utils.tsx";
 import { buildImportMap } from "../blocks/utils.tsx";
 import type { DecoContext } from "../deco.ts";
 import { Context } from "../deco.ts";
-import { context as otelContext } from "../deps.ts";
+// Import directly to avoid loading all of deps.ts (~3s)
+import { context as otelContext } from "npm:@opentelemetry/api@1.9.0";
 import type { BaseContext } from "../engine/core/resolver.ts";
 import {
   type DecofileProvider,
@@ -15,7 +16,8 @@ import { siteNameFromEnv } from "../engine/manifest/manifest.ts";
 import { randomSiteName } from "../engine/manifest/utils.ts";
 import { newContext, type PreactComponent, type Resolvable } from "../mod.ts";
 import { observe } from "../observability/observe.ts";
-import { tracer } from "../observability/otel/config.ts";
+// Use lazy-loading config to avoid 3-5s OpenTelemetry initialization at startup
+import { tracer } from "../observability/otel/config-lazy.ts";
 import {
   REQUEST_CONTEXT_KEY,
   STATE_CONTEXT_KEY,
@@ -26,6 +28,8 @@ import { buildInvokeFunc } from "../utils/invoke.server.ts";
 import { createServerTimings } from "../utils/timings.ts";
 import { vary } from "../utils/vary.ts";
 import type { ContextRenderer } from "./deps.ts";
+// Lazy-import handler to avoid loading all routes at startup (~5.5s)
+// import { type Bindings, handlerFor } from "./handler.tsx";
 import { batchInvoke, invoke } from "./features/invoke.ts";
 import {
   type GetMetaOpts,
@@ -67,12 +71,18 @@ export interface DecoOptions<TAppManifest extends AppManifest = AppManifest> {
 
 const NOOP_CALL = () => {};
 
+// Types for lazy-loaded handler
+type HandlerFunction = (
+  req: Request,
+  bindings?: { RENDER_FN?: ContextRenderer | undefined; GLOBALS?: unknown } | undefined,
+) => Response | Promise<Response>;
+
 export class Deco<TAppManifest extends AppManifest = AppManifest> {
-  private _handler: ReturnType<typeof handlerFor> | null = null;
+  private _handler: HandlerFunction | null = null;
   private constructor(
     public site: string,
     public ctx: DecoContext<TAppManifest>,
-    public bindings?: Bindings<TAppManifest>,
+    public bindings?: any, // Will be typed by handler.tsx when loaded
   ) {
   }
 
@@ -107,13 +117,21 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     return meta(this.ctx, opts);
   }
 
-  get handler(): (
-    req: Request,
-    bindings?:
-      | { RENDER_FN?: ContextRenderer | undefined; GLOBALS?: unknown }
-      | undefined,
-  ) => Response | Promise<Response> {
-    return this._handler ??= handlerFor(this);
+  get handler(): HandlerFunction {
+    if (this._handler) return this._handler;
+
+    // Lazy-load handler on first access
+    this._handler = async (req: Request, bindings?: any) => {
+      // Dynamic import to avoid loading all routes at startup
+      const { handlerFor } = await import("./handler.tsx");
+      const actualHandler = handlerFor(this);
+      // Replace the lazy wrapper with the real handler
+      this._handler = actualHandler;
+      // Call the real handler
+      return actualHandler(req, bindings);
+    };
+
+    return this._handler;
   }
   get fetch(): (req: Request) => Response | Promise<Response> {
     return (req: Request) => this.handler(req);

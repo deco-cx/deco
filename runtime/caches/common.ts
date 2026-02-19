@@ -1,5 +1,5 @@
 import { type Exception, ValueType } from "../../deps.ts";
-import { tracer } from "../../observability/otel/config.ts";
+import { tracer } from "../../observability/otel/config-lazy.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { inFuture } from "./utils.ts";
 

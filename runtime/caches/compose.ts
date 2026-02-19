@@ -1,4 +1,4 @@
-import { logger } from "../../observability/otel/config.ts";
+import { logger } from "../../observability/otel/config-lazy.ts";
 
 const logCacheErr = (cache: CacheStorage, msg: string) => (err: unknown) => {
   logger.error(

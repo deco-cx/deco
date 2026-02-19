@@ -9,7 +9,7 @@ import type { DecofileProvider } from "../engine/decofile/provider.ts";
 import { HttpError } from "../engine/errors.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { State } from "../mod.ts";
-import { logger } from "../observability/otel/config.ts";
+import { logger } from "../observability/otel/config-lazy.ts";
 import {
   meter,
   OTEL_ENABLE_EXTRA_METRICS,

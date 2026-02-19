@@ -1,9 +1,9 @@
 import type { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
-import { SectionContext } from "../components/section.tsx";
+import { SectionContext } from "../components/context.ts";
 import { FieldResolver } from "../engine/core/resolver.ts";
 
-import { Murmurhash3 } from "../deps.ts";
+import { MurmurHash3 as Murmurhash3 } from "../utils/hasher.ts";
 
 const hasher = new Murmurhash3();
 

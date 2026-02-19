@@ -5,11 +5,10 @@ import "../utils/patched_fetch.ts";
 import {
   type ComponentChildren,
   type ComponentType,
-  createContext,
 } from "preact";
-import { useContext } from "preact/hooks";
 import type { Framework } from "../components/section.tsx";
 import type { AppManifest } from "../types.ts";
+import { FrameworkContext } from "./framework.ts";
 import "../utils/patched_fetch.ts";
 import { Hono, type PageData } from "./deps.ts";
 import { HTMX } from "./htmx/mod.tsx";
@@ -104,22 +103,8 @@ const routes: Array<
   },
 ];
 
-/**
- * Preact context for storing the application framework.
- */
-export const FrameworkContext = createContext<Framework | undefined>(
-  undefined,
-);
-
-/**
- * Hook to access the application framework from context.
- *
- * @throws {Error}  - Throws an error if framework is not set in context.
- * @returns {Framework} The application framework.
- */
-export const useFramework = (): Framework => {
-  return useContext(FrameworkContext)!;
-};
+// Re-export from lightweight framework.ts to avoid breaking existing imports
+export { FrameworkContext, useFramework } from "./framework.ts";
 
 /**
  * Creates a handler function for a decorated application manifest.

@@ -7,7 +7,6 @@
  */
 
 import { LRUCache } from "npm:lru-cache@10.2.0";
-import { minify as terserMinify } from "npm:terser@5.34.0";
 
 const verbose = !!Deno.env.get("SCRIPT_MINIFICATION_DEBUG");
 
@@ -31,6 +30,9 @@ const timings = (js: string) => {
 const minify = async (js: string) => {
   try {
     const log = verbose ? timings(js) : null;
+
+    // Lazy load terser only when actually minifying
+    const { minify: terserMinify } = await import("npm:terser@5.34.0");
 
     const result = await terserMinify(js, {
       ecma: 2020,

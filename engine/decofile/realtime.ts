@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { logger } from "../../observability/otel/config.ts";
+import { logger } from "../../observability/otel/config-lazy.ts";
 import { randId as ulid } from "../../utils/rand.ts";
 import type { Resolvable } from "../core/resolver.ts";
 import type {

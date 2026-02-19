@@ -1,12 +1,18 @@
 import { isWrappedError } from "../blocks/loader.ts";
-import { ValueType } from "../deps.ts";
-import { meter, OTEL_ENABLE_EXTRA_METRICS } from "./otel/metrics.ts";
+import { meter, OTEL_ENABLE_EXTRA_METRICS } from "./otel/metrics-lazy.ts";
 
-const operationDuration = meter.createHistogram("block_op_duration", {
-  description: "operation duration",
-  unit: "ms",
-  valueType: ValueType.DOUBLE,
-});
+// Lazy-create histogram to avoid module-level initialization
+let operationDuration: any = null;
+function getHistogram() {
+  if (!operationDuration) {
+    operationDuration = meter.createHistogram("block_op_duration", {
+      description: "operation duration",
+      unit: "ms",
+      valueType: 2, // ValueType.DOUBLE
+    });
+  }
+  return operationDuration;
+}
 
 /**
  * Observe function durations based on the provided labels
@@ -28,7 +34,7 @@ export const observe = async <T>(
     throw error;
   } finally {
     if (OTEL_ENABLE_EXTRA_METRICS) {
-      operationDuration.record(performance.now() - start, {
+      getHistogram().record(performance.now() - start, {
         "operation.name": op,
         "operation.is_error": isError,
       });
