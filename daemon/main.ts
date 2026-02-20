@@ -31,7 +31,7 @@ import {
   resetActivity,
 } from "./monitor.ts";
 import { downloadCache } from "./cache.ts";
-import { createClaudeHandlers } from "./claude/handlers.ts";
+import { createAIHandlers } from "./ai/handlers.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
 import { register, type TunnelConnection } from "./tunnel.ts";
 import { createWorker, worker, type WorkerOptions } from "./worker.ts";
@@ -502,7 +502,7 @@ if (SANDBOX_MODE) {
   // Sandbox mode: start without a site, deploy later via POST /sandbox/deploy
   let currentSite: SiteAppResult | null = null;
   let tunnelConn: TunnelConnection | null = null;
-  let claudeHandlers: ReturnType<typeof createClaudeHandlers> | null = null;
+  let aiHandlers: ReturnType<typeof createAIHandlers> | null = null;
 
   const sandbox = createSandboxHandlers({
     onDeploy: async (
@@ -525,12 +525,12 @@ if (SANDBOX_MODE) {
         branch,
       });
 
-      // Create Claude handlers if ANTHROPIC_API_KEY is available
-      const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
-      if (anthropicApiKey) {
-        claudeHandlers = createClaudeHandlers({
+      // Create AI handlers if ANTHROPIC_API_KEY is available
+      const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+      if (apiKey) {
+        aiHandlers = createAIHandlers({
           cwd: Deno.cwd(),
-          anthropicApiKey,
+          apiKey,
           githubToken: Deno.env.get("GITHUB_TOKEN"),
           extraEnv: envs,
         });
@@ -543,39 +543,39 @@ if (SANDBOX_MODE) {
 
       tunnelConn = tunnel;
 
-      // Auto-create a Claude task if task field was provided in deploy request
-      // anthropicApiKey is guaranteed non-null when claudeHandlers is truthy
+      // Auto-create an AI task if task field was provided in deploy request
+      // apiKey is guaranteed non-null when aiHandlers is truthy
       if (
-        task && claudeHandlers && anthropicApiKey && (task.issue || task.prompt)
+        task && aiHandlers && apiKey && (task.issue || task.prompt)
       ) {
-        const { ClaudeTask } = await import("./claude/task.ts");
-        const ct = new ClaudeTask({
+        const { AITask } = await import("./ai/task.ts");
+        const ct = new AITask({
           issue: task.issue,
           prompt: task.prompt,
           cwd: Deno.cwd(),
-          anthropicApiKey,
+          apiKey,
           githubToken: Deno.env.get("GITHUB_TOKEN"),
           extraEnv: envs,
         });
         ct.start().then(() => {
           console.log(
-            `[sandbox] Auto-started Claude task ${ct.taskId}${
+            `[sandbox] Auto-started AI task ${ct.taskId}${
               task.issue ? ` for issue: ${task.issue}` : ""
             }`,
           );
         }).catch((err) => {
-          console.error(`[sandbox] Auto-start Claude task failed:`, err);
+          console.error(`[sandbox] Auto-start AI task failed:`, err);
         });
       }
 
       return { domain: tunnel?.domain };
     },
     onUndeploy: async () => {
-      // Dispose Claude handlers first (kills running tasks)
-      if (claudeHandlers) {
-        await claudeHandlers.dispose();
-        claudeHandlers = null;
-        console.log(`[sandbox] Claude handlers disposed`);
+      // Dispose AI handlers first (kills running tasks)
+      if (aiHandlers) {
+        await aiHandlers.dispose();
+        aiHandlers = null;
+        console.log(`[sandbox] AI handlers disposed`);
       }
       if (currentSite) {
         await currentSite.dispose();
@@ -594,17 +594,17 @@ if (SANDBOX_MODE) {
   app.post("/sandbox/deploy", sandbox.deploy);
   app.delete("/sandbox/deploy", sandbox.undeploy);
 
-  // Claude task endpoints (auth-protected, proxied to Claude sub-app)
-  const claudeAuth: MiddlewareHandler = async (c, next) => {
+  // AI task endpoints (auth-protected, proxied to AI sub-app)
+  const aiAuth: MiddlewareHandler = async (c, next) => {
     const site = getSiteName();
     if (!site) {
       c.res = c.json({ error: "Not deployed" }, 503);
       return;
     }
-    if (!claudeHandlers) {
+    if (!aiHandlers) {
       c.res = c.json(
         {
-          error: "Claude integration not available (ANTHROPIC_API_KEY not set)",
+          error: "AI integration not available (ANTHROPIC_API_KEY not set)",
         },
         503,
       );
@@ -614,16 +614,16 @@ if (SANDBOX_MODE) {
   };
 
   for (const pattern of ["/sandbox/tasks", "/sandbox/tasks/*"] as const) {
-    app.use(pattern, claudeAuth);
+    app.use(pattern, aiAuth);
     app.all(pattern, (c) => {
-      if (!claudeHandlers) {
+      if (!aiHandlers) {
         return c.json({ error: "Not available" }, 503);
       }
-      // Rewrite URL to strip /sandbox/tasks prefix for the Claude sub-app
+      // Rewrite URL to strip /sandbox/tasks prefix for the AI sub-app
       const url = new URL(c.req.url);
       url.pathname = url.pathname.replace(/^\/sandbox\/tasks/, "") || "/";
       const rewritten = new Request(url.toString(), c.req.raw);
-      return claudeHandlers.app.fetch(rewritten);
+      return aiHandlers.app.fetch(rewritten);
     });
   }
 

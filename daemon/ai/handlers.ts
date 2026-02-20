@@ -1,22 +1,22 @@
 import { Hono } from "@hono/hono";
-import { ClaudeTask } from "./task.ts";
+import { AITask } from "./task.ts";
 
-interface ClaudeHandlersOptions {
-  /** Working directory for Claude (the cloned repo). */
+interface AIHandlersOptions {
+  /** Working directory for the AI agent (the cloned repo). */
   cwd: string;
-  /** ANTHROPIC_API_KEY from daemon env. */
-  anthropicApiKey: string;
+  /** AI provider API key from daemon env. */
+  apiKey: string;
   /** GITHUB_TOKEN from daemon env. */
   githubToken?: string;
   /** Extra env vars from deploy request. */
   extraEnv?: Record<string, string>;
 }
 
-export const createClaudeHandlers = (opts: ClaudeHandlersOptions) => {
+export const createAIHandlers = (opts: AIHandlersOptions) => {
   const app = new Hono();
-  const tasks = new Map<string, ClaudeTask>();
+  const tasks = new Map<string, AITask>();
 
-  // POST /sandbox/tasks — create a new Claude task
+  // POST /sandbox/tasks — create a new AI task
   app.post("/", async (c) => {
     let body: { issue?: string; prompt?: string };
     try {
@@ -42,11 +42,11 @@ export const createClaudeHandlers = (opts: ClaudeHandlersOptions) => {
       return c.json({ error: "'prompt' must be a string" }, 400);
     }
 
-    const task = new ClaudeTask({
+    const task = new AITask({
       issue,
       prompt,
       cwd: opts.cwd,
-      anthropicApiKey: opts.anthropicApiKey,
+      apiKey: opts.apiKey,
       githubToken: opts.githubToken,
       extraEnv: opts.extraEnv,
     });
@@ -57,14 +57,12 @@ export const createClaudeHandlers = (opts: ClaudeHandlersOptions) => {
       await task.start();
     } catch (err) {
       tasks.delete(task.taskId);
-      console.error(`[claude] Failed to start task:`, err);
+      console.error(`[ai] Failed to start task:`, err);
       return c.json({ error: "Failed to start task" }, 500);
     }
 
     console.log(
-      `[claude] Task ${task.taskId} started${
-        issue ? ` for issue: ${issue}` : ""
-      }`,
+      `[ai] Task ${task.taskId} started${issue ? ` for issue: ${issue}` : ""}`,
     );
 
     return c.json({
@@ -141,7 +139,7 @@ export const createClaudeHandlers = (opts: ClaudeHandlersOptions) => {
     };
 
     socket.onclose = () => {
-      // Don't kill the session on disconnect — Claude keeps running
+      // Don't kill the session on disconnect — agent keeps running
     };
 
     return response;
@@ -158,7 +156,7 @@ export const createClaudeHandlers = (opts: ClaudeHandlersOptions) => {
     task.dispose();
     tasks.delete(taskId);
 
-    console.log(`[claude] Task ${taskId} killed`);
+    console.log(`[ai] Task ${taskId} killed`);
     return c.json({ ok: true });
   });
 

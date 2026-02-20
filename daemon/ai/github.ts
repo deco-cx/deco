@@ -151,7 +151,7 @@ https://github.com/${nwo}/issues/${opts.issueNumber}
 
   if (!output.success) {
     const stderr = new TextDecoder().decode(output.stderr);
-    console.error(`[claude] gh pr create failed: ${stderr}`);
+    console.error(`[ai] gh pr create failed: ${stderr}`);
     return null;
   }
 
@@ -205,6 +205,6 @@ ${opts.prUrl ?? "No PR created"}
   const output = await cmd.output();
   if (!output.success) {
     const stderr = new TextDecoder().decode(output.stderr);
-    console.error(`[claude] gh issue comment failed: ${stderr}`);
+    console.error(`[ai] gh issue comment failed: ${stderr}`);
   }
 }

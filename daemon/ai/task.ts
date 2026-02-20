@@ -7,47 +7,47 @@ import {
   type IssueContext,
 } from "./github.ts";
 
-export interface ClaudeTaskOptions {
+export interface AITaskOptions {
   /** GitHub issue URL — mutually exclusive with `prompt`. */
   issue?: string;
   /** Inline prompt — mutually exclusive with `issue`. */
   prompt?: string;
   /** Working directory (the cloned repo). */
   cwd: string;
-  /** ANTHROPIC_API_KEY — injected into Claude's env only. */
-  anthropicApiKey: string;
-  /** GITHUB_TOKEN — injected into Claude's and gh's env only. */
+  /** AI provider API key — injected into the agent's env only. */
+  apiKey: string;
+  /** GITHUB_TOKEN — injected into the agent's and gh's env only. */
   githubToken?: string;
-  /** Extra env vars for the Claude process. */
+  /** Extra env vars for the agent process. */
   extraEnv?: Record<string, string>;
 }
 
-export type ClaudeTaskStatus =
+export type AITaskStatus =
   | "pending"
   | "running"
   | "completed"
   | "failed";
 
-export interface ClaudeTaskInfo {
+export interface AITaskInfo {
   taskId: string;
-  status: ClaudeTaskStatus;
+  status: AITaskStatus;
   issue?: string;
   prompt?: string;
   prUrl?: string | null;
   createdAt: number;
 }
 
-export class ClaudeTask {
+export class AITask {
   readonly taskId: string;
   readonly createdAt: number;
   readonly issue?: string;
   readonly prompt?: string;
 
   #session: PtySession | null = null;
-  #status: ClaudeTaskStatus = "pending";
+  #status: AITaskStatus = "pending";
   #prUrl: string | null = null;
   #issueCtx: IssueContext | null = null;
-  #opts: ClaudeTaskOptions;
+  #opts: AITaskOptions;
 
   get status() {
     return this.#status;
@@ -57,7 +57,7 @@ export class ClaudeTask {
     return this.#session;
   }
 
-  constructor(opts: ClaudeTaskOptions) {
+  constructor(opts: AITaskOptions) {
     if (!opts.issue && !opts.prompt) {
       throw new Error("Either 'issue' or 'prompt' is required");
     }
@@ -72,7 +72,7 @@ export class ClaudeTask {
     this.#status = "running";
 
     // Build the prompt
-    let claudePrompt: string;
+    let taskPrompt: string;
     if (this.#opts.issue) {
       if (!this.#opts.githubToken) {
         throw new Error("GITHUB_TOKEN required for issue-based tasks");
@@ -81,14 +81,14 @@ export class ClaudeTask {
         this.#opts.issue,
         this.#opts.githubToken,
       );
-      claudePrompt = buildPromptFromIssue(this.#issueCtx);
+      taskPrompt = buildPromptFromIssue(this.#issueCtx);
     } else {
-      claudePrompt = this.#opts.prompt!;
+      taskPrompt = this.#opts.prompt!;
     }
 
-    // Build env for the Claude child process — secrets go here, NOT in shell
+    // Build env for the AI agent child process — secrets go here, NOT in shell
     const env: Record<string, string> = {
-      ANTHROPIC_API_KEY: this.#opts.anthropicApiKey,
+      ANTHROPIC_API_KEY: this.#opts.apiKey,
       HOME: Deno.env.get("HOME") ?? "/home/deno",
       PATH: Deno.env.get("PATH") ?? "",
       ...this.#opts.extraEnv,
@@ -99,14 +99,14 @@ export class ClaudeTask {
 
     this.#session = await PtySession.create({
       cmd: "claude",
-      args: ["--print", "--dangerously-skip-permissions", claudePrompt],
+      args: ["--print", "--dangerously-skip-permissions", taskPrompt],
       env,
       cwd: this.#opts.cwd,
     });
 
     this.#session.onExit((code) => {
       this.#onComplete(code).catch((err) => {
-        console.error(`[claude] Post-completion failed:`, err);
+        console.error(`[ai] Post-completion failed:`, err);
       });
     });
   }
@@ -116,7 +116,7 @@ export class ClaudeTask {
     this.#status = success ? "completed" : "failed";
 
     console.log(
-      `[claude] Task ${this.taskId} exited with code ${exitCode}`,
+      `[ai] Task ${this.taskId} exited with code ${exitCode}`,
     );
 
     // Only run GitHub flow if this was an issue-based task
@@ -144,7 +144,7 @@ export class ClaudeTask {
       new TextDecoder().decode(diffOutput.stdout).trim().length > 0;
 
     if (!hasDiff) {
-      console.log(`[claude] No changes to create PR for task ${this.taskId}`);
+      console.log(`[ai] No changes to create PR for task ${this.taskId}`);
       await commentOnIssue({
         owner,
         repo,
@@ -181,7 +181,7 @@ export class ClaudeTask {
     });
 
     console.log(
-      `[claude] PR created for task ${this.taskId}: ${this.#prUrl}`,
+      `[ai] PR created for task ${this.taskId}: ${this.#prUrl}`,
     );
 
     // Comment on issue
@@ -195,7 +195,7 @@ export class ClaudeTask {
     });
   }
 
-  info(): ClaudeTaskInfo {
+  info(): AITaskInfo {
     return {
       taskId: this.taskId,
       status: this.#status,
