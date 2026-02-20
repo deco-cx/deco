@@ -1,4 +1,5 @@
 import { getGitHubToken, setupGithubTokenNetrc } from "../git.ts";
+import { GITHUB_APP_CONFIGURED, setupGitHubAppNetrc } from "../githubApp.ts";
 import { PtySession } from "../pty/session.ts";
 import {
   buildPromptFromIssue,
@@ -9,6 +10,29 @@ import {
 } from "./github.ts";
 
 const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
+const HAS_GITHUB_AUTH = GITHUB_APP_CONFIGURED || Boolean(GITHUB_APP_KEY);
+const TOKEN_REFRESH_MS = 45 * 60 * 1000; // 45 minutes (tokens expire after 1 hour)
+
+/** Write GitHub token to agent home files so git and gh CLI pick up refreshed tokens. */
+async function writeAgentTokenFiles(
+  agentHome: string,
+  token: string,
+): Promise<void> {
+  // .netrc for git HTTPS auth (read per-connection)
+  const netrcContent =
+    `machine github.com\nlogin x-access-token\npassword ${token}\n`;
+  await Deno.writeTextFile(`${agentHome}/.netrc`, netrcContent);
+  await Deno.chmod(`${agentHome}/.netrc`, 0o600);
+
+  // gh CLI config (read per-command when GITHUB_TOKEN env var is not set)
+  const ghConfigDir = `${agentHome}/.config/gh`;
+  try {
+    Deno.mkdirSync(ghConfigDir, { recursive: true });
+  } catch { /* already exists */ }
+  const hostsContent =
+    `github.com:\n    oauth_token: ${token}\n    user: x-access-token\n    git_protocol: https\n`;
+  await Deno.writeTextFile(`${ghConfigDir}/hosts.yml`, hostsContent);
+}
 
 export interface AITaskOptions {
   /** GitHub issue URL — mutually exclusive with `prompt`. */
@@ -40,6 +64,28 @@ export interface AITaskInfo {
   createdAt: number;
 }
 
+/** Extract owner/repo from a git remote URL. */
+async function getRepoInfo(
+  cwd: string,
+): Promise<{ owner: string; repo: string }> {
+  const cmd = new Deno.Command("git", {
+    args: ["remote", "get-url", "origin"],
+    cwd,
+    stdout: "piped",
+  });
+  const output = await cmd.output();
+  const url = new TextDecoder().decode(output.stdout).trim();
+
+  // Match: https://github.com/owner/repo.git OR git@github.com:owner/repo.git
+  const match = url.match(
+    /github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/,
+  );
+  if (!match) {
+    throw new Error(`Cannot parse owner/repo from git remote: ${url}`);
+  }
+  return { owner: match[1], repo: match[2] };
+}
+
 /** Shared env for daemon-side git commands — includes HOME so git can find ~/.gitconfig and SSH keys. */
 function gitEnv(githubToken?: string): Record<string, string> {
   const home = Deno.env.get("HOME") ?? "/home/deno";
@@ -47,8 +93,8 @@ function gitEnv(githubToken?: string): Record<string, string> {
     HOME: home,
     PATH: Deno.env.get("PATH") ?? "",
   };
-  // Only use SSH when GITHUB_APP_KEY is not set (legacy path)
-  if (!GITHUB_APP_KEY) {
+  // Only use SSH when no GitHub App auth is available (legacy SSH path)
+  if (!HAS_GITHUB_AUTH) {
     env.GIT_SSH_COMMAND =
       `ssh -i ${home}/.ssh/id_rsa -o StrictHostKeyChecking=no`;
   }
@@ -71,6 +117,8 @@ export class AITask {
   #opts: AITaskOptions;
   #startSha: string | null = null;
   #githubToken: string | null = null;
+  #tokenRefreshInterval: ReturnType<typeof setInterval> | null = null;
+  #repoInfo: { owner: string; repo: string } | null = null;
 
   get status() {
     return this.#status;
@@ -103,14 +151,26 @@ export class AITask {
     const headOutput = await headCmd.output();
     this.#startSha = new TextDecoder().decode(headOutput.stdout).trim();
 
-    // Self-provision a scoped GitHub token when GITHUB_APP_KEY is available
+    // Self-provision a scoped GitHub token
     let githubToken = this.#opts.githubToken;
-    if (GITHUB_APP_KEY && !githubToken) {
+    if (!githubToken && GITHUB_APP_CONFIGURED) {
+      // New path: direct GitHub App token generation
       try {
-        await setupGithubTokenNetrc(); // writes ~/.netrc for daemon git ops
-        githubToken = await getGitHubToken() ?? undefined;
+        this.#repoInfo = await getRepoInfo(this.#opts.cwd);
+        githubToken = await setupGitHubAppNetrc(
+          this.#repoInfo.owner,
+          this.#repoInfo.repo,
+        );
       } catch (err) {
         console.error(`[ai] Failed to provision GitHub token:`, err);
+      }
+    } else if (!githubToken && GITHUB_APP_KEY) {
+      // Legacy path: fetch token via admin API
+      try {
+        await setupGithubTokenNetrc();
+        githubToken = await getGitHubToken() ?? undefined;
+      } catch (err) {
+        console.error(`[ai] Failed to provision GitHub token (legacy):`, err);
       }
     }
     this.#githubToken = githubToken ?? null;
@@ -144,7 +204,39 @@ export class AITask {
       PATH: Deno.env.get("PATH") ?? "",
       ...this.#opts.extraEnv,
     };
-    if (githubToken) {
+
+    if (HAS_GITHUB_AUTH && githubToken) {
+      // File-based auth: write .netrc + gh config so both git and gh CLI
+      // pick up refreshed tokens automatically (env vars can't be updated).
+      await writeAgentTokenFiles(agentHome, githubToken);
+
+      // Refresh token files every 45 min (tokens expire after 1 hour)
+      this.#tokenRefreshInterval = setInterval(async () => {
+        try {
+          let newToken: string | undefined;
+          if (GITHUB_APP_CONFIGURED && this.#repoInfo) {
+            newToken = await setupGitHubAppNetrc(
+              this.#repoInfo.owner,
+              this.#repoInfo.repo,
+            );
+          } else if (GITHUB_APP_KEY) {
+            await setupGithubTokenNetrc();
+            newToken = await getGitHubToken();
+          }
+          if (newToken) {
+            this.#githubToken = newToken;
+            await writeAgentTokenFiles(agentHome, newToken);
+            console.log(`[ai] Token refreshed for task ${this.taskId}`);
+          }
+        } catch (err) {
+          console.error(
+            `[ai] Token refresh failed for task ${this.taskId}:`,
+            err,
+          );
+        }
+      }, TOKEN_REFRESH_MS);
+    } else if (githubToken) {
+      // Legacy path: pass token as env var (no refresh needed for short-lived tasks)
       env.GITHUB_TOKEN = githubToken;
     }
 
@@ -166,6 +258,12 @@ export class AITask {
     const success = exitCode === 0;
     this.#status = success ? "completed" : "failed";
 
+    // Stop the token refresh interval — task is done
+    if (this.#tokenRefreshInterval) {
+      clearInterval(this.#tokenRefreshInterval);
+      this.#tokenRefreshInterval = null;
+    }
+
     console.log(
       `[ai] Task ${this.taskId} exited with code ${exitCode}`,
     );
@@ -173,14 +271,24 @@ export class AITask {
     // Only run GitHub flow if this was an issue-based task
     if (!this.#issueCtx) return;
 
-    // Refresh token if using GitHub App (tokens expire after 1 hour)
+    // Refresh token (tokens expire after 1 hour)
     let githubToken = this.#githubToken;
-    if (GITHUB_APP_KEY) {
+    if (GITHUB_APP_CONFIGURED) {
+      try {
+        const info = this.#repoInfo ?? {
+          owner: this.#issueCtx.owner,
+          repo: this.#issueCtx.repo,
+        };
+        githubToken = await setupGitHubAppNetrc(info.owner, info.repo);
+      } catch (err) {
+        console.error(`[ai] Token refresh failed:`, err);
+      }
+    } else if (GITHUB_APP_KEY) {
       try {
         await setupGithubTokenNetrc();
         githubToken = await getGitHubToken() ?? githubToken;
       } catch (err) {
-        console.error(`[ai] Token refresh failed:`, err);
+        console.error(`[ai] Token refresh failed (legacy):`, err);
       }
     }
 
@@ -274,6 +382,10 @@ export class AITask {
   }
 
   dispose(): void {
+    if (this.#tokenRefreshInterval) {
+      clearInterval(this.#tokenRefreshInterval);
+      this.#tokenRefreshInterval = null;
+    }
     if (this.#session) {
       this.#session.dispose();
     }
