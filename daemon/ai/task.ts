@@ -1,3 +1,4 @@
+import { getGitHubToken, setupGithubTokenNetrc } from "../git.ts";
 import { PtySession } from "../pty/session.ts";
 import {
   buildPromptFromIssue,
@@ -6,6 +7,8 @@ import {
   fetchIssue,
   type IssueContext,
 } from "./github.ts";
+
+const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
 
 export interface AITaskOptions {
   /** GitHub issue URL — mutually exclusive with `prompt`. */
@@ -37,6 +40,24 @@ export interface AITaskInfo {
   createdAt: number;
 }
 
+/** Shared env for daemon-side git commands — includes HOME so git can find ~/.gitconfig and SSH keys. */
+function gitEnv(githubToken?: string): Record<string, string> {
+  const home = Deno.env.get("HOME") ?? "/home/deno";
+  const env: Record<string, string> = {
+    HOME: home,
+    PATH: Deno.env.get("PATH") ?? "",
+  };
+  // Only use SSH when GITHUB_APP_KEY is not set (legacy path)
+  if (!GITHUB_APP_KEY) {
+    env.GIT_SSH_COMMAND =
+      `ssh -i ${home}/.ssh/id_rsa -o StrictHostKeyChecking=no`;
+  }
+  if (githubToken) {
+    env.GITHUB_TOKEN = githubToken;
+  }
+  return env;
+}
+
 export class AITask {
   readonly taskId: string;
   readonly createdAt: number;
@@ -48,6 +69,8 @@ export class AITask {
   #prUrl: string | null = null;
   #issueCtx: IssueContext | null = null;
   #opts: AITaskOptions;
+  #startSha: string | null = null;
+  #githubToken: string | null = null;
 
   get status() {
     return this.#status;
@@ -71,30 +94,58 @@ export class AITask {
   async start(): Promise<void> {
     this.#status = "running";
 
+    // Save the current HEAD SHA so we can compare after the task completes
+    const headCmd = new Deno.Command("git", {
+      args: ["rev-parse", "HEAD"],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+    });
+    const headOutput = await headCmd.output();
+    this.#startSha = new TextDecoder().decode(headOutput.stdout).trim();
+
+    // Self-provision a scoped GitHub token when GITHUB_APP_KEY is available
+    let githubToken = this.#opts.githubToken;
+    if (GITHUB_APP_KEY && !githubToken) {
+      try {
+        await setupGithubTokenNetrc(); // writes ~/.netrc for daemon git ops
+        githubToken = await getGitHubToken() ?? undefined;
+      } catch (err) {
+        console.error(`[ai] Failed to provision GitHub token:`, err);
+      }
+    }
+    this.#githubToken = githubToken ?? null;
+
     // Build the prompt
     let taskPrompt: string;
     if (this.#opts.issue) {
-      if (!this.#opts.githubToken) {
+      if (!githubToken) {
         throw new Error("GITHUB_TOKEN required for issue-based tasks");
       }
       this.#issueCtx = await fetchIssue(
         this.#opts.issue,
-        this.#opts.githubToken,
+        githubToken,
       );
       taskPrompt = buildPromptFromIssue(this.#issueCtx);
     } else {
       taskPrompt = this.#opts.prompt!;
     }
 
-    // Build env for the AI agent child process — secrets go here, NOT in shell
+    // Build env for the AI agent child process — secrets go here, NOT in shell.
+    // Use a sandboxed home dir so the agent cannot access ~/.ssh keys
+    // through standard paths (git config, ssh defaults).
+    const realHome = Deno.env.get("HOME") ?? "/home/deno";
+    const agentHome = `${this.#opts.cwd}/.agent-home`;
+    try {
+      Deno.mkdirSync(agentHome, { recursive: true });
+    } catch { /* already exists */ }
     const env: Record<string, string> = {
       ANTHROPIC_API_KEY: this.#opts.apiKey,
-      HOME: Deno.env.get("HOME") ?? "/home/deno",
+      HOME: agentHome,
       PATH: Deno.env.get("PATH") ?? "",
       ...this.#opts.extraEnv,
     };
-    if (this.#opts.githubToken) {
-      env.GITHUB_TOKEN = this.#opts.githubToken;
+    if (githubToken) {
+      env.GITHUB_TOKEN = githubToken;
     }
 
     this.#session = await PtySession.create({
@@ -120,24 +171,43 @@ export class AITask {
     );
 
     // Only run GitHub flow if this was an issue-based task
-    if (!this.#issueCtx || !this.#opts.githubToken) return;
+    if (!this.#issueCtx) return;
+
+    // Refresh token if using GitHub App (tokens expire after 1 hour)
+    let githubToken = this.#githubToken;
+    if (GITHUB_APP_KEY) {
+      try {
+        await setupGithubTokenNetrc();
+        githubToken = await getGitHubToken() ?? githubToken;
+      } catch (err) {
+        console.error(`[ai] Token refresh failed:`, err);
+      }
+    }
+
+    if (!githubToken) {
+      console.error(`[ai] No GitHub token available for post-completion flow`);
+      return;
+    }
 
     const { owner, repo, number: issueNumber, title } = this.#issueCtx;
+    const env = gitEnv(githubToken);
 
     // Get current branch
     const branchCmd = new Deno.Command("git", {
       args: ["rev-parse", "--abbrev-ref", "HEAD"],
       cwd: this.#opts.cwd,
       stdout: "piped",
+      env,
     });
     const branchOutput = await branchCmd.output();
     const branch = new TextDecoder().decode(branchOutput.stdout).trim();
 
-    // Check if there are any commits to push
+    // Check if there are new commits since the task started
     const diffCmd = new Deno.Command("git", {
-      args: ["diff", "--stat", "HEAD~1"],
+      args: ["diff", "--stat", `${this.#startSha}..HEAD`],
       cwd: this.#opts.cwd,
       stdout: "piped",
+      env,
     });
     const diffOutput = await diffCmd.output();
     const hasDiff =
@@ -151,7 +221,7 @@ export class AITask {
         issueNumber,
         prUrl: null,
         success: false,
-        token: this.#opts.githubToken,
+        token: githubToken,
       });
       return;
     }
@@ -162,10 +232,7 @@ export class AITask {
       cwd: this.#opts.cwd,
       stdout: "piped",
       stderr: "piped",
-      env: {
-        GITHUB_TOKEN: this.#opts.githubToken,
-        PATH: Deno.env.get("PATH") ?? "",
-      },
+      env,
     });
     await pushCmd.output();
 
@@ -176,7 +243,7 @@ export class AITask {
       issueNumber,
       issueTitle: title,
       branch,
-      token: this.#opts.githubToken,
+      token: githubToken,
       cwd: this.#opts.cwd,
     });
 
@@ -191,7 +258,7 @@ export class AITask {
       issueNumber,
       prUrl: this.#prUrl,
       success,
-      token: this.#opts.githubToken,
+      token: githubToken,
     });
   }
 

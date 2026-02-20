@@ -17,6 +17,13 @@ export interface PtySessionInfo {
 
 const POLL_INTERVAL_MS = 50;
 
+/** Shell-escape a single argument for safe inclusion in a command string. */
+function shellEscape(arg: string): string {
+  if (arg.length === 0) return "''";
+  if (!/[^a-zA-Z0-9_./:=@-]/.test(arg)) return arg;
+  return `'${arg.replace(/'/g, "'\\''")}'`;
+}
+
 // deno-lint-ignore no-explicit-any
 type PtyCtor = new (...args: any[]) => any;
 
@@ -84,7 +91,7 @@ export class PtySession {
     }
 
     const cmdWithArgs = opts.args?.length
-      ? `${opts.cmd} ${opts.args.join(" ")}`
+      ? `${shellEscape(opts.cmd)} ${opts.args.map(shellEscape).join(" ")}`
       : opts.cmd;
 
     const pty = new PtyCtor(cmdWithArgs, {
@@ -148,16 +155,22 @@ export class PtySession {
     this.#pty.close();
   }
 
-  onData(cb: (data: string) => void): void {
+  onData(cb: (data: string) => void): () => void {
     this.#dataCallbacks.push(cb);
+    return () => {
+      this.#dataCallbacks = this.#dataCallbacks.filter((c) => c !== cb);
+    };
   }
 
-  onExit(cb: (code: number) => void): void {
+  onExit(cb: (code: number) => void): () => void {
     if (this.#status === "exited") {
       cb(this.#exitCode ?? 0);
-      return;
+      return () => {};
     }
     this.#exitCallbacks.push(cb);
+    return () => {
+      this.#exitCallbacks = this.#exitCallbacks.filter((c) => c !== cb);
+    };
   }
 
   info(): PtySessionInfo {

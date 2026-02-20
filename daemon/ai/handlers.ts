@@ -34,6 +34,13 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       );
     }
 
+    if (issue && prompt) {
+      return c.json(
+        { error: "'issue' and 'prompt' are mutually exclusive" },
+        400,
+      );
+    }
+
     if (issue && typeof issue !== "string") {
       return c.json({ error: "'issue' must be a string" }, 400);
     }
@@ -100,6 +107,9 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
     const { socket, response } = Deno.upgradeWebSocket(c.req.raw);
 
+    let unsubData: (() => void) | undefined;
+    let unsubExit: (() => void) | undefined;
+
     socket.onopen = () => {
       // Send buffered output
       for (const line of session.outputBuffer) {
@@ -107,14 +117,14 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       }
 
       // Stream new output
-      session.onData((data) => {
+      unsubData = session.onData((data) => {
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(data);
         }
       });
 
       // Notify on exit
-      session.onExit((code) => {
+      unsubExit = session.onExit((code) => {
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({ type: "exit", code }));
           socket.close();
@@ -139,7 +149,9 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     };
 
     socket.onclose = () => {
-      // Don't kill the session on disconnect — agent keeps running
+      // Clean up callbacks to prevent accumulation on reconnects
+      unsubData?.();
+      unsubExit?.();
     };
 
     return response;

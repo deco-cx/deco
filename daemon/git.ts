@@ -455,7 +455,7 @@ export const getGitHubPackageTokens = async (): Promise<string[]> => {
   return packageTokens;
 };
 
-const setupGithubTokenNetrc = async (): Promise<void> => {
+export const setupGithubTokenNetrc = async (): Promise<void> => {
   const token = await getGitHubToken();
   if (token === undefined) return;
 
