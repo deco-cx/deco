@@ -149,6 +149,25 @@ export const status: Handler = async (c) => {
   });
 };
 
+const doBuild = (oid: string, build: Deno.Command | null) => {
+  const buildMap = new Map<string, Promise<void>>();
+
+  const p = buildMap.get(oid) ||
+    (async () => {
+      try {
+        await build?.spawn()?.status;
+        await persist(oid);
+      } catch (e) {
+        console.error("Building failed with:", e);
+      } finally {
+        buildMap.delete(oid);
+      }
+    })();
+
+  buildMap.set(oid, p);
+
+  return p;
+};
 export interface PublishAPI {
   body: {
     message: string;
@@ -191,25 +210,6 @@ const persist = async (oid: string) => {
 // TODO: maybe tag with versions!
 // TODO: handle rebase conflicts
 export const publish = ({ build }: Options): Handler => {
-  const buildMap = new Map<string, Promise<void>>();
-
-  const doBuild = (oid: string) => {
-    const p = buildMap.get(oid) ||
-      (async () => {
-        try {
-          await build?.spawn()?.status;
-          await persist(oid);
-        } catch (e) {
-          console.error("Building failed with:", e);
-        } finally {
-          buildMap.delete(oid);
-        }
-      })();
-
-    buildMap.set(oid, p);
-
-    return p;
-  };
 
   return async (c) => {
     const body = (await c.req.json()) as PublishAPI["body"];
@@ -232,7 +232,7 @@ export const publish = ({ build }: Options): Handler => {
     const result = await git.push();
 
     // Runs build pipeline asynchronously
-    doBuild(commit.commit);
+    doBuild(commit.commit, build);
 
     return Response.json(result);
   };
@@ -654,6 +654,56 @@ interface Options {
   site: string;
 }
 
+export interface RevertAPI {
+  body: {
+    commitHash: string;
+    message?: string;
+    author?: {
+      name?: string;
+      email?: string;
+    };
+  };
+  response: {
+    status: StatusResult;
+    commit: string;
+  };
+}
+
+export const revert = ({ build }: Options): Handler => {
+
+  return async (c) => {
+    const { commitHash, message, author = { name: "decobot", email: "capy@deco.cx" } } = 
+      await c.req.json() as RevertAPI["body"];
+  
+    await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
+  
+    await resetToMergeBase();
+  
+    // Create revert commit
+    await git.revert(commitHash, {
+      "--no-commit": null, // Stage changes without committing
+    });
+  
+    // Commit the revert with custom message
+    const commitMessage = message || `Revert "${commitHash}"`;
+    const commit = await git.commit(commitMessage, {
+      "--author": `${author.name} <${author.email}>`,
+      "--no-verify": null,
+    });
+
+    // Runs build pipeline asynchronously
+    doBuild(commit.commit, build);
+
+    // Push the revert commit
+    await git.push();
+  
+    return Response.json({ 
+      status: await git.status(),
+      commit: commit.commit
+    });
+  };
+};
+
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
@@ -664,6 +714,7 @@ export const createGitAPIS = (options: Options) => {
   app.post("/publish", publish(options));
   app.post("/discard", discard);
   app.post("/rebase", rebase);
+  app.post("/revert", revert(options));
 
   return app;
 };
