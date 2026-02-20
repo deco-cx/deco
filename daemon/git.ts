@@ -544,7 +544,10 @@ export const assertRebased = async (): Promise<void> => {
 };
 
 export const ensureGit = async (
-  { site, repoUrl }: Pick<Options, "site"> & { repoUrl?: string },
+  { site, repoUrl, branch }: Pick<Options, "site"> & {
+    repoUrl?: string;
+    branch?: string;
+  },
 ) => {
   const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
   const assertNoIndexLock = async () => {
@@ -623,7 +626,7 @@ export const ensureGit = async (
         "1",
         "--single-branch",
         "--branch",
-        DEFAULT_TRACKING_BRANCH,
+        branch ?? DEFAULT_TRACKING_BRANCH,
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);

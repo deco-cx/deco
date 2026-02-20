@@ -13,6 +13,7 @@ import {
 import { genMetadata } from "../engine/decofile/fsFolder.ts";
 import { bundleApp } from "../scripts/apps/bundle.lib.ts";
 import { delay, throttle } from "../utils/async.ts";
+import { createAuth } from "./auth.ts";
 import {
   createDaemonAPIs,
   DECO_ENV_NAME,
@@ -30,6 +31,7 @@ import {
   resetActivity,
 } from "./monitor.ts";
 import { downloadCache } from "./cache.ts";
+import { createClaudeHandlers } from "./claude/handlers.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
 import { register, type TunnelConnection } from "./tunnel.ts";
 import { createWorker, worker, type WorkerOptions } from "./worker.ts";
@@ -257,7 +259,7 @@ const watch = async (signal?: AbortSignal) => {
 
 const createDeps = (
   signal?: AbortSignal,
-  opts?: { repoUrl?: string },
+  opts?: { repoUrl?: string; branch?: string },
 ): MiddlewareHandler => {
   let ok: Promise<unknown> | null | false = null;
 
@@ -267,7 +269,11 @@ const createDeps = (
       throw new Error("Cannot initialize deps: site name not set");
     }
     let start = performance.now();
-    await ensureGit({ site: siteName, repoUrl: opts?.repoUrl });
+    await ensureGit({
+      site: siteName,
+      repoUrl: opts?.repoUrl,
+      branch: opts?.branch,
+    });
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -368,6 +374,7 @@ interface SiteAppOptions {
   siteName: string;
   runCmdFactory?: RunCmdFactory | null;
   repoUrl?: string;
+  branch?: string;
 }
 
 interface SiteAppResult {
@@ -386,6 +393,7 @@ const createSiteApp = ({
   siteName,
   runCmdFactory,
   repoUrl,
+  branch,
 }: SiteAppOptions): SiteAppResult => {
   const ac = new AbortController();
   const siteApp = new Hono();
@@ -394,7 +402,7 @@ const createSiteApp = ({
   const envName = DECO_ENV_NAME ?? "";
   siteApp.get("/deco/_is_idle", createIdleHandler(siteName, envName));
   // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-  siteApp.use(createDeps(ac.signal, { repoUrl }));
+  siteApp.use(createDeps(ac.signal, { repoUrl, branch }));
   siteApp.use(activityMonitor);
   // These are the APIs that communicate with admin UI
   siteApp.use(createDaemonAPIs({ build: buildCmd, site: siteName }));
@@ -494,10 +502,11 @@ if (SANDBOX_MODE) {
   // Sandbox mode: start without a site, deploy later via POST /sandbox/deploy
   let currentSite: SiteAppResult | null = null;
   let tunnelConn: TunnelConnection | null = null;
+  let claudeHandlers: ReturnType<typeof createClaudeHandlers> | null = null;
 
   const sandbox = createSandboxHandlers({
     onDeploy: async (
-      { repo, site, envName, runCommand, envs }: DeployParams,
+      { repo, site, envName, branch, runCommand, envs, task }: DeployParams,
     ) => {
       // Reset idle timer so the newly claimed sandbox starts fresh
       resetActivity();
@@ -513,7 +522,19 @@ if (SANDBOX_MODE) {
         siteName: site,
         runCmdFactory,
         repoUrl: repo,
+        branch,
       });
+
+      // Create Claude handlers if ANTHROPIC_API_KEY is available
+      const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
+      if (anthropicApiKey) {
+        claudeHandlers = createClaudeHandlers({
+          cwd: Deno.cwd(),
+          anthropicApiKey,
+          githubToken: Deno.env.get("GITHUB_TOKEN"),
+          extraEnv: envs,
+        });
+      }
 
       const tunnel = await registerTunnel(site, envName).catch((err) => {
         console.error("Tunnel registration failed:", err);
@@ -522,9 +543,40 @@ if (SANDBOX_MODE) {
 
       tunnelConn = tunnel;
 
+      // Auto-create a Claude task if task field was provided in deploy request
+      // anthropicApiKey is guaranteed non-null when claudeHandlers is truthy
+      if (
+        task && claudeHandlers && anthropicApiKey && (task.issue || task.prompt)
+      ) {
+        const { ClaudeTask } = await import("./claude/task.ts");
+        const ct = new ClaudeTask({
+          issue: task.issue,
+          prompt: task.prompt,
+          cwd: Deno.cwd(),
+          anthropicApiKey,
+          githubToken: Deno.env.get("GITHUB_TOKEN"),
+          extraEnv: envs,
+        });
+        ct.start().then(() => {
+          console.log(
+            `[sandbox] Auto-started Claude task ${ct.taskId}${
+              task.issue ? ` for issue: ${task.issue}` : ""
+            }`,
+          );
+        }).catch((err) => {
+          console.error(`[sandbox] Auto-start Claude task failed:`, err);
+        });
+      }
+
       return { domain: tunnel?.domain };
     },
     onUndeploy: async () => {
+      // Dispose Claude handlers first (kills running tasks)
+      if (claudeHandlers) {
+        await claudeHandlers.dispose();
+        claudeHandlers = null;
+        console.log(`[sandbox] Claude handlers disposed`);
+      }
       if (currentSite) {
         await currentSite.dispose();
         currentSite = null;
@@ -541,6 +593,39 @@ if (SANDBOX_MODE) {
   app.get("/sandbox/status", sandbox.status);
   app.post("/sandbox/deploy", sandbox.deploy);
   app.delete("/sandbox/deploy", sandbox.undeploy);
+
+  // Claude task endpoints (auth-protected, proxied to Claude sub-app)
+  const claudeAuth: MiddlewareHandler = async (c, next) => {
+    const site = getSiteName();
+    if (!site) {
+      c.res = c.json({ error: "Not deployed" }, 503);
+      return;
+    }
+    if (!claudeHandlers) {
+      c.res = c.json(
+        {
+          error: "Claude integration not available (ANTHROPIC_API_KEY not set)",
+        },
+        503,
+      );
+      return;
+    }
+    await createAuth({ site })(c, next);
+  };
+
+  for (const pattern of ["/sandbox/tasks", "/sandbox/tasks/*"] as const) {
+    app.use(pattern, claudeAuth);
+    app.all(pattern, (c) => {
+      if (!claudeHandlers) {
+        return c.json({ error: "Not available" }, 503);
+      }
+      // Rewrite URL to strip /sandbox/tasks prefix for the Claude sub-app
+      const url = new URL(c.req.url);
+      url.pathname = url.pathname.replace(/^\/sandbox\/tasks/, "") || "/";
+      const rewritten = new Request(url.toString(), c.req.raw);
+      return claudeHandlers.app.fetch(rewritten);
+    });
+  }
 
   // Delegate all other requests to the site app once deployed, or return 503
   app.all("*", (c) => {
