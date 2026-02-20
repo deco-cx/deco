@@ -13,7 +13,7 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [deco-runner, windows-latest]
     runs-on: ${{ matrix.os }}
     name: "Setup deno"
     steps:
