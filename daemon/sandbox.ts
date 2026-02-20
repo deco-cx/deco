@@ -19,8 +19,10 @@ interface DeployParams {
   /** Always resolved: either from the request body or derived from `repo`. */
   site: string;
   envName?: string;
+  branch?: string;
   runCommand?: string[];
   envs?: Record<string, string>;
+  task?: { issue?: string; prompt?: string };
 }
 
 interface DeployResult {
@@ -65,8 +67,10 @@ export const createSandboxHandlers = (
       repo?: string;
       site?: string;
       envName?: string;
+      branch?: string;
       runCommand?: string[];
       envs?: Record<string, string>;
+      task?: { issue?: string; prompt?: string };
     };
     try {
       body = await c.req.json();
@@ -95,6 +99,10 @@ export const createSandboxHandlers = (
       return c.json({ error: "envName must be a string" }, 400);
     }
 
+    if (body.branch !== undefined && typeof body.branch !== "string") {
+      return c.json({ error: "branch must be a string" }, 400);
+    }
+
     if (
       runCommand &&
       (!Array.isArray(runCommand) ||
@@ -120,7 +128,15 @@ export const createSandboxHandlers = (
 
     let result: DeployResult;
     try {
-      result = await onDeploy({ repo, site, envName, runCommand, envs });
+      result = await onDeploy({
+        repo,
+        site,
+        envName,
+        branch: body.branch,
+        runCommand,
+        envs,
+        task: body.task,
+      });
     } catch (err) {
       deploying = false;
       console.error(`[sandbox] Deploy failed:`, err);
