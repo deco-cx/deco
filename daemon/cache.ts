@@ -2,7 +2,8 @@ import { GetObjectCommand, S3Client } from "npm:@aws-sdk/client-s3@3.946.0";
 
 const ASSETS_BUCKET = Deno.env.get("ASSETS_BUCKET") || "deco-assets-storage";
 const S3_REGION = Deno.env.get("ADMIN_S3_REGION") || "sa-east-1";
-const CACHE_FILE = "cache.tar";
+const CACHE_FILE_ZSTD = "cache.tar.zst";
+const CACHE_FILE_PLAIN = "cache.tar";
 
 export async function downloadCache(site: string): Promise<void> {
   const accessKeyId = Deno.env.get("ADMIN_S3_ACCESS_KEY_ID") || "";
@@ -13,8 +14,6 @@ export async function downloadCache(site: string): Promise<void> {
     return;
   }
 
-  const s3Key = `deco-sites/${site}/${CACHE_FILE}`;
-  const localTar = `/tmp/${CACHE_FILE}`;
   const denoDir = Deno.env.get("DENO_DIR_RUN");
   if (!denoDir) {
     console.warn("[cache] DENO_DIR_RUN not set, skipping cache download");
@@ -26,6 +25,29 @@ export async function downloadCache(site: string): Promise<void> {
     region: S3_REGION,
     credentials: { accessKeyId, secretAccessKey },
   });
+
+  // Try zstd first, fallback to plain tar for old sites
+  let cacheFile: string;
+  try {
+    cacheFile = CACHE_FILE_ZSTD;
+    await downloadAndExtract(client, site, cacheFile, denoDir);
+    return;
+  } catch {
+    console.log("[cache] cache.tar.zst not found, trying cache.tar fallback");
+  }
+
+  cacheFile = CACHE_FILE_PLAIN;
+  await downloadAndExtract(client, site, cacheFile, denoDir);
+}
+
+async function downloadAndExtract(
+  client: any,
+  site: string,
+  cacheFile: string,
+  denoDir: string,
+): Promise<void> {
+  const s3Key = `deco-sites/${site}/${cacheFile}`;
+  const localTar = `/tmp/${cacheFile}`;
 
   const resp = await client.send(
     new GetObjectCommand({ Bucket: ASSETS_BUCKET, Key: s3Key }),
@@ -63,9 +85,19 @@ export async function downloadCache(site: string): Promise<void> {
     });
   });
 
-  const { success } = await new Deno.Command("tar", {
-    args: ["xf", localTar, "-C", denoDir],
-  }).output();
+  const isZstd = cacheFile.endsWith(".zst");
+  const extractCmd = isZstd
+    ? new Deno.Command("sh", {
+      args: [
+        "-c",
+        `zstd -d "${localTar}" --stdout | tar xf - -C "${denoDir}"`,
+      ],
+    })
+    : new Deno.Command("tar", {
+      args: ["xf", localTar, "-C", denoDir],
+    });
+
+  const { success } = await extractCmd.output();
 
   if (!success) {
     throw new Error(`tar extraction failed for ${localTar} -> ${denoDir}`);
