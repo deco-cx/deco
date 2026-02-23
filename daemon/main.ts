@@ -27,6 +27,7 @@ import { activityMonitor, createIdleHandler } from "./monitor.ts";
 import { register } from "./tunnel.ts";
 import { createWorker, type WorkerOptions } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
+import { exists } from "@std/fs";
 
 const parsedArgs = parseArgs(Deno.args, {
   string: ["build-cmd"],
@@ -117,6 +118,25 @@ globalThis.addEventListener("unhandledrejection", (e: {
 }) => {
   console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
 });
+
+type ProjectType = "faststore" | "fresh" | "hono";
+
+const detectProjectType = async (): Promise<ProjectType> => {
+  try {
+    const packageJsonPath = join(Deno.cwd(), "package.json");
+    if (await exists(packageJsonPath)) {
+      const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
+      if (packageJson.dependencies?.["@faststore/cli"]) {
+        return "faststore";
+      }
+      // Could add more Node.js framework detection here (e.g., Hono)
+    }
+    return "fresh"; // Default to Fresh for Deno projects
+  } catch (error) {
+    console.log("Error detecting project type, defaulting to fresh:", error);
+    return "fresh";
+  }
+};
 
 const createBundler = (appName?: string) => {
   const bundler = bundleApp(Deno.cwd());
@@ -221,7 +241,7 @@ const watch = async () => {
   }
 };
 
-const createDeps = (): MiddlewareHandler => {
+const createDeps = (projectType: ProjectType): MiddlewareHandler => {
   let ok: Promise<unknown> | null | false = null;
 
   const start = async () => {
@@ -234,33 +254,48 @@ const createDeps = (): MiddlewareHandler => {
       }ms`,
     });
 
-    start = performance.now();
-    await genManifestTS();
-    logs.push({
-      level: "info",
-      message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
-        (performance.now() - start).toFixed(0)
-      }ms`,
-    });
+    // Only run Fresh-specific operations for Fresh projects
+    if (projectType === "fresh") {
+      start = performance.now();
+      await genManifestTS();
+      logs.push({
+        level: "info",
+        message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      });
 
-    start = performance.now();
-    await genBlocksJSON();
-    logs.push({
-      level: "info",
-      message: `${colors.bold("[step 3/4]")}: Blocks metadata generation took ${
-        (performance.now() - start).toFixed(0)
-      }ms`,
-    });
+      start = performance.now();
+      await genBlocksJSON();
+      logs.push({
+        level: "info",
+        message: `${colors.bold("[step 3/4]")}: Blocks metadata generation took ${
+          (performance.now() - start).toFixed(0)
+        }ms`,
+      });
 
-    watch().catch(console.error);
-    watchMeta().catch(console.error);
+      watch().catch(console.error);
+      watchMeta().catch(console.error);
+    } else {
+      await genManifestTS();
+      logs.push({
+        level: "info",
+        message: `${colors.bold("[step 2/4]")}: Skipped Fresh-specific operations (FastStore project)`,
+      });
+    }
+
+    // watchFS is needed for all project types (sends events to admin)
     watchFS().catch(console.error);
+    logs.push({
+      level: "info",
+      message: colors.green("File system watcher started"),
+    });
 
     logs.push({
       level: "info",
       message: `${
         colors.bold("[step 4/4]")
-      }: Started file watcher in background`,
+      }: Initialization complete`,
     });
   };
 
@@ -276,6 +311,9 @@ const createDeps = (): MiddlewareHandler => {
     }
   };
 };
+
+// Detect project type early for configuration
+const PROJECT_TYPE = await detectProjectType();
 
 const app = new Hono();
 
@@ -306,7 +344,7 @@ app.get("/deco/_is_idle", createIdleHandler(DECO_SITE_NAME!, DECO_ENV_NAME!));
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 
 // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-app.use(createDeps());
+app.use(createDeps(PROJECT_TYPE));
 app.use(activityMonitor);
 // These are the APIs that communicate with admin UI
 app.use(createDaemonAPIs({ build: buildCmd, site: DECO_SITE_NAME }));
@@ -337,6 +375,58 @@ if (createRunCmd) {
   };
 
   app.route("", createWorker(createWorkerOptions));
+} else {
+  // No explicit run command, create appropriate worker based on detected type
+  if (PROJECT_TYPE === "faststore") {
+    logs.push({
+      level: "info",
+      message: colors.green("Detected FastStore project, starting Node.js worker..."),
+    });
+
+    // FastStore/Next.js runs on port 3000 by default
+    const FASTSTORE_PORT = 3000;
+
+    const createFastStoreWorkerOptions = async (): Promise<WorkerOptions> => {
+      const packageJsonPath = join(Deno.cwd(), "package.json");
+      const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
+      
+      // Detect package manager
+      const hasYarnLock = await exists(join(Deno.cwd(), "yarn.lock"));
+      const hasPnpmLock = await exists(join(Deno.cwd(), "pnpm-lock.yaml"));
+      const packageManager = hasPnpmLock ? "pnpm" : hasYarnLock ? "yarn" : "npm";
+      
+      // Use volta-specified node version if available
+      const nodeVersion = packageJson.volta?.node;
+      if (nodeVersion) {
+        logs.push({
+          level: "info",
+          message: `Using Node.js ${nodeVersion} from Volta configuration`,
+        });
+      }
+
+      logs.push({
+        level: "info",
+        message: colors.blue(`FastStore worker will run on port ${FASTSTORE_PORT}`),
+      });
+
+      return {
+        command: new Deno.Command(packageManager, {
+          args: ["run", "dev"],
+          cwd: Deno.cwd(),
+          stdout: "piped",
+          stderr: "piped",
+          env: {
+            PORT: `${FASTSTORE_PORT}`,
+            NODE_ENV: "development",
+          },
+        }),
+        port: FASTSTORE_PORT,
+        persist,
+      };
+    };
+
+    app.route("", createWorker(createFastStoreWorkerOptions));
+  }
 }
 
 const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";

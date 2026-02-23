@@ -79,6 +79,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
   static async init<TAppManifest extends AppManifest = AppManifest>(
     opts?: DecoOptions<TAppManifest>,
   ): Promise<Deco<TAppManifest>> {
+    console.log("Deco.init", opts)
     const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
     const decofile = opts?.decofile ?? await getProvider();
     const manifest = opts?.manifest ?? (await import(

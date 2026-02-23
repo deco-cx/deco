@@ -17,11 +17,18 @@ import {
 import { grep, type GrepResult } from "./grep.ts";
 
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
+  return { kind: "file" };
+
   try {
+    console.log("filepath", filepath)
     const { __resolveType, name, path } = JSON.parse(
       await Deno.readTextFile(filepath),
     );
+    console.log("__resolveType", __resolveType)
+    console.log("name", name)
+    console.log("path", path)
     const blockType = await inferBlockType(__resolveType);
+    console.log("blockType", blockType)
 
     if (!blockType) {
       return { kind: "file" };
@@ -43,6 +50,7 @@ const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
       __resolveType,
     };
   } catch (error) {
+    console.log("error", error)
     if (error instanceof Deno.errors.NotFound) {
       return null;
     }
@@ -102,10 +110,25 @@ export interface GrepAPI {
   response: GrepResult;
 }
 
-const shouldIgnore = (path: string) =>
-  basename(path) !== ".gitignore" &&
-    path.includes(`${SEPARATOR}.git`) ||
-  path.includes(`${SEPARATOR}node_modules${SEPARATOR}`);
+const shouldIgnore = (path: string) => {
+  if (basename(path) === ".gitignore") {
+    return false;
+  }
+  
+  // Check if path contains these directories anywhere in the path
+  const ignoredDirs = [
+    '.git',
+    'node_modules',
+    '.next',
+    '.faststore',
+    'dist',
+    'build',
+    '.turbo'
+  ];
+  
+  const pathSegments = path.split(SEPARATOR);
+  return ignoredDirs.some(dir => pathSegments.includes(dir));
+};
 
 const systemPathFromBrowser = (pathAndQuery: string) => {
   const [url] = pathAndQuery.split("?");
@@ -120,37 +143,62 @@ const browserPathFromSystem = (filepath: string) =>
 
 export async function* start(since: number): AsyncIterableIterator<FSEvent> {
   try {
+    // Handle invalid since values (NaN, undefined, etc.)
+    const sinceTimestamp = Number.isFinite(since) ? since : 0;
+    console.log("[watchFS.start] Starting file walk, since:", since, "-> normalized:", sinceTimestamp);
     const walker = walk(Deno.cwd(), { includeDirs: false, includeFiles: true });
+    let fileCount = 0;
+    let skippedCount = 0;
+    let processedCount = 0;
 
     for await (const entry of walker) {
+      processedCount++;
+      
       if (shouldIgnore(entry.path)) {
+        skippedCount++;
         continue;
       }
+      console.log("entry", entry)
 
       const [metadata, mtime] = await Promise.all([
         inferMetadata(entry.path),
         mtimeFor(entry.path),
       ]);
+      console.log("metadata", metadata);
+      console.log("mtime", mtime)
 
-      if (
-        !metadata || mtime < since
-      ) {
+      if (!metadata) {
+        continue;
+      }
+      
+      if (mtime < sinceTimestamp) {
         continue;
       }
 
       const filepath = browserPathFromSystem(entry.path);
+      fileCount++;
+      
+      if (fileCount % 100 === 0) {
+        console.log(`[watchFS.start] Progress: ${fileCount} files sent, ${processedCount} processed, ${skippedCount} skipped`);
+      }
+      
       yield {
         type: "fs-sync",
         detail: { metadata, filepath, timestamp: mtime },
       };
     }
 
+    console.log(`[watchFS.start] File walk complete! Processed: ${processedCount}, Sent: ${fileCount}, Skipped: ${skippedCount}`);
+    console.log("[watchFS.start] Sending fs-snapshot event...");
+    
     yield {
       type: "fs-snapshot",
       detail: { timestamp: Date.now(), status: await git.status() },
     };
+    
+    console.log("[watchFS.start] ✅ fs-snapshot event sent successfully");
   } catch (error) {
-    console.error(error);
+    console.error("[watchFS.start] ❌ Error during file walk:", error);
   }
 }
 

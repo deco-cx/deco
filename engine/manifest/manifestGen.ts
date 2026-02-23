@@ -80,7 +80,7 @@ export const decoManifestBuilder = async (
   let blockIdx = 1;
   for (const blk of blocks()) {
     let totalBlocks = 0;
-    const blockDir = join(dir, blk.type);
+    const blockDir = join(dir, blk.type === "sections" ? "src/components/sections" : blk.type);
 
     // for stability purposes we need to sort paths first.
     const paths: string[] = [];

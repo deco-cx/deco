@@ -1,6 +1,8 @@
 import { Hono } from "@hono/hono";
 import { broadcast } from "./sse/channel.ts";
 import { DenoRun } from "./workers/denoRun.ts";
+import { NodeRun } from "./workers/nodeRun.ts";
+import type { Isolate } from "./workers/isolate.ts";
 
 export interface WorkerOptions {
   persist: () => void;
@@ -31,15 +33,28 @@ export const start = (): WorkerStatusEvent => ({
   detail: workerState,
 });
 
-const wp = Promise.withResolvers<DenoRun>();
+const wp = Promise.withResolvers<Isolate>();
 
 export const worker = async () => {
   const w = await wp.promise;
 
-  w.start();
-  await w.waitUntilReady();
+  w.start?.();
+  await w.waitUntilReady?.();
 
   return w;
+};
+
+const createIsolate = (options: WorkerOptions): Isolate => {
+  // Detect worker type based on command
+  const commandName = (options.command as any).command;
+  
+  // Check if it's a Node.js package manager command
+  if (commandName === "npm" || commandName === "yarn" || commandName === "pnpm") {
+    return new NodeRun({ command: options.command, port: options.port });
+  }
+  
+  // Default to DenoRun for Deno projects
+  return new DenoRun({ command: options.command, port: options.port });
 };
 
 const isProviderFn = (provider: unknown): provider is () => unknown =>
@@ -62,7 +77,7 @@ export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
   // Initialize worker with initial options
   const initializeWorker = async () => {
     const initialOpts = await resolveWorkerOptions(optionsProvider);
-    wp.resolve(new DenoRun(initialOpts));
+    wp.resolve(createIsolate(initialOpts));
   };
 
   initializeWorker();
@@ -96,8 +111,8 @@ export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
         }
 
         wp.promise.then((w) => {
-          w.signal(signal);
-          w[Symbol.asyncDispose]();
+          w.signal?.(signal);
+          w[Symbol.asyncDispose]?.();
         });
         self.close();
       });

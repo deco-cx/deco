@@ -15,7 +15,11 @@ export const createSSE = () => {
   app.get("/watch", (c) => {
     const signal = c.req.raw.signal;
     const done = Promise.withResolvers<void>();
-    const since = Number(c.req.query("since"));
+    const sinceParam = c.req.query("since");
+    const since = Number(sinceParam);
+    const normalizedSince = Number.isFinite(since) ? since : 0;
+    
+    console.log("[SSE /watch] Query params:", { sinceParam, since, normalizedSince });
 
     const enqueue = (
       controller: ReadableStreamDefaultController<ServerSentEventMessage>,
@@ -41,7 +45,7 @@ export const createSSE = () => {
             channel.removeEventListener("broadcast", handler);
           });
 
-          for await (const event of startFS(since)) {
+          for await (const event of startFS(normalizedSince)) {
             if (signal.aborted) {
               return;
             }
@@ -50,7 +54,7 @@ export const createSSE = () => {
 
           enqueue(controller, startWorker());
 
-          startMeta(since)
+          startMeta(normalizedSince)
             .then((meta) => meta && enqueue(controller, meta))
             .catch(console.error);
 
