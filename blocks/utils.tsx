@@ -81,6 +81,7 @@ export interface RequestState {
   };
   bag: WeakMap<any, any>;
   flags: Flag[];
+  dirty?: boolean;
 }
 
 export type FnContext<

@@ -107,6 +107,8 @@ async (ctx, next) => {
 
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
+const PAGE_CACHE_DRY_RUN =
+  Deno.env.get("DECO_PAGE_CACHE_DRY_RUN") === "true";
 
 export const DEBUG_QS = "__d";
 const addHours = function (date: Date, h: number) {
@@ -446,6 +448,21 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       // If response has set-cookie header, set cache-control to no-store
       if (getSetCookies(newHeaders).length > 0) {
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      } else if (!ctx.var.dirty) {
+        if (PAGE_CACHE_DRY_RUN) {
+          console.warn(
+            `[page-cache] cacheable: ${url.pathname}`,
+          );
+        } else {
+          newHeaders.set(
+            "Cache-Control",
+            "public, max-age=120, s-maxage=120",
+          );
+        }
+      } else if (PAGE_CACHE_DRY_RUN) {
+        console.warn(
+          `[page-cache] not cacheable (cookies accessed): ${url.pathname}`,
+        );
       }
 
       // for some reason hono deletes content-type when response is not fresh.
