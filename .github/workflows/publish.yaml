@@ -152,7 +152,6 @@ jobs:
           USER deno
 
           RUN DENO_DIR=/deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT
-          RUN DENO_DIR=/deno-dir deno cache https://cdn.jsdelivr.net/gh/deco-cx/deco@$IMAGE_TAG_COMMIT/mod.ts
 
           WORKDIR /app/deco
           EOF
