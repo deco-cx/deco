@@ -88,6 +88,7 @@
     "@std/path": "jsr:@std/path@^0.225.2",
     "@std/semver": "jsr:@std/semver@^0.224.3",
     "@std/streams": "jsr:@std/streams@^1.0.0",
+    "@sigma/pty-ffi": "jsr:@sigma/pty-ffi@^0.39.1",
     "@std/testing": "jsr:@std/testing@^1.0.0",
     "@zaubrik/djwt": "jsr:@zaubrik/djwt@^3.0.2",
     "fast-json-patch": "npm:fast-json-patch@^3.1.1",

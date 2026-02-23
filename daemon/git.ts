@@ -10,6 +10,7 @@ import {
 } from "simple-git";
 import { createLocker } from "./async.ts";
 import { getSiteName } from "./daemon.ts";
+import { GITHUB_APP_CONFIGURED, setupGitHubAppNetrc } from "./githubApp.ts";
 import { logs } from "./loggings/stream.ts";
 import { DENO_DEPLOYMENT_ID } from "./main.ts";
 
@@ -216,7 +217,7 @@ export const publish = ({ build }: Options): Handler => {
     const author = body.author || { name: "decobot", email: "capy@deco.cx" };
     const message = body.message || `New release by ${author.name}`;
 
-    if (GITHUB_APP_KEY) {
+    if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
       await setupGithubTokenNetrc();
     }
 
@@ -455,7 +456,19 @@ export const getGitHubPackageTokens = async (): Promise<string[]> => {
   return packageTokens;
 };
 
-const setupGithubTokenNetrc = async (): Promise<void> => {
+export const setupGithubTokenNetrc = async (): Promise<void> => {
+  // Prefer direct GitHub App token generation (no admin API dependency)
+  if (GITHUB_APP_CONFIGURED) {
+    const owner = "deco-sites";
+    const siteName = getSiteName();
+    if (!siteName) {
+      throw new Error("Site name not set");
+    }
+    await setupGitHubAppNetrc(owner, siteName);
+    return;
+  }
+
+  // Fallback: fetch token via admin API
   const token = await getGitHubToken();
   if (token === undefined) return;
 
@@ -544,7 +557,10 @@ export const assertRebased = async (): Promise<void> => {
 };
 
 export const ensureGit = async (
-  { site, repoUrl }: Pick<Options, "site"> & { repoUrl?: string },
+  { site, repoUrl, branch }: Pick<Options, "site"> & {
+    repoUrl?: string;
+    branch?: string;
+  },
 ) => {
   const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
   const assertNoIndexLock = async () => {
@@ -603,7 +619,7 @@ export const ensureGit = async (
       );
     }
 
-    if (GITHUB_APP_KEY) {
+    if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
       await setupGithubTokenNetrc();
     }
 
@@ -612,8 +628,9 @@ export const ensureGit = async (
       return;
     }
 
+    const useHttps = GITHUB_APP_CONFIGURED || GITHUB_APP_KEY;
     const cloneUrl = repoUrl ?? REPO_URL ??
-      (GITHUB_APP_KEY
+      (useHttps
         ? `https://github.com/deco-sites/${site}.git`
         : `git@github.com:deco-sites/${site}.git`);
 
@@ -623,7 +640,7 @@ export const ensureGit = async (
         "1",
         "--single-branch",
         "--branch",
-        DEFAULT_TRACKING_BRANCH,
+        branch ?? DEFAULT_TRACKING_BRANCH,
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
