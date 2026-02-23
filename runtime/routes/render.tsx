@@ -110,7 +110,7 @@ export const handler = createHandler(async (
   // Needs to measure if CPU time for rendering is higher than the time to deduplicate the render calls.
   const response = SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT
     ? await AsyncRenderSF.do(
-      stableStringify(props),
+      stableStringify({ ...props, url: ctx.var.url.href }),
       renderFn,
     ).then((r) => r.clone())
     : await renderFn();
