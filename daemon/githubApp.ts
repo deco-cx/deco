@@ -81,9 +81,9 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
   const isPkcs1 = pem.includes("BEGIN RSA PRIVATE KEY");
   const bytes = pemToBytes(pem);
   if (isPkcs1) {
-    return wrapPkcs1InPkcs8(bytes).buffer;
+    return wrapPkcs1InPkcs8(bytes).buffer as ArrayBuffer;
   }
-  return bytes.buffer;
+  return bytes.buffer as ArrayBuffer;
 }
 
 async function generateAppJWT(): Promise<string> {
