@@ -2,7 +2,9 @@ import { create } from "@zaubrik/djwt";
 import { join } from "@std/path";
 
 const GITHUB_APP_ID = Deno.env.get("GITHUB_APP_ID");
-const GITHUB_APP_PRIVATE_KEY = Deno.env.get("GITHUB_APP_PRIVATE_KEY");
+// Normalize literal "\n" escape sequences (common in Docker/K8s/CI envs)
+const GITHUB_APP_PRIVATE_KEY = Deno.env.get("GITHUB_APP_PRIVATE_KEY")
+  ?.replaceAll("\\n", "\n");
 
 export const GITHUB_APP_CONFIGURED = Boolean(
   GITHUB_APP_ID && GITHUB_APP_PRIVATE_KEY,
@@ -138,7 +140,12 @@ async function getInstallationId(
   }
 
   const data = await response.json();
-  const id = data.id as number;
+  const id = data.id;
+  if (typeof id !== "number" || !Number.isFinite(id)) {
+    throw new Error(
+      `Unexpected installation id for ${key}: ${JSON.stringify(data)}`,
+    );
+  }
   installationIdCache.set(key, id);
   return id;
 }
@@ -167,7 +174,12 @@ async function getInstallationToken(
   }
 
   const data = await response.json();
-  return data.token as string;
+  if (typeof data.token !== "string" || !data.token) {
+    throw new Error(
+      `Unexpected token response: ${JSON.stringify(data)}`,
+    );
+  }
+  return data.token;
 }
 
 export async function getGitHubAppToken(

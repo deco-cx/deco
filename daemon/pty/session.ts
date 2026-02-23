@@ -17,13 +17,6 @@ export interface PtySessionInfo {
 
 const POLL_INTERVAL_MS = 50;
 
-/** Shell-escape a single argument for safe inclusion in a command string. */
-function shellEscape(arg: string): string {
-  if (arg.length === 0) return "''";
-  if (!/[^a-zA-Z0-9_./:=@-]/.test(arg)) return arg;
-  return `'${arg.replace(/'/g, "'\\''")}'`;
-}
-
 // deno-lint-ignore no-explicit-any
 type PtyCtor = new (...args: any[]) => any;
 
@@ -90,11 +83,8 @@ export class PtySession {
       );
     }
 
-    const cmdWithArgs = opts.args?.length
-      ? `${shellEscape(opts.cmd)} ${opts.args.map(shellEscape).join(" ")}`
-      : opts.cmd;
-
-    const pty = new PtyCtor(cmdWithArgs, {
+    const pty = new PtyCtor(opts.cmd, {
+      args: opts.args,
       env: opts.env,
       cwd: opts.cwd,
     });

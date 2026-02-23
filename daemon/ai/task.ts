@@ -26,9 +26,7 @@ async function writeAgentTokenFiles(
 
   // gh CLI config (read per-command when GITHUB_TOKEN env var is not set)
   const ghConfigDir = `${agentHome}/.config/gh`;
-  try {
-    Deno.mkdirSync(ghConfigDir, { recursive: true });
-  } catch { /* already exists */ }
+  Deno.mkdirSync(ghConfigDir, { recursive: true });
   const hostsContent =
     `github.com:\n    oauth_token: ${token}\n    user: x-access-token\n    git_protocol: https\n`;
   await Deno.writeTextFile(`${ghConfigDir}/hosts.yml`, hostsContent);
@@ -72,8 +70,13 @@ async function getRepoInfo(
     args: ["remote", "get-url", "origin"],
     cwd,
     stdout: "piped",
+    stderr: "piped",
   });
   const output = await cmd.output();
+  if (!output.success) {
+    const stderr = new TextDecoder().decode(output.stderr);
+    throw new Error(`git remote get-url origin failed: ${stderr}`);
+  }
   const url = new TextDecoder().decode(output.stdout).trim();
 
   // Match: https://github.com/owner/repo.git OR git@github.com:owner/repo.git
@@ -147,8 +150,14 @@ export class AITask {
       args: ["rev-parse", "HEAD"],
       cwd: this.#opts.cwd,
       stdout: "piped",
+      stderr: "piped",
     });
     const headOutput = await headCmd.output();
+    if (!headOutput.success) {
+      throw new Error(
+        `Failed to determine HEAD SHA in ${this.#opts.cwd}`,
+      );
+    }
     this.#startSha = new TextDecoder().decode(headOutput.stdout).trim();
 
     // Self-provision a scoped GitHub token
@@ -195,14 +204,17 @@ export class AITask {
     // through standard paths (git config, ssh defaults).
     const realHome = Deno.env.get("HOME") ?? "/home/deno";
     const agentHome = `${this.#opts.cwd}/.agent-home`;
-    try {
-      Deno.mkdirSync(agentHome, { recursive: true });
-    } catch { /* already exists */ }
+    Deno.mkdirSync(agentHome, { recursive: true });
     const env: Record<string, string> = {
+      ...this.#opts.extraEnv,
       ANTHROPIC_API_KEY: this.#opts.apiKey,
       HOME: agentHome,
-      PATH: Deno.env.get("PATH") ?? "",
-      ...this.#opts.extraEnv,
+      PATH: [
+        Deno.env.get("PATH") ?? "",
+        `${realHome}/.local/bin`,
+        `${realHome}/.deno/bin`,
+        "/usr/local/bin",
+      ].join(":"),
     };
 
     if (HAS_GITHUB_AUTH && githubToken) {
@@ -240,18 +252,27 @@ export class AITask {
       env.GITHUB_TOKEN = githubToken;
     }
 
-    this.#session = await PtySession.create({
-      cmd: "claude",
-      args: ["--print", "--dangerously-skip-permissions", taskPrompt],
-      env,
-      cwd: this.#opts.cwd,
-    });
-
-    this.#session.onExit((code) => {
-      this.#onComplete(code).catch((err) => {
-        console.error(`[ai] Post-completion failed:`, err);
+    try {
+      this.#session = await PtySession.create({
+        cmd: "claude",
+        args: ["--print", "--dangerously-skip-permissions", taskPrompt],
+        env,
+        cwd: this.#opts.cwd,
       });
-    });
+
+      this.#session.onExit((code) => {
+        this.#onComplete(code).catch((err) => {
+          console.error(`[ai] Post-completion failed:`, err);
+        });
+      });
+    } catch (err) {
+      this.#status = "failed";
+      if (this.#tokenRefreshInterval) {
+        clearInterval(this.#tokenRefreshInterval);
+        this.#tokenRefreshInterval = null;
+      }
+      throw err;
+    }
   }
 
   async #onComplete(exitCode: number): Promise<void> {
@@ -305,20 +326,35 @@ export class AITask {
       args: ["rev-parse", "--abbrev-ref", "HEAD"],
       cwd: this.#opts.cwd,
       stdout: "piped",
+      stderr: "piped",
       env,
     });
     const branchOutput = await branchCmd.output();
+    if (!branchOutput.success) {
+      console.error(
+        `[ai] Failed to determine branch for task ${this.taskId}`,
+      );
+      return;
+    }
     const branch = new TextDecoder().decode(branchOutput.stdout).trim();
+
+    if (!this.#startSha) {
+      console.error(
+        `[ai] No start SHA recorded — skipping PR flow for task ${this.taskId}`,
+      );
+      return;
+    }
 
     // Check if there are new commits since the task started
     const diffCmd = new Deno.Command("git", {
       args: ["diff", "--stat", `${this.#startSha}..HEAD`],
       cwd: this.#opts.cwd,
       stdout: "piped",
+      stderr: "piped",
       env,
     });
     const diffOutput = await diffCmd.output();
-    const hasDiff =
+    const hasDiff = diffOutput.success &&
       new TextDecoder().decode(diffOutput.stdout).trim().length > 0;
 
     if (!hasDiff) {
@@ -342,7 +378,22 @@ export class AITask {
       stderr: "piped",
       env,
     });
-    await pushCmd.output();
+    const pushOutput = await pushCmd.output();
+    if (!pushOutput.success) {
+      const stderr = new TextDecoder().decode(pushOutput.stderr);
+      console.error(
+        `[ai] git push failed for task ${this.taskId}: ${stderr}`,
+      );
+      await commentOnIssue({
+        owner,
+        repo,
+        issueNumber,
+        prUrl: null,
+        success: false,
+        token: githubToken,
+      });
+      return;
+    }
 
     // Create PR
     this.#prUrl = await createPR({

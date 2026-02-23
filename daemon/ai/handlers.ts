@@ -116,6 +116,13 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
         socket.send(line);
       }
 
+      // If the process already exited, send exit message immediately
+      if (session.status === "exited") {
+        socket.send(JSON.stringify({ type: "exit", code: session.exitCode }));
+        socket.close();
+        return;
+      }
+
       // Stream new output
       unsubData = session.onData((data) => {
         if (socket.readyState === WebSocket.OPEN) {
