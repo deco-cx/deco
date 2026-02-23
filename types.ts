@@ -129,6 +129,8 @@ export type DecoState<
       & InvocationFunc<TManifest>;
     pathTemplate: string;
     routes?: Route[];
+    dirty?: boolean;
+    dirtyTraces?: string[];
   };
 
 export type { JSONSchema7 } from "npm:@types/json-schema@7.0.11/index.d.ts";
