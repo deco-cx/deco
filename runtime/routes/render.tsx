@@ -3,6 +3,8 @@
 
 import { FieldResolver } from "../../engine/core/resolver.ts";
 import { badRequest } from "../../engine/errors.ts";
+import { stableStringify } from "../../utils/json.ts";
+import { singleFlight } from "../../utils/mod.ts";
 import { createHandler, DEBUG_QS } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
@@ -73,6 +75,10 @@ const fromRequest = (req: Request): Options => {
 const DECO_RENDER_CACHE_CONTROL = Deno.env.get("DECO_RENDER_CACHE_CONTROL") ||
   "public, max-age=60, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400";
 
+const AsyncRenderSF = singleFlight<Response>();
+const SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT =
+  Deno.env.get("SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT") === "true";
+
 export const handler = createHandler(async (
   ctx,
 ) => {
@@ -85,17 +91,29 @@ export const handler = createHandler(async (
   if (isDebugRequest) {
     return Response.json({ debugData: state.vary.debug.build() });
   }
+  const props = {
+    params: ctx.req.param(),
+    url: ctx.var.url,
+    data: { page },
+  } satisfies PageParams<PageData>;
 
-  const response = await render({
-    page: {
-      Component: Render,
-      props: {
-        params: ctx.req.param(),
-        url: ctx.var.url,
-        data: { page },
-      } satisfies PageParams<PageData>,
-    },
-  });
+  const renderFn = async () =>
+    await render({
+      page: {
+        Component: Render,
+        props,
+      },
+    });
+
+  // In case of async render, we use single flight to deduplicate the render calls.
+  // FEATURE_FLAG: SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT
+  // Needs to measure if CPU time for rendering is higher than the time to deduplicate the render calls.
+  const response = SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT
+    ? await AsyncRenderSF.do(
+      stableStringify({ ...props, url: ctx.var.url.href }),
+      renderFn,
+    ).then((r) => r.clone())
+    : await renderFn();
 
   // this is a hack to make sure we cache only sections that does not vary based on the loader content.
   // so we can calculate cacheBust per page but decide to cache sections individually based on vary.
