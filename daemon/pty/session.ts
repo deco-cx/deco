@@ -28,7 +28,8 @@ async function loadPty() {
   try {
     const mod = await import("@sigma/pty-ffi");
     _PtyCtor = mod.Pty;
-  } catch {
+  } catch (err) {
+    console.error("[pty] Failed to load @sigma/pty-ffi:", err);
     _PtyCtor = null;
   }
   return _PtyCtor;
