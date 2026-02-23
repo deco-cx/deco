@@ -73,17 +73,17 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     public site: string,
     public ctx: DecoContext<TAppManifest>,
     public bindings?: Bindings<TAppManifest>,
-  ) {
-  }
+  ) {}
 
   static async init<TAppManifest extends AppManifest = AppManifest>(
     opts?: DecoOptions<TAppManifest>,
   ): Promise<Deco<TAppManifest>> {
     const site = opts?.site ?? siteNameFromEnv() ?? randomSiteName();
-    const decofile = opts?.decofile ?? await getProvider();
-    const manifest = opts?.manifest ?? (await import(
-      toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href
-    ).then((mod) => mod.default));
+    const decofile = opts?.decofile ?? (await getProvider());
+    const manifest = opts?.manifest ??
+      (await import(toFileUrl(join(Deno.cwd(), "manifest.gen.ts")).href).then(
+        (mod) => mod.default,
+      ));
     const decoContext = await Promise.resolve(manifest).then((m) =>
       newContext(
         m,
@@ -96,11 +96,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       )
     );
     Context.setDefault(decoContext);
-    return new Deco<TAppManifest>(
-      site,
-      decoContext,
-      opts?.bindings,
-    );
+    return new Deco<TAppManifest>(site, decoContext, opts?.bindings);
   }
 
   meta(opts?: GetMetaOpts): Promise<VersionedMetaInfo | undefined> {
@@ -113,7 +109,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       | { RENDER_FN?: ContextRenderer | undefined; GLOBALS?: unknown }
       | undefined,
   ) => Response | Promise<Response> {
-    return this._handler ??= handlerFor(this);
+    return (this._handler ??= handlerFor(this));
   }
   get fetch(): (req: Request) => Response | Promise<Response> {
     return (req: Request) => this.handler(req);
@@ -141,7 +137,8 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       req,
       previewUrl,
       props,
-      ctx ?? await this.prepareState({ req: { raw: req, param: () => ({}) } }),
+      ctx ??
+        (await this.prepareState({ req: { raw: req, param: () => ({}) } })),
     );
   }
 
@@ -154,7 +151,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       req,
       opts,
       state ??
-        await this.prepareState({ req: { raw: req, param: () => ({}) } }),
+        (await this.prepareState({ req: { raw: req, param: () => ({}) } })),
     );
   }
 
@@ -162,9 +159,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     return invoke(...args);
   }
 
-  batchInvoke(
-    ...args: Parameters<typeof batchInvoke>
-  ): Promise<unknown> {
+  batchInvoke(...args: Parameters<typeof batchInvoke>): Promise<unknown> {
     return batchInvoke(...args);
   }
 
@@ -173,7 +168,10 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       req: { raw: Request; param: () => Record<string, string> };
       base?: unknown;
     },
-    { enabled, correlationId }: {
+    {
+      enabled,
+      correlationId,
+    }: {
       enabled: boolean;
       correlationId?: string;
     } = { enabled: false },
@@ -191,12 +189,11 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       timings: t,
       metrics: observe,
       tracer,
-      context: otelContext.active().setValue(REQUEST_CONTEXT_KEY, req)
-        .setValue(
-          STATE_CONTEXT_KEY,
-          state,
-        ),
-      logger: enabled ? console : {
+      context: otelContext
+        .active()
+        .setValue(REQUEST_CONTEXT_KEY, req)
+        .setValue(STATE_CONTEXT_KEY, state),
+      logger: enabled ? console : ({
         assert: NOOP_CALL,
         clear: NOOP_CALL,
         count: NOOP_CALL,
@@ -217,7 +214,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
         timeStamp: NOOP_CALL,
         trace: NOOP_CALL,
         warn: NOOP_CALL,
-      } as Console,
+      } as Console),
     };
 
     const liveContext = this.ctx;
@@ -234,6 +231,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     state.vary = vary();
     state.flags = [];
     state.dirty = false;
+    state.dirtyTraces = [];
     state.site = {
       id: this.ctx.siteId ?? 0,
       name: this.ctx.site,
@@ -255,6 +253,13 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
               args[0].toLowerCase() === "cookie"
             ) {
               state.dirty = true;
+              state.dirtyTraces!.push(
+                new Error(
+                  `cookie header accessed via headers.${
+                    String(prop)
+                  }("cookie")`,
+                ).stack ?? "",
+              );
             }
             return value.apply(target, args);
           };
@@ -298,9 +303,13 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       .bind(resolver);
 
     state.resolve = ctxResolver;
-    state.invoke = buildInvokeFunc(ctxResolver, {}, {
-      isInvoke: true,
-    });
+    state.invoke = buildInvokeFunc(
+      ctxResolver,
+      {},
+      {
+        isInvoke: true,
+      },
+    );
 
     return state;
   }
