@@ -233,12 +233,48 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     state.bag = new WeakMap();
     state.vary = vary();
     state.flags = [];
+    state.dirty = false;
     state.site = {
       id: this.ctx.siteId ?? 0,
       name: this.ctx.site,
     };
     state.global = state;
     const { resolver } = await this.ctx.runtime!;
+
+    // Proxy the request headers to detect cookie access during resolution.
+    // When any resolver (loader, action, section) reads the "cookie" header,
+    // we flag state.dirty = true so the middleware knows not to cache.
+    const proxiedHeaders = new Proxy(request.headers, {
+      get(target, prop, receiver) {
+        const value = Reflect.get(target, prop, receiver);
+        if (typeof value === "function") {
+          return function (this: Headers, ...args: any[]) {
+            if (
+              (prop === "get" || prop === "has") &&
+              typeof args[0] === "string" &&
+              args[0].toLowerCase() === "cookie"
+            ) {
+              state.dirty = true;
+            }
+            return value.apply(target, args);
+          };
+        }
+        return value;
+      },
+    });
+    const proxiedRequest = new Proxy(request, {
+      get(target, prop, receiver) {
+        if (prop === "headers") {
+          return proxiedHeaders;
+        }
+        const value = Reflect.get(target, prop, receiver);
+        if (typeof value === "function") {
+          return value.bind(target);
+        }
+        return value;
+      },
+    });
+
     const ctxResolver = resolver
       .resolverFor(
         {
@@ -253,7 +289,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
               return Reflect.get(target, prop, recv);
             },
           }),
-          request,
+          request: proxiedRequest,
         },
         {
           monitoring: state.monitoring,
