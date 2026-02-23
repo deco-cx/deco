@@ -548,16 +548,19 @@ if (SANDBOX_MODE) {
       if (
         task && aiHandlers && apiKey && (task.issue || task.prompt)
       ) {
-        const { AITask } = await import("./ai/task.ts");
-        const ct = new AITask({
-          issue: task.issue,
-          prompt: task.prompt,
-          cwd: Deno.cwd(),
-          apiKey,
-          githubToken: Deno.env.get("GITHUB_TOKEN"),
-          extraEnv: envs,
-        });
-        ct.start().then(() => {
+        // Wait for git clone to finish before starting the AI task,
+        // since the task needs a valid repo (git rev-parse HEAD, etc.)
+        ensureGit({ site, repoUrl: repo, branch }).then(async () => {
+          const { AITask } = await import("./ai/task.ts");
+          const ct = new AITask({
+            issue: task.issue,
+            prompt: task.prompt,
+            cwd: Deno.cwd(),
+            apiKey,
+            githubToken: Deno.env.get("GITHUB_TOKEN"),
+            extraEnv: envs,
+          });
+          await ct.start();
           console.log(
             `[sandbox] Auto-started AI task ${ct.taskId}${
               task.issue ? ` for issue: ${task.issue}` : ""
