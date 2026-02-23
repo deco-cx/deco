@@ -97,7 +97,6 @@ export const handler = createHandler(async (
     data: { page },
   } satisfies PageParams<PageData>;
 
-  const propsString = stableStringify(props);
   const renderFn = async () =>
     await render({
       page: {
@@ -111,7 +110,7 @@ export const handler = createHandler(async (
   // Needs to measure if CPU time for rendering is higher than the time to deduplicate the render calls.
   const response = SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT
     ? await AsyncRenderSF.do(
-      propsString,
+      stableStringify(props),
       renderFn,
     ).then((r) => r.clone())
     : await renderFn();
