@@ -87,6 +87,8 @@ jobs:
           # Maybe add deno lsp?
           RUN apk add git openssh zstd curl jq nodejs npm
           RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community github-cli
+          # Remove Deno's bundled libgcc_s which conflicts with Alpine's Node.js
+          RUN rm -f /usr/local/lib/libgcc_s.so.1
           RUN npm install -g @anthropic-ai/claude-code
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir && chown -R deno:deno /daemon-deno-dir
@@ -140,9 +142,10 @@ jobs:
           # Maybe add deno lsp?
           RUN apk add git openssh zstd curl jq nodejs npm
           RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community github-cli
+          # Remove Deno's bundled libgcc_s which conflicts with Alpine's Node.js
+          RUN rm -f /usr/local/lib/libgcc_s.so.1
           RUN npm install -g @anthropic-ai/claude-code
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
-          // common deps
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir && chown -R deno:deno /daemon-deno-dir
 
           # Prefer not to run as root.
