@@ -77,18 +77,15 @@ jobs:
 
           # Get the current tag and create the Dockerfile
           cat <<EOF > Dockerfile
-          FROM denoland/deno:alpine-1.44.4
+          FROM denoland/deno:1.44.4
 
           # The port that your application listens to.
           EXPOSE 8000
 
           WORKDIR /app
 
-          # Maybe add deno lsp?
-          RUN apk add git openssh zstd curl jq nodejs npm
-          RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community github-cli
-          # Remove Deno's bundled libgcc_s which conflicts with Alpine's Node.js
-          RUN rm -f /usr/local/lib/libgcc_s.so.1
+          RUN apt-get update && apt-get install -y --no-install-recommends git openssh-client zstd curl jq nodejs npm && rm -rf /var/lib/apt/lists/*
+          RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh && rm -rf /var/lib/apt/lists/*
           RUN npm install -g @anthropic-ai/claude-code
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
@@ -133,18 +130,15 @@ jobs:
 
           # Get the current tag and create the Dockerfile
           cat <<EOF > Dockerfile
-          FROM denoland/deno:alpine-2.4.0
+          FROM denoland/deno:2.4.0
 
           # The port that your application listens to.
           EXPOSE 8000
 
           WORKDIR /app
 
-          # Maybe add deno lsp?
-          RUN apk add git openssh zstd curl jq nodejs npm
-          RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community github-cli
-          # Remove Deno's bundled libgcc_s which conflicts with Alpine's Node.js
-          RUN rm -f /usr/local/lib/libgcc_s.so.1
+          RUN apt-get update && apt-get install -y --no-install-recommends git openssh-client zstd curl jq nodejs npm && rm -rf /var/lib/apt/lists/*
+          RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh && rm -rf /var/lib/apt/lists/*
           RUN npm install -g @anthropic-ai/claude-code
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
