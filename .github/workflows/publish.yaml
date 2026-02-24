@@ -77,18 +77,16 @@ jobs:
 
           # Get the current tag and create the Dockerfile
           cat <<EOF > Dockerfile
-          FROM denoland/deno:1.44.4
+          FROM denoland/deno:alpine-1.44.4
 
           # The port that your application listens to.
           EXPOSE 8000
 
           WORKDIR /app
 
-          RUN apt-get update && apt-get install -y --no-install-recommends git openssh-client zstd curl jq nodejs npm && rm -rf /var/lib/apt/lists/*
-          RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh && rm -rf /var/lib/apt/lists/*
-          RUN npm install -g @anthropic-ai/claude-code
+          # Maybe add deno lsp?
+          RUN apk add git openssh
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
-          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir && chown -R deno:deno /daemon-deno-dir
 
           # Prefer not to run as root.
@@ -130,24 +128,20 @@ jobs:
 
           # Get the current tag and create the Dockerfile
           cat <<EOF > Dockerfile
-          FROM denoland/deno:2.4.0
+          FROM denoland/deno:alpine-2.4.0
 
           # The port that your application listens to.
           EXPOSE 8000
 
           WORKDIR /app
 
-          RUN apt-get update && apt-get install -y --no-install-recommends git openssh-client zstd curl jq nodejs npm && rm -rf /var/lib/apt/lists/*
-          RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && apt-get update && apt-get install -y gh && rm -rf /var/lib/apt/lists/*
-          RUN npm install -g @anthropic-ai/claude-code
+          # Maybe add deno lsp?
+          RUN apk add git openssh
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
-          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno && mkdir /app/deco && chown -R deno:deno /app && mkdir -p /deno-dir && chown -R deno:deno /deno-dir && chown -R deno:deno /daemon-deno-dir
 
           # Prefer not to run as root.
           USER deno
-
-          RUN DENO_DIR=/deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT
 
           WORKDIR /app/deco
           EOF
