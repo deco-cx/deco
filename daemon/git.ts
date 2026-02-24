@@ -491,7 +491,9 @@ export const assertRebased = async (): Promise<void> => {
   if (status.conflicted.length > 0) {
     console.log(
       `Skipping rebase: Repository has existing conflicts: ${
-        status.conflicted.join(", ")
+        status.conflicted.join(
+          ", ",
+        )
       }`,
     );
     return;
@@ -556,12 +558,14 @@ export const assertRebased = async (): Promise<void> => {
   }
 };
 
-export const ensureGit = async (
-  { site, repoUrl, branch }: Pick<Options, "site"> & {
-    repoUrl?: string;
-    branch?: string;
-  },
-) => {
+export const ensureGit = async ({
+  site,
+  repoUrl,
+  branch,
+}: Pick<Options, "site"> & {
+  repoUrl?: string;
+  branch?: string;
+}) => {
   const isDeployment = typeof DENO_DEPLOYMENT_ID === "string";
   const assertNoIndexLock = async () => {
     if (!isDeployment) {
@@ -629,7 +633,8 @@ export const ensureGit = async (
     }
 
     const useHttps = GITHUB_APP_CONFIGURED || GITHUB_APP_KEY;
-    const cloneUrl = repoUrl ?? REPO_URL ??
+    const cloneUrl = repoUrl ??
+      REPO_URL ??
       (useHttps
         ? `https://github.com/deco-sites/${site}.git`
         : `git@github.com:deco-sites/${site}.git`);
@@ -644,6 +649,22 @@ export const ensureGit = async (
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
+
+    // Exclude AI agent artifacts from git tracking
+    const excludeFile = join(Deno.cwd(), ".git/info/exclude");
+    try {
+      const existing = await Deno.readTextFile(excludeFile).catch(() => "");
+      const entries = [".agent-home/", ".claude/"];
+      const toAdd = entries.filter((e) => !existing.includes(e));
+      if (toAdd.length > 0) {
+        await Deno.writeTextFile(
+          excludeFile,
+          existing.trimEnd() + "\n" + toAdd.join("\n") + "\n",
+        );
+      }
+    } catch {
+      // Ignore — exclude file may not exist yet
+    }
 
     // Copy build files if BUILD_FILES_DIR is specified
     if (BUILD_FILES_DIR) {

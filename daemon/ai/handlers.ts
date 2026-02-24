@@ -187,5 +187,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     tasks.clear();
   };
 
-  return { app, dispose };
+  const getTask = (taskId: string) => tasks.get(taskId);
+
+  return { app, dispose, getTask };
 };
