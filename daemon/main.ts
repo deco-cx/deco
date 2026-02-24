@@ -527,16 +527,13 @@ if (SANDBOX_MODE) {
         branch,
       });
 
-      // Create AI handlers if ANTHROPIC_API_KEY is available
-      const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-      if (apiKey) {
-        aiHandlers = createAIHandlers({
-          cwd: Deno.cwd(),
-          apiKey,
-          githubToken: Deno.env.get("GITHUB_TOKEN"),
-          extraEnv: envs,
-        });
-      }
+      // Always create AI handlers — OAuth can be used when no API key is set
+      aiHandlers = createAIHandlers({
+        cwd: Deno.cwd(),
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
+        githubToken: Deno.env.get("GITHUB_TOKEN"),
+        extraEnv: envs,
+      });
 
       const tunnel = await registerTunnel(site, envName).catch((err) => {
         console.error("Tunnel registration failed:", err);
@@ -546,26 +543,31 @@ if (SANDBOX_MODE) {
       tunnelConn = tunnel;
 
       // Auto-create an AI task if task field was provided in deploy request
-      // apiKey is guaranteed non-null when aiHandlers is truthy
-      if (
-        task && aiHandlers && apiKey && (task.issue || task.prompt)
-      ) {
-        const handlers = aiHandlers;
-        // Wait for git clone to finish before starting the AI task,
-        // since the task needs a valid repo (git rev-parse HEAD, etc.)
-        ensureGit({ site, repoUrl: repo, branch }).then(async () => {
-          const ct = await handlers.createTask({
-            issue: task.issue,
-            prompt: task.prompt,
+      // Only auto-start prompt/issue tasks if we have an API key (OAuth can't be auto-started)
+      if (task && aiHandlers && (task.issue || task.prompt)) {
+        const hasApiKey = Boolean(Deno.env.get("ANTHROPIC_API_KEY"));
+        if (hasApiKey) {
+          const handlers = aiHandlers;
+          // Wait for git clone to finish before starting the AI task,
+          // since the task needs a valid repo (git rev-parse HEAD, etc.)
+          ensureGit({ site, repoUrl: repo, branch }).then(async () => {
+            const ct = await handlers.createTask({
+              issue: task.issue,
+              prompt: task.prompt,
+            });
+            console.log(
+              `[sandbox] Auto-started AI task ${ct.taskId}${
+                task.issue ? ` for issue: ${task.issue}` : ""
+              }`,
+            );
+          }).catch((err) => {
+            console.error(`[sandbox] Auto-start AI task failed:`, err);
           });
-          console.log(
-            `[sandbox] Auto-started AI task ${ct.taskId}${
-              task.issue ? ` for issue: ${task.issue}` : ""
-            }`,
+        } else {
+          console.warn(
+            `[sandbox] Skipping auto-start: no ANTHROPIC_API_KEY, user needs OAuth first`,
           );
-        }).catch((err) => {
-          console.error(`[sandbox] Auto-start AI task failed:`, err);
-        });
+        }
       }
 
       return { domain: tunnel?.domain };
@@ -601,12 +603,7 @@ if (SANDBOX_MODE) {
       return c.json({ error: "Not deployed" }, 503);
     }
     if (!aiHandlers) {
-      return c.json(
-        {
-          error: "AI integration not available (ANTHROPIC_API_KEY not set)",
-        },
-        503,
-      );
+      return c.json({ error: "AI integration not available" }, 503);
     }
     await createAuth({ site })(c, next);
   };
@@ -636,12 +633,13 @@ if (SANDBOX_MODE) {
     let unsubExit: (() => void) | undefined;
 
     socket.onopen = () => {
-      for (const line of session.outputBuffer) {
-        socket.send(line);
-      }
       if (session.status === "exited") {
+        // Process already finished — replay the full buffer so the client
+        // can see the output (there's no process to trigger a redraw).
+        for (const line of session.outputBuffer) {
+          socket.send(line);
+        }
         socket.send(JSON.stringify({ type: "exit", code: session.exitCode }));
-        // Delay close to let buffered data flush to the client
         setTimeout(() => {
           if (socket.readyState === WebSocket.OPEN) {
             socket.close();
@@ -649,6 +647,13 @@ if (SANDBOX_MODE) {
         }, 500);
         return;
       }
+
+      // For running sessions: do NOT replay the output buffer.
+      // The buffer contains historical screen draws at potentially different
+      // terminal sizes. Replaying them garbles the TUI (cursor positions,
+      // partial redraws, etc.). Instead, subscribe to live data only.
+      // The client sends its dimensions on connect, which triggers a PTY
+      // resize → Claude Code redraws the current screen cleanly.
       unsubData = session.onData((data) => {
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(data);
@@ -666,8 +671,11 @@ if (SANDBOX_MODE) {
       });
     };
 
-    // Debounce resize on server side to prevent Claude Code redraw storms
+    // Debounce resize on server side to prevent Claude Code redraw storms.
+    // The first resize is applied immediately (client sends dimensions on
+    // connect, and we need a fast redraw since we don't replay the buffer).
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+    let firstResize = true;
 
     socket.onmessage = (event) => {
       try {
@@ -678,10 +686,15 @@ if (SANDBOX_MODE) {
           msg.type === "resize" && typeof msg.cols === "number" &&
           typeof msg.rows === "number"
         ) {
-          clearTimeout(resizeTimer);
-          resizeTimer = setTimeout(() => {
+          if (firstResize) {
+            firstResize = false;
             session.resize(msg.cols, msg.rows);
-          }, 150);
+          } else {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+              session.resize(msg.cols, msg.rows);
+            }, 150);
+          }
         }
       } catch {
         // Ignore malformed messages

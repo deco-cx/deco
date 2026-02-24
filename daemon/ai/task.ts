@@ -40,11 +40,13 @@ export interface AITaskOptions {
   /** Working directory (the cloned repo). */
   cwd: string;
   /** AI provider API key — injected into the agent's env only. */
-  apiKey: string;
+  apiKey?: string;
   /** GITHUB_TOKEN — injected into the agent's and gh's env only. */
   githubToken?: string;
   /** Extra env vars for the agent process. */
   extraEnv?: Record<string, string>;
+  /** Bare claude session for OAuth setup — mutually exclusive with issue/prompt. */
+  setup?: boolean;
 }
 
 export type AITaskStatus =
@@ -53,9 +55,12 @@ export type AITaskStatus =
   | "completed"
   | "failed";
 
+export type AITaskType = "setup" | "prompt" | "issue";
+
 export interface AITaskInfo {
   taskId: string;
   status: AITaskStatus;
+  type: AITaskType;
   issue?: string;
   prompt?: string;
   prUrl?: string | null;
@@ -112,6 +117,7 @@ export class AITask {
   readonly createdAt: number;
   readonly issue?: string;
   readonly prompt?: string;
+  readonly type: AITaskType;
 
   #session: PtySession | null = null;
   #status: AITaskStatus = "pending";
@@ -136,11 +142,43 @@ export class AITask {
     this.createdAt = Date.now();
     this.issue = opts.issue;
     this.prompt = opts.prompt;
+    this.type = opts.setup ? "setup" : opts.issue ? "issue" : "prompt";
     this.#opts = opts;
   }
 
   async start(): Promise<void> {
     this.#status = "running";
+
+    // Setup mode: bare claude for OAuth — skip all git/GitHub/prompt logic
+    if (this.#opts.setup) {
+      const realHome = Deno.env.get("HOME") ?? "/home/deno";
+      const agentHome = `${this.#opts.cwd}/.agent-home`;
+      Deno.mkdirSync(agentHome, { recursive: true });
+      const env: Record<string, string> = {
+        ...this.#opts.extraEnv,
+        HOME: agentHome,
+        PATH: [
+          Deno.env.get("PATH") ?? "",
+          `${realHome}/.local/bin`,
+          `${realHome}/.deno/bin`,
+          "/usr/local/bin",
+        ].join(":"),
+      };
+      // NO ANTHROPIC_API_KEY — forces OAuth flow
+      // NO flags — bare claude
+      this.#session = await PtySession.create({
+        cmd: "claude",
+        args: [],
+        env,
+        cwd: this.#opts.cwd,
+        cols: 120,
+        rows: 40,
+      });
+      this.#session.onExit((code) => {
+        this.#status = code === 0 ? "completed" : "failed";
+      });
+      return;
+    }
 
     // Save the current HEAD SHA so we can compare after the task completes
     const headCmd = new Deno.Command("git", {
@@ -204,7 +242,6 @@ export class AITask {
     Deno.mkdirSync(agentHome, { recursive: true });
     const env: Record<string, string> = {
       ...this.#opts.extraEnv,
-      ANTHROPIC_API_KEY: this.#opts.apiKey,
       HOME: agentHome,
       PATH: [
         Deno.env.get("PATH") ?? "",
@@ -213,6 +250,10 @@ export class AITask {
         "/usr/local/bin",
       ].join(":"),
     };
+
+    if (this.#opts.apiKey) {
+      env.ANTHROPIC_API_KEY = this.#opts.apiKey;
+    }
 
     if (HAS_GITHUB_AUTH && githubToken) {
       // File-based auth: write .netrc + gh config so both git and gh CLI
@@ -430,6 +471,7 @@ export class AITask {
     return {
       taskId: this.taskId,
       status: this.#status,
+      type: this.type,
       issue: this.issue,
       prompt: this.prompt,
       prUrl: this.#prUrl,
