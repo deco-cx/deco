@@ -4,8 +4,8 @@ import { AITask } from "./task.ts";
 interface AIHandlersOptions {
   /** Working directory for the AI agent (the cloned repo). */
   cwd: string;
-  /** AI provider API key from daemon env. */
-  apiKey: string;
+  /** AI provider API key from daemon env (optional — OAuth can be used instead). */
+  apiKey?: string;
   /** GITHUB_TOKEN from daemon env. */
   githubToken?: string;
   /** Extra env vars from deploy request. */
@@ -18,18 +18,25 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   // POST /sandbox/tasks — create a new AI task
   app.post("/", async (c) => {
-    let body: { issue?: string; prompt?: string };
+    let body: { issue?: string; prompt?: string; setup?: boolean };
     try {
       body = await c.req.json();
     } catch {
       return c.json({ error: "Invalid JSON body" }, 400);
     }
 
-    const { issue, prompt } = body;
+    const { issue, prompt, setup } = body;
 
-    if (issue && prompt) {
+    if ([issue, prompt, setup].filter(Boolean).length > 1) {
       return c.json(
-        { error: "'issue' and 'prompt' are mutually exclusive" },
+        { error: "'issue', 'prompt', and 'setup' are mutually exclusive" },
+        400,
+      );
+    }
+
+    if (!issue && !prompt && !setup) {
+      return c.json(
+        { error: "One of 'issue', 'prompt', or 'setup' is required" },
         400,
       );
     }
@@ -45,6 +52,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     const task = new AITask({
       issue,
       prompt,
+      setup,
       cwd: opts.cwd,
       apiKey: opts.apiKey,
       githubToken: opts.githubToken,
@@ -62,7 +70,9 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     }
 
     console.log(
-      `[ai] Task ${task.taskId} started${issue ? ` for issue: ${issue}` : ""}`,
+      `[ai] Task ${task.taskId} started${
+        setup ? " (setup)" : issue ? ` for issue: ${issue}` : ""
+      }`,
     );
 
     return c.json({
@@ -75,6 +85,19 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
   app.get("/", (c) => {
     const list = Array.from(tasks.values()).map((t) => t.info());
     return c.json(list);
+  });
+
+  // GET /sandbox/tasks/status — check if auth is available
+  app.get("/status", (c) => {
+    const hasApiKey = Boolean(opts.apiKey);
+    let hasOAuthCreds = false;
+    try {
+      Deno.statSync(`${opts.cwd}/.agent-home/.claude/.credentials.json`);
+      hasOAuthCreds = true;
+    } catch { /* not found */ }
+    return c.json({
+      needsSetup: !hasApiKey && !hasOAuthCreds,
+    });
   });
 
   // GET /sandbox/tasks/:taskId — get task details
@@ -184,7 +207,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   /** Create and start an AI task, registering it in the task map. */
   const createTask = async (
-    taskOpts: { issue?: string; prompt?: string },
+    taskOpts: { issue?: string; prompt?: string; setup?: boolean },
   ): Promise<AITask> => {
     const task = new AITask({
       ...taskOpts,
