@@ -91,10 +91,10 @@ jobs:
 
           ENV HOME=/home/deno
 
-          RUN mkdir -p /home/deno && chown -R deno:deno /home/deno \
-              && mkdir /app/deco && chown -R deno:deno /app \
-              && mkdir -p /deno-dir && chown -R deno:deno /deno-dir \
-              && chown -R deno:deno /daemon-deno-dir
+          RUN mkdir -p /home/deno && chown -R 1000:1000 /home/deno \
+              && mkdir /app/deco && chown -R 1000:1000 /app \
+              && mkdir -p /deno-dir && chown -R 1000:1000 /deno-dir \
+              && chown -R 1000:1000 /daemon-deno-dir
 
           USER deno
           WORKDIR /app/deco
@@ -154,10 +154,10 @@ jobs:
 
           ENV HOME=/home/deno
 
-          RUN mkdir -p /home/deno && chown -R deno:deno /home/deno \
-              && mkdir /app/deco && chown -R deno:deno /app \
-              && mkdir -p /deno-dir && chown -R deno:deno /deno-dir \
-              && chown -R deno:deno /daemon-deno-dir
+          RUN mkdir -p /home/deno && chown -R 1000:1000 /home/deno \
+              && mkdir /app/deco && chown -R 1000:1000 /app \
+              && mkdir -p /deno-dir && chown -R 1000:1000 /deno-dir \
+              && chown -R 1000:1000 /daemon-deno-dir
 
           USER deno
 
