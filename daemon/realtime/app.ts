@@ -69,7 +69,10 @@ export const createRealtimeAPIs = () => {
 
       const path = paths[0];
 
-      if (path.includes(".git") || path.includes("node_modules")) {
+      if (
+        path.includes(".git") || path.includes("node_modules") ||
+        path.includes(".agent-home") || path.includes(".claude")
+      ) {
         continue;
       }
 
