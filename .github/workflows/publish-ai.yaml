@@ -89,6 +89,8 @@ jobs:
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
 
+          ENV HOME=/home/deno
+
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno \
               && mkdir /app/deco && chown -R deno:deno /app \
               && mkdir -p /deno-dir && chown -R deno:deno /deno-dir \
@@ -149,6 +151,8 @@ jobs:
           # Deno caches
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
           RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
+
+          ENV HOME=/home/deno
 
           RUN mkdir -p /home/deno && chown -R deno:deno /home/deno \
               && mkdir /app/deco && chown -R deno:deno /app \
