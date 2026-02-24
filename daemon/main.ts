@@ -666,6 +666,9 @@ if (SANDBOX_MODE) {
       });
     };
 
+    // Debounce resize on server side to prevent Claude Code redraw storms
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+
     socket.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data as string);
@@ -675,7 +678,10 @@ if (SANDBOX_MODE) {
           msg.type === "resize" && typeof msg.cols === "number" &&
           typeof msg.rows === "number"
         ) {
-          session.resize(msg.cols, msg.rows);
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            session.resize(msg.cols, msg.rows);
+          }, 150);
         }
       } catch {
         // Ignore malformed messages
@@ -683,6 +689,7 @@ if (SANDBOX_MODE) {
     };
 
     socket.onclose = () => {
+      clearTimeout(resizeTimer);
       unsubData?.();
       unsubExit?.();
     };
