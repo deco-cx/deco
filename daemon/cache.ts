@@ -26,18 +26,27 @@ export async function downloadCache(site: string): Promise<void> {
     credentials: { accessKeyId, secretAccessKey },
   });
 
-  // Try zstd first, fallback to plain tar for old sites
-  let cacheFile: string;
   try {
-    cacheFile = CACHE_FILE_ZSTD;
-    await downloadAndExtract(client, site, cacheFile, denoDir);
-    return;
-  } catch {
-    console.log("[cache] cache.tar.zst not found, trying cache.tar fallback");
-  }
+    // Try zstd first, fallback to plain tar for old sites
+    let cacheFile: string;
+    try {
+      cacheFile = CACHE_FILE_ZSTD;
+      await downloadAndExtract(client, site, cacheFile, denoDir);
+      return;
+    } catch {
+      console.log(
+        "[cache] cache.tar.zst not found, trying cache.tar fallback",
+      );
+    }
 
-  cacheFile = CACHE_FILE_PLAIN;
-  await downloadAndExtract(client, site, cacheFile, denoDir);
+    cacheFile = CACHE_FILE_PLAIN;
+    await downloadAndExtract(client, site, cacheFile, denoDir);
+  } finally {
+    // Scrub S3 credentials from process env — they are no longer needed
+    // and would otherwise be readable via /proc/self/environ by child processes.
+    Deno.env.delete("ADMIN_S3_ACCESS_KEY_ID");
+    Deno.env.delete("ADMIN_S3_SECRET_ACCESS_KEY");
+  }
 }
 
 async function downloadAndExtract(

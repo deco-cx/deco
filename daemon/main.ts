@@ -601,28 +601,97 @@ if (SANDBOX_MODE) {
   const aiAuth: MiddlewareHandler = async (c, next) => {
     const site = getSiteName();
     if (!site) {
-      c.res = c.json({ error: "Not deployed" }, 503);
-      return;
+      return c.json({ error: "Not deployed" }, 503);
     }
     if (!aiHandlers) {
-      c.res = c.json(
+      return c.json(
         {
           error: "AI integration not available (ANTHROPIC_API_KEY not set)",
         },
         503,
       );
-      return;
     }
     await createAuth({ site })(c, next);
   };
 
   for (const pattern of ["/sandbox/tasks", "/sandbox/tasks/*"] as const) {
     app.use(pattern, aiAuth);
+  }
+
+  // WebSocket upgrade must be handled directly (not proxied through sub-app)
+  // because Deno.upgradeWebSocket requires the original server request object.
+  app.get("/sandbox/tasks/:taskId/ws", (c) => {
+    if (!aiHandlers) {
+      return c.json({ error: "Not available" }, 503);
+    }
+    const task = aiHandlers.getTask(c.req.param("taskId"));
+    if (!task) {
+      return c.json({ error: "Task not found" }, 404);
+    }
+    const session = task.session;
+    if (!session) {
+      return c.json({ error: "Task has no active session" }, 400);
+    }
+
+    const { socket, response } = Deno.upgradeWebSocket(c.req.raw);
+
+    let unsubData: (() => void) | undefined;
+    let unsubExit: (() => void) | undefined;
+
+    socket.onopen = () => {
+      for (const line of session.outputBuffer) {
+        socket.send(line);
+      }
+      if (session.status === "exited") {
+        socket.send(JSON.stringify({ type: "exit", code: session.exitCode }));
+        socket.close();
+        return;
+      }
+      unsubData = session.onData((data) => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(data);
+        }
+      });
+      unsubExit = session.onExit((code) => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: "exit", code }));
+          socket.close();
+        }
+      });
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data as string);
+        if (msg.type === "input" && typeof msg.data === "string") {
+          session.write(msg.data);
+        } else if (
+          msg.type === "resize" && typeof msg.cols === "number" &&
+          typeof msg.rows === "number"
+        ) {
+          session.resize(msg.cols, msg.rows);
+        }
+      } catch {
+        // Ignore malformed messages
+      }
+    };
+
+    socket.onclose = () => {
+      unsubData?.();
+      unsubExit?.();
+    };
+
+    return response;
+  });
+
+  // All other /sandbox/tasks routes → proxy to AI sub-app
+  for (
+    const pattern of ["/sandbox/tasks", "/sandbox/tasks/*"] as const
+  ) {
     app.all(pattern, (c) => {
       if (!aiHandlers) {
         return c.json({ error: "Not available" }, 503);
       }
-      // Rewrite URL to strip /sandbox/tasks prefix for the AI sub-app
       const url = new URL(c.req.url);
       url.pathname = url.pathname.replace(/^\/sandbox\/tasks/, "") || "/";
       const rewritten = new Request(url.toString(), c.req.raw);

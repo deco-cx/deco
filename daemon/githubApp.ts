@@ -10,6 +10,13 @@ export const GITHUB_APP_CONFIGURED = Boolean(
   GITHUB_APP_ID && GITHUB_APP_PRIVATE_KEY,
 );
 
+// Clear sensitive env vars from process so child processes (and /proc/self/environ)
+// cannot read them. The values are already stored in JS module-scope constants.
+if (GITHUB_APP_CONFIGURED) {
+  Deno.env.delete("GITHUB_APP_PRIVATE_KEY");
+  Deno.env.delete("GITHUB_APP_ID");
+}
+
 // Cache: installation IDs never change for a given owner/repo
 const installationIdCache = new Map<string, number>();
 // Cache: access tokens (50-minute TTL, tokens expire after 1 hour)
@@ -152,6 +159,7 @@ async function getInstallationId(
 
 async function getInstallationToken(
   installationId: number,
+  repo: string,
 ): Promise<string> {
   const jwt = await generateAppJWT();
   const response = await fetch(
@@ -163,6 +171,9 @@ async function getInstallationToken(
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
       },
+      body: JSON.stringify({
+        repositories: [repo],
+      }),
     },
   );
 
@@ -193,7 +204,7 @@ export async function getGitHubAppToken(
   }
 
   const installationId = await getInstallationId(owner, repo);
-  const token = await getInstallationToken(installationId);
+  const token = await getInstallationToken(installationId, repo);
 
   tokenCache.set(key, {
     token,
