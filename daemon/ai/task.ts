@@ -261,6 +261,8 @@ export class AITask {
         args: claudeArgs,
         env,
         cwd: this.#opts.cwd,
+        cols: 120,
+        rows: 40,
       });
 
       this.#session.onExit((code) => {
