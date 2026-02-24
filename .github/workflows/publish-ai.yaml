@@ -1,0 +1,170 @@
+name: Publish AI
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "The tag to be published"
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  publish-ai:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Create a new builder instance
+        run: docker buildx create --name mybuilder --use
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build, tag, and push the AI image (Deno 1.x)
+        id: build-ai-image
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          REPOSITORY: ${{ env.IMAGE_NAME }}/ai
+          IMAGE_TAG_LATEST: latest
+          IMAGE_TAG_COMMIT: ${{ github.event.inputs.tag_name || github.ref_name }}
+        run: |
+          #!/bin/bash
+
+          hasPrerelease() {
+            [[ "$1" == *"-"* ]]
+          }
+
+          LATEST=""
+          if ! hasPrerelease "$IMAGE_TAG_COMMIT"; then
+            LATEST="-t $REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
+          fi
+
+          cat <<EOF > Dockerfile
+          FROM denoland/deno:1.44.4
+
+          EXPOSE 8000
+          WORKDIR /app
+
+          # System dependencies
+          RUN apt-get update && apt-get install -y --no-install-recommends \
+              git openssh-client zstd curl jq nodejs npm \
+              && rm -rf /var/lib/apt/lists/*
+
+          # GitHub CLI
+          RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+              | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+              && echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+              | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+              && apt-get update && apt-get install -y gh \
+              && rm -rf /var/lib/apt/lists/*
+
+          # Claude Code CLI
+          RUN npm install -g @anthropic-ai/claude-code
+
+          # Deno caches
+          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
+          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
+
+          RUN mkdir -p /home/deno && chown -R deno:deno /home/deno \
+              && mkdir /app/deco && chown -R deno:deno /app \
+              && mkdir -p /deno-dir && chown -R deno:deno /deno-dir \
+              && chown -R deno:deno /daemon-deno-dir
+
+          USER deno
+          WORKDIR /app/deco
+          EOF
+
+          docker buildx build --platform linux/amd64,linux/arm64 $LATEST -t $REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT --push .
+
+          if [ -n "$LATEST" ]; then
+            echo "::set-output name=image_ai_latest::$REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
+          fi
+          echo "::set-output name=image_ai_commit::$REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT"
+
+      - name: Build, tag, and push the AI image (Deno 2.x)
+        id: build-ai-image-2
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          REPOSITORY: ${{ env.IMAGE_NAME }}/deno2-ai
+          IMAGE_TAG_LATEST: latest
+          IMAGE_TAG_COMMIT: ${{ github.event.inputs.tag_name || github.ref_name }}
+        run: |
+          #!/bin/bash
+
+          hasPrerelease() {
+            [[ "$1" == *"-"* ]]
+          }
+
+          LATEST=""
+          if ! hasPrerelease "$IMAGE_TAG_COMMIT"; then
+            LATEST="-t $REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
+          fi
+
+          cat <<EOF > Dockerfile
+          FROM denoland/deno:2.4.0
+
+          EXPOSE 8000
+          WORKDIR /app
+
+          # System dependencies
+          RUN apt-get update && apt-get install -y --no-install-recommends \
+              git openssh-client zstd curl jq nodejs npm \
+              && rm -rf /var/lib/apt/lists/*
+
+          # GitHub CLI
+          RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+              | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+              && echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+              | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+              && apt-get update && apt-get install -y gh \
+              && rm -rf /var/lib/apt/lists/*
+
+          # Claude Code CLI
+          RUN npm install -g @anthropic-ai/claude-code
+
+          # Deno caches
+          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT/scripts/run
+          RUN DENO_DIR=/daemon-deno-dir deno cache jsr:@sigma/pty-ffi@0.39.1
+
+          RUN mkdir -p /home/deno && chown -R deno:deno /home/deno \
+              && mkdir /app/deco && chown -R deno:deno /app \
+              && mkdir -p /deno-dir && chown -R deno:deno /deno-dir \
+              && chown -R deno:deno /daemon-deno-dir
+
+          USER deno
+
+          RUN DENO_DIR=/deno-dir deno cache jsr:@deco/deco@$IMAGE_TAG_COMMIT
+
+          WORKDIR /app/deco
+          EOF
+
+          docker buildx build --platform linux/amd64,linux/arm64 $LATEST -t $REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT --push .
+
+          if [ -n "$LATEST" ]; then
+            echo "::set-output name=image_ai_latest::$REGISTRY/$REPOSITORY:$IMAGE_TAG_LATEST"
+          fi
+          echo "::set-output name=image_ai_commit::$REGISTRY/$REPOSITORY:$IMAGE_TAG_COMMIT"
