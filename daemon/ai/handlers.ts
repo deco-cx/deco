@@ -18,25 +18,18 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   // POST /sandbox/tasks — create a new AI task
   app.post("/", async (c) => {
-    let body: { issue?: string; prompt?: string; setup?: boolean };
+    let body: { issue?: string; prompt?: string };
     try {
       body = await c.req.json();
     } catch {
       return c.json({ error: "Invalid JSON body" }, 400);
     }
 
-    const { issue, prompt, setup } = body;
+    const { issue, prompt } = body;
 
-    if ([issue, prompt, setup].filter(Boolean).length > 1) {
+    if (issue && prompt) {
       return c.json(
-        { error: "'issue', 'prompt', and 'setup' are mutually exclusive" },
-        400,
-      );
-    }
-
-    if (!issue && !prompt && !setup) {
-      return c.json(
-        { error: "One of 'issue', 'prompt', or 'setup' is required" },
+        { error: "'issue' and 'prompt' are mutually exclusive" },
         400,
       );
     }
@@ -52,7 +45,6 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     const task = new AITask({
       issue,
       prompt,
-      setup,
       cwd: opts.cwd,
       apiKey: opts.apiKey,
       githubToken: opts.githubToken,
@@ -70,9 +62,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     }
 
     console.log(
-      `[ai] Task ${task.taskId} started${
-        setup ? " (setup)" : issue ? ` for issue: ${issue}` : ""
-      }`,
+      `[ai] Task ${task.taskId} started${issue ? ` for issue: ${issue}` : ""}`,
     );
 
     return c.json({
@@ -207,7 +197,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   /** Create and start an AI task, registering it in the task map. */
   const createTask = async (
-    taskOpts: { issue?: string; prompt?: string; setup?: boolean },
+    taskOpts: { issue?: string; prompt?: string },
   ): Promise<AITask> => {
     const task = new AITask({
       ...taskOpts,
