@@ -217,7 +217,9 @@ const watch = async (signal?: AbortSignal) => {
 
     using _ = await lockerGitAPI.lock.rlock();
     const skip = event.paths.some(
-      (path) => path.includes(".git") || path.includes("node_modules"),
+      (path) =>
+        path.includes(".git") || path.includes("node_modules") ||
+        path.includes(".agent-home") || path.includes(".claude"),
     );
 
     if (skip) {
@@ -548,19 +550,14 @@ if (SANDBOX_MODE) {
       if (
         task && aiHandlers && apiKey && (task.issue || task.prompt)
       ) {
+        const handlers = aiHandlers;
         // Wait for git clone to finish before starting the AI task,
         // since the task needs a valid repo (git rev-parse HEAD, etc.)
         ensureGit({ site, repoUrl: repo, branch }).then(async () => {
-          const { AITask } = await import("./ai/task.ts");
-          const ct = new AITask({
+          const ct = await handlers.createTask({
             issue: task.issue,
             prompt: task.prompt,
-            cwd: Deno.cwd(),
-            apiKey,
-            githubToken: Deno.env.get("GITHUB_TOKEN"),
-            extraEnv: envs,
           });
-          await ct.start();
           console.log(
             `[sandbox] Auto-started AI task ${ct.taskId}${
               task.issue ? ` for issue: ${task.issue}` : ""
@@ -644,7 +641,12 @@ if (SANDBOX_MODE) {
       }
       if (session.status === "exited") {
         socket.send(JSON.stringify({ type: "exit", code: session.exitCode }));
-        socket.close();
+        // Delay close to let buffered data flush to the client
+        setTimeout(() => {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.close();
+          }
+        }, 500);
         return;
       }
       unsubData = session.onData((data) => {
@@ -655,7 +657,11 @@ if (SANDBOX_MODE) {
       unsubExit = session.onExit((code) => {
         if (socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({ type: "exit", code }));
-          socket.close();
+          setTimeout(() => {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.close();
+            }
+          }, 500);
         }
       });
     };

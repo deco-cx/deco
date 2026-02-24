@@ -132,9 +132,6 @@ export class AITask {
   }
 
   constructor(opts: AITaskOptions) {
-    if (!opts.issue && !opts.prompt) {
-      throw new Error("Either 'issue' or 'prompt' is required");
-    }
     this.taskId = `t_${crypto.randomUUID().slice(0, 8)}`;
     this.createdAt = Date.now();
     this.issue = opts.issue;
@@ -184,8 +181,8 @@ export class AITask {
     }
     this.#githubToken = githubToken ?? null;
 
-    // Build the prompt
-    let taskPrompt: string;
+    // Build the prompt (if any — no prompt means interactive mode)
+    let taskPrompt: string | undefined;
     if (this.#opts.issue) {
       if (!githubToken) {
         throw new Error("GITHUB_TOKEN required for issue-based tasks");
@@ -195,8 +192,8 @@ export class AITask {
         githubToken,
       );
       taskPrompt = buildPromptFromIssue(this.#issueCtx);
-    } else {
-      taskPrompt = this.#opts.prompt!;
+    } else if (this.#opts.prompt) {
+      taskPrompt = this.#opts.prompt;
     }
 
     // Build env for the AI agent child process — secrets go here, NOT in shell.
@@ -252,10 +249,16 @@ export class AITask {
       env.GITHUB_TOKEN = githubToken;
     }
 
+    // Interactive mode: just `claude` with no --print
+    // Task mode: `claude --print --dangerously-skip-permissions <prompt>`
+    const claudeArgs = taskPrompt
+      ? ["--print", "--dangerously-skip-permissions", taskPrompt]
+      : ["--dangerously-skip-permissions"];
+
     try {
       this.#session = await PtySession.create({
         cmd: "claude",
-        args: ["--print", "--dangerously-skip-permissions", taskPrompt],
+        args: claudeArgs,
         env,
         cwd: this.#opts.cwd,
       });

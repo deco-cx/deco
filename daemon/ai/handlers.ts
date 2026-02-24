@@ -27,13 +27,6 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
     const { issue, prompt } = body;
 
-    if (!issue && !prompt) {
-      return c.json(
-        { error: "Either 'issue' or 'prompt' is required" },
-        400,
-      );
-    }
-
     if (issue && prompt) {
       return c.json(
         { error: "'issue' and 'prompt' are mutually exclusive" },
@@ -189,5 +182,26 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   const getTask = (taskId: string) => tasks.get(taskId);
 
-  return { app, dispose, getTask };
+  /** Create and start an AI task, registering it in the task map. */
+  const createTask = async (
+    taskOpts: { issue?: string; prompt?: string },
+  ): Promise<AITask> => {
+    const task = new AITask({
+      ...taskOpts,
+      cwd: opts.cwd,
+      apiKey: opts.apiKey,
+      githubToken: opts.githubToken,
+      extraEnv: opts.extraEnv,
+    });
+    tasks.set(task.taskId, task);
+    try {
+      await task.start();
+    } catch (err) {
+      tasks.delete(task.taskId);
+      throw err;
+    }
+    return task;
+  };
+
+  return { app, dispose, getTask, createTask };
 };

@@ -105,7 +105,9 @@ export interface GrepAPI {
 const shouldIgnore = (path: string) =>
   basename(path) !== ".gitignore" &&
     path.includes(`${SEPARATOR}.git`) ||
-  path.includes(`${SEPARATOR}node_modules${SEPARATOR}`);
+  path.includes(`${SEPARATOR}node_modules${SEPARATOR}`) ||
+  path.includes(`${SEPARATOR}.agent-home${SEPARATOR}`) ||
+  path.includes(`${SEPARATOR}.claude${SEPARATOR}`);
 
 const systemPathFromBrowser = (pathAndQuery: string) => {
   const [url] = pathAndQuery.split("?");
