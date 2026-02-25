@@ -18,7 +18,13 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   // POST /sandbox/tasks — create a new AI task
   app.post("/", async (c) => {
-    let body: { issue?: string; prompt?: string };
+    let body: {
+      issue?: string;
+      prompt?: string;
+      useProvidedKey?: boolean;
+      proxyUrl?: string;
+      proxyToken?: string;
+    };
     try {
       body = await c.req.json();
     } catch {
@@ -49,6 +55,9 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       apiKey: opts.apiKey,
       githubToken: opts.githubToken,
       extraEnv: opts.extraEnv,
+      useProvidedKey: body.useProvidedKey,
+      proxyUrl: body.proxyUrl,
+      proxyToken: body.proxyToken,
     });
 
     tasks.set(task.taskId, task);
@@ -75,19 +84,6 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
   app.get("/", (c) => {
     const list = Array.from(tasks.values()).map((t) => t.info());
     return c.json(list);
-  });
-
-  // GET /sandbox/tasks/status — check if auth is available
-  app.get("/status", (c) => {
-    const hasApiKey = Boolean(opts.apiKey);
-    let hasOAuthCreds = false;
-    try {
-      Deno.statSync(`${opts.cwd}/.agent-home/.claude/.credentials.json`);
-      hasOAuthCreds = true;
-    } catch { /* not found */ }
-    return c.json({
-      needsSetup: !hasApiKey && !hasOAuthCreds,
-    });
   });
 
   // GET /sandbox/tasks/:taskId — get task details

@@ -45,6 +45,12 @@ export interface AITaskOptions {
   githubToken?: string;
   /** Extra env vars for the agent process. */
   extraEnv?: Record<string, string>;
+  /** When true, route API traffic through the admin proxy instead of using apiKey directly. */
+  useProvidedKey?: boolean;
+  /** Admin proxy URL (e.g. https://admin.deco.cx/api/anthropic-proxy). */
+  proxyUrl?: string;
+  /** Scoped JWT token for authenticating with the admin proxy. */
+  proxyToken?: string;
 }
 
 export type AITaskStatus =
@@ -218,7 +224,13 @@ export class AITask {
       ].join(":"),
     };
 
-    if (this.#opts.apiKey) {
+    if (
+      this.#opts.useProvidedKey && this.#opts.proxyUrl && this.#opts.proxyToken
+    ) {
+      // Platform-provided key via proxy — real key never touches the sandbox
+      env.ANTHROPIC_BASE_URL = this.#opts.proxyUrl;
+      env.ANTHROPIC_API_KEY = this.#opts.proxyToken;
+    } else if (this.#opts.apiKey) {
       env.ANTHROPIC_API_KEY = this.#opts.apiKey;
     }
 
