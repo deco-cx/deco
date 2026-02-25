@@ -45,9 +45,7 @@ export interface AITaskOptions {
   githubToken?: string;
   /** Extra env vars for the agent process. */
   extraEnv?: Record<string, string>;
-  /** When true, route API traffic through the admin proxy instead of using apiKey directly. */
-  useProvidedKey?: boolean;
-  /** Admin proxy URL (e.g. https://admin.deco.cx/api/anthropic-proxy). */
+  /** Admin proxy URL — when set (with proxyToken), routes API traffic through the proxy. */
   proxyUrl?: string;
   /** Scoped JWT token for authenticating with the admin proxy. */
   proxyToken?: string;
@@ -213,6 +211,22 @@ export class AITask {
     const realHome = Deno.env.get("HOME") ?? "/home/deno";
     const agentHome = `${this.#opts.cwd}/.agent-home`;
     Deno.mkdirSync(agentHome, { recursive: true });
+
+    // Pre-seed Claude config so it skips the interactive onboarding/login flow
+    const claudeConfig = `${agentHome}/.claude.json`;
+    try {
+      await Deno.stat(claudeConfig);
+    } catch {
+      await Deno.writeTextFile(
+        claudeConfig,
+        JSON.stringify({
+          hasCompletedOnboarding: true,
+          numStartups: 1,
+          firstStartTime: new Date().toISOString(),
+        }),
+      );
+    }
+
     const env: Record<string, string> = {
       ...this.#opts.extraEnv,
       HOME: agentHome,
@@ -224,9 +238,7 @@ export class AITask {
       ].join(":"),
     };
 
-    if (
-      this.#opts.useProvidedKey && this.#opts.proxyUrl && this.#opts.proxyToken
-    ) {
+    if (this.#opts.proxyUrl && this.#opts.proxyToken) {
       // Platform-provided key via proxy — real key never touches the sandbox
       env.ANTHROPIC_BASE_URL = this.#opts.proxyUrl;
       env.ANTHROPIC_API_KEY = this.#opts.proxyToken;

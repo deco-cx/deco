@@ -533,6 +533,8 @@ if (SANDBOX_MODE) {
         apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
         githubToken: Deno.env.get("GITHUB_TOKEN"),
         extraEnv: envs,
+        proxyUrl: envs?.ANTHROPIC_PROXY_URL,
+        proxyToken: envs?.ANTHROPIC_PROXY_TOKEN,
       });
 
       const tunnel = await registerTunnel(site, envName).catch((err) => {
@@ -545,7 +547,8 @@ if (SANDBOX_MODE) {
       // Auto-create an AI task if task field was provided in deploy request
       // Only auto-start prompt/issue tasks if we have an API key (OAuth can't be auto-started)
       if (task && aiHandlers && (task.issue || task.prompt)) {
-        const hasApiKey = Boolean(Deno.env.get("ANTHROPIC_API_KEY"));
+        const hasApiKey = Boolean(Deno.env.get("ANTHROPIC_API_KEY")) ||
+          Boolean(envs?.ANTHROPIC_PROXY_URL);
         if (hasApiKey) {
           const handlers = aiHandlers;
           // Wait for git clone to finish before starting the AI task,
