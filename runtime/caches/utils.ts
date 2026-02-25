@@ -1,15 +1,38 @@
-// Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
 
-export const sha1 = async (text: string) => {
-  const buffer = await crypto.subtle
-    .digest("SHA-1", textEncoder.encode(text));
+const HEX_TABLE: string[] = Array.from(
+  { length: 256 },
+  (_, i) => i.toString(16).padStart(2, "0"),
+);
 
-  const hex = Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
+function bufferToHex(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let hex = "";
+  for (let i = 0; i < bytes.length; i++) {
+    hex += HEX_TABLE[bytes[i]];
+  }
   return hex;
+}
+
+const SHA1_CACHE_MAX = 2048;
+const sha1Cache = new Map<string, Promise<string>>();
+
+export const sha1 = (text: string): Promise<string> => {
+  const cached = sha1Cache.get(text);
+  if (cached !== undefined) return cached;
+
+  if (sha1Cache.size >= SHA1_CACHE_MAX) {
+    const firstKey = sha1Cache.keys().next().value;
+    if (firstKey !== undefined) sha1Cache.delete(firstKey);
+  }
+
+  const promise = crypto.subtle
+    .digest("SHA-1", textEncoder.encode(text))
+    .then(bufferToHex);
+
+  sha1Cache.set(text, promise);
+
+  return promise;
 };
 
 export const NOT_IMPLEMENTED = () => {
