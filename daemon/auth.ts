@@ -8,7 +8,7 @@ const BYPASS_JWT_VERIFICATION =
 
 let adminVerifier: Promise<JwtVerifier | undefined> | null = null;
 
-const getVerifiedJWT = async (req: Request) => {
+export const getVerifiedJWT = async (req: Request) => {
   adminVerifier ??= getTrustedVerifierOf("https://admin.deco.cx");
   const verifier = await adminVerifier;
   if (!verifier) {
