@@ -253,15 +253,17 @@ export type ResolvableMap<
   Resolvable<any, TContext, TResolverMap, TResolvableMap>
 >;
 
+/**
+ * Creates a lightweight context derived from the parent via prototypal inheritance.
+ * Only the resolveChain is allocated new — all other fields are inherited.
+ */
 export const withResolveChain = <TContext extends BaseContext = BaseContext>(
   ctx: TContext,
   ...resolverType: FieldResolver[]
 ): TContext => {
-  // Optimize array operations - use concat instead of spread for better performance
-  return {
-    ...ctx,
-    resolveChain: ctx.resolveChain.concat(resolverType),
-  };
+  const derived = Object.create(ctx) as TContext;
+  derived.resolveChain = ctx.resolveChain.concat(resolverType);
+  return derived;
 };
 
 export const withResolveChainOfType = <
@@ -270,8 +272,8 @@ export const withResolveChainOfType = <
   ctx: TContext,
   ...resolverType: string[]
 ): TContext => {
-  // Optimize array operations - use concat instead of spread for better performance
-  const newResolveChain = ctx.resolveChain.concat(
+  const derived = Object.create(ctx) as TContext;
+  derived.resolveChain = ctx.resolveChain.concat(
     resolverType.map((tp) => ({
       type: tp in ctx.resolvables
         ? "resolvable" as const
@@ -281,11 +283,7 @@ export const withResolveChainOfType = <
       value: tp,
     })),
   );
-
-  return {
-    ...ctx,
-    resolveChain: newResolveChain,
-  };
+  return derived;
 };
 
 export const RESOLVE_SHORTCIRCUIT = "resolved";
@@ -378,18 +376,15 @@ const resolvePropsWithHints = async <
         async ([_key, hint]) => {
           const key = _key as keyof T;
           if (props[key]) {
+            let chainCtx = ctx;
+            if (resolveId) {
+              chainCtx = Object.create(ctx) as typeof ctx;
+              chainCtx.resolveId = resolveId;
+            }
             const resolved = await resolvePropsWithHints(
               props[key],
               hint as HintNode<T[typeof key]>,
-              withResolveChain(
-                resolveId
-                  ? { ...ctx, resolveId: resolveId ?? ctx.resolveId }
-                  : ctx,
-                {
-                  type: "prop",
-                  value: _key,
-                },
-              ),
+              withResolveChain(chainCtx, { type: "prop", value: _key }),
               opts,
             );
             return { key, resolved } as ResolvedKey<T, typeof key>;
@@ -451,22 +446,24 @@ const invokeResolverWithProps = async <
     delete (props as Resolvable)["__resolveType"];
   }
 
-  // TODO: (@tlgimenes) create resolverId outside of the request cycle
   const resolverId = resolverIdFromResolveChain(ctx.resolveChain);
   const timing = resolverId
     ? ctx.monitoring?.timings.start(resolverId)
     : undefined;
 
-  // Shallow copy to avoid resolvers getting the currentSpan from one another
   const monitoring = ctx.monitoring && {
     ...ctx.monitoring,
     currentSpan: timing,
   };
 
+  const resolverCtx = Object.create(ctx) as typeof ctx;
+  resolverCtx.monitoring = monitoring;
+  resolverCtx.resolverId = resolverId;
+
   try {
     let respOrPromise = resolver(
       props,
-      { ...ctx, monitoring, resolverId },
+      resolverCtx,
     );
     const metricsFunc = ctx.monitoring?.metrics;
     if (isAwaitable(respOrPromise)) {
