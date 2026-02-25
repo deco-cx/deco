@@ -82,6 +82,8 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected danglingRecover?: Resolver;
   protected runOncePerRelease: Record<string, SyncOnce<any>>;
   private resolveHints: ResolveHints;
+  private _cachedResolvers: ResolverMap<BaseContext> | null = null;
+  private _resolveIdCounter = 0;
   constructor(
     config: ResolverOptions<TContext>,
     hints?: ResolveHints,
@@ -97,6 +99,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       dispatchEvent(new Event("deco:hmr"));
       this.runOncePerRelease = {};
       this.resolveHints = {};
+      this._cachedResolvers = null;
     });
   }
 
@@ -119,7 +122,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     );
 
   public getResolvers(): ResolverMap<BaseContext> {
-    return {
+    return this._cachedResolvers ??= {
       ...this.resolvers,
       resolve: function _resolve(obj: any, { resolve }: BaseContext) {
         return resolve(obj);
@@ -163,10 +166,12 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       ]);
     }
 
-    const nresolvables = withOverrides(options?.overrides, {
-      ...resolvables,
-      ...(this.resolvables ?? {}),
-    });
+    const mergedResolvables = this.resolvables
+      ? { ...resolvables, ...this.resolvables }
+      : resolvables;
+    const nresolvables = options?.overrides
+      ? withOverrides(options.overrides, mergedResolvables)
+      : mergedResolvables;
     const resolvers = this.getResolvers();
     const currentOnce = this.runOncePerRelease;
     const resolveChain = options?.resolveChain ?? [];
@@ -175,7 +180,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
       resolverId: "unknown",
-      resolveId: crypto.randomUUID(),
+      resolveId: `r${++this._resolveIdCounter}`,
       resolveChain,
       resolveHints: this.resolveHints,
       resolvables: nresolvables,
