@@ -10,6 +10,10 @@ interface AIHandlersOptions {
   githubToken?: string;
   /** Extra env vars from deploy request. */
   extraEnv?: Record<string, string>;
+  /** Admin proxy URL — set at env level when "Use deco keys" is enabled. */
+  proxyUrl?: string;
+  /** Scoped JWT for authenticating with the admin proxy. */
+  proxyToken?: string;
 }
 
 export const createAIHandlers = (opts: AIHandlersOptions) => {
@@ -21,9 +25,6 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     let body: {
       issue?: string;
       prompt?: string;
-      useProvidedKey?: boolean;
-      proxyUrl?: string;
-      proxyToken?: string;
     };
     try {
       body = await c.req.json();
@@ -55,9 +56,8 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       apiKey: opts.apiKey,
       githubToken: opts.githubToken,
       extraEnv: opts.extraEnv,
-      useProvidedKey: body.useProvidedKey,
-      proxyUrl: body.proxyUrl,
-      proxyToken: body.proxyToken,
+      proxyUrl: opts.proxyUrl,
+      proxyToken: opts.proxyToken,
     });
 
     tasks.set(task.taskId, task);
@@ -201,6 +201,8 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       apiKey: opts.apiKey,
       githubToken: opts.githubToken,
       extraEnv: opts.extraEnv,
+      proxyUrl: opts.proxyUrl,
+      proxyToken: opts.proxyToken,
     });
     tasks.set(task.taskId, task);
     try {
