@@ -15,21 +15,37 @@ const ideviceToDevice: Record<string, Device> = {
   embedded: "desktop",
 };
 
-export const deviceOf = (request: Request) => {
+// Cache parsed device results by User-Agent string to avoid re-creating UAParser per call
+const deviceByUA = new Map<string, Device>();
+const DEVICE_CACHE_MAX_SIZE = 1000;
+
+export const deviceOf = (request: Request): Device => {
+  // Short-circuit: use Cloudflare device hint when available (avoids UAParser entirely)
+  const cfDeviceHint = request.headers.get("cf-device-type") || "";
+  if (cfDeviceHint) {
+    return ideviceToDevice[cfDeviceHint] ?? "desktop";
+  }
+
+  const ua = request.headers.get("user-agent") || "";
+  if (ua) {
+    const cached = deviceByUA.get(ua);
+    if (cached !== undefined) return cached;
+
+    const parsedType = new UAParser(ua).getDevice().type || "desktop";
+    const device = ideviceToDevice[parsedType] ?? "desktop";
+    deviceByUA.set(ua, device);
+    // Evict oldest entry when cache is full
+    if (deviceByUA.size > DEVICE_CACHE_MAX_SIZE) {
+      const firstKey = deviceByUA.keys().next().value;
+      if (firstKey !== undefined) deviceByUA.delete(firstKey);
+    }
+    return device;
+  }
+
+  // Fallback: check URL search params (only parse URL when actually needed)
   const url = new URL(request.url);
-  const ua: string | null = request.headers.get("user-agent") || "";
-  // use cf hint at first and then fallback to user-agent parser.
-  const cfDeviceHint: string | null = request.headers.get("cf-device-type") ||
-    "";
-
-  const device = cfDeviceHint ||
-    (ua && new UAParser(ua).getDevice().type) ||
-    url.searchParams.get("deviceHint") ||
-    "desktop"; // console, mobile, tablet, smarttv, wearable, embedded
-
-  const normalizedDevice = ideviceToDevice[device] ?? "desktop";
-
-  return normalizedDevice;
+  const hint = url.searchParams.get("deviceHint") || "desktop";
+  return ideviceToDevice[hint] ?? "desktop";
 };
 
 const UABotParser = new UAParser(Bots);

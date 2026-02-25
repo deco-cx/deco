@@ -43,9 +43,15 @@ const withOverrides = (
   overrides: Record<string, string> | undefined,
   resolvables: ResolvableMap,
 ): ResolvableMap => {
-  return Object.entries(overrides ?? {}).reduce((nresolvables, [from, to]) => {
-    return { ...nresolvables, [from]: nresolvables[to] };
-  }, resolvables);
+  if (!overrides) return resolvables;
+  const entries = Object.entries(overrides);
+  if (entries.length === 0) return resolvables;
+  // Single copy instead of N intermediate spreads
+  const result = { ...resolvables };
+  for (const [from, to] of entries) {
+    result[from] = result[to];
+  }
+  return result;
 };
 
 const charByType = {
@@ -71,6 +77,9 @@ export const resolverIdFromResolveChain = (chain: FieldResolver[]) => {
   return uniqueId;
 };
 
+// Incremental counter instead of crypto.randomUUID() — avoids expensive UUID generation
+let resolveCounter = 0;
+
 export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected release: DecofileProvider;
   protected resolvers: ResolverMap<TContext>;
@@ -78,6 +87,11 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
   protected danglingRecover?: Resolver;
   protected runOncePerRelease: Record<string, SyncOnce<any>>;
   private resolveHints: ResolveHints;
+  // Cached merged resolvers — invalidated on release change
+  private cachedResolvers: ResolverMap<BaseContext> | null = null;
+  // Cached merged resolvables (state + this.resolvables) — recomputed only when state changes
+  private cachedMergedResolvables: ResolvableMap | null = null;
+  private cachedStateRef: Record<string, any> | null = null;
   constructor(
     config: ResolverOptions<TContext>,
     hints?: ResolveHints,
@@ -93,6 +107,9 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       dispatchEvent(new Event("deco:hmr"));
       this.runOncePerRelease = {};
       this.resolveHints = {};
+      this.cachedResolvers = null;
+      this.cachedMergedResolvables = null;
+      this.cachedStateRef = null;
     });
   }
 
@@ -115,12 +132,15 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     );
 
   public getResolvers(): ResolverMap<BaseContext> {
-    return {
-      ...this.resolvers,
-      resolve: function _resolve(obj: any, { resolve }: BaseContext) {
-        return resolve(obj);
-      },
-    };
+    if (!this.cachedResolvers) {
+      this.cachedResolvers = {
+        ...this.resolvers,
+        resolve: function _resolve(obj: any, { resolve }: BaseContext) {
+          return resolve(obj);
+        },
+      };
+    }
+    return this.cachedResolvers;
   }
 
   public resolverFor = (
@@ -149,10 +169,17 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       }),
       this.release.revision(),
     ]);
-    const nresolvables = withOverrides(options?.overrides, {
-      ...resolvables,
-      ...(this.resolvables ?? {}),
-    });
+    // Cache merged resolvables — recompute only when state reference changes
+    if (this.cachedStateRef !== resolvables || !this.cachedMergedResolvables) {
+      this.cachedStateRef = resolvables;
+      this.cachedMergedResolvables = this.resolvables
+        ? { ...resolvables, ...this.resolvables }
+        : resolvables;
+    }
+    const nresolvables = withOverrides(
+      options?.overrides,
+      this.cachedMergedResolvables,
+    );
     const resolvers = this.getResolvers();
     const currentOnce = this.runOncePerRelease;
     const resolveChain = options?.resolveChain ?? [];
@@ -161,7 +188,7 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
       resolverId: "unknown",
-      resolveId: crypto.randomUUID(),
+      resolveId: `r${++resolveCounter}`,
       resolveChain,
       resolveHints: this.resolveHints,
       resolvables: nresolvables,

@@ -137,6 +137,9 @@ export const fromHttpContent = (
   return fromJSON(JSON.parse(state.text), state.etag);
 };
 
+// Shared resolved promise to avoid creating new Promise.resolve() on every call
+const RESOLVED_VOID = Promise.resolve();
+
 export const fromJSON = (
   parsed: Record<string, unknown>,
   revision?: string,
@@ -144,8 +147,11 @@ export const fromJSON = (
   const cbs: Array<OnChangeCallback> = [];
   let state = parsed;
   let currentRevision: string = revision ?? crypto.randomUUID();
+  // Pre-resolved promises that are updated when state changes
+  let statePromise = Promise.resolve(state);
+  let revisionPromise = Promise.resolve(currentRevision);
   return {
-    state: () => Promise.resolve(state),
+    state: () => statePromise,
     onChange: (cb) => {
       cbs.push(cb);
       return {
@@ -155,12 +161,16 @@ export const fromJSON = (
       };
     },
     notify: () => {
+      if (cbs.length === 0) return RESOLVED_VOID;
       return Promise.all(cbs.map((cb) => cb())).then(() => {});
     },
-    revision: () => Promise.resolve(currentRevision),
+    revision: () => revisionPromise,
     set(newState, revision) {
       state = newState;
       currentRevision = revision ?? crypto.randomUUID();
+      statePromise = Promise.resolve(state);
+      revisionPromise = Promise.resolve(currentRevision);
+      if (cbs.length === 0) return RESOLVED_VOID;
       return Promise.all(cbs.map((cb) => cb())).then(() => {});
     },
   };
@@ -225,26 +235,49 @@ export const fromEndpoint = (endpoint: string): DecofileProvider => {
           return r;
         },
       );
+  // Cache resolved provider to avoid .then() microtask on every call
+  let resolvedProvider: DecofileProvider | null = null;
+  decofileProviderPromise.then((r) => {
+    resolvedProvider = r;
+  });
   return {
     set(state, revision) {
+      if (resolvedProvider) {
+        return resolvedProvider.set?.(state, revision) ?? Promise.resolve();
+      }
       return decofileProviderPromise.then((r) => r?.set?.(state, revision));
     },
     notify() {
+      if (resolvedProvider) {
+        return resolvedProvider.notify?.() ?? Promise.resolve();
+      }
       return decofileProviderPromise.then((r) =>
         r?.notify?.() ?? Promise.resolve()
       );
     },
-    state: (options) => decofileProviderPromise.then((r) => r.state(options)),
+    state: (options) => {
+      if (resolvedProvider) return resolvedProvider.state(options);
+      return decofileProviderPromise.then((r) => r.state(options));
+    },
     onChange: (cb) => {
+      if (resolvedProvider) return resolvedProvider.onChange(cb);
       decofileProviderPromise.then((r) => r.onChange(cb));
       return {
         [Symbol.dispose]: () => {
         },
       };
     },
-    revision: () => decofileProviderPromise.then((r) => r.revision()),
+    revision: () => {
+      if (resolvedProvider) return resolvedProvider.revision();
+      return decofileProviderPromise.then((r) => r.revision());
+    },
     dispose: () => {
-      decofileProviderPromise.then((r) => r?.dispose?.());
+      if (resolvedProvider) {
+        resolvedProvider.dispose?.();
+      } else {
+        decofileProviderPromise.then((r) => r?.dispose?.());
+      }
+      resolvedProvider = null;
       delete decofileCache[endpoint];
     },
   };

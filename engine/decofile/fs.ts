@@ -68,6 +68,9 @@ export const newFsProviderFromPath = (
 ): DecofileProvider => {
   const onChangeCbs: OnChangeCallback[] = [];
   let previousState: unknown = null;
+  // Synchronous cache for resolved state and revision — avoids .then() microtask overhead
+  let cachedState: Decofile | null = null;
+  let cachedRevision: string | null = null;
 
   const doUpdateState = async () => {
     const state = await readAndDecompressFile(fullPath)
@@ -80,9 +83,12 @@ export const newFsProviderFromPath = (
       return;
     }
     previousState = state;
+    const revision = hashState(state);
+    cachedState = state;
+    cachedRevision = revision;
     decofile = Promise.resolve({
       state,
-      revision: hashState(state),
+      revision,
     });
     for (const cb of onChangeCbs) {
       cb();
@@ -103,15 +109,18 @@ export const newFsProviderFromPath = (
           stringifyForWrite(data),
         ).then(() => {
           previousState = data;
-          return { state: data, revision: hashState(data) };
+          const revision = hashState(data);
+          cachedState = data;
+          cachedRevision = revision;
+          return { state: data, revision };
         });
       }
       const state = await readAndDecompressFile(fullPath);
       previousState = state;
-      return {
-        state,
-        revision: hashState(state),
-      };
+      const revision = hashState(state);
+      cachedState = state;
+      cachedRevision = revision;
+      return { state, revision };
     },
   ).then((result) => {
     (async () => {
@@ -128,6 +137,8 @@ export const newFsProviderFromPath = (
     if (options?.forceFresh) {
       return readAndDecompressFile(fullPath);
     }
+    // Return cached value synchronously when available — avoids .then() microtask
+    if (cachedState !== null) return cachedState;
 
     return await decofile.then((r) => r.state);
   };
@@ -141,9 +152,12 @@ export const newFsProviderFromPath = (
     },
     set: (state, rev) => {
       previousState = state;
+      const revision = rev ?? hashState(state);
+      cachedState = state;
+      cachedRevision = revision;
       decofile = Promise.resolve({
         state,
-        revision: rev ?? hashState(state),
+        revision,
       });
       for (const cb of onChangeCbs) {
         cb();
@@ -158,7 +172,11 @@ export const newFsProviderFromPath = (
         },
       };
     },
-    revision: () => decofile.then((r) => r.revision),
+    revision: () => {
+      // Return cached value synchronously when available
+      if (cachedRevision !== null) return Promise.resolve(cachedRevision);
+      return decofile.then((r) => r.revision);
+    },
   };
 };
 export const newFsProvider = (

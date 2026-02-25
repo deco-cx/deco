@@ -1,14 +1,21 @@
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
 
+// Pre-computed hex lookup table — avoids Array.from + map + join per call
+const HEX_LOOKUP: string[] = new Array(256);
+for (let i = 0; i < 256; i++) {
+  HEX_LOOKUP[i] = i.toString(16).padStart(2, "0");
+}
+
 export const sha1 = async (text: string) => {
   const buffer = await crypto.subtle
     .digest("SHA-1", textEncoder.encode(text));
 
-  const hex = Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
+  const bytes = new Uint8Array(buffer);
+  let hex = "";
+  for (let i = 0; i < bytes.length; i++) {
+    hex += HEX_LOOKUP[bytes[i]];
+  }
   return hex;
 };
 
@@ -84,8 +91,24 @@ export const withCacheNamespace =
     return requestURLSHA1(request).then((key) => `${key}${cacheName}`);
   };
 
-export const requestURLSHA1 = (request: RequestInfo | URL): Promise<string> => {
-  return sha1(requestURL(request));
+// Cache SHA1 results per URL — same URLs repeat across cache tiers and requests
+const sha1Cache = new Map<string, string>();
+const SHA1_CACHE_MAX_SIZE = 5000;
+
+export const requestURLSHA1 = async (
+  request: RequestInfo | URL,
+): Promise<string> => {
+  const url = requestURL(request);
+  const cached = sha1Cache.get(url);
+  if (cached !== undefined) return cached;
+  const hash = await sha1(url);
+  sha1Cache.set(url, hash);
+  // Evict oldest entry when cache is full
+  if (sha1Cache.size > SHA1_CACHE_MAX_SIZE) {
+    const firstKey = sha1Cache.keys().next().value;
+    if (firstKey !== undefined) sha1Cache.delete(firstKey);
+  }
+  return hash;
 };
 
 export const assertCanBeCached = (req: Request, response: Response) => {

@@ -9,9 +9,11 @@ const operationDuration = meter.createHistogram("block_op_duration", {
 });
 
 /**
- * Observe function durations based on the provided labels
+ * Observe function durations based on the provided labels.
+ * When OTEL_ENABLE_EXTRA_METRICS is disabled, bypasses the wrapper entirely
+ * to avoid performance.now(), try/catch, and isWrappedError overhead.
  */
-export const observe = async <T>(
+const _observe = async <T>(
   op: string,
   f: () => Promise<T>,
 ): Promise<T> => {
@@ -27,11 +29,14 @@ export const observe = async <T>(
     isError = "true";
     throw error;
   } finally {
-    if (OTEL_ENABLE_EXTRA_METRICS) {
-      operationDuration.record(performance.now() - start, {
-        "operation.name": op,
-        "operation.is_error": isError,
-      });
-    }
+    operationDuration.record(performance.now() - start, {
+      "operation.name": op,
+      "operation.is_error": isError,
+    });
   }
 };
+
+// Short-circuit: when metrics are disabled, just call the function directly
+export const observe: typeof _observe = OTEL_ENABLE_EXTRA_METRICS
+  ? _observe
+  : (_op, f) => f();
