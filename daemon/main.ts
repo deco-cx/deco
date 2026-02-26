@@ -530,7 +530,8 @@ if (SANDBOX_MODE) {
       // Always create AI handlers — OAuth can be used when no API key is set
       aiHandlers = createAIHandlers({
         cwd: Deno.cwd(),
-        apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") ??
+          envs?.ANTHROPIC_API_KEY,
         githubToken: Deno.env.get("GITHUB_TOKEN"),
         extraEnv: envs,
         proxyUrl: envs?.ANTHROPIC_PROXY_URL,
@@ -548,6 +549,7 @@ if (SANDBOX_MODE) {
       // Only auto-start prompt/issue tasks if we have an API key (OAuth can't be auto-started)
       if (task && aiHandlers && (task.issue || task.prompt)) {
         const hasApiKey = Boolean(Deno.env.get("ANTHROPIC_API_KEY")) ||
+          Boolean(envs?.ANTHROPIC_API_KEY) ||
           Boolean(envs?.ANTHROPIC_PROXY_URL);
         if (hasApiKey) {
           const handlers = aiHandlers;
