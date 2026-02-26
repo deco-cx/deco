@@ -44,9 +44,14 @@ export function createTieredCache(
         request: RequestInfo | URL,
         matched: Response,
       ) {
+        const body = await matched.arrayBuffer();
+        const headers = matched.headers;
         await Promise.all(
           indexOfCachesToUpdate.map((index) =>
-            openedCaches[index].put(request, matched.clone())
+            openedCaches[index].put(
+              request,
+              new Response(body.slice(0), { headers }),
+            )
           ),
         );
       }
@@ -123,8 +128,13 @@ export function createTieredCache(
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
-          const putPromises = openedCaches.map((caches) =>
-            caches.put(request, response.clone())
+          const body = await response.arrayBuffer();
+          const headers = response.headers;
+          const putPromises = openedCaches.map((cache) =>
+            cache.put(
+              request,
+              new Response(body.slice(0), { headers }),
+            )
           );
           await Promise.all(putPromises);
         },
