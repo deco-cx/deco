@@ -3,7 +3,7 @@
 
 import type { Page } from "../../blocks/page.tsx";
 import { getSectionID } from "../../components/section.tsx";
-import type { FieldResolver, Resolvable } from "../../engine/core/resolver.ts";
+import { FieldResolver, type Resolvable } from "../../engine/core/resolver.ts";
 import { HttpError } from "../../engine/errors.ts";
 import { useScriptAsDataURI } from "../../hooks/useScript.ts";
 import { logger } from "../../observability/mod.ts";
@@ -60,19 +60,9 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
     __resolveType: "resolvables",
   }) as Record<string, Resolvable>;
 
-  let section;
-
-  if (resolveChain) {
-    const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
-    section = resolvables[resolveChain[index].value];
-
-    for (let it = 0; it < resolveChain.length; it++) {
-      const item = resolveChain[it];
-      if (it < index || item.type !== "prop") continue;
-
-      section = section[item.value];
-    }
-  }
+  const section = resolveChain
+    ? FieldResolver.resolveFromChain(resolveChain, resolvables)
+    : undefined;
 
   const context = {
     request,
