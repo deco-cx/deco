@@ -7,6 +7,19 @@ const inFuture = (maybeDate: string) => {
 };
 
 /**
+ * Creates a lightweight Response from pre-read body bytes and headers.
+ * Avoids Response.clone() which duplicates the full SharedArrayBuffer backing store
+ * and shares internal tee state that prevents GC of the original response.
+ */
+function responseFromBody(
+  body: ArrayBuffer,
+  headers: Headers,
+  status: number,
+): Response {
+  return new Response(body, { headers, status });
+}
+
+/**
  * Creates a tiered cache that combines multiple cache storages into a single cache storage.
  * The tiered cache will prioritize the caches in the order they are provided.
  * When a request is made to the tiered cache, it will first check if the request is available in any of the caches.
@@ -38,18 +51,6 @@ export function createTieredCache(
       const openedCaches: Cache[] = await Promise.all(
         tieredCaches.map((cache) => cache.open(cacheName)),
       );
-
-      async function updateTieredCaches(
-        indexOfCachesToUpdate: number[],
-        request: RequestInfo | URL,
-        matched: Response,
-      ) {
-        await Promise.all(
-          indexOfCachesToUpdate.map((index) =>
-            openedCaches[index].put(request, matched.clone())
-          ),
-        );
-      }
 
       return Promise.resolve({
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/add) */
@@ -83,7 +84,7 @@ export function createTieredCache(
           request: RequestInfo | URL,
           options?: CacheQueryOptions,
         ): Promise<Response | undefined> => {
-          let matched;
+          let matched: Response | undefined;
           const indexOfCachesToUpdate: number[] = [];
           for (const [index, cache] of openedCaches.entries()) {
             matched = await cache.match(request, options).catch(() =>
@@ -105,8 +106,28 @@ export function createTieredCache(
             indexOfCachesToUpdate.push(index);
           }
 
-          if (matched) {
-            updateTieredCaches(indexOfCachesToUpdate, request, matched);
+          if (!matched) return undefined;
+
+          if (indexOfCachesToUpdate.length > 0) {
+            // Read body bytes ONCE instead of using Response.clone() per tier.
+            // clone() duplicates the full SharedArrayBuffer and creates tee'd streams
+            // that keep both original and clone alive until both are fully consumed.
+            // With fire-and-forget backfill, clones linger until all puts complete.
+            const body = await matched.arrayBuffer();
+            const { headers, status } = matched;
+
+            // Backfill lower-priority tiers with independent responses from shared bytes
+            Promise.all(
+              indexOfCachesToUpdate.map((index) =>
+                openedCaches[index].put(
+                  request,
+                  responseFromBody(body, headers, status),
+                )
+              ),
+            ).catch(() => {});
+
+            // Return a new response for the caller (original body was consumed above)
+            return responseFromBody(body, headers, status);
           }
 
           return matched;
@@ -123,10 +144,22 @@ export function createTieredCache(
           request: RequestInfo | URL,
           response: Response,
         ): Promise<void> => {
-          const putPromises = openedCaches.map((caches) =>
-            caches.put(request, response.clone())
+          if (openedCaches.length === 0) return;
+          if (openedCaches.length === 1) {
+            // Single tier — no need to clone or read body separately
+            return openedCaches[0].put(request, response);
+          }
+          // Read body once instead of clone() per tier.
+          // clone() duplicates the SharedArrayBuffer for each tier, and all copies
+          // stay alive until every tier's put() completes.
+          const body = await response.arrayBuffer();
+          const { headers, status } = response;
+
+          await Promise.all(
+            openedCaches.map((cache) =>
+              cache.put(request, responseFromBody(body, headers, status))
+            ),
           );
-          await Promise.all(putPromises);
         },
       });
     },

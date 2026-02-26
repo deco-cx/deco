@@ -205,11 +205,8 @@ function createFileSystemCache(): CacheStorage {
 
           const cacheKey = await requestURLSHA1(request);
 
-          const bodyBuffer = await response.arrayBuffer()
-            .then((buffer) => new Uint8Array(buffer))
-            .then((buffer) => {
-              return buffer;
-            });
+          // Read body directly — avoids unnecessary intermediate .then() chain
+          const bodyBuffer = new Uint8Array(await response.arrayBuffer());
           const headersBuffer = headersToUint8Array([
             ...response.headers.entries(),
           ]);
