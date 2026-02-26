@@ -57,12 +57,14 @@ const loggerName = "deco-logger";
 export const OTEL_IS_ENABLED: boolean = Deno.env.has(
   "OTEL_EXPORTER_OTLP_ENDPOINT",
 );
+
 export const logger: Logger = new Logger(loggerName, "INFO", {
   handlers: [
     ...OTEL_IS_ENABLED
       ? [
         new OpenTelemetryHandler("INFO", {
           resourceAttributes: resource.attributes,
+          additionalExporters: parseExtraOTLPExporters(),
         }),
       ]
       : [new log.ConsoleHandler("INFO")],
@@ -151,3 +153,57 @@ export const tracer = opentelemetry.trace.getTracer(
 
 export const tracerIsRecording = () =>
   opentelemetry.trace.getActiveSpan()?.isRecording() ?? false;
+
+interface ExtraOTLPExporterConfig {
+  endpoint: string;
+  headers?: Record<string, string>;
+}
+
+/**
+ * Parses the OTEL_EXPORTER_EXTRA_OTLP_HANDLER environment variable
+ * to create additional OTLP exporter configurations for fan-out.
+ *
+ * @returns Array of OTLPExporterNodeConfigBase for additional exporters
+ */
+function parseExtraOTLPExporters() {
+  const OTEL_EXPORTER_EXTRA_OTLP_HANDLER = Deno.env.get(
+    "OTEL_EXPORTER_EXTRA_OTLP_HANDLER",
+  );
+  if (!OTEL_EXPORTER_EXTRA_OTLP_HANDLER) {
+    return [];
+  }
+
+  try {
+    const configs: ExtraOTLPExporterConfig[] = JSON.parse(
+      OTEL_EXPORTER_EXTRA_OTLP_HANDLER,
+    );
+
+    if (!Array.isArray(configs)) {
+      console.error(
+        "OTEL_EXPORTER_EXTRA_OTLP_HANDLER must be a JSON array",
+      );
+      return [];
+    }
+
+    return configs
+      .filter((config) => {
+        if (!config.endpoint) {
+          console.error(
+            "Each OTEL_EXPORTER_EXTRA_OTLP_HANDLER entry must have an 'endpoint' property",
+          );
+          return false;
+        }
+        return true;
+      })
+      .map((config) => ({
+        url: config.endpoint,
+        headers: config.headers || {},
+      }));
+  } catch (error) {
+    console.error(
+      "Failed to parse OTEL_EXPORTER_EXTRA_OTLP_HANDLER:",
+      error,
+    );
+    return [];
+  }
+}

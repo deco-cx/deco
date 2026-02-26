@@ -60,11 +60,12 @@ interface HandlerOptions extends log.BaseHandlerOptions {
   processorConfig?: BufferConfig;
   resourceAttributes?: Attributes;
   detectResources?: boolean;
+  additionalExporters?: OTLPExporterNodeConfigBase[];
 }
 
 export class OpenTelemetryHandler extends log.BaseHandler {
   protected _logger: Logger | undefined;
-  protected _processor: BatchLogRecordProcessor | undefined;
+  protected _processors: BatchLogRecordProcessor[] = [];
 
   #unloadCallback = (() => {
     this.destroy();
@@ -84,23 +85,39 @@ export class OpenTelemetryHandler extends log.BaseHandler {
         ],
     });
 
-    const exporter = options.exporterProtocol === "console"
-      ? new ConsoleLogRecordExporter()
-      : new OTLPLogExporter(options.httpExporterOptions);
-
-    const processor = new BatchLogRecordProcessor(
-      // @ts-ignore: no idea why this is failing, but it should work
-      exporter,
-      options.processorConfig,
-    );
-    this._processor = processor;
-
     const loggerProvider = new LoggerProvider({
       resource: detectedResource.merge(
         new Resource({ ...options.resourceAttributes }),
       ),
     });
-    loggerProvider.addLogRecordProcessor(processor);
+
+    // Add the main exporter processor
+    const mainExporter = options.exporterProtocol === "console"
+      ? new ConsoleLogRecordExporter()
+      : new OTLPLogExporter(options.httpExporterOptions);
+
+    const mainProcessor = new BatchLogRecordProcessor(
+      // @ts-ignore: no idea why this is failing, but it should work
+      mainExporter,
+      options.processorConfig,
+    );
+    this._processors.push(mainProcessor);
+    loggerProvider.addLogRecordProcessor(mainProcessor);
+
+    // Add additional exporter processors for fan-out
+    if (options.additionalExporters && options.additionalExporters.length > 0) {
+      options.additionalExporters.forEach((exporterConfig) => {
+        const additionalExporter = new OTLPLogExporter(exporterConfig);
+        const additionalProcessor = new BatchLogRecordProcessor(
+          // @ts-ignore: no idea why this is failing, but it should work
+          additionalExporter,
+          options.processorConfig,
+        );
+        this._processors.push(additionalProcessor);
+        loggerProvider.addLogRecordProcessor(additionalProcessor);
+      });
+    }
+
     logs.setGlobalLoggerProvider(loggerProvider);
     const logger = logs.getLogger("deno-logger");
     this._logger = logger;
@@ -150,7 +167,8 @@ export class OpenTelemetryHandler extends log.BaseHandler {
 
   override destroy() {
     this.flush();
-    this._processor?.shutdown();
+    // Shutdown all processors
+    this._processors.forEach((processor) => processor.shutdown());
     removeEventListener("unload", this.#unloadCallback);
   }
 }
