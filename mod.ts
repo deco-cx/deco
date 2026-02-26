@@ -54,3 +54,5 @@ export type {
   AvailableInvocations,
   AvailableLoaders,
 } from "./utils/invoke.types.ts";
+export { onFetch } from "./utils/patched_fetch.ts";
+export type { FetchCompleteEvent, FetchEvent } from "./utils/patched_fetch.ts";
