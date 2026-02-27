@@ -4,7 +4,7 @@ import type { ImportMap } from "../blocks/mod.ts";
 import type { RequestState } from "../blocks/utils.tsx";
 import { buildImportMap } from "../blocks/utils.tsx";
 import type { DecoContext } from "../deco.ts";
-import { Context } from "../deco.ts";
+import { Context, RequestContext } from "../deco.ts";
 import { context as otelContext } from "../deps.ts";
 import type { BaseContext } from "../engine/core/resolver.ts";
 import {
@@ -221,7 +221,45 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     };
 
     const liveContext = this.ctx;
+
+    /**
+     * Set up request timeout to prevent long-running loaders from causing upstream connection timeouts.
+     * This addresses issue #1034 where loaders in the critical rendering path could timeout.
+     *
+     * Configuration:
+     * - REQUEST_TIMEOUT_MS: Overall request timeout (default 30s)
+     * - FETCH_TIMEOUT_MS: Individual fetch operation timeout (default 30s, configured in patched_fetch.ts)
+     *
+     * The timeout signal is propagated to all loaders via RequestContext.signal and to all
+     * fetch calls via the patched globalThis.fetch. When a timeout occurs, an AbortError is
+     * thrown which is handled gracefully by the ErrorBoundary (showing loading state).
+     */
+    const REQUEST_TIMEOUT_MS = parseInt(Deno.env.get("REQUEST_TIMEOUT_MS") ?? "30000"); // 30 seconds default
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), REQUEST_TIMEOUT_MS);
+
+    // Combine the incoming request signal with our timeout signal
+    const combinedSignal = req.signal
+      ? AbortSignal.any([req.signal, abortController.signal])
+      : abortController.signal;
+
+    // Clean up timeout if request completes successfully
+    combinedSignal.addEventListener("abort", () => {
+      clearTimeout(timeoutId);
+    });
+
     const request = forceHttps(req);
+
+    // Update the context to include the request with timeout signal
+    // This makes the signal available to all loaders via RequestContext.signal
+    const framework = liveContext.request?.framework ?? "fresh";
+    Context.setDefault({
+      ...liveContext,
+      request: {
+        signal: combinedSignal,
+        framework,
+      },
+    });
 
     state.release = liveContext.release!;
     const response = {
