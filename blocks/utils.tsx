@@ -71,6 +71,13 @@ export const createBagKey = (description: string): symbol =>
   Symbol(description);
 
 /**
+ * Bag key for marking a page as dirty (not cacheable).
+ * App middlewares should set this in the bag when the page depends on cookies
+ * or other per-user state that prevents CDN caching.
+ */
+export const PAGE_DIRTY_KEY = createBagKey("page-dirty");
+
+/**
  * Values that are fulfilled for every request
  */
 export interface RequestState {
