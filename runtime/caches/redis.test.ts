@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { create, type RedisConnection } from "./redis.ts";
-import type { SetOptions } from "npm:@redis/client@^1.6.0";
+import type { SetOptions } from "npm:@redis/client@^1.6.1";
 
 Deno.test({
   name: ".match",

@@ -11,7 +11,7 @@ import {
   type RedisFunctions,
   type RedisModules,
   type RedisScripts,
-} from "npm:@redis/client@^1.6.0";
+} from "npm:@redis/client@^1.6.1";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
