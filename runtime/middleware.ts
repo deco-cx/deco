@@ -438,7 +438,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
       } else if (!newHeaders.has("Cache-Control") && !isDirty) {
         if (PAGE_CACHE_ENABLED) {
-          newHeaders.set("Cache-Control", "public, max-age=120, s-maxage=120");
+          newHeaders.set("Cache-Control", "public, max-age=90, s-maxage=90, stale-while-revalidate=30");
         } else if (PAGE_CACHE_DRY_RUN) {
           console.warn(`[page-cache] cacheable: ${url.pathname}`);
         }
