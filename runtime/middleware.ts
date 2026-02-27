@@ -107,6 +107,7 @@ async (ctx, next) => {
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
 const PAGE_CACHE_DRY_RUN = Deno.env.get("DECO_PAGE_CACHE_DRY_RUN") === "true";
+const PAGE_CACHE_ENABLED = Deno.env.get("DECO_PAGE_CACHE_ENABLED") === "true";
 
 export const DEBUG_QS = "__d";
 const addHours = (date: Date, h: number) => {
@@ -436,10 +437,10 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       if (getSetCookies(newHeaders).length > 0) {
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
       } else if (!newHeaders.has("Cache-Control") && !isDirty) {
-        if (PAGE_CACHE_DRY_RUN) {
-          console.warn(`[page-cache] cacheable: ${url.pathname}`);
-        } else {
+        if (PAGE_CACHE_ENABLED) {
           newHeaders.set("Cache-Control", "public, max-age=120, s-maxage=120");
+        } else if (PAGE_CACHE_DRY_RUN) {
+          console.warn(`[page-cache] cacheable: ${url.pathname}`);
         }
       } else if (PAGE_CACHE_DRY_RUN && !newHeaders.has("Cache-Control")) {
         console.warn(
