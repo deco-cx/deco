@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { PAGE_DIRTY_KEY } from "../blocks/utils.tsx";
+import { PAGE_CACHE_ALLOWED_KEY } from "../blocks/utils.tsx";
 import { Context, context } from "../deco.ts";
 import {
   type Exception,
@@ -428,24 +428,40 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
-      // Check if any app middleware or resolver marked the page as dirty
-      // via the shared bag. The bag (WeakMap) is a reference shared across all
-      // resolver contexts, unlike primitives which get copied by value.
-      const isDirty = ctx.var.dirty || ctx.var.bag?.has(PAGE_DIRTY_KEY);
+      const hasSetCookie = getSetCookies(newHeaders).length > 0;
+      const contentType = newHeaders.get("Content-Type") ?? "";
+      const isHtmlResponse = contentType.includes("text/html");
+      // App middleware must explicitly opt in to page caching via the bag
+      const isCacheAllowed = ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY);
 
-      // If response has set-cookie header, set cache-control to no-store
-      if (getSetCookies(newHeaders).length > 0) {
+      if (hasSetCookie) {
+        // Set-cookie present: never cache (same behavior as main)
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
-      } else if (!newHeaders.has("Cache-Control") && !isDirty) {
-        if (PAGE_CACHE_ENABLED) {
-          newHeaders.set("Cache-Control", "public, max-age=90, s-maxage=90, stale-while-revalidate=30");
-        } else if (PAGE_CACHE_DRY_RUN) {
-          console.warn(`[page-cache] cacheable: ${url.pathname}`);
+      } else if (isHtmlResponse && isCacheAllowed) {
+        // HTML opted in by app middleware: apply page cache logic
+        const flags = ctx.var?.flags ?? [];
+        const nonCacheableFlags = flags.filter((flag) => flag.cacheable !== true);
+        const allFlagsCacheable = flags.length > 0
+          ? flags.every((flag) => flag.cacheable === true)
+          : true;
+
+        if (!allFlagsCacheable) {
+          newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
+          if (PAGE_CACHE_DRY_RUN) {
+            const matcherNames = nonCacheableFlags
+              .map((flag) => flag.resolveType ? `${flag.resolveType} in "${flag.name}"` : flag.name)
+              .join(", ");
+            console.warn(
+              `[page-cache] not cacheable (non-cacheable flags: ${matcherNames}): ${url.pathname}`,
+            );
+          }
+        } else if (!newHeaders.has("Cache-Control")) {
+          if (PAGE_CACHE_ENABLED) {
+            newHeaders.set("Cache-Control", "public, max-age=90, s-maxage=90, stale-while-revalidate=30");
+          } else if (PAGE_CACHE_DRY_RUN) {
+            console.warn(`[page-cache] cacheable: ${url.pathname}`);
+          }
         }
-      } else if (PAGE_CACHE_DRY_RUN && !newHeaders.has("Cache-Control")) {
-        console.warn(
-          `[page-cache] not cacheable (cookies accessed): ${url.pathname}`,
-        );
       }
 
       // for some reason hono deletes content-type when response is not fresh.
