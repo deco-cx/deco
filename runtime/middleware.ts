@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
+import { PAGE_DIRTY_KEY } from "../blocks/utils.tsx";
 import { Context, context } from "../deco.ts";
 import {
   type Exception,
@@ -426,10 +427,15 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
+      // Check if any app middleware or resolver marked the page as dirty
+      // via the shared bag. The bag (WeakMap) is a reference shared across all
+      // resolver contexts, unlike primitives which get copied by value.
+      const isDirty = ctx.var.dirty || ctx.var.bag?.has(PAGE_DIRTY_KEY);
+
       // If response has set-cookie header, set cache-control to no-store
       if (getSetCookies(newHeaders).length > 0) {
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
-      } else if (!ctx.var.dirty) {
+      } else if (!isDirty) {
         if (PAGE_CACHE_DRY_RUN) {
           console.warn(`[page-cache] cacheable: ${url.pathname}`);
         } else {
@@ -439,9 +445,6 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         console.warn(
           `[page-cache] not cacheable (cookies accessed): ${url.pathname}`,
         );
-        for (const trace of ctx.var.dirtyTraces ?? []) {
-          console.warn(`[page-cache] trace:\n${trace}`);
-        }
       }
 
       // for some reason hono deletes content-type when response is not fresh.
