@@ -435,13 +435,13 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       // If response has set-cookie header, set cache-control to no-store
       if (getSetCookies(newHeaders).length > 0) {
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
-      } else if (!isDirty) {
+      } else if (!newHeaders.has("Cache-Control") && !isDirty) {
         if (PAGE_CACHE_DRY_RUN) {
           console.warn(`[page-cache] cacheable: ${url.pathname}`);
         } else {
           newHeaders.set("Cache-Control", "public, max-age=120, s-maxage=120");
         }
-      } else if (PAGE_CACHE_DRY_RUN) {
+      } else if (PAGE_CACHE_DRY_RUN && !newHeaders.has("Cache-Control")) {
         console.warn(
           `[page-cache] not cacheable (cookies accessed): ${url.pathname}`,
         );
