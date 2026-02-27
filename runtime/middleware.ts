@@ -358,6 +358,16 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       }
       const newHeaders = new Headers(initialResponse.headers);
       context.platform && newHeaders.set("x-deco-platform", context.platform);
+      
+      // Add route template for debugging/observability
+      if (ctx?.var?.pathTemplate) {
+        newHeaders.set("x-deco-route", ctx.var.pathTemplate);
+      }
+      
+      // Add matched page block name for debugging/observability
+      if (ctx?.var?.matchedPageBlock) {
+        newHeaders.set("x-deco-page", ctx.var.matchedPageBlock);
+      }
 
       if (
         (url.pathname.startsWith("/live/previews") &&
