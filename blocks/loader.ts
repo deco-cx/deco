@@ -189,6 +189,7 @@ const wrapLoader = (
     ? [MAX_AGE_S, cache]
     : [cache?.maxAge, "stale-while-revalidate"];
   const flights = singleFlight();
+  const bgFlights = singleFlight();
 
   if (typeof singleFlightKey === "function") {
     console.warn(
@@ -305,7 +306,7 @@ const wrapLoader = (
             headers["Content-Length"] = jsonStringEncoded.length.toString();
           }
 
-          cache.put(
+          await cache.put(
             request,
             new Response(jsonStringEncoded, {
               headers: headers,
@@ -332,9 +333,8 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            callHandlerAndCache().catch((error) =>
-              logger.error(`loader error ${error}`)
-            );
+            bgFlights.do(request.url, callHandlerAndCache)
+              .catch((error) => logger.error(`loader error ${error}`));
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
