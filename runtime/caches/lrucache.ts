@@ -11,6 +11,9 @@ const CACHE_MAX_SIZE = parseInt(
   Deno.env.get("CACHE_MAX_SIZE") ?? Deno.env.get("MAX_CACHE_SIZE") ??
     "1073741824",
 ); // 1 GB max size of cache
+const CACHE_MAX_ITEMS = parseInt(
+  Deno.env.get("CACHE_MAX_ITEMS") ?? "4096",
+); // max number of items in the LRU cache (bounds internal typed array memory)
 const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") === "true"; // creates a cron for each element in the cache to automatically delete expired items
 const CACHE_TTL_RESOLUTION = parseInt(
   Deno.env.get("CACHE_TTL_RESOLUTION") ?? "1000",
@@ -23,6 +26,7 @@ const STALE_TTL_PERIOD = parseInt(
 
 const cacheOptions = (cache: Cache) => (
   {
+    max: CACHE_MAX_ITEMS,
     maxSize: CACHE_MAX_SIZE,
     ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
