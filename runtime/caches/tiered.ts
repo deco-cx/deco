@@ -84,6 +84,9 @@ export function createTieredCache(
           request: RequestInfo | URL,
           options?: CacheQueryOptions,
         ): Promise<Response | undefined> => {
+          if (openedCaches.length === 1) {
+            return openedCaches[0].match(request, options);
+          }
           let matched: Response | undefined;
           const indexOfCachesToUpdate: number[] = [];
           for (const [index, cache] of openedCaches.entries()) {
