@@ -49,9 +49,7 @@ export const proxyState = (
 };
 
 export type DecoMiddleware<TManifest extends AppManifest = AppManifest> =
-  MiddlewareHandler<
-    DecoRouteState<TManifest>
-  >;
+  MiddlewareHandler<DecoRouteState<TManifest>>;
 
 export type DecoRouteState<TManifest extends AppManifest = AppManifest> = {
   Variables: State<TManifest>;
@@ -107,10 +105,11 @@ async (ctx, next) => {
 
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
+const PAGE_CACHE_DRY_RUN = Deno.env.get("DECO_PAGE_CACHE_DRY_RUN") === "true";
 
 export const DEBUG_QS = "__d";
-const addHours = function (date: Date, h: number) {
-  date.setTime(date.getTime() + (h * 60 * 60 * 1000));
+const addHours = (date: Date, h: number) => {
+  date.setTime(date.getTime() + h * 60 * 60 * 1000);
   return date;
 };
 
@@ -136,20 +135,19 @@ export const DEBUG = {
   ): { action: DebugAction; enabled: boolean; correlationId: string } => {
     const url = new URL(request.url);
     const debugFromCookies = getCookies(request.headers)[DEBUG_COOKIE];
-    const debugFromQS = url.searchParams.has(DEBUG_QS) && DEBUG_ENABLED ||
+    const debugFromQS = (url.searchParams.has(DEBUG_QS) && DEBUG_ENABLED) ||
       url.searchParams.get(DEBUG_COOKIE);
     const hasDebugFromQS = debugFromQS !== null;
     const isLivePreview = url.pathname.includes("/live/previews/");
-    const enabled = ((debugFromQS ?? debugFromCookies) === DEBUG_ENABLED) ||
+    const enabled = (debugFromQS ?? debugFromCookies) === DEBUG_ENABLED ||
       isLivePreview;
 
-    const correlationId = url.searchParams.get(DEBUG_QS) ||
-      crypto.randomUUID();
+    const correlationId = url.searchParams.get(DEBUG_QS) || crypto.randomUUID();
     const liveContext = Context.active();
     // querystring forces a setcookie using the querystring value
     return {
       action: hasDebugFromQS || isLivePreview
-        ? (enabled
+        ? enabled
           ? async (resp) => {
             DEBUG.enable(resp);
             resp.headers.set("x-correlation-id", correlationId);
@@ -159,7 +157,7 @@ export const DEBUG = {
             );
             resp.headers.set(
               "x-deco-revision",
-              `${await liveContext.release?.revision() ?? ""}`,
+              `${(await liveContext.release?.revision()) ?? ""}`,
             );
             resp.headers.set(
               "x-isolate-started-at",
@@ -171,7 +169,7 @@ export const DEBUG = {
                 `${liveContext.instance.readyAt.toISOString()}`,
               );
           }
-          : DEBUG.disable)
+          : DEBUG.disable
         : DEBUG.none,
       enabled,
       correlationId,
@@ -221,19 +219,14 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
     liveness,
     // 1 => statebuilder
     async (ctx, next) => {
-      const { enabled, action, correlationId } = DEBUG.fromRequest(
-        ctx.req.raw,
-      );
+      const { enabled, action, correlationId } = DEBUG.fromRequest(ctx.req.raw);
 
-      //@ts-ignore: ctx.base dont exist in hono ctx
+      //@ts-expect-error: ctx.base dont exist in hono ctx
       ctx.base = ctx.var.global;
-      const state = await deco.prepareState(
-        ctx,
-        {
-          enabled,
-          correlationId,
-        },
-      );
+      const state = await deco.prepareState(ctx, {
+        enabled,
+        correlationId,
+      });
       for (const [key, value] of Object.entries(state)) {
         ctx.set(key as keyof typeof state, value);
       }
@@ -253,7 +246,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       if (ctx.req.raw.headers.get("upgrade") === "websocket") {
         return;
       }
-      ctx.res && await action(ctx.res);
+      ctx.res && (await action(ctx.res));
       setLogger(null);
     },
     // 2 => observability
@@ -268,8 +261,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
             "http.request.url": ctx.req.raw.url,
             "http.request.method": ctx.req.raw.method,
             "http.request.body.size":
-              ctx.req.raw.headers.get("content-length") ??
-                undefined,
+              ctx.req.raw.headers.get("content-length") ?? undefined,
             "url.scheme": url.protocol,
             "server.address": url.host,
             "url.query": url.search,
@@ -296,10 +288,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
             span.setStatus({
               code: isErr ? SpanStatusCode.ERROR : SpanStatusCode.OK,
             });
-            span.setAttribute(
-              "http.response.status_code",
-              `${status}`,
-            );
+            span.setAttribute("http.response.status_code", `${status}`);
             if (ctx?.var?.pathTemplate) {
               const route = `${ctx.req.raw.method} ${ctx?.var?.pathTemplate}`;
               span.updateName(route);
@@ -310,9 +299,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
                 ctx.res?.status ?? 500,
               );
             } else {
-              span.updateName(
-                `${ctx.req.raw.method} ${ctx.req.raw.url}`,
-              );
+              span.updateName(`${ctx.req.raw.method} ${ctx.req.raw.url}`);
             }
             span.end();
             if (!url.pathname.startsWith("/_frsh")) {
@@ -333,10 +320,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
     },
     // 3 => main
     async (ctx, next) => {
-      if (
-        ctx.req.raw.method === "HEAD" && isMonitoringRobots(ctx.req.raw)
-      ) {
-        return ctx.res = new Response(null, { status: 200 });
+      if (ctx.req.raw.method === "HEAD" && isMonitoringRobots(ctx.req.raw)) {
+        return (ctx.res = new Response(null, { status: 200 }));
       }
 
       const url = new URL(ctx.req.raw.url); // TODO(mcandeia) check if ctx.url can be used here
@@ -354,7 +339,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         // which means that sometimes it will fail as headers are immutable.
         // so I'm first setting it to undefined and just then set the entire response again
         ctx.res = undefined;
-        return ctx.res = initialResponse;
+        return (ctx.res = initialResponse);
       }
       const newHeaders = new Headers(initialResponse.headers);
       context.platform && newHeaders.set("x-deco-platform", context.platform);
@@ -366,11 +351,9 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         url.pathname.startsWith("/_frsh/") ||
         shouldAllowCorsForOptions
       ) {
-        Object.entries(allowCorsFor(ctx.req.raw)).map(
-          ([name, value]) => {
-            newHeaders.set(name, value);
-          },
-        );
+        Object.entries(allowCorsFor(ctx.req.raw)).map(([name, value]) => {
+          newHeaders.set(name, value);
+        });
       }
       ctx.var.response.headers.forEach((value, key) =>
         newHeaders.append(key, value)
@@ -380,8 +363,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         reduceServerTimingsTo(printTimings(), SERVER_TIMING_MAX_LEN);
       printedTimings && newHeaders.set("Server-Timing", printedTimings);
 
-      const responseStatus = ctx.var.response.status ??
-        initialResponse.status;
+      const responseStatus = ctx.var.response.status ?? initialResponse.status;
 
       if (
         url.pathname.startsWith("/_frsh/") &&
@@ -405,10 +387,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           () => decodeCookie(currentCookies[DECO_SEGMENT]),
           "",
         );
-        const segment = tryOrDefault(
-          () => JSON.parse(cookieSegment),
-          {},
-        );
+        const segment = tryOrDefault(() => JSON.parse(cookieSegment), {});
 
         const active = new Set(segment.active || []);
         const inactiveDrawn = new Set(segment.inactiveDrawn || []);
@@ -432,20 +411,37 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
         if (hasFlags && cookieSegment !== value) {
           const date = new Date();
-          date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
-          setCookie(newHeaders, {
-            name: DECO_SEGMENT,
-            value,
-            path: "/",
-            expires: date,
-            sameSite: "Lax",
-          }, { encode: true });
+          date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000); // 1 month
+          setCookie(
+            newHeaders,
+            {
+              name: DECO_SEGMENT,
+              value,
+              path: "/",
+              expires: date,
+              sameSite: "Lax",
+            },
+            { encode: true },
+          );
         }
       }
 
       // If response has set-cookie header, set cache-control to no-store
       if (getSetCookies(newHeaders).length > 0) {
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      } else if (!ctx.var.dirty) {
+        if (PAGE_CACHE_DRY_RUN) {
+          console.warn(`[page-cache] cacheable: ${url.pathname}`);
+        } else {
+          newHeaders.set("Cache-Control", "public, max-age=120, s-maxage=120");
+        }
+      } else if (PAGE_CACHE_DRY_RUN) {
+        console.warn(
+          `[page-cache] not cacheable (cookies accessed): ${url.pathname}`,
+        );
+        for (const trace of ctx.var.dirtyTraces ?? []) {
+          console.warn(`[page-cache] trace:\n${trace}`);
+        }
       }
 
       // for some reason hono deletes content-type when response is not fresh.
