@@ -201,22 +201,11 @@ const matcherBlock: Block<
         }
       }
 
-      // Extract resolveType from resolveChain (the matcher's resolver type)
-      let matcherResolveType: string | undefined;
-      for (let i = httpCtx.resolveChain.length - 1; i >= 0; i--) {
-        const { type, value } = httpCtx.resolveChain[i];
-        if (type === "resolver") {
-          matcherResolveType = value;
-          break;
-        }
-      }
-
       httpCtx.context.state.flags.push({
         name: uniqueId,
         value: result,
         isSegment,
         cacheable: matcherModule.cacheable,
-        resolveType: matcherResolveType,
       });
 
       return result;

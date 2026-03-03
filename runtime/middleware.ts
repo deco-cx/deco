@@ -106,7 +106,6 @@ async (ctx, next) => {
 
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
-const PAGE_CACHE_DRY_RUN = Deno.env.get("DECO_PAGE_CACHE_DRY_RUN") === "true";
 const PAGE_CACHE_ENABLED = Deno.env.get("DECO_PAGE_CACHE_ENABLED") === "true";
 
 export const DEBUG_QS = "__d";
@@ -440,26 +439,21 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       } else if (isHtmlResponse && isCacheAllowed) {
         // HTML opted in by app middleware: apply page cache logic
         const flags = ctx.var?.flags ?? [];
-        const nonCacheableFlags = flags.filter((flag) => flag.cacheable !== true);
         const allFlagsCacheable = flags.length > 0
           ? flags.every((flag) => flag.cacheable === true)
           : true;
 
         if (!allFlagsCacheable) {
-          newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
-          if (PAGE_CACHE_DRY_RUN) {
-            const matcherNames = nonCacheableFlags
-              .map((flag) => flag.resolveType ? `${flag.resolveType} in "${flag.name}"` : flag.name)
-              .join(", ");
-            console.warn(
-              `[page-cache] not cacheable (non-cacheable flags: ${matcherNames}): ${url.pathname}`,
-            );
-          }
+          newHeaders.set(
+            "Cache-Control",
+            "no-store, no-cache, must-revalidate",
+          );
         } else if (!newHeaders.has("Cache-Control")) {
           if (PAGE_CACHE_ENABLED) {
-            newHeaders.set("Cache-Control", "public, max-age=90, s-maxage=90, stale-while-revalidate=30");
-          } else if (PAGE_CACHE_DRY_RUN) {
-            console.warn(`[page-cache] cacheable: ${url.pathname}`);
+            newHeaders.set(
+              "Cache-Control",
+              "public, max-age=90, s-maxage=90, stale-while-revalidate=30",
+            );
           }
         }
       }
