@@ -431,7 +431,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
 
       const setCookies = getSetCookies(newHeaders);
       const hasSetCookie = setCookies.some(
-        (cookie: { name: string }) => cookie.name !== "__clfb",
+        (cookie: { name: string }) => cookie.name !== "__cflb",
       );
       const contentType = newHeaders.get("Content-Type") ?? "";
       const isHtmlResponse = contentType.includes("text/html");
