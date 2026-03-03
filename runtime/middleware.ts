@@ -107,6 +107,7 @@ async (ctx, next) => {
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
 const PAGE_CACHE_ENABLED = Deno.env.get("DECO_PAGE_CACHE_ENABLED") === "true";
+const PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ?? "public, max-age=90, s-maxage=90, stale-while-revalidate=30";
 
 export const DEBUG_QS = "__d";
 const addHours = (date: Date, h: number) => {
@@ -450,10 +451,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
           );
         } else if (!newHeaders.has("Cache-Control")) {
           if (PAGE_CACHE_ENABLED) {
-            newHeaders.set(
-              "Cache-Control",
-              "public, max-age=90, s-maxage=90, stale-while-revalidate=30",
-            );
+            newHeaders.set("Cache-Control", PAGE_CACHE_CONTROL);
           }
         }
       }
