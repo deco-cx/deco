@@ -88,11 +88,15 @@ const isStickySessionModule = <TProps = any>(
   return (matcher as MatcherStickySessionModule<TProps>).sticky === "session";
 };
 
-export type BlockModuleMatcher = BlockModule<
-  MatchFunc,
-  boolean | ((ctx: MatchContext) => boolean),
-  (ctx: MatchContext) => boolean
->;
+export type BlockModuleMatcher =
+  & BlockModule<
+    MatchFunc,
+    boolean | ((ctx: MatchContext) => boolean),
+    (ctx: MatchContext) => boolean
+  >
+  & {
+    cacheable?: boolean;
+  };
 
 export interface MatcherStickyNoneModule extends BlockModuleMatcher {
   sticky?: "none";
@@ -201,6 +205,7 @@ const matcherBlock: Block<
         name: uniqueId,
         value: result,
         isSegment,
+        cacheable: matcherModule.cacheable,
       });
 
       return result;
