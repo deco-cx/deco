@@ -83,7 +83,6 @@ export interface Flag {
   value: boolean;
   isSegment?: boolean;
   cacheable?: boolean;
-  resolveType?: string;
 }
 
 export interface StatefulContext<T> {
@@ -132,7 +131,6 @@ export type DecoState<
     pathTemplate: string;
     routes?: Route[];
     dirty?: boolean;
-    dirtyTraces?: string[];
   };
 
 export type { JSONSchema7 } from "npm:@types/json-schema@7.0.11/index.d.ts";

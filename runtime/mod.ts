@@ -176,49 +176,8 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       correlationId?: string;
     } = { enabled: false },
   ): Promise<State<TAppManifest, TConfig>> {
-    const _req = forceHttps(context.req.raw);
-    // Proxy the request headers to detect cookie access during resolution.
-    // When any resolver (loader, action, section) reads the "cookie" header,
-    // we flag state.dirty = true so the middleware knows not to cache.
-    const proxiedHeaders = new Proxy(_req.headers, {
-      get(target, prop, receiver) {
-        const value = Reflect.get(target, prop, receiver);
-        if (typeof value === "function") {
-          return function (this: Headers, ...args: any[]) {
-            if (
-              (prop === "get" || prop === "has") &&
-              typeof args[0] === "string" &&
-              args[0].toLowerCase() === "cookie"
-            ) {
-              state.dirty = true;
-              state.dirtyTraces!.push(
-                new Error(
-                  `cookie header accessed via headers.${
-                    String(
-                      prop,
-                    )
-                  }("cookie")`,
-                ).stack ?? "",
-              );
-            }
-            return value.apply(target, args);
-          };
-        }
-        return value;
-      },
-    });
-    const req = new Proxy(_req, {
-      get(target, prop, receiver) {
-        if (prop === "headers") {
-          return proxiedHeaders;
-        }
-        const value = Reflect.get(target, prop, receiver);
-        if (typeof value === "function") {
-          return value.bind(target);
-        }
-        return value;
-      },
-    });
+    const req = context.req.raw;
+
     const state = (context.base ?? {}) as State<TAppManifest, TConfig>;
     state.deco = this;
     const t = createServerTimings();
@@ -260,19 +219,19 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
     };
 
     const liveContext = this.ctx;
+    const request = forceHttps(req);
 
     state.release = liveContext.release!;
     const response = {
       headers: new Headers(defaultHeaders),
       status: undefined,
     };
-    state.url = new URL(req.url);
+    state.url = new URL(request.url);
     state.response = response;
     state.bag = new WeakMap();
     state.vary = vary();
     state.flags = [];
     state.dirty = false;
-    state.dirtyTraces = [];
     state.site = {
       id: this.ctx.siteId ?? 0,
       name: this.ctx.site,
