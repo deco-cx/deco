@@ -253,7 +253,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
               return Reflect.get(target, prop, recv);
             },
           }),
-          request: req,
+          request,
         },
         {
           monitoring: state.monitoring,
