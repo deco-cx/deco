@@ -27,7 +27,7 @@ import type { InvocationProxy } from "../utils/invoke.types.ts";
 import { type Device, deviceOf, isBot as isUABot } from "../utils/userAgent.ts";
 import type { HttpContext } from "./handler.ts";
 import type { Vary } from "../utils/vary.ts";
-import { Context } from "../mod.ts";
+import { Context } from "../deco.ts";
 import { simulateBot } from "../utils/http.ts";
 
 export interface GateKeeperAccess {
