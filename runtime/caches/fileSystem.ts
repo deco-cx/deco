@@ -21,18 +21,17 @@ function headersToUint8Array(headers: [string, string][]) {
 
 // Function to combine the body and headers into a single buffer
 function generateCombinedBuffer(body: Uint8Array, headers: Uint8Array) {
-  // This prepends the header length to the combined buffer. As it has 4 bytes in size,
-  // it can store up to 2^32 - 1 bytes of headers (4GB). This should be enough for all deco use cases.
-  const headerLength = new Uint8Array(new Uint32Array([headers.length]).buffer);
-
-  // Concatenate length, headers, and body into one Uint8Array
-  const combinedBuffer = new Uint8Array(
-    headerLength.length + headers.length + body.length,
-  );
-  combinedBuffer.set(headerLength, 0);
-  combinedBuffer.set(headers, headerLength.length);
-  combinedBuffer.set(body, headerLength.length + headers.length);
-  return combinedBuffer;
+  const hLen = headers.length;
+  // Single allocation: 4 bytes for header length + headers + body
+  const buf = new Uint8Array(4 + hLen + body.length);
+  // Write header length as little-endian uint32 directly (avoids Uint32Array allocation)
+  buf[0] = hLen & 0xFF;
+  buf[1] = (hLen >> 8) & 0xFF;
+  buf[2] = (hLen >> 16) & 0xFF;
+  buf[3] = (hLen >> 24) & 0xFF;
+  buf.set(headers, 4);
+  buf.set(body, 4 + hLen);
+  return buf;
 }
 
 // Function to extract the headers and body from a combined buffer

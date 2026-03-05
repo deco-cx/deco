@@ -464,9 +464,10 @@ const invokeResolverWithProps = async <
   };
 
   try {
+    // Use Object.assign to avoid spread copy of entire ctx
     let respOrPromise = resolver(
       props,
-      { ...ctx, monitoring, resolverId },
+      Object.assign({}, ctx, { monitoring, resolverId }),
     );
     const metricsFunc = ctx.monitoring?.metrics;
     if (isAwaitable(respOrPromise)) {

@@ -283,34 +283,30 @@ const wrapLoader = (
 
         timing?.end();
 
-        const cacheKeyUrl = `https://localhost/?resolver=${
-          encodeURIComponent(loader)
-        }&resolveChain=${encodeURIComponent(resolveChainString)}&revision=${
-          encodeURIComponent(revisionID)
-        }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
+        // Use simple string concatenation with a separator instead of
+        // 4x encodeURIComponent + URL construction + new Request allocation.
+        // The cache layer hashes this to SHA1 anyway, so encoding is unnecessary.
+        const cacheKeyUrl =
+          `https://localhost/?k=${loader}\0${resolveChainString}\0${revisionID}\0${cacheKeyValue}`;
         const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
 
-          // Optimize JSON serialization and encoding using reused TextEncoder
-          const jsonString = JSON.stringify(json);
-          const jsonStringEncoded = textEncoder.encode(jsonString);
+          // Serialize once, encode once. The headers object literal is
+          // cheaper than new Headers() and sufficient for Response ctor.
+          const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
 
-          const headers: { [key: string]: string } = {
-            expires: new Date(Date.now() + (cacheMaxAge * 1e3)).toUTCString(),
+          const headers: Record<string, string> = {
+            "expires": new Date(Date.now() + (cacheMaxAge * 1e3))
+              .toUTCString(),
             "Content-Type": "application/json",
+            "Content-Length": "" + jsonStringEncoded.length,
           };
 
-          if (jsonStringEncoded.length > 0) {
-            headers["Content-Length"] = jsonStringEncoded.length.toString();
-          }
-
-          await cache.put(
+          cache.put(
             request,
-            new Response(jsonStringEncoded, {
-              headers: headers,
-            }),
+            new Response(jsonStringEncoded, { headers }),
           ).catch((error) => logger.error(`loader error ${error}`));
 
           return json;
