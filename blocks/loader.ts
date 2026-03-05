@@ -283,11 +283,12 @@ const wrapLoader = (
 
         timing?.end();
 
-        const cacheKeyUrl = `https://localhost/?resolver=${
-          encodeURIComponent(loader)
-        }&resolveChain=${encodeURIComponent(resolveChainString)}&revision=${
-          encodeURIComponent(revisionID)
-        }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
+        const cacheKeyUrl = `https://localhost/?${new URLSearchParams({
+          resolver: loader,
+          resolveChain: resolveChainString,
+          revision: revisionID,
+          cacheKey: cacheKeyValue,
+        })}`;
         const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {

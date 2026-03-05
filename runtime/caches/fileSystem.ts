@@ -37,11 +37,20 @@ function generateCombinedBuffer(body: Uint8Array, headers: Uint8Array) {
 
 // Function to extract the headers and body from a combined buffer
 function extractCombinedBuffer(combinedBuffer: Uint8Array) {
+  if (combinedBuffer.length < 4) {
+    throw new Error("Malformed cache entry: buffer too small");
+  }
+
   // Read header length as little-endian uint32 (matches generateCombinedBuffer write order)
-  const headerLength = combinedBuffer[0] |
+  // Use >>> 0 to force unsigned interpretation after signed bitwise shifts
+  const headerLength = (combinedBuffer[0] |
     (combinedBuffer[1] << 8) |
     (combinedBuffer[2] << 16) |
-    (combinedBuffer[3] << 24);
+    (combinedBuffer[3] << 24)) >>> 0;
+
+  if (headerLength > combinedBuffer.length - 4) {
+    throw new Error("Malformed cache entry: header length exceeds buffer");
+  }
 
   // Extract the headers and body from the combined buffer
   const headers = combinedBuffer.slice(4, 4 + headerLength);
