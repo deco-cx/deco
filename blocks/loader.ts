@@ -293,20 +293,26 @@ const wrapLoader = (
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
 
-          // Serialize once, encode once. The headers object literal is
-          // cheaper than new Headers() and sufficient for Response ctor.
+          // Serialize and encode once on the main thread.
           const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
 
-          const headers: Record<string, string> = {
-            "expires": new Date(Date.now() + (cacheMaxAge * 1e3))
-              .toUTCString(),
-            "Content-Type": "application/json",
-            "Content-Length": "" + jsonStringEncoded.length,
-          };
+          const expires = new Date(Date.now() + (cacheMaxAge * 1e3))
+            .toUTCString();
+          const headerPairs: [string, string][] = [
+            ["expires", expires],
+            ["Content-Type", "application/json"],
+            ["Content-Length", "" + jsonStringEncoded.length],
+          ];
 
+          // Cache write goes through the full chain (LRU → filesystem)
+          // so the LRU registers the key for fast match lookups.
+          // The filesystem layer offloads the actual I/O to a worker thread
+          // when DECO_CACHE_WRITE_WORKER=true.
           cache.put(
             request,
-            new Response(jsonStringEncoded, { headers }),
+            new Response(jsonStringEncoded, {
+              headers: Object.fromEntries(headerPairs),
+            }),
           ).catch((error) => logger.error(`loader error ${error}`));
 
           return json;

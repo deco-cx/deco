@@ -1,5 +1,6 @@
 import { existsSync } from "@std/fs";
 import { logger } from "../../observability/otel/config.ts";
+import type { CacheWriteMessage } from "./cacheWriteWorker.ts";
 
 import {
   assertCanBeCached,
@@ -57,6 +58,34 @@ function getIterableHeaders(headers: Uint8Array) {
     key !== "" && value !== ""
   );
   return filteredHeaders;
+}
+
+// Worker for offloading cache writes from the main event loop.
+// All serialization (JSON.stringify headers, generateCombinedBuffer) and
+// FS I/O (Deno.writeFile) happen on the worker thread.
+// Opt-in via DECO_CACHE_WRITE_WORKER=true.
+const CACHE_WRITE_WORKER_ENABLED =
+  Deno.env.get("DECO_CACHE_WRITE_WORKER") === "true";
+
+let cacheWriteWorker: Worker | null = null;
+
+function getCacheWriteWorker(): Worker | null {
+  if (!CACHE_WRITE_WORKER_ENABLED) return null;
+  if (cacheWriteWorker) return cacheWriteWorker;
+  try {
+    cacheWriteWorker = new Worker(
+      import.meta.resolve("./cacheWriteWorker.ts"),
+      { type: "module" },
+    );
+    cacheWriteWorker.onerror = (e) => {
+      console.error("[cache-write-worker] fatal:", e.message);
+      cacheWriteWorker = null;
+    };
+    return cacheWriteWorker;
+  } catch (err) {
+    console.error("[cache-write-worker] failed to start:", err);
+    return null;
+  }
 }
 
 function createFileSystemCache(): CacheStorage {
@@ -202,9 +231,35 @@ function createFileSystemCache(): CacheStorage {
             return;
           }
 
-          const cacheKey = await requestURLSHA1(request);
+          const worker = getCacheWriteWorker();
+          if (worker) {
+            // Offload serialization + FS write to worker thread.
+            // The main event loop only reads the body; everything else
+            // (SHA1 hash, header encoding, buffer combine, writeFile)
+            // runs on the worker's thread.
+            const bodyBuffer = new Uint8Array(await response.arrayBuffer());
+            const headers: [string, string][] = [
+              ...response.headers.entries(),
+            ];
+            const url = typeof request === "string"
+              ? request
+              : request instanceof URL
+              ? request.href
+              : request.url;
+            const msg: CacheWriteMessage = {
+              cacheDir: FILE_SYSTEM_CACHE_DIRECTORY,
+              url,
+              cacheName,
+              body: bodyBuffer,
+              headers,
+            };
+            // Transfer the body buffer to avoid copying
+            worker.postMessage(msg, [bodyBuffer.buffer]);
+            return;
+          }
 
-          // Read body directly — avoids unnecessary intermediate .then() chain
+          // Fallback: no worker available, do it inline
+          const cacheKey = await requestURLSHA1(request);
           const bodyBuffer = new Uint8Array(await response.arrayBuffer());
           const headersBuffer = headersToUint8Array([
             ...response.headers.entries(),
