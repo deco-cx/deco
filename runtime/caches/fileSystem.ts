@@ -37,9 +37,11 @@ function generateCombinedBuffer(body: Uint8Array, headers: Uint8Array) {
 
 // Function to extract the headers and body from a combined buffer
 function extractCombinedBuffer(combinedBuffer: Uint8Array) {
-  // Extract the header length from the combined buffer
-  const headerLengthArray = combinedBuffer.slice(0, 4);
-  const headerLength = new Uint32Array(headerLengthArray.buffer)[0];
+  // Read header length as little-endian uint32 (matches generateCombinedBuffer write order)
+  const headerLength = combinedBuffer[0] |
+    (combinedBuffer[1] << 8) |
+    (combinedBuffer[2] << 16) |
+    (combinedBuffer[3] << 24);
 
   // Extract the headers and body from the combined buffer
   const headers = combinedBuffer.slice(4, 4 + headerLength);

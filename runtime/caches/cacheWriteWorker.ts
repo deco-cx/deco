@@ -9,8 +9,14 @@ function ensureCacheDir(dir: string) {
   if (initializedDirs.has(dir)) return;
   try {
     Deno.mkdirSync(dir, { recursive: true });
-  } catch { /* already exists */ }
-  initializedDirs.add(dir);
+    initializedDirs.add(dir);
+  } catch (err) {
+    if (err instanceof Deno.errors.AlreadyExists) {
+      initializedDirs.add(dir);
+    } else {
+      console.error("[cache-write-worker] failed to create cache dir:", err);
+    }
+  }
 }
 
 // --- SHA1 ---

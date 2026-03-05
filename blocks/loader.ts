@@ -283,11 +283,11 @@ const wrapLoader = (
 
         timing?.end();
 
-        // Use simple string concatenation with a separator instead of
-        // 4x encodeURIComponent + URL construction + new Request allocation.
-        // The cache layer hashes this to SHA1 anyway, so encoding is unnecessary.
-        const cacheKeyUrl =
-          `https://localhost/?k=${loader}\0${resolveChainString}\0${revisionID}\0${cacheKeyValue}`;
+        const cacheKeyUrl = `https://localhost/?resolver=${
+          encodeURIComponent(loader)
+        }&resolveChain=${encodeURIComponent(resolveChainString)}&revision=${
+          encodeURIComponent(revisionID)
+        }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
         const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {
