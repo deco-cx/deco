@@ -128,7 +128,9 @@ export const assertCanBeCached = (req: Request, response: Response) => {
 
 export const inFuture = (maybeDate: string) => {
   try {
-    return new Date(maybeDate) > new Date();
+    // Use Date.parse + Date.now to avoid allocating two Date objects per call
+    const ts = Date.parse(maybeDate);
+    return ts > Date.now();
   } catch {
     return false;
   }

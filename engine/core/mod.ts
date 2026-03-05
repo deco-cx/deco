@@ -47,9 +47,15 @@ const withOverrides = (
   overrides: Record<string, string> | undefined,
   resolvables: ResolvableMap,
 ): ResolvableMap => {
-  return Object.entries(overrides ?? {}).reduce((nresolvables, [from, to]) => {
-    return { ...nresolvables, [from]: nresolvables[to] };
-  }, resolvables);
+  if (!overrides) return resolvables;
+  const entries = Object.entries(overrides);
+  if (entries.length === 0) return resolvables;
+  // Single shallow copy instead of N spreads (one per override entry)
+  const result = { ...resolvables };
+  for (const [from, to] of entries) {
+    result[from] = resolvables[to];
+  }
+  return result;
 };
 
 const charByType = {
@@ -175,7 +181,8 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
     const resolvers = this.getResolvers();
     const currentOnce = this.runOncePerRelease;
     const resolveChain = options?.resolveChain ?? [];
-    const baseCtx: BaseContext = {
+    // Build ctx in a single Object.assign instead of two spread copies
+    const ctx = Object.assign({}, context, {
       revision,
       danglingRecover: this.danglingRecover,
       resolve: _resolve as ResolveFunc,
@@ -187,11 +194,10 @@ export class ReleaseResolver<TContext extends BaseContext = BaseContext> {
       resolvers,
       monitoring: options?.monitoring,
       memo: {},
-      runOnce: (key, f) => {
+      runOnce: (key: string, f: () => any) => {
         return (currentOnce[key] ??= once()).do(f);
       },
-    };
-    const ctx = { ...context, ...baseCtx };
+    }) as TContext;
 
     const innerResolver = this.resolverFor(
       ctx,

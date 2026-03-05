@@ -1,5 +1,6 @@
 import { existsSync } from "@std/fs";
 import { logger } from "../../observability/otel/config.ts";
+import type { CacheWriteMessage } from "./cacheWriteWorker.ts";
 
 import {
   assertCanBeCached,
@@ -21,25 +22,35 @@ function headersToUint8Array(headers: [string, string][]) {
 
 // Function to combine the body and headers into a single buffer
 function generateCombinedBuffer(body: Uint8Array, headers: Uint8Array) {
-  // This prepends the header length to the combined buffer. As it has 4 bytes in size,
-  // it can store up to 2^32 - 1 bytes of headers (4GB). This should be enough for all deco use cases.
-  const headerLength = new Uint8Array(new Uint32Array([headers.length]).buffer);
-
-  // Concatenate length, headers, and body into one Uint8Array
-  const combinedBuffer = new Uint8Array(
-    headerLength.length + headers.length + body.length,
-  );
-  combinedBuffer.set(headerLength, 0);
-  combinedBuffer.set(headers, headerLength.length);
-  combinedBuffer.set(body, headerLength.length + headers.length);
-  return combinedBuffer;
+  const hLen = headers.length;
+  // Single allocation: 4 bytes for header length + headers + body
+  const buf = new Uint8Array(4 + hLen + body.length);
+  // Write header length as little-endian uint32 directly (avoids Uint32Array allocation)
+  buf[0] = hLen & 0xFF;
+  buf[1] = (hLen >> 8) & 0xFF;
+  buf[2] = (hLen >> 16) & 0xFF;
+  buf[3] = (hLen >> 24) & 0xFF;
+  buf.set(headers, 4);
+  buf.set(body, 4 + hLen);
+  return buf;
 }
 
 // Function to extract the headers and body from a combined buffer
 function extractCombinedBuffer(combinedBuffer: Uint8Array) {
-  // Extract the header length from the combined buffer
-  const headerLengthArray = combinedBuffer.slice(0, 4);
-  const headerLength = new Uint32Array(headerLengthArray.buffer)[0];
+  if (combinedBuffer.length < 4) {
+    throw new Error("Malformed cache entry: buffer too small");
+  }
+
+  // Read header length as little-endian uint32 (matches generateCombinedBuffer write order)
+  // Use >>> 0 to force unsigned interpretation after signed bitwise shifts
+  const headerLength = (combinedBuffer[0] |
+    (combinedBuffer[1] << 8) |
+    (combinedBuffer[2] << 16) |
+    (combinedBuffer[3] << 24)) >>> 0;
+
+  if (headerLength > combinedBuffer.length - 4) {
+    throw new Error("Malformed cache entry: header length exceeds buffer");
+  }
 
   // Extract the headers and body from the combined buffer
   const headers = combinedBuffer.slice(4, 4 + headerLength);
@@ -58,6 +69,34 @@ function getIterableHeaders(headers: Uint8Array) {
     key !== "" && value !== ""
   );
   return filteredHeaders;
+}
+
+// Worker for offloading cache writes from the main event loop.
+// All serialization (JSON.stringify headers, generateCombinedBuffer) and
+// FS I/O (Deno.writeFile) happen on the worker thread.
+// Opt-in via DECO_CACHE_WRITE_WORKER=true.
+const CACHE_WRITE_WORKER_ENABLED =
+  Deno.env.get("DECO_CACHE_WRITE_WORKER") === "true";
+
+let cacheWriteWorker: Worker | null = null;
+
+function getCacheWriteWorker(): Worker | null {
+  if (!CACHE_WRITE_WORKER_ENABLED) return null;
+  if (cacheWriteWorker) return cacheWriteWorker;
+  try {
+    cacheWriteWorker = new Worker(
+      import.meta.resolve("./cacheWriteWorker.ts"),
+      { type: "module" },
+    );
+    cacheWriteWorker.onerror = (e) => {
+      console.error("[cache-write-worker] fatal:", e.message);
+      cacheWriteWorker = null;
+    };
+    return cacheWriteWorker;
+  } catch (err) {
+    console.error("[cache-write-worker] failed to start:", err);
+    return null;
+  }
 }
 
 function createFileSystemCache(): CacheStorage {
@@ -203,9 +242,35 @@ function createFileSystemCache(): CacheStorage {
             return;
           }
 
-          const cacheKey = await requestURLSHA1(request);
+          const worker = getCacheWriteWorker();
+          if (worker) {
+            // Offload serialization + FS write to worker thread.
+            // The main event loop only reads the body; everything else
+            // (SHA1 hash, header encoding, buffer combine, writeFile)
+            // runs on the worker's thread.
+            const bodyBuffer = new Uint8Array(await response.arrayBuffer());
+            const headers: [string, string][] = [
+              ...response.headers.entries(),
+            ];
+            const url = typeof request === "string"
+              ? request
+              : request instanceof URL
+              ? request.href
+              : request.url;
+            const msg: CacheWriteMessage = {
+              cacheDir: FILE_SYSTEM_CACHE_DIRECTORY,
+              url,
+              cacheName,
+              body: bodyBuffer,
+              headers,
+            };
+            // Transfer the body buffer to avoid copying
+            worker.postMessage(msg, [bodyBuffer.buffer]);
+            return;
+          }
 
-          // Read body directly — avoids unnecessary intermediate .then() chain
+          // Fallback: no worker available, do it inline
+          const cacheKey = await requestURLSHA1(request);
           const bodyBuffer = new Uint8Array(await response.arrayBuffer());
           const headersBuffer = headersToUint8Array([
             ...response.headers.entries(),

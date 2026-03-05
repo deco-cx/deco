@@ -283,33 +283,36 @@ const wrapLoader = (
 
         timing?.end();
 
-        const cacheKeyUrl = `https://localhost/?resolver=${
-          encodeURIComponent(loader)
-        }&resolveChain=${encodeURIComponent(resolveChainString)}&revision=${
-          encodeURIComponent(revisionID)
-        }&cacheKey=${encodeURIComponent(cacheKeyValue)}`;
+        const cacheKeyUrl = `https://localhost/?${new URLSearchParams({
+          resolver: loader,
+          resolveChain: resolveChainString,
+          revision: revisionID,
+          cacheKey: cacheKeyValue,
+        })}`;
         const request = new Request(cacheKeyUrl);
 
         const callHandlerAndCache = async () => {
           const json = await handler(props, req, ctx);
 
-          // Optimize JSON serialization and encoding using reused TextEncoder
-          const jsonString = JSON.stringify(json);
-          const jsonStringEncoded = textEncoder.encode(jsonString);
+          // Serialize and encode once on the main thread.
+          const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
 
-          const headers: { [key: string]: string } = {
-            expires: new Date(Date.now() + (cacheMaxAge * 1e3)).toUTCString(),
-            "Content-Type": "application/json",
-          };
+          const expires = new Date(Date.now() + (cacheMaxAge * 1e3))
+            .toUTCString();
+          const headerPairs: [string, string][] = [
+            ["expires", expires],
+            ["Content-Type", "application/json"],
+            ["Content-Length", "" + jsonStringEncoded.length],
+          ];
 
-          if (jsonStringEncoded.length > 0) {
-            headers["Content-Length"] = jsonStringEncoded.length.toString();
-          }
-
-          await cache.put(
+          // Cache write goes through the full chain (LRU → filesystem)
+          // so the LRU registers the key for fast match lookups.
+          // The filesystem layer offloads the actual I/O to a worker thread
+          // when DECO_CACHE_WRITE_WORKER=true.
+          cache.put(
             request,
             new Response(jsonStringEncoded, {
-              headers: headers,
+              headers: Object.fromEntries(headerPairs),
             }),
           ).catch((error) => logger.error(`loader error ${error}`));
 
