@@ -25,6 +25,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
     let body: {
       issue?: string;
       prompt?: string;
+      shouldCommitChanges?: boolean;
     };
     try {
       body = await c.req.json();
@@ -32,7 +33,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       return c.json({ error: "Invalid JSON body" }, 400);
     }
 
-    const { issue, prompt } = body;
+    const { issue, prompt, shouldCommitChanges } = body;
 
     if (issue && prompt) {
       return c.json(
@@ -58,6 +59,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       extraEnv: opts.extraEnv,
       proxyUrl: opts.proxyUrl,
       proxyToken: opts.proxyToken,
+      shouldCommitChanges,
     });
 
     tasks.set(task.taskId, task);
@@ -193,7 +195,7 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   /** Create and start an AI task, registering it in the task map. */
   const createTask = async (
-    taskOpts: { issue?: string; prompt?: string },
+    taskOpts: { issue?: string; prompt?: string; shouldCommitChanges?: boolean },
   ): Promise<AITask> => {
     const task = new AITask({
       ...taskOpts,

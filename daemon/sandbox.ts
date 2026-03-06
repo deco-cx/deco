@@ -22,7 +22,7 @@ interface DeployParams {
   branch?: string;
   runCommand?: string[];
   envs?: Record<string, string>;
-  task?: { issue?: string; prompt?: string };
+  task?: { issue?: string; prompt?: string; shouldCommitChanges?: boolean };
 }
 
 interface DeployResult {
@@ -70,7 +70,7 @@ export const createSandboxHandlers = (
       branch?: string;
       runCommand?: string[];
       envs?: Record<string, string>;
-      task?: { issue?: string; prompt?: string };
+      task?: { issue?: string; prompt?: string; shouldCommitChanges?: boolean };
     };
     try {
       body = await c.req.json();
