@@ -50,6 +50,13 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
       return c.json({ error: "'prompt' must be a string" }, 400);
     }
 
+    if (
+      shouldCommitChanges !== undefined &&
+      typeof shouldCommitChanges !== "boolean"
+    ) {
+      return c.json({ error: "'shouldCommitChanges' must be a boolean" }, 400);
+    }
+
     const task = new AITask({
       issue,
       prompt,
