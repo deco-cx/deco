@@ -206,6 +206,40 @@ export class AITask {
         githubToken,
       );
       taskPrompt = buildPromptFromIssue(this.#issueCtx);
+
+      // Create a dedicated branch so Claude never commits directly to the
+      // default branch, which would make gh pr create fail (can't PR to itself).
+      const branchName = `agent/issue-${this.#issueCtx.number}`;
+      const branchEnv = gitEnv(githubToken ?? undefined);
+      const createBranch = new Deno.Command("git", {
+        args: ["checkout", "-b", branchName],
+        cwd: this.#opts.cwd,
+        stdout: "piped",
+        stderr: "piped",
+        env: branchEnv,
+      });
+      const createBranchOut = await createBranch.output();
+      if (!createBranchOut.success) {
+        // Branch may already exist — try checking it out instead
+        const checkoutBranch = new Deno.Command("git", {
+          args: ["checkout", branchName],
+          cwd: this.#opts.cwd,
+          stdout: "piped",
+          stderr: "piped",
+          env: branchEnv,
+        });
+        const checkoutOut = await checkoutBranch.output();
+        if (!checkoutOut.success) {
+          console.warn(
+            `[ai] Task ${this.taskId}: could not switch to branch ${branchName}: ${
+              new TextDecoder().decode(createBranchOut.stderr)
+            }`,
+          );
+        }
+      }
+      console.log(
+        `[ai] Task ${this.taskId}: checked out branch ${branchName}`,
+      );
     } else if (this.#opts.prompt) {
       taskPrompt = this.#opts.prompt;
     }
