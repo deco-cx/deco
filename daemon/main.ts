@@ -559,6 +559,7 @@ if (SANDBOX_MODE) {
             const ct = await handlers.createTask({
               issue: task.issue,
               prompt: task.prompt,
+              shouldCommitChanges: task.shouldCommitChanges,
             });
             console.log(
               `[sandbox] Auto-started AI task ${ct.taskId}${

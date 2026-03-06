@@ -1,5 +1,6 @@
-import { getGitHubToken, setupGithubTokenNetrc } from "../git.ts";
+import { getGitHubToken, lockerGitAPI, setupGithubTokenNetrc } from "../git.ts";
 import { GITHUB_APP_CONFIGURED, setupGitHubAppNetrc } from "../githubApp.ts";
+import { resetActivity } from "../monitor.ts";
 import { PtySession } from "../pty/session.ts";
 import {
   buildPromptFromIssue,
@@ -49,6 +50,8 @@ export interface AITaskOptions {
   proxyUrl?: string;
   /** Scoped JWT token for authenticating with the admin proxy. */
   proxyToken?: string;
+  /** When true, commit any uncommitted changes after Claude exits. */
+  shouldCommitChanges?: boolean;
 }
 
 export type AITaskStatus =
@@ -123,12 +126,14 @@ export class AITask {
 
   #session: PtySession | null = null;
   #status: AITaskStatus = "pending";
+  #disposed = false;
   #prUrl: string | null = null;
   #issueCtx: IssueContext | null = null;
   #opts: AITaskOptions;
   #startSha: string | null = null;
   #githubToken: string | null = null;
   #tokenRefreshInterval: ReturnType<typeof setInterval> | null = null;
+  #activityInterval: ReturnType<typeof setInterval> | null = null;
   #repoInfo: { owner: string; repo: string } | null = null;
 
   get status() {
@@ -302,6 +307,14 @@ export class AITask {
           console.error(`[ai] Post-completion failed:`, err);
         });
       });
+
+      // Keep the environment from being considered idle while the task runs.
+      // The HTTP activity monitor only fires on requests; a long-running AI
+      // task produces no traffic, so reset immediately and then every 30 s.
+      resetActivity();
+      this.#activityInterval = setInterval(() => {
+        resetActivity();
+      }, 30_000);
     } catch (err) {
       this.#status = "failed";
       if (this.#tokenRefreshInterval) {
@@ -312,19 +325,136 @@ export class AITask {
     }
   }
 
+  async #commitChanges(): Promise<void> {
+    using _ = await lockerGitAPI.lock.wlock();
+    const env = gitEnv(this.#githubToken ?? undefined);
+
+    // Check for uncommitted changes (staged or unstaged)
+    const statusCmd = new Deno.Command("git", {
+      args: ["status", "--porcelain"],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+      stderr: "piped",
+      env,
+    });
+    const statusOutput = await statusCmd.output();
+    const hasChanges = statusOutput.success &&
+      new TextDecoder().decode(statusOutput.stdout).trim().length > 0;
+
+    if (!hasChanges) {
+      console.log(`[ai] Task ${this.taskId}: no uncommitted changes to commit`);
+      return;
+    }
+
+    const addCmd = new Deno.Command("git", {
+      args: ["add", "-A"],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+      stderr: "piped",
+      env,
+    });
+    const addOutput = await addCmd.output();
+    if (!addOutput.success) {
+      console.error(
+        `[ai] Task ${this.taskId}: git add failed: ${
+          new TextDecoder().decode(addOutput.stderr)
+        }`,
+      );
+      return;
+    }
+
+    // Unstage .agent-home so token files are never committed
+    const unstageCmd = new Deno.Command("git", {
+      args: ["reset", "--", ".agent-home"],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+      stderr: "piped",
+      env,
+    });
+    await unstageCmd.output(); // best-effort; .agent-home may not exist
+
+    const commitCmd = new Deno.Command("git", {
+      args: [
+        "commit",
+        "-m",
+        `chore: apply AI task changes [${this.taskId}]`,
+      ],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+      stderr: "piped",
+      env,
+    });
+    const commitOutput = await commitCmd.output();
+    if (!commitOutput.success) {
+      console.error(
+        `[ai] Task ${this.taskId}: git commit failed: ${
+          new TextDecoder().decode(commitOutput.stderr)
+        }`,
+      );
+      return;
+    }
+
+    console.log(`[ai] Task ${this.taskId}: uncommitted changes committed`);
+
+    // Get current branch name
+    const branchCmd = new Deno.Command("git", {
+      args: ["rev-parse", "--abbrev-ref", "HEAD"],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+      stderr: "piped",
+      env,
+    });
+    const branchOutput = await branchCmd.output();
+    if (!branchOutput.success) {
+      console.error(`[ai] Task ${this.taskId}: failed to get branch name`);
+      return;
+    }
+    const branch = new TextDecoder().decode(branchOutput.stdout).trim();
+
+    const pushCmd = new Deno.Command("git", {
+      args: ["push", "-u", "origin", branch],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+      stderr: "piped",
+      env,
+    });
+    const pushOutput = await pushCmd.output();
+    if (!pushOutput.success) {
+      console.error(
+        `[ai] Task ${this.taskId}: git push failed: ${
+          new TextDecoder().decode(pushOutput.stderr)
+        }`,
+      );
+    } else {
+      console.log(`[ai] Task ${this.taskId}: changes pushed to ${branch}`);
+    }
+  }
+
   async #onComplete(exitCode: number): Promise<void> {
     const success = exitCode === 0;
     this.#status = success ? "completed" : "failed";
 
-    // Stop the token refresh interval — task is done
+    // Stop the token refresh and activity intervals — task is done
     if (this.#tokenRefreshInterval) {
       clearInterval(this.#tokenRefreshInterval);
       this.#tokenRefreshInterval = null;
+    }
+    if (this.#activityInterval) {
+      clearInterval(this.#activityInterval);
+      this.#activityInterval = null;
     }
 
     console.log(
       `[ai] Task ${this.taskId} exited with code ${exitCode}`,
     );
+
+    // Skip all post-exit side-effects if the task was disposed
+    if (this.#disposed) return;
+
+    // Commit any uncommitted changes left by Claude if requested
+    if (this.#opts.shouldCommitChanges === true) {
+      await this.#commitChanges();
+    }
 
     // Only run GitHub flow if this was an issue-based task
     if (!this.#issueCtx) return;
@@ -471,9 +601,14 @@ export class AITask {
   }
 
   dispose(): void {
+    this.#disposed = true;
     if (this.#tokenRefreshInterval) {
       clearInterval(this.#tokenRefreshInterval);
       this.#tokenRefreshInterval = null;
+    }
+    if (this.#activityInterval) {
+      clearInterval(this.#activityInterval);
+      this.#activityInterval = null;
     }
     if (this.#session) {
       this.#session.dispose();
