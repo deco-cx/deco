@@ -202,7 +202,11 @@ export const createAIHandlers = (opts: AIHandlersOptions) => {
 
   /** Create and start an AI task, registering it in the task map. */
   const createTask = async (
-    taskOpts: { issue?: string; prompt?: string; shouldCommitChanges?: boolean },
+    taskOpts: {
+      issue?: string;
+      prompt?: string;
+      shouldCommitChanges?: boolean;
+    },
   ): Promise<AITask> => {
     const task = new AITask({
       ...taskOpts,

@@ -126,6 +126,7 @@ export class AITask {
 
   #session: PtySession | null = null;
   #status: AITaskStatus = "pending";
+  #disposed = false;
   #prUrl: string | null = null;
   #issueCtx: IssueContext | null = null;
   #opts: AITaskOptions;
@@ -309,7 +310,8 @@ export class AITask {
 
       // Keep the environment from being considered idle while the task runs.
       // The HTTP activity monitor only fires on requests; a long-running AI
-      // task produces no traffic, so we reset the timer every 30 seconds.
+      // task produces no traffic, so reset immediately and then every 30 s.
+      resetActivity();
       this.#activityInterval = setInterval(() => {
         resetActivity();
       }, 30_000);
@@ -359,6 +361,16 @@ export class AITask {
       );
       return;
     }
+
+    // Unstage .agent-home so token files are never committed
+    const unstageCmd = new Deno.Command("git", {
+      args: ["reset", "--", ".agent-home"],
+      cwd: this.#opts.cwd,
+      stdout: "piped",
+      stderr: "piped",
+      env,
+    });
+    await unstageCmd.output(); // best-effort; .agent-home may not exist
 
     const commitCmd = new Deno.Command("git", {
       args: [
@@ -435,8 +447,11 @@ export class AITask {
       `[ai] Task ${this.taskId} exited with code ${exitCode}`,
     );
 
+    // Skip all post-exit side-effects if the task was disposed
+    if (this.#disposed) return;
+
     // Commit any uncommitted changes left by Claude if requested
-    if (this.#opts.shouldCommitChanges) {
+    if (this.#opts.shouldCommitChanges === true) {
       await this.#commitChanges();
     }
 
@@ -585,6 +600,7 @@ export class AITask {
   }
 
   dispose(): void {
+    this.#disposed = true;
     if (this.#tokenRefreshInterval) {
       clearInterval(this.#tokenRefreshInterval);
       this.#tokenRefreshInterval = null;
