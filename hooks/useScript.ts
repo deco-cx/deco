@@ -6,10 +6,11 @@
  * Use at your own risk.
  */
 
+import { IS_BROWSER } from "$fresh/runtime.ts";
 import { LRUCache } from "npm:lru-cache@10.2.0";
 import { minify as terserMinify } from "npm:terser@5.34.0";
 
-const verbose = !!Deno.env.get("SCRIPT_MINIFICATION_DEBUG");
+const verbose = !IS_BROWSER && !!Deno.env.get("SCRIPT_MINIFICATION_DEBUG");
 
 const cache = new LRUCache<string, string | Promise<string | null>>({
   max: 100,
