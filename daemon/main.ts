@@ -20,6 +20,7 @@ import {
   DECO_HOST,
   getSiteName,
   SANDBOX_MODE,
+  setSiteName,
 } from "./daemon.ts";
 import { watchFS } from "./fs/api.ts";
 import { ensureGit, getGitHubPackageTokens, lockerGitAPI } from "./git.ts";
@@ -552,6 +553,8 @@ if (SANDBOX_MODE) {
       resetActivity();
       // Set env var so worker subprocesses inherit the site name
       Deno.env.set(ENV_SITE_NAME, site);
+      // Also update the module-level variable so getSiteName() returns the value
+      setSiteName(site);
 
       // Use run command from deploy request, fall back to CLI args
       const runCmdFactory = runCommand?.length
