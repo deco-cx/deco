@@ -262,89 +262,88 @@ const watch = async (signal?: AbortSignal) => {
 const createDeps = (
   signal?: AbortSignal,
   opts?: { repoUrl?: string; branch?: string },
-): MiddlewareHandler => {
-  let ok: Promise<unknown> | null | false = null;
+): { middleware: MiddlewareHandler; startDeps: () => Promise<void> } => {
+  let ok: Promise<void> | null = null;
 
-  const start = async () => {
-    const siteName = getSiteName();
-    if (!siteName) {
-      throw new Error("Cannot initialize deps: site name not set");
-    }
-    let start = performance.now();
-    await ensureGit({
-      site: siteName,
-      repoUrl: opts?.repoUrl,
-      branch: opts?.branch,
-    });
-    logs.push({
-      level: "info",
-      message: `${colors.bold("[step 1/4]")}: Git setup took ${
-        (
-          performance.now() - start
-        ).toFixed(0)
-      }ms`,
-    });
-
-    if (SANDBOX_MODE) {
-      start = performance.now();
-      await downloadCache(siteName).catch((err) => {
-        console.warn(`[cache] Failed to download build cache: ${err.message}`);
+  const startDeps = (): Promise<void> => {
+    ok ??= (async () => {
+      const siteName = getSiteName();
+      if (!siteName) {
+        throw new Error("Cannot initialize deps: site name not set");
+      }
+      let t = performance.now();
+      await ensureGit({
+        site: siteName,
+        repoUrl: opts?.repoUrl,
+        branch: opts?.branch,
       });
       logs.push({
         level: "info",
-        message: `${colors.bold("[step 1.5/4]")}: Cache download took ${
-          (performance.now() - start).toFixed(0)
+        message: `${colors.bold("[step 1/4]")}: Git setup took ${
+          (performance.now() - t).toFixed(0)
         }ms`,
       });
-    }
 
-    start = performance.now();
-    await genManifestTS();
-    logs.push({
-      level: "info",
-      message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
-        (
-          performance.now() - start
-        ).toFixed(0)
-      }ms`,
-    });
+      if (SANDBOX_MODE) {
+        t = performance.now();
+        await downloadCache(siteName).catch((err) => {
+          console.warn(
+            `[cache] Failed to download build cache: ${err.message}`,
+          );
+        });
+        logs.push({
+          level: "info",
+          message: `${colors.bold("[step 1.5/4]")}: Cache download took ${
+            (performance.now() - t).toFixed(0)
+          }ms`,
+        });
+      }
 
-    start = performance.now();
-    await genBlocksJSON();
-    logs.push({
-      level: "info",
-      message: `${colors.bold("[step 3/4]")}: Blocks metadata generation took ${
-        (
-          performance.now() - start
-        ).toFixed(0)
-      }ms`,
-    });
+      t = performance.now();
+      await genManifestTS();
+      logs.push({
+        level: "info",
+        message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
+          (performance.now() - t).toFixed(0)
+        }ms`,
+      });
 
-    watch(signal).catch(console.error);
-    watchMeta(signal).catch(console.error);
-    watchFS(signal).catch(console.error);
+      t = performance.now();
+      await genBlocksJSON();
+      logs.push({
+        level: "info",
+        message: `${
+          colors.bold("[step 3/4]")
+        }: Blocks metadata generation took ${
+          (performance.now() - t).toFixed(0)
+        }ms`,
+      });
 
-    logs.push({
-      level: "info",
-      message: `${
-        colors.bold(
-          "[step 4/4]",
-        )
-      }: Started file watcher in background`,
-    });
+      watch(signal).catch(console.error);
+      watchMeta(signal).catch(console.error);
+      watchFS(signal).catch(console.error);
+
+      logs.push({
+        level: "info",
+        message: `${
+          colors.bold("[step 4/4]")
+        }: Started file watcher in background`,
+      });
+    })();
+    return ok;
   };
 
-  return async (c, next) => {
+  const middleware: MiddlewareHandler = async (c, next) => {
     try {
-      ok ||= start();
-
-      await ok.then(next);
+      await startDeps().then(next);
     } catch (err) {
       console.log(err);
 
       c.res = new Response("Error while starting global deps", { status: 424 });
     }
   };
+
+  return { middleware, startDeps };
 };
 
 // Create a function that returns fresh WorkerOptions with new tokens
@@ -382,6 +381,8 @@ interface SiteAppOptions {
 interface SiteAppResult {
   app: Hono;
   dispose: () => Promise<void>;
+  /** Starts (or joins) the deps initialization: git clone, manifest gen, watchers. */
+  startDeps: () => Promise<void>;
 }
 
 /**
@@ -404,7 +405,11 @@ const createSiteApp = ({
   const envName = DECO_ENV_NAME ?? "";
   siteApp.get("/deco/_is_idle", createIdleHandler(siteName, envName));
   // Globals are started after healthcheck to ensure k8s does not kill the pod before it is ready
-  siteApp.use(createDeps(ac.signal, { repoUrl, branch }));
+  const { middleware: depsMiddleware, startDeps } = createDeps(
+    ac.signal,
+    { repoUrl, branch },
+  );
+  siteApp.use(depsMiddleware);
   siteApp.use(activityMonitor);
   // These are the APIs that communicate with admin UI
   siteApp.use(createDaemonAPIs({ build: buildCmd, site: siteName }));
@@ -441,7 +446,7 @@ const createSiteApp = ({
     console.log(`[sandbox] Cleaned working directory: ${cwd}`);
   };
 
-  return { app: siteApp, dispose };
+  return { app: siteApp, dispose, startDeps };
 };
 const LOCAL_STORAGE_ENV_NAME = "deco_host_env_name";
 const stableEnvironmentName = () => {
@@ -553,9 +558,11 @@ if (SANDBOX_MODE) {
           Boolean(envs?.ANTHROPIC_PROXY_URL);
         if (hasApiKey) {
           const handlers = aiHandlers;
-          // Wait for git clone to finish before starting the AI task,
-          // since the task needs a valid repo (git rev-parse HEAD, etc.)
-          ensureGit({ site, repoUrl: repo, branch }).then(async () => {
+          const site_ = currentSite;
+          // Reuse the same deps-init promise (git clone, manifest gen, watchers)
+          // so the task starts in a fully initialised repo and we don't race
+          // against createDeps calling resetToMergeBase while Claude works.
+          site_.startDeps().then(async () => {
             const ct = await handlers.createTask({
               issue: task.issue,
               prompt: task.prompt,
