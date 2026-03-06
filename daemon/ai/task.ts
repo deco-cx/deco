@@ -1,4 +1,4 @@
-import { getGitHubToken, setupGithubTokenNetrc } from "../git.ts";
+import { getGitHubToken, lockerGitAPI, setupGithubTokenNetrc } from "../git.ts";
 import { GITHUB_APP_CONFIGURED, setupGitHubAppNetrc } from "../githubApp.ts";
 import { resetActivity } from "../monitor.ts";
 import { PtySession } from "../pty/session.ts";
@@ -326,6 +326,7 @@ export class AITask {
   }
 
   async #commitChanges(): Promise<void> {
+    using _ = await lockerGitAPI.lock.wlock();
     const env = gitEnv(this.#githubToken ?? undefined);
 
     // Check for uncommitted changes (staged or unstaged)
