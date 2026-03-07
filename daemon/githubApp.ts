@@ -160,6 +160,7 @@ async function getInstallationId(
 async function getInstallationToken(
   installationId: number,
   repo: string,
+  permissions?: Record<string, string>,
 ): Promise<string> {
   const jwt = await generateAppJWT();
   const response = await fetch(
@@ -173,6 +174,7 @@ async function getInstallationToken(
       },
       body: JSON.stringify({
         repositories: [repo],
+        ...(permissions ? { permissions } : {}),
       }),
     },
   );
@@ -193,6 +195,113 @@ async function getInstallationToken(
   return data.token;
 }
 
+/** Minimal permissions for the agent token — no administration. */
+export const AGENT_PERMISSIONS = {
+  contents: "write",
+  pull_requests: "write",
+  issues: "write",
+  metadata: "read",
+} as const;
+
+/** Mint a fresh token with explicit permissions — never cached. */
+export async function mintScopedToken(
+  owner: string,
+  repo: string,
+  permissions: Record<string, string>,
+): Promise<string> {
+  const installationId = await getInstallationId(owner, repo);
+  return getInstallationToken(installationId, repo, permissions);
+}
+
+/**
+ * Ensure a branch has at least a minimal protection rule.
+ *
+ * If the branch already has protection (GET returns 200), we leave it alone —
+ * any existing rule is at least as strong as our no-requirement baseline.
+ * We only apply the PUT when the branch is completely unprotected (GET returns 404).
+ */
+export async function setBranchProtection(
+  owner: string,
+  repo: string,
+  branch: string,
+  adminToken: string,
+): Promise<void> {
+  const headers = {
+    Authorization: `Bearer ${adminToken}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+
+  const encodedBranch = encodeURIComponent(branch);
+  const url =
+    `https://api.github.com/repos/${owner}/${repo}/branches/${encodedBranch}/protection`;
+
+  const existing = await fetch(url, { headers });
+
+  if (existing.ok) {
+    console.log(
+      `[githubApp] branch ${branch} already protected — skipping`,
+    );
+    return;
+  }
+
+  if (existing.status !== 404) {
+    const body = await existing.text();
+    console.warn(
+      `[githubApp] failed to check branch protection: ${existing.status} ${body}`,
+    );
+    return;
+  }
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      required_status_checks: null,
+      enforce_admins: false,
+      required_pull_request_reviews: { required_approving_review_count: 0 },
+      restrictions: null,
+    }),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    console.warn(
+      `[githubApp] branch protection skipped: ${response.status} ${body}`,
+    );
+  }
+}
+
+/** Resolve the repository's default branch via the GitHub API. */
+export async function resolveDefaultBranch(
+  owner: string,
+  repo: string,
+  token: string,
+): Promise<string> {
+  const response = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Failed to fetch repo info for ${owner}/${repo}: ${response.status} ${body}`,
+    );
+  }
+  const data = await response.json();
+  if (typeof data.default_branch !== "string" || !data.default_branch) {
+    throw new Error(
+      `Unexpected default_branch in repo response: ${JSON.stringify(data)}`,
+    );
+  }
+  return data.default_branch;
+}
+
 export async function getGitHubAppToken(
   owner: string,
   repo: string,
@@ -204,7 +313,7 @@ export async function getGitHubAppToken(
   }
 
   const installationId = await getInstallationId(owner, repo);
-  const token = await getInstallationToken(installationId, repo);
+  const token = await getInstallationToken(installationId, repo, undefined);
 
   tokenCache.set(key, {
     token,
