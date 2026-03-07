@@ -78,7 +78,9 @@ export interface AITaskInfo {
   createdAt: number;
 }
 
-/** Extract owner/repo/defaultBranch from a git remote URL. */
+import { parseRepoUrl } from "./repoUrl.ts";
+
+/** Extract owner/repo/defaultBranch from the origin remote in a working tree. */
 async function getRepoInfo(
   cwd: string,
 ): Promise<{ owner: string; repo: string; defaultBranch: string }> {
@@ -94,14 +96,7 @@ async function getRepoInfo(
     throw new Error(`git remote get-url origin failed: ${stderr}`);
   }
   const url = new TextDecoder().decode(output.stdout).trim();
-
-  // Match: https://github.com/owner/repo.git OR git@github.com:owner/repo.git
-  const match = url.match(
-    /github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/,
-  );
-  if (!match) {
-    throw new Error(`Cannot parse owner/repo from git remote: ${url}`);
-  }
+  const { owner, repo } = parseRepoUrl(url);
 
   // Resolve the remote's default branch (falls back to "main" if unavailable)
   let defaultBranch = "main";
@@ -123,7 +118,7 @@ async function getRepoInfo(
     // best-effort; fall back to "main"
   }
 
-  return { owner: match[1], repo: match[2], defaultBranch };
+  return { owner, repo, defaultBranch };
 }
 
 /** Shared env for daemon-side git commands — includes HOME so git can find ~/.gitconfig and SSH keys. */
