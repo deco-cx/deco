@@ -1,5 +1,11 @@
 import { getGitHubToken, lockerGitAPI, setupGithubTokenNetrc } from "../git.ts";
-import { GITHUB_APP_CONFIGURED, setupGitHubAppNetrc } from "../githubApp.ts";
+import {
+  AGENT_PERMISSIONS,
+  GITHUB_APP_CONFIGURED,
+  mintScopedToken,
+  setBranchProtection,
+  setupGitHubAppNetrc,
+} from "../githubApp.ts";
 import { resetActivity } from "../monitor.ts";
 import { PtySession } from "../pty/session.ts";
 import {
@@ -174,12 +180,38 @@ export class AITask {
     // Self-provision a scoped GitHub token
     let githubToken = this.#opts.githubToken;
     if (!githubToken && GITHUB_APP_CONFIGURED) {
-      // New path: direct GitHub App token generation
+      // New path: two-token pattern — admin token for branch protection (discarded),
+      // restricted agent token for .agent-home (no administration permission)
       try {
         this.#repoInfo = await getRepoInfo(this.#opts.cwd);
-        githubToken = await setupGitHubAppNetrc(
+        // Daemon's own .netrc: full-permission token for git push in onComplete
+        await setupGitHubAppNetrc(
           this.#repoInfo.owner,
           this.#repoInfo.repo,
+        );
+
+        // Set branch protection with a short-lived admin token, then discard it
+        try {
+          const adminToken = await mintScopedToken(
+            this.#repoInfo.owner,
+            this.#repoInfo.repo,
+            { administration: "write" },
+          );
+          await setBranchProtection(
+            this.#repoInfo.owner,
+            this.#repoInfo.repo,
+            "main",
+            adminToken,
+          );
+        } catch (err) {
+          console.warn("[ai] branch protection setup skipped:", err);
+        }
+
+        // Agent token: restricted — no administration permission
+        githubToken = await mintScopedToken(
+          this.#repoInfo.owner,
+          this.#repoInfo.repo,
+          { ...AGENT_PERMISSIONS },
         );
       } catch (err) {
         console.error(`[ai] Failed to provision GitHub token:`, err);
@@ -261,9 +293,16 @@ export class AITask {
         try {
           let newToken: string | undefined;
           if (GITHUB_APP_CONFIGURED && this.#repoInfo) {
-            newToken = await setupGitHubAppNetrc(
+            // Refresh daemon .netrc (full token)
+            await setupGitHubAppNetrc(
               this.#repoInfo.owner,
               this.#repoInfo.repo,
+            );
+            // Mint a fresh restricted token for the agent files
+            newToken = await mintScopedToken(
+              this.#repoInfo.owner,
+              this.#repoInfo.repo,
+              AGENT_PERMISSIONS,
             );
           } else if (GITHUB_APP_KEY) {
             await setupGithubTokenNetrc();

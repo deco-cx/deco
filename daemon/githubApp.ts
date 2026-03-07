@@ -160,6 +160,7 @@ async function getInstallationId(
 async function getInstallationToken(
   installationId: number,
   repo: string,
+  permissions?: Record<string, string>,
 ): Promise<string> {
   const jwt = await generateAppJWT();
   const response = await fetch(
@@ -173,6 +174,7 @@ async function getInstallationToken(
       },
       body: JSON.stringify({
         repositories: [repo],
+        ...(permissions ? { permissions } : {}),
       }),
     },
   );
@@ -193,6 +195,57 @@ async function getInstallationToken(
   return data.token;
 }
 
+/** Minimal permissions for the agent token — no administration. */
+export const AGENT_PERMISSIONS = {
+  contents: "write",
+  pull_requests: "write",
+  issues: "write",
+  metadata: "read",
+} as const;
+
+/** Mint a fresh token with explicit permissions — never cached. */
+export async function mintScopedToken(
+  owner: string,
+  repo: string,
+  permissions: Record<string, string>,
+): Promise<string> {
+  const installationId = await getInstallationId(owner, repo);
+  return getInstallationToken(installationId, repo, permissions);
+}
+
+/** Set branch protection using a token with administration:write. */
+export async function setBranchProtection(
+  owner: string,
+  repo: string,
+  branch: string,
+  adminToken: string,
+): Promise<void> {
+  const response = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/branches/${branch}/protection`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        required_status_checks: null,
+        enforce_admins: false,
+        required_pull_request_reviews: { required_approving_review_count: 0 },
+        restrictions: null,
+      }),
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    console.warn(
+      `[githubApp] branch protection skipped: ${response.status} ${body}`,
+    );
+  }
+}
+
 export async function getGitHubAppToken(
   owner: string,
   repo: string,
@@ -204,7 +257,7 @@ export async function getGitHubAppToken(
   }
 
   const installationId = await getInstallationId(owner, repo);
-  const token = await getInstallationToken(installationId, repo);
+  const token = await getInstallationToken(installationId, repo, undefined);
 
   tokenCache.set(key, {
     token,
