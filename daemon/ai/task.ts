@@ -219,7 +219,7 @@ export class AITask {
           const adminToken = await mintScopedToken(
             this.#repoInfo.owner,
             this.#repoInfo.repo,
-            { administration: "write" },
+            { administration: "write", metadata: "read" },
           );
 
           let branch = this.#repoInfo.defaultBranch;
