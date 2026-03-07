@@ -78,10 +78,10 @@ export interface AITaskInfo {
   createdAt: number;
 }
 
-/** Extract owner/repo from a git remote URL. */
+/** Extract owner/repo/defaultBranch from a git remote URL. */
 async function getRepoInfo(
   cwd: string,
-): Promise<{ owner: string; repo: string }> {
+): Promise<{ owner: string; repo: string; defaultBranch: string }> {
   const cmd = new Deno.Command("git", {
     args: ["remote", "get-url", "origin"],
     cwd,
@@ -97,12 +97,33 @@ async function getRepoInfo(
 
   // Match: https://github.com/owner/repo.git OR git@github.com:owner/repo.git
   const match = url.match(
-    /github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/,
+    /github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/,
   );
   if (!match) {
     throw new Error(`Cannot parse owner/repo from git remote: ${url}`);
   }
-  return { owner: match[1], repo: match[2] };
+
+  // Resolve the remote's default branch (falls back to "main" if unavailable)
+  let defaultBranch = "main";
+  try {
+    const refCmd = new Deno.Command("git", {
+      args: ["symbolic-ref", "refs/remotes/origin/HEAD"],
+      cwd,
+      stdout: "piped",
+      stderr: "piped",
+    });
+    const refOutput = await refCmd.output();
+    if (refOutput.success) {
+      const ref = new TextDecoder().decode(refOutput.stdout).trim();
+      // refs/remotes/origin/main → main
+      const branch = ref.replace(/^refs\/remotes\/origin\//, "");
+      if (branch) defaultBranch = branch;
+    }
+  } catch {
+    // best-effort; fall back to "main"
+  }
+
+  return { owner: match[1], repo: match[2], defaultBranch };
 }
 
 /** Shared env for daemon-side git commands — includes HOME so git can find ~/.gitconfig and SSH keys. */
@@ -140,7 +161,8 @@ export class AITask {
   #githubToken: string | null = null;
   #tokenRefreshInterval: ReturnType<typeof setInterval> | null = null;
   #activityInterval: ReturnType<typeof setInterval> | null = null;
-  #repoInfo: { owner: string; repo: string } | null = null;
+  #repoInfo: { owner: string; repo: string; defaultBranch: string } | null =
+    null;
 
   get status() {
     return this.#status;
@@ -200,7 +222,7 @@ export class AITask {
           await setBranchProtection(
             this.#repoInfo.owner,
             this.#repoInfo.repo,
-            "main",
+            this.#repoInfo.defaultBranch,
             adminToken,
           );
         } catch (err) {

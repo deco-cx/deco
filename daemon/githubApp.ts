@@ -213,31 +213,55 @@ export async function mintScopedToken(
   return getInstallationToken(installationId, repo, permissions);
 }
 
-/** Set branch protection using a token with administration:write. */
+/**
+ * Ensure a branch has at least a minimal protection rule.
+ *
+ * If the branch already has protection (GET returns 200), we leave it alone —
+ * any existing rule is at least as strong as our no-requirement baseline.
+ * We only apply the PUT when the branch is completely unprotected (GET returns 404).
+ */
 export async function setBranchProtection(
   owner: string,
   repo: string,
   branch: string,
   adminToken: string,
 ): Promise<void> {
-  const response = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/branches/${branch}/protection`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${adminToken}`,
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        required_status_checks: null,
-        enforce_admins: false,
-        required_pull_request_reviews: { required_approving_review_count: 0 },
-        restrictions: null,
-      }),
-    },
-  );
+  const headers = {
+    Authorization: `Bearer ${adminToken}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+
+  const url =
+    `https://api.github.com/repos/${owner}/${repo}/branches/${branch}/protection`;
+
+  const existing = await fetch(url, { headers });
+
+  if (existing.ok) {
+    console.log(
+      `[githubApp] branch ${branch} already protected — skipping`,
+    );
+    return;
+  }
+
+  if (existing.status !== 404) {
+    const body = await existing.text();
+    console.warn(
+      `[githubApp] failed to check branch protection: ${existing.status} ${body}`,
+    );
+    return;
+  }
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      required_status_checks: null,
+      enforce_admins: false,
+      required_pull_request_reviews: { required_approving_review_count: 0 },
+      restrictions: null,
+    }),
+  });
   if (!response.ok) {
     const body = await response.text();
     console.warn(
