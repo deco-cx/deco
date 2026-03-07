@@ -232,8 +232,9 @@ export async function setBranchProtection(
     "X-GitHub-Api-Version": "2022-11-28",
   };
 
+  const encodedBranch = encodeURIComponent(branch);
   const url =
-    `https://api.github.com/repos/${owner}/${repo}/branches/${branch}/protection`;
+    `https://api.github.com/repos/${owner}/${repo}/branches/${encodedBranch}/protection`;
 
   const existing = await fetch(url, { headers });
 
@@ -268,6 +269,37 @@ export async function setBranchProtection(
       `[githubApp] branch protection skipped: ${response.status} ${body}`,
     );
   }
+}
+
+/** Resolve the repository's default branch via the GitHub API. */
+export async function resolveDefaultBranch(
+  owner: string,
+  repo: string,
+  token: string,
+): Promise<string> {
+  const response = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Failed to fetch repo info for ${owner}/${repo}: ${response.status} ${body}`,
+    );
+  }
+  const data = await response.json();
+  if (typeof data.default_branch !== "string" || !data.default_branch) {
+    throw new Error(
+      `Unexpected default_branch in repo response: ${JSON.stringify(data)}`,
+    );
+  }
+  return data.default_branch;
 }
 
 export async function getGitHubAppToken(

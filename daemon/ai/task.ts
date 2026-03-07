@@ -3,6 +3,7 @@ import {
   AGENT_PERMISSIONS,
   GITHUB_APP_CONFIGURED,
   mintScopedToken,
+  resolveDefaultBranch,
   setBranchProtection,
   setupGitHubAppNetrc,
 } from "../githubApp.ts";
@@ -83,7 +84,7 @@ import { parseRepoUrl } from "./repoUrl.ts";
 /** Extract owner/repo/defaultBranch from the origin remote in a working tree. */
 async function getRepoInfo(
   cwd: string,
-): Promise<{ owner: string; repo: string; defaultBranch: string }> {
+): Promise<{ owner: string; repo: string; defaultBranch: string | null }> {
   const cmd = new Deno.Command("git", {
     args: ["remote", "get-url", "origin"],
     cwd,
@@ -98,8 +99,7 @@ async function getRepoInfo(
   const url = new TextDecoder().decode(output.stdout).trim();
   const { owner, repo } = parseRepoUrl(url);
 
-  // Resolve the remote's default branch (falls back to "main" if unavailable)
-  let defaultBranch = "main";
+  let defaultBranch: string | null = null;
   try {
     const refCmd = new Deno.Command("git", {
       args: ["symbolic-ref", "refs/remotes/origin/HEAD"],
@@ -110,12 +110,18 @@ async function getRepoInfo(
     const refOutput = await refCmd.output();
     if (refOutput.success) {
       const ref = new TextDecoder().decode(refOutput.stdout).trim();
-      // refs/remotes/origin/main → main
       const branch = ref.replace(/^refs\/remotes\/origin\//, "");
       if (branch) defaultBranch = branch;
     }
   } catch {
-    // best-effort; fall back to "main"
+    // symbolic-ref unavailable (shallow clone, missing remote HEAD, etc.)
+  }
+
+  if (!defaultBranch) {
+    console.warn(
+      `[ai] Could not detect default branch for ${owner}/${repo} via git symbolic-ref; ` +
+        `will attempt GitHub API fallback before applying branch protection`,
+    );
   }
 
   return { owner, repo, defaultBranch };
@@ -156,8 +162,9 @@ export class AITask {
   #githubToken: string | null = null;
   #tokenRefreshInterval: ReturnType<typeof setInterval> | null = null;
   #activityInterval: ReturnType<typeof setInterval> | null = null;
-  #repoInfo: { owner: string; repo: string; defaultBranch: string } | null =
-    null;
+  #repoInfo:
+    | { owner: string; repo: string; defaultBranch: string | null }
+    | null = null;
 
   get status() {
     return this.#status;
@@ -214,12 +221,36 @@ export class AITask {
             this.#repoInfo.repo,
             { administration: "write" },
           );
-          await setBranchProtection(
-            this.#repoInfo.owner,
-            this.#repoInfo.repo,
-            this.#repoInfo.defaultBranch,
-            adminToken,
-          );
+
+          let branch = this.#repoInfo.defaultBranch;
+          if (!branch) {
+            try {
+              branch = await resolveDefaultBranch(
+                this.#repoInfo.owner,
+                this.#repoInfo.repo,
+                adminToken,
+              );
+              this.#repoInfo.defaultBranch = branch;
+            } catch (apiErr) {
+              console.warn(
+                "[ai] GitHub API fallback for default branch failed:",
+                apiErr,
+              );
+            }
+          }
+
+          if (branch) {
+            await setBranchProtection(
+              this.#repoInfo.owner,
+              this.#repoInfo.repo,
+              branch,
+              adminToken,
+            );
+          } else {
+            console.warn(
+              "[ai] branch protection skipped: could not determine default branch",
+            );
+          }
         } catch (err) {
           console.warn("[ai] branch protection setup skipped:", err);
         }

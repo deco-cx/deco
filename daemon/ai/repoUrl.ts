@@ -3,7 +3,7 @@ export function parseRepoUrl(
   url: string,
 ): { owner: string; repo: string } {
   const match = url.match(
-    /github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/,
+    /(?:\/\/|@)github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/,
   );
   if (!match) {
     throw new Error(`Cannot parse owner/repo from git remote: ${url}`);

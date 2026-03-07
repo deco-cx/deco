@@ -54,6 +54,14 @@ Deno.test("parseRepoUrl: rejects non-GitHub URL", () => {
   );
 });
 
+Deno.test("parseRepoUrl: rejects host containing github.com as substring", () => {
+  assertThrows(
+    () => parseRepoUrl("https://notgithub.com/org/repo.git"),
+    Error,
+    "Cannot parse owner/repo",
+  );
+});
+
 Deno.test("parseRepoUrl: multiple dots ending in .git", () => {
   const r = parseRepoUrl("git@github.com:org/a.b.c.git");
   assertEquals(r, { owner: "org", repo: "a.b.c" });
