@@ -3,6 +3,7 @@ import type { JSONSchema7 } from "../deps.ts";
 const extraAdminDomains = Deno.env.get("ADMIN_DOMAINS")
   ?.split(",")
   .map((d) => d.trim())
+<<<<<<< HEAD
   .filter(Boolean)
   .flatMap((d) => {
     try {
