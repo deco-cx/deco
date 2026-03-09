@@ -1,27 +1,39 @@
 import type { JSONSchema7 } from "../deps.ts";
 
+const extraAdminDomains = Deno.env.get("ADMIN_DOMAINS")
+  ?.split(",")
+  .map((d) => d.trim())
+  .filter(Boolean)
+  .flatMap((d) => {
+    try {
+      return [new URL(d).origin];
+    } catch {
+      console.warn(`[admin] Skipping invalid ADMIN_DOMAINS entry: "${d}"`);
+      return [];
+    }
+  }) ?? [];
+
 export const adminDomains = [
-  "https://admin.deco.cx/",
-  "https://v0-admin.deco.cx/",
-  "https://play.deco.cx/",
-  "https://admin-cx.deco.page/",
+  "https://admin.deco.cx",
+  "https://admin-cx.deco.page",
   "https://deco.chat",
   "https://admin.decocms.com",
   "https://decocms.com",
+  "https://studio.decocms.com",
+  ...extraAdminDomains,
 ];
 export const landingPageDomain = ["https://deco.cx", "https://www.deco.cx"];
-const adminPreviewUrls = "https://deco-sites-admin-";
-const adminPreviewDomain = "deno.dev";
 
 export const isAdmin = (url: string): boolean => {
-  if (adminDomains.find((adminDomain) => url.startsWith(adminDomain))) {
-    return true;
+  try {
+    const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
+    if (adminDomains.includes(urlObj.origin)) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
   }
-  const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
-  return (
-    url.startsWith(adminPreviewUrls) &&
-    urlObj.host.endsWith(adminPreviewDomain) // previews
-  );
 };
 
 export const isAdminOrLocalhost = (req: Request): boolean => {
