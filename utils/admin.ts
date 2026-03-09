@@ -23,8 +23,6 @@ export const adminDomains = [
   ...extraAdminDomains,
 ];
 export const landingPageDomain = ["https://deco.cx", "https://www.deco.cx"];
-const adminPreviewUrls = "https://deco-sites-admin-";
-const adminPreviewDomain = "deno.dev";
 
 export const isAdmin = (url: string): boolean => {
   try {
@@ -32,10 +30,7 @@ export const isAdmin = (url: string): boolean => {
     if (adminDomains.includes(urlObj.origin)) {
       return true;
     }
-    return (
-      url.startsWith(adminPreviewUrls) &&
-      urlObj.host.endsWith(adminPreviewDomain) // previews
-    );
+    return false;
   } catch {
     return false;
   }
