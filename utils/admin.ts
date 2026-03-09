@@ -1,13 +1,18 @@
 import type { JSONSchema7 } from "../deps.ts";
 
+const extraAdminDomains = Deno.env.get("ADMIN_DOMAINS")
+  ?.split(",")
+  .map((d) => d.trim())
+  .filter(Boolean) ?? [];
+
 export const adminDomains = [
   "https://admin.deco.cx/",
-  "https://v0-admin.deco.cx/",
-  "https://play.deco.cx/",
   "https://admin-cx.deco.page/",
   "https://deco.chat",
   "https://admin.decocms.com",
   "https://decocms.com",
+  "https://studio.decocms.com",
+  ...extraAdminDomains,
 ];
 export const landingPageDomain = ["https://deco.cx", "https://www.deco.cx"];
 const adminPreviewUrls = "https://deco-sites-admin-";
