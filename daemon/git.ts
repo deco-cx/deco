@@ -25,17 +25,32 @@ const ADMIN_DOMAIN = "https://admin.deco.cx";
  * Parse owner and repo name from a GitHub URL.
  * Handles HTTPS (https://github.com/owner/repo.git) and
  * SSH (git@github.com:owner/repo.git) formats.
+ * Returns null for any URL that is not strictly hosted on github.com.
  */
 function parseGitHubOwnerRepo(
   url: string,
 ): { owner: string; repo: string } | null {
-  const https = url.match(
-    /github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/.*)?$/,
-  );
-  if (https) return { owner: https[1], repo: https[2] };
-  const ssh = url.match(/github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/);
+  // HTTPS — validate hostname exactly to prevent subdomain/injection tricks
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === "github.com") {
+      const parts = parsed.pathname.replace(/\.git$/, "").split("/").filter(
+        Boolean,
+      );
+      if (parts.length >= 2) return { owner: parts[0], repo: parts[1] };
+    }
+  } catch {
+    // Not a valid HTTPS URL — fall through to SSH check
+  }
+  // SSH: git@github.com:owner/repo.git
+  const ssh = url.match(/^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/);
   if (ssh) return { owner: ssh[1], repo: ssh[2] };
   return null;
+}
+
+/** Returns true only when the URL is strictly hosted on github.com. */
+function isGitHubUrl(url: string): boolean {
+  return parseGitHubOwnerRepo(url) !== null;
 }
 
 export const lockerGitAPI = createLocker();
@@ -240,7 +255,7 @@ export const publish = ({ build }: Options): Handler => {
       const remoteUrl = await git.remote(["get-url", "origin"]).catch(
         () => undefined,
       );
-      const repoOverride = remoteUrl?.includes("github.com")
+      const repoOverride = remoteUrl && isGitHubUrl(remoteUrl)
         ? parseGitHubOwnerRepo(remoteUrl) ?? undefined
         : undefined;
       await setupGithubTokenNetrc(repoOverride);
@@ -655,7 +670,7 @@ export const ensureGit = async ({
 
     // Resolve the owner/repo for auth — use the explicit repoUrl when available
     // so external (self-hosted) repos get the right GitHub App installation token.
-    const repoOverride = repoUrl?.includes("github.com")
+    const repoOverride = repoUrl && isGitHubUrl(repoUrl)
       ? parseGitHubOwnerRepo(repoUrl) ?? undefined
       : undefined;
 
