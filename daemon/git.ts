@@ -668,10 +668,13 @@ export const ensureGit = async ({
       );
     }
 
-    // Resolve the owner/repo for auth — use the explicit repoUrl when available
-    // so external (self-hosted) repos get the right GitHub App installation token.
-    const repoOverride = repoUrl && isGitHubUrl(repoUrl)
-      ? parseGitHubOwnerRepo(repoUrl) ?? undefined
+    // Resolve the owner/repo for auth — mirror the same precedence used for
+    // cloneUrl below (explicit param → DECO_REPO_URL env → default deco-sites).
+    // Without this, external repos configured only via DECO_REPO_URL would get
+    // credentials generated for the wrong GitHub installation.
+    const effectiveRepoUrl = repoUrl ?? REPO_URL;
+    const repoOverride = effectiveRepoUrl && isGitHubUrl(effectiveRepoUrl)
+      ? parseGitHubOwnerRepo(effectiveRepoUrl) ?? undefined
       : undefined;
 
     if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
