@@ -21,6 +21,23 @@ const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
 const BUILD_FILES_DIR = Deno.env.get("BUILD_FILES_DIR");
 const ADMIN_DOMAIN = "https://admin.deco.cx";
 
+/**
+ * Parse owner and repo name from a GitHub URL.
+ * Handles HTTPS (https://github.com/owner/repo.git) and
+ * SSH (git@github.com:owner/repo.git) formats.
+ */
+function parseGitHubOwnerRepo(
+  url: string,
+): { owner: string; repo: string } | null {
+  const https = url.match(
+    /github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/.*)?$/,
+  );
+  if (https) return { owner: https[1], repo: https[2] };
+  const ssh = url.match(/github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/);
+  if (ssh) return { owner: ssh[1], repo: ssh[2] };
+  return null;
+}
+
 export const lockerGitAPI = createLocker();
 
 export const git = simpleGit(Deno.cwd(), {
@@ -218,7 +235,15 @@ export const publish = ({ build }: Options): Handler => {
     const message = body.message || `New release by ${author.name}`;
 
     if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
-      await setupGithubTokenNetrc();
+      // Re-read the remote URL so we refresh the token for the correct repo
+      // (important for self-hosted / external repos).
+      const remoteUrl = await git.remote(["get-url", "origin"]).catch(
+        () => undefined,
+      );
+      const repoOverride = remoteUrl?.includes("github.com")
+        ? parseGitHubOwnerRepo(remoteUrl) ?? undefined
+        : undefined;
+      await setupGithubTokenNetrc(repoOverride);
     }
 
     await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
@@ -456,15 +481,20 @@ export const getGitHubPackageTokens = async (): Promise<string[]> => {
   return packageTokens;
 };
 
-export const setupGithubTokenNetrc = async (): Promise<void> => {
+export const setupGithubTokenNetrc = async (
+  repoOverride?: { owner: string; repo: string },
+): Promise<void> => {
   // Prefer direct GitHub App token generation (no admin API dependency)
   if (GITHUB_APP_CONFIGURED) {
-    const owner = "deco-sites";
     const siteName = getSiteName();
     if (!siteName) {
       throw new Error("Site name not set");
     }
-    await setupGitHubAppNetrc(owner, siteName);
+    // Use the explicit owner/repo when provided (e.g. external / self-hosted repos).
+    // Fall back to the deco-sites org for deco-managed sites.
+    const owner = repoOverride?.owner ?? "deco-sites";
+    const repo = repoOverride?.repo ?? siteName;
+    await setupGitHubAppNetrc(owner, repo);
     return;
   }
 
@@ -623,8 +653,14 @@ export const ensureGit = async ({
       );
     }
 
+    // Resolve the owner/repo for auth — use the explicit repoUrl when available
+    // so external (self-hosted) repos get the right GitHub App installation token.
+    const repoOverride = repoUrl?.includes("github.com")
+      ? parseGitHubOwnerRepo(repoUrl) ?? undefined
+      : undefined;
+
     if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
-      await setupGithubTokenNetrc();
+      await setupGithubTokenNetrc(repoOverride);
     }
 
     if (hasGitFolder) {
