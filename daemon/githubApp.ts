@@ -17,6 +17,11 @@ if (GITHUB_APP_CONFIGURED) {
   Deno.env.delete("GITHUB_APP_ID");
 }
 
+/** Strip the `.git` suffix that git remote URLs often carry (e.g. "repo.git" → "repo"). */
+function stripGitSuffix(repo: string): string {
+  return repo.replace(/\.git$/, "");
+}
+
 // Cache: installation IDs never change for a given owner/repo
 const installationIdCache = new Map<string, number>();
 // Cache: access tokens (50-minute TTL, tokens expire after 1 hour)
@@ -123,6 +128,7 @@ async function getInstallationId(
   owner: string,
   repo: string,
 ): Promise<number> {
+  repo = stripGitSuffix(repo);
   const key = `${owner}/${repo}`;
   const cached = installationIdCache.get(key);
   if (cached !== undefined) return cached;
@@ -162,6 +168,7 @@ async function getInstallationToken(
   repo: string,
   permissions?: Record<string, string>,
 ): Promise<string> {
+  repo = stripGitSuffix(repo);
   const jwt = await generateAppJWT();
   const response = await fetch(
     `https://api.github.com/app/installations/${installationId}/access_tokens`,
@@ -306,6 +313,7 @@ export async function getGitHubAppToken(
   owner: string,
   repo: string,
 ): Promise<string> {
+  repo = stripGitSuffix(repo);
   const key = `${owner}/${repo}`;
   const cached = tokenCache.get(key);
   if (cached && Date.now() < cached.expiresAt) {
