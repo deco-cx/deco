@@ -123,6 +123,8 @@ async function getInstallationId(
   owner: string,
   repo: string,
 ): Promise<number> {
+  // Strip .git suffix that git remote URLs often carry (e.g. "repo.git" → "repo")
+  repo = repo.replace(/\.git$/, "");
   const key = `${owner}/${repo}`;
   const cached = installationIdCache.get(key);
   if (cached !== undefined) return cached;
