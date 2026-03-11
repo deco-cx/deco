@@ -101,7 +101,7 @@ const withReleaseContent = async (config: Config): Promise<Config> => {
     ` 🔍 TailwindCSS resolved ${allTsxFiles.size} dependencies in ${duration}ms`,
   );
 
-  const dynamicContent: Config["content"] = [
+  const dynamicContent = [
     ...allTsxFiles.values().map((content) => ({
       raw: content,
       extension: "tsx" as const,
