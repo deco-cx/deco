@@ -101,14 +101,6 @@ const withReleaseContent = async (config: Config): Promise<Config> => {
     ` 🔍 TailwindCSS resolved ${allTsxFiles.size} dependencies in ${duration}ms`,
   );
 
-  // Merge with existing content config
-  let existingContent: Config["content"] = [];
-  if (Array.isArray(config.content)) {
-    existingContent = config.content;
-  } else if (config.content && "files" in config.content) {
-    existingContent = config.content.files;
-  }
-
   const dynamicContent: Config["content"] = [
     ...allTsxFiles.values().map((content) => ({
       raw: content,
@@ -116,9 +108,26 @@ const withReleaseContent = async (config: Config): Promise<Config> => {
     })),
   ];
 
+  if (Array.isArray(config.content)) {
+    return {
+      ...config,
+      content: [...config.content, ...dynamicContent],
+    };
+  }
+
+  if (config.content && "files" in config.content) {
+    return {
+      ...config,
+      content: {
+        ...config.content,
+        files: [...config.content.files, ...dynamicContent],
+      },
+    };
+  }
+
   return {
     ...config,
-    content: [...existingContent, ...dynamicContent],
+    content: dynamicContent,
   };
 };
 
