@@ -71,7 +71,14 @@ jobs:
 
           # System dependencies
           RUN apt-get update && apt-get install -y --no-install-recommends \
-              git openssh-client zstd curl jq nodejs npm \
+              git openssh-client zstd curl jq ca-certificates gnupg \
+              && rm -rf /var/lib/apt/lists/*
+
+          # Node.js 22 LTS (required by TanStack Start >= 22.12.0)
+          RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/setup_node.sh \
+              && bash /tmp/setup_node.sh \
+              && apt-get install -y --no-install-recommends nodejs \
+              && rm -f /tmp/setup_node.sh \
               && rm -rf /var/lib/apt/lists/*
 
           # GitHub CLI
@@ -134,7 +141,14 @@ jobs:
 
           # System dependencies
           RUN apt-get update && apt-get install -y --no-install-recommends \
-              git openssh-client zstd curl jq nodejs npm \
+              git openssh-client zstd curl jq ca-certificates gnupg \
+              && rm -rf /var/lib/apt/lists/*
+
+          # Node.js 22 LTS (required by TanStack Start >= 22.12.0)
+          RUN curl -fsSL https://deb.nodesource.com/setup_22.x -o /tmp/setup_node.sh \
+              && bash /tmp/setup_node.sh \
+              && apt-get install -y --no-install-recommends nodejs \
+              && rm -f /tmp/setup_node.sh \
               && rm -rf /var/lib/apt/lists/*
 
           # GitHub CLI
