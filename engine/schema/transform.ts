@@ -1516,6 +1516,32 @@ const getReturnFnFunction = async (
   }
 };
 
+/**
+ * Searches for `export const DEFAULT_PROPS = { ... }` in the module AST.
+ * Returns the parsed object value if found, undefined otherwise.
+ */
+const findExportedDefaultProps = (
+  program: ParsedSource,
+): JSONSchema7Type | undefined => {
+  for (const item of program.program.body) {
+    if (
+      item.type === "ExportDeclaration" &&
+      item.declaration.type === "VariableDeclaration"
+    ) {
+      for (const decl of item.declaration.declarations) {
+        if (
+          decl.id.type === "Identifier" &&
+          decl.id.value === "DEFAULT_PROPS" &&
+          decl.init
+        ) {
+          return generateObject(decl.init);
+        }
+      }
+    }
+  }
+  return undefined;
+};
+
 export const programToBlockRef = async (
   importMapResolver: ImportMapResolver,
   mPath: string,
@@ -1584,7 +1610,9 @@ export const programToBlockRef = async (
       references: schemeableReferences,
     });
     if (inputSchema.type === "object") {
-      inputSchema.default = defaultValue;
+      // Priority: DEFAULT_PROPS export > function parameter default > nothing
+      const exportedDefaultProps = findExportedDefaultProps(mProgram);
+      inputSchema.default = exportedDefaultProps ?? defaultValue;
     }
     return {
       ...baseBlockRef,
