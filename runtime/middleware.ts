@@ -107,6 +107,8 @@ async (ctx, next) => {
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
 const PAGE_CACHE_ENABLED = Deno.env.get("DECO_PAGE_CACHE_ENABLED") === "true";
+const PAGE_CACHE_SKIP_OPT_IN =
+  Deno.env.get("DECO_PAGE_CACHE_SKIP_OPT_IN") === "true";
 const PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ??
   "public, max-age=90, s-maxage=90, stale-while-revalidate=30";
 
@@ -433,7 +435,8 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       const contentType = newHeaders.get("Content-Type") ?? "";
       const isHtmlResponse = contentType.includes("text/html");
       // App middleware must explicitly opt in to page caching via the bag
-      const isCacheAllowed = ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY);
+      const isCacheAllowed = PAGE_CACHE_SKIP_OPT_IN ||
+        ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY);
 
       if (hasSetCookie) {
         // Set-cookie present: never cache (same behavior as main)
