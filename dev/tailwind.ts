@@ -75,7 +75,7 @@ const isDev = Deno.env.get("DECO_PREVIEW") ||
 
 const mode = isDev ? "dev" : "prod";
 
-const withReleaseContent = async (config: Config) => {
+const withReleaseContent = async (config: Config): Promise<Config> => {
   const allTsxFiles = new Map<string, string>();
 
   // init search graph with local FS
@@ -101,12 +101,33 @@ const withReleaseContent = async (config: Config) => {
     ` 🔍 TailwindCSS resolved ${allTsxFiles.size} dependencies in ${duration}ms`,
   );
 
+  const dynamicContent = [
+    ...allTsxFiles.values().map((content) => ({
+      raw: content,
+      extension: "tsx" as const,
+    })),
+  ];
+
+  if (Array.isArray(config.content)) {
+    return {
+      ...config,
+      content: [...config.content, ...dynamicContent],
+    };
+  }
+
+  if (config.content && "files" in config.content) {
+    return {
+      ...config,
+      content: {
+        ...config.content,
+        files: [...config.content.files, ...dynamicContent],
+      },
+    };
+  }
+
   return {
     ...config,
-    content: [...allTsxFiles.values()].map((content) => ({
-      raw: content,
-      extension: "tsx",
-    })),
+    content: dynamicContent,
   };
 };
 
