@@ -70,7 +70,8 @@ const bundle = async (
 
 const TAILWIND_FILE = "tailwind.css";
 
-const isDev = Deno.env.get("DECO_PREVIEW") || Deno.env.get("TAILWIND_DEV_MODE") === "true";
+const isDev = Deno.env.get("DECO_PREVIEW") === "true" ||
+  Deno.env.get("TAILWIND_DEV_MODE") === "true";
 
 const withReleaseContent = async (config: Config): Promise<Config> => {
   const allTsxFiles = new Map<string, string>();
