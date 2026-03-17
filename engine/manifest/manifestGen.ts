@@ -64,6 +64,13 @@ export async function* defaultWalker(
     includeDirs: false,
     includeFiles: true,
     exts: ["tsx", "jsx", "ts", "js"],
+    // Avoid scanning VCS, build artifacts and dependencies
+    skip: [
+      /[\\/]\.git([\\/]|$)/,
+      /[\\/]node_modules([\\/]|$)/,
+      /[\\/]_fresh([\\/]|$)/,
+      /[\\/]dist([\\/]|$)/,
+    ],
   });
 }
 export const decoManifestBuilder = async (
