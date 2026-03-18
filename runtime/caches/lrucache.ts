@@ -24,9 +24,9 @@ const STALE_TTL_PERIOD = parseInt(
   Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
 );
 // Minimum number of times a request must be made before it is admitted into the LRU cache.
-// Protects against one-off/cold requests polluting the cache. Default is 1 (admit on first request).
+// Protects against one-off/cold requests polluting the cache. Default is 3.
 const CACHE_MIN_FREQUENCY = parseInt(
-  Deno.env.get("CACHE_MIN_FREQUENCY") ?? "1",
+  Deno.env.get("CACHE_MIN_FREQUENCY") ?? "3",
 );
 
 const cacheOptions = (cache: Cache) => (
