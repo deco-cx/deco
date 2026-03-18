@@ -100,7 +100,7 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
             return;
           }
 
-          if (CACHE_MIN_FREQUENCY > 1) {
+          if (CACHE_MIN_FREQUENCY > 1 && !fileCache.has(cacheKey)) {
             const count = (frequency.get(cacheKey) ?? 0) + 1;
             if (count < CACHE_MIN_FREQUENCY) {
               frequency.set(cacheKey, count);
