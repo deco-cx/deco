@@ -375,16 +375,6 @@ const wrapLoader = (
             }
           }
 
-          if (OTEL_ENABLE_EXTRA_METRICS) {
-            const parseStart = performance.now();
-            const result = await matched.json();
-            stats.latency.record(performance.now() - parseStart, {
-              loader,
-              status: "json_parse",
-            });
-            return result;
-          }
-
           return await matched.json();
         };
 

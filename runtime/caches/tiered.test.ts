@@ -140,8 +140,10 @@ Deno.test("tiered / two tiers: stale L1, fresh L2 — serves L2, backfills L1", 
   assertEquals(await result!.text(), "new");
 
   await flush();
-  // L1 gets backfilled with fresh data
-  assertNotEquals(l1.get(REQ.url), undefined);
+  // L1 gets backfilled with fresh data (not the old stale "old" entry)
+  const backfilled = l1.get(REQ.url);
+  assertNotEquals(backfilled, undefined);
+  assertEquals(await backfilled!.clone().text(), "new");
 });
 
 Deno.test("tiered / put: distributes to all tiers", async () => {

@@ -20,11 +20,11 @@ const CACHE_MAX_ENTRY_SIZE = parseInt(
 ) || 2097152;
 // Minimum number of cache writes before a key is admitted to L1 (in-memory).
 // Prevents one-hit wonders (bot traffic, rare URLs) from displacing hot keys.
-// Default 2: a key must be written twice (i.e. accessed from L2 on separate requests)
+// Default 3: a key must be written three times (i.e. accessed from L2 on separate requests)
 // before it earns a spot in RAM.
 const MEMORY_CACHE_MIN_HITS = parseInt(
-  Deno.env.get("MEMORY_CACHE_MIN_HITS") ?? "2",
-) || 2;
+  Deno.env.get("MEMORY_CACHE_MIN_HITS") ?? "3",
+) || 3;
 
 const l1EvictionCounter = meter.createCounter("l1_cache_eviction", {
   description: "number of entries evicted from the L1 in-memory cache",
@@ -46,13 +46,9 @@ function createInMemoryCache(): CacheStorage {
     maxSize: MEMORY_CACHE_MAX_SIZE,
     sizeCalculation: (entry) => entry.body.length,
     dispose: (_value, _key, reason) => {
-      l1EvictionCounter.add(1, { reason });
-      // Log a warning periodically so operators can see if L1 is under pressure.
-      // "evict" means the cache was full and had to drop an entry to make room —
-      // that's the signal to watch. "delete" and "set" are normal lifecycle events.
       if (reason === "evict") {
+        l1EvictionCounter.add(1);
         totalEvictions++;
-        // Log on the 1st eviction and every 100 thereafter to avoid log spam.
         if (totalEvictions === 1 || totalEvictions % 100 === 0) {
           logger.warn(
             `l1_cache: ${totalEvictions} total evictions — L1 is full and dropping entries. ` +
