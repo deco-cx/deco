@@ -46,6 +46,10 @@ export const withInstrumentation = (
             const result = getCacheStatus(isMatch);
 
             span.setAttribute("cache_status", result);
+            if (isMatch) {
+              const cl = isMatch.headers.get("Content-Length");
+              if (cl) span.setAttribute("content_length", parseInt(cl));
+            }
             cacheHit.add(1, {
               result,
               engine,

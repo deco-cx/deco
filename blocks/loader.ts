@@ -146,6 +146,11 @@ const stats = {
     unit: "ms",
     valueType: ValueType.DOUBLE,
   }),
+  cacheEntrySize: meter.createHistogram("loader_cache_entry_size", {
+    description: "size of cached loader responses in bytes",
+    unit: "bytes",
+    valueType: ValueType.DOUBLE,
+  }),
 };
 
 let maybeCache: Cache | undefined;
@@ -155,6 +160,9 @@ caches?.open("loader")
   .catch(() => maybeCache = undefined);
 
 const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
+const CACHE_MAX_ENTRY_SIZE = parseInt(
+  Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
+);
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
@@ -297,6 +305,15 @@ const wrapLoader = (
           // Serialize and encode once on the main thread.
           const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
 
+          if (OTEL_ENABLE_EXTRA_METRICS) {
+            stats.cacheEntrySize.record(jsonStringEncoded.length, { loader });
+          }
+
+          // Skip caching oversized entries to protect disk and memory
+          if (jsonStringEncoded.length > CACHE_MAX_ENTRY_SIZE) {
+            return json;
+          }
+
           const expires = new Date(Date.now() + (cacheMaxAge * 1e3))
             .toUTCString();
           const headerPairs: [string, string][] = [
@@ -305,7 +322,7 @@ const wrapLoader = (
             ["Content-Length", "" + jsonStringEncoded.length],
           ];
 
-          // Cache write goes through the full chain (LRU → filesystem)
+          // Cache write goes through the full chain (LRU → in-memory → filesystem)
           // so the LRU registers the key for fast match lookups.
           // The filesystem layer offloads the actual I/O to a worker thread
           // when DECO_CACHE_WRITE_WORKER=true.
@@ -341,6 +358,15 @@ const wrapLoader = (
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
+          }
+
+          if (OTEL_ENABLE_EXTRA_METRICS) {
+            const cl = parseInt(
+              matched.headers.get("Content-Length") ?? "0",
+            );
+            if (cl > 0) {
+              stats.cacheEntrySize.record(cl, { loader, status });
+            }
           }
 
           return await matched.json();

@@ -11,6 +11,16 @@ import {
 const FILE_SYSTEM_CACHE_DIRECTORY =
   Deno.env.get("FILE_SYSTEM_CACHE_DIRECTORY") ?? "/tmp/deco_cache";
 
+const CACHE_MAX_ENTRY_SIZE = parseInt(
+  Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
+);
+
+function shardedPath(cacheDir: string, key: string): string {
+  const l1 = key.substring(0, 2);
+  const l2 = key.substring(2, 4);
+  return `${cacheDir}/${l1}/${l2}/${key}`;
+}
+
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
 
@@ -121,8 +131,9 @@ function createFileSystemCache(): CacheStorage {
     if (!isCacheInitialized) {
       await assertCacheDirectory();
     }
-    const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
-
+    const filePath = shardedPath(FILE_SYSTEM_CACHE_DIRECTORY, key);
+    const dir = filePath.substring(0, filePath.lastIndexOf("/"));
+    await Deno.mkdir(dir, { recursive: true }).catch(() => {});
     await Deno.writeFile(filePath, responseArray);
     return;
   }
@@ -132,8 +143,12 @@ function createFileSystemCache(): CacheStorage {
       await assertCacheDirectory();
     }
     try {
-      const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
+      const filePath = shardedPath(FILE_SYSTEM_CACHE_DIRECTORY, key);
       const fileContent = await Deno.readFile(filePath);
+      if (fileContent.length > CACHE_MAX_ENTRY_SIZE) {
+        Deno.remove(filePath).catch(() => {});
+        return null;
+      }
       return fileContent;
     } catch (_err) {
       const err = _err as { code?: string };
@@ -151,7 +166,7 @@ function createFileSystemCache(): CacheStorage {
       await assertCacheDirectory();
     }
     try {
-      const filePath = `${FILE_SYSTEM_CACHE_DIRECTORY}/${key}`;
+      const filePath = shardedPath(FILE_SYSTEM_CACHE_DIRECTORY, key);
       await Deno.remove(filePath);
       return true;
     } catch (err) {
