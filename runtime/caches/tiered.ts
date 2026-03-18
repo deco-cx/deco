@@ -81,7 +81,9 @@ export function createTieredCache(
           options?: CacheQueryOptions,
         ): Promise<Response | undefined> => {
           if (openedCaches.length === 1) {
-            return openedCaches[0].match(request, options);
+            const resp = await openedCaches[0].match(request, options);
+            resp?.headers.set(TIERED_CACHE_HEADER, "0");
+            return resp;
           }
           let matched: Response | undefined;
           let matchedTierIndex: number | undefined;
