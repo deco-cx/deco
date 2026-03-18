@@ -360,6 +360,12 @@ const wrapLoader = (
           return await matched.json();
         };
 
+        if (isBotRequest) {
+          // Bots must not participate in shared flights — if a bot becomes the
+          // leader, its closure skips cache.put and revalidation, which would
+          // suppress writes for all concurrent non-bot callers sharing the flight.
+          return await staleWhileRevalidate();
+        }
         return await flights.do(request.url, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
