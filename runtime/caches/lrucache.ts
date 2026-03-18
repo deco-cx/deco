@@ -26,12 +26,11 @@ const CACHE_TTL_RESOLUTION = parseInt(
   Deno.env.get("CACHE_TTL_RESOLUTION") ?? "1000",
 ); // updates the lru cache timer every 1 second
 // How long stale content remains serveable (and stays on disk) beyond its expires header.
-// STALE_WINDOW_S (seconds) takes precedence; STALE_TTL_PERIOD (ms) is kept for backwards compat.
 // Default: 1 hour — long enough for low-traffic sites to keep serving cached content across
 // quiet periods while background revalidation catches up.
-const STALE_TTL_PERIOD = Deno.env.get("STALE_WINDOW_S")
-  ? parseInt(Deno.env.get("STALE_WINDOW_S")!) * 1000
-  : parseInt(Deno.env.get("STALE_TTL_PERIOD") ?? "3600000"); // 1h
+const STALE_TTL_PERIOD = parseInt(
+  Deno.env.get("STALE_TTL_PERIOD") ?? "3600000", // 1h
+);
 
 const cacheOptions = (cache: Cache) => (
   {

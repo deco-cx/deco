@@ -142,9 +142,9 @@ Deno.test({
 // Simulates a pod restart: new LRU instance wrapping the same underlying storage.
 // Valid disk entries should be re-indexed; truly expired ones should be evicted.
 
-const STALE_TTL_PERIOD_MS = Deno.env.get("STALE_WINDOW_S")
-  ? parseInt(Deno.env.get("STALE_WINDOW_S")!) * 1000
-  : parseInt(Deno.env.get("STALE_TTL_PERIOD") ?? "3600000");
+const STALE_TTL_PERIOD_MS = parseInt(
+  Deno.env.get("STALE_TTL_PERIOD") ?? "3600000",
+);
 
 function reindexResponse(expiresOffset: number, body = "cached"): Response {
   const encoded = new TextEncoder().encode(body);
