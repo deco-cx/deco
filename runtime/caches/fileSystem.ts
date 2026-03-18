@@ -130,6 +130,7 @@ function createFileSystemCache(): CacheStorage {
     key: string,
     responseArray: Uint8Array,
   ) {
+    if (responseArray.length > CACHE_MAX_ENTRY_SIZE) return;
     if (!isCacheInitialized) {
       await assertCacheDirectory();
     }
