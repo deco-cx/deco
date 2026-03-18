@@ -90,6 +90,7 @@ export function createTieredCache(
             return openedCaches[0].match(request, options);
           }
           let matched: Response | undefined;
+          let matchedTierIndex: number | undefined;
           const indexOfCachesToUpdate: number[] = [];
           for (const [index, cache] of openedCaches.entries()) {
             matched = await cache.match(request, options).catch(() =>
@@ -106,8 +107,7 @@ export function createTieredCache(
 
             if (!isStale) {
               // found a match that is not stale, no need to check the other caches
-              // Tag which tier served the hit (0 = highest priority / in-memory)
-              matched.headers.set(TIERED_CACHE_HEADER, String(index));
+              matchedTierIndex = index;
               break;
             }
             indexOfCachesToUpdate.push(index);
@@ -115,14 +115,13 @@ export function createTieredCache(
 
           if (!matched) return undefined;
 
-          if (indexOfCachesToUpdate.length > 0) {
-            // Read body bytes ONCE instead of using Response.clone() per tier.
-            // clone() duplicates the full SharedArrayBuffer and creates tee'd streams
-            // that keep both original and clone alive until both are fully consumed.
-            // With fire-and-forget backfill, clones linger until all puts complete.
-            const body = await matched.arrayBuffer();
-            const { headers, status } = matched;
+          // Read body once — needed for backfill and to construct a new Response
+          // with the tier header (matched.headers may be immutable on cache hits).
+          const body = await matched.arrayBuffer();
+          const { headers, status } = matched;
+          const tierIndex = matchedTierIndex ?? (openedCaches.length - 1);
 
+          if (indexOfCachesToUpdate.length > 0) {
             // Backfill lower-priority tiers with independent responses from shared bytes
             Promise.all(
               indexOfCachesToUpdate.map((index) =>
@@ -132,22 +131,13 @@ export function createTieredCache(
                 )
               ),
             ).catch(() => {});
-
-            // Return a new response for the caller (original body was consumed above)
-            const resp = responseFromBody(body, headers, status);
-            // Preserve tier tag through body re-read
-            if (!resp.headers.has(TIERED_CACHE_HEADER)) {
-              resp.headers.set(
-                TIERED_CACHE_HEADER,
-                matched.headers.get(TIERED_CACHE_HEADER) ?? String(
-                  openedCaches.length - 1,
-                ),
-              );
-            }
-            return resp;
           }
 
-          return matched;
+          // Tag which tier served the hit (0 = highest priority / in-memory).
+          // Always build a fresh Response so headers are guaranteed mutable.
+          const resp = responseFromBody(body, headers, status);
+          resp.headers.set(TIERED_CACHE_HEADER, String(tierIndex));
+          return resp;
         },
         /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Cache/matchAll) */
         matchAll: (

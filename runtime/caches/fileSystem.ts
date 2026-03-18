@@ -13,7 +13,7 @@ const FILE_SYSTEM_CACHE_DIRECTORY =
 
 const CACHE_MAX_ENTRY_SIZE = parseInt(
   Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
-) || 2097152;
+);
 
 const initializedShardDirs = new Set<string>();
 
@@ -136,8 +136,12 @@ function createFileSystemCache(): CacheStorage {
     const filePath = shardedPath(FILE_SYSTEM_CACHE_DIRECTORY, key);
     const dir = filePath.substring(0, filePath.lastIndexOf("/"));
     if (!initializedShardDirs.has(dir)) {
-      await Deno.mkdir(dir, { recursive: true }).catch(() => {});
-      initializedShardDirs.add(dir);
+      try {
+        await Deno.mkdir(dir, { recursive: true });
+        initializedShardDirs.add(dir);
+      } catch {
+        // transient failure — don't mark initialized so next write retries mkdir
+      }
     }
     await Deno.writeFile(filePath, responseArray);
     return;
