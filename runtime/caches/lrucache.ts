@@ -23,6 +23,11 @@ const CACHE_TTL_RESOLUTION = parseInt(
 const STALE_TTL_PERIOD = parseInt(
   Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
 );
+// Minimum number of times a request must be made before it is admitted into the LRU cache.
+// Protects against one-off/cold requests polluting the cache. Default is 1 (admit on first request).
+const CACHE_MIN_FREQUENCY = parseInt(
+  Deno.env.get("CACHE_MIN_FREQUENCY") ?? "1",
+);
 
 const cacheOptions = (cache: Cache) => (
   {
@@ -41,6 +46,11 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
     cacheStorageInner,
     (_cacheName, cacheInner, requestURLSHA1) => {
       const fileCache = new LRUCache(cacheOptions(cacheInner));
+      // Tracks how many times each key has been put before admission into the LRU.
+      // Bounded to avoid unbounded memory growth from unique one-off keys.
+      const frequency = new LRUCache<string, number>({
+        max: CACHE_MAX_ITEMS * 4,
+      });
       return Promise.resolve({
         ...baseCache,
         delete: async (
@@ -89,6 +99,16 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           if (!length || length == "0") {
             return;
           }
+
+          if (CACHE_MIN_FREQUENCY > 1) {
+            const count = (frequency.get(cacheKey) ?? 0) + 1;
+            if (count < CACHE_MIN_FREQUENCY) {
+              frequency.set(cacheKey, count);
+              return;
+            }
+            frequency.delete(cacheKey);
+          }
+
           fileCache.set(cacheKey, true, {
             size: parseInt(length),
             ttl,
