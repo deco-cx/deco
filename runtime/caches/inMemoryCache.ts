@@ -73,6 +73,10 @@ function createInMemoryCache(): CacheStorage {
           const req = new Request(request);
           assertCanBeCached(req, response);
           if (!response.body) return;
+          // Fast path: skip the body read entirely if Content-Length already tells us
+          // the entry is too large. The loader always sets this header.
+          const cl = parseInt(response.headers.get("content-length") ?? "0");
+          if (cl > CACHE_MAX_ENTRY_SIZE) return;
           const cacheKey = await requestURLSHA1(request);
           const body = new Uint8Array(await response.arrayBuffer());
           if (body.length > CACHE_MAX_ENTRY_SIZE) return;
