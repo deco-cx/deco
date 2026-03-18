@@ -15,6 +15,33 @@ const CACHE_MAX_ENTRY_SIZE = parseInt(
   Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
 ) || 2097152;
 
+// Warn when write rate exceeds this many writes per minute.
+// High write rates usually indicate bots, missing cache keys, or very short TTLs.
+const CACHE_WRITE_RATE_WARN = parseInt(
+  Deno.env.get("CACHE_WRITE_RATE_WARN") ?? "500",
+) || 500;
+
+// --- Write rate tracking ---
+let writeCount = 0;
+let writeWindowStart = Date.now();
+
+function trackWriteRate(key: string) {
+  const now = Date.now();
+  if (now - writeWindowStart > 60_000) {
+    writeWindowStart = now;
+    writeCount = 0;
+  }
+  writeCount++;
+  if (writeCount === CACHE_WRITE_RATE_WARN) {
+    logger.warn(
+      `fs_cache: high write rate — ${writeCount} writes in the last minute. ` +
+        `Latest key: ${key}. ` +
+        `Consider increasing CACHE_MAX_AGE_S or reviewing loader cacheKey functions. ` +
+        `Adjust threshold with CACHE_WRITE_RATE_WARN (current: ${CACHE_WRITE_RATE_WARN}/min).`,
+    );
+  }
+}
+
 const initializedShardDirs = new Set<string>();
 
 function shardedPath(cacheDir: string, key: string): string {
@@ -138,6 +165,7 @@ function createFileSystemCache(): CacheStorage {
     if (!isCacheInitialized) {
       await assertCacheDirectory();
     }
+    trackWriteRate(key);
     const filePath = shardedPath(FILE_SYSTEM_CACHE_DIRECTORY, key);
     const dir = filePath.substring(0, filePath.lastIndexOf("/"));
     if (!initializedShardDirs.has(dir)) {

@@ -1,5 +1,6 @@
 import { LRUCache } from "npm:lru-cache@10.2.0";
 import { ValueType } from "../../deps.ts";
+import { logger } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
@@ -66,9 +67,24 @@ lruSizeGauge.addCallback((observer) => {
   }
 });
 
+// Warn when LRU disk usage exceeds this fraction of CACHE_MAX_SIZE.
+// At this point the LRU is evicting aggressively and disk is nearly full.
+const LRU_DISK_WARN_RATIO = parseFloat(
+  Deno.env.get("LRU_DISK_WARN_RATIO") ?? "0.9",
+);
+
 lruBytesGauge.addCallback((observer) => {
   for (const [name, lru] of activeCaches) {
     observer.observe(lru.calculatedSize, { cache: name });
+    const ratio = lru.calculatedSize / CACHE_MAX_SIZE;
+    if (ratio >= LRU_DISK_WARN_RATIO) {
+      logger.warn(
+        `lru_cache: disk usage for cache "${name}" is at ` +
+          `${Math.round(lru.calculatedSize / 1024 / 1024)}MB / ` +
+          `${Math.round(CACHE_MAX_SIZE / 1024 / 1024)}MB (${Math.round(ratio * 100)}%). ` +
+          `LRU is evicting aggressively. Consider increasing CACHE_MAX_SIZE or reducing CACHE_MAX_AGE_S.`,
+      );
+    }
   }
 });
 
