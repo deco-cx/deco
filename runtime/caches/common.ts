@@ -49,6 +49,8 @@ export const withInstrumentation = (
             if (isMatch) {
               const cl = isMatch.headers.get("Content-Length");
               if (cl) span.setAttribute("content_length", parseInt(cl));
+              const tier = isMatch.headers.get("X-Cache-Tier");
+              if (tier) span.setAttribute("cache_tier", parseInt(tier));
             }
             cacheHit.add(1, {
               result,

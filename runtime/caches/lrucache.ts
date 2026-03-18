@@ -1,10 +1,17 @@
 import { LRUCache } from "npm:lru-cache@10.2.0";
+import { ValueType } from "../../deps.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
   baseCache,
   createBaseCacheStorage,
 } from "./utils.ts";
+
+const lruEvictionCounter = meter.createCounter("lru_cache_eviction", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+});
 
 // keep compatible with old variable name
 const CACHE_MAX_SIZE = parseInt(
@@ -30,17 +37,46 @@ const cacheOptions = (cache: Cache) => (
     maxSize: CACHE_MAX_SIZE,
     ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
-    dispose: async (_value: boolean, key: string) => {
+    dispose: async (_value: boolean, key: string, reason: string) => {
+      lruEvictionCounter.add(1, { reason });
       await cache.delete(key);
     },
   }
 );
+
+const lruSizeGauge = meter.createObservableGauge("lru_cache_keys", {
+  description: "number of keys in the LRU cache",
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+});
+
+const lruBytesGauge = meter.createObservableGauge("lru_cache_bytes", {
+  description: "total bytes tracked by the LRU cache",
+  unit: "bytes",
+  valueType: ValueType.DOUBLE,
+});
+
+// deno-lint-ignore no-explicit-any
+const activeCaches: LRUCache<string, any>[] = [];
+
+lruSizeGauge.addCallback((observer) => {
+  for (const cache of activeCaches) {
+    observer.observe(cache.size);
+  }
+});
+
+lruBytesGauge.addCallback((observer) => {
+  for (const cache of activeCaches) {
+    observer.observe(cache.calculatedSize);
+  }
+});
 
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
   const caches = createBaseCacheStorage(
     cacheStorageInner,
     (_cacheName, cacheInner, requestURLSHA1) => {
       const fileCache = new LRUCache(cacheOptions(cacheInner));
+      activeCaches.push(fileCache);
       return Promise.resolve({
         ...baseCache,
         delete: async (

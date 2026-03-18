@@ -1,3 +1,5 @@
+const TIERED_CACHE_HEADER = "X-Cache-Tier";
+
 const inFuture = (maybeDate: string) => {
   try {
     return new Date(maybeDate) > new Date();
@@ -104,6 +106,8 @@ export function createTieredCache(
 
             if (!isStale) {
               // found a match that is not stale, no need to check the other caches
+              // Tag which tier served the hit (0 = highest priority / in-memory)
+              matched.headers.set(TIERED_CACHE_HEADER, String(index));
               break;
             }
             indexOfCachesToUpdate.push(index);
@@ -130,7 +134,17 @@ export function createTieredCache(
             ).catch(() => {});
 
             // Return a new response for the caller (original body was consumed above)
-            return responseFromBody(body, headers, status);
+            const resp = responseFromBody(body, headers, status);
+            // Preserve tier tag through body re-read
+            if (!resp.headers.has(TIERED_CACHE_HEADER)) {
+              resp.headers.set(
+                TIERED_CACHE_HEADER,
+                matched.headers.get(TIERED_CACHE_HEADER) ?? String(
+                  openedCaches.length - 1,
+                ),
+              );
+            }
+            return resp;
           }
 
           return matched;
