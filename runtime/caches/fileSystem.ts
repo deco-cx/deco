@@ -106,7 +106,7 @@ function createFileSystemCache(): CacheStorage {
       if (
         FILE_SYSTEM_CACHE_DIRECTORY && !existsSync(FILE_SYSTEM_CACHE_DIRECTORY)
       ) {
-        await Deno.mkdirSync(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
+        await Deno.mkdir(FILE_SYSTEM_CACHE_DIRECTORY, { recursive: true });
       }
       isCacheInitialized = true;
     } catch (err) {

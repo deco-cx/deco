@@ -155,6 +155,9 @@ caches?.open("loader")
   .catch(() => maybeCache = undefined);
 
 const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
+const CACHE_MAX_ENTRY_SIZE = parseInt(
+  Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
+) || 2097152;
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
@@ -248,7 +251,14 @@ const wrapLoader = (
           !shouldNotCache && ctx.vary?.push(cacheKeyValue);
 
           status = "bypass";
-          stats.cache.add(1, { status, loader });
+          const bypassReason = isCacheNoStore
+            ? "no-store"
+            : isCacheNoCache
+            ? "no-cache"
+            : isCacheKeyNull
+            ? "null-key"
+            : "disabled";
+          stats.cache.add(1, { status, loader, reason: bypassReason });
 
           RequestContext?.signal?.throwIfAborted();
           return await handler(props, req, ctx);
@@ -296,6 +306,15 @@ const wrapLoader = (
 
           // Serialize and encode once on the main thread.
           const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
+
+          // Skip caching oversized entries to protect disk and memory.
+          // Also evict any existing stale entry so it doesn't stay pinned forever.
+          if (jsonStringEncoded.length > CACHE_MAX_ENTRY_SIZE) {
+            cache.delete(request).catch((error) =>
+              logger.error(`loader error ${error}`)
+            );
+            return json;
+          }
 
           const expires = new Date(Date.now() + (cacheMaxAge * 1e3))
             .toUTCString();

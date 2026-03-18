@@ -18,10 +18,11 @@ const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") === "true"; // c
 const CACHE_TTL_RESOLUTION = parseInt(
   Deno.env.get("CACHE_TTL_RESOLUTION") ?? "1000",
 ); // updates the lru cache timer every 1 second
-// Additional time-to-live increment in milliseconds to extend the cache expiration beyond the response's Expires header.
-// If not set, the cache will use only the expiration timestamp from response headers
+// How long stale content remains serveable (and stays on disk) beyond its expires header.
+// Default: 1 hour — long enough for low-traffic sites to keep serving cached content across
+// quiet periods while background revalidation catches up.
 const STALE_TTL_PERIOD = parseInt(
-  Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
+  Deno.env.get("STALE_TTL_PERIOD") ?? "3600000", // 1h
 );
 
 const cacheOptions = (cache: Cache) => (
@@ -37,11 +38,14 @@ const cacheOptions = (cache: Cache) => (
 );
 
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
+  const openedCachesByName = new Map<string, Promise<Cache>>();
   const caches = createBaseCacheStorage(
     cacheStorageInner,
     (_cacheName, cacheInner, requestURLSHA1) => {
+      const existing = openedCachesByName.get(_cacheName);
+      if (existing) return existing;
       const fileCache = new LRUCache(cacheOptions(cacheInner));
-      return Promise.resolve({
+      const cache = Promise.resolve({
         ...baseCache,
         delete: async (
           request: RequestInfo | URL,
@@ -58,8 +62,7 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           assertNoOptions(options);
           const cacheKey = await requestURLSHA1(request);
           if (fileCache.has(cacheKey)) {
-            const result = cacheInner.match(cacheKey);
-            return result;
+            return cacheInner.match(cacheKey);
           }
           return undefined;
         },
@@ -96,6 +99,8 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           return cacheInner.put(cacheKey, response);
         },
       });
+      openedCachesByName.set(_cacheName, cache);
+      return cache;
     },
   );
   return caches;
