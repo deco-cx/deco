@@ -156,11 +156,6 @@ const stats = {
     unit: "ms",
     valueType: ValueType.DOUBLE,
   }),
-  lruEviction: meter.createCounter("loader_cache_eviction", {
-    description: "LRU cache evictions",
-    unit: "1",
-    valueType: ValueType.DOUBLE,
-  }),
 };
 
 let maybeCache: Cache | undefined;
@@ -372,15 +367,15 @@ const wrapLoader = (
 
             const bgStart = performance.now();
             bgFlights.do(request.url, callHandlerAndCache)
-              .then(() => {
+              .catch((error) => logger.error(`loader error ${error}`))
+              .finally(() => {
                 if (OTEL_ENABLE_EXTRA_METRICS) {
                   stats.bgRevalidation.record(
                     performance.now() - bgStart,
                     { loader },
                   );
                 }
-              })
-              .catch((error) => logger.error(`loader error ${error}`));
+              });
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });

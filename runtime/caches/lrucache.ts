@@ -57,17 +57,17 @@ const lruBytesGauge = meter.createObservableGauge("lru_cache_bytes", {
 });
 
 // deno-lint-ignore no-explicit-any
-const activeCaches: LRUCache<string, any>[] = [];
+const activeCaches: { name: string; lru: LRUCache<string, any> }[] = [];
 
 lruSizeGauge.addCallback((observer) => {
-  for (const cache of activeCaches) {
-    observer.observe(cache.size);
+  for (const { name, lru } of activeCaches) {
+    observer.observe(lru.size, { cache: name });
   }
 });
 
 lruBytesGauge.addCallback((observer) => {
-  for (const cache of activeCaches) {
-    observer.observe(cache.calculatedSize);
+  for (const { name, lru } of activeCaches) {
+    observer.observe(lru.calculatedSize, { cache: name });
   }
 });
 
@@ -76,7 +76,7 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
     cacheStorageInner,
     (_cacheName, cacheInner, requestURLSHA1) => {
       const fileCache = new LRUCache(cacheOptions(cacheInner));
-      activeCaches.push(fileCache);
+      activeCaches.push({ name: _cacheName, lru: fileCache });
       return Promise.resolve({
         ...baseCache,
         delete: async (

@@ -8,10 +8,10 @@ import {
 
 const MEMORY_CACHE_MAX_SIZE = parseInt(
   Deno.env.get("MEMORY_CACHE_MAX_SIZE") ?? "268435456", // 256 MB
-);
+) || 268435456;
 const MEMORY_CACHE_MAX_ITEMS = parseInt(
   Deno.env.get("MEMORY_CACHE_MAX_ITEMS") ?? "2048",
-);
+) || 2048;
 
 interface CacheEntry {
   body: Uint8Array;
