@@ -424,7 +424,13 @@ const wrapLoader = (
           return await matched.json();
         };
 
-        return await flights.do(request.url, staleWhileRevalidate);
+        // Separate flight key for bots so a bot can never become the leader
+        // for a non-bot request — bot leaders skip cache.put(), which would
+        // leave all concurrent non-bot waiters with an uncached result.
+        const flightKey = isBotRequest
+          ? `bot:${request.url}`
+          : request.url;
+        return await flights.do(flightKey, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
         if (OTEL_ENABLE_EXTRA_METRICS) {
