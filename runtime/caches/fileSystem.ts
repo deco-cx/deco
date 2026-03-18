@@ -13,7 +13,7 @@ const FILE_SYSTEM_CACHE_DIRECTORY =
 
 const CACHE_MAX_ENTRY_SIZE = parseInt(
   Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
-);
+) || 2097152;
 
 const initializedShardDirs = new Set<string>();
 

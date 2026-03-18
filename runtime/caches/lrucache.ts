@@ -72,12 +72,15 @@ lruBytesGauge.addCallback((observer) => {
 });
 
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
+  const openedCachesByName = new Map<string, Promise<Cache>>();
   const caches = createBaseCacheStorage(
     cacheStorageInner,
     (_cacheName, cacheInner, requestURLSHA1) => {
+      const existing = openedCachesByName.get(_cacheName);
+      if (existing) return existing;
       const fileCache = new LRUCache(cacheOptions(cacheInner));
       activeCaches.set(_cacheName, fileCache);
-      return Promise.resolve({
+      const cache = Promise.resolve({
         ...baseCache,
         delete: async (
           request: RequestInfo | URL,
@@ -150,6 +153,8 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           return cacheInner.put(cacheKey, response);
         },
       });
+      openedCachesByName.set(_cacheName, cache);
+      return cache;
     },
   );
   return caches;

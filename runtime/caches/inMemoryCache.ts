@@ -8,10 +8,13 @@ import {
 
 const MEMORY_CACHE_MAX_SIZE = parseInt(
   Deno.env.get("MEMORY_CACHE_MAX_SIZE") ?? "268435456", // 256 MB
-);
+) || 268435456;
 const MEMORY_CACHE_MAX_ITEMS = parseInt(
   Deno.env.get("MEMORY_CACHE_MAX_ITEMS") ?? "2048",
-);
+) || 2048;
+const CACHE_MAX_ENTRY_SIZE = parseInt(
+  Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
+) || 2097152;
 
 interface CacheEntry {
   body: Uint8Array;
@@ -72,6 +75,7 @@ function createInMemoryCache(): CacheStorage {
           if (!response.body) return;
           const cacheKey = await requestURLSHA1(request);
           const body = new Uint8Array(await response.arrayBuffer());
+          if (body.length > CACHE_MAX_ENTRY_SIZE) return;
           const headers: [string, string][] = [...response.headers.entries()];
           store.set(cacheKey, { body, headers, status: response.status });
         },
