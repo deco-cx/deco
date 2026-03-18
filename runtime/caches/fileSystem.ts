@@ -130,7 +130,11 @@ function createFileSystemCache(): CacheStorage {
     key: string,
     responseArray: Uint8Array,
   ) {
-    if (responseArray.length > CACHE_MAX_ENTRY_SIZE) return;
+    if (responseArray.length > CACHE_MAX_ENTRY_SIZE) {
+      // Evict any existing entry so stale data doesn't stay pinned on disk.
+      deleteFile(key).catch(() => {});
+      return;
+    }
     if (!isCacheInitialized) {
       await assertCacheDirectory();
     }
