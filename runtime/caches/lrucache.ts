@@ -73,7 +73,7 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           if (expires && length) {
             const ttl = Date.parse(expires) - Date.now() + STALE_TTL_PERIOD;
             if (ttl > 0) {
-              fileCache.set(cacheKey, true, { size: parseInt(length), ttl });
+              fileCache.set(cacheKey, true, { size: parseInt(length, 10), ttl });
               return response;
             }
           }

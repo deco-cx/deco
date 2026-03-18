@@ -146,48 +146,13 @@ const STALE_TTL_PERIOD_MS = parseInt(
   Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
 );
 
-/**
- * Helper: build a testCacheStorage where `open` returns a *shared* map so we
- * can simulate "disk" surviving an LRU restart.
- */
-const sharedMapCacheStorage = (
-  map: Map<RequestInfo | URL, Response>,
-): CacheStorage => {
-  const getUrl = (request: RequestInfo | URL) =>
-    (request as Request).url ?? request.toString();
-  return {
-    delete: () => {
-      map.clear();
-      return Promise.resolve(true);
-    },
-    has: NOT_IMPLEMENTED,
-    keys: NOT_IMPLEMENTED,
-    match: NOT_IMPLEMENTED,
-    open: () =>
-      Promise.resolve({
-        add: NOT_IMPLEMENTED,
-        addAll: NOT_IMPLEMENTED,
-        delete: (request: RequestInfo | URL) =>
-          Promise.resolve(Boolean(map.delete(getUrl(request)))),
-        keys: NOT_IMPLEMENTED,
-        match: (request: RequestInfo | URL) =>
-          Promise.resolve(map.get(getUrl(request))),
-        matchAll: NOT_IMPLEMENTED,
-        put: (request: RequestInfo | URL, response: Response) => {
-          map.set(getUrl(request), response);
-          return Promise.resolve();
-        },
-      } as Cache),
-  };
-};
-
 Deno.test({
   name: "lru_cache_lazy_reindex: valid entry is served after LRU restart",
   sanitizeResources: false,
   sanitizeOps: false,
 }, async () => {
   const disk = new Map<RequestInfo | URL, Response>();
-  const storage1 = sharedMapCacheStorage(disk);
+  const storage1 = testCacheStorage(disk);
 
   // --- first LRU lifetime: put an entry ---
   const cache1 = await headersCache(lruCache(storage1)).open(CACHE_NAME);
@@ -203,7 +168,7 @@ Deno.test({
   );
 
   // --- simulate pod restart: new LRU over the *same* disk map ---
-  const storage2 = sharedMapCacheStorage(disk);
+  const storage2 = testCacheStorage(disk);
   const cache2 = await headersCache(lruCache(storage2)).open(CACHE_NAME);
 
   const response = await cache2.match(createRequest(100));
@@ -216,7 +181,7 @@ Deno.test({
   sanitizeOps: false,
 }, async () => {
   const disk = new Map<RequestInfo | URL, Response>();
-  const storage1 = sharedMapCacheStorage(disk);
+  const storage1 = testCacheStorage(disk);
 
   const cache1 = await headersCache(lruCache(storage1)).open(CACHE_NAME);
   // Expired well before now, even accounting for STALE_TTL_PERIOD
@@ -234,7 +199,7 @@ Deno.test({
   );
 
   // --- simulate pod restart ---
-  const storage2 = sharedMapCacheStorage(disk);
+  const storage2 = testCacheStorage(disk);
   const cache2 = await headersCache(lruCache(storage2)).open(CACHE_NAME);
 
   const response = await cache2.match(createRequest(200));
@@ -248,7 +213,7 @@ Deno.test({
 }, async () => {
   // Empty disk — nothing was ever written
   const disk = new Map<RequestInfo | URL, Response>();
-  const storage = sharedMapCacheStorage(disk);
+  const storage = testCacheStorage(disk);
   const cache = await headersCache(lruCache(storage)).open(CACHE_NAME);
 
   const response = await cache.match(createRequest(300));
@@ -262,7 +227,7 @@ Deno.test({
   sanitizeOps: false,
 }, async () => {
   const disk = new Map<RequestInfo | URL, Response>();
-  const storage1 = sharedMapCacheStorage(disk);
+  const storage1 = testCacheStorage(disk);
 
   const cache1 = await headersCache(lruCache(storage1)).open(CACHE_NAME);
   const futureExpires = new Date(Date.now() + 60_000).toUTCString();
@@ -277,7 +242,7 @@ Deno.test({
   );
 
   // --- simulate pod restart ---
-  const storage2 = sharedMapCacheStorage(disk);
+  const storage2 = testCacheStorage(disk);
   const cache2 = await headersCache(lruCache(storage2)).open(CACHE_NAME);
 
   // First access triggers lazy re-index
