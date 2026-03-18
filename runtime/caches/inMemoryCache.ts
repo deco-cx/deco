@@ -16,6 +16,7 @@ const MEMORY_CACHE_MAX_ITEMS = parseInt(
 interface CacheEntry {
   body: Uint8Array;
   headers: [string, string][];
+  status: number;
 }
 
 function createInMemoryCache(): CacheStorage {
@@ -59,6 +60,7 @@ function createInMemoryCache(): CacheStorage {
           if (!entry) return undefined;
           return new Response(entry.body as unknown as BodyInit, {
             headers: new Headers(entry.headers),
+            status: entry.status,
           });
         },
         put: async (
@@ -71,7 +73,7 @@ function createInMemoryCache(): CacheStorage {
           const cacheKey = await requestURLSHA1(request);
           const body = new Uint8Array(await response.arrayBuffer());
           const headers: [string, string][] = [...response.headers.entries()];
-          store.set(cacheKey, { body, headers });
+          store.set(cacheKey, { body, headers, status: response.status });
         },
       });
     },

@@ -172,7 +172,7 @@ caches?.open("loader")
 const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
 const CACHE_MAX_ENTRY_SIZE = parseInt(
   Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
-);
+) || 2097152;
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
@@ -322,13 +322,13 @@ const wrapLoader = (
           // Serialize and encode once on the main thread.
           const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
 
-          if (OTEL_ENABLE_EXTRA_METRICS) {
-            stats.cacheEntrySize.record(jsonStringEncoded.length, { loader });
-          }
-
           // Skip caching oversized entries to protect disk and memory
           if (jsonStringEncoded.length > CACHE_MAX_ENTRY_SIZE) {
             return json;
+          }
+
+          if (OTEL_ENABLE_EXTRA_METRICS) {
+            stats.cacheEntrySize.record(jsonStringEncoded.length, { loader });
           }
 
           const expires = new Date(Date.now() + (cacheMaxAge * 1e3))
