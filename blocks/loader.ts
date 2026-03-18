@@ -360,13 +360,13 @@ const wrapLoader = (
           return await matched.json();
         };
 
-        if (isBotRequest) {
-          // Bots must not participate in shared flights — if a bot becomes the
-          // leader, its closure skips cache.put and revalidation, which would
-          // suppress writes for all concurrent non-bot callers sharing the flight.
-          return await staleWhileRevalidate();
-        }
-        return await flights.do(request.url, staleWhileRevalidate);
+        // Bots use a separate flight key so they deduplicate among themselves
+        // but never become leader for non-bot requests (bot leaders skip
+        // cache.put and revalidation, which would suppress writes for non-bots).
+        const flightKey = isBotRequest
+          ? `bot:${request.url}`
+          : request.url;
+        return await flights.do(flightKey, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
         if (OTEL_ENABLE_EXTRA_METRICS) {
