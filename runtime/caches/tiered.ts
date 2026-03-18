@@ -1,12 +1,6 @@
-const TIERED_CACHE_HEADER = "X-Cache-Tier";
+import { inFuture } from "./utils.ts";
 
-const inFuture = (maybeDate: string) => {
-  try {
-    return new Date(maybeDate) > new Date();
-  } catch {
-    return false;
-  }
-};
+const TIERED_CACHE_HEADER = "X-Cache-Tier";
 
 /**
  * Creates a lightweight Response from pre-read body bytes and headers.
@@ -115,26 +109,30 @@ export function createTieredCache(
 
           if (!matched) return undefined;
 
-          // Read body once — needed for backfill and to construct a new Response
-          // with the tier header (matched.headers may be immutable on cache hits).
-          const body = await matched.arrayBuffer();
-          const { headers, status } = matched;
           const tierIndex = matchedTierIndex ?? (openedCaches.length - 1);
 
-          if (indexOfCachesToUpdate.length > 0) {
-            // Backfill lower-priority tiers with independent responses from shared bytes
-            Promise.all(
-              indexOfCachesToUpdate.map((index) =>
-                openedCaches[index].put(
-                  request,
-                  responseFromBody(body, headers, status),
-                )
-              ),
-            ).catch(() => {});
+          if (indexOfCachesToUpdate.length === 0) {
+            // Fast path: L1 hit, nothing to backfill — avoid reading the body.
+            // Our cache implementations always return mutable headers so the set is safe.
+            matched.headers.set(TIERED_CACHE_HEADER, String(tierIndex));
+            return matched;
           }
 
-          // Tag which tier served the hit (0 = highest priority / in-memory).
-          // Always build a fresh Response so headers are guaranteed mutable.
+          // Slow path: need to fan out to lower tiers — read body once.
+          const body = await matched.arrayBuffer();
+          const { headers, status } = matched;
+
+          // Backfill lower-priority tiers with independent responses from shared bytes.
+          Promise.all(
+            indexOfCachesToUpdate.map((index) =>
+              openedCaches[index].put(
+                request,
+                responseFromBody(body, headers, status),
+              )
+            ),
+          ).catch(() => {});
+
+          // Tag which tier served the hit.
           const resp = responseFromBody(body, headers, status);
           resp.headers.set(TIERED_CACHE_HEADER, String(tierIndex));
           return resp;

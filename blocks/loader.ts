@@ -317,8 +317,12 @@ const wrapLoader = (
           // Serialize and encode once on the main thread.
           const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
 
-          // Skip caching oversized entries to protect disk and memory
+          // Skip caching oversized entries to protect disk and memory.
+          // Also evict any existing stale entry so it doesn't stay pinned forever.
           if (jsonStringEncoded.length > CACHE_MAX_ENTRY_SIZE) {
+            cache.delete(request).catch((error) =>
+              logger.error(`loader error ${error}`)
+            );
             return json;
           }
 
@@ -365,17 +369,21 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            const bgStart = performance.now();
-            bgFlights.do(request.url, callHandlerAndCache)
-              .catch((error) => logger.error(`loader error ${error}`))
-              .finally(() => {
+            // Timer lives inside the singleFlight fn so it records exactly once
+            // per revalidation, not once per concurrent waiter on the same key.
+            bgFlights.do(request.url, async () => {
+              const bgStart = performance.now();
+              try {
+                return await callHandlerAndCache();
+              } finally {
                 if (OTEL_ENABLE_EXTRA_METRICS) {
                   stats.bgRevalidation.record(
                     performance.now() - bgStart,
                     { loader },
                   );
                 }
-              });
+              }
+            }).catch((error) => logger.error(`loader error ${error}`));
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
