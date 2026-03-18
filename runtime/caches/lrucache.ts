@@ -58,9 +58,27 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           assertNoOptions(options);
           const cacheKey = await requestURLSHA1(request);
           if (fileCache.has(cacheKey)) {
-            const result = cacheInner.match(cacheKey);
-            return result;
+            return cacheInner.match(cacheKey);
           }
+          // Lazy re-index: on a cold LRU (e.g. after pod restart), check if the file
+          // exists on disk. If still valid, re-index into the LRU so eviction is managed
+          // normally from this point on. If expired, delete the orphaned file and miss.
+          // TODO: add a background sweep at startup that deletes expired orphaned files
+          // that are never re-accessed — they accumulate on disk across restarts and are
+          // never evicted without this sweep.
+          const response = await cacheInner.match(cacheKey);
+          if (!response) return undefined;
+          const expires = response.headers.get("expires");
+          const length = response.headers.get("content-length");
+          if (expires && length) {
+            const ttl = Date.parse(expires) - Date.now() + STALE_TTL_PERIOD;
+            if (ttl > 0) {
+              fileCache.set(cacheKey, true, { size: parseInt(length), ttl });
+              return response;
+            }
+          }
+          // Expired or missing metadata — delete the orphaned file and treat as a miss.
+          cacheInner.delete(cacheKey).catch(() => {});
           return undefined;
         },
         put: async (
