@@ -83,12 +83,18 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     if (isMultivariate(flag)) {
       const variants = flag.variants || [];
 
-      const results = await Promise.all(
-        variants.map((variant) =>
-          typeof variant?.rule === "function" ? variant.rule(ctx) : false
-        ),
-      );
-      const match = variants.find((_, index) => results[index]);
+      // Evaluate sequentially with short-circuit to avoid side-effects
+      // from non-selected variant matchers (e.g. invoke, response mutation).
+      let match: Variant<unknown> | undefined;
+      for (const variant of variants) {
+        const matched = typeof variant?.rule === "function"
+          ? await variant.rule(ctx)
+          : false;
+        if (matched) {
+          match = variant;
+          break;
+        }
+      }
 
       return isDeferred(match?.value) ? match?.value() : match?.value;
     }
