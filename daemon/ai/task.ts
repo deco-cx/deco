@@ -409,10 +409,12 @@ export class AITask {
         if (this.#stdoutBuffer.length > 4096) {
           this.#stdoutBuffer = this.#stdoutBuffer.slice(-4096);
         }
-        // Require the URL to be followed by whitespace or end-of-buffer so we
-        // don't capture a partial URL when it is split across chunks.
+        // Require the URL to be followed by actual whitespace so we don't
+        // capture a partial URL when a chunk boundary falls mid-URL.
+        // Using (?=\s) instead of (?=\s|$) prevents matching at end-of-buffer,
+        // which would be indistinguishable from a truncated chunk.
         const match = this.#stdoutBuffer.match(
-          /https:\/\/claude\.ai\/oauth\/authorize\S*(?=\s|$)/,
+          /https:\/\/claude\.ai\/oauth\/authorize\S*(?=\s)/,
         );
         if (match) {
           this.#loginUrl = match[0].trim().replace(/[)\]'"]+$/, "");
