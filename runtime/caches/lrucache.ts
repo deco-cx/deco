@@ -1,18 +1,10 @@
 import { LRUCache } from "npm:lru-cache@10.2.0";
-import { ValueType } from "../../deps.ts";
-import { logger } from "../../observability/otel/config.ts";
-import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
   baseCache,
   createBaseCacheStorage,
 } from "./utils.ts";
-
-const lruEvictionCounter = meter.createCounter("lru_cache_eviction", {
-  unit: "1",
-  valueType: ValueType.DOUBLE,
-});
 
 // keep compatible with old variable name
 const CACHE_MAX_SIZE = parseInt(
@@ -38,61 +30,17 @@ const cacheOptions = (cache: Cache) => (
     maxSize: CACHE_MAX_SIZE,
     ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
-    dispose: async (_value: boolean, key: string, reason: string) => {
-      lruEvictionCounter.add(1, { reason });
+    dispose: async (_value: boolean, key: string) => {
       await cache.delete(key);
     },
   }
 );
-
-const lruSizeGauge = meter.createObservableGauge("lru_cache_keys", {
-  description: "number of keys in the LRU cache",
-  unit: "1",
-  valueType: ValueType.DOUBLE,
-});
-
-const lruBytesGauge = meter.createObservableGauge("lru_cache_bytes", {
-  description: "total bytes tracked by the LRU cache",
-  unit: "bytes",
-  valueType: ValueType.DOUBLE,
-});
-
-// deno-lint-ignore no-explicit-any
-const activeCaches = new Map<string, LRUCache<string, any>>();
-
-lruSizeGauge.addCallback((observer) => {
-  for (const [name, lru] of activeCaches) {
-    observer.observe(lru.size, { cache: name });
-  }
-});
-
-// Warn when LRU disk usage exceeds this fraction of CACHE_MAX_SIZE.
-// At this point the LRU is evicting aggressively and disk is nearly full.
-const LRU_DISK_WARN_RATIO = parseFloat(
-  Deno.env.get("LRU_DISK_WARN_RATIO") ?? "0.9",
-);
-
-lruBytesGauge.addCallback((observer) => {
-  for (const [name, lru] of activeCaches) {
-    observer.observe(lru.calculatedSize, { cache: name });
-    const ratio = lru.calculatedSize / CACHE_MAX_SIZE;
-    if (ratio >= LRU_DISK_WARN_RATIO) {
-      logger.warn(
-        `lru_cache: disk usage for cache "${name}" is at ` +
-          `${Math.round(lru.calculatedSize / 1024 / 1024)}MB / ` +
-          `${Math.round(CACHE_MAX_SIZE / 1024 / 1024)}MB (${Math.round(ratio * 100)}%). ` +
-          `LRU is evicting aggressively. Consider increasing CACHE_MAX_SIZE or reducing CACHE_MAX_AGE_S.`,
-      );
-    }
-  }
-});
 
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
   const caches = createBaseCacheStorage(
     cacheStorageInner,
     (_cacheName, cacheInner, requestURLSHA1) => {
       const fileCache = new LRUCache(cacheOptions(cacheInner));
-      activeCaches.set(_cacheName, fileCache);
       return Promise.resolve({
         ...baseCache,
         delete: async (
