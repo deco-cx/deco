@@ -23,6 +23,11 @@ const CACHE_TTL_RESOLUTION = parseInt(
 const STALE_TTL_PERIOD = parseInt(
   Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
 );
+// Time-to-live in milliseconds to extend a stale cache entry when the origin fails to revalidate.
+// Keeps the entry alive so subsequent requests can still be served stale while the origin recovers.
+const ERROR_STALE_TTL = parseInt(
+  Deno.env.get("ERROR_STALE_TTL") ?? "3600000", // 1 hour
+);
 
 const cacheOptions = (cache: Cache) => (
   {
@@ -30,7 +35,7 @@ const cacheOptions = (cache: Cache) => (
     maxSize: CACHE_MAX_SIZE,
     ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
-    dispose: async (_value: boolean, key: string) => {
+    dispose: async (_value: number, key: string) => {
       await cache.delete(key);
     },
   }
@@ -89,11 +94,22 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           if (!length || length == "0") {
             return;
           }
-          fileCache.set(cacheKey, true, {
-            size: parseInt(length),
+          const size = parseInt(length);
+          fileCache.set(cacheKey, size, {
+            size,
             ttl,
           });
           return cacheInner.put(cacheKey, response);
+        },
+        // Extends the LRU TTL of a cache entry without modifying the underlying data or
+        // the expires header. Used when origin revalidation fails (stale-on-error) to keep
+        // the entry alive so stale content can continue to be served while origin recovers.
+        touch: async (request: RequestInfo | URL): Promise<void> => {
+          const cacheKey = await requestURLSHA1(request);
+          const size = fileCache.get(cacheKey);
+          if (size) {
+            fileCache.set(cacheKey, size, { size, ttl: ERROR_STALE_TTL });
+          }
         },
       });
     },
