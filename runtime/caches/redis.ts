@@ -5,7 +5,7 @@ import {
   NOT_IMPLEMENTED,
   withCacheNamespace,
 } from "./utils.ts";
-import Redis from "ioredis";
+import Redis from "npm:ioredis@^5.10.1";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -14,6 +14,8 @@ const SITE_NAME = Deno.env.get("DECO_SITE_NAME") ?? "";
 const SENTINEL_URLS = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_URLS");
 const SENTINEL_NAME = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_NAME") ??
   "mymaster";
+const SENTINEL_PASSWORD = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_PASSWORD");
+const REDIS_PASSWORD = Deno.env.get("LOADER_CACHE_REDIS_PASSWORD");
 
 export type RedisConnection = Redis;
 
@@ -41,10 +43,15 @@ function createRedisClient(): Redis {
       ...sharedOptions,
       sentinels: parseSentinels(SENTINEL_URLS),
       name: SENTINEL_NAME,
+      ...(SENTINEL_PASSWORD && { sentinelPassword: SENTINEL_PASSWORD }),
+      ...(REDIS_PASSWORD && { password: REDIS_PASSWORD }),
     });
   }
 
-  return new Redis(Deno.env.get("LOADER_CACHE_REDIS_URL")!, sharedOptions);
+  return new Redis(Deno.env.get("LOADER_CACHE_REDIS_URL")!, {
+    ...sharedOptions,
+    ...(REDIS_PASSWORD && { password: REDIS_PASSWORD }),
+  });
 }
 
 function wait(ms: number) {
