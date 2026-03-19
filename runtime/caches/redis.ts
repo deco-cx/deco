@@ -5,7 +5,7 @@ import {
   NOT_IMPLEMENTED,
   withCacheNamespace,
 } from "./utils.ts";
-import Redis from "npm:ioredis@^5.10.1";
+import { Redis } from "npm:ioredis@^5.10.1";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -165,9 +165,8 @@ export const caches: CacheStorage = {
     if (isAvailable) {
       redis = createRedisClient();
       redis.on("error", () => {});
+      await wait(CONNECTION_TIMEOUT);
     }
-
-    await wait(CONNECTION_TIMEOUT);
 
     return Promise.resolve(create(redis, namespace));
   },
