@@ -146,16 +146,6 @@ const stats = {
     unit: "ms",
     valueType: ValueType.DOUBLE,
   }),
-  cacheEntrySize: meter.createHistogram("loader_cache_entry_size", {
-    description: "size of cached loader responses in bytes",
-    unit: "bytes",
-    valueType: ValueType.DOUBLE,
-  }),
-  bgRevalidation: meter.createHistogram("loader_bg_revalidation", {
-    description: "duration of background stale-while-revalidate calls",
-    unit: "ms",
-    valueType: ValueType.DOUBLE,
-  }),
 };
 
 let maybeCache: Cache | undefined;
@@ -346,33 +336,11 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            // Timer lives inside the singleFlight fn so it records exactly once
-            // per revalidation, not once per concurrent waiter on the same key.
-            bgFlights.do(request.url, async () => {
-              const bgStart = performance.now();
-              try {
-                return await callHandlerAndCache();
-              } finally {
-                if (OTEL_ENABLE_EXTRA_METRICS) {
-                  stats.bgRevalidation.record(
-                    performance.now() - bgStart,
-                    { loader },
-                  );
-                }
-              }
-            }).catch((error) => logger.error(`loader error ${error}`));
+            bgFlights.do(request.url, callHandlerAndCache)
+              .catch((error) => logger.error(`loader error ${error}`));
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
-          }
-
-          if (OTEL_ENABLE_EXTRA_METRICS) {
-            const cl = parseInt(
-              matched.headers.get("Content-Length") ?? "0",
-            );
-            if (cl > 0) {
-              stats.cacheEntrySize.record(cl, { loader, status });
-            }
           }
 
           return await matched.json();
