@@ -261,15 +261,6 @@ const wrapLoader = (
 
         const timing = ctx.monitoring?.timings.start("loader-hash");
 
-        const resolveChainString = FieldResolver.minify(resolveChain)
-          .toString();
-
-        if (!resolveChainString) {
-          logger.warn(`Could not get resolveChain`);
-          timing?.end();
-          return await handler(props, req, ctx);
-        }
-
         // K_REVISION is preferred over the revisionID from the release
         // because it does not change when only .decofile changes
         const revisionID = Deno.env.get("K_REVISION") ??
@@ -285,7 +276,6 @@ const wrapLoader = (
 
         const cacheKeyUrl = `https://localhost/?${new URLSearchParams({
           resolver: loader,
-          resolveChain: resolveChainString,
           revision: revisionID,
           cacheKey: cacheKeyValue,
         })}`;
