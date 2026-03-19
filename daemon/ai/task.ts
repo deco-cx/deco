@@ -76,6 +76,7 @@ export interface AITaskInfo {
   issue?: string;
   prompt?: string;
   prUrl?: string | null;
+  loginUrl?: string | null;
   createdAt: number;
 }
 
@@ -156,6 +157,7 @@ export class AITask {
   #status: AITaskStatus = "pending";
   #disposed = false;
   #prUrl: string | null = null;
+  #loginUrl: string | null = null;
   #issueCtx: IssueContext | null = null;
   #opts: AITaskOptions;
   #startSha: string | null = null;
@@ -321,6 +323,10 @@ export class AITask {
         `${realHome}/.deno/bin`,
         "/usr/local/bin",
       ].join(":"),
+      // Prevent Claude Code from refusing to run inside another Claude Code
+      // session. The daemon may inherit this env var when started from a
+      // developer's terminal that already has Claude Code running.
+      CLAUDECODE: "",
     };
 
     if (this.#opts.proxyUrl && this.#opts.proxyToken) {
@@ -373,8 +379,6 @@ export class AITask {
       env.GITHUB_TOKEN = githubToken;
     }
 
-    // Interactive mode: just `claude` with no --print
-    // Task mode: `claude --print --dangerously-skip-permissions <prompt>`
     const claudeArgs = taskPrompt
       ? ["--print", "--dangerously-skip-permissions", taskPrompt]
       : ["--dangerously-skip-permissions"];
@@ -387,6 +391,23 @@ export class AITask {
         cwd: this.#opts.cwd,
         cols: 120,
         rows: 40,
+      });
+
+      // Subscribe to PTY output to capture Claude Code's OAuth login URL.
+      // Claude Code prints something like:
+      //   "To sign in, visit: https://claude.ai/oauth/authorize?..."
+      // when started without an API key.
+      this.#session.onData((data) => {
+        if (this.#loginUrl) return; // already found
+        // Strip ANSI escape sequences for reliable URL matching
+        const plain = data.replace(/\x1b\[[0-9;]*[mGKHF]/g, "");
+        const match = plain.match(
+          /https:\/\/claude\.ai\/oauth\/authorize[^\s\x1b]*/,
+        );
+        if (match) {
+          this.#loginUrl = match[0].trim().replace(/[)\]'"]+$/, "");
+          console.log(`[ai] Task ${this.taskId}: captured login URL`);
+        }
       });
 
       this.#session.onExit((code) => {
@@ -683,6 +704,7 @@ export class AITask {
       issue: this.issue,
       prompt: this.prompt,
       prUrl: this.#prUrl,
+      loginUrl: this.#loginUrl,
       createdAt: this.createdAt,
     };
   }
