@@ -5,43 +5,46 @@ import {
   NOT_IMPLEMENTED,
   withCacheNamespace,
 } from "./utils.ts";
-import {
-  createClient,
-  type RedisClientType,
-  type RedisFunctions,
-  type RedisModules,
-  type RedisScripts,
-} from "npm:@redis/client@^1.6.0";
+import Redis from "ioredis";
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
-const RECONNECTION_TIMEOUT = 5000;
-const TTL = parseInt(Deno.env.get("LOADER_CACHE_REDIS_TTL_SECONDS") || "3600");
+const TTL = parseInt(Deno.env.get("LOADER_CACHE_REDIS_TTL_SECONDS") || "180"); // 3 minutes
+const SITE_NAME = Deno.env.get("DECO_SITE_NAME") ?? "";
+const SENTINEL_URLS = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_URLS");
+const SENTINEL_NAME = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_NAME") ??
+  "mymaster";
 
-interface RedisCommandTimeout extends Error {
-}
+export type RedisConnection = Redis;
 
-export type RedisConnection = RedisClientType<
-  RedisModules,
-  RedisFunctions,
-  RedisScripts
->;
+export const isAvailable = Deno.env.has("LOADER_CACHE_REDIS_URL") ||
+  !!SENTINEL_URLS;
 
-export const isAvailable = Deno.env.has("LOADER_CACHE_REDIS_URL");
-
-async function serialize(response: Response): Promise<string> {
-  const body = await response.text();
-
-  return JSON.stringify({
-    body: body,
-    headers: response.headers,
-    status: response.status,
+function parseSentinels(
+  raw: string,
+): Array<{ host: string; port: number }> {
+  return raw.split(",").map((entry) => {
+    const [host, port] = entry.trim().split(":");
+    return { host, port: parseInt(port ?? "26379") };
   });
 }
 
-function deserialize(raw: string): Response {
-  const { body, headers, status } = JSON.parse(raw);
-  return new Response(body, { headers, status });
+function createRedisClient(): Redis {
+  const sharedOptions = {
+    enableOfflineQueue: false,
+    connectTimeout: CONNECTION_TIMEOUT,
+    maxRetriesPerRequest: 1,
+  };
+
+  if (SENTINEL_URLS) {
+    return new Redis({
+      ...sharedOptions,
+      sentinels: parseSentinels(SENTINEL_URLS),
+      name: SENTINEL_NAME,
+    });
+  }
+
+  return new Redis(Deno.env.get("LOADER_CACHE_REDIS_URL")!, sharedOptions);
 }
 
 function wait(ms: number) {
@@ -53,16 +56,33 @@ function waitOrReject<T>(
   ms: number,
 ): Promise<T> {
   const timeout = new Promise<T>((_, reject) => {
-    wait(ms).then(() => reject(new Error() as RedisCommandTimeout));
+    wait(ms).then(() => reject(new Error("Redis command timeout")));
   });
 
-  return Promise.race([
-    callback(),
-    timeout,
-  ]);
+  return Promise.race([callback(), timeout]);
+}
+
+async function serialize(response: Response): Promise<string> {
+  const body = await response.text();
+
+  return JSON.stringify({
+    body,
+    headers: response.headers,
+    status: response.status,
+  });
+}
+
+function deserialize(raw: string): Response {
+  const { body, headers, status } = JSON.parse(raw);
+  return new Response(body, { headers, status });
 }
 
 export function create(redis: RedisConnection | null, namespace: string) {
+  const generateKey = async (request: RequestInfo | URL): Promise<string> => {
+    const key = await withCacheNamespace(namespace)(request);
+    return SITE_NAME ? `${SITE_NAME}:${key}` : key;
+  };
+
   return {
     ...baseCache,
     delete: async (
@@ -70,8 +90,6 @@ export function create(redis: RedisConnection | null, namespace: string) {
       options?: CacheQueryOptions,
     ): Promise<boolean> => {
       assertNoOptions(options);
-
-      const generateKey = withCacheNamespace(namespace);
 
       const result = await generateKey(request)
         .then((cacheKey: string) =>
@@ -89,8 +107,6 @@ export function create(redis: RedisConnection | null, namespace: string) {
       options?: CacheQueryOptions,
     ): Promise<Response | undefined> => {
       assertNoOptions(options);
-
-      const generateKey = withCacheNamespace(namespace);
 
       const result = await generateKey(request)
         .then((cacheKey: string) =>
@@ -121,14 +137,12 @@ export function create(redis: RedisConnection | null, namespace: string) {
         return;
       }
 
-      const generateKey = withCacheNamespace(namespace);
       const cacheKey = await generateKey(request);
 
       serialize(response)
         .then((data) =>
           waitOrReject<string | null>(
-            () =>
-              redis?.set(cacheKey, data, { EX: TTL }) ?? Promise.resolve(null),
+            () => redis?.set(cacheKey, data, "EX", TTL) ?? Promise.resolve(null),
             COMMAND_TIMEOUT,
           )
         )
@@ -141,30 +155,12 @@ export const caches: CacheStorage = {
   open: async (namespace: string): Promise<Cache> => {
     let redis: null | RedisConnection = null;
 
-    function connect(): void {
-      if (!isAvailable) {
-        return;
-      }
-
-      redis ??= createClient({
-        url: Deno.env.get("LOADER_CACHE_REDIS_URL"),
-      });
-      // @ts-ignore redis types are not up to date
-      redis.on("error", () => {
-        if (redis?.isOpen) {
-          redis?.disconnect();
-        }
-
-        wait(RECONNECTION_TIMEOUT).then(() => redis?.connect());
-      });
-
-      redis.connect();
+    if (isAvailable) {
+      redis = createRedisClient();
+      redis.on("error", () => {});
     }
 
-    await Promise.race([
-      connect(),
-      wait(CONNECTION_TIMEOUT),
-    ]);
+    await wait(CONNECTION_TIMEOUT);
 
     return Promise.resolve(create(redis, namespace));
   },
