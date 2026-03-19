@@ -108,7 +108,7 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
             return;
           }
           fileCache.set(cacheKey, true, {
-            size: parseInt(length),
+            size: parseInt(length, 10),
             ttl,
           });
           return cacheInner.put(cacheKey, response);
