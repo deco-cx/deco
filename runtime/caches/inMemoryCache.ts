@@ -118,14 +118,18 @@ function createInMemoryCache(): CacheStorage {
           if (cl > CACHE_MAX_ENTRY_SIZE) return;
           const cacheKey = await requestURLSHA1(request);
 
-          // Admission filter: only promote to L1 after MEMORY_CACHE_MIN_HITS writes.
-          const hits = (admissionCounts.get(cacheKey) ?? 0) + 1;
-          if (hits < MEMORY_CACHE_MIN_HITS) {
-            admissionCounts.set(cacheKey, hits);
-            return;
+          // Skip admission gate for keys already in L1 — allow immediate refresh
+          // so background revalidation updates don't get silently dropped.
+          if (!store.has(cacheKey)) {
+            // Admission filter: only promote to L1 after MEMORY_CACHE_MIN_HITS writes.
+            const hits = (admissionCounts.get(cacheKey) ?? 0) + 1;
+            if (hits < MEMORY_CACHE_MIN_HITS) {
+              admissionCounts.set(cacheKey, hits);
+              return;
+            }
+            // Key has earned its place — remove from admission tracker.
+            admissionCounts.delete(cacheKey);
           }
-          // Key has earned its place — remove from admission tracker and store in RAM.
-          admissionCounts.delete(cacheKey);
 
           const body = new Uint8Array(await response.arrayBuffer());
           if (body.length > CACHE_MAX_ENTRY_SIZE) return;

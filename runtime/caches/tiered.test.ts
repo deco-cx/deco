@@ -20,10 +20,8 @@ function mapCacheStorage(map = new Map<string, Response>()): CacheStorage {
         addAll: NOT_IMPL,
         keys: NOT_IMPL,
         matchAll: NOT_IMPL,
-        delete: (r: RequestInfo | URL) =>
-          Promise.resolve(map.delete(url(r))),
-        match: (r: RequestInfo | URL) =>
-          Promise.resolve(map.get(url(r))),
+        delete: (r: RequestInfo | URL) => Promise.resolve(map.delete(url(r))),
+        match: (r: RequestInfo | URL) => Promise.resolve(map.get(url(r))),
         put: (r: RequestInfo | URL, res: Response) => {
           map.set(url(r), res);
           return Promise.resolve();
