@@ -158,6 +158,7 @@ export class AITask {
   #disposed = false;
   #prUrl: string | null = null;
   #loginUrl: string | null = null;
+  #stdoutBuffer = "";
   #issueCtx: IssueContext | null = null;
   #opts: AITaskOptions;
   #startSha: string | null = null;
@@ -397,16 +398,26 @@ export class AITask {
       // Claude Code prints something like:
       //   "To sign in, visit: https://claude.ai/oauth/authorize?..."
       // when started without an API key.
+      // We accumulate output in a buffer so that URLs split across PTY chunks
+      // are still matched reliably.
       this.#session.onData((data) => {
         if (this.#loginUrl) return; // already found
         // Strip ANSI escape sequences for reliable URL matching
-        const plain = data.replace(/\x1b\[[0-9;]*[mGKHF]/g, "");
-        const match = plain.match(
-          /https:\/\/claude\.ai\/oauth\/authorize[^\s\x1b]*/,
+        this.#stdoutBuffer += data.replace(/\x1b\[[0-9;]*[mGKHF]/g, "");
+        // Keep the buffer bounded — the URL appears early in the output and
+        // we only need enough context to span a split chunk boundary.
+        if (this.#stdoutBuffer.length > 4096) {
+          this.#stdoutBuffer = this.#stdoutBuffer.slice(-4096);
+        }
+        // Require the URL to be followed by whitespace or end-of-buffer so we
+        // don't capture a partial URL when it is split across chunks.
+        const match = this.#stdoutBuffer.match(
+          /https:\/\/claude\.ai\/oauth\/authorize\S*(?=\s|$)/,
         );
         if (match) {
           this.#loginUrl = match[0].trim().replace(/[)\]'"]+$/, "");
           console.log(`[ai] Task ${this.taskId}: captured login URL`);
+          this.#stdoutBuffer = ""; // release memory
         }
       });
 
