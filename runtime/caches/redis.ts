@@ -7,7 +7,9 @@ import {
 } from "./utils.ts";
 import { Redis } from "npm:ioredis@^5.10.1";
 
-const CONNECTION_TIMEOUT = 500;
+const CONNECTION_TIMEOUT = parseInt(
+  Deno.env.get("LOADER_CACHE_REDIS_CONNECTION_TIMEOUT_MS") || "2000",
+);
 const COMMAND_TIMEOUT = 500;
 const TTL = parseInt(Deno.env.get("LOADER_CACHE_REDIS_TTL_SECONDS") || "180"); // 3 minutes
 const SITE_NAME = Deno.env.get("DECO_SITE_NAME") ?? "";
@@ -168,6 +170,11 @@ export const caches: CacheStorage = {
         console.error("[redis-cache] connection error:", err?.message ?? err);
       });
       await wait(CONNECTION_TIMEOUT);
+      if (redis.status !== "ready") {
+        console.warn(
+          `[redis-cache] connection not ready after ${CONNECTION_TIMEOUT}ms (status: ${redis.status}). Commands will be dropped until connected.`,
+        );
+      }
     }
 
     return Promise.resolve(create(redis, namespace));
