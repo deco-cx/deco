@@ -1,4 +1,4 @@
-import { type Exception, ValueType } from "../../deps.ts";
+import { context, type Exception, ValueType } from "../../deps.ts";
 import { tracer } from "../../observability/otel/config.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { inFuture } from "./utils.ts";
@@ -39,7 +39,7 @@ export const withInstrumentation = (
         match: async (req, opts) => {
           const span = tracer.startSpan("cache-match", {
             attributes: { engine },
-          });
+          }, context.active());
           try {
             const isMatch = await cacheImpl.match(req, opts);
             //there is an edge case where there is no expires header, but technically our loader always sets it

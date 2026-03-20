@@ -59,7 +59,7 @@ export type {
 export * as weakcache from "npm:weak-lru-cache@1.0.0";
 export type Handler = Deno.ServeHandler;
 
-export { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-proto@0.52.1";
+export { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-http@0.52.1";
 export { Resource } from "npm:@opentelemetry/resources@1.25.1";
 export {
   BatchSpanProcessor,
@@ -69,8 +69,11 @@ export {
 } from "npm:@opentelemetry/sdk-trace-base@1.25.1";
 
 export type {
+  ReadableSpan,
   Sampler,
   SamplingResult,
+  SpanExporter,
+  SpanProcessor,
 } from "npm:@opentelemetry/sdk-trace-base@1.25.1";
 export { NodeTracerProvider } from "npm:@opentelemetry/sdk-trace-node@1.25.1";
 export {

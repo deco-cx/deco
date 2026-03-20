@@ -5,13 +5,12 @@ import {
   PeriodicExportingMetricReader,
   View,
 } from "../../deps.ts";
-import { OTEL_IS_ENABLED, resource } from "./config.ts";
+import { OTEL_IS_ENABLED, resource } from "./resource.ts";
 
 export const OTEL_ENABLE_EXTRA_METRICS: boolean = Deno.env.has(
   "OTEL_ENABLE_EXTRA_METRICS",
 );
 
-// 2 minutes. We don't need frequent updates here.
 export const OTEL_EXPORT_INTERVAL: number = parseInt(
   Deno.env.get("OTEL_EXPORT_INTERVAL") ?? "60000",
   10,
@@ -33,7 +32,7 @@ const msBoundaries = [10, 100, 500, 1000, 5000, 10000, 15000];
 const sBoundaries = [1, 5, 10, 50];
 
 type IMeter = ReturnType<MeterProvider["getMeter"]>;
-const meterProvider: MeterProvider = new MeterProvider({
+export const meterProvider: MeterProvider = new MeterProvider({
   resource,
   views: [
     new View({
@@ -60,6 +59,10 @@ if (OTEL_IS_ENABLED) {
       exportIntervalMillis: OTEL_EXPORT_INTERVAL,
     }),
   );
+
+  addEventListener("unload", () => {
+    meterProvider.shutdown().catch(() => {});
+  });
 }
 
 export const meter: IMeter = meterProvider.getMeter("deco");

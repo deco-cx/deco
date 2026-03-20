@@ -10,10 +10,7 @@ import { HttpError } from "../engine/errors.ts";
 import type { ResolverMiddlewareContext } from "../engine/middleware.ts";
 import type { State } from "../mod.ts";
 import { logger } from "../observability/otel/config.ts";
-import {
-  meter,
-  OTEL_ENABLE_EXTRA_METRICS,
-} from "../observability/otel/metrics.ts";
+import { meter } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
 import { inFuture } from "../runtime/caches/utils.ts";
 import type { DebugProperties } from "../utils/vary.ts";
@@ -184,6 +181,7 @@ const wrapLoader = (
   }: LoaderModule,
   resolveChain: FieldResolver[],
   release: DecofileProvider,
+  loaderKey?: string,
 ) => {
   const [cacheMaxAge, mode] = typeof cache === "string"
     ? [MAX_AGE_S, cache]
@@ -204,7 +202,9 @@ const wrapLoader = (
       req: Request,
       ctx: FnContext<State, any>,
     ): Promise<ReturnType<typeof handler>> => {
-      const loader = ctx.resolverId || "unknown";
+      const loader = (ctx.resolverId && ctx.resolverId !== "obj")
+        ? ctx.resolverId
+        : (loaderKey ?? ctx.resolverId ?? "unknown");
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
 
@@ -267,8 +267,9 @@ const wrapLoader = (
           (await release?.revision() ?? undefined);
 
         if (!revisionID) {
-          logger.warn(`Could not get K_REVISION`);
           timing?.end();
+          status = "bypass";
+          stats.cache.add(1, { status, loader });
           return await handler(props, req, ctx);
         }
 
@@ -339,9 +340,7 @@ const wrapLoader = (
         return await flights.do(request.url, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
-        if (OTEL_ENABLE_EXTRA_METRICS) {
-          stats.latency.record(performance.now() - start, dimension);
-        }
+        stats.latency.record(performance.now() - start, dimension);
         ctx.monitoring?.currentSpan?.setDesc(status);
       }
     },
@@ -356,7 +355,7 @@ const loaderBlock: Block<LoaderModule> = {
     wrapCaughtErrors,
     (props: TProps, ctx: HttpContext<{ global: any } & RequestState>) =>
       applyProps(
-        wrapLoader(mod, ctx.resolveChain, ctx.context.state.release),
+        wrapLoader(mod, ctx.resolveChain, ctx.context.state.release, key),
       )(
         props,
         ctx,

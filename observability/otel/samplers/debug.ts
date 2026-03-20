@@ -23,8 +23,14 @@ export class DebugSampler implements Sampler {
     const req = context.getValue(REQUEST_CONTEXT_KEY) as Request;
     const state = context.getValue(STATE_CONTEXT_KEY) as DecoState;
 
+    // Only force sampling when explicitly requested:
+    // 1. via x-trace-debug-id header (programmatic debug)
+    // 2. via ?__d= query param or debug cookie (debugEnabled = true)
+    // Normal requests always have a correlationId (UUID) — do NOT use it here,
+    // otherwise every request would be forced to RECORD_AND_SAMPLED,
+    // nullifying the defaultRatio in URLBasedSampler.
     const correlationId = req?.headers?.get?.("x-trace-debug-id") ??
-      state?.correlationId;
+      (state?.debugEnabled ? state?.correlationId : undefined);
     if (correlationId) {
       return {
         decision: SamplingDecision.RECORD_AND_SAMPLED,

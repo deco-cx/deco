@@ -1,69 +1,54 @@
-/**
- * Heavily inspired from unlicensed code: https://github.com/cloudydeno/deno-observability/blob/main/instrumentation/deno-runtime.ts
- */
 import {
   type Attributes,
-  InstrumentationBase,
-  type InstrumentationConfig,
-  type ObservableCounter,
   type ObservableGauge,
   type ObservableResult,
   type ObservableUpDownCounter,
   ValueType,
 } from "../../../deps.ts";
+import { meter } from "../metrics.ts";
 
-export class DenoRuntimeInstrumentation extends InstrumentationBase {
-  readonly component: string = "deno-runtime";
-  moduleName = this.component;
+const memoryUsage: ObservableGauge<Attributes> = meter
+  .createObservableGauge("deno.memory_usage", {
+    unit: "By",
+    valueType: ValueType.DOUBLE,
+    description: "Deno process memory usage in bytes.",
+  });
 
-  constructor(_config?: InstrumentationConfig) {
-    super("deno-runtime", "0.1.0", { enabled: false });
+const openResources: ObservableUpDownCounter<Attributes> = meter
+  .createObservableUpDownCounter("deno.open_resources", {
+    valueType: ValueType.DOUBLE,
+    description: "Number of open resources of a particular type.",
+  });
+
+const gatherMemoryUsage = (x: ObservableResult<Attributes>) => {
+  const usage = Deno.memoryUsage();
+  x.observe(usage.rss, { "deno.memory.type": "rss" });
+  x.observe(usage.heapTotal, { "deno.memory.type": "heap_total" });
+  x.observe(usage.heapUsed, { "deno.memory.type": "heap_used" });
+  x.observe(usage.external, { "deno.memory.type": "external" });
+};
+
+const gatherOpenResources = (x: ObservableResult<Attributes>) => {
+  try {
+    // deno-lint-ignore no-explicit-any
+    const resources = (Deno as any).resources?.() as
+      | Record<string, string>
+      | undefined;
+    if (!resources) return;
+    const counts: Record<string, number> = {};
+    for (const type of Object.values(resources)) {
+      counts[type] = (counts[type] ?? 0) + 1;
+    }
+    for (const [type, count] of Object.entries(counts)) {
+      x.observe(count, { "deno.resource.type": type });
+    }
+  } catch {
+    // Deno.resources() may not be available in all environments
   }
+};
 
-  metrics!: {
-    openResources: ObservableUpDownCounter<Attributes>;
-    memoryUsage: ObservableGauge<Attributes>;
-    dispatchedCtr: ObservableCounter<Attributes>;
-    inflightCtr: ObservableUpDownCounter<Attributes>;
-  };
+memoryUsage.addCallback(gatherMemoryUsage);
+openResources.addCallback(gatherOpenResources);
 
-  protected init() {}
-
-  private gatherMemoryUsage = (x: ObservableResult<Attributes>) => {
-    const usage = Deno.memoryUsage();
-    x.observe(usage.rss, { "deno.memory.type": "rss" });
-    x.observe(usage.heapTotal, { "deno.memory.type": "heap_total" });
-    x.observe(usage.heapUsed, { "deno.memory.type": "heap_used" });
-    x.observe(usage.external, { "deno.memory.type": "external" });
-  };
-
-  override enable() {
-    this.metrics ??= {
-      openResources: this.meter
-        .createObservableUpDownCounter("deno.open_resources", {
-          valueType: ValueType.DOUBLE,
-          description: "Number of open resources of a particular type.",
-        }),
-      memoryUsage: this.meter
-        .createObservableGauge("deno.memory_usage", {
-          valueType: ValueType.DOUBLE,
-        }),
-      dispatchedCtr: this.meter
-        .createObservableCounter("deno.ops_dispatched", {
-          valueType: ValueType.DOUBLE,
-          description: "Total number of Deno op invocations.",
-        }),
-      inflightCtr: this.meter
-        .createObservableUpDownCounter("deno.ops_inflight", {
-          valueType: ValueType.DOUBLE,
-          description: "Number of currently-inflight Deno ops.",
-        }),
-    };
-
-    this.metrics.memoryUsage.addCallback(this.gatherMemoryUsage);
-  }
-
-  override disable() {
-    this.metrics.memoryUsage.removeCallback(this.gatherMemoryUsage);
-  }
-}
+// Kept for backward compatibility — no longer needed but exported to avoid import errors
+export class DenoRuntimeInstrumentation {}

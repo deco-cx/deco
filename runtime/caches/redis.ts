@@ -1,3 +1,6 @@
+import { logger } from "../../observability/otel/config.ts";
+import { ValueType } from "../../deps.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -6,6 +9,29 @@ import {
   withCacheNamespace,
 } from "./utils.ts";
 import { Redis } from "npm:ioredis@^5.10.1";
+
+const redisErrors = meter.createCounter("redis.errors_total", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Number of Redis connection or command errors.",
+});
+
+const redisReconnections = meter.createCounter("redis.reconnections_total", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Number of Redis reconnection attempts.",
+});
+
+const redisConnected = meter.createObservableGauge("redis.connected", {
+  valueType: ValueType.DOUBLE,
+  description: "Number of Redis clients currently connected.",
+});
+
+const connectedClientSet = new Set<RedisConnection>();
+// deno-lint-ignore no-explicit-any
+redisConnected.addCallback((result: any) => {
+  result.observe(connectedClientSet.size);
+});
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -105,7 +131,11 @@ export function create(redis: RedisConnection | null, namespace: string) {
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => 0);
+        .catch((err) => {
+          logger.warn(`redis cache delete error: ${err}`);
+          redisErrors.add(1);
+          return 0;
+        });
 
       return result > 0;
     },
@@ -129,7 +159,11 @@ export function create(redis: RedisConnection | null, namespace: string) {
 
           return deserialize(result);
         })
-        .catch(() => undefined);
+        .catch((err) => {
+          logger.warn(`redis cache match error: ${err}`);
+          redisErrors.add(1);
+          return undefined;
+        });
 
       return result;
     },
@@ -153,7 +187,10 @@ export function create(redis: RedisConnection | null, namespace: string) {
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => {});
+        .catch((err) => {
+          logger.warn(`redis cache put error: ${err}`);
+          redisErrors.add(1);
+        });
     },
   };
 }
@@ -164,7 +201,17 @@ export const caches: CacheStorage = {
 
     if (isAvailable) {
       redis = createRedisClient();
-      redis.on("error", () => {});
+      redis.on("error", () => {
+        connectedClientSet.delete(redis!);
+        redisErrors.add(1);
+      });
+      redis.on("connect", () => {
+        connectedClientSet.add(redis!);
+      });
+      redis.on("reconnecting", () => {
+        connectedClientSet.delete(redis!);
+        redisReconnections.add(1);
+      });
       await wait(CONNECTION_TIMEOUT);
     }
 

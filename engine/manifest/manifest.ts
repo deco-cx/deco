@@ -1,5 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { parse } from "@std/flags";
+import { ValueType } from "../../deps.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import { gray, green, red } from "@std/fmt/colors";
 import {
   type AppManifest,
@@ -284,8 +286,15 @@ export const fulfillContext = async <
   ctx.site = currentSite!;
   const provider = release ?? await getProvider();
   const runtimePromise = deferred<DecoRuntimeState<T>>();
+  const startedAt = ctx.instance.startedAt;
   ctx.runtime = runtimePromise.finally(() => {
-    ctx.instance.readyAt = new Date();
+    const readyAt = new Date();
+    ctx.instance.readyAt = readyAt;
+    meter.createHistogram("instance_startup_duration_ms", {
+      description: "Time from instance start to first request readiness.",
+      unit: "ms",
+      valueType: ValueType.DOUBLE,
+    }).record(readyAt.getTime() - startedAt.getTime());
   });
 
   ctx.release = provider;
