@@ -16,6 +16,11 @@ const ALWAYS_DROP_NAMES = new Set([
   "htmx/sections/htmx.tsx",
 ]);
 
+// Drop internal loopback fetch spans (FetchInstrumentation for /deco/render calls).
+// These are server-to-self requests that create high-cardinality span names.
+const isLoopbackFetch = (name: string): boolean =>
+  /^(GET|POST|PUT|DELETE|PATCH)\s+https?:\/\/(127\.0\.0\.1|localhost)/.test(name);
+
 const isRoot = (span: ReadableSpan): boolean => !span.parentSpanId;
 const hasError = (span: ReadableSpan): boolean =>
   span.status.code === SpanStatusCode.ERROR;
@@ -72,8 +77,9 @@ export class FilteringSpanProcessor implements SpanProcessor {
     // Always keep error spans — critical signal regardless of anything else
     if (hasError(span)) return true;
 
-    // Root spans: apply rate limiting for normal traffic
+    // Root spans: drop known noise even if appearing as root (context propagation issues)
     if (isRoot(span)) {
+      if (ALWAYS_DROP_NAMES.has(span.name) || isLoopbackFetch(span.name)) return false;
       if (isFinite(this.maxExportPerSecond) && !this.consumeToken()) {
         return false;
       }

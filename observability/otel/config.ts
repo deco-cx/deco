@@ -112,6 +112,7 @@ const provider = new NodeTracerProvider({
 // Skip provider.register() when Deno's native OTel is active.
 const DENO_OTEL_ACTIVE = Deno.env.get("OTEL_DENO") === "true";
 
+
 if (OTEL_IS_ENABLED && !DENO_OTEL_ACTIVE) {
   const traceExporter = new OTLPTraceExporter();
   provider.addSpanProcessor(
@@ -129,9 +130,12 @@ if (OTEL_IS_ENABLED && !DENO_OTEL_ACTIVE) {
   });
 }
 
-export const tracer = opentelemetry.trace.getTracer(
-  "deco-tracer",
-);
+// Use provider.getTracer directly (not via global API) to ensure spans
+// always go through our FilteringSpanProcessor, even if another TracerProvider
+// overrides the global after our provider.register() call.
+export const tracer = OTEL_IS_ENABLED && !DENO_OTEL_ACTIVE
+  ? provider.getTracer("deco-tracer")
+  : opentelemetry.trace.getTracer("deco-tracer");
 
 export const tracerIsRecording = () =>
   opentelemetry.trace.getActiveSpan()?.isRecording() ?? false;
