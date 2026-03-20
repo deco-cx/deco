@@ -1,10 +1,18 @@
 import { LRUCache } from "npm:lru-cache@10.2.0";
+import { ValueType } from "../../deps.ts";
+import { logger } from "../../observability/otel/config.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
   baseCache,
   createBaseCacheStorage,
 } from "./utils.ts";
+
+const lruEvictionCounter = meter.createCounter("lru_cache_eviction", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+});
 
 // keep compatible with old variable name
 const CACHE_MAX_SIZE = parseInt(
@@ -18,10 +26,11 @@ const CACHE_TTL_AUTOPURGE = Deno.env.get("CACHE_TTL_AUTOPURGE") === "true"; // c
 const CACHE_TTL_RESOLUTION = parseInt(
   Deno.env.get("CACHE_TTL_RESOLUTION") ?? "1000",
 ); // updates the lru cache timer every 1 second
-// Additional time-to-live increment in milliseconds to extend the cache expiration beyond the response's Expires header.
-// If not set, the cache will use only the expiration timestamp from response headers
+// How long stale content remains serveable (and stays on disk) beyond its expires header.
+// Default: 1 hour — long enough for low-traffic sites to keep serving cached content across
+// quiet periods while background revalidation catches up.
 const STALE_TTL_PERIOD = parseInt(
-  Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
+  Deno.env.get("STALE_TTL_PERIOD") ?? "3600000", // 1h
 );
 
 const cacheOptions = (cache: Cache) => (
@@ -30,18 +39,65 @@ const cacheOptions = (cache: Cache) => (
     maxSize: CACHE_MAX_SIZE,
     ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
-    dispose: async (_value: boolean, key: string) => {
+    dispose: async (_value: boolean, key: string, reason: string) => {
+      lruEvictionCounter.add(1, { reason });
       await cache.delete(key);
     },
   }
 );
 
+const lruSizeGauge = meter.createObservableGauge("lru_cache_keys", {
+  description: "number of keys in the LRU cache",
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+});
+
+const lruBytesGauge = meter.createObservableGauge("lru_cache_bytes", {
+  description: "total bytes tracked by the LRU cache",
+  unit: "bytes",
+  valueType: ValueType.DOUBLE,
+});
+
+// deno-lint-ignore no-explicit-any
+const activeCaches = new Map<string, LRUCache<string, any>>();
+
+lruSizeGauge.addCallback((observer) => {
+  for (const [name, lru] of activeCaches) {
+    observer.observe(lru.size, { cache: name });
+  }
+});
+
+// Warn when LRU disk usage exceeds this fraction of CACHE_MAX_SIZE.
+// At this point the LRU is evicting aggressively and disk is nearly full.
+const LRU_DISK_WARN_RATIO = parseFloat(
+  Deno.env.get("LRU_DISK_WARN_RATIO") ?? "0.9",
+);
+
+lruBytesGauge.addCallback((observer) => {
+  for (const [name, lru] of activeCaches) {
+    observer.observe(lru.calculatedSize, { cache: name });
+    const ratio = lru.calculatedSize / CACHE_MAX_SIZE;
+    if (ratio >= LRU_DISK_WARN_RATIO) {
+      logger.warn(
+        `lru_cache: disk usage for cache "${name}" is at ` +
+          `${Math.round(lru.calculatedSize / 1024 / 1024)}MB / ` +
+          `${Math.round(CACHE_MAX_SIZE / 1024 / 1024)}MB (${Math.round(ratio * 100)}%). ` +
+          `LRU is evicting aggressively. Consider increasing CACHE_MAX_SIZE or reducing CACHE_MAX_AGE_S.`,
+      );
+    }
+  }
+});
+
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
+  const openedCachesByName = new Map<string, Promise<Cache>>();
   const caches = createBaseCacheStorage(
     cacheStorageInner,
     (_cacheName, cacheInner, requestURLSHA1) => {
+      const existing = openedCachesByName.get(_cacheName);
+      if (existing) return existing;
       const fileCache = new LRUCache(cacheOptions(cacheInner));
-      return Promise.resolve({
+      activeCaches.set(_cacheName, fileCache);
+      const cache = Promise.resolve({
         ...baseCache,
         delete: async (
           request: RequestInfo | URL,
@@ -58,9 +114,27 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           assertNoOptions(options);
           const cacheKey = await requestURLSHA1(request);
           if (fileCache.has(cacheKey)) {
-            const result = cacheInner.match(cacheKey);
-            return result;
+            return cacheInner.match(cacheKey);
           }
+          // Lazy re-index: on a cold LRU (e.g. after pod restart), check if the file
+          // exists on disk. If still valid, re-index into the LRU so eviction is managed
+          // normally from this point on. If expired, delete the orphaned file and miss.
+          // TODO: add a background sweep at startup that deletes expired orphaned files
+          // that are never re-accessed — they accumulate on disk across restarts and are
+          // never evicted without this sweep.
+          const response = await cacheInner.match(cacheKey);
+          if (!response) return undefined;
+          const expires = response.headers.get("expires");
+          const length = response.headers.get("content-length");
+          if (expires && length) {
+            const ttl = Date.parse(expires) - Date.now() + STALE_TTL_PERIOD;
+            if (ttl > 0) {
+              fileCache.set(cacheKey, true, { size: parseInt(length), ttl });
+              return response;
+            }
+          }
+          // Expired or missing metadata — delete the orphaned file and treat as a miss.
+          cacheInner.delete(cacheKey).catch(() => {});
           return undefined;
         },
         put: async (
@@ -96,6 +170,8 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           return cacheInner.put(cacheKey, response);
         },
       });
+      openedCachesByName.set(_cacheName, cache);
+      return cache;
     },
   );
   return caches;

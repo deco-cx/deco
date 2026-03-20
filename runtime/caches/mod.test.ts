@@ -137,3 +137,113 @@ Deno.test({
 });
 
 // TODO TESTAR O CENARIO ONDE O RESPONSE N TEM LENGTH
+
+// --- Lazy re-index tests ---
+// Simulates a pod restart: new LRU instance wrapping the same underlying storage.
+// Valid disk entries should be re-indexed; truly expired ones should be evicted.
+
+const STALE_TTL_PERIOD_MS = parseInt(
+  Deno.env.get("STALE_TTL_PERIOD") ?? "3600000",
+);
+
+function reindexResponse(expiresOffset: number, body = "cached"): Response {
+  const encoded = new TextEncoder().encode(body);
+  return new Response(encoded, {
+    headers: {
+      expires: new Date(Date.now() + expiresOffset).toUTCString(),
+      "content-length": String(encoded.length),
+      "content-type": "application/json",
+    },
+  });
+}
+
+Deno.test({
+  name: "lru_cache_lazy_reindex: valid entry is served after LRU restart",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async () => {
+  const sharedMap = new Map();
+  const sharedStorage = testCacheStorage(sharedMap);
+  const req = new Request("https://example.com/reindex-valid");
+
+  // Populate via first LRU instance (simulates writes from previous pod)
+  const lru1 = lruCache(sharedStorage);
+  const cache1 = await lru1.open(CACHE_NAME);
+  await cache1.put(req, reindexResponse(60_000)); // expires in 60s
+
+  // Simulate restart: new LRU, same underlying storage, cold index
+  const lru2 = lruCache(sharedStorage);
+  const cache2 = await lru2.open(CACHE_NAME);
+
+  const result = await cache2.match(req);
+  assertNotEquals(result, undefined, "should serve from disk on cold LRU");
+});
+
+Deno.test({
+  name: "lru_cache_lazy_reindex: truly expired entry is evicted on access",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async () => {
+  const sharedMap = new Map();
+  const sharedStorage = testCacheStorage(sharedMap);
+  const req = new Request("https://example.com/reindex-expired");
+
+  // Pre-populate inner storage directly with a response that is so old
+  // that even STALE_TTL_PERIOD cannot save it (expires > 30s ago).
+  const lru1 = lruCache(sharedStorage);
+  const cache1 = await lru1.open(CACHE_NAME);
+  // Write a response that expires well beyond STALE_TTL_PERIOD in the past
+  await cache1.put(req, reindexResponse(-(STALE_TTL_PERIOD_MS + 60_000)));
+
+  // Simulate restart
+  const lru2 = lruCache(sharedStorage);
+  const cache2 = await lru2.open(CACHE_NAME);
+
+  const result = await cache2.match(req);
+  assertEquals(result, undefined, "expired entry should not be served");
+});
+
+Deno.test({
+  name: "lru_cache_lazy_reindex: entry missing from disk is a miss",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async () => {
+  const sharedStorage = testCacheStorage(new Map());
+  const req = new Request("https://example.com/reindex-missing");
+
+  const lru = lruCache(sharedStorage);
+  const cache = await lru.open(CACHE_NAME);
+
+  assertEquals(await cache.match(req), undefined);
+});
+
+Deno.test({
+  name: "lru_cache_lazy_reindex: re-indexed entry stays accessible on subsequent accesses",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async () => {
+  // The LRU stores only presence (true), responses always come from inner.
+  // What matters: after re-index the key is registered in the LRU and
+  // subsequent accesses keep working without going through the cold path.
+  const sharedMap = new Map();
+  const req = new Request("https://example.com/reindex-cached");
+
+  // Populate via first instance (simulates previous pod)
+  const lru1 = lruCache(testCacheStorage(sharedMap));
+  await (await lru1.open(CACHE_NAME)).put(req, reindexResponse(60_000));
+
+  // Simulate restart: new LRU, same underlying storage
+  const lru2 = lruCache(testCacheStorage(sharedMap));
+  const cache2 = await lru2.open(CACHE_NAME);
+
+  assertNotEquals(
+    await cache2.match(req),
+    undefined,
+    "first access: re-indexed from inner storage",
+  );
+  assertNotEquals(
+    await cache2.match(req),
+    undefined,
+    "second access: served via warm LRU path",
+  );
+});
