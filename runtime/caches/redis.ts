@@ -24,13 +24,13 @@ const redisReconnections = meter.createCounter("redis.reconnections_total", {
 
 const redisConnected = meter.createObservableGauge("redis.connected", {
   valueType: ValueType.DOUBLE,
-  description: "1 when Redis is connected, 0 otherwise.",
+  description: "Number of Redis clients currently connected.",
 });
 
-let redisConnectionState = 0;
+const connectedClientSet = new Set<RedisConnection>();
 // deno-lint-ignore no-explicit-any
 redisConnected.addCallback((result: any) => {
-  result.observe(redisConnectionState);
+  result.observe(connectedClientSet.size);
 });
 
 const CONNECTION_TIMEOUT = 500;
@@ -202,14 +202,14 @@ export const caches: CacheStorage = {
     if (isAvailable) {
       redis = createRedisClient();
       redis.on("error", () => {
-        redisConnectionState = 0;
+        connectedClientSet.delete(redis!);
         redisErrors.add(1);
       });
       redis.on("connect", () => {
-        redisConnectionState = 1;
+        connectedClientSet.add(redis!);
       });
       redis.on("reconnecting", () => {
-        redisConnectionState = 0;
+        connectedClientSet.delete(redis!);
         redisReconnections.add(1);
       });
       await wait(CONNECTION_TIMEOUT);

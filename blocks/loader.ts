@@ -268,6 +268,8 @@ const wrapLoader = (
 
         if (!revisionID) {
           timing?.end();
+          status = "bypass";
+          stats.cache.add(1, { status, loader });
           return await handler(props, req, ctx);
         }
 

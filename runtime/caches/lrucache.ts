@@ -47,7 +47,8 @@ const lruItemsGauge = meter.createObservableGauge("lru.item_count", {
 
 const lruFillRatioGauge = meter.createObservableGauge("lru.fill_ratio", {
   valueType: ValueType.DOUBLE,
-  description: "LRU cache fill ratio (0-1). Above 0.9 eviction pressure is high.",
+  description:
+    "LRU cache fill ratio (0-1). Above 0.9 eviction pressure is high.",
 });
 
 const lruHits = meter.createCounter("lru.hits_total", {
@@ -97,7 +98,10 @@ const cacheOptions = (cache: Cache, cacheName: string) => (
         lruEvictions.add(1, { cache: cacheName });
       }
       cache.delete(key).catch((err) => {
-        logger.warn(`lru dispose failed to delete key from backing cache: ${err}`, { cache: cacheName });
+        logger.warn(
+          `lru dispose failed to delete key from backing cache: ${err}`,
+          { cache: cacheName },
+        );
       });
     },
   }
