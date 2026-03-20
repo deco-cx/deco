@@ -1,3 +1,4 @@
+import { logger } from "../../observability/otel/config.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -105,7 +106,10 @@ export function create(redis: RedisConnection | null, namespace: string) {
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => 0);
+        .catch((err) => {
+          logger.warn(`redis cache delete error: ${err}`);
+          return 0;
+        });
 
       return result > 0;
     },
@@ -129,7 +133,10 @@ export function create(redis: RedisConnection | null, namespace: string) {
 
           return deserialize(result);
         })
-        .catch(() => undefined);
+        .catch((err) => {
+          logger.warn(`redis cache match error: ${err}`);
+          return undefined;
+        });
 
       return result;
     },
@@ -153,7 +160,9 @@ export function create(redis: RedisConnection | null, namespace: string) {
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => {});
+        .catch((err) => {
+          logger.warn(`redis cache put error: ${err}`);
+        });
     },
   };
 }

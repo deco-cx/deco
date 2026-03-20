@@ -1,4 +1,7 @@
 import { LRUCache } from "npm:lru-cache@10.2.0";
+import { type ObservableResult, ValueType } from "../../deps.ts";
+import { logger } from "../../observability/otel/config.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -24,14 +27,76 @@ const STALE_TTL_PERIOD = parseInt(
   Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
 );
 
-const cacheOptions = (cache: Cache) => (
+const lruEvictions = meter.createCounter("lru.evictions_total", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Number of LRU cache evictions.",
+});
+
+const lruSizeGauge = meter.createObservableGauge("lru.size_bytes", {
+  unit: "By",
+  valueType: ValueType.DOUBLE,
+  description: "Current LRU cache size in bytes.",
+});
+
+const lruItemsGauge = meter.createObservableGauge("lru.item_count", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Current number of items in the LRU cache.",
+});
+
+const lruFillRatioGauge = meter.createObservableGauge("lru.fill_ratio", {
+  valueType: ValueType.DOUBLE,
+  description: "LRU cache fill ratio (0-1). Above 0.9 eviction pressure is high.",
+});
+
+const lruHits = meter.createCounter("lru.hits_total", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Number of LRU cache hits.",
+});
+
+const lruMisses = meter.createCounter("lru.misses_total", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Number of LRU cache misses.",
+});
+
+// Track active LRU instances per cache name for observable gauges
+const lruInstances = new Map<string, LRUCache<string, boolean>>();
+
+lruSizeGauge.addCallback((result: ObservableResult) => {
+  for (const [cacheName, cache] of lruInstances) {
+    result.observe(cache.calculatedSize ?? 0, { cache: cacheName });
+  }
+});
+
+lruItemsGauge.addCallback((result: ObservableResult) => {
+  for (const [cacheName, cache] of lruInstances) {
+    result.observe(cache.size, { cache: cacheName });
+  }
+});
+
+lruFillRatioGauge.addCallback((result: ObservableResult) => {
+  for (const [cacheName, cache] of lruInstances) {
+    const ratio = CACHE_MAX_SIZE > 0
+      ? (cache.calculatedSize ?? 0) / CACHE_MAX_SIZE
+      : 0;
+    result.observe(ratio, { cache: cacheName });
+  }
+});
+
+const cacheOptions = (cache: Cache, cacheName: string) => (
   {
     max: CACHE_MAX_ITEMS,
     maxSize: CACHE_MAX_SIZE,
     ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
-    dispose: async (_value: boolean, key: string) => {
-      await cache.delete(key);
+    dispose: (_value: boolean, key: string) => {
+      lruEvictions.add(1, { cache: cacheName });
+      cache.delete(key).catch((err) => {
+        logger.warn(`lru dispose failed to delete key from backing cache: ${err}`, { cache: cacheName });
+      });
     },
   }
 );
@@ -39,8 +104,9 @@ const cacheOptions = (cache: Cache) => (
 function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
   const caches = createBaseCacheStorage(
     cacheStorageInner,
-    (_cacheName, cacheInner, requestURLSHA1) => {
-      const fileCache = new LRUCache(cacheOptions(cacheInner));
+    (cacheName, cacheInner, requestURLSHA1) => {
+      const fileCache = new LRUCache(cacheOptions(cacheInner, cacheName));
+      lruInstances.set(cacheName, fileCache);
       return Promise.resolve({
         ...baseCache,
         delete: async (
@@ -58,9 +124,11 @@ function createLruCacheStorage(cacheStorageInner: CacheStorage): CacheStorage {
           assertNoOptions(options);
           const cacheKey = await requestURLSHA1(request);
           if (fileCache.has(cacheKey)) {
+            lruHits.add(1, { cache: cacheName });
             const result = cacheInner.match(cacheKey);
             return result;
           }
+          lruMisses.add(1, { cache: cacheName });
           return undefined;
         },
         put: async (
