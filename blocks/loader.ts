@@ -146,6 +146,16 @@ const stats = {
     unit: "ms",
     valueType: ValueType.DOUBLE,
   }),
+  cacheEntrySize: meter.createHistogram("loader_cache_entry_size", {
+    description: "size of cached loader responses in bytes",
+    unit: "bytes",
+    valueType: ValueType.DOUBLE,
+  }),
+  bgRevalidation: meter.createHistogram("loader_bg_revalidation", {
+    description: "duration of background stale-while-revalidate calls",
+    unit: "ms",
+    valueType: ValueType.DOUBLE,
+  }),
 };
 
 let maybeCache: Cache | undefined;
@@ -155,6 +165,9 @@ caches?.open("loader")
   .catch(() => maybeCache = undefined);
 
 const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
+const CACHE_MAX_ENTRY_SIZE = parseInt(
+  Deno.env.get("CACHE_MAX_ENTRY_SIZE") ?? "2097152", // 2 MB
+) || 2097152;
 
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
@@ -248,7 +261,14 @@ const wrapLoader = (
           !shouldNotCache && ctx.vary?.push(cacheKeyValue);
 
           status = "bypass";
-          stats.cache.add(1, { status, loader });
+          const bypassReason = isCacheNoStore
+            ? "no-store"
+            : isCacheNoCache
+            ? "no-cache"
+            : isCacheKeyNull
+            ? "null-key"
+            : "disabled";
+          stats.cache.add(1, { status, loader, reason: bypassReason });
 
           RequestContext?.signal?.throwIfAborted();
           return await handler(props, req, ctx);
@@ -286,6 +306,19 @@ const wrapLoader = (
 
           // Serialize and encode once on the main thread.
           const jsonStringEncoded = textEncoder.encode(JSON.stringify(json));
+
+          // Skip caching oversized entries to protect disk and memory.
+          // Also evict any existing stale entry so it doesn't stay pinned forever.
+          if (jsonStringEncoded.length > CACHE_MAX_ENTRY_SIZE) {
+            cache.delete(request).catch((error) =>
+              logger.error(`loader error ${error}`)
+            );
+            return json;
+          }
+
+          if (OTEL_ENABLE_EXTRA_METRICS) {
+            stats.cacheEntrySize.record(jsonStringEncoded.length, { loader });
+          }
 
           const expires = new Date(Date.now() + (cacheMaxAge * 1e3))
             .toUTCString();
@@ -326,13 +359,44 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            bgFlights.do(request.url, callHandlerAndCache)
-              .catch((error) => logger.error(`loader error ${error}`));
+            // Timer lives inside the singleFlight fn so it records exactly once
+            // per revalidation, not once per concurrent waiter on the same key.
+            bgFlights.do(request.url, async () => {
+              const bgStart = performance.now();
+              try {
+                return await callHandlerAndCache();
+              } finally {
+                if (OTEL_ENABLE_EXTRA_METRICS) {
+                  stats.bgRevalidation.record(
+                    performance.now() - bgStart,
+                    { loader },
+                  );
+                }
+              }
+            }).catch((error) => logger.error(`loader error ${error}`));
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
           }
 
+          if (OTEL_ENABLE_EXTRA_METRICS) {
+            const cl = parseInt(
+              matched.headers.get("Content-Length") ?? "0",
+            );
+            if (cl > 0) {
+              stats.cacheEntrySize.record(cl, { loader, status });
+            }
+          }
+
+          if (OTEL_ENABLE_EXTRA_METRICS) {
+            const parseStart = performance.now();
+            const result = await matched.json();
+            stats.latency.record(performance.now() - parseStart, {
+              loader,
+              status: "json_parse",
+            });
+            return result;
+          }
           return await matched.json();
         };
 
