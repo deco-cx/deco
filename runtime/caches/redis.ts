@@ -164,7 +164,9 @@ export const caches: CacheStorage = {
 
     if (isAvailable) {
       redis = createRedisClient();
-      redis.on("error", () => {});
+      redis.on("error", (err: Error) => {
+        console.error("[redis-cache] connection error:", err?.message ?? err);
+      });
       await wait(CONNECTION_TIMEOUT);
     }
 
