@@ -1,10 +1,10 @@
 import type { TsType, TsTypeReference } from "@deco/deno-ast-wasm/types";
-import type { HttpContext } from "../blocks/handler.ts";
 import type { Matcher } from "../blocks/matcher.ts";
 import JsonViewer from "../components/JsonViewer.tsx";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
 import { isDeferred } from "../engine/core/resolver.ts";
 import { type Device, deviceOf } from "../utils/userAgent.ts";
+import { type AppHttpContext, fnContextFromHttpContext } from "./utils.tsx";
 
 export type Flag = InstanceOf<typeof flagBlock, "#/root/flags">;
 
@@ -65,12 +65,17 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
   >(func: {
     default: FlagFunc<TConfig>;
   }) =>
-  async ($live: TConfig, { request }: HttpContext) => {
+  async ($live: TConfig, httpCtx: AppHttpContext) => {
     const flag = func.default($live);
     let device: Device | null = null;
+    const fnCtx = fnContextFromHttpContext(httpCtx);
     const ctx = {
-      request,
+      request: httpCtx.request,
       siteId: 0,
+      resolve: fnCtx.get,
+      invoke: fnCtx.invoke,
+      response: fnCtx.response,
+      bag: fnCtx.bag,
       get device() {
         return device ??= deviceOf(ctx.request);
       },
@@ -78,17 +83,23 @@ const flagBlock: Block<BlockModule<FlagFunc>> = {
     if (isMultivariate(flag)) {
       const variants = flag.variants || [];
 
-      const results = await Promise.all(
-        variants.map((variant) =>
-          typeof variant?.rule === "function" ? variant.rule(ctx) : false
-        ),
-      );
-      const match = variants.find((_, index) => results[index]);
+      // Evaluate sequentially with short-circuit to avoid side-effects
+      // from non-selected variant matchers (e.g. invoke, response mutation).
+      let match: Variant<unknown> | undefined;
+      for (const variant of variants) {
+        const matched = typeof variant?.rule === "function"
+          ? await variant.rule(ctx)
+          : false;
+        if (matched) {
+          match = variant;
+          break;
+        }
+      }
 
       return isDeferred(match?.value) ? match?.value() : match?.value;
     }
     const matchValue = typeof flag?.matcher === "function"
-      ? flag.matcher(ctx)
+      ? await flag.matcher(ctx)
       : false;
     return matchValue ? flag?.true : flag?.false;
   },

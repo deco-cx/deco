@@ -1,9 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
+import type { StatusCode as Status } from "@std/http/status";
+import type { AppManifest } from "../blocks/app.ts";
 import type { HttpContext } from "../blocks/handler.ts";
+import type { InvocationFunc } from "../clients/withManifest.ts";
 import { getCookies, Murmurhash3, setCookie } from "../deps.ts";
 import type { Block, BlockModule, InstanceOf } from "../engine/block.ts";
+import type { ResolveFunc } from "../engine/core/resolver.ts";
+import type { PromiseOrValue } from "../engine/core/utils.ts";
 import type { Device } from "../utils/userAgent.ts";
-import type { RequestState } from "./utils.tsx";
+import type { InvocationProxy } from "../utils/invoke.types.ts";
+import { fnContextFromHttpContext, type RequestState } from "./utils.tsx";
 
 export type Matcher = InstanceOf<typeof matcherBlock, "#/root/matchers">;
 
@@ -12,10 +18,13 @@ export type MatchContext<T = {}> = T & {
   device: Device;
   siteId: number;
   request: Request;
+  resolve: ResolveFunc;
+  invoke: InvocationProxy<AppManifest> & InvocationFunc<AppManifest>;
+  response: { headers: Headers; status?: Status };
+  bag: WeakMap<any, any>;
 };
 
-// Murmurhash3 was chosen because it is fast
-const hasher = new Murmurhash3(); // This object cannot be shared across executions when a `await` keyword is used (which is not the case here).
+// Murmurhash3 is used for hashing matcher unique IDs into cookie names.
 
 export const DECO_MATCHER_PREFIX = `deco_matcher_`;
 export const DECO_MATCHER_HEADER_QS = "x-deco-matchers";
@@ -72,9 +81,9 @@ const cookieValue = {
 };
 
 type MatchFunc<TConfig = any> =
-  | ((config: TConfig) => (ctx: MatchContext) => boolean)
-  | ((config: TConfig) => boolean)
-  | ((config: TConfig, ctx: MatchContext) => boolean);
+  | ((config: TConfig) => (ctx: MatchContext) => PromiseOrValue<boolean>)
+  | ((config: TConfig) => PromiseOrValue<boolean>)
+  | ((config: TConfig, ctx: MatchContext) => PromiseOrValue<boolean>);
 
 export type MatcherStickiness = "session" | "none";
 
@@ -91,8 +100,9 @@ const isStickySessionModule = <TProps = any>(
 export type BlockModuleMatcher =
   & BlockModule<
     MatchFunc,
-    boolean | ((ctx: MatchContext) => boolean),
-    (ctx: MatchContext) => boolean
+    | PromiseOrValue<boolean>
+    | ((ctx: MatchContext) => PromiseOrValue<boolean>),
+    (ctx: MatchContext) => PromiseOrValue<boolean>
   >
   & {
     cacheable?: boolean;
@@ -118,8 +128,9 @@ const charByType = {
 const matcherBlock: Block<
   BlockModule<
     MatchFunc,
-    boolean | ((ctx: MatchContext) => boolean),
-    (ctx: MatchContext) => boolean
+    | PromiseOrValue<boolean>
+    | ((ctx: MatchContext) => PromiseOrValue<boolean>),
+    (ctx: MatchContext) => PromiseOrValue<boolean>
   >
 > = {
   type: "matchers",
@@ -136,19 +147,20 @@ const matcherBlock: Block<
     >,
   ) => {
     const { default: func } = matcherModule;
-    const matcherFunc = (ctx: MatchContext) => {
+    const matcherFunc = async (ctx: MatchContext): Promise<boolean> => {
       const fMatcher = func as unknown as
-        | ((c: TConfig, ctx: MatchContext) => boolean)
+        | ((c: TConfig, ctx: MatchContext) => PromiseOrValue<boolean>)
         | MatchFunc;
-      const matcherFuncOrValue = fMatcher($live, ctx);
+      const matcherFuncOrValue = await fMatcher($live, ctx);
       if (typeof matcherFuncOrValue === "function") {
-        return matcherFuncOrValue(ctx);
+        return await matcherFuncOrValue(ctx);
       }
       return matcherFuncOrValue;
     };
     const respHeaders = httpCtx.context.state.response.headers;
     const shouldStickyOnSession = isStickySessionModule(matcherModule);
-    return (ctx: MatchContext) => {
+    const fnCtx = fnContextFromHttpContext(httpCtx);
+    return async (ctx: MatchContext): Promise<boolean> => {
       let uniqueId = "";
       let isSegment = true;
 
@@ -167,26 +179,32 @@ const matcherBlock: Block<
           break;
         }
       }
+      const enrichedCtx: MatchContext = {
+        ...ctx,
+        resolve: fnCtx.get,
+        invoke: fnCtx.invoke,
+        response: fnCtx.response,
+        bag: fnCtx.bag,
+      };
       const { [uniqueId]: isEnabled } = matchersOverride.parse(
-        ctx.request,
+        enrichedCtx.request,
       );
 
       let result = isEnabled;
       // if it is not sticky then we can run the matcher function
       if (!shouldStickyOnSession) {
-        result ??= matcherFunc(ctx);
+        result ??= await matcherFunc(enrichedCtx);
       } else {
-        hasher.hash(uniqueId);
+        const h = new Murmurhash3();
+        h.hash(uniqueId);
         const _sessionKey = matcherModule.sessionKey
-          ? `_${matcherModule.sessionKey?.($live, ctx)}`
+          ? `_${matcherModule.sessionKey?.($live, enrichedCtx)}`
           : "";
-        const cookieName =
-          `${DECO_MATCHER_PREFIX}${hasher.result()}${_sessionKey}`;
-        hasher.reset();
+        const cookieName = `${DECO_MATCHER_PREFIX}${h.result()}${_sessionKey}`;
         const isMatchFromCookie = cookieValue.boolean(
-          getCookies(ctx.request.headers)[cookieName],
+          getCookies(enrichedCtx.request.headers)[cookieName],
         );
-        result ??= isMatchFromCookie ?? matcherFunc(ctx);
+        result ??= isMatchFromCookie ?? await matcherFunc(enrichedCtx);
         if (result !== isMatchFromCookie) {
           const date = new Date();
           date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 1 month
