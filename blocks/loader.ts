@@ -267,7 +267,6 @@ const wrapLoader = (
           (await release?.revision() ?? undefined);
 
         if (!revisionID) {
-          logger.warn(`Could not get K_REVISION`);
           timing?.end();
           return await handler(props, req, ctx);
         }

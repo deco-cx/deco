@@ -1,4 +1,6 @@
 import { logger } from "../../observability/otel/config.ts";
+import { ValueType } from "../../deps.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import {
   assertCanBeCached,
   assertNoOptions,
@@ -7,6 +9,29 @@ import {
   withCacheNamespace,
 } from "./utils.ts";
 import { Redis } from "npm:ioredis@^5.10.1";
+
+const redisErrors = meter.createCounter("redis.errors_total", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Number of Redis connection or command errors.",
+});
+
+const redisReconnections = meter.createCounter("redis.reconnections_total", {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+  description: "Number of Redis reconnection attempts.",
+});
+
+const redisConnected = meter.createObservableGauge("redis.connected", {
+  valueType: ValueType.DOUBLE,
+  description: "1 when Redis is connected, 0 otherwise.",
+});
+
+let redisConnectionState = 0;
+// deno-lint-ignore no-explicit-any
+redisConnected.addCallback((result: any) => {
+  result.observe(redisConnectionState);
+});
 
 const CONNECTION_TIMEOUT = 500;
 const COMMAND_TIMEOUT = 500;
@@ -173,7 +198,17 @@ export const caches: CacheStorage = {
 
     if (isAvailable) {
       redis = createRedisClient();
-      redis.on("error", () => {});
+      redis.on("error", () => {
+        redisConnectionState = 0;
+        redisErrors.add(1);
+      });
+      redis.on("connect", () => {
+        redisConnectionState = 1;
+      });
+      redis.on("reconnecting", () => {
+        redisConnectionState = 0;
+        redisReconnections.add(1);
+      });
       await wait(CONNECTION_TIMEOUT);
     }
 
