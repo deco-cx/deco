@@ -92,8 +92,10 @@ const cacheOptions = (cache: Cache, cacheName: string) => (
     maxSize: CACHE_MAX_SIZE,
     ttlAutopurge: CACHE_TTL_AUTOPURGE,
     ttlResolution: CACHE_TTL_RESOLUTION,
-    dispose: (_value: boolean, key: string) => {
-      lruEvictions.add(1, { cache: cacheName });
+    dispose: (_value: boolean, key: string, reason: string) => {
+      if (reason === "evict") {
+        lruEvictions.add(1, { cache: cacheName });
+      }
       cache.delete(key).catch((err) => {
         logger.warn(`lru dispose failed to delete key from backing cache: ${err}`, { cache: cacheName });
       });

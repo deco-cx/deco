@@ -133,6 +133,7 @@ export function create(redis: RedisConnection | null, namespace: string) {
         )
         .catch((err) => {
           logger.warn(`redis cache delete error: ${err}`);
+          redisErrors.add(1);
           return 0;
         });
 
@@ -160,6 +161,7 @@ export function create(redis: RedisConnection | null, namespace: string) {
         })
         .catch((err) => {
           logger.warn(`redis cache match error: ${err}`);
+          redisErrors.add(1);
           return undefined;
         });
 
@@ -187,6 +189,7 @@ export function create(redis: RedisConnection | null, namespace: string) {
         )
         .catch((err) => {
           logger.warn(`redis cache put error: ${err}`);
+          redisErrors.add(1);
         });
     },
   };
