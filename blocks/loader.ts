@@ -16,6 +16,7 @@ import {
 } from "../observability/otel/metrics.ts";
 import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
 import { inFuture } from "../runtime/caches/utils.ts";
+import { isBot } from "../utils/userAgent.ts";
 import type { DebugProperties } from "../utils/vary.ts";
 import type { HttpContext } from "./handler.ts";
 import {
@@ -207,6 +208,10 @@ const wrapLoader = (
       const loader = ctx.resolverId || "unknown";
       const start = performance.now();
       let status: "bypass" | "miss" | "stale" | "hit" | undefined;
+      // Bots can read from cache but must not write to it or trigger background
+      // revalidation — they often hit arbitrary URLs with many query params and
+      // would pollute the cache with one-hit entries.
+      const isBotRequest = isBot(req);
 
       const isCacheEngineDefined = isCache(maybeCache);
       const isCacheDisabled = !ENABLE_LOADER_CACHE ||
@@ -295,16 +300,20 @@ const wrapLoader = (
             ["Content-Length", "" + jsonStringEncoded.length],
           ];
 
-          // Cache write goes through the full chain (LRU → filesystem)
-          // so the LRU registers the key for fast match lookups.
-          // The filesystem layer offloads the actual I/O to a worker thread
-          // when DECO_CACHE_WRITE_WORKER=true.
-          cache.put(
-            request,
-            new Response(jsonStringEncoded, {
-              headers: Object.fromEntries(headerPairs),
-            }),
-          ).catch((error) => logger.error(`loader error ${error}`));
+          // Bots must not write to cache — they hit arbitrary URLs and would
+          // pollute all cache tiers with one-hit entries.
+          if (!isBotRequest) {
+            // Cache write goes through the full chain (LRU → filesystem)
+            // so the LRU registers the key for fast match lookups.
+            // The filesystem layer offloads the actual I/O to a worker thread
+            // when DECO_CACHE_WRITE_WORKER=true.
+            cache.put(
+              request,
+              new Response(jsonStringEncoded, {
+                headers: Object.fromEntries(headerPairs),
+              }),
+            ).catch((error) => logger.error(`loader error ${error}`));
+          }
 
           return json;
         };
@@ -326,8 +335,13 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            bgFlights.do(request.url, callHandlerAndCache)
-              .catch((error) => logger.error(`loader error ${error}`));
+            // Bots get the stale response but must not trigger revalidation —
+            // running the handler for a bot request would waste CPU and still
+            // not write to cache.
+            if (!isBotRequest) {
+              bgFlights.do(request.url, callHandlerAndCache)
+                .catch((error) => logger.error(`loader error ${error}`));
+            }
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
@@ -336,7 +350,13 @@ const wrapLoader = (
           return await matched.json();
         };
 
-        return await flights.do(request.url, staleWhileRevalidate);
+        // Bots use a separate flight key so they deduplicate among themselves
+        // but never become leader for non-bot requests (bot leaders skip
+        // cache.put and revalidation, which would suppress writes for non-bots).
+        const flightKey = isBotRequest
+          ? `bot:${request.url}`
+          : request.url;
+        return await flights.do(flightKey, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
         if (OTEL_ENABLE_EXTRA_METRICS) {
