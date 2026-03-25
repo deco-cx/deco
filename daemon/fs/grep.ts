@@ -30,8 +30,7 @@ export interface GrepOptions {
 
 const shouldIgnore = (path: string) =>
   path.includes(`${SEPARATOR}.git`) ||
-  path.includes(`${SEPARATOR}node_modules${SEPARATOR}`) ||
-  path.includes(`${SEPARATOR}.deco`);
+  path.includes(`${SEPARATOR}node_modules${SEPARATOR}`);
 
 const browserPathFromSystem = (filepath: string) =>
   filepath.replace(Deno.cwd(), "").replaceAll(SEPARATOR, "/");
@@ -108,7 +107,6 @@ const systemGrep = async (
       args.push(
         "--exclude-dir=.git",
         "--exclude-dir=node_modules",
-        "--exclude-dir=.deco",
         "-r", // recursive
       );
     }
