@@ -327,7 +327,14 @@ const wrapLoader = (
             stats.cache.add(1, { status, loader });
 
             bgFlights.do(request.url, callHandlerAndCache)
-              .catch((error) => logger.error(`loader error ${error}`));
+              .catch((error) => {
+                logger.error(`loader error ${error}`);
+                // Origin failed — extend LRU TTL so stale content keeps being served
+                // while origin recovers, instead of evicting and returning a hard error.
+                (cache as Cache & { touch?: (r: RequestInfo | URL) => Promise<void> })
+                  .touch?.(request)
+                  .catch((e) => logger.error(`loader touch error ${e}`));
+              });
           } else {
             status = "hit";
             stats.cache.add(1, { status, loader });
