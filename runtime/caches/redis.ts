@@ -18,6 +18,7 @@ const SENTINEL_NAME = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_NAME") ??
   "mymaster";
 const SENTINEL_PASSWORD = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_PASSWORD");
 const REDIS_PASSWORD = Deno.env.get("LOADER_CACHE_REDIS_PASSWORD");
+const REDIS_READ_URL = Deno.env.get("LOADER_CACHE_REDIS_READ_URL");
 
 export type RedisConnection = Redis;
 
@@ -33,13 +34,13 @@ function parseSentinels(
   });
 }
 
-function createRedisClient(): Redis {
-  const sharedOptions = {
-    enableOfflineQueue: false,
-    connectTimeout: CONNECTION_TIMEOUT,
-    maxRetriesPerRequest: 1,
-  };
+const sharedOptions = {
+  enableOfflineQueue: false,
+  connectTimeout: CONNECTION_TIMEOUT,
+  maxRetriesPerRequest: 1,
+};
 
+function createRedisClient(): Redis {
   if (SENTINEL_URLS) {
     return new Redis({
       ...sharedOptions,
@@ -51,6 +52,13 @@ function createRedisClient(): Redis {
   }
 
   return new Redis(Deno.env.get("LOADER_CACHE_REDIS_URL")!, {
+    ...sharedOptions,
+    ...(REDIS_PASSWORD && { password: REDIS_PASSWORD }),
+  });
+}
+
+function createReadRedisClient(): Redis {
+  return new Redis(REDIS_READ_URL!, {
     ...sharedOptions,
     ...(REDIS_PASSWORD && { password: REDIS_PASSWORD }),
   });
@@ -86,7 +94,11 @@ function deserialize(raw: string): Response {
   return new Response(body, { headers, status });
 }
 
-export function create(redis: RedisConnection | null, namespace: string) {
+export function create(
+  redis: RedisConnection | null,
+  namespace: string,
+  redisRead?: RedisConnection | null,
+) {
   const generateKey = async (request: RequestInfo | URL): Promise<string> => {
     const key = await withCacheNamespace(namespace)(request);
     return SITE_NAME ? `${SITE_NAME}:${key}` : key;
@@ -120,7 +132,7 @@ export function create(redis: RedisConnection | null, namespace: string) {
       const result = await generateKey(request)
         .then((cacheKey: string) =>
           waitOrReject<string | null>(
-            () => redis?.get(cacheKey) ?? Promise.resolve(null),
+            () => (redisRead ?? redis)?.get(cacheKey) ?? Promise.resolve(null),
             COMMAND_TIMEOUT,
           )
         )
@@ -163,21 +175,39 @@ export function create(redis: RedisConnection | null, namespace: string) {
 export const caches: CacheStorage = {
   open: async (namespace: string): Promise<Cache> => {
     let redis: null | RedisConnection = null;
+    let redisRead: null | RedisConnection = null;
 
     if (isAvailable) {
       redis = createRedisClient();
       redis.on("error", (err: Error) => {
         console.error("[redis-cache] connection error:", err?.message ?? err);
       });
+
+      if (REDIS_READ_URL) {
+        redisRead = createReadRedisClient();
+        redisRead.on("error", (err: Error) => {
+          console.error(
+            "[redis-cache] read connection error:",
+            err?.message ?? err,
+          );
+        });
+      }
+
       await wait(CONNECTION_TIMEOUT);
+
       if (redis.status !== "ready") {
         console.warn(
           `[redis-cache] connection not ready after ${CONNECTION_TIMEOUT}ms (status: ${redis.status}). Commands will be dropped until connected.`,
         );
       }
+      if (redisRead && redisRead.status !== "ready") {
+        console.warn(
+          `[redis-cache] read connection not ready after ${CONNECTION_TIMEOUT}ms (status: ${redisRead.status}). Read commands will be dropped until connected.`,
+        );
+      }
     }
 
-    return Promise.resolve(create(redis, namespace));
+    return Promise.resolve(create(redis, namespace, redisRead));
   },
   delete: NOT_IMPLEMENTED,
   has: NOT_IMPLEMENTED,
