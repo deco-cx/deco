@@ -5,7 +5,15 @@ import {
   NOT_IMPLEMENTED,
   withCacheNamespace,
 } from "./utils.ts";
+import { ValueType } from "../../deps.ts";
+import { meter } from "../../observability/otel/metrics.ts";
 import { Redis } from "npm:ioredis@^5.10.1";
+
+const cacheError = meter.createCounter("cache_error", {
+  description: "Number of Redis cache operation errors",
+  unit: "1",
+  valueType: ValueType.INT,
+});
 
 const CONNECTION_TIMEOUT = parseInt(
   Deno.env.get("LOADER_CACHE_REDIS_CONNECTION_TIMEOUT_MS") || "2000",
@@ -119,7 +127,10 @@ export function create(
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => 0);
+        .catch(() => {
+          cacheError.add(1, { engine: "REDIS", operation: "delete" });
+          return 0;
+        });
 
       return result > 0;
     },
@@ -143,7 +154,10 @@ export function create(
 
           return deserialize(result);
         })
-        .catch(() => undefined);
+        .catch(() => {
+          cacheError.add(1, { engine: "REDIS", operation: "match" });
+          return undefined;
+        });
 
       return result;
     },
@@ -167,7 +181,9 @@ export function create(
             COMMAND_TIMEOUT,
           )
         )
-        .catch(() => {});
+        .catch(() => {
+          cacheError.add(1, { engine: "REDIS", operation: "put" });
+        });
     },
   };
 }
