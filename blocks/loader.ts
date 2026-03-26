@@ -14,7 +14,11 @@ import {
   meter,
   OTEL_ENABLE_EXTRA_METRICS,
 } from "../observability/otel/metrics.ts";
-import { caches, ENABLE_LOADER_CACHE } from "../runtime/caches/mod.ts";
+import {
+  caches,
+  ENABLE_LOADER_CACHE,
+  revalidationLocker,
+} from "../runtime/caches/mod.ts";
 import { inFuture } from "../runtime/caches/utils.ts";
 import type { DebugProperties } from "../utils/vary.ts";
 import type { HttpContext } from "./handler.ts";
@@ -326,7 +330,12 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            bgFlights.do(request.url, callHandlerAndCache)
+            revalidationLocker.tryAcquire(request)
+              .catch(() => true) // fail-open: locker error → allow revalidation
+              .then((acquired) => {
+                if (!acquired) return;
+                return bgFlights.do(request.url, callHandlerAndCache);
+              })
               .catch((error) => logger.error(`loader error ${error}`));
           } else {
             status = "hit";
