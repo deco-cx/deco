@@ -231,8 +231,9 @@ export function create(
       const cacheKey = await generateKey(request);
 
       const expires = response.headers.get("expires");
-      const expirationTimestamp = expires
-        ? Date.parse(expires)
+      const parsedExpires = expires ? Date.parse(expires) : NaN;
+      const expirationTimestamp = Number.isFinite(parsedExpires)
+        ? parsedExpires
         : Date.now() + TTL * 1000;
       const ttlSeconds = Math.max(
         1,

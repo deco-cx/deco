@@ -163,11 +163,10 @@ Deno.test({
 
       await new Promise((r) => setTimeout(r, 50));
 
-      if (capturedArgs.length > 0) {
-        // TTL should be ~90s: 60s remaining + 30s stale window
-        const ttl = capturedArgs[0].ttl;
-        assertEquals(ttl >= 85 && ttl <= 95, true);
-      }
+      assertEquals(capturedArgs.length > 0, true);
+      // TTL should be ~90s: 60s remaining + 30s stale window
+      const ttl = capturedArgs[0].ttl;
+      assertEquals(ttl >= 85 && ttl <= 95, true);
     },
   );
 
@@ -182,11 +181,10 @@ Deno.test({
 
       await new Promise((r) => setTimeout(r, 50));
 
-      if (capturedArgs.length > 0) {
-        // TTL should be ~210s: 180s default TTL + 30s stale window
-        const ttl = capturedArgs[0].ttl;
-        assertEquals(ttl >= 205 && ttl <= 215, true);
-      }
+      assertEquals(capturedArgs.length > 0, true);
+      // TTL should be ~210s: 180s default TTL + 30s stale window
+      const ttl = capturedArgs[0].ttl;
+      assertEquals(ttl >= 205 && ttl <= 215, true);
     },
   );
 
