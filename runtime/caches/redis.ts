@@ -65,7 +65,7 @@ export function createRevalidationLocker(
         const lockKey = `${SITE_NAME ? `${SITE_NAME}:` : ""}${key}:lock`;
         const result = await waitOrReject(
           () =>
-            redis?.set(lockKey, "1", "NX", "EX", ttlSeconds) ??
+            redis?.set(lockKey, "1", "EX", ttlSeconds, "NX") ??
               Promise.resolve(null),
           COMMAND_TIMEOUT,
         );
