@@ -1,5 +1,7 @@
 import { assertEquals } from "@std/assert";
 import {
+  _compress,
+  _decompress,
   create,
   createRevalidationLocker,
   type RedisConnection,
@@ -13,15 +15,13 @@ Deno.test({
   const namespace = "test";
 
   const store: RedisConnection = {
-    get: (cacheKey: string): string => {
-      const data: { [key: string]: string } = {
-        a94a8fe5ccb19ba61c4c0873d391e987982fbbd3test: JSON.stringify({
-          body: "body",
-          status: 200,
-        }),
+    getBuffer: (cacheKey: string): Uint8Array | null => {
+      const data: { [key: string]: Uint8Array } = {
+        a94a8fe5ccb19ba61c4c0873d391e987982fbbd3test: new TextEncoder().encode(
+          JSON.stringify({ body: "body", status: 200 }),
+        ),
       };
-
-      return data[cacheKey];
+      return data[cacheKey] ?? null;
     },
   } as unknown as RedisConnection;
 
@@ -50,9 +50,9 @@ Deno.test({
     "when the cache key takes too long to return",
     async () => {
       const timeoutStore: RedisConnection = {
-        get: (_: string): Promise<string> =>
-          new Promise<string>((resolve) => {
-            setTimeout(() => resolve("{}"), 10000);
+        getBuffer: (_: string): Promise<Uint8Array> =>
+          new Promise<Uint8Array>((resolve) => {
+            setTimeout(() => resolve(new TextEncoder().encode("{}")), 10000);
           }),
       } as unknown as RedisConnection;
 
@@ -275,4 +275,56 @@ Deno.test({
       assertEquals(await locker.tryAcquire("https://test.com"), true);
     },
   );
+});
+
+Deno.test({
+  name: "compression round-trip",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async (t) => {
+  const CODEC_GZIP = 0x01;
+  const CODEC_DEFLATE = 0x02;
+  const CODEC_LZ4 = 0x03;
+  const CODEC_ZSTD = 0x04;
+
+  const input = JSON.stringify({
+    body: "hello world ".repeat(500),
+    headers: { "content-type": "application/json" },
+    status: 200,
+  });
+
+  for (
+    const [name, codec] of [
+      ["gzip", CODEC_GZIP],
+      ["deflate", CODEC_DEFLATE],
+      ["lz4", CODEC_LZ4],
+      ["zstd", CODEC_ZSTD],
+    ] as const
+  ) {
+    await t.step(`round-trip with ${name}`, async () => {
+      const compressed = await _compress(input, codec);
+      assertEquals(compressed[0], codec);
+      const decompressed = await _decompress(compressed);
+      assertEquals(decompressed, input);
+    });
+  }
+
+  await t.step("compressed output is smaller than input", async () => {
+    const inputBytes = new TextEncoder().encode(input).length;
+    for (
+      const [name, codec] of [
+        ["gzip", CODEC_GZIP],
+        ["deflate", CODEC_DEFLATE],
+        ["lz4", CODEC_LZ4],
+        ["zstd", CODEC_ZSTD],
+      ] as const
+    ) {
+      const compressed = await _compress(input, codec);
+      assertEquals(
+        compressed.length < inputBytes,
+        true,
+        `${name}: compressed (${compressed.length}) should be smaller than input (${inputBytes})`,
+      );
+    }
+  });
 });

@@ -2,6 +2,7 @@
   "name": "@deco/deco",
   "version": "1.184.0",
   "lock": false,
+  "nodeModulesDir": "auto",
   "exports": {
     ".": "./mod.ts",
     "./web": "./mod.web.ts",

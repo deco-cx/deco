@@ -5,7 +5,14 @@ import {
   NOT_IMPLEMENTED,
   withCacheNamespace,
 } from "./utils.ts";
+import { Buffer } from "node:buffer";
 import { Redis } from "npm:ioredis@^5.10.1";
+import { compress as lz4Compress, decompress as lz4Decompress } from "jsr:@denosaurs/lz4@^0.1.4";
+import {
+  compress as zstdCompress,
+  decompress as zstdDecompress,
+  init as zstdInit,
+} from "https://deno.land/x/zstd_wasm@0.0.21/deno/zstd.ts";
 
 const CONNECTION_TIMEOUT = parseInt(
   Deno.env.get("LOADER_CACHE_REDIS_CONNECTION_TIMEOUT_MS") || "2000",
@@ -37,6 +44,110 @@ const SENTINEL_NAME = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_NAME") ??
 const SENTINEL_PASSWORD = Deno.env.get("LOADER_CACHE_REDIS_SENTINEL_PASSWORD");
 const REDIS_PASSWORD = Deno.env.get("LOADER_CACHE_REDIS_PASSWORD");
 const REDIS_READ_URL = Deno.env.get("LOADER_CACHE_REDIS_READ_URL");
+
+// Compression — set LOADER_CACHE_REDIS_COMPRESSION to "zstd" (recommended), "gzip", or "deflate".
+// Unset (default) means no compression; existing plain-JSON keys keep working indefinitely.
+//
+// First byte of every stored value encodes the format:
+//   0x7B ('{') → legacy uncompressed JSON
+//   0x01       → gzip
+//   0x02       → deflate-raw
+//   0x03       → lz4        (WASM, fast on small payloads)
+//   0x04       → zstd/1     (WASM, best ratio + fastest on large payloads — recommended)
+const COMPRESSION_ENV = Deno.env.get("LOADER_CACHE_REDIS_COMPRESSION");
+// zstd_wasm requires a one-time async init before use. Lazy-initialized on first compress/decompress.
+let zstdReady: Promise<void> | null = null;
+function ensureZstd(): Promise<void> {
+  return zstdReady ??= zstdInit();
+}
+const CODEC_GZIP = 0x01;
+const CODEC_DEFLATE = 0x02;
+const CODEC_LZ4 = 0x03;
+const CODEC_ZSTD = 0x04;
+
+function activeCodec(): number | null {
+  switch (COMPRESSION_ENV) {
+    case "gzip":
+      return CODEC_GZIP;
+    case "deflate":
+      return CODEC_DEFLATE;
+    case "lz4":
+      return CODEC_LZ4;
+    case undefined:
+    case "":
+      return null;
+    default:
+      // "zstd", "true", or any other truthy value → zstd (best ratio/CPU tradeoff)
+      return CODEC_ZSTD;
+  }
+}
+
+// Exported with _ prefix for unit testing only — not part of the public API.
+export async function _compress(
+  text: string,
+  codec: number,
+): Promise<Uint8Array> {
+  const input = new TextEncoder().encode(text);
+
+  if (codec === CODEC_LZ4) {
+    const compressed = lz4Compress(input);
+    const result = new Uint8Array(1 + compressed.length);
+    result[0] = CODEC_LZ4;
+    result.set(compressed, 1);
+    return result;
+  }
+
+  if (codec === CODEC_ZSTD) {
+    await ensureZstd();
+    const compressed = zstdCompress(input, 1); // level 1 = lowest CPU
+    const result = new Uint8Array(1 + compressed.length);
+    result[0] = CODEC_ZSTD;
+    result.set(compressed, 1);
+    return result;
+  }
+
+  if (codec !== CODEC_GZIP && codec !== CODEC_DEFLATE) {
+    throw new Error(`[redis-cache] unknown compression codec: 0x${codec.toString(16)}`);
+  }
+  // gzip / deflate-raw — native Deno, no deps
+  const algo = codec === CODEC_GZIP ? "gzip" : "deflate-raw";
+  const stream = new CompressionStream(algo);
+  const writer = stream.writable.getWriter();
+  writer.write(input);
+  writer.close();
+  const buf = await new Response(stream.readable).arrayBuffer();
+  const compressed = new Uint8Array(buf);
+  const result = new Uint8Array(1 + compressed.length);
+  result[0] = codec;
+  result.set(compressed, 1);
+  return result;
+}
+
+export async function _decompress(data: Uint8Array): Promise<string> {
+  const codec = data[0];
+  const payload = data.slice(1);
+
+  if (codec === CODEC_LZ4) {
+    return new TextDecoder().decode(lz4Decompress(payload));
+  }
+
+  if (codec === CODEC_ZSTD) {
+    await ensureZstd();
+    return new TextDecoder().decode(zstdDecompress(payload));
+  }
+
+  if (codec !== CODEC_GZIP && codec !== CODEC_DEFLATE) {
+    throw new Error(`[redis-cache] unknown compression codec: 0x${codec.toString(16)}`);
+  }
+  // gzip / deflate-raw — native Deno
+  const algo = codec === CODEC_GZIP ? "gzip" : "deflate-raw";
+  const stream = new DecompressionStream(algo);
+  const writer = stream.writable.getWriter();
+  writer.write(payload);
+  writer.close();
+  const buf = await new Response(stream.readable).arrayBuffer();
+  return new TextDecoder().decode(buf);
+}
 
 export type RedisConnection = Redis;
 
@@ -149,18 +260,28 @@ function waitOrReject<T>(
   return Promise.race([callback(), timeout]);
 }
 
-async function serialize(response: Response): Promise<string> {
+async function serialize(response: Response): Promise<Buffer | string> {
   const body = await response.text();
-
-  return JSON.stringify({
+  const json = JSON.stringify({
     body,
     headers: Object.fromEntries(response.headers.entries()),
     status: response.status,
   });
+  const codec = activeCodec();
+  if (codec === null) return json;
+  // ioredis requires a Node Buffer to store raw bytes — Uint8Array.toString() produces
+  // comma-separated decimals which would corrupt the payload.
+  return Buffer.from(await _compress(json, codec));
 }
 
-function deserialize(raw: string): Response {
-  const { body, headers, status } = JSON.parse(raw);
+async function deserialize(raw: Uint8Array): Promise<Response> {
+  let json: string;
+  if (raw[0] === 0x7b /* '{' */) {
+    json = new TextDecoder().decode(raw);
+  } else {
+    json = await _decompress(raw);
+  }
+  const { body, headers, status } = JSON.parse(json);
   return new Response(body, { headers, status });
 }
 
@@ -201,16 +322,15 @@ export function create(
 
       const result = await generateKey(request)
         .then((cacheKey: string) =>
-          waitOrReject<string | null>(
-            () => (redisRead ?? redis)?.get(cacheKey) ?? Promise.resolve(null),
+          waitOrReject<Uint8Array | null>(
+            () =>
+              (redisRead ?? redis)?.getBuffer(cacheKey) ??
+                Promise.resolve(null),
             COMMAND_TIMEOUT,
           )
         )
-        .then((result: string | null) => {
-          if (!result) {
-            return undefined;
-          }
-
+        .then((result: Uint8Array | null) => {
+          if (!result) return undefined;
           return deserialize(result);
         })
         .catch(() => undefined);
@@ -245,7 +365,10 @@ export function create(
       serialize(response)
         .then((data) =>
           waitOrReject<string | null>(
-            () => redis?.set(cacheKey, data, "EX", ttlSeconds) ?? Promise.resolve(null),
+            // deno-lint-ignore no-explicit-any
+            () =>
+              redis?.set(cacheKey, data as any, "EX", ttlSeconds) ??
+                Promise.resolve(null),
             COMMAND_TIMEOUT,
           )
         )
