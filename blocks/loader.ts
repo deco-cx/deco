@@ -156,6 +156,13 @@ caches?.open("loader")
 
 const MAX_AGE_S = parseInt(Deno.env.get("CACHE_MAX_AGE_S") ?? "60"); // 60 seconds
 
+// Global singleFlight instances shared across all loader resolutions.
+// This allows concurrent section resolutions (e.g. SearchResult + PageSEO)
+// that reference the same block to share a single in-flight VTEX request
+// instead of each making independent requests.
+const globalFlights = singleFlight();
+const globalBgFlights = singleFlight();
+
 // Reuse TextEncoder instance to avoid repeated instantiation
 const textEncoder = new TextEncoder();
 
@@ -188,8 +195,15 @@ const wrapLoader = (
   const [cacheMaxAge, mode] = typeof cache === "string"
     ? [MAX_AGE_S, cache]
     : [cache?.maxAge, "stale-while-revalidate"];
-  const flights = singleFlight();
-  const bgFlights = singleFlight();
+
+  // Extract the block name (last resolvable in the chain) to use as the
+  // cache key namespace. Using the block name instead of the full resolverId
+  // (which includes the calling prop path like "block:page" vs "block:structuredData")
+  // ensures that multiple sections referencing the same named block share
+  // the same cache entry and singleFlight deduplication.
+  const blockName = [...resolveChain].reverse().find(
+    (r) => r.type === "resolvable",
+  )?.value;
 
   if (typeof singleFlightKey === "function") {
     console.warn(
@@ -275,7 +289,7 @@ const wrapLoader = (
         timing?.end();
 
         const cacheKeyUrl = `https://localhost/?${new URLSearchParams({
-          resolver: loader,
+          resolver: blockName ?? loader,
           revision: revisionID,
           cacheKey: cacheKeyValue,
         })}`;
@@ -326,7 +340,7 @@ const wrapLoader = (
             status = "stale";
             stats.cache.add(1, { status, loader });
 
-            bgFlights.do(request.url, callHandlerAndCache)
+            globalBgFlights.do(request.url, callHandlerAndCache)
               .catch((error) => logger.error(`loader error ${error}`));
           } else {
             status = "hit";
@@ -336,7 +350,7 @@ const wrapLoader = (
           return await matched.json();
         };
 
-        return await flights.do(request.url, staleWhileRevalidate);
+        return await globalFlights.do(request.url, staleWhileRevalidate);
       } finally {
         const dimension = { loader, status };
         if (OTEL_ENABLE_EXTRA_METRICS) {
