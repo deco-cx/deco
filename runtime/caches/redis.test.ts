@@ -1,6 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { create, type RedisConnection } from "./redis.ts";
-import type { SetOptions } from "npm:@redis/client@^1.6.0";
+import {
+  create,
+  createRevalidationLocker,
+  type RedisConnection,
+} from "./redis.ts";
 
 Deno.test({
   name: ".match",
@@ -122,12 +125,17 @@ Deno.test({
 }, async (t) => {
   const namespace = "test";
 
+  const capturedArgs: { ttl: number }[] = [];
   const store: RedisConnection = {
     set: (
       _cacheKey: string,
       _data: string,
-      _options: SetOptions,
-    ): Promise<string | null> => Promise.resolve(null),
+      _ex: string,
+      ttl: number,
+    ): Promise<string | null> => {
+      capturedArgs.push({ ttl });
+      return Promise.resolve(null);
+    },
   } as unknown as RedisConnection;
 
   await t.step(
@@ -137,6 +145,46 @@ Deno.test({
       const response = await client.put("https://test.com", {} as Response);
 
       assertEquals(response, undefined);
+    },
+  );
+
+  await t.step(
+    "when response has expires header, TTL includes stale window",
+    async () => {
+      capturedArgs.length = 0;
+      const futureExpires = new Date(Date.now() + 60_000).toUTCString();
+      const headers = new Headers({
+        "expires": futureExpires,
+        "content-length": "4",
+      });
+      const res = new Response("body", { headers, status: 200 });
+      const client = create(store, namespace);
+      await client.put("https://test.com/expires", res);
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      assertEquals(capturedArgs.length > 0, true);
+      // TTL should be ~90s: 60s remaining + 30s stale window
+      const ttl = capturedArgs[0].ttl;
+      assertEquals(ttl >= 85 && ttl <= 95, true);
+    },
+  );
+
+  await t.step(
+    "when response has no expires header, TTL falls back to default",
+    async () => {
+      capturedArgs.length = 0;
+      const headers = new Headers({ "content-length": "4" });
+      const res = new Response("body", { headers, status: 200 });
+      const client = create(store, namespace);
+      await client.put("https://test.com/no-expires", res);
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      assertEquals(capturedArgs.length > 0, true);
+      // TTL should be ~210s: 180s default TTL + 30s stale window
+      const ttl = capturedArgs[0].ttl;
+      assertEquals(ttl >= 205 && ttl <= 215, true);
     },
   );
 
@@ -154,6 +202,77 @@ Deno.test({
       const response = await client.put("https://slow.com", {} as Response);
 
       assertEquals(response, undefined);
+    },
+  );
+});
+
+Deno.test({
+  name: ".revalidationLocker",
+  sanitizeResources: false,
+  sanitizeOps: false,
+}, async (t) => {
+  await t.step(
+    "when lock is disabled, always returns true without calling Redis",
+    async () => {
+      const store: RedisConnection = {
+        set: () => {
+          throw new Error("should not be called");
+        },
+      } as unknown as RedisConnection;
+      const locker = createRevalidationLocker(store, false);
+      assertEquals(await locker.tryAcquire("https://test.com"), true);
+    },
+  );
+
+  await t.step(
+    "when SET NX returns OK, returns true (lock acquired)",
+    async () => {
+      const store: RedisConnection = {
+        set: () => Promise.resolve("OK"),
+      } as unknown as RedisConnection;
+      const locker = createRevalidationLocker(store, true, 15);
+      assertEquals(await locker.tryAcquire("https://test.com"), true);
+    },
+  );
+
+  await t.step(
+    "when SET NX returns null, returns false (lock already held by another pod)",
+    async () => {
+      const store: RedisConnection = {
+        set: () => Promise.resolve(null),
+      } as unknown as RedisConnection;
+      const locker = createRevalidationLocker(store, true, 15);
+      assertEquals(await locker.tryAcquire("https://test.com"), false);
+    },
+  );
+
+  await t.step(
+    "when Redis throws, returns true (fail-open)",
+    async () => {
+      const store: RedisConnection = {
+        set: () => Promise.reject(new Error("connection refused")),
+      } as unknown as RedisConnection;
+      const locker = createRevalidationLocker(store, true, 15);
+      assertEquals(await locker.tryAcquire("https://test.com"), true);
+    },
+  );
+
+  await t.step(
+    "when Redis times out, returns true (fail-open)",
+    async () => {
+      const store: RedisConnection = {
+        set: (): Promise<string | null> => new Promise(() => {}), // never resolves
+      } as unknown as RedisConnection;
+      const locker = createRevalidationLocker(store, true, 15);
+      assertEquals(await locker.tryAcquire("https://test.com"), true);
+    },
+  );
+
+  await t.step(
+    "when redis is null, returns true (fail-open)",
+    async () => {
+      const locker = createRevalidationLocker(null, true, 15);
+      assertEquals(await locker.tryAcquire("https://test.com"), true);
     },
   );
 });

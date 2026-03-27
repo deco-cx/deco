@@ -7,7 +7,10 @@ import { caches as headersCache } from "./headerscache.ts";
 import {
   caches as redisCache,
   isAvailable as isRedisCacheAvailable,
+  revalidationLocker,
 } from "./redis.ts";
+
+export { revalidationLocker };
 
 import { createTieredCache } from "./tiered.ts";
 
