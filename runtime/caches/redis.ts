@@ -12,7 +12,7 @@ import {
   compress as zstdCompress,
   decompress as zstdDecompress,
   init as zstdInit,
-} from "https://deno.land/x/zstd_wasm@0.0.21/deno/zstd.ts";
+} from "npm:@bokuweb/zstd-wasm@0.0.27";
 
 const CONNECTION_TIMEOUT = parseInt(
   Deno.env.get("LOADER_CACHE_REDIS_CONNECTION_TIMEOUT_MS") || "2000",
