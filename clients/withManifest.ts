@@ -158,18 +158,22 @@ const fetchWithProps = async (
     return response.json();
   }
 
-  console.error(init?.body, response);
-  const error = await response.text();
+  const errorBody = await response.text();
+  const correlationId = response.headers.get("x-correlation-id");
+  console.error(
+    `Invoke error ${response.status} ${response.statusText} - ${url}`,
+    errorBody,
+  );
   if (response.headers.get("content-type") === "application/json") {
-    const errorObj = JSON.parse(error);
+    const errorObj = JSON.parse(errorBody);
     throw new InvokeError(`${response.status}: ${response.statusText}`, {
       cause: errorObj,
-      correlationId: response.headers.get("x-correlation-id"),
+      correlationId,
     });
   }
   throw new InvokeError(`${response.status}: ${response.statusText}`, {
-    cause: error,
-    correlationId: response.headers.get("x-correlation-id"),
+    cause: errorBody,
+    correlationId,
   });
 };
 
