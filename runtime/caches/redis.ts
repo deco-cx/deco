@@ -75,6 +75,7 @@ function activeCodec(): number | null {
       return CODEC_LZ4;
     case undefined:
     case "":
+    case "false":
       return null;
     default:
       // "zstd", "true", or any other truthy value → zstd (best ratio/CPU tradeoff)
