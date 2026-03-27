@@ -12,7 +12,7 @@ import {
   compress as zstdCompress,
   decompress as zstdDecompress,
   init as zstdInit,
-} from "https://deno.land/x/zstd_wasm@0.0.21/deno/zstd.ts";
+} from "npm:@bokuweb/zstd-wasm@0.0.27";
 
 const CONNECTION_TIMEOUT = parseInt(
   Deno.env.get("LOADER_CACHE_REDIS_CONNECTION_TIMEOUT_MS") || "2000",
@@ -54,6 +54,12 @@ const REDIS_READ_URL = Deno.env.get("LOADER_CACHE_REDIS_READ_URL");
 //   0x02       → deflate-raw
 //   0x03       → lz4        (WASM, fast on small payloads)
 //   0x04       → zstd/1     (WASM, best ratio + fastest on large payloads — recommended)
+//
+// To inspect a key in the terminal (skip first byte, then decompress based on codec):
+//   redis-cli --raw GET <key> | tail -c +2 | zstd -d --no-check -        # zstd (0x04)
+//   redis-cli --raw GET <key> | tail -c +2 | gunzip                       # gzip (0x01)
+//   redis-cli --raw GET <key> | tail -c +2 | zlib-flate -uncompress       # deflate (0x02)
+//   redis-cli --raw GET <key>                                              # plain JSON (0x7B)
 const COMPRESSION_ENV = Deno.env.get("LOADER_CACHE_REDIS_COMPRESSION");
 // zstd_wasm requires a one-time async init before use. Lazy-initialized on first compress/decompress.
 let zstdReady: Promise<void> | null = null;
