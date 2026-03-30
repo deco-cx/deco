@@ -18,9 +18,15 @@ import { grep, type GrepResult } from "./grep.ts";
 
 const inferMetadata = async (filepath: string): Promise<Metadata | null> => {
   try {
+    if(!filepath.endsWith(".json")) {
+      return { kind: "file" };
+    }
     const { __resolveType, name, path } = JSON.parse(
       await Deno.readTextFile(filepath),
     );
+    if(!__resolveType) {
+      return { kind: "file" };
+    }
     const blockType = await inferBlockType(__resolveType);
 
     if (!blockType) {
