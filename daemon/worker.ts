@@ -31,7 +31,27 @@ export const start = (): WorkerStatusEvent => ({
   detail: workerState,
 });
 
-const wp = Promise.withResolvers<DenoRun>();
+const makeWp = () => {
+  const w = Promise.withResolvers<DenoRun>();
+  // Prevent unhandled rejection crash if worker fails to initialize (e.g. no dev.ts).
+  // The rejection is handled by worker() callers via the middleware.
+  w.promise.catch(() => {});
+  return w;
+};
+
+let wp = makeWp();
+
+// Set to true when worker initialization fails permanently (e.g. no dev.ts).
+// Used by watchMeta to exit its retry loop.
+let workerInitFailed = false;
+export const isWorkerDisabled = () => workerInitFailed;
+
+// Reset worker state on undeploy so a subsequent deploy starts fresh.
+// Must recreate wp because a settled (resolved/rejected) Promise cannot be reused.
+export const resetWorkerState = () => {
+  workerInitFailed = false;
+  wp = makeWp();
+};
 
 export const worker = async () => {
   const w = await wp.promise;
@@ -59,10 +79,17 @@ const resolveWorkerOptions = async <
 export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
   const app = new Hono();
 
-  // Initialize worker with initial options
+  // Initialize worker with initial options.
+  // Rejects wp if options cannot be resolved (e.g. no dev.ts in repo)
+  // so that worker() rejects and the middleware returns 424 instead of hanging.
   const initializeWorker = async () => {
-    const initialOpts = await resolveWorkerOptions(optionsProvider);
-    wp.resolve(new DenoRun(initialOpts));
+    try {
+      const initialOpts = await resolveWorkerOptions(optionsProvider);
+      wp.resolve(new DenoRun(initialOpts));
+    } catch (err) {
+      workerInitFailed = true;
+      wp.reject(err);
+    }
   };
 
   initializeWorker();
