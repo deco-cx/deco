@@ -21,5 +21,3 @@ interface FechInfo {
 export const fetch: FechInfo = [
   withLogs,
 ].filter(Boolean).reduceRight((acc, curr) => curr!(acc), globalThis.fetch);
-
-export type { DecoRequestInit as RequestInit } from "./fetchCache.ts";
