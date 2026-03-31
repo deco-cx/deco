@@ -35,7 +35,12 @@ import { downloadCache } from "./cache.ts";
 import { createAIHandlers } from "./ai/handlers.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
 import { register, type TunnelConnection } from "./tunnel.ts";
-import { createWorker, worker, type WorkerOptions } from "./worker.ts";
+import {
+  createWorker,
+  resetWorkerState,
+  worker,
+  type WorkerOptions,
+} from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
@@ -378,7 +383,13 @@ const createDeps = (
 
 // Create a function that returns fresh WorkerOptions with new tokens
 const makeWorkerOptionsFactory =
-  (runCmdFactory: RunCmdFactory) => async (): Promise<WorkerOptions> => {
+  (runCmdFactory: RunCmdFactory, gitReady?: Promise<void>) =>
+  async (): Promise<WorkerOptions> => {
+    // Wait for git clone to complete before running the factory.
+    // This ensures dev.ts existence checks and token refreshes happen
+    // after the repo is available on disk.
+    if (gitReady) await gitReady;
+
     if (HAS_PRIVATE_GITHUB_IMPORT) {
       await updateDenoAuthTokenEnv();
     }
@@ -444,7 +455,10 @@ const createSiteApp = ({
   siteApp.use(createDaemonAPIs({ build: buildCmd, site: siteName }));
   // Workers are only necessary if there needs to have a preview of the site
   if (runCmdFactory) {
-    siteApp.route("", createWorker(makeWorkerOptionsFactory(runCmdFactory)));
+    siteApp.route(
+      "",
+      createWorker(makeWorkerOptionsFactory(runCmdFactory, deps.ready)),
+    );
   }
 
   const dispose = async () => {
@@ -556,10 +570,32 @@ if (SANDBOX_MODE) {
       // Also update the module-level variable so getSiteName() returns the value
       setSiteName(site);
 
-      // Use run command from deploy request, fall back to CLI args
-      const runCmdFactory = runCommand?.length
+      // Use run command from deploy request.
+      // If no runCommand provided, default to Deno runner only if dev.ts exists.
+      // This prevents a timeout loop when the sandbox is used for non-Deco repos
+      // (e.g. markdown files, scripts) that have no dev server to start.
+      //
+      // The check is intentionally lazy (inside the factory) so it runs after
+      // git clone has completed, not before.
+      const runCmdFactory: RunCmdFactory | null = runCommand?.length
         ? makeRunCmdFactory(runCommand[0], runCommand.slice(1), envs)
-        : createRunCmd;
+        : runCommand !== undefined
+        ? null // explicit empty array = caller opted out of a worker
+        : createRunCmd
+        ? () => {
+          // Default: start Deno worker only if dev.ts exists in the cloned repo.
+          // Checked lazily so it runs after git clone has completed.
+          // Throws if no dev.ts — caught by watchMeta, no worker started.
+          try {
+            Deno.statSync(join(Deno.cwd(), "dev.ts"));
+          } catch {
+            throw new Error(
+              "[sandbox] No dev.ts found — not a Deno/Fresh project, skipping worker",
+            );
+          }
+          return createRunCmd!();
+        }
+        : null;
 
       currentSite = createSiteApp({
         siteName: site,
@@ -638,6 +674,9 @@ if (SANDBOX_MODE) {
         tunnelConn = null;
         console.log(`[sandbox] Tunnel closed`);
       }
+      // Reset worker state so a subsequent deploy starts fresh
+      // (workerInitFailed persists across deploys otherwise)
+      resetWorkerState();
       Deno.env.delete(ENV_SITE_NAME);
     },
   });

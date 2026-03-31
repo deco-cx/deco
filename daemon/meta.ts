@@ -1,6 +1,7 @@
 import type { BlockType } from "../engine/block.ts";
 import type { JSONSchema } from "../types.ts";
 import { broadcast } from "./sse/channel.ts";
+import { isWorkerDisabled } from "./worker.ts";
 import { dispatchWorkerState, worker } from "./worker.ts";
 
 export type BlockMap = Record<string, { $ref: string; namespace: string }>;
@@ -79,9 +80,10 @@ export const watchMeta = async (signal?: AbortSignal) => {
     meta = m;
   };
 
-  while (!signal?.aborted) {
+  while (!signal?.aborted && !isWorkerDisabled()) {
     try {
       const w = await worker();
+
       const response = await w.fetch(metaRequest(etag));
       if (!response.ok) {
         throw response;
@@ -118,6 +120,12 @@ export const watchMeta = async (signal?: AbortSignal) => {
       dispatchWorkerState("updating");
       console.error(error);
     }
+  }
+
+  // If we exited because the worker is disabled (e.g. no dev.ts),
+  // resolve meta to null so ensureMetaIsReady() doesn't hang forever.
+  if (isWorkerDisabled()) {
+    setMeta(null);
   }
 };
 
