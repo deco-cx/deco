@@ -3,7 +3,7 @@ import type {
   tracerIsRecording,
 } from "../../observability/otel/config.ts";
 
-const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") !== "false";
+const PROXY_ENABLED = Deno.env.get("ENABLE_DECO_PROXY_CACHE") === "true";
 
 const PROXY_DOMAIN = Deno.env.get("DECO_PROXY_DOMAIN") ??
   "fastly.decocache.com";
