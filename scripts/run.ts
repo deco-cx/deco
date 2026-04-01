@@ -4,7 +4,7 @@ import denoJSON from "../deno.json" with { type: "json" };
 
 const packageName = "@deco/deco";
 
-const version = denoJSON.version || "1";
+const version = Deno.env.get("DECO_VERSION") ?? denoJSON.version ?? "1";
 
 console.log(
   `%cusing ${version} version of ${packageName}`,
