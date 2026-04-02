@@ -180,7 +180,7 @@ export function createRevalidationLocker(
       if (!enabled || redis === null) return true;
       try {
         const key = await withCacheNamespace(LOCK_NAMESPACE)(request);
-        const lockKey = `${SITE_NAME ? `${SITE_NAME}:` : ""}${key}:lock`;
+        const lockKey = `lock:${SITE_NAME ? `${SITE_NAME}:` : ""}${key}`;
         const result = await waitOrReject(
           () =>
             redis?.set(lockKey, "1", "EX", ttlSeconds, "NX") ??
@@ -297,6 +297,13 @@ export function create(
   namespace: string,
   redisRead?: RedisConnection | null,
 ) {
+  if (!SITE_NAME) {
+    console.warn(
+      "[redis-cache] DECO_SITE_NAME is empty — cache keys will not have tenant isolation. " +
+        "Set DECO_SITE_NAME to prevent cross-tenant cache collisions in shared Redis.",
+    );
+  }
+
   const generateKey = async (request: RequestInfo | URL): Promise<string> => {
     const key = await withCacheNamespace(namespace)(request);
     return SITE_NAME ? `${SITE_NAME}:${key}` : key;
