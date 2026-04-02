@@ -2,6 +2,7 @@ import type { ComponentType } from "preact";
 import { useContext } from "preact/hooks";
 import { SectionContext } from "../components/section.tsx";
 import { FieldResolver } from "../engine/core/resolver.ts";
+import { stableStringify } from "../utils/json.ts";
 
 import { Murmurhash3 } from "../deps.ts";
 
@@ -80,17 +81,28 @@ export const useSection = <P>(
     throw new Error("Missing context in rendering tree");
   }
 
-  const revisionId = ctx?.revision;
   const vary = ctx?.context.state.vary.build();
-  const { request, renderSalt, context: { state: { pathTemplate } } } = ctx;
+  const {
+    request,
+    renderSalt,
+    context: { state: { pathTemplate } },
+    resolvables,
+    resolveChain,
+  } = ctx;
+
+  const sectionConfig = FieldResolver.resolveFromChain(
+    resolveChain,
+    resolvables,
+  );
 
   const hrefParam = href ?? request.url;
   const stableHref = createStableHref(hrefParam);
   const cbString = [
-    revisionId,
+    stableStringify(sectionConfig), // Section-specific config (deterministic)
+    stableStringify(props), // Partial props override (deterministic)
     vary,
     stableHref,
-    ctx?.deploymentId,
+    ctx?.deploymentId, // Understand if we can remove it
   ].join("|");
   hasher.hash(cbString);
   const cb = hasher.result();
