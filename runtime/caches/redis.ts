@@ -297,6 +297,13 @@ export function create(
   namespace: string,
   redisRead?: RedisConnection | null,
 ) {
+  if (!SITE_NAME) {
+    console.warn(
+      "[redis-cache] DECO_SITE_NAME is empty — cache keys will not have tenant isolation. " +
+        "Set DECO_SITE_NAME to prevent cross-tenant cache collisions in shared Redis.",
+    );
+  }
+
   const generateKey = async (request: RequestInfo | URL): Promise<string> => {
     const key = await withCacheNamespace(namespace)(request);
     return SITE_NAME ? `${SITE_NAME}:${key}` : key;
