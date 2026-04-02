@@ -236,6 +236,23 @@ Deno.test({
   );
 
   await t.step(
+    "lock key uses lock: prefix before site name",
+    async () => {
+      let capturedKey = "";
+      const store: RedisConnection = {
+        set: (key: string) => {
+          capturedKey = key;
+          return Promise.resolve("OK");
+        },
+      } as unknown as RedisConnection;
+      const locker = createRevalidationLocker(store, true, 15);
+      await locker.tryAcquire("https://test.com");
+      assertEquals(capturedKey.startsWith("lock:"), true);
+      assertEquals(capturedKey.endsWith(":lock"), false);
+    },
+  );
+
+  await t.step(
     "when SET NX returns null, returns false (lock already held by another pod)",
     async () => {
       const store: RedisConnection = {
