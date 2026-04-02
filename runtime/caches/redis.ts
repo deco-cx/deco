@@ -180,7 +180,7 @@ export function createRevalidationLocker(
       if (!enabled || redis === null) return true;
       try {
         const key = await withCacheNamespace(LOCK_NAMESPACE)(request);
-        const lockKey = `${SITE_NAME ? `${SITE_NAME}:` : ""}${key}:lock`;
+        const lockKey = `lock:${SITE_NAME ? `${SITE_NAME}:` : ""}${key}`;
         const result = await waitOrReject(
           () =>
             redis?.set(lockKey, "1", "EX", ttlSeconds, "NX") ??
