@@ -429,13 +429,20 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
-      const hasSetCookie = getSetCookies(newHeaders).length > 0;
+      // Cookies that CDN varies its cache key by are safe to set on cacheable
+      // responses — they don't prevent CDN caching, they just create separate
+      // cache buckets per cookie value.
+      const CDN_VARY_COOKIES = new Set(["vtex_segment", "VTEXSC"]);
+      const setCookies = getSetCookies(newHeaders);
+      const hasNonVaryCookie = setCookies.some(
+        (c) => !CDN_VARY_COOKIES.has(c.name),
+      );
       const contentType = newHeaders.get("Content-Type") ?? "";
       const isHtmlResponse = contentType.includes("text/html");
       const isPageDirty = ctx.var.bag?.has(PAGE_DIRTY_KEY);
 
-      if (hasSetCookie) {
-        // Set-cookie present: never cache (same behavior as main)
+      if (hasNonVaryCookie) {
+        // Non-vary Set-Cookie present: never cache
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
       } else if (isHtmlResponse && PAGE_CACHE_ENABLED && !isPageDirty) {
         const flags = ctx.var?.flags ?? [];
