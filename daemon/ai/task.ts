@@ -9,6 +9,9 @@ import {
 } from "../githubApp.ts";
 import { resetActivity } from "../monitor.ts";
 import { PtySession } from "../pty/session.ts";
+import { SdkSession, type SessionLike } from "./sdk-session.ts";
+
+const USE_AGENT_SDK = Deno.env.get("USE_AGENT_SDK") === "true";
 import {
   buildPromptFromIssue,
   commentOnIssue,
@@ -153,7 +156,7 @@ export class AITask {
   readonly prompt?: string;
   readonly type: AITaskType;
 
-  #session: PtySession | null = null;
+  #session: PtySession | SdkSession | null = null;
   #status: AITaskStatus = "pending";
   #disposed = false;
   #prUrl: string | null = null;
@@ -385,14 +388,25 @@ export class AITask {
       : ["--dangerously-skip-permissions"];
 
     try {
-      this.#session = await PtySession.create({
-        cmd: "claude",
-        args: claudeArgs,
-        env,
-        cwd: this.#opts.cwd,
-        cols: 120,
-        rows: 40,
-      });
+      if (USE_AGENT_SDK && taskPrompt) {
+        // SDK mode: spawn Node subprocess using @anthropic-ai/claude-agent-sdk
+        // No PTY, no ANSI — structured JSON events formatted as readable text.
+        console.log(`[ai] Task ${this.taskId}: starting with Agent SDK`);
+        this.#session = new SdkSession({
+          prompt: taskPrompt,
+          cwd: this.#opts.cwd,
+          env,
+        });
+      } else {
+        this.#session = await PtySession.create({
+          cmd: "claude",
+          args: claudeArgs,
+          env,
+          cwd: this.#opts.cwd,
+          cols: 120,
+          rows: 40,
+        });
+      }
 
       // Subscribe to PTY output to capture Claude Code's OAuth login URL.
       // Claude Code prints something like:
