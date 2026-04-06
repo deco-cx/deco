@@ -154,9 +154,10 @@ export const tracerIsRecording = () =>
 
 // Register fetch logging listener here (not in patched_fetch.ts) to avoid
 // circular dependency: deco.ts → patched_fetch.ts → otel/config.ts → deco.ts
+// Disabled by default due to high log volume. Enable with OTEL_LOG_OUTGOING_FETCH=true.
 import { onFetch, parseUrlParts } from "../../utils/patched_fetch.ts";
 
-onFetch((event) => {
+if (Deno.env.get("OTEL_LOG_OUTGOING_FETCH") === "true") onFetch((event) => {
   const logFn = event.error ? logger.error : logger.info;
   const { host, path } = parseUrlParts(event.url);
 
