@@ -64,9 +64,11 @@ if (OTEL_IS_ENABLED) {
 
 export const meter: IMeter = meterProvider.getMeter("deco");
 
-// Outgoing fetch metrics — always on, low cardinality (host, not path).
+// Outgoing fetch metrics — disabled by default. Enable with OTEL_METRICS_OUTGOING_FETCH=true.
 import { ValueType } from "../../deps.ts";
 import { onFetch, parseUrlParts } from "../../utils/patched_fetch.ts";
+
+if (Deno.env.get("OTEL_METRICS_OUTGOING_FETCH") === "true") {
 
 const fetchCount = meter.createCounter("outgoing_fetch", {
   unit: "1",
@@ -89,3 +91,5 @@ onFetch((event) => {
   fetchCount.add(1, attrs);
   fetchDuration.record(event.durationMs, attrs);
 });
+
+} // OTEL_METRICS_OUTGOING_FETCH
