@@ -63,3 +63,29 @@ if (OTEL_IS_ENABLED) {
 }
 
 export const meter: IMeter = meterProvider.getMeter("deco");
+
+// Outgoing fetch metrics — always on, low cardinality (host, not path).
+import { ValueType } from "../../deps.ts";
+import { onFetch, parseUrlParts } from "../../utils/patched_fetch.ts";
+
+const fetchCount = meter.createCounter("outgoing_fetch", {
+  unit: "1",
+  valueType: ValueType.INT,
+});
+
+const fetchDuration = meter.createHistogram("outgoing_fetch_duration", {
+  unit: "ms",
+  valueType: ValueType.DOUBLE,
+});
+
+onFetch((event) => {
+  const { host } = parseUrlParts(event.url);
+  const attrs = {
+    app: event.app ?? "unknown",
+    host: host ?? "unknown",
+    method: event.method,
+    status: event.status,
+  };
+  fetchCount.add(1, attrs);
+  fetchDuration.record(event.durationMs, attrs);
+});
