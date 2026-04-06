@@ -1,5 +1,4 @@
 import { RequestContext } from "../deco.ts";
-import { logger } from "../observability/otel/config.ts";
 
 // Monkey patch fetch so we can have global cancellation token
 const fetcher = globalThis.fetch;
@@ -42,22 +41,6 @@ const extractMethod = (
   if (init?.method) return init.method;
   if (input instanceof Request) return input.method;
   return "GET"; // Default method
-};
-
-/**
- * Parses a URL and returns host and path (without query string or hash).
- * Returns undefined values if URL is invalid or relative.
- */
-const parseUrlParts = (
-  urlStr: string,
-): { host: string | undefined; path: string | undefined } => {
-  try {
-    const url = new URL(urlStr);
-    return { host: url.host, path: url.pathname };
-  } catch {
-    // Relative URL or invalid - return as-is in path
-    return { host: undefined, path: urlStr.split("?")[0].split("#")[0] };
-  }
 };
 
 /**
@@ -109,8 +92,21 @@ export const onFetch = (listener: FetchListener): () => void => {
   };
 };
 
+/**
+ * Parses a URL and returns host and path (without query string or hash).
+ */
+export const parseUrlParts = (
+  urlStr: string,
+): { host: string | undefined; path: string | undefined } => {
+  try {
+    const url = new URL(urlStr);
+    return { host: url.host, path: url.pathname };
+  } catch {
+    return { host: undefined, path: urlStr.split("?")[0].split("#")[0] };
+  }
+};
+
 const notifyListeners = (event: FetchCompleteEvent) => {
-  // Iterate over a copy to safely handle listeners that unsubscribe during iteration
   for (const listener of [...listeners]) {
     try {
       listener(event);
@@ -119,24 +115,6 @@ const notifyListeners = (event: FetchCompleteEvent) => {
     }
   }
 };
-
-// Register default logging listener with OTEL structured fields
-onFetch((event) => {
-  const logFn = event.error ? logger.error : logger.info;
-  const { host, path } = parseUrlParts(event.url);
-
-  logFn.call(logger, "outgoing fetch", {
-    "fetch.app": event.app,
-    "fetch.block_id": event.blockId,
-    "fetch.host": host,
-    "fetch.path": path,
-    "fetch.method": event.method,
-    "fetch.status": event.status,
-    "fetch.ok": event.ok,
-    "fetch.duration_ms": Math.round(event.durationMs),
-    ...(event.error && { "fetch.error": event.error }),
-  });
-});
 
 globalThis.fetch = async (input, init) => {
   const signal = hasSignal(init)
@@ -147,16 +125,13 @@ globalThis.fetch = async (input, init) => {
 
   const blockId = RequestContext.blockId;
   const app = extractAppName(blockId);
-  // Extract URL and method without constructing a Request (which would consume the body)
   const url = extractUrl(input);
   const method = extractMethod(input, init);
   const startedAt = performance.now();
 
   try {
-    // Spread init first, then signal, so computed signal takes precedence over init.signal: undefined
     const response = await fetcher(input, { ...init, signal });
 
-    // Notify listeners on success
     if (listeners.length > 0) {
       notifyListeners({
         app,
@@ -172,7 +147,6 @@ globalThis.fetch = async (input, init) => {
 
     return response;
   } catch (err) {
-    // Notify listeners on failure
     if (listeners.length > 0) {
       notifyListeners({
         app,
@@ -187,6 +161,6 @@ globalThis.fetch = async (input, init) => {
       });
     }
 
-    throw err; // Re-throw to preserve original behavior
+    throw err;
   }
 };

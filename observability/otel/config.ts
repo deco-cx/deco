@@ -151,3 +151,24 @@ export const tracer = opentelemetry.trace.getTracer(
 
 export const tracerIsRecording = () =>
   opentelemetry.trace.getActiveSpan()?.isRecording() ?? false;
+
+// Register fetch logging listener here (not in patched_fetch.ts) to avoid
+// circular dependency: deco.ts → patched_fetch.ts → otel/config.ts → deco.ts
+import { onFetch, parseUrlParts } from "../../utils/patched_fetch.ts";
+
+onFetch((event) => {
+  const logFn = event.error ? logger.error : logger.info;
+  const { host, path } = parseUrlParts(event.url);
+
+  logFn.call(logger, "outgoing fetch", {
+    "fetch.app": event.app,
+    "fetch.block_id": event.blockId,
+    "fetch.host": host,
+    "fetch.path": path,
+    "fetch.method": event.method,
+    "fetch.status": event.status,
+    "fetch.ok": event.ok,
+    "fetch.duration_ms": Math.round(event.durationMs),
+    ...(event.error && { "fetch.error": event.error }),
+  });
+});
