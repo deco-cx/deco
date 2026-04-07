@@ -517,9 +517,11 @@ export const setupGithubTokenNetrc = async (
   // Fallback: fetch token via admin API
   if (GITHUB_APP_KEY) {
     const token = await getGitHubToken();
-    if (token === undefined) return;
-    await updateNetrc(token);
-    return;
+    if (token !== undefined) {
+      await updateNetrc(token);
+      return;
+    }
+    // token is undefined (e.g. admin API unavailable) — fall through to GITHUB_TOKEN
   }
 
   // Fallback: use a pre-provisioned GITHUB_TOKEN injected by the platform
