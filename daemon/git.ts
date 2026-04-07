@@ -259,6 +259,11 @@ export const publish = ({ build }: Options): Handler => {
         ? parseGitHubOwnerRepo(remoteUrl) ?? undefined
         : undefined;
       await setupGithubTokenNetrc(repoOverride);
+    } else {
+      const githubToken = c.req.header("x-github-token");
+      if (githubToken) {
+        await updateNetrc(githubToken);
+      }
     }
 
     await git.fetch(["-p"]).submoduleUpdate(["--depth", "1"]);
