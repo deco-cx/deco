@@ -18,7 +18,6 @@ const SOURCE_PATH = Deno.env.get("SOURCE_ASSET_PATH");
 const DEFAULT_TRACKING_BRANCH = Deno.env.get("DECO_TRACKING_BRANCH") ?? "main";
 const REPO_URL = Deno.env.get("DECO_REPO_URL");
 const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
-const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN");
 const BUILD_FILES_DIR = Deno.env.get("BUILD_FILES_DIR");
 const ADMIN_DOMAIN = "https://admin.deco.cx";
 
@@ -250,7 +249,7 @@ export const publish = ({ build }: Options): Handler => {
     const author = body.author || { name: "decobot", email: "capy@deco.cx" };
     const message = body.message || `New release by ${author.name}`;
 
-    if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY || GITHUB_TOKEN) {
+    if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
       // Re-read the remote URL so we refresh the token for the correct repo
       // (important for self-hosted / external repos).
       const remoteUrl = await git.remote(["get-url", "origin"]).catch(
@@ -515,20 +514,10 @@ export const setupGithubTokenNetrc = async (
   }
 
   // Fallback: fetch token via admin API
-  if (GITHUB_APP_KEY) {
-    const token = await getGitHubToken();
-    if (token !== undefined) {
-      await updateNetrc(token);
-      return;
-    }
-    // token is undefined (e.g. admin API unavailable) — fall through to GITHUB_TOKEN
-  }
+  const token = await getGitHubToken();
+  if (token === undefined) return;
 
-  // Fallback: use a pre-provisioned GITHUB_TOKEN injected by the platform
-  // (e.g. freestyle environments where a scoped installation token is passed directly).
-  if (GITHUB_TOKEN) {
-    await updateNetrc(GITHUB_TOKEN);
-  }
+  await updateNetrc(token);
 };
 
 /**
@@ -688,7 +677,7 @@ export const ensureGit = async ({
       ? parseGitHubOwnerRepo(effectiveRepoUrl) ?? undefined
       : undefined;
 
-    if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY || GITHUB_TOKEN) {
+    if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
       await setupGithubTokenNetrc(repoOverride);
     }
 
@@ -697,7 +686,7 @@ export const ensureGit = async ({
       return;
     }
 
-    const useHttps = GITHUB_APP_CONFIGURED || GITHUB_APP_KEY || GITHUB_TOKEN;
+    const useHttps = GITHUB_APP_CONFIGURED || GITHUB_APP_KEY;
     const cloneUrl = repoUrl ??
       REPO_URL ??
       (useHttps
