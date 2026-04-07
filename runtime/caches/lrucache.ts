@@ -21,7 +21,7 @@ const CACHE_TTL_RESOLUTION = parseInt(
 // Additional time-to-live increment in milliseconds to extend the cache expiration beyond the response's Expires header.
 // If not set, the cache will use only the expiration timestamp from response headers
 const STALE_TTL_PERIOD = parseInt(
-  Deno.env.get("STALE_TTL_PERIOD") ?? "3600000",
+  Deno.env.get("STALE_TTL_PERIOD") ?? "30000",
 );
 
 const cacheOptions = (cache: Cache) => (
