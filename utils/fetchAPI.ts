@@ -14,6 +14,10 @@ export const fetchAPI = async <T>(
     return response.json();
   }
 
-  console.error(input, response);
+  const errorBody = await response.text();
+  console.error(
+    `fetchAPI error ${response.status} ${response.statusText} - ${input}`,
+    errorBody,
+  );
   throw new Error(`fetch ${input} responded with status ${response.status}`);
 };
