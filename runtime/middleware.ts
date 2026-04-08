@@ -106,7 +106,6 @@ async (ctx, next) => {
 
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
-const PAGE_CACHE_ENABLED = Deno.env.get("DECO_PAGE_CACHE_ENABLED") === "true";
 const PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ??
   "public, max-age=90, s-maxage=90, stale-while-revalidate=3600, stale-if-error=86400";
 
@@ -437,7 +436,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       if (hasSetCookie) {
         // Set-cookie present: never cache (same behavior as main)
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
-      } else if (isHtmlResponse && PAGE_CACHE_ENABLED && !isPageDirty) {
+      } else if (isHtmlResponse && !isPageDirty) {
         const flags = ctx.var?.flags ?? [];
         const allFlagsCacheable = flags.length > 0
           ? flags.every((flag) => flag.cacheable === true)
