@@ -20,6 +20,7 @@ export type {
   CheckoutBranchAPI,
   GitDiffAPI,
   GitLogAPI,
+  GitRawAPI,
   GitStatusAPI,
   PublishAPI,
   RebaseAPI,

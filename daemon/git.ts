@@ -324,6 +324,71 @@ export interface CheckoutBranchAPI {
   };
 }
 
+// ─── /git/raw ─────────────────────────────────────────────────────────────────
+
+export interface GitRawAPI {
+  body: {
+    args: string[];
+  };
+  response: {
+    result: string;
+  };
+}
+
+/**
+ * Git subcommands that are safe to run via /git/raw.
+ * Intentionally excludes push, pull, clone, remote, config, gc, and other
+ * operations that can affect the remote, global config, or be irreversible.
+ */
+const ALLOWED_SUBCOMMANDS = new Set([
+  "checkout",
+  "branch",
+  "stash",
+  "tag",
+  "log",
+  "show",
+  "diff",
+  "merge",
+  "cherry-pick",
+  "format-patch",
+  "describe",
+  "shortlog",
+  "rev-parse",
+  "rev-list",
+  "ls-files",
+  "ls-tree",
+  "cat-file",
+]);
+
+/**
+ * Flags that are blocked regardless of subcommand, as they can cause
+ * irreversible damage or break system-level git configuration.
+ */
+const BLOCKED_FLAGS = new Set([
+  "--force",
+  "-f",
+  "--hard",
+  "--global",
+  "--system",
+  "--exec",
+]);
+
+const validateRawArgs = (args: string[]): string | null => {
+  if (!args.length) return "No git arguments provided";
+
+  const subcommand = args[0];
+  if (!ALLOWED_SUBCOMMANDS.has(subcommand)) {
+    return `Subcommand "${subcommand}" is not allowed. Allowed: ${[...ALLOWED_SUBCOMMANDS].join(", ")}`;
+  }
+
+  const blockedFlag = args.find((arg) => BLOCKED_FLAGS.has(arg));
+  if (blockedFlag) {
+    return `Flag "${blockedFlag}" is blocked`;
+  }
+
+  return null;
+};
+
 const abortRebase = async () => {
   await git.rebase({ "--abort": null });
   throw new Error(
@@ -760,6 +825,19 @@ interface Options {
   site: string;
 }
 
+export const gitRaw: Handler = async (c) => {
+  const { args } = (await c.req.json()) as GitRawAPI["body"];
+
+  const validationError = validateRawArgs(args);
+  if (validationError) {
+    return new Response(validationError, { status: 400 });
+  }
+
+  const result = await git.raw(args);
+
+  return Response.json({ result });
+};
+
 export const checkoutBranch: Handler = async (c) => {
   const { branchName } = (await c.req.json()) as CheckoutBranchAPI["body"];
 
@@ -783,6 +861,7 @@ export const createGitAPIS = (options: Options) => {
   app.post("/discard", discard);
   app.post("/rebase", rebase);
   app.post("/checkout-branch", checkoutBranch);
+  app.post("/raw", gitRaw);
 
   return app;
 };
