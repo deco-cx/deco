@@ -17,8 +17,10 @@ export type {
 } from "./fs/common.ts";
 export type {
   CheckoutAPI,
+  CheckoutBranchAPI,
   GitDiffAPI,
   GitLogAPI,
+  GitRawAPI,
   GitStatusAPI,
   PublishAPI,
   RebaseAPI,
