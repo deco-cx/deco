@@ -324,6 +324,15 @@ export interface CheckoutBranchAPI {
   };
 }
 
+export interface CheckoutExistingBranchAPI {
+  body: {
+    branchName: string;
+  };
+  response: {
+    branch: string;
+  };
+}
+
 // ─── /git/raw ─────────────────────────────────────────────────────────────────
 
 export interface GitRawAPI {
@@ -858,6 +867,28 @@ export const checkoutBranch: Handler = async (c) => {
   return Response.json({ branch: branchName });
 };
 
+export const checkoutExistingBranch: Handler = async (c) => {
+  const { branchName } =
+    (await c.req.json()) as CheckoutExistingBranchAPI["body"];
+
+  if (!branchName || !/^[a-zA-Z0-9_\-./]+$/.test(branchName)) {
+    return new Response("Invalid branch name", { status: 400 });
+  }
+
+  const branches = await git.branch(["-a"]);
+  const exists = Object.keys(branches.branches).some(
+    (b) => b === branchName || b === `remotes/origin/${branchName}`,
+  );
+
+  if (!exists) {
+    return new Response(`Branch "${branchName}" not found`, { status: 404 });
+  }
+
+  await git.checkout(branchName);
+
+  return Response.json({ branch: branchName });
+};
+
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
@@ -869,6 +900,7 @@ export const createGitAPIS = (options: Options) => {
   app.post("/discard", discard);
   app.post("/rebase", rebase);
   app.post("/checkout-branch", checkoutBranch);
+  app.post("/checkout", checkoutExistingBranch);
   app.post("/raw", gitRaw);
 
   return app;
