@@ -381,7 +381,15 @@ const validateRawArgs = (args: string[]): string | null => {
     return `Subcommand "${subcommand}" is not allowed. Allowed: ${[...ALLOWED_SUBCOMMANDS].join(", ")}`;
   }
 
-  const blockedFlag = args.find((arg) => BLOCKED_FLAGS.has(arg));
+  const blockedFlag = args.find((arg) => {
+    if (arg.startsWith("--")) {
+      return BLOCKED_FLAGS.has(arg.split("=")[0]);
+    }
+    if (arg.startsWith("-") && arg.length > 1) {
+      return [...arg.slice(1)].some((ch) => BLOCKED_FLAGS.has(`-${ch}`));
+    }
+    return false;
+  });
   if (blockedFlag) {
     return `Flag "${blockedFlag}" is blocked`;
   }
