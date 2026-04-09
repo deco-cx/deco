@@ -315,6 +315,15 @@ export interface RebaseAPI {
   };
 }
 
+export interface CheckoutBranchAPI {
+  body: {
+    branchName: string;
+  };
+  response: {
+    branch: string;
+  };
+}
+
 const abortRebase = async () => {
   await git.rebase({ "--abort": null });
   throw new Error(
@@ -751,6 +760,18 @@ interface Options {
   site: string;
 }
 
+export const checkoutBranch: Handler = async (c) => {
+  const { branchName } = (await c.req.json()) as CheckoutBranchAPI["body"];
+
+  if (!branchName || !/^[a-zA-Z0-9_\-./]+$/.test(branchName)) {
+    return new Response("Invalid branch name", { status: 400 });
+  }
+
+  await git.checkoutLocalBranch(branchName);
+
+  return Response.json({ branch: branchName });
+};
+
 export const createGitAPIS = (options: Options) => {
   const app = new Hono();
 
@@ -761,6 +782,7 @@ export const createGitAPIS = (options: Options) => {
   app.post("/publish", publish(options));
   app.post("/discard", discard);
   app.post("/rebase", rebase);
+  app.post("/checkout-branch", checkoutBranch);
 
   return app;
 };
