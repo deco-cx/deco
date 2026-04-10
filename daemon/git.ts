@@ -368,6 +368,7 @@ const ALLOWED_SUBCOMMANDS = new Set([
   "ls-tree",
   "cat-file",
   "revert",
+  "fetch",
 ]);
 
 /**
