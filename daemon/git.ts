@@ -57,6 +57,9 @@ export const lockerGitAPI = createLocker();
 
 export const git = simpleGit(Deno.cwd(), {
   config: ["core.editor=true"], // disable interactive editor
+  unsafe: {
+    allowUnsafeEditor: true,
+  },
   maxConcurrentProcesses: 1,
   trimmed: true,
   progress: ({ method, stage, progress }) =>
