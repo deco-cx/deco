@@ -41,7 +41,9 @@ const metaRequest = (etag: string) =>
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "If-None-Match": etag,
+      // Only send If-None-Match when we actually have an etag.
+      // Sending an empty string causes servers to return 304 unconditionally.
+      ...(etag ? { "If-None-Match": etag } : {}),
     },
   });
 
@@ -85,6 +87,16 @@ export const watchMeta = async (signal?: AbortSignal) => {
       const w = await worker();
 
       const response = await w.fetch(metaRequest(etag));
+
+      // 304 means the meta hasn't changed since the last etag — not an error.
+      // Still update the etag from the response so future requests are correct,
+      // then wait briefly before polling again.
+      if (response.status === 304) {
+        etag = response.headers.get("etag") ?? etag;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        continue;
+      }
+
       if (!response.ok) {
         throw response;
       }
