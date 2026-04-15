@@ -64,11 +64,32 @@ export const render = async <TAppManifest extends AppManifest = AppManifest>(
 
   if (resolveChain) {
     const index = resolveChain.findLastIndex((x) => x.type === "resolvable");
+    if (index === -1) {
+      throw new HttpError(
+        new Response("Invalid resolve chain: no resolvable found", {
+          status: 400,
+        }),
+      );
+    }
     section = resolvables[resolveChain[index].value];
 
     for (let it = 0; it < resolveChain.length; it++) {
       const item = resolveChain[it];
       if (it < index || item.type !== "prop") continue;
+
+      if (section == null) {
+        const chain = resolveChain
+          .slice(0, it + 1)
+          .map((r) => `${r.type}:${r.value}`)
+          .join(" → ");
+        logger.warn(
+          `Stale resolve chain: section is ${section} at step ${it} (${item.type}:${item.value}). Chain: ${chain}`,
+          { url: url.toString(), pathTemplate },
+        );
+        throw new HttpError(
+          new Response("Stale or invalid resolve chain", { status: 404 }),
+        );
+      }
 
       section = section[item.value];
     }
