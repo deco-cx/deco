@@ -285,6 +285,7 @@ our contribution guidelines to get started.
 
 ## Thanks to all contributors
 
+
 <a href="https://github.com/deco-cx/deco/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=deco-cx/deco" />
 </a>
