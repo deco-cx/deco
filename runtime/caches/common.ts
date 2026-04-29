@@ -1,5 +1,4 @@
-import { type Exception, ValueType } from "../../deps.ts";
-import { tracer } from "../../observability/otel/config.ts";
+import { ValueType } from "../../deps.ts";
 import { meter } from "../../observability/otel/metrics.ts";
 import { inFuture } from "./utils.ts";
 
@@ -37,26 +36,14 @@ export const withInstrumentation = (
         delete: cacheImpl.delete.bind(cacheImpl),
         put: cacheImpl.put.bind(cacheImpl),
         match: async (req, opts) => {
-          const span = tracer.startSpan("cache-match", {
-            attributes: { engine },
-          });
-          try {
-            const isMatch = await cacheImpl.match(req, opts);
-            //there is an edge case where there is no expires header, but technically our loader always sets it
-            const result = getCacheStatus(isMatch);
+          const isMatch = await cacheImpl.match(req, opts);
+          const result = getCacheStatus(isMatch);
 
-            span.setAttribute("cache_status", result);
-            cacheHit.add(1, {
-              result,
-              engine,
-            });
-            return isMatch;
-          } catch (err) {
-            span.recordException(err as Exception);
-            throw err;
-          } finally {
-            span.end();
-          }
+          cacheHit.add(1, {
+            result,
+            engine,
+          });
+          return isMatch;
         },
       };
     },

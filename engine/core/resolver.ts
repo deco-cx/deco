@@ -471,33 +471,30 @@ const invokeResolverWithProps = async <
     );
     const metricsFunc = ctx.monitoring?.metrics;
     if (isAwaitable(respOrPromise)) {
-      await ctx?.monitoring?.tracer?.startActiveSpan?.(__resolveType, {
-        attributes: {
-          "block.kind": "resolver",
-        },
-      }, async (span) => {
-        await metricsFunc?.(__resolveType, async () => {
-          respOrPromise = await respOrPromise;
+      const resolve = async () => {
+        respOrPromise = await respOrPromise;
 
-          // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
-          // in order to achieve the correct result we should wrap the inner function with the timings function.
-          if (typeof respOrPromise === "function") {
-            const original = respOrPromise;
-            respOrPromise = async (...args: any[]) => {
-              try {
-                return await original(...args);
-              } finally {
-                timing?.end();
-                span?.end?.();
-              }
-            };
-          } else {
-            timing?.end();
-            span?.end?.();
-          }
-          return respOrPromise;
-        });
-      });
+        // (@mcandeia) there are some cases where the function returns a function. In such cases we should calculate the time to wait the inner function to return,
+        // in order to achieve the correct result we should wrap the inner function with the timings function.
+        if (typeof respOrPromise === "function") {
+          const original = respOrPromise;
+          respOrPromise = async (...args: any[]) => {
+            try {
+              return await original(...args);
+            } finally {
+              timing?.end();
+            }
+          };
+        } else {
+          timing?.end();
+        }
+        return respOrPromise;
+      };
+      if (metricsFunc) {
+        await metricsFunc(__resolveType, resolve);
+      } else {
+        await resolve();
+      }
     }
     return respOrPromise;
   } catch (err) {
