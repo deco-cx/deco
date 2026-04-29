@@ -1,17 +1,19 @@
 import type { JSONSchema7 } from "../deps.ts";
 
-const extraAdminDomains = Deno.env.get("ADMIN_DOMAINS")
-  ?.split(",")
-  .map((d) => d.trim())
-  .filter(Boolean)
-  .flatMap((d) => {
-    try {
-      return [new URL(d).origin];
-    } catch {
-      console.warn(`[admin] Skipping invalid ADMIN_DOMAINS entry: "${d}"`);
-      return [];
-    }
-  }) ?? [];
+const extraAdminDomains = typeof Deno !== "undefined"
+  ? (Deno.env.get("ADMIN_DOMAINS")
+    ?.split(",")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .flatMap((d) => {
+      try {
+        return [new URL(d).origin];
+      } catch {
+        console.warn(`[admin] Skipping invalid ADMIN_DOMAINS entry: "${d}"`);
+        return [];
+      }
+    }) ?? [])
+  : [];
 
 export const adminDomains = [
   "https://admin.deco.cx",
