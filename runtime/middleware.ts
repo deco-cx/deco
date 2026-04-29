@@ -305,15 +305,13 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
               span.updateName(`${ctx.req.raw.method} ${ctx.req.raw.url}`);
             }
             span.end();
-            if (!url.pathname.startsWith("/_frsh")) {
+            if (ctx.var.debugEnabled && !url.pathname.startsWith("/_frsh")) {
               console.info(
                 formatLog({
                   status: ctx.res?.status ?? 500,
                   url,
                   begin,
-                  timings: ctx.var.debugEnabled
-                    ? ctx.var.monitoring.timings.get()
-                    : undefined,
+                  timings: ctx.var.monitoring.timings.get(),
                 }),
               );
             }
