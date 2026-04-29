@@ -158,7 +158,6 @@ const fetchWithProps = async (
     return response.json();
   }
 
-  console.error(init?.body, response);
   const error = await response.text();
   if (response.headers.get("content-type") === "application/json") {
     const errorObj = JSON.parse(error);
