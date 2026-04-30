@@ -1,6 +1,6 @@
 {
   "name": "@deco/dev",
-  "version": "1.196.7",
+  "version": "1.197.0",
   "exports": {
     "./tailwind": "./tailwind.ts"
   },
