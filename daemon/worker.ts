@@ -1,4 +1,5 @@
 import { Hono } from "@hono/hono";
+import { phaseEnd } from "./phases.ts";
 import { broadcast } from "./sse/channel.ts";
 import { DenoRun } from "./workers/denoRun.ts";
 
@@ -21,9 +22,29 @@ export type WorkerStatus = { state: "updating" | "ready" };
 
 const workerState: WorkerStatus = { state: "updating" };
 
+const firstReady = Promise.withResolvers<void>();
+// Prevent unhandled rejection if the daemon shuts down before the worker
+// ever becomes ready — callers handle the race against their own timeouts.
+firstReady.promise.catch(() => {});
+let everReady = false;
+
+/**
+ * Resolves the first time the worker is observed serving traffic
+ * (dispatchWorkerState("ready") fired by meta.ts after a successful
+ * /deco/meta fetch). Subsequent transitions don't re-resolve.
+ */
+export const waitForFirstReady = (): Promise<void> => firstReady.promise;
+
+export const isWorkerEverReady = (): boolean => everReady;
+
 export const dispatchWorkerState = (state: "ready" | "updating") => {
   workerState.state = state;
   broadcast({ type: "worker-status", detail: workerState });
+  if (state === "ready" && !everReady) {
+    everReady = true;
+    phaseEnd("worker_ready");
+    firstReady.resolve();
+  }
 };
 
 export const start = (): WorkerStatusEvent => ({
