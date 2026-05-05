@@ -271,10 +271,13 @@ const createDeps = (
 ): MiddlewareHandler & { ready: Promise<void>; ensureStarted: () => void } => {
   let ok: Promise<unknown> | null = null;
   let readyResolve: () => void;
-  let readyReject: (err: unknown) => void;
-  const ready = new Promise<void>((resolve, reject) => {
+  // `ready` is intentionally never rejected. We resolve it on the first
+  // successful `ensureGit` (inside `runInitSteps`); failures are surfaced
+  // to the caller via the `ok` Promise instead. Keeping `ready` settle-once
+  // and resolve-only means consumers that await it (e.g. worker factories)
+  // can recover after a cooldown-driven retry.
+  const ready = new Promise<void>((resolve) => {
     readyResolve = resolve;
-    readyReject = reject;
   });
 
   const runInitSteps = async () => {
@@ -357,9 +360,36 @@ const createDeps = (
   // enough not to hammer GitHub on permanent failures.
   const RETRY_DELAYS_MS = [500, 1500, 5000, 15_000, 30_000];
 
+  // Sleep that wakes early if the surrounding signal aborts. Used between
+  // retry attempts so dispose() during a long backoff cancels promptly
+  // instead of waking up later into a torn-down sandbox.
+  const abortableSleep = (ms: number): Promise<void> => {
+    if (signal?.aborted) {
+      return Promise.reject(
+        new DOMException("Init aborted before backoff", "AbortError"),
+      );
+    }
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        signal?.removeEventListener("abort", onAbort);
+        resolve();
+      }, ms);
+      const onAbort = () => {
+        clearTimeout(timer);
+        reject(new DOMException("Init aborted during backoff", "AbortError"));
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
+  };
+
   const runInitWithRetry = async () => {
     let lastErr: unknown;
     for (let i = 0; i <= RETRY_DELAYS_MS.length; i++) {
+      // Bail before each attempt — dispose() / undeploy may have aborted us
+      // while we were sleeping in backoff or running the previous attempt.
+      if (signal?.aborted) {
+        throw new DOMException("Init aborted", "AbortError");
+      }
       try {
         await runInitSteps();
         return;
@@ -373,12 +403,17 @@ const createDeps = (
           err,
         );
         if (next !== undefined) {
-          await new Promise((r) => setTimeout(r, next));
+          await abortableSleep(next);
         }
       }
     }
-    // All retries exhausted — propagate to `ready` and the caller.
-    readyReject(lastErr);
+    // All retries exhausted. We only `throw` so callers (including the
+    // middleware) see this attempt's failure — but we deliberately do NOT
+    // `readyReject(lastErr)`. After the cooldown a future request can
+    // start a fresh sequence, and if that one succeeds, `readyResolve()`
+    // inside `runInitSteps` finally fires. Permanently rejecting `ready`
+    // here would strand any consumer that awaited it (e.g. the worker
+    // factory passed `deps.ready`), since Promises can only settle once.
     throw lastErr;
   };
 
