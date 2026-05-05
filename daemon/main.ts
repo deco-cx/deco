@@ -277,23 +277,21 @@ const createDeps = (
     readyReject = reject;
   });
 
-  const start = async () => {
+  const runInitSteps = async () => {
     const siteName = getSiteName();
     if (!siteName) {
       throw new Error("Cannot initialize deps: site name not set");
     }
     let start = performance.now();
-    try {
-      await ensureGit({
-        site: siteName,
-        repoUrl: opts?.repoUrl,
-        branch: opts?.branch,
-      });
-      readyResolve();
-    } catch (err) {
-      readyReject(err);
-      throw err;
-    }
+    await ensureGit({
+      site: siteName,
+      repoUrl: opts?.repoUrl,
+      branch: opts?.branch,
+    });
+    // Git is up — signal `ready` for any caller waiting just on the repo.
+    // Subsequent calls (on retry success) are no-ops since the Promise is
+    // already settled, which is fine.
+    readyResolve();
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -352,8 +350,58 @@ const createDeps = (
     });
   };
 
+  // Retry init with exponential-ish backoff. Catches transient failures
+  // (GitHub App auth race, ephemeral network glitches) without leaving the
+  // pod stuck on a sticky 424 forever. Total retry window: ~52s across 6
+  // attempts — fast enough to recover within a single user request, slow
+  // enough not to hammer GitHub on permanent failures.
+  const RETRY_DELAYS_MS = [500, 1500, 5000, 15_000, 30_000];
+
+  const runInitWithRetry = async () => {
+    let lastErr: unknown;
+    for (let i = 0; i <= RETRY_DELAYS_MS.length; i++) {
+      try {
+        await runInitSteps();
+        return;
+      } catch (err) {
+        lastErr = err;
+        const next = RETRY_DELAYS_MS[i];
+        console.warn(
+          `[deps] init attempt ${i + 1}/${RETRY_DELAYS_MS.length + 1} failed${
+            next !== undefined ? `, retrying in ${next}ms` : " (giving up)"
+          }:`,
+          err,
+        );
+        if (next !== undefined) {
+          await new Promise((r) => setTimeout(r, next));
+        }
+      }
+    }
+    // All retries exhausted — propagate to `ready` and the caller.
+    readyReject(lastErr);
+    throw lastErr;
+  };
+
+  // Cooldown after a fully exhausted retry sequence. Allows a fresh attempt
+  // on a future request when a transient external issue lasted longer than
+  // the retry window — without thrashing if the failure is permanent.
+  const RESET_AFTER_EXHAUSTION_MS = 60_000;
+  let exhaustedAt = 0;
+
   const ensureStarted = () => {
-    ok ||= start();
+    if (
+      ok && exhaustedAt &&
+      Date.now() - exhaustedAt > RESET_AFTER_EXHAUSTION_MS
+    ) {
+      ok = null;
+      exhaustedAt = 0;
+    }
+    if (!ok) {
+      ok = runInitWithRetry().catch((err) => {
+        exhaustedAt = Date.now();
+        throw err;
+      });
+    }
   };
 
   const middleware: MiddlewareHandler & {
