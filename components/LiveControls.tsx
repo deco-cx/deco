@@ -110,7 +110,21 @@ const main = () => {
     }
   };
 
+  const TRUSTED_ORIGINS = [
+    "https://deco.cx",
+    "https://admin.deco.cx",
+    "https://play.deco.cx",
+  ];
+  const isTrustedOrigin = (origin: string) =>
+    TRUSTED_ORIGINS.indexOf(origin) !== -1 ||
+    (origin.startsWith("https://") && origin.endsWith(".deco.cx")) ||
+    origin === WINDOW.location.origin;
+
   const onMessage = (event: MessageEvent<LiveEvent>) => {
+    if (!isTrustedOrigin(event.origin)) {
+      return;
+    }
+
     const { data } = event;
 
     switch (data.type) {
