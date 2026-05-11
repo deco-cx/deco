@@ -23,7 +23,13 @@ import {
   setSiteName,
 } from "./daemon.ts";
 import { watchFS } from "./fs/api.ts";
-import { ensureGit, getGitHubPackageTokens, lockerGitAPI } from "./git.ts";
+import {
+  ensureGit,
+  ENV_BRANCH,
+  flushEnvBranch,
+  getGitHubPackageTokens,
+  lockerGitAPI,
+} from "./git.ts";
 import { logs } from "./loggings/stream.ts";
 import { watchMeta } from "./meta.ts";
 import {
@@ -155,6 +161,41 @@ globalThis.addEventListener(
   },
 );
 
+// SIGTERM flush: commit + push any WIP to deco/env/<name> before exit so the
+// next pod cold-starts from the latest state. Capped with a hard timeout so a
+// hung push can't keep us past terminationGracePeriodSeconds.
+if (ENV_BRANCH) {
+  const SHUTDOWN_FLUSH_TIMEOUT_MS = 60_000;
+  let flushing = false;
+  const onShutdown = async (signal: string) => {
+    if (flushing) return;
+    flushing = true;
+    console.log(`[shutdown] received ${signal}, flushing ${ENV_BRANCH}`);
+    try {
+      await Promise.race([
+        flushEnvBranch(),
+        new Promise<void>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("shutdown flush timed out")),
+            SHUTDOWN_FLUSH_TIMEOUT_MS,
+          )
+        ),
+      ]);
+      console.log(`[shutdown] flush complete`);
+    } catch (err) {
+      console.error(`[shutdown] flush failed:`, err);
+    }
+    Deno.exit(0);
+  };
+  Deno.addSignalListener("SIGTERM", () => onShutdown("SIGTERM"));
+  try {
+    // SIGINT is supported on Unix; the call throws on platforms where it isn't.
+    Deno.addSignalListener("SIGINT", () => onShutdown("SIGINT"));
+  } catch {
+    // Ignore — SIGINT not available on this platform.
+  }
+}
+
 const createBundler = (appName?: string) => {
   const bundler = bundleApp(Deno.cwd());
 
@@ -211,6 +252,14 @@ const persistState = throttle(async () => {
   await Promise.all([persist(), delay(2 * 60 * 1_000)]);
 });
 
+// When running as an env pod (DECO_ENV_NAME set), the workspace is persisted
+// by pushing to the deco/env/<name> branch on origin instead of via the
+// SOURCE_ASSET_PATH tarball. Throttled to one flush per 2 min so file-watch
+// chatter doesn't spam git pushes.
+const flushEnvState = throttle(async () => {
+  await Promise.all([flushEnvBranch(), delay(2 * 60 * 1_000)]);
+});
+
 // Watch for changes in filesystem
 // TODO: we should be able to completely remove this after in some point in the future
 const watch = async (signal?: AbortSignal) => {
@@ -262,6 +311,9 @@ const watch = async (signal?: AbortSignal) => {
 
     // TODO: We should be able to remove this after we migrate to ebs
     persistState();
+
+    // Env-pod state lives on the deco/env/<name> branch on origin.
+    flushEnvState();
   }
 };
 

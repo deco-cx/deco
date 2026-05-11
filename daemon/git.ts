@@ -21,6 +21,13 @@ const GITHUB_APP_KEY = Deno.env.get("GITHUB_APP_KEY");
 const BUILD_FILES_DIR = Deno.env.get("BUILD_FILES_DIR");
 const ADMIN_DOMAIN = "https://admin.deco.cx";
 
+const envBranchName = (): string | undefined => {
+  const envName = Deno.env.get("DECO_ENV_NAME");
+  return envName ? `deco/env/${envName}` : undefined;
+};
+
+export const ENV_BRANCH = envBranchName();
+
 /**
  * Parse owner and repo name from a GitHub URL.
  * Handles HTTPS (https://github.com/owner/repo.git) and
@@ -392,7 +399,9 @@ const validateRawArgs = (args: string[]): string | null => {
 
   const subcommand = args[0];
   if (!ALLOWED_SUBCOMMANDS.has(subcommand)) {
-    return `Subcommand "${subcommand}" is not allowed. Allowed: ${[...ALLOWED_SUBCOMMANDS].join(", ")}`;
+    return `Subcommand "${subcommand}" is not allowed. Allowed: ${
+      [...ALLOWED_SUBCOMMANDS].join(", ")
+    }`;
   }
 
   const blockedFlag = args.find((arg) => {
@@ -794,16 +803,71 @@ export const ensureGit = async ({
         ? `https://github.com/deco-sites/${site}.git`
         : `git@github.com:deco-sites/${site}.git`);
 
+    const upstreamBranch = branch ?? DEFAULT_TRACKING_BRANCH;
+
+    // When DECO_ENV_NAME is set, each env pod tracks its own branch
+    // (deco/env/<name>) and uses the upstream branch (main) as the rebase
+    // target. The branch may not exist yet on first boot, so we probe with
+    // ls-remote and fall back to cloning the upstream + creating it locally.
+    let envBranchExists = false;
+    if (ENV_BRANCH) {
+      try {
+        const remoteRefs = await git.listRemote([
+          "--heads",
+          cloneUrl,
+          ENV_BRANCH,
+        ]);
+        envBranchExists = remoteRefs.trim().length > 0;
+      } catch (err) {
+        console.warn(
+          `[ensureGit] ls-remote failed for ${ENV_BRANCH}, falling back to ${upstreamBranch}:`,
+          err,
+        );
+      }
+    }
+
+    const branchToClone = envBranchExists ? ENV_BRANCH! : upstreamBranch;
+
     await git
       .clone(cloneUrl, ".", [
         "--depth",
         "1",
-        "--single-branch",
+        // In env mode we also want refs for upstreamBranch so assertRebased
+        // can rebase onto it; --single-branch would restrict refspec to the
+        // checked-out branch only.
+        ...(ENV_BRANCH ? [] : ["--single-branch"]),
         "--branch",
-        branch ?? DEFAULT_TRACKING_BRANCH,
+        branchToClone,
       ])
       .submoduleInit()
       .submoduleUpdate(["--depth", "1"]);
+
+    if (ENV_BRANCH) {
+      if (!envBranchExists) {
+        // Cloned upstream — create the env branch locally. First push will
+        // create it on origin via flushEnvBranch.
+        await git.checkoutLocalBranch(ENV_BRANCH);
+      }
+      // Make sure origin/<upstream> is fetched so assertRebased has a target.
+      await git
+        .fetch(["origin", upstreamBranch, "--depth", "1"])
+        .catch((err) => {
+          console.warn(
+            `[ensureGit] fetch origin ${upstreamBranch} failed:`,
+            err,
+          );
+        });
+      // Point the env branch's upstream at origin/<upstream> so status.tracking
+      // resolves there and assertRebased rebases env state onto upstream.
+      await git
+        .branch([`--set-upstream-to=origin/${upstreamBranch}`, ENV_BRANCH])
+        .catch((err) => {
+          console.warn(
+            `[ensureGit] set-upstream-to origin/${upstreamBranch} for ${ENV_BRANCH} failed:`,
+            err,
+          );
+        });
+    }
 
     // Exclude AI agent artifacts from git tracking
     const excludeFile = join(Deno.cwd(), ".git/info/exclude");
@@ -839,6 +903,51 @@ export const ensureGit = async ({
   // Ensure repository is rebased and up to date
   if (isDeployment) {
     await assertRebased();
+  }
+};
+
+/**
+ * Commits the current working tree and pushes it to `deco/env/<DECO_ENV_NAME>`
+ * on origin. Used to persist env-pod state across restarts in place of an EBS
+ * PVC. No-op when DECO_ENV_NAME is unset (production pods, sandbox mode).
+ *
+ * The function:
+ *  - refreshes the GitHub App netrc token so push auth is fresh,
+ *  - skips if the working tree is clean (no commit, no network),
+ *  - acquires the write lock so it doesn't race with publish/rebase/file-watch,
+ *  - never throws (failures are logged so a flaky push doesn't crash shutdown).
+ */
+export const flushEnvBranch = async (): Promise<void> => {
+  if (!ENV_BRANCH) return;
+
+  using _ = await lockerGitAPI.lock.wlock();
+
+  try {
+    if (GITHUB_APP_CONFIGURED || GITHUB_APP_KEY) {
+      const remoteUrl = await git.remote(["get-url", "origin"]).catch(
+        () => undefined,
+      );
+      const repoOverride = remoteUrl && isGitHubUrl(remoteUrl)
+        ? parseGitHubOwnerRepo(remoteUrl) ?? undefined
+        : undefined;
+      await setupGithubTokenNetrc(repoOverride);
+    }
+
+    const status = await git.status();
+    if (status.files.length === 0) {
+      return;
+    }
+
+    const message = `auto: env snapshot ${new Date().toISOString()}`;
+    await git
+      .add(["-A"])
+      .commit(message, { "--no-verify": null });
+    // Explicit refspec: the upstream is origin/<DEFAULT_TRACKING_BRANCH> so a
+    // bare `git push` would push env state onto upstream. We push to the env
+    // branch by name instead.
+    await git.push(["origin", `HEAD:refs/heads/${ENV_BRANCH}`]);
+  } catch (err) {
+    console.error(`[flushEnvBranch] Failed to flush ${ENV_BRANCH}:`, err);
   }
 };
 
