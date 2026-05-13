@@ -138,7 +138,7 @@ export default function ProductShelf(props: Props) {
 
 Explore the capabilities of Deco further in our comprehensive documentation.
 Learn how to craft Sections, Loaders, Apps and much more. Go to
-[deco.cx/docs/en](https://deco.cx/docs/en).
+[deco.cx/docs/en](https://docs.deco.cx/).
 
 ## Motivation
 
