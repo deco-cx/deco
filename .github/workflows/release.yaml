@@ -33,7 +33,7 @@ jobs:
                 generate_release_notes: true,
                 name: `Release ${tag}`,
                 owner: context.repo.owner,
-                prerelease: tag.includes("rc-") || tag.includes("preview") || tag.includes("beta") || tag.includes("alpha"),
+                prerelease: tag.includes("rc-") || tag.includes("preview") || tag.includes("beta") || tag.includes("alpha") || tag.includes("next"),
                 repo: context.repo.repo,
                 tag_name: tag,
               });
