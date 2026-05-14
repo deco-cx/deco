@@ -2,7 +2,7 @@
 
 ## Release channels
 
-This repository ships on two channels:
+This repository publishes on two channels:
 
 | Channel | Branch | Example version | JSR resolution |
 |---------|--------|-----------------|----------------|
