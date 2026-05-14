@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - next
 
 permissions:
   contents: write # Necessary for accessing and modifying repository content
@@ -15,7 +16,7 @@ permissions:
 
 jobs:
   tag-discussion:
-    if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
+    if: github.event_name == 'pull_request_target' && github.event.action == 'opened' && github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -55,8 +56,50 @@ jobs:
             - 🎉 for **Minor** ${{ steps.calculate_versions.outputs.minor_version }} update
             - 🚀 for **Major** ${{ steps.calculate_versions.outputs.major_version }} update
 
+  prerelease-tag-discussion:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'opened' && github.event.pull_request.base.ref == 'next'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          repository: ${{ github.event.pull_request.base.repo.full_name }}
+
+      - name: Calculate prerelease bases
+        id: calculate_versions
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="0.0.0"
+          fi
+          MAJOR=$(echo $LATEST_TAG | cut -d. -f1)
+          MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+          PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+          echo "patch_base=$MAJOR.$MINOR.$((PATCH + 1))" >> $GITHUB_OUTPUT
+          echo "minor_base=$MAJOR.$((MINOR + 1)).0" >> $GITHUB_OUTPUT
+          echo "major_base=$((MAJOR + 1)).0.0" >> $GITHUB_OUTPUT
+
+      - name: Start Discussion for Prerelease Tagging
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Prerelease Tagging
+            Merging this PR will publish a prerelease automatically.
+            By default this is a **Patch prerelease** (`${{ steps.calculate_versions.outputs.patch_base }}-next.N`).
+            A maintainer can override the bump by reacting:
+            - 👍 **Patch prerelease** `${{ steps.calculate_versions.outputs.patch_base }}-next.N` (default)
+            - 🎉 **Minor prerelease** `${{ steps.calculate_versions.outputs.minor_base }}-next.N`
+            - 🚀 **Major prerelease** `${{ steps.calculate_versions.outputs.major_base }}-next.N`
+
+            `.N` auto-increments per base. Consumers opt in via the explicit version
+            (e.g. `jsr:@deco/deco@${{ steps.calculate_versions.outputs.patch_base }}-next.1`); `jsr:@deco/deco` continues to resolve to the stable channel.
+
   determine-tag:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -187,3 +230,146 @@ jobs:
               -H "Accept: application/vnd.github.everest-preview+json" \
               https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish-ai.yaml/dispatches \
               -d '{"ref":"main", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
+
+  determine-prerelease-tag:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/next'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          ref: next
+
+      - name: Find the Merged Pull Request
+        id: find_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE_BRANCH="next"
+          RECENT_PR=$(gh pr list --state closed --base $BASE_BRANCH --json number,title,closedAt --jq '.[] | select(.closedAt >= "'$(date -u -d '1 minute ago' +%Y-%m-%dT%H:%M:%SZ)'") | {number, title}')
+          echo "RECENT_PR=$RECENT_PR" >> $GITHUB_ENV
+          echo "PR_NUMBER=$(echo $RECENT_PR | jq -r '.number')" >> $GITHUB_ENV
+
+      - name: Fetch latest stable tag (excluding prerelease tags)
+        id: get_latest_tag
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="0.0.0"
+          fi
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Determine the next prerelease version
+        id: determine_version
+        if: env.PR_NUMBER != ''
+        env:
+          PR_NUMBER: ${{ env.PR_NUMBER }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=${{ steps.get_latest_tag.outputs.latest_tag }}
+          MAJOR=$(echo $LATEST_TAG | cut -d. -f1)
+          MINOR=$(echo $LATEST_TAG | cut -d. -f2)
+          PATCH=$(echo $LATEST_TAG | cut -d. -f3)
+
+          # Define allowed users as a JSON array
+          ALLOWED_USERS=$(cat MAINTAINERS.txt | jq -R -s -c 'split("\n")[:-1]')
+          echo "Maintainers list: $ALLOWED_USERS"
+
+          # Fetch reactions on the prerelease tagging comment and filter by allowed users
+          REACTION=$(gh api graphql -f query='
+            query {
+              repository(owner:"${{ github.repository_owner }}", name:"${{ github.event.repository.name }}") {
+                pullRequest(number: '${PR_NUMBER}') {
+                  comments(last: 100) {
+                    nodes {
+                      body
+                      id
+                      reactions(last: 100) {
+                        nodes {
+                          content
+                          user {
+                            login
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }' | jq -r --argjson allowed_users "$ALLOWED_USERS" '
+              .data.repository.pullRequest.comments.nodes[] |
+              select(.body | contains("## Prerelease Tagging")) |
+              .reactions.nodes[] |
+              select(.user.login | IN($allowed_users[])) |
+              .content'
+          )
+
+          echo "Captured reaction: $REACTION"
+          REACTION=$(echo "$REACTION" | tr '[:lower:]' '[:upper:]')
+
+          # Determine base version: 🚀 major, 🎉 minor, anything else (incl. 👍 or no reaction) -> patch.
+          # Unlike the stable flow, no-reaction defaults to PATCH instead of skipping the release.
+          if [[ "$REACTION" == *"ROCKET"* ]]; then
+            BASE="$((MAJOR + 1)).0.0"
+          elif [[ "$REACTION" == *"HOORAY"* ]]; then
+            BASE="$MAJOR.$((MINOR + 1)).0"
+          else
+            BASE="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+
+          # Compute next N for this base (highest existing <BASE>-next.<N> + 1, else 1)
+          LATEST_N=$(git tag --list "${BASE}-next.*" | awk -F'-next.' 'NF==2 {print $2}' | grep -E '^[0-9]+$' | sort -n | tail -n 1)
+          if [ -z "$LATEST_N" ]; then
+            N=1
+          else
+            N=$((LATEST_N + 1))
+          fi
+
+          NEW_VERSION="${BASE}-next.${N}"
+          echo "Computed prerelease version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update deno.json Version
+        if: steps.determine_version.outputs.new_version != ''
+        run: |
+          jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' deno.json > tmp.$$.json && mv tmp.$$.json deno.json
+          jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' ./scripts/deno.json > tmp.$$.json && mv tmp.$$.json ./scripts/deno.json
+          jq --arg new_version "${{ steps.determine_version.outputs.new_version }}" '.version = $new_version' ./dev/deno.json > tmp.$$.json && mv tmp.$$.json ./dev/deno.json
+
+
+          git config user.name "decobot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deno.json ./scripts/deno.json ./dev/deno.json
+          git commit -m "Update version to ${{ steps.determine_version.outputs.new_version }}"
+          git push origin next
+
+      - name: Create and Push Tag
+        if: steps.determine_version.outputs.new_version != ''
+        run: |
+          git tag ${{ steps.determine_version.outputs.new_version }}
+          git push origin ${{ steps.determine_version.outputs.new_version }}
+      - name: Trigger Release Workflow
+        if: steps.determine_version.outputs.new_version != ''
+        run: |
+          curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.everest-preview+json" \
+              https://api.github.com/repos/${{ github.repository }}/actions/workflows/release.yaml/dispatches \
+              -d '{"ref":"next", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
+      - name: Trigger Publish Workflow
+        if: steps.determine_version.outputs.new_version != ''
+        run: |
+          curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.everest-preview+json" \
+              https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish.yaml/dispatches \
+              -d '{"ref":"next", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
+      - name: Trigger Publish AI Workflow
+        if: steps.determine_version.outputs.new_version != ''
+        run: |
+          curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.everest-preview+json" \
+              https://api.github.com/repos/${{ github.repository }}/actions/workflows/publish-ai.yaml/dispatches \
+              -d '{"ref":"next", "inputs":{"tag_name":"${{ steps.determine_version.outputs.new_version }}"}}'
