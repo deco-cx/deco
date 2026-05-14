@@ -390,27 +390,24 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         );
         const segment = tryOrDefault(() => JSON.parse(cookieSegment), {});
 
-        const active = new Set(segment.active || []);
-        const inactiveDrawn = new Set(segment.inactiveDrawn || []);
+        // Track only the `active` set. The previous `inactiveDrawn` set was
+        // write-only state — never read by any matcher logic — and its growth
+        // across pages was the main reason `deco_segment` got rewritten on
+        // almost every request, tripping the Set-Cookie kill-switch below and
+        // making HTML uncacheable. Removing it lets cohort assignment stick.
+        const previousActive = [...new Set<string>(segment.active || [])].sort();
+        const active = new Set<string>(previousActive);
         for (const flag of ctx.var.flags) {
-          if (flag.isSegment) {
-            if (flag.value) {
-              active.add(flag.name);
-              inactiveDrawn.delete(flag.name);
-            } else {
-              active.delete(flag.name);
-              inactiveDrawn.add(flag.name);
-            }
-          }
+          if (!flag.isSegment) continue;
+          if (flag.value) active.add(flag.name);
+          else active.delete(flag.name);
         }
-        const newSegment = {
-          active: [...active].sort(),
-          inactiveDrawn: [...inactiveDrawn].sort(),
-        };
-        const value = JSON.stringify(newSegment);
-        const hasFlags = active.size > 0 || inactiveDrawn.size > 0;
+        const newActive = [...active].sort();
+        const activeChanged =
+          JSON.stringify(previousActive) !== JSON.stringify(newActive);
 
-        if (hasFlags && cookieSegment !== value) {
+        if (active.size > 0 && activeChanged) {
+          const value = JSON.stringify({ active: newActive });
           const date = new Date();
           date.setTime(date.getTime() + 30 * 24 * 60 * 60 * 1000); // 1 month
           setCookie(
