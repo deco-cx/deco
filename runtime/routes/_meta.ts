@@ -21,7 +21,8 @@ export const handler = createHandler(async (ctx) => {
   return new Response(JSON.stringify(value), {
     headers: {
       "Content-Type": "application/json",
-      "cache-control": "must-revalidate",
+      "cache-control":
+        "public, max-age=60, s-maxage=60, stale-while-revalidate=300, must-revalidate",
       etag,
       ...allowCorsFor(ctx.req.raw),
     },
