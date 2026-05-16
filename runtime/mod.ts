@@ -248,7 +248,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       name: this.ctx.site,
     };
     state.global = state;
-    const { resolver } = await this.ctx.runtime!;
+    const { manifest, resolver } = await this.ctx.runtime!;
 
     const ctxResolver = resolver
       .resolverFor(
@@ -279,6 +279,7 @@ export class Deco<TAppManifest extends AppManifest = AppManifest> {
       {
         isInvoke: true,
       },
+      manifest,
     );
 
     return state;

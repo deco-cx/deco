@@ -4,6 +4,7 @@ import type { ResolveOptions } from "../engine/core/mod.ts";
 import type { BaseContext, ResolveFunc } from "../engine/core/resolver.ts";
 import dfs from "../engine/manifest/defaults.ts";
 import type { AppManifest } from "../types.ts";
+import { resolveDynamicInvokeProps } from "./invoke_path.ts";
 import type { InvocationProxy, InvokeFunction } from "./invoke.types.ts";
 
 const sanitizer = (str: string | `#${string}`) =>
@@ -28,6 +29,7 @@ export const buildInvokeFunc = <
   resolver: ResolveFunc,
   options?: Partial<ResolveOptions>,
   partialCtx?: Partial<Omit<TContext, keyof BaseContext>>,
+  manifest?: TManifest,
 ):
   & InvocationProxy<
     TManifest
@@ -36,15 +38,32 @@ export const buildInvokeFunc = <
   const invoker = (
     key: string,
     props: unknown,
-  ) =>
-    resolver<Awaited<ReturnType<InvocationFunc<TManifest>>>>(
-      payloadForFunc({ key, props } as InvokeFunction<TManifest>),
+  ) => {
+    const propsRecord = props != null && typeof props === "object" &&
+        !Array.isArray(props)
+      ? props as Record<string, unknown>
+      : undefined;
+
+    const resolved = manifest
+      ? resolveDynamicInvokeProps(
+        key,
+        propsRecord,
+        manifest,
+      )
+      : { key, props };
+    if (!resolved) {
+      throw new Error("Invalid invoke path");
+    }
+
+    return resolver<Awaited<ReturnType<InvocationFunc<TManifest>>>>(
+      payloadForFunc(resolved as InvokeFunction<TManifest>),
       {
         ...options,
         resolveChain: options?.resolveChain ?? [],
       },
       partialCtx,
     );
+  };
 
   return new Proxy<InvocationProxyHandler>(
     invoker as InvocationProxyHandler,
