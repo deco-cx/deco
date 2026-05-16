@@ -1,11 +1,5 @@
 import { formDataToProps } from "../../clients/formdata.ts";
 import { bodyFromUrl } from "../../utils/http.ts";
-import {
-  blockFromManifest,
-  invokableKeysFromManifest,
-  mergeDynamicProps,
-  resolveInvokePath,
-} from "../../utils/invoke_path.ts";
 import { invokeToHttpResponse } from "../../utils/invoke.ts";
 import type { InvokeFunction } from "../../utils/invoke.types.ts";
 import { createHandler } from "../middleware.ts";
@@ -82,41 +76,13 @@ async function parsePropsFromRequest(
 export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
-  const rawKey = ctx.var.url.pathname.replace("/live/invoke/", "")
+  const key = ctx.var.url.pathname.replace("/live/invoke/", "")
     .replace(
       "/deco/invoke/",
       "",
     );
-  const runtime = await ctx.var.deco.ctx.runtime;
-  if (!runtime?.manifest) {
-    console.error("Runtime manifest not available for invoke handler");
-    return new Response("Internal configuration error", { status: 500 });
-  }
 
-  const manifest = runtime.manifest;
-  const resolvedPath = resolveInvokePath(
-    rawKey,
-    invokableKeysFromManifest(manifest),
-  );
-  if (!resolvedPath) {
-    return new Response("Invalid invoke path", { status: 400 });
-  }
-
-  const { key, dynamicSegments } = resolvedPath;
-  const block = blockFromManifest(manifest, key);
-  if (
-    dynamicSegments.length &&
-    (!block?.dynamicParams?.length ||
-      dynamicSegments.length > block.dynamicParams.length)
-  ) {
-    return new Response("Invalid invoke path", { status: 400 });
-  }
-
-  const props = mergeDynamicProps(
-    await parsePropsFromRequest(ctx.req.raw),
-    block?.dynamicParams,
-    dynamicSegments,
-  );
+  const props = await parsePropsFromRequest(ctx.req.raw);
 
   const select = (ctx.var.url.searchParams.getAll("select") ??
     []) as InvokeFunction[
