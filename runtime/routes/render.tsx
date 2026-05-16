@@ -75,6 +75,15 @@ const fromRequest = (req: Request): Options => {
 const DECO_RENDER_CACHE_CONTROL = Deno.env.get("DECO_RENDER_CACHE_CONTROL") ||
   "public, max-age=60, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400";
 
+// When the request carries a __cb (content-bust) query param, the response is
+// fully content-addressed: __cb is a Murmurhash3 of revisionId|vary|stableHref
+// |deploymentId (see hooks/useSection.ts), so a new deploy or vary change
+// produces a new __cb by construction. Treat these responses as immutable so
+// CDNs cache them aggressively and stop re-validating against origin.
+const DECO_RENDER_CACHE_CONTROL_IMMUTABLE =
+  Deno.env.get("DECO_RENDER_CACHE_CONTROL_IMMUTABLE") ||
+  "public, max-age=31536000, s-maxage=31536000, immutable, stale-if-error=86400";
+
 const AsyncRenderSF = singleFlight<Response>();
 const SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT =
   Deno.env.get("SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT") === "true";
@@ -120,11 +129,15 @@ export const handler = createHandler(async (
   // ideally cachebust should be calculated per section as well so that you can reuse section across pages and produce same cacheBusts.
   const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;
   if (shouldCache && shouldCacheFromVary) {
-    // Stale cache on CDN, but make the browser fetch every single time.
-    // We can test if caching on the browser helps too.
+    // When __cb (content-bust) is present, the response is content-addressed
+    // and may be cached effectively forever. Without __cb, fall back to the
+    // short-TTL default so any handler that bypassed useSection still works.
+    const hasContentHash = opts.searchParams.has("__cb");
     response.headers.set(
       "cache-control",
-      DECO_RENDER_CACHE_CONTROL,
+      hasContentHash
+        ? DECO_RENDER_CACHE_CONTROL_IMMUTABLE
+        : DECO_RENDER_CACHE_CONTROL,
     );
   } else {
     response.headers.set(
