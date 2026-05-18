@@ -1,5 +1,8 @@
 const ALLOWED_ORIGINS = [
   "https://admin.deco.cx",
+  "https://admin.decocms.com",
+  "https://deco.cx",
+  "https://decocms.com",
   "http://localhost:3000", // local dev
   "http://localhost:8000",
 ];
@@ -22,9 +25,15 @@ export function isPreviewAllowed(req: Request): boolean {
     return true;
   }
 
-  // Allow if the request IS on admin.deco.cx itself
+  // Allow if the request IS on an allowed host itself
   const host = req.headers.get("host") || "";
-  if (host === "admin.deco.cx" || host.startsWith("localhost")) {
+  if (
+    host === "admin.deco.cx" ||
+    host === "admin.decocms.com" ||
+    host.endsWith(".deco.cx") ||
+    host.endsWith(".decocms.com") ||
+    host.startsWith("localhost")
+  ) {
     return true;
   }
 
