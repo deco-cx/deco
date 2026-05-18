@@ -8,6 +8,7 @@ import { singleFlight } from "../../utils/mod.ts";
 import { createHandler, DEBUG_QS } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
+import { isPreviewAllowed } from "./previewAuth.ts";
 
 interface Options {
   resolveChain?: FieldResolver[];
@@ -83,6 +84,13 @@ export const handler = createHandler(async (
   ctx,
 ) => {
   const { req: { raw: req }, var: state, render } = ctx;
+
+  if (!isPreviewAllowed(req)) {
+    return new Response("Preview only available from admin editor", {
+      status: 403,
+    });
+  }
+
   const opts = fromRequest(req);
   const isDebugRequest = opts.searchParams.has(DEBUG_QS);
 

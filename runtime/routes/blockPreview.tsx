@@ -7,6 +7,7 @@ import { bodyFromUrl } from "../../utils/http.ts";
 import { createHandler, type DecoMiddlewareContext } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render from "./entrypoint.tsx";
+import { isPreviewAllowed } from "./previewAuth.ts";
 
 const decoder = new TextDecoder();
 export default function Preview(
@@ -39,6 +40,13 @@ export const handler = createHandler(async (
   ctx,
 ): Promise<Response> => {
   const { req: { raw: req }, var: state } = ctx;
+
+  if (!isPreviewAllowed(req)) {
+    return new Response("Preview only available from admin editor", {
+      status: 403,
+    });
+  }
+
   if (req.headers.get("upgrade") != "websocket") {
     const props = await getPropsFromRequest(req);
     return await render(req.url, await props, req, ctx);
