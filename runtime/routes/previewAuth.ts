@@ -33,13 +33,11 @@ export function isPreviewAllowed(req: Request): boolean {
     return true;
   }
 
-  // Allow if the request IS on an allowed host itself
+  // Allow if the request IS on an admin host itself (not wildcard subdomains)
   const host = req.headers.get("host") || "";
   if (
     host === "admin.deco.cx" ||
     host === "admin.decocms.com" ||
-    host.endsWith(".deco.cx") ||
-    host.endsWith(".decocms.com") ||
     host.startsWith("localhost")
   ) {
     return true;
