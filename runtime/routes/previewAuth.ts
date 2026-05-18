@@ -7,6 +7,14 @@ const ALLOWED_ORIGINS = [
   "http://localhost:8000",
 ];
 
+function safeOrigin(value: string): string | null {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Checks whether a preview/render request originates from the admin editor.
  * Allows requests from admin.deco.cx, localhost dev servers, and requests
@@ -14,14 +22,14 @@ const ALLOWED_ORIGINS = [
  */
 export function isPreviewAllowed(req: Request): boolean {
   // Check Origin header (set on cross-origin requests from admin iframe/fetch)
-  const origin = req.headers.get("origin");
-  if (origin && ALLOWED_ORIGINS.some((o) => origin.startsWith(o))) {
+  const origin = safeOrigin(req.headers.get("origin") ?? "");
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
     return true;
   }
 
   // Check Referer as fallback (for GET requests that don't send Origin)
-  const referer = req.headers.get("referer");
-  if (referer && ALLOWED_ORIGINS.some((o) => referer.startsWith(o))) {
+  const referer = safeOrigin(req.headers.get("referer") ?? "");
+  if (referer && ALLOWED_ORIGINS.includes(referer)) {
     return true;
   }
 
