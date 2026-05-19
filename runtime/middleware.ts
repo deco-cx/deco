@@ -393,7 +393,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         const active = new Set(segment.active || []);
         const inactiveDrawn = new Set(segment.inactiveDrawn || []);
         for (const flag of ctx.var.flags) {
-          if (flag.isSegment) {
+          if (flag.isSegment && flag.sticky) {
             if (flag.value) {
               active.add(flag.name);
               inactiveDrawn.delete(flag.name);

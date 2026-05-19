@@ -223,6 +223,7 @@ const matcherBlock: Block<
         name: uniqueId,
         value: result,
         isSegment,
+        sticky: shouldStickyOnSession,
         cacheable: matcherModule.cacheable,
       });
 
