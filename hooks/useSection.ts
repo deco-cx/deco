@@ -7,8 +7,10 @@ import { Murmurhash3 } from "../deps.ts";
 
 const hasher = new Murmurhash3();
 
-// List from cloudflare APO https://developers.cloudflare.com/automatic-platform-optimization/reference/query-parameters
-/** List of querystring that should not vary cache */
+// Seed list adapted from Cloudflare APO
+// (https://developers.cloudflare.com/automatic-platform-optimization/reference/query-parameters),
+// extended with ad-network families seen in production traffic on commerce sites.
+/** Exact-match querystring names that should not vary cache. */
 const BLOCKED_QS = new Set<string>([
   "ref",
   "fbclid",
@@ -19,7 +21,11 @@ const BLOCKED_QS = new Set<string>([
   "mc_eid",
   "gclid",
   "dclid",
+  "msclkid",
+  "ttclid",
+  "yclid",
   "_ga",
+  "_gl",
   "campaignid",
   "adgroupid",
   "_ke",
@@ -30,12 +36,38 @@ const BLOCKED_QS = new Set<string>([
   "mkt_tok",
   "epik",
   "ck_subscriber_id",
+  "_hsenc",
+  "_hsmi",
 ]);
+
+/**
+ * Prefix-matched querystring names that should not vary cache. Used for
+ * families where individual params are open-ended (e.g. utm_source, utm_medium,
+ * utm_id, utm_campaign, utm_content, utm_term — enumerating every variant is
+ * impractical, and ad platforms keep inventing new ones).
+ */
+const BLOCKED_QS_PREFIXES: string[] = [
+  "utm_",
+  "gad_",
+  "dgen_",
+];
 
 const ALLOWED_QS = new Set<string>();
 
 export const addBlockedQS = (queryStrings: string[]): void => {
   queryStrings.forEach((qs) => BLOCKED_QS.add(qs));
+};
+
+export const addBlockedQSPrefix = (prefixes: string[]): void => {
+  for (const p of prefixes) {
+    // Empty prefix would make startsWith("") match every param, silently
+    // stripping the entire querystring. Skip without throwing so a single bad
+    // entry doesn't break the caller.
+    if (!p) continue;
+    if (!BLOCKED_QS_PREFIXES.includes(p)) {
+      BLOCKED_QS_PREFIXES.push(p);
+    }
+  }
 };
 
 export const addAllowedQS = (queryStrings: string[]): void => {
@@ -50,7 +82,8 @@ const createStableHref = (href: string): string => {
   qsList.forEach((qsName: string) => {
     const shouldRemove = ALLOWED_QS.size > 0
       ? !ALLOWED_QS.has(qsName)
-      : BLOCKED_QS.has(qsName);
+      : (BLOCKED_QS.has(qsName) ||
+        BLOCKED_QS_PREFIXES.some((prefix) => qsName.startsWith(prefix)));
 
     if (shouldRemove) {
       hrefUrl.searchParams.delete(qsName);
