@@ -36,6 +36,8 @@ const BLOCKED_QS = new Set<string>([
   "mkt_tok",
   "epik",
   "ck_subscriber_id",
+  "_hsenc",
+  "_hsmi",
 ]);
 
 /**
@@ -48,8 +50,6 @@ const BLOCKED_QS_PREFIXES: string[] = [
   "utm_",
   "gad_",
   "dgen_",
-  "_hsenc",
-  "_hsmi",
 ];
 
 const ALLOWED_QS = new Set<string>();
@@ -60,6 +60,10 @@ export const addBlockedQS = (queryStrings: string[]): void => {
 
 export const addBlockedQSPrefix = (prefixes: string[]): void => {
   for (const p of prefixes) {
+    // Empty prefix would make startsWith("") match every param, silently
+    // stripping the entire querystring. Skip without throwing so a single bad
+    // entry doesn't break the caller.
+    if (!p) continue;
     if (!BLOCKED_QS_PREFIXES.includes(p)) {
       BLOCKED_QS_PREFIXES.push(p);
     }
