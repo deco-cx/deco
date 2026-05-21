@@ -43,7 +43,6 @@ const SA_NAMESPACE_PATH =
 interface SelfScaleConfig {
   apiHost: string;
   namespace: string;
-  token: string;
   client: Deno.HttpClient;
 }
 
@@ -56,8 +55,10 @@ const initSelfScale = async (): Promise<SelfScaleConfig | null> => {
     return null;
   }
   try {
-    const [token, caCert, namespace] = await Promise.all([
-      Deno.readTextFile(SA_TOKEN_PATH),
+    // CA cert + namespace are stable for the pod's lifetime; cache them.
+    // The SA token has a TTL (~1h) and is rotated in place by kubelet, so we
+    // re-read it on every PATCH instead of caching it here.
+    const [caCert, namespace] = await Promise.all([
       Deno.readTextFile(SA_CA_CERT_PATH),
       Deno.readTextFile(SA_NAMESPACE_PATH),
     ]);
@@ -73,7 +74,6 @@ const initSelfScale = async (): Promise<SelfScaleConfig | null> => {
     selfScaleConfig = {
       apiHost: `https://${host}:${port}`,
       namespace: namespace.trim(),
-      token: token.trim(),
       client: Deno.createHttpClient({ caCerts: [caCert] }),
     };
     return selfScaleConfig;
@@ -87,13 +87,20 @@ const initSelfScale = async (): Promise<SelfScaleConfig | null> => {
 const scaleSelfToZero = async (): Promise<boolean> => {
   const cfg = await initSelfScale();
   if (!cfg || !DECO_STATEFULSET_NAME) return false;
+  let token: string;
+  try {
+    token = (await Deno.readTextFile(SA_TOKEN_PATH)).trim();
+  } catch (err) {
+    console.error("[self-scale] failed to read SA token:", err);
+    return false;
+  }
   const url =
     `${cfg.apiHost}/apis/apps/v1/namespaces/${cfg.namespace}/statefulsets/${DECO_STATEFULSET_NAME}/scale`;
   try {
     const resp = await fetch(url, {
       method: "PATCH",
       headers: {
-        "Authorization": `Bearer ${cfg.token}`,
+        "Authorization": `Bearer ${token}`,
         "Content-Type": "application/strategic-merge-patch+json",
       },
       body: JSON.stringify({ spec: { replicas: 0 } }),
@@ -106,6 +113,8 @@ const scaleSelfToZero = async (): Promise<boolean> => {
       );
       return false;
     }
+    // Drain the body so the connection is returned to the pool promptly.
+    await resp.body?.cancel();
     console.log(
       `[self-scale] scaled self to zero sts=${DECO_STATEFULSET_NAME} ns=${cfg.namespace}`,
     );
@@ -128,6 +137,8 @@ const notifyViaHttp = async (notificationUrl: URL): Promise<boolean> => {
       );
       return false;
     }
+    // Drain the body so the connection is returned to the pool promptly.
+    await resp.body?.cancel();
     return true;
   } catch (err) {
     console.error(`Failed to notify ${notificationUrl}`, err);
@@ -143,17 +154,19 @@ const notifyViaHttp = async (notificationUrl: URL): Promise<boolean> => {
 // window, which dominated admin's request load.
 
 let idleInterval: number | undefined;
-let armedNotificationUrl: URL | undefined;
+let armedNotificationUrl: URL | undefined | null;
 
-const fireOnce = async (notificationUrl: URL) => {
-  console.log(`env is considered idle notifying ${notificationUrl}`);
+const fireOnce = async (notificationUrl: URL | undefined | null) => {
+  console.log(
+    `env is considered idle (self-scale=${DECO_SELF_SCALE_ENABLED} http=${!!notificationUrl})`,
+  );
   // Self-scale path is preferred; HTTP fallback runs on failure (or when
   // the env is not provisioned with the SA, e.g. existing envs pre-migration).
   let success = false;
   if (DECO_SELF_SCALE_ENABLED) {
     success = await scaleSelfToZero();
   }
-  if (!success) {
+  if (!success && notificationUrl) {
     success = await notifyViaHttp(notificationUrl);
   }
   if (success && idleInterval !== undefined) {
@@ -162,13 +175,21 @@ const fireOnce = async (notificationUrl: URL) => {
   }
 };
 
-const checkActivity = (notificationUrl: URL) => {
-  if (isIdle()) {
-    fireOnce(notificationUrl);
-  }
-};
+// Guard against re-entrancy: if a previous fireOnce() is still in flight when
+// the next interval tick arrives (network hang, slow k8s API), don't kick off
+// a second concurrent notification.
+const checkActivity = (() => {
+  let inFlight = false;
+  return (notificationUrl: URL | undefined | null) => {
+    if (!isIdle() || inFlight) return;
+    inFlight = true;
+    fireOnce(notificationUrl).finally(() => {
+      inFlight = false;
+    });
+  };
+})();
 
-const armIdleInterval = (notificationUrl: URL) => {
+const armIdleInterval = (notificationUrl: URL | undefined | null) => {
   if (idleInterval !== undefined) return;
   idleInterval = setInterval(
     () => checkActivity(notificationUrl),
@@ -180,7 +201,7 @@ export const resetActivity = () => {
   lastActivity = Date.now();
   // If we previously cleared the interval after firing, re-arm so that a
   // subsequent idle period will fire again.
-  if (idleInterval === undefined && armedNotificationUrl) {
+  if (idleInterval === undefined && armedNotificationUrl !== undefined) {
     armIdleInterval(armedNotificationUrl);
   }
 };
@@ -191,13 +212,25 @@ export const activityMonitor: MiddlewareHandler = async (_ctx, next) => {
 };
 
 export const createIdleHandler = (site: string, envName: string): Handler => {
-  const shouldNotify = hasNotificationEndpoint &&
+  // Idle monitoring runs whenever a threshold is set and at least one of the
+  // two fire paths is configured. Previously this was gated only on the HTTP
+  // endpoint, which meant envs with self-scale enabled but no fallback URL
+  // would never arm the timer.
+  const idleEnabled = DECO_IDLE_THRESHOLD_MINUTES !== undefined &&
+    (hasNotificationEndpoint || DECO_SELF_SCALE_ENABLED) &&
     typeof site === "string" &&
     typeof envName === "string";
-  if (shouldNotify && DECO_IDLE_NOTIFICATION_ENDPOINT) {
-    const notificationUrl = new URL(DECO_IDLE_NOTIFICATION_ENDPOINT);
-    notificationUrl.searchParams.set("site", site);
-    notificationUrl.searchParams.set("name", envName);
+  if (idleEnabled) {
+    // The URL is the HTTP fallback target. Build it only if the endpoint is
+    // configured; if it's not, fireOnce uses self-scale exclusively.
+    const notificationUrl: URL | null = DECO_IDLE_NOTIFICATION_ENDPOINT
+      ? (() => {
+        const u = new URL(DECO_IDLE_NOTIFICATION_ENDPOINT);
+        u.searchParams.set("site", site);
+        u.searchParams.set("name", envName);
+        return u;
+      })()
+      : null;
     armedNotificationUrl = notificationUrl;
     armIdleInterval(notificationUrl);
   }
