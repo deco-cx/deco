@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { HTTPException } from "@hono/hono/http-exception";
 import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
-import { PAGE_DIRTY_KEY } from "../blocks/utils.tsx";
+import { PAGE_CACHE_ALLOWED_KEY } from "../blocks/utils.tsx";
 import { Context, context } from "../deco.ts";
 import {
   type Exception,
@@ -106,7 +106,6 @@ async (ctx, next) => {
 
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
-const PAGE_CACHE_ENABLED = Deno.env.get("DECO_PAGE_CACHE_ENABLED") === "true";
 const PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ??
   "public, max-age=90, s-maxage=90, stale-while-revalidate=3600, stale-if-error=86400";
 
@@ -430,12 +429,12 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       const hasSetCookie = getSetCookies(newHeaders).length > 0;
       const contentType = newHeaders.get("Content-Type") ?? "";
       const isHtmlResponse = contentType.includes("text/html");
-      const isPageDirty = ctx.var.bag?.has(PAGE_DIRTY_KEY);
+      const isPageCacheAllowed = ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY);
 
       if (hasSetCookie) {
         // Set-cookie present: never cache (same behavior as main)
         newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
-      } else if (isHtmlResponse && PAGE_CACHE_ENABLED && !isPageDirty) {
+      } else if (isHtmlResponse && isPageCacheAllowed) {
         const flags = ctx.var?.flags ?? [];
         const allFlagsCacheable = flags.length > 0
           ? flags.every((flag) => flag.cacheable === true)
