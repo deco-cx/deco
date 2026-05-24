@@ -426,7 +426,10 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
-      const hasSetCookie = getSetCookies(newHeaders).length > 0;
+      const setCookies = getSetCookies(newHeaders);
+      const hasSetCookie = setCookies.some(
+        (cookie: { name: string }) => cookie.name !== "__cflb",
+      );
       const contentType = newHeaders.get("Content-Type") ?? "";
       const isHtmlResponse = contentType.includes("text/html");
       const isPageCacheAllowed = ctx.var.bag?.has(PAGE_CACHE_ALLOWED_KEY);
