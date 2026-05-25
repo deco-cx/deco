@@ -73,7 +73,7 @@ const fromRequest = (req: Request): Options => {
 };
 
 const DECO_RENDER_CACHE_CONTROL = Deno.env.get("DECO_RENDER_CACHE_CONTROL") ||
-  "public, max-age=60, s-maxage=60, stale-while-revalidate=3600, stale-if-error=86400";
+  "public, max-age=60, stale-while-revalidate=3600, stale-if-error=86400";
 
 const AsyncRenderSF = singleFlight<Response>();
 const SHOULD_USE_ASYNC_RENDER_SINGLE_FLIGHT =

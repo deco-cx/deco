@@ -107,7 +107,7 @@ async (ctx, next) => {
 const DEBUG_COOKIE = "deco_debug";
 const DEBUG_ENABLED = "enabled";
 const PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ??
-  "public, max-age=90, s-maxage=90, stale-while-revalidate=3600, stale-if-error=86400";
+  "public, max-age=90, stale-while-revalidate=3600, stale-if-error=86400";
 
 export const DEBUG_QS = "__d";
 const addHours = (date: Date, h: number) => {
