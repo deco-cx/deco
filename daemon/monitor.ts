@@ -222,10 +222,12 @@ export const createIdleHandler = (site: string, envName: string): Handler => {
     typeof envName === "string";
   if (idleEnabled) {
     // The URL is the HTTP fallback target. Build it only if the endpoint is
-    // configured; if it's not, fireOnce uses self-scale exclusively.
-    const notificationUrl: URL | null = DECO_IDLE_NOTIFICATION_ENDPOINT
+    // configured AND parseable; if it's not, fireOnce uses self-scale
+    // exclusively. Guarding on the raw env var would crash here when
+    // self-scale is enabled but the fallback URL is malformed.
+    const notificationUrl: URL | null = hasNotificationEndpoint
       ? (() => {
-        const u = new URL(DECO_IDLE_NOTIFICATION_ENDPOINT);
+        const u = new URL(DECO_IDLE_NOTIFICATION_ENDPOINT!);
         u.searchParams.set("site", site);
         u.searchParams.set("name", envName);
         return u;
