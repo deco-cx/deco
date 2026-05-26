@@ -384,7 +384,7 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       if (ctx.var?.flags.length > 0) {
         const currentCookies = getCookies(ctx.req.raw.headers);
         const cookieSegment = tryOrDefault(
-          () => decodeCookie(currentCookies[DECO_SEGMENT]),
+          () => decodeCookie(currentCookies[DECO_SEGMENT] ?? ""),
           "",
         );
         const segment = tryOrDefault(() => JSON.parse(cookieSegment), {});

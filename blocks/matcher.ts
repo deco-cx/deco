@@ -202,7 +202,7 @@ const matcherBlock: Block<
           : "";
         const cookieName = `${DECO_MATCHER_PREFIX}${h.result()}${_sessionKey}`;
         const isMatchFromCookie = cookieValue.boolean(
-          getCookies(enrichedCtx.request.headers)[cookieName],
+          getCookies(enrichedCtx.request.headers)[cookieName] ?? "",
         );
         result ??= isMatchFromCookie ?? await matcherFunc(enrichedCtx);
         if (result !== isMatchFromCookie) {
