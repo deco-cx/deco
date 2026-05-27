@@ -31,6 +31,7 @@ import type {
 import {
   buildClientCookieScript,
   injectScriptIntoHtml,
+  stripFrameworkSetCookies,
 } from "./clientCookies.ts";
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
@@ -533,6 +534,13 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
       ctx.res = undefined;
       if (cookieScript) {
         const html = await initialResponse.text();
+        // Script captured the framework cookies; remove the now-redundant
+        // Set-Cookie headers so CDNs under `respect_origin` cache mode treat
+        // the response as non-personalized and cache cold-visit responses.
+        // The Deco-Cache-Vary-Cookies hint header (set by applyPageCacheDecision
+        // above) is preserved so operators still know which cookies belong in
+        // the custom cache key.
+        stripFrameworkSetCookies(newHeaders);
         ctx.res = new Response(injectScriptIntoHtml(html, cookieScript), {
           status: responseStatus,
           headers: newHeaders,

@@ -85,3 +85,31 @@ export const injectScriptIntoHtml = (html: string, script: string): string => {
   }
   return html + script;
 };
+
+/**
+ * Remove framework-managed Set-Cookies (`deco_matcher_*`, `deco_segment`) from
+ * `headers` in place. Foreign Set-Cookies (cart, profile, etc.) are kept.
+ *
+ * Used after `buildClientCookieScript` has captured the framework cookies into
+ * an inline `<script>`. The script handles client-side persistence, which
+ * means the response header is redundant — and a CDN running under
+ * `respect_origin` cache mode (e.g. Cloudflare) treats any `Set-Cookie` as a
+ * personalization signal and refuses to cache the response. Stripping the
+ * framework Set-Cookies lets cold-visit responses cache cleanly.
+ *
+ * Trade-off: no-JS clients lose framework-cookie stickiness because they
+ * cannot execute the inline script. That is an accepted side effect — the
+ * matcher-stickiness model has been implicitly JS-dependent ever since 1.201.1.
+ */
+export const stripFrameworkSetCookies = (headers: Headers): void => {
+  const remaining = headers.getSetCookie().filter((raw) => {
+    const eq = raw.indexOf("=");
+    if (eq < 0) return true;
+    const name = raw.slice(0, eq);
+    return !frameworkCookiePrefixes().some((p) => name.startsWith(p));
+  });
+  headers.delete("Set-Cookie");
+  for (const raw of remaining) {
+    headers.append("Set-Cookie", raw);
+  }
+};

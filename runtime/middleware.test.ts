@@ -5,6 +5,7 @@ import { applyPageCacheDecision, DECO_SEGMENT } from "./middleware.ts";
 import {
   buildClientCookieScript,
   injectScriptIntoHtml,
+  stripFrameworkSetCookies,
 } from "./clientCookies.ts";
 
 const matcherCookie = `${DECO_MATCHER_PREFIX}1234567890_0.5`;
@@ -254,5 +255,100 @@ Deno.test("injectScriptIntoHtml: prefers first </head> (handles embedded HTML)",
   assertEquals(
     out.slice(firstHeadClose - SCRIPT.length, firstHeadClose),
     SCRIPT,
+  );
+});
+
+// ---------- stripFrameworkSetCookies ----------
+
+Deno.test("stripFrameworkSetCookies: removes deco_matcher_* and deco_segment, keeps foreign", () => {
+  const headers = new Headers();
+  setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
+  setCookie(
+    headers,
+    { name: DECO_SEGMENT, value: '{"active":["foo"]}', path: "/" },
+    { encode: true },
+  );
+  setCookie(headers, { name: "cart_count", value: "3", path: "/" });
+  setCookie(headers, { name: "session_id", value: "xyz", path: "/" });
+
+  stripFrameworkSetCookies(headers);
+
+  const names = headers.getSetCookie().map((raw) => {
+    const eq = raw.indexOf("=");
+    return raw.slice(0, eq);
+  });
+  assertEquals(names.sort(), ["cart_count", "session_id"]);
+});
+
+Deno.test("stripFrameworkSetCookies: no-op when there are no Set-Cookie headers", () => {
+  const headers = new Headers({ "Content-Type": "text/html" });
+  stripFrameworkSetCookies(headers);
+  assertEquals(headers.getSetCookie().length, 0);
+  assertEquals(headers.get("Content-Type"), "text/html");
+});
+
+Deno.test("stripFrameworkSetCookies: no-op when only foreign Set-Cookies present", () => {
+  const headers = new Headers();
+  setCookie(headers, { name: "cart_count", value: "3", path: "/" });
+  setCookie(headers, { name: "session_id", value: "xyz", path: "/" });
+
+  stripFrameworkSetCookies(headers);
+
+  assertEquals(headers.getSetCookie().length, 2);
+});
+
+Deno.test("flow: build script captures cookies, strip removes them, hint header preserved", () => {
+  // Simulate the production middleware flow:
+  // 1. applyPageCacheDecision runs first — sets the Deco-Cache-Vary-Cookies hint.
+  // 2. buildClientCookieScript reads the framework Set-Cookies into a <script>.
+  // 3. stripFrameworkSetCookies removes the now-redundant headers.
+  // Final state: hint header preserved, script has the original cookie bytes,
+  // response has no framework Set-Cookies.
+  const headers = new Headers({ "Content-Type": "text/html" });
+  setCookie(headers, { name: matcherCookie, value: "abc@1", path: "/" });
+  setCookie(
+    headers,
+    { name: DECO_SEGMENT, value: '{"active":["foo"]}', path: "/" },
+    { encode: true },
+  );
+  setCookie(headers, { name: "cart_count", value: "3", path: "/" });
+
+  // Step 1: apply page-cache decision (this also sets the hint header).
+  // Foreign Set-Cookie present → cache disqualified → no-store. So we test
+  // the hint header path with foreign cookie removed.
+  // Build a separate headers object without the foreign cookie, run the
+  // decision so the hint header is set, then add back the foreign cookie
+  // and proceed.
+  const headersForDecision = new Headers({ "Content-Type": "text/html" });
+  setCookie(headersForDecision, {
+    name: matcherCookie,
+    value: "abc@1",
+    path: "/",
+  });
+  setCookie(
+    headersForDecision,
+    { name: DECO_SEGMENT, value: '{"active":["foo"]}', path: "/" },
+    { encode: true },
+  );
+  applyPageCacheDecision(headersForDecision, pageInput);
+  const hint = headersForDecision.get("Deco-Cache-Vary-Cookies");
+  assert(hint !== null, "expected hint header from applyPageCacheDecision");
+
+  // Step 2: build the script from the (now decided) headers.
+  const script = buildClientCookieScript(headersForDecision);
+  assert(script !== null);
+  assertStringIncludes(script, matcherCookie);
+  assertStringIncludes(script, DECO_SEGMENT);
+
+  // Step 3: strip framework Set-Cookies — script already captured them.
+  stripFrameworkSetCookies(headersForDecision);
+
+  // Verify final state.
+  const remaining = headersForDecision.getSetCookie();
+  assertEquals(remaining.length, 0, "expected no Set-Cookies remaining");
+  assertEquals(
+    headersForDecision.get("Deco-Cache-Vary-Cookies"),
+    hint,
+    "hint header must survive the strip",
   );
 });
