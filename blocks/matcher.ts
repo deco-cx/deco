@@ -105,6 +105,25 @@ export type BlockModuleMatcher =
     (ctx: MatchContext) => PromiseOrValue<boolean>
   >
   & {
+    /**
+     * If `true`, this matcher's result does NOT depend on per-user state
+     * (auth cookies, session, identity-keyed flags) and is safe to bake into
+     * cached HTML shared across visitors.
+     *
+     * When set on every matcher of a page, the page becomes eligible for
+     * full-page CDN caching. The framework also injects a small
+     * `<script>document.cookie=...</script>` so the matcher's variant cookie
+     * still reaches the browser when the CDN strips `Set-Cookie` from cached
+     * responses (e.g. Cloudflare's `cache: true` rule).
+     *
+     * Consequence: the first cold-cache visitor's variant becomes the
+     * variant served to everyone hitting that URL during the cache window.
+     * This is correct for sticky CSS/copy A/B tests and matchers keyed on
+     * URL/date/geo/device. It is WRONG for matchers whose result derives
+     * from per-user identity — never set `cacheable: true` for those.
+     *
+     * Default: `undefined` → page falls through to `Cache-Control: no-store`.
+     */
     cacheable?: boolean;
   };
 
