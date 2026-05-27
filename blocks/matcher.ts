@@ -215,6 +215,7 @@ const matcherBlock: Block<
             sameSite: "Lax",
             expires: date,
           });
+          respHeaders.append("vary", "cookie");
         }
       }
 

@@ -1,9 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { HTTPException } from "@hono/hono/http-exception";
-import {
-  DECO_MATCHER_HEADER_QS,
-  DECO_MATCHER_PREFIX,
-} from "../blocks/matcher.ts";
+import { DECO_MATCHER_HEADER_QS } from "../blocks/matcher.ts";
 import { PAGE_DIRTY_KEY } from "../blocks/utils.tsx";
 import { Context, context } from "../deco.ts";
 import {
@@ -112,80 +109,6 @@ const DEBUG_ENABLED = "enabled";
 const PAGE_CACHE_ENABLED = Deno.env.get("DECO_PAGE_CACHE_ENABLED") === "true";
 const PAGE_CACHE_CONTROL = Deno.env.get("DECO_PAGE_CACHE_CONTROL") ??
   "public, max-age=90, s-maxage=90, stale-while-revalidate=3600, stale-if-error=86400";
-
-// Cookies the framework itself emits. CDNs are expected to include these in
-// their custom cache key so cache identity tracks the variant, instead of
-// treating the Set-Cookie as a reason to bypass cache entirely.
-// Deferred to a getter to dodge a TDZ from the blocks/matcher.ts circular import.
-const frameworkCookiePrefixes = (): readonly string[] => [
-  DECO_MATCHER_PREFIX,
-  DECO_SEGMENT,
-];
-
-const isFrameworkCookieName = (name: string): boolean =>
-  frameworkCookiePrefixes().some((p) => name.startsWith(p));
-
-const hasNonFrameworkSetCookie = (headers: Headers): boolean => {
-  for (const c of getSetCookies(headers)) {
-    if (!isFrameworkCookieName(c.name)) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const frameworkSetCookieNames = (headers: Headers): string[] =>
-  getSetCookies(headers)
-    .filter((c) => isFrameworkCookieName(c.name))
-    .map((c) => c.name);
-
-const NO_STORE = "no-store, no-cache, must-revalidate";
-
-export interface PageCacheDecisionInput {
-  flags: readonly { cacheable?: boolean }[];
-  isPageCacheAllowed: boolean;
-  /** false iff some loader vetoed caching (cache:"no-store" or null cache key). */
-  shouldCacheFromVary: boolean;
-}
-
-/**
- * Mutates `headers` to set Cache-Control (and the Deco-Cache-Vary-Cookies
- * hint header) according to the matcher-aware caching rules. Exported for
- * direct testability; the request middleware is the only production caller.
- */
-export const applyPageCacheDecision = (
-  headers: Headers,
-  input: PageCacheDecisionInput,
-): void => {
-  const hasForeignSetCookie = hasNonFrameworkSetCookie(headers);
-  const cacheDisqualified = hasForeignSetCookie || !input.shouldCacheFromVary;
-
-  if (cacheDisqualified) {
-    headers.set("Cache-Control", NO_STORE);
-    return;
-  }
-
-  if (!input.isPageCacheAllowed) {
-    return;
-  }
-
-  const allFlagsCacheable = input.flags.length > 0
-    ? input.flags.every((flag) => flag.cacheable === true)
-    : true;
-
-  if (!allFlagsCacheable) {
-    headers.set("Cache-Control", NO_STORE);
-    return;
-  }
-
-  if (!headers.has("Cache-Control")) {
-    headers.set("Cache-Control", PAGE_CACHE_CONTROL);
-  }
-  const frameworkNames = frameworkSetCookieNames(headers);
-  if (frameworkNames.length > 0) {
-    headers.set("Deco-Cache-Vary-Cookies", frameworkNames.join(", "));
-  }
-};
 
 export const DEBUG_QS = "__d";
 const addHours = (date: Date, h: number) => {
@@ -501,16 +424,29 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         }
       }
 
+      const hasSetCookie = getSetCookies(newHeaders).length > 0;
       const contentType = newHeaders.get("Content-Type") ?? "";
       const isHtmlResponse = contentType.includes("text/html");
       const isPageDirty = ctx.var.bag?.has(PAGE_DIRTY_KEY);
-      const isPageCacheAllowed = isHtmlResponse && PAGE_CACHE_ENABLED &&
-        !isPageDirty;
-      applyPageCacheDecision(newHeaders, {
-        flags: ctx.var?.flags ?? [],
-        isPageCacheAllowed,
-        shouldCacheFromVary: ctx.var?.vary?.shouldCache !== false,
-      });
+
+      if (hasSetCookie) {
+        // Set-cookie present: never cache (same behavior as main)
+        newHeaders.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      } else if (isHtmlResponse && PAGE_CACHE_ENABLED && !isPageDirty) {
+        const flags = ctx.var?.flags ?? [];
+        const allFlagsCacheable = flags.length > 0
+          ? flags.every((flag) => flag.cacheable === true)
+          : true;
+
+        if (!allFlagsCacheable) {
+          newHeaders.set(
+            "Cache-Control",
+            "no-store, no-cache, must-revalidate",
+          );
+        } else if (!newHeaders.has("Cache-Control")) {
+          newHeaders.set("Cache-Control", PAGE_CACHE_CONTROL);
+        }
+      }
 
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
