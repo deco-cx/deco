@@ -148,6 +148,14 @@ if (SANDBOX_MODE) {
   );
 }
 
+// Surface scheduled-restart configuration so it's easy to rule out as the cause
+// of "the daemon keeps restarting" reports.
+console.log(
+  `[daemon] ${UNSTABLE_WORKER_RESPAWN_INTERVAL_MS_ENV_NAME}=${
+    UNSTABLE_WORKER_RESPAWN_INTERVAL_MS ?? "unset"
+  }`,
+);
+
 globalThis.addEventListener(
   "unhandledrejection",
   (e: { promise: Promise<unknown>; reason: unknown }) => {
