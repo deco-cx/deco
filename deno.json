@@ -1,6 +1,6 @@
 {
   "name": "@deco/deco",
-  "version": "1.200.0",
+  "version": "1.200.1-next.2",
   "lock": false,
   "nodeModulesDir": "auto",
   "exports": {
