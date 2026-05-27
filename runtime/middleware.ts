@@ -28,6 +28,10 @@ import type {
   Input,
   MiddlewareHandler,
 } from "./deps.ts";
+import {
+  buildClientCookieScript,
+  injectScriptIntoHtml,
+} from "./clientCookies.ts";
 import { setLogger } from "./fetch/fetchLog.ts";
 import { liveness } from "./middlewares/liveness.ts";
 import type { Deco, State } from "./mod.ts";
@@ -513,14 +517,32 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
         shouldCacheFromVary: ctx.var?.vary?.shouldCache !== false,
       });
 
+      // CDNs (e.g. Cloudflare with `cache: true`) strip Set-Cookie from
+      // cached responses for safety. Mirror framework Set-Cookies into an
+      // inline `<script>document.cookie=...</script>` so matcher/segment
+      // stickiness survives CDN-stripped headers. Gated on status=200 + HTML
+      // so we never inject into redirects or error pages (which may carry
+      // reflected input).
+      const cookieScript = (responseStatus === 200 && isHtmlResponse)
+        ? buildClientCookieScript(newHeaders)
+        : null;
+
       // for some reason hono deletes content-type when response is not fresh.
       // which means that sometimes it will fail as headers are immutable.
       // so I'm first setting it to undefined and just then set the entire response again
       ctx.res = undefined;
-      ctx.res = new Response(initialResponse.body, {
-        status: responseStatus,
-        headers: newHeaders,
-      });
+      if (cookieScript) {
+        const html = await initialResponse.text();
+        ctx.res = new Response(injectScriptIntoHtml(html, cookieScript), {
+          status: responseStatus,
+          headers: newHeaders,
+        });
+      } else {
+        ctx.res = new Response(initialResponse.body, {
+          status: responseStatus,
+          headers: newHeaders,
+        });
+      }
     },
   ];
 };
