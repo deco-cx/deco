@@ -6,7 +6,7 @@ import {
   withCacheNamespace,
 } from "./utils.ts";
 import { Buffer } from "node:buffer";
-import { Redis } from "npm:ioredis@^5.10.1";
+import { Redis } from "npm:ioredis@^5.11.0";
 import { compress as lz4Compress, decompress as lz4Decompress } from "jsr:@denosaurs/lz4@^0.1.4";
 import {
   compress as zstdCompress,
