@@ -34,6 +34,11 @@ import {
 import { downloadCache } from "./cache.ts";
 import { createAIHandlers } from "./ai/handlers.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
+import {
+  cacheConfigFromEnvs,
+  restoreCache,
+  snapshotCache,
+} from "./sandboxCache.ts";
 import { register, type TunnelConnection } from "./tunnel.ts";
 import {
   createWorker,
@@ -570,6 +575,17 @@ if (SANDBOX_MODE) {
       // Also update the module-level variable so getSiteName() returns the value
       setSiteName(site);
 
+      // Best-effort cache restore — populates /deno-dir from S3 so the
+      // upcoming deno cache resolution is mostly a no-op. Opt-in via
+      // DECO_CACHE_S3_BUCKET in the deploy body envs (admin forwards it
+      // there, NOT via SandboxClaim.spec.env: the operator rejects
+      // per-claim env when warm pool is in use).
+      // Any failure logs and continues with the cold-start path. Awaited
+      // because we want it done before the worker subprocess starts
+      // requesting modules.
+      const cacheCfg = cacheConfigFromEnvs(envs);
+      await restoreCache(cacheCfg).catch(() => {/* never throws */});
+
       // Use run command from deploy request.
       // If no runCommand provided, default to Deno runner only if dev.ts exists.
       // This prevents a timeout loop when the sandbox is used for non-Deco repos
@@ -603,6 +619,14 @@ if (SANDBOX_MODE) {
         repoUrl: repo,
         branch,
       });
+
+      // Best-effort cache snapshot — fires after the worker is up so
+      // /deno-dir reflects every module the site actually needed.
+      // Detached: never blocks the deploy response. Failures are
+      // logged and swallowed inside snapshotCache().
+      currentSite.gitReady
+        .then(() => snapshotCache(cacheCfg))
+        .catch(() => {/* never throws */});
 
       // Always create AI handlers — OAuth can be used when no API key is set
       aiHandlers = createAIHandlers({
