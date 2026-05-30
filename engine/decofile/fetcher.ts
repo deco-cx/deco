@@ -225,26 +225,46 @@ export const fromEndpoint = (endpoint: string): DecofileProvider => {
           return r;
         },
       );
+
+  let resolvedProvider: DecofileProvider | null = null;
+  decofileProviderPromise.then((r) => {
+    resolvedProvider = r;
+  });
+
   return {
     set(state, revision) {
+      if (resolvedProvider) return resolvedProvider.set?.(state, revision) ?? Promise.resolve();
       return decofileProviderPromise.then((r) => r?.set?.(state, revision));
     },
     notify() {
+      if (resolvedProvider) return resolvedProvider.notify?.() ?? Promise.resolve();
       return decofileProviderPromise.then((r) =>
         r?.notify?.() ?? Promise.resolve()
       );
     },
-    state: (options) => decofileProviderPromise.then((r) => r.state(options)),
+    state: (options) => {
+      if (resolvedProvider) return resolvedProvider.state(options);
+      return decofileProviderPromise.then((r) => r.state(options));
+    },
     onChange: (cb) => {
+      if (resolvedProvider) return resolvedProvider.onChange(cb);
       decofileProviderPromise.then((r) => r.onChange(cb));
       return {
         [Symbol.dispose]: () => {
         },
       };
     },
-    revision: () => decofileProviderPromise.then((r) => r.revision()),
+    revision: () => {
+      if (resolvedProvider) return resolvedProvider.revision();
+      return decofileProviderPromise.then((r) => r.revision());
+    },
     dispose: () => {
-      decofileProviderPromise.then((r) => r?.dispose?.());
+      if (resolvedProvider) {
+        resolvedProvider.dispose?.();
+      } else {
+        decofileProviderPromise.then((r) => r?.dispose?.());
+      }
+      resolvedProvider = null;
       delete decofileCache[endpoint];
     },
   };
