@@ -33,15 +33,20 @@ import {
 } from "./monitor.ts";
 import { downloadCache } from "./cache.ts";
 import { createAIHandlers } from "./ai/handlers.ts";
+import { phaseEnd, phaseStart, phaseSummary } from "./phases.ts";
 import { createSandboxHandlers, type DeployParams } from "./sandbox.ts";
 import { register, type TunnelConnection } from "./tunnel.ts";
 import {
   createWorker,
+  isWorkerEverReady,
   resetWorkerState,
+  waitForFirstReady,
   worker,
   type WorkerOptions,
 } from "./worker.ts";
 import { portPool } from "./workers/portpool.ts";
+
+phaseStart("daemon_boot");
 
 const parsedArgs = parseArgs(Deno.args, {
   string: ["build-cmd"],
@@ -283,6 +288,7 @@ const createDeps = (
       throw new Error("Cannot initialize deps: site name not set");
     }
     let start = performance.now();
+    phaseStart("git_setup");
     try {
       await ensureGit({
         site: siteName,
@@ -291,9 +297,11 @@ const createDeps = (
       });
       readyResolve();
     } catch (err) {
+      phaseEnd("git_setup", "fail");
       readyReject(err);
       throw err;
     }
+    phaseEnd("git_setup");
     logs.push({
       level: "info",
       message: `${colors.bold("[step 1/4]")}: Git setup took ${
@@ -305,9 +313,11 @@ const createDeps = (
 
     if (SANDBOX_MODE) {
       start = performance.now();
+      phaseStart("cache_download");
       await downloadCache(siteName).catch((err) => {
         console.warn(`[cache] Failed to download build cache: ${err.message}`);
       });
+      phaseEnd("cache_download");
       logs.push({
         level: "info",
         message: `${colors.bold("[step 1.5/4]")}: Cache download took ${
@@ -317,7 +327,9 @@ const createDeps = (
     }
 
     start = performance.now();
+    phaseStart("manifest_gen");
     await genManifestTS();
+    phaseEnd("manifest_gen");
     logs.push({
       level: "info",
       message: `${colors.bold("[step 2/4]")}: Manifest generation took ${
@@ -328,7 +340,9 @@ const createDeps = (
     });
 
     start = performance.now();
+    phaseStart("blocks_metadata");
     await genBlocksJSON();
+    phaseEnd("blocks_metadata");
     logs.push({
       level: "info",
       message: `${colors.bold("[step 3/4]")}: Blocks metadata generation took ${
@@ -550,6 +564,54 @@ app.get("/_healthcheck", (c) => {
     },
   });
 });
+
+/**
+ * /_ready waits server-side until the inner worker has actually responded
+ * to traffic (dispatchWorkerState("ready") fires after meta.ts's first
+ * successful /deco/meta fetch). Unlike /_healthcheck — which goes 200 the
+ * moment the daemon's Hono server binds — this is a true readiness signal
+ * for the user-facing Fresh app.
+ *
+ * Returns { ready, version, phases } so the admin can record startup
+ * timings without parsing logs. Honors ?timeout=<ms> (default 30s).
+ */
+const READY_DEFAULT_TIMEOUT_MS = 30_000;
+const READY_MAX_TIMEOUT_MS = 120_000;
+
+app.get("/_ready", async (c) => {
+  const requested = Number(c.req.query("timeout"));
+  const timeoutMs = Number.isFinite(requested) && requested > 0
+    ? Math.min(requested, READY_MAX_TIMEOUT_MS)
+    : READY_DEFAULT_TIMEOUT_MS;
+
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store",
+    "Content-Type": "application/json",
+  };
+
+  const respond = (ready: boolean) =>
+    new Response(
+      JSON.stringify({
+        ready,
+        version: denoJSON.version,
+        phases: phaseSummary(),
+      }),
+      { status: ready ? 200 : 503, headers },
+    );
+
+  if (isWorkerEverReady()) return respond(true);
+
+  const ready = await Promise.race([
+    waitForFirstReady().then(() => true as const),
+    delay(timeoutMs).then(() => false as const),
+  ]);
+
+  return respond(ready);
+});
+
 // k8s liveness probe
 app.get("/deco/_liveness", () => new Response("OK", { status: 200 }));
 
@@ -844,6 +906,7 @@ Deno.serve(
   {
     port,
     onListen: async (addr) => {
+      phaseEnd("daemon_boot");
       try {
         const siteName = !SANDBOX_MODE ? getSiteName() : undefined;
         const tunnel = siteName ? await registerTunnel(siteName) : null;
