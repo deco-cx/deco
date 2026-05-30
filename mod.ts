@@ -45,6 +45,16 @@ export { type DecoRouteState } from "./runtime/middleware.ts";
 export * from "./runtime/mod.ts";
 export { Deco } from "./runtime/mod.ts";
 export type { PageData } from "./runtime/mod.ts";
+export {
+  buildLazyUrl,
+  serializeResolvedSection,
+} from "./runtime/routes/serialize-section.ts";
+export type {
+  LazyUrlContext,
+  ResolvedSection,
+  SerializedSection,
+} from "./runtime/routes/serialize-section.ts";
+export { Murmurhash3 } from "./deps.ts";
 export * from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
