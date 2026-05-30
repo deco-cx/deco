@@ -4,6 +4,7 @@
 import { context } from "../deco.ts";
 import { DomInspector, DomInspectorActivators } from "../deps.ts";
 import type { Flag, Site } from "../types.ts";
+import { adminDomains } from "../utils/admin.ts";
 
 const IS_LOCALHOST = context.deploymentId === undefined;
 
@@ -110,8 +111,44 @@ const main = () => {
     }
   };
 
+  const STATIC_TRUSTED_ORIGINS = [
+    "https://deco.cx",
+    "https://admin.deco.cx",
+    "https://play.deco.cx",
+    "https://admin-cx.deco.page",
+    "https://deco.chat",
+    "https://admin.decocms.com",
+    "https://decocms.com",
+    "https://studio.decocms.com",
+  ];
+  const runtimeTrustedOrigins = (() => {
+    try {
+      const el = document.getElementById("__DECO_TRUSTED_ORIGINS");
+      const parsed = JSON.parse(el?.textContent || "[]");
+      return Array.isArray(parsed) ? parsed.filter((o) => typeof o === "string") : [];
+    } catch {
+      return [];
+    }
+  })();
+  const TRUSTED_ORIGINS = STATIC_TRUSTED_ORIGINS.concat(runtimeTrustedOrigins);
+  const isTrustedOrigin = (origin: string) =>
+    TRUSTED_ORIGINS.indexOf(origin) !== -1 ||
+    (origin.startsWith("https://") && origin.endsWith(".deco.cx")) ||
+    origin === WINDOW.location.origin;
+
   const onMessage = (event: MessageEvent<LiveEvent>) => {
+    if (!isTrustedOrigin(event.origin)) {
+      return;
+    }
+
     const { data } = event;
+
+    if (
+      typeof data !== "object" || data === null ||
+      typeof (data as { type?: unknown }).type !== "string"
+    ) {
+      return;
+    }
 
     switch (data.type) {
       case "scrollToComponent": {
@@ -181,6 +218,13 @@ function LiveControls({ site, page, flags }: Props) {
         id="__DECO_STATE"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({ page, site, flags }),
+        }}
+      />
+      <script
+        type="application/json"
+        id="__DECO_TRUSTED_ORIGINS"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(adminDomains),
         }}
       />
       <script
