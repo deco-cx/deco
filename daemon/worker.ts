@@ -10,6 +10,14 @@ import { DenoRun } from "./workers/denoRun.ts";
 // and retry, instead of the request hanging until the CDN returns a 504.
 const SANDBOX_READY_GATE_MS = 5_000;
 
+// Header + per-process token used by the daemon's own internal warmup request
+// to bypass the fast-503 gate (it must block until the worker is ready so it
+// can actually render the entry route). The token is random per process so a
+// forged `x-deco-warmup` header on public traffic can't match and is treated
+// as a normal request.
+export const WARMUP_HEADER = "x-deco-warmup";
+export const WARMUP_TOKEN: string = crypto.randomUUID();
+
 export interface WorkerOptions {
   persist: () => void;
   command: Deno.Command;
@@ -109,34 +117,38 @@ export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
       // blocking behavior: wait for the worker to be fully ready, then proxy.
       // This is what lets the warmup request actually JIT-compile and render
       // the entry route — a fast-503 gate would skip the render entirely.
-      const isWarmup = c.req.header("x-deco-warmup") === "1";
+      const isWarmup = c.req.header(WARMUP_HEADER) === WARMUP_TOKEN;
       if (SANDBOX_MODE && !isWarmup) {
         // worker() boots the dev server (idempotent) and resolves once it is
-        // listening. On a cold sandbox that can take a while; rather than hold
-        // the request open the whole time — which lets the CDN time out as a
-        // 504 — we fail fast with 503 after SANDBOX_READY_GATE_MS. The env
-        // ingress (error_page 502 503 -> @admin) then bounces the client to
-        // the activator and retries. The boot keeps running in the background
-        // (watchMeta also drives it), so a retry lands on a warm worker.
-        const ready = worker().then(() => true, () => false);
-        const isReady = await Promise.race([
-          ready,
-          delay(SANDBOX_READY_GATE_MS).then(() => false),
+        // listening; it rejects if the boot fails (missing dev.ts, crash, ...).
+        // On a cold sandbox the boot can take a while, so rather than hold the
+        // request open the whole time — which lets the CDN time out as a 504 —
+        // we race it against a short gate:
+        //   - still booting at the gate  -> 503 (retryable): the env ingress
+        //     (error_page 502 503 -> @admin) bounces to the activator and the
+        //     boot keeps running in the background, so the retry lands warm.
+        //   - boot rejected              -> 424 (non-retryable): a real failure
+        //     that won't fix itself, so we don't loop the activator forever.
+        // Mapping the rejection inline (not throwing) keeps the loser of the
+        // race from surfacing as an unhandled rejection once we've replied.
+        const boot = worker().then(
+          () => "ready" as const,
+          (err: unknown) => ({ err }),
+        );
+        const outcome = await Promise.race([
+          boot,
+          delay(SANDBOX_READY_GATE_MS).then(() => "timeout" as const),
         ]);
-        if (!isReady) {
-          // A permanent init failure (e.g. no dev.ts) keeps returning 424 as
-          // before: bouncing it to the activator would loop forever, since the
-          // env can never become ready. Only a still-booting worker gets 503.
-          if (isWorkerDisabled()) {
-            c.res = new Response(`Error while starting worker`, {
-              status: 424,
-            });
-            return;
-          }
+        if (outcome === "timeout") {
           c.res = new Response("Sandbox environment is starting", {
             status: 503,
             headers: { "retry-after": "2" },
           });
+          return;
+        }
+        if (typeof outcome === "object") {
+          console.error(outcome.err);
+          c.res = new Response(`Error while starting worker`, { status: 424 });
           return;
         }
       } else {

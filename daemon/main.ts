@@ -38,6 +38,8 @@ import { register, type TunnelConnection } from "./tunnel.ts";
 import {
   createWorker,
   resetWorkerState,
+  WARMUP_HEADER,
+  WARMUP_TOKEN,
   worker,
   type WorkerOptions,
 } from "./worker.ts";
@@ -619,15 +621,17 @@ if (SANDBOX_MODE) {
       // entry route before the first real user request arrives — otherwise that
       // compile + render is paid inline on the user's first hit. Off by default
       // because it triggers one synthetic homepage render (and any server-side
-      // analytics it fires); the x-deco-warmup header lets the site opt out of
-      // side effects. Enable with DECO_SANDBOX_WARMUP=true.
+      // analytics it fires); the x-deco-warmup header (carrying the per-process
+      // token) marks it as our internal warmup so it bypasses the fast-503 gate
+      // and the site can opt out of side effects. Enable with
+      // DECO_SANDBOX_WARMUP=true.
       if (Deno.env.get("DECO_SANDBOX_WARMUP") === "true") {
         const { app: siteApp, gitReady } = currentSite;
         gitReady
           .then(() =>
             siteApp.fetch(
               new Request("http://localhost/", {
-                headers: { "x-deco-warmup": "1" },
+                headers: { [WARMUP_HEADER]: WARMUP_TOKEN },
               }),
             )
           )
