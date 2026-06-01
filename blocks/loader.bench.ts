@@ -1,4 +1,8 @@
-import hash from "https://esm.sh/v135/object-hash@3.0.0";
+// `?no-dts` skips esm.sh's bundled type definitions. Upstream `@types/object-hash`
+// uses a CommonJS `export =` with no synthetic default, which makes Deno's
+// type-check fail with TS1192 ("no default export") on a fresh fetch. The types
+// aren't needed in this benchmark, so dropping them keeps CI deterministic.
+import hash from "https://esm.sh/v135/object-hash@3.0.0?no-dts";
 
 const props = {
   randomObject: {
