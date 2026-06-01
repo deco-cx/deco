@@ -604,6 +604,16 @@ if (SANDBOX_MODE) {
         branch,
       });
 
+      // Eagerly kick off deps init (git clone, build-cache download, manifest
+      // + blocks generation) as soon as the env is assigned, instead of
+      // waiting for the first HTTP request to trigger it lazily. On a freshly
+      // claimed sandbox this cold-start work can take tens of seconds; paying
+      // it inline on the first request risks exceeding the CDN origin timeout
+      // and surfacing to the user as a 504 (the client abort is logged as a
+      // 499 at the ingress). ensureStarted() is idempotent — the AI-task path
+      // below still awaits gitReady without re-triggering init.
+      currentSite.ensureStarted();
+
       // Always create AI handlers — OAuth can be used when no API key is set
       aiHandlers = createAIHandlers({
         cwd: Deno.cwd(),
@@ -630,9 +640,6 @@ if (SANDBOX_MODE) {
           Boolean(envs?.ANTHROPIC_PROXY_URL);
         if (hasApiKey) {
           const handlers = aiHandlers;
-          // Eagerly trigger deps init (git clone, etc.) so the task doesn't wait
-          // for the first HTTP request to arrive
-          currentSite.ensureStarted();
           // Wait for git clone to finish before starting the AI task,
           // since the task needs a valid repo (git rev-parse HEAD, etc.)
           currentSite.gitReady.then(async () => {
