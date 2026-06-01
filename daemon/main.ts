@@ -38,6 +38,8 @@ import { register, type TunnelConnection } from "./tunnel.ts";
 import {
   createWorker,
   resetWorkerState,
+  WARMUP_HEADER,
+  WARMUP_TOKEN,
   worker,
   type WorkerOptions,
 } from "./worker.ts";
@@ -604,6 +606,41 @@ if (SANDBOX_MODE) {
         branch,
       });
 
+      // Eagerly kick off deps init (git clone, build-cache download, manifest
+      // + blocks generation) as soon as the env is assigned, instead of
+      // waiting for the first HTTP request to trigger it lazily. On a freshly
+      // claimed sandbox this cold-start work can take tens of seconds; paying
+      // it inline on the first request risks exceeding the CDN origin timeout
+      // and surfacing to the user as a 504 (the client abort is logged as a
+      // 499 at the ingress). ensureStarted() is idempotent — the AI-task path
+      // below still awaits gitReady without re-triggering init.
+      currentSite.ensureStarted();
+
+      // Optional deep warmup: once the repo is cloned, issue a single internal
+      // request to the site root so the dev server JIT-compiles and renders the
+      // entry route before the first real user request arrives — otherwise that
+      // compile + render is paid inline on the user's first hit. Off by default
+      // because it triggers one synthetic homepage render (and any server-side
+      // analytics it fires); the x-deco-warmup header (carrying the per-process
+      // token) marks it as our internal warmup so it bypasses the fast-503 gate
+      // and the site can opt out of side effects. Enable with
+      // DECO_SANDBOX_WARMUP=true.
+      if (Deno.env.get("DECO_SANDBOX_WARMUP") === "true") {
+        const { app: siteApp, gitReady } = currentSite;
+        gitReady
+          .then(() =>
+            siteApp.fetch(
+              new Request("http://localhost/", {
+                headers: { [WARMUP_HEADER]: WARMUP_TOKEN },
+              }),
+            )
+          )
+          .then(() => console.log("[sandbox] warmup request completed"))
+          .catch((err) =>
+            console.error("[sandbox] warmup request failed:", err)
+          );
+      }
+
       // Always create AI handlers — OAuth can be used when no API key is set
       aiHandlers = createAIHandlers({
         cwd: Deno.cwd(),
@@ -630,9 +667,6 @@ if (SANDBOX_MODE) {
           Boolean(envs?.ANTHROPIC_PROXY_URL);
         if (hasApiKey) {
           const handlers = aiHandlers;
-          // Eagerly trigger deps init (git clone, etc.) so the task doesn't wait
-          // for the first HTTP request to arrive
-          currentSite.ensureStarted();
           // Wait for git clone to finish before starting the AI task,
           // since the task needs a valid repo (git rev-parse HEAD, etc.)
           currentSite.gitReady.then(async () => {
