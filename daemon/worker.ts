@@ -1,6 +1,14 @@
 import { Hono } from "@hono/hono";
 import { broadcast } from "./sse/channel.ts";
+import { SANDBOX_MODE } from "./daemon.ts";
+import { delay } from "../utils/async.ts";
 import { DenoRun } from "./workers/denoRun.ts";
+
+// How long a request waits for a cold dev server to come up before we stop
+// holding the connection open and reply 503 (SANDBOX_MODE only). Kept well
+// under the CDN origin timeout so the env ingress can bounce to the activator
+// and retry, instead of the request hanging until the CDN returns a 504.
+const SANDBOX_READY_GATE_MS = 5_000;
 
 export interface WorkerOptions {
   persist: () => void;
@@ -97,7 +105,29 @@ export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
   // ensure isolate is up and running
   app.use("/*", async (c, next) => {
     try {
-      await worker();
+      if (SANDBOX_MODE) {
+        // worker() boots the dev server (idempotent) and resolves once it is
+        // listening. On a cold sandbox that can take a while; rather than hold
+        // the request open the whole time — which lets the CDN time out as a
+        // 504 — we fail fast with 503 after SANDBOX_READY_GATE_MS. The env
+        // ingress (error_page 502 503 -> @admin) then bounces the client to
+        // the activator and retries. The boot keeps running in the background
+        // (watchMeta also drives it), so a retry lands on a warm worker.
+        const ready = worker().then(() => true, () => false);
+        const isReady = await Promise.race([
+          ready,
+          delay(SANDBOX_READY_GATE_MS).then(() => false),
+        ]);
+        if (!isReady) {
+          c.res = new Response("Sandbox environment is starting", {
+            status: 503,
+            headers: { "retry-after": "2" },
+          });
+          return;
+        }
+      } else {
+        await worker();
+      }
       await next();
     } catch (error) {
       console.error(error);
