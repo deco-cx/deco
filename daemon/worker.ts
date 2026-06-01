@@ -105,7 +105,12 @@ export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
   // ensure isolate is up and running
   app.use("/*", async (c, next) => {
     try {
-      if (SANDBOX_MODE) {
+      // Warmup requests (and normal, non-sandbox mode) keep the original
+      // blocking behavior: wait for the worker to be fully ready, then proxy.
+      // This is what lets the warmup request actually JIT-compile and render
+      // the entry route — a fast-503 gate would skip the render entirely.
+      const isWarmup = c.req.header("x-deco-warmup") === "1";
+      if (SANDBOX_MODE && !isWarmup) {
         // worker() boots the dev server (idempotent) and resolves once it is
         // listening. On a cold sandbox that can take a while; rather than hold
         // the request open the whole time — which lets the CDN time out as a
@@ -119,6 +124,15 @@ export const createWorker = (optionsProvider: WorkerOptionsProvider) => {
           delay(SANDBOX_READY_GATE_MS).then(() => false),
         ]);
         if (!isReady) {
+          // A permanent init failure (e.g. no dev.ts) keeps returning 424 as
+          // before: bouncing it to the activator would loop forever, since the
+          // env can never become ready. Only a still-booting worker gets 503.
+          if (isWorkerDisabled()) {
+            c.res = new Response(`Error while starting worker`, {
+              status: 424,
+            });
+            return;
+          }
           c.res = new Response("Sandbox environment is starting", {
             status: 503,
             headers: { "retry-after": "2" },
