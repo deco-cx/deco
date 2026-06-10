@@ -12,7 +12,7 @@ export { adminUrlFor, isAdmin, resolvable } from "./admin.ts";
  */
 export { readFromStream } from "./http.ts";
 export { metabasePreview } from "./metabase.tsx";
-export { tryOrDefault } from "./object.ts";
+export { deepOmit, tryOrDefault } from "./object.ts";
 export type { DotNestedKeys } from "./object.ts";
 export { createServerTimings } from "./timings.ts";
 export type { Device } from "./userAgent.ts";

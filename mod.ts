@@ -47,11 +47,15 @@ export { Deco } from "./runtime/mod.ts";
 export type { PageData } from "./runtime/mod.ts";
 export {
   buildLazyUrl,
+  sectionModuleLookup,
   serializeResolvedSection,
 } from "./runtime/routes/serialize-section.ts";
 export type {
   LazyUrlContext,
+  RenderJson,
   ResolvedSection,
+  SectionJsonModule,
+  SerializeContext,
   SerializedSection,
 } from "./runtime/routes/serialize-section.ts";
 export { Murmurhash3 } from "./deps.ts";

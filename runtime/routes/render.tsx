@@ -9,8 +9,9 @@ import { createHandler, DEBUG_QS } from "../middleware.ts";
 import type { PageParams } from "../mod.ts";
 import Render, { type PageData } from "./entrypoint.tsx";
 import {
-  type LazyUrlContext,
   type ResolvedSection,
+  sectionModuleLookup,
+  type SerializeContext,
   serializeResolvedSection,
 } from "./serialize-section.ts";
 
@@ -98,15 +99,16 @@ export const handler = createHandler(async (
   }
 
   if (opts.searchParams.get("format") === "json") {
-    const lazyCtx: LazyUrlContext = {
+    const serializeCtx: SerializeContext = {
       href: opts.href,
       pathTemplate: opts.pathTemplate,
       renderSalt: opts.renderSalt,
       cb: opts.searchParams.get("__cb") ?? undefined,
+      getSectionModule: await sectionModuleLookup(),
     };
     const serialized = serializeResolvedSection(
       page as ResolvedSection,
-      lazyCtx,
+      serializeCtx,
     );
     const jsonResponse = Response.json(serialized);
     const shouldCacheFromVary = ctx?.var?.vary?.shouldCache === true;

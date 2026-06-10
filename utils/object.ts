@@ -146,3 +146,56 @@ export const tryOrDefault = <R>(fn: () => R, defaultValue: R): R => {
     return defaultValue;
   }
 };
+
+const omitAtPath = (obj: unknown, parts: string[]): unknown => {
+  if (!obj || typeof obj !== "object" || parts.length === 0) return obj;
+
+  const [key, ...rest] = parts;
+
+  // `*` fans the remaining path out over every array element / record value.
+  if (key === "*") {
+    if (Array.isArray(obj)) {
+      return obj.map((v) => omitAtPath(v, rest));
+    }
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>).map(([k, v]) => [
+        k,
+        omitAtPath(v, rest),
+      ]),
+    );
+  }
+
+  // Preserve array shape: apply the same path to each element.
+  if (Array.isArray(obj)) {
+    return obj.map((v) => omitAtPath(v, parts));
+  }
+
+  const current = obj as Record<string, unknown>;
+
+  if (rest.length === 0) {
+    const copy = { ...current };
+    delete copy[key];
+    return copy;
+  }
+
+  return {
+    ...current,
+    [key]: omitAtPath(current[key], rest),
+  };
+};
+
+/**
+ * Removes properties from `obj` by path, immutably.
+ *
+ * Supports top-level keys (`"seoProps"`), nested dot-notation paths
+ * (`"page.seo"`), and the `*` wildcard over record/array values
+ * (`"page.productsMap.*.internalFlag"`). Prefer typed rest-destructuring
+ * for top-level keys; reach for deepOmit on deep paths and dynamic keys.
+ */
+export const deepOmit = <T extends object>(obj: T, ...paths: string[]): T => {
+  let result: unknown = obj;
+  for (const path of paths) {
+    result = omitAtPath(result, path.split("."));
+  }
+  return result as T;
+};
