@@ -94,6 +94,36 @@ const createStableHref = (href: string): string => {
   return hrefUrl.href;
 };
 
+export interface RenderCbInput {
+  revision: unknown;
+  vary: unknown;
+  href: string;
+  deploymentId?: string;
+}
+
+/**
+ * Cache-bust value for `/deco/render` URLs. Single source of truth shared by
+ * `useSection` (web partials) and JSON serialization consumers (e.g. the
+ * website app's ?renderJson handler) — both sides MUST produce identical
+ * values or web/JSON cache invalidation diverges.
+ *
+ * `revision`/`vary` join as-is (undefined → "undefined") to preserve the
+ * historical recipe byte-for-byte. Shared `hasher` is safe ONLY because this
+ * function is fully synchronous — no await between hash() and reset().
+ */
+export const computeRenderCb = (input: RenderCbInput): string => {
+  const cbString = [
+    input.revision,
+    input.vary,
+    createStableHref(input.href),
+    input.deploymentId,
+  ].join("|");
+  hasher.hash(cbString);
+  const cb = `${hasher.result()}`;
+  hasher.reset();
+  return cb;
+};
+
 export type Options<P> = {
   /** Section props partially applied */
   props?: Partial<P extends ComponentType<infer K> ? K : P>;
@@ -119,15 +149,12 @@ export const useSection = <P>(
 
   const hrefParam = href ?? request.url;
   const stableHref = createStableHref(hrefParam);
-  const cbString = [
-    revisionId,
+  const cb = computeRenderCb({
+    revision: revisionId,
     vary,
-    stableHref,
-    ctx?.deploymentId,
-  ].join("|");
-  hasher.hash(cbString);
-  const cb = hasher.result();
-  hasher.reset();
+    href: hrefParam,
+    deploymentId: ctx?.deploymentId,
+  });
 
   const params = new URLSearchParams([
     ["props", JSON.stringify(props)],

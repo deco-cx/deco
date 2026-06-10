@@ -50,6 +50,8 @@ export {
   sectionModuleLookup,
   serializeResolvedSection,
 } from "./runtime/routes/serialize-section.ts";
+export { computeRenderCb } from "./hooks/useSection.ts";
+export type { RenderCbInput } from "./hooks/useSection.ts";
 export type {
   LazyUrlContext,
   RenderJson,
