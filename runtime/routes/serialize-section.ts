@@ -35,7 +35,7 @@ export type SerializedSection =
  */
 export type RenderJson =
   // deno-lint-ignore no-explicit-any
-  | ((props: any) => unknown)
+  | ((props: any) => Record<string, unknown>)
   | false;
 
 export interface SectionJsonModule {
@@ -150,6 +150,10 @@ export function serializeResolvedSection(
     if (renderJsonOf(ctx, component) === false) return null;
     return {
       component,
+      // The wrapper's resolveChain is what reconstructs this slot on the lazy
+      // fetch — it re-resolves the inner section and applies the inner's
+      // renderJson there. The inner is not independently resolvable, so its own
+      // chain would not rebuild this position; the wrapper's chain is correct.
       lazyUrl: buildLazyUrl(current.metadata!.resolveChain ?? [], ctx),
     };
   }

@@ -178,6 +178,9 @@ const omitAtPath = (obj: unknown, parts: string[]): unknown => {
     return copy;
   }
 
+  // Omit is a no-op when the path is absent — never create `undefined` branches.
+  if (!(key in current)) return current;
+
   return {
     ...current,
     [key]: omitAtPath(current[key], rest),

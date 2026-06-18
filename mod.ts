@@ -60,7 +60,6 @@ export type {
   SerializeContext,
   SerializedSection,
 } from "./runtime/routes/serialize-section.ts";
-export { Murmurhash3 } from "./deps.ts";
 export * from "./types.ts";
 export { allowCorsFor } from "./utils/http.ts";
 export type { StreamProps } from "./utils/invoke.ts";
