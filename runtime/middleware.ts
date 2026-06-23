@@ -9,7 +9,7 @@ import {
   getSetCookies,
   SpanStatusCode,
 } from "../deps.ts";
-import { startObserve } from "../observability/http.ts";
+import { recordResponseBytes, startObserve } from "../observability/http.ts";
 import { logger } from "../observability/mod.ts";
 import { HttpError } from "../runtime/errors.ts";
 import type { AppManifest } from "../types.ts";
@@ -301,6 +301,29 @@ export const middlewareFor = <TAppManifest extends AppManifest = AppManifest>(
                 ctx?.var?.pathTemplate,
                 ctx.res?.status ?? 500,
               );
+              // Per-route egress: responses are transfer-encoding: chunked, so
+              // content-length is absent. Tally bytes through a pass-through
+              // stream and record on flush (after the body finishes streaming).
+              const res = ctx.res;
+              if (res?.body) {
+                let bytes = 0;
+                const method = ctx.req.raw.method;
+                const pathTemplate = ctx.var.pathTemplate;
+                const counter = new TransformStream<Uint8Array, Uint8Array>({
+                  transform(chunk, controller) {
+                    bytes += chunk.byteLength;
+                    controller.enqueue(chunk);
+                  },
+                  flush() {
+                    recordResponseBytes(bytes, method, pathTemplate, res.status);
+                  },
+                });
+                ctx.res = new Response(res.body.pipeThrough(counter), {
+                  status: res.status,
+                  statusText: res.statusText,
+                  headers: res.headers,
+                });
+              }
             } else {
               span.updateName(`${ctx.req.raw.method} ${ctx.req.raw.url}`);
             }

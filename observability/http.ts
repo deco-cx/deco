@@ -6,6 +6,30 @@ const httpDuration = meter.createHistogram("http_request_duration", {
   unit: "ms",
   valueType: ValueType.DOUBLE,
 });
+
+const httpResponseBytes = meter.createHistogram("http_response_bytes", {
+  description: "http response body size in bytes (per route)",
+  unit: "By",
+  valueType: ValueType.INT,
+});
+
+/**
+ * Records the response body size for a route. Egress per route is otherwise
+ * unobservable: istio byte metrics carry no path label. Call after the body
+ * has been fully counted (see the counting stream in runtime/middleware.ts).
+ */
+export const recordResponseBytes = (
+  bytes: number,
+  method: string,
+  path: string,
+  status: number,
+) => {
+  httpResponseBytes.record(bytes, {
+    "http.method": method,
+    "http.route": path,
+    "http.response.status": `${status}`,
+  });
+};
 /**
  * @returns a end function that when gets called observe the duration of the operation.
  */
