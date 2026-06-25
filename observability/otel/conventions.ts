@@ -6,7 +6,9 @@
 // Metrics
 export const METRIC_DECO_BLOCK_OPERATION_DURATION =
   "deco.block.operation.duration";
-export const METRIC_DECO_CACHE_HITS = "deco.cache.hits";
+// Single cache counter dimensioned by `deco.cache.result` — unified with
+// @decocms/start (avoids a `deco.cache.hits` name/semantics collision).
+export const METRIC_DECO_CACHE_LOOKUPS = "deco.cache.lookups";
 
 // Attributes
 export const ATTR_DECO_OPERATION_NAME = "deco.operation.name";

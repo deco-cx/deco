@@ -5,7 +5,7 @@ import {
   ATTR_DECO_CACHE_ENGINE,
   ATTR_DECO_CACHE_RESULT,
   ATTR_DECO_CACHE_STATUS,
-  METRIC_DECO_CACHE_HITS,
+  METRIC_DECO_CACHE_LOOKUPS,
 } from "../../observability/otel/conventions.ts";
 import { inFuture } from "./utils.ts";
 
@@ -14,7 +14,7 @@ export interface CacheMetrics {
   total: number;
   hits: number;
 }
-const cacheHit = meter.createCounter(METRIC_DECO_CACHE_HITS, {
+const cacheHit = meter.createCounter(METRIC_DECO_CACHE_LOOKUPS, {
   unit: "1",
   valueType: ValueType.DOUBLE,
 });
