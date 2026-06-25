@@ -5,7 +5,8 @@ import {
   ATTR_DECO_CACHE_ENGINE,
   ATTR_DECO_CACHE_RESULT,
   ATTR_DECO_CACHE_STATUS,
-  METRIC_DECO_CACHE_LOOKUPS,
+  METRIC_DECO_CACHE_HITS,
+  METRIC_DECO_CACHE_MISSES,
 } from "../../observability/otel/conventions.ts";
 import { inFuture } from "./utils.ts";
 
@@ -14,7 +15,13 @@ export interface CacheMetrics {
   total: number;
   hits: number;
 }
-const cacheHit = meter.createCounter(METRIC_DECO_CACHE_LOOKUPS, {
+// Two counters (names match @decocms/start); `deco.cache.result` carries the
+// outcome (hit/stale/miss) for both.
+const cacheHits = meter.createCounter(METRIC_DECO_CACHE_HITS, {
+  unit: "1",
+  valueType: ValueType.DOUBLE,
+});
+const cacheMisses = meter.createCounter(METRIC_DECO_CACHE_MISSES, {
   unit: "1",
   valueType: ValueType.DOUBLE,
 });
@@ -52,7 +59,8 @@ export const withInstrumentation = (
             const result = getCacheStatus(isMatch);
 
             span.setAttribute(ATTR_DECO_CACHE_STATUS, result);
-            cacheHit.add(1, {
+            const counter = result === "miss" ? cacheMisses : cacheHits;
+            counter.add(1, {
               [ATTR_DECO_CACHE_RESULT]: result,
               [ATTR_DECO_CACHE_ENGINE]: engine,
             });
