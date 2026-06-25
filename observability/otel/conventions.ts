@@ -6,14 +6,15 @@
 // Metrics
 export const METRIC_DECO_BLOCK_OPERATION_DURATION =
   "deco.block.operation.duration";
-// Cache counters, dimensioned by `deco.cache.result` — names match
-// @decocms/start (tanstack) so both frameworks aggregate on the same metrics.
-export const METRIC_DECO_CACHE_HITS = "deco.cache.hits";
-export const METRIC_DECO_CACHE_MISSES = "deco.cache.misses";
+// Single cache counter dimensioned by `deco.cache.status` — follows the OTel
+// semconv pattern (cf. nfs.server.repcache.requests + .status) and the general
+// guidance to prefer attributes over separate metrics. Unified with
+// @decocms/start so both frameworks aggregate on the same series.
+export const METRIC_DECO_CACHE_REQUESTS = "deco.cache.requests";
 
 // Attributes
 export const ATTR_DECO_OPERATION_NAME = "deco.operation.name";
 export const ATTR_DECO_OPERATION_ERROR = "deco.operation.error";
-export const ATTR_DECO_CACHE_RESULT = "deco.cache.result";
 export const ATTR_DECO_CACHE_ENGINE = "deco.cache.engine";
+// Cache outcome: hit | stale | miss (| bypass). Same key on span + metric.
 export const ATTR_DECO_CACHE_STATUS = "deco.cache.status";
